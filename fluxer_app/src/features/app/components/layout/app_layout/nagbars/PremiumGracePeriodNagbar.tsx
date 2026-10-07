@@ -5,11 +5,11 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import {getPremiumGraceEndDate} from '@app/features/premium/utils/PremiumGrace';
 import {MANAGE_SUBSCRIPTION_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import Users from '@app/features/user/state/Users';
@@ -79,7 +79,7 @@ export const PremiumGracePeriodNagbar = observer(({isMobile}: {isMobile: boolean
 				isMobile={isMobile}
 				onDismiss={handleDismiss}
 				message={i18n._(PREMIUM_GRACE_PERIOD_MESSAGE_DESCRIPTOR, {
-					premiumProductName: PREMIUM_PRODUCT_NAME,
+					premiumProductName: getPremiumProductName(),
 					formattedGraceDate,
 				})}
 				actions={

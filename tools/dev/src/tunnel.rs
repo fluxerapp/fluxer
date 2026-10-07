@@ -119,10 +119,6 @@ pub fn public_url_env(public_url: &str) -> Result<Vec<(String, String)>> {
             "FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS".to_owned(),
             format!("{localhost_origins},{base}"),
         ),
-        (
-            "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT".to_owned(),
-            format!("{base}/api"),
-        ),
     ])
 }
 

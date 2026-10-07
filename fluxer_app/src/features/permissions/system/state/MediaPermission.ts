@@ -6,6 +6,7 @@ import {
 	type NativePermissionResult,
 } from '@app/features/permissions/system/utils/NativePermissions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {MediaDeviceRefreshType, refreshMediaDeviceLists} from '@app/features/voice/utils/MediaDeviceRefresh';
 import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
@@ -27,7 +28,7 @@ class MediaPermission {
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
 		this.bindMacPermissions();
-		void this.initializePermissionState();
+		initializeStore(this, () => this.initializePermissionState());
 	}
 
 	private bindMacPermissions(): void {

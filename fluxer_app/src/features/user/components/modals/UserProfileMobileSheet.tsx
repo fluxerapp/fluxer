@@ -2,6 +2,7 @@
 
 import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {
 	CustomStatusDisplay,
 	type EmojiPressData,
@@ -45,7 +46,6 @@ import {NoteEditSheet} from '@app/features/user/components/modals/NoteEditSheet'
 import {UserProfileActionsSheet} from '@app/features/user/components/modals/UserProfileActionsSheet';
 import styles from '@app/features/user/components/modals/UserProfileMobileSheet.module.css';
 import {getContrastingNotchColor} from '@app/features/user/components/modals/UserProfileUtils';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {getMutualItemsDescriptor} from '@app/features/user/components/modals/user_profile_modal/MutualItemsDescriptors';
 import {
 	getMutualCommunityDisplayItems,
@@ -360,12 +360,15 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 		};
 		const handleEditProfile = () => {
 			ModalCommands.push(
-				modal(() => (
-					<UserSettingsModal
-						initialTab="my_profile"
-						data-flx="user.user-profile-mobile-sheet.handle-edit-profile.user-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<UserSettingsModal
+							initialTab="my_profile"
+							data-flx="user.user-profile-mobile-sheet.handle-edit-profile.user-settings-modal"
+						/>
+					),
+					'user-settings',
+				),
 			);
 		};
 		const handleStartVoiceCall = async () => {

@@ -3,19 +3,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
-import {
-	CANARY_APP_URL,
-	CANARY_MIGRATED_APP_ORIGIN,
-	MIGRATED_APP_ENTRY_PATH,
-	STABLE_APP_URL,
-	STABLE_MIGRATED_APP_ORIGIN,
-} from '@electron/common/Constants';
+import {CANARY_MIGRATED_APP_ORIGIN, CHANNEL_APP_URLS, STABLE_MIGRATED_APP_ORIGIN} from '@electron/common/Constants';
 import {
 	GLOBAL_SHORTCUT_DESCRIPTION_MAX_LENGTH,
 	type GlobalShortcutAction,
 	isGlobalShortcutAction,
 } from '@electron/common/GlobalShortcutActions';
 import type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@electron/common/Types';
+import {InstanceEndpointKind, normalizeInstanceEndpoint} from '@fluxer/instance_bootstrap/src/EndpointNormalization';
 import log from 'electron-log';
 
 export type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@electron/common/Types';
@@ -30,7 +25,9 @@ interface DesktopConfig extends Record<string, unknown> {
 	troubleshooting?: PersistedDesktopTroubleshootingSettings;
 	theme_allowed_local_files?: Array<string>;
 	app_origin?: string;
+	preboot_theme?: string;
 	global_shortcuts?: PersistedGlobalShortcutsSettings;
+	mac_screen_recording_requested?: boolean;
 }
 
 export type GlobalShortcutsPortalConsent = 'unset' | 'granted' | 'declined';
@@ -73,9 +70,12 @@ interface PersistedDesktopTroubleshootingSettings {
 	disableHardwareAcceleration?: boolean;
 }
 
+const INSTANCE_ENDPOINT_ARGS = ['--fluxer-instance'];
+
+const PREBOOT_THEME_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/u;
+
 let config: DesktopConfig = {};
 let configPath: string | null = null;
-let runtimeAppUrlOverride: string | null = null;
 
 function getDefaultDesktopTroubleshootingSettings(): DesktopTroubleshootingSettings {
 	return {
@@ -237,20 +237,24 @@ function serializeGlobalShortcutsSettings(settings: GlobalShortcutsSettings): Pe
 	};
 }
 
-function getLegacyAppUrl(): string {
-	return BUILD_CHANNEL === 'canary' ? CANARY_APP_URL : STABLE_APP_URL;
+function getLegacyWebAppOrigin(): string {
+	return new URL(CHANNEL_APP_URLS[BUILD_CHANNEL]).origin;
 }
 
 function getMigratedAppOrigin(): string {
 	return BUILD_CHANNEL === 'canary' ? CANARY_MIGRATED_APP_ORIGIN : STABLE_MIGRATED_APP_ORIGIN;
 }
 
-export function getOfficialAppOrigins(): Array<string> {
-	return [new URL(getLegacyAppUrl()).origin, getMigratedAppOrigin()];
+function getOfficialAppOrigins(): Array<string> {
+	return [getLegacyWebAppOrigin(), getMigratedAppOrigin()];
 }
 
 function sanitizeAppOrigin(value: unknown): string | undefined {
 	return typeof value === 'string' && getOfficialAppOrigins().includes(value) ? value : undefined;
+}
+
+function sanitizePrebootTheme(value: unknown): string | undefined {
+	return typeof value === 'string' && PREBOOT_THEME_PATTERN.test(value) ? value : undefined;
 }
 
 function sanitizeDesktopConfig(value: unknown): DesktopConfig {
@@ -289,12 +293,23 @@ function sanitizeDesktopConfig(value: unknown): DesktopConfig {
 	} else {
 		delete nextConfig.global_shortcuts;
 	}
+	if (value.mac_screen_recording_requested === true) {
+		nextConfig.mac_screen_recording_requested = true;
+	} else {
+		delete nextConfig.mac_screen_recording_requested;
+	}
 	if (Array.isArray(value.theme_allowed_local_files)) {
 		nextConfig.theme_allowed_local_files = value.theme_allowed_local_files.filter(
 			(item): item is string => typeof item === 'string' && item.trim().length > 0,
 		);
 	} else {
 		delete nextConfig.theme_allowed_local_files;
+	}
+	const prebootTheme = sanitizePrebootTheme(value.preboot_theme);
+	if (prebootTheme) {
+		nextConfig.preboot_theme = prebootTheme;
+	} else {
+		delete nextConfig.preboot_theme;
 	}
 	return nextConfig;
 }
@@ -445,41 +460,35 @@ export function loadDesktopConfig(userDataPath: string): void {
 	}
 }
 
-export function getAppUrl(): string {
-	if (runtimeAppUrlOverride) {
-		return runtimeAppUrlOverride;
-	}
+export function getLegacyAppOrigin(): string {
 	const migratedAppOrigin = getMigratedAppOrigin();
-	if (config.app_origin === migratedAppOrigin) {
-		return `${migratedAppOrigin}${MIGRATED_APP_ENTRY_PATH}`;
-	}
-	return getLegacyAppUrl();
+	return config.app_origin === migratedAppOrigin ? migratedAppOrigin : getLegacyWebAppOrigin();
 }
 
-export function getAppUrlFallback(url: string): string | null {
-	try {
-		return new URL(url).origin === getMigratedAppOrigin() ? getLegacyAppUrl() : null;
-	} catch {
+export function getLaunchInstanceEndpointOverride(argv: ReadonlyArray<string> = process.argv): string | null {
+	let raw: string | null = null;
+	for (let index = 0; index < argv.length; index += 1) {
+		const arg = argv[index];
+		for (const name of INSTANCE_ENDPOINT_ARGS) {
+			if (arg === name) {
+				const next = argv[index + 1];
+				raw = next && !next.startsWith('--') ? next : '';
+			} else if (arg.startsWith(`${name}=`)) {
+				raw = arg.slice(name.length + 1);
+			}
+		}
+	}
+	if (raw === null) {
 		return null;
 	}
-}
-
-export function setAppOrigin(origin: string): boolean {
-	const appOrigin = sanitizeAppOrigin(origin);
-	if (appOrigin === undefined) {
-		return false;
+	if (process.defaultApp !== true) {
+		throw new Error('--fluxer-instance is only accepted in a development build');
 	}
-	config.app_origin = appOrigin;
-	saveDesktopConfig();
-	return true;
-}
-
-export function getCustomAppUrl(): string | null {
-	return runtimeAppUrlOverride;
-}
-
-export function setRuntimeAppUrlOverride(appUrl: string | null): void {
-	runtimeAppUrlOverride = appUrl;
+	const endpoint = normalizeInstanceEndpoint(raw.trim(), InstanceEndpointKind.API);
+	if (endpoint == null || !endpoint.includes('://')) {
+		throw new Error('--fluxer-instance requires an absolute http(s) API endpoint');
+	}
+	return endpoint;
 }
 
 export function getConfiguredChromiumSwitches(): ChromiumSwitchesSetting | undefined {
@@ -547,6 +556,31 @@ export function addAllowedThemeLocalFiles(paths: ReadonlyArray<string>): Array<s
 	config.theme_allowed_local_files = [...next].sort();
 	saveDesktopConfig();
 	return getAllowedThemeLocalFiles();
+}
+
+export function getPrebootTheme(): string | null {
+	return sanitizePrebootTheme(config.preboot_theme) ?? null;
+}
+
+export function setPrebootTheme(theme: string): void {
+	const sanitized = sanitizePrebootTheme(theme);
+	if (sanitized === undefined || sanitized === getPrebootTheme()) {
+		return;
+	}
+	config.preboot_theme = sanitized;
+	saveDesktopConfig();
+}
+
+export function hasRequestedMacScreenRecording(): boolean {
+	return config.mac_screen_recording_requested === true;
+}
+
+export function markMacScreenRecordingRequested(): void {
+	if (config.mac_screen_recording_requested === true) {
+		return;
+	}
+	config.mac_screen_recording_requested = true;
+	saveDesktopConfig();
 }
 
 export function clearAllowedThemeLocalFiles(): void {

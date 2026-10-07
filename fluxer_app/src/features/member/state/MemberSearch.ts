@@ -4,6 +4,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import Relationships from '@app/features/relationship/state/Relationships';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
@@ -172,7 +173,7 @@ export class SearchContext {
 	private _attachedWorker: Worker | null = null;
 
 	constructor(callback: (results: Array<TransformedMember>) => void, limit: number = DEFAULT_LIMIT) {
-		this._contextId = crypto.randomUUID();
+		this._contextId = randomUuid();
 		this._deliverResults = callback;
 		this._maxResults = limit;
 		this._inFlightQuery = null;

@@ -44,6 +44,8 @@
 
 /app-dist-output/
 /artifacts/
+/desktop-shared-assets/
+/desktop-modules/
 /s3_payload/
 /upload_staging/
 

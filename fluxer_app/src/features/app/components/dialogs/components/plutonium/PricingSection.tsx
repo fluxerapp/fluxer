@@ -6,13 +6,13 @@ import {PurchaseDisclaimer} from '@app/features/app/components/dialogs/component
 import styles from '@app/features/app/components/dialogs/components/plutonium/PricingSection.module.css';
 import {PurchaseDisabledWrapper} from '@app/features/app/components/dialogs/components/plutonium/PurchaseDisabledWrapper';
 import {ToggleButton} from '@app/features/app/components/dialogs/components/ToggleButton';
-import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {
 	BUY_GIFT_DESCRIPTOR,
 	CLAIM_ACCOUNT_TO_PURCHASE_PREMIUM_DESCRIPTOR,
 	ONE_TIME_PURCHASE_DESCRIPTOR,
 	VIEW_PREMIUM_PERKS_DESCRIPTOR,
 } from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {getPremiumProductFullName, getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowDownIcon} from '@phosphor-icons/react';
@@ -99,7 +99,7 @@ export const PricingSection: React.FC<PricingSectionProps> = observer(
 		const {i18n} = useLingui();
 		const tooltipText: React.ReactNode =
 			purchaseDisabledTooltip ??
-			i18n._(CLAIM_ACCOUNT_TO_PURCHASE_PREMIUM_DESCRIPTOR, {premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME});
+			i18n._(CLAIM_ACCOUNT_TO_PURCHASE_PREMIUM_DESCRIPTOR, {premiumProductFullName: getPremiumProductFullName()});
 		return (
 			<section className={styles.section} data-flx="app.plutonium.pricing-section.section">
 				{giftPurchasesAvailable && (
@@ -208,7 +208,7 @@ export const PricingSection: React.FC<PricingSectionProps> = observer(
 						data-flx="app.plutonium.pricing-section.scroll-prompt-container"
 					>
 						<p className={styles.scrollPromptText} data-flx="app.plutonium.pricing-section.scroll-prompt-text">
-							{i18n._(VIEW_PREMIUM_PERKS_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+							{i18n._(VIEW_PREMIUM_PERKS_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						</p>
 						<ArrowDownIcon
 							className={styles.scrollPromptIcon}

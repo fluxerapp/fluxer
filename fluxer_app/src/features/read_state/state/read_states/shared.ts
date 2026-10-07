@@ -60,6 +60,7 @@ export interface PendingAck {
 	messageId: string;
 	deadline: number;
 	attempt: number;
+	userId: string | null;
 }
 
 export interface ArchivedReadState {

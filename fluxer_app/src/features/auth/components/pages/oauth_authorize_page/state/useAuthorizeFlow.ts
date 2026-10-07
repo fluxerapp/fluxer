@@ -8,7 +8,7 @@ import {
 	createBotInviteDestinationKey,
 	parseBotInviteDestinationKey,
 	useBotInviteDestinations,
-} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useBotGuilds';
+} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useBotInviteDestinations';
 import {useOAuthPublicApp} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useOAuthPublicApp';
 import {usePermissionSelection} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/usePermissionSelection';
 import {useScopeSelection} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useScopeSelection';
@@ -26,6 +26,7 @@ import {
 	selectAuthorizePhase,
 	transitionAuthorizeSnapshot,
 } from '@app/features/auth/components/pages/oauth_authorize_page/state/authorizeMachine';
+import Accounts from '@app/features/auth/state/Accounts';
 import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
 import type {BotPermissionOption} from '@app/features/permissions/utils/PermissionUtils';
 import {http} from '@app/features/platform/transport/RestTransport';
@@ -267,14 +268,23 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 	]);
 	useEffect(() => {
 		if (phase.kind !== 'session_expired') return;
-		void import('@app/features/platform/state/AuthSession').then(({default: SessionManager}) => {
+		void import('@app/features/platform/state/AuthSession').then(async ({default: SessionManager}) => {
 			const expiredUserId = SessionManager.userId;
 			if (expiredUserId) SessionManager.markAccountInvalid(expiredUserId);
-			SessionManager.handleConnectionClosed(4004);
-			window.location.replace(getLoginRedirectPath());
+			try {
+				await SessionManager.handleConnectionClosed(4004);
+				window.location.replace(getLoginRedirectPath());
+			} catch (error) {
+				logger.error('Failed to complete the expired session transition', error);
+			}
 		});
 	}, [phase.kind]);
+	const currentAccountKey = Accounts.currentAccountKey;
 	const destinationInitRef = useRef(false);
+	useEffect(() => {
+		destinationInitRef.current = false;
+		setSelectedDestinationKey(null);
+	}, [currentAccountKey]);
 	useEffect(() => {
 		if (!hasBotScope) {
 			destinationInitRef.current = false;

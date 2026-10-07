@@ -33000,6 +33000,7 @@
 			"WellKnownFluxerResponse": {
 				"type": "object",
 				"properties": {
+					"codename": {"description": "Protocol generation spoken by this instance", "type": "string"},
 					"api_code_version": {
 						"type": "integer",
 						"minimum": -9007199254740991,
@@ -33104,6 +33105,7 @@
 						"description": "Public application configuration for client-side features",
 						"$ref": "#/components/schemas/InstanceAppPublicSchema"
 					},
+					"age_policy": {"$ref": "#/components/schemas/InstanceAgePolicySchema"},
 					"domain_migration": {
 						"description": "Web domain migration switch and anonymous rollout, only acted on by official instance clients",
 						"$ref": "#/components/schemas/DomainMigrationDiscoveryResponse"
@@ -33149,6 +33151,19 @@
 				},
 				"required": ["enabled", "anonymous_rollout_basis_points", "rollout_salt", "standalone_forwarding"],
 				"additionalProperties": false
+			},
+			"InstanceAgePolicySchema": {
+				"type": "object",
+				"properties": {
+					"geos": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/InstanceAgePolicyGeoSchema"},
+						"description": "Regions with an age policy"
+					}
+				},
+				"required": ["geos"],
+				"additionalProperties": false,
+				"description": "Regional age policy for this instance"
 			},
 			"InstanceAppPublicSchema": {
 				"type": "object",
@@ -33253,7 +33268,23 @@
 			"InstancePushSchema": {
 				"type": "object",
 				"properties": {
-					"public_vapid_key": {"description": "VAPID public key for web push notifications", "type": ["string", "null"]}
+					"public_vapid_key": {
+						"description": "VAPID public key for web push notifications",
+						"type": ["string", "null"]
+					},
+					"delivery_mode": {
+						"description": "How push notifications reach devices",
+						"$ref": "#/components/schemas/InstancePushDeliveryModeSchema"
+					},
+					"event_resolution_path": {
+						"description": "API path clients call to resolve the payload of a push event",
+						"type": "string"
+					},
+					"external_relay_url": {"description": "URL of the external push relay, if any", "type": ["string", "null"]},
+					"relay_signing_key_hashes": {
+						"description": "Hashes of the keys the external push relay signs with",
+						"anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]
+					}
 				},
 				"required": ["public_vapid_key"],
 				"additionalProperties": false,
@@ -33327,7 +33358,8 @@
 					"enabled": {"type": "boolean", "description": "Whether SSO is enabled for this instance"},
 					"enforced": {"type": "boolean", "description": "Whether SSO is required for all users"},
 					"display_name": {"description": "Display name of the SSO provider", "type": ["string", "null"]},
-					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"}
+					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"},
+					"available": {"description": "Whether an SSO provider is configured for this instance", "type": "boolean"}
 				},
 				"required": ["enabled", "enforced", "display_name", "redirect_uri"],
 				"additionalProperties": false,
@@ -33373,6 +33405,22 @@
 						"description": "Whether the instance sends emails (verification, password reset, etc.)"
 					},
 					"phone_verification_enabled": {"type": "boolean", "description": "Deprecated. Always false."},
+					"desktop_modules_enabled": {
+						"description": "Whether desktop clients may load downloadable modules",
+						"type": "boolean"
+					},
+					"account_deletion_grace_period_hours": {
+						"description": "Hours between a deletion request and the permanent deletion of the account",
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 8760
+					},
+					"max_background_gateway_connections": {
+						"description": "Maximum gateway connections a client may keep open for background accounts",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 64
+					},
 					"account_identity": {
 						"description": "How people sign in on this instance. Clients treat a missing value as email",
 						"$ref": "#/components/schemas/AccountIdentityModeSchema"
@@ -33415,8 +33463,10 @@
 					"api_public": {"type": "string", "description": "Base URL for public API requests"},
 					"gateway": {"type": "string", "description": "WebSocket URL for the gateway"},
 					"media": {"type": "string", "description": "Base URL for the media proxy"},
+					"upload_relay": {"description": "Base URL for proxied attachment and preview uploads", "type": "string"},
 					"static_cdn": {"type": "string", "description": "Base URL for static assets (avatars, emojis, etc.)"},
 					"marketing": {"type": "string", "description": "Base URL for the marketing website"},
+					"docs": {"description": "Base URL for the documentation website", "type": "string"},
 					"admin": {"type": "string", "description": "Base URL for the admin panel"},
 					"invite": {"type": "string", "description": "Base URL for invite links"},
 					"gift": {"type": "string", "description": "Base URL for gift links"},
@@ -33467,6 +33517,29 @@
 				"enum": ["open", "approval", "closed"],
 				"type": "string"
 			},
+			"InstancePushDeliveryModeSchema": {"type": "string", "enum": ["direct", "external_relay", "hybrid"]},
+			"InstanceAgePolicyGeoSchema": {
+				"type": "object",
+				"properties": {
+					"country_code": {"type": "string", "description": "ISO 3166-1 alpha-2 country code"},
+					"region_code": {
+						"description": "ISO 3166-2 subdivision code, or null for the whole country",
+						"type": ["string", "null"]
+					},
+					"action": {
+						"description": "Whether the region restricts or blocks access",
+						"$ref": "#/components/schemas/InstanceAgePolicyActionSchema"
+					},
+					"card_verification_available": {
+						"type": "boolean",
+						"description": "Whether card age verification is available in the region"
+					}
+				},
+				"required": ["country_code", "region_code", "action", "card_verification_available"],
+				"additionalProperties": false,
+				"description": "Age policy for one region"
+			},
+			"InstanceAgePolicyActionSchema": {"type": "string", "enum": ["restrict", "block"]},
 			"BotFlags": {
 				"type": "integer",
 				"minimum": 0,

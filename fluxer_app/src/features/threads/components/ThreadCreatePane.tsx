@@ -21,6 +21,7 @@ import {sendThreadStarter} from '@app/features/threads/utils/ThreadStarterSend';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
+import Users from '@app/features/user/state/Users';
 import * as FormUtils from '@app/lib/forms';
 import {ChannelTypes, MessagePreviewContext, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {publicThreadTypeFor, THREAD_NAME_MAX_LENGTH} from '@fluxer/constants/src/ThreadConstants';
@@ -72,6 +73,7 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 	nameRef.current = name;
 	const sourceMessage = messageId ? Messages.getMessage(parent.id, messageId) : undefined;
 	const draftKey = `thread-create:${parent.id}`;
+	const accountKey = Users.viewAccountKey;
 	const draft = Drafts.getDraft(draftKey);
 	const draftSegments = Drafts.getDraftSegments(draftKey);
 	const canPrivate =
@@ -118,7 +120,7 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 					openThread(thread);
 				})
 				.catch((error) => {
-					if (content && !Drafts.getDraft(draftKey)) DraftCommands.createDraft(draftKey, content);
+					if (content && !Drafts.getDraft(draftKey)) DraftCommands.createDraft(accountKey, draftKey, content);
 					CloudUpload.restoreAttachmentsToTextarea(nonce);
 					ToastCommands.createToast({
 						type: 'error',
@@ -177,6 +179,7 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 				</div>
 			)}
 			<LexicalChannelTextareaContent
+				accountKey={accountKey}
 				channel={parent}
 				draft={draft}
 				draftSegments={draftSegments}

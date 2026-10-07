@@ -5,7 +5,6 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {
 	PAYMENT_PROVIDER_NAME,
 	PIX_PAYMENT_METHOD,
-	PREMIUM_PRODUCT_FULL_NAME,
 	PRODUCT_NAME,
 	SUPPORT_EMAIL,
 	UPI_PAYMENT_METHOD,
@@ -19,7 +18,7 @@ import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {recordPremiumCheckoutReturnIntent} from '@app/features/premium/utils/PremiumCheckoutReturnIntent';
 import {MANAGE_SUBSCRIPTION_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
-import {getStoreName} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductFullName, getStoreName} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
@@ -276,7 +275,7 @@ export const useCheckoutActions = (
 								<GenericErrorModal
 									title={i18n._(EMAIL_VERIFICATION_REQUIRED_TITLE_DESCRIPTOR)}
 									message={i18n._(EMAIL_VERIFICATION_REQUIRED_BODY_DESCRIPTOR, {
-										premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME,
+										premiumProductFullName: getPremiumProductFullName(),
 									})}
 									data-flx="app.plutonium.use-checkout-actions.email-verification-required.generic-error-modal"
 								/>
@@ -304,7 +303,7 @@ export const useCheckoutActions = (
 							const store = PremiumState.state?.store;
 							const manageUrl = store?.provider === storeProvider ? store.manage_url : null;
 							const description = i18n._(EXISTING_STORE_SUBSCRIPTION_BODY_DESCRIPTOR, {
-								premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME,
+								premiumProductFullName: getPremiumProductFullName(),
 								storeName: getStoreName(storeProvider),
 							});
 							ModalCommands.push(
@@ -337,7 +336,7 @@ export const useCheckoutActions = (
 									<ConfirmModal
 										title={i18n._(EXISTING_SUBSCRIPTION_TITLE_DESCRIPTOR)}
 										description={i18n._(EXISTING_SUBSCRIPTION_BODY_DESCRIPTOR, {
-											premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME,
+											premiumProductFullName: getPremiumProductFullName(),
 										})}
 										primaryText={i18n._(MANAGE_SUBSCRIPTION_DESCRIPTOR)}
 										primaryVariant="primary"

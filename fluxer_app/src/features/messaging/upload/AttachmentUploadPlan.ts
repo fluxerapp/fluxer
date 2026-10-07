@@ -8,6 +8,7 @@ import {
 	uploadFileInChunks,
 } from '@app/features/messaging/upload/ChunkedAttachmentUploader';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
+import {wrapDesktopLocalUploadURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import type {ApiAttachmentMetadata} from '@app/features/messaging/utils/MessageRequestUtils';
 import {http} from '@app/features/platform/transport/RestTransport';
 
@@ -145,8 +146,9 @@ export async function uploadAttachmentsViaPlans(params: {
 		}
 		const plan = plans[planIndex];
 		if (plan.upload_mode === 'singlepart') {
-			await http.put(plan.upload_url, {
+			await http.put(wrapDesktopLocalUploadURL(plan.upload_url), {
 				body: file,
+				auth: 'none',
 				headers: {
 					'Content-Type': plan.content_type,
 				},
@@ -216,8 +218,9 @@ export async function uploadTextareaAttachmentViaPlan(params: {
 		CloudUpload.updateAttachment(channelId, attachmentId, {status: 'uploading', uploadProgress});
 	};
 	if (plan.upload_mode === 'singlepart') {
-		await http.put(plan.upload_url, {
+		await http.put(wrapDesktopLocalUploadURL(plan.upload_url), {
 			body: file,
+			auth: 'none',
 			headers: {
 				'Content-Type': plan.content_type,
 			},

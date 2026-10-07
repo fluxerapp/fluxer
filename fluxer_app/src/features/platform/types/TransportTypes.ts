@@ -26,6 +26,7 @@ interface RestRequestOptionsBase {
 	retries?: number;
 	signal?: AbortSignal;
 	onProgress?: (event: ProgressEvent) => void;
+	intercept?: RestInterceptor;
 	suppressContentBlockedModal?: boolean;
 }
 

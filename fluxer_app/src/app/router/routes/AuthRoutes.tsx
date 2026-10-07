@@ -1,25 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import * as AuthRouteRedirectPolicy from '@app/app/router/policy/AuthRouteRedirectPolicy';
+import * as ShortLinkRouteEnterPolicy from '@app/app/router/policy/ShortLinkRouteEnterPolicy';
 import {rootRoute} from '@app/app/router/routes/RootRoutes';
+import * as ShortLinkAcceptModalOpener from '@app/app/router/ShortLinkAcceptModalOpener';
 import {AuthLayout} from '@app/features/app/components/layout/AuthLayout';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {
-	type AuthRoutePage,
-	createAuthRoutePage,
-	createNamedAuthRoutePage,
-} from '@app/features/auth/flow/AuthLoadableRoutePage';
-import {isHandoffRequest} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
-import Authentication from '@app/features/auth/state/Authentication';
-import {safeRedirectTarget, safeRedirectTargetOrFallback} from '@app/features/auth/utils/SafeRedirect';
-import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
-import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
-import {createRoute} from '@app/features/platform/components/router/RouterBuilder';
-import type {RouteConfig, RouteContext} from '@app/features/platform/components/router/RouterTypes';
-import {Redirect} from '@app/features/platform/components/router/RouterTypes';
-import SessionManager from '@app/features/platform/state/AuthSession';
+import {type AuthRoutePage, createAuthRoutePage} from '@app/features/auth/flow/AuthLoadableRoutePage';
+import {createRoute, type RouteBuilder} from '@app/features/platform/components/router/RouterBuilder';
+import {NotFound, Redirect, type RouteContext} from '@app/features/platform/components/router/RouterTypes';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
-import {i18n} from '@lingui/core';
 
 const AuthorizeIPPage = createAuthRoutePage(
 	'AuthorizeIPPage',
@@ -50,8 +41,8 @@ const ResetPasswordPage = createAuthRoutePage(
 	'ResetPasswordPage',
 	() => import('@app/features/auth/components/pages/ResetPasswordPage'),
 );
-const SsoCallbackPage = createAuthRoutePage(
-	'SsoCallbackPage',
+const SSOCallbackPage = createAuthRoutePage(
+	'SSOCallbackPage',
 	() => import('@app/features/auth/components/pages/SsoCallbackPage'),
 );
 const VerifyEmailPage = createAuthRoutePage(
@@ -74,10 +65,9 @@ const InviteRegisterPage = createAuthRoutePage(
 	'InviteRegisterPage',
 	() => import('@app/features/invite/components/pages/InviteRegisterPage'),
 );
-const ReportPage = createNamedAuthRoutePage('ReportPage', async () => {
-	const module = await import('@app/features/moderation/components/pages/ReportPage');
-	return module.ReportPage;
-});
+const ReportPage = createAuthRoutePage('ReportPage', async () => ({
+	default: (await import('@app/features/moderation/components/pages/ReportPage')).ReportPage,
+}));
 const ThemeLoginPage = createAuthRoutePage(
 	'ThemeLoginPage',
 	() => import('@app/features/theme/components/pages/ThemeLoginPage'),
@@ -87,81 +77,23 @@ const ThemeRegisterPage = createAuthRoutePage(
 	() => import('@app/features/theme/components/pages/ThemeRegisterPage'),
 );
 
-const currentRedirectTarget = (fallback: string): string => {
-	const qp = new URLSearchParams(window.location.search);
-	return safeRedirectTargetOrFallback(qp.get('redirect_to'), fallback);
-};
-
-const resolveToPath = (to: Redirect['to']): string => {
-	if (typeof to === 'string') {
-		return to;
-	}
-	const url = new URL(to.to, window.location.origin);
-	if (to.search) {
-		url.search = '';
-		for (const [k, v] of Object.entries(to.search)) {
-			if (v === undefined) continue;
-			if (v === null) {
-				url.searchParams.set(k, '');
-			} else {
-				url.searchParams.set(k, String(v));
-			}
-		}
-	}
-	if (to.hash) {
-		url.hash = to.hash.startsWith('#') ? to.hash : `#${to.hash}`;
-	}
-	return url.pathname + url.search + url.hash;
-};
-
-type AuthRedirectHandler = (ctx: RouteContext) => Redirect | undefined;
-
-const redirectWhenEmailsDisabled: RouteConfig['onEnter'] = () => {
-	if (!RuntimeConfig.emailsEnabled) {
-		return new Redirect(Routes.LOGIN);
-	}
-	return undefined;
-};
-
-const redirectWhenPasswordResetUnavailable: RouteConfig['onEnter'] = () => {
-	if (!RuntimeConfig.emailsEnabled && !RuntimeConfig.usesUsernameSignIn) {
-		return new Redirect(Routes.LOGIN);
-	}
-	return undefined;
-};
-
-const whenAuthenticated = (handler: AuthRedirectHandler) => {
-	return (ctx: RouteContext): Redirect | undefined => {
-		const execute = (): Redirect | undefined => handler(ctx);
-		if (SessionManager.isInitialized) {
-			return Authentication.isAuthenticated ? execute() : undefined;
-		}
-		void SessionManager.initialize().then(() => {
-			if (Authentication.isAuthenticated) {
-				const res = execute();
-				if (res instanceof Redirect) {
-					RouterUtils.replaceWith(resolveToPath(res.to));
-				}
-			}
-		});
-		return undefined;
-	};
-};
 const authLayoutRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	id: 'authLayout',
 	layout: ({children}) => <AuthLayout data-flx="app.router.auth-routes.layout.auth-layout">{children}</AuthLayout>,
 });
 
+type AuthPageEnterHandler = (context: RouteContext) => Redirect | NotFound | undefined;
+
 interface AuthPageRouteOptions {
 	id: string;
 	path: string;
 	page: AuthRoutePage;
 	dataFlx: string;
-	onEnter?: RouteConfig['onEnter'];
+	onEnter?: AuthPageEnterHandler;
 }
 
-function createAuthPageRoute({id, path, page: Page, dataFlx, onEnter}: AuthPageRouteOptions) {
+function createAuthPageRoute({id, path, page: Page, dataFlx, onEnter}: AuthPageRouteOptions): RouteBuilder {
 	return createRoute({
 		getParentRoute: () => authLayoutRoute,
 		id,
@@ -172,7 +104,7 @@ function createAuthPageRoute({id, path, page: Page, dataFlx, onEnter}: AuthPageR
 	});
 }
 
-function createAuthRedirectRoute(id: string, path: string) {
+function createAuthRedirectRoute(id: string, path: string): RouteBuilder {
 	return createRoute({
 		getParentRoute: () => authLayoutRoute,
 		id,
@@ -181,25 +113,84 @@ function createAuthRedirectRoute(id: string, path: string) {
 	});
 }
 
+interface ShortLinkRoutePaths {
+	readonly register: string;
+	readonly login: string;
+}
+
+interface ShortLinkAuthRouteOptions {
+	id: string;
+	dataFlxPrefix: string;
+	paths: ShortLinkRoutePaths;
+	registerPage: AuthRoutePage;
+	loginPage: AuthRoutePage;
+	handlers: {readonly onRegisterEnter: AuthPageEnterHandler; readonly onLoginEnter: AuthPageEnterHandler};
+}
+
+function createShortLinkAuthRoutes({
+	id,
+	dataFlxPrefix,
+	paths,
+	registerPage,
+	loginPage,
+	handlers,
+}: ShortLinkAuthRouteOptions): Array<RouteBuilder> {
+	return [
+		createAuthPageRoute({
+			id: `${id}Register`,
+			path: paths.register,
+			page: registerPage,
+			dataFlx: `${dataFlxPrefix}-register-page`,
+			onEnter: handlers.onRegisterEnter,
+		}),
+		createAuthPageRoute({
+			id: `${id}Login`,
+			path: paths.login,
+			page: loginPage,
+			dataFlx: `${dataFlxPrefix}-login-page`,
+			onEnter: handlers.onLoginEnter,
+		}),
+	];
+}
+
+const inviteRouteEnterHandlers = ShortLinkRouteEnterPolicy.createHandlers({
+	paramName: 'code',
+	openAcceptModal: ShortLinkAcceptModalOpener.openInvite,
+});
+const giftShortLinkHandlers = ShortLinkRouteEnterPolicy.createHandlers({
+	paramName: 'code',
+	openAcceptModal: ShortLinkAcceptModalOpener.openGift,
+});
+
+function whenGiftingAvailable(handler: AuthRouteRedirectPolicy.AuthRouteEnterHandler): AuthPageEnterHandler {
+	return (context: RouteContext): Redirect | NotFound | undefined => {
+		if (RuntimeConfig.getSnapshotOrNull() !== null && !shouldShowPremiumFeatures()) {
+			return new NotFound();
+		}
+		return handler(context);
+	};
+}
+
+const giftRouteEnterHandlers = {
+	onRegisterEnter: whenGiftingAvailable(giftShortLinkHandlers.onRegisterEnter),
+	onLoginEnter: whenGiftingAvailable(giftShortLinkHandlers.onLoginEnter),
+};
+const themeRouteEnterHandlers = ShortLinkRouteEnterPolicy.createHandlers({
+	paramName: 'themeId',
+	openAcceptModal: ShortLinkAcceptModalOpener.openTheme,
+});
+
 const loginRoute = createAuthPageRoute({
 	id: 'login',
 	path: '/login',
 	page: LoginPage,
 	dataFlx: 'app.router.auth-routes.login-page',
-	onEnter: whenAuthenticated(() => {
-		const search = window.location.search;
-		const qp = new URLSearchParams(search);
-		if (isHandoffRequest(qp)) {
-			return undefined;
-		}
-		const redirectTo = safeRedirectTarget(qp.get('redirect_to'));
-		return new Redirect(redirectTo || Routes.ME);
-	}),
+	onEnter: AuthRouteRedirectPolicy.whenAuthenticated(AuthRouteRedirectPolicy.resolveAuthenticatedLoginEntry),
 });
 const ssoCallbackRoute = createAuthPageRoute({
 	id: 'ssoCallback',
 	path: Routes.SSO_CALLBACK,
-	page: SsoCallbackPage,
+	page: SSOCallbackPage,
 	dataFlx: 'app.router.auth-routes.sso-callback-page',
 });
 const inviteBaseRoute = createAuthRedirectRoute('inviteBase', '/invite');
@@ -216,137 +207,58 @@ const oauthAuthorizeRoute = createAuthPageRoute({
 	path: Routes.OAUTH_AUTHORIZE,
 	page: OAuthAuthorizePage,
 	dataFlx: 'app.router.auth-routes.o-auth-authorize-page',
-	onEnter: () => {
-		const current = window.location.pathname + window.location.search;
-		if (!SessionManager.isInitialized) {
-			void SessionManager.initialize().then(() => {
-				if (!Authentication.isAuthenticated) {
-					RouterUtils.replaceWith(setPathQueryParams(Routes.LOGIN, {redirect_to: current}));
-				}
-			});
-			return undefined;
-		}
-		if (!Authentication.isAuthenticated) {
-			return new Redirect(setPathQueryParams(Routes.LOGIN, {redirect_to: current}));
-		}
-		return undefined;
-	},
+	onEnter: AuthRouteRedirectPolicy.requireAuthentication,
 });
-const inviteRegisterRoute = createAuthPageRoute({
-	id: 'inviteRegister',
-	path: '/invite/:code',
-	page: InviteRegisterPage,
-	dataFlx: 'app.router.auth-routes.invite-register-page',
-	onEnter: whenAuthenticated((ctx) => {
-		const code = ctx.params['code'];
-		if (code) {
-			void import('@app/features/invite/commands/InviteCommands').then((commands) => {
-				commands.openAcceptModal(code);
-			});
-		}
-		return new Redirect(currentRedirectTarget(Routes.ME));
-	}),
+const inviteRoutes = createShortLinkAuthRoutes({
+	id: 'invite',
+	dataFlxPrefix: 'app.router.auth-routes.invite',
+	paths: {register: Routes.INVITE_REGISTER, login: Routes.INVITE_LOGIN},
+	registerPage: InviteRegisterPage,
+	loginPage: InviteLoginPage,
+	handlers: inviteRouteEnterHandlers,
 });
-const inviteLoginRoute = createAuthPageRoute({
-	id: 'inviteLogin',
-	path: '/invite/:code/login',
-	page: InviteLoginPage,
-	dataFlx: 'app.router.auth-routes.invite-login-page',
-	onEnter: whenAuthenticated((ctx) => {
-		const qp = new URLSearchParams(window.location.search);
-		if (isHandoffRequest(qp)) {
-			return undefined;
-		}
-		const code = ctx.params['code'];
-		if (code) {
-			void import('@app/features/invite/commands/InviteCommands').then((commands) => {
-				commands.openAcceptModal(code);
-			});
-		}
-		return new Redirect(currentRedirectTarget(Routes.ME));
-	}),
-});
-const giftRegisterRoute = createAuthPageRoute({
-	id: 'giftRegister',
-	path: '/gift/:code',
-	page: GiftRegisterPage,
-	dataFlx: 'app.router.auth-routes.gift-register-page',
-	onEnter: whenAuthenticated((ctx) => {
-		const code = ctx.params['code'];
-		if (code) {
-			void import('@app/features/gift/commands/GiftCommands').then((commands) => {
-				commands.openAcceptModal(code);
-			});
-		}
-		return new Redirect(currentRedirectTarget(Routes.ME));
-	}),
-});
-const giftLoginRoute = createAuthPageRoute({
-	id: 'giftLogin',
-	path: '/gift/:code/login',
-	page: GiftLoginPage,
-	dataFlx: 'app.router.auth-routes.gift-login-page',
-	onEnter: whenAuthenticated((ctx) => {
-		const qp = new URLSearchParams(window.location.search);
-		if (isHandoffRequest(qp)) {
-			return undefined;
-		}
-		const code = ctx.params['code'];
-		if (code) {
-			void import('@app/features/gift/commands/GiftCommands').then((commands) => {
-				commands.openAcceptModal(code);
-			});
-		}
-		return new Redirect(currentRedirectTarget(Routes.ME));
-	}),
+const giftRoutes = createShortLinkAuthRoutes({
+	id: 'gift',
+	dataFlxPrefix: 'app.router.auth-routes.gift',
+	paths: {register: Routes.GIFT_REGISTER, login: Routes.GIFT_LOGIN},
+	registerPage: GiftRegisterPage,
+	loginPage: GiftLoginPage,
+	handlers: giftRouteEnterHandlers,
 });
 const forgotPasswordRoute = createAuthPageRoute({
 	id: 'forgotPassword',
 	path: Routes.FORGOT_PASSWORD,
 	page: ForgotPasswordPage,
 	dataFlx: 'app.router.auth-routes.forgot-password-page',
-	onEnter: (ctx) => {
-		if (RuntimeConfig.usesUsernameSignIn) {
-			return new Redirect(Routes.RECOVER_ACCOUNT);
-		}
-		if (!RuntimeConfig.emailsEnabled) {
-			return new Redirect(Routes.LOGIN);
-		}
-		return whenAuthenticated(() => new Redirect(Routes.ME))(ctx);
-	},
+	onEnter: AuthRouteRedirectPolicy.resolveForgotPasswordEntry,
 });
 const recoverAccountRoute = createAuthPageRoute({
 	id: 'recoverAccount',
 	path: Routes.RECOVER_ACCOUNT,
 	page: RecoverAccountPage,
 	dataFlx: 'app.router.auth-routes.recover-account-page',
-	onEnter: (ctx) => {
-		if (!RuntimeConfig.usesUsernameSignIn) {
-			return new Redirect(Routes.LOGIN);
-		}
-		return whenAuthenticated(() => new Redirect(Routes.ME))(ctx);
-	},
+	onEnter: AuthRouteRedirectPolicy.resolveRecoverAccountEntry,
 });
 const resetPasswordRoute = createAuthPageRoute({
 	id: 'resetPassword',
 	path: Routes.RESET_PASSWORD,
 	page: ResetPasswordPage,
 	dataFlx: 'app.router.auth-routes.reset-password-page',
-	onEnter: redirectWhenPasswordResetUnavailable,
+	onEnter: AuthRouteRedirectPolicy.resolvePasswordResetEntry,
 });
 const emailRevertRoute = createAuthPageRoute({
 	id: 'emailRevert',
 	path: Routes.EMAIL_REVERT,
 	page: EmailRevertPage,
 	dataFlx: 'app.router.auth-routes.email-revert-page',
-	onEnter: redirectWhenEmailsDisabled,
+	onEnter: AuthRouteRedirectPolicy.resolveEmailFeatureEntry,
 });
 const verifyEmailRoute = createAuthPageRoute({
 	id: 'verifyEmail',
 	path: Routes.VERIFY_EMAIL,
 	page: VerifyEmailPage,
 	dataFlx: 'app.router.auth-routes.verify-email-page',
-	onEnter: redirectWhenEmailsDisabled,
+	onEnter: AuthRouteRedirectPolicy.resolveEmailFeatureEntry,
 });
 const authorizeIPRoute = createAuthPageRoute({
 	id: 'authorizeIP',
@@ -366,34 +278,14 @@ const themeRegisterRoute = createAuthPageRoute({
 	path: Routes.THEME_REGISTER,
 	page: ThemeRegisterPage,
 	dataFlx: 'app.router.auth-routes.theme-register-page',
-	onEnter: whenAuthenticated((ctx) => {
-		const themeId = ctx.params.themeId;
-		if (themeId) {
-			void import('@app/features/theme/commands/ThemeCommands').then((commands) => {
-				commands.openAcceptModal(themeId, i18n);
-			});
-		}
-		return new Redirect(currentRedirectTarget(Routes.ME));
-	}),
+	onEnter: themeRouteEnterHandlers.onRegisterEnter,
 });
 const themeLoginRoute = createAuthPageRoute({
 	id: 'themeLogin',
 	path: Routes.THEME_LOGIN,
 	page: ThemeLoginPage,
 	dataFlx: 'app.router.auth-routes.theme-login-page',
-	onEnter: whenAuthenticated((ctx) => {
-		const qp = new URLSearchParams(window.location.search);
-		if (isHandoffRequest(qp)) {
-			return undefined;
-		}
-		const themeId = ctx.params.themeId;
-		if (themeId) {
-			void import('@app/features/theme/commands/ThemeCommands').then((commands) => {
-				commands.openAcceptModal(themeId, i18n);
-			});
-		}
-		return new Redirect(currentRedirectTarget(Routes.ME));
-	}),
+	onEnter: themeRouteEnterHandlers.onLoginEnter,
 });
 
 export const authRouteTree = authLayoutRoute.addChildren([
@@ -404,8 +296,8 @@ export const authRouteTree = authLayoutRoute.addChildren([
 	inviteBaseRoute,
 	giftBaseRoute,
 	themeBaseRoute,
-	inviteRegisterRoute,
-	inviteLoginRoute,
+	...inviteRoutes,
+	...giftRoutes,
 	themeRegisterRoute,
 	themeLoginRoute,
 	forgotPasswordRoute,
@@ -416,5 +308,4 @@ export const authRouteTree = authLayoutRoute.addChildren([
 	authorizeIPRoute,
 	pendingRoute,
 	reportRoute,
-	...(shouldShowPremiumFeatures() ? [giftRegisterRoute, giftLoginRoute] : []),
 ]);

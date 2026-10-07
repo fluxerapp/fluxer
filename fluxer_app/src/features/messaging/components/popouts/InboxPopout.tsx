@@ -10,6 +10,7 @@ import Inbox, {type InboxTab} from '@app/features/inbox/state/Inbox';
 import styles from '@app/features/messaging/components/popouts/InboxPopout.module.css';
 import {RecentMentionsContent} from '@app/features/messaging/components/popouts/RecentMentionsContent';
 import {SavedMessagesContent} from '@app/features/messaging/components/popouts/SavedMessagesContent';
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -111,7 +112,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 	const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const {size, getHandleProps} = useResizablePane(containerRef, {
-		storageKey: 'fluxer:ui:inbox-popout-size',
+		storageKey: AppStorageKey.UI_INBOX_POPOUT_SIZE,
 		defaultSize: INBOX_POPOUT_DEFAULT_SIZE,
 		minSize: INBOX_POPOUT_MIN_SIZE,
 		viewportPadding: RESIZABLE_PANE_DEFAULT_VIEWPORT_PADDING,

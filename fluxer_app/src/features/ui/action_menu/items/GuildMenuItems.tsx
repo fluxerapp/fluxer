@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GuildSettingsModal, UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {EVERYONE_MENTION, HERE_MENTION} from '@app/features/app/config/I18nDisplayConstants';
 import Authentication from '@app/features/auth/state/Authentication';
 import {getMuteDurationOptions} from '@app/features/channel/components/MuteOptions';
@@ -9,7 +10,6 @@ import Channels from '@app/features/channel/state/Channels';
 import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import {GuildNotificationSettingsModal} from '@app/features/guild/components/modals/GuildNotificationSettingsModal';
 import {GuildPrivacySettingsModal} from '@app/features/guild/components/modals/GuildPrivacySettingsModal';
-import {GuildSettingsModal} from '@app/features/guild/components/modals/GuildSettingsModal';
 import {useLeaveGuild} from '@app/features/guild/hooks/useLeaveGuild';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {isStockCommunityGuild} from '@app/features/guild/utils/GuildCommunityUtils';
@@ -55,7 +55,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {
 	GUILD_SETTINGS_LABEL_DESCRIPTOR,
 	type GuildSettingsTab,
@@ -374,13 +373,16 @@ export const CommunitySettingsMenuItem: React.FC<GuildMenuItemProps> = observer(
 	const handleOpenSettings = useCallback(
 		(tab: GuildSettingsTab) => {
 			ModalCommands.push(
-				modal(() => (
-					<GuildSettingsModal
-						guildId={guild.id}
-						initialTab={tab.type}
-						data-flx="ui.action-menu.items.guild-menu-items.handle-open-settings.guild-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<GuildSettingsModal
+							guildId={guild.id}
+							initialTab={tab.type}
+							data-flx="ui.action-menu.items.guild-menu-items.handle-open-settings.guild-settings-modal"
+						/>
+					),
+					'guild-settings',
+				),
 			);
 			onClose();
 		},
@@ -452,13 +454,16 @@ export const EditCommunityProfileMenuItem: React.FC<GuildMenuItemProps> = observ
 	const currentUser = Users.getCurrentUser();
 	const handleEditProfile = useCallback(() => {
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialGuildId={guild.id}
-					initialTab="my_profile"
-					data-flx="ui.action-menu.items.guild-menu-items.handle-edit-profile.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialGuildId={guild.id}
+						initialTab="my_profile"
+						data-flx="ui.action-menu.items.guild-menu-items.handle-edit-profile.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 		onClose();
 	}, [guild.id, onClose]);

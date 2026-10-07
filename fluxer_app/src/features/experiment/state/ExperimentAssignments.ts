@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {http} from '@app/features/platform/transport/RestTransport';
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -332,5 +333,7 @@ class ExperimentAssignmentsStore {
 }
 
 export const ExperimentAssignments = new ExperimentAssignmentsStore();
+
+ResettableStates.register(ExperimentAssignments, ExperimentAssignments.reset);
 
 export default ExperimentAssignments;

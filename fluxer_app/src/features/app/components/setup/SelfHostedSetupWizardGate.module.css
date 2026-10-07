@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .backdrop {
+	isolation: isolate;
 	min-height: 100vh;
 	background:
 		radial-gradient(ellipse at 50% 0%, rgba(75, 168, 255, 0.34), transparent 58%),
@@ -89,7 +90,7 @@
 	display: grid;
 	place-items: center;
 	width: 100%;
-	min-height: 5.1rem;
+	height: 7.5rem;
 	overflow: hidden;
 }
 
@@ -97,7 +98,7 @@
 .welcomeWordMeasure {
 	display: inline-block;
 	margin: 0;
-	font-size: 3.35rem;
+	font-size: 4.75rem;
 	font-weight: 850;
 	line-height: 1;
 	letter-spacing: 0;
@@ -374,7 +375,7 @@
 
 	.welcomeWord,
 	.welcomeWordMeasure {
-		font-size: 2.65rem;
+		font-size: 3.4rem;
 	}
 
 	.footer {

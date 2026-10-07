@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import styles from '@app/features/channel/components/barriers/BarrierComponents.module.css';
@@ -15,7 +16,6 @@ import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {BouncedEmailChangeModal} from '@app/features/user/components/modals/BouncedEmailChangeModal';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import {ACCOUNT_LIMITED_NOTICE_DESCRIPTOR} from '@app/features/user/utils/AccountLimitUtils';
 import {msg} from '@lingui/core/macro';
@@ -184,15 +184,17 @@ export const UnverifiedEmailBarrier = observer(({onAction}: BarrierProps) => {
 						onAction?.();
 						const bounced = Users.currentUser?.emailBounced === true;
 						ModalCommands.push(
-							modal(() =>
-								bounced ? (
-									<BouncedEmailChangeModal data-flx="channel.barriers.barrier-components.unverified-email-barrier.bounced-email-change-modal" />
-								) : (
-									<UserSettingsModal
-										initialTab="account_security"
-										data-flx="channel.barriers.barrier-components.unverified-email-barrier.user-settings-modal"
-									/>
-								),
+							modal(
+								() =>
+									bounced ? (
+										<BouncedEmailChangeModal data-flx="channel.barriers.barrier-components.unverified-email-barrier.bounced-email-change-modal" />
+									) : (
+										<UserSettingsModal
+											initialTab="account_security"
+											data-flx="channel.barriers.barrier-components.unverified-email-barrier.user-settings-modal"
+										/>
+									),
+								bounced ? undefined : 'user-settings',
 							),
 						);
 					}}

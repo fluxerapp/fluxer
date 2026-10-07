@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PREMIUM_PRODUCT_FULL_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductFullName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {guessPlatform, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {
 	ADVANCED_SETTINGS_TAG_LABELS,
@@ -184,7 +183,7 @@ export interface SettingsTab {
 	iconWeight?: IconWeight;
 }
 
-type SettingsTabLabel = MessageDescriptor | string;
+type SettingsTabLabel = MessageDescriptor | string | (() => string);
 
 interface SettingsTabDescriptor {
 	type: UserSettingsTabType;
@@ -253,7 +252,7 @@ const ALL_TABS_DESCRIPTORS: Array<SettingsTabDescriptor> = [
 	{
 		type: 'plutonium',
 		category: 'billing',
-		label: PREMIUM_PRODUCT_FULL_NAME,
+		label: getPremiumProductFullName,
 		icon: CrownIcon,
 	},
 	{
@@ -347,7 +346,9 @@ export function getUserSettingsTabLabel(i18n: I18n, tabType: UserSettingsTabType
 	const tab = ALL_TABS_DESCRIPTORS.find((candidate) => candidate.type === tabType);
 	if (!tab) return '';
 	if (tab.type === 'desktop_settings') return getDesktopSettingsTabLabel(i18n);
-	return typeof tab.label === 'string' ? tab.label : i18n._(tab.label);
+	if (typeof tab.label === 'string') return tab.label;
+	if (typeof tab.label === 'function') return tab.label();
+	return i18n._(tab.label);
 }
 
 export function getUserSettingsTabIconDescriptor(

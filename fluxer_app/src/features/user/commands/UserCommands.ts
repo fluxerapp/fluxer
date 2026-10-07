@@ -415,7 +415,7 @@ export async function completePasswordChange(
 		const response = await http.post<PasswordChangeCompleteResponse>(Endpoints.USER_PASSWORD_CHANGE_COMPLETE, {
 			body: completePasswordChangeBody(ticket, verificationProof, newPassword),
 		});
-		SessionManager.setToken(response.body.token);
+		await SessionManager.setToken(response.body.token);
 		GatewayConnection.setToken(response.body.token);
 		AuthSession.handleAuthSessionChange(response.body.auth_session_id_hash);
 		logger.info('Password changed successfully');

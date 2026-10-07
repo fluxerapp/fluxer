@@ -2,6 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import {GuildChannelRouter} from '@app/app/router/components/GuildChannelRouter';
+import {requireAuthentication, whenAuthenticated} from '@app/app/router/policy/AuthRouteRedirectPolicy';
 import {rootRoute} from '@app/app/router/routes/RootRoutes';
 import {AppBadge} from '@app/features/app/components/AppNotificationBadge';
 import {AppLayout} from '@app/features/app/components/layout/AppLayout';
@@ -9,14 +10,15 @@ import {DiscoveryLayout} from '@app/features/app/components/layout/DiscoveryLayo
 import {FavoritesLayout} from '@app/features/app/components/layout/FavoritesLayout';
 import {GuildsLayout} from '@app/features/app/components/layout/GuildsLayout';
 import {NotFoundPage} from '@app/features/app/components/pages/NotFoundPage';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import Authentication from '@app/features/auth/state/Authentication';
+import {
+	AuthenticatedRuntimeInvariantError,
+	readAuthenticatedRuntimeContext,
+} from '@app/features/auth/state/AuthenticatedRuntime';
 import {ChannelIndexPage} from '@app/features/channel/components/ChannelIndexPage';
 import {ChannelLayout} from '@app/features/channel/components/ChannelLayout';
 import {DMLayout} from '@app/features/channel/components/direct_message/DirectMessageLayout';
 import Channels from '@app/features/channel/state/Channels';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
-import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {navigateToLinkedUserProfile} from '@app/features/navigation/utils/DeepLinkUtils';
 import {getDirectMessagesFallbackPath} from '@app/features/navigation/utils/DefaultLandingUtils';
@@ -34,9 +36,17 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {observer} from 'mobx-react-lite';
-import {useEffect, useState} from 'react';
+import {type ReactNode, useEffect, useState} from 'react';
 
 type AppRouteComponentProps = Record<string, unknown>;
+
+function authenticatedRuntimeDisablesDirectMessages(): boolean {
+	const runtimeContext = readAuthenticatedRuntimeContext();
+	if (runtimeContext === null) {
+		throw new AuthenticatedRuntimeInvariantError('An authenticated route requires an active account runtime');
+	}
+	return runtimeContext.runtime.community.direct_messages_disabled;
+}
 
 const YouPage = createNamedLoadableComponent<AppRouteComponentProps>({
 	displayName: 'YouPage',
@@ -77,24 +87,24 @@ const StatusChangeBottomSheet = createNamedLoadableComponent<AppRouteComponentPr
 		(await import('@app/features/user/components/modals/StatusChangeBottomSheet')).StatusChangeBottomSheet,
 });
 
-const appLayoutRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	id: 'appLayout',
-	onEnter: () => {
-		if (!SessionManager.isInitialized) {
-			return undefined;
-		}
-		if (!Authentication.isAuthenticated) {
-			const current = window.location.pathname + window.location.search;
-			return new Redirect(setPathQueryParams(Routes.LOGIN, {redirect_to: current}));
-		}
-		return undefined;
-	},
-	layout: ({children}) => (
+const ProtectedAppLayout = observer(({children}: {children: ReactNode}) => {
+	if (readAuthenticatedRuntimeContext() === null && !SessionManager.isSwitching) {
+		return null;
+	}
+	return (
 		<>
 			<AppBadge data-flx="app.router.app-routes.layout.app-badge" />
 			<AppLayout data-flx="app.router.app-routes.layout.app-layout">{children}</AppLayout>
 		</>
+	);
+});
+
+const appLayoutRoute = createRoute({
+	getParentRoute: () => rootRoute,
+	id: 'appLayout',
+	onEnter: requireAuthentication,
+	layout: ({children}) => (
+		<ProtectedAppLayout data-flx="app.router.app-routes.layout.protected-app-layout">{children}</ProtectedAppLayout>
 	),
 });
 const guildsLayoutRoute = createRoute({
@@ -162,6 +172,7 @@ export const premiumCallbackRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	id: 'premiumCallback',
 	path: Routes.PREMIUM_CALLBACK,
+	onEnter: requireAuthentication,
 	preload: PremiumCallbackPage.preload,
 	component: () => <PremiumCallbackPage data-flx="app.router.app-routes.premium-callback-page" />,
 });
@@ -197,12 +208,12 @@ const meRoute = createRoute({
 	getParentRoute: () => guildsLayoutRoute,
 	id: 'me',
 	path: '/channels/@me',
-	onEnter: () => {
-		if (RuntimeConfig.directMessagesDisabled) {
+	onEnter: whenAuthenticated(() => {
+		if (authenticatedRuntimeDisablesDirectMessages()) {
 			return new Redirect(getDirectMessagesFallbackPath());
 		}
 		return undefined;
-	},
+	}),
 	component: observer(() => {
 		const isMobileLayout = MobileLayout.enabled;
 		useEffect(() => {
@@ -297,9 +308,9 @@ const channelRoute = createRoute({
 	getParentRoute: () => channelsRoute,
 	id: 'channel',
 	path: '/channels/:guildId/:channelId',
-	onEnter: (ctx) => {
+	onEnter: whenAuthenticated((ctx) => {
 		const {guildId, channelId} = ctx.params;
-		if (guildId === ME && RuntimeConfig.directMessagesDisabled) {
+		if (guildId === ME && authenticatedRuntimeDisablesDirectMessages()) {
 			return new Redirect(getDirectMessagesFallbackPath());
 		}
 		const channel = Channels.getChannel(channelId);
@@ -307,7 +318,7 @@ const channelRoute = createRoute({
 			return new Redirect(Routes.guildChannel(guildId));
 		}
 		return undefined;
-	},
+	}),
 	component: () => (
 		<ChannelLayout data-flx="app.router.app-routes.channel-layout--2">
 			<ChannelIndexPage data-flx="app.router.app-routes.channel-index-page--2" />
@@ -318,9 +329,9 @@ const messageRoute = createRoute({
 	getParentRoute: () => channelRoute,
 	id: 'message',
 	path: '/channels/:guildId/:channelId/:messageId',
-	onEnter: (ctx) => {
+	onEnter: whenAuthenticated((ctx) => {
 		const {guildId, channelId} = ctx.params;
-		if (guildId === ME && RuntimeConfig.directMessagesDisabled) {
+		if (guildId === ME && authenticatedRuntimeDisablesDirectMessages()) {
 			return new Redirect(getDirectMessagesFallbackPath());
 		}
 		const channel = Channels.getChannel(channelId);
@@ -328,7 +339,7 @@ const messageRoute = createRoute({
 			return new Redirect(Routes.guildChannel(guildId));
 		}
 		return undefined;
-	},
+	}),
 	component: () => (
 		<ChannelLayout data-flx="app.router.app-routes.channel-layout--3">
 			<ChannelIndexPage data-flx="app.router.app-routes.channel-index-page--3" />

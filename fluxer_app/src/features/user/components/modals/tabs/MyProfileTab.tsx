@@ -4,7 +4,6 @@ import {EmailVerificationAlert} from '@app/features/app/components/dialogs/compo
 import {UnclaimedAccountAlert} from '@app/features/app/components/dialogs/components/UnclaimedAccountAlert';
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {SettingsTabContainer} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
@@ -19,7 +18,7 @@ import {convertMarkdownToSegments} from '@app/features/messaging/utils/MarkdownT
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import {Form} from '@app/features/ui/components/form/Form';
@@ -756,7 +755,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 									? i18n._(VERIFY_YOUR_EMAIL_BEFORE_CHANGING_YOUR_COMMUNITY_NICKNAME_DESCRIPTOR)
 									: showPremiumFeatures
 										? i18n._(VERIFY_YOUR_EMAIL_BEFORE_CHANGING_YOUR_USERNAME_DISPLAY_DESCRIPTOR, {
-												premiumProductName: PREMIUM_PRODUCT_NAME,
+												premiumProductName: getPremiumProductName(),
 											})
 										: i18n._(VERIFY_YOUR_EMAIL_BEFORE_EDITING_YOUR_PROFILE_YOU_DESCRIPTOR)}
 							</EmailVerificationAlert>

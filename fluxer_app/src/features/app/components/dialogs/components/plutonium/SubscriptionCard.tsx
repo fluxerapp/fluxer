@@ -6,11 +6,7 @@ import {useSubscriptionActions} from '@app/features/app/components/dialogs/compo
 import type {GracePeriodInfo} from '@app/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionStatus';
 import statusStyles from '@app/features/app/components/dialogs/components/plutonium/PurchaseHistoryStatus.module.css';
 import styles from '@app/features/app/components/dialogs/components/plutonium/SubscriptionCard.module.css';
-import {
-	PAYMENT_PROVIDER_NAME,
-	PREMIUM_PRODUCT_FULL_NAME,
-	PREMIUM_PRODUCT_NAME,
-} from '@app/features/app/config/I18nDisplayConstants';
+import {PAYMENT_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {JOIN_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {
@@ -18,7 +14,7 @@ import {
 	MANAGE_SUBSCRIPTION_DESCRIPTOR,
 	PREMIUM_SUBSCRIPTION_DESCRIPTOR,
 } from '@app/features/premium/utils/PremiumMessageDescriptors';
-import {getStoreName} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductFullName, getPremiumProductName, getStoreName} from '@app/features/premium/utils/PremiumUtils';
 import {formatMinorUnitPrice} from '@app/features/premium/utils/PricingUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -195,7 +191,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 			purchaseDisabledTooltip != null
 				? () => purchaseDisabledTooltip
 				: i18n._(CLAIM_ACCOUNT_TO_PURCHASE_OR_REDEEM_PREMIUM_DESCRIPTOR, {
-						premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME,
+						premiumProductFullName: getPremiumProductFullName(),
 					});
 		const targetBillingCycle = billingCycle === 'monthly' ? 'yearly' : billingCycle === 'yearly' ? 'monthly' : null;
 		const effectiveMonthlyPrice =
@@ -422,7 +418,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 								{isVisionary ? (
 									<Trans>Visionary</Trans>
 								) : (
-									i18n._(PREMIUM_SUBSCRIPTION_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})
+									i18n._(PREMIUM_SUBSCRIPTION_DESCRIPTOR, {premiumProductName: getPremiumProductName()})
 								)}
 							</h3>
 							<span className={badgeClass} data-flx="app.plutonium.subscription-card.badge">

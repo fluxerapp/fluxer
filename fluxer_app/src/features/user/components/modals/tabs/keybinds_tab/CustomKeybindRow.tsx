@@ -7,6 +7,7 @@ import Keybind, {
 	type KeybindCommand,
 	type KeyCombo,
 } from '@app/features/input/state/InputKeybind';
+import {resolveKeybindCommand} from '@app/features/input/state/input_keybind/KeybindCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {MoreOptionsVerticalIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
@@ -56,7 +57,8 @@ export const CustomKeybindRow = observer(
 		conflictLabel: string | null;
 	}) => {
 		const {i18n} = useLingui();
-		const options = useAssignableActionOptions(entry.action);
+		const entryAction = resolveKeybindCommand(entry.action);
+		const options = useAssignableActionOptions(entryAction);
 		const handleAction = (action: KeybindCommand | null) => {
 			Keybind.setCustomKeybindAction(entry.id, action);
 		};
@@ -72,7 +74,7 @@ export const CustomKeybindRow = observer(
 		const openRowMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
 			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
 				<>
-					{entry.action && Keybind.isActionGlobalCapable(entry.action) && !GlobalShortcuts.isPortalBackend ? (
+					{entryAction && Keybind.isActionGlobalCapable(entryAction) && !GlobalShortcuts.isPortalBackend ? (
 						<MenuGroup data-flx="user.keybinds-tab.open-row-menu.global-menu-group">
 							<CheckboxItem
 								checked={entry.combo.global === true}
@@ -112,7 +114,7 @@ export const CustomKeybindRow = observer(
 							<Trans>Action</Trans>
 						</div>
 						<ActionDropdown
-							value={entry.action}
+							value={entryAction}
 							options={options}
 							onChange={handleAction}
 							ariaLabel={i18n._(CUSTOM_SHORTCUT_ACTION_DESCRIPTOR)}
@@ -121,7 +123,7 @@ export const CustomKeybindRow = observer(
 					</div>
 					<KeybindRecorder
 						label={<Trans>Shortcut</Trans>}
-						action={entry.action ?? 'voice_push_to_talk'}
+						action={entryAction ?? 'voice_push_to_talk'}
 						value={entry.combo}
 						onChange={handleCombo}
 						onClear={handleClear}
@@ -149,13 +151,13 @@ export const CustomKeybindRow = observer(
 						</button>
 					</div>
 				</div>
-				{!entry.action ? (
+				{entryAction === null ? (
 					<div className={styles.customHint} data-flx="user.keybinds-tab.custom-keybind-row.custom-hint">
 						<Trans>Choose an action.</Trans>
 					</div>
 				) : (
 					<SystemShortcutRowHint
-						action={entry.action}
+						action={entryAction}
 						data-flx="user.keybinds-tab.custom-keybind-row.system-shortcut-row-hint"
 					/>
 				)}

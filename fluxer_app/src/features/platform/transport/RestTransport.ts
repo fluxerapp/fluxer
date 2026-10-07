@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isDesktopLocalAppDocument, isDesktopLocalAppOrigin} from '@app/features/platform/DesktopLocalAppRuntime';
+import {
+	AccountScopedWork,
+	type AccountScopedWorkSuspension,
+	type AccountScopedWorkTicket,
+	accountScopedWorkAbortError,
+} from '@app/features/platform/state/AccountScopedWork';
+import {ClientInstallationId} from '@app/features/platform/state/ClientInstallationId';
 import {HttpError, type HttpErrorDetail} from '@app/features/platform/types/EndpointError';
 import type {
 	HttpMethod,
@@ -13,8 +21,17 @@ import type {
 	RestResponseFormat,
 	SudoBindings,
 } from '@app/features/platform/types/TransportTypes';
+import {resolveDocumentURLFromRoot} from '@app/features/platform/URLOriginUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {Headers} from '@fluxer/constants/src/Headers';
+import type {DesktopLocalAppUploadProgress} from '@fluxer/desktop_ipc/src/LocalAppRouteContract';
+import {
+	DESKTOP_LOCAL_APP_HOST,
+	LOCAL_APP_API_PATH_PREFIX,
+	LOCAL_APP_UPLOAD_ID_HEADER,
+} from '@fluxer/desktop_ipc/src/LocalAppRouteContract';
 import {i18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -49,9 +66,15 @@ interface PacingEntry {
 	code?: string;
 }
 
+class UnscopedDesktopLocalApiEndpointError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = 'UnscopedDesktopLocalApiEndpointError';
+	}
+}
+
 interface RuntimeState {
-	baseUrl: string;
-	apiVersion: number;
+	routing: RestRuntimeRouting | null;
 	defaultTimeoutMs: number;
 	defaultRetries: number;
 	authProvider: () => string | null;
@@ -60,9 +83,23 @@ interface RuntimeState {
 	pacing: Map<string, PacingEntry>;
 }
 
+interface RestRuntimeRouting {
+	readonly baseUrl: string;
+	readonly canonicalBaseUrl: string;
+	readonly apiVersion: number;
+}
+
+export class RestRuntimeUnavailableError extends Error {
+	constructor() {
+		super('A relative REST request requires an active instance runtime');
+		this.name = 'RestRuntimeUnavailableError';
+	}
+}
+
 interface Plan {
 	method: HttpMethod;
 	path: string;
+	routing: RestRuntimeRouting | null;
 	url: string;
 	rateLimitKey: string;
 	body: BodyShape;
@@ -146,10 +183,13 @@ function waitUntilOnline(signal?: AbortSignal): Promise<void> {
 	});
 }
 
+function withoutTrailingSlashes(value: string): string {
+	return value.replace(/\/+$/u, '');
+}
+
 export class RestClient {
 	private readonly state: RuntimeState = {
-		baseUrl: '/api',
-		apiVersion: 1,
+		routing: null,
 		defaultTimeoutMs: 0,
 		defaultRetries: 0,
 		authProvider: () => null,
@@ -157,12 +197,25 @@ export class RestClient {
 		pacing: new Map(),
 	};
 
-	configure(options: {baseUrl?: string; apiVersion?: number; timeoutMs?: number; retries?: number}): void {
-		const s = this.state;
-		if (options.baseUrl !== undefined) s.baseUrl = options.baseUrl;
-		if (options.apiVersion !== undefined) s.apiVersion = options.apiVersion;
-		if (options.timeoutMs !== undefined) s.defaultTimeoutMs = options.timeoutMs;
-		if (options.retries !== undefined) s.defaultRetries = options.retries;
+	configure(options: {baseUrl: string; canonicalBaseUrl?: string; apiVersion: number}): void {
+		this.state.routing = {
+			baseUrl: options.baseUrl,
+			canonicalBaseUrl: options.canonicalBaseUrl ?? options.baseUrl,
+			apiVersion: options.apiVersion,
+		};
+	}
+
+	clearRuntime(): void {
+		this.state.routing = null;
+	}
+
+	matchesConfiguredRouting(baseUrl: string, apiVersion: number): boolean {
+		const routing = this.state.routing;
+		return (
+			routing !== null &&
+			routing.apiVersion === apiVersion &&
+			withoutTrailingSlashes(routing.canonicalBaseUrl) === withoutTrailingSlashes(baseUrl)
+		);
 	}
 
 	installAuth(provider: () => string | null): void {
@@ -178,11 +231,49 @@ export class RestClient {
 	}
 
 	hasAuthorization(): boolean {
-		return !isOffOrigin(resolveUrl(this.state, '/', undefined));
+		const routing = this.state.routing;
+		if (routing === null) return false;
+		return !isOffOrigin(resolveUrl(routing, '/', undefined));
 	}
 
 	dispatch<T = unknown>(method: HttpMethod, path: string, options: RestRequestOptions = {}): Promise<RestResponse<T>> {
-		return runWithSudoEscalation<T>(this.state, method, path, options, 'fresh');
+		return this.dispatchAccountScoped(method, path, options, () => AccountScopedWork.begin());
+	}
+
+	dispatchWithinAccountTransition<T = unknown>(
+		suspension: AccountScopedWorkSuspension,
+		method: HttpMethod,
+		path: string,
+		options: RestRequestOptions = {},
+	): Promise<RestResponse<T>> {
+		return this.dispatchAccountScoped(method, path, options, () => AccountScopedWork.beginWithinSuspension(suspension));
+	}
+
+	private dispatchAccountScoped<T>(
+		method: HttpMethod,
+		path: string,
+		options: RestRequestOptions,
+		beginTicket: () => AccountScopedWorkTicket,
+	): Promise<RestResponse<T>> {
+		const routing = this.state.routing;
+		if (!looksAbsolute(path) && routing === null) {
+			return Promise.reject(new RestRuntimeUnavailableError());
+		}
+		let ticket: AccountScopedWorkTicket;
+		try {
+			ticket = beginTicket();
+		} catch (error) {
+			return Promise.reject(error);
+		}
+		return runWithSudoEscalation<T>(this.state, routing, ticket, method, path, options, 'fresh')
+			.catch((error: unknown) => {
+				throw toAccountScopedFailure(ticket, error);
+			})
+			.finally(() => ticket.dispose());
+	}
+
+	clearPacing(): void {
+		this.state.pacing.clear();
 	}
 
 	get<T = unknown>(path: string, options?: RestRequestOptions): Promise<RestResponse<T>> {
@@ -210,6 +301,8 @@ type SudoPhase = 'fresh' | 'reissued' | 'reissued-twice';
 
 async function runWithSudoEscalation<T>(
 	state: RuntimeState,
+	routing: RestRuntimeRouting | null,
+	ticket: AccountScopedWorkTicket,
 	method: HttpMethod,
 	path: string,
 	options: RestRequestOptions,
@@ -219,7 +312,7 @@ async function runWithSudoEscalation<T>(
 	const effective = overrideOptions ?? options;
 	const sudoApplied = phase !== 'fresh';
 	try {
-		return await runRetryLoop<T>(state, method, path, effective, sudoApplied, 0);
+		return await runRetryLoop<T>(state, routing, ticket, method, path, effective, sudoApplied, 0);
 	} catch (err) {
 		const sudo = state.sudo;
 		const sudoRequired = isSudoRequiredFailure(err);
@@ -230,22 +323,49 @@ async function runWithSudoEscalation<T>(
 		}
 		if (sudoVerificationFailed) {
 			sudo.onFailure(err);
-			const merged = await sudo.prompt(method, path, err);
+			const merged = await awaitAccountScopedInteraction(ticket, sudo.prompt(method, path, err));
 			if (!merged) throw err;
-			return runWithSudoEscalation<T>(state, method, path, options, 'reissued', mergeBody(options, merged));
+			return runWithSudoEscalation<T>(
+				state,
+				routing,
+				ticket,
+				method,
+				path,
+				options,
+				'reissued',
+				mergeBody(options, merged),
+			);
 		}
 		switch (phase) {
 			case 'fresh': {
 				sudo.invalidate();
-				const merged = await sudo.prompt(method, path, err);
+				const merged = await awaitAccountScopedInteraction(ticket, sudo.prompt(method, path, err));
 				if (!merged) throw err;
-				return runWithSudoEscalation<T>(state, method, path, options, 'reissued', mergeBody(options, merged));
+				return runWithSudoEscalation<T>(
+					state,
+					routing,
+					ticket,
+					method,
+					path,
+					options,
+					'reissued',
+					mergeBody(options, merged),
+				);
 			}
 			case 'reissued': {
 				sudo.onFailure(err);
-				const second = await sudo.prompt(method, path, err);
+				const second = await awaitAccountScopedInteraction(ticket, sudo.prompt(method, path, err));
 				if (!second) throw err;
-				return runWithSudoEscalation<T>(state, method, path, options, 'reissued-twice', mergeBody(options, second));
+				return runWithSudoEscalation<T>(
+					state,
+					routing,
+					ticket,
+					method,
+					path,
+					options,
+					'reissued-twice',
+					mergeBody(options, second),
+				);
 			}
 			case 'reissued-twice': {
 				sudo.onFailure(err);
@@ -280,57 +400,68 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 async function runRetryLoop<T>(
 	state: RuntimeState,
+	routing: RestRuntimeRouting | null,
+	ticket: AccountScopedWorkTicket,
 	method: HttpMethod,
 	path: string,
 	options: PlanOptions,
 	sudoApplied: boolean,
 	attempt: number,
 ): Promise<RestResponse<T>> {
-	const plan = composePlan(state, method, path, options, sudoApplied);
-	if (plan.retries > 0) await waitUntilOnline(plan.signal);
-	const pacingHit = consultPacing(state.pacing, plan.rateLimitKey);
-	if (pacingHit) {
-		if (plan.mode === 'auto-retry') {
-			await sleepUntil(pacingHit.until, plan.signal);
-		} else {
-			const synthesized = synthesizePacingReply<T>(plan, pacingHit);
-			if (plan.mode === 'silent') {
-				return synthesized;
-			}
-			throw new HttpError(failureDetail(plan, synthesized));
-		}
-	}
-	const handle = createHandle(plan.signal);
-	const outcome = await performTransport(plan, handle);
-	const decision = await reactToOutcome(state, plan, outcome);
-	switch (decision.next) {
-		case 'deliver':
-			return decision.reply as RestResponse<T>;
-		case 'retry-after': {
-			if (attempt >= plan.retries) {
-				return finalizeAfterRetriesExhausted<T>(state, plan, outcome);
-			}
-			const wait = decision.mode === 'backoff' ? computeBackoffMs(attempt) : decision.delayMs;
-			if (outcome.status === 'transport-error' && !navigator.onLine) {
-				await waitUntilOnline(plan.signal);
+	ticket.assertCurrent();
+	const plan = composePlan(state, routing, method, path, options, sudoApplied);
+	const {handle, unlink} = createHandle(plan.signal, ticket.signal);
+	try {
+		if (plan.retries > 0) await waitUntilOnline(handle.abortController.signal);
+		const pacingHit = consultPacing(state.pacing, plan.rateLimitKey);
+		if (pacingHit) {
+			if (plan.mode === 'auto-retry') {
+				await sleepUntil(pacingHit.until, handle.abortController.signal);
 			} else {
-				await delay(wait, plan.signal);
+				const synthesized = synthesizePacingReply<T>(plan, pacingHit);
+				if (plan.mode === 'silent') {
+					return synthesized;
+				}
+				throw new HttpError(failureDetail(plan, synthesized));
 			}
-			return runRetryLoop<T>(state, method, path, options, sudoApplied, attempt + 1);
+			ticket.assertCurrent();
 		}
-		case 'fail':
-			throw decision.error;
+		const outcome = await performTransport(plan, handle);
+		ticket.assertCurrent();
+		const decision = await reactToOutcome(state, ticket, plan, outcome);
+		ticket.assertCurrent();
+		switch (decision.next) {
+			case 'deliver':
+				return decision.reply as RestResponse<T>;
+			case 'retry-after': {
+				if (attempt >= plan.retries) {
+					return finalizeAfterRetriesExhausted<T>(state, plan, outcome);
+				}
+				const wait = decision.mode === 'backoff' ? computeBackoffMs(attempt) : decision.delayMs;
+				if (outcome.status === 'transport-error' && !navigator.onLine) {
+					await waitUntilOnline(handle.abortController.signal);
+				} else {
+					await delay(wait, handle.abortController.signal);
+				}
+				return runRetryLoop<T>(state, routing, ticket, method, path, options, sudoApplied, attempt + 1);
+			}
+			case 'fail':
+				throw decision.error;
+		}
+	} finally {
+		unlink();
 	}
 }
 
 function composePlan(
 	state: RuntimeState,
+	routing: RestRuntimeRouting | null,
 	method: HttpMethod,
 	path: string,
 	options: PlanOptions,
 	sudoApplied: boolean,
 ): Plan {
-	const url = resolveUrl(state, path, options.query);
+	const url = resolveUrl(routing, path, options.query);
 	const body = encodeBody(options);
 	const targetsApiBase = !looksAbsolute(path);
 	const apiOrigin = targetsApiBase ? originOf(url) : null;
@@ -349,6 +480,7 @@ function composePlan(
 	return {
 		method,
 		path,
+		routing,
 		url,
 		rateLimitKey: `${method} ${path}`,
 		body,
@@ -365,9 +497,18 @@ function composePlan(
 	};
 }
 
-function resolveUrl(state: RuntimeState, path: string, query: RestRequestOptions['query']): string {
-	const seed = looksAbsolute(path) ? path : `${state.baseUrl}/v${state.apiVersion}${path}`;
-	const url = new URL(seed, window.location.origin);
+function resolveUrl(routing: RestRuntimeRouting | null, path: string, query: RestRequestOptions['query']): string {
+	let seed: string;
+	if (looksAbsolute(path)) {
+		seed = path;
+	} else {
+		if (routing === null) {
+			throw new RestRuntimeUnavailableError();
+		}
+		assertScopedDesktopLocalApiBase(routing.baseUrl);
+		seed = `${routing.baseUrl}/v${routing.apiVersion}${path}`;
+	}
+	const url = resolveDocumentURLFromRoot(seed);
 	if (query instanceof URLSearchParams) {
 		query.forEach((value, key) => url.searchParams.set(key, value));
 	} else if (query) {
@@ -377,6 +518,24 @@ function resolveUrl(state: RuntimeState, path: string, query: RestRequestOptions
 		}
 	}
 	return url.toString();
+}
+
+function assertScopedDesktopLocalApiBase(baseUrl: string): void {
+	if (!isDesktopLocalAppDocument()) return;
+	if (!isUnscopedDesktopLocalApiBase(baseUrl)) return;
+	throw new UnscopedDesktopLocalApiEndpointError('Desktop local REST requests require a scoped runtime API endpoint');
+}
+
+function isUnscopedDesktopLocalApiBase(baseUrl: string): boolean {
+	let parsedUrl: URL;
+	try {
+		parsedUrl = resolveDocumentURLFromRoot(baseUrl);
+	} catch {
+		return false;
+	}
+	if (!isDesktopLocalAppOrigin(parsedUrl.protocol, parsedUrl.hostname)) return false;
+	if (parsedUrl.host !== DESKTOP_LOCAL_APP_HOST) return false;
+	return !parsedUrl.pathname.startsWith(`${LOCAL_APP_API_PATH_PREFIX}/`);
 }
 
 function looksAbsolute(path: string): boolean {
@@ -465,14 +624,15 @@ interface AssembleHeadersInput {
 function assembleHeaders(input: AssembleHeadersInput): Record<string, string> {
 	const accumulator: Record<string, string> = {};
 	if (input.sameOrigin) {
-		accumulator['X-Fluxer-Features'] = 'view_channel_members_permission,channel_threads';
+		accumulator[Headers.X_FLUXER_FEATURES] = 'view_channel_members_permission,channel_threads';
+		accumulator[Headers.X_FLUXER_CLIENT_INSTALLATION_ID] = ClientInstallationId.get();
 	}
 	const contentType = inferContentType(input.body);
-	if (contentType) accumulator['Content-Type'] = contentType;
-	if (input.reason) accumulator['X-Audit-Log-Reason'] = encodeURIComponent(input.reason);
+	if (contentType) accumulator[Headers.CONTENT_TYPE] = contentType;
+	if (input.reason) accumulator[Headers.X_AUDIT_LOG_REASON] = encodeURIComponent(input.reason);
 	if (input.auth !== 'none' && input.sameOrigin) {
 		const token = input.state.authProvider();
-		if (token) accumulator['Authorization'] = token;
+		if (token) accumulator[Headers.AUTHORIZATION] = token;
 	}
 	const sudoToken = input.state.sudo?.tokenProvider() ?? null;
 	if (sudoToken && input.sameOrigin) accumulator[SUDO_HEADER] = sudoToken;
@@ -547,6 +707,40 @@ function synthesizePacingReply<T>(_plan: Plan, hit: PacingEntry): RestResponse<T
 	};
 }
 
+const UPLOAD_ID_RANDOM_BYTES = 16;
+
+function newLocalUploadId(): string {
+	const bytes = new Uint8Array(UPLOAD_ID_RANDOM_BYTES);
+	globalThis.crypto.getRandomValues(bytes);
+	return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function attachLocalUploadProgress(xhr: XMLHttpRequest, onProgress: (event: ProgressEvent) => void): boolean {
+	if (!isDesktopLocalAppDocument()) {
+		return false;
+	}
+	const subscribe = getElectronAPI()?.localAppUpload?.subscribe;
+	if (subscribe == null) {
+		return false;
+	}
+	const uploadId = newLocalUploadId();
+	xhr.setRequestHeader(LOCAL_APP_UPLOAD_ID_HEADER, uploadId);
+	const unsubscribe = subscribe((progress: DesktopLocalAppUploadProgress) => {
+		if (progress.uploadId !== uploadId || progress.failed) {
+			return;
+		}
+		onProgress(
+			new ProgressEvent('progress', {
+				lengthComputable: progress.total !== null,
+				loaded: progress.loaded,
+				total: progress.total ?? 0,
+			}),
+		);
+	});
+	xhr.addEventListener('loadend', unsubscribe, {once: true});
+	return true;
+}
+
 function performTransport(plan: Plan, handle: RestRequestHandle): Promise<TransportOutcome> {
 	return new Promise<TransportOutcome>((resolve) => {
 		const xhr = new XMLHttpRequest();
@@ -574,7 +768,9 @@ function performTransport(plan: Plan, handle: RestRequestHandle): Promise<Transp
 			externalSignal.removeEventListener('abort', onExternalAbort);
 		});
 		if (plan.onProgress) {
-			xhr.upload.addEventListener('progress', plan.onProgress);
+			if (!attachLocalUploadProgress(xhr, plan.onProgress)) {
+				xhr.upload.addEventListener('progress', plan.onProgress);
+			}
 		}
 		xhr.addEventListener('load', finishWithReply);
 		xhr.addEventListener('error', () => {
@@ -647,7 +843,12 @@ function parseHeaderBlock(raw: string | null): Record<string, string> {
 	return out;
 }
 
-async function reactToOutcome(state: RuntimeState, plan: Plan, outcome: TransportOutcome): Promise<AttemptDecision> {
+async function reactToOutcome(
+	state: RuntimeState,
+	ticket: AccountScopedWorkTicket,
+	plan: Plan,
+	outcome: TransportOutcome,
+): Promise<AttemptDecision> {
 	if (outcome.status === 'aborted') {
 		return {next: 'fail', error: outcome.error};
 	}
@@ -658,9 +859,9 @@ async function reactToOutcome(state: RuntimeState, plan: Plan, outcome: Transpor
 	if (reply.status === 429) {
 		return reactToRateLimit(state, plan, reply);
 	}
-	const interceptor = plan.options.skipIntercept ? undefined : state.globalIntercept;
+	const interceptor = plan.options.skipIntercept ? undefined : (plan.options.intercept ?? state.globalIntercept);
 	if (interceptor) {
-		const intercepted = await invokeInterceptor(state, plan, interceptor, reply);
+		const intercepted = await invokeInterceptor(state, ticket, plan, interceptor, reply);
 		if (intercepted) return intercepted;
 	}
 	if (RETRYABLE_STATUSES.has(reply.status)) {
@@ -729,6 +930,7 @@ function extractMessage(body: unknown): string | undefined {
 
 async function invokeInterceptor(
 	state: RuntimeState,
+	ticket: AccountScopedWorkTicket,
 	plan: Plan,
 	interceptor: RestInterceptor,
 	reply: RestResponse,
@@ -736,6 +938,8 @@ async function invokeInterceptor(
 	const retry = (extra: Record<string, string>): Promise<RestResponse> =>
 		runRetryLoop(
 			state,
+			plan.routing,
+			ticket,
 			plan.method,
 			plan.path,
 			{...plan.options, headers: {...(plan.options.headers ?? {}), ...extra}, skipIntercept: true},
@@ -743,11 +947,35 @@ async function invokeInterceptor(
 			0,
 		);
 	try {
-		const finalReply = await interceptor(reply, retry);
+		const finalReply = await awaitAccountScopedInteraction(ticket, Promise.resolve(interceptor(reply, retry)));
 		return finalReply === undefined ? null : {next: 'deliver', reply: finalReply};
 	} catch (err) {
 		return {next: 'fail', error: err};
 	}
+}
+
+function toAccountScopedFailure(ticket: AccountScopedWorkTicket, error: unknown): unknown {
+	if (ticket.isStale && error instanceof DOMException && error.name === 'AbortError') {
+		return accountScopedWorkAbortError();
+	}
+	return error;
+}
+
+function awaitAccountScopedInteraction<T>(ticket: AccountScopedWorkTicket, operation: Promise<T>): Promise<T> {
+	ticket.assertCurrent();
+	const signal = ticket.signal;
+	if (signal.aborted) {
+		return Promise.reject(signal.reason);
+	}
+	return new Promise<T>((resolve, reject) => {
+		const handleAbort = (): void => {
+			reject(signal.reason);
+		};
+		signal.addEventListener('abort', handleAbort, {once: true});
+		operation.then(resolve, reject).finally(() => {
+			signal.removeEventListener('abort', handleAbort);
+		});
+	});
 }
 
 function hasContentBlockedCode(body: unknown): boolean {
@@ -824,15 +1052,31 @@ function sleepUntil(deadlineMs: number, signal?: AbortSignal): Promise<void> {
 	return delay(Math.max(0, deadlineMs - Date.now()), signal);
 }
 
-function createHandle(external?: AbortSignal): RestRequestHandle {
+function createHandle(
+	external: AbortSignal | undefined,
+	accountScoped: AbortSignal,
+): {handle: RestRequestHandle; unlink: () => void} {
 	const controller = new AbortController();
-	if (external) {
-		if (external.aborted) controller.abort();
-		else external.addEventListener('abort', () => controller.abort(), {once: true});
+	const forward = () => controller.abort();
+	const linked: Array<AbortSignal> = [];
+	for (const signal of external === undefined ? [accountScoped] : [accountScoped, external]) {
+		if (signal.aborted) {
+			controller.abort();
+			continue;
+		}
+		signal.addEventListener('abort', forward, {once: true});
+		linked.push(signal);
 	}
 	return {
-		abortController: controller,
-		abort: () => controller.abort(),
+		handle: {
+			abortController: controller,
+			abort: forward,
+		},
+		unlink: () => {
+			for (const signal of linked) {
+				signal.removeEventListener('abort', forward);
+			}
+		},
 	};
 }
 
@@ -857,3 +1101,5 @@ function mergeBody(options: RestRequestOptions, augmentation: Record<string, unk
 }
 
 export const http = new RestClient();
+
+AccountScopedWork.registerCancellation(() => http.clearPacing());

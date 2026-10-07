@@ -3,7 +3,7 @@
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import GuildCount from '@app/features/guild/state/GuildCount';
 
-interface GuildCountsUpdatePayload {
+export interface GuildCountsUpdatePayload {
 	counts?: ReadonlyArray<{
 		guild_id: string;
 		member_count: number;

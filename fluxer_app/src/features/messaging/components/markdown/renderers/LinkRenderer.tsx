@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
 	openOAuthAuthorizeModalFromUrl,
 	parseOAuthAuthorizeModalUrl,
@@ -52,6 +53,7 @@ import {
 	parseUserProfileUrl,
 	parseUserSettingsDeepLink,
 } from '@app/features/navigation/utils/DeepLinkUtils';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import * as ThemeCommands from '@app/features/theme/commands/ThemeCommands';
@@ -1097,13 +1099,13 @@ export const LinkRenderer = observer(function LinkRenderer({
 			if (!handleClick && inviteCode) {
 				handleClick = (e) => {
 					e.preventDefault();
-					void InviteCommands.openAcceptModal(inviteCode);
+					void InviteCommands.openAcceptModal(inviteCode, currentInstanceTarget());
 				};
 				isInternal = true;
 			} else if (!handleClick && themeCode) {
 				handleClick = (e) => {
 					e.preventDefault();
-					ThemeCommands.openAcceptModal(themeCode, i18n);
+					ThemeCommands.openAcceptModal(themeCode, i18n, RuntimeConfig.getSnapshot());
 				};
 				isInternal = true;
 			} else if (!handleClick && isInternal) {

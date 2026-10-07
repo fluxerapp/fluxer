@@ -121,6 +121,10 @@ export const OPEN_SETTINGS_DESCRIPTOR = msg({
 	message: 'Open settings',
 	comment: 'Generic action label that opens the global app settings modal.',
 });
+export const RELAUNCH_TO_APPLY_DESCRIPTOR = msg({
+	message: 'Relaunch to apply',
+	comment: 'Button label that restarts the desktop app so macOS applies a permission change.',
+});
 export const BACK_TO_SETTINGS_DESCRIPTOR = msg({
 	message: 'Back to settings',
 	comment: 'Back-navigation label that returns from a nested settings pane to the settings tab list.',
@@ -818,4 +822,88 @@ export const SENT_DESCRIPTOR = msg({
 export const SOUNDS_DESCRIPTOR = msg({
 	message: 'Sounds',
 	comment: 'Section heading / tab label for the notification-sounds area.',
+});
+export const AUTHENTICATOR_CODE_DESCRIPTOR = msg({
+	message: 'Authenticator code',
+	comment: 'Generic field label for the one-time code produced by an authenticator app.',
+});
+export const BACKUP_CODE_DESCRIPTOR = msg({
+	message: 'Backup code',
+	comment: 'Generic field label for one of the one-use codes saved when two-factor authentication was set up.',
+});
+export const BACK_DESCRIPTOR = msg({
+	message: 'Back',
+	comment: 'Generic secondary button label that returns to the previous step or screen.',
+});
+export const DONE_DESCRIPTOR = msg({
+	message: 'Done',
+	comment: 'Generic action or status label indicating that the current flow is complete.',
+});
+export const MORE_DESCRIPTOR = msg({
+	message: 'More',
+	comment: 'Generic label for a button that reveals additional actions.',
+});
+export const CHANGE_INSTANCE_DESCRIPTOR = msg({
+	message: 'Change instance',
+	comment: 'Generic action label that returns the user to instance selection.',
+});
+export const INSTANCE_URL_DESCRIPTOR = msg({
+	message: 'Instance URL',
+	comment: 'Generic field label for the address of a self-hosted instance.',
+});
+export const OFFICIAL_INSTANCE_DESCRIPTOR = msg({
+	message: 'Official instance',
+	comment: 'Accessible label for identifying the official Fluxer instance.',
+});
+export const CODE_DESCRIPTOR = msg({
+	message: 'Code',
+	comment: 'Generic field label for a short verification or backup code the user types in.',
+});
+export const NEW_PASSWORD_DESCRIPTOR = msg({
+	message: 'New password',
+	comment: 'Generic field label for the password the user is choosing.',
+});
+export const CONFIRM_NEW_PASSWORD_DESCRIPTOR = msg({
+	message: 'Confirm new password',
+	comment: 'Generic field label for retyping the password the user is choosing.',
+});
+export const PASSWORDS_DO_NOT_MATCH_DESCRIPTOR = msg({
+	message: 'Passwords do not match',
+	comment: 'Validation error shown when a password and its confirmation field differ.',
+});
+export const DISPLAY_NAME_OPTIONAL_DESCRIPTOR = msg({
+	message: 'Display name (optional)',
+	comment: 'Optional display-name field label in account registration forms.',
+});
+export const WHAT_SHOULD_PEOPLE_CALL_YOU_DESCRIPTOR = msg({
+	message: 'What should people call you?',
+	comment: 'Display-name field placeholder in account registration forms.',
+});
+export const COMMUNITY_DESCRIPTOR = msg({
+	message: 'Community',
+	comment: 'Generic label for a community. Used as a field label, filter label, or fallback community name.',
+});
+export const GROUP_DM_DESCRIPTOR = msg({
+	message: 'Group DM',
+	comment: 'Generic label for a group direct message conversation.',
+});
+export const THEME_DESCRIPTOR = msg({
+	message: 'Theme',
+	comment: 'Generic label for the app theme selector.',
+});
+export const INVALID_STATUS_DESCRIPTOR = msg({
+	message: 'Invalid status',
+	comment: 'Callback page title shown when an external flow returns an unrecognized status.',
+});
+export const ACTIVE_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Active account',
+	comment: 'Short status label for the account currently signed in.',
+});
+export const ADD_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Add account',
+	comment: 'Generic action label that starts signing in to an additional account.',
+});
+export const SWITCH_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Switch account',
+	comment: 'Short button label that opens the account switcher overlay.',
 });

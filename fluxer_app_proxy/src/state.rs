@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::config::AppProxyConfig;
+use crate::config::{AppProxyConfig, HttpUrl};
 use crate::csp::CompiledCspPolicy;
-use crate::discovery_cache::DiscoveryCache;
-use fluxer_common::geoip::GeoipResolver;
+use crate::local_files::LocalFileStore;
+use crate::routes::present_local_asset_prefixes;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::io::AsyncReadExt;
@@ -36,16 +36,81 @@ impl Default for AppProxyBudgets {
     }
 }
 
+pub const AUTH_ENTRY_SHELL_FILE: &str = "auth-index.html";
+
+#[derive(Clone)]
+pub enum SpaIndexSource {
+    Bundled {
+        shell: Arc<str>,
+        auth_entry_shell: Option<Arc<str>>,
+    },
+    Upstream(Arc<HttpUrl>),
+}
+
+impl SpaIndexSource {
+    pub fn bundled(shell: &str) -> Self {
+        Self::Bundled {
+            shell: Arc::from(shell),
+            auth_entry_shell: None,
+        }
+    }
+
+    pub async fn load(config: &AppProxyConfig) -> anyhow::Result<Self> {
+        if let Some(index_upstream_url) = &config.index_upstream_url {
+            return Ok(Self::Upstream(Arc::new(index_upstream_url.clone())));
+        }
+        let static_dir = std::path::Path::new(&config.static_dir);
+        let shell = read_shell(&static_dir.join("index.html")).await?;
+        let auth_entry_path = static_dir.join(AUTH_ENTRY_SHELL_FILE);
+        let auth_entry_shell = if tokio::fs::try_exists(&auth_entry_path).await? {
+            Some(read_shell(&auth_entry_path).await?)
+        } else {
+            None
+        };
+        Ok(Self::Bundled {
+            shell,
+            auth_entry_shell,
+        })
+    }
+
+    pub fn is_upstream(&self) -> bool {
+        matches!(self, Self::Upstream(_))
+    }
+}
+
 #[derive(Clone)]
 pub struct AppState {
     pub config: Arc<AppProxyConfig>,
     pub csp: Arc<CompiledCspPolicy>,
     pub http_client: reqwest::Client,
-    pub discovery_cache: Arc<DiscoveryCache>,
-    pub geoip: Arc<GeoipResolver>,
-    pub index_html: Option<Arc<str>>,
+    pub spa_index_source: SpaIndexSource,
     pub local_asset_prefixes: Option<Arc<[&'static str]>>,
     pub budgets: AppProxyBudgets,
+    pub(crate) local_files: LocalFileStore,
+}
+
+impl AppState {
+    pub async fn load(
+        config: Arc<AppProxyConfig>,
+        csp: Arc<CompiledCspPolicy>,
+        http_client: reqwest::Client,
+    ) -> anyhow::Result<Self> {
+        let budgets = AppProxyBudgets::new();
+        let local_files =
+            LocalFileStore::load(std::path::Path::new(&config.static_dir), &budgets).await?;
+        let spa_index_source = SpaIndexSource::load(&config).await?;
+        let local_asset_prefixes = (!spa_index_source.is_upstream())
+            .then(|| present_local_asset_prefixes(&config.static_dir));
+        Ok(Self {
+            config,
+            csp,
+            http_client,
+            spa_index_source,
+            local_asset_prefixes,
+            budgets,
+            local_files,
+        })
+    }
 }
 
 #[derive(Debug)]
@@ -67,12 +132,6 @@ impl std::fmt::Display for BoundedFileReadError {
 }
 
 impl std::error::Error for BoundedFileReadError {}
-
-impl BoundedFileReadError {
-    pub fn is_not_found(&self) -> bool {
-        matches!(self, Self::Io(source) if source.kind() == std::io::ErrorKind::NotFound)
-    }
-}
 
 pub async fn read_bounded_file(
     path: &std::path::Path,
@@ -108,6 +167,13 @@ pub async fn read_bounded_file(
         });
     }
     Ok(bytes)
+}
+
+async fn read_shell(path: &std::path::Path) -> anyhow::Result<Arc<str>> {
+    let html = read_bounded_text_file(path, MAX_SPA_INDEX_BYTES)
+        .await
+        .map_err(|error| anyhow::anyhow!("failed to read {}: {error}", path.display()))?;
+    Ok(Arc::from(html))
 }
 
 pub async fn read_bounded_text_file(

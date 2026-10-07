@@ -15,7 +15,7 @@ import {
 } from '@app/features/channel/utils/ChannelFrecencyCalculator';
 import Guilds from '@app/features/guild/state/Guilds';
 import Navigation from '@app/features/navigation/state/Navigation';
-import AppStorage from '@app/features/platform/state/PersistentStorage';
+import AppStorage, {getAppStorageScope} from '@app/features/platform/state/PersistentStorage';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {isSyncExcludedChannelId} from '@app/features/threads/utils/SyncedPreferenceGuard';
@@ -36,18 +36,27 @@ let lastChannelId: string | null = null;
 let lastGuildId: string | null = null;
 let localPersistence: Promise<void> | null = null;
 let deferredSelections: Array<{guildId: string | null; channelId: string; timestamp: number}> = [];
-let rememberedThreadGuildIds: ReadonlySet<string> = loadRememberedThreadGuildIds();
+let rememberedThreadGuilds: {readonly scope: string; readonly ids: ReadonlySet<string>} | null = null;
 
 function loadRememberedThreadGuildIds(): ReadonlySet<string> {
 	const stored = AppStorage.getJSON<unknown>(THREAD_GUILDS_STORAGE_KEY);
 	return new Set(Array.isArray(stored) ? stored.filter((id): id is string => typeof id === 'string') : []);
 }
 
+function rememberedThreadGuildIds(): ReadonlySet<string> {
+	const scope = getAppStorageScope();
+	if (rememberedThreadGuilds?.scope !== scope) {
+		rememberedThreadGuilds = {scope, ids: loadRememberedThreadGuildIds()};
+	}
+	return rememberedThreadGuilds.ids;
+}
+
 function rememberThreadGuildIds(guildIds: ReadonlyArray<string>): void {
-	if (guildIds.length === rememberedThreadGuildIds.size && guildIds.every((id) => rememberedThreadGuildIds.has(id))) {
+	const remembered = rememberedThreadGuildIds();
+	if (guildIds.length === remembered.size && guildIds.every((id) => remembered.has(id))) {
 		return;
 	}
-	rememberedThreadGuildIds = new Set(guildIds);
+	rememberedThreadGuilds = {scope: getAppStorageScope(), ids: new Set(guildIds)};
 	if (guildIds.length === 0) AppStorage.removeItem(THREAD_GUILDS_STORAGE_KEY);
 	else AppStorage.setJSON(THREAD_GUILDS_STORAGE_KEY, guildIds);
 }
@@ -61,7 +70,9 @@ function isChannelTypePending(guildId: string | null, channelId: string | null):
 		guildId !== null &&
 		guildId !== ME &&
 		isTrackableId(channelId) &&
-		(Initialization.hasCompletedInitialLoad ? ThreadGuilds.isActive(guildId) : rememberedThreadGuildIds.has(guildId)) &&
+		(Initialization.hasCompletedInitialLoad
+			? ThreadGuilds.isActive(guildId)
+			: rememberedThreadGuildIds().has(guildId)) &&
 		Channels.getChannel(channelId) === undefined
 	);
 }

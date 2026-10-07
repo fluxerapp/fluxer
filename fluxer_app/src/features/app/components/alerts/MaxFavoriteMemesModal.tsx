@@ -2,11 +2,10 @@
 
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import Users from '@app/features/user/state/Users';
 import {MAX_FAVORITE_MEMES_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {msg, plural} from '@lingui/core/macro';
@@ -73,14 +72,14 @@ export const MaxFavoriteMemesModal = observer(() => {
 	}
 	const freeDescription = i18n._(YOU_VE_REACHED_THE_MAXIMUM_LIMIT_OF_FOR_DESCRIPTOR, {
 		count: maxFavoriteMemes,
-		premiumProductName: PREMIUM_PRODUCT_NAME,
+		premiumProductName: getPremiumProductName(),
 		premiumCount: premiumLimit,
 	});
 	return (
 		<ConfirmModal
 			title={i18n._(SAVED_MEDIA_LIMIT_REACHED_DESCRIPTOR)}
 			description={freeDescription}
-			primaryText={i18n._(UPGRADE_TO_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+			primaryText={i18n._(UPGRADE_TO_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 			primaryVariant="primary"
 			onPrimary={() => {
 				window.setTimeout(() => {

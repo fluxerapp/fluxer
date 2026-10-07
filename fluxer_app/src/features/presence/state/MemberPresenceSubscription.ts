@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 const MEMBER_SUBSCRIPTION_MAX_SIZE = 100;
@@ -255,4 +256,8 @@ class MemberPresenceSubscription {
 	}
 }
 
-export default new MemberPresenceSubscription();
+const memberPresenceSubscription = new MemberPresenceSubscription();
+
+AccountScopedWork.registerCancellation(() => memberPresenceSubscription.clearAll());
+
+export default memberPresenceSubscription;

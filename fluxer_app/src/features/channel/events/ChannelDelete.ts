@@ -11,6 +11,7 @@ import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import Permission from '@app/features/permissions/state/Permission';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
@@ -20,7 +21,7 @@ import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import Webhooks from '@app/features/webhook/state/Webhooks';
 import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 
-interface ChannelDeletePayload {
+export interface ChannelDeletePayload {
 	id: string;
 	type: number;
 	guild_id?: string;
@@ -37,7 +38,7 @@ export function cleanupChannelLocalState(channel: Channel): void {
 	Channels.handleChannelDelete({channel});
 	Permission.handleChannelDelete(channel.id, guildId);
 	GuildReadState.handleChannelDelete(channel.id);
-	Invites.handleChannelDelete(channel.id);
+	Invites.handleChannelDelete(channel.id, currentInstanceTarget());
 	Webhooks.handleChannelDelete(channel.id);
 	ReadStates.handleChannelDelete({channel});
 	SelectedChannel.handleChannelDelete(channel);

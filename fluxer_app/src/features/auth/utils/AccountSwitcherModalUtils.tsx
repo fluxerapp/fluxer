@@ -2,29 +2,21 @@
 
 import i18n from '@app/app/I18n';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
-import {getAccountAvatarUrl, getAccountDisplayName} from '@app/features/auth/components/accounts/AccountListItem';
-import {showBrowserLoginHandoffModal} from '@app/features/auth/flow/BrowserLoginHandoffModal';
-import AccountManager from '@app/features/auth/state/AccountManager';
-import type {LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
+import {resolveAccountInstanceLabel} from '@app/features/auth/AccountDisplayUtils';
+import {INSTANCE_UNAVAILABLE_DESCRIPTOR} from '@app/features/auth/AuthMessageDescriptors';
+import {AccountInstanceUnavailableError} from '@app/features/auth/state/AccountAccess';
+import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
+import {switcherAccounts} from '@app/features/auth/state/AccountSwitcherAccounts';
+import Accounts from '@app/features/auth/state/Accounts';
 import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {type Account, SessionExpiredError} from '@app/features/platform/state/AuthSession';
-import {http} from '@app/features/platform/transport/RestTransport';
+import {instanceRequest, instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
-import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
-import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {Trans} from '@lingui/react/macro';
-import {SignOutIcon} from '@phosphor-icons/react';
-import type React from 'react';
+import {useCallback} from 'react';
 
 const WE_COULDN_T_SWITCH_ACCOUNTS_PLEASE_TRY_AGAIN_DESCRIPTOR = msg({
 	message: "Couldn't switch accounts. Try again.",
@@ -38,7 +30,20 @@ const WE_COULDN_T_REMOVE_THIS_ACCOUNT_PLEASE_TRY_DESCRIPTOR = msg({
 	message: "Couldn't remove this account. Try again.",
 	comment: 'Toast error shown when removing the current account from the device fails.',
 });
+const INSTANCE_UNAVAILABLE_NAMED_BODY_DESCRIPTOR = msg({
+	message:
+		"We couldn't reach {instanceLabel} to switch accounts. Your current account is still active. Try again when the instance is back online.",
+	comment:
+		'Modal body shown when switching to an account on a named unreachable instance fails. instanceLabel is a hostname or endpoint label.',
+});
+const INSTANCE_UNAVAILABLE_UNNAMED_BODY_DESCRIPTOR = msg({
+	message:
+		"We couldn't reach that account's instance to switch accounts. Your current account is still active. Try again when the instance is back online.",
+	comment: 'Modal body shown when switching to an account on an unreachable instance fails.',
+});
+
 const logger = new Logger('AccountSwitcherModalUtils');
+const STORED_ACCOUNT_LOGOUT_TIMEOUT_MS = 5000;
 
 function showAccountSwitcherErrorModal(message: MessageDescriptor): void {
 	showGenericErrorModal({
@@ -49,275 +54,195 @@ function showAccountSwitcherErrorModal(message: MessageDescriptor): void {
 	});
 }
 
+function showAccountInstanceUnavailableModal(account: Account): void {
+	const instanceLabel = resolveAccountInstanceLabel(account);
+	showGenericErrorModal({
+		title: () => i18n._(INSTANCE_UNAVAILABLE_DESCRIPTOR),
+		message: () => {
+			if (instanceLabel != null && instanceLabel.length > 0) {
+				return i18n._(INSTANCE_UNAVAILABLE_NAMED_BODY_DESCRIPTOR, {instanceLabel});
+			}
+			return i18n._(INSTANCE_UNAVAILABLE_UNNAMED_BODY_DESCRIPTOR);
+		},
+		dataFlx: 'auth.account-switcher-modal-utils.instance-unavailable-modal',
+		defer: true,
+	});
+}
+
 export interface AccountSwitcherLogic {
-	currentAccount: Account | null;
-	accounts: Array<Account>;
-	isBusy: boolean;
-	handleSwitchAccount: (userId: string) => Promise<void>;
-	handleLogout: () => Promise<void>;
-	handleLogoutStoredAccount: (account: Account) => Promise<void>;
-	handleAddAccount: () => void;
-	handleReLogin: (_userId: string) => void;
-	handleRemoveAccount: (userId: string) => Promise<void>;
-	getAvatarUrl: (account: Account) => string | undefined;
+	readonly accounts: Array<Account>;
+	readonly currentAccount: Account | null;
+	readonly currentAccountKey: string | null;
+	readonly isBusy: boolean;
+	readonly handleSelectAccount: (account: Account) => void;
+	readonly handleSwitchAccount: (accountKey: string) => Promise<void>;
+	readonly handleLogout: () => Promise<void>;
+	readonly handleLogoutStoredAccount: (account: Account) => Promise<void>;
 }
 
 export interface AccountSwitcherLogicOptions {
-	redirectAfterSwitch?: string | null;
-	redirectAfterLogin?: string | null;
-	switchAccount?: (userId: string) => Promise<void>;
+	readonly onSelectCurrent?: (() => void) | null;
+	readonly onSessionExpired: ((account: Account) => void) | null;
+	readonly redirectAfterSwitch: string | null;
+	readonly switchAccount: ((accountKey: string) => Promise<void>) | null;
 }
 
-export function useAccountSwitcherLogic(options: AccountSwitcherLogicOptions = {}): AccountSwitcherLogic {
-	const {redirectAfterSwitch = undefined, redirectAfterLogin = undefined, switchAccount} = options;
-	const currentAccount = AccountManager.currentAccount;
-	const accounts = AccountManager.getAllAccounts();
-	const isBusy = AccountManager.isSwitching || AccountManager.isLoading;
-	const handleLoginSuccess = async (payload: LoginSuccessPayload): Promise<void> => {
-		await AuthenticationCommands.completeLogin(payload, {redirectPath: redirectAfterLogin});
-		ModalCommands.popAll();
-	};
-	const handleReLogin = (userId: string): void => {
-		const account = AccountManager.accounts.get(userId);
-		if (!account) {
-			showAccountSwitcherErrorModal(WE_COULDN_T_SWITCH_ACCOUNTS_PLEASE_TRY_AGAIN_DESCRIPTOR);
+export interface SwitchStoredAccountRequest extends AccountSwitcherLogicOptions {
+	readonly accountKey: string;
+	readonly onSuccess: (() => void) | null;
+}
+
+interface ExpiredStoredAccountRequest {
+	readonly account: Account | null;
+	readonly error: unknown;
+	readonly onSessionExpired: ((account: Account) => void) | null;
+}
+
+function handleExpiredStoredAccount({account, error, onSessionExpired}: ExpiredStoredAccountRequest): boolean {
+	if (!(error instanceof SessionExpiredError) || account == null) {
+		return false;
+	}
+	if (onSessionExpired != null) {
+		onSessionExpired(account);
+		return true;
+	}
+	logger.warn('Stored account session expired while switching', error);
+	showAccountSwitcherErrorModal(WE_COULDN_T_SWITCH_ACCOUNTS_PLEASE_TRY_AGAIN_DESCRIPTOR);
+	return true;
+}
+
+export async function switchStoredAccountFromSwitcher({
+	accountKey,
+	onSessionExpired,
+	onSuccess,
+	redirectAfterSwitch,
+	switchAccount,
+}: SwitchStoredAccountRequest): Promise<void> {
+	if (Accounts.isSwitching || Accounts.isLoading) {
+		return;
+	}
+	const account = Accounts.getAccount(accountKey);
+	try {
+		if (switchAccount != null) {
+			await switchAccount(accountKey);
+		} else {
+			await Accounts.switchToAccount(accountKey, redirectAfterSwitch);
+		}
+		if (onSuccess != null) {
+			onSuccess();
+		}
+	} catch (error) {
+		const preparedAccount = Accounts.getAccount(accountKey) ?? account;
+		if (handleExpiredStoredAccount({account: preparedAccount, error, onSessionExpired})) {
 			return;
 		}
-		const prefillLogin = RuntimeConfig.usesUsernameSignIn
-			? account.userData && formatUserTag(account.userData)
-			: (account.userData?.email ?? undefined);
-		showBrowserLoginHandoffModal(handleLoginSuccess, prefillLogin);
-	};
-	const handleSwitchAccount = async (userId: string): Promise<void> => {
-		if (isBusy) {
+		logger.error('Failed to switch account', error);
+		if (error instanceof AccountInstanceUnavailableError && preparedAccount != null) {
+			showAccountInstanceUnavailableModal(preparedAccount);
+			return;
+		}
+		showAccountSwitcherErrorModal(WE_COULDN_T_SWITCH_ACCOUNTS_PLEASE_TRY_AGAIN_DESCRIPTOR);
+	}
+}
+
+async function removeStoredAccountFromSwitcher(accountKey: string): Promise<void> {
+	if (Accounts.isSwitching || Accounts.isLoading) {
+		return;
+	}
+	try {
+		await Accounts.removeStoredAccount(accountKey);
+	} catch (error) {
+		logger.error('Failed to remove account', error);
+		showAccountSwitcherErrorModal(WE_COULDN_T_REMOVE_THIS_ACCOUNT_PLEASE_TRY_DESCRIPTOR);
+	}
+}
+
+export async function logoutStoredAccountFromSwitcher(account: Account): Promise<void> {
+	if (Accounts.isSwitching || Accounts.isLoading) {
+		return;
+	}
+	if (account.instance == null) {
+		logger.warn(`Stored account ${getAccountKey(account)} has no instance runtime, removing it locally`);
+		await removeStoredAccountFromSwitcher(getAccountKey(account));
+		return;
+	}
+	const target = instanceTargetFromSnapshot(account.instance);
+	try {
+		await instanceRequest({
+			method: 'POST',
+			path: Endpoints.AUTH_LOGOUT,
+			target,
+			headers: {Authorization: account.token},
+			timeoutMs: STORED_ACCOUNT_LOGOUT_TIMEOUT_MS,
+			retries: 0,
+			auth: 'none',
+		});
+	} catch (error) {
+		logger.warn('Failed to log out stored account', error);
+	}
+	await removeStoredAccountFromSwitcher(getAccountKey(account));
+}
+
+export function useAccountSwitcherLogic({
+	onSelectCurrent,
+	onSessionExpired,
+	redirectAfterSwitch,
+	switchAccount,
+}: AccountSwitcherLogicOptions): AccountSwitcherLogic {
+	const accounts = switcherAccounts();
+	const currentAccount = Accounts.currentAccount;
+	const currentAccountKey = Accounts.currentAccountKey;
+	const isBusy = Accounts.isSwitching || Accounts.isLoading;
+	const handleSwitchAccount = useCallback(
+		async (accountKey: string): Promise<void> => {
+			await switchStoredAccountFromSwitcher({
+				accountKey,
+				onSessionExpired,
+				onSuccess: ModalCommands.pop,
+				redirectAfterSwitch,
+				switchAccount,
+			});
+		},
+		[onSessionExpired, redirectAfterSwitch, switchAccount],
+	);
+	const handleSelectAccount = useCallback(
+		(account: Account): void => {
+			if (isBusy) {
+				return;
+			}
+			if (account.isValid === false) {
+				onSessionExpired?.(account);
+				return;
+			}
+			const accountKey = getAccountKey(account);
+			if (accountKey === currentAccountKey) {
+				onSelectCurrent?.();
+				return;
+			}
+			void handleSwitchAccount(accountKey);
+		},
+		[currentAccountKey, handleSwitchAccount, isBusy, onSelectCurrent, onSessionExpired],
+	);
+	const handleLogout = useCallback(async (): Promise<void> => {
+		if (Accounts.isSwitching || Accounts.isLoading) {
 			return;
 		}
 		try {
-			if (switchAccount) {
-				await switchAccount(userId);
-			} else {
-				await AccountManager.switchToAccount(userId, redirectAfterSwitch);
-			}
-			ModalCommands.pop();
-		} catch (error) {
-			if (error instanceof SessionExpiredError) {
-				handleReLogin(userId);
-			} else {
-				logger.error('Failed to switch account', error);
-				showAccountSwitcherErrorModal(WE_COULDN_T_SWITCH_ACCOUNTS_PLEASE_TRY_AGAIN_DESCRIPTOR);
-			}
-		}
-	};
-	const handleLogout = async (): Promise<void> => {
-		if (isBusy) {
-			return;
-		}
-		try {
-			await AccountManager.logout();
+			await Accounts.logout();
 			ModalCommands.pop();
 		} catch (error) {
 			logger.error('Logout failed', error);
 			showAccountSwitcherErrorModal(SIGNING_OUT_FAILED_TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR);
 		}
-	};
-	const handleLogoutStoredAccount = async (account: Account): Promise<void> => {
-		if (isBusy) {
-			return;
-		}
-		try {
-			await http.post(Endpoints.AUTH_LOGOUT, {
-				headers: {Authorization: account.token},
-				timeoutMs: 5000,
-				retries: 0,
-				auth: 'none',
-			});
-		} catch (error) {
-			logger.warn('Failed to log out stored account', error);
-		}
-		await handleRemoveAccount(account.userId);
-	};
-	const handleAddAccount = (): void => {
-		showBrowserLoginHandoffModal(handleLoginSuccess);
-	};
-	const handleRemoveAccount = async (userId: string): Promise<void> => {
-		if (isBusy) {
-			return;
-		}
-		try {
-			await AccountManager.removeStoredAccount(userId);
-		} catch (error) {
-			logger.error('Failed to remove account', error);
-			showAccountSwitcherErrorModal(WE_COULDN_T_REMOVE_THIS_ACCOUNT_PLEASE_TRY_DESCRIPTOR);
-		}
-	};
+	}, []);
 	return {
-		currentAccount,
 		accounts,
+		currentAccount,
+		currentAccountKey,
 		isBusy,
+		handleSelectAccount,
 		handleSwitchAccount,
 		handleLogout,
-		handleLogoutStoredAccount,
-		handleAddAccount,
-		handleReLogin,
-		handleRemoveAccount,
-		getAvatarUrl: getAccountAvatarUrl,
+		handleLogoutStoredAccount: logoutStoredAccountFromSwitcher,
 	};
-}
-
-export interface OpenSignOutConfirmOptions {
-	account: Account;
-	currentAccountId: string | null;
-	hasMultipleAccounts: boolean;
-	onLogout: () => Promise<void>;
-	onLogoutStoredAccount: (account: Account) => Promise<void>;
-}
-
-export function openSignOutConfirm({
-	account,
-	currentAccountId,
-	hasMultipleAccounts,
-	onLogout,
-	onLogoutStoredAccount,
-}: OpenSignOutConfirmOptions): void {
-	const displayName = getAccountDisplayName(account, account.userId);
-	const isCurrentAccount = account.userId === currentAccountId;
-	ModalCommands.push(
-		modal(() => (
-			<ConfirmModal
-				title={<Trans>Sign out of {displayName}</Trans>}
-				description={
-					isCurrentAccount ? (
-						hasMultipleAccounts ? (
-							<Trans>Signing out will bring you to the sign-in screen so you can pick another account.</Trans>
-						) : (
-							<Trans>Signing out will bring you to the sign-in screen.</Trans>
-						)
-					) : (
-						<Trans>Signing out will remove this account from the device.</Trans>
-					)
-				}
-				primaryText={<Trans>Sign out</Trans>}
-				primaryVariant="danger"
-				onPrimary={async () => {
-					if (isCurrentAccount) {
-						await onLogout();
-					} else {
-						await onLogoutStoredAccount(account);
-					}
-				}}
-				data-flx="auth.account-switcher-modal-utils.open-sign-out-confirm.confirm-modal"
-			/>
-		)),
-	);
-}
-
-export interface OpenAccountContextMenuOptions {
-	account: Account;
-	currentAccountId: string | null;
-	hasMultipleAccounts: boolean;
-	onSwitch: (userId: string) => void;
-	onReLogin: (userId: string) => void;
-	onLogout: () => Promise<void>;
-	onLogoutStoredAccount: (account: Account) => Promise<void>;
-}
-
-export function openAccountContextMenu(
-	event: React.MouseEvent<HTMLButtonElement>,
-	{
-		account,
-		currentAccountId,
-		hasMultipleAccounts,
-		onSwitch,
-		onReLogin,
-		onLogout,
-		onLogoutStoredAccount,
-	}: OpenAccountContextMenuOptions,
-): void {
-	const isCurrent = account.userId === currentAccountId;
-	ContextMenuCommands.openFromEvent(event, (props) => (
-		<MenuGroup data-flx="auth.account-switcher-modal-utils.open-account-context-menu.menu-group">
-			{isCurrent ? (
-				<MenuItem
-					danger
-					icon={
-						<SignOutIcon
-							size={18}
-							data-flx="auth.account-switcher-modal-utils.open-account-context-menu.sign-out-icon"
-						/>
-					}
-					onClick={() => {
-						props.onClose();
-						openSignOutConfirm({
-							account,
-							currentAccountId,
-							hasMultipleAccounts,
-							onLogout,
-							onLogoutStoredAccount,
-						});
-					}}
-					data-flx="auth.account-switcher-modal-utils.open-account-context-menu.menu-item.close"
-				>
-					<Trans>Sign out</Trans>
-				</MenuItem>
-			) : (
-				<>
-					{account.isValid === false ? (
-						<MenuItem
-							icon={
-								<SignOutIcon
-									size={18}
-									data-flx="auth.account-switcher-modal-utils.open-account-context-menu.sign-out-icon--2"
-								/>
-							}
-							onClick={() => {
-								props.onClose();
-								onReLogin(account.userId);
-							}}
-							data-flx="auth.account-switcher-modal-utils.open-account-context-menu.menu-item.close--2"
-						>
-							<Trans>Sign in again</Trans>
-						</MenuItem>
-					) : (
-						<MenuItem
-							icon={
-								<SignOutIcon
-									size={18}
-									data-flx="auth.account-switcher-modal-utils.open-account-context-menu.sign-out-icon--3"
-								/>
-							}
-							onClick={() => {
-								props.onClose();
-								onSwitch(account.userId);
-							}}
-							data-flx="auth.account-switcher-modal-utils.open-account-context-menu.menu-item.close--3"
-						>
-							<Trans>Switch to this account</Trans>
-						</MenuItem>
-					)}
-					<MenuItem
-						danger
-						icon={
-							<SignOutIcon
-								size={18}
-								data-flx="auth.account-switcher-modal-utils.open-account-context-menu.sign-out-icon--4"
-							/>
-						}
-						onClick={() => {
-							props.onClose();
-							openSignOutConfirm({
-								account,
-								currentAccountId,
-								hasMultipleAccounts,
-								onLogout,
-								onLogoutStoredAccount,
-							});
-						}}
-						data-flx="auth.account-switcher-modal-utils.open-account-context-menu.menu-item.close--4"
-					>
-						<Trans>Sign out</Trans>
-					</MenuItem>
-				</>
-			)}
-		</MenuGroup>
-	));
 }

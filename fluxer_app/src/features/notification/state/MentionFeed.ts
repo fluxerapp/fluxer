@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Channels from '@app/features/channel/state/Channels';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -9,6 +10,7 @@ import {
 	type MentionFilters,
 	messageMatchesMentionTypeFilters,
 } from '@app/features/notification/utils/MentionFeedFilters';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
@@ -33,7 +35,7 @@ class MentionFeed {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -230,4 +232,7 @@ class MentionFeed {
 	}
 }
 
-export default new MentionFeed();
+const mentionFeed = new MentionFeed();
+ResettableStates.register(mentionFeed, mentionFeed.handleGatewayReady);
+
+export default mentionFeed;

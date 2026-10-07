@@ -1,15 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import {usesUsernameSignIn} from '@app/features/app/utils/AccountIdentityFeatures';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {openRecoveryKitModal} from '@app/features/auth/components/modals/RecoveryKitModal';
 import styles from '@app/features/auth/components/pages/RecoverAccountPage.module.css';
 import FormField from '@app/features/auth/flow/AuthFormField';
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
+import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
 import MfaScreen from '@app/features/auth/flow/MfaScreen';
+import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
 import {useAuthForm} from '@app/features/auth/hooks/useAuthForm';
 import {type LoginSuccessPayload, type MfaChallenge, recoverAccount} from '@app/features/auth/state/AuthFlow';
+import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
 import {BACK_TO_SIGN_IN_DESCRIPTOR, USERNAME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {Button} from '@app/features/ui/button/Button';
 import {rememberRecoveryKit} from '@app/features/user/commands/RecoveryKitCommands';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
@@ -100,14 +106,25 @@ function showRecoveredKit(payload: LoginSuccessPayload, kit: PendingRecoveryKit)
 	rememberRecoveryKit(payload.userId, kit.createdAt);
 }
 
-const RecoverAccountPage = observer(function RecoverAccountPage() {
+interface RecoverAccountPageContentProps {
+	readonly runtimeSnapshot: RuntimeConfigSnapshot;
+}
+
+const RecoverAccountPageContent = observer(function RecoverAccountPageContent({
+	runtimeSnapshot,
+}: RecoverAccountPageContentProps) {
 	const {i18n} = useLingui();
 	const loginId = useId();
 	const keyId = useId();
 	const passwordId = useId();
 	const confirmPasswordId = useId();
-	useFluxerDocumentTitle(i18n._(RECOVER_ACCOUNT_DESCRIPTOR));
 	const [fragment] = useState(readRecoveryFragment);
+	const usernameSignIn = usesUsernameSignIn(runtimeSnapshot.features);
+	useEffect(() => {
+		if (!usernameSignIn) {
+			RouterUtils.replaceWith(Routes.LOGIN);
+		}
+	}, [usernameSignIn]);
 	const [mfaChallenge, setMfaChallenge] = useState<MfaChallenge | null>(null);
 	const [pendingKit, setPendingKit] = useState<PendingRecoveryKit | null>(null);
 	useEffect(() => {
@@ -126,14 +143,20 @@ const RecoverAccountPage = observer(function RecoverAccountPage() {
 				return false;
 			}
 			const login = values.login.trim();
-			const result = await recoverAccount({login, recoveryKey: values.recovery_key, password: values.password});
+			const result = await recoverAccount({
+				login,
+				recoveryKey: values.recovery_key,
+				password: values.password,
+				runtimeSnapshot,
+			});
 			if (result.type === 'mfa') {
 				setPendingKit({...result.kit, login});
+				AuthenticationCommands.setMfaTicket({...result.challenge, runtimeSnapshot});
 				setMfaChallenge(result.challenge);
 				return false;
 			}
 			showRecoveredKit(result.payload, {...result.kit, login});
-			await AuthenticationCommands.completeLogin(result.payload);
+			await AuthenticationCommands.completeLogin({...result.payload, runtimeSnapshot});
 			return undefined;
 		},
 		firstFieldName: 'login',
@@ -143,11 +166,13 @@ const RecoverAccountPage = observer(function RecoverAccountPage() {
 			if (pendingKit) {
 				showRecoveredKit(payload, pendingKit);
 			}
-			await AuthenticationCommands.completeLogin(payload);
+			await AuthenticationCommands.completeLogin({...payload, runtimeSnapshot});
+			AuthenticationCommands.clearMfaTicket();
 		},
-		[pendingKit],
+		[pendingKit, runtimeSnapshot],
 	);
 	const handleMfaCancel = useCallback(() => {
+		AuthenticationCommands.clearMfaTicket();
 		setMfaChallenge(null);
 		setPendingKit(null);
 	}, []);
@@ -263,6 +288,19 @@ const RecoverAccountPage = observer(function RecoverAccountPage() {
 				</AuthRouterLink>
 			</div>
 		</>
+	);
+});
+
+const RecoverAccountPage = observer(function RecoverAccountPage() {
+	const {i18n} = useLingui();
+	useFluxerDocumentTitle(i18n._(RECOVER_ACCOUNT_DESCRIPTOR));
+	useAuthPresentation({variant: AuthCardVariant.STANDARD});
+	return (
+		<AuthRuntimeTargetGate data-flx="auth.recover-account-page.runtime-target-gate">
+			{(runtimeSnapshot) => (
+				<RecoverAccountPageContent runtimeSnapshot={runtimeSnapshot} data-flx="auth.recover-account-page.content" />
+			)}
+		</AuthRuntimeTargetGate>
 	);
 });
 

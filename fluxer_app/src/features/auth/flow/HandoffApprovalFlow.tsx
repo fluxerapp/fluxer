@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {DesktopHandoffInfoResponse} from '@app/features/auth/commands/AuthenticationCommands';
-import type {DesktopHandoffMode} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
+import type {DesktopHandoffMode} from '@app/features/auth/flow/auth_login_core/AuthLoginStepTypes';
 import styles from '@app/features/auth/flow/HandoffApprovalFlow.module.css';
-import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CANCEL_DESCRIPTOR,
+	SOMETHING_WENT_WRONG_DESCRIPTOR,
+	TRY_AGAIN_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Input} from '@app/features/ui/components/form/FormInput';
+import {Spinner} from '@app/features/ui/components/Spinner';
+import {
+	formatDesktopHandoffCode,
+	isDesktopHandoffCode,
+	parseDesktopHandoffCodeInput,
+} from '@fluxer/schema/src/domains/auth/DesktopHandoffCode';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CheckCircleIcon, ShieldWarningIcon} from '@phosphor-icons/react';
@@ -17,26 +27,6 @@ const SIGN_IN_CODE_DESCRIPTOR = msg({
 	message: 'Sign-in code',
 	comment: 'Short label in the authentication handoff approval flow. Keep the tone plain and specific.',
 });
-const CODE_LENGTH = 12;
-const VALID_CODE_PATTERN = /^[A-Za-z0-9]{12}$/;
-
-function formatCodeForDisplay(raw: string): string {
-	const cleaned = raw
-		.replace(/[^A-Za-z0-9]/g, '')
-		.toUpperCase()
-		.slice(0, CODE_LENGTH);
-	if (cleaned.length <= 6) {
-		return cleaned;
-	}
-	return `${cleaned.slice(0, 6)}-${cleaned.slice(6)}`;
-}
-
-function extractRawCode(formatted: string): string {
-	return formatted
-		.replace(/[^A-Za-z0-9]/g, '')
-		.toUpperCase()
-		.slice(0, CODE_LENGTH);
-}
 
 function formatLocation(location: {
 	city?: string | null;
@@ -72,9 +62,9 @@ export function HandoffApprovalFlow({
 	const [codeInput, setCodeInput] = useState('');
 	const handleCodeChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const rawCode = extractRawCode(e.target.value);
+			const rawCode = parseDesktopHandoffCodeInput(e.target.value);
 			setCodeInput(rawCode);
-			if (VALID_CODE_PATTERN.test(rawCode)) {
+			if (isDesktopHandoffCode(rawCode)) {
 				onSubmitCode(rawCode);
 			}
 		},
@@ -124,7 +114,7 @@ export function HandoffApprovalFlow({
 					<Input
 						aria-label={i18n._(SIGN_IN_CODE_DESCRIPTOR)}
 						name="desktop_handoff_code"
-						value={formatCodeForDisplay(codeInput)}
+						value={formatDesktopHandoffCode(codeInput)}
 						onChange={handleCodeChange}
 						autoComplete="off"
 						autoCapitalize="characters"
@@ -134,6 +124,14 @@ export function HandoffApprovalFlow({
 						data-flx="auth.flow.handoff-approval-flow.input.code-change"
 					/>
 				</div>
+				<Button
+					onClick={onRetry}
+					variant="secondary"
+					fitContainer
+					data-flx="auth.flow.handoff-approval-flow.button.cancel"
+				>
+					{i18n._(CANCEL_DESCRIPTOR)}
+				</Button>
 			</div>
 		);
 	}
@@ -144,7 +142,7 @@ export function HandoffApprovalFlow({
 					<Trans>Verifying code…</Trans>
 				</h1>
 				<div className={styles.spinner} data-flx="auth.flow.handoff-approval-flow.spinner">
-					<span className={styles.spinnerIcon} data-flx="auth.flow.handoff-approval-flow.spinner-icon" />
+					<Spinner data-flx="auth.flow.handoff-approval-flow.spinner-icon" />
 				</div>
 			</div>
 		);
@@ -218,7 +216,7 @@ export function HandoffApprovalFlow({
 					<Trans>Completing sign-in…</Trans>
 				</h1>
 				<div className={styles.spinner} data-flx="auth.flow.handoff-approval-flow.spinner--2">
-					<span className={styles.spinnerIcon} data-flx="auth.flow.handoff-approval-flow.spinner-icon--2" />
+					<Spinner data-flx="auth.flow.handoff-approval-flow.spinner-icon--2" />
 				</div>
 			</div>
 		);
@@ -245,7 +243,7 @@ export function HandoffApprovalFlow({
 		return (
 			<div className={styles.container} data-flx="auth.flow.handoff-approval-flow.container--7">
 				<h1 className={styles.title} data-flx="auth.flow.handoff-approval-flow.title--6">
-					<Trans>Something went wrong</Trans>
+					{i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR)}
 				</h1>
 				{error ? (
 					<p className={styles.error} role="alert" data-flx="auth.flow.handoff-approval-flow.error">

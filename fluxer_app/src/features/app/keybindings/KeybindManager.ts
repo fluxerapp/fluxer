@@ -103,7 +103,7 @@ import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 import CombokeysImport from 'combokeys';
-import {autorun, compareStructural, reaction} from 'mobx';
+import {autorun, compareStructural, computed, reaction} from 'mobx';
 
 const normalizeKeyboardShortcutKey = (key: string): string => {
 	if (key === ' ') return 'space';
@@ -257,14 +257,21 @@ class KeybindManager {
 		}
 	}
 
-	private get resolvedKeybinds(): Array<RuntimeKeybind> {
-		const skipDefaults = Keybind.getDisableBuiltinKeybinds();
-		const defaults = skipDefaults ? [] : Keybind.getDefaultsForRuntimeDispatch();
-		const customs = Keybind.getCustomKeybinds();
-		return [
-			...buildDefaultRuntimeKeybinds(defaults, getSuppressedBuiltinActions(customs)),
-			...buildCustomRuntimeKeybinds(customs, (action) => Keybind.getDefaultByAction(action)),
-		];
+	private readonly resolvedKeybindsValue = computed(
+		(): ReadonlyArray<RuntimeKeybind> => {
+			const skipDefaults = Keybind.getDisableBuiltinKeybinds();
+			const defaults = skipDefaults ? [] : Keybind.getDefaultsForRuntimeDispatch();
+			const customs = Keybind.getCustomKeybinds();
+			return [
+				...buildDefaultRuntimeKeybinds(defaults, getSuppressedBuiltinActions(customs)),
+				...buildCustomRuntimeKeybinds(customs, (action) => Keybind.getDefaultByAction(action)),
+			];
+		},
+		{keepAlive: true},
+	);
+
+	private get resolvedKeybinds(): ReadonlyArray<RuntimeKeybind> {
+		return this.resolvedKeybindsValue.get();
 	}
 
 	private get activeKeybinds(): Array<RuntimeKeybind> {
@@ -491,7 +498,6 @@ class KeybindManager {
 				this.inputMonitoringHookStatus = 'granted';
 				return true;
 			case 'denied':
-			case 'declined':
 				NativePermission.setInputMonitoringStatus('denied');
 				this.inputMonitoringHookStatus = 'denied';
 				return false;

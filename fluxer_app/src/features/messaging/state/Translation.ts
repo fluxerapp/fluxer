@@ -2,6 +2,7 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {create} from '@bufbuild/protobuf';
 import {SearchEngineSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
@@ -74,7 +75,7 @@ class Translation {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void makePersistent(this, 'Translation', ['engines'], {version: 1});
+		initializeStore(this, () => makePersistent(this, 'Translation', ['engines'], {version: 1}));
 	}
 
 	get enabledEngines(): ReadonlyArray<TranslationProvider> {

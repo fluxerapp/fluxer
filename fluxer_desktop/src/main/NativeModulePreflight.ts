@@ -5,109 +5,149 @@ import {createHash} from 'node:crypto';
 import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import path from 'node:path';
+import {APP_STORE_ADDON_PACKAGE} from '@electron/main/AppStoreNativeBoundary';
+import {GATEWAY_SOCKET_ADDON_PACKAGE} from '@electron/main/GatewaySocketNativeBoundary';
 import {app} from 'electron';
 import log from 'electron-log';
 
 const requireModule = createRequire(import.meta.url);
 const PREFLIGHT_TIMEOUT_MS = 60_000;
 const SKIP_PREFLIGHT_ENV = 'FLUXER_SKIP_NATIVE_PREFLIGHT';
-const PREFLIGHT_MARKER_FILENAME = 'native-module-preflight-v1.json';
+const PREFLIGHT_MARKER_FILENAME = 'native-module-preflight-v2.json';
+const PREFLIGHT_MARKER_VERSION = 2;
 
 interface PreflightMarker {
-	version: 1;
-	fingerprint: string;
-	completedAt: string;
+	readonly fingerprint: string;
+	readonly completedAt: string;
+	readonly degraded: ReadonlyArray<string>;
 }
+
+type NativeModuleSeverity = 'fatal' | 'degraded';
 
 interface NativeModulePreflightSpec {
 	readonly name: string;
 	readonly platforms: ReadonlySet<NodeJS.Platform>;
+	readonly severity: NativeModuleSeverity;
 }
 
 interface NativeModulePreflightFailure {
 	readonly name: string;
+	readonly severity: NativeModuleSeverity;
 	readonly modulePath?: string;
 	readonly reason: string;
 	readonly stdout?: string;
 	readonly stderr?: string;
 }
 
+export interface NativeModulePreflightResult {
+	readonly degraded: ReadonlyArray<string>;
+}
+
 const NATIVE_MODULE_PREFLIGHT_SPECS: ReadonlyArray<NativeModulePreflightSpec> = [
 	{
 		name: '@fluxer/webauthn',
 		platforms: new Set(['darwin', 'linux', 'win32']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/platform-info',
 		platforms: new Set(['darwin', 'linux', 'win32']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/mac-app-audio',
 		platforms: new Set(['darwin']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/mac-clipboard',
 		platforms: new Set(['darwin']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/mac-sysctl',
 		platforms: new Set(['darwin']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/mac-tcc',
 		platforms: new Set(['darwin']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/macos-input-hook',
 		platforms: new Set(['darwin']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/linux-audio-capture',
 		platforms: new Set(['linux']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/linux-evdev',
 		platforms: new Set(['linux']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/linux-input-hook',
 		platforms: new Set(['linux']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/linux-notifications',
 		platforms: new Set(['linux']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/linux-portals',
 		platforms: new Set(['linux']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/linux-screen-capture',
 		platforms: new Set(['linux']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/system-hunspell',
 		platforms: new Set(['linux']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/win-clipboard',
 		platforms: new Set(['win32']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/win-process-loopback',
 		platforms: new Set(['win32']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/win-shell',
 		platforms: new Set(['win32']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/win-toast',
 		platforms: new Set(['win32']),
+		severity: 'fatal',
 	},
 	{
 		name: '@fluxer/windows-input-hook',
 		platforms: new Set(['win32']),
+		severity: 'fatal',
+	},
+	{
+		name: APP_STORE_ADDON_PACKAGE,
+		platforms: new Set(['darwin', 'linux', 'win32']),
+		severity: 'degraded',
+	},
+	{
+		name: GATEWAY_SOCKET_ADDON_PACKAGE,
+		platforms: new Set(['darwin', 'linux', 'win32']),
+		severity: 'degraded',
 	},
 ];
 const PROBE_SCRIPT = `
@@ -205,23 +245,43 @@ function preflightFingerprint(resolved: ReadonlyArray<ResolvedSpec>): string {
 	return hash.digest('hex');
 }
 
+function parsePreflightMarker(raw: string): PreflightMarker | null {
+	let parsed: {version?: unknown; fingerprint?: unknown; completedAt?: unknown; degraded?: unknown};
+	try {
+		parsed = JSON.parse(raw) as typeof parsed;
+	} catch {
+		return null;
+	}
+	if (typeof parsed.fingerprint !== 'string') return null;
+	const completedAt = typeof parsed.completedAt === 'string' ? parsed.completedAt : '';
+	if (parsed.version === 1) return {fingerprint: parsed.fingerprint, completedAt, degraded: []};
+	if (parsed.version !== PREFLIGHT_MARKER_VERSION) return null;
+	if (!Array.isArray(parsed.degraded) || parsed.degraded.some((name) => typeof name !== 'string')) return null;
+	return {fingerprint: parsed.fingerprint, completedAt, degraded: parsed.degraded as Array<string>};
+}
+
 function readPreflightMarker(): PreflightMarker | null {
 	try {
-		const raw = readFileSync(preflightMarkerPath(), 'utf-8');
-		const parsed = JSON.parse(raw) as Partial<PreflightMarker>;
-		if (parsed.version !== 1 || typeof parsed.fingerprint !== 'string') return null;
-		return parsed as PreflightMarker;
+		return parsePreflightMarker(readFileSync(preflightMarkerPath(), 'utf-8'));
 	} catch {
 		return null;
 	}
 }
 
-function writePreflightMarker(fingerprint: string): void {
+function writePreflightMarker(fingerprint: string, degraded: ReadonlyArray<string>): void {
 	try {
 		const markerPath = preflightMarkerPath();
 		mkdirSync(path.dirname(markerPath), {recursive: true});
-		const marker: PreflightMarker = {version: 1, fingerprint, completedAt: new Date().toISOString()};
-		writeFileSync(markerPath, JSON.stringify(marker), 'utf-8');
+		writeFileSync(
+			markerPath,
+			JSON.stringify({
+				version: PREFLIGHT_MARKER_VERSION,
+				fingerprint,
+				completedAt: new Date().toISOString(),
+				degraded,
+			}),
+			'utf-8',
+		);
 	} catch (error) {
 		log.warn('[NativeModulePreflight] Failed to persist preflight marker', error);
 	}
@@ -248,6 +308,7 @@ function resolveSpecs(): {resolved: Array<ResolvedSpec>; failures: Array<NativeM
 		} catch (error) {
 			failures.push({
 				name: spec.name,
+				severity: spec.severity,
 				reason: `failed to resolve module: ${error instanceof Error ? error.message : String(error)}`,
 			});
 		}
@@ -307,6 +368,7 @@ function probeAllModules(resolved: Array<ResolvedSpec>): ProbeOutcome {
 			if (earlierMissing) continue;
 			failures.push({
 				name: spec.name,
+				severity: spec.severity,
 				modulePath,
 				reason: result.signal
 					? `child process terminated by signal ${result.signal} before this probe ran`
@@ -321,6 +383,7 @@ function probeAllModules(resolved: Array<ResolvedSpec>): ProbeOutcome {
 		if (!completionRecord) {
 			failures.push({
 				name: spec.name,
+				severity: spec.severity,
 				modulePath,
 				reason: result.signal
 					? `module require crashed: child terminated by signal ${result.signal}`
@@ -333,6 +396,7 @@ function probeAllModules(resolved: Array<ResolvedSpec>): ProbeOutcome {
 		if (completionRecord.phase === 'load-error' || completionRecord.phase === 'throw') {
 			failures.push({
 				name: spec.name,
+				severity: spec.severity,
 				modulePath,
 				reason: completionRecord.phase === 'load-error' ? 'module reported loadError' : 'module require threw',
 				stdout: completionRecord.message ?? undefined,
@@ -354,19 +418,20 @@ function formatNativeModulePreflightFailure(failure: NativeModulePreflightFailur
 		.join('\n');
 }
 
-export function runNativeModulePreflight(): void {
+export function runNativeModulePreflight(): NativeModulePreflightResult {
 	if (!shouldRunNativeModulePreflight()) {
-		return;
+		return {degraded: []};
 	}
 	const {resolved, failures: resolveFailures} = resolveSpecs();
 	const fingerprint = preflightFingerprint(resolved);
-	if (resolveFailures.length === 0) {
+	if (!resolveFailures.some((failure) => failure.severity === 'fatal')) {
 		const marker = readPreflightMarker();
 		if (marker && marker.fingerprint === fingerprint) {
 			log.info('[NativeModulePreflight] Skipped: install fingerprint matches successful previous run', {
 				completedAt: marker.completedAt,
+				degraded: marker.degraded,
 			});
-			return;
+			return {degraded: marker.degraded};
 		}
 	}
 	const outcome = probeAllModules(resolved);
@@ -374,14 +439,23 @@ export function runNativeModulePreflight(): void {
 		log.warn('[NativeModulePreflight] Skipped: preflight could not be completed on this machine', {
 			reason: outcome.inconclusive,
 		});
-		return;
+		return {degraded: []};
 	}
 	const failures = [...resolveFailures, ...outcome.failures];
-	if (failures.length === 0) {
-		writePreflightMarker(fingerprint);
-		return;
+	const fatal = failures.filter((failure) => failure.severity === 'fatal');
+	const degraded = failures.filter((failure) => failure.severity === 'degraded');
+	if (degraded.length > 0) {
+		log.warn(
+			'[NativeModulePreflight] Optional native modules are unavailable. The app continues without them',
+			degraded.map(formatNativeModulePreflightFailure).join('\n'),
+		);
 	}
-	clearPreflightMarker();
-	const details = failures.map(formatNativeModulePreflightFailure).join('\n');
-	throw new Error(`Fluxer native module preflight failed on ${process.platform}/${process.arch}.\n${details}`);
+	if (fatal.length > 0) {
+		clearPreflightMarker();
+		const details = fatal.map(formatNativeModulePreflightFailure).join('\n');
+		throw new Error(`Fluxer native module preflight failed on ${process.platform}/${process.arch}.\n${details}`);
+	}
+	const degradedModules = degraded.map((failure) => failure.name);
+	writePreflightMarker(fingerprint, degradedModules);
+	return {degraded: degradedModules};
 }

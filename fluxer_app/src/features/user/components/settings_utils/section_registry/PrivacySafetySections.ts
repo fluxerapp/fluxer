@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	COMMUNITY_DESCRIPTOR,
 	COMMUNITY_MEMBERS_DESCRIPTOR,
 	DIRECT_MESSAGES_DESCRIPTOR,
 	FRIENDS_OF_FRIENDS_DESCRIPTOR,
+	GROUP_DM_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ADD_FRIEND_DESCRIPTOR} from '@app/features/relationship/utils/RelationshipMessageDescriptors';
 import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
@@ -113,10 +115,6 @@ const GROUP_CHAT_DESCRIPTOR = msg({
 	message: 'Group chat',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const GROUP_DM_DESCRIPTOR = msg({
-	message: 'Group DM',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
 const ADD_TO_GROUP_DESCRIPTOR = msg({
 	message: 'Add to group',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -135,10 +133,6 @@ const GROUP_PRIVACY_DESCRIPTOR = msg({
 });
 const EXTENDED_NETWORK_DESCRIPTOR = msg({
 	message: 'Extended network',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const COMMUNITY_DESCRIPTOR = msg({
-	message: 'Community',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const GUILD_MEMBERS_DESCRIPTOR = msg({

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {msg} from '@lingui/core/macro';
 
 export const COLORS_DESCRIPTOR = msg({
@@ -184,7 +184,7 @@ export const VOLUME_DESCRIPTOR = msg({
 	message: 'Volume',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-export const PREMIUM_PRODUCT_NAME_KEYWORD = PREMIUM_PRODUCT_NAME;
+export const PREMIUM_PRODUCT_NAME_KEYWORD = getPremiumProductName;
 export const DM_DESCRIPTOR = msg({
 	message: 'DM',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

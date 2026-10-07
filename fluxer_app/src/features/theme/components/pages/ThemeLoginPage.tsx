@@ -1,28 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
 import {AuthLoginLayout} from '@app/features/auth/flow/AuthLoginLayout';
 import {AuthPageHeader} from '@app/features/auth/flow/AuthPageHeader';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
-import {
-	isApprovalFlowMode,
-	isHandoffRequest,
-	useDesktopHandoffFlow,
-} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
+import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
+import {AuthRuntimeTargetResetAction} from '@app/features/auth/flow/AuthRuntimeTargetResetAction';
+import {isHandoffRequest} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
 import {DesktopDeepLinkPrompt} from '@app/features/auth/flow/DesktopDeepLinkPrompt';
-import {ConnectedHandoffApprovalFlow} from '@app/features/auth/flow/HandoffApprovalFlow';
-import MfaScreen from '@app/features/auth/flow/MfaScreen';
-import AccountManager from '@app/features/auth/state/AccountManager';
-import Authentication from '@app/features/auth/state/Authentication';
-import type {LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
-import {safeRedirectTarget, safeRedirectTargetOrFallback} from '@app/features/auth/utils/SafeRedirect';
+import {DesktopHandoffMfaStep} from '@app/features/auth/flow/DesktopHandoffMfaStep';
+import Authentication, {LoginState} from '@app/features/auth/state/Authentication';
+import {useAuthRuntimeTarget} from '@app/features/auth/state/AuthRuntimeTarget';
+import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
 import {REGISTER_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
-import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation, useParams} from '@app/features/platform/components/router/RouterReact';
 import * as ThemeCommands from '@app/features/theme/commands/ThemeCommands';
 import {useThemeExists} from '@app/features/theme/hooks/useThemeExists';
@@ -33,6 +28,8 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {PaletteIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useMemo} from 'react';
+
+const THEME_LOGIN_PAGE_STEP_ORDER: ReadonlyArray<LoginState> = [LoginState.DEFAULT, LoginState.MFA];
 
 const YOU_VE_GOT_CSS_DESCRIPTOR = msg({
 	message: "You've got CSS!",
@@ -46,30 +43,31 @@ const APPLY_THEME_DESCRIPTOR = msg({
 	message: 'Apply theme',
 	comment: 'Button or menu action label in the theme login page. Keep it concise. Keep the tone plain and specific.',
 });
-const THEME_LOGIN_PAGE_STEP_ORDER = ['default', 'mfa'] as const;
-const ThemeLoginPage = observer(function ThemeLoginPage() {
+interface ThemeLoginPageProps {
+	readonly themeId: string;
+	readonly onLoginComplete: () => void;
+}
+
+const ThemeLoginPage = observer(function ThemeLoginPage({themeId, onLoginComplete}: ThemeLoginPageProps) {
 	const {i18n} = useLingui();
-	const {themeId} = useParams() as {themeId: string};
+	const runtimeTarget = useAuthRuntimeTarget();
 	const location = useLocation();
 	const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
-	const rawRedirect = params['get']('redirect_to');
-	const safeRedirect = safeRedirectTarget(rawRedirect);
+	const safeRedirect = safeRedirectTarget(params.get('redirect_to'));
 	const isHandoff = isHandoffRequest(params);
-	const registerSearch = safeRedirect ? {redirect_to: safeRedirect} : undefined;
+	const registerSearch = safeRedirect == null ? undefined : {redirect_to: safeRedirect};
 	const redirectPath = useMemo(() => {
-		if (!safeRedirect) {
+		if (safeRedirect == null) {
 			return Routes.theme(themeId);
 		}
 		return setPathQueryParams(Routes.theme(themeId), {redirect_to: safeRedirect});
 	}, [themeId, safeRedirect]);
-	const handleLoginComplete = useCallback(() => {
-		if (!themeId) return;
-		ThemeCommands.openAcceptModal(themeId, i18n);
-	}, [themeId, i18n]);
 	return (
 		<AuthLoginLayout
 			redirectPath={redirectPath}
+			inviteCode={null}
 			desktopHandoff={isHandoff}
+			excludeCurrentUser={false}
 			extraTopContent={
 				<>
 					<DesktopDeepLinkPrompt
@@ -93,7 +91,18 @@ const ThemeLoginPage = observer(function ThemeLoginPage() {
 					/>
 				</>
 			}
+			forgotPasswordAction={null}
 			showTitle={false}
+			title={null}
+			onBackActionChange={null}
+			completeLoginRedirectPath={null}
+			forceCredentials={false}
+			startWithAddAccount={false}
+			runtimeTarget={runtimeTarget}
+			showInstanceSelector={null}
+			ssoRedirectPath={null}
+			suppressInlineBackButtons={false}
+			initialIdentifier={null}
 			registerLink={
 				<AuthRouterLink
 					to={Routes.themeRegister(themeId)}
@@ -103,70 +112,26 @@ const ThemeLoginPage = observer(function ThemeLoginPage() {
 					{i18n._(REGISTER_DESCRIPTOR)}
 				</AuthRouterLink>
 			}
-			onLoginComplete={handleLoginComplete}
+			onLoginComplete={onLoginComplete}
 			data-flx="theme.theme-login-page.auth-login-layout"
 		/>
 	);
 });
-const ThemeLoginPageMFA = observer(function ThemeLoginPageMFA() {
+interface ThemeLoginPageContentProps {
+	readonly runtimeSnapshot: RuntimeConfigSnapshot;
+}
+
+const ThemeLoginPageContent = observer(function ThemeLoginPageContent({runtimeSnapshot}: ThemeLoginPageContentProps) {
 	const {i18n} = useLingui();
-	const {themeId} = useParams() as {themeId: string};
-	const location = useLocation();
-	const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
-	const isHandoff = isHandoffRequest(params);
-	const rawRedirect = params['get']('redirect_to');
-	const redirectTo = isHandoff ? undefined : safeRedirectTargetOrFallback(rawRedirect, Routes.theme(themeId));
-	const mfaTicket = Authentication.currentMfaTicket;
-	const mfaMethods = Authentication.availableMfaMethods;
-	const hasStoredAccounts = AccountManager.orderedAccounts.length > 0;
-	const handoff = useDesktopHandoffFlow({
-		enabled: isHandoff,
-		hasStoredAccounts,
-		initialMode: 'idle',
-	});
-	const handleMfaSuccess = useCallback(
-		async ({token, userId}: LoginSuccessPayload) => {
-			if (isHandoff) {
-				await AccountManager.refreshStoredAccount(userId, token);
-				await handoff.start({token, userId});
-				return;
-			}
-			await AuthenticationCommands.completeLogin({token, userId});
-			ThemeCommands.openAcceptModal(themeId, i18n);
-			AuthenticationCommands.clearMfaTicket();
-			RouterUtils.replaceWith(redirectTo || '/');
-		},
-		[handoff, isHandoff, redirectTo, themeId, i18n],
-	);
-	const handleCancel = useCallback(() => {
-		AuthenticationCommands.clearMfaTicket();
-	}, []);
-	if (!mfaTicket || !mfaMethods) {
-		return null;
-	}
-	if (isHandoff && isApprovalFlowMode(handoff.mode)) {
-		return (
-			<ConnectedHandoffApprovalFlow
-				handoff={handoff}
-				data-flx="theme.theme-login-page.theme-login-page-mfa.connected-handoff-approval-flow"
-			/>
-		);
-	}
-	return (
-		<MfaScreen
-			challenge={{ticket: mfaTicket, ...mfaMethods}}
-			onSuccess={handleMfaSuccess}
-			onCancel={handleCancel}
-			data-flx="theme.theme-login-page.theme-login-page-mfa.mfa-screen"
-		/>
-	);
-});
-const ThemeLoginPageContainer = observer(() => {
-	const {i18n} = useLingui();
+	const runtimeTarget = useAuthRuntimeTarget();
 	const loginState = Authentication.loginState;
 	const {themeId} = useParams() as {themeId: string};
+	const handleLoginComplete = useCallback(() => {
+		ThemeCommands.openAcceptModal(themeId, i18n, runtimeSnapshot);
+		runtimeTarget.reset();
+	}, [i18n, runtimeSnapshot, runtimeTarget, themeId]);
 	useFluxerDocumentTitle(i18n._(APPLY_THEME_DESCRIPTOR));
-	const themeStatus = useThemeExists(themeId);
+	const themeStatus = useThemeExists(themeId, runtimeSnapshot);
 	if (themeStatus === 'loading') {
 		return <AuthLoadingState data-flx="theme.theme-login-page.theme-login-page-container.auth-loading-state" />;
 	}
@@ -175,12 +140,15 @@ const ThemeLoginPageContainer = observer(() => {
 			<AuthErrorState
 				title={<Trans>Theme not found</Trans>}
 				text={<Trans>This theme may have been removed or the link is invalid.</Trans>}
+				action={
+					<AuthRuntimeTargetResetAction data-flx="theme.theme-login-page.theme-login-page-container.auth-runtime-target-reset-action" />
+				}
 				data-flx="theme.theme-login-page.theme-login-page-container.auth-error-state"
 			/>
 		);
 	}
 	switch (loginState) {
-		case 'default':
+		case LoginState.DEFAULT:
 			return (
 				<SteppedCarousel
 					step={loginState}
@@ -189,10 +157,14 @@ const ThemeLoginPageContainer = observer(() => {
 					ariaLabel={i18n._(APPLY_THEME_DESCRIPTOR)}
 					data-flx="theme.theme-login-page.container-carousel"
 				>
-					<ThemeLoginPage data-flx="theme.theme-login-page.theme-login-page-container.theme-login-page" />
+					<ThemeLoginPage
+						themeId={themeId}
+						onLoginComplete={handleLoginComplete}
+						data-flx="theme.theme-login-page.theme-login-page-container.theme-login-page"
+					/>
 				</SteppedCarousel>
 			);
-		case 'mfa':
+		case LoginState.MFA:
 			return (
 				<SteppedCarousel
 					step={loginState}
@@ -201,12 +173,27 @@ const ThemeLoginPageContainer = observer(() => {
 					ariaLabel={i18n._(APPLY_THEME_DESCRIPTOR)}
 					data-flx="theme.theme-login-page.container-carousel"
 				>
-					<ThemeLoginPageMFA data-flx="theme.theme-login-page.theme-login-page-container.theme-login-page-mfa" />
+					<DesktopHandoffMfaStep
+						fallbackRedirectPath={Routes.theme(themeId)}
+						onLoginComplete={handleLoginComplete}
+						data-flx="theme.theme-login-page.theme-login-page-container.desktop-handoff-mfa-step"
+					/>
 				</SteppedCarousel>
 			);
 		default:
 			return null;
 	}
 });
+
+const ThemeLoginPageContainer = observer(() => (
+	<AuthRuntimeTargetGate data-flx="theme.theme-login-page.runtime-target-gate">
+		{(runtimeSnapshot) => (
+			<ThemeLoginPageContent
+				runtimeSnapshot={runtimeSnapshot}
+				data-flx="theme.theme-login-page.theme-login-page-content"
+			/>
+		)}
+	</AuthRuntimeTargetGate>
+));
 
 export default ThemeLoginPageContainer;

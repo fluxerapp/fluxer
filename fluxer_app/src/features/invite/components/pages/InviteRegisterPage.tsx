@@ -2,16 +2,21 @@
 
 import {Routes} from '@app/app/Routes';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
 import {AuthMinimalRegisterFormCore} from '@app/features/auth/flow/AuthMinimalRegisterFormCore';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
-import {AuthSsoPanel, isRuntimeSsoEnforced} from '@app/features/auth/flow/AuthSsoPanel';
+import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
+import {AuthRuntimeTargetResetAction} from '@app/features/auth/flow/AuthRuntimeTargetResetAction';
+import {AuthSsoPanel, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
 import {DesktopDeepLinkPrompt} from '@app/features/auth/flow/DesktopDeepLinkPrompt';
 import {GuildInviteHeader, InviteHeader} from '@app/features/auth/flow/InviteHeader';
-import {useAuthLayoutContext} from '@app/features/auth/state/AuthLayoutContext';
+import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
+import {AuthCardVariant, useAuthLayoutContext} from '@app/features/auth/state/AuthLayoutContext';
+import {useAuthRuntimeTarget} from '@app/features/auth/state/AuthRuntimeTarget';
 import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
 import {CREATE_ACCOUNT_DESCRIPTOR, SIGN_IN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
@@ -28,6 +33,7 @@ import {
 } from '@app/features/invite/utils/InviteMessageDescriptors';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {useLocation, useParams} from '@app/features/platform/components/router/RouterReact';
+import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Button} from '@app/features/ui/button/Button';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
@@ -36,8 +42,15 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useEffect, useMemo} from 'react';
 
-const InviteRegisterPage = observer(function InviteRegisterPage() {
+interface InviteRegisterPageContentProps {
+	readonly runtimeSnapshot: RuntimeConfigSnapshot;
+}
+
+const InviteRegisterPageContent = observer(function InviteRegisterPageContent({
+	runtimeSnapshot,
+}: InviteRegisterPageContentProps) {
 	const {i18n} = useLingui();
+	const runtimeTarget = useAuthRuntimeTarget();
 	const {code} = useParams() as {code: string};
 	const location = useLocation();
 	const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -49,17 +62,22 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 	const loginPath = safeRedirect
 		? setPathQueryParams(Routes.inviteLogin(code), {redirect_to: safeRedirect})
 		: Routes.inviteLogin(code);
+	const inviteTarget = useMemo(
+		() => instanceTargetFromSnapshot(runtimeSnapshot),
+		[runtimeSnapshot.apiCodeVersion, runtimeSnapshot.apiEndpoint],
+	);
 	const {setSplashUrl, setSplashCardAlignment} = useAuthLayoutContext();
 	useFluxerDocumentTitle(i18n._(ACCEPT_INVITE_DESCRIPTOR));
-	const inviteState = Invites.invites.get(code) ?? null;
+	useAuthPresentation({variant: AuthCardVariant.STANDARD});
+	const inviteState = Invites.getInvite(code, inviteTarget);
 	const inviteData = inviteState?.data ?? null;
 	const guildInvite = inviteData && isGuildInvite(inviteData) ? inviteData : null;
 	useEffect(() => {
-		const currentInviteState = Invites.invites.get(code) ?? null;
+		const currentInviteState = Invites.getInvite(code, inviteTarget);
 		if (!currentInviteState && code) {
-			void InviteCommands.fetchWithCoalescing(code).catch(() => {});
+			void InviteCommands.fetchWithCoalescing(code, inviteTarget).catch(() => {});
 		}
-	}, [code]);
+	}, [code, inviteTarget]);
 	useEffect(() => {
 		if (!guildInvite) {
 			return;
@@ -88,6 +106,9 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 			<AuthErrorState
 				title={i18n._(INVITE_NOT_FOUND_TITLE_DESCRIPTOR)}
 				text={i18n._(INVITE_NOT_FOUND_DESCRIPTION_DESCRIPTOR)}
+				action={
+					<AuthRuntimeTargetResetAction data-flx="invite.invite-register-page.auth-runtime-target-reset-action" />
+				}
 				data-flx="invite.invite-register-page.auth-error-state"
 			/>
 		);
@@ -147,7 +168,8 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 			</div>
 		);
 	}
-	if (isRuntimeSsoEnforced()) {
+	const runtimeSso = resolveAuthPanelSso(runtimeSnapshot);
+	if (runtimeSso?.enabled === true && runtimeSso.enforced === true) {
 		return (
 			<>
 				<DesktopDeepLinkPrompt
@@ -159,6 +181,7 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 				<div className={sharedStyles.container} data-flx="invite.invite-register-page.sso-container">
 					<AuthSsoPanel
 						redirectPath={ssoRedirectPath}
+						runtimeSnapshot={runtimeSnapshot}
 						dataFlx="invite.invite-register-page.sso-panel"
 						data-flx="invite.invite-register-page.auth-sso-panel"
 					/>
@@ -180,6 +203,8 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 					submitLabel={i18n._(CREATE_ACCOUNT_DESCRIPTOR)}
 					redirectPath="/"
 					inviteCode={code}
+					runtimeSnapshot={runtimeSnapshot}
+					onAuthenticated={runtimeTarget.reset}
 					data-flx="invite.invite-register-page.auth-minimal-register-form-core"
 				/>
 				<AuthBottomLink variant="login" to={loginPath} data-flx="invite.invite-register-page.auth-bottom-link" />
@@ -187,5 +212,16 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 		</>
 	);
 });
+
+const InviteRegisterPage = observer(() => (
+	<AuthRuntimeTargetGate data-flx="invite.invite-register-page.runtime-target-gate">
+		{(runtimeSnapshot) => (
+			<InviteRegisterPageContent
+				runtimeSnapshot={runtimeSnapshot}
+				data-flx="invite.invite-register-page.invite-register-page-content"
+			/>
+		)}
+	</AuthRuntimeTargetGate>
+));
 
 export default InviteRegisterPage;

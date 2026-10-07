@@ -13,7 +13,10 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, Args, Clone)]
 pub struct BuildDesktopNativeAddonArgs {
-    #[arg(long)]
+    #[arg(
+        long,
+        help = "Directory holding the addon crate to build, defaults to the current directory"
+    )]
     addon_root: Option<PathBuf>,
 }
 
@@ -55,6 +58,26 @@ const LINUX_AUDIO_CAPTURE_PKG_CONFIG: &[PkgConfigRequirement] = &[PkgConfigRequi
 }];
 
 const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
+    DesktopNativeAddon {
+        package_dir: "app-store",
+        package_name: "@fluxer/app-store",
+        crate_name: "fluxer_app_store",
+        node_file_stem: "app-store",
+        required_platform: None,
+        features: &[],
+        pkg_config: &[],
+        special: DesktopNativeSpecialBuild::None,
+    },
+    DesktopNativeAddon {
+        package_dir: "gateway-socket",
+        package_name: "@fluxer/gateway-socket",
+        crate_name: "fluxer_gateway_socket",
+        node_file_stem: "gateway-socket",
+        required_platform: None,
+        features: &[],
+        pkg_config: &[],
+        special: DesktopNativeSpecialBuild::None,
+    },
     DesktopNativeAddon {
         package_dir: "hardware-encoder",
         package_name: "@fluxer/hardware-encoder",
@@ -991,7 +1014,95 @@ mod tests {
         assert!(names.contains(&"linux-audio-capture"));
         assert!(names.contains(&"webauthn"));
         assert!(names.contains(&"win-game-capture"));
-        assert_eq!(DESKTOP_NATIVE_ADDONS.len(), 22);
+        assert!(names.contains(&"app-store"));
+        assert!(names.contains(&"gateway-socket"));
+        assert_eq!(DESKTOP_NATIVE_ADDONS.len(), 24);
+    }
+
+    #[test]
+    fn the_desktop_build_script_builds_and_verifies_every_registered_addon() {
+        let build_script =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_desktop/scripts/build.mjs");
+        let source = fs::read_to_string(&build_script)
+            .unwrap_or_else(|error| panic!("failed to read {}: {error}", build_script.display()));
+        for addon in DESKTOP_NATIVE_ADDONS {
+            assert!(
+                source.contains(&format!("dirName: '{}'", addon.package_dir)),
+                "{} is registered but fluxer_desktop/scripts/build.mjs never builds it",
+                addon.package_dir
+            );
+            assert!(
+                source
+                    .matches(&format!("label: '{}'", addon.package_name))
+                    .count()
+                    >= 2,
+                "{} must appear in both the build list and the artifact verification list in fluxer_desktop/scripts/build.mjs",
+                addon.package_name
+            );
+        }
+    }
+
+    #[test]
+    fn addon_directory_names_stay_within_the_velopack_path_budget() {
+        for addon in DESKTOP_NATIVE_ADDONS {
+            assert!(
+                addon.package_dir.len() <= 20,
+                "{} exceeds the 20 character addon directory budget",
+                addon.package_dir
+            );
+        }
+    }
+
+    #[test]
+    fn the_registry_covers_every_shipped_addon_package() {
+        let native_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_desktop/native");
+        let mut shipped = Vec::new();
+        for entry in fs::read_dir(&native_root).expect("failed to read the native addon root") {
+            let entry = entry.expect("failed to read a native addon directory entry");
+            if entry.path().join("package.json").exists() {
+                shipped.push(entry.file_name().to_string_lossy().into_owned());
+            }
+        }
+        shipped.sort();
+        let mut registered = DESKTOP_NATIVE_ADDONS
+            .iter()
+            .map(|addon| addon.package_dir.to_string())
+            .collect::<Vec<_>>();
+        registered.sort();
+        assert_eq!(
+            shipped, registered,
+            "every fluxer_desktop/native/* directory with a package.json must be registered in DESKTOP_NATIVE_ADDONS"
+        );
+    }
+
+    #[test]
+    fn every_addon_ships_a_byte_identical_loader_diagnostics_copy() {
+        let native_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_desktop/native");
+        let mut canonical: Option<(String, Vec<u8>)> = None;
+        let mut checked = 0;
+        for addon in DESKTOP_NATIVE_ADDONS {
+            let path = native_root
+                .join(addon.package_dir)
+                .join("loader-diagnostics.cjs");
+            if !path.exists() {
+                continue;
+            }
+            let contents = fs::read(&path)
+                .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()));
+            match &canonical {
+                None => canonical = Some((addon.package_dir.to_string(), contents)),
+                Some((first_dir, first_contents)) => assert!(
+                    first_contents == &contents,
+                    "{} ships a loader-diagnostics.cjs that differs from {first_dir}",
+                    addon.package_dir
+                ),
+            }
+            checked += 1;
+        }
+        assert!(
+            checked >= DESKTOP_NATIVE_ADDONS.len() - 1,
+            "expected every addon but hardware-encoder to ship loader-diagnostics.cjs, checked {checked}"
+        );
     }
 
     #[test]

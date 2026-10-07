@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
 import {TURN_OFF_CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -32,7 +33,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
@@ -197,12 +197,15 @@ export const VoiceVideoSettingsMenuItem: React.FC<VoiceVideoSettingsMenuItemProp
 	const handleClick = useCallback(() => {
 		ModalCommands.pushAfterBottomSheetClose(
 			onClose,
-			modal(() => (
-				<UserSettingsModal
-					initialTab="voice_video"
-					data-flx="ui.action-menu.items.voice-participant-menu-items.handle-click.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="voice_video"
+						data-flx="ui.action-menu.items.voice-participant-menu-items.handle-click.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	}, [onClose]);
 	return (

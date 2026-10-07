@@ -3,7 +3,7 @@
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import {useArboriumHighlightedHtml} from '@app/features/code_highlighting/utils/ArboriumHighlighting';
 import {COPY_CODE_DESCRIPTOR, SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -39,30 +39,24 @@ const logger = new Logger('ThemeAcceptModal');
 
 interface ThemeAcceptModalProps {
 	themeId: string;
+	runtimeSnapshot: RuntimeConfigSnapshot;
 }
 
-export const ThemeAcceptModal = observer(function ThemeAcceptModal({themeId}: ThemeAcceptModalProps) {
+export const ThemeAcceptModal = observer(function ThemeAcceptModal({themeId, runtimeSnapshot}: ThemeAcceptModalProps) {
 	const {i18n} = useLingui();
 	const themeSettingsPath = formatUserSettingsPath(i18n, 'appearance', 'theme');
 	const [isApplying, setIsApplying] = useState(false);
 	const [css, setCss] = useState<string | null>(null);
 	const [fetchStatus, setFetchStatus] = useState<'idle' | 'loading' | 'error' | 'ready'>('idle');
 	const [fetchError, setFetchError] = useState<string | null>(null);
-	const mediaEndpoint = RuntimeConfig.mediaEndpoint;
 	const highlightedCss = useArboriumHighlightedHtml('css', css);
 	useEffect(() => {
-		if (!mediaEndpoint) {
-			setCss(null);
-			setFetchStatus('idle');
-			setFetchError(null);
-			return;
-		}
 		let cancelled = false;
 		const fetchTheme = async () => {
 			setFetchStatus('loading');
 			setFetchError(null);
 			try {
-				const themeUrl = buildThemeCssProxyUrl(mediaEndpoint, themeId);
+				const themeUrl = buildThemeCssProxyUrl(runtimeSnapshot, themeId);
 				if (!themeUrl) {
 					throw new Error('Media endpoint not configured');
 				}
@@ -86,7 +80,7 @@ export const ThemeAcceptModal = observer(function ThemeAcceptModal({themeId}: Th
 		return () => {
 			cancelled = true;
 		};
-	}, [mediaEndpoint, themeId]);
+	}, [runtimeSnapshot, themeId]);
 	const handleDismiss = () => {
 		ModalCommands.pop();
 	};

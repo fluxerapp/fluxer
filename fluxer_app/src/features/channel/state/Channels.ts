@@ -244,9 +244,18 @@ class Channels {
 	}
 
 	handleGatewayReady({channels}: {channels: ReadonlyArray<WireChannel>}): void {
+		this.replaceChannelsFromSnapshot(channels, Authentication.currentUserId);
+	}
+
+	hydrateFromSnapshot(channels: ReadonlyArray<WireChannel>, selfUserId: string): void {
+		this.replaceChannelsFromSnapshot(channels, selfUserId);
+	}
+
+	private replaceChannelsFromSnapshot(channels: ReadonlyArray<WireChannel>, selfUserId: string | null): void {
 		this.channelsById.clear();
 		this.channelsByGuildId.clear();
 		this.privateChannelList = EMPTY_CHANNELS;
+		this.optimisticChannelBackups.clear();
 		ChannelDisplayName.clear();
 		const allRecipients = channels
 			.filter((channel) => channel.recipients && channel.recipients.length > 0)
@@ -257,12 +266,11 @@ class Channels {
 		for (const channel of channels) {
 			this.setChannel(channel);
 		}
-		const userId = Authentication.currentUserId;
-		if (!userId) {
+		if (selfUserId == null) {
 			return;
 		}
 		const personalNotesChannel: WireChannel = {
-			id: userId,
+			id: selfUserId,
 			type: ChannelTypes.DM_PERSONAL_NOTES,
 			name: undefined,
 			topic: null,

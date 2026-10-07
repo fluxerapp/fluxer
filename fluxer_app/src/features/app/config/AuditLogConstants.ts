@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type {I18n, MessageDescriptor} from '@lingui/core';
@@ -143,10 +144,6 @@ const MESSAGE_UNPINNED_DESCRIPTOR = msg({
 const ALL_DESCRIPTOR = msg({
 	message: 'All',
 	comment: 'Audit log target-type filter option. Shows entries for every target type.',
-});
-const COMMUNITY_DESCRIPTOR = msg({
-	message: 'Community',
-	comment: 'Audit log target-type filter label. Filters entries to community-level actions.',
 });
 const MEMBER_DESCRIPTOR = msg({
 	message: 'Member',

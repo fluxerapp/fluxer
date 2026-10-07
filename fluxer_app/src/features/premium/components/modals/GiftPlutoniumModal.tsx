@@ -4,14 +4,13 @@ import {PurchaseDisclaimer} from '@app/features/app/components/dialogs/component
 import {useCheckoutActions} from '@app/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions';
 import {usePremiumData} from '@app/features/app/components/dialogs/components/plutonium/hooks/usePremiumData';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import GeoIP from '@app/features/app/state/GeoIP';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import styles from '@app/features/premium/components/modals/GiftPlutoniumModal.module.css';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {BUY_GIFT_DESCRIPTOR, GIFT_PREMIUM_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
-import {areGiftPurchasesAvailable} from '@app/features/premium/utils/PremiumUtils';
+import {areGiftPurchasesAvailable, getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
@@ -95,7 +94,7 @@ export const GiftPlutoniumModal = observer(() => {
 		],
 		[giftMonthlyPrice, giftYearlyPrice, i18n],
 	);
-	const title = i18n._(GIFT_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME});
+	const title = i18n._(GIFT_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()});
 	return (
 		<Modal.Root size="small" centered data-flx="premium.gift-plutonium-modal.modal-root">
 			<Modal.Header title={title} data-flx="premium.gift-plutonium-modal.modal-header" />

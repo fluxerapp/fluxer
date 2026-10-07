@@ -1,0 +1,29 @@
+{
+	"name": "@fluxer/app-store",
+	"version": "0.0.0",
+	"description": "",
+	"private": true,
+	"license": "AGPL-3.0-or-later",
+	"cpu": [
+		"x64",
+		"arm64"
+	],
+	"main": "index.js",
+	"types": "index.d.ts",
+	"files": [
+		"index.js",
+		"index.d.ts",
+		"loader-diagnostics.cjs",
+		"pure.cjs",
+		"app-store.darwin-x64.node",
+		"app-store.darwin-arm64.node",
+		"app-store.win32-x64-msvc.node",
+		"app-store.win32-arm64-msvc.node",
+		"app-store.linux-x64-gnu.node",
+		"app-store.linux-arm64-gnu.node"
+	],
+	"scripts": {
+		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon",
+		"test": "cargo test --manifest-path Cargo.toml && node --test test/*.test.mjs"
+	}
+}

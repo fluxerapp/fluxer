@@ -3,8 +3,7 @@
 mod android_association;
 mod apple_association;
 mod assets_proxy;
-mod client_geoip;
-mod file_stream;
+pub(crate) mod file_stream;
 mod health;
 mod spa_index;
 mod spa_static;
@@ -38,10 +37,6 @@ pub fn build_router(state: AppState) -> Router {
     Router::new()
         .route("/_health", get(health::health))
         .route("/_ready", get(health::ready))
-        .route(
-            client_geoip::CLIENT_GEOIP_PATH,
-            get(client_geoip::client_geoip),
-        )
         .route(
             "/.well-known/apple-app-site-association",
             get(apple_association::apple_app_site_association),
@@ -128,7 +123,7 @@ fn generate_request_id() -> String {
     hex::encode(bytes)
 }
 
-pub(super) fn capacity_refused_response() -> Response {
+pub(crate) fn capacity_refused_response() -> Response {
     let mut response = axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
     let headers = response.headers_mut();
     headers.insert(header::RETRY_AFTER, HeaderValue::from_static("1"));

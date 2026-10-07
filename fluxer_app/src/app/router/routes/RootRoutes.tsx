@@ -2,7 +2,9 @@
 
 import {Routes} from '@app/app/Routes';
 import {RootComponent} from '@app/app/router/components/RootComponent';
+import {afterSessionInitialization} from '@app/app/router/policy/AuthRouteRedirectPolicy';
 import {NotFoundPage} from '@app/features/app/components/pages/NotFoundPage';
+import {readAuthenticatedRuntimeContext} from '@app/features/auth/state/AuthenticatedRuntime';
 import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
 import {createRootRoute, createRoute} from '@app/features/platform/components/router/RouterBuilder';
 import {Redirect} from '@app/features/platform/components/router/RouterTypes';
@@ -21,7 +23,12 @@ export const homeRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	id: 'home',
 	path: '/',
-	onEnter: () => new Redirect(getDefaultLandingPath()),
+	onEnter: afterSessionInitialization(() => {
+		if (readAuthenticatedRuntimeContext() === null) {
+			return new Redirect(Routes.LOGIN);
+		}
+		return new Redirect(getDefaultLandingPath());
+	}),
 });
 export const appRoute = createRoute({
 	getParentRoute: () => rootRoute,

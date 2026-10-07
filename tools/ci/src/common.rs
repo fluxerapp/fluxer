@@ -1054,6 +1054,33 @@ pub(crate) fn count_files(root: &Path) -> Result<usize> {
     Ok(collect_files(root)?.len())
 }
 
+pub(crate) fn remove_empty_dirs_below(root: &Path) -> Result<usize> {
+    if !root.exists() {
+        return Ok(0);
+    }
+    let mut dirs = WalkDir::new(root)
+        .min_depth(1)
+        .into_iter()
+        .collect::<std::result::Result<Vec<_>, _>>()?
+        .into_iter()
+        .filter(|entry| entry.file_type().is_dir())
+        .map(|entry| entry.into_path())
+        .collect::<Vec<_>>();
+    dirs.sort();
+    let mut removed = 0usize;
+    for dir in dirs.into_iter().rev() {
+        let is_empty = fs::read_dir(&dir)
+            .with_context(|| format!("Failed to read {}", dir.display()))?
+            .next()
+            .is_none();
+        if is_empty {
+            fs::remove_dir(&dir).with_context(|| format!("Failed to remove {}", dir.display()))?;
+            removed += 1;
+        }
+    }
+    Ok(removed)
+}
+
 pub(crate) fn title_case(value: &str) -> String {
     let mut chars = value.chars();
     match chars.next() {
@@ -1333,6 +1360,32 @@ mod tests {
         assert_eq!(
             fs::read_to_string(dest.join("b").join("two.txt")).unwrap(),
             "2"
+        );
+    }
+
+    #[test]
+    fn remove_empty_dirs_below_collapses_nested_husks_and_keeps_the_root() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("renderer");
+        fs::create_dir_all(root.join("web").join("icons").join("desktop")).unwrap();
+        fs::create_dir_all(root.join("assets")).unwrap();
+        fs::create_dir_all(root.join("keep")).unwrap();
+        fs::write(root.join("keep").join("one.txt"), "1").unwrap();
+
+        assert_eq!(remove_empty_dirs_below(&root).unwrap(), 4);
+
+        assert!(root.is_dir());
+        assert!(!root.join("web").exists());
+        assert!(!root.join("assets").exists());
+        assert!(root.join("keep").join("one.txt").is_file());
+    }
+
+    #[test]
+    fn remove_empty_dirs_below_is_a_no_op_on_a_missing_root() {
+        let temp = tempfile::tempdir().unwrap();
+        assert_eq!(
+            remove_empty_dirs_below(&temp.path().join("absent")).unwrap(),
+            0
         );
     }
 }

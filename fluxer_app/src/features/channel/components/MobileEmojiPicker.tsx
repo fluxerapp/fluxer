@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import {EmojiPickerCategoryList} from '@app/features/channel/components/emoji_picker/EmojiPickerCategoryList';
@@ -35,7 +34,7 @@ import {getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDet
 import Permission from '@app/features/permissions/state/Permission';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {usePremiumUpsellData} from '@app/features/premium/hooks/usePremiumUpsellData';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
@@ -64,6 +63,7 @@ export const MobileEmojiPicker = observer(
 		externalSetSearchTerm?: (term: string) => void;
 		hideSearchBar?: boolean;
 	}) => {
+		const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 		const headerPortalContext = useExpressionPickerHeaderPortal();
 		const hasPortal = Boolean(headerPortalContext?.headerPortalElement);
 		const {i18n} = useLingui();

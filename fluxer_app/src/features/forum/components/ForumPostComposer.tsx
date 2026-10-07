@@ -30,6 +30,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import Users from '@app/features/user/state/Users';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {THREAD_NAME_MAX_LENGTH} from '@fluxer/constants/src/ThreadConstants';
 import type {MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -88,6 +89,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 	const stateRef = useRef({title, tags});
 	stateRef.current = {title, tags};
 	const draftKey = `forum-post:${forum.id}`;
+	const accountKey = Users.viewAccountKey;
 	const media = isMediaChannel(forum);
 	const attachments = useTextareaAttachments(draftKey);
 	const bypassesSlowmode = Permission.can(Permissions.BYPASS_SLOWMODE, forum);
@@ -129,7 +131,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 					openThread(post);
 				})
 				.catch((failure) => {
-					if (content && !Drafts.getDraft(draftKey)) DraftCommands.createDraft(draftKey, content);
+					if (content && !Drafts.getDraft(draftKey)) DraftCommands.createDraft(accountKey, draftKey, content);
 					reportForumError(i18n, failure, D.POST_CREATE_FAILED_DESCRIPTOR);
 				});
 			return true;
@@ -181,6 +183,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 				data-flx="forum.forum-post-composer.composer-body"
 			>
 				<LexicalChannelTextareaContent
+					accountKey={accountKey}
 					channel={forum}
 					draft={Drafts.getDraft(draftKey)}
 					draftSegments={Drafts.getDraftSegments(draftKey)}

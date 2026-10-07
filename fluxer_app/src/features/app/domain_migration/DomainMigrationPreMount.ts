@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	desktopPasskeysSupported,
 	hasStoredAccount,
+	loadDomainMigrationDiscovery,
 	readActiveSessionToken,
 	readDomainMigrationDiscovery,
 	readDomainMigrationEnvironment,
@@ -66,6 +66,7 @@ import {
 	randomBase64Url,
 	sha256Hex,
 } from '@app/features/app/domain_migration/DomainMigrationCrypto';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
 import type {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {
 	AuthSessionStorageKey,
@@ -129,6 +130,16 @@ function mountInPlace(next: string): false {
 
 function readCurrentPath(): {pathname: string; search: string; hash: string} {
 	return {pathname: window.location.pathname, search: window.location.search, hash: window.location.hash};
+}
+
+async function currentInstanceSnapshot(): Promise<RuntimeConfigSnapshot> {
+	const {default: RuntimeConfig} = await import('@app/features/app/state/RuntimeConfig');
+	const active = RuntimeConfig.getSnapshotOrNull();
+	if (active !== null) {
+		return active;
+	}
+	const resolution = await RuntimeConfig.resolveEndpoint({input: window.location.origin, signal: null});
+	return resolution.snapshot;
 }
 
 function readNotificationPermission(): string {
@@ -352,24 +363,34 @@ async function exportFromSource(side: DomainMigrationSide, nonce: string | null)
 		if (attempts > DOMAIN_MIGRATION_MAX_FAILED_ATTEMPTS) {
 			throw new Error('Too many domain migration attempts');
 		}
-		const [{default: accountStorage}, {default: RuntimeConfig, runtimeConfigSnapshotsAreSameInstance}] =
-			await Promise.all([
-				import('@app/features/auth/state/AccountStorage'),
-				import('@app/features/app/state/RuntimeConfig'),
-			]);
-		const instance = RuntimeConfig.getSnapshot();
-		const accounts = (await accountStorage.getAllAccounts()).filter(
+		const [{default: accountStorage}, {runtimeConfigSnapshotsAreSameInstance}, instance] = await Promise.all([
+			import('@app/features/auth/state/AccountStorage'),
+			import('@app/features/app/state/RuntimeConfig'),
+			currentInstanceSnapshot(),
+		]);
+		const accounts = (await accountStorage.getAllAccounts()).records.filter(
 			(account) => Boolean(account.token) && runtimeConfigSnapshotsAreSameInstance(account.instance, instance),
 		);
 		const token = readActiveSessionToken() ?? accounts.find((account) => account.isValid !== false)?.token ?? null;
 		if (!token) {
 			throw new Error('No stored account to export');
 		}
+		const [{collectExportableAppStorage}, {getPersistentStorageBackend}] = await Promise.all([
+			import('@app/features/app/domain_migration/DomainMigrationAppStorage'),
+			import('@app/features/platform/state/PersistentStorageBackend'),
+		]);
+		const storedState = await collectExportableAppStorage(
+			getPersistentStorageBackend(),
+			collectExportableLocalStorage(storage),
+			accounts,
+			storage ? readStoredSessionUserId(storage) : null,
+		);
 		const payload: DomainMigrationPayload = {
 			version: DOMAIN_MIGRATION_PAYLOAD_VERSION,
 			source_origin: side.source,
 			exported_at: Date.now(),
-			local_storage: collectExportableLocalStorage(storage),
+			local_storage: storedState.local_storage,
+			app_storage: storedState.app_storage,
 			accounts,
 			custom_sounds: await collectCustomSounds(),
 			theme_library: await collectThemeLibrary(),
@@ -380,7 +401,7 @@ async function exportFromSource(side: DomainMigrationSide, nonce: string | null)
 		if (sealed.payload.length > MAX_HANDOFF_PAYLOAD_LENGTH) {
 			sealed = await encryptDomainMigrationPayload(withoutOptionalPayloadData(payload));
 		}
-		const handoffId = await createHandoff(RuntimeConfig.apiEndpoint, token, await sha256Hex(nonce), sealed.payload);
+		const handoffId = await createHandoff(instance.apiEndpoint, token, await sha256Hex(nonce), sealed.payload);
 		writeDomainMigrationIntent(sessionStorage, {at: intent.at, handoff_id: handoffId});
 		markDomainMigrationHandedOff(storage, side.target, Date.now(), attempts);
 		const landing: DomainMigrationLanding = environmentMayForward(
@@ -416,7 +437,7 @@ async function startEnrolledSource(side: DomainMigrationSide): Promise<boolean> 
 	) {
 		return false;
 	}
-	if (!(await hasStoredAccount()) || !(await desktopPasskeysSupported())) {
+	if (!(await hasStoredAccount())) {
 		return false;
 	}
 	return startDomainMigrationFromSource(side);
@@ -582,17 +603,23 @@ async function importHandoff(side: DomainMigrationSide, fragment: URLSearchParam
 	const storage = getProtectedLocalStorage();
 	const previousImport = readDomainMigrationImport(storage);
 	writeDomainMigrationImport(storage, {state: 'running', at: Date.now()});
+	let instance: RuntimeConfigSnapshot;
 	try {
-		const [{default: accountStorage}, {default: RuntimeConfig}] = await Promise.all([
+		const [{default: accountStorage}, {runtimeConfigSnapshotsAreSameInstance}, snapshot] = await Promise.all([
 			import('@app/features/auth/state/AccountStorage'),
 			import('@app/features/app/state/RuntimeConfig'),
+			currentInstanceSnapshot(),
 		]);
-		const instance = RuntimeConfig.getSnapshot();
+		instance = snapshot;
 		const activeToken = readActiveSessionToken();
 		const activeUserId = storage ? readStoredSessionUserId(storage) : null;
 		const incomingToken = parseStoredSessionValue(payload.local_storage[AuthSessionStorageKey.Token] ?? null);
 		const incomingUserId = parseStoredSessionValue(payload.local_storage[AuthSessionStorageKey.UserId] ?? null);
-		const existing = new Map((await accountStorage.getAllAccounts()).map((account) => [account.userId, account]));
+		const existing = new Map(
+			(await accountStorage.getAllAccounts()).records
+				.filter((account) => runtimeConfigSnapshotsAreSameInstance(account.instance, instance))
+				.map((account) => [account.userId, account]),
+		);
 		await accountStorage.importAccounts(
 			payload.accounts.map((account) =>
 				keepValidTargetSession(rewriteImportedAccount(account, instance), existing.get(account.userId)),
@@ -618,6 +645,17 @@ async function importHandoff(side: DomainMigrationSide, fragment: URLSearchParam
 			logger.warn(`Failed to import localStorage key ${storageKey}:`, err);
 		}
 	}
+	if (payload.app_storage) {
+		try {
+			const [{writeImportedAppStorage}, {getPersistentStorageBackend}] = await Promise.all([
+				import('@app/features/app/domain_migration/DomainMigrationAppStorage'),
+				import('@app/features/platform/state/PersistentStorageBackend'),
+			]);
+			await writeImportedAppStorage(getPersistentStorageBackend(), payload.app_storage, payload.accounts, instance);
+		} catch (err) {
+			logger.warn('Failed to import scoped app storage:', err);
+		}
+	}
 	if (payload.media_devices) {
 		writeDomainMigrationDeviceMap(storage, {at: Date.now(), devices: payload.media_devices, resolved: []});
 	}
@@ -629,15 +667,6 @@ async function importHandoff(side: DomainMigrationSide, fragment: URLSearchParam
 	writeDomainMigrationImport(storage, {state: 'done', at: Date.now()});
 	await restoreCustomSounds(payload.custom_sounds);
 	await restoreThemeLibrary(payload.theme_library);
-	await persistDesktopAppOrigin();
-}
-
-async function persistDesktopAppOrigin(): Promise<void> {
-	try {
-		await window.electron?.domainMigration?.setAppOrigin(window.location.origin);
-	} catch (err) {
-		logger.warn('Failed to persist the desktop app origin:', err);
-	}
 }
 
 function doneUrl(side: DomainMigrationSide, next: string, handoffId: string | null): string {
@@ -679,7 +708,6 @@ async function beginOnTarget(side: DomainMigrationSide, params: URLSearchParams)
 	}
 	const imported = readDomainMigrationImport(storage)?.state === 'done' || (resumed && params.get('imported') === '1');
 	if ((resumed || started) && (imported || (started && (await hasStoredAccount())))) {
-		await persistDesktopAppOrigin();
 		return mountInPlace(next);
 	}
 	if (started) {
@@ -742,6 +770,11 @@ export async function runDomainMigrationPreMount(): Promise<boolean> {
 	const side = resolveDomainMigrationSide(window.location.origin);
 	if (side === null) {
 		return false;
+	}
+	try {
+		await loadDomainMigrationDiscovery();
+	} catch (err) {
+		logger.warn('Domain migration discovery is unavailable:', err);
 	}
 	try {
 		return side.role === 'source' ? await handleSource(side) : await handleTarget(side);

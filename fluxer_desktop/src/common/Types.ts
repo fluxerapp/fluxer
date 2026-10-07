@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {BuildChannel} from '@electron/common/BuildChannel';
+import type {DesktopAccountStorageAPI} from '@fluxer/desktop_ipc/src/AccountContract';
+import type {DesktopHandoffAPI} from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
+import type {DesktopCapabilityManifest} from '@fluxer/desktop_ipc/src/CapabilityManifest';
+import type {NativeGatewayTransportAPI} from '@fluxer/desktop_ipc/src/GatewayTransportContract';
+import type {DesktopKnownInstanceStorageAPI} from '@fluxer/desktop_ipc/src/KnownInstanceContract';
+import type {DesktopModuleAPI} from '@fluxer/desktop_ipc/src/ModuleContract';
+import type {DesktopStorageAPI} from '@fluxer/desktop_ipc/src/StorageContract';
 import type {VoiceEngineV2BridgeHardwareEncoderApi} from '@fluxer/voice_engine_v2/bridge';
 import type {
 	AuthenticationResponseJSON,
@@ -16,7 +24,7 @@ export interface LinuxAppearanceSnapshot {
 
 export interface DesktopInfo {
 	version: string;
-	channel: 'stable' | 'canary';
+	channel: BuildChannel;
 	arch: string;
 	hardwareArch: string;
 	runningUnderRosetta: boolean;
@@ -636,14 +644,11 @@ export type TrayActionPayload =
 			action: 'check-for-updates';
 	  };
 
-export interface DomainMigrationApi {
-	version: 1;
-	setAppOrigin: (origin: string) => Promise<void>;
-}
-
 export interface ElectronAPI {
 	platform: NodeJS.Platform;
-	buildChannel: 'stable' | 'canary';
+	buildChannel: BuildChannel;
+	localDevelopmentInstanceUrl: string | null;
+	offlineBuild?: boolean;
 	getDesktopInfo: () => Promise<DesktopInfo>;
 	getGpuInfo: () => Promise<GpuInfo>;
 	getDesktopWindowBehaviorSettings: () => Promise<DesktopWindowBehaviorSettings>;
@@ -684,6 +689,7 @@ export interface ElectronAPI {
 	openVoiceDebugEventSinkPopout: (entries: Array<DesktopVoiceDebugEventSinkEntry>) => Promise<void>;
 	appendVoiceDebugEventSinkEntries: (entries: Array<DesktopVoiceDebugEventSinkEntry>) => void;
 	setVoiceDebugEventSinkStatsHtml: (html: string) => void;
+	onWindowLiveResizeChange: (callback: (resizing: boolean) => void) => () => void;
 	onWindowMaximizeChange: (callback: (maximized: boolean) => void) => () => void;
 	openExternal: (url: string) => Promise<void>;
 	clipboardWriteText: (text: string) => Promise<void>;
@@ -775,10 +781,14 @@ export interface ElectronAPI {
 	spellcheckReplaceMisspelling: (replacement: string) => Promise<void>;
 	spellcheckAddWordToDictionary: (word: string) => Promise<void>;
 	passkeyIsSupported: () => Promise<boolean>;
-	passkeyAuthenticate: (options: PublicKeyCredentialRequestOptionsJSON) => Promise<AuthenticationResponseJSON>;
-	passkeyRegister: (options: PublicKeyCredentialCreationOptionsJSON) => Promise<RegistrationResponseJSON>;
-	passkeyRpIds: ReadonlyArray<string>;
-	domainMigration: DomainMigrationApi;
+	passkeyAuthenticate: (
+		options: PublicKeyCredentialRequestOptionsJSON,
+		requestContext?: {pin?: string; instanceKey?: string},
+	) => Promise<AuthenticationResponseJSON>;
+	passkeyRegister: (
+		options: PublicKeyCredentialCreationOptionsJSON,
+		requestContext?: {pin?: string; instanceKey?: string},
+	) => Promise<RegistrationResponseJSON>;
 	virtmic: VirtmicApi;
 	nativeAudio: NativeAudioApi;
 	nativeScreenCapture: NativeScreenCaptureApi;
@@ -794,6 +804,15 @@ export interface ElectronAPI {
 	selectDisplayMediaSource: (requestId: string, sourceId: string | null, withAudio: boolean) => void;
 	setDisplayMediaPortalPreference: (preference: DisplayMediaPortalSurfacePreference) => Promise<void>;
 	getAppMetrics?: () => Promise<AppMetricsSnapshot>;
+	capabilities: DesktopCapabilityManifest;
+	desktopModules: DesktopModuleAPI;
+	reportLastRoute: (routePath: string) => void;
+	notifyFirstContentPainted: () => void;
+	desktopAccounts: DesktopAccountStorageAPI;
+	desktopStorage: DesktopStorageAPI;
+	desktopKnownInstances: DesktopKnownInstanceStorageAPI;
+	desktopHandoff: DesktopHandoffAPI;
+	nativeGatewayTransport: NativeGatewayTransportAPI;
 }
 
 export type GlobalShortcutsBackend = 'portal' | 'x11' | 'evdev' | 'windows' | 'macos' | 'none';

@@ -115,24 +115,6 @@
 	padding: 1.5rem 0;
 }
 
-.spinnerIcon {
-	width: 1.5rem;
-	height: 1.5rem;
-	border: 0.1875rem solid var(--background-modifier-accent);
-	border-top-color: var(--brand-primary);
-	border-radius: 50%;
-	animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
-}
-
 .error {
 	background-color: hsla(0, calc(100% * var(--saturation-factor)), 50%, 0.1);
 	border: 0.0625rem solid hsla(0, calc(100% * var(--saturation-factor)), 50%, 0.2);

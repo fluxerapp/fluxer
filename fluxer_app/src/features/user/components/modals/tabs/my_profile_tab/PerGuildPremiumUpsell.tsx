@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {PlutoniumUpsell} from '@app/features/ui/plutonium_upsell/PlutoniumUpsell';
 import {WarningAlert} from '@app/features/ui/warning_alert/WarningAlert';
 import {Trans} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
 export const PerGuildPremiumUpsell = observer(() => {
+	const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 	const showPremium = shouldShowPremiumFeatures();
 	if (!showPremium) {
 		return (

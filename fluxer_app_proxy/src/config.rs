@@ -343,6 +343,7 @@ pub struct AppProxyConfig {
     pub static_dir: String,
     pub index_upstream_url: Option<HttpUrl>,
     pub static_cdn_endpoint: Option<HttpEndpoint>,
+    pub media_endpoint: Option<HttpEndpoint>,
     pub s3_public_endpoint: Option<HttpEndpoint>,
     pub s3_uploads_endpoint: Option<HttpEndpoint>,
     pub discovery_upstream_url: String,
@@ -358,6 +359,7 @@ pub struct AppProxyConfig {
     pub client_ip_header_name: String,
     pub same_origin_hosts: Vec<String>,
     pub manifest_scope_extensions: Vec<String>,
+    pub self_hosted: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -476,6 +478,10 @@ impl AppProxyConfig {
                 "FLUXER_STATIC_CDN_ENDPOINT",
                 cfg::env_value("FLUXER_STATIC_CDN_ENDPOINT"),
             ),
+            media_endpoint: parse_optional_http_endpoint(
+                "FLUXER_MEDIA_ENDPOINT",
+                cfg::env_value("FLUXER_MEDIA_ENDPOINT"),
+            ),
             s3_public_endpoint,
             s3_uploads_endpoint,
             discovery_upstream_url: resolve_discovery_upstream_url_from_env(),
@@ -506,6 +512,7 @@ impl AppProxyConfig {
                 "FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS",
                 &cfg::read_env("FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS", ""),
             ),
+            self_hosted: cfg::read_bool_env("FLUXER_SELF_HOSTED", false),
         }
     }
 }

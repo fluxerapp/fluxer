@@ -3,6 +3,7 @@
 import TextareaSelection from '@app/features/messaging/state/TextareaSelection';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeAutoObservable} from 'mobx';
 
 const EMPTY_SEGMENTS: ReadonlyArray<MentionSegment> = [];
@@ -54,7 +55,7 @@ class Drafts {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
 import {makeAutoObservable} from 'mobx';
 
@@ -43,7 +44,7 @@ class Slowmode {
 
 	constructor() {
 		makeAutoObservable<this, 'nextPruneAt'>(this, {nextPruneAt: false}, {autoBind: true});
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {

@@ -12,6 +12,12 @@ import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import {installLocaleSwitchWatchdog} from '@app/features/i18n/utils/LocaleSwitchWatchdog';
 import {installTranslationDomGuard} from '@app/features/i18n/utils/TranslationDomGuard';
 import {installScrollRestoration} from '@app/features/platform/components/router/ScrollRestoration';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
+import type {
+	AppStorageBootstrapHandle,
+	AppStorageSessionAccount,
+} from '@app/features/platform/state/AppStorageBootstrap';
+import type {Account} from '@app/features/platform/state/AuthSession';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {
 	getFormattedClientInfo,
@@ -24,10 +30,12 @@ import {scheduleNonLatinScriptFaces} from '@app/features/theme/fonts/ScriptFontL
 import {installVoiceSubscriptionDebugApi} from '@app/features/voice/diagnostics/VoiceSubscriptionDebugApi';
 import {PASSKEY_BRIDGE_PATH} from '@fluxer/constants/src/PasskeyConstants';
 import {i18n} from '@lingui/core';
-import type {ReactNode} from 'react';
+import {type ReactNode, startTransition} from 'react';
 import ReactDOM from 'react-dom/client';
 
 const logger = new Logger('index');
+
+const SIGNED_OUT_INSTANCE_DISCOVERY_TIMEOUT_MS = 5000;
 
 if (typeof window !== 'undefined' && window.history) {
 	bootstrapSyntheticHistory();
@@ -47,18 +55,22 @@ function createRoot(): ReactDOM.Root {
 
 function mountRoot(content: ReactNode, dataFlxScope: string): void {
 	installTranslationDomGuard();
-	createRoot().render(
-		<AppErrorBoundary
-			fallback={(error) => (
-				<AppI18nProvider i18n={i18n}>
-					<ErrorFallback error={error ?? undefined} data-flx={`${dataFlxScope}.error-fallback`} />
-				</AppI18nProvider>
-			)}
-			data-flx={`${dataFlxScope}.app-error-boundary`}
-		>
-			{content}
-		</AppErrorBoundary>,
-	);
+	const root = createRoot();
+	startTransition(() => {
+		root.render(
+			<AppErrorBoundary
+				fallback={(error) => (
+					<AppI18nProvider i18n={i18n}>
+						<ErrorFallback error={error ?? undefined} data-flx={`${dataFlxScope}.error-fallback`} />
+					</AppI18nProvider>
+				)}
+				data-flx={`${dataFlxScope}.app-error-boundary`}
+			>
+				{content}
+			</AppErrorBoundary>,
+		);
+	});
+	globalThis.window?.electron?.notifyFirstContentPainted?.();
 }
 
 async function logClientInfo(): Promise<void> {
@@ -82,14 +94,25 @@ async function preloadMarkdownParser(): Promise<void> {
 	}
 }
 
-async function bootstrapThemeStudio(): Promise<void> {
+function storageSessionAccount(account: Account | null): AppStorageSessionAccount | null {
+	if (account === null) {
+		return null;
+	}
+	if (account.instance === undefined) {
+		throw new Error(`Authenticated account ${account.storageKey} has no instance runtime`);
+	}
+	return {accountKey: account.storageKey, userId: account.userId, token: account.token, instance: account.instance};
+}
+
+async function bootstrapThemeStudio(storageBootstrap: AppStorageBootstrapHandle): Promise<void> {
 	const markdownParserReady = preloadMarkdownParser();
-	const [{ThemeStudioStandaloneApp}, {setupHttp}, {default: AccountManager}] = await Promise.all([
+	const [{ThemeStudioStandaloneApp}, {setupHttp}, {default: Accounts}] = await Promise.all([
 		loadLazyModule(() => import('@app/features/theme_studio/ThemeStudioStandaloneApp')),
 		loadLazyModule(() => import('@app/app/SetupHttp')),
-		loadLazyModule(() => import('@app/features/auth/state/AccountManager')),
+		loadLazyModule(() => import('@app/features/auth/state/Accounts')),
 	]);
-	await AccountManager.bootstrap();
+	await Accounts.bootstrap();
+	await storageBootstrap.finalizeAfterSessionResolution(storageSessionAccount(Accounts.currentAccount));
 	setupHttp();
 	await markdownParserReady;
 	mountRoot(
@@ -132,7 +155,39 @@ async function probeSignedOutDomainMigration(): Promise<void> {
 	}
 }
 
-async function bootstrapApp(): Promise<void> {
+async function activateSignedOutDocumentInstance(): Promise<void> {
+	if (isDesktopLocalAppDocument()) {
+		return;
+	}
+	try {
+		const {default: RuntimeConfig} = await loadLazyModule(() => import('@app/features/app/state/RuntimeConfig'));
+		if (RuntimeConfig.getSnapshotOrNull() !== null) {
+			return;
+		}
+		const resolution = await RuntimeConfig.resolveEndpoint({
+			input: window.location.origin,
+			signal: AbortSignal.timeout(SIGNED_OUT_INSTANCE_DISCOVERY_TIMEOUT_MS),
+		});
+		if (RuntimeConfig.getSnapshotOrNull() === null) {
+			RuntimeConfig.applySnapshot(resolution.snapshot);
+		}
+	} catch (error) {
+		logger.warn('Failed to activate the instance this page belongs to:', error);
+	}
+}
+
+async function prepareSignedOutFirstScreen(): Promise<void> {
+	try {
+		const {prepareSignedOutFirstScreen: prepare} = await loadLazyModule(
+			() => import('@app/features/auth/flow/AuthFirstScreen'),
+		);
+		await prepare();
+	} catch (error) {
+		logger.warn('Failed to prepare the signed-out first screen:', error);
+	}
+}
+
+async function bootstrapApp(storageBootstrap: AppStorageBootstrapHandle): Promise<void> {
 	const markdownParserReady = preloadMarkdownParser();
 	const [
 		{App},
@@ -140,7 +195,7 @@ async function bootstrapApp(): Promise<void> {
 		{default: CaptchaInterceptor},
 		{initializeEmojiParser},
 		{registerServiceWorker},
-		{default: AccountManager},
+		{default: Accounts},
 		{default: ChannelDisplayName},
 		_channelFrecency,
 		_geoIp,
@@ -152,15 +207,15 @@ async function bootstrapApp(): Promise<void> {
 		{default: StatusPage},
 		{installMigratedDeviceRemap},
 	] = await Promise.all([
-		loadLazyModule(() => import('@app/app/App')),
+		loadLazyModule(() => import(/* webpackChunkName: "boot-app" */ '@app/app/App')),
 		loadLazyModule(() => import('@app/app/SetupHttp')),
 		loadLazyModule(() => import('@app/features/auth/altcha/CaptchaInterceptor')),
 		loadLazyModule(() => import('@app/features/messaging/utils/markdown/EmojiProviderSetup')),
 		loadLazyModule(() => import('@app/features/platform/service_worker/Register')),
-		loadLazyModule(() => import('@app/features/auth/state/AccountManager')),
+		loadLazyModule(() => import('@app/features/auth/state/Accounts')),
 		loadLazyModule(() => import('@app/features/channel/state/ChannelDisplayName')),
 		loadLazyModule(() => import('@app/features/channel/state/ChannelFrecency')),
-		loadLazyModule(() => import('@app/features/app/state/GeoIP')).then(({default: GeoIP}) => GeoIP.load()),
+		loadLazyModule(() => import('@app/features/app/state/GeoIP')),
 		loadLazyModule(() => import('@app/features/input/state/InputKeybind')),
 		loadLazyModule(() => import('@app/features/auth/state/NewDeviceMonitoring')),
 		loadLazyModule(() => import('@app/features/ui/state/Notification')),
@@ -178,9 +233,13 @@ async function bootstrapApp(): Promise<void> {
 	CaptchaInterceptor.setI18n(reactiveI18n);
 	void StatusPage.checkIncidents();
 	StatusPage.startPolling();
-	await Promise.all([AccountManager.bootstrap(), installMigratedDeviceRemap()]);
-	if (AccountManager.currentUserId === null) {
+	await Promise.all([Accounts.bootstrap(), installMigratedDeviceRemap()]);
+	await storageBootstrap.finalizeAfterSessionResolution(storageSessionAccount(Accounts.currentAccount));
+	if (Accounts.currentUserId === null) {
 		void probeSignedOutDomainMigration();
+	}
+	if (Accounts.currentAccount === null) {
+		await Promise.all([activateSignedOutDocumentInstance(), prepareSignedOutFirstScreen()]);
 	}
 	setupHttp();
 	initializeEmojiParser();
@@ -190,15 +249,15 @@ async function bootstrapApp(): Promise<void> {
 	registerServiceWorker();
 }
 
-export async function runApp(): Promise<void> {
+export async function runApp(storageBootstrap: AppStorageBootstrapHandle): Promise<void> {
 	scheduleNonLatinScriptFaces();
 	await initI18n();
 	installLocaleSwitchWatchdog();
 	installSelfXssNotice();
 	void logClientInfo();
 	if (window.location.pathname === Routes.THEME_STUDIO) {
-		await bootstrapThemeStudio();
+		await bootstrapThemeStudio(storageBootstrap);
 	} else {
-		await bootstrapApp();
+		await bootstrapApp(storageBootstrap);
 	}
 }

@@ -43,6 +43,7 @@ import {TextareaPlusMenu} from '@app/features/channel/components/textarea/Textar
 import {useChannelComposerDraftFocusRestore} from '@app/features/channel/components/useChannelComposerDraftFocusRestore';
 import {useChannelComposerGlobalShortcuts} from '@app/features/channel/components/useChannelComposerGlobalShortcuts';
 import {useChannelComposerPaste} from '@app/features/channel/components/useChannelComposerPaste';
+import {useComposerShowAllButtons} from '@app/features/channel/hooks/useComposerShowAllButtons';
 import type {Channel} from '@app/features/channel/models/Channel';
 import ChannelSearch from '@app/features/channel/state/ChannelSearch';
 import ChannelSticker from '@app/features/channel/state/ChannelSticker';
@@ -152,6 +153,7 @@ const NON_COMMAND_TRIGGERS: Array<TriggerType> = ['mention', 'channel', 'emoji',
 
 export const LexicalChannelTextareaContent = observer(
 	({
+		accountKey,
 		channel,
 		draft,
 		draftSegments,
@@ -169,6 +171,7 @@ export const LexicalChannelTextareaContent = observer(
 		controlsRef,
 		onValueChange,
 	}: {
+		accountKey: string | null;
 		channel: Channel;
 		draft: string | null;
 		draftSegments: ReadonlyArray<MentionSegment>;
@@ -206,7 +209,6 @@ export const LexicalChannelTextareaContent = observer(
 			hasSlots: false,
 			activeSlot: null,
 		});
-		const [showAllButtons, setShowAllButtons] = useState(true);
 		const [mentionConfirmationSnapshot, setMentionConfirmationSnapshot] = useState(createMentionConfirmationSnapshot);
 		const mentionConfirmationModel = selectMentionConfirmationModel(mentionConfirmationSnapshot);
 		const pendingMentionConfirmation = mentionConfirmationModel.pending;
@@ -221,6 +223,7 @@ export const LexicalChannelTextareaContent = observer(
 		const expressionPickerTriggerRef = useRef<HTMLButtonElement>(null);
 		const invisibleExpressionPickerTriggerRef = useRef<HTMLDivElement>(null);
 		const containerRef = useRef<HTMLDivElement>(null);
+		const showAllButtons = useComposerShowAllButtons(containerRef, MobileLayout.enabled);
 		const typingStatusRailLeftRef = useRef<HTMLElement>(null);
 		const contentAreaRef = useRef<HTMLElement | null>(null);
 		const plusButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -368,6 +371,7 @@ export const LexicalChannelTextareaContent = observer(
 			[channel.id],
 		);
 		const {sendMessage, sendOptimisticMessage} = useMessageSubmission({
+			accountKey,
 			channel,
 			referencedMessage,
 			replyingMessage,
@@ -703,11 +707,11 @@ export const LexicalChannelTextareaContent = observer(
 				handle.clear();
 			}
 			setValue('');
-			DraftCommands.deleteDraft(composerKey);
+			DraftCommands.deleteDraft(accountKey, composerKey);
 			if (handle !== null) {
 				handle.focus();
 			}
-		}, [textareaInputDisabled, value, channel, uploadAttachments.length, maxAttachments, composerKey]);
+		}, [accountKey, textareaInputDisabled, value, channel, uploadAttachments.length, maxAttachments, composerKey]);
 		useTextareaExpressionHandlers({
 			setValue,
 			textareaRef: nullTextareaRef,
@@ -786,6 +790,7 @@ export const LexicalChannelTextareaContent = observer(
 			isEditingMessageOnMobile,
 		});
 		const {onSubmit} = useTextareaSubmit({
+			draftOwner: accountKey,
 			channelId: channel.id,
 			guildId: channel.guildId === undefined ? null : channel.guildId,
 			editingMessage: editingMessageForComposer,
@@ -810,11 +815,11 @@ export const LexicalChannelTextareaContent = observer(
 			}
 			setValue('');
 			clearSegments();
-			DraftCommands.deleteDraft(draftChannelId ?? channel.id);
+			DraftCommands.deleteDraft(accountKey, draftChannelId ?? channel.id);
 			if (handle !== null) {
 				handle.focus();
 			}
-		}, [channel.id, clearSegments, draftChannelId]);
+		}, [accountKey, channel.id, clearSegments, draftChannelId]);
 		const handleCancelEdit = useCallback(() => {
 			setValue('');
 			clearSegments();
@@ -978,6 +983,7 @@ export const LexicalChannelTextareaContent = observer(
 			return true;
 		}, [channel.id, enableEditLast]);
 		useTextareaDraftAndTyping({
+			draftOwner: accountKey,
 			channelId: draftChannelId ?? channel.id,
 			value,
 			setValue,
@@ -1062,55 +1068,6 @@ export const LexicalChannelTextareaContent = observer(
 			});
 			return unsubscribe;
 		}, [channel.id, composerKey, draftChannelId, textareaInputDisabled, mobileLayout.enabled]);
-		useEffect(() => {
-			if (mobileLayout.enabled) {
-				setShowAllButtons(true);
-				return;
-			}
-			const container = containerRef.current;
-			if (container === null || typeof ResizeObserver === 'undefined') return;
-			let lastWidth = -1;
-			let rafId: number | null = null;
-			let pendingWidth: number | null = null;
-			const updateButtonVisibility = () => {
-				rafId = null;
-				let containerWidthLocal = 0;
-				if (pendingWidth !== null) {
-					containerWidthLocal = pendingWidth;
-				} else {
-					const currentContainer = containerRef.current;
-					if (currentContainer !== null) containerWidthLocal = currentContainer.clientWidth;
-				}
-				pendingWidth = null;
-				if (containerWidthLocal === lastWidth) return;
-				lastWidth = containerWidthLocal;
-				const shouldShowAll = containerWidthLocal > 500;
-				setShowAllButtons(shouldShowAll);
-			};
-			const scheduleButtonVisibilityCheck = (width?: number) => {
-				if (typeof width === 'number') {
-					pendingWidth = Math.round(width);
-				}
-				if (rafId != null) return;
-				rafId = requestAnimationFrame(updateButtonVisibility);
-			};
-			const resizeObserver = new ResizeObserver((entries) => {
-				const entry = entries[0];
-				if (entry !== undefined) {
-					scheduleButtonVisibilityCheck(entry.contentRect.width);
-				} else {
-					scheduleButtonVisibilityCheck();
-				}
-			});
-			resizeObserver.observe(container);
-			scheduleButtonVisibilityCheck(container.clientWidth);
-			return () => {
-				if (rafId != null) {
-					cancelAnimationFrame(rafId);
-				}
-				resizeObserver.disconnect();
-			};
-		}, [mobileLayout.enabled]);
 		const isPlusContextMenuOpen = useCallback(() => {
 			const plusButton = plusButtonRef.current;
 			const contextMenu = ContextMenuState.contextMenu;

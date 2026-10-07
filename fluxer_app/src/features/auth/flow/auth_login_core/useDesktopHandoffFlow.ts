@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import type {DesktopHandoffInfoResponse} from '@app/features/auth/commands/AuthenticationCommands';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
+import {DesktopHandoffMode} from '@app/features/auth/flow/auth_login_core/AuthLoginStepTypes';
+import {type InstanceHTTPTarget, instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import * as FormUtils from '@app/lib/forms';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -20,32 +23,6 @@ const COULDN_T_COMPLETE_SIGN_IN_PLEASE_TRY_AGAIN_DESCRIPTOR = msg({
 	comment: 'Desktop handoff flow error shown when finalizing the sign-in fails after a valid code.',
 });
 
-export type DesktopHandoffMode =
-	| 'idle'
-	| 'selecting'
-	| 'login'
-	| 'warning'
-	| 'code_input'
-	| 'fetching_info'
-	| 'approving'
-	| 'completing'
-	| 'done'
-	| 'error';
-
-const APPROVAL_FLOW_MODES: ReadonlySet<DesktopHandoffMode> = new Set([
-	'warning',
-	'code_input',
-	'fetching_info',
-	'approving',
-	'completing',
-	'done',
-	'error',
-]);
-
-export function isApprovalFlowMode(mode: DesktopHandoffMode): boolean {
-	return APPROVAL_FLOW_MODES.has(mode);
-}
-
 export function isHandoffRequest(params: URLSearchParams): boolean {
 	return params.get('handoff') === '1' || params.get('desktop_handoff') === '1';
 }
@@ -56,12 +33,18 @@ interface Options {
 	initialMode?: DesktopHandoffMode;
 }
 
+export interface DesktopHandoffAccountCredentials {
+	readonly token: string;
+	readonly userId: string;
+	readonly runtimeSnapshot: RuntimeConfigSnapshot;
+}
+
 export function useDesktopHandoffFlow({enabled, hasStoredAccounts, initialMode}: Options) {
 	const {i18n} = useLingui();
 	const derivedInitial = useMemo<DesktopHandoffMode>(() => {
-		if (!enabled) return 'idle';
+		if (!enabled) return DesktopHandoffMode.IDLE;
 		if (initialMode) return initialMode;
-		return hasStoredAccounts ? 'selecting' : 'login';
+		return hasStoredAccounts ? DesktopHandoffMode.SELECTING : DesktopHandoffMode.LOGIN;
 	}, [enabled, hasStoredAccounts, initialMode]);
 	const [mode, setMode] = useState<DesktopHandoffMode>(derivedInitial);
 	const [error, setError] = useState<string | null>(null);
@@ -69,38 +52,49 @@ export function useDesktopHandoffFlow({enabled, hasStoredAccounts, initialMode}:
 	const [handoffCode, setHandoffCode] = useState<string | null>(null);
 	const tokenRef = useRef<string | null>(null);
 	const userIdRef = useRef<string | null>(null);
+	const operationRevisionRef = useRef(0);
+	const targetRef = useRef<InstanceHTTPTarget | null>(null);
 	const start = useCallback(
-		({token, userId}: {token: string; userId: string}) => {
+		({token, userId, runtimeSnapshot}: DesktopHandoffAccountCredentials) => {
 			if (!enabled) return;
+			operationRevisionRef.current += 1;
 			tokenRef.current = token;
 			userIdRef.current = userId;
+			targetRef.current = instanceTargetFromSnapshot(runtimeSnapshot);
 			setError(null);
 			setHandoffCode(null);
 			setClientInfo(null);
-			setMode('warning');
+			setMode(DesktopHandoffMode.WARNING);
 		},
 		[enabled],
 	);
 	const proceedToCodeInput = useCallback(() => {
-		setMode('code_input');
+		operationRevisionRef.current += 1;
+		setMode(DesktopHandoffMode.CODE_INPUT);
 		setError(null);
 	}, []);
 	const submitCode = useCallback(
 		async (code: string) => {
-			setMode('fetching_info');
+			const token = tokenRef.current;
+			const target = targetRef.current;
+			if (token == null || token.length === 0 || target == null) return;
+			const operationRevision = ++operationRevisionRef.current;
+			setMode(DesktopHandoffMode.FETCHING_INFO);
 			setError(null);
 			setHandoffCode(code);
 			try {
-				const info = await AuthenticationCommands.fetchDesktopHandoffInfo(code);
+				const info = await AuthenticationCommands.fetchDesktopHandoffInfo({code, token, target});
+				if (operationRevision !== operationRevisionRef.current) return;
 				if (info.status === 'expired') {
-					setMode('error');
+					setMode(DesktopHandoffMode.ERROR);
 					setError(i18n._(INVALID_OR_EXPIRED_CODE_PLEASE_TRY_AGAIN_DESCRIPTOR));
 					return;
 				}
 				setClientInfo(info.client_info);
-				setMode('approving');
+				setMode(DesktopHandoffMode.APPROVING);
 			} catch (e) {
-				setMode('error');
+				if (operationRevision !== operationRevisionRef.current) return;
+				setMode(DesktopHandoffMode.ERROR);
 				setError(
 					e && typeof e === 'object' && 'body' in e
 						? FormUtils.extractErrorMessage(i18n, e)
@@ -111,18 +105,25 @@ export function useDesktopHandoffFlow({enabled, hasStoredAccounts, initialMode}:
 		[i18n],
 	);
 	const approve = useCallback(async () => {
-		if (!handoffCode || !tokenRef.current || !userIdRef.current) return;
-		setMode('completing');
+		const token = tokenRef.current;
+		const userId = userIdRef.current;
+		const target = targetRef.current;
+		if (!handoffCode || !token || !userId || target == null) return;
+		const operationRevision = ++operationRevisionRef.current;
+		setMode(DesktopHandoffMode.COMPLETING);
 		setError(null);
 		try {
 			await AuthenticationCommands.completeDesktopHandoff({
 				code: handoffCode,
-				token: tokenRef.current,
-				userId: userIdRef.current,
+				token,
+				userId,
+				target,
 			});
-			setMode('done');
+			if (operationRevision !== operationRevisionRef.current) return;
+			setMode(DesktopHandoffMode.DONE);
 		} catch (e) {
-			setMode('error');
+			if (operationRevision !== operationRevisionRef.current) return;
+			setMode(DesktopHandoffMode.ERROR);
 			setError(
 				e && typeof e === 'object' && 'body' in e
 					? FormUtils.extractErrorMessage(i18n, e)
@@ -131,28 +132,31 @@ export function useDesktopHandoffFlow({enabled, hasStoredAccounts, initialMode}:
 		}
 	}, [handoffCode, i18n]);
 	const deny = useCallback(() => {
+		operationRevisionRef.current += 1;
 		setHandoffCode(null);
 		setClientInfo(null);
-		setMode('code_input');
+		setMode(DesktopHandoffMode.CODE_INPUT);
 	}, []);
 	const switchToLogin = useCallback(() => {
-		setMode('login');
+		operationRevisionRef.current += 1;
+		setMode(DesktopHandoffMode.LOGIN);
 		setError(null);
 	}, []);
 	const retry = useCallback(() => {
+		operationRevisionRef.current += 1;
 		setError(null);
 		setHandoffCode(null);
 		setClientInfo(null);
 		tokenRef.current = null;
 		userIdRef.current = null;
-		setMode(hasStoredAccounts ? 'selecting' : 'login');
+		targetRef.current = null;
+		setMode(hasStoredAccounts ? DesktopHandoffMode.SELECTING : DesktopHandoffMode.LOGIN);
 	}, [hasStoredAccounts]);
 	return {
 		mode,
 		error,
 		clientInfo,
 		handoffCode,
-		setMode,
 		start,
 		proceedToCodeInput,
 		submitCode,

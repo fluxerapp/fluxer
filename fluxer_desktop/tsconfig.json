@@ -15,9 +15,10 @@
 		"paths": {
 			"@electron/*": ["./src/*"],
 			"@fluxer/voice_engine_v2": ["../packages/voice_engine_v2/src/index.ts"],
-			"@fluxer/voice_engine_v2/*": ["../packages/voice_engine_v2/*"]
+			"@fluxer/voice_engine_v2/*": ["../packages/voice_engine_v2/*"],
+			"@fluxer/*": ["../packages/*", "../packages/*/src/index.ts"]
 		}
 	},
-	"include": ["src/**/*", "../packages/voice_engine_v2/src/**/*"],
+	"include": ["src/**/*", "../packages/desktop_ipc/src/**/*", "../packages/voice_engine_v2/src/**/*"],
 	"exclude": ["node_modules", "dist"]
 }

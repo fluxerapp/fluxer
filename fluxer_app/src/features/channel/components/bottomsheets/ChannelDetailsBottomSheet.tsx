@@ -4,6 +4,7 @@ import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {MuteDurationSheet} from '@app/features/app/components/bottomsheets/MuteDurationSheet';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {ChannelPinsContent} from '@app/features/app/components/shared/ChannelPinsContent';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
@@ -40,7 +41,6 @@ import {
 	GROUP_SETTINGS_DESCRIPTOR,
 	logger,
 	MARKED_AS_READ_DESCRIPTOR,
-	MORE_DESCRIPTOR,
 	MUTE_DESCRIPTOR,
 	PINNED_GROUP_DESCRIPTOR,
 	SEARCH_DESCRIPTOR,
@@ -56,7 +56,6 @@ import {NotificationSettingsSheet} from '@app/features/channel/components/bottom
 import {QuickActionButton} from '@app/features/channel/components/bottomsheets/channel_details_bottom_sheet/QuickActionButton';
 import {createMuteConfig} from '@app/features/channel/components/MuteOptions';
 import {ChannelFollowModal} from '@app/features/channel/components/modals/ChannelFollowModal';
-import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
 import {CreateDMModal} from '@app/features/channel/components/modals/CreateDMModal';
 import {EditGroupModal} from '@app/features/channel/components/modals/EditGroupModal';
 import {GroupInvitesModal} from '@app/features/channel/components/modals/GroupInvitesModal';
@@ -81,6 +80,7 @@ import {
 	ANNOUNCEMENT_CHANNEL_DESCRIPTOR,
 	CHANNEL_DELETED_DESCRIPTOR,
 	LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR,
+	MORE_DESCRIPTOR,
 	PERSONAL_NOTES_DESCRIPTOR,
 	PINNED_DM_DESCRIPTOR,
 	REMOVED_FROM_FAVORITES_TOAST_DESCRIPTOR,
@@ -405,12 +405,15 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 		const handleEditChannel = useCallback(() => {
 			ModalCommands.pushAfterBottomSheetClose(
 				onClose,
-				modal(() => (
-					<ChannelSettingsModal
-						channelId={channel.id}
-						data-flx="channel.channel-details-bottom-sheet.handle-edit-channel.channel-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<ChannelSettingsModal
+							channelId={channel.id}
+							data-flx="channel.channel-details-bottom-sheet.handle-edit-channel.channel-settings-modal"
+						/>
+					),
+					'channel-settings',
+				),
 			);
 		}, [channel.id, onClose]);
 		const handleDeleteChannel = useCallback(() => {

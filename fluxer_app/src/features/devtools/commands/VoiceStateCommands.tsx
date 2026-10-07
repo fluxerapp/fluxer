@@ -206,7 +206,7 @@ const updateConnectionProperty = async (
 	if (!voiceState) return;
 	const socket = GatewayConnection.socket;
 	if (!socket) return;
-	socket.updateVoiceState({
+	socket.updateVoiceStateExplicit({
 		guild_id: voiceState.guild_id,
 		channel_id: voiceState.channel_id,
 		connection_id: connectionId,
@@ -226,7 +226,7 @@ const updateConnectionsProperty = async (
 	for (const connectionId of connectionIds) {
 		const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
 		if (!voiceState) continue;
-		socket.updateVoiceState({
+		socket.updateVoiceStateExplicit({
 			guild_id: voiceState.guild_id,
 			channel_id: voiceState.channel_id,
 			connection_id: connectionId,
@@ -282,7 +282,7 @@ export async function bulkDisconnect(connectionIds: Array<string>): Promise<void
 	for (const connectionId of connectionIds) {
 		const voiceState = MediaEngine.getVoiceStateByConnectionId(connectionId);
 		if (!voiceState) continue;
-		socket.updateVoiceState({
+		socket.updateVoiceStateExplicit({
 			guild_id: voiceState.guild_id,
 			channel_id: null,
 			connection_id: connectionId,
@@ -305,7 +305,7 @@ export async function bulkMoveConnections(connectionIds: Array<string>, targetCh
 			await MediaEngine.connectToVoiceChannel(voiceState.guild_id ?? null, targetChannelId);
 			continue;
 		}
-		socket.updateVoiceState({
+		socket.updateVoiceStateExplicit({
 			guild_id: voiceState.guild_id,
 			channel_id: targetChannelId,
 			connection_id: connectionId,

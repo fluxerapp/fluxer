@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {useCallHeaderState} from '@app/features/channel/components/channel_view/useCallHeaderState';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
@@ -29,7 +30,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
 import styles from '@app/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.module.css';
 import {CompactVoiceCallView} from '@app/features/voice/components/CompactVoiceCallView';
@@ -192,12 +192,15 @@ export const DirectCallLobbyBottomSheet = observer(function DirectCallLobbyBotto
 	const handleOpenVoiceSettings = useCallback(() => {
 		ModalCommands.pushAfterBottomSheetClose(
 			onClose,
-			modal(() => (
-				<UserSettingsModal
-					initialTab="voice_video"
-					data-flx="voice.direct-call-lobby-bottom-sheet.handle-open-voice-settings.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="voice_video"
+						data-flx="voice.direct-call-lobby-bottom-sheet.handle-open-voice-settings.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	}, [onClose]);
 	const handleOpenCallView = useCallback(() => {

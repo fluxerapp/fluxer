@@ -4,19 +4,21 @@ use crate::common::{
     CalverEnv, CommandSpec, append_github_env, append_github_output, append_github_path, capture,
     collect_files, command_succeeds, copy_dir_contents, count_files, download_file, env_bool,
     env_string, output_bytes, output_text, parse_bool, path_to_s3_key, remove_dir_if_exists,
-    remove_file_if_exists, require_any_env, require_env, require_home, resolve_calver, run_command,
-    runner_temp, title_case, trim_option,
+    remove_empty_dirs_below, remove_file_if_exists, require_any_env, require_env, require_home,
+    resolve_calver, run_command, runner_temp, title_case, trim_option,
 };
-use crate::functions::write_json_pretty;
+use crate::functions::{sha256_file, write_json_pretty};
 use crate::release::{
     DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION, DesktopReleaseAsset, DesktopReleaseDescriptor,
+    desktop_module_manifest_release_asset_name, desktop_module_manifest_storage_key,
+    desktop_module_package_release_asset_name, desktop_module_package_storage_key,
     desktop_release_asset_name, desktop_release_coordinates, desktop_release_descriptor_filename,
     desktop_release_product, desktop_release_shipped_formats,
     desktop_release_update_payload_suffix, desktop_release_updater_feeds,
-    validate_desktop_release_descriptor,
+    validate_desktop_release_descriptor, validate_desktop_release_module_files,
 };
 use anyhow::{Context, Result, anyhow, bail, ensure};
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use clap::{Args, ValueEnum};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -25,8 +27,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, File, OpenOptions};
-use std::io::{self, Read, Seek, SeekFrom, Write};
+use std::io::{self, BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
 use tempfile::TempDir;
@@ -34,9 +37,12 @@ use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
 
 const PACKAGE_ORIGIN_BASE: &str = "https://pkgs.fluxer.com";
+const PACKAGE_ORIGIN_BASE_ENV: &str = "PKGS_DOWNLOAD_BASE_URL";
 const PNPM_VERSION: &str = "12.4.2";
 const RUST_TOOLCHAIN: &str = "1.98.1";
 const LINUX_PIPEWIRE_VERSION: &str = "0.3.65";
+const LINUX_PIPEWIRE_HEADER_DIR: &str = "pipewire-0.3";
+const LINUX_SPA_HEADER_DIR: &str = "spa-0.2";
 const LINUX_PIPEWIRE_SOURCE_SHA256: &str =
     "bb76f938136d0ce8c35bffa99e002dc2dbaeab5e14c6c34154e7f750013d1d6b";
 const LINUX_LIBFIDO2_VERSION: &str = "1.16.0";
@@ -45,6 +51,46 @@ const LINUX_LIBFIDO2_SOURCE_SHA256: &str =
 pub(crate) const MACOS_UNIVERSAL_ARCH: &str = "universal";
 const MACOS_MINIMUM_SYSTEM_VERSION: &str = "13.0";
 const DESKTOP_PAYLOAD_PREFIX: &str = "desktop";
+const DESKTOP_SHARED_ASSETS_DIR_NAME: &str = "desktop-shared-assets";
+const DESKTOP_SHARED_ASSETS_PAYLOAD_DIR_NAME: &str = "renderer";
+const DESKTOP_SHARED_ASSETS_MANIFEST_NAME: &str = "manifest.json";
+const DESKTOP_SHARED_ASSET_FILE_LIMIT: usize = 100_000;
+const DESKTOP_MODULES_DIR_NAME: &str = "desktop-modules";
+const DESKTOP_MODULE_FILES_DIR_NAME: &str = "files";
+const DESKTOP_MODULE_FILE_LIST_NAME: &str = "module.json";
+const DESKTOP_MODULE_CLASSIFICATION_NAME: &str = "classification.json";
+pub(crate) const DESKTOP_MODULE_PACKAGE_NAME: &str = "package.br";
+const DESKTOP_MODULE_PACKAGE_CHECKSUM_NAME: &str = "package.br.sha256";
+pub(crate) const DESKTOP_RENDERER_MODULE: &str = "fluxer_renderer";
+const DESKTOP_SOURCEMAP_MODULE: &str = "fluxer_sourcemaps";
+const DESKTOP_SOURCEMAP_EXTENSION: &str = "map";
+const DESKTOP_MODULE_ASSETS_DIR_NAME: &str = "assets";
+const DESKTOP_MODULE_NAME_MAX_LENGTH: usize = 64;
+const DESKTOP_PRECOMPRESSED_EXTENSIONS: &[&str] = &[
+    "avif", "br", "gif", "gz", "ico", "jpeg", "jpg", "mp3", "mp4", "ogg", "onnx", "png", "webm",
+    "webp", "woff2", "zip",
+];
+const DESKTOP_MODULE_BROTLI_QUALITY: u32 = 9;
+const DESKTOP_PRECOMPRESSED_MODULE_BROTLI_QUALITY: u32 = 0;
+const DESKTOP_MODULE_BROTLI_WINDOW: u32 = 24;
+const DESKTOP_MODULE_BROTLI_BUFFER_BYTES: usize = 1024 * 1024;
+const DESKTOP_MODULE_TAR_MODE: u32 = 0o644;
+const DESKTOP_MODULE_PACK_MAX_THREADS: usize = 8;
+const DESKTOP_PAYLOAD_MANIFEST_NAME: &str = "manifest.json";
+pub(crate) const DESKTOP_CHANNEL_MANIFEST_NAME: &str = "modules.json";
+pub(crate) const DESKTOP_MODULES_KEY_SEGMENT: &str = "modules";
+const DESKTOP_CHANNEL_MANIFEST_VERSION: u64 = 1;
+const DESKTOP_CHANNEL_MANIFEST_MAX_BYTES: usize = 1024 * 1024;
+const DESKTOP_MODULE_ASSET_SEGMENT_RULE: &str = "module_asset_segment";
+const DESKTOP_RENDERER_REMAINDER_RULE: &str = "renderer_remainder";
+const DESKTOP_SOURCEMAP_RULE: &str = "source_map";
+const DESKTOP_SPELLCHECK_DICTIONARY_RULE: &str = "spellcheck_dictionary";
+const DESKTOP_DICTIONARY_MODULE_PREFIX: &str = "fluxer_dict_";
+const DESKTOP_DICTIONARY_PACKAGE_PREFIX: &str = "dictionary-";
+const DESKTOP_DICTIONARY_FILE_NAMES: &[&str] = &["index.aff", "index.dic"];
+const DESKTOP_MODULE_MINIMUM_SHELL_VERSION: &str = "0.0.0";
+const DESKTOP_REQUIRED_MODULES: &[&str] = &[DESKTOP_RENDERER_MODULE];
+const DESKTOP_MODULES_ENV: &str = "FLUXER_MODULES";
 
 #[derive(Debug, Args, Clone)]
 pub struct BuildDesktopArgs {
@@ -89,6 +135,12 @@ enum DesktopStep {
     InstallDependencies,
     UpdateVersion,
     SetBuildChannel,
+    BuildSharedAssets,
+    PrepareSharedAssets,
+    RestoreSharedAssets,
+    SplitModules,
+    PackModules,
+    StripShellRenderer,
     BuildElectronMain,
     InstallVelopackCli,
     BuildAppMacos,
@@ -111,6 +163,7 @@ enum DesktopStep {
     GenerateChecksumsWindows,
     StageHandoff,
     BuildPayload,
+    BuildModuleManifest,
     PrepareReleaseAssets,
     BuildSummary,
 }
@@ -190,6 +243,12 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
             "--allow-same-version",
         ])),
         DesktopStep::SetBuildChannel => set_build_channel_step(),
+        DesktopStep::BuildSharedAssets => build_shared_assets_step(),
+        DesktopStep::PrepareSharedAssets => prepare_shared_assets_step(),
+        DesktopStep::RestoreSharedAssets => restore_shared_assets_step(),
+        DesktopStep::SplitModules => split_modules_step(),
+        DesktopStep::PackModules => pack_modules_step(),
+        DesktopStep::StripShellRenderer => strip_shell_renderer_step(),
         DesktopStep::BuildElectronMain => build_electron_main_step(),
         DesktopStep::InstallVelopackCli => install_velopack_cli_step(),
         DesktopStep::BuildAppMacos => build_app_step(DesktopBuildPlatform::Macos),
@@ -224,6 +283,7 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         ]),
         DesktopStep::StageHandoff => stage_handoff_step(),
         DesktopStep::BuildPayload => build_payload_step(),
+        DesktopStep::BuildModuleManifest => build_module_manifest_step(),
         DesktopStep::PrepareReleaseAssets => prepare_release_assets_step(),
         DesktopStep::BuildSummary => build_summary_step(),
     }
@@ -275,10 +335,13 @@ fn resolve_desktop_dir() -> Result<PathBuf> {
     ))
 }
 
+const BUILD_CHANNELS: &[&str] = &["stable", "canary", "development"];
+
 pub(crate) fn write_build_channel_file(root: &Path, channel: &str) -> Result<()> {
     ensure!(
-        matches!(channel, "stable" | "canary"),
-        "Invalid BUILD_CHANNEL: {channel}. Must be 'stable' or 'canary'."
+        BUILD_CHANNELS.contains(&channel),
+        "Invalid BUILD_CHANNEL: {channel}. Must be one of: {}.",
+        BUILD_CHANNELS.join(", ")
     );
     let path = root.join("src/common/BuildChannel.ts");
     let content = build_channel_content(channel);
@@ -303,9 +366,14 @@ pub(crate) fn write_build_channel_file(root: &Path, channel: &str) -> Result<()>
 }
 
 fn build_channel_content(channel: &str) -> String {
+    let union = BUILD_CHANNELS
+        .iter()
+        .map(|value| format!("'{value}'"))
+        .collect::<Vec<_>>()
+        .join(" | ");
     format!(
         "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
-export type BuildChannel = 'stable' | 'canary';\n\n\
+export type BuildChannel = {union};\n\n\
 export const BUILD_CHANNEL = '{channel}' as BuildChannel;\n\
 export const IS_CANARY = BUILD_CHANNEL === 'canary';\n\
 export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
@@ -771,6 +839,26 @@ async fn install_linux_pipewire_headers() -> Result<()> {
         "Expected the system PipeWire runtime, got {}",
         system_pipewire_library.display()
     );
+    let install_include_dir = Path::new("/usr/local/include");
+    if linux_pipewire_header_overlay_present(install_include_dir)? {
+        verify_linux_pipewire_header_overlay(
+            install_include_dir,
+            &install_library_dir,
+            &install_pkgconfig_dir,
+            &system_pipewire_library,
+        )
+        .with_context(|| {
+            format!(
+                "The PipeWire header overlay under {} is not the expected {LINUX_PIPEWIRE_VERSION} install",
+                install_include_dir.display()
+            )
+        })?;
+        println!(
+            "PipeWire {LINUX_PIPEWIRE_VERSION} header overlay already installed for {}, skipping.",
+            system_pipewire_library.display()
+        );
+        return Ok(());
+    }
 
     download_file(&source_url, &archive_path).await?;
     let archive_sha256 = sha256_file(&archive_path)?;
@@ -831,17 +919,11 @@ async fn install_linux_pipewire_headers() -> Result<()> {
     )?;
 
     let staged_prefix = staging_dir.join("usr/local");
-    let staged_pipewire_headers = staged_prefix.join("include/pipewire-0.3");
-    let staged_spa_headers = staged_prefix.join("include/spa-0.2");
+    let staged_pipewire_headers = staged_prefix
+        .join("include")
+        .join(LINUX_PIPEWIRE_HEADER_DIR);
+    let staged_spa_headers = staged_prefix.join("include").join(LINUX_SPA_HEADER_DIR);
     let staged_pkgconfig_dir = staged_prefix.join(format!("lib/{multiarch}/pkgconfig"));
-    let install_include_dir = Path::new("/usr/local/include");
-    let install_pipewire_headers = install_include_dir.join("pipewire-0.3");
-    let install_spa_headers = install_include_dir.join("spa-0.2");
-    ensure!(
-        !install_pipewire_headers.exists() && !install_spa_headers.exists(),
-        "PipeWire header overlay already exists under {}",
-        install_include_dir.display()
-    );
     run_command(CommandSpec::new("sudo").args([
         "install",
         "-d",
@@ -873,6 +955,47 @@ async fn install_linux_pipewire_headers() -> Result<()> {
         )?;
     }
 
+    verify_linux_pipewire_header_overlay(
+        install_include_dir,
+        &install_library_dir,
+        &install_pkgconfig_dir,
+        &system_pipewire_library,
+    )?;
+
+    println!(
+        "Installed PipeWire {LINUX_PIPEWIRE_VERSION} headers for {}.",
+        system_pipewire_library.display()
+    );
+    Ok(())
+}
+
+fn linux_pipewire_header_overlay_present(install_include_dir: &Path) -> Result<bool> {
+    let pipewire_headers = install_include_dir.join(LINUX_PIPEWIRE_HEADER_DIR);
+    let spa_headers = install_include_dir.join(LINUX_SPA_HEADER_DIR);
+    match (pipewire_headers.exists(), spa_headers.exists()) {
+        (false, false) => Ok(false),
+        (true, true) => Ok(true),
+        (has_pipewire, _) => {
+            let (present, missing) = if has_pipewire {
+                (pipewire_headers, spa_headers)
+            } else {
+                (spa_headers, pipewire_headers)
+            };
+            bail!(
+                "PipeWire header overlay is partially installed: {} exists but {} does not",
+                present.display(),
+                missing.display()
+            )
+        }
+    }
+}
+
+fn verify_linux_pipewire_header_overlay(
+    install_include_dir: &Path,
+    install_library_dir: &Path,
+    install_pkgconfig_dir: &Path,
+    system_pipewire_library: &Path,
+) -> Result<()> {
     let installed_version =
         output_text(CommandSpec::new("pkg-config").args(["--modversion", "libpipewire-0.3"]))?;
     ensure!(
@@ -910,6 +1033,8 @@ async fn install_linux_pipewire_headers() -> Result<()> {
             "Expected {package} include flag {expected_include_flag}, got {include_flags}"
         );
     }
+    let install_pipewire_headers = install_include_dir.join(LINUX_PIPEWIRE_HEADER_DIR);
+    let install_spa_headers = install_include_dir.join(LINUX_SPA_HEADER_DIR);
     ensure!(
         install_pipewire_headers
             .join("pipewire/pipewire.h")
@@ -920,7 +1045,7 @@ async fn install_linux_pipewire_headers() -> Result<()> {
         LINUX_PIPEWIRE_VERSION
     );
     let mut local_pipewire_library = None;
-    for entry in fs::read_dir(&install_library_dir)
+    for entry in fs::read_dir(install_library_dir)
         .with_context(|| format!("Failed to read {}", install_library_dir.display()))?
     {
         let entry = entry
@@ -947,11 +1072,6 @@ async fn install_linux_pipewire_headers() -> Result<()> {
         "PipeWire header overlay changed the runtime from {} to {}",
         system_pipewire_library.display(),
         loaded_pipewire_library.display()
-    );
-
-    println!(
-        "Installed PipeWire {LINUX_PIPEWIRE_VERSION} headers for {}.",
-        system_pipewire_library.display()
     );
     Ok(())
 }
@@ -1317,10 +1437,905 @@ fn install_rust_windows_targets_step() -> Result<()> {
 fn build_electron_main_step() -> Result<()> {
     run_command(
         pnpm_command()?
-            .arg("build")
+            .args(["build", "--use-shared-renderer"])
+            .env("NODE_ENV", "production")
+            .env("FLUXER_DESKTOP_PRODUCTION", "true")
+            .env(DESKTOP_MODULES_ENV, "1"),
+    )
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+struct DesktopSharedAssetFile {
+    path: String,
+    sha256: String,
+    bytes: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+struct DesktopSharedAssetManifest {
+    build_version: String,
+    release_channel: String,
+    source_sha: String,
+    files: Vec<DesktopSharedAssetFile>,
+}
+
+fn desktop_renderer_dir() -> PathBuf {
+    workdir()
+        .join("fluxer_desktop")
+        .join("dist")
+        .join("renderer")
+}
+
+fn desktop_shared_assets_dir() -> PathBuf {
+    workdir().join(DESKTOP_SHARED_ASSETS_DIR_NAME)
+}
+
+fn build_shared_assets_step() -> Result<()> {
+    run_command(
+        pnpm_command()?
+            .args(["exec", "node", "scripts/build.mjs", "--shared-assets"])
             .env("NODE_ENV", "production")
             .env("FLUXER_DESKTOP_PRODUCTION", "true"),
     )
+}
+
+fn prepare_shared_assets_step() -> Result<()> {
+    let renderer_dir = desktop_renderer_dir();
+    ensure_renderer_assets_ready(&renderer_dir)?;
+    let staging_dir = desktop_shared_assets_dir();
+    remove_dir_if_exists(&staging_dir)?;
+    let payload_dir = staging_dir.join(DESKTOP_SHARED_ASSETS_PAYLOAD_DIR_NAME);
+    copy_dir_contents(&renderer_dir, &payload_dir)?;
+    let manifest = build_shared_asset_manifest(&payload_dir)?;
+    write_json_pretty(
+        &staging_dir.join(DESKTOP_SHARED_ASSETS_MANIFEST_NAME),
+        &manifest,
+    )?;
+    println!(
+        "Staged {} shared renderer file(s) into {}",
+        manifest.files.len(),
+        staging_dir.display()
+    );
+    Ok(())
+}
+
+fn restore_shared_assets_step() -> Result<()> {
+    let staging_dir = desktop_shared_assets_dir();
+    let manifest_path = staging_dir.join(DESKTOP_SHARED_ASSETS_MANIFEST_NAME);
+    let manifest_bytes = fs::read(&manifest_path)
+        .with_context(|| format!("Failed to read {}", manifest_path.display()))?;
+    let manifest: DesktopSharedAssetManifest = serde_json::from_slice(&manifest_bytes)
+        .with_context(|| format!("Failed to parse {}", manifest_path.display()))?;
+    let build_version = require_env("BUILD_VERSION")?;
+    let release_channel = require_env("BUILD_CHANNEL")?;
+    let source_sha = require_env("SOURCE_SHA")?;
+    ensure!(
+        manifest.build_version == build_version,
+        "Shared renderer assets were built for version {}, expected {build_version}",
+        manifest.build_version
+    );
+    ensure!(
+        manifest.release_channel == release_channel,
+        "Shared renderer assets were built for channel {}, expected {release_channel}",
+        manifest.release_channel
+    );
+    ensure!(
+        manifest.source_sha == source_sha,
+        "Shared renderer assets were built from {}, expected {source_sha}",
+        manifest.source_sha
+    );
+    let payload_dir = staging_dir.join(DESKTOP_SHARED_ASSETS_PAYLOAD_DIR_NAME);
+    verify_shared_asset_payload(&payload_dir, &manifest)?;
+    let renderer_dir = desktop_renderer_dir();
+    remove_dir_if_exists(&renderer_dir)?;
+    copy_dir_contents(&payload_dir, &renderer_dir)?;
+    ensure_renderer_assets_ready(&renderer_dir)?;
+    println!(
+        "Restored {} shared renderer file(s) into {}",
+        manifest.files.len(),
+        renderer_dir.display()
+    );
+    Ok(())
+}
+
+fn build_shared_asset_manifest(root: &Path) -> Result<DesktopSharedAssetManifest> {
+    let files = collect_files(root)?;
+    ensure!(
+        files.len() <= DESKTOP_SHARED_ASSET_FILE_LIMIT,
+        "Shared renderer payload has {} files, above the {DESKTOP_SHARED_ASSET_FILE_LIMIT} file limit",
+        files.len()
+    );
+    let mut entries = Vec::with_capacity(files.len());
+    for file in files {
+        let relative = file.strip_prefix(root)?;
+        let metadata =
+            fs::metadata(&file).with_context(|| format!("Failed to stat {}", file.display()))?;
+        entries.push(DesktopSharedAssetFile {
+            path: shared_asset_relative_path(relative),
+            sha256: sha256_file(&file)?,
+            bytes: metadata.len(),
+        });
+    }
+    Ok(DesktopSharedAssetManifest {
+        build_version: require_env("BUILD_VERSION")?,
+        release_channel: require_env("BUILD_CHANNEL")?,
+        source_sha: require_env("SOURCE_SHA")?,
+        files: entries,
+    })
+}
+
+fn shared_asset_relative_path(relative: &Path) -> String {
+    relative
+        .components()
+        .map(|component| component.as_os_str().to_string_lossy().into_owned())
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
+fn resolve_shared_asset_path(root: &Path, relative: &str) -> Result<PathBuf> {
+    let mut path = root.to_path_buf();
+    for segment in relative.split('/') {
+        ensure!(
+            !segment.is_empty() && segment != "." && segment != "..",
+            "Shared renderer manifest contains an unsafe path: {relative}"
+        );
+        path.push(segment);
+    }
+    Ok(path)
+}
+
+fn verify_shared_asset_payload(root: &Path, manifest: &DesktopSharedAssetManifest) -> Result<()> {
+    let present = collect_files(root)?;
+    ensure!(
+        present.len() == manifest.files.len(),
+        "Shared renderer payload has {} files, the manifest lists {}",
+        present.len(),
+        manifest.files.len()
+    );
+    for entry in &manifest.files {
+        let path = resolve_shared_asset_path(root, &entry.path)?;
+        let metadata = fs::metadata(&path)
+            .with_context(|| format!("Missing shared renderer file {}", path.display()))?;
+        ensure!(
+            metadata.len() == entry.bytes,
+            "Shared renderer file {} is {} bytes, the manifest lists {}",
+            entry.path,
+            metadata.len(),
+            entry.bytes
+        );
+        let digest = sha256_file(&path)?;
+        ensure!(
+            digest == entry.sha256,
+            "Shared renderer file {} hashes to {digest}, the manifest lists {}",
+            entry.path,
+            entry.sha256
+        );
+    }
+    Ok(())
+}
+
+fn ensure_renderer_assets_ready(root: &Path) -> Result<()> {
+    ensure!(
+        root.join("index.html").is_file(),
+        "Missing renderer index.html in {}",
+        root.display()
+    );
+    ensure!(
+        root.join("assets").is_dir(),
+        "Missing renderer assets directory in {}",
+        root.display()
+    );
+    ensure!(
+        !root.join("sw.js").exists(),
+        "The desktop renderer bundle must not contain sw.js ({})",
+        root.display()
+    );
+    Ok(())
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+struct DesktopModuleManifest {
+    module: String,
+    build_version: String,
+    release_channel: String,
+    source_sha: String,
+    files: Vec<DesktopSharedAssetFile>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+struct DesktopModuleClassificationFile {
+    path: String,
+    module: String,
+    rule: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+struct DesktopModuleClassificationSummary {
+    module: String,
+    files: usize,
+    bytes: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+struct DesktopModuleClassification {
+    build_version: String,
+    release_channel: String,
+    source_sha: String,
+    modules: Vec<DesktopModuleClassificationSummary>,
+    files: Vec<DesktopModuleClassificationFile>,
+}
+
+fn desktop_modules_dir() -> PathBuf {
+    workdir().join(DESKTOP_MODULES_DIR_NAME)
+}
+
+pub(crate) fn is_desktop_module_name(value: &str) -> bool {
+    if value.is_empty() || value.len() > DESKTOP_MODULE_NAME_MAX_LENGTH {
+        return false;
+    }
+    let mut characters = value.chars();
+    let Some(first) = characters.next() else {
+        return false;
+    };
+    first.is_ascii_lowercase()
+        && characters
+            .all(|value| value.is_ascii_lowercase() || value.is_ascii_digit() || value == '_')
+}
+
+fn is_desktop_source_map(relative: &str) -> bool {
+    Path::new(relative)
+        .extension()
+        .and_then(|value| value.to_str())
+        .is_some_and(|value| value.eq_ignore_ascii_case(DESKTOP_SOURCEMAP_EXTENSION))
+}
+
+fn desktop_module_for_relative_path(relative: &str) -> Result<Option<&str>> {
+    let Some(rest) = relative.strip_prefix(&format!("{DESKTOP_MODULE_ASSETS_DIR_NAME}/")) else {
+        return Ok(None);
+    };
+    let Some((segment, name)) = rest.split_once('/') else {
+        return Ok(None);
+    };
+    ensure!(
+        !name.contains('/'),
+        "Renderer file {relative} nests more than one directory under {DESKTOP_MODULE_ASSETS_DIR_NAME}/, the owning module segment must be the only one"
+    );
+    ensure!(
+        segment != DESKTOP_MODULE_ASSETS_DIR_NAME,
+        "Renderer file {relative} names its module {DESKTOP_MODULE_ASSETS_DIR_NAME}, which nests a second {DESKTOP_MODULE_ASSETS_DIR_NAME} segment and collapses every proxied asset path"
+    );
+    ensure!(
+        segment != DESKTOP_RENDERER_MODULE,
+        "Renderer file {relative} names {DESKTOP_RENDERER_MODULE} explicitly, a file with no module segment already belongs to it"
+    );
+    ensure!(
+        is_desktop_module_name(segment),
+        "Renderer file {relative} sits under {segment}, which is not a usable desktop module name"
+    );
+    Ok(Some(segment))
+}
+
+fn expected_desktop_modules(modules_dir: &Path) -> Result<BTreeSet<String>> {
+    let path = modules_dir.join(DESKTOP_MODULE_CLASSIFICATION_NAME);
+    let bytes = fs::read(&path).with_context(|| {
+        format!(
+            "Failed to read {}, run the split_modules step first",
+            path.display()
+        )
+    })?;
+    let classification: DesktopModuleClassification = serde_json::from_slice(&bytes)
+        .with_context(|| format!("Failed to parse {}", path.display()))?;
+    let modules = classification
+        .modules
+        .iter()
+        .map(|summary| summary.module.clone())
+        .collect::<BTreeSet<_>>();
+    ensure!(
+        modules.contains(DESKTOP_RENDERER_MODULE),
+        "{} lists no {DESKTOP_RENDERER_MODULE}",
+        path.display()
+    );
+    Ok(modules)
+}
+
+fn desktop_module_brotli_quality(manifest: &DesktopModuleManifest) -> u32 {
+    if manifest.files.is_empty() {
+        return DESKTOP_MODULE_BROTLI_QUALITY;
+    }
+    let precompressed = manifest.files.iter().all(|entry| {
+        Path::new(&entry.path)
+            .extension()
+            .and_then(OsStr::to_str)
+            .is_some_and(|extension| {
+                DESKTOP_PRECOMPRESSED_EXTENSIONS.contains(&extension.to_ascii_lowercase().as_str())
+            })
+    });
+    if precompressed {
+        DESKTOP_PRECOMPRESSED_MODULE_BROTLI_QUALITY
+    } else {
+        DESKTOP_MODULE_BROTLI_QUALITY
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct DesktopClassifiedRendererFile {
+    source: PathBuf,
+    module: String,
+    rule: &'static str,
+    entry: DesktopSharedAssetFile,
+}
+
+fn classify_renderer_files(renderer_dir: &Path) -> Result<Vec<DesktopClassifiedRendererFile>> {
+    let files = collect_files(renderer_dir)?;
+    ensure!(
+        files.len() <= DESKTOP_SHARED_ASSET_FILE_LIMIT,
+        "Renderer payload has {} files, above the {DESKTOP_SHARED_ASSET_FILE_LIMIT} file limit",
+        files.len()
+    );
+    let mut classified = Vec::with_capacity(files.len());
+    for file in files {
+        let relative = shared_asset_relative_path(file.strip_prefix(renderer_dir)?);
+        let metadata =
+            fs::metadata(&file).with_context(|| format!("Failed to stat {}", file.display()))?;
+        let sha256 = sha256_file(&file)?;
+        let (module, rule) = if is_desktop_source_map(&relative) {
+            (DESKTOP_SOURCEMAP_MODULE.to_string(), DESKTOP_SOURCEMAP_RULE)
+        } else {
+            match desktop_module_for_relative_path(&relative)? {
+                Some(segment) => (segment.to_string(), DESKTOP_MODULE_ASSET_SEGMENT_RULE),
+                None => (
+                    DESKTOP_RENDERER_MODULE.to_string(),
+                    DESKTOP_RENDERER_REMAINDER_RULE,
+                ),
+            }
+        };
+        classified.push(DesktopClassifiedRendererFile {
+            source: file,
+            module,
+            rule,
+            entry: DesktopSharedAssetFile {
+                path: relative,
+                sha256,
+                bytes: metadata.len(),
+            },
+        });
+    }
+    Ok(classified)
+}
+
+fn strip_renderer_tree_owned_by_modules(
+    renderer_dir: &Path,
+) -> Result<BTreeMap<String, Vec<DesktopSharedAssetFile>>> {
+    ensure_renderer_assets_ready(renderer_dir)?;
+    let mut removed: BTreeMap<String, Vec<DesktopSharedAssetFile>> = BTreeMap::new();
+    for file in classify_renderer_files(renderer_dir)? {
+        fs::remove_file(&file.source)
+            .with_context(|| format!("Failed to remove {}", file.source.display()))?;
+        removed.entry(file.module).or_default().push(file.entry);
+    }
+    ensure!(
+        removed
+            .get(DESKTOP_RENDERER_MODULE)
+            .is_some_and(|entries| !entries.is_empty()),
+        "{DESKTOP_RENDERER_MODULE} claimed no file in {}, refusing to publish a shell whose renderer module is empty",
+        renderer_dir.display()
+    );
+    let left = count_files(renderer_dir)?;
+    ensure!(
+        left == 0,
+        "{left} renderer file(s) survived the strip in {}, every packed file must belong to a module",
+        renderer_dir.display()
+    );
+    remove_empty_dirs_below(renderer_dir)?;
+    let surviving_entries = fs::read_dir(renderer_dir)
+        .with_context(|| format!("Failed to read {}", renderer_dir.display()))?
+        .count();
+    ensure!(
+        surviving_entries == 0,
+        "{surviving_entries} entries survived the strip in {}, the packed renderer directory must be left empty",
+        renderer_dir.display()
+    );
+    Ok(removed)
+}
+
+fn strip_shell_renderer_step() -> Result<()> {
+    let renderer_dir = desktop_renderer_dir();
+    let removed = strip_renderer_tree_owned_by_modules(&renderer_dir)?;
+    let mut total_files = 0usize;
+    let mut total_bytes = 0u64;
+    for (module, entries) in &removed {
+        let bytes = entries.iter().map(|entry| entry.bytes).sum::<u64>();
+        total_files += entries.len();
+        total_bytes += bytes;
+        println!(
+            "Removed {} file(s), {bytes} bytes owned by {module}",
+            entries.len()
+        );
+    }
+    println!(
+        "Stripped {total_files} module file(s), {total_bytes} bytes from {}, the shell now ships no renderer",
+        renderer_dir.display()
+    );
+    Ok(())
+}
+
+fn split_modules_step() -> Result<()> {
+    let renderer_dir = desktop_renderer_dir();
+    ensure_renderer_assets_ready(&renderer_dir)?;
+    let build_version = require_env("BUILD_VERSION")?;
+    let release_channel = require_env("BUILD_CHANNEL")?;
+    let source_sha = require_env("SOURCE_SHA")?;
+    let classified = classify_renderer_files(&renderer_dir)?;
+    let file_count = classified.len();
+    let mut classification = Vec::with_capacity(file_count);
+    let mut modules: BTreeMap<String, Vec<(PathBuf, DesktopSharedAssetFile)>> = BTreeMap::new();
+    for file in classified {
+        classification.push(DesktopModuleClassificationFile {
+            path: file.entry.path.clone(),
+            module: file.module.clone(),
+            rule: file.rule.to_string(),
+        });
+        modules
+            .entry(file.module)
+            .or_default()
+            .push((file.source, file.entry));
+    }
+    ensure!(
+        modules
+            .get(DESKTOP_RENDERER_MODULE)
+            .is_some_and(|entries| !entries.is_empty()),
+        "{DESKTOP_RENDERER_MODULE} classified no renderer files"
+    );
+    let modules_dir = desktop_modules_dir();
+    remove_dir_if_exists(&modules_dir)?;
+    let mut summaries: Vec<DesktopModuleClassificationSummary> = Vec::with_capacity(modules.len());
+    for (module, entries) in &modules {
+        let module_dir = modules_dir.join(module);
+        let files_dir = module_dir.join(DESKTOP_MODULE_FILES_DIR_NAME);
+        for (source, entry) in entries {
+            let target = resolve_shared_asset_path(&files_dir, &entry.path)?;
+            if let Some(parent) = target.parent() {
+                fs::create_dir_all(parent)
+                    .with_context(|| format!("Failed to create {}", parent.display()))?;
+            }
+            fs::copy(source, &target).with_context(|| {
+                format!(
+                    "Failed to copy {} to {}",
+                    source.display(),
+                    target.display()
+                )
+            })?;
+        }
+        write_json_pretty(
+            &module_dir.join(DESKTOP_MODULE_FILE_LIST_NAME),
+            &DesktopModuleManifest {
+                module: module.clone(),
+                build_version: build_version.clone(),
+                release_channel: release_channel.clone(),
+                source_sha: source_sha.clone(),
+                files: entries.iter().map(|(_, entry)| entry.clone()).collect(),
+            },
+        )?;
+        summaries.push(DesktopModuleClassificationSummary {
+            module: module.clone(),
+            files: entries.len(),
+            bytes: entries.iter().map(|(_, entry)| entry.bytes).sum(),
+        });
+    }
+    verify_desktop_module_split(&modules_dir, &renderer_dir)?;
+    let dictionaries = write_desktop_dictionary_modules(
+        &modules_dir,
+        &build_version,
+        &release_channel,
+        &source_sha,
+    )?;
+    for dictionary in &dictionaries {
+        for entry in &dictionary.files {
+            classification.push(DesktopModuleClassificationFile {
+                path: entry.path.clone(),
+                module: dictionary.module.clone(),
+                rule: DESKTOP_SPELLCHECK_DICTIONARY_RULE.to_string(),
+            });
+        }
+        summaries.push(DesktopModuleClassificationSummary {
+            module: dictionary.module.clone(),
+            files: dictionary.files.len(),
+            bytes: dictionary.files.iter().map(|entry| entry.bytes).sum(),
+        });
+    }
+    write_json_pretty(
+        &modules_dir.join(DESKTOP_MODULE_CLASSIFICATION_NAME),
+        &DesktopModuleClassification {
+            build_version,
+            release_channel,
+            source_sha,
+            modules: summaries.clone(),
+            files: classification,
+        },
+    )?;
+    for summary in &summaries {
+        println!(
+            "{} carries {} file(s), {} bytes",
+            summary.module, summary.files, summary.bytes
+        );
+    }
+    println!(
+        "Split {file_count} renderer file(s) into {} module(s) under {}",
+        summaries.len(),
+        modules_dir.display()
+    );
+    Ok(())
+}
+
+fn desktop_dictionary_module_name(directory_name: &str) -> Option<String> {
+    let (package, version) = directory_name.split_once('@')?;
+    if version.is_empty() {
+        return None;
+    }
+    let tag = package.strip_prefix(DESKTOP_DICTIONARY_PACKAGE_PREFIX)?;
+    let module = format!(
+        "{DESKTOP_DICTIONARY_MODULE_PREFIX}{}",
+        tag.replace('-', "_")
+    );
+    is_desktop_module_name(&module).then_some(module)
+}
+
+fn desktop_dictionary_source_root() -> PathBuf {
+    workdir()
+        .join("fluxer_static")
+        .join("desktop")
+        .join("spellcheck")
+        .join("dictionaries")
+}
+
+fn desktop_dictionary_sources() -> Result<Vec<(String, PathBuf)>> {
+    let source_root = desktop_dictionary_source_root();
+    ensure!(
+        source_root.is_dir(),
+        "Missing {}, the shipped client resolves every spellcheck dictionary from its own modules",
+        source_root.display()
+    );
+    let mut sources = Vec::new();
+    let mut seen = BTreeSet::new();
+    for entry in sorted_child_directories(&source_root)? {
+        let directory_name = file_name_string(&entry)?;
+        let Some(module) = desktop_dictionary_module_name(&directory_name) else {
+            continue;
+        };
+        ensure!(
+            seen.insert(module.clone()),
+            "Two dictionary directories under {} both resolve to {module}",
+            source_root.display()
+        );
+        for name in DESKTOP_DICTIONARY_FILE_NAMES {
+            ensure!(
+                entry.join(name).is_file(),
+                "Dictionary {directory_name} is missing {name}"
+            );
+        }
+        sources.push((module, entry));
+    }
+    ensure!(
+        !sources.is_empty(),
+        "{} holds no spellcheck dictionary, refusing to publish a client whose spellcheck can never load",
+        source_root.display()
+    );
+    Ok(sources)
+}
+
+fn write_desktop_dictionary_modules(
+    modules_dir: &Path,
+    build_version: &str,
+    release_channel: &str,
+    source_sha: &str,
+) -> Result<Vec<DesktopModuleManifest>> {
+    let mut manifests = Vec::new();
+    for (module, entry) in desktop_dictionary_sources()? {
+        let module_dir = modules_dir.join(&module);
+        let files_dir = module_dir
+            .join(DESKTOP_MODULE_FILES_DIR_NAME)
+            .join(DESKTOP_MODULE_ASSETS_DIR_NAME)
+            .join(&module);
+        fs::create_dir_all(&files_dir)
+            .with_context(|| format!("Failed to create {}", files_dir.display()))?;
+        let mut files = Vec::with_capacity(DESKTOP_DICTIONARY_FILE_NAMES.len());
+        for name in DESKTOP_DICTIONARY_FILE_NAMES {
+            let source = entry.join(name);
+            let target = files_dir.join(name);
+            fs::copy(&source, &target).with_context(|| {
+                format!(
+                    "Failed to copy {} to {}",
+                    source.display(),
+                    target.display()
+                )
+            })?;
+            files.push(DesktopSharedAssetFile {
+                path: format!("{DESKTOP_MODULE_ASSETS_DIR_NAME}/{module}/{name}"),
+                sha256: sha256_file(&source)?,
+                bytes: fs::metadata(&source)
+                    .with_context(|| format!("Failed to stat {}", source.display()))?
+                    .len(),
+            });
+        }
+        let manifest = DesktopModuleManifest {
+            module,
+            build_version: build_version.to_string(),
+            release_channel: release_channel.to_string(),
+            source_sha: source_sha.to_string(),
+            files,
+        };
+        write_json_pretty(&module_dir.join(DESKTOP_MODULE_FILE_LIST_NAME), &manifest)?;
+        manifests.push(manifest);
+    }
+    println!("Wrote {} spellcheck dictionary module(s)", manifests.len());
+    Ok(manifests)
+}
+
+fn read_desktop_module_manifest(module_dir: &Path) -> Result<DesktopModuleManifest> {
+    let path = module_dir.join(DESKTOP_MODULE_FILE_LIST_NAME);
+    let bytes = fs::read(&path).with_context(|| format!("Failed to read {}", path.display()))?;
+    let manifest: DesktopModuleManifest = serde_json::from_slice(&bytes)
+        .with_context(|| format!("Failed to parse {}", path.display()))?;
+    Ok(manifest)
+}
+
+fn desktop_module_dirs(modules_dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut dirs = fs::read_dir(modules_dir)
+        .with_context(|| format!("Failed to read {}", modules_dir.display()))?
+        .collect::<std::result::Result<Vec<_>, _>>()?
+        .into_iter()
+        .map(|entry| entry.path())
+        .filter(|path| path.join(DESKTOP_MODULE_FILE_LIST_NAME).is_file())
+        .collect::<Vec<_>>();
+    dirs.sort();
+    Ok(dirs)
+}
+
+fn verify_desktop_module_split(modules_dir: &Path, renderer_dir: &Path) -> Result<()> {
+    let mut renderer_files = BTreeSet::new();
+    for file in collect_files(renderer_dir)? {
+        renderer_files.insert(shared_asset_relative_path(file.strip_prefix(renderer_dir)?));
+    }
+    let mut owners: BTreeMap<String, String> = BTreeMap::new();
+    for module_dir in desktop_module_dirs(modules_dir)? {
+        let manifest = read_desktop_module_manifest(&module_dir)?;
+        let files_dir = module_dir.join(DESKTOP_MODULE_FILES_DIR_NAME);
+        let present = collect_files(&files_dir)?;
+        ensure!(
+            present.len() == manifest.files.len(),
+            "Desktop module {} holds {} file(s), its manifest lists {}",
+            manifest.module,
+            present.len(),
+            manifest.files.len()
+        );
+        for entry in &manifest.files {
+            let path = resolve_shared_asset_path(&files_dir, &entry.path)?;
+            let metadata = fs::metadata(&path)
+                .with_context(|| format!("Missing desktop module file {}", path.display()))?;
+            ensure!(
+                metadata.len() == entry.bytes,
+                "Desktop module file {} is {} bytes, its manifest lists {}",
+                entry.path,
+                metadata.len(),
+                entry.bytes
+            );
+            if let Some(previous) = owners.insert(entry.path.clone(), manifest.module.clone()) {
+                bail!(
+                    "Renderer file {} landed in both {previous} and {}",
+                    entry.path,
+                    manifest.module
+                );
+            }
+        }
+    }
+    for relative in &renderer_files {
+        ensure!(
+            owners.contains_key(relative),
+            "Renderer file {relative} landed in no desktop module"
+        );
+    }
+    ensure!(
+        owners.len() == renderer_files.len(),
+        "The desktop modules hold {} file(s), the renderer has {}",
+        owners.len(),
+        renderer_files.len()
+    );
+    let renderer_files_dir = modules_dir
+        .join(DESKTOP_RENDERER_MODULE)
+        .join(DESKTOP_MODULE_FILES_DIR_NAME);
+    ensure_renderer_assets_ready(&renderer_files_dir)?;
+    ensure!(
+        count_files(&renderer_files_dir.join("assets"))? > 0,
+        "{DESKTOP_RENDERER_MODULE} must keep a non-empty assets directory"
+    );
+    Ok(())
+}
+
+fn pack_modules_step() -> Result<()> {
+    let modules_dir = desktop_modules_dir();
+    ensure!(
+        modules_dir.is_dir(),
+        "Missing {}, run the split_modules step first",
+        modules_dir.display()
+    );
+    let module_dirs = desktop_module_dirs(&modules_dir)?;
+    ensure!(
+        !module_dirs.is_empty(),
+        "No desktop modules found in {}",
+        modules_dir.display()
+    );
+    let mut jobs = Vec::with_capacity(module_dirs.len());
+    for module_dir in module_dirs {
+        let manifest = read_desktop_module_manifest(&module_dir)?;
+        ensure!(
+            module_dir.file_name().and_then(OsStr::to_str) == Some(manifest.module.as_str()),
+            "Desktop module directory {} declares module {}",
+            module_dir.display(),
+            manifest.module
+        );
+        jobs.push((module_dir, manifest));
+    }
+    let mut schedule: Vec<usize> = (0..jobs.len()).collect();
+    schedule.sort_by_key(|index| {
+        std::cmp::Reverse(
+            jobs[*index]
+                .1
+                .files
+                .iter()
+                .map(|entry| entry.bytes)
+                .sum::<u64>(),
+        )
+    });
+    let jobs = &jobs;
+    let schedule = &schedule;
+    let cursor = AtomicUsize::new(0);
+    let workers = thread::available_parallelism()
+        .map_or(1, |value| value.get())
+        .min(DESKTOP_MODULE_PACK_MAX_THREADS)
+        .min(schedule.len());
+    let mut packed = thread::scope(|scope| -> Result<Vec<(usize, String)>> {
+        let handles = (0..workers)
+            .map(|_| {
+                scope.spawn(|| -> Result<Vec<(usize, String)>> {
+                    let mut lines = Vec::new();
+                    loop {
+                        let slot = cursor.fetch_add(1, Ordering::Relaxed);
+                        let Some(index) = schedule.get(slot).copied() else {
+                            return Ok(lines);
+                        };
+                        let (module_dir, manifest) = &jobs[index];
+                        lines.push((index, pack_one_desktop_module(module_dir, manifest)?));
+                    }
+                })
+            })
+            .collect::<Vec<_>>();
+        let mut packed = Vec::with_capacity(jobs.len());
+        for handle in handles {
+            let lines = handle
+                .join()
+                .map_err(|_| anyhow!("A desktop module packing thread panicked"))??;
+            packed.extend(lines);
+        }
+        Ok(packed)
+    })?;
+    packed.sort_by_key(|(index, _)| *index);
+    for (_, line) in packed {
+        println!("{line}");
+    }
+    Ok(())
+}
+
+fn pack_one_desktop_module(module_dir: &Path, manifest: &DesktopModuleManifest) -> Result<String> {
+    let package_path = module_dir.join(DESKTOP_MODULE_PACKAGE_NAME);
+    pack_desktop_module(module_dir, manifest, &package_path)?;
+    verify_desktop_module_package(&package_path, manifest)?;
+    let digest = sha256_file(&package_path)?;
+    let checksum_path = module_dir.join(DESKTOP_MODULE_PACKAGE_CHECKSUM_NAME);
+    fs::write(&checksum_path, &digest)
+        .with_context(|| format!("Failed to write {}", checksum_path.display()))?;
+    let packed = fs::metadata(&package_path)
+        .with_context(|| format!("Failed to stat {}", package_path.display()))?
+        .len();
+    Ok(format!(
+        "Packed {} into {packed} bytes ({} file(s), sha256 {digest})",
+        manifest.module,
+        manifest.files.len()
+    ))
+}
+
+fn desktop_module_tar_header(path: &str, bytes: u64) -> Result<tar::Header> {
+    let mut header = tar::Header::new_ustar();
+    header.set_path(path)?;
+    header.set_entry_type(tar::EntryType::Regular);
+    header.set_size(bytes);
+    header.set_mode(DESKTOP_MODULE_TAR_MODE);
+    header.set_uid(0);
+    header.set_gid(0);
+    header.set_mtime(0);
+    header.set_cksum();
+    Ok(header)
+}
+
+fn pack_desktop_module(
+    module_dir: &Path,
+    manifest: &DesktopModuleManifest,
+    package_path: &Path,
+) -> Result<()> {
+    let manifest_bytes = fs::read(module_dir.join(DESKTOP_MODULE_FILE_LIST_NAME))?;
+    let package = File::create(package_path)
+        .with_context(|| format!("Failed to create {}", package_path.display()))?;
+    let mut archive = tar::Builder::new(brotli::CompressorWriter::new(
+        BufWriter::new(package),
+        DESKTOP_MODULE_BROTLI_BUFFER_BYTES,
+        desktop_module_brotli_quality(manifest),
+        DESKTOP_MODULE_BROTLI_WINDOW,
+    ));
+    let header = desktop_module_tar_header(
+        DESKTOP_MODULE_FILE_LIST_NAME,
+        u64::try_from(manifest_bytes.len())?,
+    )?;
+    archive.append(&header, manifest_bytes.as_slice())?;
+    let files_dir = module_dir.join(DESKTOP_MODULE_FILES_DIR_NAME);
+    for entry in &manifest.files {
+        let path = resolve_shared_asset_path(&files_dir, &entry.path)?;
+        let file =
+            File::open(&path).with_context(|| format!("Failed to open {}", path.display()))?;
+        let header = desktop_module_tar_header(
+            &format!("{DESKTOP_MODULE_FILES_DIR_NAME}/{}", entry.path),
+            entry.bytes,
+        )?;
+        archive
+            .append(&header, file)
+            .with_context(|| format!("Failed to pack {}", path.display()))?;
+    }
+    let mut package = archive.into_inner()?.into_inner();
+    package.flush()?;
+    Ok(())
+}
+
+fn verify_desktop_module_package(
+    package_path: &Path,
+    manifest: &DesktopModuleManifest,
+) -> Result<()> {
+    let package = File::open(package_path)
+        .with_context(|| format!("Failed to open {}", package_path.display()))?;
+    let mut archive = tar::Archive::new(brotli::Decompressor::new(
+        BufReader::new(package),
+        DESKTOP_MODULE_BROTLI_BUFFER_BYTES,
+    ));
+    let mut expected = vec![DESKTOP_MODULE_FILE_LIST_NAME.to_string()];
+    expected.extend(
+        manifest
+            .files
+            .iter()
+            .map(|entry| format!("{DESKTOP_MODULE_FILES_DIR_NAME}/{}", entry.path)),
+    );
+    let mut found = Vec::with_capacity(expected.len());
+    for entry in archive
+        .entries()
+        .with_context(|| format!("Failed to read {}", package_path.display()))?
+    {
+        let entry = entry.with_context(|| format!("Failed to read {}", package_path.display()))?;
+        found.push(entry.path()?.to_string_lossy().into_owned());
+    }
+    if found != expected {
+        let mismatch = found
+            .iter()
+            .zip(&expected)
+            .find(|(packed, wanted)| packed != wanted)
+            .map_or_else(
+                || {
+                    format!(
+                        "{} entrie(s) where {} were expected",
+                        found.len(),
+                        expected.len()
+                    )
+                },
+                |(packed, wanted)| format!("{packed} where {wanted} was expected"),
+            );
+        bail!("{} packs {mismatch}", package_path.display());
+    }
+    Ok(())
 }
 
 fn install_velopack_cli_step() -> Result<()> {
@@ -1665,6 +2680,8 @@ fn macos_native_runtime_targets(electron_arch: &str) -> Vec<(String, &'static st
         "@fluxer/mac-tcc/mac-tcc",
         "@fluxer/macos-input-hook/macos-input-hook",
         "@fluxer/platform-info/platform-info",
+        "@fluxer/app-store/app-store",
+        "@fluxer/gateway-socket/gateway-socket",
     ]
     .into_iter()
     .map(|prefix| {
@@ -1771,7 +2788,7 @@ fn write_windows_signing_metadata_step() -> Result<()> {
 fn resolve_windows_unpacked_dir_step() -> Result<()> {
     let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
     let arch = require_env("ARCH")?;
-    let config = windows_package_config(&build_channel, &arch);
+    let config = windows_package_config(&build_channel, &arch)?;
     let pack_dir = resolve_windows_unpacked_dir(&arch, &config.main_exe)?;
     println!(
         "Resolved unpacked Windows app directory: {}",
@@ -1815,22 +2832,30 @@ struct VelopackAssetIndexEntry {
     extra: BTreeMap<String, Value>,
 }
 
-fn windows_package_config(build_channel: &str, arch: &str) -> WindowsPackageConfig {
-    let canary = build_channel == "canary";
-    let pack_title = if canary { "Fluxer Canary" } else { "Fluxer" };
-    WindowsPackageConfig {
-        pack_id: if canary {
-            "fluxer_desktop_canary"
-        } else {
-            "fluxer_desktop"
-        },
+fn windows_package_config(build_channel: &str, arch: &str) -> Result<WindowsPackageConfig> {
+    let (pack_id, pack_title, artifact_prefix, icon_dir) = match build_channel {
+        "stable" => ("fluxer_desktop", "Fluxer", "Fluxer", "icons-stable"),
+        "canary" => (
+            "fluxer_desktop_canary",
+            "Fluxer Canary",
+            "Fluxer-Canary",
+            "icons-canary",
+        ),
+        "development" => (
+            "fluxer_desktop_development",
+            "Fluxer Development",
+            "Fluxer-Development",
+            "icons-development",
+        ),
+        other => bail!(
+            "Unsupported BUILD_CHANNEL for Windows packaging: {other}. Expected stable, canary or development"
+        ),
+    };
+    Ok(WindowsPackageConfig {
+        pack_id,
         pack_title,
-        artifact_prefix: if canary { "Fluxer-Canary" } else { "Fluxer" },
-        icon_dir: if canary {
-            "icons-canary"
-        } else {
-            "icons-stable"
-        },
+        artifact_prefix,
+        icon_dir,
         runtime: if arch == "arm64" {
             "win-arm64"
         } else {
@@ -1838,14 +2863,14 @@ fn windows_package_config(build_channel: &str, arch: &str) -> WindowsPackageConf
         },
         main_exe: format!("{pack_title}.exe"),
         output_dir: PathBuf::from("dist-electron").join(format!("velopack-windows-{arch}")),
-    }
+    })
 }
 
 fn package_app_windows_velopack_step() -> Result<()> {
     let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
     let arch = require_env("ARCH")?;
     let version = require_env("VERSION")?;
-    let config = windows_package_config(&build_channel, &arch);
+    let config = windows_package_config(&build_channel, &arch)?;
     remove_dir_if_exists(&config.output_dir)?;
 
     let pack_dir = find_windows_unpacked_app(&arch, &config.main_exe).ok_or_else(|| {
@@ -2157,7 +3182,7 @@ fn find_velopack_cli() -> Result<PathBuf> {
 fn analyse_velopack_paths_step() -> Result<()> {
     let arch = require_env("ARCH")?;
     let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
-    let config = windows_package_config(&build_channel, &arch);
+    let config = windows_package_config(&build_channel, &arch)?;
     let nupkg = first_file_matching(&config.output_dir, |name| name.ends_with("-full.nupkg"))
         .ok_or_else(|| {
             anyhow!(
@@ -2243,7 +3268,7 @@ fn create_portable_zip_windows_step() -> Result<()> {
     let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
     let arch = require_env("ARCH")?;
     let version = require_env("VERSION")?;
-    let config = windows_package_config(&build_channel, &arch);
+    let config = windows_package_config(&build_channel, &arch)?;
     let Some(pack_dir) = find_windows_unpacked_app(&arch, &config.main_exe) else {
         println!("No unpacked Windows app found; skipping portable ZIP.");
         return Ok(());
@@ -2288,6 +3313,8 @@ const FORBIDDEN_WINDOWS_GAME_CAPTURE_ARTIFACT_PREFIXES: &[&str] = &[
     "fluxer_vulkan_layer.",
 ];
 const WINDOWS_NATIVE_ADDON_STEMS: &[&str] = &[
+    "app-store",
+    "gateway-socket",
     "hardware-encoder",
     "webauthn",
     "win-process-loopback",
@@ -3113,7 +4140,7 @@ fn verify_windows_pe_signatures(
 fn verify_windows_unpacked_signatures_step() -> Result<()> {
     let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
     let arch = require_env("ARCH")?;
-    let config = windows_package_config(&build_channel, &arch);
+    let config = windows_package_config(&build_channel, &arch)?;
     let pack_dir = resolve_windows_unpacked_dir(&arch, &config.main_exe)?;
     let files = collect_pe_files(&pack_dir)?;
     assert_windows_package_file_policy(&pack_dir, &arch)?;
@@ -3179,7 +4206,7 @@ fn verify_windows_signed_artifacts_step() -> Result<()> {
     let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
     let arch = require_env("ARCH")?;
     let version = require_env("VERSION")?;
-    let config = windows_package_config(&build_channel, &arch);
+    let config = windows_package_config(&build_channel, &arch)?;
 
     let nupkg = first_file_matching(&config.output_dir, |name| name.ends_with("-full.nupkg"))
         .ok_or_else(|| {
@@ -3554,8 +4581,10 @@ fn prepare_release_assets_step() -> Result<()> {
             release_builder.add(platform, arch, &updater_file, true)?;
         }
     }
-    let mut descriptor_assets = release_builder.finish();
+    add_desktop_module_release_assets(&mut release_builder, &payload_root)?;
+    let (mut descriptor_assets, mut descriptor_modules) = release_builder.finish();
     descriptor_assets.sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
+    descriptor_modules.sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
     let descriptor = DesktopReleaseDescriptor {
         schema_version: DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
         channel: channel.clone(),
@@ -3563,13 +4592,57 @@ fn prepare_release_assets_step() -> Result<()> {
         release_tag: format!("fluxer-desktop-{channel}@{version}"),
         source_sha,
         assets: descriptor_assets,
+        modules: descriptor_modules,
     };
     validate_desktop_release_descriptor(&descriptor, &channel, &version, &descriptor.source_sha)?;
+    validate_desktop_release_module_files(&descriptor, release_assets)?;
     let descriptor_path =
         release_assets.join(desktop_release_descriptor_filename(&channel, &version)?);
     write_json_pretty(&descriptor_path, &descriptor)?;
     println!("GitHub release asset tree:");
     print_tree(release_assets, 2)
+}
+
+fn add_desktop_module_release_assets(
+    release_builder: &mut DesktopReleaseAssetBuilder,
+    channel_payload: &Path,
+) -> Result<()> {
+    let mut packages = BTreeMap::<String, String>::new();
+    for (platform, arch) in desktop_release_coordinates() {
+        let manifest_path = channel_payload
+            .join(platform)
+            .join(arch)
+            .join(DESKTOP_CHANNEL_MANIFEST_NAME);
+        ensure!(
+            manifest_path.is_file(),
+            "Desktop module manifest is missing: {}, run the build_module_manifest step first",
+            manifest_path.display()
+        );
+        let manifest: DesktopChannelManifest = serde_json::from_slice(
+            &fs::read(&manifest_path)
+                .with_context(|| format!("Failed to read {}", manifest_path.display()))?,
+        )
+        .with_context(|| format!("Failed to parse {}", manifest_path.display()))?;
+        for (module, entry) in manifest.modules {
+            if let Some(existing) = packages.insert(module.clone(), entry.sha256.clone()) {
+                ensure!(
+                    existing == entry.sha256,
+                    "Desktop module {module} resolves to {existing} and {} across coordinates",
+                    entry.sha256
+                );
+            }
+        }
+        release_builder.add_module_manifest(platform, arch, &manifest_path)?;
+    }
+    for (module, sha256) in &packages {
+        let package_path = channel_payload
+            .join(DESKTOP_MODULES_KEY_SEGMENT)
+            .join(module)
+            .join(sha256)
+            .join(DESKTOP_MODULE_PACKAGE_NAME);
+        release_builder.add_module_package(module, sha256, &package_path)?;
+    }
+    Ok(())
 }
 
 fn desktop_updater_release_files(dir: &Path, platform: &str) -> Result<Vec<PathBuf>> {
@@ -3610,6 +4683,7 @@ struct DesktopReleaseAssetBuilder<'a> {
     product: &'a str,
     release_assets: &'a Path,
     descriptor_assets: Vec<DesktopReleaseAsset>,
+    descriptor_modules: Vec<DesktopReleaseAsset>,
     storage_keys: BTreeSet<String>,
     release_asset_content: BTreeMap<String, (String, u64)>,
     release_asset_names: BTreeMap<String, String>,
@@ -3623,6 +4697,7 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
             product,
             release_assets,
             descriptor_assets: Vec::new(),
+            descriptor_modules: Vec::new(),
             storage_keys: BTreeSet::new(),
             release_asset_content: BTreeMap::new(),
             release_asset_names: BTreeMap::new(),
@@ -3650,6 +4725,52 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
                 }),
             "Desktop release asset name is not canonical and URL-safe: {release_asset:?}"
         );
+        let storage_key = format!(
+            "{DESKTOP_PAYLOAD_PREFIX}/{}/{platform}/{arch}/{source_name}",
+            self.channel
+        );
+        let asset = self.copy(storage_key, release_asset, source)?;
+        self.descriptor_assets.push(asset);
+        Ok(())
+    }
+
+    fn add_module_manifest(&mut self, platform: &str, arch: &str, source: &Path) -> Result<()> {
+        let asset = self.copy(
+            desktop_module_manifest_storage_key(self.channel, platform, arch),
+            desktop_module_manifest_release_asset_name(self.channel, self.version, platform, arch)?,
+            source,
+        )?;
+        self.descriptor_modules.push(asset);
+        Ok(())
+    }
+
+    fn add_module_package(&mut self, module: &str, sha256: &str, source: &Path) -> Result<()> {
+        let asset = self.copy(
+            desktop_module_package_storage_key(self.channel, module, sha256),
+            desktop_module_package_release_asset_name(self.channel, self.version, module, sha256)?,
+            source,
+        )?;
+        ensure!(
+            asset.sha256 == sha256,
+            "Desktop module package {} hashes to {}, its manifest records {sha256}",
+            source.display(),
+            asset.sha256
+        );
+        self.descriptor_modules.push(asset);
+        Ok(())
+    }
+
+    fn copy(
+        &mut self,
+        storage_key: String,
+        release_asset: String,
+        source: &Path,
+    ) -> Result<DesktopReleaseAsset> {
+        ensure!(
+            source.is_file(),
+            "Release source is missing: {}",
+            source.display()
+        );
         if let Some(existing) = self
             .release_asset_names
             .insert(release_asset.to_ascii_lowercase(), release_asset.clone())
@@ -3659,10 +4780,6 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
                 "Desktop release asset names differ only by case: {existing:?} and {release_asset:?}"
             );
         }
-        let storage_key = format!(
-            "{DESKTOP_PAYLOAD_PREFIX}/{}/{platform}/{arch}/{source_name}",
-            self.channel
-        );
         ensure!(
             self.storage_keys.insert(storage_key.clone()),
             "Duplicate desktop release storage key {storage_key:?}"
@@ -3700,17 +4817,16 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
             self.release_asset_content
                 .insert(release_asset.clone(), (sha256.clone(), size));
         }
-        self.descriptor_assets.push(DesktopReleaseAsset {
+        Ok(DesktopReleaseAsset {
             storage_key,
             release_asset,
             sha256,
             size,
-        });
-        Ok(())
+        })
     }
 
-    fn finish(self) -> Vec<DesktopReleaseAsset> {
-        self.descriptor_assets
+    fn finish(self) -> (Vec<DesktopReleaseAsset>, Vec<DesktopReleaseAsset>) {
+        (self.descriptor_assets, self.descriptor_modules)
     }
 }
 
@@ -3926,7 +5042,8 @@ fn write_macos_releases(dest: &Path, channel: &str, manifest: &DesktopManifest) 
         return Ok(());
     };
     let url = format!(
-        "{PACKAGE_ORIGIN_BASE}/{DESKTOP_PAYLOAD_PREFIX}/{channel}/{}/{}/{}",
+        "{}/{DESKTOP_PAYLOAD_PREFIX}/{channel}/{}/{}/{}",
+        package_origin_base(),
         manifest.platform,
         manifest.arch,
         zip.filename()
@@ -3946,6 +5063,341 @@ fn write_macos_releases(dest: &Path, channel: &str, manifest: &DesktopManifest) 
     });
     write_json_pretty(&dest.join("RELEASES.json"), &releases)?;
     write_json_pretty(&dest.join("releases.json"), &releases)?;
+    Ok(())
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub(crate) struct DesktopChannelManifestShell {
+    pub(crate) latest_version: String,
+    pub(crate) minimum_version: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub(crate) struct DesktopChannelManifestEntry {
+    pub(crate) sha256: String,
+    pub(crate) bytes: u64,
+    pub(crate) url: String,
+    pub(crate) minimum_shell_version: String,
+    pub(crate) maximum_shell_version: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub(crate) struct DesktopChannelManifest {
+    pub(crate) manifest_version: u64,
+    pub(crate) release_channel: String,
+    pub(crate) platform: String,
+    pub(crate) arch: String,
+    pub(crate) build_version: String,
+    pub(crate) pub_date: String,
+    pub(crate) metadata_version: u64,
+    pub(crate) shell: DesktopChannelManifestShell,
+    pub(crate) modules: BTreeMap<String, DesktopChannelManifestEntry>,
+    pub(crate) required_modules: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct DesktopPackedModule {
+    module: String,
+    sha256: String,
+    bytes: u64,
+    directory: PathBuf,
+}
+
+fn package_origin_base() -> String {
+    env::var(PACKAGE_ORIGIN_BASE_ENV)
+        .ok()
+        .map(|value| value.trim().trim_end_matches('/').to_string())
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| PACKAGE_ORIGIN_BASE.to_string())
+}
+
+pub(crate) fn desktop_module_package_url(channel: &str, module: &str, sha256: &str) -> String {
+    format!(
+        "{}/{DESKTOP_PAYLOAD_PREFIX}/{channel}/{DESKTOP_MODULES_KEY_SEGMENT}/{module}/{sha256}/{DESKTOP_MODULE_PACKAGE_NAME}",
+        package_origin_base()
+    )
+}
+
+fn read_packed_desktop_modules(
+    modules_dir: &Path,
+    release_channel: &str,
+    build_version: &str,
+) -> Result<Vec<DesktopPackedModule>> {
+    ensure!(
+        modules_dir.is_dir(),
+        "Missing {}, run the split_modules and pack_modules steps first",
+        modules_dir.display()
+    );
+    let mut packed = Vec::new();
+    for module_dir in desktop_module_dirs(modules_dir)? {
+        let manifest = read_desktop_module_manifest(&module_dir)?;
+        ensure!(
+            manifest.release_channel == release_channel,
+            "Desktop module {} was packed for channel {}, expected {release_channel}",
+            manifest.module,
+            manifest.release_channel
+        );
+        ensure!(
+            manifest.build_version == build_version,
+            "Desktop module {} was packed for version {}, expected {build_version}",
+            manifest.module,
+            manifest.build_version
+        );
+        let package_path = module_dir.join(DESKTOP_MODULE_PACKAGE_NAME);
+        let checksum_path = module_dir.join(DESKTOP_MODULE_PACKAGE_CHECKSUM_NAME);
+        let recorded = fs::read_to_string(&checksum_path)
+            .with_context(|| format!("Failed to read {}", checksum_path.display()))?;
+        let recorded = recorded.trim();
+        let sha256 = sha256_file(&package_path)?;
+        ensure!(
+            sha256 == recorded,
+            "Desktop module package {} hashes to {sha256}, {} records {recorded}",
+            package_path.display(),
+            checksum_path.display()
+        );
+        let bytes = fs::metadata(&package_path)
+            .with_context(|| format!("Failed to stat {}", package_path.display()))?
+            .len();
+        packed.push(DesktopPackedModule {
+            module: manifest.module,
+            sha256,
+            bytes,
+            directory: module_dir,
+        });
+    }
+    let present = packed
+        .iter()
+        .map(|module| module.module.clone())
+        .collect::<BTreeSet<_>>();
+    let expected = expected_desktop_modules(modules_dir)?;
+    ensure!(
+        present == expected,
+        "The packed desktop modules are [{}], expected [{}]",
+        present.into_iter().collect::<Vec<_>>().join(", "),
+        expected.into_iter().collect::<Vec<_>>().join(", ")
+    );
+    Ok(packed)
+}
+
+fn stage_desktop_module_packages(
+    payload_root: &Path,
+    channel: &str,
+    packed: &[DesktopPackedModule],
+) -> Result<()> {
+    for module in packed {
+        let dest = payload_root
+            .join(channel)
+            .join(DESKTOP_MODULES_KEY_SEGMENT)
+            .join(&module.module)
+            .join(&module.sha256);
+        fs::create_dir_all(&dest)
+            .with_context(|| format!("Failed to create {}", dest.display()))?;
+        for name in [
+            DESKTOP_MODULE_PACKAGE_NAME,
+            DESKTOP_MODULE_PACKAGE_CHECKSUM_NAME,
+            DESKTOP_MODULE_FILE_LIST_NAME,
+        ] {
+            let source = module.directory.join(name);
+            let target = dest.join(name);
+            fs::copy(&source, &target).with_context(|| {
+                format!(
+                    "Failed to copy {} to {}",
+                    source.display(),
+                    target.display()
+                )
+            })?;
+        }
+    }
+    Ok(())
+}
+
+fn desktop_channel_manifest_entries(
+    channel: &str,
+    packed: &[DesktopPackedModule],
+) -> BTreeMap<String, DesktopChannelManifestEntry> {
+    packed
+        .iter()
+        .map(|module| {
+            (
+                module.module.clone(),
+                DesktopChannelManifestEntry {
+                    sha256: module.sha256.clone(),
+                    bytes: module.bytes,
+                    url: desktop_module_package_url(channel, &module.module, &module.sha256),
+                    minimum_shell_version: DESKTOP_MODULE_MINIMUM_SHELL_VERSION.to_string(),
+                    maximum_shell_version: None,
+                },
+            )
+        })
+        .collect()
+}
+
+fn desktop_module_metadata_version(pub_date: &str) -> Result<u64> {
+    let published = DateTime::parse_from_rfc3339(pub_date)
+        .with_context(|| format!("Failed to parse PUB_DATE {pub_date}"))?;
+    u64::try_from(published.timestamp())
+        .with_context(|| format!("PUB_DATE {pub_date} predates the epoch"))
+}
+
+fn sorted_child_directories(root: &Path) -> Result<Vec<PathBuf>> {
+    let mut dirs = fs::read_dir(root)
+        .with_context(|| format!("Failed to read {}", root.display()))?
+        .collect::<std::result::Result<Vec<_>, _>>()?
+        .into_iter()
+        .map(|entry| entry.path())
+        .filter(|path| path.is_dir())
+        .collect::<Vec<_>>();
+    dirs.sort();
+    Ok(dirs)
+}
+
+fn desktop_channel_manifest_targets(
+    payload_root: &Path,
+    channel: &str,
+) -> Result<Vec<(String, String)>> {
+    let channel_dir = payload_root.join(channel);
+    let mut targets = Vec::new();
+    for platform_dir in sorted_child_directories(&channel_dir)? {
+        let platform = file_name_string(&platform_dir)?;
+        if platform == DESKTOP_MODULES_KEY_SEGMENT {
+            continue;
+        }
+        for arch_dir in sorted_child_directories(&platform_dir)? {
+            if !arch_dir.join(DESKTOP_PAYLOAD_MANIFEST_NAME).is_file() {
+                continue;
+            }
+            targets.push((platform.clone(), file_name_string(&arch_dir)?));
+        }
+    }
+    Ok(targets)
+}
+
+fn desktop_module_manifest_targets(
+    payload_root: &Path,
+    channel: &str,
+) -> Result<Vec<(String, String)>> {
+    if !env_bool("DESKTOP_MODULE_ONLY") {
+        return desktop_channel_manifest_targets(payload_root, channel);
+    }
+    let platform = require_env("PLATFORM")?;
+    let arch = require_env("ARCH")?;
+    ensure!(
+        matches!(platform.as_str(), "darwin" | "win32" | "linux"),
+        "Invalid module-only PLATFORM: {platform}"
+    );
+    ensure!(
+        matches!(arch.as_str(), "x64" | "arm64"),
+        "Invalid module-only ARCH: {arch}"
+    );
+    Ok(vec![(platform, arch)])
+}
+
+fn desktop_channel_manifest_path(
+    payload_root: &Path,
+    channel: &str,
+    platform: &str,
+    arch: &str,
+) -> PathBuf {
+    payload_root
+        .join(channel)
+        .join(platform)
+        .join(arch)
+        .join(DESKTOP_CHANNEL_MANIFEST_NAME)
+}
+
+fn write_desktop_channel_manifest(path: &Path, manifest: &DesktopChannelManifest) -> Result<()> {
+    let mut bytes = serde_json::to_vec(manifest)?;
+    bytes.push(b'\n');
+    ensure!(
+        bytes.len() <= DESKTOP_CHANNEL_MANIFEST_MAX_BYTES,
+        "The module manifest for {} {} is {} bytes, above the {DESKTOP_CHANNEL_MANIFEST_MAX_BYTES} byte client limit",
+        manifest.platform,
+        manifest.arch,
+        bytes.len()
+    );
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create {}", parent.display()))?;
+    }
+    fs::write(path, bytes).with_context(|| format!("Failed to write {}", path.display()))
+}
+
+fn write_desktop_channel_manifests(
+    payload_root: &Path,
+    channel: &str,
+    build_version: &str,
+    pub_date: &str,
+    packed: &[DesktopPackedModule],
+    targets: &[(String, String)],
+) -> Result<()> {
+    ensure!(
+        !targets.is_empty(),
+        "The payload tree under {} has no platform and arch to publish a module manifest for",
+        payload_root.display()
+    );
+    let metadata_version = desktop_module_metadata_version(pub_date)?;
+    stage_desktop_module_packages(payload_root, channel, packed)?;
+    let modules = desktop_channel_manifest_entries(channel, packed);
+    for (platform, arch) in targets {
+        let manifest = DesktopChannelManifest {
+            manifest_version: DESKTOP_CHANNEL_MANIFEST_VERSION,
+            release_channel: channel.to_string(),
+            platform: platform.clone(),
+            arch: arch.clone(),
+            build_version: build_version.to_string(),
+            pub_date: pub_date.to_string(),
+            metadata_version,
+            shell: DesktopChannelManifestShell {
+                latest_version: build_version.to_string(),
+                minimum_version: DESKTOP_MODULE_MINIMUM_SHELL_VERSION.to_string(),
+            },
+            modules: modules.clone(),
+            required_modules: DESKTOP_REQUIRED_MODULES
+                .iter()
+                .map(|module| (*module).to_string())
+                .collect(),
+        };
+        let manifest_path = desktop_channel_manifest_path(payload_root, channel, platform, arch);
+        write_desktop_channel_manifest(&manifest_path, &manifest)?;
+        println!(
+            "Wrote the {platform} {arch} module manifest to {}",
+            manifest_path.display()
+        );
+    }
+    Ok(())
+}
+
+fn build_module_manifest_step() -> Result<()> {
+    let payload_root = Path::new("payload_tree").join(DESKTOP_PAYLOAD_PREFIX);
+    ensure!(
+        payload_root.is_dir(),
+        "Missing {}, run the build_payload step first",
+        payload_root.display()
+    );
+    let channel = require_env("CHANNEL")?;
+    let build_version = require_env("VERSION")?;
+    let pub_date = require_env("PUB_DATE")?;
+    let packed = read_packed_desktop_modules(&desktop_modules_dir(), &channel, &build_version)?;
+    let targets = desktop_module_manifest_targets(&payload_root, &channel)?;
+    write_desktop_channel_manifests(
+        &payload_root,
+        &channel,
+        &build_version,
+        &pub_date,
+        &packed,
+        &targets,
+    )?;
+    for module in &packed {
+        println!(
+            "{} is {} byte(s) at sha256 {}",
+            module.module, module.bytes, module.sha256
+        );
+    }
+    println!(
+        "Staged {} module(s) across {} module manifest(s) for {build_version}",
+        packed.len(),
+        targets.len()
+    );
     Ok(())
 }
 
@@ -4089,23 +5541,6 @@ pub(crate) fn file_name_string(path: &Path) -> Result<String> {
         .and_then(OsStr::to_str)
         .map(ToOwned::to_owned)
         .ok_or_else(|| anyhow!("Path has no UTF-8 file name: {}", path.display()))
-}
-
-fn sha256_file(path: &Path) -> Result<String> {
-    let mut file =
-        File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
-    let mut hasher = Sha256::new();
-    let mut buffer = [0u8; 64 * 1024];
-    loop {
-        let read = file
-            .read(&mut buffer)
-            .with_context(|| format!("Failed to read {}", path.display()))?;
-        if read == 0 {
-            break;
-        }
-        hasher.update(&buffer[..read]);
-    }
-    Ok(hex::encode(hasher.finalize()))
 }
 
 fn print_directory(dir: &Path) -> Result<()> {
@@ -4449,10 +5884,14 @@ mod tests {
         assert_eq!(
             build_channel_content("canary"),
             "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
-export type BuildChannel = 'stable' | 'canary';\n\n\
+export type BuildChannel = 'stable' | 'canary' | 'development';\n\n\
 export const BUILD_CHANNEL = 'canary' as BuildChannel;\n\
 export const IS_CANARY = BUILD_CHANNEL === 'canary';\n\
 export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
+        );
+        assert!(
+            build_channel_content("development")
+                .contains("export const BUILD_CHANNEL = 'development' as BuildChannel;")
         );
     }
 
@@ -4463,8 +5902,9 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
             write_build_channel_file(temp.path(), "nightly")
                 .unwrap_err()
                 .to_string(),
-            "Invalid BUILD_CHANNEL: nightly. Must be 'stable' or 'canary'."
+            "Invalid BUILD_CHANNEL: nightly. Must be one of: stable, canary, development."
         );
+        write_build_channel_file(temp.path(), "development").unwrap();
     }
 
     #[test]
@@ -4686,15 +6126,24 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
 
     #[test]
     fn windows_package_config_tracks_channel_and_arch() {
-        let stable = windows_package_config("stable", "x64");
+        let stable = windows_package_config("stable", "x64").unwrap();
         assert_eq!(stable.pack_id, "fluxer_desktop");
         assert_eq!(stable.runtime, "win-x64");
         assert_eq!(stable.main_exe, "Fluxer.exe");
 
-        let canary = windows_package_config("canary", "arm64");
+        let canary = windows_package_config("canary", "arm64").unwrap();
         assert_eq!(canary.pack_id, "fluxer_desktop_canary");
         assert_eq!(canary.runtime, "win-arm64");
         assert_eq!(canary.main_exe, "Fluxer Canary.exe");
+
+        let development = windows_package_config("development", "x64").unwrap();
+        assert_eq!(development.pack_id, "fluxer_desktop_development");
+        assert_eq!(development.pack_title, "Fluxer Development");
+        assert_eq!(development.artifact_prefix, "Fluxer-Development");
+        assert_eq!(development.icon_dir, "icons-development");
+        assert_eq!(development.main_exe, "Fluxer Development.exe");
+
+        assert!(windows_package_config("nightly", "x64").is_err());
     }
 
     #[test]
@@ -4775,6 +6224,34 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
     }
 
     #[test]
+    fn shipped_account_switching_addons_are_required_windows_binaries() {
+        for arch in ["x64", "arm64"] {
+            let inventory = expected_windows_pe_inventory(arch, "Fluxer.exe");
+            for stem in ["app-store", "gateway-socket"] {
+                let expected = format!("{stem}.win32-{arch}-msvc.node");
+                assert!(
+                    inventory.contains(&expected),
+                    "{expected} must be a required Windows binary, not an unlisted PE"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn shipped_account_switching_addons_are_architecture_verified_on_macos() {
+        for arch in ["x64", "arm64"] {
+            let targets = macos_native_runtime_targets(arch);
+            for stem in ["app-store", "gateway-socket"] {
+                let expected = format!("@fluxer/{stem}/{stem}.darwin-{arch}.node");
+                assert!(
+                    targets.iter().any(|(relative, _)| relative == &expected),
+                    "{expected} must be Mach-O architecture verified"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn known_optional_windows_pe_inventory_never_repeats_a_required_binary() {
         for arch in ["x64", "arm64"] {
             for main_exe in ["Fluxer.exe", "Fluxer Canary.exe"] {
@@ -4785,5 +6262,437 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
                 );
             }
         }
+    }
+
+    #[test]
+    fn module_package_urls_point_at_the_content_addressed_package() {
+        assert_eq!(
+            desktop_module_package_url("canary", "fluxer_renderer", "5c1e"),
+            "https://pkgs.fluxer.com/desktop/canary/modules/fluxer_renderer/5c1e/package.br"
+        );
+    }
+
+    #[test]
+    fn metadata_version_is_the_publication_instant() {
+        assert_eq!(
+            desktop_module_metadata_version("2026-05-20T01:02:03Z").unwrap(),
+            1_779_238_923
+        );
+        assert!(desktop_module_metadata_version("not-a-date").is_err());
+    }
+
+    #[test]
+    fn module_manifest_targets_skip_the_module_tree() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path();
+        write_file(&root.join("canary/darwin/arm64/manifest.json"), "{}");
+        write_file(&root.join("canary/darwin/x64/manifest.json"), "{}");
+        write_file(&root.join("canary/win32/x64/manifest.json"), "{}");
+        write_file(&root.join("canary/win32/arm64/Fluxer.exe"), "exe");
+        write_file(
+            &root.join("canary/modules/fluxer_renderer/5c1e/package.br"),
+            "package",
+        );
+
+        assert_eq!(
+            desktop_channel_manifest_targets(root, "canary").unwrap(),
+            vec![
+                ("darwin".to_string(), "arm64".to_string()),
+                ("darwin".to_string(), "x64".to_string()),
+                ("win32".to_string(), "x64".to_string()),
+            ]
+        );
+    }
+
+    const LAYOUT_VERSION: &str = "2026.1003.120000";
+    const LAYOUT_PUB_DATE: &str = "2026-10-03T12:00:00Z";
+
+    fn fake_packed_module(root: &Path, module: &str) -> DesktopPackedModule {
+        let directory = root.join(module);
+        write_file(
+            &directory.join(DESKTOP_MODULE_PACKAGE_NAME),
+            &format!("{module} brotli tar"),
+        );
+        let package = directory.join(DESKTOP_MODULE_PACKAGE_NAME);
+        let sha256 = sha256_file(&package).unwrap();
+        write_file(
+            &directory.join(DESKTOP_MODULE_PACKAGE_CHECKSUM_NAME),
+            &sha256,
+        );
+        write_file(&directory.join(DESKTOP_MODULE_FILE_LIST_NAME), "{}");
+        DesktopPackedModule {
+            module: module.to_string(),
+            sha256,
+            bytes: fs::metadata(&package).unwrap().len(),
+            directory,
+        }
+    }
+
+    fn write_fake_module_payload(root: &Path) -> (PathBuf, Vec<DesktopPackedModule>) {
+        let packed = ["fluxer_renderer", "fluxer_sourcemaps"]
+            .into_iter()
+            .map(|module| fake_packed_module(&root.join("desktop-modules"), module))
+            .collect::<Vec<_>>();
+        let payload_root = root.join("payload_tree/desktop");
+        let targets = desktop_release_coordinates()
+            .into_iter()
+            .map(|(platform, arch)| (platform.to_string(), arch.to_string()))
+            .collect::<Vec<_>>();
+        write_desktop_channel_manifests(
+            &payload_root,
+            "canary",
+            LAYOUT_VERSION,
+            LAYOUT_PUB_DATE,
+            &packed,
+            &targets,
+        )
+        .unwrap();
+        (payload_root, packed)
+    }
+
+    #[test]
+    fn module_manifests_are_one_modules_json_per_coordinate() {
+        let temp = tempfile::tempdir().unwrap();
+        let (payload_root, packed) = write_fake_module_payload(temp.path());
+        for (platform, arch) in desktop_release_coordinates() {
+            let coordinate = payload_root.join("canary").join(platform).join(arch);
+            assert!(!coordinate.join("modules").exists());
+            assert!(!coordinate.join(LAYOUT_VERSION).exists());
+            let manifest: DesktopChannelManifest =
+                serde_json::from_slice(&fs::read(coordinate.join("modules.json")).unwrap())
+                    .unwrap();
+            assert_eq!(manifest.platform, platform);
+            assert_eq!(manifest.arch, arch);
+            assert_eq!(manifest.build_version, LAYOUT_VERSION);
+            assert_eq!(manifest.required_modules, vec!["fluxer_renderer"]);
+            assert_eq!(
+                manifest.modules.keys().collect::<Vec<_>>(),
+                vec!["fluxer_renderer", "fluxer_sourcemaps"]
+            );
+            for module in &packed {
+                let entry = &manifest.modules[&module.module];
+                assert_eq!(entry.sha256, module.sha256);
+                assert_eq!(entry.bytes, module.bytes);
+                assert_eq!(
+                    entry.url,
+                    format!(
+                        "https://pkgs.fluxer.com/desktop/canary/modules/{}/{}/package.br",
+                        module.module, module.sha256
+                    )
+                );
+            }
+        }
+        for module in &packed {
+            let staged = payload_root
+                .join("canary/modules")
+                .join(&module.module)
+                .join(&module.sha256);
+            assert_eq!(
+                sha256_file(&staged.join("package.br")).unwrap(),
+                module.sha256
+            );
+            assert!(staged.join("package.br.sha256").is_file());
+            assert!(staged.join("module.json").is_file());
+        }
+    }
+
+    #[test]
+    fn module_manifests_and_packages_become_release_assets() {
+        let temp = tempfile::tempdir().unwrap();
+        let (payload_root, packed) = write_fake_module_payload(temp.path());
+        let release_assets = temp.path().join("release_assets");
+        fs::create_dir_all(&release_assets).unwrap();
+        let mut builder = DesktopReleaseAssetBuilder::new(
+            "canary",
+            LAYOUT_VERSION,
+            "Fluxer-Canary",
+            &release_assets,
+        );
+        add_desktop_module_release_assets(&mut builder, &payload_root.join("canary")).unwrap();
+        let (assets, modules) = builder.finish();
+        assert!(assets.is_empty());
+        let mut expected = desktop_release_coordinates()
+            .into_iter()
+            .map(|(platform, arch)| {
+                let token = match platform {
+                    "win32" => "win",
+                    "darwin" => "mac",
+                    _ => "linux",
+                };
+                (
+                    format!("desktop/canary/{platform}/{arch}/modules.json"),
+                    format!("Fluxer-Canary-{LAYOUT_VERSION}-{token}-{arch}-modules.json"),
+                )
+            })
+            .collect::<Vec<_>>();
+        for module in &packed {
+            expected.push((
+                format!(
+                    "desktop/canary/modules/{}/{}/package.br",
+                    module.module, module.sha256
+                ),
+                format!(
+                    "Fluxer-Canary-{LAYOUT_VERSION}-module-{}-{}.br",
+                    module.module, module.sha256
+                ),
+            ));
+        }
+        assert_eq!(
+            modules
+                .iter()
+                .map(|entry| (entry.storage_key.clone(), entry.release_asset.clone()))
+                .collect::<Vec<_>>(),
+            expected
+        );
+        let mut on_disk = fs::read_dir(&release_assets)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+            .collect::<Vec<_>>();
+        on_disk.sort();
+        let mut names = expected
+            .iter()
+            .map(|(_, name)| name.clone())
+            .collect::<Vec<_>>();
+        names.sort();
+        assert_eq!(on_disk, names);
+        let descriptor = DesktopReleaseDescriptor {
+            schema_version: DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
+            channel: "canary".to_string(),
+            version: LAYOUT_VERSION.to_string(),
+            release_tag: format!("fluxer-desktop-canary@{LAYOUT_VERSION}"),
+            source_sha: "0".repeat(40),
+            assets,
+            modules,
+        };
+        validate_desktop_release_module_files(&descriptor, &release_assets).unwrap();
+    }
+
+    #[test]
+    fn a_missing_staged_package_stops_the_release_assets() {
+        let temp = tempfile::tempdir().unwrap();
+        let (payload_root, packed) = write_fake_module_payload(temp.path());
+        fs::remove_file(
+            payload_root
+                .join("canary/modules")
+                .join(&packed[0].module)
+                .join(&packed[0].sha256)
+                .join("package.br"),
+        )
+        .unwrap();
+        let release_assets = temp.path().join("release_assets");
+        fs::create_dir_all(&release_assets).unwrap();
+        let mut builder = DesktopReleaseAssetBuilder::new(
+            "canary",
+            LAYOUT_VERSION,
+            "Fluxer-Canary",
+            &release_assets,
+        );
+        assert!(
+            add_desktop_module_release_assets(&mut builder, &payload_root.join("canary"))
+                .unwrap_err()
+                .to_string()
+                .starts_with("Release source is missing")
+        );
+    }
+
+    #[test]
+    fn coordinates_that_disagree_on_a_module_stop_the_release_assets() {
+        let temp = tempfile::tempdir().unwrap();
+        let (payload_root, _) = write_fake_module_payload(temp.path());
+        let path = payload_root.join("canary/linux/arm64/modules.json");
+        let mut manifest: DesktopChannelManifest =
+            serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        manifest.modules.get_mut("fluxer_renderer").unwrap().sha256 = "f".repeat(64);
+        fs::write(&path, serde_json::to_vec(&manifest).unwrap()).unwrap();
+        let release_assets = temp.path().join("release_assets");
+        fs::create_dir_all(&release_assets).unwrap();
+        let mut builder = DesktopReleaseAssetBuilder::new(
+            "canary",
+            LAYOUT_VERSION,
+            "Fluxer-Canary",
+            &release_assets,
+        );
+        assert!(
+            add_desktop_module_release_assets(&mut builder, &payload_root.join("canary"))
+                .unwrap_err()
+                .to_string()
+                .contains("across coordinates")
+        );
+    }
+
+    #[test]
+    fn the_module_payload_ships_only_through_the_github_release() {
+        let upload = workflow_job("upload");
+        assert!(!upload.contains("fluxer-desktop-module-payload"));
+        assert!(!upload.contains("payload_tree/desktop/*/modules/"));
+        let steps = workflow_step_names(upload);
+        let manifest = steps
+            .iter()
+            .position(|step| *step == "Build desktop module manifest")
+            .unwrap();
+        assert_eq!(steps[manifest + 1], "Prepare GitHub release assets");
+    }
+
+    #[test]
+    fn renderer_files_split_by_module_segment_and_source_map() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("renderer");
+        write_file(&root.join("index.html"), "<html></html>");
+        write_file(&root.join("assets/app.js"), "app");
+        write_file(&root.join("assets/app.js.map"), "{}");
+        write_file(&root.join("assets/fluxer_grammars/en.json"), "{}");
+
+        let classified = classify_renderer_files(&root)
+            .unwrap()
+            .into_iter()
+            .map(|file| (file.entry.path, file.module))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            classified,
+            vec![
+                ("assets/app.js".to_string(), "fluxer_renderer".to_string()),
+                (
+                    "assets/app.js.map".to_string(),
+                    "fluxer_sourcemaps".to_string()
+                ),
+                (
+                    "assets/fluxer_grammars/en.json".to_string(),
+                    "fluxer_grammars".to_string()
+                ),
+                ("index.html".to_string(), "fluxer_renderer".to_string()),
+            ]
+        );
+        assert!(desktop_module_for_relative_path("assets/fluxer_renderer/app.js").is_err());
+        assert!(desktop_module_for_relative_path("assets/Bad/app.js").is_err());
+        assert!(desktop_module_for_relative_path("assets/a/b/c.js").is_err());
+    }
+
+    #[test]
+    fn dictionary_directories_map_to_module_names() {
+        assert_eq!(
+            desktop_dictionary_module_name("dictionary-en-gb@3.0.0").as_deref(),
+            Some("fluxer_dict_en_gb")
+        );
+        assert_eq!(desktop_dictionary_module_name("dictionary-en@"), None);
+        assert_eq!(desktop_dictionary_module_name("NOTICE.md"), None);
+    }
+
+    #[test]
+    fn packed_modules_round_trip_through_brotli_tar() {
+        let temp = tempfile::tempdir().unwrap();
+        let module_dir = temp.path().join("fluxer_renderer");
+        write_file(&module_dir.join("files/assets/app.js"), "console.log(1)");
+        write_file(&module_dir.join("files/index.html"), "<html></html>");
+        let files = ["assets/app.js", "index.html"]
+            .into_iter()
+            .map(|path| {
+                let file = module_dir.join("files").join(path);
+                DesktopSharedAssetFile {
+                    path: path.to_string(),
+                    sha256: sha256_file(&file).unwrap(),
+                    bytes: fs::metadata(&file).unwrap().len(),
+                }
+            })
+            .collect::<Vec<_>>();
+        let manifest = DesktopModuleManifest {
+            module: "fluxer_renderer".to_string(),
+            build_version: "2026.820.1".to_string(),
+            release_channel: "canary".to_string(),
+            source_sha: "0".repeat(40),
+            files,
+        };
+        write_json_pretty(&module_dir.join("module.json"), &manifest).unwrap();
+
+        pack_one_desktop_module(&module_dir, &manifest).unwrap();
+
+        let package = module_dir.join("package.br");
+        verify_desktop_module_package(&package, &manifest).unwrap();
+        assert_eq!(
+            fs::read_to_string(module_dir.join("package.br.sha256")).unwrap(),
+            sha256_file(&package).unwrap()
+        );
+        let mut missing = manifest.clone();
+        missing.files.pop();
+        assert!(verify_desktop_module_package(&package, &missing).is_err());
+    }
+
+    #[test]
+    fn shared_asset_payload_verification_detects_tampering() {
+        let temp = tempfile::tempdir().unwrap();
+        let payload = temp.path().join("renderer");
+        write_file(&payload.join("index.html"), "<html></html>");
+        write_file(
+            &payload.join("assets/0123456789abcdef.js"),
+            "console.log(1)",
+        );
+
+        let files = collect_files(&payload)
+            .unwrap()
+            .into_iter()
+            .map(|file| {
+                let relative = file.strip_prefix(&payload).unwrap();
+                DesktopSharedAssetFile {
+                    path: shared_asset_relative_path(relative),
+                    sha256: sha256_file(&file).unwrap(),
+                    bytes: fs::metadata(&file).unwrap().len(),
+                }
+            })
+            .collect::<Vec<_>>();
+        let manifest = DesktopSharedAssetManifest {
+            build_version: "2026.820.1".to_string(),
+            release_channel: "canary".to_string(),
+            source_sha: "0".repeat(40),
+            files,
+        };
+
+        verify_shared_asset_payload(&payload, &manifest).unwrap();
+
+        write_file(
+            &payload.join("assets/0123456789abcdef.js"),
+            "console.log(2)",
+        );
+        assert!(verify_shared_asset_payload(&payload, &manifest).is_err());
+    }
+
+    #[test]
+    fn shared_asset_paths_never_escape_the_payload_root() {
+        let root = Path::new("/tmp/desktop-shared-assets/renderer");
+        assert_eq!(
+            resolve_shared_asset_path(root, "assets/app.js").unwrap(),
+            root.join("assets").join("app.js")
+        );
+        assert!(resolve_shared_asset_path(root, "../secrets").is_err());
+        assert!(resolve_shared_asset_path(root, "assets//app.js").is_err());
+    }
+
+    #[test]
+    fn renderer_assets_readiness_rejects_a_bundled_service_worker() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("renderer");
+        write_file(&root.join("index.html"), "<html></html>");
+        write_file(&root.join("assets/0123456789abcdef.js"), "console.log(1)");
+
+        ensure_renderer_assets_ready(&root).unwrap();
+
+        write_file(&root.join("sw.js"), "self.addEventListener");
+        assert!(ensure_renderer_assets_ready(&root).is_err());
+    }
+
+    #[test]
+    fn pipewire_header_overlay_presence_skips_only_a_complete_install() {
+        let temp = TempDir::new().unwrap();
+        let include_dir = temp.path();
+        assert!(!linux_pipewire_header_overlay_present(include_dir).unwrap());
+
+        fs::create_dir_all(include_dir.join(LINUX_PIPEWIRE_HEADER_DIR)).unwrap();
+        let partial = linux_pipewire_header_overlay_present(include_dir).unwrap_err();
+        assert!(partial.to_string().contains("partially installed"));
+
+        fs::create_dir_all(include_dir.join(LINUX_SPA_HEADER_DIR)).unwrap();
+        assert!(linux_pipewire_header_overlay_present(include_dir).unwrap());
+
+        fs::remove_dir(include_dir.join(LINUX_PIPEWIRE_HEADER_DIR)).unwrap();
+        let partial = linux_pipewire_header_overlay_present(include_dir).unwrap_err();
+        assert!(partial.to_string().contains("partially installed"));
     }
 }

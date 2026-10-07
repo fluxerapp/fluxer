@@ -37,6 +37,7 @@ import {
 	GUILD_SETTINGS_LABEL_DESCRIPTOR,
 	getGuildSettingsCategoryLabel,
 } from '@app/features/user/components/settings_utils/GuildSettingsConstants';
+import {getGuildSettingsTabComponent} from '@app/features/user/components/settings_utils/GuildSettingsTabComponents';
 import {useUnsavedChangesFlash} from '@app/features/user/hooks/useUnsavedChangesFlash';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
@@ -80,6 +81,7 @@ interface DesktopGuildSettingsViewProps {
 export const DesktopGuildSettingsView: React.FC<DesktopGuildSettingsViewProps> = observer(
 	({guild, groupedSettingsTabs, currentTab, selectedTab, onTabSelect}) => {
 		const {i18n} = useLingui();
+		const CurrentTabComponent = currentTab ? getGuildSettingsTabComponent(currentTab.type) : null;
 		const {showUnsavedBanner, flashBanner, tabData, checkUnsavedChanges} = useUnsavedChangesFlash(selectedTab);
 		const prefersReducedMotion = Accessibility.useReducedMotion;
 		const contentRef = useRef<HTMLDivElement>(null);
@@ -314,8 +316,8 @@ export const DesktopGuildSettingsView: React.FC<DesktopGuildSettingsViewProps> =
 						scrollKey={scrollKey}
 						data-flx="app.desktop-guild-settings-view.settings-modal-desktop-scroll"
 					>
-						{currentTab && (
-							<currentTab.component
+						{CurrentTabComponent && (
+							<CurrentTabComponent
 								guildId={guild.id}
 								data-flx="app.desktop-guild-settings-view.current-tab-component"
 							/>

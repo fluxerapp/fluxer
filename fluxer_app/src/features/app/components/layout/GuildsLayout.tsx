@@ -86,8 +86,6 @@ import GuildListState, {type OrganizedItem} from '@app/features/guild/state/Guil
 import GuildReadState from '@app/features/guild/state/GuildReadState';
 import HiddenGuildListButtons from '@app/features/guild/state/HiddenGuildListButtons';
 import {PRIMARY_NAVIGATION_LANDMARK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {openMacPermissionsModal} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
-import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {Platform} from '@app/features/platform/types/Platform';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
@@ -2238,14 +2236,6 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 		if (!latestEntry) return;
 		if (!WhatsNew.shouldShow(latestEntry.id, latestEntry.date, user.createdAt)) return;
 		openWhatsNewModal();
-	}, [isReady, user]);
-	useEffect(() => {
-		if (!isReady) return;
-		if (!user) return;
-		if (!MacPermissions.shouldShowOnboarding) return;
-		if (MacPermissions.onboardingOpenedThisSession) return;
-		MacPermissions.markOnboardingOpenedThisSession();
-		openMacPermissionsModal();
 	}, [isReady, user]);
 	const shouldShowSidebarDivider = !mobileLayout.enabled;
 	return (

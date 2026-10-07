@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {NagbarDismissalsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable} from 'mobx';
@@ -147,7 +148,7 @@ export class Nagbar implements NagbarSettings {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {

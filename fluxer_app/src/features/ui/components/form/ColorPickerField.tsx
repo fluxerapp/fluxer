@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ColorPickerPopover} from '@app/features/app/components/floating/ColorPickerPopover';
+import type {ColorPickerPopover as ColorPickerPopoverComponent} from '@app/features/app/components/floating/ColorPickerPopover';
+import {createNamedLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/components/form/ColorPickerField.module.css';
@@ -10,7 +11,6 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {EyedropperIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
-import Color from 'colorjs.io';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
@@ -93,20 +93,51 @@ function parseColor(input: string): {hex: string; num: number} | null {
 	return null;
 }
 
+function toLinearChannel(byte: number): number {
+	const channel = byte / 255;
+	return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+}
+
+function relativeLuminance(num: number): number {
+	return (
+		0.2126 * toLinearChannel((num >>> 16) & 0xff) +
+		0.7152 * toLinearChannel((num >>> 8) & 0xff) +
+		0.0722 * toLinearChannel(num & 0xff)
+	);
+}
+
 function bestIconColorFor(bgColorCss: string): 'black' | 'white' {
 	if (bgColorCss === 'var(--text-chat)') {
 		const isLightTheme = document.documentElement.classList.contains('theme-light');
 		return isLightTheme ? 'white' : 'black';
 	}
-	try {
-		const bgColor = new Color(bgColorCss);
-		const contrastWithWhite = Math.abs(bgColor.contrast('#FFFFFF', 'WCAG21'));
-		const contrastWithBlack = Math.abs(bgColor.contrast('#000000', 'WCAG21'));
-		return contrastWithWhite >= contrastWithBlack ? 'white' : 'black';
-	} catch {
+	const parsed = parseColor(bgColorCss);
+	if (!parsed) {
 		return 'white';
 	}
+	const luminance = relativeLuminance(parsed.num);
+	const contrastWithWhite = 1.05 / (luminance + 0.05);
+	const contrastWithBlack = (luminance + 0.05) / 0.05;
+	return contrastWithWhite >= contrastWithBlack ? 'white' : 'black';
 }
+
+type ColorPickerPopoverProps = React.ComponentProps<typeof ColorPickerPopoverComponent>;
+
+function ColorPickerPopoverLoading() {
+	return (
+		<div
+			style={{width: '16.25rem', height: '16rem'}}
+			aria-hidden={true}
+			data-flx="ui.form.color-picker-field.popover-loading"
+		/>
+	);
+}
+
+const ColorPickerPopover = createNamedLoadableComponent<ColorPickerPopoverProps>({
+	displayName: 'ColorPickerPopover',
+	LoadingComponent: ColorPickerPopoverLoading,
+	load: async () => (await import('@app/features/app/components/floating/ColorPickerPopover')).ColorPickerPopover,
+});
 
 interface ColorPickerFieldProps {
 	label?: string;

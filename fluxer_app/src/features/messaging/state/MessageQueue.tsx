@@ -40,6 +40,9 @@ import {
 import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import {MatureContentRejectedModal} from '@app/features/moderation/components/alerts/MatureContentRejectedModal';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
+import {AccountScopedWork, accountScopedWorkAbortError} from '@app/features/platform/state/AccountScopedWork';
+import {isAccountTransitionAbortError} from '@app/features/platform/state/AccountTransitionAbort';
+import SessionManager from '@app/features/platform/state/AuthSession';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
@@ -96,6 +99,7 @@ const MESSAGE_SEND_RATE_LIMIT_MAX_AUTOMATIC_RETRIES = 2;
 const MESSAGE_SEND_RATE_LIMIT_MAX_AUTOMATIC_DELAY_MS = 30 * 1000;
 
 interface BaseMessagePayload {
+	accountKey: string | null;
 	channelId: string;
 }
 
@@ -260,6 +264,18 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 				}
 			},
 		);
+		AccountScopedWork.registerCancellation(() => this.handleAccountTransition());
+	}
+
+	private handleAccountTransition(): void {
+		for (const controller of this.abortControllers.values()) {
+			controller.abort(accountScopedWorkAbortError());
+		}
+		this.abortControllers.clear();
+		this.cancelAllTextareaAttachmentUploads();
+		this.localSendLimiters.clear();
+		this.localSendReservations.clear();
+		CloudUpload.clearAll();
 	}
 
 	isFull(): boolean {
@@ -822,6 +838,12 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 	): Promise<void> {
 		const {channelId, nonce, hasAttachments} = payload;
 		await this.applyDevDelay();
+		if (payload.accountKey !== SessionManager.currentAccountKey) {
+			logger.debug(`Discarding a send to channel ${channelId} queued by another account`);
+			CloudUpload.removeMessageUpload(nonce);
+			completed(null, undefined, accountScopedWorkAbortError());
+			return;
+		}
 		if (ThreadGuilds.purgedThreadIds.has(channelId)) {
 			logger.debug(`Dropping message send to purged thread ${channelId}`);
 			this.discardPurgedThreadSend(nonce);
@@ -1018,6 +1040,9 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		if (hasAttachments) {
 			this.restoreFailedMessage(channelId, nonce);
 		}
+		if (isAccountTransitionAbortError(error)) {
+			return;
+		}
 		if (!(error instanceof HttpError)) {
 			this.showErrorModal(error, channelId, hasAttachments);
 			return;
@@ -1071,10 +1096,13 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 
 	private restoreFailedMessage(channelId: string, nonce: string): void {
 		const messageUpload = CloudUpload.getMessageUpload(nonce);
+		if (messageUpload === null) {
+			MessageCommands.deleteOptimistic(channelId, nonce);
+			return;
+		}
 		CloudUpload.restoreAttachmentsToTextarea(nonce);
-		const contentToRestore = messageUpload?.content ?? '';
-		DraftCommands.createDraft(channelId, contentToRestore);
-		if (messageUpload?.messageReference) {
+		DraftCommands.createDraft(SessionManager.currentAccountKey, channelId, messageUpload.content ?? '');
+		if (messageUpload.messageReference) {
 			MessageCommands.startReply(
 				channelId,
 				messageUpload.messageReference.message_id,

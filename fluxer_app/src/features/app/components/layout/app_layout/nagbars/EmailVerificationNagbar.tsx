@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
@@ -8,7 +9,6 @@ import {OPEN_SETTINGS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDe
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {BouncedEmailChangeModal} from '@app/features/user/components/modals/BouncedEmailChangeModal';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {msg} from '@lingui/core/macro';
@@ -45,12 +45,15 @@ export const EmailVerificationNagbar = observer(({isMobile}: {isMobile: boolean}
 	};
 	const openUserSettings = () => {
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialTab="account_security"
-					data-flx="app.app-layout.nagbars.email-verification-nagbar.open-user-settings.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="account_security"
+						data-flx="app.app-layout.nagbars.email-verification-nagbar.open-user-settings.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	};
 	return (

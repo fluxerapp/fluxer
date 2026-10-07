@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import type {ThemePreferenceSnapshot} from '@app/features/theme/state/Theme';
 import {useEffect} from 'react';
 
@@ -17,10 +18,7 @@ export type ThemeStudioBroadcastInput =
 	| {type: 'studio:focus-popout'};
 export type ThemeStudioBroadcastMessage = ThemeStudioBroadcastInput & {origin: string};
 
-const senderId =
-	typeof globalThis.crypto?.randomUUID === 'function'
-		? globalThis.crypto.randomUUID()
-		: `studio-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+const senderId = randomUuid();
 
 let channel: BroadcastChannel | null = null;
 

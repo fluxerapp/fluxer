@@ -138,13 +138,8 @@ should_passive_receive(channel_update_bulk, _EventData, _SessionData) ->
 should_passive_receive(channel_delete, _EventData, _SessionData) ->
     true;
 should_passive_receive(message_create, EventData, SessionData) ->
-    Mentioned = is_user_mentioned(EventData, SessionData),
-    case Mentioned of
-        true ->
-            true;
-        false ->
-            false
-    end;
+    is_user_mentioned(EventData, SessionData) orelse
+        is_session_author_event(EventData, SessionData);
 should_passive_receive(message_update, EventData, SessionData) ->
     is_user_mentioned(EventData, SessionData);
 should_passive_receive(guild_delete, _EventData, _SessionData) ->
@@ -164,6 +159,15 @@ should_passive_receive(_, _, _) ->
 is_session_user_event(EventData, SessionData) ->
     UserId = maps:get(user_id, SessionData),
     UserId =:= event_user_id(EventData).
+
+-spec is_session_author_event(map(), session_data()) -> boolean().
+is_session_author_event(EventData, SessionData) ->
+    UserId = maps:get(user_id, SessionData),
+    UserId =/= undefined andalso UserId =:= event_author_id(EventData).
+
+-spec event_author_id(map()) -> user_id() | undefined.
+event_author_id(EventData) ->
+    user_id(maps:get(<<"author">>, EventData, #{})).
 
 -spec event_user_id(map()) -> user_id() | undefined.
 event_user_id(EventData) ->

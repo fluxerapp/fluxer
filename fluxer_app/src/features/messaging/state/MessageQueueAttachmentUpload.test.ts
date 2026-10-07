@@ -29,6 +29,13 @@ vi.mock('@app/features/platform/transport/RestTransport', () => ({
 		put: vi.fn(async (url: string, options: {body?: unknown}) => record('PUT', url, options)),
 	},
 }));
+vi.mock('@app/features/messaging/utils/DesktopResourceUrl', () => ({wrapDesktopLocalUploadURL: (url: string) => url}));
+vi.mock('@app/features/platform/state/AuthSession', () => ({default: {currentAccountKey: 'account'}}));
+vi.mock('@app/features/platform/state/AccountScopedWork', () => ({
+	AccountScopedWork: {registerCancellation: vi.fn(), currentAccountKey: 'account'},
+	accountScopedWorkAbortError: () => new Error('aborted'),
+}));
+vi.mock('@app/features/platform/state/AccountTransitionAbort', () => ({isAccountTransitionAbortError: () => false}));
 vi.mock('@app/features/app/state/RuntimeConfig', () => ({default: {features: {presigned_attachment_uploads: true}}}));
 vi.mock('@app/features/user/state/PrivacyPreferences', () => ({
 	default: {getPreuploadMessageAttachments: () => preupload},

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {accountOwnsActiveView} from '@app/features/auth/state/AccountViewOwnership';
 import * as ChannelStickerCommands from '@app/features/channel/commands/ChannelStickerCommands';
 import ChannelSticker from '@app/features/channel/state/ChannelSticker';
 import Channels from '@app/features/channel/state/Channels';
@@ -68,6 +69,7 @@ const mentionTypePriority: Record<MentionType, number> = {
 const pendingMentionCountLoads = new Map<string, Promise<void>>();
 
 interface UseTextareaSubmitOptions {
+	draftOwner: DraftCommands.DraftOwner;
 	channelId: string;
 	guildId: string | null;
 	value: string;
@@ -243,6 +245,7 @@ export function shouldShowMentionConfirmation(params: MentionCountResolutionPara
 }
 
 export const useTextareaSubmit = ({
+	draftOwner,
 	channelId,
 	guildId,
 	value,
@@ -447,6 +450,9 @@ export const useTextareaSubmit = ({
 		[channelId, guildId, i18n],
 	);
 	const onSubmit = useCallback(async () => {
+		if (!accountOwnsActiveView(draftOwner)) {
+			return;
+		}
 		let composerHandle: ComposerHandle | null = null;
 		if (composerHandleRef !== undefined) {
 			composerHandle = composerHandleRef.current;
@@ -477,7 +483,7 @@ export const useTextareaSubmit = ({
 			ReactionCommands.addReaction(i18n, channelId, reactionTargetId, reactionShorthand);
 			setValue('');
 			clearSegments();
-			DraftCommands.deleteDraft(channelId);
+			DraftCommands.deleteDraft(draftOwner, channelId);
 			TypingUtils.clear(channelId);
 			MessageCommands.stopReply(channelId);
 			return;
@@ -564,7 +570,7 @@ export const useTextareaSubmit = ({
 			}
 			setValue('');
 			clearSegments();
-			DraftCommands.deleteDraft(channelId);
+			DraftCommands.deleteDraft(draftOwner, channelId);
 			TypingUtils.clear(channelId);
 			return;
 		}
@@ -620,7 +626,7 @@ export const useTextareaSubmit = ({
 						await CommandUtils.executeCommand(parsedCommand, channelId, commandGuildId, i18n);
 						setValue('');
 						clearSegments();
-						DraftCommands.deleteDraft(channelId);
+						DraftCommands.deleteDraft(draftOwner, channelId);
 						TypingUtils.clear(channelId);
 						if (parsedCommand.type !== 'msg') {
 							MessageCommands.stopReply(channelId);
@@ -646,6 +652,7 @@ export const useTextareaSubmit = ({
 			sendWithPendingSticker(resolvedContent, false);
 		}
 	}, [
+		draftOwner,
 		channelId,
 		value,
 		uploadAttachmentsLength,

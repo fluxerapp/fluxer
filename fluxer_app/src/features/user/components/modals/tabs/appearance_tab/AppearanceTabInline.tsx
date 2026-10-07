@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
-import {APP_ZOOM_LEVEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {APP_ZOOM_LEVEL_DESCRIPTOR, THEME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ActiveNowTabContent} from '@app/features/user/components/modals/tabs/appearance_tab/ActiveNowTab';
 import {
 	HdrTabContent,
@@ -20,10 +20,6 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
-const THEME_DESCRIPTOR = msg({
-	message: 'Theme',
-	comment: 'Short label in the inline. Keep it concise.',
-});
 const HIGH_DYNAMIC_RANGE_DESCRIPTOR = msg({
 	message: 'High dynamic range',
 	comment: 'Short label in the inline. Keep it concise.',

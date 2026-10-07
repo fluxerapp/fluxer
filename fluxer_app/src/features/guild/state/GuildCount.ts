@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import {makeAutoObservable, observable} from 'mobx';
 
@@ -146,4 +147,6 @@ class GuildCount {
 	}
 }
 
-export default new GuildCount();
+const guildCount = new GuildCount();
+ResettableStates.register(guildCount, guildCount.handleSessionInvalidated);
+export default guildCount;

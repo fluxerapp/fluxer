@@ -72,7 +72,7 @@ export const GuildSettingsModal: React.FC<GuildSettingsModalProps> = observer(
 		}, [guildId]);
 		useEffect(() => {
 			if (!guild) {
-				ModalCommands.popByType(GuildSettingsModal);
+				ModalCommands.popByModalType('guild-settings');
 			}
 		}, [guild]);
 		useEffect(() => {

@@ -2,6 +2,7 @@
 
 import {IS_DEV} from '@app/features/platform/types/Env';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import Users from '@app/features/user/state/Users';
 import {makeAutoObservable} from 'mobx';
 
@@ -15,7 +16,7 @@ class DeveloperMode {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {

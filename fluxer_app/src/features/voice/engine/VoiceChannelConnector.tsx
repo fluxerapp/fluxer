@@ -121,7 +121,7 @@ export function sendVoiceStateConnect(
 		: LocalVoiceState.getSelfMute();
 	const selfMute = applyVoiceSpeakPermissionToSelfMute(guildId, channelId, effectiveSelfMute);
 	const connectionId = getVoiceConnectionContextFromMediaEngine()?.connectionId ?? null;
-	socket.updateVoiceState({
+	socket.updateVoiceStateExplicit({
 		guild_id: guildId,
 		channel_id: channelId,
 		self_mute: selfMute,
@@ -139,7 +139,7 @@ export function sendVoiceStateDisconnect(guildId: string | null, connectionId: s
 		logger.warn('No socket');
 		return;
 	}
-	socket.updateVoiceState({
+	socket.updateVoiceStateExplicit({
 		guild_id: guildId,
 		channel_id: null,
 		self_mute: true,
@@ -164,7 +164,7 @@ export function syncVoiceStateToServer(
 		? selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload(snapshot)
 		: LocalVoiceState.getSelfMute();
 	const selfMute = applyVoiceSpeakPermissionToSelfMute(guildId, channelId, partial?.self_mute ?? effectiveSelfMute);
-	socket.updateVoiceState({
+	socket.updateVoiceStateExplicit({
 		guild_id: guildId,
 		channel_id: channelId,
 		self_mute: selfMute,

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import type {SearchHints} from '@app/features/search/utils/SearchQueryParser';
 import {makeAutoObservable} from 'mobx';
 
@@ -18,7 +19,7 @@ class SearchHistory {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void makePersistent(this, 'SearchHistory', ['entriesByChannel']);
+		initializeStore(this, () => makePersistent(this, 'SearchHistory', ['entriesByChannel']));
 	}
 
 	private getEntries(channelId?: string): Array<SearchHistoryEntry> {

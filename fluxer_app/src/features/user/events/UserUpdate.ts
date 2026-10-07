@@ -8,7 +8,7 @@ import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import Users from '@app/features/user/state/Users';
 import type {User} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
-interface UserUpdatePayload {
+export interface UserUpdatePayload {
 	id: string;
 	username: string;
 	discriminator: string;

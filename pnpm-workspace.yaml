@@ -103,13 +103,13 @@ catalog:
   bowser: 2.14.1
   cassandra-driver: 4.9.0
   clsx: 2.1.1
-  colorjs.io: 0.7.1
   combokeys: 3.0.1
   emoji-regex: 11.0.0
   esbuild: 0.28.2
   eslint: 10.10.0
   eslint-plugin-react-google-translate: 1.0.4
   eventemitter3: 5.0.4
+  fake-indexeddb: 6.2.5
   fast-xml-parser: 5.11.1
   favico.js: 0.3.10
   framer-motion: 13.4.0

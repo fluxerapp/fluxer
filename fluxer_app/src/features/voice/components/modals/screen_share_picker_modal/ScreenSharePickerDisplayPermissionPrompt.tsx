@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {
-	MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME,
-	MACOS_SCREEN_RECORDING_PERMISSION_NAME,
-	MACOS_SYSTEM_SETTINGS_NAME,
-	PRODUCT_NAME,
-} from '@app/features/app/config/I18nDisplayConstants';
-import {OPEN_SETTINGS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+	OPEN_SETTINGS_DESCRIPTOR,
+	RELAUNCH_TO_APPLY_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Spinner} from '@app/features/ui/components/Spinner';
+import {relaunchDesktopApp} from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
 import styles from '@app/features/voice/components/modals/ScreenSharePickerModal.module.css';
 import type {ScreenSharePickerDisplayPermissionPrompt as DisplayPermissionPrompt} from '@app/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionStateMachine';
 import {msg} from '@lingui/core/macro';
@@ -25,21 +24,20 @@ const CHECKING_SCREEN_RECORDING_PERMISSION_DESCRIPTOR = msg({
 	comment: 'Loading state in the screen-share picker while checking macOS screen recording permission.',
 });
 const SCREEN_RECORDING_PERMISSION_PROMPT_DESCRIPTOR = msg({
-	message:
-		'Open {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} → {macosScreenRecordingPermissionName}, then allow {productName}. If {productName2} is already enabled, fully quit and restart {productName3} so macOS applies the permission.',
+	message: 'Open System Settings → Privacy & Security → Screen Recording, then allow {productName}.',
 	comment:
-		'Body in the screen-share picker when macOS screen recording permission is missing. Placeholders are product and macOS UI names.',
+		'Body in the screen-share picker when macOS screen recording permission is missing. {productName} is the app name. Keep "System Settings", "Privacy & Security" and the permission name as macOS shows them in this language.',
 });
-const SCREEN_RECORDING_PERMISSION_RESTART_REQUIRED_DESCRIPTOR = msg({
-	message: 'Restart {productName} to use screen sharing',
+const SCREEN_RECORDING_PERMISSION_STILL_WAITING_DESCRIPTOR = msg({
+	message: 'Still waiting for screen recording access',
 	comment:
-		'Heading in the screen-share picker after the user has opened macOS screen recording settings. The app must restart before the permission applies.',
+		'Heading in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet.',
 });
-const SCREEN_RECORDING_PERMISSION_RESTART_PROMPT_DESCRIPTOR = msg({
+const SCREEN_RECORDING_PERMISSION_RELAUNCH_PROMPT_DESCRIPTOR = msg({
 	message:
-		'After changing {macosScreenRecordingPermissionName}, fully quit and restart {productName} so macOS applies the permission.',
+		'Allow {productName} under Screen Recording in System Settings. If it is already allowed, relaunch {productName2} so macOS applies it.',
 	comment:
-		'Body in the screen-share picker after the user has opened macOS screen recording settings. macOS does not apply screen recording permission to a running app.',
+		'Body in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet. {productName} and {productName2} are the app name. Keep "Screen Recording" and "System Settings" as macOS shows them in this language.',
 });
 
 export function ScreenSharePickerDisplayPermissionPrompt({
@@ -76,22 +74,17 @@ export function ScreenSharePickerDisplayPermissionPrompt({
 				data-flx="voice.screen-share-picker-modal.screen-recording-permission.heading"
 			>
 				{restartRequired
-					? i18n._(SCREEN_RECORDING_PERMISSION_RESTART_REQUIRED_DESCRIPTOR, {productName: PRODUCT_NAME})
+					? i18n._(SCREEN_RECORDING_PERMISSION_STILL_WAITING_DESCRIPTOR)
 					: i18n._(SCREEN_RECORDING_PERMISSION_REQUIRED_DESCRIPTOR)}
 			</div>
 			<div className={styles.stateTitle} data-flx="voice.screen-share-picker-modal.screen-recording-permission.copy">
 				{restartRequired
-					? i18n._(SCREEN_RECORDING_PERMISSION_RESTART_PROMPT_DESCRIPTOR, {
-							macosScreenRecordingPermissionName: MACOS_SCREEN_RECORDING_PERMISSION_NAME,
-							productName: PRODUCT_NAME,
-						})
-					: i18n._(SCREEN_RECORDING_PERMISSION_PROMPT_DESCRIPTOR, {
-							macosSystemSettingsName: MACOS_SYSTEM_SETTINGS_NAME,
-							macosPrivacyAndSecuritySettingsName: MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME,
-							macosScreenRecordingPermissionName: MACOS_SCREEN_RECORDING_PERMISSION_NAME,
+					? i18n._(SCREEN_RECORDING_PERMISSION_RELAUNCH_PROMPT_DESCRIPTOR, {
 							productName: PRODUCT_NAME,
 							productName2: PRODUCT_NAME,
-							productName3: PRODUCT_NAME,
+						})
+					: i18n._(SCREEN_RECORDING_PERMISSION_PROMPT_DESCRIPTOR, {
+							productName: PRODUCT_NAME,
 						})}
 			</div>
 			<div
@@ -105,6 +98,15 @@ export function ScreenSharePickerDisplayPermissionPrompt({
 				>
 					{i18n._(OPEN_SETTINGS_DESCRIPTOR)}
 				</Button>
+				{restartRequired && (
+					<Button
+						variant="secondary"
+						onClick={() => void relaunchDesktopApp()}
+						data-flx="voice.screen-share-picker-modal.screen-recording-permission.button.relaunch"
+					>
+						{i18n._(RELAUNCH_TO_APPLY_DESCRIPTOR)}
+					</Button>
+				)}
 			</div>
 		</div>
 	);

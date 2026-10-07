@@ -1,0 +1,178 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.browserPane {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.browserInstanceRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	min-width: 0;
+	padding: 0.625rem 0.75rem;
+	border: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 72%, transparent);
+	border-radius: 0.5rem;
+	background: color-mix(in srgb, var(--background-secondary) 70%, transparent);
+}
+
+.browserInstanceIdentity {
+	display: grid;
+	grid-template-columns: 2.25rem minmax(0, 1fr);
+	gap: 0.625rem;
+	align-items: center;
+	min-width: 0;
+}
+
+.browserInstanceLogo {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	overflow: visible;
+	border: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 72%, transparent);
+	border-radius: 0.5rem;
+	background: color-mix(in srgb, var(--background-tertiary) 70%, transparent);
+	color: var(--text-secondary);
+}
+
+.browserInstanceLogo svg {
+	width: 1.5rem;
+	height: 1.5rem;
+	object-fit: contain;
+}
+
+.browserInstanceMeta {
+	display: grid;
+	gap: 0.125rem;
+	min-width: 0;
+}
+
+.browserInstanceNameRow {
+	display: flex;
+	align-items: center;
+	gap: 0.1875rem;
+	min-width: 0;
+}
+
+.browserInstanceName {
+	min-width: 0;
+	overflow: hidden;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	font-weight: 700;
+	line-height: 1.125rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.browserInstanceOfficialBadge {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	color: var(--status-online);
+}
+
+.browserInstanceDomain {
+	min-width: 0;
+	overflow: hidden;
+	color: var(--text-tertiary);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	line-height: 1.125rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.browserStatusPanel {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.625rem;
+	min-height: 7rem;
+	padding: 1rem 0.75rem;
+	color: var(--text-primary-muted);
+	text-align: center;
+}
+
+.browserStatusText {
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.browserManualPanel {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.625rem;
+	min-height: 7rem;
+	justify-content: center;
+	padding: 1rem 0.75rem;
+}
+
+.browserManualCode {
+	max-width: 100%;
+	padding: 0.75rem 0.875rem;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.5rem;
+	background: var(--background-tertiary);
+	color: var(--text-primary);
+	font-family: var(--font-mono);
+	font-size: 1.375rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.08em;
+	line-height: 1.1;
+	overflow-wrap: anywhere;
+	text-align: center;
+}
+
+.browserTimer {
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.browserTimerExpired {
+	color: var(--status-danger);
+	font-size: 0.8125rem;
+	font-weight: 600;
+}
+
+.browserFooter {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	margin-top: 0.125rem;
+	padding-top: 0.875rem;
+	border-top: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 72%, transparent);
+}
+
+.browserFooter > * {
+	min-width: 7rem;
+	white-space: nowrap;
+}
+
+@media (max-width: 30rem) {
+	.browserInstanceRow {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.browserFooter {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.browserFooter > * {
+		width: 100%;
+	}
+}

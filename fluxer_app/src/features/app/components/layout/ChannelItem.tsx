@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility, {ChannelTypingIndicatorMode} from '@app/features/accessibility/state/Accessibility';
+import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import styles from '@app/features/app/components/layout/ChannelItem.module.css';
 import {ChannelItemContent} from '@app/features/app/components/layout/ChannelItemContent';
 import {ChannelItemIcon} from '@app/features/app/components/layout/ChannelItemIcon';
@@ -30,7 +31,6 @@ import {CategoryBottomSheet} from '@app/features/channel/components/bottomsheets
 import {ChannelBottomSheet} from '@app/features/channel/components/bottomsheets/ChannelBottomSheet';
 import {Typing} from '@app/features/channel/components/ChannelTyping';
 import {ChannelCreateModal} from '@app/features/channel/components/modals/ChannelCreateModal';
-import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
 import {getTypingText, usePresentableTypingUsers} from '@app/features/channel/components/TypingUsers';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
@@ -607,12 +607,15 @@ export const ChannelItem = observer(
 		const handleChannelSettingsClick = useCallback(() => {
 			armActionModalReturn();
 			ModalCommands.push(
-				modal(() => (
-					<ChannelSettingsModal
-						channelId={channel.id}
-						data-flx="app.channel-item.handle-channel-settings-click.channel-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<ChannelSettingsModal
+							channelId={channel.id}
+							data-flx="app.channel-item.handle-channel-settings-click.channel-settings-modal"
+						/>
+					),
+					'channel-settings',
+				),
 			);
 		}, [channel.id, armActionModalReturn]);
 		const channelSettingsLabel = channelIsCategory

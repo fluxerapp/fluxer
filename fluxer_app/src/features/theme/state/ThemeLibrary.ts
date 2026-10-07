@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import {
 	assetToExportDataUrl,
 	parseThemeMetadata,
@@ -84,11 +85,7 @@ export interface ThemeDirectoryCssFile {
 }
 
 function createThemeLibraryId(prefix: string): string {
-	const cryptoApi = globalThis.crypto;
-	if (cryptoApi?.randomUUID) {
-		return `${prefix}-${cryptoApi.randomUUID()}`;
-	}
-	return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+	return `${prefix}-${randomUuid()}`;
 }
 
 function sanitizeFileName(name: string): string {

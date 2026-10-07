@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
+import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {getProtectedIndexedDB} from '@app/features/platform/state/ProtectedWebStorage';
 import type {
 	ThemeLibraryAsset,
@@ -158,15 +160,76 @@ async function withReadwriteDb<T>(name: ThemeLibraryTableName, operation: (store
 	return result;
 }
 
+const DURABLE_THEMES_KEY = AppStorageKey.THEME_LIBRARY_THEMES;
+const DURABLE_LOCAL_FILES_KEY = AppStorageKey.THEME_LIBRARY_LOCAL_FILES;
+const DURABLE_ENABLED_IDS_KEY = AppStorageKey.THEME_LIBRARY_ENABLED_IDS;
+const DURABLE_MIGRATION_KEY = AppStorageKey.THEME_LIBRARY_MIGRATED;
+
+function readDurableList<T>(key: string, guard: (value: unknown) => value is T): Array<T> {
+	const raw = AppStorage.getItem(key);
+	if (raw == null) return [];
+	try {
+		const parsed: unknown = JSON.parse(raw);
+		return Array.isArray(parsed) ? parsed.filter(guard) : [];
+	} catch {
+		return [];
+	}
+}
+
+function writeDurableList<T>(key: string, value: ReadonlyArray<T>): void {
+	AppStorage.setItem(key, JSON.stringify([...value]));
+}
+
+function readDurableStringArray(value: string): Array<string> {
+	try {
+		const parsed: unknown = JSON.parse(value);
+		return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+	} catch {
+		return [];
+	}
+}
+
+let themeLibraryMigrationPromise: Promise<void> | null = null;
+
+async function ensureThemeLibraryMigrated(): Promise<void> {
+	if (themeLibraryMigrationPromise == null) {
+		themeLibraryMigrationPromise = migrateThemeLibraryToDurableStore();
+	}
+	return themeLibraryMigrationPromise;
+}
+
+async function migrateThemeLibraryToDurableStore(): Promise<void> {
+	if (AppStorage.getItem(DURABLE_MIGRATION_KEY) === '1') return;
+	try {
+		const [legacyThemes, legacyLocalFiles, legacyEnabledIds] = await Promise.all([
+			withReadonlyDb(THEMES_STORE, (store) => requestToPromise(store.getAll())).then((result) =>
+				result.filter(isThemeLibraryTheme),
+			),
+			withReadonlyDb(LOCAL_FILES_STORE, (store) => requestToPromise(store.getAll())).then((result) =>
+				result.filter(isThemeLibraryLocalFileReference),
+			),
+			withReadonlyDb(META_STORE, (store) => requestToPromise(store.get(ENABLED_THEME_IDS_KEY))).then((result) =>
+				Array.isArray(result) ? result.filter((value): value is string => typeof value === 'string') : [],
+			),
+		]);
+		if (legacyThemes.length > 0) writeDurableList(DURABLE_THEMES_KEY, legacyThemes);
+		if (legacyLocalFiles.length > 0) writeDurableList(DURABLE_LOCAL_FILES_KEY, legacyLocalFiles);
+		if (legacyEnabledIds.length > 0) {
+			AppStorage.setItem(DURABLE_ENABLED_IDS_KEY, JSON.stringify(legacyEnabledIds));
+		}
+	} catch {}
+	AppStorage.setItem(DURABLE_MIGRATION_KEY, '1');
+}
+
 export async function listThemeLibraryThemes(): Promise<Array<ThemeLibraryTheme>> {
-	const result = await withReadonlyDb(THEMES_STORE, (store) => requestToPromise(store.getAll()));
-	return result.filter(isThemeLibraryTheme);
+	await ensureThemeLibraryMigrated();
+	return readDurableList(DURABLE_THEMES_KEY, isThemeLibraryTheme);
 }
 
 export async function saveThemeLibraryTheme(theme: ThemeLibraryTheme): Promise<void> {
-	await withReadwriteDb(THEMES_STORE, (store) => {
-		store.put(theme);
-	});
+	await ensureThemeLibraryMigrated();
+	const themes = readDurableList(DURABLE_THEMES_KEY, isThemeLibraryTheme);
+	writeDurableList(DURABLE_THEMES_KEY, [...themes.filter((existing) => existing.id !== theme.id), theme]);
 }
 
 export async function updateThemeLibraryThemes(
@@ -195,15 +258,16 @@ export async function updateThemeLibraryThemes(
 }
 
 export async function deleteThemeLibraryTheme(id: string): Promise<void> {
-	await withReadwriteDb(THEMES_STORE, (store) => {
-		store.delete(id);
-	});
+	await ensureThemeLibraryMigrated();
+	const themes = readDurableList(DURABLE_THEMES_KEY, isThemeLibraryTheme);
+	writeDurableList(
+		DURABLE_THEMES_KEY,
+		themes.filter((existing) => existing.id !== id),
+	);
 }
 
 export async function clearThemeLibraryThemes(): Promise<void> {
-	await withReadwriteDb(THEMES_STORE, (store) => {
-		store.clear();
-	});
+	AppStorage.removeItem(DURABLE_THEMES_KEY);
 }
 
 export async function listThemeLibraryAssets(): Promise<Array<ThemeLibraryAsset>> {
@@ -230,41 +294,40 @@ export async function clearThemeLibraryAssets(): Promise<void> {
 }
 
 export async function listThemeLibraryLocalFiles(): Promise<Array<ThemeLibraryLocalFileReference>> {
-	const result = await withReadonlyDb(LOCAL_FILES_STORE, (store) => requestToPromise(store.getAll()));
-	return result.filter(isThemeLibraryLocalFileReference);
+	await ensureThemeLibraryMigrated();
+	return readDurableList(DURABLE_LOCAL_FILES_KEY, isThemeLibraryLocalFileReference);
 }
 
 export async function saveThemeLibraryLocalFile(file: ThemeLibraryLocalFileReference): Promise<void> {
-	await withReadwriteDb(LOCAL_FILES_STORE, (store) => {
-		store.put(file);
-	});
+	await ensureThemeLibraryMigrated();
+	const files = readDurableList(DURABLE_LOCAL_FILES_KEY, isThemeLibraryLocalFileReference);
+	writeDurableList(DURABLE_LOCAL_FILES_KEY, [...files.filter((existing) => existing.id !== file.id), file]);
 }
 
 export async function deleteThemeLibraryLocalFile(id: string): Promise<void> {
-	await withReadwriteDb(LOCAL_FILES_STORE, (store) => {
-		store.delete(id);
-	});
+	await ensureThemeLibraryMigrated();
+	const files = readDurableList(DURABLE_LOCAL_FILES_KEY, isThemeLibraryLocalFileReference);
+	writeDurableList(
+		DURABLE_LOCAL_FILES_KEY,
+		files.filter((existing) => existing.id !== id),
+	);
 }
 
 export async function clearThemeLibraryLocalFiles(): Promise<void> {
-	await withReadwriteDb(LOCAL_FILES_STORE, (store) => {
-		store.clear();
-	});
+	AppStorage.removeItem(DURABLE_LOCAL_FILES_KEY);
 }
 
 export async function getEnabledThemeIds(): Promise<Array<string>> {
-	const result = await withReadonlyDb(META_STORE, (store) => requestToPromise(store.get(ENABLED_THEME_IDS_KEY)));
-	return Array.isArray(result) ? result.filter((value): value is string => typeof value === 'string') : [];
+	await ensureThemeLibraryMigrated();
+	const raw = AppStorage.getItem(DURABLE_ENABLED_IDS_KEY);
+	return raw == null ? [] : readDurableStringArray(raw);
 }
 
 export async function setEnabledThemeIds(themeIds: ReadonlyArray<string>): Promise<void> {
-	await withReadwriteDb(META_STORE, (store) => {
-		store.put([...themeIds], ENABLED_THEME_IDS_KEY);
-	});
+	await ensureThemeLibraryMigrated();
+	AppStorage.setItem(DURABLE_ENABLED_IDS_KEY, JSON.stringify([...themeIds]));
 }
 
 export async function clearThemeLibraryMeta(): Promise<void> {
-	await withReadwriteDb(META_STORE, (store) => {
-		store.clear();
-	});
+	AppStorage.removeItem(DURABLE_ENABLED_IDS_KEY);
 }

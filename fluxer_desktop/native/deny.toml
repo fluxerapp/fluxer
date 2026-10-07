@@ -80,6 +80,7 @@ deny = [
 skip = [
     { crate = "bitflags@1.3.2", reason = "hunspell bindgen requires the legacy bitflags API" },
     { crate = "foldhash@0.1.5", reason = "transitive dependencies require the prior hash table API" },
+    { crate = "getrandom@0.2.17", reason = "ring requires the older randomness API" },
     { crate = "hashbrown@0.15.5", reason = "transitive dependencies require the older hash table API" },
     { crate = "hashbrown@0.16.1", reason = "transitive dependencies require the prior hash table API" },
     { crate = "hermit-abi@0.3.9", reason = "udev requires the prior Hermit ABI" },
@@ -92,6 +93,7 @@ skip = [
     { crate = "syn@1.0.109", reason = "hunspell bindgen requires the legacy macro API" },
     { crate = "syn@2.0.119", reason = "napi derive requires the prior macro API" },
     { crate = "windows-sys@0.48.0", reason = "udev requires the legacy Windows API" },
+    { crate = "windows-sys@0.52.0", reason = "ring requires the older Windows API" },
     { crate = "windows-sys@0.59.0", reason = "hunspell build tooling requires the prior Windows API" },
     { crate = "wit-bindgen@0.51.0", reason = "the WASI preview 3 compatibility layer requires the prior binding API" },
 ]

@@ -8,8 +8,26 @@ import {afterEach, beforeEach, describe, test} from 'node:test';
 import {loadTsModule} from './fixtures/TsModuleLoader.mjs';
 
 const EXEC_PATH = '/opt/Fluxer/fluxer';
+const DESKTOP_NAME = 'app.fluxer.FluxerDesktop.desktop';
 const protocolRegistrations = [];
-const noopLogger = {debug: () => {}, info: () => {}, warn: () => {}, error: () => {}};
+const inProcessRegistrations = [];
+const childProcessCalls = [];
+const loggedWarnings = [];
+let registeredAsDefault = false;
+const electronApp = {
+	isPackaged: true,
+	isDefaultProtocolClient: () => registeredAsDefault,
+	setAsDefaultProtocolClient: (protocol) => inProcessRegistrations.push(protocol),
+};
+const childProcess = {
+	execFile: (file, args, options, callback) => {
+		childProcessCalls.push({file, args, options, callback});
+		if (file === 'xdg-mime' && args[0] === 'default' && args[2].startsWith('x-scheme-handler/')) {
+			protocolRegistrations.push(args[2].slice('x-scheme-handler/'.length));
+		}
+	},
+};
+const noopLogger = {debug: () => {}, info: () => {}, warn: (message) => loggedWarnings.push(message), error: () => {}};
 const englishStrings = {
 	'desktop.jumpList.openSettings': 'Open Settings',
 	'desktop.jumpList.newDirectMessage': 'New Direct Message',
@@ -19,11 +37,11 @@ const englishStrings = {
 
 const desktopEntry = loadTsModule('@electron/main/LinuxDesktopEntry', {
 	stubs: {
-		'node:child_process': {execFile: () => {}},
+		'node:child_process': childProcess,
 		'node:fs': fs,
 		'node:os': os,
 		'node:path': path,
-		electron: {app: {setAsDefaultProtocolClient: (protocol) => protocolRegistrations.push(protocol)}},
+		electron: {app: electronApp},
 		'@electron/common/BuildChannel': {BUILD_CHANNEL: 'stable'},
 		'@electron/common/Logger': {createChildLogger: () => noopLogger},
 		'@electron/main/JumpList': {TASK_ARG_PREFIX: '--fluxer-task='},
@@ -76,13 +94,20 @@ describe('ensureLinuxDesktopEntry', () => {
 			dataHome: process.env.XDG_DATA_HOME,
 			dataDirs: process.env.XDG_DATA_DIRS,
 			disable: process.env.FLUXER_DISABLE_DESKTOP_FILE,
+			desktopName: process.env.CHROME_DESKTOP,
 		};
 		Object.defineProperty(process, 'platform', {value: 'linux'});
 		process.resourcesPath = path.join(root, 'resources');
 		process.env.XDG_DATA_HOME = path.join(root, 'home');
 		process.env.XDG_DATA_DIRS = path.join(root, 'system');
 		delete process.env.FLUXER_DISABLE_DESKTOP_FILE;
+		process.env.CHROME_DESKTOP = DESKTOP_NAME;
 		protocolRegistrations.length = 0;
+		inProcessRegistrations.length = 0;
+		childProcessCalls.length = 0;
+		loggedWarnings.length = 0;
+		registeredAsDefault = false;
+		electronApp.isPackaged = true;
 	});
 
 	afterEach(() => {
@@ -92,6 +117,7 @@ describe('ensureLinuxDesktopEntry', () => {
 			['XDG_DATA_HOME', previous.dataHome],
 			['XDG_DATA_DIRS', previous.dataDirs],
 			['FLUXER_DISABLE_DESKTOP_FILE', previous.disable],
+			['CHROME_DESKTOP', previous.desktopName],
 		]) {
 			if (value === undefined) delete process.env[key];
 			else process.env[key] = value;
@@ -176,5 +202,54 @@ describe('ensureLinuxDesktopEntry', () => {
 		assert.equal(desktopEntry.ensureLinuxDesktopEntry(), true);
 		assert.equal(fs.existsSync(path.join(userDir(), 'fluxer.desktop')), true);
 		assert.deepEqual(protocolRegistrations, ['fluxer']);
+	});
+
+	const installSystemEntry = () => {
+		fs.mkdirSync(systemDir(), {recursive: true});
+		fs.writeFileSync(path.join(systemDir(), 'app.fluxer.FluxerDesktop.desktop'), '[Desktop Entry]\n');
+	};
+
+	test('the scheme handler is registered off the main thread with a bounded xdg-mime call', () => {
+		installSystemEntry();
+		assert.equal(desktopEntry.ensureLinuxDesktopEntry(), true);
+		const registrations = childProcessCalls.filter((call) => call.file === 'xdg-mime');
+		assert.equal(registrations.length, 1);
+		assert.deepEqual(registrations[0].args, ['default', DESKTOP_NAME, 'x-scheme-handler/fluxer']);
+		assert.equal(registrations[0].options.timeout, 5000);
+		registrations[0].callback(null);
+		assert.deepEqual(inProcessRegistrations, []);
+		assert.deepEqual(loggedWarnings, []);
+	});
+
+	test('a scheme handler that already points at this app is not written again', () => {
+		registeredAsDefault = true;
+		installSystemEntry();
+		assert.equal(desktopEntry.ensureLinuxDesktopEntry(), true);
+		assert.deepEqual(childProcessCalls, []);
+		assert.deepEqual(inProcessRegistrations, []);
+	});
+
+	test('a missing, failed or timed out xdg-mime falls back to registering in process', () => {
+		installSystemEntry();
+		assert.equal(desktopEntry.ensureLinuxDesktopEntry(), true);
+		assert.deepEqual(inProcessRegistrations, []);
+		const registration = childProcessCalls.find((call) => call.file === 'xdg-mime');
+		registration.callback(Object.assign(new Error('spawn xdg-mime ENOENT'), {code: 'ENOENT'}));
+		assert.deepEqual(inProcessRegistrations, ['fluxer']);
+	});
+
+	test('the scheme handler is left alone when the shell has no desktop name', () => {
+		delete process.env.CHROME_DESKTOP;
+		installSystemEntry();
+		assert.equal(desktopEntry.ensureLinuxDesktopEntry(), true);
+		assert.deepEqual(childProcessCalls, []);
+		assert.deepEqual(inProcessRegistrations, []);
+	});
+
+	test('an unpackaged run leaves launchers and the scheme handler alone', () => {
+		electronApp.isPackaged = false;
+		assert.equal(desktopEntry.ensureLinuxDesktopEntry(), false);
+		assert.equal(fs.existsSync(path.join(userDir(), 'app.fluxer.FluxerDesktop.desktop')), false);
+		assert.deepEqual(protocolRegistrations, []);
 	});
 });

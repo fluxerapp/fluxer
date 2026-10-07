@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeAutoObservable} from 'mobx';
 
 export type PremiumScenarioOverride =
@@ -168,7 +169,7 @@ class DeveloperOptions implements DeveloperOptionsState {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {

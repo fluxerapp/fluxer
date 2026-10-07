@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/ThemeEmbed.module.css';
 import {
 	EmbedCard,
@@ -45,10 +46,11 @@ interface ThemeEmbedProps {
 
 export const ThemeEmbed = observer(function ThemeEmbed({themeId}: ThemeEmbedProps) {
 	const {i18n} = useLingui();
-	const status = useThemeExists(themeId);
+	const runtimeSnapshot = RuntimeConfig.getSnapshot();
+	const status = useThemeExists(themeId, runtimeSnapshot);
 	const shouldForceSkeleton = useEmbedSkeletonOverride();
 	const handleImport = () => {
-		ThemeCommands.openAcceptModal(themeId, i18n);
+		ThemeCommands.openAcceptModal(themeId, i18n, runtimeSnapshot);
 	};
 	if (shouldForceSkeleton || status === 'loading') {
 		return <ThemeLoadingState data-flx="channel.theme-embed.theme-loading-state" />;

@@ -3,11 +3,11 @@
 import {ChannelChatLayout} from '@app/features/channel/components/ChannelChatLayout';
 import headerStyles from '@app/features/channel/components/ChannelHeader.module.css';
 import {Messages} from '@app/features/channel/components/ChannelMessages';
-import {BACK_DESCRIPTOR} from '@app/features/channel/components/channel_header/shared';
 import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header_components/ChannelHeaderIcon';
 import {MemberListContainer} from '@app/features/channel/components/MemberListContainer';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {getPostForum} from '@app/features/forum/utils/ForumChannelUtils';
+import {BACK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {closeThreadPanel, openThreadFullView} from '@app/features/threads/commands/ThreadNavigation';

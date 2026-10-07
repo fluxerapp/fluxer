@@ -4,7 +4,6 @@ import {Routes} from '@app/app/Routes';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {LongPressable} from '@app/features/app/components/LongPressable';
 import {reportSkeletonDMSidebarLayout} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import {useRovingFocusList} from '@app/features/app/hooks/useRovingFocusList';
 import {useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
@@ -25,7 +24,7 @@ import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {AddFriendSheet} from '@app/features/relationship/components/modals/AddFriendSheet';
 import Relationships from '@app/features/relationship/state/Relationships';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
@@ -447,7 +446,7 @@ export const DMList = observer(() => {
 												className={styles.mobileSpecialButtonLabel}
 												data-flx="channel.direct-message.dm-list.mobile-special-button-label--2"
 											>
-												{PREMIUM_PRODUCT_NAME}
+												{getPremiumProductName()}
 											</span>
 										</div>
 									</div>
@@ -612,7 +611,7 @@ export const DMList = observer(() => {
 									className={styles.clickableItemText}
 									data-flx="channel.direct-message.dm-list.clickable-item-text--3"
 								>
-									{PREMIUM_PRODUCT_NAME}
+									{getPremiumProductName()}
 								</span>
 							</div>
 						</ClickableItem>

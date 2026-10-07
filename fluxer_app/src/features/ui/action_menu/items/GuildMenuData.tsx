@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {GuildSettingsModal, UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import Authentication from '@app/features/auth/state/Authentication';
 import {CategoryCreateModal} from '@app/features/channel/components/modals/CategoryCreateModal';
 import {ChannelCreateModal} from '@app/features/channel/components/modals/ChannelCreateModal';
@@ -10,7 +11,6 @@ import {GuildDebugModal} from '@app/features/devtools/components/debug/GuildDebu
 import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import {GuildNotificationSettingsModal} from '@app/features/guild/components/modals/GuildNotificationSettingsModal';
 import {GuildPrivacySettingsModal} from '@app/features/guild/components/modals/GuildPrivacySettingsModal';
-import {GuildSettingsModal} from '@app/features/guild/components/modals/GuildSettingsModal';
 import {useDeleteMyMessagesInGuild} from '@app/features/guild/hooks/useDeleteMyMessagesInGuild';
 import {useLeaveGuild} from '@app/features/guild/hooks/useLeaveGuild';
 import type {Guild} from '@app/features/guild/models/Guild';
@@ -64,7 +64,6 @@ import type {
 	MenuSubmenuItemType,
 } from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {
 	GUILD_SETTINGS_LABEL_DESCRIPTOR,
 	getGuildSettingsTabs,
@@ -212,12 +211,15 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 			handleCommunitySettings: () => {
 				ModalCommands.pushAfterBottomSheetClose(
 					onClose,
-					modal(() => (
-						<GuildSettingsModal
-							guildId={guild.id}
-							data-flx="ui.action-menu.items.guild-menu-data.handle-community-settings.guild-settings-modal"
-						/>
-					)),
+					modal(
+						() => (
+							<GuildSettingsModal
+								guildId={guild.id}
+								data-flx="ui.action-menu.items.guild-menu-data.handle-community-settings.guild-settings-modal"
+							/>
+						),
+						'guild-settings',
+					),
 				);
 			},
 			handleCreateChannel: () => {
@@ -267,13 +269,16 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 			handleEditCommunityProfile: () => {
 				ModalCommands.pushAfterBottomSheetClose(
 					onClose,
-					modal(() => (
-						<UserSettingsModal
-							initialGuildId={guild.id}
-							initialTab="my_profile"
-							data-flx="ui.action-menu.items.guild-menu-data.handle-edit-community-profile.user-settings-modal"
-						/>
-					)),
+					modal(
+						() => (
+							<UserSettingsModal
+								initialGuildId={guild.id}
+								initialTab="my_profile"
+								data-flx="ui.action-menu.items.guild-menu-data.handle-edit-community-profile.user-settings-modal"
+							/>
+						),
+						'user-settings',
+					),
 				);
 			},
 			handleLeaveCommunity: () => {
@@ -371,13 +376,16 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 					}
 					ModalCommands.pushAfterBottomSheetClose(
 						onClose,
-						modal(() => (
-							<GuildSettingsModal
-								guildId={guild.id}
-								initialTab={tab.type}
-								data-flx="ui.action-menu.items.guild-menu-data.on-click.guild-settings-modal"
-							/>
-						)),
+						modal(
+							() => (
+								<GuildSettingsModal
+									guildId={guild.id}
+									initialTab={tab.type}
+									data-flx="ui.action-menu.items.guild-menu-data.on-click.guild-settings-modal"
+								/>
+							),
+							'guild-settings',
+						),
 					);
 				},
 			}));

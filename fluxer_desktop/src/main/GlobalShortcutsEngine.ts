@@ -463,6 +463,10 @@ export class GlobalShortcutsEngine {
 		return this.hookQueue;
 	}
 
+	retryBlockedHooks(): Promise<void> {
+		return this.hookError === null ? Promise.resolve() : this.refreshHooks();
+	}
+
 	private desiredHookKind(): HookBackendKind | null {
 		if (this.disposed) return null;
 		const backend = this.getBackendSelection();

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
+import {resolveDocumentURLFromRoot} from '@app/features/platform/URLOriginUtils';
 import {useEffect, useRef} from 'react';
 
 let globalCleanupInProgress = false;
@@ -41,7 +43,7 @@ export const useBottomSheetBackHandler = (isOpen: boolean, onClose: () => void, 
 		if (!history) {
 			return;
 		}
-		const currentUrl = new URL(window.location.pathname + window.location.search, window.location.origin);
+		const currentUrl = resolveDocumentURLFromRoot(window.location.pathname + window.location.search);
 		history.push(currentUrl, {
 			bottomSheet: historyStateId,
 		});
@@ -80,7 +82,8 @@ export const useBottomSheetBackHandler = (isOpen: boolean, onClose: () => void, 
 				historyEntryPushedRef.current &&
 				!closedViaBackButtonRef.current &&
 				isActiveSheetHistoryEntry &&
-				isStillOnSheetUrl
+				isStillOnSheetUrl &&
+				!AccountScopedWork.isSuspended
 			) {
 				historyEntryPushedRef.current = false;
 				globalCleanupInProgress = true;

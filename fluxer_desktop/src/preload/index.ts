@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
-import {PASSKEY_RP_IDS} from '@electron/common/Constants';
+import {DESKTOP_PREBOOT_THEME_CHANNEL, LOCAL_DEVELOPMENT_INSTANCE_URL} from '@electron/common/Constants';
+import {IS_OFFLINE_BUILD} from '@electron/common/OfflineBuild';
+import {readExactPlainRecord} from '@electron/common/PlainRecord';
 import type {
 	AppMetricsSnapshot,
 	ClipboardWriteFileOptions,
@@ -65,6 +67,23 @@ import type {
 	VirtmicRoutingGraphResult,
 	VirtmicSystemLinkOptions,
 } from '@electron/common/Types';
+import {createBrowserHandoffPreloadAPI} from '@electron/preload/BrowserHandoffPreload';
+import {createDesktopStoragePreloadAPI} from '@electron/preload/DesktopStoragePreload';
+import {createFirstContentPaintSignal} from '@electron/preload/FirstContentPaint';
+import {applyLegacyRawLocalStorage} from '@electron/preload/LegacyRawStorageSeed';
+import {createLocalAppPreloadAPI} from '@electron/preload/LocalAppPreload';
+import {createNativeGatewayPreloadAPI} from '@electron/preload/NativeGatewayPreload';
+import type {DesktopCapabilityManifest} from '@fluxer/desktop_ipc/src/CapabilityManifest';
+import {DESKTOP_CAPABILITY_MANIFEST_CHANNEL} from '@fluxer/desktop_ipc/src/CapabilityManifest';
+import {DESKTOP_LAST_ROUTE_CHANNEL} from '@fluxer/desktop_ipc/src/LastRouteContract';
+import {
+	buildNativeTitlebarStartupHtml,
+	NATIVE_TITLEBAR_CLASS,
+	NATIVE_TITLEBAR_CONTROL_ATTR,
+	type NativeTitlebarControlName,
+	type NativeTitlebarLayout,
+} from '@fluxer/desktop_ipc/src/NativeTitlebarShell';
+import {ZOOM_PREBOOT_MIRROR_STORAGE_KEY} from '@fluxer/desktop_ipc/src/StorageContract';
 import {
 	VOICE_ENGINE_V2_HARDWARE_ENCODER_IPC_CHANNEL,
 	type VoiceEngineV2BridgeHardwareEncoderApi,
@@ -78,18 +97,22 @@ import type {
 import {contextBridge, ipcRenderer, webFrame} from 'electron';
 
 const ACCESSIBILITY_STORE_STORAGE_KEY = 'AccessibilityStore';
-const ACCESSIBILITY_ZOOM_STORAGE_KEY = 'AccessibilityStore:zoomLevel';
 const ACTIVE_ALLOW_TRANSPARENCY_RENDERER_ARG = '--fluxer-active-allow-transparency=1';
 const ACTIVE_USE_NATIVE_TITLEBAR_RENDERER_ARG = '--fluxer-active-use-native-titlebar=1';
 const CUSTOM_TITLEBAR_HEIGHT = '32px';
 const NATIVE_TITLEBAR_HEIGHT = '0px';
 const STARTUP_NATIVE_TITLEBAR_ID = 'fluxer-startup-native-titlebar';
 const THEME_STUDIO_STANDALONE_PATHNAME = '/theme-studio';
-const ZOOM_LEVEL_MIN = 0.5;
-const ZOOM_LEVEL_MAX = 2.0;
+const DESKTOP_CAPABILITY_MANIFEST_KEYS = Object.freeze(['appStore', 'gatewaySocket'] as const);
+
+class DesktopCapabilityManifestContractError extends TypeError {
+	public constructor(reason: string, options?: ErrorOptions) {
+		super(`Desktop capability manifest contract violation: ${reason}`, options);
+		this.name = 'DesktopCapabilityManifestContractError';
+	}
+}
 
 interface AccessibilityStartupSettings {
-	zoomLevel: number;
 	syncReducedMotionWithSystem: boolean;
 	reducedMotionOverride: boolean | null;
 }
@@ -137,32 +160,6 @@ function validateNativeScreenCaptureLifecycleMessage(value: unknown): NativeScre
 		: {captureId, kind: kind as NativeScreenCaptureLifecycleEventKind, message, source};
 }
 
-function clampZoomLevel(level: number): number {
-	if (!Number.isFinite(level)) return 1;
-	const pct = Math.round(level * 100);
-	const clampedPct = Math.max(Math.round(ZOOM_LEVEL_MIN * 100), Math.min(Math.round(ZOOM_LEVEL_MAX * 100), pct));
-	return clampedPct / 100;
-}
-
-function readLocalZoomLevel(): number | null {
-	let raw: string | null;
-	try {
-		raw = window.localStorage.getItem(ACCESSIBILITY_ZOOM_STORAGE_KEY);
-	} catch {
-		return null;
-	}
-	if (raw === null) {
-		return null;
-	}
-	let parsed: unknown;
-	try {
-		parsed = JSON.parse(raw);
-	} catch {
-		return null;
-	}
-	return typeof parsed === 'number' ? clampZoomLevel(parsed) : null;
-}
-
 function readLegacyAccessibilityStartupSettings(): AccessibilityStartupSettings | null {
 	let raw: string | null;
 	try {
@@ -187,30 +184,32 @@ function readLegacyAccessibilityStartupSettings(): AccessibilityStartupSettings 
 		return null;
 	}
 	return {
-		zoomLevel: typeof parsed.zoomLevel === 'number' ? clampZoomLevel(parsed.zoomLevel) : 1.0,
 		syncReducedMotionWithSystem:
 			typeof parsed.syncReducedMotionWithSystem === 'boolean' ? parsed.syncReducedMotionWithSystem : true,
 		reducedMotionOverride: typeof parsed.reducedMotionOverride === 'boolean' ? parsed.reducedMotionOverride : null,
 	};
 }
 
+function hasPrebootZoomMirror(): boolean {
+	let raw: string | null;
+	try {
+		raw = window.localStorage.getItem(ZOOM_PREBOOT_MIRROR_STORAGE_KEY);
+	} catch {
+		return false;
+	}
+	return raw !== null && Number.isFinite(Number.parseInt(raw, 10));
+}
+
 function readAccessibilityStartupSettings(): AccessibilityStartupSettings | null {
-	const localZoomLevel = readLocalZoomLevel();
+	const hasZoomMirror = hasPrebootZoomMirror();
 	const legacySettings = readLegacyAccessibilityStartupSettings();
-	if (localZoomLevel === null && legacySettings === null) {
+	if (!hasZoomMirror && legacySettings === null) {
 		return null;
 	}
 	return {
-		zoomLevel: localZoomLevel ?? legacySettings?.zoomLevel ?? 1.0,
 		syncReducedMotionWithSystem: legacySettings?.syncReducedMotionWithSystem ?? true,
 		reducedMotionOverride: legacySettings?.reducedMotionOverride ?? null,
 	};
-}
-
-function persistLocalZoomLevel(level: number): void {
-	try {
-		window.localStorage.setItem(ACCESSIBILITY_ZOOM_STORAGE_KEY, JSON.stringify(clampZoomLevel(level)));
-	} catch {}
 }
 
 function getSystemReducedMotionPreference(): boolean {
@@ -265,13 +264,6 @@ function applyReducedMotionClass(reducedMotion: boolean): void {
 	});
 }
 
-function applyCustomZoomProperty(level: number): void {
-	const zoomPercent = Math.round(clampZoomLevel(level) * 100);
-	withDocumentElement((root) => {
-		root.style.setProperty('--custom-zoom', String(zoomPercent));
-	});
-}
-
 function getStartupPlatformClass(): string {
 	switch (process.platform) {
 		case 'darwin':
@@ -285,14 +277,46 @@ function getStartupPlatformClass(): string {
 	}
 }
 
+function getStartupPlatform(): string {
+	return getStartupPlatformClass().replace('platform-', '');
+}
+
+function startupNativeTitlebarLayout(): NativeTitlebarLayout {
+	return process.platform === 'darwin' ? 'macos' : 'controls';
+}
+
+function wireStartupNativeTitlebarControls(titlebar: HTMLElement): void {
+	titlebar.querySelectorAll<HTMLButtonElement>(`[${NATIVE_TITLEBAR_CONTROL_ATTR}]`).forEach((button) => {
+		const control = button.getAttribute(NATIVE_TITLEBAR_CONTROL_ATTR) as NativeTitlebarControlName | null;
+		if (control == null) return;
+		button.addEventListener('click', () => {
+			ipcRenderer.send(`window-${control}`);
+		});
+	});
+}
+
 function installStartupNativeTitlebar(activeUseNativeTitleBar: boolean): void {
-	if (activeUseNativeTitleBar || window.location.pathname === THEME_STUDIO_STANDALONE_PATHNAME) return;
+	if (
+		activeUseNativeTitleBar ||
+		window.location.protocol === 'data:' ||
+		window.location.pathname === THEME_STUDIO_STANDALONE_PATHNAME
+	) {
+		return;
+	}
+	const layout = startupNativeTitlebarLayout();
 	const install = (): void => {
 		if (!document.body || document.getElementById(STARTUP_NATIVE_TITLEBAR_ID)) return;
 		const titlebar = document.createElement('div');
 		titlebar.id = STARTUP_NATIVE_TITLEBAR_ID;
+		titlebar.className = NATIVE_TITLEBAR_CLASS.root;
+		titlebar.setAttribute('role', 'group');
 		titlebar.setAttribute('aria-hidden', 'true');
 		titlebar.setAttribute('data-native-titlebar', '');
+		titlebar.setAttribute('data-platform', getStartupPlatform());
+		titlebar.innerHTML = buildNativeTitlebarStartupHtml(layout);
+		if (layout === 'controls') {
+			wireStartupNativeTitlebarControls(titlebar);
+		}
 		document.body.prepend(titlebar);
 	};
 	if (document.body) {
@@ -329,19 +353,74 @@ function applyStartupAccessibilitySettings(): void {
 	if (settings === null) {
 		return;
 	}
-	persistLocalZoomLevel(settings.zoomLevel);
 	webFrame.setZoomFactor(1);
-	applyCustomZoomProperty(settings.zoomLevel);
 	applyReducedMotionClass(resolveReducedMotion(settings));
 }
 
+function readDesktopCapabilityManifest(): DesktopCapabilityManifest {
+	let value: unknown;
+	try {
+		value = ipcRenderer.sendSync(DESKTOP_CAPABILITY_MANIFEST_CHANNEL);
+	} catch (error) {
+		throw new DesktopCapabilityManifestContractError('the main process request failed', {cause: error});
+	}
+	const manifest = readExactPlainRecord({value, expectedKeys: DESKTOP_CAPABILITY_MANIFEST_KEYS});
+	if (manifest === null) {
+		throw new DesktopCapabilityManifestContractError(
+			'the main process response must be a plain object with exactly appStore and gatewaySocket',
+		);
+	}
+	if (typeof manifest.appStore !== 'boolean') {
+		throw new DesktopCapabilityManifestContractError('appStore must be a boolean');
+	}
+	if (typeof manifest.gatewaySocket !== 'boolean') {
+		throw new DesktopCapabilityManifestContractError('gatewaySocket must be a boolean');
+	}
+	return {appStore: manifest.appStore, gatewaySocket: manifest.gatewaySocket};
+}
+
+function reportPrebootTheme(renderer: typeof ipcRenderer): void {
+	let theme: string | null = null;
+	try {
+		theme = window.localStorage.getItem('theme');
+	} catch {
+		return;
+	}
+	if (typeof theme === 'string' && theme.length > 0) {
+		renderer.send(DESKTOP_PREBOOT_THEME_CHANNEL, theme);
+	}
+}
+
 applyStartupDesktopWindowClasses();
+
+applyLegacyRawLocalStorage(ipcRenderer);
+
+reportPrebootTheme(ipcRenderer);
+window.addEventListener('pagehide', () => reportPrebootTheme(ipcRenderer));
+document.addEventListener('visibilitychange', () => {
+	if (document.visibilityState === 'hidden') {
+		reportPrebootTheme(ipcRenderer);
+	}
+});
 
 applyStartupAccessibilitySettings();
 
 const api: ElectronAPI = {
 	platform: process.platform,
 	buildChannel: BUILD_CHANNEL,
+	localDevelopmentInstanceUrl: LOCAL_DEVELOPMENT_INSTANCE_URL,
+	capabilities: readDesktopCapabilityManifest(),
+	offlineBuild: IS_OFFLINE_BUILD,
+	...createDesktopStoragePreloadAPI(ipcRenderer),
+	...createLocalAppPreloadAPI(ipcRenderer),
+	...createBrowserHandoffPreloadAPI(ipcRenderer),
+	...createNativeGatewayPreloadAPI(ipcRenderer),
+	reportLastRoute: (routePath: string): void => {
+		ipcRenderer.send(DESKTOP_LAST_ROUTE_CHANNEL, routePath);
+	},
+	notifyFirstContentPainted: createFirstContentPaintSignal(ipcRenderer, (callback) =>
+		window.requestAnimationFrame(callback),
+	),
 	getDesktopInfo: (): Promise<DesktopInfo> => ipcRenderer.invoke('get-desktop-info'),
 	getGpuInfo: (): Promise<GpuInfo> => ipcRenderer.invoke('get-gpu-info'),
 	getAppMetrics: (): Promise<AppMetricsSnapshot> => ipcRenderer.invoke('get-app-metrics'),
@@ -409,6 +488,15 @@ const api: ElectronAPI = {
 	setVoiceDebugEventSinkStatsHtml: (html: string): void => {
 		ipcRenderer.send('voice-debug-event-sink:set-stats-html', html);
 	},
+	onWindowLiveResizeChange: (callback: (resizing: boolean) => void): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, resizing: boolean): void => {
+			callback(resizing);
+		};
+		ipcRenderer.on('window-live-resize-change', handler);
+		return () => {
+			ipcRenderer.removeListener('window-live-resize-change', handler);
+		};
+	},
 	onWindowMaximizeChange: (callback: (maximized: boolean) => void): (() => void) => {
 		const handler = (_event: Electron.IpcRendererEvent, maximized: boolean): void => {
 			callback(maximized);
@@ -458,17 +546,12 @@ const api: ElectronAPI = {
 	passkeyIsSupported: (): Promise<boolean> => ipcRenderer.invoke('passkey-is-supported'),
 	passkeyAuthenticate: (
 		options: PublicKeyCredentialRequestOptionsJSON,
-		requestContext?: {pin?: string},
+		requestContext?: {pin?: string; instanceKey?: string},
 	): Promise<AuthenticationResponseJSON> => ipcRenderer.invoke('passkey-authenticate', options, requestContext),
 	passkeyRegister: (
 		options: PublicKeyCredentialCreationOptionsJSON,
-		requestContext?: {pin?: string},
+		requestContext?: {pin?: string; instanceKey?: string},
 	): Promise<RegistrationResponseJSON> => ipcRenderer.invoke('passkey-register', options, requestContext),
-	passkeyRpIds: PASSKEY_RP_IDS,
-	domainMigration: {
-		version: 1,
-		setAppOrigin: (origin: string): Promise<void> => ipcRenderer.invoke('domain-migration:set-app-origin', origin),
-	},
 	toggleDevTools: (): void => {
 		ipcRenderer.send('toggle-devtools');
 	},

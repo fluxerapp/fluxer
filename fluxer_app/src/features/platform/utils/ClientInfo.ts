@@ -368,7 +368,7 @@ function isLiveKitE2EECapable(): boolean {
 }
 
 export async function getGatewayClientProperties(geo?: {latitude?: string | null; longitude?: string | null}) {
-	const info = await getClientInfo();
+	const info = await preloadClientInfo();
 	return {
 		os: info.osName ?? 'unknown',
 		os_version: info.osVersion ?? '',

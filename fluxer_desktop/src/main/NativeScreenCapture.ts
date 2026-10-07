@@ -16,7 +16,7 @@ import type {
 	NativeScreenCaptureStartResult,
 	WindowsHagsState,
 } from '@electron/common/Types';
-import {getTccStatus} from '@electron/main/MacTcc';
+import {refreshTccStatus} from '@electron/main/MacTcc';
 import {isValidStartOptions, normalizeScreenCaptureDimension} from '@electron/main/NativeScreenCaptureValidation';
 import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
 import {ipcMain} from 'electron';
@@ -391,9 +391,9 @@ function loadWindowsNativeScreenCaptureAddon(): NativeAddonLoadResult {
 	}
 }
 
-function getMacScreenPermissionStatus(): string | null {
+async function getMacScreenPermissionStatus(): Promise<string | null> {
 	try {
-		return getTccStatus('screen-recording');
+		return await refreshTccStatus('screen-recording');
 	} catch (error) {
 		logger.debug('Failed to read macOS screen capture permission', error);
 		return null;
@@ -439,7 +439,7 @@ async function getMacNativeScreenCaptureAvailability(
 				capabilities,
 			};
 		}
-		const screenPermissionStatus = getMacScreenPermissionStatus();
+		const screenPermissionStatus = await getMacScreenPermissionStatus();
 		if (screenPermissionStatus === 'denied' || screenPermissionStatus === 'restricted') {
 			return {
 				available: false,

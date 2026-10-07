@@ -19,6 +19,10 @@ class Relationships {
 		this.relationships = newRelationships;
 	}
 
+	hydrateFromSnapshot(relationships: ReadonlyArray<RelationshipWire>): void {
+		this.loadRelationships(relationships);
+	}
+
 	updateRelationship(relationship: RelationshipWire): void {
 		const existingRelationship = this.relationships[relationship.id];
 		if (existingRelationship) {

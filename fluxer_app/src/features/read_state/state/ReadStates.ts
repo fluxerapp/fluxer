@@ -2,6 +2,7 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Channels from '@app/features/channel/state/Channels';
+import type {SnapshotReadStateRow} from '@app/features/gateway/snapshot/SnapshotEntities';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import AutoAck from '@app/features/notification/state/NotificationAutoAck';
 import {http} from '@app/features/platform/transport/RestTransport';
@@ -344,6 +345,16 @@ class ReadStates {
 		return Array.from(this.states.keys());
 	}
 
+	captureMentionCounts(): Map<string, number> {
+		const counts = new Map<string, number>();
+		for (const [channelId, state] of this.states) {
+			if (state.mentionCount > 0) {
+				counts.set(channelId, state.mentionCount);
+			}
+		}
+		return counts;
+	}
+
 	clearStickyUnread(channelId: string): void {
 		const state = this.getIfExists(channelId);
 		if (state != null) {
@@ -390,6 +401,7 @@ class ReadStates {
 		channels: Array<ChannelPayload>;
 	}): void {
 		this.suppressVersionBumps(() => {
+			const preservedAcks = this.capturePendingAcks();
 			this.reset();
 			const readStates = this.decodeReadStateBundle(action.readStateProto, action.readState);
 			const channelsWithReadState = new Set<ChannelId>();
@@ -412,6 +424,27 @@ class ReadStates {
 				}
 				this.clearUnreadStateIfRead(state);
 			}
+			this.restorePendingAcks(preservedAcks);
+			this.notifyChange(undefined, {global: true});
+		});
+	}
+
+	hydrateFromSnapshot(readStates: ReadonlyMap<string, SnapshotReadStateRow>): void {
+		this.suppressVersionBumps(() => {
+			const preservedAcks = this.capturePendingAcks();
+			this.reset();
+			for (const [channelId, row] of readStates) {
+				const state = this.get(channelId);
+				this.setMentionCount(state, row.mentionCount);
+				state.ackMessageId = row.ackMessageId;
+				state.acknowledgedPinTimestamp = row.ackPinTimestamp;
+				state.serverVersion = row.serverVersion;
+				state.lastMessageId = row.lastMessageId;
+				state.storedGuildId = row.guildId;
+				state.lastPinTimestamp = Channels.getChannel(channelId)?.lastPinTimestamp?.getTime() ?? 0;
+				this.clearUnreadStateIfRead(state);
+			}
+			this.restorePendingAcks(preservedAcks);
 			this.notifyChange(undefined, {global: true});
 		});
 	}
@@ -837,6 +870,26 @@ class ReadStates {
 		await this.flushDueAcks(true);
 	}
 
+	private capturePendingAcks(): Array<PendingAck> {
+		return Array.from(this.pendingAcks.values(), (pending) => ({...pending}));
+	}
+
+	private restorePendingAcks(preserved: ReadonlyArray<PendingAck>): void {
+		const currentUserId = Users.getCurrentUser()?.id ?? null;
+		for (const pending of preserved) {
+			if (pending.userId !== currentUserId) continue;
+			const state = this.getIfExists(pending.channelId);
+			if (state == null) continue;
+			if (compareMessageIds(pending.messageId, state.ackMessageId) <= 0) continue;
+			this.pendingAcks.set(pending.channelId as ChannelId, {...pending, deadline: Date.now()});
+		}
+		if (this.pendingAcks.size === 0) {
+			return;
+		}
+		this.scheduleAckFlush();
+		void this.flushDueAcks(true);
+	}
+
 	private applyAck(state: ReadStateEntry, options: AckOptions): AppliedAck {
 		const {
 			messageId,
@@ -906,6 +959,7 @@ class ReadStates {
 			messageId: existingIsNewer ? existing.messageId : messageId,
 			deadline: existing == null ? deadline : Math.min(existing.deadline, deadline),
 			attempt: existing?.attempt ?? 0,
+			userId: Users.getCurrentUser()?.id ?? null,
 		};
 		this.pendingAcks.set(channelId as ChannelId, pending);
 		const state = this.getIfExists(channelId);

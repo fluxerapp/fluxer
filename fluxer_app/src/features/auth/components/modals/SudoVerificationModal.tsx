@@ -11,11 +11,13 @@ import {
 } from '@app/features/auth/passkey_migration/PasskeyLegacyCeremony';
 import PasskeyMigration from '@app/features/auth/passkey_migration/PasskeyMigration';
 import {isPasskeyMigrationOrigin} from '@app/features/auth/passkey_migration/PasskeyMigrationOrigin';
-import AccountManager from '@app/features/auth/state/AccountManager';
+import Accounts from '@app/features/auth/state/Accounts';
 import Sudo from '@app/features/auth/state/AuthSudo';
 import SudoPrompt, {SUDO_MODAL_KEY, SudoVerificationMethod} from '@app/features/auth/state/SudoPrompt';
 import * as WebAuthnUtils from '@app/features/auth/utils/WebAuthnUtils';
 import {
+	AUTHENTICATOR_CODE_DESCRIPTOR,
+	BACKUP_CODE_DESCRIPTOR,
 	COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR,
 	PASSWORD_DESCRIPTOR,
 	VERIFY_DESCRIPTOR,
@@ -68,18 +70,9 @@ const VERIFY_IT_S_YOU_DESCRIPTOR = msg({
 	message: "Verify it's you",
 	comment: 'Short label in the authentication sudo verification modal. Keep the tone plain and specific.',
 });
-const AUTHENTICATOR_CODE_DESCRIPTOR = msg({
-	message: 'Authenticator code',
-	comment: 'Short label in the authentication sudo verification modal. Keep the tone plain and specific.',
-});
 const MESSAGE_6_DIGIT_CODE_DESCRIPTOR = msg({
 	message: '6-digit code',
 	comment: 'Short label in the authentication sudo verification modal. Keep the tone plain and specific.',
-});
-const BACKUP_CODE_DESCRIPTOR = msg({
-	message: 'Backup code',
-	comment:
-		'Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.',
 });
 const VERIFICATION_FAILED_DESCRIPTOR = msg({message: 'Verification failed'});
 const INCORRECT_PASSWORD_DESCRIPTOR = msg({
@@ -134,7 +127,7 @@ const SudoVerificationModal: React.FC = observer(() => {
 	const legacyLinkRef = useRef<PasskeyBridgeSudoLink | null>(null);
 	const preferLegacyRef = useRef(false);
 	const openRef = useRef(true);
-	const userIdAtOpenRef = useRef(AccountManager.currentUserId);
+	const userIdAtOpenRef = useRef(Accounts.currentUserId);
 	const showPasskey = availableMethods.webauthn;
 	const showTotp = availableMethods.totp;
 	const backupCodeOnly = !showTotp && availableMethods.backupCodes;
@@ -161,7 +154,7 @@ const SudoVerificationModal: React.FC = observer(() => {
 		setWebAuthnInFlight(false);
 	}, [form, verificationFailed, rawError, i18n, i18n.locale, showPassword, showCode]);
 	const finishLegacySudo = (sudoToken: string) => {
-		if (!openRef.current || AccountManager.currentUserId !== userIdAtOpenRef.current) return;
+		if (!openRef.current || Accounts.currentUserId !== userIdAtOpenRef.current) return;
 		Sudo.setToken(sudoToken);
 		PasskeyMigration.checkAfterSudo(SUDO_MODAL_KEY);
 		SudoPrompt.submit({});

@@ -88,6 +88,11 @@ function listSources() {
 	return binding.listSources();
 }
 
+function probeScreenRecordingAccess() {
+	if (!binding || typeof binding.probeScreenRecordingAccess !== 'function') return Promise.resolve('unsupported');
+	return Promise.resolve(binding.probeScreenRecordingAccess());
+}
+
 function __setBindingForTests(nextBinding) {
 	binding = nextBinding;
 	loadError = null;
@@ -229,5 +234,6 @@ module.exports = {
 	getBackendInfo,
 	listSources,
 	loadError,
+	probeScreenRecordingAccess,
 	__setBindingForTests,
 };

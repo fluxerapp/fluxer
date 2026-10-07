@@ -16,12 +16,13 @@ Each `GET` route answers with `Access-Control-Allow-Origin: *`, replaced by the 
 
 ## Instance discovery object
 
-The discovery document is the complete public description of one deployment. Every field is always present. The one optional field, `domain_migration`, is absent only from a server older than this version.
+The discovery document is the complete public description of one deployment. Every field without a `?` is always present. This server never sends `codename` or `age_policy`, and `domain_migration` and `endpoints.upload_relay` are absent only from a server older than this version.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
+| codename? | string | The protocol generation the deployment speaks |
 | api_code_version<sup>1</sup> | integer | The version of the API server code this deployment runs |
 | endpoints | [instance endpoints](#instance-endpoints-object) object | Public service endpoints for this deployment |
 | captcha | [captcha configuration](#captcha-configuration-object) object | Public CAPTCHA configuration |
@@ -34,6 +35,7 @@ The discovery document is the complete public description of one deployment. Eve
 | limits | [limit configuration](#limit-configuration-object) object | Ordered limit rules and the trait names the deployment declares |
 | push | [push configuration](#push-configuration-object) object | Public Web Push identity |
 | app_public | [public application configuration](#public-application-configuration-object) object | Public client configuration |
+| age_policy? | [age policy](#age-policy-object) object | Regional age policy for the deployment |
 | domain_migration? | [domain migration](#domain-migration-object) object | Web domain migration switch and logged-out rollout |
 
 <sup>1</sup> The value is a plain integer that increases when the API introduces a change a client is expected to notice, and the current value is `1`
@@ -50,7 +52,8 @@ Each value is an absolute URL supplied by the operator. A value can be a bare or
 | api_client<sup>1</sup> | string | Base URL for client API requests |
 | api_public | string | Base URL for public API requests |
 | gateway<sup>2</sup> | string | The [main Gateway](/gateway/overview/) WebSocket URL |
-| media | string | [Media Proxy](/media-proxy/overview/) base URL, also used as the attachment [upload relay](/media-proxy/upload-relay/) base |
+| media | string | [Media Proxy](/media-proxy/overview/) base URL |
+| upload_relay? | string | Attachment [upload relay](/media-proxy/upload-relay/) base URL |
 | static_cdn<sup>3</sup> | string | Static asset base URL |
 | marketing | string | Marketing site base URL |
 | admin | string | Admin application base URL |
@@ -474,6 +477,27 @@ The public part of the instance [domain migration configuration](/admin-api/inst
 A logged-out device draws its own random ID once and keeps it. The device moves when its bucket over that ID and `rollout_salt` falls below `anonymous_rollout_basis_points`. Signed-in accounts use the [domain migration assignment](/http-api/experiments/#domain-migration-assignment-object) instead.
 
 While `standalone_forwarding` is false, an installed desktop web app moves its data and stays on the legacy origin. Browser tabs forward either way.
+
+## Age policy object
+
+The regions where the deployment gates access behind an age check or blocks it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| geos | array[[age policy region](#age-policy-region-object) object] | Regions with an age policy |
+
+## Age policy region object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| country_code | string | The ISO 3166-1 alpha-2 country code |
+| region_code | ?string | The ISO 3166-2 subdivision code, or null when the entry covers the whole country |
+| action | string | `restrict` to require an age check, or `block` to refuse access |
+| card_verification_available | boolean | Whether card age verification is available in the region |
 
 ## Geolocation object
 

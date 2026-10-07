@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import path from 'node:path';
-import {
-	getAppUrl,
-	getCustomAppUrl,
-	getDesktopTroubleshootingSettings,
-	getDesktopWindowBehaviorSettings,
-} from '@electron/common/DesktopConfig';
+import {APP_PROTOCOL, DESKTOP_APP_URL} from '@electron/common/Constants';
+import {getDesktopTroubleshootingSettings, getDesktopWindowBehaviorSettings} from '@electron/common/DesktopConfig';
 import type {DesktopInfo, DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@electron/common/Types';
 import {isPortableMode} from '@electron/common/UserDataPath';
 import {hasEnabledBlinkFeature, MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE} from '@electron/main/ChromiumRuntime';
+import {
+	type DesktopAccountStoreCounts,
+	formatDesktopAccountStoreTelemetry,
+	readDesktopAccountStoreTelemetry,
+} from '@electron/main/DesktopAccountStoreTelemetry';
+import {type DesktopAppStoreState, readDesktopAppStoreState} from '@electron/main/DesktopAppStoreHealth';
 import {getDesktopInfo} from '@electron/main/PlatformInfo';
 import {app} from 'electron';
 import log from 'electron-log';
@@ -21,17 +23,17 @@ const RESET_WINDOW_STATE_ARGS = new Set(['--fluxer-reset-window-state']);
 const SAFE_MODE_ARGS = new Set(['--fluxer-safe-mode']);
 const RENDERER_CONSOLE_LOG_ARGS = new Set(['--fluxer-log-renderer-console']);
 const NET_LOG_ARGS = new Set(['--fluxer-net-log']);
-const APP_URL_ARGS = new Set(['--fluxer-app-url']);
 
 interface DesktopDebugInfo {
 	clientInfo: string;
 	desktopInfo: DesktopInfo;
 	appUrl: string;
-	customAppUrl: string | null;
 	userDataPath: string;
 	logsPath: string | null;
 	logFilePath: string | null;
 	configPath: string;
+	accountStore: DesktopAppStoreState | null;
+	accountStoreTelemetry: DesktopAccountStoreCounts;
 	windowBehavior: DesktopWindowBehaviorSettings;
 	troubleshooting: DesktopTroubleshootingSettings;
 	packaged: boolean;
@@ -133,23 +135,6 @@ function getArgValue(argv: ReadonlyArray<string>, names: ReadonlySet<string>): s
 	return null;
 }
 
-export function getLaunchAppUrlOverride(argv: ReadonlyArray<string>): string | null {
-	const value = getArgValue(argv, APP_URL_ARGS);
-	if (value === null) {
-		return null;
-	}
-	const trimmed = value.trim();
-	if (!trimmed) {
-		throw new Error('--fluxer-app-url requires a URL');
-	}
-	const candidate = /^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`;
-	const url = new URL(candidate);
-	if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-		throw new Error('--fluxer-app-url must use http or https');
-	}
-	return url.toString();
-}
-
 export function getLaunchNetLogPath(userDataPath: string, argv: ReadonlyArray<string>): string | null {
 	const value = getArgValue(argv, NET_LOG_ARGS);
 	if (value === null) {
@@ -180,11 +165,8 @@ function getLogFilePath(): string | null {
 }
 
 function sanitizeLaunchArg(arg: string): string {
-	if (/^fluxer:\/\//i.test(arg)) {
-		return 'fluxer://<redacted>';
-	}
-	if (arg.startsWith('--fluxer-app-url=')) {
-		return `--fluxer-app-url=${sanitizeUrlForDiagnostics(arg.slice('--fluxer-app-url='.length))}`;
+	if (arg.toLowerCase().startsWith(`${APP_PROTOCOL}://`)) {
+		return `${APP_PROTOCOL}://<redacted>`;
 	}
 	if (/^(--[^=]*(?:token|secret|password|key|code)[^=]*)=/i.test(arg)) {
 		return `${arg.slice(0, arg.indexOf('='))}=<redacted>`;
@@ -193,35 +175,7 @@ function sanitizeLaunchArg(arg: string): string {
 }
 
 function sanitizeLaunchArgs(argv: ReadonlyArray<string>): Array<string> {
-	const sanitized: Array<string> = [];
-	for (let index = 0; index < argv.length; index += 1) {
-		const arg = argv[index];
-		if (arg === '--fluxer-app-url') {
-			sanitized.push(arg);
-			const next = argv[index + 1];
-			if (next && !next.startsWith('--')) {
-				sanitized.push(sanitizeUrlForDiagnostics(next));
-				index += 1;
-			}
-			continue;
-		}
-		sanitized.push(sanitizeLaunchArg(arg));
-	}
-	return sanitized;
-}
-
-function sanitizeUrlForDiagnostics(rawUrl: string): string {
-	try {
-		const candidate = /^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
-		const url = new URL(candidate);
-		url.username = '';
-		url.password = '';
-		url.search = '';
-		url.hash = '';
-		return url.toString();
-	} catch {
-		return '<invalid-url>';
-	}
+	return argv.map(sanitizeLaunchArg);
 }
 
 function normalizeArchitectureValue(value: string | null | undefined): string | undefined {
@@ -314,12 +268,13 @@ export async function getDesktopDebugInfo(
 	return {
 		clientInfo: formatDesktopClientInfo(desktopInfo, {locale: safeGetLocale()}),
 		desktopInfo,
-		appUrl: getAppUrl(),
-		customAppUrl: getCustomAppUrl(),
+		appUrl: DESKTOP_APP_URL,
 		userDataPath,
 		logsPath: safeGetLogsPath(),
 		logFilePath: getLogFilePath(),
 		configPath: path.join(userDataPath, 'settings.json'),
+		accountStore: readDesktopAppStoreState(userDataPath),
+		accountStoreTelemetry: readDesktopAccountStoreTelemetry(userDataPath),
 		windowBehavior: getDesktopWindowBehaviorDebugSettings(),
 		troubleshooting: getLaunchDesktopTroubleshootingSettings(),
 		packaged: app.isPackaged,
@@ -350,14 +305,24 @@ function formatWindowBehavior(settings: DesktopWindowBehaviorSettings): string {
 	].join(', ');
 }
 
+function formatAccountStoreState(state: DesktopAppStoreState | null): string {
+	if (state === null) {
+		return 'never opened successfully on this device';
+	}
+	return `firstSuccessAt=${new Date(state.firstSuccessAt).toISOString()}, lastSuccessAt=${new Date(
+		state.lastSuccessAt,
+	).toISOString()}, schemaVersion=${state.lastSchemaVersion}`;
+}
+
 export function formatDesktopDebugInfo(info: DesktopDebugInfo): string {
 	return [
 		'Fluxer desktop debug info',
 		info.clientInfo,
 		`App URL: ${info.appUrl}`,
-		`Custom app URL: ${info.customAppUrl ?? '(none)'}`,
 		`User data: ${info.userDataPath}`,
 		`Config: ${info.configPath}`,
+		`Account store: ${formatAccountStoreState(info.accountStore)}`,
+		`Account store telemetry: ${formatDesktopAccountStoreTelemetry(info.accountStoreTelemetry)}`,
 		`Logs: ${info.logFilePath ?? info.logsPath ?? '(unavailable)'}`,
 		`Troubleshooting: disableHardwareAcceleration=${info.troubleshooting.disableHardwareAcceleration}`,
 		`Window behavior: ${formatWindowBehavior(info.windowBehavior)}`,
@@ -373,9 +338,10 @@ export function logDesktopDebugInfo(info: DesktopDebugInfo): void {
 	log.info('[DebugInfo] Client info:', info.clientInfo);
 	log.info('[DebugInfo] Runtime:', {
 		appUrl: info.appUrl,
-		customAppUrl: info.customAppUrl,
 		userDataPath: info.userDataPath,
 		configPath: info.configPath,
+		accountStore: info.accountStore,
+		accountStoreTelemetry: info.accountStoreTelemetry,
 		logsPath: info.logsPath,
 		logFilePath: info.logFilePath,
 		troubleshooting: info.troubleshooting,

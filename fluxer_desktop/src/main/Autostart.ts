@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {createRequire} from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
+import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
 import {
 	DESKTOP_APP_NAME,
 	LEGACY_LINUX_DESKTOP_ENTRY_ID,
@@ -13,6 +14,7 @@ import {
 	WINDOWS_LEGACY_APP_USER_MODEL_IDS,
 } from '@electron/common/DesktopIdentity';
 import {isPortableMode} from '@electron/common/UserDataPath';
+import {AUTOSTART_LAUNCH_ARG} from '@electron/main/AutostartLaunch';
 import {getLinuxPortalsMode} from '@electron/main/LaunchOptions';
 import {GENERATED_MARKER} from '@electron/main/LinuxDesktopEntry';
 import {getStableLinuxLaunchPath} from '@electron/main/LinuxLaunchPath';
@@ -30,6 +32,7 @@ function getInitializedFilePath(): string {
 }
 
 function isInitialized(): boolean {
+	if (BUILD_CHANNEL === 'development') return true;
 	try {
 		return fs.existsSync(getInitializedFilePath());
 	} catch {
@@ -79,7 +82,6 @@ const APP_NAME = DESKTOP_APP_NAME;
 const LINUX_DESKTOP_FILE_BASENAME = `${LINUX_DESKTOP_ENTRY_ID}.desktop`;
 const LINUX_STARTUP_WM_CLASS = LINUX_DESKTOP_ENTRY_ID;
 const LEGACY_LINUX_DESKTOP_FILE_BASENAME = `${LEGACY_LINUX_DESKTOP_ENTRY_ID}.desktop`;
-const AUTOSTART_LAUNCH_ARG = '--autostart';
 
 interface AutoLaunchConfig {
 	name: string;
@@ -280,17 +282,6 @@ async function isWindowsAutostartEnabled(): Promise<boolean> {
 		if (state === 'disabled') continue;
 		const runValue = await getWindowsRunValue(config.name);
 		if (runValue !== null && runValue === buildWindowsRunCommand(config)) return true;
-	}
-	return false;
-}
-
-export function isAutostartLaunch(): boolean {
-	if (process.argv.includes(AUTOSTART_LAUNCH_ARG)) {
-		return true;
-	}
-	if (isMac) {
-		const settings = app.getLoginItemSettings();
-		return Boolean(settings.wasOpenedAtLogin);
 	}
 	return false;
 }

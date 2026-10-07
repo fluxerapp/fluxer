@@ -137,18 +137,6 @@
 	color: var(--text-tertiary);
 }
 
-.footerLink {
-	font-size: 0.875rem;
-	color: var(--text-link);
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.footerLink:hover {
-	color: var(--text-link);
-	text-decoration: underline;
-}
-
 .mfaDescription {
 	margin-bottom: 2rem;
 	text-align: center;

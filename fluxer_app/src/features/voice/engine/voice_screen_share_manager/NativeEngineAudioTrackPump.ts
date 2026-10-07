@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import type {NativeAudioFramePump} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {computeAudioLevels} from '@app/features/voice/utils/native_audio_capture_bridge/shared';
 
@@ -171,10 +172,7 @@ const initialPumpStats: NativeEngineAudioTrackPumpStats = {
 let pumpStats: NativeEngineAudioTrackPumpStats = {...initialPumpStats};
 
 function createCaptureId(): string {
-	if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-		return `media-track-screen-audio:${crypto.randomUUID()}`;
-	}
-	return `media-track-screen-audio:${Date.now().toString(36)}:${Math.random().toString(36).slice(2)}`;
+	return `media-track-screen-audio:${randomUuid()}`;
 }
 
 function roundLevel(value: number | undefined): number | null {

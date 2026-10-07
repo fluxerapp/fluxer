@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import {resolvePriceAnnouncementCampaign} from '@app/features/premium/config/PriceAnnouncementCampaign';
 import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {MANAGE_SUBSCRIPTION_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {formatMinorUnitPrice} from '@app/features/premium/utils/PricingUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import NagbarState from '@app/features/ui/state/Nagbar';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
 import {getFormattedLongDate} from '@fluxer/date_utils/src/DateFormatting';
@@ -34,12 +34,15 @@ export const LegacyPriceOptInNagbar = observer(function LegacyPriceOptInNagbar({
 			return;
 		}
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialTab="plutonium"
-					data-flx="app.app-layout.nagbars.legacy-price-opt-in-nagbar.handle-open-premium-settings.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="plutonium"
+						data-flx="app.app-layout.nagbars.legacy-price-opt-in-nagbar.handle-open-premium-settings.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	}, []);
 	const handleDismiss = useCallback(() => {
@@ -72,7 +75,7 @@ export const LegacyPriceOptInNagbar = observer(function LegacyPriceOptInNagbar({
 						? resolved.campaign.optInMonthlyMessage
 						: resolved.campaign.optInYearlyMessage,
 					{
-						premiumProductName: PREMIUM_PRODUCT_NAME,
+						premiumProductName: getPremiumProductName(),
 						currentPrice,
 						newPrice,
 						effectiveDate: getFormattedLongDate(listPriceSwitch.effective_at, locale),

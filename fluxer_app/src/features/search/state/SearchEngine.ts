@@ -2,6 +2,7 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {create} from '@bufbuild/protobuf';
 import {SearchEngineSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
@@ -59,7 +60,7 @@ class SearchEngines {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void makePersistent(this, 'SearchEngine', ['engines'], {version: 2});
+		initializeStore(this, () => makePersistent(this, 'SearchEngine', ['engines'], {version: 2}));
 	}
 
 	get enabledEngines(): ReadonlyArray<SearchEngine> {

@@ -4,6 +4,7 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {useSudo} from '@app/features/auth/hooks/useSudo';
 import type {DeveloperApplication} from '@app/features/devtools/models/DeveloperApplication';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -505,7 +506,7 @@ export const ApplicationDetail: React.FC<ApplicationDetailProps> = observer(
 		);
 		const builderUrl = useMemo(() => {
 			if (!application) return '';
-			const authorizeUrl = new URL(Endpoints.OAUTH_AUTHORIZE, window.location.origin);
+			const authorizeUrl = new URL(`${RuntimeConfig.webAppBaseUrl}${Endpoints.OAUTH_AUTHORIZE}`);
 			authorizeUrl.searchParams.set('client_id', application.id);
 			if (builderScopeList.length > 0) {
 				authorizeUrl.searchParams.set('scope', builderScopeList.join(' '));

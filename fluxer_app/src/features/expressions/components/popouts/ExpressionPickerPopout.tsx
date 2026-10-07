@@ -22,6 +22,7 @@ import {
 	MEDIA_DESCRIPTOR,
 	STICKERS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {useResizablePane} from '@app/features/ui/hooks/useResizablePane';
@@ -230,7 +231,7 @@ export const ExpressionPickerPopout = observer(
 		const containerRef = useRef<HTMLDivElement>(null);
 		const tabRefs = useRef<Map<ExpressionPickerTabType, HTMLButtonElement>>(new Map());
 		const {size, getHandleProps} = useResizablePane(containerRef, {
-			storageKey: 'fluxer:ui:expression-picker-size',
+			storageKey: AppStorageKey.UI_EXPRESSION_PICKER_SIZE,
 			defaultSize: EXPRESSION_PICKER_DEFAULT_SIZE,
 			minSize: EXPRESSION_PICKER_MIN_SIZE,
 			widthSnap: EXPRESSION_PICKER_WIDTH_SNAP,

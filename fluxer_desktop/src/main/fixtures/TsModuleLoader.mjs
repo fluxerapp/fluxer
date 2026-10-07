@@ -11,6 +11,7 @@ const esbuild = require('esbuild');
 const sourceRoots = {
 	'@electron/main/': new URL('../', import.meta.url),
 	'@electron/common/': new URL('../../common/', import.meta.url),
+	'@fluxer/': new URL('../../../../packages/', import.meta.url),
 };
 
 function resolveSourcePath(specifier) {

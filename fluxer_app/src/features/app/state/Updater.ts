@@ -11,7 +11,14 @@ import {getProtectedCacheStorage} from '@app/features/platform/state/ProtectedWe
 import type {UpdaterContext, UpdaterDownloadOption, UpdaterEvent} from '@app/features/platform/types/Electron';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getClientInfo} from '@app/features/platform/utils/ClientInfo';
-import {downloadWithNative, getElectronAPI, isElectron, openExternalUrl} from '@app/features/ui/utils/NativeUtils';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
+import {
+	downloadWithNative,
+	getElectronAPI,
+	isDesktop,
+	isElectron,
+	openExternalUrl,
+} from '@app/features/ui/utils/NativeUtils';
 import {
 	pushDesktopUpdateDownloadFailedModal,
 	pushDesktopUpdateInstallFailedModal,
@@ -40,6 +47,7 @@ import {
 } from '@app/features/updater/state/UpdaterStateMachine';
 import {buildLinuxManualUpdateOptions} from '@app/features/updater/utils/LinuxManualUpdateOptions';
 import type {UpdaterEvent as NativeUpdaterEvent} from '@app/types/electron.d';
+import type {DesktopPendingModuleUpdate} from '@fluxer/desktop_ipc/src/ModuleContract';
 import {msg} from '@lingui/core/macro';
 import {makeAutoObservable, runInAction} from 'mobx';
 
@@ -156,6 +164,8 @@ class Updater {
 	private backgroundCheckInterval: number | null = null;
 	private backgroundCheckCleanups: Array<() => void> = [];
 	private unsubscribeNativeEvents: (() => void) | null = null;
+	private unsubscribeModuleUpdates: (() => void) | null = null;
+	moduleUpdate: DesktopPendingModuleUpdate | null = null;
 	private updateReadyNagbarDismissedVersion: string | null = null;
 	private pendingManualDownloadRefreshes = 0;
 	private checkInProgress = false;
@@ -163,7 +173,7 @@ class Updater {
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
 		this.isNative = isElectron();
-		void this.bootstrap();
+		initializeStore(this, () => this.bootstrap());
 	}
 
 	get updateType(): UpdateType {
@@ -206,7 +216,11 @@ class Updater {
 	}
 
 	get hasUpdate(): boolean {
-		return this.updateInfo.native.available || this.updateInfo.web.available;
+		return this.moduleUpdateReady || this.updateInfo.native.available || this.updateInfo.web.available;
+	}
+
+	get moduleUpdateReady(): boolean {
+		return this.moduleUpdate != null;
 	}
 
 	get nativeUpdatePending(): boolean {
@@ -276,8 +290,12 @@ class Updater {
 	}
 
 	private async bootstrap(): Promise<void> {
+		if (getElectronAPI()?.offlineBuild === true) {
+			return;
+		}
 		if (this.isNative) {
 			await this.bootstrapNative();
+			await this.bootstrapModuleUpdates();
 		}
 		this.startBackgroundChecks();
 		void this.checkForUpdates(false);
@@ -295,6 +313,36 @@ class Updater {
 			logger.warn('Failed to read desktop info', error);
 		}
 		this.subscribeToNativeEvents();
+	}
+
+	private async bootstrapModuleUpdates(): Promise<void> {
+		const desktopModules = getElectronAPI()?.desktopModules;
+		const onPendingUpdateChanged = desktopModules?.onPendingUpdateChanged;
+		const pendingUpdate = desktopModules?.pendingUpdate;
+		if (onPendingUpdateChanged == null || pendingUpdate == null) return;
+		this.unsubscribeModuleUpdates = onPendingUpdateChanged((pending) => {
+			runInAction(() => {
+				this.moduleUpdate = pending;
+			});
+		});
+		try {
+			const pending = await pendingUpdate();
+			runInAction(() => {
+				this.moduleUpdate = pending;
+			});
+		} catch (error) {
+			logger.warn('Failed to read the pending desktop module update', error);
+		}
+	}
+
+	private async applyModuleUpdate(): Promise<void> {
+		const applyPendingUpdate = getElectronAPI()?.desktopModules?.applyPendingUpdate;
+		if (applyPendingUpdate == null) return;
+		try {
+			await applyPendingUpdate();
+		} catch (error) {
+			logger.warn('Failed to apply the pending desktop module update', error);
+		}
 	}
 
 	private subscribeToNativeEvents(): void {
@@ -543,6 +591,9 @@ class Updater {
 		available: boolean;
 		version: string | null;
 	} | null> {
+		if (isDesktop()) {
+			return {available: false, version: null};
+		}
 		if (!ALLOWED_WEB_UPDATE_HOSTS.has(window.location.host)) {
 			return {available: false, version: null};
 		}
@@ -577,6 +628,10 @@ class Updater {
 
 	async applyUpdate(): Promise<void> {
 		if (!this.hasUpdate) return;
+		if (this.moduleUpdateReady) {
+			await this.applyModuleUpdate();
+			return;
+		}
 		const electronApi = getElectronAPI();
 		if (this.isNative && this.updateInfo.native.downloaded && electronApi) {
 			if (this.updateInfo.native.installing) {
@@ -774,6 +829,11 @@ class Updater {
 			this.unsubscribeNativeEvents();
 			this.unsubscribeNativeEvents = null;
 		}
+		if (this.unsubscribeModuleUpdates) {
+			this.unsubscribeModuleUpdates();
+			this.unsubscribeModuleUpdates = null;
+		}
+		this.moduleUpdate = null;
 		if (this.backgroundCheckInterval != null) {
 			window.clearInterval(this.backgroundCheckInterval);
 			this.backgroundCheckInterval = null;

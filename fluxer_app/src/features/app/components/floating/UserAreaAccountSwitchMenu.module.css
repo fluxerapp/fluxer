@@ -1,0 +1,122 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.switchMenu {
+	composes: submenuPopover from '@app/features/ui/action_menu/ContextMenu.module.css';
+	display: flex;
+	flex-direction: column;
+	width: 17.5rem;
+	margin-left: 1rem;
+	filter: none;
+}
+
+.switchMenuList {
+	display: flex;
+	flex-direction: column;
+}
+
+.instanceGroup {
+	display: flex;
+	flex-direction: column;
+}
+
+.instanceHeading {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+	padding: 0.375rem 0.625rem 0.25rem;
+	color: var(--text-tertiary);
+	font-size: 0.6875rem;
+	font-weight: 600;
+	line-height: 0.875rem;
+}
+
+.instanceHeadingLabel {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.instanceAccounts {
+	display: flex;
+	flex-direction: column;
+}
+
+.switchMenuFooter {
+	margin-top: 0.5rem;
+	padding-top: 0.5rem;
+	border-top: 0.0625rem solid var(--background-modifier-accent);
+}
+
+.manageAccountsButton {
+	composes: item from '@app/features/ui/action_menu/ContextMenu.module.css';
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+}
+
+.accountMenuItem {
+	composes: item from '@app/features/ui/action_menu/ContextMenu.module.css';
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+	min-width: 0;
+}
+
+.accountMenuAvatar {
+	flex-shrink: 0;
+}
+
+.accountMenuInfo {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 0.125rem;
+	min-width: 0;
+}
+
+.accountMenuTag {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+	font-weight: 500;
+	font-size: 0.8125rem;
+	line-height: 1rem;
+}
+
+.accountMenuNameText {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.accountMenuDiscriminator {
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+	font-weight: 400;
+}
+
+.accountMenuMeta {
+	color: var(--status-online);
+	font-size: 0.6875rem;
+	line-height: 0.875rem;
+}
+
+.accountMenuMetaExpired {
+	color: var(--status-danger);
+}
+
+.accountMenuCheck {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	width: 1.25rem;
+	height: 1.25rem;
+	border-radius: 50%;
+	background-color: var(--brand-primary);
+	color: white;
+}

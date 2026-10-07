@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {wrapDesktopLocalUploadURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -129,8 +130,9 @@ export async function uploadFileInChunks(plan: ChunkedUploadPlan, hooks: Chunked
 					while (true) {
 						attempt++;
 						try {
-							await http.put(part.uploadUrl, {
+							await http.put(wrapDesktopLocalUploadURL(part.uploadUrl), {
 								body: chunk,
+								auth: 'none',
 								headers: {
 									'Content-Type': contentType,
 								},

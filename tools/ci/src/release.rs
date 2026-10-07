@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{CommandSpec, output_text, parse_version_instant, run_command};
+use crate::desktop::{
+    DESKTOP_CHANNEL_MANIFEST_NAME, DESKTOP_MODULE_PACKAGE_NAME, DESKTOP_MODULES_KEY_SEGMENT,
+    DESKTOP_RENDERER_MODULE, DesktopChannelManifest, desktop_module_package_url,
+    is_desktop_module_name,
+};
 use crate::functions::sha256_reader;
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use chrono::{DateTime, Utc};
@@ -14,7 +19,7 @@ use std::time::Duration;
 
 pub(crate) const RELEASE_REPOSITORY: &str = "fluxerapp/fluxer";
 const RELEASE_COMPARE_URL: &str = "https://github.com/fluxerapp/fluxer/compare";
-pub(crate) const DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION: u8 = 1;
+pub(crate) const DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION: u8 = 2;
 const DESKTOP_RELEASE_ARCHES: [&str; 2] = ["x64", "arm64"];
 
 struct DesktopReleasePlatform {
@@ -151,6 +156,100 @@ pub(crate) struct DesktopReleaseDescriptor {
     pub(crate) release_tag: String,
     pub(crate) source_sha: String,
     pub(crate) assets: Vec<DesktopReleaseAsset>,
+    #[serde(default)]
+    pub(crate) modules: Vec<DesktopReleaseAsset>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum DesktopReleaseModuleKey<'a> {
+    Manifest { platform: &'a str, arch: &'a str },
+    Package { module: &'a str, sha256: &'a str },
+}
+
+fn is_lowercase_sha256(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+}
+
+fn parse_desktop_release_module_key<'a>(
+    storage_key: &'a str,
+    channel: &str,
+) -> Option<DesktopReleaseModuleKey<'a>> {
+    match storage_key.split('/').collect::<Vec<_>>().as_slice() {
+        ["desktop", key_channel, platform, arch, name]
+            if *key_channel == channel
+                && matches!(*platform, "win32" | "darwin" | "linux")
+                && matches!(*arch, "x64" | "arm64")
+                && *name == DESKTOP_CHANNEL_MANIFEST_NAME =>
+        {
+            Some(DesktopReleaseModuleKey::Manifest { platform, arch })
+        }
+        ["desktop", key_channel, segment, module, sha256, name]
+            if *key_channel == channel
+                && *segment == DESKTOP_MODULES_KEY_SEGMENT
+                && is_desktop_module_name(module)
+                && is_lowercase_sha256(sha256)
+                && *name == DESKTOP_MODULE_PACKAGE_NAME =>
+        {
+            Some(DesktopReleaseModuleKey::Package { module, sha256 })
+        }
+        _ => None,
+    }
+}
+
+pub(crate) fn desktop_module_manifest_storage_key(
+    channel: &str,
+    platform: &str,
+    arch: &str,
+) -> String {
+    format!("desktop/{channel}/{platform}/{arch}/{DESKTOP_CHANNEL_MANIFEST_NAME}")
+}
+
+pub(crate) fn desktop_module_package_storage_key(
+    channel: &str,
+    module: &str,
+    sha256: &str,
+) -> String {
+    format!(
+        "desktop/{channel}/{DESKTOP_MODULES_KEY_SEGMENT}/{module}/{sha256}/{DESKTOP_MODULE_PACKAGE_NAME}"
+    )
+}
+
+pub(crate) fn desktop_module_manifest_release_asset_name(
+    channel: &str,
+    version: &str,
+    platform: &str,
+    arch: &str,
+) -> Result<String> {
+    desktop_release_asset_name(
+        channel,
+        version,
+        platform,
+        arch,
+        DESKTOP_CHANNEL_MANIFEST_NAME,
+    )
+}
+
+pub(crate) fn desktop_module_package_release_asset_name(
+    channel: &str,
+    version: &str,
+    module: &str,
+    sha256: &str,
+) -> Result<String> {
+    ensure!(
+        is_desktop_module_name(module),
+        "Invalid desktop module name {module:?}"
+    );
+    ensure!(
+        is_lowercase_sha256(sha256),
+        "Invalid desktop module package SHA-256 {sha256:?}"
+    );
+    Ok(format!(
+        "{}-{version}-module-{module}-{sha256}.br",
+        desktop_release_product(channel)?
+    ))
 }
 
 pub(crate) fn desktop_release_product(channel: &str) -> Result<&'static str> {
@@ -303,11 +402,7 @@ pub(crate) fn validate_desktop_release_descriptor(
             );
         }
         ensure!(
-            asset.sha256.len() == 64
-                && asset
-                    .sha256
-                    .bytes()
-                    .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()),
+            is_lowercase_sha256(&asset.sha256),
             "Desktop release descriptor contains invalid SHA-256 for {:?}",
             asset.release_asset
         );
@@ -340,6 +435,159 @@ pub(crate) fn validate_desktop_release_descriptor(
         route_counts == expected_route_counts,
         "Desktop release descriptor route inventory mismatch: expected {expected_route_counts:?}, found {route_counts:?}"
     );
+    validate_desktop_release_modules(descriptor, channel, version, &mut release_asset_names)
+}
+
+fn validate_desktop_release_modules<'a>(
+    descriptor: &'a DesktopReleaseDescriptor,
+    channel: &str,
+    version: &str,
+    release_asset_names: &mut BTreeMap<String, &'a str>,
+) -> Result<()> {
+    let mut storage_keys = BTreeSet::new();
+    let mut manifests = BTreeSet::new();
+    let mut packages = BTreeMap::<&str, &str>::new();
+    for entry in &descriptor.modules {
+        ensure!(
+            storage_keys.insert(entry.storage_key.as_str()),
+            "Desktop release descriptor contains duplicate module storage key {:?}",
+            entry.storage_key
+        );
+        let key =
+            parse_desktop_release_module_key(&entry.storage_key, channel).with_context(|| {
+                format!(
+                    "Desktop release descriptor contains invalid module storage key {:?}",
+                    entry.storage_key
+                )
+            })?;
+        let expected_release_asset = match key {
+            DesktopReleaseModuleKey::Manifest { platform, arch } => {
+                manifests.insert((platform, arch));
+                desktop_module_manifest_release_asset_name(channel, version, platform, arch)?
+            }
+            DesktopReleaseModuleKey::Package { module, sha256 } => {
+                ensure!(
+                    entry.sha256 == sha256,
+                    "Desktop module package {:?} hashes to {}, its storage key names {sha256}",
+                    entry.release_asset,
+                    entry.sha256
+                );
+                ensure!(
+                    packages.insert(module, sha256).is_none(),
+                    "Desktop release descriptor carries more than one package for module {module:?}"
+                );
+                desktop_module_package_release_asset_name(channel, version, module, sha256)?
+            }
+        };
+        ensure!(
+            entry.release_asset == expected_release_asset,
+            "Desktop release descriptor contains invalid module release asset {:?}, expected {expected_release_asset:?}",
+            entry.release_asset
+        );
+        if let Some(existing) = release_asset_names.insert(
+            entry.release_asset.to_ascii_lowercase(),
+            entry.release_asset.as_str(),
+        ) {
+            bail!(
+                "Desktop release asset name {:?} collides with {existing:?}",
+                entry.release_asset
+            );
+        }
+        ensure!(
+            is_lowercase_sha256(&entry.sha256),
+            "Desktop release descriptor contains invalid SHA-256 for {:?}",
+            entry.release_asset
+        );
+        ensure!(
+            entry.size > 0,
+            "Desktop release descriptor contains an empty asset {:?}",
+            entry.release_asset
+        );
+    }
+    let expected_manifests = desktop_release_coordinates()
+        .into_iter()
+        .collect::<BTreeSet<_>>();
+    ensure!(
+        manifests == expected_manifests,
+        "Desktop release descriptor module manifests mismatch: expected {expected_manifests:?}, found {manifests:?}"
+    );
+    ensure!(
+        packages.contains_key(DESKTOP_RENDERER_MODULE),
+        "Desktop release descriptor carries no {DESKTOP_RENDERER_MODULE} package"
+    );
+    Ok(())
+}
+
+pub(crate) fn validate_desktop_release_module_files(
+    descriptor: &DesktopReleaseDescriptor,
+    asset_dir: &Path,
+) -> Result<()> {
+    let channel = descriptor.channel.as_str();
+    let mut packages = BTreeMap::<String, (String, u64)>::new();
+    let mut manifests = Vec::new();
+    for entry in &descriptor.modules {
+        let path = asset_dir.join(&entry.release_asset);
+        let size = fs::metadata(&path)
+            .with_context(|| format!("Failed to inspect {}", path.display()))?
+            .len();
+        ensure!(
+            sha256_file(&path)? == entry.sha256 && size == entry.size,
+            "Desktop release descriptor metadata does not match {:?}",
+            entry.release_asset
+        );
+        match parse_desktop_release_module_key(&entry.storage_key, channel) {
+            Some(DesktopReleaseModuleKey::Package { module, sha256 }) => {
+                packages.insert(module.to_string(), (sha256.to_string(), size));
+            }
+            Some(DesktopReleaseModuleKey::Manifest { platform, arch }) => {
+                manifests.push((platform, arch, entry, path));
+            }
+            None => bail!(
+                "Desktop release descriptor contains invalid module storage key {:?}",
+                entry.storage_key
+            ),
+        }
+    }
+    for (platform, arch, entry, path) in manifests {
+        let manifest: DesktopChannelManifest = serde_json::from_slice(
+            &fs::read(&path).with_context(|| format!("Failed to read {}", path.display()))?,
+        )
+        .with_context(|| format!("Failed to parse {}", path.display()))?;
+        ensure!(
+            manifest.release_channel == channel
+                && manifest.platform == platform
+                && manifest.arch == arch
+                && manifest.build_version == descriptor.version,
+            "Desktop module manifest {:?} does not describe {channel} {platform} {arch} {}",
+            entry.release_asset,
+            descriptor.version
+        );
+        let listed = manifest
+            .modules
+            .iter()
+            .map(|(module, listed)| (module.clone(), (listed.sha256.clone(), listed.bytes)))
+            .collect::<BTreeMap<_, _>>();
+        ensure!(
+            listed == packages,
+            "Desktop module manifest {:?} lists {listed:?}, the release carries packages {packages:?}",
+            entry.release_asset
+        );
+        for (module, listed) in &manifest.modules {
+            ensure!(
+                listed.url == desktop_module_package_url(channel, module, &listed.sha256),
+                "Desktop module manifest {:?} points {module} at {:?}",
+                entry.release_asset,
+                listed.url
+            );
+        }
+        for required in &manifest.required_modules {
+            ensure!(
+                manifest.modules.contains_key(required),
+                "Desktop module manifest {:?} requires missing module {required}",
+                entry.release_asset
+            );
+        }
+    }
     Ok(())
 }
 
@@ -825,6 +1073,7 @@ fn local_release_assets(
     let expected_names = descriptor
         .assets
         .iter()
+        .chain(&descriptor.modules)
         .map(|asset| asset.release_asset.clone())
         .chain(std::iter::once(descriptor_name))
         .collect::<BTreeSet<_>>();
@@ -840,7 +1089,7 @@ fn local_release_assets(
         .iter()
         .map(|asset| (asset.name.as_str(), asset))
         .collect::<BTreeMap<_, _>>();
-    for descriptor_asset in &descriptor.assets {
+    for descriptor_asset in descriptor.assets.iter().chain(&descriptor.modules) {
         let local = local_by_name
             .get(descriptor_asset.release_asset.as_str())
             .with_context(|| {
@@ -855,6 +1104,7 @@ fn local_release_assets(
             descriptor_asset.release_asset
         );
     }
+    validate_desktop_release_module_files(&descriptor, asset_dir)?;
     Ok(assets)
 }
 
@@ -1193,6 +1443,26 @@ mod tests {
                 });
             }
         }
+        let mut modules = desktop_release_coordinates()
+            .into_iter()
+            .enumerate()
+            .map(|(index, (platform, arch))| DesktopReleaseAsset {
+                storage_key: desktop_module_manifest_storage_key(SAMPLE_CHANNEL, platform, arch),
+                release_asset: desktop_module_manifest_release_asset_name(
+                    SAMPLE_CHANNEL,
+                    SAMPLE_VERSION,
+                    platform,
+                    arch,
+                )
+                .unwrap(),
+                sha256: format!("{:064x}", 500 + index),
+                size: 700,
+            })
+            .collect::<Vec<_>>();
+        for (index, module) in SAMPLE_MODULES.iter().enumerate() {
+            let sha256 = format!("{:064x}", 900 + index);
+            modules.push(sample_package_entry(module, &sha256, 4096));
+        }
         DesktopReleaseDescriptor {
             schema_version: DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
             channel: SAMPLE_CHANNEL.to_string(),
@@ -1200,7 +1470,90 @@ mod tests {
             release_tag: format!("fluxer-desktop-{SAMPLE_CHANNEL}@{SAMPLE_VERSION}"),
             source_sha: SAMPLE_SOURCE_SHA.to_string(),
             assets,
+            modules,
         }
+    }
+
+    const SAMPLE_MODULES: [&str; 2] = ["fluxer_renderer", "fluxer_sourcemaps"];
+
+    fn sample_package_entry(module: &str, sha256: &str, size: u64) -> DesktopReleaseAsset {
+        DesktopReleaseAsset {
+            storage_key: desktop_module_package_storage_key(SAMPLE_CHANNEL, module, sha256),
+            release_asset: desktop_module_package_release_asset_name(
+                SAMPLE_CHANNEL,
+                SAMPLE_VERSION,
+                module,
+                sha256,
+            )
+            .unwrap(),
+            sha256: sha256.to_string(),
+            size,
+        }
+    }
+
+    fn write_sample_module_release(
+        dir: &Path,
+        manifest_modules: &[&str],
+    ) -> DesktopReleaseDescriptor {
+        let mut descriptor = sample_descriptor();
+        descriptor.modules.clear();
+        let mut entries = BTreeMap::new();
+        for module in SAMPLE_MODULES {
+            let staged = dir.join(format!("{module}.staged"));
+            fs::write(&staged, format!("{module} package bytes")).unwrap();
+            let sha256 = sha256_file(&staged).unwrap();
+            let size = fs::metadata(&staged).unwrap().len();
+            let entry = sample_package_entry(module, &sha256, size);
+            fs::rename(&staged, dir.join(&entry.release_asset)).unwrap();
+            entries.insert(
+                module.to_string(),
+                crate::desktop::DesktopChannelManifestEntry {
+                    url: desktop_module_package_url(SAMPLE_CHANNEL, module, &sha256),
+                    sha256,
+                    bytes: size,
+                    minimum_shell_version: "0.0.0".to_string(),
+                    maximum_shell_version: None,
+                },
+            );
+            descriptor.modules.push(entry);
+        }
+        for (platform, arch) in desktop_release_coordinates() {
+            let manifest = DesktopChannelManifest {
+                manifest_version: 1,
+                release_channel: SAMPLE_CHANNEL.to_string(),
+                platform: platform.to_string(),
+                arch: arch.to_string(),
+                build_version: SAMPLE_VERSION.to_string(),
+                pub_date: "2026-09-13T21:00:37Z".to_string(),
+                metadata_version: 1,
+                shell: crate::desktop::DesktopChannelManifestShell {
+                    latest_version: SAMPLE_VERSION.to_string(),
+                    minimum_version: "0.0.0".to_string(),
+                },
+                modules: entries
+                    .iter()
+                    .filter(|(module, _)| manifest_modules.contains(&module.as_str()))
+                    .map(|(module, entry)| (module.clone(), entry.clone()))
+                    .collect(),
+                required_modules: vec![DESKTOP_RENDERER_MODULE.to_string()],
+            };
+            let release_asset = desktop_module_manifest_release_asset_name(
+                SAMPLE_CHANNEL,
+                SAMPLE_VERSION,
+                platform,
+                arch,
+            )
+            .unwrap();
+            let path = dir.join(&release_asset);
+            fs::write(&path, serde_json::to_vec(&manifest).unwrap()).unwrap();
+            descriptor.modules.push(DesktopReleaseAsset {
+                storage_key: desktop_module_manifest_storage_key(SAMPLE_CHANNEL, platform, arch),
+                release_asset,
+                sha256: sha256_file(&path).unwrap(),
+                size: fs::metadata(&path).unwrap().len(),
+            });
+        }
+        descriptor
     }
 
     fn validate_sample(descriptor: &DesktopReleaseDescriptor) -> Result<()> {
@@ -1308,6 +1661,319 @@ mod tests {
         for asset in sample_descriptor().assets {
             assert!(!asset.storage_key.ends_with("/manifest.json"));
         }
+    }
+
+    #[test]
+    fn module_release_assets_follow_the_contract_names() {
+        let sha256 = "ab".repeat(32);
+        assert_eq!(
+            desktop_module_manifest_release_asset_name("canary", SAMPLE_VERSION, "win32", "x64")
+                .unwrap(),
+            "Fluxer-Canary-2026.913.210037-win-x64-modules.json"
+        );
+        assert_eq!(
+            desktop_module_manifest_release_asset_name("stable", SAMPLE_VERSION, "darwin", "arm64")
+                .unwrap(),
+            "Fluxer-2026.913.210037-mac-arm64-modules.json"
+        );
+        assert_eq!(
+            desktop_module_manifest_storage_key("canary", "linux", "arm64"),
+            "desktop/canary/linux/arm64/modules.json"
+        );
+        assert_eq!(
+            desktop_module_package_release_asset_name(
+                "canary",
+                SAMPLE_VERSION,
+                "fluxer_renderer",
+                &sha256
+            )
+            .unwrap(),
+            format!("Fluxer-Canary-2026.913.210037-module-fluxer_renderer-{sha256}.br")
+        );
+        assert_eq!(
+            desktop_module_package_storage_key("stable", "fluxer_renderer", &sha256),
+            format!("desktop/stable/modules/fluxer_renderer/{sha256}/package.br")
+        );
+        assert!(
+            desktop_module_package_release_asset_name("canary", SAMPLE_VERSION, "Bad", &sha256)
+                .is_err()
+        );
+        assert!(
+            desktop_module_package_release_asset_name(
+                "canary",
+                SAMPLE_VERSION,
+                "fluxer_renderer",
+                "ABCD"
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn a_schema_two_descriptor_round_trips_with_its_modules() {
+        let descriptor = sample_descriptor();
+        assert_eq!(descriptor.schema_version, 2);
+        let json = serde_json::to_value(&descriptor).unwrap();
+        assert_eq!(json["modules"].as_array().unwrap().len(), 8);
+        let parsed: DesktopReleaseDescriptor = serde_json::from_value(json).unwrap();
+        assert_eq!(parsed, descriptor);
+
+        let mut empty = sample_descriptor();
+        empty.modules.clear();
+        assert!(
+            serde_json::to_value(&empty)
+                .unwrap()
+                .as_object()
+                .unwrap()
+                .contains_key("modules")
+        );
+    }
+
+    #[test]
+    fn a_schema_one_descriptor_parses_but_is_refused() {
+        let mut json = serde_json::to_value(sample_descriptor()).unwrap();
+        let object = json.as_object_mut().unwrap();
+        object.remove("modules");
+        object.insert("schema_version".to_string(), 1.into());
+        let parsed: DesktopReleaseDescriptor = serde_json::from_value(json).unwrap();
+        assert!(parsed.modules.is_empty());
+        assert_eq!(
+            validate_sample(&parsed).unwrap_err().to_string(),
+            "Unsupported desktop release descriptor schema version 1"
+        );
+    }
+
+    #[test]
+    fn a_release_without_a_renderer_package_is_refused() {
+        let mut descriptor = sample_descriptor();
+        descriptor
+            .modules
+            .retain(|entry| !entry.storage_key.contains("/fluxer_renderer/"));
+        assert_eq!(
+            validate_sample(&descriptor).unwrap_err().to_string(),
+            "Desktop release descriptor carries no fluxer_renderer package"
+        );
+    }
+
+    #[test]
+    fn a_package_whose_hash_differs_from_its_path_is_refused() {
+        let mut descriptor = sample_descriptor();
+        let package = descriptor
+            .modules
+            .iter_mut()
+            .find(|entry| entry.storage_key.ends_with("/package.br"))
+            .unwrap();
+        package.sha256 = "f".repeat(64);
+        assert!(
+            validate_sample(&descriptor)
+                .unwrap_err()
+                .to_string()
+                .contains("its storage key names")
+        );
+    }
+
+    #[test]
+    fn a_release_missing_a_coordinate_module_manifest_is_refused() {
+        let mut descriptor = sample_descriptor();
+        descriptor
+            .modules
+            .retain(|entry| entry.storage_key != "desktop/canary/linux/arm64/modules.json");
+        assert!(
+            validate_sample(&descriptor)
+                .unwrap_err()
+                .to_string()
+                .starts_with("Desktop release descriptor module manifests mismatch")
+        );
+    }
+
+    #[test]
+    fn module_entries_with_wrong_keys_or_names_are_refused() {
+        let mut descriptor = sample_descriptor();
+        descriptor.modules[0].storage_key = "desktop/canary/win32/x64/modules/manifest.json".into();
+        assert!(
+            validate_sample(&descriptor)
+                .unwrap_err()
+                .to_string()
+                .contains("invalid module storage key")
+        );
+
+        let mut descriptor = sample_descriptor();
+        descriptor.modules[0].release_asset = "Fluxer-Canary-2026.913.210037-modules.json".into();
+        assert!(
+            validate_sample(&descriptor)
+                .unwrap_err()
+                .to_string()
+                .contains("invalid module release asset")
+        );
+
+        let mut descriptor = sample_descriptor();
+        let duplicate = descriptor.modules.last().unwrap().clone();
+        let sha256 = "e".repeat(64);
+        descriptor.modules.push(DesktopReleaseAsset {
+            storage_key: desktop_module_package_storage_key(
+                SAMPLE_CHANNEL,
+                "fluxer_sourcemaps",
+                &sha256,
+            ),
+            release_asset: desktop_module_package_release_asset_name(
+                SAMPLE_CHANNEL,
+                SAMPLE_VERSION,
+                "fluxer_sourcemaps",
+                &sha256,
+            )
+            .unwrap(),
+            sha256,
+            size: duplicate.size,
+        });
+        assert_eq!(
+            validate_sample(&descriptor).unwrap_err().to_string(),
+            "Desktop release descriptor carries more than one package for module \"fluxer_sourcemaps\""
+        );
+    }
+
+    #[test]
+    fn module_release_asset_names_are_unique_across_the_whole_release() {
+        let descriptor = sample_descriptor();
+        let shell_names = descriptor
+            .assets
+            .iter()
+            .map(|asset| asset.release_asset.to_ascii_lowercase())
+            .collect::<BTreeSet<_>>();
+        let module_names = descriptor
+            .modules
+            .iter()
+            .map(|entry| entry.release_asset.to_ascii_lowercase())
+            .collect::<BTreeSet<_>>();
+        assert_eq!(module_names.len(), descriptor.modules.len());
+        assert!(shell_names.is_disjoint(&module_names));
+
+        let mut descriptor = sample_descriptor();
+        let repeated = descriptor.modules[0].clone();
+        descriptor.modules.push(repeated);
+        assert_eq!(
+            validate_sample(&descriptor).unwrap_err().to_string(),
+            "Desktop release descriptor contains duplicate module storage key \"desktop/canary/win32/x64/modules.json\""
+        );
+    }
+
+    #[test]
+    fn module_files_whose_manifests_match_the_packages_validate() {
+        let temp = tempfile::tempdir().unwrap();
+        let descriptor = write_sample_module_release(temp.path(), &SAMPLE_MODULES);
+        validate_sample(&descriptor).unwrap();
+        validate_desktop_release_module_files(&descriptor, temp.path()).unwrap();
+    }
+
+    #[test]
+    fn a_manifest_that_omits_a_shipped_package_is_refused() {
+        let temp = tempfile::tempdir().unwrap();
+        let descriptor = write_sample_module_release(temp.path(), &["fluxer_renderer"]);
+        validate_sample(&descriptor).unwrap();
+        let error = validate_desktop_release_module_files(&descriptor, temp.path())
+            .unwrap_err()
+            .to_string();
+        assert!(
+            error.contains("the release carries packages"),
+            "unexpected error {error}"
+        );
+    }
+
+    #[test]
+    fn a_manifest_that_references_an_unshipped_package_is_refused() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut descriptor = write_sample_module_release(temp.path(), &SAMPLE_MODULES);
+        descriptor
+            .modules
+            .retain(|entry| !entry.storage_key.contains("/fluxer_sourcemaps/"));
+        validate_sample(&descriptor).unwrap();
+        assert!(
+            validate_desktop_release_module_files(&descriptor, temp.path())
+                .unwrap_err()
+                .to_string()
+                .contains("the release carries packages")
+        );
+    }
+
+    #[test]
+    fn a_tampered_module_file_is_refused() {
+        let temp = tempfile::tempdir().unwrap();
+        let descriptor = write_sample_module_release(temp.path(), &SAMPLE_MODULES);
+        let package = descriptor
+            .modules
+            .iter()
+            .find(|entry| entry.storage_key.ends_with("/package.br"))
+            .unwrap();
+        fs::write(temp.path().join(&package.release_asset), "tampered").unwrap();
+        assert!(
+            validate_desktop_release_module_files(&descriptor, temp.path())
+                .unwrap_err()
+                .to_string()
+                .starts_with("Desktop release descriptor metadata does not match")
+        );
+    }
+
+    fn write_sample_release_dir(dir: &Path) -> DesktopReleaseDescriptor {
+        let mut descriptor = write_sample_module_release(dir, &SAMPLE_MODULES);
+        for asset in &mut descriptor.assets {
+            let path = dir.join(&asset.release_asset);
+            if !path.exists() {
+                fs::write(&path, format!("{} bytes", asset.release_asset)).unwrap();
+            }
+            asset.sha256 = sha256_file(&path).unwrap();
+            asset.size = fs::metadata(&path).unwrap().len();
+        }
+        fs::write(
+            dir.join(desktop_release_descriptor_filename(SAMPLE_CHANNEL, SAMPLE_VERSION).unwrap()),
+            serde_json::to_vec(&descriptor).unwrap(),
+        )
+        .unwrap();
+        descriptor
+    }
+
+    #[test]
+    fn the_publisher_uploads_every_module_release_asset() {
+        let temp = tempfile::tempdir().unwrap();
+        let descriptor = write_sample_release_dir(temp.path());
+        let uploaded = local_release_assets(
+            "fluxer-desktop-canary",
+            SAMPLE_VERSION,
+            SAMPLE_SOURCE_SHA,
+            Some(temp.path()),
+        )
+        .unwrap()
+        .into_iter()
+        .map(|asset| asset.name)
+        .collect::<BTreeSet<_>>();
+        for entry in &descriptor.modules {
+            assert!(uploaded.contains(&entry.release_asset));
+        }
+        assert_eq!(
+            uploaded.len(),
+            desktop_release_asset_count() + descriptor.modules.len() + 1
+        );
+    }
+
+    #[test]
+    fn the_publisher_refuses_a_release_missing_a_module_file() {
+        let temp = tempfile::tempdir().unwrap();
+        let descriptor = write_sample_release_dir(temp.path());
+        let package = descriptor
+            .modules
+            .iter()
+            .find(|entry| entry.storage_key.ends_with("/package.br"))
+            .unwrap();
+        fs::remove_file(temp.path().join(&package.release_asset)).unwrap();
+        assert!(
+            local_release_assets(
+                "fluxer-desktop-canary",
+                SAMPLE_VERSION,
+                SAMPLE_SOURCE_SHA,
+                Some(temp.path()),
+            )
+            .unwrap_err()
+            .to_string()
+            .starts_with("Desktop release asset inventory mismatch")
+        );
     }
 
     #[test]

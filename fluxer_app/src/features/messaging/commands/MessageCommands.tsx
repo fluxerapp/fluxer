@@ -49,6 +49,9 @@ import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils
 import * as IARCommands from '@app/features/moderation/commands/IARCommands';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Permission from '@app/features/permissions/state/Permission';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
+import {isAccountTransitionAbortError} from '@app/features/platform/state/AccountTransitionAbort';
+import SessionManager from '@app/features/platform/state/AuthSession';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
@@ -443,6 +446,7 @@ export async function fetchMessages(
 	const inFlight = pendingFetchPromises.get(key);
 	const preflightDecision = resolveMessageFetchPreflightDecision({
 		hasInFlightRequest: inFlight != null,
+		accountTransitionActive: AccountScopedWork.isSuspended,
 		shouldBlockForGate: shouldBlockMessageFetch(channelId),
 		cacheHit: getMessageFetchCacheHit(channelId, before, after, jump),
 	});
@@ -450,6 +454,10 @@ export async function fetchMessages(
 		case 'useInFlightRequest':
 			logger.debug(`Using in-flight fetchMessages for channel ${channelId} (deduped)`);
 			return inFlight as Promise<Array<WireMessage>>;
+		case 'waitForAccountTransition':
+			logger.debug(`Holding message fetch for channel ${channelId} until the account transition completes`);
+			Messages.handleLoadMessagesBlocked({channelId});
+			return [];
 		case 'blockForGate':
 			logger.debug(`Skipping message fetch for gated channel ${channelId}`);
 			Messages.handleLoadMessagesBlocked({channelId});
@@ -487,7 +495,11 @@ export async function fetchMessages(
 			return messages;
 		} catch (error) {
 			logger.error(`Failed to fetch messages for channel ${channelId}:`, error);
-			Messages.handleLoadMessagesFailure({channelId});
+			if (isAccountTransitionAbortError(error)) {
+				Messages.handleLoadMessagesBlocked({channelId});
+			} else {
+				Messages.handleLoadMessagesFailure({channelId});
+			}
 			if (options?.throwOnError) {
 				throw error;
 			}
@@ -578,6 +590,7 @@ function nextChannelOrder(channelId: string): number {
 }
 
 export async function send(channelId: string, params: SendMessageParams): Promise<WireMessage | null> {
+	const accountKey = SessionManager.currentAccountKey;
 	if (!MessageQueue.consumeLocalSendReservation(channelId, params.nonce)) {
 		MessageQueue.rejectLocalRateLimitedSend(channelId, params.nonce, params.hasAttachments);
 		return null;
@@ -592,6 +605,7 @@ export async function send(channelId: string, params: SendMessageParams): Promis
 	}
 	const payload = {
 		type: 'send' as const,
+		accountKey,
 		channelId,
 		nonce: params.nonce,
 		content: params.content,

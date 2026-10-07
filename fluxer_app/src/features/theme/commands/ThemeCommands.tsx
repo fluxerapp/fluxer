@@ -2,6 +2,7 @@
 
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ThemeAcceptModal} from '@app/features/theme/components/modals/ThemeAcceptModal';
@@ -40,7 +41,7 @@ export function applyTheme(css: string, i18n: I18n): void {
 	}
 }
 
-export function openAcceptModal(themeId: string | undefined, i18n: I18n): void {
+export function openAcceptModal(themeId: string | undefined, i18n: I18n, runtimeSnapshot: RuntimeConfigSnapshot): void {
 	if (!themeId) {
 		showGenericErrorModal({
 			title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
@@ -51,7 +52,11 @@ export function openAcceptModal(themeId: string | undefined, i18n: I18n): void {
 	}
 	ModalCommands.pushWithKey(
 		modal(() => (
-			<ThemeAcceptModal themeId={themeId} data-flx="theme.theme-commands.open-accept-modal.theme-accept-modal" />
+			<ThemeAcceptModal
+				themeId={themeId}
+				runtimeSnapshot={runtimeSnapshot}
+				data-flx="theme.theme-commands.open-accept-modal.theme-accept-modal"
+			/>
 		)),
 		`theme-accept-${themeId}`,
 	);

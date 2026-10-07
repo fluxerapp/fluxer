@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {GiftPlutoniumModal} from '@app/features/premium/components/modals/GiftPlutoniumModal';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 
 export function openPlutoniumPage(): void {
 	ModalCommands.popAll();

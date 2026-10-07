@@ -2,7 +2,7 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getActivePortalHost, type PortalHostElement} from '@app/features/ui/overlay/PortalHostContext';
-import type {ModalRender} from '@app/features/ui/state/ModalRender';
+import type {ModalRender, ModalType} from '@app/features/ui/state/ModalRender';
 import Toast from '@app/features/ui/state/Toast';
 import {shouldRestoreFocusToTarget} from '@app/features/ui/utils/PointerActivationFocus';
 import {i18n} from '@lingui/core';
@@ -43,6 +43,7 @@ export function getBackdropZIndexForStack(stackIndex: number): number {
 
 interface ModalEntry {
 	modal: ModalRender;
+	modalType: ModalType | undefined;
 	key: string;
 	focusReturnTarget: HTMLElement | null;
 	keyboardModeEnabled: boolean;
@@ -82,6 +83,7 @@ class ModalState {
 		const restoreFocusOnClose = shouldRestoreFocusToTarget(focusReturnTarget, keyboardModeEnabled);
 		this.modals.push({
 			modal,
+			modalType: modal.modalType,
 			key: key.toString(),
 			focusReturnTarget: restoreFocusOnClose ? focusReturnTarget : null,
 			keyboardModeEnabled,
@@ -125,9 +127,11 @@ class ModalState {
 		const shouldUpdateOwner = options?.forceMainWindow === true || (options ? 'portalHost' in options : false);
 		const portalHost = shouldUpdateOwner && options ? this.resolvePortalHost(options) : existingModal.portalHost;
 		const ownerDocument = shouldUpdateOwner ? this.resolveOwnerDocument(portalHost) : existingModal.ownerDocument;
+		const nextModal = updater(existingModal.modal);
 		this.modals[modalIndex] = {
 			...existingModal,
-			modal: updater(existingModal.modal),
+			modal: nextModal,
+			modalType: nextModal.modalType ?? existingModal.modalType,
 			isBackground: options?.isBackground ?? existingModal.isBackground,
 			ownerDocument,
 			portalHost,
@@ -186,6 +190,22 @@ class ModalState {
 		}
 	}
 
+	popByModalType(modalType: ModalType, ownerDocument?: Document): void {
+		const modalIndex = this.modals.findLastIndex((modal) => {
+			if (ownerDocument && modal.ownerDocument !== ownerDocument) return false;
+			return modal.modalType === modalType;
+		});
+		if (modalIndex === -1) return;
+		const wasTopmost = modalIndex === this.modals.length - 1;
+		const [removed] = this.modals.splice(modalIndex, 1);
+		if (removed && wasTopmost) {
+			logger.debug(
+				`Modal.popByModalType restoring focus topmost=${wasTopmost} keyboardMode=${removed.keyboardModeEnabled}`,
+			);
+			this.scheduleFocus(removed.focusReturnTarget, removed.keyboardModeEnabled);
+		}
+	}
+
 	get orderedModals(): Array<ModalWithStackInfo> {
 		return this.getOrderedModals(document);
 	}
@@ -221,6 +241,13 @@ class ModalState {
 
 	hasModal(key: string): boolean {
 		return this.modals.some((modal) => modal.key === key);
+	}
+
+	hasModalOfModalType(modalType: ModalType, ownerDocument?: Document): boolean {
+		return this.modals.some((modal) => {
+			if (ownerDocument && modal.ownerDocument !== ownerDocument) return false;
+			return modal.modalType === modalType;
+		});
 	}
 
 	hasModalOfType<T>(component: React.ComponentType<T>, ownerDocument?: Document): boolean {

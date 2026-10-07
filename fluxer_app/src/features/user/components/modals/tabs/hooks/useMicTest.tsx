@@ -171,7 +171,6 @@ export const useMicTest = (settings: MicTestSettings) => {
 				case 'unsupported-platform':
 					break;
 				case 'denied':
-				case 'declined':
 					MediaPermission.markMicrophoneExplicitlyDenied();
 					handleMediaPermissionBlocked('microphone');
 					return;

@@ -4,7 +4,13 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import type {PopoutKey} from '@app/features/ui/popover';
 
-type LayerType = 'modal' | 'popout' | 'contextmenu';
+export const LayerType = Object.freeze({
+	CONTEXT_MENU: 'contextmenu',
+	MODAL: 'modal',
+	POPOUT: 'popout',
+} as const);
+
+export type LayerType = (typeof LayerType)[keyof typeof LayerType];
 
 export interface Layer {
 	type: LayerType;

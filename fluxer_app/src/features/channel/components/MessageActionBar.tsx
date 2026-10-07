@@ -26,6 +26,7 @@ import {
 	DELETE_MESSAGE_DESCRIPTOR,
 	EDIT_MESSAGE_DESCRIPTOR,
 	MARK_AS_UNREAD_DESCRIPTOR,
+	MORE_DESCRIPTOR,
 	PIN_MESSAGE_DESCRIPTOR,
 	REPLY_DESCRIPTOR,
 	TRY_AGAIN_DESCRIPTOR,
@@ -77,10 +78,6 @@ const CLICK_TO_REACT_DESCRIPTOR = msg({
 const MESSAGE_DEBUG_DESCRIPTOR = msg({
 	message: 'Message debug',
 	comment: 'Title of the developer-mode message debug modal opened from the message action bar.',
-});
-const MORE_DESCRIPTOR = msg({
-	message: 'More',
-	comment: 'Tooltip on the overflow button in the inline message hover action bar. Opens the full action menu.',
 });
 const DEBUG_MESSAGE_DESCRIPTOR = msg({
 	message: 'Debug message',

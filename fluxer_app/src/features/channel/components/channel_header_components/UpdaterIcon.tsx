@@ -74,6 +74,11 @@ const CLICK_TO_RESTART_AND_INSTALL_UPDATE_2_DESCRIPTOR = msg({
 	comment:
 		'Tooltip on the channel header updater icon prompting a restart to apply a downloaded update of unknown version. productName is the app name.',
 });
+const CLICK_TO_RELOAD_FOR_MODULE_UPDATE_DESCRIPTOR = msg({
+	message: 'Reload {productName} to use the updated modules',
+	comment:
+		'Tooltip on the channel header updater icon prompting a reload to apply freshly downloaded desktop modules. productName is the app name.',
+});
 const CLICK_TO_RELOAD_AND_UPDATE_DESCRIPTOR = msg({
 	message: 'Reload {productName} to use web update {version}',
 	comment:
@@ -103,6 +108,7 @@ function formatBytes(locale: string, bytes: number): string {
 
 function resolveUpdaterVisibility(): {
 	readonly hasActionableNativeUpdate: boolean;
+	readonly hasActionableModuleUpdate: boolean;
 	readonly hasActionableWebUpdate: boolean;
 } {
 	const hasActionableNativeUpdate =
@@ -111,21 +117,26 @@ function resolveUpdaterVisibility(): {
 			Updater.nativeAwaitingDownload ||
 			Updater.nativeManualUpdateAvailable ||
 			Updater.nativeDownloadInFlight);
-	const hasActionableWebUpdate = !!Updater.updateInfo.web.available && !hasActionableNativeUpdate;
-	return {hasActionableNativeUpdate, hasActionableWebUpdate};
+	const hasActionableModuleUpdate = Platform.isElectron && Updater.moduleUpdateReady && !hasActionableNativeUpdate;
+	const hasActionableWebUpdate =
+		!!Updater.updateInfo.web.available && !hasActionableNativeUpdate && !hasActionableModuleUpdate;
+	return {hasActionableNativeUpdate, hasActionableModuleUpdate, hasActionableWebUpdate};
 }
 
 export function isUpdaterIconVisible(): boolean {
-	const {hasActionableNativeUpdate, hasActionableWebUpdate} = resolveUpdaterVisibility();
-	return hasActionableNativeUpdate || hasActionableWebUpdate;
+	const {hasActionableNativeUpdate, hasActionableModuleUpdate, hasActionableWebUpdate} = resolveUpdaterVisibility();
+	return hasActionableNativeUpdate || hasActionableModuleUpdate || hasActionableWebUpdate;
 }
 
 export const UpdaterIcon = observer(() => {
 	const {i18n} = useLingui();
 	const store = Updater;
-	const {hasActionableNativeUpdate, hasActionableWebUpdate} = resolveUpdaterVisibility();
+	const {hasActionableNativeUpdate, hasActionableModuleUpdate, hasActionableWebUpdate} = resolveUpdaterVisibility();
 	const tooltip = useMemo(() => {
 		const version = store.displayVersion;
+		if (hasActionableModuleUpdate) {
+			return i18n._(CLICK_TO_RELOAD_FOR_MODULE_UPDATE_DESCRIPTOR, {productName: PRODUCT_NAME});
+		}
 		if (Platform.isElectron && store.updateInfo.native.installing) {
 			return version ? i18n._(INSTALLING_UPDATE_DESCRIPTOR, {version}) : i18n._(INSTALLING_UPDATE_2_DESCRIPTOR);
 		}
@@ -171,6 +182,7 @@ export const UpdaterIcon = observer(() => {
 			? i18n._(CLICK_TO_RELOAD_AND_UPDATE_DESCRIPTOR, {version, productName: PRODUCT_NAME})
 			: i18n._(CLICK_TO_RELOAD_AND_UPDATE_2_DESCRIPTOR, {productName: PRODUCT_NAME});
 	}, [
+		hasActionableModuleUpdate,
 		store.displayVersion,
 		store.downloadProgress,
 		store.nativeAwaitingDownload,
@@ -185,13 +197,13 @@ export const UpdaterIcon = observer(() => {
 	const handleClick = useCallback(() => {
 		void store.applyUpdate();
 	}, [store]);
-	if (!hasActionableNativeUpdate && !hasActionableWebUpdate) {
+	if (!hasActionableNativeUpdate && !hasActionableModuleUpdate && !hasActionableWebUpdate) {
 		return null;
 	}
 	const isInstalling = Platform.isElectron && store.updateInfo.native.installing;
 	const isDownloading = Platform.isElectron && store.nativeDownloadInFlight;
 	const buttonClass = isInstalling ? styles.updateIconButtonDisabled : styles.updateIconButton;
-	const Icon = hasActionableWebUpdate ? ArrowClockwiseIcon : DownloadSimpleIcon;
+	const Icon = hasActionableWebUpdate || hasActionableModuleUpdate ? ArrowClockwiseIcon : DownloadSimpleIcon;
 	const percentLabel =
 		isDownloading && store.nativeDownloadProgressSupported
 			? getCachedNumberFormat(i18n.locale, {style: 'percent', maximumFractionDigits: 0}).format(

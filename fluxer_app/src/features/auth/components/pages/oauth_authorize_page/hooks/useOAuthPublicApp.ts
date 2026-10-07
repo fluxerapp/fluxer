@@ -6,8 +6,8 @@ import {
 	logger,
 	type PublicAppData,
 } from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizePageShared';
-import AccountManager from '@app/features/auth/state/AccountManager';
 import accountStorage from '@app/features/auth/state/AccountStorage';
+import Accounts from '@app/features/auth/state/Accounts';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {useEffect, useState} from 'react';
@@ -21,7 +21,8 @@ export interface PublicAppState {
 }
 
 export function useOAuthPublicApp(clientId: string | null): PublicAppState {
-	const currentUserId = AccountManager.currentUserId;
+	const currentUserId = Accounts.currentUserId;
+	const currentAccountKey = Accounts.currentAccountKey;
 	const [state, setState] = useState<PublicAppState>(() => ({
 		status: clientId ? 'loading' : 'idle',
 		data: null,
@@ -44,11 +45,13 @@ export function useOAuthPublicApp(clientId: string | null): PublicAppState {
 					setState({status: 'session_expired', data: null, error: null});
 					return;
 				}
-				if (currentUser && currentUser.id === currentUserId) {
+				if (currentUser && currentUser.id === currentUserId && currentAccountKey != null) {
 					const userData = authResponseUserToUserData(currentUser);
 					if (userData) {
-						AccountManager.updateAccountUserData(currentUser.id, userData);
-						void accountStorage.updateAccountUserData(currentUser.id, userData);
+						Accounts.updateAccountUserData(currentAccountKey, userData);
+						void accountStorage.updateAccountUserData(currentAccountKey, userData).catch((error) => {
+							logger.warn(`Failed to persist account user data for ${currentAccountKey}`, error);
+						});
 					}
 				}
 				setState({status: 'ready', data: resp.body, error: null});
@@ -66,6 +69,6 @@ export function useOAuthPublicApp(clientId: string | null): PublicAppState {
 		return () => {
 			cancelled = true;
 		};
-	}, [clientId, currentUserId]);
+	}, [clientId, currentAccountKey, currentUserId]);
 	return state;
 }

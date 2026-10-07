@@ -13,6 +13,7 @@ import {isClientReconnecting} from '@app/features/app/state/ClientReadiness';
 import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Updater from '@app/features/app/state/Updater';
+import Accounts from '@app/features/auth/state/Accounts';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
@@ -299,7 +300,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 			? false
 			: nagbarState.forceUnclaimedAccount
 				? true
-				: Boolean(user && !user.isClaimed()),
+				: Boolean(!Accounts.isSwitching && user && !user.isClaimed()),
 		userNeedsVerification: nagbarState.forceHideEmailVerification
 			? false
 			: nagbarState.forceEmailVerification

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {EXAMPLE_FLUXER_TAG_FULL, EXAMPLE_USERNAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
@@ -15,7 +16,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {msg} from '@lingui/core/macro';
@@ -90,12 +90,15 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 						text: i18n._(VERIFY_EMAIL_DESCRIPTOR),
 						onClick: () =>
 							ModalCommands.push(
-								modal(() => (
-									<UserSettingsModal
-										initialTab="account_security"
-										data-flx="channel.direct-message.add-friend-form.on-click.user-settings-modal"
-									/>
-								)),
+								modal(
+									() => (
+										<UserSettingsModal
+											initialTab="account_security"
+											data-flx="channel.direct-message.add-friend-form.on-click.user-settings-modal"
+										/>
+									),
+									'user-settings',
+								),
 							),
 						variant: 'primary',
 					},

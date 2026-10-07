@@ -6,6 +6,7 @@ export type MessageFetchCacheHit = 'jump' | 'before' | 'after';
 
 export interface MessageFetchPreflightInput {
 	hasInFlightRequest: boolean;
+	accountTransitionActive: boolean;
 	shouldBlockForGate: boolean;
 	cacheHit: MessageFetchCacheHit | null;
 }
@@ -13,6 +14,9 @@ export interface MessageFetchPreflightInput {
 export type MessageFetchPreflightDecision =
 	| {
 			type: 'useInFlightRequest';
+	  }
+	| {
+			type: 'waitForAccountTransition';
 	  }
 	| {
 			type: 'blockForGate';
@@ -30,7 +34,7 @@ export type MessageFetchPreflightEvent = {
 	input: MessageFetchPreflightInput;
 };
 
-export type MessageFetchPreflightState = 'inFlight' | 'blocked' | 'cached' | 'network';
+export type MessageFetchPreflightState = 'inFlight' | 'accountTransition' | 'blocked' | 'cached' | 'network';
 
 export interface MessageFetchExecutionInput {
 	forceFailure: boolean;
@@ -51,6 +55,7 @@ export type MessageFetchExecutionEvent = {
 
 function resolvePreflightState(input: MessageFetchPreflightInput): MessageFetchPreflightState {
 	if (input.hasInFlightRequest) return 'inFlight';
+	if (input.accountTransitionActive) return 'accountTransition';
 	if (input.shouldBlockForGate) return 'blocked';
 	if (input.cacheHit != null) return 'cached';
 	return 'network';
@@ -63,6 +68,8 @@ function buildPreflightDecision(
 	switch (state) {
 		case 'inFlight':
 			return {type: 'useInFlightRequest'};
+		case 'accountTransition':
+			return {type: 'waitForAccountTransition'};
 		case 'blocked':
 			return {type: 'blockForGate'};
 		case 'cached':
@@ -90,6 +97,7 @@ export const messageFetchPreflightMachine = setup({
 	},
 	guards: {
 		hasInFlightRequest: ({context}) => context.hasInFlightRequest,
+		accountTransitionActive: ({context}) => context.accountTransitionActive,
 		shouldBlockForGate: ({context}) => context.shouldBlockForGate,
 		hasCacheHit: ({context}) => context.cacheHit != null,
 	},
@@ -101,12 +109,16 @@ export const messageFetchPreflightMachine = setup({
 		routing: {
 			always: [
 				{guard: 'hasInFlightRequest', target: 'inFlight'},
+				{guard: 'accountTransitionActive', target: 'accountTransition'},
 				{guard: 'shouldBlockForGate', target: 'blocked'},
 				{guard: 'hasCacheHit', target: 'cached'},
 				{target: 'network'},
 			],
 		},
 		inFlight: {
+			on: {'messageFetch.preflightChanged': {target: 'routing', actions: 'applyInput'}},
+		},
+		accountTransition: {
 			on: {'messageFetch.preflightChanged': {target: 'routing', actions: 'applyInput'}},
 		},
 		blocked: {

@@ -18,6 +18,7 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import {UserBannedFromGuildModal} from '@app/features/moderation/components/alerts/UserBannedFromGuildModal';
 import {UserIpBannedFromGuildModal} from '@app/features/moderation/components/alerts/UserIpBannedFromGuildModal';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
+import {type InstanceHTTPTarget, instanceRequest} from '@app/features/platform/transport/InstanceHTTP';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -70,10 +71,15 @@ function guildInviteFeatures(invite: Invite | null): Array<string> {
 	return invite && isGuildInvite(invite) && Array.isArray(invite.guild.features) ? invite.guild.features : [];
 }
 
-function removeInviteIfMissing(code: string, responseErr: HttpError | null, errorCode?: string): void {
+function removeInviteIfMissing(
+	code: string,
+	target: InstanceHTTPTarget,
+	responseErr: HttpError | null,
+	errorCode?: string,
+): void {
 	if (responseErr?.status === 404 || errorCode === APIErrorCodes.UNKNOWN_INVITE) {
 		logger.debug(`Invite ${code} not found, removing from store`);
-		Invites.handleInviteDelete(code);
+		Invites.handleInviteDelete(code, target);
 	}
 }
 
@@ -164,10 +170,10 @@ function showGuildInviteAcceptFailure(
 	}
 }
 
-export async function fetch(code: string): Promise<Invite> {
+export async function fetch(code: string, target: InstanceHTTPTarget): Promise<Invite> {
 	try {
 		logger.debug(`Fetching invite with code ${code}`);
-		const response = await http.get<Invite>(Endpoints.INVITE(code));
+		const response = await instanceRequest<Invite>({method: 'GET', path: Endpoints.INVITE(code), target});
 		return response.body;
 	} catch (error) {
 		logger.error(`Failed to fetch invite with code ${code}:`, error);
@@ -175,17 +181,22 @@ export async function fetch(code: string): Promise<Invite> {
 	}
 }
 
-export async function fetchWithCoalescing(code: string): Promise<Invite> {
-	return Invites.fetchInvite(code);
+export async function fetchWithCoalescing(code: string, target: InstanceHTTPTarget): Promise<Invite> {
+	return Invites.fetchInvite(code, target);
 }
 
-const accept = async (code: string): Promise<Invite> => {
+const accept = async (code: string, target: InstanceHTTPTarget): Promise<Invite> => {
 	if (blockIfAccountLimited()) {
 		throw new DOMException('Invite accept skipped', 'AbortError');
 	}
 	try {
 		logger.debug(`Accepting invite with code ${code}`);
-		const response = await http.post<Invite>(Endpoints.INVITE(code), {body: ACCEPT_INVITE_BODY});
+		const response = await instanceRequest<Invite>({
+			method: 'POST',
+			path: Endpoints.INVITE(code),
+			target,
+			body: ACCEPT_INVITE_BODY,
+		});
 		return response.body;
 	} catch (error) {
 		logger.error(`Failed to accept invite with code ${code}:`, error);
@@ -194,18 +205,22 @@ const accept = async (code: string): Promise<Invite> => {
 };
 export const acceptInvite = accept;
 
-export async function acceptAndTransitionToChannel(code: string, i18n: I18n): Promise<void> {
+export async function acceptAndTransitionToChannel(
+	code: string,
+	i18n: I18n,
+	target: InstanceHTTPTarget,
+): Promise<void> {
 	let invite: Invite | null = null;
 	try {
 		logger.debug(`Fetching invite details before accepting: ${code}`);
-		invite = await fetchWithCoalescing(code);
+		invite = await fetchWithCoalescing(code, target);
 		if (!invite) {
 			throw new Error(`Invite ${code} returned no data`);
 		}
 		if (isGroupDmInvite(invite)) {
 			const channelId = invite.channel.id;
 			logger.debug(`Accepting group DM invite ${code} and opening channel ${channelId}`);
-			await accept(code);
+			await accept(code, target);
 			NavigationCommands.selectChannel(ME, channelId);
 			return;
 		}
@@ -226,7 +241,7 @@ export async function acceptAndTransitionToChannel(code: string, i18n: I18n): Pr
 			return;
 		}
 		logger.debug(`User not in guild ${guildId}, accepting invite ${code}`);
-		await accept(code);
+		await accept(code, target);
 		logger.debug(
 			inviteTargetAllowed
 				? `Transitioning to channel ${channelId} in guild ${guildId}`
@@ -238,17 +253,21 @@ export async function acceptAndTransitionToChannel(code: string, i18n: I18n): Pr
 		const responseErr = error instanceof HttpError ? error : null;
 		const errorCode = failureCode(error);
 		logger.error(`Failed to accept invite and transition for code ${code}:`, error);
-		removeInviteIfMissing(code, responseErr, errorCode);
+		removeInviteIfMissing(code, target, responseErr, errorCode);
 		showGuildInviteAcceptFailure(i18n, invite, errorCode, responseErr);
 		throw error;
 	}
 }
 
-export async function openAcceptModal(code: string): Promise<void> {
-	void fetchWithCoalescing(code).catch(() => {});
+export async function openAcceptModal(code: string, target: InstanceHTTPTarget): Promise<void> {
+	void fetchWithCoalescing(code, target).catch(() => {});
 	ModalCommands.pushWithKey(
 		modal(() => (
-			<InviteAcceptModal code={code} data-flx="invite.invite-commands.open-accept-modal.invite-accept-modal" />
+			<InviteAcceptModal
+				code={code}
+				target={target}
+				data-flx="invite.invite-commands.open-accept-modal.invite-accept-modal"
+			/>
 		)),
 		`invite-accept-${code}`,
 	);

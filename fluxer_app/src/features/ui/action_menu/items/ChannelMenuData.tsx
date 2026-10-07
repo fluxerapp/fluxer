@@ -4,13 +4,13 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {showChannelDeleteFailedModal} from '@app/features/app/components/alerts/ChannelDeleteFailedModal';
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import * as LinkChannelCommands from '@app/features/channel/commands/LinkChannelCommands';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {ChannelDuplicateModal} from '@app/features/channel/components/modals/ChannelDuplicateModal';
 import {ChannelFollowModal} from '@app/features/channel/components/modals/ChannelFollowModal';
-import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
 import {EditGroupModal} from '@app/features/channel/components/modals/EditGroupModal';
 import {GroupInvitesModal} from '@app/features/channel/components/modals/GroupInvitesModal';
 import {useDeleteMyMessagesInChannel} from '@app/features/channel/hooks/useDeleteMyMessagesInChannel';
@@ -404,12 +404,15 @@ export function useChannelMenuData(
 			handleChannelSettings: () => {
 				ModalCommands.pushAfterBottomSheetClose(
 					onClose,
-					modal(() => (
-						<ChannelSettingsModal
-							channelId={channel.id}
-							data-flx="ui.action-menu.items.channel-menu-data.handle-channel-settings.channel-settings-modal"
-						/>
-					)),
+					modal(
+						() => (
+							<ChannelSettingsModal
+								channelId={channel.id}
+								data-flx="ui.action-menu.items.channel-menu-data.handle-channel-settings.channel-settings-modal"
+							/>
+						),
+						'channel-settings',
+					),
 				);
 			},
 			handleDeleteChannel: () => {

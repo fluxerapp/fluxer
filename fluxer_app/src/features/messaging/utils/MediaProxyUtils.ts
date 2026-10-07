@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	unwrapDesktopLocalResourceURL,
+	wrapDesktopLocalResourceURL,
+	wrapDesktopLocalResourceURLForInstance,
+} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {MEDIA_PROXY_IMAGE_SIZES, type MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 
 export const MEDIA_PROXY_IMAGE_SIZE_LADDER = MEDIA_PROXY_IMAGE_SIZES;
@@ -92,16 +97,27 @@ function getFitInsideProxyOptions(options: FitInsideMediaProxyOptions): MediaPro
 
 export function buildMediaProxyURL(originalUrl: string, options: MediaProxyOptions = {}): string {
 	if (!originalUrl) return originalUrl;
-	const url = new URL(originalUrl);
+	const url = new URL(unwrapDesktopLocalResourceURL(originalUrl));
 	appendMediaProxyParams(url, options);
-	return url.toString();
+	return wrapDesktopLocalResourceURL(url.toString());
+}
+
+export function buildMediaProxyURLForInstance(
+	originalUrl: string,
+	instanceKey: string,
+	options: MediaProxyOptions = {},
+): string {
+	if (!originalUrl) return originalUrl;
+	const url = new URL(unwrapDesktopLocalResourceURL(originalUrl));
+	appendMediaProxyParams(url, options);
+	return wrapDesktopLocalResourceURLForInstance(url.toString(), instanceKey);
 }
 
 export function buildFitInsideMediaProxyURL(originalUrl: string, options: FitInsideMediaProxyOptions = {}): string {
 	if (!originalUrl) return originalUrl;
-	const url = new URL(originalUrl);
+	const url = new URL(unwrapDesktopLocalResourceURL(originalUrl));
 	appendMediaProxyParams(url, getFitInsideProxyOptions(options));
-	return url.toString();
+	return wrapDesktopLocalResourceURL(url.toString());
 }
 
 function readProxyDimensionParam(url: URL, key: 'width' | 'height'): number | undefined {
@@ -128,13 +144,13 @@ function variantDimensions(proxyURL: string, width?: number, height?: number): {
 }
 
 export function stripMediaProxyParams(proxyURL: string): string {
-	const url = new URL(proxyURL);
+	const url = new URL(unwrapDesktopLocalResourceURL(proxyURL));
 	url.searchParams.delete('width');
 	url.searchParams.delete('height');
 	url.searchParams.delete('format');
 	url.searchParams.delete('quality');
 	url.searchParams.delete('animated');
-	return url.toString();
+	return wrapDesktopLocalResourceURL(url.toString());
 }
 
 export function buildAnimatedImageProxyURL(proxyURL: string, width?: number, height?: number): string {

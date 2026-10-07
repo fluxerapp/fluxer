@@ -107,6 +107,25 @@ class Sticker {
 		ComponentBus.dispatch('STICKER_PICKER_RERENDER');
 	}
 
+	hydrateFromSnapshot(
+		guildStickers: ReadonlyArray<{guildId: string; stickers: ReadonlyArray<WireGuildSticker>}>,
+	): void {
+		this.guildStickers.clear();
+		this.stickerById.clear();
+		for (const {guildId, stickers} of guildStickers) {
+			if (stickers.length === 0) {
+				continue;
+			}
+			const stickerRecords = stickers.map((sticker) => new GuildSticker(guildId, sticker));
+			const sortedStickers = sortBySnowflakeDesc(stickerRecords);
+			this.guildStickers.set(guildId, {stickers: sortedStickers});
+			for (const sticker of sortedStickers) {
+				this.stickerById.set(sticker.id, sticker);
+			}
+		}
+		ComponentBus.dispatch('STICKER_PICKER_RERENDER');
+	}
+
 	handleGuildUpdate(guild: GuildStickersPayload): void {
 		if (!guild.stickers || guild.stickers.length === 0) {
 			return;

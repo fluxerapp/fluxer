@@ -2,6 +2,7 @@
 
 import {canSwitchAccountFromStalledConnection} from '@app/features/app/ConnectionRecovery';
 import {isClientBooting, isClientReconnecting} from '@app/features/app/state/ClientReadiness';
+import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import StatusPage from '@app/features/user/state/StatusPage';
@@ -10,7 +11,6 @@ import {useLingui} from '@lingui/react/macro';
 import {useEffect, useState} from 'react';
 
 const BOOT_NOTICE_DELAY_MS = 3_000;
-const STATUS_PAGE_URL = RuntimeConfig.statusPageUrl;
 
 export const ConnectionNoticeTone = Object.freeze({
 	NEUTRAL: 'neutral',
@@ -28,6 +28,7 @@ export interface ConnectionNotice {
 	readonly tone: ConnectionNoticeTone;
 	readonly message: string;
 	readonly action: ConnectionNoticeAction | null;
+	readonly showRetry: boolean;
 	readonly showSwitchAccount: boolean;
 }
 
@@ -100,6 +101,9 @@ export function useConnectionNotice(): ConnectionNotice | null {
 	if (booting) {
 		connectionUnavailable = bootStalled;
 	}
+	if (Initialization.hasError) {
+		connectionUnavailable = true;
+	}
 	if (!forced && !connectionUnavailable) {
 		return null;
 	}
@@ -110,6 +114,7 @@ export function useConnectionNotice(): ConnectionNotice | null {
 			tone: ConnectionNoticeTone.MAINTENANCE,
 			message: maintenance.name,
 			action: {label: i18n._(VIEW_MAINTENANCE_DETAILS_DESCRIPTOR), url: maintenance.url},
+			showRetry: Initialization.hasError,
 			showSwitchAccount: noticeShowsSwitchAccount,
 		};
 	}
@@ -119,6 +124,7 @@ export function useConnectionNotice(): ConnectionNotice | null {
 			tone: ConnectionNoticeTone.NEUTRAL,
 			message: incident.name,
 			action: {label: i18n._(VIEW_INCIDENT_DETAILS_DESCRIPTOR), url: incident.url},
+			showRetry: Initialization.hasError,
 			showSwitchAccount: noticeShowsSwitchAccount,
 		};
 	}
@@ -127,13 +133,16 @@ export function useConnectionNotice(): ConnectionNotice | null {
 			tone: ConnectionNoticeTone.NEUTRAL,
 			message: i18n._(CONNECTION_LOST_DESCRIPTOR),
 			action: null,
+			showRetry: false,
 			showSwitchAccount: false,
 		};
 	}
+	const statusPageUrl = RuntimeConfig.statusPageUrl;
 	return {
 		tone: ConnectionNoticeTone.NEUTRAL,
 		message: i18n._(CONNECTION_ISSUES_DESCRIPTOR),
-		action: STATUS_PAGE_URL ? {label: i18n._(VIEW_STATUS_PAGE_DESCRIPTOR), url: STATUS_PAGE_URL} : null,
+		action: statusPageUrl ? {label: i18n._(VIEW_STATUS_PAGE_DESCRIPTOR), url: statusPageUrl} : null,
+		showRetry: Initialization.hasError,
 		showSwitchAccount,
 	};
 }

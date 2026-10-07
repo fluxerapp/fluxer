@@ -189,16 +189,16 @@ export function translateNativeHookEvent(kind: HookBackendKind, event: NativeHoo
 export function hasMacInputMonitoringAccess(): boolean {
 	if (process.platform !== 'darwin') return true;
 	try {
-		const module = loadModule<NativeInputHookModule>(NATIVE_HOOK_MODULES.macos);
-		if (module.hasAccessibilityPermission) return module.hasAccessibilityPermission();
-	} catch (error) {
-		logger.warn('Input Monitoring preflight failed', {error});
-		return false;
-	}
-	try {
-		return getTccStatus('input-monitoring') === 'granted';
+		const status = getTccStatus('input-monitoring');
+		if (status !== 'not-determined') return status === 'granted';
 	} catch (error) {
 		logger.warn('Input Monitoring status could not be read', {error});
+	}
+	try {
+		const module = loadModule<NativeInputHookModule>(NATIVE_HOOK_MODULES.macos);
+		return module.hasAccessibilityPermission?.() === true;
+	} catch (error) {
+		logger.warn('Input Monitoring preflight failed', {error});
 		return false;
 	}
 }

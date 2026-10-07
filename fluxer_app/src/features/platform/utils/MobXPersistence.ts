@@ -1,16 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import AppStorage from '@app/features/platform/state/PersistentStorage';
+import AppStorage, {
+	type AppStorageScopeChangeEvent,
+	onBeforeAppStorageScopeChange,
+	subscribeAppStorageScope,
+} from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {configurePersistable, hydrateStore, makePersistable, stopPersisting} from 'mobx-persist-store';
+import {compareStructural, runInAction, toJS} from 'mobx';
+import {
+	configurePersistable,
+	hydrateStore,
+	makePersistable,
+	pausePersisting,
+	startPersisting,
+	stopPersisting,
+} from 'mobx-persist-store';
 
 const logger = new Logger('MobXPersistence');
-const persistedStates = new Map<
-	string,
-	{
-		stopSync?: () => void;
-	}
->();
+
+interface PersistedStoreState {
+	readonly store: object;
+	readonly properties: ReadonlyArray<string>;
+	readonly resetToDefaults: () => void;
+	readonly stopSync?: () => void;
+	readonly onRehydrated?: (event: AppStorageScopeChangeEvent | null) => void;
+}
+
+const persistedStates = new Map<string, PersistedStoreState>();
 const getStorage = () => {
 	return AppStorage;
 };
@@ -40,16 +56,96 @@ function createPersistScheduler(delayMs: number): (callback: () => void) => void
 	};
 }
 
-function flushPendingPersistWrites(): void {
+export function flushPendingPersistWrites(): void {
 	for (const flush of [...pendingPersistFlushes]) {
-		flush();
+		try {
+			flush();
+		} catch (error) {
+			logger.error('Failed to flush a pending persistent store write:', error);
+		}
 	}
+}
+
+function clonePersistedValue<V>(value: V): V {
+	return structuredClone(toJS(value));
+}
+
+function captureStoreDefaults(
+	store: object,
+	properties: ReadonlyArray<string>,
+): {properties: ReadonlyArray<string>; resetToDefaults: () => void} {
+	const target = store as Record<string, unknown>;
+	const defaults: Array<readonly [string, unknown]> = [];
+	for (const property of properties) {
+		try {
+			defaults.push([property, clonePersistedValue(target[property])]);
+		} catch (error) {
+			logger.error(`Cannot capture the default value of persisted property ${property}:`, error);
+		}
+	}
+	return {
+		properties: defaults.map(([property]) => property),
+		resetToDefaults: () => {
+			runInAction(() => {
+				for (const [property, value] of defaults) {
+					if (compareStructural(toJS(target[property]), value)) {
+						continue;
+					}
+					target[property] = clonePersistedValue(value);
+				}
+			});
+		},
+	};
+}
+
+async function rehydratePersistedStore(
+	storageKey: string,
+	state: PersistedStoreState,
+	event: AppStorageScopeChangeEvent | null,
+): Promise<void> {
+	if (persistedStates.get(storageKey) !== state) {
+		return;
+	}
+	pausePersisting(state.store);
+	try {
+		state.resetToDefaults();
+		await hydrateStore(state.store);
+	} catch (error) {
+		logger.error(`Store ${storageKey} stays paused, it could not be rehydrated for the active storage scope:`, error);
+		return;
+	}
+	if (persistedStates.get(storageKey) === state) {
+		startPersisting(state.store);
+		state.onRehydrated?.(event);
+	}
+}
+
+async function rehydratePersistedStores(event: AppStorageScopeChangeEvent | null): Promise<void> {
+	const states = [...persistedStates];
+	if (states.length === 0) {
+		return;
+	}
+	logger.debug(`Rehydrating ${states.length} persisted stores for the active storage scope.`);
+	for (const [storageKey, state] of states) {
+		await rehydratePersistedStore(storageKey, state, event);
+	}
+}
+
+let rehydrationTail: Promise<void> = Promise.resolve();
+
+export function rehydrateAllPersistentStores(event: AppStorageScopeChangeEvent | null = null): Promise<void> {
+	const run = () => rehydratePersistedStores(event);
+	rehydrationTail = rehydrationTail.then(run, run);
+	return rehydrationTail;
 }
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
 	window.addEventListener('pagehide', flushPendingPersistWrites);
 	window.addEventListener('beforeunload', flushPendingPersistWrites);
 }
+
+onBeforeAppStorageScopeChange(flushPendingPersistWrites);
+subscribeAppStorageScope(rehydrateAllPersistentStores);
 
 configurePersistable(
 	{
@@ -60,6 +156,7 @@ configurePersistable(
 		debugMode: false,
 	},
 	{
+		fireImmediately: false,
 		scheduler: createPersistScheduler(PERSIST_WRITE_DELAY_MS),
 	},
 );
@@ -80,6 +177,7 @@ export async function makePersistent<T extends object>(
 		version?: number;
 		syncAcrossTabs?: boolean;
 		writeDelayMs?: number;
+		onRehydrated?: (event: AppStorageScopeChangeEvent | null) => void;
 	},
 ): Promise<void> {
 	try {
@@ -87,6 +185,7 @@ export async function makePersistent<T extends object>(
 			logger.debug(`Store ${storageKey} is already being persisted, skipping...`);
 			return;
 		}
+		const defaults = captureStoreDefaults(store, properties as Array<keyof T & string>);
 		const hydrationPromise = makePersistable(
 			store,
 			{
@@ -123,7 +222,13 @@ export async function makePersistent<T extends object>(
 				},
 			);
 		}
-		persistedStates.set(storageKey, {stopSync});
+		persistedStates.set(storageKey, {
+			store,
+			properties: defaults.properties,
+			resetToDefaults: defaults.resetToDefaults,
+			stopSync,
+			onRehydrated: options?.onRehydrated,
+		});
 		logger.debug(`Store ${storageKey} hydrated from AppStorage and is now persisting.`);
 	} catch (error) {
 		logger.error(`Failed to hydrate store ${storageKey}:`, error);

@@ -38,6 +38,10 @@ export interface MacScreenCaptureSource {
 
 export declare function listSources(): Promise<Array<MacScreenCaptureSource>>;
 
+export type MacScreenRecordingProbeResult = 'granted' | 'denied' | 'timeout' | 'unsupported';
+
+export declare function probeScreenRecordingAccess(): Promise<MacScreenRecordingProbeResult>;
+
 export interface ScreenCaptureRect {
 	x: number;
 	y: number;

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {UserAreaPopout} from '@app/features/app/components/floating/UserAreaPopout';
 import styles from '@app/features/app/components/layout/UserArea.module.css';
 import {
@@ -27,7 +28,6 @@ import {TooltipWithKeybind} from '@app/features/ui/keybind_hint/KeybindHint';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {USER_SETTINGS_LABEL_DESCRIPTOR} from '@app/features/user/components/settings_utils/SettingsConstants';
 import type {User} from '@app/features/user/models/User';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
@@ -142,7 +142,10 @@ const UserAreaInner = observer(
 		};
 		const handleSettingsClick = () => {
 			ModalCommands.push(
-				modal(() => <UserSettingsModal data-flx="app.user-area.handle-settings-click.user-settings-modal" />),
+				modal(
+					() => <UserSettingsModal data-flx="app.user-area.handle-settings-click.user-settings-modal" />,
+					'user-settings',
+				),
 			);
 		};
 		const storeConnectedChannelId = MediaEngine.channelId;

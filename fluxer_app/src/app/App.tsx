@@ -23,10 +23,13 @@ import {type LayoutVariant, LayoutVariantProvider} from '@app/features/app/state
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
 import {showMyselfTypingHelper} from '@app/features/devtools/utils/ShowMyselfTypingHelper';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import {startDeepLinkHandling} from '@app/features/navigation/utils/DeepLinkUtils';
 import {Outlet, RouterProvider} from '@app/features/platform/components/router/RouterReact';
+import SessionManager from '@app/features/platform/state/AuthSession';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ensureAutostartDefaultEnabled} from '@app/features/platform/utils/Autostart';
 import {startDesktopJumpListBridge} from '@app/features/platform/utils/DesktopJumpListBridge';
 import {startDesktopLocaleBridge} from '@app/features/platform/utils/DesktopLocaleBridge';
@@ -70,6 +73,8 @@ const SKIP_TO_CONTENT_DESCRIPTOR = msg({
 	message: 'Skip to content',
 	comment: 'Accessible skip-link label for keyboard users.',
 });
+
+const logger = new Logger('App');
 
 interface AppWrapperProps {
 	children: ReactNode;
@@ -122,6 +127,22 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		showMyselfTypingHelper.start();
 		return () => showMyselfTypingHelper.stop();
 	}, []);
+	useEffect(() => {
+		let active = true;
+		void SessionManager.initialize()
+			.then(() => {
+				if (active) {
+					GatewaySessions.startRestoredSession();
+				}
+			})
+			.catch((error: unknown) => {
+				logger.error('Failed to initialize the restored gateway session', error);
+			});
+		return () => {
+			active = false;
+			GatewaySessions.dispose();
+		};
+	}, []);
 	useEffect(
 		() =>
 			reaction(
@@ -155,7 +176,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	useDocumentClassToggle('mobile-layout', MobileLayout.platformMobileDetected || MobileLayout.enabled);
 	useDocumentClassToggle(UNFOCUSED_FULLY_INTERACTIVE_CLASS, stayInteractiveWhenUnfocused);
 	useDesktopAllowTransparency(isNative);
-	useWindowEventListeners({preventDocumentScroll: !isNative});
+	useWindowEventListeners();
 	useRemScaleTracking();
 	usePlatformClasses(platform, isNative);
 	useThemeCssVariables({

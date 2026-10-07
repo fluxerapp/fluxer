@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import styles from '@app/features/app/components/pages/YouPage.module.css';
 import {CustomStatusDisplay} from '@app/features/app/components/shared/custom_status_display/CustomStatusDisplay';
 import {useAnimatedImageUrl} from '@app/features/app/hooks/useAnimatedImageUrl';
@@ -10,7 +11,6 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import {NoteEditSheet} from '@app/features/user/components/modals/NoteEditSheet';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {UserProfileBadges} from '@app/features/user/components/popouts/UserProfileBadges';
 import {UserProfileBio, UserProfileMembershipInfo} from '@app/features/user/components/popouts/UserProfileShared';
 import {normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
@@ -40,13 +40,18 @@ export const YouPage = observer(({onAvatarClick}: YouPageProps) => {
 	const userNote = user ? UserNote.getUserNote(user.id) : '';
 	const [noteSheetOpen, setNoteSheetOpen] = useState(false);
 	const handleSettings = () => {
-		ModalCommands.push(modal(() => <UserSettingsModal data-flx="app.you-page.handle-settings.user-settings-modal" />));
+		ModalCommands.push(
+			modal(() => <UserSettingsModal data-flx="app.you-page.handle-settings.user-settings-modal" />, 'user-settings'),
+		);
 	};
 	const handleEditProfile = () => {
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal initialTab="my_profile" data-flx="app.you-page.handle-edit-profile.user-settings-modal" />
-			)),
+			modal(
+				() => (
+					<UserSettingsModal initialTab="my_profile" data-flx="app.you-page.handle-edit-profile.user-settings-modal" />
+				),
+				'user-settings',
+			),
 		);
 	};
 	const profile = useMemo(() => (user ? createMockProfile(user) : null), [user]);

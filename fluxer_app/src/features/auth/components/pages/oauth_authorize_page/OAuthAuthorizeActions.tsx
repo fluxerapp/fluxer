@@ -3,7 +3,7 @@
 import styles from '@app/features/auth/components/pages/OAuthAuthorizePage.module.css';
 import type {AuthorizeParams} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizePageShared';
 import type {AuthorizeFlow} from '@app/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow';
-import {CANCEL_DESCRIPTOR, NEXT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {BACK_DESCRIPTOR, CANCEL_DESCRIPTOR, NEXT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
@@ -11,10 +11,6 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
-const BACK_DESCRIPTOR = msg({
-	message: 'Back',
-	comment: 'OAuth authorization secondary button. Returns to the previous carousel step.',
-});
 const AUTHORIZE_DESCRIPTOR = msg({
 	message: 'Authorize',
 	comment: 'OAuth authorization primary button. Grants the selected OAuth access.',

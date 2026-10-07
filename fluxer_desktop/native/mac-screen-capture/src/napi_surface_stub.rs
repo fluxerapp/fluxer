@@ -44,6 +44,11 @@ pub fn get_backend_availability() -> Result<BackendAvailability> {
     Err(unsupported())
 }
 
+#[napi(js_name = "probeScreenRecordingAccess")]
+pub fn probe_screen_recording_access() -> String {
+    crate::permission_probe::PROBE_UNSUPPORTED.to_owned()
+}
+
 #[napi(object, js_name = "MacScreenCaptureBackendInfo")]
 pub struct MacScreenCaptureBackendInfo {
     pub backend: String,

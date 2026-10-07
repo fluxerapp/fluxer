@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import styles from '@app/features/premium/components/plutonium_page/PlutoniumPage.module.css';
@@ -33,6 +32,7 @@ import {
 	PERK_VIDEO_QUALITY_PREMIUM_DESCRIPTOR,
 	TAG_FOOTNOTE_MARKER_DESCRIPTOR,
 } from '@app/features/premium/components/plutonium_page/PlutoniumPageMessages';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {
 	isBooleanTierPerk,
@@ -190,7 +190,7 @@ export const PlutoniumPageComparison = observer(
 	({footnoteId, onFootnoteClick, actions}: PlutoniumPageComparisonProps) => {
 		const {i18n} = useLingui();
 		const rows = buildRows(i18n.locale, (descriptor) => i18n._(descriptor));
-		const premiumLabel = PREMIUM_PRODUCT_NAME;
+		const premiumLabel = getPremiumProductName();
 		const renderLabel = (row: PerkRow) => (
 			<>
 				<span>{i18n._(row.label)}</span>
@@ -220,7 +220,7 @@ export const PlutoniumPageComparison = observer(
 					className={styles.titleHeading}
 					data-flx="premium.plutonium-page.comparison.title"
 				>
-					{i18n._(COMPARE_TITLE_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+					{i18n._(COMPARE_TITLE_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 				</h2>
 				<ul className={styles.perkCards} data-flx="premium.plutonium-page.comparison.cards">
 					{rows.map((row) => (
@@ -249,7 +249,7 @@ export const PlutoniumPageComparison = observer(
 				<FocusRing offset={-2}>
 					<section
 						className={styles.tableWrap}
-						aria-label={i18n._(COMPARE_TITLE_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						aria-label={i18n._(COMPARE_TITLE_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						data-flx="premium.plutonium-page.comparison.table-wrap"
 					>
 						<table className={styles.table}>

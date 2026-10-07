@@ -3,6 +3,7 @@
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {detectDomainMigrationInstallKind} from '@app/features/app/domain_migration/DomainMigrationBrowser';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -21,7 +22,8 @@ const LAST_PUSH_ENDPOINT_KEY = 'fluxer.lastPushEndpoint';
 const readLastEndpoint = (): string | null => {
 	try {
 		return AppStorage.getItem(LAST_PUSH_ENDPOINT_KEY);
-	} catch {
+	} catch (error) {
+		logger.warn('Failed to read the last registered push endpoint', error);
 		return null;
 	}
 };
@@ -29,7 +31,9 @@ const writeLastEndpoint = (endpoint: string | null): void => {
 	try {
 		if (endpoint) AppStorage.setItem(LAST_PUSH_ENDPOINT_KEY, endpoint);
 		else AppStorage.removeItem(LAST_PUSH_ENDPOINT_KEY);
-	} catch {}
+	} catch (error) {
+		logger.warn('Failed to persist the last registered push endpoint', error);
+	}
 };
 
 let registerPromise: Promise<string | null> | null = null;
@@ -40,11 +44,13 @@ export function isWebPushBlockedForNativeDesktop(): boolean {
 	return isElectron() || hasUnavailableElectronNativeContext();
 }
 
-const getPublicVapidKey = async (): Promise<string | null> => {
-	await RuntimeConfig.waitForInit();
-	return RuntimeConfig.publicPushVapidKey;
+const getPublicVapidKey = (): string | null => {
+	return RuntimeConfig.getSnapshotOrNull()?.publicPushVapidKey ?? null;
 };
 const isWebPushSupported = (): boolean => {
+	if (isDesktopLocalAppDocument()) {
+		return false;
+	}
 	return 'serviceWorker' in navigator && 'PushManager' in window && typeof Notification !== 'undefined';
 };
 const logWebPushUnavailable = (): void => {
@@ -194,7 +200,7 @@ export async function registerPushSubscription(): Promise<string | null> {
 	}
 	let publicVapidKey: string | null;
 	try {
-		publicVapidKey = await getPublicVapidKey();
+		publicVapidKey = getPublicVapidKey();
 	} catch (error) {
 		logger.error('Failed to resolve runtime configuration before push registration', {error});
 		return null;

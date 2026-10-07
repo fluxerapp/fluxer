@@ -146,6 +146,10 @@
 	caret-color: transparent;
 }
 
+.inputWithValueOverlay::selection {
+	background: transparent;
+}
+
 .inputWithValueOverlay::placeholder {
 	color: transparent;
 }

@@ -220,7 +220,7 @@ const DesktopSettingsTab: React.FC = observer(() => {
 					title={<Trans>macOS permissions</Trans>}
 					data-flx="user.desktop-settings-tab.macos-permissions-section"
 				>
-					<MacPermissionsSettingsRow showTitle={false} data-flx="user.desktop-settings-tab.macos-permissions-row" />
+					<MacPermissionsSettingsRow data-flx="user.desktop-settings-tab.macos-permissions-row" />
 				</SettingsSection>
 			)}
 		</SettingsTabContainer>

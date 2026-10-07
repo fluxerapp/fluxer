@@ -6,7 +6,6 @@ import {
 	BANNER_ASPECT_RATIO_LABEL,
 	BANNER_MINIMUM_SIZE_LABEL,
 	IMAGE_MAX_SIZE_BYTES,
-	PREMIUM_PRODUCT_NAME,
 } from '@app/features/app/config/I18nDisplayConstants';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
@@ -29,7 +28,7 @@ import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {canDecodeAnimatedAvif} from '@app/features/platform/utils/ImageDecoderInterop';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -129,6 +128,7 @@ export const BannerUploader = observer(
 		bannerMode = 'inherit',
 		onBannerModeChange,
 	}: BannerUploaderProps) => {
+		const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 		const {i18n} = useLingui();
 		const hasPremiumBannerEntitlement = isLimitToggleEnabled(
 			{feature_animated_banner: LimitResolver.resolve({key: 'feature_animated_banner', fallback: 0})},
@@ -161,14 +161,14 @@ export const BannerUploader = observer(
 			ModalCommands.push(
 				modal(() => (
 					<ConfirmModal
-						title={i18n._(PROFILE_BANNERS_REQUIRE_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						title={i18n._(PROFILE_BANNERS_REQUIRE_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						description={
 							<Trans>
 								Profile banners are a {PREMIUM_PRODUCT_NAME} feature. Get {PREMIUM_PRODUCT_NAME} to add a banner to your
 								profile.
 							</Trans>
 						}
-						primaryText={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						primaryText={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						primaryVariant="primary"
 						secondaryText={i18n._(CANCEL_DESCRIPTOR)}
 						onPrimary={() => {
@@ -370,7 +370,7 @@ export const BannerUploader = observer(
 				{!canUploadBanner && (
 					<div className={styles.description} data-flx="user.my-profile-tab.banner-uploader.description--3">
 						{shouldShowPremiumFeatures()
-							? i18n._(PROFILE_BANNERS_REQUIRE_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})
+							? i18n._(PROFILE_BANNERS_REQUIRE_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})
 							: i18n._(PROFILE_BANNERS_NOT_ENABLED_DESCRIPTOR)}
 					</div>
 				)}

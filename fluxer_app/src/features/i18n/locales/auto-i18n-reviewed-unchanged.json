@@ -12,6 +12,12 @@
         "msgid": "Alt"
       },
       {
+        "msgid": "Backspace"
+      },
+      {
+        "msgid": "Bluesky"
+      },
+      {
         "msgid": "Bluesky OAuth"
       },
       {
@@ -19,6 +25,12 @@
       },
       {
         "msgid": "Enter"
+      },
+      {
+        "msgid": "Esc"
+      },
+      {
+        "msgid": "Fluxer"
       },
       {
         "msgid": "HEVC"
@@ -39,7 +51,22 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
+      },
+      {
         "msgid": "WebAuthn"
+      },
+      {
+        "msgid": "Win"
       },
       {
         "msgid": "cron"
@@ -58,6 +85,12 @@
       },
       {
         "msgid": "user@example.com"
+      },
+      {
+        "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{productName} Visionary"
       }
     ],
     "bg": [
@@ -92,7 +125,13 @@
         "msgid": "Esc"
       },
       {
+        "msgid": "Escape"
+      },
+      {
         "msgid": "Fluxer"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -107,7 +146,22 @@
         "msgid": "OP"
       },
       {
+        "msgid": "PgDn"
+      },
+      {
+        "msgid": "PgUp"
+      },
+      {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
+        "msgid": "Visionary ID {visionaryIdLabel}"
       },
       {
         "msgid": "WebAuthn"
@@ -140,6 +194,15 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{desktopChannel} Desktop {desktopVersion}"
+      },
+      {
+        "msgid": "{fps} FPS"
+      },
+      {
         "msgid": "{frameRate} FPS"
       },
       {
@@ -152,7 +215,34 @@
         "msgid": "{messageGroupSpacing}px"
       },
       {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{zoomPercent}%"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
       }
     ],
     "cs": [
@@ -173,6 +263,9 @@
       },
       {
         "msgid": "Alt"
+      },
+      {
+        "msgid": "Avatar"
       },
       {
         "msgid": "Backspace"
@@ -211,7 +304,13 @@
         "msgid": "Esc"
       },
       {
+        "msgid": "Escape"
+      },
+      {
         "msgid": "Fluxer"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -283,10 +382,16 @@
         "msgid": "Spam"
       },
       {
+        "msgid": "Spoiler"
+      },
+      {
         "msgid": "Stream"
       },
       {
         "msgid": "Symbol"
+      },
+      {
+        "msgid": "Tab"
       },
       {
         "msgid": "Text"
@@ -302,6 +407,15 @@
       },
       {
         "msgid": "Video"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
+      },
+      {
+        "msgid": "Visionary ID {visionaryIdLabel}"
       },
       {
         "msgid": "Web {buildVersion}"
@@ -346,7 +460,13 @@
         "msgid": "video"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{desktopChannel} Desktop {desktopVersion}"
+      },
+      {
+        "msgid": "{formattedPresenceCount} online"
       },
       {
         "msgid": "{fps} FPS"
@@ -367,6 +487,9 @@
         "msgid": "{presenceCount} online"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
@@ -376,8 +499,199 @@
         "msgid": "{renderedPresenceCount} online"
       },
       {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgctxt": "community-settings-tab",
         "msgid": "Emoji"
+      },
+      {
+        "msgctxt": "gamepad-button-name",
+        "msgid": "Gamepad Back / Select"
+      },
+      {
+        "msgctxt": "gamepad-button-name",
+        "msgid": "Gamepad Guide"
+      },
+      {
+        "msgctxt": "gamepad-button-name",
+        "msgid": "Gamepad Start / Options"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
       },
       {
         "msgctxt": "voice-video-settings-section",
@@ -420,6 +734,9 @@
       },
       {
         "msgid": "Avatar"
+      },
+      {
+        "msgid": "Backspace"
       },
       {
         "msgid": "Badge"
@@ -479,6 +796,9 @@
         "msgid": "Download app"
       },
       {
+        "msgid": "Download fluxer-verification"
+      },
+      {
         "msgid": "Download {productName}"
       },
       {
@@ -492,6 +812,9 @@
       },
       {
         "msgid": "Esc"
+      },
+      {
+        "msgid": "Escape"
       },
       {
         "msgid": "Favicon"
@@ -510,6 +833,9 @@
       },
       {
         "msgid": "Gateway"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -540,6 +866,9 @@
       },
       {
         "msgid": "Lane"
+      },
+      {
+        "msgid": "Layout"
       },
       {
         "msgid": "Link"
@@ -585,6 +914,9 @@
       },
       {
         "msgid": "Normal"
+      },
+      {
+        "msgid": "Note"
       },
       {
         "msgid": "OP"
@@ -662,6 +994,9 @@
         "msgid": "Spoiler"
       },
       {
+        "msgid": "Stack traces"
+      },
+      {
         "msgid": "Standard"
       },
       {
@@ -693,6 +1028,9 @@
       },
       {
         "msgid": "System"
+      },
+      {
+        "msgid": "Tab"
       },
       {
         "msgid": "Tag"
@@ -731,6 +1069,9 @@
         "msgid": "Type {premiumType}"
       },
       {
+        "msgid": "Upload"
+      },
+      {
         "msgid": "Upload banner"
       },
       {
@@ -744,6 +1085,12 @@
       },
       {
         "msgid": "Video"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Web {buildVersion}"
@@ -815,6 +1162,9 @@
         "msgid": "{actor} stopped following an announcement channel in {channel}"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{count, plural, one {# emoji} other {# emojis}}"
       },
       {
@@ -828,6 +1178,9 @@
       },
       {
         "msgid": "{kilobits} kbps"
+      },
+      {
+        "msgid": "{length, plural, one {# app} other {# apps}}"
       },
       {
         "msgid": "{length} apps"
@@ -845,6 +1198,9 @@
         "msgid": "{presenceCount} online"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
@@ -852,6 +1208,9 @@
       },
       {
         "msgid": "{renderedPresenceCount} online"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
       },
       {
         "msgid": "{tokenCount, plural, one {# token} other {# tokens}}"
@@ -876,12 +1235,244 @@
         "msgid": "Webhooks"
       },
       {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Menu"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
         "msgctxt": "noise-suppression-option",
         "msgid": "Standard"
       },
       {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "District of Columbia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Hawaii"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Mexico"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "North Carolina"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "North Dakota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "South Carolina"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "South Dakota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "West Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
+      },
+      {
         "msgctxt": "voice-video-settings-section",
         "msgid": "Video"
+      },
+      {
+        "msgctxt": "window-menu",
+        "msgid": "Zoom"
       }
     ],
     "de": [
@@ -908,6 +1499,9 @@
       },
       {
         "msgid": "Administrator"
+      },
+      {
+        "msgid": "Alt"
       },
       {
         "msgid": "Animation"
@@ -973,7 +1567,43 @@
         "msgid": "Community"
       },
       {
+        "msgid": "Desktop"
+      },
+      {
+        "msgid": "Details"
+      },
+      {
+        "msgid": "Details: {reason}"
+      },
+      {
+        "msgid": "Domain"
+      },
+      {
+        "msgid": "Echo"
+      },
+      {
+        "msgid": "Emoji"
+      },
+      {
+        "msgid": "Emojis"
+      },
+      {
+        "msgid": "Emoticon"
+      },
+      {
+        "msgid": "Emoticons"
+      },
+      {
+        "msgid": "Esc"
+      },
+      {
+        "msgid": "Escape"
+      },
+      {
         "msgid": "Favicon"
+      },
+      {
+        "msgid": "Filter"
       },
       {
         "msgid": "Fluxer"
@@ -982,10 +1612,40 @@
         "msgid": "Forum"
       },
       {
+        "msgid": "GIFs"
+      },
+      {
+        "msgid": "Gaming"
+      },
+      {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
       },
       {
+        "msgid": "Hardware"
+      },
+      {
+        "msgid": "Hindi"
+      },
+      {
+        "msgid": "Host"
+      },
+      {
+        "msgid": "Hyperlink"
+      },
+      {
+        "msgid": "In"
+      },
+      {
+        "msgid": "Inline"
+      },
+      {
         "msgid": "Jitter"
+      },
+      {
+        "msgid": "Layout"
       },
       {
         "msgid": "Link"
@@ -1078,10 +1738,16 @@
         "msgid": "Region: {regionName}"
       },
       {
+        "msgid": "Reposts: <0>{countLabel}</0>"
+      },
+      {
         "msgid": "Searching..."
       },
       {
         "msgid": "Smileys"
+      },
+      {
+        "msgid": "Sourcemaps"
       },
       {
         "msgid": "Spam"
@@ -1144,6 +1810,9 @@
         "msgid": "Tokens"
       },
       {
+        "msgid": "Tooltips"
+      },
+      {
         "msgid": "Tracking"
       },
       {
@@ -1157,6 +1826,12 @@
       },
       {
         "msgid": "Videos"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Web {buildVersion}"
@@ -1177,6 +1852,9 @@
         "msgid": "Webhooks"
       },
       {
+        "msgid": "Win"
+      },
+      {
         "msgid": "YubiKey"
       },
       {
@@ -1190,6 +1868,12 @@
       },
       {
         "msgid": "macOS"
+      },
+      {
+        "msgid": "online"
+      },
+      {
+        "msgid": "{context} · {accountName}"
       },
       {
         "msgid": "{desktopChannel} Desktop {desktopVersion}"
@@ -1225,6 +1909,9 @@
         "msgid": "{productName} Desktop"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
@@ -1232,6 +1919,9 @@
       },
       {
         "msgid": "{renderedPresenceCount} online"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
       },
       {
         "msgctxt": "accessibility-settings-section",
@@ -1250,8 +1940,228 @@
         "msgid": "Webhooks"
       },
       {
+        "msgctxt": "gamepad-button-name",
+        "msgid": "Gamepad Back / Select"
+      },
+      {
+        "msgctxt": "gamepad-button-name",
+        "msgid": "Gamepad Guide"
+      },
+      {
+        "msgctxt": "gamepad-button-name",
+        "msgid": "Gamepad Start / Options"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
         "msgctxt": "noise-suppression-option",
         "msgid": "Standard"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "District of Columbia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Hawaii"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Mexico"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "North Carolina"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "North Dakota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "South Carolina"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "South Dakota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "West Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
+      },
+      {
+        "msgctxt": "voice-video-settings-section",
+        "msgid": "Audio"
       },
       {
         "msgctxt": "voice-video-settings-section",
@@ -1293,6 +2203,9 @@
         "msgid": "Cisco"
       },
       {
+        "msgid": "Coal"
+      },
+      {
         "msgid": "Ctrl"
       },
       {
@@ -1308,10 +2221,19 @@
         "msgid": "Esc"
       },
       {
+        "msgid": "Favicon"
+      },
+      {
         "msgid": "Fluxer"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
+      },
+      {
+        "msgid": "Markdown"
       },
       {
         "msgid": "NCMEC {ncmecReportId}"
@@ -1329,6 +2251,9 @@
         "msgid": "PgUp"
       },
       {
+        "msgid": "PiP"
+      },
+      {
         "msgid": "Ping: {currentLatency}ms"
       },
       {
@@ -1341,7 +2266,22 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
         "msgid": "Spam"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
+      },
+      {
+        "msgid": "Visionary ID {visionaryIdLabel}"
       },
       {
         "msgid": "Web {buildVersion}"
@@ -1383,6 +2323,12 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{desktopChannel} Desktop {desktopVersion}"
+      },
+      {
         "msgid": "{fps} FPS"
       },
       {
@@ -1395,7 +2341,16 @@
         "msgid": "{messageGroupSpacing}px"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
+        "msgid": "{zoomPercent}%"
       },
       {
         "msgctxt": "community-settings-tab",
@@ -1404,6 +2359,30 @@
       {
         "msgctxt": "community-settings-tab",
         "msgid": "Webhooks"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
       }
     ],
     "en-GB": [
@@ -1477,6 +2456,9 @@
         "msgid": "Accepted"
       },
       {
+        "msgid": "Account details unavailable"
+      },
+      {
         "msgid": "Add a Klipy API key to enable GIF search at runtime."
       },
       {
@@ -1484,6 +2466,9 @@
       },
       {
         "msgid": "Add a username and password to your account first."
+      },
+      {
+        "msgid": "Add another instance"
       },
       {
         "msgid": "Add emoji"
@@ -1552,7 +2537,25 @@
         "msgid": "Allow H.265 (HEVC) for screen sharing"
       },
       {
+        "msgid": "Allow access on your Mac"
+      },
+      {
         "msgid": "Allow anyone to invite"
+      },
+      {
+        "msgid": "Allow {PRODUCT_NAME} to access your camera in System Settings → Privacy & Security → Camera."
+      },
+      {
+        "msgid": "Allow {PRODUCT_NAME} to access your microphone in System Settings → Privacy & Security → Microphone."
+      },
+      {
+        "msgid": "Allow {productName} under Screen Recording in System Settings. If it is already allowed, relaunch {productName2} so macOS applies it."
+      },
+      {
+        "msgid": "Allow {productName} under {macosScreenRecordingPermissionName} in {macosSystemSettingsName}. If it is already allowed, relaunch {productName2} so macOS applies it."
+      },
+      {
+        "msgid": "Allowed"
       },
       {
         "msgid": "Allowed all members to mention this role."
@@ -1672,6 +2675,12 @@
         "msgid": "Automatic ({codec})"
       },
       {
+        "msgid": "Back to account switcher"
+      },
+      {
+        "msgid": "Back to accounts"
+      },
+      {
         "msgid": "Back to {productName}"
       },
       {
@@ -1709,6 +2718,9 @@
       },
       {
         "msgid": "Bring custom emojis and stickers from any of your communities into every chat and community you're in."
+      },
+      {
+        "msgid": "Browser sign-in is unavailable here."
       },
       {
         "msgid": "Built-in suppression from your browser or system."
@@ -1760,6 +2772,9 @@
       },
       {
         "msgid": "Change in system settings"
+      },
+      {
+        "msgid": "Change instance"
       },
       {
         "msgid": "Change stream"
@@ -1915,6 +2930,12 @@
         "msgid": "Choose File, then Add to Dock."
       },
       {
+        "msgid": "Choose a different instance"
+      },
+      {
+        "msgid": "Choose a language and theme. Your account preferences can replace these after you sign in."
+      },
+      {
         "msgid": "Choose a new password. You get a new recovery kit and this one stops working."
       },
       {
@@ -1931,6 +2952,12 @@
       },
       {
         "msgid": "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
+      },
+      {
+        "msgid": "Choose your defaults"
+      },
+      {
+        "msgid": "Choose your instance"
       },
       {
         "msgid": "Claim your account by choosing a username and password. You sign in with them, so pick ones you will remember."
@@ -1964,6 +2991,9 @@
       },
       {
         "msgid": "Clone sticker"
+      },
+      {
+        "msgid": "Close account switcher"
       },
       {
         "msgid": "Close thread"
@@ -2020,6 +3050,9 @@
         "msgid": "Connect a microphone and try again."
       },
       {
+        "msgid": "Connecting to {domain}…"
+      },
+      {
         "msgid": "Connection volume controls"
       },
       {
@@ -2074,6 +3107,9 @@
         "msgid": "Couldn't connect to voice. Please try again."
       },
       {
+        "msgid": "Couldn't connect to {domain}. Try again."
+      },
+      {
         "msgid": "Couldn't convert this channel"
       },
       {
@@ -2092,13 +3128,22 @@
         "msgid": "Couldn't load posts. Try again later."
       },
       {
+        "msgid": "Couldn't load settings"
+      },
+      {
         "msgid": "Couldn't load this community. Try again in a moment."
+      },
+      {
+        "msgid": "Couldn't load this part of the app. Check your connection and try again."
       },
       {
         "msgid": "Couldn't load your backup codes."
       },
       {
         "msgid": "Couldn't publish this message"
+      },
+      {
+        "msgid": "Couldn't reach a Fluxer instance at {domain}. Check the address and that the instance is online."
       },
       {
         "msgid": "Couldn't save channel settings"
@@ -2182,6 +3227,9 @@
         "msgid": "Deafen other members in this voice channel, so they cannot hear or speak."
       },
       {
+        "msgid": "Debugging"
+      },
+      {
         "msgid": "Decide how premium limits apply to people on this instance."
       },
       {
@@ -2242,6 +3290,9 @@
         "msgid": "Desktop audio isn't available right now on macOS."
       },
       {
+        "msgid": "Details: {reason}"
+      },
+      {
         "msgid": "Device audio ({deviceLabel})"
       },
       {
@@ -2282,6 +3333,12 @@
       },
       {
         "msgid": "Download export"
+      },
+      {
+        "msgid": "Download source maps"
+      },
+      {
+        "msgid": "Download source maps so stack traces and the developer tools point at real source"
       },
       {
         "msgid": "Drag members between voice channels they can access, and disconnect them from voice."
@@ -2383,10 +3440,16 @@
         "msgid": "Enter a valid username."
       },
       {
+        "msgid": "Enter an instance URL"
+      },
+      {
         "msgid": "Enter one of your backup codes if you can't use your passkey."
       },
       {
         "msgid": "Enter one of your backup codes."
+      },
+      {
+        "msgid": "Enter self-hosted instance URL (e.g. {exampleInstanceDomain})"
       },
       {
         "msgid": "Enter the PIN for your security key to continue."
@@ -2413,6 +3476,15 @@
         "msgid": "Excluded search filter: {filter}"
       },
       {
+        "msgid": "Expires in {remainingSeconds}s"
+      },
+      {
+        "msgid": "Failed to remove instance from recent instances"
+      },
+      {
+        "msgid": "Failed to send reset link. Try again."
+      },
+      {
         "msgid": "Favicon"
       },
       {
@@ -2432,6 +3504,9 @@
       },
       {
         "msgid": "Fluxer"
+      },
+      {
+        "msgid": "Fluxer stopped checking whether the browser approved this sign-in. It didn't lose your code."
       },
       {
         "msgid": "Focus window"
@@ -2566,6 +3641,9 @@
         "msgid": "Hang out together with voice, video and screen share"
       },
       {
+        "msgid": "Hang out together with voice, video, and screen share"
+      },
+      {
         "msgid": "Hang out with voice, video and screen share"
       },
       {
@@ -2623,6 +3701,12 @@
         "msgid": "I've stored my recovery kit somewhere safe"
       },
       {
+        "msgid": "If an account uses that address, we've sent it password reset instructions. Check your inbox for the reset link."
+      },
+      {
+        "msgid": "If macOS asks to quit and reopen {productName}, choose Later."
+      },
+      {
         "msgid": "If you forget your password, a recovery kit is the only way back into your account."
       },
       {
@@ -2650,6 +3734,9 @@
         "msgid": "Inline code"
       },
       {
+        "msgid": "Input Monitoring"
+      },
+      {
         "msgid": "Input level"
       },
       {
@@ -2660,6 +3747,18 @@
       },
       {
         "msgid": "Instance"
+      },
+      {
+        "msgid": "Instance URL"
+      },
+      {
+        "msgid": "Instance URL is too long"
+      },
+      {
+        "msgid": "Instance selection"
+      },
+      {
+        "msgid": "Instance unavailable"
       },
       {
         "msgid": "Invite new people to the community with a link to this channel."
@@ -2737,7 +3836,22 @@
         "msgid": "Lets other communities follow this channel and get copies of what you publish."
       },
       {
+        "msgid": "Lets people hear you in calls."
+      },
+      {
+        "msgid": "Lets people see you on video."
+      },
+      {
+        "msgid": "Lets push-to-talk and shortcuts work in other apps."
+      },
+      {
+        "msgid": "Lets push-to-talk and shortcuts work while {productName} is in the background."
+      },
+      {
         "msgid": "Lets you reset your password if you forget it."
+      },
+      {
+        "msgid": "Lets you share your screen or a window."
       },
       {
         "msgid": "Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead."
@@ -2756,6 +3870,9 @@
       },
       {
         "msgid": "Link a new device"
+      },
+      {
+        "msgid": "Link channel"
       },
       {
         "msgid": "Link file"
@@ -2986,6 +4103,9 @@
         "msgid": "No recovery kit? Ask an admin of this instance for a password reset link."
       },
       {
+        "msgid": "No server is selected for this request."
+      },
+      {
         "msgid": "No tags"
       },
       {
@@ -2996,6 +4116,9 @@
       },
       {
         "msgid": "Not accepted"
+      },
+      {
+        "msgid": "Not allowed"
       },
       {
         "msgid": "Not assigned"
@@ -3011,6 +4134,9 @@
       },
       {
         "msgid": "OP"
+      },
+      {
+        "msgid": "Official instance"
       },
       {
         "msgid": "Older posts"
@@ -3040,10 +4166,22 @@
         "msgid": "Open Settings"
       },
       {
+        "msgid": "Open System Settings"
+      },
+      {
+        "msgid": "Open System Settings → Privacy & Security → Screen Recording, then allow {productName}."
+      },
+      {
+        "msgid": "Open account switcher"
+      },
+      {
         "msgid": "Open an application window, then try again."
       },
       {
         "msgid": "Open in full view"
+      },
+      {
+        "msgid": "Open on {instanceName}"
       },
       {
         "msgid": "Open popup"
@@ -3058,6 +4196,12 @@
         "msgid": "Open thread again"
       },
       {
+        "msgid": "Open with {accountName} on {instanceName}"
+      },
+      {
+        "msgid": "Open your browser to finish signing in."
+      },
+      {
         "msgid": "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
       },
       {
@@ -3068,6 +4212,9 @@
       },
       {
         "msgid": "Open {labelText}"
+      },
+      {
+        "msgid": "Open {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} → {macosScreenRecordingPermissionName}, then allow {productName}."
       },
       {
         "msgid": "Open {premiumProductFullName}"
@@ -3104,6 +4251,9 @@
       },
       {
         "msgid": "Other active threads"
+      },
+      {
+        "msgid": "Passkey sign-in is unavailable here."
       },
       {
         "msgid": "Passkey updated"
@@ -3310,6 +4460,9 @@
         "msgid": "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
       },
       {
+        "msgid": "Push-to-talk only works while {productName} is focused until {permissionName} is enabled."
+      },
+      {
         "msgid": "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
       },
       {
@@ -3320,6 +4473,9 @@
       },
       {
         "msgid": "Quick access to an external website or resource"
+      },
+      {
+        "msgid": "Quit {appName}, make sure no other copy is running, and open it again."
       },
       {
         "msgid": "Random tags"
@@ -3361,13 +4517,28 @@
         "msgid": "Redeem a gift code"
       },
       {
+        "msgid": "Register an account"
+      },
+      {
         "msgid": "Registration"
+      },
+      {
+        "msgid": "Relaunch to apply"
+      },
+      {
+        "msgid": "Reload {productName} to use the updated modules"
+      },
+      {
+        "msgid": "Remove from recent instances"
       },
       {
         "msgid": "Remove from thread"
       },
       {
         "msgid": "Remove members from the community. They can rejoin with a new invite."
+      },
+      {
+        "msgid": "Remove {accountTag}"
       },
       {
         "msgid": "Removed the AFK channel."
@@ -3631,10 +4802,19 @@
         "msgid": "Save {percent}%"
       },
       {
+        "msgid": "Saved account"
+      },
+      {
+        "msgid": "Saved accounts"
+      },
+      {
         "msgid": "Saved media cannot start a post. Upload the file instead."
       },
       {
         "msgid": "Scan to open the recovery page with your details filled in."
+      },
+      {
+        "msgid": "Screen Recording"
       },
       {
         "msgid": "Screen share audio couldn't start"
@@ -3730,6 +4910,9 @@
         "msgid": "Send messages, images, GIFs and emoji"
       },
       {
+        "msgid": "Send messages, images, GIFs, and emoji"
+      },
+      {
         "msgid": "Sending {resolution} at {frameRate} FPS with {codec}"
       },
       {
@@ -3752,6 +4935,9 @@
       },
       {
         "msgid": "Service incident nagbar"
+      },
+      {
+        "msgid": "Session expired"
       },
       {
         "msgid": "Set a community avatar."
@@ -3850,6 +5036,9 @@
         "msgid": "Set up"
       },
       {
+        "msgid": "Set up later in User Settings"
+      },
+      {
         "msgid": "Set up {productName}"
       },
       {
@@ -3901,6 +5090,9 @@
         "msgid": "Show a one-click shortcut for copying custom emojis and stickers from communities that allow it"
       },
       {
+        "msgid": "Show code"
+      },
+      {
         "msgid": "Show connection volume controls"
       },
       {
@@ -3928,6 +5120,9 @@
         "msgid": "Show rich previews for YouTube links."
       },
       {
+        "msgid": "Show store folder"
+      },
+      {
         "msgid": "Show {count, plural, one {# more filter} other {# more filters}}"
       },
       {
@@ -3940,7 +5135,25 @@
         "msgid": "Shown on every post so people can react with one click."
       },
       {
+        "msgid": "Sign in again as {accountLabel}"
+      },
+      {
+        "msgid": "Sign in with email"
+      },
+      {
+        "msgid": "Sign in with username"
+      },
+      {
+        "msgid": "Sign in with your browser"
+      },
+      {
         "msgid": "Sign in with your old {productName} app"
+      },
+      {
+        "msgid": "Sign out of this account"
+      },
+      {
+        "msgid": "Sign out {accountTag}"
       },
       {
         "msgid": "Sign-in details"
@@ -4012,6 +5225,15 @@
         "msgid": "Sort by"
       },
       {
+        "msgid": "Source maps"
+      },
+      {
+        "msgid": "Sourcemaps"
+      },
+      {
+        "msgid": "Stack traces"
+      },
+      {
         "msgid": "Start in the tray instead of opening the window when launched at login"
       },
       {
@@ -4027,6 +5249,9 @@
         "msgid": "Stay focused on a conversation with a thread, a temporary text channel."
       },
       {
+        "msgid": "Step {current} of {total}"
+      },
+      {
         "msgid": "Stereo microphone"
       },
       {
@@ -4034,6 +5259,12 @@
       },
       {
         "msgid": "Still Neko"
+      },
+      {
+        "msgid": "Still not applied after you turned it on?"
+      },
+      {
+        "msgid": "Still waiting for screen recording access"
       },
       {
         "msgid": "Still working on it…"
@@ -4108,6 +5339,9 @@
         "msgid": "Switch price"
       },
       {
+        "msgid": "Switch to account {slot}"
+      },
+      {
         "msgid": "Switch to the new price?"
       },
       {
@@ -4145,6 +5379,9 @@
       },
       {
         "msgid": "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
+      },
+      {
+        "msgid": "That doesn't look like an instance address. Try a domain such as {exampleInstanceDomain}."
       },
       {
         "msgid": "That image could not be used. Try a different file."
@@ -4301,6 +5538,9 @@
       },
       {
         "msgid": "This instance has no accounts yet. The first account you create automatically becomes the administrator. Create it now, then return here to finish setup."
+      },
+      {
+        "msgid": "This invite is on {instanceName}, where you also have an account."
       },
       {
         "msgid": "This is a custom emoji from"
@@ -4519,6 +5759,9 @@
         "msgid": "Upload files and media in this channel."
       },
       {
+        "msgid": "Use a self-hosted instance URL"
+      },
+      {
         "msgid": "Use animated emojis in messages"
       },
       {
@@ -4552,6 +5795,9 @@
         "msgid": "Use the Up and Down arrow keys to move between items and Space or Enter to open one. Where a tab has sections, the Right arrow expands it and the Left arrow collapses it."
       },
       {
+        "msgid": "Use the official Fluxer instance"
+      },
+      {
         "msgid": "Use video and camera previews."
       },
       {
@@ -4562,6 +5808,15 @@
       },
       {
         "msgid": "Use your recovery kit"
+      },
+      {
+        "msgid": "Use {accountTag}"
+      },
+      {
+        "msgid": "Use {accountTag} on {instanceName}"
+      },
+      {
+        "msgid": "Use {name} on {domain}"
       },
       {
         "msgid": "Used in Custom mode. The Gaming and Screen share presets set their own hint."
@@ -4606,13 +5861,22 @@
         "msgid": "Volume sliders"
       },
       {
+        "msgid": "Waiting for browser approval."
+      },
+      {
         "msgid": "Waiting for your desktop…"
       },
       {
         "msgid": "We could not renew your subscription. Update your payment method to keep your perks."
       },
       {
+        "msgid": "We couldn't reach that account's instance to switch accounts. Your current account is still active. Try again when the instance is back online."
+      },
+      {
         "msgid": "We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these attachments exceed that combined limit and can't be sent until connectivity is restored. Try again later or contact the administrators of this instance if this keeps happening."
+      },
+      {
+        "msgid": "We couldn't reach {instanceLabel} to switch accounts. Your current account is still active. Try again when the instance is back online."
       },
       {
         "msgid": "We lowered the price of {premiumProductName} in Brazil. It is now {monthlyPrice} a month or {yearlyPrice} a year."
@@ -4678,6 +5942,9 @@
         "msgid": "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
       },
       {
+        "msgid": "You can turn these on later in User Settings under {settingsTabLabel}."
+      },
+      {
         "msgid": "You can't manage webhooks in any community. Ask an admin to follow this channel."
       },
       {
@@ -4703,6 +5970,9 @@
       },
       {
         "msgid": "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
+      },
+      {
+        "msgid": "Your accounts and settings have not been changed or deleted."
       },
       {
         "msgid": "Your capture device is sending {deliveredResolution} instead of {resolution}."
@@ -5389,10 +6659,25 @@
         "msgid": "{appName} can't reach its servers. It will keep trying in the background."
       },
       {
+        "msgid": "{appName} cannot open its local data"
+      },
+      {
+        "msgid": "{appName} cannot open the local data it saved on this computer."
+      },
+      {
+        "msgid": "{appName} could not load its app files. Quit and open it again."
+      },
+      {
+        "msgid": "{appName} could not read one of its app files. Quit and open it again."
+      },
+      {
         "msgid": "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
       },
       {
         "msgid": "{codec} cannot keep up on this device. Set the codec to Automatic in Advanced settings to allow a faster one."
+      },
+      {
+        "msgid": "{context} · {accountName}"
       },
       {
         "msgid": "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
@@ -5434,6 +6719,9 @@
         "msgid": "{count, plural, one {The invite was used # time.} other {The invite was used # times.}}"
       },
       {
+        "msgid": "{domain} runs a newer version of Fluxer than this app. Update Fluxer, then try again."
+      },
+      {
         "msgid": "{expressionName} is a custom emoji from this community. Members can use it here."
       },
       {
@@ -5444,6 +6732,9 @@
       },
       {
         "msgid": "{imageCount, plural, one {# image} other {# images}}, {videoCount, plural, one {# video} other {# videos}}"
+      },
+      {
+        "msgid": "{instanceName} does not publish a web address, so sign-in cannot be handed to a browser."
       },
       {
         "msgid": "{monthlyPrice}/mo"
@@ -5513,6 +6804,9 @@
       },
       {
         "msgid": "{productName} registered its shortcuts with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused."
+      },
+      {
+        "msgid": "{productName} uses these for voice, video, screen sharing, and shortcuts. Grant all four to continue."
       },
       {
         "msgid": "{productName} wordmark"
@@ -5689,6 +6983,9 @@
         "msgid": "General"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -5710,6 +7007,9 @@
         "msgid": "Markdown"
       },
       {
+        "msgid": "Mod"
+      },
+      {
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
@@ -5726,6 +7026,9 @@
       },
       {
         "msgid": "PiP"
+      },
+      {
+        "msgid": "Ping"
       },
       {
         "msgid": "Plan"
@@ -5770,6 +7073,9 @@
         "msgid": "Stickers: {stickerNames}"
       },
       {
+        "msgid": "Tab"
+      },
+      {
         "msgid": "Token"
       },
       {
@@ -5780,6 +7086,12 @@
       },
       {
         "msgid": "Videos"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Visual"
@@ -5839,6 +7151,9 @@
         "msgid": "video"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{count, plural, one {# emoji} other {# emojis}}"
       },
       {
@@ -5863,6 +7178,12 @@
         "msgid": "{messageGroupSpacing}px"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{tokenCount, plural, one {# token} other {# tokens}}"
       },
       {
@@ -5881,7 +7202,155 @@
       },
       {
         "msgctxt": "community-settings-tab",
+        "msgid": "Stickers"
+      },
+      {
+        "msgctxt": "community-settings-tab",
         "msgid": "Webhooks"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "California"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
       },
       {
         "msgctxt": "voice-video-settings-section",
@@ -5975,6 +7444,9 @@
         "msgid": "General"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -5990,13 +7462,40 @@
         "msgid": "Malta"
       },
       {
+        "msgid": "Markdown"
+      },
+      {
+        "msgid": "Mod"
+      },
+      {
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
         "msgid": "Neko"
       },
       {
+        "msgid": "No"
+      },
+      {
         "msgid": "OP"
+      },
+      {
+        "msgid": "PiP"
+      },
+      {
+        "msgid": "Ping"
+      },
+      {
+        "msgid": "Plan"
+      },
+      {
+        "msgid": "Portugal"
+      },
+      {
+        "msgid": "Premium"
+      },
+      {
+        "msgid": "Roles"
       },
       {
         "msgid": "Roles ({roleCount})"
@@ -6005,10 +7504,28 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Social"
+      },
+      {
+        "msgid": "Spoiler"
+      },
+      {
+        "msgid": "Spoilers"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
         "msgid": "Token"
       },
       {
         "msgid": "Tokens"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Visual"
@@ -6027,6 +7544,9 @@
       },
       {
         "msgid": "Webhooks"
+      },
+      {
+        "msgid": "Win"
       },
       {
         "msgid": "YubiKey"
@@ -6053,6 +7573,12 @@
         "msgid": "macOS"
       },
       {
+        "msgid": "spoiler"
+      },
+      {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{count, plural, one {# emoji} other {# emojis}}"
       },
       {
@@ -6071,7 +7597,13 @@
         "msgid": "{messageGroupSpacing}px"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
       },
       {
         "msgid": "{tokenCount, plural, one {# token} other {# tokens}}"
@@ -6085,11 +7617,163 @@
       },
       {
         "msgctxt": "community-settings-tab",
+        "msgid": "Roles"
+      },
+      {
+        "msgctxt": "community-settings-tab",
         "msgid": "Webhooks"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "California"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
       },
       {
         "msgctxt": "voice-video-settings-section",
         "msgid": "Audio"
+      },
+      {
+        "msgctxt": "window-menu",
+        "msgid": "Zoom"
       }
     ],
     "fi": [
@@ -6139,10 +7823,16 @@
         "msgid": "Esc"
       },
       {
+        "msgid": "Escape"
+      },
+      {
         "msgid": "Favicon"
       },
       {
         "msgid": "Fluxer"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -6172,6 +7862,18 @@
         "msgid": "OP"
       },
       {
+        "msgid": "PgDn"
+      },
+      {
+        "msgid": "PgUp"
+      },
+      {
+        "msgid": "PiP"
+      },
+      {
+        "msgid": "Ping"
+      },
+      {
         "msgid": "Plutonium"
       },
       {
@@ -6191,6 +7893,18 @@
       },
       {
         "msgid": "Video"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
+      },
+      {
+        "msgid": "Visionary ID {visionaryIdLabel}"
+      },
+      {
+        "msgid": "Web {buildVersion}"
       },
       {
         "msgid": "WebAuthn"
@@ -6229,6 +7943,12 @@
         "msgid": "video"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{desktopChannel} Desktop {desktopVersion}"
+      },
+      {
         "msgid": "{fps} FPS"
       },
       {
@@ -6247,8 +7967,203 @@
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgctxt": "chat-settings-section",
         "msgid": "Media"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
       },
       {
         "msgctxt": "voice-video-settings-section",
@@ -6404,6 +8319,9 @@
         "msgid": "France"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -6476,6 +8394,9 @@
         "msgid": "Narration"
       },
       {
+        "msgid": "Nature"
+      },
+      {
         "msgid": "Navigation"
       },
       {
@@ -6486,6 +8407,9 @@
       },
       {
         "msgid": "Note"
+      },
+      {
+        "msgid": "Notification"
       },
       {
         "msgid": "Notifications"
@@ -6581,6 +8505,9 @@
         "msgid": "Standard {baseCurrencyLabel}"
       },
       {
+        "msgid": "Sticker"
+      },
+      {
         "msgid": "Stickers"
       },
       {
@@ -6588,6 +8515,12 @@
       },
       {
         "msgid": "Suppression"
+      },
+      {
+        "msgid": "Surfaces"
+      },
+      {
+        "msgid": "Tab"
       },
       {
         "msgid": "Tag"
@@ -6612,6 +8545,12 @@
       },
       {
         "msgid": "Version"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Volume"
@@ -6668,10 +8607,16 @@
         "msgid": "spoiler"
       },
       {
+        "msgid": "sticker"
+      },
+      {
         "msgid": "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
       },
       {
         "msgid": "{channelHeading}, {mentionCount} mentions"
+      },
+      {
+        "msgid": "{context} · {accountName}"
       },
       {
         "msgid": "{count, plural, one {# image} other {# images}}"
@@ -6686,6 +8631,9 @@
         "msgid": "{countLabel} minutes"
       },
       {
+        "msgid": "{desktopChannel} Desktop {desktopVersion}"
+      },
+      {
         "msgid": "{fifteenMinutes} minutes"
       },
       {
@@ -6693,6 +8641,9 @@
       },
       {
         "msgid": "{kilobits} kbps"
+      },
+      {
+        "msgid": "{length, plural, one {# sticker} other {# stickers}}"
       },
       {
         "msgid": "{length} types"
@@ -6717,6 +8668,9 @@
       },
       {
         "msgid": "{oneMinute} minute"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
       },
       {
         "msgid": "{thirtyMinutes} minutes"
@@ -6749,7 +8703,19 @@
       },
       {
         "msgctxt": "community-settings-tab",
+        "msgid": "Stickers"
+      },
+      {
+        "msgctxt": "community-settings-tab",
         "msgid": "Webhooks"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Menu"
       },
       {
         "msgctxt": "noise-suppression-option",
@@ -6760,12 +8726,164 @@
         "msgid": "Communication"
       },
       {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
+      },
+      {
         "msgctxt": "user-settings-tab",
         "msgid": "Notifications"
       },
       {
         "msgctxt": "voice-video-settings-section",
         "msgid": "Audio"
+      },
+      {
+        "msgctxt": "window-menu",
+        "msgid": "Zoom"
       }
     ],
     "he": [
@@ -6779,6 +8897,12 @@
         "msgid": "Alt"
       },
       {
+        "msgid": "Backspace"
+      },
+      {
+        "msgid": "Bluesky"
+      },
+      {
         "msgid": "Ctrl"
       },
       {
@@ -6788,7 +8912,13 @@
         "msgid": "Esc"
       },
       {
+        "msgid": "Escape"
+      },
+      {
         "msgid": "Fluxer"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -6809,10 +8939,19 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
         "msgid": "Threads"
       },
       {
         "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Web {buildVersion}"
@@ -6851,6 +8990,12 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{fps} FPS"
+      },
+      {
         "msgid": "{frameRate} FPS"
       },
       {
@@ -6860,7 +9005,34 @@
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{zoomPercent}%"
+      },
+      {
+        "msgctxt": "community-settings-tab",
+        "msgid": "Webhooks"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
       }
     ],
     "hi": [
@@ -6889,6 +9061,12 @@
         "msgid": "Esc"
       },
       {
+        "msgid": "Fluxer"
+      },
+      {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -6905,6 +9083,12 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "WebAuthn"
       },
       {
         "msgid": "Win"
@@ -6931,6 +9115,9 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{fps} FPS"
       },
       {
@@ -6941,6 +9128,9 @@
       },
       {
         "msgid": "{messageGroupSpacing}px"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
       },
       {
         "msgid": "{zoomPercent}%"
@@ -6969,6 +9159,9 @@
         "msgid": "Alt"
       },
       {
+        "msgid": "Avatar"
+      },
+      {
         "msgid": "Backspace"
       },
       {
@@ -6987,10 +9180,19 @@
         "msgid": "Ctrl"
       },
       {
+        "msgid": "Emoji"
+      },
+      {
         "msgid": "Enter"
       },
       {
         "msgid": "Esc"
+      },
+      {
+        "msgid": "Escape"
+      },
+      {
+        "msgid": "Favicon"
       },
       {
         "msgid": "Fluxer"
@@ -7005,7 +9207,13 @@
         "msgid": "Gateway"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
+      },
+      {
+        "msgid": "Host"
       },
       {
         "msgid": "Logo"
@@ -7015,6 +9223,9 @@
       },
       {
         "msgid": "Markdown"
+      },
+      {
+        "msgid": "Mod"
       },
       {
         "msgid": "Moderator"
@@ -7038,6 +9249,9 @@
         "msgid": "PgUp"
       },
       {
+        "msgid": "PiP"
+      },
+      {
         "msgid": "Ping"
       },
       {
@@ -7059,13 +9273,31 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Sourcemaps"
+      },
+      {
         "msgid": "Spam"
       },
       {
         "msgid": "Status"
       },
       {
+        "msgid": "Tab"
+      },
+      {
         "msgid": "Token"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
+      },
+      {
+        "msgid": "Visionary ID {visionaryIdLabel}"
       },
       {
         "msgid": "Web {buildVersion}"
@@ -7107,6 +9339,12 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{desktopChannel} Desktop {desktopVersion}"
+      },
+      {
         "msgid": "{fps} FPS"
       },
       {
@@ -7122,7 +9360,201 @@
         "msgid": "{messageGroupSpacing}px"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
+      },
+      {
+        "msgctxt": "voice-video-settings-section",
+        "msgid": "Video"
       }
     ],
     "hu": [
@@ -7146,6 +9578,9 @@
       },
       {
         "msgid": "Avatar hash"
+      },
+      {
+        "msgid": "Backspace"
       },
       {
         "msgid": "Belgium"
@@ -7190,6 +9625,9 @@
         "msgid": "Gateway"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -7203,6 +9641,9 @@
       },
       {
         "msgid": "Markdown"
+      },
+      {
+        "msgid": "Mod"
       },
       {
         "msgid": "NCMEC {ncmecReportId}"
@@ -7229,16 +9670,31 @@
         "msgid": "Ping"
       },
       {
+        "msgid": "Platform"
+      },
+      {
         "msgid": "Port"
       },
       {
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Spoiler"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
         "msgid": "Token"
       },
       {
         "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Web {buildVersion}"
@@ -7280,7 +9736,16 @@
         "msgid": "online"
       },
       {
+        "msgid": "spoiler"
+      },
+      {
         "msgid": "user@example.com"
+      },
+      {
+        "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{formattedPresenceCount} online"
       },
       {
         "msgid": "{fps} FPS"
@@ -7301,13 +9766,215 @@
         "msgid": "{presenceCount} online"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
       },
       {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{zoomPercent}%"
+      },
+      {
+        "msgctxt": "community-settings-tab",
+        "msgid": "Emoji"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Hawaii"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
       }
     ],
     "id": [
@@ -7357,6 +10024,9 @@
         "msgid": "Bandwidth"
       },
       {
+        "msgid": "Banner"
+      },
+      {
         "msgid": "Bio"
       },
       {
@@ -7366,10 +10036,16 @@
         "msgid": "Bluesky"
       },
       {
+        "msgid": "Bookmark"
+      },
+      {
         "msgid": "Bot"
       },
       {
         "msgid": "Bulgaria"
+      },
+      {
+        "msgid": "Checkout"
       },
       {
         "msgid": "Cisco"
@@ -7387,7 +10063,25 @@
         "msgid": "Debug"
       },
       {
+        "msgid": "Debugging"
+      },
+      {
         "msgid": "Default"
+      },
+      {
+        "msgid": "Denmark"
+      },
+      {
+        "msgid": "Desktop"
+      },
+      {
+        "msgid": "Detail"
+      },
+      {
+        "msgid": "Domain"
+      },
+      {
+        "msgid": "Edit"
       },
       {
         "msgid": "Edit \"{0}\""
@@ -7399,22 +10093,64 @@
         "msgid": "Edit Thread"
       },
       {
+        "msgid": "Edit media"
+      },
+      {
         "msgid": "Edit tag"
       },
       {
         "msgid": "Edit {engineName}"
       },
       {
+        "msgid": "Email"
+      },
+      {
+        "msgid": "Emoji"
+      },
+      {
+        "msgid": "Endpoint"
+      },
+      {
+        "msgid": "Enter"
+      },
+      {
+        "msgid": "Esc"
+      },
+      {
+        "msgid": "Escape"
+      },
+      {
+        "msgid": "Estonia"
+      },
+      {
         "msgid": "Favicon"
+      },
+      {
+        "msgid": "File: {fileName}"
+      },
+      {
+        "msgid": "Filter"
       },
       {
         "msgid": "Fluxer"
       },
       {
+        "msgid": "Folder"
+      },
+      {
+        "msgid": "Font"
+      },
+      {
         "msgid": "Forum"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
+      },
+      {
+        "msgid": "Header"
       },
       {
         "msgid": "Hindi"
@@ -7442,6 +10178,9 @@
       },
       {
         "msgid": "Metadata"
+      },
+      {
+        "msgid": "Mod"
       },
       {
         "msgid": "Moderator"
@@ -7474,6 +10213,9 @@
         "msgid": "Output"
       },
       {
+        "msgid": "Passkey"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -7501,6 +10243,9 @@
         "msgid": "Premium"
       },
       {
+        "msgid": "Prompt"
+      },
+      {
         "msgid": "SHA-256 Hash"
       },
       {
@@ -7514,6 +10259,9 @@
       },
       {
         "msgid": "Spam"
+      },
+      {
+        "msgid": "Speaker"
       },
       {
         "msgid": "Spoiler"
@@ -7552,6 +10300,12 @@
         "msgid": "Video"
       },
       {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
+      },
+      {
         "msgid": "Visual"
       },
       {
@@ -7582,6 +10336,9 @@
         "msgid": "YubiKey"
       },
       {
+        "msgid": "Zoom"
+      },
+      {
         "msgid": "cron"
       },
       {
@@ -7592,6 +10349,9 @@
       },
       {
         "msgid": "deleted-role"
+      },
+      {
+        "msgid": "emoji {emojiName}"
       },
       {
         "msgid": "macOS"
@@ -7609,6 +10369,12 @@
         "msgid": "video"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{desktopChannel} Desktop {desktopVersion}"
+      },
+      {
         "msgid": "{formattedPresenceCount} online"
       },
       {
@@ -7624,6 +10390,9 @@
         "msgid": "{megabits} Mbps"
       },
       {
+        "msgid": "{messageGroupSpacing}px"
+      },
+      {
         "msgid": "{onlineCount} online"
       },
       {
@@ -7633,10 +10402,19 @@
         "msgid": "{productName} Desktop"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
+        "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
         "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
       },
       {
         "msgid": "{totalCount} total"
@@ -7657,8 +10435,232 @@
         "msgid": "Media"
       },
       {
+        "msgctxt": "community-settings-tab",
+        "msgid": "Emoji"
+      },
+      {
+        "msgctxt": "gamepad-button-name",
+        "msgid": "Gamepad Back / Select"
+      },
+      {
+        "msgctxt": "gamepad-button-name",
+        "msgid": "Gamepad Guide"
+      },
+      {
+        "msgctxt": "gamepad-button-name",
+        "msgid": "Gamepad Start / Options"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Menu"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "California"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Hawaii"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
+      },
+      {
         "msgctxt": "voice-video-settings-section",
         "msgid": "Video"
+      },
+      {
+        "msgctxt": "window-menu",
+        "msgid": "Zoom"
       }
     ],
     "it": [
@@ -7750,6 +10752,9 @@
         "msgid": "Emoji"
       },
       {
+        "msgid": "Emoticon"
+      },
+      {
         "msgid": "Endpoint"
       },
       {
@@ -7771,10 +10776,16 @@
         "msgid": "Fluxer"
       },
       {
+        "msgid": "Focus"
+      },
+      {
         "msgid": "Forum"
       },
       {
         "msgid": "Gateway"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -7804,6 +10815,9 @@
         "msgid": "Jitter"
       },
       {
+        "msgid": "Layout"
+      },
+      {
         "msgid": "Link"
       },
       {
@@ -7811,6 +10825,9 @@
       },
       {
         "msgid": "Malta"
+      },
+      {
+        "msgid": "Markdown"
       },
       {
         "msgid": "Media"
@@ -7891,6 +10908,15 @@
         "msgid": "Static Neko"
       },
       {
+        "msgid": "Sticker"
+      },
+      {
+        "msgid": "Sticker: {stickerName}"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
         "msgid": "Tag"
       },
       {
@@ -7904,6 +10930,12 @@
       },
       {
         "msgid": "Video"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Volume"
@@ -7951,6 +10983,9 @@
         "msgid": "deleted-role"
       },
       {
+        "msgid": "emoji {emojiName}"
+      },
+      {
         "msgid": "link"
       },
       {
@@ -7963,13 +10998,22 @@
         "msgid": "spoiler"
       },
       {
+        "msgid": "sticker"
+      },
+      {
         "msgid": "user@example.com"
       },
       {
         "msgid": "video"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{desktopChannel} Desktop {desktopVersion}"
+      },
+      {
+        "msgid": "{formattedPresenceCount} online"
       },
       {
         "msgid": "{fps} FPS"
@@ -7987,13 +11031,28 @@
         "msgid": "{messageGroupSpacing}px"
       },
       {
+        "msgid": "{onlineCount} online"
+      },
+      {
+        "msgid": "{presenceCount} online"
+      },
+      {
         "msgid": "{productName} Desktop"
+      },
+      {
+        "msgid": "{productName} Visionary"
       },
       {
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
         "msgid": "{renderedOnlineCount} online"
+      },
+      {
+        "msgid": "{renderedPresenceCount} online"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
       },
       {
         "msgid": "{zoomPercent}%"
@@ -8007,12 +11066,200 @@
         "msgid": "Emoji"
       },
       {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Menu"
+      },
+      {
         "msgctxt": "noise-suppression-option",
         "msgid": "Standard"
       },
       {
         "msgctxt": "security-settings-section",
         "msgid": "Account"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "California"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Hawaii"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
       },
       {
         "msgctxt": "voice-video-settings-section",
@@ -8079,6 +11326,12 @@
         "msgid": "OP"
       },
       {
+        "msgid": "PgDn"
+      },
+      {
+        "msgid": "PgUp"
+      },
+      {
         "msgid": "Ping"
       },
       {
@@ -8089,6 +11342,9 @@
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Shift"
       },
       {
         "msgid": "Visionary"
@@ -8136,6 +11392,9 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{fps} FPS"
       },
       {
@@ -8154,7 +11413,30 @@
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{zoomPercent}%"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
       }
     ],
     "ko": [
@@ -8204,10 +11486,31 @@
         "msgid": "OP"
       },
       {
+        "msgid": "PgDn"
+      },
+      {
+        "msgid": "PgUp"
+      },
+      {
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
         "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
+      },
+      {
+        "msgid": "Visionary ID {visionaryIdLabel}"
+      },
+      {
+        "msgid": "WebAuthn"
+      },
+      {
+        "msgid": "Win"
       },
       {
         "msgid": "cron"
@@ -8231,6 +11534,9 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{fps} FPS"
       },
       {
@@ -8240,7 +11546,33 @@
         "msgid": "{messageGroupSpacing}px"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{zoomPercent}%"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
       }
     ],
     "lt": [
@@ -8257,13 +11589,31 @@
         "msgid": "Alt"
       },
       {
+        "msgid": "Backspace"
+      },
+      {
+        "msgid": "Bluesky"
+      },
+      {
         "msgid": "Cisco"
+      },
+      {
+        "msgid": "Ctrl"
       },
       {
         "msgid": "Enter"
       },
       {
+        "msgid": "Esc"
+      },
+      {
+        "msgid": "Escape"
+      },
+      {
         "msgid": "Fluxer"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -8275,10 +11625,19 @@
         "msgid": "Instance"
       },
       {
+        "msgid": "Instance URL"
+      },
+      {
         "msgid": "JWKS URL"
       },
       {
         "msgid": "Malta"
+      },
+      {
+        "msgid": "Markdown"
+      },
+      {
+        "msgid": "Mod"
       },
       {
         "msgid": "NCMEC {ncmecReportId}"
@@ -8296,10 +11655,37 @@
         "msgid": "PgUp"
       },
       {
+        "msgid": "PiP"
+      },
+      {
+        "msgid": "Ping"
+      },
+      {
         "msgid": "Premium"
       },
       {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
+      },
+      {
+        "msgid": "Visionary ID {visionaryIdLabel}"
+      },
+      {
+        "msgid": "WebAuthn"
+      },
+      {
+        "msgid": "Win"
       },
       {
         "msgid": "YubiKey"
@@ -8317,6 +11703,9 @@
         "msgid": "deleted-role"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{fps} FPS"
       },
       {
@@ -8327,6 +11716,69 @@
       },
       {
         "msgid": "{megabits} Mbps"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Convert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
       }
     ],
     "nl": [
@@ -8364,6 +11816,12 @@
         "msgid": "Authenticators"
       },
       {
+        "msgid": "Avatar"
+      },
+      {
+        "msgid": "Avatars"
+      },
+      {
         "msgid": "Backspace"
       },
       {
@@ -8374,6 +11832,9 @@
       },
       {
         "msgid": "Bio"
+      },
+      {
+        "msgid": "Bitrate"
       },
       {
         "msgid": "Bluesky"
@@ -8439,6 +11900,9 @@
         "msgid": "Details"
       },
       {
+        "msgid": "Details: {reason}"
+      },
+      {
         "msgid": "Discriminator"
       },
       {
@@ -8455,6 +11919,12 @@
       },
       {
         "msgid": "Emoticons"
+      },
+      {
+        "msgid": "Enter"
+      },
+      {
+        "msgid": "Esc"
       },
       {
         "msgid": "Favicon"
@@ -8478,6 +11948,9 @@
         "msgid": "Gateway"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -8497,6 +11970,9 @@
       },
       {
         "msgid": "In"
+      },
+      {
+        "msgid": "Inbox"
       },
       {
         "msgid": "Indicator"
@@ -8610,6 +12086,12 @@
         "msgid": "Open {productName}"
       },
       {
+        "msgid": "Passkey"
+      },
+      {
+        "msgid": "Passkeys"
+      },
+      {
         "msgid": "Payload"
       },
       {
@@ -8658,7 +12140,16 @@
         "msgid": "Relevant"
       },
       {
+        "msgid": "Reposts: <0>{countLabel}</0>"
+      },
+      {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Sourcemaps"
       },
       {
         "msgid": "Spam"
@@ -8671,6 +12162,9 @@
       },
       {
         "msgid": "Spoilers"
+      },
+      {
+        "msgid": "Stack traces"
       },
       {
         "msgid": "Status"
@@ -8695,6 +12189,9 @@
       },
       {
         "msgid": "Substring"
+      },
+      {
+        "msgid": "Tab"
       },
       {
         "msgid": "Tag"
@@ -8740,6 +12237,12 @@
       },
       {
         "msgid": "Video"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Voice servers: {regionName}"
@@ -8814,6 +12317,9 @@
         "msgid": "video"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{count, plural, one {# item} other {# items}}"
       },
       {
@@ -8824,6 +12330,15 @@
       },
       {
         "msgid": "{kilobits} kbps"
+      },
+      {
+        "msgid": "{length, plural, one {# app} other {# apps}}"
+      },
+      {
+        "msgid": "{length, plural, one {# embed} other {# embeds}}"
+      },
+      {
+        "msgid": "{length, plural, one {# sticker} other {# stickers}}"
       },
       {
         "msgid": "{length} apps"
@@ -8839,6 +12354,9 @@
       },
       {
         "msgid": "{presenceCount} online"
+      },
+      {
+        "msgid": "{productName} Visionary"
       },
       {
         "msgid": "{renderedOnlineCount} online"
@@ -8877,6 +12395,226 @@
         "msgid": "Webhooks"
       },
       {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Menu"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "registration-policy",
+        "msgid": "Open"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "District of Columbia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Mexico"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "South Carolina"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "West Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
+      },
+      {
+        "msgctxt": "voice-video-settings-section",
+        "msgid": "Audio"
+      },
+      {
         "msgctxt": "voice-video-settings-section",
         "msgid": "Video"
       }
@@ -8907,6 +12645,9 @@
         "msgid": "Alt"
       },
       {
+        "msgid": "Avatar"
+      },
+      {
         "msgid": "Ban reason"
       },
       {
@@ -8914,6 +12655,9 @@
       },
       {
         "msgid": "Bind"
+      },
+      {
+        "msgid": "Bio"
       },
       {
         "msgid": "Bluesky"
@@ -8971,6 +12715,9 @@
       },
       {
         "msgid": "Gateway"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -9033,6 +12780,12 @@
         "msgid": "Permanent"
       },
       {
+        "msgid": "PgDn"
+      },
+      {
+        "msgid": "PgUp"
+      },
+      {
         "msgid": "Ping"
       },
       {
@@ -9081,6 +12834,9 @@
         "msgid": "Spam"
       },
       {
+        "msgid": "Spoiler"
+      },
+      {
         "msgid": "Standard"
       },
       {
@@ -9097,6 +12853,9 @@
       },
       {
         "msgid": "System"
+      },
+      {
+        "msgid": "Tab"
       },
       {
         "msgid": "Test SMTP"
@@ -9124,6 +12883,12 @@
       },
       {
         "msgid": "Video"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "WebAuthn"
@@ -9168,7 +12933,13 @@
         "msgid": "sendSystemDm"
       },
       {
+        "msgid": "spoiler"
+      },
+      {
         "msgid": "video"
+      },
+      {
+        "msgid": "{context} · {accountName}"
       },
       {
         "msgid": "{fps} FPS"
@@ -9180,8 +12951,230 @@
         "msgid": "{megabits} Mbps"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgctxt": "community-settings-tab",
         "msgid": "Emoji"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "California"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "District of Columbia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Hawaii"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Mexico"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
+      },
+      {
+        "msgctxt": "voice-video-settings-section",
+        "msgid": "Video"
+      },
+      {
+        "msgctxt": "window-menu",
+        "msgid": "Zoom"
       }
     ],
     "pl": [
@@ -9199,6 +13192,9 @@
       },
       {
         "msgid": "Austria"
+      },
+      {
+        "msgid": "Backspace"
       },
       {
         "msgid": "Bluesky"
@@ -9238,6 +13234,9 @@
       },
       {
         "msgid": "Forum"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -9285,6 +13284,9 @@
         "msgid": "Online"
       },
       {
+        "msgid": "PgDn"
+      },
+      {
         "msgid": "PgUp"
       },
       {
@@ -9309,7 +13311,13 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
         "msgid": "Spam"
+      },
+      {
+        "msgid": "Spoiler"
       },
       {
         "msgid": "Status"
@@ -9321,10 +13329,19 @@
         "msgid": "System"
       },
       {
+        "msgid": "Tab"
+      },
+      {
         "msgid": "Tag"
       },
       {
         "msgid": "Token"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Web {buildVersion}"
@@ -9360,13 +13377,25 @@
         "msgid": "deleted-role"
       },
       {
+        "msgid": "link"
+      },
+      {
         "msgid": "macOS"
       },
       {
         "msgid": "online"
       },
       {
+        "msgid": "spoiler"
+      },
+      {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{desktopChannel} Desktop {desktopVersion}"
+      },
+      {
+        "msgid": "{formattedPresenceCount} online"
       },
       {
         "msgid": "{onlineCount} online"
@@ -9375,14 +13404,183 @@
         "msgid": "{presenceCount} online"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
       },
       {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
+        "msgid": "{zoomPercent}%"
+      },
+      {
         "msgctxt": "community-settings-tab",
         "msgid": "Emoji"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Menu"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
       }
     ],
     "pt-BR": [
@@ -9412,6 +13610,9 @@
       },
       {
         "msgid": "Avatar"
+      },
+      {
+        "msgid": "Backspace"
       },
       {
         "msgid": "Banner"
@@ -9447,6 +13648,9 @@
         "msgid": "Emoticons"
       },
       {
+        "msgid": "Endpoint"
+      },
+      {
         "msgid": "Enter"
       },
       {
@@ -9465,6 +13669,9 @@
         "msgid": "Gateway"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -9474,10 +13681,16 @@
         "msgid": "Hindi"
       },
       {
+        "msgid": "Host"
+      },
+      {
         "msgid": "Interface"
       },
       {
         "msgid": "Latitude"
+      },
+      {
+        "msgid": "Layout"
       },
       {
         "msgid": "Link"
@@ -9513,7 +13726,16 @@
         "msgid": "OP"
       },
       {
+        "msgid": "Offline"
+      },
+      {
         "msgid": "Online"
+      },
+      {
+        "msgid": "PgDn"
+      },
+      {
+        "msgid": "PgUp"
       },
       {
         "msgid": "PiP"
@@ -9540,16 +13762,31 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
         "msgid": "Social"
       },
       {
         "msgid": "Spam"
       },
       {
+        "msgid": "Spoiler"
+      },
+      {
+        "msgid": "Spoilers"
+      },
+      {
+        "msgid": "Status"
+      },
+      {
         "msgid": "Submenu"
       },
       {
         "msgid": "Substring"
+      },
+      {
+        "msgid": "Tab"
       },
       {
         "msgid": "Tag"
@@ -9568,6 +13805,15 @@
       },
       {
         "msgid": "Tokens"
+      },
+      {
+        "msgid": "Use {accountTag}"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Visual"
@@ -9630,6 +13876,9 @@
         "msgid": "spoiler"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{count, plural, one {# emoji} other {# emojis}}"
       },
       {
@@ -9663,10 +13912,16 @@
         "msgid": "{presenceCount} online"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
       },
       {
         "msgid": "{tokenCount, plural, one {# token} other {# tokens}}"
@@ -9692,6 +13947,170 @@
       {
         "msgctxt": "community-settings-tab",
         "msgid": "Webhooks"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Menu"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
+      },
+      {
+        "msgctxt": "window-menu",
+        "msgid": "Zoom"
       }
     ],
     "ro": [
@@ -9709,6 +14128,9 @@
       },
       {
         "msgid": "AV1"
+      },
+      {
+        "msgid": "Accent"
       },
       {
         "msgid": "Admin"
@@ -9729,6 +14151,9 @@
         "msgid": "Avatar"
       },
       {
+        "msgid": "Backspace"
+      },
+      {
         "msgid": "Banner"
       },
       {
@@ -9739,6 +14164,9 @@
       },
       {
         "msgid": "Bot"
+      },
+      {
+        "msgid": "Branding"
       },
       {
         "msgid": "Bulgaria"
@@ -9792,6 +14220,9 @@
         "msgid": "Esc"
       },
       {
+        "msgid": "Escape"
+      },
+      {
         "msgid": "Estonia"
       },
       {
@@ -9819,6 +14250,9 @@
         "msgid": "General"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -9835,6 +14269,9 @@
       },
       {
         "msgid": "Invalid"
+      },
+      {
+        "msgid": "Jitter"
       },
       {
         "msgid": "Job {jobId}: {jobStatus}"
@@ -9915,6 +14352,9 @@
         "msgid": "Set the role color to {color}."
       },
       {
+        "msgid": "Shift"
+      },
+      {
         "msgid": "Slovenia"
       },
       {
@@ -9939,10 +14379,22 @@
         "msgid": "Static Neko"
       },
       {
+        "msgid": "Sticker"
+      },
+      {
+        "msgid": "Sticker: {stickerName}"
+      },
+      {
         "msgid": "Streaming"
       },
       {
         "msgid": "Subtext"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
+        "msgid": "Tag"
       },
       {
         "msgid": "Text"
@@ -9952,6 +14404,12 @@
       },
       {
         "msgid": "Video"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Web {buildVersion}"
@@ -9990,6 +14448,9 @@
         "msgid": "emoji {emojiName}"
       },
       {
+        "msgid": "exclude {values}"
+      },
+      {
         "msgid": "link"
       },
       {
@@ -10005,13 +14466,22 @@
         "msgid": "spoiler"
       },
       {
+        "msgid": "sticker"
+      },
+      {
         "msgid": "user@example.com"
       },
       {
         "msgid": "video"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{desktopChannel} Desktop {desktopVersion}"
+      },
+      {
+        "msgid": "{formattedPresenceCount} online"
       },
       {
         "msgid": "{fps} FPS"
@@ -10044,7 +14514,13 @@
         "msgid": "{renderedPresenceCount} online"
       },
       {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{totalCount} total"
+      },
+      {
+        "msgid": "{zoomPercent}%"
       },
       {
         "msgctxt": "chat-settings-section",
@@ -10055,8 +14531,212 @@
         "msgid": "Emoji"
       },
       {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
         "msgctxt": "noise-suppression-option",
         "msgid": "Standard"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "California"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Hawaii"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Mexico"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
       },
       {
         "msgctxt": "voice-video-settings-section",
@@ -10090,7 +14770,13 @@
         "msgid": "Ctrl"
       },
       {
+        "msgid": "Enter"
+      },
+      {
         "msgid": "Esc"
+      },
+      {
+        "msgid": "Escape"
       },
       {
         "msgid": "Fluxer"
@@ -10114,7 +14800,19 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
         "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
+      },
+      {
+        "msgid": "Visionary ID {visionaryIdLabel}"
       },
       {
         "msgid": "WebAuthn"
@@ -10147,6 +14845,9 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{fps} FPS"
       },
       {
@@ -10157,6 +14858,26 @@
       },
       {
         "msgid": "{zoomPercent}%"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
       }
     ],
     "sv-SE": [
@@ -10209,6 +14930,9 @@
         "msgid": "Codec"
       },
       {
+        "msgid": "Communities"
+      },
+      {
         "msgid": "Community"
       },
       {
@@ -10227,6 +14951,9 @@
         "msgid": "Esc"
       },
       {
+        "msgid": "Escape"
+      },
+      {
         "msgid": "Favicon"
       },
       {
@@ -10242,6 +14969,9 @@
         "msgid": "Gateway"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -10252,6 +14982,9 @@
       },
       {
         "msgid": "Lane"
+      },
+      {
+        "msgid": "Layout"
       },
       {
         "msgid": "Live"
@@ -10287,7 +15020,16 @@
         "msgid": "OP"
       },
       {
+        "msgid": "Offline"
+      },
+      {
+        "msgid": "Online"
+      },
+      {
         "msgid": "Permanent"
+      },
+      {
+        "msgid": "PgDn"
       },
       {
         "msgid": "PgUp"
@@ -10335,6 +15077,15 @@
         "msgid": "Session"
       },
       {
+        "msgid": "Smileys"
+      },
+      {
+        "msgid": "Spoiler"
+      },
+      {
+        "msgid": "Spoilers"
+      },
+      {
         "msgid": "Standard"
       },
       {
@@ -10350,7 +15101,13 @@
         "msgid": "System"
       },
       {
+        "msgid": "Tab"
+      },
+      {
         "msgid": "Text"
+      },
+      {
+        "msgid": "Timeout"
       },
       {
         "msgid": "Token"
@@ -10360,6 +15117,12 @@
       },
       {
         "msgid": "Video"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "WebAuthn"
@@ -10407,7 +15170,16 @@
         "msgid": "online"
       },
       {
+        "msgid": "spoiler"
+      },
+      {
         "msgid": "video"
+      },
+      {
+        "msgid": "{categoryLabel}, {count, plural, one {# community} other {# communities}}"
+      },
+      {
+        "msgid": "{context} · {accountName}"
       },
       {
         "msgid": "{count, plural, one {# emoji} other {# emojis}}"
@@ -10434,6 +15206,9 @@
         "msgid": "{presenceCount} online"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
@@ -10441,6 +15216,9 @@
       },
       {
         "msgid": "{renderedPresenceCount} online"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
       },
       {
         "msgid": "{tokenCount, plural, one {# token} other {# tokens}}"
@@ -10459,6 +15237,226 @@
       {
         "msgctxt": "community-settings-tab",
         "msgid": "Webhooks"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "District of Columbia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Hawaii"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Mexico"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "North Carolina"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "North Dakota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "South Dakota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "West Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
       },
       {
         "msgctxt": "voice-video-settings-section",
@@ -10494,13 +15492,22 @@
         "msgid": "Cisco"
       },
       {
+        "msgid": "Client secret"
+      },
+      {
         "msgid": "Ctrl"
+      },
+      {
+        "msgid": "Enter"
       },
       {
         "msgid": "Esc"
       },
       {
         "msgid": "Fluxer"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -10524,7 +15531,22 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Stack traces"
+      },
+      {
         "msgid": "Static Neko"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
+      },
+      {
+        "msgid": "Visionary ID {visionaryIdLabel}"
       },
       {
         "msgid": "WebAuthn"
@@ -10534,6 +15556,9 @@
       },
       {
         "msgid": "Webhook {currentName}"
+      },
+      {
+        "msgid": "Win"
       },
       {
         "msgid": "YubiKey"
@@ -10557,6 +15582,9 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{fps} FPS"
       },
       {
@@ -10569,7 +15597,33 @@
         "msgid": "{messageGroupSpacing}px"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{zoomPercent}%"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
       }
     ],
     "tr": [
@@ -10595,6 +15649,12 @@
         "msgid": "Avatar"
       },
       {
+        "msgid": "Backspace"
+      },
+      {
+        "msgid": "Banner"
+      },
+      {
         "msgid": "Bluesky"
       },
       {
@@ -10613,6 +15673,15 @@
         "msgid": "Emoji"
       },
       {
+        "msgid": "Enter"
+      },
+      {
+        "msgid": "Esc"
+      },
+      {
+        "msgid": "Escape"
+      },
+      {
         "msgid": "Favicon"
       },
       {
@@ -10620,6 +15689,9 @@
       },
       {
         "msgid": "Forum"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -10652,6 +15724,12 @@
         "msgid": "OP"
       },
       {
+        "msgid": "PgDn"
+      },
+      {
+        "msgid": "PgUp"
+      },
+      {
         "msgid": "Ping"
       },
       {
@@ -10679,10 +15757,25 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
         "msgid": "Spam"
       },
       {
+        "msgid": "Spoiler"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
         "msgid": "Video"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
         "msgid": "Web {buildVersion}"
@@ -10718,7 +15811,13 @@
         "msgid": "macOS"
       },
       {
+        "msgid": "spoiler"
+      },
+      {
         "msgid": "video"
+      },
+      {
+        "msgid": "{context} · {accountName}"
       },
       {
         "msgid": "{fps} FPS"
@@ -10736,11 +15835,205 @@
         "msgid": "{messageGroupSpacing}px"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
       },
       {
         "msgctxt": "community-settings-tab",
         "msgid": "Emoji"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Hawaii"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
       },
       {
         "msgctxt": "voice-video-settings-section",
@@ -10776,7 +16069,13 @@
         "msgid": "Esc"
       },
       {
+        "msgid": "Escape"
+      },
+      {
         "msgid": "Fluxer"
+      },
+      {
+        "msgid": "Google Lens"
       },
       {
         "msgid": "HEVC"
@@ -10800,10 +16099,19 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
         "msgid": "Visionary"
       },
       {
         "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
+      },
+      {
+        "msgid": "Visionary ID {visionaryIdLabel}"
       },
       {
         "msgid": "WebAuthn"
@@ -10836,13 +16144,45 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{fps} FPS"
+      },
+      {
         "msgid": "{messageGroupSpacing}px"
+      },
+      {
+        "msgid": "{productName} Visionary"
       },
       {
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{zoomPercent}%"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
       }
     ],
     "vi": [
@@ -10868,6 +16208,9 @@
         "msgid": "Anime & manga"
       },
       {
+        "msgid": "Backspace"
+      },
+      {
         "msgid": "Bluesky"
       },
       {
@@ -10881,6 +16224,9 @@
       },
       {
         "msgid": "Cisco"
+      },
+      {
+        "msgid": "Codec"
       },
       {
         "msgid": "Croatia"
@@ -10904,6 +16250,9 @@
         "msgid": "Fluxer"
       },
       {
+        "msgid": "Google Lens"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -10925,7 +16274,16 @@
         "msgid": "Malta"
       },
       {
+        "msgid": "Markdown"
+      },
+      {
+        "msgid": "Mic"
+      },
+      {
         "msgid": "Microphone ({deviceLabel})"
+      },
+      {
+        "msgid": "Mod"
       },
       {
         "msgid": "NCMEC {ncmecReportId}"
@@ -10955,6 +16313,9 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
         "msgid": "Slovakia"
       },
       {
@@ -10980,6 +16341,9 @@
       },
       {
         "msgid": "WebAuthn"
+      },
+      {
+        "msgid": "Webcam"
       },
       {
         "msgid": "Webhook"
@@ -11018,6 +16382,9 @@
         "msgid": "video"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{fps} FPS"
       },
       {
@@ -11033,7 +16400,221 @@
         "msgid": "{messageGroupSpacing}px"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{zoomPercent}%"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Kana"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Menu"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alabama"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Alaska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arizona"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Arkansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "California"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Colorado"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Connecticut"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Delaware"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Florida"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Georgia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Hawaii"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Idaho"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Illinois"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Indiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Iowa"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kansas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Kentucky"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Louisiana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maine"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Maryland"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Massachusetts"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Michigan"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Minnesota"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Mississippi"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Missouri"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Montana"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nebraska"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Nevada"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Hampshire"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Jersey"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New Mexico"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "New York"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Ohio"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oklahoma"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Oregon"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Pennsylvania"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Rhode Island"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Tennessee"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Texas"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Utah"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Vermont"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Virginia"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Washington"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wisconsin"
+      },
+      {
+        "msgctxt": "us-state",
+        "msgid": "Wyoming"
       },
       {
         "msgctxt": "voice-video-settings-section",
@@ -11046,6 +16627,9 @@
       },
       {
         "msgid": "AV1"
+      },
+      {
+        "msgid": "Alt"
       },
       {
         "msgid": "Bluesky"
@@ -11087,6 +16671,21 @@
         "msgid": "Searching..."
       },
       {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Sourcemaps"
+      },
+      {
+        "msgid": "Tab"
+      },
+      {
+        "msgid": "Visionary"
+      },
+      {
+        "msgid": "Visionary ID {visionaryIdLabel}"
+      },
+      {
         "msgid": "WebAuthn"
       },
       {
@@ -11123,16 +16722,44 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
+        "msgid": "{fps} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
         "msgid": "{megabits} Mbps"
       },
       {
+        "msgid": "{productName} Visionary"
+      },
+      {
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{zoomPercent}%"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
       }
     ],
     "zh-TW": [
@@ -11152,6 +16779,9 @@
         "msgid": "AV1"
       },
       {
+        "msgid": "Alt"
+      },
+      {
         "msgid": "Bluesky"
       },
       {
@@ -11165,6 +16795,9 @@
       },
       {
         "msgid": "Esc"
+      },
+      {
+        "msgid": "Escape"
       },
       {
         "msgid": "Fluxer"
@@ -11191,7 +16824,16 @@
         "msgid": "PgDn"
       },
       {
+        "msgid": "PgUp"
+      },
+      {
         "msgid": "Searching..."
+      },
+      {
+        "msgid": "Shift"
+      },
+      {
+        "msgid": "Tab"
       },
       {
         "msgid": "WebAuthn"
@@ -11233,6 +16875,9 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{context} · {accountName}"
+      },
+      {
         "msgid": "{fps} FPS"
       },
       {
@@ -11245,7 +16890,30 @@
         "msgid": "{megabits} Mbps"
       },
       {
+        "msgid": "{resolution} {fps} FPS"
+      },
+      {
         "msgid": "{zoomPercent}%"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Delete"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "End"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Home"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Insert"
+      },
+      {
+        "msgctxt": "keyboard-key-name",
+        "msgid": "Pause / Break"
       }
     ]
   }

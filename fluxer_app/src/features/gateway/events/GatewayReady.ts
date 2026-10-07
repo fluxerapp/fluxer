@@ -2,9 +2,8 @@
 
 import {startDomainMigrationTrigger} from '@app/features/app/domain_migration/DomainMigrationTrigger';
 import Initialization from '@app/features/app/state/Initialization';
-import PasskeyMigration from '@app/features/auth/passkey_migration/PasskeyMigration';
-import AccountManager from '@app/features/auth/state/AccountManager';
 import accountStorage from '@app/features/auth/state/AccountStorage';
+import Accounts from '@app/features/auth/state/Accounts';
 import Authentication from '@app/features/auth/state/Authentication';
 import AuthSession from '@app/features/auth/state/AuthSession';
 import ChannelPins from '@app/features/channel/state/ChannelPins';
@@ -12,11 +11,11 @@ import Channels from '@app/features/channel/state/Channels';
 import UserConnection from '@app/features/connection/state/UserConnection';
 import Emoji from '@app/features/emoji/state/Emoji';
 import Sticker from '@app/features/emoji/state/EmojiSticker';
-import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import type {FavoriteMemeWire} from '@app/features/expressions/models/FavoriteMeme';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import ForumPosts from '@app/features/forum/state/ForumPosts';
 import ForumReadState from '@app/features/forum/state/ForumReadState';
+import {scheduleAccountReadyWork} from '@app/features/gateway/events/AccountReadyWork';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {PresenceRecord} from '@app/features/gateway/types/GatewayPresenceTypes';
@@ -37,7 +36,6 @@ import NavigationSideEffects from '@app/features/navigation/state/NavigationSide
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import Presence from '@app/features/presence/state/Presence';
 import ReadStates, {type GatewayReadState} from '@app/features/read_state/state/ReadStates';
 import type {RelationshipWire} from '@app/features/relationship/models/Relationship';
@@ -48,18 +46,22 @@ import ThreadSubscriptions from '@app/features/threads/state/ThreadSubscriptions
 import UserGuildSettings, {type GatewayGuildSettings} from '@app/features/user/state/UserGuildSettings';
 import UserNote from '@app/features/user/state/UserNote';
 import UserPinnedDM from '@app/features/user/state/UserPinnedDM';
-import UserSettings, {type UserSettings as UserSettingsWire} from '@app/features/user/state/UserSettings';
+import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import WebAuthnCredentials, {type WebAuthnCredential} from '@app/features/user/state/WebAuthnCredentials';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import RtcRegions from '@app/features/voice/state/RtcRegions';
+import {seedVoiceStatesFromReady} from '@app/features/voice/VoiceGatewayLifecycle';
 import type {RtcRegionResponse, Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import type {UserPrivate, User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import type {
+	UserPrivate,
+	UserSettingsResponse,
+	User as WireUser,
+} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {runInAction} from 'mobx';
 
 const logger = new Logger('READY Handler');
 
-interface ReadyPayload {
+export interface ReadyPayload {
 	session_id: string;
 	guilds: Array<GuildReadyData>;
 	user: UserPrivate;
@@ -72,7 +74,7 @@ interface ReadyPayload {
 	relationships?: Array<RelationshipWire>;
 	favorite_memes?: Array<FavoriteMemeWire>;
 	users?: Array<WireUser>;
-	user_settings?: UserSettingsWire;
+	user_settings?: UserSettingsResponse;
 	user_guild_settings?: Array<GatewayGuildSettings>;
 	read_states?: Array<GatewayReadState>;
 	read_state_proto?: string;
@@ -82,11 +84,33 @@ interface ReadyPayload {
 	webauthn_credentials?: Array<WebAuthnCredential>;
 }
 
-export function handleReady(data: ReadyPayload, context: GatewayHandlerContext): void {
-	runInAction(() => handleReadyInternal(data, context));
+export class GatewayReadyIdentityMismatchError extends Error {
+	constructor(expectedUserId: string, receivedUserId: string) {
+		super(`READY user mismatch: expected ${expectedUserId}, received ${receivedUserId}`);
+		this.name = 'GatewayReadyIdentityMismatchError';
+	}
 }
 
-function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext): void {
+export class GatewayReadyAccountContextMissingError extends Error {
+	constructor() {
+		super('Gateway READY has no account context');
+		this.name = 'GatewayReadyAccountContextMissingError';
+	}
+}
+
+export function handleReady(data: ReadyPayload, context: GatewayHandlerContext): void {
+	const accountKey = context.accountKey;
+	if (accountKey === null) {
+		throw new GatewayReadyAccountContextMissingError();
+	}
+	const expectedUserId = context.expectedUserId;
+	if (expectedUserId != null && data.user.id !== expectedUserId) {
+		throw new GatewayReadyIdentityMismatchError(expectedUserId, data.user.id);
+	}
+	runInAction(() => handleReadyInternal(data, context, accountKey));
+}
+
+function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext, accountKey: string): void {
 	const currentSessionId = data.session_id;
 	const isNewSession = context.previousSessionId !== null && context.previousSessionId !== currentSessionId;
 	if (isNewSession) {
@@ -101,10 +125,8 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	context.setPreviousSessionId(currentSessionId);
 	const guilds = data.guilds;
 	const channels: Array<WireChannel> = [];
-	if (data.private_channels) {
-		for (const channel of data.private_channels) {
-			channels.push({...channel});
-		}
+	for (const channel of data.private_channels ?? []) {
+		channels.push({...channel});
 	}
 	for (const guild of guilds) {
 		if (guild.unavailable) continue;
@@ -118,47 +140,31 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 		}
 	}
 	GuildAvailability.loadUnavailableGuilds(guilds);
-	if (data.notes) {
-		UserNote.loadNotes(data.notes);
-	}
+	UserNote.loadNotes(data.notes ?? {});
 	context.setConnectionGeoip({
 		country_code: data.country_code,
 		latitude: data.latitude,
 		longitude: data.longitude,
 	});
-	if (data.pinned_dms) {
-		UserPinnedDM.setPinnedDMs(data.pinned_dms);
-	}
-	if (data.relationships) {
-		Relationships.loadRelationships(data.relationships);
-	}
-	if (data.favorite_memes) {
-		FavoriteMemes.loadFavoriteMemes(data.favorite_memes);
-	}
-	if (data.rtc_regions) {
-		RtcRegions.setRegions(data.rtc_regions);
-	}
-	ExperimentAssignments.start(data.user.id);
-	Users.handleGatewayReady(data.user);
-	if (data.users && data.users.length > 0) {
-		Users.cacheUsers(data.users);
-	}
+	UserPinnedDM.setPinnedDMs(data.pinned_dms ?? []);
+	Relationships.loadRelationships(data.relationships ?? []);
+	FavoriteMemes.loadFavoriteMemes(data.favorite_memes ?? []);
+	RtcRegions.setRegions(data.rtc_regions ?? []);
+	Users.handleGatewayReady(accountKey, data.user);
+	Users.cacheUsers(data.users ?? []);
 	const user = data.user;
-	if (user.id) {
-		const userData = {
-			username: user.username,
-			discriminator: user.discriminator,
-			globalName: user.global_name,
-			email: user.email ?? undefined,
-			avatar: user.avatar ?? undefined,
-		};
-		void accountStorage.updateAccountUserData(user.id, userData);
-		void AccountManager.updateAccountUserData(user.id, userData);
-	}
-	Authentication.handleGatewayReady({user: data.user});
-	void PremiumCommands.refreshPremiumState().catch((error) => {
-		logger.warn('Failed to refresh premium state after READY', error);
+	const userData = {
+		username: user.username,
+		discriminator: user.discriminator,
+		globalName: user.global_name,
+		email: user.email ?? undefined,
+		avatar: user.avatar ?? undefined,
+	};
+	void accountStorage.updateAccountUserData(accountKey, userData).catch((error) => {
+		logger.warn(`Failed to persist account user data for ${accountKey}`, error);
 	});
+	Accounts.updateAccountUserData(accountKey, userData);
+	Authentication.handleGatewayReady({user: data.user});
 	Guilds.handleGatewayReady({guilds});
 	UserSettings.handleGatewayReady(data.user_settings);
 	GuildList.handleGatewayReady(guilds);
@@ -172,11 +178,7 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	ForumPosts.handleGatewayReady();
 	ForumReadState.handleGatewayReady();
 	NavigationSideEffects.handleGatewayReady();
-	if (data.auth_session_id_hash) {
-		AuthSession.handleGatewayReady(data.auth_session_id_hash);
-	} else {
-		logger.warn('READY missing auth_session_id_hash; continuing without AuthSession init');
-	}
+	AuthSession.handleGatewayReady(data.auth_session_id_hash ?? null);
 	MessageReactions.handleGatewayReady();
 	Sticker.handleGatewayReady(guilds);
 	Emoji.handleGatewayReady({guilds});
@@ -195,10 +197,10 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	});
 	GuildReadState.handleGatewayReady();
 	Presence.handleGatewayReady(data.user, guilds, data.presences);
-	MediaEngine.handleGatewayReady(guilds);
+	seedVoiceStatesFromReady(guilds);
+	if (!context.setReady()) return;
 	Initialization.setReady();
-	context.setReady();
 	Messages.handleGatewayReady();
 	startDomainMigrationTrigger();
-	PasskeyMigration.handleGatewayReady(data.user.id);
+	scheduleAccountReadyWork(data.user.id);
 }

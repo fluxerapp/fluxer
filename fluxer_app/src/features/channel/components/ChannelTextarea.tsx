@@ -17,6 +17,7 @@ interface ChannelTextareaProps {
 }
 
 export const ChannelTextarea = observer(({channel, inputSuppressed = false, placeholder}: ChannelTextareaProps) => {
+	const accountKey = Users.viewAccountKey;
 	const draft = Drafts.getDraft(channel.id);
 	const draftSegments = Drafts.getDraftSegments(channel.id);
 	const forceNoSendMessages = DeveloperOptions.forceNoSendMessages;
@@ -33,7 +34,8 @@ export const ChannelTextarea = observer(({channel, inputSuppressed = false, plac
 	}
 	return (
 		<LexicalChannelTextareaContent
-			key={channel.id}
+			key={`${accountKey ?? ''}:${channel.id}`}
+			accountKey={accountKey}
 			channel={channel}
 			draft={draft}
 			draftSegments={draftSegments}

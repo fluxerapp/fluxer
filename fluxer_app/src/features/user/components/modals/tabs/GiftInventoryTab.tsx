@@ -3,7 +3,6 @@
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {SettingsTabContainer} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
@@ -17,8 +16,10 @@ import {
 	TRY_AGAIN_DESCRIPTOR,
 	TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -149,10 +150,10 @@ const GiftCard: React.FC<GiftCardProps> = observer(({gift, isExpanded, onToggle,
 	const handleRedeem = async () => {
 		setRedeeming(true);
 		try {
-			await GiftCommands.redeem(i18n, gift.code);
+			await GiftCommands.redeem(i18n, gift.code, currentInstanceTarget());
 			ToastCommands.createToast({
 				type: 'success',
-				children: i18n._(GIFT_REDEEMED_SUCCESSFULLY_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME}),
+				children: i18n._(GIFT_REDEEMED_SUCCESSFULLY_DESCRIPTOR, {premiumProductName: getPremiumProductName()}),
 			});
 			onRedeemSuccess();
 		} catch (error) {
@@ -290,6 +291,7 @@ const GiftCard: React.FC<GiftCardProps> = observer(({gift, isExpanded, onToggle,
 	);
 });
 const GiftInventoryTab: React.FC = observer(() => {
+	const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 	const {i18n} = useLingui();
 	const [gifts, setGifts] = useState<Array<GiftMetadata>>([]);
 	const [loading, setLoading] = useState(true);
@@ -301,7 +303,7 @@ const GiftInventoryTab: React.FC = observer(() => {
 		async (data: GiftCodeFormInputs) => {
 			const trimmedCode = data.code.trim();
 			if (!trimmedCode) return;
-			await GiftCommands.redeem(i18n, trimmedCode);
+			await GiftCommands.redeem(i18n, trimmedCode, currentInstanceTarget());
 			giftCodeForm.reset();
 		},
 		[giftCodeForm, i18n],
@@ -342,7 +344,7 @@ const GiftInventoryTab: React.FC = observer(() => {
 				Icon={WarningCircleIcon}
 				title={<Trans>Claim your account</Trans>}
 				description={i18n._(CLAIM_ACCOUNT_TO_MANAGE_GIFTS_DESCRIPTOR, {
-					premiumProductName: PREMIUM_PRODUCT_NAME,
+					premiumProductName: getPremiumProductName(),
 				})}
 				actions={[
 					{
@@ -360,7 +362,7 @@ const GiftInventoryTab: React.FC = observer(() => {
 			<SettingsSection
 				id="redeem-gift"
 				title={<Trans>Redeem a gift</Trans>}
-				description={i18n._(ENTER_GIFT_CODE_TO_REDEEM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+				description={i18n._(ENTER_GIFT_CODE_TO_REDEEM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 				data-flx="user.gift-inventory-tab.redeem-gift"
 			>
 				<Form
@@ -441,10 +443,10 @@ const GiftInventoryTab: React.FC = observer(() => {
 					<StatusSlate
 						Icon={GiftIcon}
 						title={<Trans>No gifts yet</Trans>}
-						description={i18n._(BUY_GIFT_FROM_PREMIUM_TAB_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						description={i18n._(BUY_GIFT_FROM_PREMIUM_TAB_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						actions={[
 							{
-								text: i18n._(GO_TO_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME}),
+								text: i18n._(GO_TO_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()}),
 								onClick: () => ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'plutonium'}),
 								variant: 'primary',
 								fitContent: true,

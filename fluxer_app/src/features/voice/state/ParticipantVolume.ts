@@ -2,6 +2,7 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {getStreamKey} from '@app/features/voice/components/StreamKeys';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
 import {isScreenShareAudioPublicationLike, VoiceTrackKind} from '@app/features/voice/engine/VoiceTrackSource';
@@ -79,7 +80,7 @@ class ParticipantVolume {
 			},
 			{autoBind: true},
 		);
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {

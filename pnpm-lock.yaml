@@ -204,9 +204,6 @@ catalogs:
     clsx:
       specifier: 2.1.1
       version: 2.1.1
-    colorjs.io:
-      specifier: 0.7.1
-      version: 0.7.1
     combokeys:
       specifier: 3.0.1
       version: 3.0.1
@@ -225,6 +222,9 @@ catalogs:
     eventemitter3:
       specifier: 5.0.4
       version: 5.0.4
+    fake-indexeddb:
+      specifier: 6.2.5
+      version: 6.2.5
     fast-xml-parser:
       specifier: 5.11.1
       version: 5.11.1
@@ -1381,6 +1381,9 @@ importers:
       '@fluxer/date_utils':
         specifier: workspace:*
         version: link:../packages/date_utils
+      '@fluxer/desktop_ipc':
+        specifier: workspace:*
+        version: link:../packages/desktop_ipc
       '@fluxer/geo_utils':
         specifier: workspace:*
         version: link:../packages/geo_utils
@@ -1462,9 +1465,6 @@ importers:
       codemirror:
         specifier: ^6.0.2
         version: 6.0.2
-      colorjs.io:
-        specifier: 'catalog:'
-        version: 0.7.1
       combokeys:
         specifier: 'catalog:'
         version: 3.0.1
@@ -1652,6 +1652,9 @@ importers:
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
+      fake-indexeddb:
+        specifier: 'catalog:'
+        version: 6.2.5
       happy-dom:
         specifier: 20.14.5
         version: 20.14.5
@@ -1737,6 +1740,18 @@ importers:
 
   fluxer_desktop:
     dependencies:
+      '@fluxer/constants':
+        specifier: workspace:*
+        version: link:../packages/constants
+      '@fluxer/desktop_ipc':
+        specifier: workspace:*
+        version: link:../packages/desktop_ipc
+      '@fluxer/instance_bootstrap':
+        specifier: workspace:*
+        version: link:../packages/instance_bootstrap
+      '@fluxer/ip_utils':
+        specifier: workspace:*
+        version: link:../packages/ip_utils
       '@fluxer/voice_engine_v2':
         specifier: workspace:*
         version: link:../packages/voice_engine_v2
@@ -1775,6 +1790,12 @@ importers:
         specifier: catalog:ts7
         version: 7.0.2
     optionalDependencies:
+      '@fluxer/app-store':
+        specifier: file:./native/app-store
+        version: file:fluxer_desktop/native/app-store
+      '@fluxer/gateway-socket':
+        specifier: file:./native/gateway-socket
+        version: file:fluxer_desktop/native/gateway-socket
       '@fluxer/hardware-encoder':
         specifier: file:./native/hardware-encoder
         version: file:fluxer_desktop/native/hardware-encoder
@@ -1944,6 +1965,15 @@ importers:
       '@vvo/tzdb':
         specifier: 'catalog:'
         version: 6.198.0
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.1
+      typescript:
+        specifier: catalog:ts7
+        version: 7.0.2
+
+  packages/desktop_ipc:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -4458,6 +4488,14 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@fluxer/app-store@file:fluxer_desktop/native/app-store':
+    resolution: {directory: fluxer_desktop/native/app-store, type: directory}
+    cpu: [x64, arm64]
+
+  '@fluxer/gateway-socket@file:fluxer_desktop/native/gateway-socket':
+    resolution: {directory: fluxer_desktop/native/gateway-socket, type: directory}
+    cpu: [x64, arm64]
 
   '@fluxer/hardware-encoder@file:fluxer_desktop/native/hardware-encoder':
     resolution: {directory: fluxer_desktop/native/hardware-encoder, type: directory}
@@ -7348,9 +7386,6 @@ packages:
   colorette@2.0.20:
     resolution: {integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==}
 
-  colorjs.io@0.7.1:
-    resolution: {integrity: sha512-LY7OHnJZxHwT5UlzNa9bbhHHDbzB6yE5+3MIPwJEQKRvSCt/T4G7epsj+9j2BExUIIfXFIJGsIXUKdfrK9Q5tA==}
-
   combined-stream@1.0.8:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
     engines: {node: '>= 0.8'}
@@ -7893,6 +7928,10 @@ packages:
 
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
+
+  fake-indexeddb@6.2.5:
+    resolution: {integrity: sha512-CGnyrvbhPlWYMngksqrSSUT1BAVP49dZocrHuK0SvtR0D5TMs5wP0o3j7jexDJW01KSadjBp1M/71o/KR3nD1w==}
+    engines: {node: '>=18'}
 
   fast-copy@4.1.1:
     resolution: {integrity: sha512-A4QTJmuiztpGtr6AMeJts9R4hbj2ZBUwtOaKrG6rw2y7t6+IaJKjz5M3XDs8BUznxDH43FVc6A0y/gWlMl4UtA==}
@@ -13582,6 +13621,12 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
+  '@fluxer/app-store@file:fluxer_desktop/native/app-store':
+    optional: true
+
+  '@fluxer/gateway-socket@file:fluxer_desktop/native/gateway-socket':
+    optional: true
+
   '@fluxer/hardware-encoder@file:fluxer_desktop/native/hardware-encoder':
     optional: true
 
@@ -16344,8 +16389,6 @@ snapshots:
 
   colorette@2.0.20: {}
 
-  colorjs.io@0.7.1: {}
-
   combined-stream@1.0.8:
     dependencies:
       delayed-stream: 1.0.0
@@ -16934,6 +16977,8 @@ snapshots:
       '@expressive-code/plugin-text-markers': 0.44.2
 
   extend@3.0.2: {}
+
+  fake-indexeddb@6.2.5: {}
 
   fast-copy@4.1.1: {}
 

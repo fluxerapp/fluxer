@@ -37,6 +37,7 @@ let engine: GlobalShortcutsEngine | null = null;
 let legacyAdapter: LegacyGlobalKeyHookAdapter | null = null;
 const senderWatchers = new Map<number, Set<() => void>>();
 let detachPowerListeners: (() => void) | null = null;
+let detachPermissionRetry: (() => void) | null = null;
 
 function log(message: string, details?: Record<string, unknown>): void {
 	logger.info(message, details ?? {});
@@ -166,6 +167,23 @@ function attachPowerListeners(target: GlobalShortcutsEngine): () => void {
 	};
 }
 
+export function retryBlockedGlobalShortcutHooks(): void {
+	void engine?.retryBlockedHooks();
+}
+
+function attachMacPermissionRetry(target: GlobalShortcutsEngine): () => void {
+	const retryOnceGranted = (): void => {
+		if (target.getStatus().hookError !== 'permission' || !hasMacInputMonitoringAccess()) return;
+		void target.retryBlockedHooks();
+	};
+	app.on('browser-window-focus', retryOnceGranted);
+	app.on('activate', retryOnceGranted);
+	return () => {
+		app.off('browser-window-focus', retryOnceGranted);
+		app.off('activate', retryOnceGranted);
+	};
+}
+
 function logDesktopIdMismatch(linux: GlobalShortcutsLinuxEnvironment): void {
 	if (linux.sandboxed) return;
 	const expected = `${LINUX_DESKTOP_ENTRY_ID}.desktop`;
@@ -292,6 +310,7 @@ export function initializeGlobalShortcuts(): void {
 		watchSender,
 	});
 	detachPowerListeners = attachPowerListeners(created);
+	if (platform === 'macos') detachPermissionRetry = attachMacPermissionRetry(created);
 	log('Global shortcuts initialised', {platform, linux, backend: created.getBackendSelection()});
 	created.start();
 }
@@ -299,6 +318,8 @@ export function initializeGlobalShortcuts(): void {
 export function cleanupGlobalShortcuts(): void {
 	detachPowerListeners?.();
 	detachPowerListeners = null;
+	detachPermissionRetry?.();
+	detachPermissionRetry = null;
 	legacyAdapter?.clear();
 	legacyAdapter = null;
 	engine?.dispose();

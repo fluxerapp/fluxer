@@ -34,6 +34,7 @@ import {createChannelStream} from '@app/features/messaging/utils/MessageGrouping
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
 import UnreadChannels from '@app/features/notification/state/UnreadChannels';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {http} from '@app/features/platform/transport/RestTransport';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
@@ -171,6 +172,11 @@ interface CacheEntry {
 
 const previewCache = new Map<string, CacheEntry>();
 const inFlightRequests = new Map<string, Promise<void>>();
+
+AccountScopedWork.registerCancellation(() => {
+	previewCache.clear();
+	inFlightRequests.clear();
+});
 
 interface BulkPreviewRequest {
 	channel_id: string;

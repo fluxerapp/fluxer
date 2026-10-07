@@ -40,6 +40,7 @@ import {DeveloperModeControl} from '@app/features/user/components/modals/tabs/ad
 import {
 	HardwareAccelerationControl,
 	NativeTitleBarControl,
+	SourceMapsControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls';
 import {
 	ExpressionCloneShortcutsControl,
@@ -102,6 +103,7 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'accessibility-stay-interactive-unfocused',
 	'advanced-native-title-bar',
 	'advanced-hardware-acceleration',
+	'desktop-source-maps',
 ]);
 
 export const FULL_WIDTH_CONTROL_ITEM_IDS = new Set([
@@ -141,6 +143,7 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'accessibility-stay-interactive-unfocused',
 	'advanced-native-title-bar',
 	'advanced-hardware-acceleration',
+	'desktop-source-maps',
 ]);
 
 export const AdvancedSettingControl = observer(({item}: {item: SearchableSettingItem}) => {
@@ -328,6 +331,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'accessibility-stay-interactive-unfocused':
 			return (
 				<StayInteractiveUnfocusedControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.stay-interactive-unfocused-control" />
+			);
+		case 'desktop-source-maps':
+			return (
+				<SourceMapsControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.source-maps-control" />
 			);
 		case 'advanced-native-title-bar':
 			return (

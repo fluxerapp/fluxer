@@ -12,7 +12,8 @@ import {
 } from '@app/features/accessibility/state/MotionPreferencesMachine';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
-import AppStorage from '@app/features/platform/state/PersistentStorage';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
+import AppStorage, {flushAppStorageWrites} from '@app/features/platform/state/PersistentStorage';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -24,6 +25,7 @@ import {
 	normalizeCustomStatus,
 	toApiCustomStatusPayload,
 } from '@app/features/user/state/CustomStatus';
+import {setSyncedFieldUserSettings} from '@app/features/user/state/SyncedField';
 import {
 	changedSyncedPreferenceFields,
 	createEmptySyncedPreferences,
@@ -56,6 +58,17 @@ import isEqual from 'lodash/isEqual';
 import isPlainObject from 'lodash/isPlainObject';
 import snakeCase from 'lodash/snakeCase';
 import {makeAutoObservable, reaction, runInAction} from 'mobx';
+
+export interface UserSettingsAccountTransitionCheckpoint {
+	readonly accountEpoch: number;
+	readonly hydrated: boolean;
+	readonly syncedPreferences: SyncedPreferences;
+	readonly wireSyncedPreferences: SyncedPreferences;
+	readonly dirtySyncedPreferenceFields: ReadonlyArray<SyncedPreferencesField>;
+	readonly recentlyAckedSyncedPreferenceFields: ReadonlyArray<readonly [SyncedPreferencesField, number]>;
+	readonly syncConsecutive429s: number;
+	readonly hadPendingFlush: boolean;
+}
 
 function restoreSettingValue<K extends keyof UserSettings>(target: UserSettings, source: UserSettings, key: K): void {
 	target[key] = source[key];
@@ -117,6 +130,10 @@ const SYNCED_PREFERENCES_LOCAL_KEY = 'UserSettings:syncedPreferencesLocal';
 const SYNCED_PREFERENCES_WIRE_KEY = 'UserSettings:syncedPreferencesWire';
 const SYNCED_PREFERENCES_RECENT_ACK_KEY = 'UserSettings:syncedPreferencesRecentAck';
 const RECENT_SYNCED_PREFERENCES_ACK_WINDOW_MS = 60_000;
+
+function isAbortError(error: unknown): boolean {
+	return (error instanceof DOMException || error instanceof Error) && error.name === 'AbortError';
+}
 
 function readDirtySyncedPreferenceFields(): Set<SyncedPreferencesField> {
 	try {
@@ -308,6 +325,7 @@ class UserSettingsState {
 	private inFlightSyncedPreferences: SyncedPreferences | null = null;
 	private recentlyAckedSyncedPreferenceFields: Map<SyncedPreferencesField, number> = readPersistedRecentAck();
 	private accountEpoch = 0;
+	private syncFlushGeneration = 0;
 
 	constructor() {
 		makeAutoObservable<
@@ -323,6 +341,7 @@ class UserSettingsState {
 			| 'inFlightSyncedPreferences'
 			| 'recentlyAckedSyncedPreferenceFields'
 			| 'accountEpoch'
+			| 'syncFlushGeneration'
 		>(
 			this,
 			{
@@ -337,6 +356,7 @@ class UserSettingsState {
 				inFlightSyncedPreferences: false,
 				recentlyAckedSyncedPreferenceFields: false,
 				accountEpoch: false,
+				syncFlushGeneration: false,
 			},
 			{autoBind: true},
 		);
@@ -562,8 +582,73 @@ class UserSettingsState {
 		this.hydrated = false;
 	}
 
+	captureAccountTransitionCheckpoint(): UserSettingsAccountTransitionCheckpoint {
+		return {
+			accountEpoch: this.accountEpoch,
+			hydrated: this.hydrated,
+			syncedPreferences: cloneSyncedPreferences(this.syncedPreferences),
+			wireSyncedPreferences: cloneSyncedPreferences(this.wireSyncedPreferences),
+			dirtySyncedPreferenceFields: [...this.dirtySyncedPreferenceFields],
+			recentlyAckedSyncedPreferenceFields: [...this.recentlyAckedSyncedPreferenceFields.entries()],
+			syncConsecutive429s: this.syncConsecutive429s,
+			hadPendingFlush:
+				this.syncFlushTimer !== null ||
+				this.syncFlushInFlight ||
+				this.syncFlushPendingPromise !== null ||
+				this.syncFlushPendingResolvers.length > 0,
+		};
+	}
+
+	async restoreAccountTransitionCheckpoint(checkpoint: UserSettingsAccountTransitionCheckpoint): Promise<void> {
+		this.syncFlushGeneration += 1;
+		if (this.syncFlushTimer != null && this.syncFlushTimer !== 'microtask') {
+			clearTimeout(this.syncFlushTimer);
+		}
+		const resolvers = this.syncFlushPendingResolvers;
+		runInAction(() => {
+			this.accountEpoch = Math.max(this.accountEpoch, checkpoint.accountEpoch);
+			this.hydrated = checkpoint.hydrated;
+			this.syncedPreferences = cloneSyncedPreferences(checkpoint.syncedPreferences);
+			this.wireSyncedPreferences = cloneSyncedPreferences(checkpoint.wireSyncedPreferences);
+			this.dirtySyncedPreferenceFields = new Set(checkpoint.dirtySyncedPreferenceFields);
+			this.recentlyAckedSyncedPreferenceFields = new Map(checkpoint.recentlyAckedSyncedPreferenceFields);
+			this.syncConsecutive429s = checkpoint.syncConsecutive429s;
+			this.syncFlushTimer = null;
+			this.syncFlushInFlight = false;
+			this.inFlightSyncedPreferenceFields.clear();
+			this.inFlightSyncedPreferences = null;
+			this.syncFlushPendingResolvers = [];
+			this.syncFlushPendingPromise = null;
+		});
+		for (const resolver of resolvers) {
+			resolver.resolve();
+		}
+		this.persistLocalSyncedPreferences();
+		this.persistWireSyncedPreferences();
+		writeDirtySyncedPreferenceFields(this.dirtySyncedPreferenceFields);
+		writePersistedRecentAck(this.recentlyAckedSyncedPreferenceFields);
+		await flushAppStorageWrites();
+		if (
+			checkpoint.hydrated &&
+			(checkpoint.hadPendingFlush ||
+				this.dirtySyncedPreferenceFields.size > 0 ||
+				changedSyncedPreferenceFields(this.syncedPreferences, this.wireSyncedPreferences).length > 0)
+		) {
+			void this.scheduleSyncedPreferencesFlush();
+		}
+		LocalPresence.updatePresence();
+	}
+
 	handleAccountTransition(): void {
+		const unsyncedFields = new Set([
+			...this.dirtySyncedPreferenceFields,
+			...changedSyncedPreferenceFields(this.syncedPreferences, this.wireSyncedPreferences),
+		]);
+		if (unsyncedFields.size > 0) {
+			logger.info(`Clearing ${unsyncedFields.size} unsynced synced preference field(s) left by the previous account`);
+		}
 		this.accountEpoch += 1;
+		this.syncFlushGeneration += 1;
 		this.hydrated = false;
 		this.syncedPreferences = createEmptySyncedPreferences();
 		this.wireSyncedPreferences = createEmptySyncedPreferences();
@@ -579,6 +664,7 @@ class UserSettingsState {
 			clearTimeout(this.syncFlushTimer);
 		}
 		this.syncFlushTimer = null;
+		this.syncFlushInFlight = false;
 		this.syncConsecutive429s = 0;
 		const resolvers = this.syncFlushPendingResolvers;
 		this.syncFlushPendingResolvers = [];
@@ -934,8 +1020,19 @@ class UserSettingsState {
 		return this.syncFlushPendingPromise;
 	}
 
+	resumeSyncedPreferencesFlush(): void {
+		if (!this.hydrated || this.syncFlushInFlight || this.syncFlushTimer != null) return;
+		if (
+			this.syncFlushPendingResolvers.length > 0 ||
+			this.dirtySyncedPreferenceFields.size > 0 ||
+			changedSyncedPreferenceFields(this.syncedPreferences, this.wireSyncedPreferences).length > 0
+		) {
+			void this.scheduleSyncedPreferencesFlush();
+		}
+	}
+
 	private async runSyncedPreferencesFlush(): Promise<void> {
-		if (this.syncFlushInFlight) return;
+		if (this.syncFlushInFlight || AccountScopedWork.isSuspended) return;
 		const resolvers = this.syncFlushPendingResolvers;
 		this.syncFlushPendingResolvers = [];
 		const pendingPromise = this.syncFlushPendingPromise;
@@ -962,6 +1059,7 @@ class UserSettingsState {
 		);
 		this.syncFlushInFlight = true;
 		const epochAtFlush = this.accountEpoch;
+		const generationAtFlush = ++this.syncFlushGeneration;
 		const snapshotAtFlush = cloneSyncedPreferences(this.syncedPreferences);
 		this.inFlightSyncedPreferenceFields = new Set(fieldsInRequest);
 		this.inFlightSyncedPreferences = cloneSyncedPreferences(snapshotAtFlush);
@@ -970,8 +1068,7 @@ class UserSettingsState {
 			const response = await http.patch(Endpoints.USER_SETTINGS, {
 				body: {synced_preferences: encoded === '' ? null : encoded},
 			});
-			if (this.accountEpoch !== epochAtFlush) {
-				this.syncFlushInFlight = false;
+			if (this.accountEpoch !== epochAtFlush || this.syncFlushGeneration !== generationAtFlush) {
 				completeAll();
 				return;
 			}
@@ -1010,13 +1107,13 @@ class UserSettingsState {
 				void this.scheduleSyncedPreferencesFlush();
 			}
 		} catch (error) {
-			this.syncFlushInFlight = false;
-			this.inFlightSyncedPreferenceFields.clear();
-			this.inFlightSyncedPreferences = null;
-			if (this.accountEpoch !== epochAtFlush) {
+			if (this.accountEpoch !== epochAtFlush || this.syncFlushGeneration !== generationAtFlush) {
 				completeAll();
 				return;
 			}
+			this.syncFlushInFlight = false;
+			this.inFlightSyncedPreferenceFields.clear();
+			this.inFlightSyncedPreferences = null;
 			if (this.isRateLimitError(error)) {
 				this.syncConsecutive429s += 1;
 				const retryAfterMs = this.syncRetryDelayMs(error);
@@ -1032,6 +1129,17 @@ class UserSettingsState {
 					this.syncFlushTimer = null;
 					void this.runSyncedPreferencesFlush();
 				}, retryAfterMs);
+				return;
+			}
+			if (isAbortError(error)) {
+				logger.debug('Synced preferences save was cancelled and will retry once account work resumes');
+				if (this.syncFlushPendingPromise == null) {
+					this.syncFlushPendingPromise = pendingPromise ?? new Promise<void>(() => undefined);
+				}
+				this.syncFlushPendingResolvers.unshift(...resolvers);
+				if (!AccountScopedWork.isSuspended) {
+					void this.scheduleSyncedPreferencesFlush();
+				}
 				return;
 			}
 			logger.error('Failed to save synced preferences:', error);
@@ -1103,5 +1211,11 @@ class UserSettingsState {
 
 const UserSettings = new UserSettingsState();
 setLocalPresenceUserSettings(UserSettings);
+setSyncedFieldUserSettings(UserSettings);
+AccountScopedWork.registerTransition({
+	suspend: () => {},
+	resume: () => {},
+	released: () => UserSettings.resumeSyncedPreferencesFlush(),
+});
 
 export default UserSettings;

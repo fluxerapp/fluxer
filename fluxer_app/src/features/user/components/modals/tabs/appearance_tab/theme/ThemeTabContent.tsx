@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {THEME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import * as ThemePreferenceCommands from '@app/features/theme/commands/ThemePreferenceCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -62,10 +63,6 @@ const SYSTEM_DARK_THEME_AUTOMATICALLY_SYNC_WITH_YOUR_SYSTEM_DESCRIPTOR = msg({
 const SYSTEM_LIGHT_THEME_AUTOMATICALLY_SYNC_WITH_YOUR_SYSTEM_DESCRIPTOR = msg({
 	message: "System: light theme (automatically sync with your system's dark/light preference)",
 	comment: 'Description text in the theme tab content.',
-});
-const THEME_DESCRIPTOR = msg({
-	message: 'Theme',
-	comment: 'Short label in the theme tab content. Keep it concise.',
 });
 const SYNC_THEME_ACROSS_DEVICES_DESCRIPTOR = msg({
 	message: 'Sync theme across devices',

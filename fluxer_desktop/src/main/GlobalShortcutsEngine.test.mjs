@@ -800,6 +800,63 @@ describe('GlobalShortcutsEngine capture', () => {
 		assert.deepEqual(harness.stopped, ['windows', 'windows']);
 	});
 
+	test('a hook blocked on permission starts on retry without a new sync', async () => {
+		const harness = createEngine({platform: 'macos'});
+		harness.startResults.push('permission');
+		harness.attach(1);
+		harness.engine.sync(
+			1,
+			syncPayload([{sourceId: 'custom:ptt', action: 'voice_push_to_talk', combo: combo({key: 'F13', code: 'F13'})}]),
+		);
+		await settle();
+		assert.equal(harness.engine.getStatus().hookError, 'permission');
+		assert.equal(harness.engine.hooksActive(), false);
+		await harness.engine.retryBlockedHooks();
+		assert.deepEqual(harness.started, ['macos', 'macos']);
+		assert.equal(harness.engine.hooksActive(), true);
+		const statuses = harness.sent.filter((entry) => entry.channel === 'global-shortcuts:status');
+		assert.deepEqual(
+			statuses.map((entry) => [entry.payload.hooksActive, entry.payload.hookError]),
+			[
+				[false, 'permission'],
+				[true, null],
+			],
+		);
+		harness.activeHook().onEvent(keyEvent('keydown', 'F13', 105));
+		assert.deepEqual(harness.events(1), ['press:custom:ptt']);
+	});
+
+	test('a retry leaves a running hook and an idle engine alone', async () => {
+		const running = createEngine({platform: 'macos'});
+		running.attach(1);
+		running.engine.sync(
+			1,
+			syncPayload([{sourceId: 'custom:a', action: 'voice_toggle_mute', combo: combo({key: 'm', meta: true})}]),
+		);
+		await settle();
+		await running.engine.retryBlockedHooks();
+		assert.deepEqual(running.started, ['macos']);
+		assert.deepEqual(running.stopped, []);
+		const idle = createEngine({platform: 'macos'});
+		idle.attach(1);
+		await idle.engine.retryBlockedHooks();
+		assert.deepEqual(idle.started, []);
+	});
+
+	test('a retry while the permission is still missing stays blocked', async () => {
+		const harness = createEngine({platform: 'macos'});
+		harness.startResults.push('permission', 'permission');
+		harness.attach(1);
+		harness.engine.sync(
+			1,
+			syncPayload([{sourceId: 'custom:a', action: 'voice_toggle_mute', combo: combo({key: 'm', meta: true})}]),
+		);
+		await settle();
+		await harness.engine.retryBlockedHooks();
+		assert.equal(harness.engine.getStatus().hookError, 'permission');
+		assert.equal(harness.engine.hooksActive(), false);
+	});
+
 	test('capture is refused on the portal and when the hook cannot start', async () => {
 		const wayland = createEngine({session: 'wayland', settings: createSettings({migrated: true})});
 		wayland.attach(1);
@@ -1069,15 +1126,100 @@ describe('GlobalShortcutsNative translation', () => {
 	});
 });
 
-function loadNativeWith(modules) {
+function loadNativeWith(modules, getTccStatus = () => 'granted') {
 	return loadTsModule('@electron/main/GlobalShortcutsNative', {
 		stubs: {
 			'node:module': {createRequire: () => (name) => modules[name] ?? {loadError: null}},
 			'@electron/common/Logger': {createChildLogger: () => ({info: () => {}, warn: () => {}})},
-			'@electron/main/MacTcc': {getTccStatus: () => 'granted'},
+			'@electron/main/MacTcc': {getTccStatus},
 		},
 	});
 }
+
+function withPlatform(platform, run) {
+	const original = Object.getOwnPropertyDescriptor(process, 'platform');
+	Object.defineProperty(process, 'platform', {...original, value: platform});
+	return Promise.resolve()
+		.then(run)
+		.finally(() => Object.defineProperty(process, 'platform', original));
+}
+
+describe('macOS Input Monitoring', () => {
+	function macHookModule({preflight = false} = {}) {
+		const instances = [];
+		class InputHook {
+			constructor() {
+				this.stopped = false;
+				instances.push(this);
+			}
+			start() {
+				return true;
+			}
+			stop() {
+				this.stopped = true;
+			}
+		}
+		return {instances, module: {InputHook, hasAccessibilityPermission: () => preflight, loadError: null}};
+	}
+
+	test('the live status wins over a stale hook preflight', () =>
+		withPlatform('darwin', () => {
+			const hook = macHookModule({preflight: false});
+			const loaded = loadNativeWith({'@fluxer/macos-input-hook': hook.module}, () => 'granted');
+			assert.equal(loaded.hasMacInputMonitoringAccess(), true);
+		}));
+
+	test('the hook preflight is the fallback when the live status is unavailable', () =>
+		withPlatform('darwin', () => {
+			const granted = macHookModule({preflight: true});
+			const unknown = () => 'not-determined';
+			assert.equal(
+				loadNativeWith({'@fluxer/macos-input-hook': granted.module}, unknown).hasMacInputMonitoringAccess(),
+				true,
+			);
+			const throwing = () => {
+				throw new Error('addon crashed');
+			};
+			assert.equal(
+				loadNativeWith({'@fluxer/macos-input-hook': granted.module}, throwing).hasMacInputMonitoringAccess(),
+				true,
+			);
+			const denied = macHookModule({preflight: false});
+			assert.equal(
+				loadNativeWith({'@fluxer/macos-input-hook': denied.module}, () => 'denied').hasMacInputMonitoringAccess(),
+				false,
+			);
+		}));
+
+	test('a live denial wins over a stale hook preflight', () =>
+		withPlatform('darwin', () => {
+			const stale = macHookModule({preflight: true});
+			assert.equal(
+				loadNativeWith({'@fluxer/macos-input-hook': stale.module}, () => 'denied').hasMacInputMonitoringAccess(),
+				false,
+			);
+		}));
+
+	test('a hook refused for permission starts once the permission is granted', () =>
+		withPlatform('darwin', async () => {
+			let status = 'denied';
+			const hook = macHookModule({preflight: false});
+			const loaded = loadNativeWith({'@fluxer/macos-input-hook': hook.module}, () => status);
+			assert.equal(await loaded.createNativeHookBackend('macos').start(() => {}), 'permission');
+			assert.equal(hook.instances.length, 0);
+			status = 'granted';
+			assert.equal(await loaded.createNativeHookBackend('macos').start(() => {}), 'ok');
+			assert.equal(hook.instances.length, 1);
+		}));
+
+	test('other platforms never ask', () =>
+		withPlatform('linux', () => {
+			const loaded = loadNativeWith({}, () => {
+				throw new Error('must not be read');
+			});
+			assert.equal(loaded.hasMacInputMonitoringAccess(), true);
+		}));
+});
 
 describe('GlobalShortcutsNative backends', () => {
 	function x11Module(start) {

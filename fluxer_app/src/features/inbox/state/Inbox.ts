@@ -2,6 +2,7 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeAutoObservable} from 'mobx';
 
 const logger = new Logger('Inbox');
@@ -15,7 +16,7 @@ class Inbox {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {

@@ -8,7 +8,7 @@ import {
 	MEDIA_PROXY_IMAGE_SIZE_LADDER,
 	snapMediaProxyImageSize,
 } from '@app/features/messaging/utils/MediaProxyUtils';
-import {cdnUrl, mediaUrl, setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
+import {mediaUrl, setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import type {User} from '@app/features/user/models/User';
 import {
 	getDefaultAvatarIndex,
@@ -16,6 +16,7 @@ import {
 	normalizeEndpoint,
 	parseAvatarHash,
 } from '@app/features/user/utils/AvatarMediaUtils';
+import {getDefaultAvatarAssetURL} from '@app/features/user/utils/DefaultAvatars';
 import {
 	MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 	MEDIA_PROXY_ICON_SIZE_DEFAULT,
@@ -72,10 +73,7 @@ const getViewportSplashSize = (): MediaProxyImageSize => {
 	return snapWideAssetImageSize(cssWidth);
 };
 
-const DEFAULT_AVATAR_ASSET_VERSION = '1';
-
-export const getDefaultAvatarURLForIndex = (index: number): string =>
-	cdnUrl(`avatars/${index}.png?v=${DEFAULT_AVATAR_ASSET_VERSION}`);
+export const getDefaultAvatarURLForIndex = (index: number): string => getDefaultAvatarAssetURL(index);
 
 export function getDefaultAvatarPrimaryColor(id: string) {
 	return getSharedDefaultAvatarPrimaryColor(id);
@@ -187,6 +185,25 @@ export function getUserNotificationAvatarURL(
 		hash,
 		size: snapIconImageSize(size),
 		animated,
+	});
+}
+
+export function getUserNotificationAvatarURLForEndpoint(
+	{id, avatar}: AvatarOptions,
+	endpoint: string,
+	size: MediaProxyImageSize = MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
+) {
+	if (!avatar) {
+		return getDefaultAvatarURLForIndex(getDefaultAvatarIndex(id));
+	}
+	const {hash, animated} = parseMediaHashForRequest(avatar, false);
+	return buildPngMediaUrl({
+		path: 'avatars',
+		id,
+		hash,
+		size: snapIconImageSize(size),
+		animated,
+		endpoint,
 	});
 }
 

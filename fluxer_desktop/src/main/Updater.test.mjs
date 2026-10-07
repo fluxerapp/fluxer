@@ -30,6 +30,8 @@ function transform(name) {
 }
 
 const appImageUpdateSource = transform('AppImageUpdate.ts');
+const shellDownloadFormatsSource = transform('ShellDownloadFormats.ts');
+const shellUpdateCapabilitySource = transform('ShellUpdateCapability.ts');
 const updaterDownloadsSource = transform('UpdaterDownloads.ts');
 const updaterSource = transform('Updater.ts');
 const updaterPlatformUtilsSource = transform('../../../fluxer_app/src/features/app/utils/UpdaterPlatformUtils.ts');
@@ -137,6 +139,8 @@ function loadUpdater({
 			},
 		},
 		'@electron/common/BuildChannel': {BUILD_CHANNEL: 'canary'},
+		'@electron/common/Constants': {DOWNLOAD_PAGE_URLS: {canary: 'https://canary.fluxer.app/download'}},
+		'@electron/common/DesktopIdentity': {DESKTOP_ARTIFACT_PRODUCT_NAME: 'Fluxer-Canary'},
 		'@electron/common/UserDataPath': {isPortableMode: () => false},
 		'@electron/main/DesktopTray': {destroyDesktopTray() {}},
 		'@electron/main/LinuxSandbox': {isFlatpakRuntime: () => false},
@@ -215,6 +219,20 @@ function loadUpdater({
 	sandbox.__filename = appImageUpdateSource.path;
 	vm.runInContext(appImageUpdateSource.code, context, {filename: appImageUpdateSource.path});
 	stubs['@electron/main/AppImageUpdate'] = appImageModule.exports;
+
+	const shellUpdateCapabilityModule = {exports: {}};
+	sandbox.module = shellUpdateCapabilityModule;
+	sandbox.exports = shellUpdateCapabilityModule.exports;
+	sandbox.__filename = shellUpdateCapabilitySource.path;
+	vm.runInContext(shellUpdateCapabilitySource.code, context, {filename: shellUpdateCapabilitySource.path});
+	stubs['@electron/main/ShellUpdateCapability'] = shellUpdateCapabilityModule.exports;
+
+	const shellDownloadFormatsModule = {exports: {}};
+	sandbox.module = shellDownloadFormatsModule;
+	sandbox.exports = shellDownloadFormatsModule.exports;
+	sandbox.__filename = shellDownloadFormatsSource.path;
+	vm.runInContext(shellDownloadFormatsSource.code, context, {filename: shellDownloadFormatsSource.path});
+	stubs['@electron/main/ShellDownloadFormats'] = shellDownloadFormatsModule.exports;
 
 	const updaterDownloadsModule = {exports: {}};
 	sandbox.module = updaterDownloadsModule;

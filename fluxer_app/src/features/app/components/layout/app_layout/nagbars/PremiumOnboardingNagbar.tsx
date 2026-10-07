@@ -1,19 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import PremiumState from '@app/features/premium/state/PremiumState';
-import {getStoreOwnedSubscription} from '@app/features/premium/utils/PremiumUtils';
+import {
+	getPremiumProductFullName,
+	getPremiumProductName,
+	getStoreOwnedSubscription,
+} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import {getFormattedFullDate} from '@app/features/user/utils/DateFormatting';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -69,8 +72,8 @@ function useOnboardingMessage(i18n: I18n): string {
 	const storeSubscription =
 		user != null && PremiumState.loadedForUserId === user.id ? getStoreOwnedSubscription(PremiumState.state) : null;
 	return useMemo(() => {
-		const premiumProductFullName = PREMIUM_PRODUCT_FULL_NAME;
-		const premiumProductName = PREMIUM_PRODUCT_NAME;
+		const premiumProductFullName = getPremiumProductFullName();
+		const premiumProductName = getPremiumProductName();
 		if (!user) {
 			return i18n._(PREMIUM_ONBOARDING_DEFAULT_MESSAGE_DESCRIPTOR, {premiumProductFullName, premiumProductName});
 		}
@@ -127,12 +130,15 @@ export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar
 			return;
 		}
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialTab="plutonium"
-					data-flx="app.app-layout.nagbars.premium-onboarding-nagbar.handle-open-premium-settings.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="plutonium"
+						data-flx="app.app-layout.nagbars.premium-onboarding-nagbar.handle-open-premium-settings.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	}, []);
 	const handleDismiss = useCallback(() => {
@@ -158,7 +164,7 @@ export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar
 						onClick={handleOpenPremiumSettings}
 						data-flx="app.app-layout.nagbars.premium-onboarding-nagbar.nagbar-button.open-premium-settings"
 					>
-						{i18n._(VIEW_PREMIUM_FEATURES_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						{i18n._(VIEW_PREMIUM_FEATURES_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 					</NagbarButton>
 				}
 				data-flx="app.app-layout.nagbars.premium-onboarding-nagbar.nagbar-content"

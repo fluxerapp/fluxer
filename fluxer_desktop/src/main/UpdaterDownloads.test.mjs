@@ -10,34 +10,62 @@ import vm from 'node:vm';
 const require = createRequire(import.meta.url);
 const esbuild = require('esbuild');
 
-const sourcePath = fileURLToPath(new URL('./UpdaterDownloads.ts', import.meta.url));
-const source = readFileSync(sourcePath, 'utf8');
-const transformedSource = esbuild.transformSync(source, {
-	loader: 'ts',
-	format: 'cjs',
-	platform: 'node',
-	target: 'node20',
-}).code;
+function transform(name) {
+	const path = fileURLToPath(new URL(`./${name}`, import.meta.url));
+	return {
+		path,
+		code: esbuild.transformSync(readFileSync(path, 'utf8'), {
+			loader: 'ts',
+			format: 'cjs',
+			platform: 'node',
+			target: 'node20',
+		}).code,
+	};
+}
+
+const {path: sourcePath, code: transformedSource} = transform('UpdaterDownloads.ts');
+const shellDownloadFormatsSource = transform('ShellDownloadFormats.ts');
 
 const APPIMAGE_SHA256 = 'a'.repeat(64);
 const DEB_SHA256 = 'b'.repeat(64);
 const TAR_GZ_SHA256 = 'c'.repeat(64);
 
 function loadUpdaterDownloads({channel = 'stable', platform = 'linux', arch = 'x64'} = {}) {
+	const stubs = {};
 	function requireStub(specifier) {
+		if (specifier in stubs) return stubs[specifier];
 		if (specifier === '@electron/common/BuildChannel') return {BUILD_CHANNEL: channel};
+		if (specifier === '@electron/common/Constants') {
+			return {
+				DOWNLOAD_PAGE_URLS: {
+					stable: 'https://fluxer.app/download',
+					canary: 'https://canary.fluxer.app/download',
+					development: 'http://localhost:8088/download',
+				},
+			};
+		}
+		if (specifier === '@electron/common/DesktopIdentity') {
+			const names = {stable: 'Fluxer', canary: 'Fluxer-Canary', development: 'Fluxer-Development'};
+			return {DESKTOP_ARTIFACT_PRODUCT_NAME: names[channel]};
+		}
 		throw new Error(`Unexpected import: ${specifier}`);
 	}
 
-	const module = {exports: {}};
-	const context = vm.createContext({
-		require: requireStub,
-		module,
-		exports: module.exports,
-		process: {platform, arch},
-	});
-	vm.runInContext(transformedSource, context, {filename: sourcePath});
-	return module.exports;
+	function evaluate({path, code}) {
+		const module = {exports: {}};
+		const context = vm.createContext({
+			require: requireStub,
+			module,
+			exports: module.exports,
+			process: {platform, arch},
+		});
+		vm.runInContext(code, context, {filename: path});
+		return module.exports;
+	}
+
+	const shellDownloadFormats = evaluate(shellDownloadFormatsSource);
+	stubs['@electron/main/ShellDownloadFormats'] = shellDownloadFormats;
+	return evaluate({path: sourcePath, code: transformedSource});
 }
 
 function latestInfo(version, files = {}) {

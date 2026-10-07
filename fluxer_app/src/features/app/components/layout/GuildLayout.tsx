@@ -2,6 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {TopNagbarContext} from '@app/features/app/components/layout/app_layout/TopNagbarContext';
 import styles from '@app/features/app/components/layout/GuildLayout.module.css';
 import {GuildNavbar} from '@app/features/app/components/layout/GuildNavbar';
@@ -9,6 +10,7 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {GuildSidebarSkeleton} from '@app/features/app/components/skeleton/GuildSidebarSkeleton';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import Accounts from '@app/features/auth/state/Accounts';
 import {MatureContentChannelGate} from '@app/features/channel/components/MatureContentChannelGate';
 import Channels from '@app/features/channel/state/Channels';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
@@ -34,7 +36,6 @@ import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import NagbarState from '@app/features/ui/state/Nagbar';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import VoiceCallFullscreen from '@app/features/voice/state/VoiceCallFullscreen';
 import {ElevatedPermissions, GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -196,13 +197,16 @@ const GuildMfaRequirementNagbar = observer(({isMobile, guildId}: {isMobile: bool
 	if (!guild) return null;
 	const handleEnableMfa = () => {
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialTab="account_security"
-					initialSubtab="security"
-					data-flx="app.guild-layout.handle-enable-mfa.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="account_security"
+						initialSubtab="security"
+						data-flx="app.guild-layout.handle-enable-mfa.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	};
 	const handleDismiss = () => {
@@ -352,7 +356,8 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 				PermissionUtils.NONE
 			: false;
 	const guildUnavailable = guildId && (unavailableGuilds.has(guildId) || guild?.unavailable);
-	const guildNotFound = !guildUnavailable && !guild;
+	const viewLive = Accounts.isViewLive;
+	const guildNotFound = viewLive && !guildUnavailable && !guild;
 	const firstAccessibleTextChannel = useMemo(() => {
 		if (!guild) return null;
 		for (const ch of channels) {
@@ -437,7 +442,7 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 		}
 	}, [nagbarCount]);
 	useEffect(() => {
-		if (!guild || !channelId || guildUnavailable || guildNotFound) return;
+		if (!viewLive || !guild || !channelId || guildUnavailable) return;
 		const currentChannel = Channels.getChannel(channelId);
 		const currentPath = Navigation.pathname;
 		const expectedPath = Routes.guildChannel(guildId, channelId);
@@ -446,7 +451,7 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 				Navigation.navigateToGuild(guildId, firstAccessibleTextChannel.id, undefined, 'replace');
 			}
 		}
-	}, [guild, guildId, channelId, firstAccessibleTextChannel, guildUnavailable, guildNotFound]);
+	}, [viewLive, guild, guildId, channelId, firstAccessibleTextChannel, guildUnavailable]);
 	const guildNagbars = (
 		<>
 			{showStaffOnlyGuildNagbar && guildId && (
@@ -487,6 +492,18 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 						>
 							{children}
 						</div>
+					</div>
+				</div>
+			</TopNagbarContext.Provider>
+		);
+	}
+	if (!viewLive && !guildUnavailable && !guild) {
+		return (
+			<TopNagbarContext.Provider value={nagbarContextValue}>
+				<div className={styles.guildLayoutContainer} data-flx="app.guild-layout.guild-layout-container.pending">
+					<div className={styles.guildLayoutContent} data-flx="app.guild-layout.guild-layout-content.pending">
+						<GuildSidebarSkeleton guildId={guildId} data-flx="app.guild-layout.guild-sidebar-skeleton.pending" />
+						<div className={styles.guildMainContent} data-flx="app.guild-layout.guild-main-content.pending" />
 					</div>
 				</div>
 			</TopNagbarContext.Provider>

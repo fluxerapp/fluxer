@@ -65,6 +65,7 @@ function buildDiscoveryStaticInput(
 			api_public: apiPublicEndpoint,
 			gateway: Config.endpoints.gateway,
 			media: Config.endpoints.media,
+			upload_relay: Config.mediaProxy.uploadRelay.endpoint,
 			static_cdn: Config.endpoints.staticCdn,
 			marketing: Config.endpoints.marketing,
 			admin: Config.endpoints.admin,

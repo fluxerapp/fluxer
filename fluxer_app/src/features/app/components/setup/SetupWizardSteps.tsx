@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/app/components/setup/SelfHostedSetupWizardGate.module.css';
+import {SetupWelcomeGate} from '@app/features/app/components/setup/SetupWelcomeGate';
 import type {SetupBrandingAssetKind} from '@app/features/app/components/setup/SetupWizardClient';
-import {
-	createRandomWelcomeRotationState,
-	createWelcomeRotationState,
-	WELCOME_ROTATION,
-} from '@app/features/app/components/setup/SetupWizardWelcomeRotation';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
 import {Button} from '@app/features/ui/button/Button';
 import {ColorPickerField} from '@app/features/ui/components/form/ColorPickerField';
@@ -33,7 +30,7 @@ import {ImageIcon, TrashIcon, UploadSimpleIcon} from '@phosphor-icons/react';
 import {AnimatePresence, motion, type Transition, useReducedMotion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {useCallback} from 'react';
 
 const PUSH_RELAY_NOTICE_URL = 'https://fluxer.com/push-relay';
 
@@ -46,15 +43,6 @@ export interface BrandingAssetState {
 	preview: string | null;
 }
 
-const WELCOME_AUTHED_TITLE_DESCRIPTOR = msg({
-	message: 'Welcome to {productName}',
-	comment: 'Setup wizard title shown once the operator is signed in as the instance admin.',
-});
-const WELCOME_AUTHED_BODY_DESCRIPTOR = msg({
-	message:
-		'You are signed in as the instance administrator. The next steps configure branding, registration, and core policy for everyone on this instance.',
-	comment: 'Setup wizard body shown to the signed-in instance administrator.',
-});
 const WELCOME_UNAUTHED_TITLE_DESCRIPTOR = msg({
 	message: 'Create the administrator account',
 	comment: 'Setup wizard title prompting the operator to create the first account.',
@@ -511,7 +499,6 @@ const ASSET_DESCRIPTORS: Record<SetupBrandingAssetKind, MessageDescriptor> = {
 	favicon: ASSET_FAVICON_DESCRIPTOR,
 };
 
-const WELCOME_WORD_INLINE_PADDING_PX = 8;
 const SETUP_LANGUAGE_MENU_MAX_HEIGHT = 220;
 
 interface StepHeaderProps {
@@ -541,65 +528,7 @@ export const WelcomeStep = observer(
 		initialFocusRef?: React.Ref<HTMLElement>;
 	}) => {
 		const {i18n} = useLingui();
-		const prefersReducedMotion = useReducedMotion();
 		const currentLocale = LocaleUtils.getCurrentOrDetectedLocale();
-		const welcomeFrameRef = useRef<HTMLDivElement | null>(null);
-		const welcomeMeasureRef = useRef<HTMLSpanElement | null>(null);
-		const [welcomeScale, setWelcomeScale] = useState(1);
-		const [welcomeRotation, setWelcomeRotation] = useState(() => createWelcomeRotationState(currentLocale));
-		const measureWelcomeScale = useCallback(() => {
-			const frame = welcomeFrameRef.current;
-			const measure = welcomeMeasureRef.current;
-			if (!frame || !measure) return;
-			const availableWidth = Math.max(0, frame.clientWidth - WELCOME_WORD_INLINE_PADDING_PX);
-			const measuredWidth = Math.max(measure.scrollWidth, measure.getBoundingClientRect().width);
-			const nextScale = measuredWidth > 0 && availableWidth > 0 ? Math.min(1, availableWidth / measuredWidth) : 1;
-			setWelcomeScale((currentScale) => (Math.abs(currentScale - nextScale) > 0.005 ? nextScale : currentScale));
-		}, []);
-		useLayoutEffect(() => {
-			measureWelcomeScale();
-			const frame = welcomeFrameRef.current;
-			if (!frame) return undefined;
-			const ownerWindow = frame.ownerDocument.defaultView;
-			const resizeObserver =
-				typeof ownerWindow?.ResizeObserver === 'function' ? new ownerWindow.ResizeObserver(measureWelcomeScale) : null;
-			resizeObserver?.observe(frame);
-			ownerWindow?.addEventListener('resize', measureWelcomeScale);
-			void frame.ownerDocument.fonts?.ready.then(measureWelcomeScale);
-			return () => {
-				resizeObserver?.disconnect();
-				ownerWindow?.removeEventListener('resize', measureWelcomeScale);
-			};
-		}, [measureWelcomeScale, welcomeRotation]);
-		useEffect(() => {
-			setWelcomeRotation(createWelcomeRotationState(currentLocale));
-		}, [currentLocale]);
-		useEffect(() => {
-			const interval = window.setInterval(() => {
-				setWelcomeRotation((rotation) => {
-					if (rotation.position + 1 < rotation.order.length) {
-						return {
-							...rotation,
-							position: rotation.position + 1,
-						};
-					}
-					return createRandomWelcomeRotationState(rotation.order[rotation.position]);
-				});
-			}, 1800);
-			return () => window.clearInterval(interval);
-		}, []);
-		const welcome = WELCOME_ROTATION[welcomeRotation.order[welcomeRotation.position] ?? 0];
-		const motionState = prefersReducedMotion
-			? {
-					initial: {opacity: 0, scale: welcomeScale},
-					animate: {opacity: 1, scale: welcomeScale},
-					exit: {opacity: 0, scale: welcomeScale},
-				}
-			: {
-					initial: {opacity: 0, y: 14, scale: welcomeScale * 0.98},
-					animate: {opacity: 1, y: 0, scale: welcomeScale},
-					exit: {opacity: 0, y: -14, scale: welcomeScale * 0.98},
-				};
 		return (
 			<section
 				ref={initialFocusRef}
@@ -607,49 +536,12 @@ export const WelcomeStep = observer(
 				tabIndex={-1}
 				data-flx="app.self-hosted-setup-wizard-gate.welcome-step"
 			>
-				<div className={styles.welcomeHero} data-flx="app.self-hosted-setup-wizard-gate.welcome-hero">
-					<div
-						ref={welcomeFrameRef}
-						className={styles.welcomeWordFrame}
-						data-flx="app.self-hosted-setup-wizard-gate.welcome-word-frame"
-					>
-						<span
-							ref={welcomeMeasureRef}
-							className={styles.welcomeWordMeasure}
-							aria-hidden="true"
-							data-flx="app.self-hosted-setup-wizard-gate.welcome-word-measure"
-						>
-							{welcome.text}
-						</span>
-						<AnimatePresence
-							mode="wait"
-							initial={false}
-							data-flx="app.setup.setup-wizard-steps.welcome-step.animate-presence"
-						>
-							<motion.h2
-								key={welcome.code}
-								className={styles.welcomeWord}
-								initial={motionState.initial}
-								animate={motionState.animate}
-								exit={motionState.exit}
-								transition={{duration: prefersReducedMotion ? 0.22 : 0.42, ease: [0.22, 1, 0.36, 1]}}
-								data-flx="app.self-hosted-setup-wizard-gate.welcome-word"
-							>
-								{welcome.text}
-							</motion.h2>
-						</AnimatePresence>
-					</div>
-					{isAuthenticated ? (
-						<>
-							<h3 className={styles.welcomeTitle} data-flx="app.self-hosted-setup-wizard-gate.welcome-title">
-								{i18n._(WELCOME_AUTHED_TITLE_DESCRIPTOR, {productName})}
-							</h3>
-							<p className={styles.body} data-flx="app.self-hosted-setup-wizard-gate.welcome-body">
-								{i18n._(WELCOME_AUTHED_BODY_DESCRIPTOR)}
-							</p>
-						</>
-					) : null}
-				</div>
+				<SetupWelcomeGate
+					localeCode={currentLocale}
+					productName={productName}
+					isAuthenticated={isAuthenticated}
+					data-flx="app.setup.setup-wizard-steps.welcome-step.setup-welcome-gate"
+				/>
 				<div className={styles.localeBlock} data-flx="app.self-hosted-setup-wizard-gate.locale-block">
 					<div className={styles.fieldLabel} data-flx="app.self-hosted-setup-wizard-gate.locale-label">
 						{i18n._(WELCOME_LANGUAGE_LABEL_DESCRIPTOR)}
@@ -811,6 +703,7 @@ export const AdminAccountStep = observer(({theme, usernameSignIn}: {theme: Theme
 					}}
 					submitLabel={i18n._(CREATE_ADMIN_ACCOUNT_DESCRIPTOR)}
 					redirectPath=""
+					runtimeSnapshot={RuntimeConfig.getSnapshot()}
 					offerRecoveryKit={usernameSignIn}
 					theme={theme}
 					showLegalConsent={false}

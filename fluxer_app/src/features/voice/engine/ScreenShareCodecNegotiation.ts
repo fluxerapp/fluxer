@@ -2,6 +2,7 @@
 
 import {getDesktopTroubleshootingSettings} from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import {
 	getVoiceConnectionContextFromMediaEngine,
 	getVoiceStateByConnectionIdFromMediaEngine,
@@ -108,9 +109,7 @@ type ScreenShareCodecNegotiationMachineEvent =
 	| {type: 'negotiation.reset'};
 
 function createId(prefix: string): string {
-	const cryptoObject = globalThis.crypto as Crypto | undefined;
-	if (typeof cryptoObject?.randomUUID === 'function') return `${prefix}_${cryptoObject.randomUUID()}`;
-	return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
+	return `${prefix}_${randomUuid()}`;
 }
 
 function hasReceiverCapability(codec: VideoCodec): boolean | null {

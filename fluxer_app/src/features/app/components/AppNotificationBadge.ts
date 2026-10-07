@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import DesktopBackgroundGateway from '@app/features/gateway/transport/DesktopBackgroundGateway';
 import GuildReadState from '@app/features/guild/state/GuildReadState';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Relationships from '@app/features/relationship/state/Relationships';
@@ -39,6 +40,7 @@ const setElectronBadge = (badge: number): void => {
 	}
 };
 const setFaviconBadge = (badge: number): void => {
+	if (badge === 0 && favico === null) return;
 	const fav = initFavico();
 	if (!fav) return;
 	try {
@@ -75,7 +77,7 @@ const setBadge = (badge: number): void => {
 export const AppBadge: React.FC = observer(() => {
 	const relationships = Relationships.getRelationships();
 	const unreadMessageBadgeEnabled = Notification.unreadMessageBadgeEnabled;
-	const mentionCount = GuildReadState.mentionCountAcrossGuilds();
+	const mentionCount = GuildReadState.mentionCountAcrossGuilds() + DesktopBackgroundGateway.totalMentionCount;
 	const hasUnread = GuildReadState.anyGuildUnread;
 	const pendingCount = RuntimeConfig.directMessagesDisabled
 		? 0

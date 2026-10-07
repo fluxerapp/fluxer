@@ -86,9 +86,11 @@ export interface GatewayGeoipPayload {
 
 export interface GatewayHandlerContext {
 	socket: GatewaySocket | null;
+	accountKey: string | null;
+	expectedUserId: string | null;
 	previousSessionId: string | null;
 	setPreviousSessionId: (id: string) => void;
-	setReady: () => void;
+	setReady: () => boolean;
 	setConnectionGeoip: (data: GatewayGeoipPayload) => void;
 	markGuildSynced: (guildId: string) => void;
 }

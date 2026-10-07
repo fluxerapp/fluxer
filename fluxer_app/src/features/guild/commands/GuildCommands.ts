@@ -6,6 +6,7 @@ import type {ChannelWire} from '@app/features/channel/models/Channel';
 import Guilds from '@app/features/guild/state/Guilds';
 import {createRoleHoistOrderPayload, createRoleOrderPayload} from '@app/features/guild/utils/GuildRoleOrderUtils';
 import Invites from '@app/features/invite/state/Invites';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
@@ -362,7 +363,7 @@ export async function fetchGuildInvites(guildId: string): Promise<Array<Invite>>
 		Invites.handleGuildInvitesFetchPending(guildId);
 		const response = await http.get<Array<Invite>>(Endpoints.GUILD_INVITES(guildId));
 		const invites = response.body;
-		Invites.handleGuildInvitesFetchSuccess(guildId, invites);
+		Invites.handleGuildInvitesFetchSuccess(guildId, invites, currentInstanceTarget());
 		return invites;
 	} catch (error) {
 		logger.error(`Failed to fetch invites for guild ${guildId}:`, error);

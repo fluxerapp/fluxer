@@ -8,9 +8,10 @@ interface AuthErrorStateProps {
 	icon?: Icon;
 	title: React.ReactNode;
 	text: React.ReactNode;
+	action?: React.ReactNode;
 }
 
-export function AuthErrorState({icon: IconComponent = QuestionIcon, title, text}: AuthErrorStateProps) {
+export function AuthErrorState({icon: IconComponent = QuestionIcon, title, text, action}: AuthErrorStateProps) {
 	return (
 		<div className={styles.errorContainer} data-flx="auth.flow.auth-error-state.error-container">
 			<div className={styles.errorIcon} data-flx="auth.flow.auth-error-state.error-icon">
@@ -22,6 +23,7 @@ export function AuthErrorState({icon: IconComponent = QuestionIcon, title, text}
 			<p className={styles.errorText} data-flx="auth.flow.auth-error-state.error-text">
 				{text}
 			</p>
+			{action}
 		</div>
 	);
 }

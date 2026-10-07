@@ -27,26 +27,19 @@ export function isAppShellResponse(response: Response): boolean {
 	return response.ok && response.headers.get(APP_SHELL_MARKER_HEADER) === '1';
 }
 
-export function isPrecacheableAssetUrl(url: string): boolean {
-	const pathname = url.split(/[?#]/, 1)[0].toLowerCase();
-	return pathname !== '/' && !pathname.endsWith('.html');
-}
-
 export async function precacheAssets(runtime: AppShellRuntime, manifest: ReadonlyArray<PrecacheEntry>): Promise<void> {
 	if (!runtime.caches) {
 		return;
 	}
 	const cache = await runtime.caches.open(runtime.precacheName);
 	await Promise.allSettled(
-		manifest
-			.filter((entry) => isPrecacheableAssetUrl(entry.url))
-			.map(async (entry) => {
-				const request = new Request(new URL(entry.url, runtime.origin).toString(), {cache: 'reload'});
-				const response = await runtime.fetch(request);
-				if (isCacheableResponse(response)) {
-					await cache.put(entry.url, response);
-				}
-			}),
+		manifest.map(async (entry) => {
+			const request = new Request(new URL(entry.url, runtime.origin).toString(), {cache: 'reload'});
+			const response = await runtime.fetch(request);
+			if (isCacheableResponse(response)) {
+				await cache.put(entry.url, response);
+			}
+		}),
 	);
 }
 

@@ -4,12 +4,8 @@ use anyhow::Context;
 use fluxer_app_proxy::{
     config::AppProxyConfig,
     csp::CompiledCspPolicy,
-    discovery_cache::DiscoveryCache,
-    geoip,
-    routes::{build_router, present_local_asset_prefixes},
-    state::{
-        AppProxyBudgets, AppState, MAX_SPA_INDEX_BYTES, build_http_client, read_bounded_text_file,
-    },
+    routes::build_router,
+    state::{AppState, build_http_client},
 };
 use std::sync::Arc;
 use tokio::{net::TcpListener, runtime::Builder};
@@ -29,8 +25,6 @@ fn main() -> anyhow::Result<()> {
             .context("failed to compile the Fluxer app proxy content security policy")?,
     );
 
-    let geoip = Arc::new(geoip::resolver_from_app_config(&config));
-
     let runtime = Builder::new_multi_thread()
         .enable_all()
         .build()
@@ -39,49 +33,9 @@ fn main() -> anyhow::Result<()> {
     runtime.block_on(async move {
         let http_client =
             build_http_client().context("failed to build Fluxer app proxy HTTP client")?;
-        let discovery_cache = Arc::new(DiscoveryCache::new());
-
-        if let Err(err) = discovery_cache
-            .refresh(&http_client, &config.discovery_upstream_url)
+        let state = AppState::load(config, csp, http_client)
             .await
-        {
-            tracing::warn!(%err, url = %config.discovery_upstream_url, "initial discovery fetch failed; will retry in background");
-        }
-
-        let cancel = discovery_cache.start_background_refresh(
-            http_client.clone(),
-            config.discovery_upstream_url.clone(),
-            config.discovery_refresh_interval_ms,
-        );
-
-        let index_html = if config.index_upstream_url.is_none() {
-            let index_path = std::path::Path::new(&config.static_dir).join("index.html");
-            match read_bounded_text_file(&index_path, MAX_SPA_INDEX_BYTES).await {
-                Ok(contents) => Some(Arc::<str>::from(contents)),
-                Err(err) => {
-                    tracing::warn!(path = ?index_path, %err, "failed to preload index.html; will read per request");
-                    None
-                }
-            }
-        } else {
-            None
-        };
-
-        let local_asset_prefixes = config
-            .index_upstream_url
-            .is_none()
-            .then(|| present_local_asset_prefixes(&config.static_dir));
-
-        let state = AppState {
-            config,
-            csp,
-            http_client,
-            discovery_cache,
-            geoip,
-            index_html,
-            local_asset_prefixes,
-            budgets: AppProxyBudgets::default(),
-        };
+            .context("failed to load the Fluxer app proxy static directory")?;
 
         let router = build_router(state);
         let listener = TcpListener::bind(&addr)
@@ -94,7 +48,6 @@ fn main() -> anyhow::Result<()> {
             .await
             .context("app proxy server exited unexpectedly")?;
 
-        cancel.abort();
         Ok(())
     })
 }

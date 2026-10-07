@@ -14,6 +14,7 @@ import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import GuildList from '@app/features/guild/state/GuildList';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import type {GuildEmoji as WireGuildEmoji} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {Guild as WireGuild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -336,7 +337,7 @@ class Emoji {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -451,6 +452,14 @@ class Emoji {
 		emojiGuildRegistry.reset();
 		for (const guild of guilds) {
 			emojiGuildRegistry.updateGuild(guild.id, guild.emojis);
+		}
+		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
+	}
+
+	hydrateFromSnapshot(guildEmojis: ReadonlyArray<{guildId: string; emojis: ReadonlyArray<WireGuildEmoji>}>): void {
+		emojiGuildRegistry.reset();
+		for (const {guildId, emojis} of guildEmojis) {
+			emojiGuildRegistry.updateGuild(guildId, emojis);
 		}
 		ComponentBus.dispatch('EMOJI_PICKER_RERENDER');
 	}

@@ -2,6 +2,7 @@
 
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import Spellcheck from '@app/features/messaging/state/Spellcheck';
 import {isEditableTextInput, replaceSelectedText} from '@app/features/messaging/utils/TextInputEditUtils';
@@ -13,7 +14,6 @@ import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {getElectronAPI, isElectron} from '@app/features/ui/utils/NativeUtils';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {
@@ -205,12 +205,15 @@ export const TextareaContextMenu = observer(
 		};
 		const handleOpenSpellcheckSettings = () => {
 			ModalCommands.push(
-				ModalCommands.modal(() => (
-					<UserSettingsModal
-						initialTab="language"
-						data-flx="channel.textarea.textarea-context-menu.handle-open-spellcheck-settings.user-settings-modal"
-					/>
-				)),
+				ModalCommands.modal(
+					() => (
+						<UserSettingsModal
+							initialTab="language"
+							data-flx="channel.textarea.textarea-context-menu.handle-open-spellcheck-settings.user-settings-modal"
+						/>
+					),
+					'user-settings',
+				),
 			);
 			onClose();
 		};

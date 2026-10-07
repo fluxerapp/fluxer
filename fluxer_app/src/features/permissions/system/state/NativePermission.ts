@@ -3,6 +3,7 @@
 import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import type {NativePermissionResult} from '@app/features/permissions/system/utils/NativePermissions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {getElectronAPI, getNativePlatform, isDesktop, type NativePlatform} from '@app/features/ui/utils/NativeUtils';
 import {makeAutoObservable, runInAction} from 'mobx';
 
@@ -16,7 +17,7 @@ class NativePermission {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void this.initialize();
+		initializeStore(this, () => this.initialize());
 	}
 
 	private async initialize(): Promise<void> {

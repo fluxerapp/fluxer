@@ -1,10 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APP_STORE_NAME, GOOGLE_PLAY_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {DEFAULT_PREMIUM_PRODUCT_NAME, PRODUCT_NAME} from '@app/features/app/config/ProductConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {PremiumStateResponse, PriceIdsResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {PremiumStoreSubscriptionState} from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';
+
+export function getPremiumProductName(): string {
+	return (
+		RuntimeConfig.getSnapshotOrNull()?.appPublic.branding.premium_product_name?.trim() || DEFAULT_PREMIUM_PRODUCT_NAME
+	);
+}
+
+export function getPremiumProductFullName(): string {
+	const productName = RuntimeConfig.getSnapshotOrNull()?.appPublic.branding.product_name?.trim() || PRODUCT_NAME;
+	return `${productName} ${getPremiumProductName()}`;
+}
 
 export function shouldShowPremiumFeatures(): boolean {
 	if (DeveloperOptions.selfHostedModeOverride) {

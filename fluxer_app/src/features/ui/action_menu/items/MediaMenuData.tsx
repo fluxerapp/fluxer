@@ -20,6 +20,10 @@ import {
 import {EditAltTextModal} from '@app/features/messaging/components/modals/EditAltTextModal';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {
+	unwrapDesktopLocalResourceURL,
+	wrapDesktopLocalResourceURL,
+} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import {buildMediaProxyURL, stripMediaProxyParams} from '@app/features/messaging/utils/MediaProxyUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -437,7 +441,11 @@ export async function copyMediaToClipboard({
 		ToastCommands.createToast({type: 'success', children: i18n._(LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR)});
 		return;
 	}
-	const baseProxyURL = proxyURL ? await AttachmentUrlRefresher.refresh(stripMediaProxyParams(proxyURL)) : null;
+	const baseProxyURL = proxyURL
+		? wrapDesktopLocalResourceURL(
+				await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(stripMediaProxyParams(proxyURL))),
+			)
+		: null;
 	const clipboardFileMediaType = getClipboardFileMediaType(type);
 	if (clipboardFileMediaType) {
 		const electronApi = getElectronAPI();
@@ -454,7 +462,7 @@ export async function copyMediaToClipboard({
 				timeout: 0,
 			});
 			const result = await electronApi.clipboardWriteFile({
-				url: baseProxyURL || freshSrc,
+				url: unwrapDesktopLocalResourceURL(baseProxyURL || freshSrc),
 				suggestedName: defaultName,
 				mediaType: clipboardFileMediaType,
 			});

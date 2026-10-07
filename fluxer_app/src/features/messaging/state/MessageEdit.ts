@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import TextareaSelection from '@app/features/messaging/state/TextareaSelection';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {compareStructural, makeAutoObservable, reaction} from 'mobx';
 
@@ -86,6 +87,15 @@ class MessageEdit {
 			{fireImmediately: true, equals: compareStructural},
 		);
 	}
+
+	reset(): void {
+		this.editingMessageIds = {};
+		this.editingContents = {};
+	}
 }
 
-export default new MessageEdit();
+const messageEdit = new MessageEdit();
+
+AccountScopedWork.registerCancellation(() => messageEdit.reset());
+
+export default messageEdit;

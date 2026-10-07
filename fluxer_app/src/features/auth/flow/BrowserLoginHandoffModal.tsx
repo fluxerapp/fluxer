@@ -7,6 +7,7 @@ import * as AuthenticationCommands from '@app/features/auth/commands/Authenticat
 import styles from '@app/features/auth/flow/BrowserLoginHandoffModal.module.css';
 import {HandoffCodeDisplay} from '@app/features/auth/flow/HandoffCodeDisplay';
 import type {LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -58,7 +59,7 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillLogin, variant}: B
 		setHandoffCode(null);
 		setHandoffExpiresAt(null);
 		try {
-			const result = await AuthenticationCommands.initiateDesktopHandoff();
+			const result = await AuthenticationCommands.initiateDesktopHandoff(currentInstanceTarget());
 			handoffPollSecretRef.current = result.poll_secret ?? null;
 			setHandoffCode(result.code);
 			setHandoffExpiresAt(result.expires_at);
@@ -77,7 +78,11 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillLogin, variant}: B
 		const timer = setInterval(async () => {
 			if (!pollingRef.current) return;
 			try {
-				const result = await AuthenticationCommands.pollDesktopHandoffStatus(handoffCode, handoffPollSecretRef.current);
+				const result = await AuthenticationCommands.pollDesktopHandoffStatus(
+					handoffCode,
+					handoffPollSecretRef.current,
+					currentInstanceTarget(),
+				);
 				if (result.status === 'completed' && result.token && result.user_id) {
 					pollingRef.current = false;
 					completedRef.current = true;

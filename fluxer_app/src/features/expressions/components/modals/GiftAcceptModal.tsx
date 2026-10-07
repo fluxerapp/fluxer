@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import styles from '@app/features/expressions/components/modals/GiftAcceptModal.module.css';
 import * as GiftCommands from '@app/features/gift/commands/GiftCommands';
 import Gifts from '@app/features/gift/state/Gifts';
 import {getGiftDurationText} from '@app/features/gift/utils/GiftUtils';
 import {CLAIM_ACCOUNT_DESCRIPTOR, CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import type {InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Spinner} from '@app/features/ui/components/Spinner';
@@ -45,19 +46,20 @@ const logger = new Logger('GiftAcceptModal');
 
 interface GiftAcceptModalProps {
 	code: string;
+	target: InstanceHTTPTarget;
 }
 
-export const GiftAcceptModal = observer(function GiftAcceptModal({code}: GiftAcceptModalProps) {
+export const GiftAcceptModal = observer(function GiftAcceptModal({code, target}: GiftAcceptModalProps) {
 	const {i18n} = useLingui();
-	const giftState = Gifts.gifts.get(code) ?? null;
+	const giftState = Gifts.getGift(code, target);
 	const gift = giftState?.data ?? null;
 	const [isRedeeming, setIsRedeeming] = useState(false);
 	const isUnclaimed = !(Users.currentUser?.isClaimed() ?? false);
 	useEffect(() => {
 		if (!giftState) {
-			void GiftCommands.fetchWithCoalescing(code).catch(() => {});
+			void GiftCommands.fetchWithCoalescing(code, target).catch(() => {});
 		}
-	}, [code, giftState]);
+	}, [code, giftState, target]);
 	const creator = useMemo(() => {
 		if (!gift?.created_by) return null;
 		return new User({
@@ -81,7 +83,7 @@ export const GiftAcceptModal = observer(function GiftAcceptModal({code}: GiftAcc
 		}
 		setIsRedeeming(true);
 		try {
-			await GiftCommands.redeem(i18n, code);
+			await GiftCommands.redeem(i18n, code, target);
 			ModalCommands.pop();
 		} catch (error) {
 			logger.error('Failed to redeem gift:', error);
@@ -261,7 +263,7 @@ export const GiftAcceptModal = observer(function GiftAcceptModal({code}: GiftAcc
 							)}
 							<span className={styles.helpText} data-flx="expressions.gift-accept-modal.render-gift.help-text--2">
 								{i18n._(CLAIM_YOUR_GIFT_TO_ACTIVATE_YOUR_PREMIUM_SUBSCRIPTION_DESCRIPTOR, {
-									premiumProductName: PREMIUM_PRODUCT_NAME,
+									premiumProductName: getPremiumProductName(),
 								})}
 							</span>
 						</div>

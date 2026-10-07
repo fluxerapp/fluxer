@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {BUILD_CHANNEL, type BuildChannel} from '@electron/common/BuildChannel';
 import log from 'electron-log';
 
-log.transports.file.level = BUILD_CHANNEL === 'canary' ? 'debug' : 'info';
+const CHANNEL_LOG_LEVELS: Record<BuildChannel, 'debug' | 'info'> = {
+	stable: 'info',
+	canary: 'debug',
+	development: 'debug',
+};
 
-log.transports.console.level = BUILD_CHANNEL === 'canary' ? 'debug' : 'info';
+log.transports.file.level = CHANNEL_LOG_LEVELS[BUILD_CHANNEL];
+
+log.transports.console.level = CHANNEL_LOG_LEVELS[BUILD_CHANNEL];
 
 export const Logger = {
 	debug: (...args: Array<unknown>) => log.debug(...args),

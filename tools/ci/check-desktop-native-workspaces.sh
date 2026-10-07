@@ -12,10 +12,12 @@ native_target_dir="${DESKTOP_NATIVE_CARGO_TARGET_DIR:-$repo_root/target/desktop-
 mode="${1:-}"
 
 linux_workspaces=(
+	"app-store/Cargo.toml"
 	"audio-apm/Cargo.toml"
 	"audio-mix/Cargo.toml"
 	"audio-timing/Cargo.toml"
 	"encoder-ring/Cargo.toml"
+	"gateway-socket/Cargo.toml"
 	"gpu-rebuild/Cargo.toml"
 	"hardware-encoder/Cargo.toml"
 	"linux-audio-capture/Cargo.toml"

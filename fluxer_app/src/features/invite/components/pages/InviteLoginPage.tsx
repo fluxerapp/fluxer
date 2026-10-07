@@ -2,26 +2,22 @@
 
 import {Routes} from '@app/app/Routes';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
 import {AuthLoginLayout} from '@app/features/auth/flow/AuthLoginLayout';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
-import {
-	isApprovalFlowMode,
-	isHandoffRequest,
-	useDesktopHandoffFlow,
-} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
+import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
+import {AuthRuntimeTargetResetAction} from '@app/features/auth/flow/AuthRuntimeTargetResetAction';
+import {isHandoffRequest} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
 import {DesktopDeepLinkPrompt} from '@app/features/auth/flow/DesktopDeepLinkPrompt';
-import {ConnectedHandoffApprovalFlow} from '@app/features/auth/flow/HandoffApprovalFlow';
+import {DesktopHandoffMfaStep} from '@app/features/auth/flow/DesktopHandoffMfaStep';
 import {GuildInviteHeader, InviteHeader} from '@app/features/auth/flow/InviteHeader';
-import MfaScreen from '@app/features/auth/flow/MfaScreen';
-import AccountManager from '@app/features/auth/state/AccountManager';
-import Authentication from '@app/features/auth/state/Authentication';
-import type {LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
+import Authentication, {LoginState} from '@app/features/auth/state/Authentication';
 import {useAuthLayoutContext} from '@app/features/auth/state/AuthLayoutContext';
-import {safeRedirectTarget, safeRedirectTargetOrFallback} from '@app/features/auth/utils/SafeRedirect';
+import {useAuthRuntimeTarget} from '@app/features/auth/state/AuthRuntimeTarget';
+import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
 import {
 	CREATE_ACCOUNT_DESCRIPTOR,
 	REGISTER_DESCRIPTOR,
@@ -40,8 +36,8 @@ import {
 	RAID_INVITES_PAUSED_DESCRIPTOR,
 } from '@app/features/invite/utils/InviteMessageDescriptors';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
-import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation, useParams} from '@app/features/platform/components/router/RouterReact';
+import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Button} from '@app/features/ui/button/Button';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
 import {getGuildSplashURL} from '@app/features/user/utils/AvatarUtils';
@@ -50,31 +46,32 @@ import {GuildFeatures, GuildSplashCardAlignment} from '@fluxer/constants/src/Gui
 import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useCallback, useEffect, useMemo} from 'react';
+import {useEffect, useMemo} from 'react';
 
-const INVITE_LOGIN_PAGE_STEP_ORDER = ['default', 'mfa'] as const;
+const INVITE_LOGIN_PAGE_STEP_ORDER: ReadonlyArray<LoginState> = [LoginState.DEFAULT, LoginState.MFA];
 
 interface InviteLoginPageProps {
-	code: string;
-	invite: Invite;
+	readonly code: string;
+	readonly invite: Invite;
 }
 
 const InviteLoginPage = observer(function InviteLoginPage({code, invite}: InviteLoginPageProps) {
 	const {i18n} = useLingui();
+	const runtimeTarget = useAuthRuntimeTarget();
 	const location = useLocation();
 	const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
-	const rawRedirect = params['get']('redirect_to');
-	const safeRedirect = safeRedirectTarget(rawRedirect);
+	const safeRedirect = safeRedirectTarget(params.get('redirect_to'));
 	const isHandoff = isHandoffRequest(params);
-	const registerSearch = safeRedirect ? {redirect_to: safeRedirect} : undefined;
+	const registerSearch = safeRedirect == null ? undefined : {redirect_to: safeRedirect};
 	const redirectPath = useMemo(() => {
 		return setPathQueryParams(Routes.inviteRegister(code), {redirect_to: safeRedirect});
 	}, [code, safeRedirect]);
 	return (
 		<AuthLoginLayout
 			redirectPath={redirectPath}
-			desktopHandoff={isHandoff}
 			inviteCode={code}
+			desktopHandoff={isHandoff}
+			excludeCurrentUser={false}
 			extraTopContent={
 				<>
 					<DesktopDeepLinkPrompt
@@ -86,7 +83,19 @@ const InviteLoginPage = observer(function InviteLoginPage({code, invite}: Invite
 					<InviteHeader invite={invite} data-flx="invite.invite-login-page.invite-header" />
 				</>
 			}
+			forgotPasswordAction={null}
 			showTitle={false}
+			title={null}
+			onLoginComplete={runtimeTarget.reset}
+			onBackActionChange={null}
+			completeLoginRedirectPath={null}
+			forceCredentials={false}
+			startWithAddAccount={false}
+			runtimeTarget={runtimeTarget}
+			showInstanceSelector={null}
+			ssoRedirectPath={null}
+			suppressInlineBackButtons={false}
+			initialIdentifier={null}
 			registerLink={
 				<AuthRouterLink
 					to={Routes.inviteRegister(code)}
@@ -100,71 +109,32 @@ const InviteLoginPage = observer(function InviteLoginPage({code, invite}: Invite
 		/>
 	);
 });
-const InviteLoginPageMFA = observer(function InviteLoginPageMFA() {
-	const location = useLocation();
-	const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
-	const isHandoff = isHandoffRequest(params);
-	const rawRedirect = params['get']('redirect_to');
-	const redirectTo = isHandoff ? undefined : safeRedirectTargetOrFallback(rawRedirect, '/');
-	const mfaTicket = Authentication.currentMfaTicket;
-	const mfaMethods = Authentication.availableMfaMethods;
-	const hasStoredAccounts = AccountManager.orderedAccounts.length > 0;
-	const handoff = useDesktopHandoffFlow({
-		enabled: isHandoff,
-		hasStoredAccounts,
-		initialMode: 'idle',
-	});
-	const handleMfaSuccess = useCallback(
-		async ({token, userId}: LoginSuccessPayload) => {
-			if (isHandoff) {
-				await AccountManager.refreshStoredAccount(userId, token);
-				await handoff.start({token, userId});
-				return;
-			}
-			await AuthenticationCommands.completeLogin({token, userId});
-			AuthenticationCommands.clearMfaTicket();
-			RouterUtils.replaceWith(redirectTo || '/');
-		},
-		[handoff, isHandoff, redirectTo],
-	);
-	const handleCancel = useCallback(() => {
-		AuthenticationCommands.clearMfaTicket();
-	}, []);
-	if (!mfaTicket || !mfaMethods) {
-		return null;
-	}
-	if (isHandoff && isApprovalFlowMode(handoff.mode)) {
-		return (
-			<ConnectedHandoffApprovalFlow
-				handoff={handoff}
-				data-flx="invite.invite-login-page.invite-login-page-mfa.connected-handoff-approval-flow"
-			/>
-		);
-	}
-	return (
-		<MfaScreen
-			challenge={{ticket: mfaTicket, ...mfaMethods}}
-			onSuccess={handleMfaSuccess}
-			onCancel={handleCancel}
-			data-flx="invite.invite-login-page.invite-login-page-mfa.mfa-screen"
-		/>
-	);
-});
-const InviteLoginPageContainer = observer(() => {
+interface InviteLoginPageContentProps {
+	readonly runtimeSnapshot: RuntimeConfigSnapshot;
+}
+
+const InviteLoginPageContent = observer(function InviteLoginPageContent({
+	runtimeSnapshot,
+}: InviteLoginPageContentProps) {
 	const {i18n} = useLingui();
+	const runtimeTarget = useAuthRuntimeTarget();
 	const loginState = Authentication.loginState;
 	const {code} = useParams() as {code: string};
+	const inviteTarget = useMemo(
+		() => instanceTargetFromSnapshot(runtimeSnapshot),
+		[runtimeSnapshot.apiCodeVersion, runtimeSnapshot.apiEndpoint],
+	);
 	useFluxerDocumentTitle(i18n._(ACCEPT_INVITE_DESCRIPTOR));
 	const {setSplashUrl, setSplashCardAlignment} = useAuthLayoutContext();
-	const inviteState = Invites.invites.get(code) ?? null;
+	const inviteState = Invites.getInvite(code, inviteTarget);
 	const inviteData = inviteState?.data ?? null;
 	const guildInvite = inviteData && isGuildInvite(inviteData) ? inviteData : null;
 	useEffect(() => {
-		const currentInviteState = Invites.invites.get(code) ?? null;
+		const currentInviteState = Invites.getInvite(code, inviteTarget);
 		if (!currentInviteState && code) {
-			void InviteCommands.fetchWithCoalescing(code).catch(() => {});
+			void InviteCommands.fetchWithCoalescing(code, inviteTarget).catch(() => {});
 		}
-	}, [code]);
+	}, [code, inviteTarget]);
 	useEffect(() => {
 		if (!guildInvite) {
 			return;
@@ -190,6 +160,9 @@ const InviteLoginPageContainer = observer(() => {
 			<AuthErrorState
 				title={i18n._(INVITE_NOT_FOUND_TITLE_DESCRIPTOR)}
 				text={i18n._(INVITE_NOT_FOUND_DESCRIPTION_DESCRIPTOR)}
+				action={
+					<AuthRuntimeTargetResetAction data-flx="invite.invite-login-page.invite-login-page-container.auth-runtime-target-reset-action" />
+				}
 				data-flx="invite.invite-login-page.invite-login-page-container.auth-error-state"
 			/>
 		);
@@ -267,7 +240,7 @@ const InviteLoginPageContainer = observer(() => {
 		);
 	}
 	switch (loginState) {
-		case 'default':
+		case LoginState.DEFAULT:
 			return (
 				<SteppedCarousel
 					step={loginState}
@@ -283,7 +256,7 @@ const InviteLoginPageContainer = observer(() => {
 					/>
 				</SteppedCarousel>
 			);
-		case 'mfa':
+		case LoginState.MFA:
 			return (
 				<SteppedCarousel
 					step={loginState}
@@ -292,12 +265,27 @@ const InviteLoginPageContainer = observer(() => {
 					ariaLabel={i18n._(ACCEPT_INVITE_DESCRIPTOR)}
 					data-flx="invite.invite-login-page.container-carousel"
 				>
-					<InviteLoginPageMFA data-flx="invite.invite-login-page.invite-login-page-container.invite-login-page-mfa" />
+					<DesktopHandoffMfaStep
+						fallbackRedirectPath="/"
+						onLoginComplete={runtimeTarget.reset}
+						data-flx="invite.invite-login-page.invite-login-page-container.desktop-handoff-mfa-step"
+					/>
 				</SteppedCarousel>
 			);
 		default:
 			return null;
 	}
 });
+
+const InviteLoginPageContainer = observer(() => (
+	<AuthRuntimeTargetGate data-flx="invite.invite-login-page.runtime-target-gate">
+		{(runtimeSnapshot) => (
+			<InviteLoginPageContent
+				runtimeSnapshot={runtimeSnapshot}
+				data-flx="invite.invite-login-page.invite-login-page-content"
+			/>
+		)}
+	</AuthRuntimeTargetGate>
+));
 
 export default InviteLoginPageContainer;

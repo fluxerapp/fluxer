@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import {usesUniqueUsernames} from '@app/features/app/utils/AccountIdentityFeatures';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import FormField from '@app/features/auth/flow/AuthFormField';
 import styles from '@app/features/auth/flow/AuthPageStyles.module.css';
@@ -18,10 +19,14 @@ import {
 	EMPTY_AUTH_REGISTER_FORM_DRAFT,
 	useAuthRegisterDraftContext,
 } from '@app/features/auth/state/AuthRegisterDraftContext';
+import {authRequestTargetFromSnapshot} from '@app/features/auth/state/AuthRequestTarget';
 import {
+	DISPLAY_NAME_OPTIONAL_DESCRIPTOR,
 	EMAIL_DESCRIPTOR,
 	PASSWORD_DESCRIPTOR,
+	PASSWORDS_DO_NOT_MATCH_DESCRIPTOR,
 	USERNAME_DESCRIPTOR,
+	WHAT_SHOULD_PEOPLE_CALL_YOU_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {Button} from '@app/features/ui/button/Button';
@@ -34,10 +39,6 @@ import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useId, useMemo, useRef, useState} from 'react';
 
-const PASSWORDS_DO_NOT_MATCH_DESCRIPTOR = msg({
-	message: 'Passwords do not match',
-	comment: 'Short label in the authentication auth register form core. Keep the tone plain and specific.',
-});
 const CONFIRM_PASSWORD_DESCRIPTOR = msg({
 	message: 'Confirm password',
 	comment: 'Short label in the authentication auth register form core. Keep the tone plain and specific.',
@@ -53,14 +54,6 @@ const USERNAME_MUST_BE_CHARACTERS_OR_LESS_DESCRIPTOR = msg({
 const ONLY_LETTERS_NUMBERS_AND_UNDERSCORES_DESCRIPTOR = msg({
 	message: 'Only letters, numbers, and underscores',
 	comment: 'Short label in the authentication auth register form core. Keep the tone plain and specific.',
-});
-const DISPLAY_NAME_OPTIONAL_DESCRIPTOR = msg({
-	message: 'Display name (optional)',
-	comment: 'Short label in the authentication auth register form core. Keep the tone plain and specific.',
-});
-const WHAT_SHOULD_PEOPLE_CALL_YOU_DESCRIPTOR = msg({
-	message: 'What should people call you?',
-	comment: 'Question prompt in the authentication auth register form core. Keep the tone plain and specific.',
 });
 const USERNAME_OPTIONAL_DESCRIPTOR = msg({
 	message: 'Username (optional)',
@@ -97,7 +90,9 @@ interface AuthRegisterFormCoreProps {
 	fields?: FieldConfig;
 	submitLabel: React.ReactNode;
 	redirectPath: string;
+	runtimeSnapshot: RuntimeConfigSnapshot;
 	onRegister?: (response: AuthenticationCommands.TokenResponse) => Promise<void>;
+	onAuthenticated?: () => void;
 	inviteCode?: string;
 	extraContent?: React.ReactNode;
 	showLegalConsent?: boolean;
@@ -109,7 +104,9 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 	fields = {},
 	submitLabel,
 	redirectPath,
+	runtimeSnapshot,
 	onRegister,
+	onAuthenticated,
 	inviteCode,
 	extraContent,
 	showLegalConsent = true,
@@ -130,8 +127,9 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 		const value = new URLSearchParams(location.search).get('registration_url')?.trim();
 		return value || undefined;
 	}, [location.search]);
-	const isPublicRegistrationClosed = RuntimeConfig.registration.mode === 'closed' && !registrationUrlCode;
-	const collectDateOfBirth = RuntimeConfig.collectDateOfBirthOnRegistration;
+	const registrationTarget = useMemo(() => authRequestTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
+	const isPublicRegistrationClosed = runtimeSnapshot.registration.mode === 'closed' && !registrationUrlCode;
+	const collectDateOfBirth = runtimeSnapshot.appPublic.registration.collect_date_of_birth;
 	const {getRegisterFormDraft, setRegisterFormDraft, clearRegisterFormDraft} = useAuthRegisterDraftContext();
 	const emailId = useId();
 	const globalNameId = useId();
@@ -157,7 +155,7 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 	const [selectedYear, setSelectedYearState] = useState(initialDraft.selectedYear);
 	const [consent, setConsentState] = useState(initialDraft.consent);
 	const [pendingApprovalUserId, setPendingApprovalUserId] = useState<string | null>(null);
-	const legalConsentConfig = getRegistrationLegalConsentConfig(showLegalConsent);
+	const legalConsentConfig = getRegistrationLegalConsentConfig(runtimeSnapshot, showLegalConsent);
 	const effectiveConsent = legalConsentConfig.requirement ? consent : true;
 	const initialValues: Record<string, string> = {
 		global_name: initialDraft.formValues.global_name ?? '',
@@ -222,17 +220,20 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 			collectDateOfBirth && selectedYear && selectedMonth && selectedDay
 				? `${selectedYear}-${selectedMonth.padStart(2, '0')}-${selectedDay.padStart(2, '0')}`
 				: undefined;
-		const response = await AuthenticationCommands.register({
-			global_name: values.global_name || undefined,
-			username: (requireUsername ? values.username.trim() : values.username) || undefined,
-			email: showEmail ? values.email : undefined,
-			password: showPassword ? values.password : undefined,
-			date_of_birth: dateOfBirth,
-			consent: effectiveConsent,
-			invite_code: inviteCode,
-			registration_url_code: registrationUrlCode,
-			theme,
-		});
+		const response = await AuthenticationCommands.register(
+			{
+				global_name: values.global_name || undefined,
+				username: (requireUsername ? values.username.trim() : values.username) || undefined,
+				email: showEmail ? values.email : undefined,
+				password: showPassword ? values.password : undefined,
+				date_of_birth: dateOfBirth,
+				consent: effectiveConsent,
+				invite_code: inviteCode,
+				registration_url_code: registrationUrlCode,
+				theme,
+			},
+			registrationTarget,
+		);
 		if (AuthenticationCommands.isRegistrationPendingApprovalResponse(response)) {
 			clearRegisterFormDraft(draftKey);
 			setPendingApprovalUserId(response.user_id);
@@ -246,6 +247,7 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 				token: response.token,
 				userId: response.user_id,
 				...(userData ? {userData} : {}),
+				runtimeSnapshot,
 			});
 			if (offerRecoveryKit && showPassword && values.password) {
 				void createRecoveryKitWithPasswordAndOpen({
@@ -256,6 +258,7 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 				});
 			}
 		}
+		onAuthenticated?.();
 		clearRegisterFormDraft(draftKey);
 		return undefined;
 	};
@@ -279,6 +282,7 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 	const {suggestions} = useUsernameSuggestions({
 		globalName: form.getValue('global_name'),
 		username: form.getValue('username'),
+		target: registrationTarget.http,
 	});
 	const missingFields = useMemo(() => {
 		const missing: Array<MissingField> = [];
@@ -318,8 +322,9 @@ export const AuthRegisterFormCore = observer(function AuthRegisterFormCore({
 	const usernameValue = form.getValue('username');
 	const trimmedUsername = usernameValue?.trim() || '';
 	const usernameFormatValid = trimmedUsername.length <= MAX_USERNAME_LENGTH && USERNAME_PATTERN.test(trimmedUsername);
-	const uniqueUsernames = RuntimeConfig.usesUniqueUsernames;
+	const uniqueUsernames = usesUniqueUsernames(runtimeSnapshot.features);
 	const usernameAvailability = useUsernameAvailability(
+		registrationTarget.http,
 		trimmedUsername,
 		uniqueUsernames && trimmedUsername.length > 0 && usernameFormatValid,
 	);

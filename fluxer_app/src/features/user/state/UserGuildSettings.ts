@@ -575,6 +575,10 @@ class UserGuildSettings {
 		this.notifyChange();
 	}
 
+	hydrateFromSnapshot(userGuildSettings: ReadonlyArray<GatewayGuildSettings>): void {
+		this.handleGatewayReady([...userGuildSettings]);
+	}
+
 	handleGuildSettingsUpdate(action: {guildId: string; settings: Partial<GatewayGuildSettings>}): void {
 		this.updateGuildSettings(action.guildId, action.settings);
 	}

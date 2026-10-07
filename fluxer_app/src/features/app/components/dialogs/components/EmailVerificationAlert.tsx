@@ -5,6 +5,7 @@ import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErro
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {VerificationResult} from '@app/features/auth/commands/AuthenticationCommands';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -61,7 +62,7 @@ export const EmailVerificationAlert = observer(({title, children}: EmailVerifica
 	const handleResend = async () => {
 		if (isResending) return;
 		setIsResending(true);
-		const result = await AuthenticationCommands.resendVerificationEmail();
+		const result = await AuthenticationCommands.resendVerificationEmail(currentInstanceTarget());
 		switch (result) {
 			case VerificationResult.SUCCESS:
 				ToastCommands.success(i18n._(VERIFICATION_EMAIL_SENT_PLEASE_CHECK_YOUR_INBOX_DESCRIPTOR));

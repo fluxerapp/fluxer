@@ -29,11 +29,10 @@ function loadAppLoadRetry() {
 	return module.exports;
 }
 
-const APP_URL = 'https://web.canary.fluxer.app/';
-const MIGRATED_URL = 'https://canary.fluxer.com/';
+const APP_URL = 'fluxer-app://app/channels/@me';
 const silentLogger = {info() {}, warn() {}, error() {}};
 
-function createHarness({appUrl = APP_URL, fallbackUrl = null} = {}) {
+function createHarness() {
 	const listeners = new Map();
 	const timers = [];
 	const loads = [];
@@ -67,10 +66,9 @@ function createHarness({appUrl = APP_URL, fallbackUrl = null} = {}) {
 	const {createAppLoadRetry} = loadAppLoadRetry();
 	const retry = createAppLoadRetry({
 		webContents,
-		appUrl,
+		appUrl: APP_URL,
 		logger: silentLogger,
 		isTrustedUrl: () => true,
-		getFallbackUrl: (url) => (url === MIGRATED_URL ? fallbackUrl : null),
 		onRepeatedFailure: (failure) => prompts.push(failure),
 		onCommitted: () => {
 			commits += 1;
@@ -122,6 +120,7 @@ describe('AppLoadRetry', () => {
 
 		assert.deepEqual(delays, [1000, 2000, 4000, 8000, 16000, 30000, 30000, 30000]);
 		assert.equal(harness.loads.length, 9);
+		assert.ok(harness.loads.every((url) => url === APP_URL));
 	});
 
 	test('resets the backoff and dismisses the prompt once the app commits', async () => {
@@ -163,15 +162,5 @@ describe('AppLoadRetry', () => {
 		await harness.settle();
 
 		assert.deepEqual(harness.pendingDelays(), []);
-	});
-
-	test('falls back from the migrated origin without backing off', async () => {
-		const harness = createHarness({appUrl: MIGRATED_URL, fallbackUrl: APP_URL});
-		harness.retry.start();
-		await harness.settle();
-
-		assert.deepEqual(harness.loads.slice(0, 2), [MIGRATED_URL, APP_URL]);
-		assert.equal(harness.retry.getAppUrl(), APP_URL);
-		assert.deepEqual(harness.pendingDelays(), [1000]);
 	});
 });

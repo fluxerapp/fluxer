@@ -86,7 +86,6 @@ pub struct RuntimeCspSources {
     pub media_endpoint: Option<HttpEndpoint>,
     pub s3_public_endpoint: Option<HttpEndpoint>,
     pub s3_uploads_endpoint: Option<HttpEndpoint>,
-    pub branding_image_origins: Vec<HttpEndpoint>,
 }
 
 const FRAME_SOURCES: &[&str] = &[
@@ -169,7 +168,14 @@ impl std::error::Error for CspCompileError {
 #[derive(Clone, Debug)]
 pub struct CompiledCspPolicy {
     config: CspConfig,
+    runtime_sources: RuntimeCspSources,
     asset: HeaderValue,
+}
+
+#[derive(Clone, Debug)]
+pub struct CspHeaderValues {
+    pub enforced: HeaderValue,
+    pub report_only: Option<HeaderValue>,
 }
 
 impl CompiledCspPolicy {
@@ -178,10 +184,9 @@ impl CompiledCspPolicy {
             config.csp.clone(),
             &RuntimeCspSources {
                 static_cdn_endpoint: config.static_cdn_endpoint.clone(),
-                media_endpoint: None,
+                media_endpoint: config.media_endpoint.clone(),
                 s3_public_endpoint: config.s3_public_endpoint.clone(),
                 s3_uploads_endpoint: config.s3_uploads_endpoint.clone(),
-                branding_image_origins: Vec::new(),
             },
         )
     }
@@ -202,22 +207,31 @@ impl CompiledCspPolicy {
             configured_sources,
         ))
         .map_err(CspCompileError::InvalidSpaPolicy)?;
-        Ok(Self { config, asset })
+        Ok(Self {
+            config,
+            runtime_sources: configured_sources.clone(),
+            asset,
+        })
     }
 
     pub fn asset_header(&self) -> HeaderValue {
         self.asset.clone()
     }
 
-    pub fn spa_header(
-        &self,
-        script_hashes: &[InlineScriptHash],
-        runtime_sources: &RuntimeCspSources,
-    ) -> HeaderValue {
-        HeaderValue::from_str(&build_csp(&self.config, script_hashes, runtime_sources)).expect(
+    pub fn spa_headers(&self, script_hashes: &[InlineScriptHash]) -> CspHeaderValues {
+        let enforced = HeaderValue::from_str(&build_csp(
+            &self.config,
+            script_hashes,
+            &self.runtime_sources,
+        ))
+        .expect(
             "every CSP source is a validated keyword, scheme, ASCII origin, or base64 hash, so a \
              policy built from them is always a valid header value",
-        )
+        );
+        CspHeaderValues {
+            enforced,
+            report_only: None,
+        }
     }
 }
 
@@ -264,9 +278,6 @@ fn build_csp_directives(
     let mut img = vec!["'self'".to_owned(), "blob:".to_owned(), "data:".to_owned()];
     extend_from(&mut img, &config.extra_img_src, IMAGE_SOURCES);
     extend_runtime_sources(&mut img, runtime_sources, true, true);
-    for origin in &runtime_sources.branding_image_origins {
-        push_endpoint_source(&mut img, Some(origin));
-    }
     directives.push(format!("img-src {}", img.join(" ")));
 
     let mut media = vec!["'self'".to_owned(), "blob:".to_owned()];
@@ -636,20 +647,63 @@ mod tests {
     }
 
     #[test]
-    fn a_compiled_policy_stamps_the_documents_script_hashes_and_discovery_endpoints() {
-        let policy = CompiledCspPolicy::compile(default_csp_config(), &runtime_sources()).unwrap();
-        let discovered = RuntimeCspSources {
-            static_cdn_endpoint: Some(endpoint("https://cdn.discovered.test")),
-            branding_image_origins: vec![endpoint("https://branding.discovered.test")],
+    fn a_compiled_policy_stamps_the_documents_script_hashes_and_configured_endpoints() {
+        let configured = RuntimeCspSources {
+            static_cdn_endpoint: Some(endpoint("https://cdn.configured.test")),
             ..Default::default()
         };
+        let policy = CompiledCspPolicy::compile(default_csp_config(), &configured).unwrap();
 
-        let header = policy.spa_header(&[hash_of("boot()")], &discovered);
-        let header = header.to_str().unwrap();
+        let headers = policy.spa_headers(&[hash_of("boot()")]);
+        let header = headers.enforced.to_str().unwrap();
 
         assert!(header.contains(hash_of("boot()").as_source()));
-        assert!(header.contains("https://cdn.discovered.test"));
-        assert!(header.contains("https://branding.discovered.test"));
+        assert!(header.contains("https://cdn.configured.test"));
+        assert!(!header.contains("nonce-"));
+        assert!(headers.report_only.is_none());
+    }
+
+    #[test]
+    fn the_configured_media_endpoint_reaches_every_directive_that_loads_media() {
+        let mut config = AppProxyConfig::from_env();
+        config.csp = default_csp_config();
+        config.media_endpoint = Some(endpoint("https://media.configured.test/"));
+        let policy = CompiledCspPolicy::from_config(&config).unwrap();
+
+        let headers = policy.spa_headers(&[hash_of("boot()")]);
+        let header = headers.enforced.to_str().unwrap();
+        for directive in [
+            "img-src",
+            "media-src",
+            "font-src",
+            "style-src",
+            "connect-src",
+        ] {
+            let sources = header
+                .split("; ")
+                .find(|candidate| candidate.starts_with(directive))
+                .unwrap_or_else(|| panic!("the policy has no {directive}"));
+            assert!(
+                sources
+                    .split(' ')
+                    .any(|source| source == "https://media.configured.test"),
+                "{directive} does not grant the configured media endpoint"
+            );
+        }
+        for directive in ["script-src", "worker-src", "manifest-src"] {
+            let sources = header
+                .split("; ")
+                .find(|candidate| candidate.starts_with(directive))
+                .unwrap_or_else(|| panic!("the policy has no {directive}"));
+            assert!(!sources.contains("https://media.configured.test"));
+        }
+        assert!(
+            !policy
+                .asset_header()
+                .to_str()
+                .unwrap()
+                .contains("https://media.configured.test")
+        );
     }
 
     #[test]
@@ -667,7 +721,7 @@ mod tests {
         );
         let hashes = [hash_of("boot()")];
         assert_eq!(
-            policy.spa_header(&hashes, &sources).to_str().unwrap(),
+            policy.spa_headers(&hashes).enforced.to_str().unwrap(),
             build_csp(&config, &hashes, &sources)
         );
     }

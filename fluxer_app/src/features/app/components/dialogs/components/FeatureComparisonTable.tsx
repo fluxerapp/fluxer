@@ -3,11 +3,11 @@
 import {ComparisonCheckRow} from '@app/features/app/components/dialogs/components/ComparisonCheckRow';
 import {ComparisonRow} from '@app/features/app/components/dialogs/components/ComparisonRow';
 import styles from '@app/features/app/components/dialogs/components/FeatureComparisonTable.module.css';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import {COMMUNITIES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {
 	isBooleanTierPerk,
 	isNumericTierPerk,
@@ -185,7 +185,7 @@ export const FeatureComparisonTable = observer(() => {
 						<Trans>Free</Trans>
 					</div>
 					<div className={styles.headerStock} data-flx="app.feature-comparison-table.header-stock">
-						{PREMIUM_PRODUCT_NAME}
+						{getPremiumProductName()}
 					</div>
 				</div>
 			</div>

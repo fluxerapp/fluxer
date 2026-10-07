@@ -200,6 +200,7 @@ jobs:
           tags: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:${{ needs.meta.outputs.build_version }}-arm64
           build-args: |
             BUILD_VERSION=${{ needs.meta.outputs.build_version }}
+            PUBLIC_ASSET_BASE_URL=https://fluxerstatic.com
             SOURCE_SHA=${{ github.sha }}
             SOURCE_DATE=${{ steps.source.outputs.date }}
             APP_ASSETS_REF=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:${{ needs.meta.outputs.build_version }}-assets

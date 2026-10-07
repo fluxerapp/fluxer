@@ -52,6 +52,9 @@ use crate::foundation;
 use crate::os_version::{
     self, SCK_MIN_MACOS, SupportClassification, classify_support, format_version,
 };
+use crate::permission_probe::{
+    PROBE_TIMEOUT_NS, ShareableContentOutcome, screen_recording_probe_result,
+};
 use crate::sck;
 use fluxer_encoder_ring::EncoderFrameRate;
 
@@ -1938,6 +1941,26 @@ pub async fn get_backend_availability() -> Result<BackendAvailability> {
         },
         screen_permission: screen_permission.to_string(),
     })
+}
+
+fn shareable_content_outcome(timeout_ns: u64) -> ShareableContentOutcome {
+    match get_shareable_content(timeout_ns) {
+        Ok(_) => ShareableContentOutcome::Delivered,
+        Err(AsyncError::Timeout) => ShareableContentOutcome::TimedOut,
+        Err(AsyncError::SckErr) => ShareableContentOutcome::Failed,
+    }
+}
+
+#[napi(js_name = "probeScreenRecordingAccess")]
+pub async fn probe_screen_recording_access() -> Result<String> {
+    use objc2::runtime::AnyClass;
+    let sck_available = AnyClass::get(c"SCShareableContent").is_some();
+    let outcome = if sck_available {
+        shareable_content_outcome(PROBE_TIMEOUT_NS)
+    } else {
+        ShareableContentOutcome::Failed
+    };
+    Ok(screen_recording_probe_result(sck_available, outcome).to_owned())
 }
 
 #[napi(object, js_name = "MacScreenCaptureBackendInfo")]

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Config from '@app/features/app/config/Config';
-import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME, PRODUCT_NAME} from '@app/features/app/config/ProductConstants';
+import {PRODUCT_NAME} from '@app/features/app/config/ProductConstants';
 import {formatAssetUploadExtensions, formatKnownAnimatedAssetExtensions} from '@fluxer/constants/src/AssetFormatPolicy';
 import {THE_OTHER_PLATFORM} from '@fluxer/constants/src/ExternalPlatformConstants';
 
-export {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME, PRODUCT_NAME};
+export {PRODUCT_NAME};
 export const PRODUCT_API_NAME = `${PRODUCT_NAME} API`;
 export const PRODUCT_HQ_COMMUNITY_NAME = `${PRODUCT_NAME} HQ`;
 export const CANARY_RELEASE_CHANNEL_NAME = `${PRODUCT_NAME} Canary`;
@@ -16,12 +16,6 @@ export const PAYMENT_PROVIDER_NAME = 'Stripe';
 export const BLUESKY_PROVIDER_NAME = 'Bluesky';
 export const APP_STORE_NAME = 'App Store';
 export const GOOGLE_PLAY_NAME = 'Google Play';
-export const MACOS_SYSTEM_SETTINGS_NAME = 'System Settings';
-export const MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME = 'Privacy & Security';
-export const MACOS_CAMERA_PERMISSION_NAME = 'Camera';
-export const MACOS_INPUT_MONITORING_PERMISSION_NAME = 'Input Monitoring';
-export const MACOS_MICROPHONE_PERMISSION_NAME = 'Microphone';
-export const MACOS_SCREEN_RECORDING_PERMISSION_NAME = 'Screen Recording';
 export const PIX_PAYMENT_METHOD = 'Pix';
 export const UPI_PAYMENT_METHOD = 'UPI';
 export const BLIK_PAYMENT_METHOD = 'BLIK';
@@ -58,8 +52,14 @@ export const LINK_PREVIEW_EXAMPLE_URL = 'https://fluxer.app';
 export const EXAMPLE_MESSAGE_LINK = `${LINK_PREVIEW_EXAMPLE_URL}/channels/...`;
 export const EXAMPLE_GIF_URLS = `${EXAMPLE_URL}/gif1.gif\n${EXAMPLE_URL}/gif2.gif`;
 export const THE_OTHER_PLATFORM_TEMPLATE_EXAMPLE_URL = `https://${THE_OTHER_PLATFORM.toLowerCase()}.new/abcd1234`;
+const DESKTOP_DOWNLOAD_URLS: Record<string, string> = {
+	stable: 'https://fluxer.app/download',
+	canary: 'https://canary.fluxer.app/download',
+	development: 'http://localhost:8088/download',
+};
+
 export const DESKTOP_DOWNLOAD_URL =
-	Config.PUBLIC_RELEASE_CHANNEL === 'canary' ? 'https://canary.fluxer.app/download' : 'https://fluxer.app/download';
+	DESKTOP_DOWNLOAD_URLS[Config.PUBLIC_RELEASE_CHANNEL] ?? DESKTOP_DOWNLOAD_URLS.stable;
 export const FLUXER_DOCS_DOMAIN = 'fluxer.dev';
 export const FLUXER_DOCS_URL = `https://${FLUXER_DOCS_DOMAIN}`;
 export const FLUXER_BLUESKY_HANDLE = '@fluxer.app';

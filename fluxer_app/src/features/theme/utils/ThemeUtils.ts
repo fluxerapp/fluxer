@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type RuntimeConfigSnapshot, runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as CodeLinkUtils from '@app/features/messaging/utils/CodeLinkUtils';
-import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
+import {buildMediaProxyURLForInstance} from '@app/features/messaging/utils/MediaProxyUtils';
 
 const OFFICIAL_THEME_URL_BASES = Object.freeze([
 	'https://fluxer.app/theme',
@@ -46,8 +47,12 @@ function buildThemeCssUrl(endpoint: string | null | undefined, themeId: string):
 	return `${base}/themes/${themeId}.css`;
 }
 
-export function buildThemeCssProxyUrl(endpoint: string | null | undefined, themeId: string): string | null {
-	const rawUrl = buildThemeCssUrl(endpoint, themeId);
+export function buildThemeCssProxyUrl(snapshot: RuntimeConfigSnapshot, themeId: string): string | null {
+	const rawUrl = buildThemeCssUrl(snapshot.mediaEndpoint, themeId);
 	if (!rawUrl) return null;
-	return buildMediaProxyURL(rawUrl);
+	const instanceKey = runtimeInstanceKey(snapshot);
+	if (instanceKey == null) {
+		throw new Error(`Theme runtime has no usable instance key (apiEndpoint: "${snapshot.apiEndpoint}")`);
+	}
+	return buildMediaProxyURLForInstance(rawUrl, instanceKey);
 }

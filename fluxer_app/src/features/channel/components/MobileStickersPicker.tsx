@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
 import mobileStyles from '@app/features/channel/components/MobileEmojiPicker.module.css';
 import {PremiumUpsellBanner} from '@app/features/channel/components/PremiumUpsellBanner';
@@ -38,7 +37,7 @@ import {
 import Permission from '@app/features/permissions/state/Permission';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {usePremiumUpsellData} from '@app/features/premium/hooks/usePremiumUpsellData';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
@@ -72,6 +71,7 @@ export const MobileStickersPicker = observer(
 		channelId?: string;
 		handleSelect: (sticker: GuildSticker, shiftKey?: boolean) => void;
 	}) => {
+		const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 		const {i18n} = useLingui();
 		const headerPortalContext = useExpressionPickerHeaderPortal();
 		const hasPortal = Boolean(headerPortalContext?.headerPortalElement);

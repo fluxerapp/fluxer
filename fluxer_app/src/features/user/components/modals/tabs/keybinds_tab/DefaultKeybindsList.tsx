@@ -5,6 +5,7 @@ import Keybind, {
 	type KeybindConfig,
 	type KeybindSection,
 } from '@app/features/input/state/InputKeybind';
+import {resolveKeybindCommand} from '@app/features/input/state/input_keybind/KeybindCommands';
 import {isActiveCustomKeybind, isBuiltinDisableMarker} from '@app/features/input/state/KeybindResolution';
 import styles from '@app/features/user/components/modals/tabs/KeybindsTab.module.css';
 import {DefaultShortcutRow} from '@app/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow';
@@ -56,9 +57,10 @@ export const DefaultKeybindsList: React.FC<{searchQuery: string}> = observer(({s
 	const overriddenActions = new Set<KeybindCommand>();
 	const disabledActions = new Set<KeybindCommand>();
 	for (const entry of customKeybinds) {
-		if (!entry.action) continue;
-		if (isActiveCustomKeybind(entry)) overriddenActions.add(entry.action);
-		else if (isBuiltinDisableMarker(entry)) disabledActions.add(entry.action);
+		const action = resolveKeybindCommand(entry.action);
+		if (action === null) continue;
+		if (isActiveCustomKeybind(entry)) overriddenActions.add(action);
+		else if (isBuiltinDisableMarker(entry)) disabledActions.add(action);
 	}
 	const normalized = normalizeQuery(searchQuery);
 	const sectionLabels: Record<KeybindSection, string> = {

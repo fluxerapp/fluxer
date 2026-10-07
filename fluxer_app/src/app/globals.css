@@ -362,6 +362,7 @@ html.platform-native.platform-macos {
 }
 
 html {
+	--custom-zoom: 100;
 	background-color: var(--background-secondary);
 	color: var(--text-primary);
 	overflow: hidden;
@@ -369,14 +370,9 @@ html {
 	user-select: var(--user-select);
 	-webkit-user-select: var(--user-select);
 	font-family: var(--font-sans);
-	font-size: 16px;
+	font-size: calc(var(--custom-zoom, 100) * 0.16px);
 	line-height: 1.5;
 	font-optical-sizing: auto;
-}
-
-html.platform-native {
-	--custom-zoom: 100;
-	font-size: calc(var(--custom-zoom, 100) * 1%);
 }
 
 html.allow-transparency,
@@ -384,20 +380,102 @@ html.allow-transparency body {
 	background-color: transparent;
 }
 
-#fluxer-startup-native-titlebar {
+.fluxer-native-titlebar {
 	position: fixed;
 	top: 0;
 	left: 0;
 	right: 0;
 	height: var(--native-titlebar-height);
-	display: none;
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	padding: 0 0 0 calc(var(--spacing-3) + env(safe-area-inset-left));
 	background: var(--background-secondary);
 	-webkit-app-region: drag;
 	z-index: var(--z-index-titlebar);
 }
 
-html.platform-native:not(.native-system-titlebar) #fluxer-startup-native-titlebar {
+.fluxer-native-titlebar[data-platform='macos'] {
+	padding-left: calc(var(--macos-traffic-light-inset) + env(safe-area-inset-left));
+	padding-right: calc(var(--spacing-3) + env(safe-area-inset-right));
+}
+
+html.platform-native:not(.window-focused) .fluxer-native-titlebar,
+html.platform-native.window-focus-activation-guard .fluxer-native-titlebar {
+	pointer-events: auto;
+}
+
+.fluxer-native-titlebar__left {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	color: var(--text-primary-muted);
+	opacity: 0.8;
+}
+
+.fluxer-native-titlebar__wordmark {
 	display: block;
+	height: 0.8125rem;
+	width: auto;
+	color: var(--text-primary-muted);
+	overflow: visible;
+}
+
+.fluxer-native-titlebar__spacer {
+	flex: 1 1 auto;
+}
+
+.fluxer-native-titlebar__controls {
+	display: flex;
+	align-items: stretch;
+	height: 100%;
+	gap: 0;
+	-webkit-app-region: no-drag;
+}
+
+.fluxer-native-titlebar__control {
+	-webkit-app-region: no-drag;
+	appearance: none;
+	box-sizing: border-box;
+	border: 0;
+	background: transparent;
+	color: var(--text-secondary);
+	width: 3rem;
+	height: 100%;
+	padding: 0;
+	border-radius: 0;
+	display: grid;
+	place-items: center;
+	transition:
+		background-color 120ms ease,
+		color 120ms ease,
+		border-color 120ms ease;
+	cursor: pointer;
+}
+
+.fluxer-native-titlebar__control svg {
+	width: 1.0625rem;
+	height: 1.0625rem;
+}
+
+.fluxer-native-titlebar__control:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-primary);
+	border-color: var(--user-area-divider-color);
+}
+
+.fluxer-native-titlebar__control:active {
+	background: var(--background-modifier-selected);
+}
+
+.fluxer-native-titlebar__control--close:hover {
+	background: #e81123;
+	color: #fff;
+	border-color: transparent;
+}
+
+.fluxer-native-titlebar__control--close:active {
+	background: #b50d1a;
 }
 
 html,

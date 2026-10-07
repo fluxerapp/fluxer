@@ -2,18 +2,12 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {
-	DESKTOP_DOWNLOAD_URL,
-	MACOS_INPUT_MONITORING_PERMISSION_NAME,
-	MACOS_MICROPHONE_PERMISSION_NAME,
-	MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME,
-	MACOS_SYSTEM_SETTINGS_NAME,
-	PRODUCT_NAME,
-} from '@app/features/app/config/I18nDisplayConstants';
+import {DESKTOP_DOWNLOAD_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {KeybindRecorder} from '@app/features/input/components/KeybindRecorder';
 import Keybind, {getDefaultKeybind} from '@app/features/input/state/InputKeybind';
 import {openMacPermissionsModal} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
+import {macPermissionNameDescriptor} from '@app/features/permissions/system/components/useMacPermissionControl';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -135,8 +129,7 @@ const PUSH_TO_TALK_BROWSER_LIMITED_DESCRIPTION_DESCRIPTOR = msg({
 	comment: 'Voice settings warning shown when push-to-talk is enabled in a browser.',
 });
 const PUSH_TO_TALK_PERMISSION_LIMITED_DESCRIPTION_DESCRIPTOR = msg({
-	message:
-		'Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it.',
+	message: 'Push-to-talk only works while {productName} is focused until {permissionName} is enabled.',
 	comment:
 		'Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.',
 });
@@ -344,13 +337,13 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 			return;
 		}
 		if (enabled && isNativeMac && !inputMonitoringGranted) {
-			openMacPermissionsModal({focus: 'input-monitoring'});
+			openMacPermissionsModal('input-monitoring');
 		}
 		Keybind.setTransmitMode(mode);
 		MediaEngine.handlePushToTalkModeChange();
 	};
 	const handleOpenInputMonitoringModal = () => {
-		openMacPermissionsModal({focus: 'input-monitoring'});
+		openMacPermissionsModal('input-monitoring');
 	};
 	const pttAvailable = voiceProcessingMode !== 'studio';
 	const showPttDetails = pttAvailable && isPushToTalk;
@@ -434,7 +427,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 								data-flx="user.voice-tab.render-ptt-controls.button.open-input-monitoring-modal"
 							>
 								{i18n._(ENABLE_PLATFORM_PERMISSION_DESCRIPTOR, {
-									permissionName: MACOS_INPUT_MONITORING_PERMISSION_NAME,
+									permissionName: i18n._(macPermissionNameDescriptor('input-monitoring')),
 								})}
 							</Button>
 						)
@@ -445,7 +438,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						? i18n._(PUSH_TO_TALK_BROWSER_LIMITED_DESCRIPTION_DESCRIPTOR)
 						: i18n._(PUSH_TO_TALK_PERMISSION_LIMITED_DESCRIPTION_DESCRIPTOR, {
 								productName: PRODUCT_NAME,
-								permissionName: MACOS_INPUT_MONITORING_PERMISSION_NAME,
+								permissionName: i18n._(macPermissionNameDescriptor('input-monitoring')),
 							})}
 				</WarningAlert>
 			)}
@@ -550,9 +543,9 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 							<p className={styles.deviceNoticeDescription} data-flx="user.voice-tab.device-notice-description">
 								{permissionStatus === 'denied' ? (
 									isNativeDesktop ? (
-										<Trans>
-											Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} →{' '}
-											{MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}.
+										<Trans comment="Shown in voice settings on the macOS app when microphone access is denied. {PRODUCT_NAME} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.">
+											Allow {PRODUCT_NAME} to access your microphone in System Settings → Privacy & Security →
+											Microphone.
 										</Trans>
 									) : (
 										<Trans>

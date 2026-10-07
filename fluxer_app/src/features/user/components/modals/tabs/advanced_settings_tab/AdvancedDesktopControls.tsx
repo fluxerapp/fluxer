@@ -8,6 +8,7 @@ import {
 	setDesktopDisableHardwareAcceleration,
 } from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import SourceMaps from '@app/features/platform/state/SourceMaps';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
@@ -24,6 +25,27 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useLayoutEffect, useState} from 'react';
+
+const DOWNLOAD_SOURCE_MAPS_DESCRIPTOR = msg({
+	message: 'Download source maps',
+	comment: 'Short label for a desktop setting that downloads debugging symbols.',
+});
+
+export const SourceMapsControl = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<Switch
+			ariaLabel={i18n._(DOWNLOAD_SOURCE_MAPS_DESCRIPTOR)}
+			value={SourceMaps.enabled}
+			onChange={(value) => {
+				void SourceMaps.setEnabled(value);
+			}}
+			disabled={SourceMaps.downloading}
+			compact
+			data-flx="user.desktop-settings-tab.switch.source-maps"
+		/>
+	);
+});
 
 const USE_NATIVE_TITLE_BAR_DESCRIPTOR = msg({
 	message: 'Use native title bar',

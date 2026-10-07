@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import {PREMIUM_PRODUCT_FULL_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {DIRECT_MESSAGES_DESCRIPTOR, FAVORITES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {isInternalChannelHost} from '@app/features/navigation/utils/DeepLinkUtils';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductFullName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -99,7 +98,7 @@ export function getAppPageLabel(i18n: I18n, page: AppPageId): string {
 		case 'discovery':
 			return i18n._(DISCOVERY_PAGE_DESCRIPTOR);
 		case 'plutonium':
-			return PREMIUM_PRODUCT_FULL_NAME;
+			return getPremiumProductFullName();
 		case 'favorites':
 			return i18n._(FAVORITES_DESCRIPTOR);
 		case 'direct_messages':

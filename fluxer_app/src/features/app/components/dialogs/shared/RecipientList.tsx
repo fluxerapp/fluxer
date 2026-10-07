@@ -6,6 +6,7 @@ import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {
 	DIRECT_MESSAGE_DESCRIPTOR,
+	GROUP_DM_DESCRIPTOR,
 	SEARCH_FRIENDS_DESCRIPTOR,
 	SENT_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -19,17 +20,11 @@ import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
-import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo, useRef, useState} from 'react';
-
-const GROUP_DM_DESCRIPTOR = msg({
-	message: 'Group DM',
-	comment: 'Short label in the settings dialog recipient list.',
-});
 
 export interface RecipientItem {
 	id: string;

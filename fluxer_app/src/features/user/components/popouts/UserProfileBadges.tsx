@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import {PREMIUM_PRODUCT_FULL_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {cdnUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductFullName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {handleExternalLinkClick} from '@app/features/ui/utils/NativeUtils';
@@ -14,6 +13,10 @@ import styles from '@app/features/user/components/popouts/UserProfileBadges.modu
 import type {Profile} from '@app/features/user/models/Profile';
 import type {User} from '@app/features/user/models/User';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
+import bugHunterBadgeUrl from '@app/media/images/badges/bug-hunter.svg';
+import partnerBadgeUrl from '@app/media/images/badges/partner.svg';
+import plutoniumBadgeUrl from '@app/media/images/badges/plutonium.svg';
+import staffBadgeUrl from '@app/media/images/badges/staff.svg';
 import {PublicUserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -21,10 +24,6 @@ import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo} from 'react';
-
-const BADGE_ASSET_VERSION = '2';
-
-const badgeAssetUrl = (fileName: string) => cdnUrl(`badges/${fileName}?v=${BADGE_ASSET_VERSION}`);
 
 const STAFF_DESCRIPTOR = msg({
 	message: '{productName} Staff',
@@ -101,7 +100,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 				result.push({
 					type: 'icon',
 					key: 'staff',
-					iconUrl: badgeAssetUrl('staff.svg'),
+					iconUrl: staffBadgeUrl,
 					tooltip: i18n._(STAFF_DESCRIPTOR, {productName: PRODUCT_NAME}),
 					url: Routes.careers(),
 				});
@@ -110,7 +109,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 				result.push({
 					type: 'icon',
 					key: 'partner',
-					iconUrl: badgeAssetUrl('partner.svg'),
+					iconUrl: partnerBadgeUrl,
 					tooltip: i18n._(PARTNER_DESCRIPTOR, {productName: PRODUCT_NAME}),
 					url: Routes.partners(),
 				});
@@ -119,13 +118,13 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 				result.push({
 					type: 'icon',
 					key: 'bug_hunter',
-					iconUrl: badgeAssetUrl('bug-hunter.svg'),
+					iconUrl: bugHunterBadgeUrl,
 					tooltip: i18n._(BUG_HUNTER_DESCRIPTOR, {productName: PRODUCT_NAME}),
 					url: Routes.bugs(),
 				});
 			}
 			if (showPremium && profile?.premiumType && profile.premiumType !== UserPremiumTypes.NONE) {
-				let tooltipText = PREMIUM_PRODUCT_FULL_NAME;
+				let tooltipText = getPremiumProductFullName();
 				let badgeUrl: string | undefined =
 					premiumInfoUrl ?? (selfHosted || plutoniumPageEnabled ? undefined : Routes.plutonium());
 				const badgeOnClick = badgeUrl ? undefined : () => PremiumModalCommands.open();
@@ -140,14 +139,14 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 				} else if (profile.premiumSince) {
 					const premiumSinceFormatted = DateUtils.getFormattedShortDate(profile.premiumSince);
 					tooltipText = i18n._(SUBSCRIBER_SINCE_DESCRIPTOR, {
-						premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME,
+						premiumProductFullName: getPremiumProductFullName(),
 						premiumSinceFormatted,
 					});
 				}
 				result.push({
 					type: 'icon',
 					key: 'premium',
-					iconUrl: badgeAssetUrl('plutonium.svg'),
+					iconUrl: plutoniumBadgeUrl,
 					tooltip: tooltipText,
 					url: badgeUrl,
 					onClick: badgeOnClick,

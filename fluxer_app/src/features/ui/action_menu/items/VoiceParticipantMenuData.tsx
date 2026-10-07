@@ -3,6 +3,7 @@
 import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {showVoiceMemberModerationFailedModal} from '@app/features/app/components/alerts/VoiceMemberModerationFailedModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
@@ -132,7 +133,6 @@ import type {
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import {ChangeNicknameModal} from '@app/features/user/components/modals/ChangeNicknameModal';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import type {User} from '@app/features/user/models/User';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
@@ -838,12 +838,15 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 						onClick: () => {
 							ModalCommands.pushAfterBottomSheetClose(
 								onClose,
-								modal(() => (
-									<UserSettingsModal
-										initialTab="voice_video"
-										data-flx="ui.action-menu.items.voice-participant-menu-data.on-click.user-settings-modal"
-									/>
-								)),
+								modal(
+									() => (
+										<UserSettingsModal
+											initialTab="voice_video"
+											data-flx="ui.action-menu.items.voice-participant-menu-data.on-click.user-settings-modal"
+										/>
+									),
+									'user-settings',
+								),
 							);
 						},
 					});

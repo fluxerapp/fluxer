@@ -3,7 +3,6 @@
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
 import type {StoredAccount} from '@app/features/auth/state/AccountStorage';
 import {isIOSMobileOrTabletUserAgent} from '@app/features/platform/notifications/NotificationAlertOptions';
-import {PASSKEY_MIGRATION_RP_ID} from '@fluxer/constants/src/PasskeyConstants';
 import type {DomainMigrationDiscoveryResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 
@@ -399,7 +398,6 @@ export interface DomainMigrationInstallSignals {
 	userAgent: string;
 	userAgentData: {brands?: ReadonlyArray<{brand: string}>; mobile?: boolean; platform?: string} | null;
 	maxTouchPoints: number;
-	electron: boolean;
 }
 
 const INSTALLED_DISPLAY_MODES: ReadonlySet<DomainMigrationDisplayMode> = new Set([
@@ -410,9 +408,6 @@ const CHROMIUM_USER_AGENT_PATTERN = /\b(?:Chrome|Chromium|CriOS|EdgA|Edg|OPR|Sam
 const ANDROID_USER_AGENT_PATTERN = /\bAndroid\b/u;
 
 export function classifyDomainMigrationInstallKind(signals: DomainMigrationInstallSignals): DomainMigrationInstallKind {
-	if (signals.electron) {
-		return 'none';
-	}
 	const installed = signals.navigatorStandalone || INSTALLED_DISPLAY_MODES.has(signals.displayMode);
 	if (!installed) {
 		return 'none';
@@ -443,22 +438,13 @@ export function classifyDomainMigrationInstallKind(signals: DomainMigrationInsta
 export interface DomainMigrationEnvironment {
 	installKind: DomainMigrationInstallKind;
 	electron: boolean;
-	electronMigrationVersion: number | null;
-	electronPasskeyRpIds: ReadonlyArray<string>;
 }
 
 export function environmentAllowsDomainMigration(environment: DomainMigrationEnvironment): boolean {
-	if (environment.installKind !== 'none' && environment.installKind !== 'chromium-desktop') {
+	if (environment.electron) {
 		return false;
 	}
-	if (environment.electron) {
-		return (
-			environment.electronMigrationVersion !== null &&
-			environment.electronMigrationVersion >= 1 &&
-			environment.electronPasskeyRpIds.includes(PASSKEY_MIGRATION_RP_ID)
-		);
-	}
-	return true;
+	return environment.installKind === 'none' || environment.installKind === 'chromium-desktop';
 }
 
 export function environmentMayForward(
@@ -597,11 +583,18 @@ export interface DomainMigrationThemeLibrary {
 	enabled_theme_ids: Array<string>;
 }
 
+export interface DomainMigrationAppStorageEntry {
+	user_id: string | null;
+	key: string;
+	value: string;
+}
+
 export interface DomainMigrationPayload {
 	version: typeof DOMAIN_MIGRATION_PAYLOAD_VERSION;
 	source_origin: string;
 	exported_at: number;
 	local_storage: Record<string, string>;
+	app_storage?: Array<DomainMigrationAppStorageEntry>;
 	accounts: Array<StoredAccount>;
 	custom_sounds?: Array<DomainMigrationCustomSound>;
 	theme_library?: DomainMigrationThemeLibrary;
@@ -624,6 +617,15 @@ function isStoredAccount(value: unknown): value is StoredAccount {
 		value.userId.length > 0 &&
 		(typeof value.token === 'string' || value.token === null) &&
 		typeof value.lastActive === 'number'
+	);
+}
+
+function isAppStorageEntry(value: unknown): value is DomainMigrationAppStorageEntry {
+	return (
+		isRecord(value) &&
+		(value.user_id === null || (typeof value.user_id === 'string' && value.user_id.length > 0)) &&
+		typeof value.key === 'string' &&
+		typeof value.value === 'string'
 	);
 }
 
@@ -699,8 +701,10 @@ export function parseDomainMigrationPayload(value: unknown, expectedSource: stri
 		return null;
 	}
 	const mediaDevices = Array.isArray(value.media_devices) ? value.media_devices.filter(isMediaDevice) : [];
+	const appStorage = Array.isArray(value.app_storage) ? value.app_storage.filter(isAppStorageEntry) : [];
 	return {
 		...(value as unknown as DomainMigrationPayload),
+		app_storage: appStorage.length > 0 ? appStorage : undefined,
 		media_devices: mediaDevices.length > 0 ? mediaDevices : undefined,
 	};
 }

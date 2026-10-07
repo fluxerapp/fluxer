@@ -11,6 +11,7 @@ import {
 import {getEffectiveMatureContentGeoContext} from '@app/features/moderation/utils/MatureContentGeoUtils';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import Users from '@app/features/user/state/Users';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -69,7 +70,7 @@ class GuildMatureContentAgree {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {

@@ -254,6 +254,15 @@ export const OPEN_YOUR_SETTINGS_DESCRIPTOR = msg({
 	message: 'Open your settings',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
 });
+export const OPEN_ACCOUNT_SWITCHER_DESCRIPTOR = msg({
+	message: 'Open account switcher',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
+export const SWITCH_TO_ACCOUNT_SLOT_DESCRIPTOR = msg({
+	message: 'Switch to account {slot}',
+	comment:
+		'Keyboard shortcut action label shown in the keybind editor. {slot} is a numeric account position, such as 1.',
+});
 export const OPEN_THEME_STUDIO_POPOUT_DESCRIPTOR = msg({
 	message: 'Open theme studio popout',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',

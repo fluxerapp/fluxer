@@ -16,6 +16,7 @@ pub mod config;
 pub mod encoder_attach;
 pub mod iosurface_pair;
 pub mod os_version;
+pub mod permission_probe;
 
 pub use audio_pool::{
     MAC_AUDIO_POOL_CAP, MAX_FRAME_BYTES_PER_SLOT, MacAudioError, MacAudioFramePool,

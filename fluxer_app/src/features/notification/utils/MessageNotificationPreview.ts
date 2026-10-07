@@ -11,8 +11,10 @@ import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas
 import type {
 	ChannelMention,
 	MessageAttachment,
+	MessageMention,
 	MessageSnapshot,
 	MessageStickerItem,
+	Message as WireMessage,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -158,6 +160,41 @@ export function buildMessageNotificationBody(message: Message, i18n: I18n): stri
 	);
 	if (contentFallback) return contentFallback;
 	const snapshot = message.messageSnapshots?.[0];
+	if (snapshot) {
+		return buildSnapshotNotificationPreview(snapshot, markdownOptions);
+	}
+	return '';
+}
+
+const USER_MENTION_PATTERN = /<@!?(\d+)>/g;
+
+function inlineUserMentions(content: string, mentions: ReadonlyArray<MessageMention> | undefined): string {
+	if (!content || !mentions?.length) return content;
+	return content.replace(USER_MENTION_PATTERN, (token, userId: string) => {
+		const user = mentions.find((mention) => mention.id === userId);
+		if (!user) return token;
+		return `@${user.member?.nick || user.global_name || user.username}`;
+	});
+}
+
+export function buildWireMessageNotificationBody(message: WireMessage, i18n: I18n): string {
+	const markdownOptions: MarkdownPreviewOptions = {
+		channelId: message.channel_id,
+		mentionChannels: message.mention_channels,
+		i18n,
+	};
+	const userBody = renderMarkdownPreview(inlineUserMentions(message.content, message.mentions), markdownOptions);
+	if (userBody) return userBody;
+	const contentFallback = buildMessageContentFallbackPreview(
+		{
+			attachments: message.attachments,
+			embeds: message.embeds,
+			stickers: message.stickers,
+		},
+		i18n,
+	);
+	if (contentFallback) return contentFallback;
+	const snapshot = message.message_snapshots?.[0];
 	if (snapshot) {
 		return buildSnapshotNotificationPreview(snapshot, markdownOptions);
 	}

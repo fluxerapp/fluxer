@@ -3,6 +3,7 @@
 import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import type {HandlerHost} from '@app/features/app/keybindings/keybind_manager/handlers/types';
 import {
 	PUSH_TO_TALK_WHILE_DEAFENED_DESCRIPTION_DESCRIPTOR,
@@ -11,6 +12,11 @@ import {
 	YOU_CAN_T_UNMUTE_YOURSELF_BECAUSE_A_MODERATOR_DESCRIPTOR,
 } from '@app/features/app/keybindings/keybind_manager/shared';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {openAccountSwitcherModal} from '@app/features/auth/commands/AccountSwitcherModalCommands';
+import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
+import {switcherAccounts} from '@app/features/auth/state/AccountSwitcherAccounts';
+import Accounts from '@app/features/auth/state/Accounts';
+import {switchStoredAccountFromSwitcher} from '@app/features/auth/utils/AccountSwitcherModalUtils';
 import {requestChannelComposerAffordanceDismissal} from '@app/features/channel/components/ChannelComposerDismissal';
 import {CreateDMModal} from '@app/features/channel/components/modals/CreateDMModal';
 import Channels from '@app/features/channel/state/Channels';
@@ -21,6 +27,7 @@ import * as InboxCommands from '@app/features/inbox/commands/InboxCommands';
 import Inbox from '@app/features/inbox/state/Inbox';
 import {KeyboardShortcutsCheatsheetModal} from '@app/features/input/components/modals/KeyboardShortcutsCheatsheetModal';
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
+import {ACCOUNT_SWITCHER_SLOT_ACTIONS} from '@app/features/input/state/input_keybind/KeybindCommands';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import {focusChannelTextareaFromKeybind} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
@@ -32,6 +39,7 @@ import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import Permission from '@app/features/permissions/state/Permission';
+import type {Account} from '@app/features/platform/state/AuthSession';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
@@ -41,7 +49,6 @@ import {getUnreadThreadIds} from '@app/features/threads/utils/ThreadViewUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {openVoiceMessageComposerModal} from '@app/features/voice/components/VoiceMessageComposerModal';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
@@ -64,7 +71,43 @@ function canOpenVoiceMessageComposerForChannel(channelId: string): boolean {
 }
 
 const KEYBOARD_SHORTCUTS_CHEATSHEET_MODAL_KEY = 'keyboard-shortcuts-cheatsheet';
+const ACCOUNT_SWITCHER_MODAL_KEY = 'account-switcher';
 const PUSH_TO_TALK_DEAFENED_MODAL_KEY = 'push-to-talk-deafened';
+
+function openKeybindAccountSwitcher(initialReloginAccount: Account | null): void {
+	openAccountSwitcherModal(
+		{
+			closeCurrentAccountOnSelect: true,
+			initialReloginAccount,
+			redirectAfterLogin: null,
+			redirectAfterSwitch: Routes.ME,
+			switchAccount: null,
+		},
+		ACCOUNT_SWITCHER_MODAL_KEY,
+	);
+}
+
+function switchToAccountSwitcherSlot(slotIndex: number): void {
+	const account = switcherAccounts()[slotIndex];
+	if (account == null) {
+		return;
+	}
+	if (account.isValid === false) {
+		openKeybindAccountSwitcher(account);
+		return;
+	}
+	const accountKey = getAccountKey(account);
+	if (accountKey === Accounts.currentAccountKey) {
+		return;
+	}
+	void switchStoredAccountFromSwitcher({
+		accountKey,
+		onSessionExpired: (expiredAccount) => openKeybindAccountSwitcher(expiredAccount),
+		onSuccess: null,
+		redirectAfterSwitch: Routes.ME,
+		switchAccount: null,
+	});
+}
 
 function showPushToTalkDeafenedModalIfNeeded(host: HandlerHost, i18n: I18n): void {
 	const voiceState = MediaEngine.getVoiceState(MediaEngine.guildId);
@@ -124,6 +167,20 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 			KEYBOARD_SHORTCUTS_CHEATSHEET_MODAL_KEY,
 		);
 	});
+	host.register('system_open_account_switcher', ({type}) => {
+		if (type !== 'press') return;
+		if (ModalCommands.getTopModalKey() === ACCOUNT_SWITCHER_MODAL_KEY) {
+			ModalCommands.popWithKey(ACCOUNT_SWITCHER_MODAL_KEY);
+			return;
+		}
+		openKeybindAccountSwitcher(null);
+	});
+	for (const [slotIndex, action] of ACCOUNT_SWITCHER_SLOT_ACTIONS.entries()) {
+		host.register(action, ({type}) => {
+			if (type !== 'press') return;
+			switchToAccountSwitcherSlot(slotIndex);
+		});
+	}
 	host.register('misc_help', ({type}) => {
 		if (type !== 'press') return;
 		openExternalUrlWithWarning(Routes.help());
@@ -196,7 +253,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('system_toggle_settings', ({type}) => {
 		if (type !== 'press') return;
-		ModalCommands.push(modal(() => React.createElement(UserSettingsModal)));
+		ModalCommands.push(modal(() => React.createElement(UserSettingsModal), 'user-settings'));
 	});
 	host.register('system_open_theme_studio_popout', ({type}) => {
 		if (type !== 'press') return;

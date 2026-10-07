@@ -45,6 +45,7 @@ async function resolvePremiumStateCountryCode(countryCode?: string): Promise<str
 	if (explicitCountry) {
 		return explicitCountry;
 	}
+	await GeoIP.ready();
 	return normalizedCountryCode(GeoIP.countryCode ?? undefined);
 }
 
@@ -183,6 +184,10 @@ export async function fetchPremiumState(countryCode?: string): Promise<PremiumSt
 	return response.body;
 }
 
+function isAbortError(error: unknown): boolean {
+	return (error instanceof DOMException || error instanceof Error) && error.name === 'AbortError';
+}
+
 export async function refreshPremiumState(countryCode?: string): Promise<PremiumStateResponse> {
 	const currentUserId = Users.currentUser?.id;
 	if (currentUserId) {
@@ -191,6 +196,7 @@ export async function refreshPremiumState(countryCode?: string): Promise<Premium
 	try {
 		const state = await fetchPremiumState(countryCode);
 		if (Users.currentUser?.id !== currentUserId) {
+			PremiumState.finishLoad();
 			return state;
 		}
 		if (currentUserId) {
@@ -200,7 +206,9 @@ export async function refreshPremiumState(countryCode?: string): Promise<Premium
 		return state;
 	} catch (error) {
 		PremiumState.finishLoad();
-		logger.error('Premium state fetch failed', error);
+		if (!isAbortError(error)) {
+			logger.error('Premium state fetch failed', error);
+		}
 		throw error;
 	}
 }

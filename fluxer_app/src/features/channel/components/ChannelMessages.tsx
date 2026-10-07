@@ -162,7 +162,7 @@ function shallowEqual<T extends object>(a: T, b: T): boolean {
 	return true;
 }
 
-export const Messages = observer(function Messages({
+const CachedMessages = observer(function CachedMessages({
 	channel,
 	onBottomBarVisibilityChange,
 	allowAutoAck = true,
@@ -772,6 +772,10 @@ export const Messages = observer(function Messages({
 			{bottomBar}
 		</div>
 	);
+});
+
+export const Messages = observer(function Messages(props: MessagesProps) {
+	return <CachedMessages key={MessagesState.cacheGeneration} {...props} />;
 });
 const JumpToPresentBar = observer(function JumpToPresentBar({
 	loadingMore,

@@ -1,0 +1,63 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.authCardContainer.authCardContainer {
+	width: 100%;
+	min-height: 0;
+	flex: 0 1 auto;
+	padding: 0;
+}
+
+.authCard {
+	position: relative;
+	min-height: 0;
+}
+
+.authCardContent.authCardContent {
+	position: relative;
+	box-sizing: border-box;
+	justify-content: flex-start;
+	max-height: min(
+		calc(100dvh - 4rem - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)),
+		var(--account-switcher-overlay-max-height, 52rem)
+	);
+	min-height: 0;
+	overflow: hidden;
+	overscroll-behavior: contain;
+}
+
+.authCarouselViewport {
+	width: 100%;
+	min-height: 0;
+	flex: 1 1 auto;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+.inlineLink {
+	align-self: flex-start;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--text-link);
+	cursor: pointer;
+	font: inherit;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	text-align: left;
+	text-decoration: none;
+}
+
+.inlineLink:hover {
+	text-decoration: underline;
+}
+
+.inlineRegisterContainer {
+	width: 100%;
+}
+
+@media (max-width: 42rem) {
+	.authCardContent.authCardContent {
+		max-height: calc(100dvh - 3rem - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
+	}
+}

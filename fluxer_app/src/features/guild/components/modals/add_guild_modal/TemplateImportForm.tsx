@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {
@@ -62,7 +63,6 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Form} from '@app/features/ui/components/form/Form';
 import {Input, Textarea} from '@app/features/ui/components/form/FormInput';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as StringUtils from '@app/lib/strings';
@@ -462,12 +462,15 @@ export const TemplateImportForm = observer(() => {
 					<Button
 						onClick={() =>
 							ModalCommands.push(
-								modal(() => (
-									<UserSettingsModal
-										initialTab="account_security"
-										data-flx="guild.add-guild-modal.template-import-form.user-settings-modal"
-									/>
-								)),
+								modal(
+									() => (
+										<UserSettingsModal
+											initialTab="account_security"
+											data-flx="guild.add-guild-modal.template-import-form.user-settings-modal"
+										/>
+									),
+									'user-settings',
+								),
 							)
 						}
 						data-flx="guild.add-guild-modal.template-import-form.button.push"

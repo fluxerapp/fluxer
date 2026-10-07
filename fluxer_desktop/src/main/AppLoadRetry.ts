@@ -22,7 +22,6 @@ interface AppLoadRetryOptions {
 	appUrl: string;
 	logger: AppLoadRetryLogger;
 	isTrustedUrl: (url: string) => boolean;
-	getFallbackUrl: (failedUrl: string) => string | null;
 	onRepeatedFailure: (failure: AppLoadFailure) => void;
 	onCommitted: () => void;
 	setTimer?: (callback: () => void, delayMs: number) => ReturnType<typeof setTimeout>;
@@ -32,7 +31,6 @@ interface AppLoadRetryOptions {
 export interface AppLoadRetry {
 	start(): void;
 	retryNow(): void;
-	getAppUrl(): string;
 }
 
 function isRetryableLoadError(errorCode: number): boolean {
@@ -51,7 +49,7 @@ export function createAppLoadRetry(options: AppLoadRetryOptions): AppLoadRetry {
 	const {webContents, logger} = options;
 	const setTimer = options.setTimer ?? setTimeout;
 	const clearTimer = options.clearTimer ?? clearTimeout;
-	let appUrl = options.appUrl;
+	const appUrl = options.appUrl;
 	let attempt = 0;
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	const cancelTimer = () => {
@@ -90,32 +88,17 @@ export function createAppLoadRetry(options: AppLoadRetryOptions): AppLoadRetry {
 		cancelTimer();
 		attempt = 0;
 	};
-	const fallBackFromMigratedOrigin = (failedUrl: string, detail: Record<string, unknown>): boolean => {
-		const fallbackUrl = options.getFallbackUrl(failedUrl);
-		if (fallbackUrl === null || fallbackUrl === appUrl) return false;
-		logger.warn('Migrated app origin failed to load, falling back to the legacy app URL', {failedUrl, ...detail});
-		appUrl = fallbackUrl;
-		reset();
-		load('legacy-fallback');
-		return true;
-	};
 	return {
 		start() {
-			webContents.on('did-navigate', (_event, url, httpResponseCode) => {
+			webContents.on('did-navigate', () => {
 				reset();
 				options.onCommitted();
-				if (httpResponseCode >= 400) {
-					fallBackFromMigratedOrigin(url, {httpResponseCode});
-				}
 			});
 			webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
 				if (isMainFrame) {
 					logger.error('App main-frame load failed', {errorCode, errorDescription, validatedURL});
 				}
 				if (!isMainFrame || !options.isTrustedUrl(validatedURL) || !isRetryableLoadError(errorCode)) {
-					return;
-				}
-				if (fallBackFromMigratedOrigin(validatedURL, {errorCode, errorDescription})) {
 					return;
 				}
 				schedule('did-fail-load', {errorCode, errorDescription, validatedURL});
@@ -129,9 +112,6 @@ export function createAppLoadRetry(options: AppLoadRetryOptions): AppLoadRetry {
 		retryNow() {
 			reset();
 			load('manual-retry');
-		},
-		getAppUrl() {
-			return appUrl;
 		},
 	};
 }

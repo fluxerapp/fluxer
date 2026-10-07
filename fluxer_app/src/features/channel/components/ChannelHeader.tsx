@@ -21,7 +21,6 @@ import {CHANNEL_HEADER_DM_AVATAR_SIZE_PX} from '@app/features/channel/components
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
 import {
 	ADD_FRIENDS_TO_GROUP_DESCRIPTOR,
-	BACK_DESCRIPTOR,
 	CHANNEL_ACTIONS_DESCRIPTOR,
 	CREATE_GROUP_DM_DESCRIPTOR,
 	EDIT_GROUP_DETAILS_DESCRIPTOR,
@@ -62,6 +61,7 @@ import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {isGroupDmFull} from '@app/features/channel/utils/GroupDmUtils';
 import {
 	ADD_TO_FAVORITES_DESCRIPTOR,
+	BACK_DESCRIPTOR,
 	CHANNEL_ADDED_TO_FAVORITES_DESCRIPTOR,
 	CHANNEL_REMOVED_FROM_FAVORITES_DESCRIPTOR,
 	HIDE_FAVORITES_DESCRIPTOR,

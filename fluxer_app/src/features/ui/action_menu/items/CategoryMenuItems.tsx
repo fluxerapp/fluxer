@@ -2,9 +2,9 @@
 
 import {showChannelDeleteFailedModal} from '@app/features/app/components/alerts/ChannelDeleteFailedModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import {getMuteDurationOptions} from '@app/features/channel/components/MuteOptions';
-import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import {DELETE_CATEGORY_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
@@ -308,12 +308,15 @@ export const EditCategoryMenuItem: React.FC<CategoryMenuItemProps> = observer(({
 	});
 	const handleEditCategory = useCallback(() => {
 		ModalCommands.push(
-			modal(() => (
-				<ChannelSettingsModal
-					channelId={category.id}
-					data-flx="ui.action-menu.items.category-menu-items.handle-edit-category.channel-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<ChannelSettingsModal
+						channelId={category.id}
+						data-flx="ui.action-menu.items.category-menu-items.handle-edit-category.channel-settings-modal"
+					/>
+				),
+				'channel-settings',
+			),
 		);
 		onClose();
 	}, [category.id, onClose]);

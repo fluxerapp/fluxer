@@ -2,7 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import AccountManager from '@app/features/auth/state/AccountManager';
+import Accounts from '@app/features/auth/state/Accounts';
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
@@ -12,6 +12,7 @@ import {
 } from '@app/features/forum/utils/ForumNotificationUtils';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import Guilds from '@app/features/guild/state/Guilds';
+import {GROUP_DM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import * as MessageUtils from '@app/features/messaging/utils/MessageUtils';
 import Navigation from '@app/features/navigation/state/Navigation';
@@ -23,6 +24,7 @@ import * as PushSubscriptionService from '@app/features/platform/push/PushSubscr
 import {IS_DEV} from '@app/features/platform/types/Env';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent, stopPersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import LocalPresence from '@app/features/presence/state/LocalPresence';
 import type {RelationshipWire} from '@app/features/relationship/models/Relationship';
 import FriendsTab from '@app/features/relationship/state/FriendsTab';
@@ -59,10 +61,6 @@ const SENT_YOU_A_FRIEND_REQUEST_DESCRIPTOR = msg({
 const IS_NOW_YOUR_FRIEND_DESCRIPTOR = msg({
 	message: '{displayName} is now your friend!',
 	comment: 'Toast title announcing a newly accepted friend request.',
-});
-const GROUP_DM_DESCRIPTOR = msg({
-	message: 'Group DM',
-	comment: 'Fallback name shown in a desktop notification for a group DM that has no custom name.',
 });
 const logger = new Logger('Notification');
 const shouldManagePushSubscriptions = (): boolean => isInstalledPwa();
@@ -153,8 +151,9 @@ class NotificationState {
 			},
 			{autoBind: true},
 		);
-		void this.initPersistence().then(() => {
-			void this.refreshPermission();
+		initializeStore(this, async () => {
+			await this.initPersistence();
+			await this.refreshPermission();
 		});
 		queueMicrotask(() => {
 			NotificationUtils.ensureDesktopNotificationClickHandler();
@@ -163,7 +162,7 @@ class NotificationState {
 			this.accountReactionDisposer = reaction(
 				() => {
 					try {
-						return AccountManager?.currentUserId;
+						return Accounts?.currentUserId;
 					} catch {
 						return undefined;
 					}
@@ -398,6 +397,7 @@ class NotificationState {
 				icon: getNotificationIconURL(user, channel.guildId),
 				url: notificationUrl,
 				playSound: false,
+				accountKey: Accounts.currentAccountKey,
 			});
 			notificationTracker.track(channel.id, {
 				browserNotification: result.browserNotification,
@@ -564,6 +564,7 @@ class NotificationState {
 			body,
 			icon: getNotificationIconURL(user),
 			url: Routes.ME,
+			accountKey: Accounts.currentAccountKey,
 		}).catch((error) => {
 			logger.error('Failed to show relationship notification', {cacheKey}, error);
 		});

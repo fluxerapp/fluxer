@@ -8,6 +8,7 @@ import {SkeletonCircle} from '@app/features/app/components/skeleton/SkeletonCirc
 import {
 	getRememberedSkeletonGuildRailLayout,
 	type RememberedSkeletonGuildRailItem,
+	SKELETON_GUILD_RAIL_FALLBACK_ITEMS,
 	SKELETON_NO_SELECTED_RAIL_ITEM_INDEX,
 	SkeletonGuildRailItemIndicator,
 	SkeletonGuildRailItemKind,
@@ -34,13 +35,7 @@ import {useState} from 'react';
 
 const GUILD_ICON_SIZE = skeletonSurfaceVar('--guild-icon-size');
 const FOLDER_ICON_SIZE = skeletonSurfaceVar('--guild-list-item-box-size');
-const GUILD_PLACEHOLDER_COUNT = 6;
 const SHOWS_DOWNLOAD_ACTION = !Platform.isElectron && !Platform.isPWA;
-const FALLBACK_ORGANIZED_ITEMS: ReadonlyArray<RememberedSkeletonGuildRailItem> = Object.freeze(
-	Array.from({length: GUILD_PLACEHOLDER_COUNT}, () =>
-		Object.freeze({kind: SkeletonGuildRailItemKind.GUILD, indicator: SkeletonGuildRailItemIndicator.NONE} as const),
-	),
-);
 const RAIL_ROW_PITCH_REM = 3.375;
 const RAIL_DIVIDER_SLOT_REM = 0.8125;
 const EMPTY_INLINE_DM_UNREAD_FLAGS: ReadonlyArray<boolean> = Object.freeze([]);
@@ -465,7 +460,7 @@ export const GuildRailSkeleton: React.FC<GuildRailSkeletonProps> = ({
 	const selectedInlineDmRowIndex = rememberedLayout?.selectedInlineDmRowIndex ?? SKELETON_NO_SELECTED_RAIL_ITEM_INDEX;
 	const inlineDmPlaceholders = Array.from({length: inlineDmRowCount}, (_, index) => index);
 	const outageVisible = rememberedLayout?.outageVisible ?? false;
-	const organizedItems = rememberedLayout?.organizedItems ?? FALLBACK_ORGANIZED_ITEMS;
+	const organizedItems = rememberedLayout?.organizedItems ?? SKELETON_GUILD_RAIL_FALLBACK_ITEMS;
 	const selectedItemIndex = rememberedLayout?.selectedItemIndex ?? SKELETON_NO_SELECTED_RAIL_ITEM_INDEX;
 	const fluxerVisible = rememberedLayout?.fluxerVisible ?? !RuntimeConfig.directMessagesDisabled;
 	const favoritesVisible = rememberedLayout?.favoritesVisible ?? true;

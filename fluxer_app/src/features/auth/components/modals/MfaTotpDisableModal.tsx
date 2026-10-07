@@ -4,7 +4,11 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {MFA_CODE_DIGIT_COUNT} from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import * as MfaCommands from '@app/features/auth/commands/MfaCommands';
-import {CANCEL_DESCRIPTOR, CONTINUE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CANCEL_DESCRIPTOR,
+	CODE_DESCRIPTOR,
+	CONTINUE_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -22,10 +26,6 @@ const DISABLE_TWO_FACTOR_AUTHENTICATION_FORM_DESCRIPTOR = msg({
 const REMOVE_AUTHENTICATOR_APP_DESCRIPTOR = msg({
 	message: 'Remove authenticator app',
 	comment: 'Security modal title for removing a TOTP authenticator app.',
-});
-const CODE_DESCRIPTOR = msg({
-	message: 'Code',
-	comment: 'Input label for a one-time authenticator or backup code.',
 });
 const TWO_FACTOR_AUTHENTICATION_DISABLED_DESCRIPTOR = msg({
 	message: 'Two-factor authentication disabled',

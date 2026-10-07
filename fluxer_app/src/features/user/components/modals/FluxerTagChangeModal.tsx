@@ -2,7 +2,7 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {EXAMPLE_FLUXER_TAG, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {EXAMPLE_FLUXER_TAG} from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
@@ -14,7 +14,7 @@ import {
 	USERNAME_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -82,6 +82,7 @@ interface FluxerTagChangeModalProps {
 }
 
 export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps) => {
+	const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 	const {i18n} = useLingui();
 	const usernameRef = useRef<HTMLInputElement>(null);
 	const hasCustomDiscriminator = isLimitToggleEnabled(

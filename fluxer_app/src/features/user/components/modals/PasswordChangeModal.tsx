@@ -3,7 +3,13 @@
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {VERIFICATION_CODE_DESCRIPTOR, VERIFY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CONFIRM_NEW_PASSWORD_DESCRIPTOR,
+	NEW_PASSWORD_DESCRIPTOR,
+	PASSWORDS_DO_NOT_MATCH_DESCRIPTOR,
+	VERIFICATION_CODE_DESCRIPTOR,
+	VERIFY_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -35,24 +41,12 @@ const UNABLE_TO_RESEND_CODE_RIGHT_NOW_DESCRIPTOR = msg({
 	message: 'Unable to resend code right now',
 	comment: 'Error message in the password change modal. Keep the tone plain and specific.',
 });
-const PASSWORDS_DO_NOT_MATCH_DESCRIPTOR = msg({
-	message: 'Passwords do not match',
-	comment: 'Label in the password change modal. Keep the tone plain and specific.',
-});
 const UPDATE_YOUR_PASSWORD_DESCRIPTOR = msg({
 	message: 'Update your password',
 	comment: 'Short label in the password change modal. Keep it concise. Keep the tone plain and specific.',
 });
 const CHANGE_PASSWORD_FORM_DESCRIPTOR = msg({
 	message: 'Change password form',
-	comment: 'Short label in the password change modal. Keep it concise. Keep the tone plain and specific.',
-});
-const NEW_PASSWORD_DESCRIPTOR = msg({
-	message: 'New password',
-	comment: 'Short label in the password change modal. Keep it concise. Keep the tone plain and specific.',
-});
-const CONFIRM_NEW_PASSWORD_DESCRIPTOR = msg({
-	message: 'Confirm new password',
 	comment: 'Short label in the password change modal. Keep it concise. Keep the tone plain and specific.',
 });
 

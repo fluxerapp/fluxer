@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ModalStack} from '@app/features/app/components/dialogs/ModalStack';
-import nativeTitlebarStyles from '@app/features/app/components/layout/NativeTitlebar.module.css';
 import {NativeWindowControls} from '@app/features/app/components/layout/NativeWindowControls';
 import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
 import {usePlatformClasses} from '@app/features/app/hooks/usePlatformClasses';
@@ -22,6 +21,7 @@ import {Toasts} from '@app/features/ui/toast/Toasts';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {useNativeTitleBar} from '@app/features/window/hooks/useNativeTitleBar';
+import {NATIVE_TITLEBAR_CLASS} from '@fluxer/desktop_ipc/src/NativeTitlebarShell';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {IconContext, PushPinIcon, PushPinSlashIcon} from '@phosphor-icons/react';
@@ -111,7 +111,7 @@ export const ThemeStudioStandaloneApp: React.FC = observer(() => {
 									<button
 										type="button"
 										tabIndex={-1}
-										className={clsx(nativeTitlebarStyles.controlButton, isAlwaysOnTop && styles.windowControlActive)}
+										className={clsx(NATIVE_TITLEBAR_CLASS.control, isAlwaysOnTop && styles.windowControlActive)}
 										onClick={handleToggleAlwaysOnTop}
 										aria-pressed={isAlwaysOnTop}
 										aria-label={pinLabel}

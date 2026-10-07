@@ -3,6 +3,7 @@
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {syncLocalVoiceStateWithServer} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import {
@@ -130,7 +131,7 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 			logger.error('Failed to hydrate LocalVoiceState from persistence', error);
 		});
 		this.initializePersistedDefaultSync();
-		this.initializePermissionSync();
+		initializeStore(this, () => this.initializePermissionSync());
 		this.initializeDevicePermissionSync();
 	}
 
