@@ -815,6 +815,10 @@ class RuntimeConfig {
 		return this.appPublic.branding.product_name;
 	}
 
+	get premiumProductFullName(): string {
+		return `${this.productName} ${this.premiumProductName}`;
+	}
+
 	get iconUrl(): string | null {
 		return this.appPublic.branding.icon_url;
 	}
@@ -845,6 +849,10 @@ class RuntimeConfig {
 
 	get privacyUrl(): string | null {
 		return this.appPublic.legal.privacy_url;
+	}
+
+	get guidelinesUrl(): string | null {
+		return this.appPublic.legal.guidelines_url;
 	}
 
 	get collectDateOfBirthOnRegistration(): boolean {

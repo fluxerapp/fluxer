@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Combobox as FormCombobox} from '@app/features/ui/components/form/FormCombobox';
 import styles from '@app/features/user/components/modals/tabs/notifications_tab/PushSettings.module.css';
 import {msg} from '@lingui/core/macro';
@@ -60,7 +60,9 @@ export const PushSettings: React.FC<PushSettingsProps> = observer(
 							{i18n._(PUSH_NOTIFICATION_INACTIVE_TIMEOUT_DESCRIPTOR)}
 						</label>
 						<p className={styles.description} data-flx="user.notifications-tab.push-settings.description">
-							{i18n._(AVOIDS_SENDING_PUSH_NOTIFICATIONS_TO_YOUR_MOBILE_DEVICES_DESCRIPTOR, {productName: PRODUCT_NAME})}
+							{i18n._(AVOIDS_SENDING_PUSH_NOTIFICATIONS_TO_YOUR_MOBILE_DEVICES_DESCRIPTOR, {
+								productName: RuntimeConfig.productName,
+							})}
 						</p>
 					</div>
 				)}

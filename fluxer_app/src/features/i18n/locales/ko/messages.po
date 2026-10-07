@@ -1404,12 +1404,12 @@ msgid "{domain} runs a newer version of Fluxer than this app. Update Fluxer, the
 msgstr "{domain}에서 더 최신 버전의 Fluxer를 사용 중입니다. Fluxer를 업데이트한 후 다시 시도하세요."
 
 #. Profile timezone difference text. duration is a localized hours/minutes phrase for how far ahead the target user's local time is.
-#: src/features/user/components/popouts/UserProfileShared.tsx:65
+#: src/features/user/components/popouts/UserProfileShared.tsx:66
 msgid "{duration} ahead of you"
 msgstr "회원님보다 {duration} 빠름"
 
 #. Profile timezone difference text. duration is a localized hours/minutes phrase for how far behind the target user's local time is.
-#: src/features/user/components/popouts/UserProfileShared.tsx:70
+#: src/features/user/components/popouts/UserProfileShared.tsx:71
 msgid "{duration} behind you"
 msgstr "회원님보다 {duration} 느림"
 
@@ -1528,7 +1528,7 @@ msgstr "{fps} FPS"
 
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:47
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:48
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:115
 msgid "{frameRate} FPS"
 msgstr "{frameRate} FPS"
@@ -1553,12 +1553,12 @@ msgstr "{hours, plural, one {#시간 전} other {#시간 전}}"
 #. Duration phrase in the profile timezone section. hours is a positive integer.
 #. Generic duration label for a whole number of hours.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:53
-#: src/features/user/components/popouts/UserProfileShared.tsx:79
+#: src/features/user/components/popouts/UserProfileShared.tsx:80
 msgid "{hours, plural, one {# hour} other {# hours}}"
 msgstr "{hours, plural, one {#시간} other {#시간}}"
 
 #. Duration phrase in the profile timezone section. hours and minutes are positive integers.
-#: src/features/user/components/popouts/UserProfileShared.tsx:75
+#: src/features/user/components/popouts/UserProfileShared.tsx:76
 msgid "{hours, plural, one {# hour} other {# hours}} {minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{hours, plural, one {#시간} other {#시간}} {minutes, plural, one {#분} other {#분}}"
 
@@ -1602,7 +1602,7 @@ msgstr "{label} 파일이 너무 큽니다. {maxSizeLabel}보다 작은 파일�
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "{label} 이미지는 애니메이션을 사용할 수 없습니다. 정지된 이미지를 사용하세요."
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:36
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:37
 msgid "{languageName} flag"
 msgstr "{languageName} 국기"
 
@@ -1678,7 +1678,7 @@ msgstr "{minutes, plural, one {#분 전} other {#분 전}}"
 #. Push notification inactive timeout option. The value is a duration in minutes.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:49
 #: src/features/user/components/modals/tabs/notifications_tab/PushSettings.tsx:25
-#: src/features/user/components/popouts/UserProfileShared.tsx:83
+#: src/features/user/components/popouts/UserProfileShared.tsx:84
 msgid "{minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{minutes, plural, other {#분}}"
 
@@ -1803,15 +1803,15 @@ msgstr "{PRODUCT_NAME}에서 이름이 <0>{deviceName}</0>인 새 오디오 출�
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "Chromium 기본 스크롤 설정이 스크롤 동작에 적용되려면 {PRODUCT_NAME}을(를) 다시 시작해야 합니다."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:209
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:214
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "하드웨어 가속을 적용하려면 {PRODUCT_NAME}을(를) 다시 시작해야 합니다."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:166
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:167
 msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 msgstr "제목 표시줄 변경 사항을 적용하려면 {PRODUCT_NAME}을(를) 다시 시작해야 합니다."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:211
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:219
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "Chromium의 하드웨어 가속을 비활성화하려면 {PRODUCT_NAME}을(를) 다시 시작해야 합니다. 그래픽 오류나 GPU 사용량이 높은 문제를 해결할 때만 사용하세요."
 
@@ -1836,27 +1836,27 @@ msgid "{productName} Bug Hunter"
 msgstr "{productName} 버그 헌터"
 
 #. Linux settings text before system-wide shortcuts are set up. The desktop environment owns the keys. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:28
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:25
 msgid "{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys."
 msgstr "{productName}은(는) {productName}에 포커스가 없을 때도 단축키를 실행하도록 데스크톱에 요청할 수 있습니다. 데스크톱에서 확인을 요청하며 키를 직접 선택할 수 있습니다."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, on an X11 session. The app now listens for shortcuts through the X11 display server itself. Keep "X11" as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:177
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:174
 msgid "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
 msgstr "{productName}이(가) 더 이상 키보드를 읽을 수 없어 대신 X11을 통해 단축키를 감지합니다."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, for example after a restart removed the access. The app already falls back to the shortcuts the desktop runs. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:172
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:169
 msgid "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
 msgstr "{productName}이(가) 더 이상 키보드를 읽을 수 없어 대신 데스크톱 단축키를 사용합니다."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read and nothing else runs system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:182
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:179
 msgid "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
 msgstr "{productName}이(가) 더 이상 키보드를 읽을 수 없습니다. 단축키는 {productName}에 포커스가 있을 때만 작동합니다."
 
 #. Linux settings text before system-wide shortcuts are set up on the Hyprland desktop. Hyprland shows no dialog. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:34
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:31
 msgid "{productName} can register its shortcuts with Hyprland so they run while {productName} is not focused. You then bind the keys in your Hyprland config."
 msgstr "{productName}은(는) {productName}에 포커스가 없을 때도 단축키가 실행되도록 Hyprland에 단축키를 등록할 수 있습니다. 등록한 후 Hyprland 설정에서 키를 바인딩하세요."
 
@@ -1890,12 +1890,12 @@ msgid "{productName} cannot use a hardware encoder for this, so it will use your
 msgstr "{productName}은 하드웨어 인코더를 사용할 수 없으므로 CPU를 사용합니다."
 
 #. Desktop updater modal body after a manual update check finds an update. Confirming closes the app window and opens the updater. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:37
+#: src/features/updater/commands/UpdaterModalCommands.tsx:38
 msgid "{productName} closes, installs the update and opens again."
 msgstr "{productName}을(를) 종료하고 업데이트를 설치한 후 다시 엽니다."
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:100
+#: src/features/updater/commands/UpdaterModalCommands.tsx:101
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "{productName}이 업데이트 서비스에 연결하지 못했습니다. 연결 상태를 확인하고 다시 시도해 주세요."
 
@@ -1935,7 +1935,7 @@ msgid "{productName} has moved to {host}. Open it in your browser to install the
 msgstr "{productName}이(가) {host}(으)로 이전했습니다. 새 앱을 설치하려면 브라우저에서 열어 주세요."
 
 #. Profile membership label showing when the user account was created.
-#: src/features/user/components/popouts/UserProfileShared.tsx:53
+#: src/features/user/components/popouts/UserProfileShared.tsx:54
 msgid "{productName} member since"
 msgstr "{productName} 가입일"
 
@@ -1960,12 +1960,12 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "{productName}이(가) 마이크에 접근해야 합니다. 운영체제 개인 정보 보호 설정에서 마이크 접근을 허용하고 앱을 다시 시작하세요."
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:55
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:56
 msgid "{productName} needs camera access to list your devices."
 msgstr "{productName}에서 기기 목록을 보려면 카메라 접근 권한이 필요합니다."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:136
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:137
 msgid "{productName} needs microphone access to list your devices."
 msgstr "{productName}에서 기기 목록을 보려면 마이크 접근 권한이 필요합니다."
 
@@ -1995,7 +1995,7 @@ msgid "{productName} recovery kit"
 msgstr "{productName} 복구 키트"
 
 #. Subtitle for system-wide shortcuts on the Hyprland desktop after setup. Hyprland shows no list of assigned keys. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:58
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:55
 msgid "{productName} registered its shortcuts with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused."
 msgstr "{productName}이(가) Hyprland에 단축키를 등록했습니다. {productName}에 포커스가 없을 때도 사용하려면 Hyprland 설정에서 바인딩하세요."
 
@@ -2511,7 +2511,7 @@ msgid "12 months (1 year)"
 msgstr "12개월 (1년)"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:54
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:55
 msgid "12-hour"
 msgstr "12시간제"
 
@@ -2554,7 +2554,7 @@ msgid "24 hours"
 msgstr "24시간"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:58
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:59
 msgid "24-hour"
 msgstr "24시간제"
 
@@ -2734,7 +2734,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "호스트 이름(예: {exampleDomain})"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:113
+#: src/features/updater/commands/UpdaterModalCommands.tsx:114
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "Linux 데스크톱 업데이트가 있습니다. 이 시스템에 맞는 패키지 형식을 선택하면 {productName}이 파일을 로컬에 저장합니다."
 
@@ -2749,7 +2749,7 @@ msgid "a minute"
 msgstr "1분"
 
 #. Desktop updater modal body when the exact target version is unknown. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:25
+#: src/features/updater/commands/UpdaterModalCommands.tsx:26
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "새로운 데스크톱 버전이 있습니다. 설치 파일을 다운로드한 다음 실행하여 {productName}을 업데이트하세요."
 
@@ -2817,7 +2817,7 @@ msgstr "{appName} 정보"
 #: src/features/app/components/pages/YouPage.tsx:171
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:791
-#: src/features/user/components/popouts/UserProfileShared.tsx:41
+#: src/features/user/components/popouts/UserProfileShared.tsx:42
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:133
 msgid "About me"
 msgstr "소개"
@@ -3135,7 +3135,7 @@ msgid "Activity sharing"
 msgstr "활동 공유"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:488
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:489
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "활동 임계값"
@@ -3155,7 +3155,7 @@ msgstr "실제 크기"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:599
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:79
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:100
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:586
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:591
 msgid "Add"
 msgstr "추가"
 
@@ -3226,7 +3226,7 @@ msgid "Add a username and password to your account first."
 msgstr "먼저 사용자 이름과 비밀번호를 계정에 추가하세요."
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:140
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:141
 msgid "Add a word…"
 msgstr "단어 추가…"
 
@@ -3244,7 +3244,7 @@ msgstr "YouTube 링크에 더 자세한 정보를 표시하려면 YouTube Data A
 
 #. Generic action label that starts signing in to an additional account.
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:23
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:902
 msgid "Add account"
 msgstr "계정 추가"
@@ -3642,7 +3642,7 @@ msgid "Address"
 msgstr "주소"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:95
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "노이즈 억제, 에코 제거, 게인 등 각 설정을 직접 조정하세요."
 
@@ -3696,7 +3696,7 @@ msgid "Advanced"
 msgstr "고급"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:108
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:109
 msgid "Advanced video settings"
 msgstr "고급 비디오 설정"
 
@@ -3906,22 +3906,22 @@ msgstr "허용"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "{everyoneMention} 및 {hereMention} 허용"
 
-#. Shown in video settings on the macOS app when camera access is denied. {PRODUCT_NAME} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:230
+#. Shown in video settings on the macOS app when camera access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:231
 msgid "Allow {PRODUCT_NAME} to access your camera in System Settings → Privacy & Security → Camera."
 msgstr "{PRODUCT_NAME}이(가) 시스템 설정 → 개인 정보 보호 및 보안 → 카메라에서 카메라에 액세스하도록 허용하세요."
 
-#. Shown in voice settings on the macOS app when microphone access is denied. {PRODUCT_NAME} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:546
+#. Shown in voice settings on the macOS app when microphone access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:547
 msgid "Allow {PRODUCT_NAME} to access your microphone in System Settings → Privacy & Security → Microphone."
 msgstr "{PRODUCT_NAME}이(가) 마이크에 접근하도록 허용하려면 시스템 설정 → 개인 정보 보호 및 보안 → 마이크에서 허용해 주세요."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:552
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "{PRODUCT_NAME}에서 마이크에 접근하도록 허용해 주세요. 브라우저 주소 표시줄 또는 설정을 확인하세요."
 
 #. Body in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet. {productName} and {productName2} are the app name. Keep "Screen Recording" and "System Settings" as macOS shows them in this language.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:36
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:37
 msgid "Allow {productName} under Screen Recording in System Settings. If it is already allowed, relaunch {productName2} so macOS applies it."
 msgstr "{productName}을(를) 시스템 설정의 '스크린 타임'에서 허용해 주세요. 이미 허용된 경우, macOS가 적용하도록 {productName2}을(를) 다시 시작하세요."
 
@@ -3961,7 +3961,7 @@ msgstr "봇 DM 허용"
 msgid "Allow bots to send you direct messages?"
 msgstr "봇이 DM을 보내도록 허용하시겠어요?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:249
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:251
 msgid "Allow camera"
 msgstr "카메라 허용"
 
@@ -4029,7 +4029,7 @@ msgstr "{readMessageHistoryPermissionLabel} 권한이 없는 멤버가 특정 �
 msgid "Allow mentions for this role"
 msgstr "이 역할에 대한 멘션 허용"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:571
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:573
 msgid "Allow microphone"
 msgstr "마이크 허용"
 
@@ -4275,7 +4275,7 @@ msgid "Always underline links"
 msgstr "링크 항상 밑줄 표시"
 
 #. Description for the in-app dictionary spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation. Hunspell is the spellcheck engine name; keep it as a product/protocol term.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:105
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:106
 msgid "Always use {productName}'s Hunspell dictionaries, downloaded on demand."
 msgstr "{productName}의 Hunspell 사전을 항상 사용하고 필요할 때 다운로드합니다."
 
@@ -4655,7 +4655,7 @@ msgid "App icon badge"
 msgstr "앱 아이콘 배지"
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:46
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:47
 msgid "App language: {format}"
 msgstr "앱 언어 시간 형식: {format}"
 
@@ -4804,7 +4804,7 @@ msgid "Approval required"
 msgstr "승인 필요"
 
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
-#: src/features/auth/flow/AuthLoginLayout.tsx:101
+#: src/features/auth/flow/AuthLoginLayout.tsx:100
 msgid "Approve this app from the {productName} app you already use. No password needed."
 msgstr "이미 사용 중인 {productName} 앱에서 이 앱을 승인하세요. 비밀번호가 필요하지 않습니다."
 
@@ -5344,7 +5344,7 @@ msgid "Authorized on {authorizedOn}"
 msgstr "{authorizedOn}에 승인됨"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:50
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:51
 msgid "Auto"
 msgstr "자동"
 
@@ -5369,8 +5369,8 @@ msgid "Auto-detect language"
 msgstr "언어 자동 감지"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:115
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:475
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:476
 msgid "Auto-set activity threshold"
 msgstr "활동 임계값 자동 설정"
 
@@ -5534,7 +5534,7 @@ msgstr "AV1 (옵트인 필요)"
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
-#: src/features/updater/commands/UpdaterModalCommands.tsx:123
+#: src/features/updater/commands/UpdaterModalCommands.tsx:124
 msgid "Available"
 msgstr "사용 가능"
 
@@ -5608,11 +5608,11 @@ msgstr "지금은 부재중"
 #. Report flow: footer button that returns to the previous question.
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:164
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:167
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:168
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:61
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:360
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:381
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:401
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:361
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:382
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:402
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
 #: src/features/moderation/components/report/ReportStepDetails.tsx:374
@@ -5927,7 +5927,7 @@ msgid "Best compression. Use it only when WebRTC exposes an encoder and the GPU 
 msgstr "최적 압축. WebRTC에서 인코더를 노출하고 GPU 보고서에서 하드웨어 지원으로 표시되는 경우에만 사용하세요."
 
 #. CTA card title in the screen-share picker promoting the desktop app for richer screen sharing.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:12
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:13
 msgid "Best with the desktop app"
 msgstr "데스크톱 앱 사용을 권장합니다"
 
@@ -6396,7 +6396,7 @@ msgid "Browser home"
 msgstr "브라우저: 홈"
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:42
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:43
 msgid "Browser locale: {format}"
 msgstr "브라우저 시간 형식: {format}"
 
@@ -6545,8 +6545,8 @@ msgstr "친구와 공유하려면 {premiumProductName} 탭에서 {premiumProduct
 msgid "Buy gift"
 msgstr "선물 구매"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:345
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:663
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:347
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:665
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "커뮤니티를 생성하면 <0>{PRODUCT_NAME} 커뮤니티 가이드라인</0>을 따르고 준수하는 데 동의하는 것입니다."
 
@@ -6658,7 +6658,7 @@ msgstr "통화"
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:734
 #: src/features/permissions/system/components/useMacPermissionControl.ts:15
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:93
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:14
@@ -6736,7 +6736,7 @@ msgstr "카메라 미리보기"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:96
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:97
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:202
 msgid "Camera quality"
 msgstr "카메라 화질"
@@ -6809,8 +6809,8 @@ msgstr "여기에 파일을 올릴 수 없습니다"
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:74
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:418
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:170
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:426
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:174
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:197
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -6896,13 +6896,13 @@ msgstr "예약된 전환 취소"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:980
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:262
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "구독 취소"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:257
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:256
 msgid "Cancel subscription?"
 msgstr "구독을 취소하시겠어요?"
 
@@ -7005,7 +7005,7 @@ msgid "Category"
 msgstr "카테고리"
 
 #. Title in a modal shown before opening a category with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:187
+#: src/features/channel/components/MatureContentChannelGate.tsx:214
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:39
 msgid "Category content warning"
 msgstr "카테고리 콘텐츠 경고"
@@ -7131,15 +7131,15 @@ msgstr "그룹 닉네임 변경"
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:67
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:90
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "아이콘 변경"
 
 #. Button that opens the Linux desktop dialog for changing the keys of system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:83
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:80
 msgid "Change in system settings"
 msgstr "시스템 설정에서 변경"
 
@@ -7554,7 +7554,7 @@ msgid "Channel badges"
 msgstr "채널 배지"
 
 #. Title in a modal shown before opening a channel with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:189
+#: src/features/channel/components/MatureContentChannelGate.tsx:216
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:43
 msgid "Channel content warning"
 msgstr "채널 콘텐츠 경고"
@@ -7770,7 +7770,7 @@ msgid "Chat shortcuts"
 msgstr "채팅 단축키"
 
 #. Button on Linux that checks again whether the desktop offers system-wide shortcuts, for example after the desktop service started. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:139
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:136
 msgid "Check again"
 msgstr "다시 확인"
 
@@ -7833,7 +7833,7 @@ msgid "Checking access..."
 msgstr "접근 권한 확인 중..."
 
 #. Loading state in the screen-share picker while checking macOS screen recording permission.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:22
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:23
 msgid "Checking screen recording permission..."
 msgstr "화면 녹화 권한 확인 중..."
 
@@ -7848,17 +7848,17 @@ msgid "Checkout"
 msgstr "결제"
 
 #. Modal body for the generic "checkout blocked" state on a self-hosted instance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:123
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:122
 msgid "Checkout is blocked for this account."
 msgstr "이 계정의 결제가 차단되었습니다."
 
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:119
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:118
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "이 계정은 결제가 차단되었습니다. 도움이 필요하시면 {supportEmail}으로 문의하세요."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:115
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:114
 msgid "Checkout unavailable"
 msgstr "결제 이용 불가"
 
@@ -8036,7 +8036,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "앱 전반에 걸쳐 시간이 표시되는 방식을 선택하세요"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:58
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:57
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "구독 결제 방법을 선택해 주세요."
 
@@ -8050,7 +8050,7 @@ msgid "Choose one of the methods below to prove domain ownership. You only need 
 msgstr "도메인 소유권을 증명할 방법을 선택하세요. 한 가지만 완료하면 됩니다."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:166
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
 msgid "Choose payment method"
 msgstr "결제 수단 선택"
 
@@ -8174,7 +8174,7 @@ msgstr "기본 설정 선택"
 
 #. Heading for an authentication step that requires an instance before continuing.
 #. Heading for the login step that lets a user choose the instance before signing in.
-#: src/features/auth/flow/AuthLoginLayout.tsx:97
+#: src/features/auth/flow/AuthLoginLayout.tsx:96
 #: src/features/auth/flow/AuthRuntimeTargetGate.tsx:11
 msgid "Choose your instance"
 msgstr "인스턴스 선택"
@@ -8216,8 +8216,8 @@ msgstr "선물 받기"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:45
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:69
 #: src/features/channel/utils/CreateDMModalUtils.tsx:44
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:216
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:444
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:217
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:445
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:345
 msgid "Claim your account"
 msgstr "계정 등록하기"
@@ -9047,7 +9047,7 @@ msgid "Community badges"
 msgstr "커뮤니티 배지"
 
 #. Title in a modal shown before opening a community with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:185
+#: src/features/channel/components/MatureContentChannelGate.tsx:212
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:35
 msgid "Community content warning"
 msgstr "커뮤니티 콘텐츠 경고"
@@ -9089,8 +9089,8 @@ msgstr "커뮤니티 DM"
 msgid "Community filter"
 msgstr "커뮤니티 필터"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:277
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:600
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:278
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:601
 msgid "Community icon"
 msgstr "커뮤니티 아이콘"
 
@@ -9235,7 +9235,7 @@ msgid "Community updated"
 msgstr "커뮤니티 업데이트됨"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:38
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:39
 msgid "Community voice"
 msgstr "커뮤니티 음성"
 
@@ -9275,11 +9275,11 @@ msgid "Complete mature content check"
 msgstr "성인 콘텐츠 확인 완료하기"
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:157
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
 msgid "Complete payment"
 msgstr "결제 완료하기"
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:67
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:73
 msgid "Complete the mature content check to unlock mature media."
 msgstr "성인 콘텐츠 확인을 완료하여 성인 미디어를 잠금 해제하세요."
 
@@ -9409,7 +9409,7 @@ msgstr "확인"
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice-channel safety preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:24
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:18
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:19
 msgid "Confirm before joining voice channels"
 msgstr "음성 채널 참여 전 확인"
 
@@ -9457,7 +9457,7 @@ msgstr "신고를 보내려면 선언 내용을 확인하세요."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:30
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:31
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:398
 msgid "Confirm voice join"
 msgstr "음성 참가 확인"
@@ -9468,7 +9468,7 @@ msgid "Confirmation"
 msgstr "확인"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:46
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:47
 msgid "Confirmation or double-click for community voice joins"
 msgstr "커뮤니티 음성 채널 참여 시 확인 또는 더블 클릭"
 
@@ -9476,7 +9476,7 @@ msgstr "커뮤니티 음성 채널 참여 시 확인 또는 더블 클릭"
 msgid "Conflicts with {conflictLabel}"
 msgstr "{conflictLabel}과(와) 충돌"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:234
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Connect a camera and try again."
 msgstr "카메라를 연결하고 다시 시도하세요."
 
@@ -9489,7 +9489,7 @@ msgstr "카메라 또는 가상 캡처 장치를 연결한 후 다시 시도하�
 msgid "Connect a display, then try again."
 msgstr "디스플레이를 연결한 다음 다시 시도하세요."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
 msgid "Connect a microphone and try again."
 msgstr "마이크를 연결하고 다시 시도하세요."
 
@@ -9633,7 +9633,7 @@ msgstr "연결: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:424
-#: src/features/user/components/popouts/UserProfileShared.tsx:618
+#: src/features/user/components/popouts/UserProfileShared.tsx:622
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9667,7 +9667,7 @@ msgid "Contact"
 msgstr "연락처"
 
 #. Short label in the authentication content blocked handler. Keep the tone plain and specific.
-#: src/features/auth/components/ContentBlockedHandler.tsx:10
+#: src/features/auth/components/ContentBlockedHandler.tsx:11
 msgid "Content blocked"
 msgstr "콘텐츠 차단됨"
 
@@ -9741,13 +9741,13 @@ msgid "Continue in your browser"
 msgstr "브라우저에서 계속하기"
 
 #. Button in the gift time confirmation that proceeds to subscription checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
 msgid "Continue to checkout"
 msgstr "결제 계속하기"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:343
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:356
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:379
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:351
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:364
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:387
 msgid "Continue with passkey"
 msgstr "패스키로 계속하기"
 
@@ -10059,17 +10059,17 @@ msgid "Copy invite URL"
 msgstr "초대 URL 복사"
 
 #. Button that copies Hyprland config lines to the clipboard.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:120
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:117
 msgid "Copy lines"
 msgstr "줄 복사"
 
 #. Screen reader name of the button that copies Hyprland config lines in the older hyprlang format. Starts with the visible button text "Copy lines". Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:129
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:126
 msgid "Copy lines for hyprland.conf"
 msgstr "줄 복사(hyprland.conf용)"
 
 #. Screen reader name of the button that copies Hyprland config lines in the Lua format. Starts with the visible button text "Copy lines". Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:124
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:121
 msgid "Copy lines for hyprland.lua"
 msgstr "줄 복사(hyprland.lua용)"
 
@@ -10343,7 +10343,7 @@ msgid "Couldn't change your price"
 msgstr "가격을 변경할 수 없습니다"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:96
+#: src/features/updater/commands/UpdaterModalCommands.tsx:97
 msgid "Couldn't check for updates"
 msgstr "업데이트를 확인할 수 없습니다"
 
@@ -10475,7 +10475,7 @@ msgid "Couldn't delete your messages"
 msgstr "내 메시지를 삭제할 수 없습니다"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:105
 msgid "Couldn't download the desktop update"
 msgstr "데스크톱 업데이트를 다운로드할 수 없습니다"
 
@@ -10591,7 +10591,7 @@ msgstr "검색 결과를 열 수 없습니다"
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:29
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10758,7 +10758,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "{blueskyProviderName} 승인을 시작할 수 없습니다"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:127
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:126
 msgid "Couldn't start checkout"
 msgstr "결제를 시작할 수 없습니다"
 
@@ -10932,7 +10932,7 @@ msgstr "만들고 공유하기"
 msgid "Create a community"
 msgstr "커뮤니티 만들기"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:262
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:263
 msgid "Create a community for you and your friends to chat."
 msgstr "친구들과 채팅할 커뮤니티를 만드세요."
 
@@ -11365,7 +11365,7 @@ msgstr "사용자 지정"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
@@ -11851,7 +11851,7 @@ msgid "Deafened by moderators"
 msgstr "모더레이터에 의해 소리 꺼짐"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:143
+#: src/features/updater/commands/UpdaterModalCommands.tsx:144
 msgid "DEB package"
 msgstr "DEB 패키지"
 
@@ -12496,7 +12496,7 @@ msgid "Desktop app"
 msgstr "데스크톱 앱"
 
 #. Modal title shown after a manual desktop update check finds no update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:50
+#: src/features/updater/commands/UpdaterModalCommands.tsx:51
 msgid "Desktop app is up to date"
 msgstr "데스크톱 앱이 최신 버전입니다"
 
@@ -12555,7 +12555,7 @@ msgid "Desktop update {version} available. Choose a Linux package."
 msgstr "데스크톱 업데이트 {version}을(를) 사용할 수 있습니다. Linux 패키지를 선택하세요."
 
 #. Modal title shown when a new desktop app update can be downloaded.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:16
+#: src/features/updater/commands/UpdaterModalCommands.tsx:17
 msgid "Desktop update available"
 msgstr "데스크톱 업데이트 사용 가능"
 
@@ -12565,7 +12565,7 @@ msgid "Desktop update available. Choose a Linux package."
 msgstr "데스크톱 업데이트를 사용할 수 있습니다. Linux 패키지를 선택하세요."
 
 #. Desktop updater modal body. The version placeholder is the target app version; productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:20
+#: src/features/updater/commands/UpdaterModalCommands.tsx:21
 msgid "Desktop version {version} is available. Download the installer, then run it to update {productName}."
 msgstr "데스크톱 버전 {version}을(를) 사용할 수 있습니다. 설치 파일을 다운로드한 후 실행하면 {productName}을(를) 업데이트할 수 있습니다."
 
@@ -12613,7 +12613,7 @@ msgstr "세부 정보: {reason}"
 #. Item in the textarea spellcheck language submenu that detects draft message language and switches dictionaries as the user types.
 #. Spellcheck language mode label in the language tab. The app detects the draft message language and switches dictionaries as the user types.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:83
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:126
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:127
 msgid "Detect while typing"
 msgstr "입력하는 동안 감지"
 
@@ -12661,7 +12661,7 @@ msgid "Developer tools unavailable"
 msgstr "개발자 도구를 사용할 수 없음"
 
 #. Modal title when the desktop app is running unpackaged during development.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:66
+#: src/features/updater/commands/UpdaterModalCommands.tsx:67
 msgid "Development build"
 msgstr "개발 빌드"
 
@@ -13455,8 +13455,8 @@ msgstr "다운로드"
 
 #. Nagbar button label that downloads the desktop app. productName is the app name.
 #. Short label in the sidebar navigation download button. Preserve {productName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:17
-#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:18
+#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:27
 msgid "Download {productName}"
 msgstr "{productName} 다운로드"
 
@@ -13465,12 +13465,12 @@ msgid "Download <0>fluxer-verification</0> and place it in your <1>.well-known</
 msgstr "도메인 유효성 검사를 위해 <0>fluxer-verification</0>을 다운로드하여 <1>.well-known</1> 폴더에 넣어주세요."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:98
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:99
 msgid "Download app"
 msgstr "앱 다운로드"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:106
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:107
 msgid "Download app button in the sidebar"
 msgstr "앱 다운로드"
 
@@ -13485,7 +13485,7 @@ msgid "Download button"
 msgstr "다운로드 버튼"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:103
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:104
 msgid "Download desktop app"
 msgstr "데스크톱 앱 다운로드"
 
@@ -13513,7 +13513,7 @@ msgid "Download image"
 msgstr "이미지 다운로드"
 
 #. Button label that downloads a desktop update installer.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:29
+#: src/features/updater/commands/UpdaterModalCommands.tsx:30
 msgid "Download installer"
 msgstr "설치 프로그램 다운로드"
 
@@ -13527,7 +13527,7 @@ msgid "Download media"
 msgstr "미디어 다운로드"
 
 #. Button label that downloads a selected Linux desktop update package.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:33
+#: src/features/updater/commands/UpdaterModalCommands.tsx:34
 msgid "Download package"
 msgstr "패키지 다운로드"
 
@@ -13655,11 +13655,11 @@ msgstr "항목 놓기"
 msgid "Drop to upload background"
 msgstr "배경을 업로드하려면 여기에 놓으세요"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:85
+#: src/features/channel/components/MatureContentChannelGate.tsx:100
 msgid "Due to mature content laws in {regionName}, mature content is blocked until you complete the mature content check."
 msgstr "{regionName}의 성인 콘텐츠 관련 법규에 따라, 성인 콘텐츠 확인을 완료하기 전까지는 성인 콘텐츠가 차단됩니다."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:95
+#: src/features/channel/components/MatureContentChannelGate.tsx:110
 msgid "Due to mature content laws in {regionName}, mature content is not available from here. Mature content checks are available only in the UK."
 msgstr "{regionName}의 성인 콘텐츠 관련 법률에 따라, 여기서는 성인 콘텐츠를 이용할 수 없습니다. 성인 콘텐츠 확인 기능은 영국에서만 이용할 수 있습니다."
 
@@ -13673,7 +13673,7 @@ msgstr "{regionName}의 성인 콘텐츠 관련 법률에 따라, 성인 콘텐�
 msgid "Due to mature content laws in {regionName}, this content is not available from here. Mature content checks are available only in the UK."
 msgstr "{regionName}의 성인 콘텐츠 관련 법규로 인해 이 콘텐츠는 여기에서 이용할 수 없습니다. 성인 콘텐츠 확인은 영국에서만 가능합니다."
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:61
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:67
 msgid "Due to mature content laws in {regionName}, this media is not available from your current region."
 msgstr "{regionName}의 성인 콘텐츠 관련 법규에 따라 현재 지역에서는 이 미디어를 이용할 수 없습니다."
 
@@ -13715,7 +13715,7 @@ msgid "Each code works once in place of your authenticator app."
 msgstr "각 코드는 인증 앱을 대신하여 한 번 사용할 수 있습니다."
 
 #. Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:75
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:72
 msgid "Each key can run only one system-wide shortcut."
 msgstr "각 키는 시스템 전체 단축키 하나만 실행할 수 있습니다."
 
@@ -14303,7 +14303,7 @@ msgid "Enable"
 msgstr "활성화"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:123
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:124
 msgid "Enable {permissionName} permission"
 msgstr "{permissionName} 권한 허용"
 
@@ -14508,7 +14508,7 @@ msgid "Enable shortcut"
 msgstr "단축키 사용"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:86
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Enable spellcheck"
 msgstr "맞춤법 검사 사용"
 
@@ -14602,12 +14602,12 @@ msgid "End grace now"
 msgstr "유예 기간 지금 종료"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:285
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:284
 msgid "End grace period"
 msgstr "유예 기간 종료"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:278
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:277
 msgid "End grace period now?"
 msgstr "유예 기간을 지금 종료할까요?"
 
@@ -14837,7 +14837,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "계속하려면 보안 키의 PIN을 입력하세요."
 
 #. Title in the desktop app above the code the user types into a browser on another device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:235
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:240
 msgid "Enter this code in your browser"
 msgstr "브라우저에 이 코드를 입력하세요"
 
@@ -14845,7 +14845,7 @@ msgstr "브라우저에 이 코드를 입력하세요"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "브라우저에 이 코드를 입력하여 로그인을 완료하세요."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:148
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:150
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
 msgstr "기존 {PRODUCT_NAME} 앱에 이 코드를 입력하여 로그인을 완료하세요."
 
@@ -14916,7 +14916,7 @@ msgstr "시스템 오디오 전체"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:181
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:313
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:188
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:150
 msgid "Entrance sound"
 msgstr "입장음"
@@ -15026,7 +15026,7 @@ msgstr "저녁 시간"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:172
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "마이크 볼륨을 일정하게 조절하여 너무 작게 들리지 않도록 합니다."
@@ -15249,7 +15249,7 @@ msgstr "{earliest} ~ {latest} 만료"
 msgid "Expires in {remaining}s"
 msgstr "{remaining}초 후 만료"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:257
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:265
 msgid "Expires in {remainingSeconds}s"
 msgstr "{remainingSeconds}초 후 만료"
 
@@ -15728,7 +15728,7 @@ msgid "Favorite channel"
 msgstr "채널 즐겨찾기"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:82
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:83
 msgid "Favorite channels"
 msgstr "즐겨찾는 채널"
 
@@ -16243,7 +16243,7 @@ msgstr "{threeHours}시간 동안"
 msgid "For {twentyFourHours} hours"
 msgstr "{twentyFourHours}시간 동안"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:255
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:256
 msgid "For British eyes only..."
 msgstr "영국인 전용입니다..."
 
@@ -16253,22 +16253,22 @@ msgid "For me"
 msgstr "직접 구매"
 
 #. Warning on GNOME when the push-to-mute shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone muted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:204
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:201
 msgid "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
 msgstr "눌러서 음소거에는 Ctrl, Alt, Shift 없이 단일 키를 사용하세요. 조합 키를 사용하면 메인 키를 먼저 떼야 합니다. 그렇지 않으면 마이크가 계속 음소거될 수 있습니다."
 
 #. Warning on GNOME when the push-to-talk shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone on.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:198
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:195
 msgid "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
 msgstr "눌러서 말하기에는 Ctrl, Alt, Shift 없이 단일 키를 사용하세요. 조합 키를 사용하면 메인 키를 먼저 떼야 합니다. 그렇지 않으면 마이크가 계속 켜져 있을 수 있습니다."
 
 #. Warning on GNOME when a hold shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the shortcut active.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:216
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:213
 msgid "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
 msgstr "이 단축키에는 Ctrl, Alt, Shift 없이 단일 키를 사용하세요. 조합 키를 사용하면 메인 키를 먼저 떼야 합니다. 그렇지 않으면 단축키가 계속 활성 상태로 남을 수 있습니다."
 
 #. Warning on GNOME when the voice activity priority shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave priority speaking on. "Voice activity priority" is the shortcut name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:210
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:207
 msgid "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
 msgstr "음성 활동 우선순위에는 Ctrl, Alt, Shift 없이 단일 키를 사용하세요. 조합 키를 사용하면 메인 키를 먼저 떼야 합니다. 그렇지 않으면 우선순위가 계속 켜져 있을 수 있습니다."
 
@@ -16460,14 +16460,14 @@ msgstr "프레임"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:334
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:336
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:230
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:133
 msgid "Frame rate"
 msgstr "프레임 속도"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:63
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "30FPS를 초과하는 프레임 속도에는 {premiumProductName}이(가) 필요합니다"
 
@@ -16926,12 +16926,12 @@ msgid "Get notified when you receive messages. You may need to allow notificatio
 msgstr "메시지가 오면 알림을 받습니다. 브라우저 설정에서 알림을 허용해야 할 수도 있습니다. 채널/커뮤니티별로 설정하려면 커뮤니티 아이콘을 마우스 오른쪽 버튼으로 클릭한 뒤 알림 설정을 여세요."
 
 #. Nagbar body encouraging web users to download the desktop app. productName is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:17
+#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:18
 msgid "Get the {productName} desktop app for system-wide push-to-talk and a few other goodies."
 msgstr "시스템 전체 푸시 투 토크 및 기타 유용한 기능을 사용하려면 {productName} 데스크톱 앱을 다운로드하세요."
 
 #. CTA button label in the screen-share picker. Opens the desktop download page.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:20
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:21
 msgid "Get the desktop app"
 msgstr "데스크톱 앱 다운로드"
 
@@ -17241,12 +17241,12 @@ msgid "Go back to {productName} to continue."
 msgstr "{productName}(으)로 돌아가 계속하세요."
 
 #. Shown after approving a sign-in for an app on another device, which signs in by itself shortly. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:296
 msgid "Go back to the {PRODUCT_NAME} app. It finishes signing in on its own."
 msgstr "{PRODUCT_NAME} 앱으로 돌아가세요. 자동으로 로그인이 완료됩니다."
 
 #. Shown after approving, when the browser has already handed the sign-in back to the desktop app. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:288
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
 msgid "Go back to the {PRODUCT_NAME} app. You can close this tab."
 msgstr "{PRODUCT_NAME} 앱으로 돌아가세요. 이 탭은 닫으셔도 됩니다."
 
@@ -17702,7 +17702,7 @@ msgid "Help"
 msgstr "도움말"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:94
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:95
 msgid "Help button"
 msgstr "도움말 버튼"
 
@@ -17712,11 +17712,11 @@ msgid "Help center"
 msgstr "고객센터"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:102
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:103
 msgid "Help center button in the sidebar"
 msgstr "도움말 센터 버튼"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:348
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:349
 msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
 msgstr "<0>{I18N_WEBLATE_DOMAIN}</0>에서 {PRODUCT_NAME}을(를) 여러분의 언어로 번역하는 데 참여해 보세요."
 
@@ -17841,7 +17841,7 @@ msgstr "채팅 숨기기"
 msgid "Hide community owner crown"
 msgstr "커뮤니티 소유자 크라운 숨기기"
 
-#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:62
+#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:63
 msgid "Hide download button"
 msgstr "다운로드 버튼 숨기기"
 
@@ -17860,7 +17860,7 @@ msgstr "즐겨찾기 숨기기"
 msgid "Hide guidelines"
 msgstr "가이드라인 숨기기"
 
-#: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:63
+#: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:64
 msgid "Hide help center button"
 msgstr "고객센터 버튼 숨기기"
 
@@ -17870,7 +17870,7 @@ msgid "Hide join messages"
 msgstr "참여 메시지 숨기기"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:50
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:51
 msgid "Hide keyboard hints"
 msgstr "키보드 안내 숨기기"
 
@@ -18156,22 +18156,22 @@ msgid "Hyperlink"
 msgstr "하이퍼링크"
 
 #. Instructions for the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:94
 msgid "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
 msgstr "Hyprland에는 단축키 대화상자가 없습니다. Hyprland 버전에 맞는 줄을 Hyprland 설정에 추가하고 KEY를 원하는 키로 바꾸세요."
 
 #. Instructions for the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:103
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:100
 msgid "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
 msgstr "Hyprland에는 단축키 대화상자가 없습니다. Hyprland 설정에서 키를 바인딩하세요."
 
 #. Label above Hyprland config lines in the older hyprlang format. Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:116
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:113
 msgid "hyprland.conf (before Hyprland 0.55)"
 msgstr "hyprland.conf (Hyprland 0.55 이전)"
 
 #. Label above Hyprland config lines in the Lua format. Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:112
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:109
 msgid "hyprland.lua (Hyprland 0.55 and later)"
 msgstr "hyprland.lua (Hyprland 0.55 이상)"
 
@@ -18218,8 +18218,8 @@ msgid "I confirm in good faith that the information and allegations in this noti
 msgstr "본 신고에 담긴 정보와 주장이 정확하고 완전함을 선의로 확인합니다."
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
+#: src/features/channel/components/MatureContentChannelGate.tsx:234
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:108
 msgid "I understand"
 msgstr "확인했습니다"
 
@@ -18598,11 +18598,11 @@ msgstr "가져오는 중… {processedCount, number}/{totalCount, number}개 처
 msgid "In"
 msgstr "채널 내"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:547
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:551
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "\"운영체제\" 모드에서는 위에 나열된 사전이 권장 사항입니다. {PRODUCT_NAME}은 지원되는 경우 이러한 언어 태그를 OS 맞춤법 검사기에 전달합니다. 인식하지 못하는 태그는 무시됩니다."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:318
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "브라우저에서는 {PRODUCT_NAME} 탭이 활성화된 경우에만 PTT(Push-to-talk)가 작동합니다. 시스템 전체에서 PTT를 사용하려면 데스크톱 앱을 설치하세요."
 
@@ -18650,7 +18650,7 @@ msgstr "음성 채팅 중"
 #. Spellcheck engine option in the language tab. Uses the bundled in-app Hunspell dictionaries. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. The bundled in-app hunspell engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:75
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:100
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:101
 msgid "In-app dictionaries"
 msgstr "앱 내 사전"
 
@@ -18875,7 +18875,7 @@ msgid "Input"
 msgstr "입력"
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:175
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:176
 msgid "Input and output"
 msgstr "입력 및 출력"
 
@@ -18939,7 +18939,7 @@ msgid "Insert emoji"
 msgstr "이모티콘 삽입"
 
 #. CTA card body in the screen-share picker promoting the desktop app. {productName} is Fluxer.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:16
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:17
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "전체 소스 선택 도구와 더 원활한 화면 공유 제어 기능을 사용하려면 {productName}을(를) 설치하세요."
 
@@ -18954,12 +18954,12 @@ msgid "Install the new app"
 msgstr "새 앱 설치"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:119
+#: src/features/updater/commands/UpdaterModalCommands.tsx:120
 msgid "Installed"
 msgstr "설치됨"
 
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:54
+#: src/features/updater/commands/UpdaterModalCommands.tsx:55
 msgid "Installed version: {currentVersion}."
 msgstr "설치된 버전: {currentVersion}."
 
@@ -19031,7 +19031,7 @@ msgstr "인터페이스"
 
 #. Settings section label for interface language selection.
 #. Settings section title in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:82
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:83
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Interface language"
 msgstr "인터페이스 언어"
@@ -19467,13 +19467,13 @@ msgstr "참여하기"
 
 #. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:30
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
 #: src/features/expressions/components/ExpressionInfoCard.tsx:94
 msgid "Join {communityName}"
 msgstr "{communityName}에 참여하기"
 
 #. Nagbar body inviting users to join the official product community. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:25
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "{communityName}에 참여하여 팀과 채팅하고 최신 소식을 받아보세요."
 
@@ -19561,7 +19561,7 @@ msgstr "영상 통화 참여"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:67
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:34
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:35
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:454
 msgid "Join voice"
 msgstr "음성 채팅 참여"
@@ -19756,7 +19756,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "무료 및 프리미엄 등급을 유지하세요. 등급을 맞춤 설정하거나, Stripe를 통해 프리미엄을 판매하거나, 나중에 관리자 패널에서 선물 코드를 배포할 수 있습니다."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:169
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:287
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:286
 msgid "Keep grace period"
 msgstr "유예 기간 유지"
 
@@ -19771,7 +19771,7 @@ msgid "Keep running"
 msgstr "계속 실행"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:147
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
 msgid "Keep subscription"
 msgstr "구독 유지"
 
@@ -19786,7 +19786,7 @@ msgid "Keep this page somewhere safe. If you forget your password, you can use i
 msgstr "이 페이지를 안전한 곳에 보관하세요. 비밀번호를 잊어버렸을 때 계정에 다시 로그인하는 데 사용할 수 있습니다. 이 복구 키를 가진 사람은 누구나 비밀번호를 재설정할 수 있으므로 절대 공유하지 마세요."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:79
 msgid "Keep transmitting briefly after release."
 msgstr "버튼을 놓은 후에도 잠시 동안 전송을 유지합니다."
 
@@ -19829,7 +19829,7 @@ msgid "Keyboard"
 msgstr "키보드"
 
 #. Linux warning when direct input device access is on but reading the keyboard failed. Not related to the "Direct input" voice processing profile. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:190
 msgid "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
 msgstr "키보드 접근을 시작할 수 없습니다. 단축키는 {productName}에 포커스가 있을 때만 작동합니다."
 
@@ -19848,7 +19848,7 @@ msgid "Keyboard mode"
 msgstr "키보드 모드"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:62
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:63
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "툴팁에 키보드 단축키 힌트 표시"
 
@@ -19923,7 +19923,7 @@ msgstr "언어 설정"
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:88
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:122
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:123
 msgid "Languages"
 msgstr "언어"
 
@@ -19971,7 +19971,7 @@ msgstr "지연 시간 그래프"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
-#: src/features/updater/commands/UpdaterModalCommands.tsx:46
+#: src/features/updater/commands/UpdaterModalCommands.tsx:47
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:74
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
@@ -20214,12 +20214,12 @@ msgid "Let the member hear others in this community again"
 msgstr "이 커뮤니티에서 멤버가 다른 사람들의 소리를 다시 들을 수 있도록 허용했습니다"
 
 #. Description for the Linux direct input device access switch while it is on, on a desktop that can also run system-wide shortcuts itself (KDE, GNOME, Hyprland). {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:166
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:163
 msgid "Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead."
 msgstr "{productName}이(가) 키보드를 직접 읽을 수 있게 합니다. 데스크톱을 통해 단축키를 설정하려면 이 설정을 끄세요."
 
 #. Description for the Linux direct input device access switch. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:162
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:159
 msgid "Lets {productName} read your keyboard directly. Your system already allows this."
 msgstr "{productName}이(가) 키보드를 직접 읽을 수 있게 합니다. 시스템에서 이미 허용되어 있습니다."
 
@@ -20512,7 +20512,7 @@ msgid "Linux default"
 msgstr "Linux 기본값"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:135
+#: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Linux package"
 msgstr "Linux 패키지"
 
@@ -20648,7 +20648,7 @@ msgid "Local files"
 msgstr "로컬 파일"
 
 #. Profile section title for a user's local time.
-#: src/features/user/components/popouts/UserProfileShared.tsx:57
+#: src/features/user/components/popouts/UserProfileShared.tsx:58
 msgid "Local time"
 msgstr "현지 시간"
 
@@ -20730,7 +20730,7 @@ msgid "Look and feel"
 msgstr "모양 및 느낌"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:673
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "{0}을(를) 사용 중이신 것 같습니다. {PRODUCT_NAME}의 처리를 추가하면 펌핑 또는 왜곡이 발생할 수 있습니다. 직접 입력은 오디오를 그대로 통과시킵니다."
 
@@ -20826,7 +20826,7 @@ msgid "Make group owner"
 msgstr "그룹 소유자로 지정"
 
 #. Shown above the code on the browser approval page when the app cannot be signed in automatically. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:253
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:257
 msgid "Make sure this code matches the one in the {PRODUCT_NAME} app."
 msgstr "{PRODUCT_NAME} 앱에 있는 이 코드를 확인하세요."
 
@@ -20966,7 +20966,7 @@ msgid "Manage your subscription"
 msgstr "구독 관리"
 
 #. Modal title when automatic in-app desktop updates cannot be used.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:62
+#: src/features/updater/commands/UpdaterModalCommands.tsx:63
 msgid "Manual desktop update"
 msgstr "수동 데스크톱 업데이트"
 
@@ -21145,15 +21145,15 @@ msgstr "매사추세츠"
 msgid "Master volume"
 msgstr "마스터 볼륨"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:141
+#: src/features/channel/components/MatureContentChannelGate.tsx:160
 msgid "Mature category"
 msgstr "성인 카테고리"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:163
+#: src/features/channel/components/MatureContentChannelGate.tsx:186
 msgid "Mature channel"
 msgstr "성인 채널"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:118
+#: src/features/channel/components/MatureContentChannelGate.tsx:133
 msgid "Mature community"
 msgstr "성인 커뮤니티"
 
@@ -21194,7 +21194,7 @@ msgstr "성인 콘텐츠 확인 요청을 보냈습니다"
 
 #. Body copy in the mature content check modal when the check is unavailable.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:36
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:71
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:77
 msgid "Mature content checks are currently available only in the UK."
 msgstr "성인 콘텐츠 확인 기능은 현재 영국에서만 이용할 수 있습니다."
 
@@ -21462,7 +21462,7 @@ msgid "Member roles updated"
 msgstr "멤버 역할 업데이트됨"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:283
+#: src/features/user/components/popouts/UserProfileShared.tsx:284
 msgid "Member since"
 msgstr "멤버 가입일"
 
@@ -22013,7 +22013,7 @@ msgstr "마이크"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:183
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:184
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:142
 msgid "Mic test"
 msgstr "마이크 테스트"
@@ -22127,7 +22127,7 @@ msgstr "미네소타"
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:100
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:101
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
@@ -23046,7 +23046,7 @@ msgid "Neko"
 msgstr "네코"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:66
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:67
 msgid "Neko cat that chases your cursor"
 msgstr "커서를 따라다니는 네코 고양이"
 
@@ -23285,7 +23285,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "지금은 새 사용자가 참여할 수 없습니다. 계정을 만들거나 로그인한 다음 나중에 이 링크를 다시 시도할 수 있습니다."
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:131
+#: src/features/updater/commands/UpdaterModalCommands.tsx:132
 msgid "New version"
 msgstr "새 버전"
 
@@ -23465,7 +23465,7 @@ msgstr "북마크 없음"
 msgid "No bot banner"
 msgstr "봇 배너 없음"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:226
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:227
 msgid "No camera found"
 msgstr "카메라를 찾을 수 없습니다"
 
@@ -23541,7 +23541,7 @@ msgid "No description."
 msgstr "설명 없음."
 
 #. Desktop updater modal body when no installed version string is available.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:58
+#: src/features/updater/commands/UpdaterModalCommands.tsx:59
 msgid "No desktop update is available."
 msgstr "사용 가능한 데스크톱 업데이트가 없습니다."
 
@@ -23684,7 +23684,7 @@ msgstr "일치하는 게시물이 없습니다"
 msgid "No mentions yet"
 msgstr "아직 멘션이 없습니다"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:541
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:542
 msgid "No microphone found"
 msgstr "마이크를 찾을 수 없습니다"
 
@@ -23731,7 +23731,7 @@ msgstr "검색 결과와 일치하는 대기 중인 요청이 없습니다"
 msgid "No permissions found"
 msgstr "일치하는 권한이 없습니다"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:594
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:599
 msgid "No personal words yet."
 msgstr "아직 추가한 단어가 없어요."
 
@@ -24093,7 +24093,7 @@ msgid "Not allowed"
 msgstr "허용되지 않음"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:79
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:76
 msgid "Not assigned"
 msgstr "할당되지 않음"
 
@@ -24423,7 +24423,7 @@ msgid "On click"
 msgstr "클릭 시"
 
 #. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:243
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:248
 msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
 msgstr "다른 기기에서 {signInAddress}에 로그인하고 요청 시 이 코드를 입력하세요."
 
@@ -24694,7 +24694,7 @@ msgid "Open {premiumProductFullName}"
 msgstr "{premiumProductFullName} 열기"
 
 #. Button on the browser page after approving that opens the desktop app again if it did not come to the front. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:304
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:308
 msgid "Open {PRODUCT_NAME}"
 msgstr "{PRODUCT_NAME} 열기"
 
@@ -24726,7 +24726,7 @@ msgid "Open account switcher"
 msgstr "계정 전환기 열기"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:112
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:113
 msgid "Open advanced media settings"
 msgstr "고급 미디어 설정 열기"
 
@@ -24788,7 +24788,7 @@ msgstr "배너 옵션 열기"
 msgid "Open bookmarks"
 msgstr "북마크 열기"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:184
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:188
 msgid "Open browser"
 msgstr "브라우저 열기"
 
@@ -24846,7 +24846,7 @@ msgid "Open date picker"
 msgstr "날짜 선택기 열기"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:92
+#: src/features/updater/commands/UpdaterModalCommands.tsx:93
 msgid "Open desktop downloads"
 msgstr "데스크톱 다운로드 열기"
 
@@ -25043,7 +25043,7 @@ msgid "Open settings"
 msgstr "설정 열기"
 
 #. Button label that opens the software center via appstream protocol.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:88
+#: src/features/updater/commands/UpdaterModalCommands.tsx:89
 msgid "Open software center"
 msgstr "소프트웨어 센터 열기"
 
@@ -25076,11 +25076,11 @@ msgid "Open System Settings"
 msgstr "시스템 설정 열기"
 
 #. Body in the screen-share picker when macOS screen recording permission is missing. {productName} is the app name. Keep "System Settings", "Privacy & Security" and the permission name as macOS shows them in this language.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:26
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:27
 msgid "Open System Settings → Privacy & Security → Screen Recording, then allow {productName}."
 msgstr "시스템 설정 → 개인 정보 보호 및 보안 → 화면 녹화로 이동하여 {productName}을(를) 허용하세요."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:535
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:536
 msgid "Open template JSON"
 msgstr "템플릿 JSON 열기"
 
@@ -25089,7 +25089,7 @@ msgstr "템플릿 JSON 열기"
 msgid "Open the context menu"
 msgstr "상황별 메뉴 열기"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:518
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:519
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "아래 링크를 브라우저에서 연 다음, 전체 JSON 응답을 복사하여 상자에 붙여넣으세요."
 
@@ -25167,11 +25167,11 @@ msgstr "오디오 및 비디오 설정 열기"
 msgid "Open with {accountName} on {instanceName}"
 msgstr "{accountName}(으)로 {instanceName} 열기"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:137
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:139
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "브라우저를 열고 로그인한 다음 아래 코드를 입력하여 계정을 연결하세요."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:135
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:134
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
 msgstr "기존 {PRODUCT_NAME} 앱을 열고 새 기기 연결을 선택한 다음 아래 코드를 입력하세요."
 
@@ -25199,7 +25199,7 @@ msgstr "멤버 페이지를 엽니다. 열려면 스페이스바 또는 Enter �
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:99
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:79
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:110
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:111
 msgid "Operating system"
 msgstr "운영체제"
 
@@ -25629,7 +25629,7 @@ msgstr "지난 7일"
 msgid "Paste"
 msgstr "붙여넣기"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:490
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:491
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "새 커뮤니티로 구조를 가져오려면 {theOtherPlatform} 템플릿 URL을 붙여넣으세요."
 
@@ -25734,12 +25734,12 @@ msgid "Pay once and get a gift link to share. Gifts never renew."
 msgstr "한 번 결제하고 공유할 선물 링크를 받으세요. 선물은 자동 갱신되지 않습니다."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:37
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "브라질 은행에서 직접 정기 결제를 승인하려면 {pixPaymentMethod} Automático로 결제하세요. 또는 \"카드 사용\"을 선택하여 {paymentProviderName}의 다음 화면에서 신용 카드를 입력하세요."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:48
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:47
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "인도 은행에서 RBI 규정을 준수하는 전자 자동이체를 설정하려면 {upiPaymentMethod}(으)로 결제하세요. 또는 \"카드 사용\"을 선택하여 {paymentProviderName}의 다음 화면에서 신용 카드를 입력하세요."
 
@@ -25933,7 +25933,7 @@ msgstr "{0}에 대한 권한"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title for personal dictionary settings. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:131
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:132
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:94
 msgid "Personal dictionary"
 msgstr "개인 사전"
@@ -26004,7 +26004,7 @@ msgid "Pick at least one tag for this post."
 msgstr "이 게시물에 태그를 하나 이상 선택해주세요."
 
 #. Help text above the manual spellcheck dictionary picker in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:135
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:136
 msgid "Pick one or more dictionaries. Words from any selected dictionary are accepted, which is useful for multilingual chats."
 msgstr "사전 하나 이상을 선택하세요. 선택된 사전의 단어는 모두 허용되므로 여러 언어를 사용하는 채팅에 유용합니다."
 
@@ -26690,7 +26690,7 @@ msgid "Pricing"
 msgstr "가격"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:149
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
 msgid "Pricing is still loading."
 msgstr "가격 정보를 불러오는 중입니다."
 
@@ -27069,17 +27069,17 @@ msgid "Purchased gifts"
 msgstr "구매한 선물"
 
 #. Modal body shown on a self-hosted instance when purchases are disabled for the account.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:111
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
 msgid "Purchases are disabled for this account."
 msgstr "이 계정에서는 구매가 비활성화되어 있습니다."
 
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:107
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "이 계정에서는 구매할 수 없습니다. 문제가 있다고 생각하시면 {supportEmail}(으)로 문의해 주세요."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:103
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:102
 msgid "Purchases unavailable"
 msgstr "구매 불가"
 
@@ -27173,33 +27173,33 @@ msgid "Push to talk key"
 msgstr "눌러서 말하기 키"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:353
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:354
 #: src/features/voice/components/VoiceSettingsMenus.tsx:422
 msgid "Push-to-talk"
 msgstr "눌러서 말하기"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:99
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:100
 msgid "Push-to-talk (limited)"
 msgstr "눌러서 말하기 (제한됨)"
 
 #. Voice settings warning on GNOME when the desktop has no key assigned to push-to-talk. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:243
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:240
 msgid "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
 msgstr "눌러서 말하기에 아직 시스템 전체 키가 없습니다. 설정하려면 설정 > 앱 > {productName}(으)로 이동하세요."
 
 #. Voice settings warning on KDE Plasma when the desktop has no key assigned to push-to-talk. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:237
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:234
 msgid "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "눌러서 말하기에 아직 시스템 전체 키가 없습니다. 설정하려면 시스템 설정 > 키보드 > 단축키 > {productName}(으)로 이동하세요."
 
 #. Voice settings warning on an unrecognized Linux desktop when the desktop has no key assigned to push-to-talk.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:248
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:245
 msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
 msgstr "눌러서 말하기에 아직 시스템 전체 키가 없습니다. 설정하려면 데스크톱의 키보드 단축키 설정을 여세요."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:706
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:709
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "원본 입력에서는 눌러서 말하기가 무시됩니다. 사용하려면 음성 포커스 또는 사용자 지정으로 전환하세요."
 
@@ -27214,27 +27214,27 @@ msgid "Push-to-talk is on. Hold your push-to-talk key to speak."
 msgstr "눌러서 말하기가 켜져 있습니다. 눌러서 말하기 키를 누른 채 말하세요."
 
 #. Voice settings warning on Linux when the desktop dialog for system-wide shortcuts was dismissed or failed. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:223
 msgid "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
 msgstr "데스크톱에서 시스템 전체 단축키를 설정하지 않아 눌러서 말하기는 {productName}에 포커스가 있을 때만 작동합니다."
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:131
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:132
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled."
 msgstr "푸시투토크는 {permissionName}이(가) 활성화될 때까지 {productName}이(가) 포커스된 상태에서만 작동합니다."
 
 #. Voice settings warning on Linux before system-wide shortcuts are set up. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:222
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:219
 msgid "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
 msgstr "시스템 전체 단축키를 설정하기 전까지 눌러서 말하기는 {productName}에 포커스가 있을 때만 작동합니다."
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:127
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:128
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "눌러서 말하기는 브라우저 탭이 활성화된 상태에서만 작동합니다."
 
 #. Linux warning next to the direct input device access switch when push-to-talk only has a key assigned by the desktop. With direct input on, only the push-to-talk key set in the app works, and without one the microphone sends whenever you speak. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:184
 msgid "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
 msgstr "눌러서 말하기는 {productName}에서 설정한 키를 사용합니다. 먼저 키를 설정하지 않으면 마이크가 음성 활동으로 작동합니다."
 
@@ -27244,12 +27244,12 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "소리 끄기 상태에서는 눌러서 말하기로 마이크 음소거가 해제되지 않습니다. 대화하려면 소리 끄기를 먼저 해제하세요."
 
 #. Voice settings note on the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:259
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:256
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
 msgstr "눌러서 말하기를 {productName} 밖에서 사용하려면 Hyprland 설정에서 바인딩해야 합니다."
 
 #. Voice settings note on the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:253
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:250
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
 msgstr "눌러서 말하기를 {productName} 밖에서 사용하려면 Hyprland 설정에서 바인딩해야 합니다. Hyprland 버전에 맞는 줄을 추가하고 KEY를 원하는 키로 바꾸세요."
 
@@ -27533,12 +27533,12 @@ msgstr "받는 사람은 {0} <0>{1}</0>(으)로 이동합니다"
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:90
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:91
 msgid "Recommended"
 msgstr "권장"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:83
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "권장. 마이크 소리를 다듬어 말소리를 선명하게 만듭니다."
 
@@ -27553,7 +27553,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "재연결되었습니다. 이전 스트림을 다시 시작하려면 화면을 다시 선택하세요."
 
 #. Status text on Linux while the app reconnects to the desktop service that runs system-wide shortcuts, for example after it restarted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:48
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:45
 msgid "Reconnecting to your desktop…"
 msgstr "데스크톱에 다시 연결 중…"
 
@@ -27836,7 +27836,7 @@ msgstr "다시 시작하여 적용"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:75
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:94
 msgid "Release delay"
 msgstr "해제 지연 시간"
@@ -27853,7 +27853,7 @@ msgstr "관련도순"
 msgid "Reload"
 msgstr "새로고침"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:471
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:474
 msgid "Reload {PRODUCT_NAME} to fully apply the engine change. Switching between in-app and system spellcheck requires a renderer reload because Electron can't swap providers while running."
 msgstr "{PRODUCT_NAME}을(를) 다시 로드하여 엔진 변경 사항을 완전히 적용하세요. Electron은 실행 중에 공급자를 교체할 수 없으므로, 앱 내 맞춤법 검사와 시스템 맞춤법 검사를 전환하려면 렌더러를 다시 로드해야 합니다."
 
@@ -27872,7 +27872,7 @@ msgstr "{version} 웹 업데이트를 적용하려면 {productName}을(를) 다�
 msgid "Reload app"
 msgstr "앱 새로고침"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:483
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:487
 msgid "Reload now"
 msgstr "지금 다시 로드"
 
@@ -27935,7 +27935,7 @@ msgid "Remove"
 msgstr "제거"
 
 #. Button or menu action label in the language tab. Keep it concise. Preserve {word}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:144
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:145
 msgid "Remove \"{word}\" from dictionary"
 msgstr "사전에서 \"{word}\" 삭제"
 
@@ -28086,8 +28086,8 @@ msgstr "URL 전용 GIF 즐겨찾기에서 제거"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
 #: src/features/channel/components/modals/EditGroupModal.tsx:292
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:320
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:643
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:321
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:644
 msgid "Remove icon"
 msgstr "아이콘 삭제"
 
@@ -29495,7 +29495,7 @@ msgid "Rows per page"
 msgstr "페이지당 행 수"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:148
+#: src/features/updater/commands/UpdaterModalCommands.tsx:149
 msgid "RPM package"
 msgstr "RPM 패키지"
 
@@ -29530,7 +29530,7 @@ msgid "Safety"
 msgstr "안전"
 
 #. Profile timezone difference text. The target user's timezone currently matches the viewer's timezone.
-#: src/features/user/components/popouts/UserProfileShared.tsx:61
+#: src/features/user/components/popouts/UserProfileShared.tsx:62
 msgid "Same time as you"
 msgstr "회원님과 동일한 시간대"
 
@@ -29770,7 +29770,7 @@ msgstr "화면 기록"
 #. Heading in the screen-share picker when macOS screen recording permission is missing.
 #. Title of the modal shown when screen recording permission is denied. Keep tone plain.
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:20
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:18
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:19
 msgid "Screen recording permission required"
 msgstr "화면 녹화 권한 필요"
 
@@ -29858,7 +29858,7 @@ msgstr "화면 공유 개인 정보 보호"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:104
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:105
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:214
 msgid "Screen share quality"
 msgstr "화면 공유 품질"
@@ -30119,7 +30119,7 @@ msgid "Search language code…"
 msgstr "언어 코드 검색…"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:74
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:75
 msgid "Search languages…"
 msgstr "언어 검색…"
 
@@ -30552,7 +30552,7 @@ msgid "Select GIF {title}"
 msgstr "{title} GIF 선택"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:78
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:79
 msgid "Select interface language"
 msgstr "인터페이스 언어 선택"
 
@@ -30573,7 +30573,7 @@ msgid "Select the account you want to sign in with on your new device."
 msgstr "새 기기에서 로그인할 계정을 선택하세요."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:119
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
 msgid "Select voice processing mode"
 msgstr "음성 처리 모드 선택"
 
@@ -30887,7 +30887,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "처리되지 않은 마이크 오디오를 전송합니다."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:87
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "오디오를 그대로 보냅니다. 외부 오디오 소프트웨어를 사용하는 경우에 가장 적합합니다."
 
@@ -30986,7 +30986,7 @@ msgid "Set a member list position for the role"
 msgstr "역할의 멤버 목록 위치를 설정했습니다"
 
 #. Video settings note shown when a streaming preset decides the screen share resolution and frame rate. preset is the Gaming or Screen share preset label, and Custom is the third preset label.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:81
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:82
 msgid "Set by the {preset} preset. Picking a value here switches to Custom."
 msgstr "{preset} 사전 설정으로 설정됩니다. 여기서 값을 선택하면 사용자 지정으로 전환됩니다."
 
@@ -31150,7 +31150,7 @@ msgid "Set the voice region to automatic"
 msgstr "음성 지역을 자동으로 설정했습니다"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:40
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "설정"
 
@@ -31307,7 +31307,7 @@ msgstr "친구에게 공유하기"
 msgid "Share your screen"
 msgstr "화면 공유"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:318
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:320
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "최대 60FPS로 고화질(1080p), QHD(1440p) 또는 기본 소스 해상도로 화면을 공유하세요."
 
@@ -31399,7 +31399,7 @@ msgstr "단축 코드"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:125
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:368
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:369
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -31407,7 +31407,7 @@ msgstr "단축키"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:58
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:59
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:370
 msgid "Shortcut badges"
 msgstr "단축키 배지"
@@ -31616,7 +31616,7 @@ msgid "Show favorite button"
 msgstr "즐겨찾기 버튼 표시"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:90
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:91
 msgid "Show favorites throughout the app"
 msgstr "앱 전체에서 즐겨찾기 표시"
 
@@ -32039,7 +32039,7 @@ msgid "Sign in with your browser"
 msgstr "브라우저로 로그인"
 
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:28
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
 msgstr "기존 {productName} 앱으로 로그인"
 
@@ -32097,7 +32097,7 @@ msgid "Sign out?"
 msgstr "로그아웃하시겠어요?"
 
 #. Title of the browser page after the user cancelled the sign-in request from the app.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:322
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:326
 msgid "Sign-in cancelled"
 msgstr "로그인 취소됨"
 
@@ -32113,7 +32113,7 @@ msgid "Sign-in details"
 msgstr "로그인 정보"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:89
+#: src/features/auth/flow/AuthLoginLayout.tsx:88
 msgid "Sign-in flow"
 msgstr "로그인 절차"
 
@@ -32144,7 +32144,7 @@ msgid "Signing in as {name}"
 msgstr "{name}(으)로 로그인 중"
 
 #. Text button in the desktop app that shows a code to type into a browser on a different device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:214
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:219
 msgid "Signing in on another device?"
 msgstr "다른 기기에서 로그인 중이신가요?"
 
@@ -32654,7 +32654,7 @@ msgstr "활동 로그를 로드하는 동안 문제가 발생했습니다."
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:33
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -32694,7 +32694,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "인증 이메일을 보내는 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:131
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "결제를 시작하는 중에 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
 
@@ -32812,7 +32812,7 @@ msgstr "소리"
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Screen share resolution token in the stream info pill on the sharing tile, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:77
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:250
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:111
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:336
@@ -32988,8 +32988,8 @@ msgstr "속도"
 #. Settings section label for spellcheck settings.
 #. Submenu label in the textarea right-click context menu for spellcheck preferences.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:62
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:401
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:443
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:402
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:446
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:78
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:50
@@ -32997,7 +32997,7 @@ msgid "Spellcheck"
 msgstr "맞춤법 검사"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:118
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:119
 msgid "Spellcheck engine"
 msgstr "맞춤법 검사 엔진"
 
@@ -33099,7 +33099,7 @@ msgid "Star animation"
 msgstr "애니메이션 별표"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:86
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:87
 msgid "Starred channels"
 msgstr "즐겨찾는 채널"
 
@@ -33140,7 +33140,7 @@ msgstr "음성 통화를 시작할까요?"
 msgid "Start call"
 msgstr "통화 시작"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:279
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:281
 msgid "Start camera test and configure effects"
 msgstr "카메라 테스트 시작 및 효과 설정"
 
@@ -33175,7 +33175,7 @@ msgid "Start minimized"
 msgstr "최소화하여 시작"
 
 #. Button on the browser page after cancelling that goes back to choosing an account.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:337
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:341
 #: src/features/moderation/components/report/ReportStepDetails.tsx:389
 #: src/features/moderation/components/report/ReportStepEmail.tsx:113
 #: src/features/moderation/components/report/ReportStepReason.tsx:149
@@ -33239,7 +33239,7 @@ msgid "Startup"
 msgstr "시작"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:78
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:79
 msgid "Static Neko"
 msgstr "움직이지 않는 네코"
 
@@ -33460,12 +33460,12 @@ msgid "Still indexing — check back in a moment"
 msgstr "아직 색인 작업 중입니다. 잠시 후에 다시 확인해 주세요"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:74
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:75
 msgid "Still Neko"
 msgstr "네코 정지"
 
 #. Heading in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:31
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:32
 msgid "Still waiting for screen recording access"
 msgstr "화면 녹화 접근 권한을 기다리는 중입니다"
 
@@ -33494,7 +33494,7 @@ msgid "Stop mic test"
 msgstr "마이크 테스트 중지"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:70
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
 msgid "Stop Neko from chasing your cursor while keeping it draggable and interactive."
 msgstr "네코가 커서를 따라다니지 않도록 하면서도 드래그와 상호작용은 유지합니다."
 
@@ -33777,7 +33777,7 @@ msgid "Subscription"
 msgstr "구독"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:86
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:85
 msgid "Subscription already exists"
 msgstr "이미 구독 중입니다"
 
@@ -33957,7 +33957,7 @@ msgstr "편안한 레이아웃으로 전환"
 msgid "Switch to dense layout"
 msgstr "간결한 레이아웃으로 전환"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:668
 msgid "Switch to direct input"
 msgstr "직접 입력으로 전환"
 
@@ -34182,7 +34182,7 @@ msgid "System DMs cannot host voice calls."
 msgstr "시스템 DM에서는 음성 통화를 할 수 없습니다."
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:38
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:39
 msgid "System locale: {format}"
 msgstr "시스템 시간 형식: {format}"
 
@@ -34218,17 +34218,17 @@ msgid "System tray"
 msgstr "시스템 트레이"
 
 #. Modal title when the desktop app is installed through a system package manager such as Flatpak.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:70
+#: src/features/updater/commands/UpdaterModalCommands.tsx:71
 msgid "System-managed install"
 msgstr "시스템 관리 설치"
 
 #. Settings subsection title for keyboard and mouse shortcuts that work outside the app.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:24
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:21
 msgid "System-wide shortcuts"
 msgstr "시스템 전체 단축키"
 
 #. Linux settings text when setting up system-wide shortcuts failed.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:148
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:145
 msgid "System-wide shortcuts could not be set up."
 msgstr "시스템 전체 단축키를 설정할 수 없습니다."
 
@@ -34344,7 +34344,7 @@ msgid "Tap to add a note"
 msgstr "메모를 추가하려면 탭하세요"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:153
+#: src/features/updater/commands/UpdaterModalCommands.tsx:154
 msgid "tar.gz archive"
 msgstr "tar.gz 아카이브"
 
@@ -34360,7 +34360,7 @@ msgstr "작업 표시줄 배지"
 msgid "Teleporting you to another voice region..."
 msgstr "다른 음성 리전으로 이동 중..."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:567
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:568
 msgid "Template"
 msgstr "템플릿"
 
@@ -34649,7 +34649,7 @@ msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on 
 msgstr "다른 기기의 {PRODUCT_NAME} 앱에서 '다른 기기에서 로그인 중' 아래에 표시됩니다. 본인이 제어하는 기기에서만 코드를 입력하세요."
 
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:327
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:331
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
 msgstr "{PRODUCT_NAME} 앱에 로그인하지 않았습니다. 이 탭을 닫을 수 있습니다."
 
@@ -34714,12 +34714,12 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "찾으시는 커뮤니티가 삭제되었거나 접근 권한이 없을 수 있습니다."
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:108
+#: src/features/updater/commands/UpdaterModalCommands.tsx:109
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "데스크톱 업데이트를 다운로드할 수 없습니다. 연결이 안정적일 때 업데이트 버튼을 눌러 다시 시도해 주세요."
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:139
+#: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "다운로드한 파일은 컴퓨터에 저장됩니다. 평소 사용하는 패키지 관리자로 설치하세요."
 
@@ -35177,7 +35177,7 @@ msgid "This category already contains the maximum of {maxChannelsPerCategory} ch
 msgstr "이 카테고리에는 이미 최대 {maxChannelsPerCategory}개의 채널이 있습니다."
 
 #. Body in the channel gate modal for a mature category when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:254
+#: src/features/channel/components/MatureContentChannelGate.tsx:281
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:76
 msgid "This category is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "이 카테고리는 성인 콘텐츠로 표시되어 있으며 일부 사용자에게 부적절할 수 있는 자료를 포함할 수 있습니다."
@@ -35220,7 +35220,7 @@ msgid "This channel has a content warning. Updates can only go to channels with 
 msgstr "이 채널에는 콘텐츠 경고가 있습니다. 콘텐츠 경고 또는 연령 제한이 있는 채널에만 업데이트를 보낼 수 있습니다."
 
 #. Body in the channel gate modal for a mature text channel when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:282
+#: src/features/channel/components/MatureContentChannelGate.tsx:309
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:91
 msgid "This channel is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "이 채널은 성인 콘텐츠로 표시되어 있으며 일부 사용자에게 부적절할 수 있는 자료를 포함할 수 있습니다."
@@ -35309,7 +35309,7 @@ msgid "This community is full"
 msgstr "이 커뮤니티는 가득 찼습니다"
 
 #. Body in the channel gate modal for a mature community when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:225
+#: src/features/channel/components/MatureContentChannelGate.tsx:252
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:71
 msgid "This community is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "이 커뮤니티는 성인 콘텐츠로 표시되어 있으며 일부 사용자에게 부적절할 수 있는 자료를 포함할 수 있습니다."
@@ -35324,14 +35324,14 @@ msgstr "이 커뮤니티는 더 이상 이용할 수 없습니다"
 #. Description text in the linked accounts tab.
 #. Description text in the user profile shared popout.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:43
-#: src/features/user/components/popouts/UserProfileShared.tsx:45
+#: src/features/user/components/popouts/UserProfileShared.tsx:46
 msgid "This connection has been verified."
 msgstr "이 연결은 확인되었습니다."
 
 #. Description text in the linked accounts tab.
 #. Description text in the user profile shared popout.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:47
-#: src/features/user/components/popouts/UserProfileShared.tsx:49
+#: src/features/user/components/popouts/UserProfileShared.tsx:50
 msgid "This connection has not been verified."
 msgstr "이 연결은 확인되지 않았습니다."
 
@@ -35349,22 +35349,22 @@ msgid "This conversation is no longer available."
 msgstr "이 대화는 더 이상 이용할 수 없습니다."
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:78
+#: src/features/updater/commands/UpdaterModalCommands.tsx:79
 msgid "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 msgstr "이 데스크톱 빌드는 {productName}에서 업데이트를 설치할 수 없습니다. 대신 최신 데스크톱 설치 파일을 다운로드하세요."
 
 #. Voice settings warning on Linux desktops without system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:232
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:229
 msgid "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused."
 msgstr "이 데스크톱은 시스템 전체 단축키를 지원하지 않습니다. 눌러서 말하기는 {productName}에 포커스가 있을 때만 작동합니다."
 
 #. Linux settings text when the desktop has no system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:144
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:141
 msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
 msgstr "이 데스크톱은 시스템 전체 단축키를 지원하지 않습니다. {productName}에 포커스가 있을 때는 단축키가 계속 작동합니다."
 
 #. Desktop updater modal body for development or unpackaged builds.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:74
+#: src/features/updater/commands/UpdaterModalCommands.tsx:75
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
 msgstr "이 개발 빌드는 자체적으로 업데이트할 수 없습니다. 업데이트 흐름을 테스트하려면 데스크톱 설치 프로그램을 다운로드하세요."
 
@@ -35476,7 +35476,7 @@ msgid "This image couldn't be read. It may be damaged."
 msgstr "이 이미지를 읽을 수 없습니다. 손상되었을 수 있습니다."
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:84
+#: src/features/updater/commands/UpdaterModalCommands.tsx:85
 msgid "This install is managed by your system. Update {productName} from your software center or package manager."
 msgstr "이 설치는 시스템에서 관리됩니다. 소프트웨어 센터 또는 패키지 관리자를 통해 {productName}을(를) 업데이트하세요."
 
@@ -35491,7 +35491,7 @@ msgid "This instance already uses usernames to sign in. This can no longer chang
 msgstr "이 인스턴스는 이미 사용자 이름을 사용하여 로그인합니다. 이 설정은 더 이상 변경할 수 없습니다."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:67
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "이 인스턴스에서는 현재 최대 720p, 30 FPS로 화면 공유가 가능합니다."
 
@@ -35629,33 +35629,44 @@ msgid "This link isn't valid. Open the link from your email again."
 msgstr "이 링크는 유효하지 않습니다. 이메일에서 링크를 다시 열어주세요."
 
 #. Body in the channel gate modal when the current user cannot access a mature category.
+#. Body text on the mature content gate when the viewer cannot open a mature category.
+#: src/features/channel/components/MatureContentChannelGate.tsx:36
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:63
 msgid "This mature category is not available to your account."
 msgstr "이 성인 카테고리는 회원님의 계정에서 이용할 수 없습니다."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:147
+#: src/features/channel/components/MatureContentChannelGate.tsx:167
 msgid "This mature category is not available to your account. <0>Learn more</0>"
 msgstr "이 성인 카테고리는 회원님의 계정에서 이용할 수 없습니다. <0>자세히 알아보기</0>"
 
 #. Body in the channel gate modal when the current user cannot access a mature channel.
+#. Body text on the mature content gate when the viewer cannot open a mature channel.
+#: src/features/channel/components/MatureContentChannelGate.tsx:40
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:67
 msgid "This mature channel is not available to your account."
 msgstr "이 성인 채널은 회원님의 계정에서 이용할 수 없습니다."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:169
+#: src/features/channel/components/MatureContentChannelGate.tsx:193
 msgid "This mature channel is not available to your account. <0>Learn more</0>"
 msgstr "이 성인 채널은 회원님의 계정에서 이용할 수 없습니다. <0>자세히 알아보기</0>"
 
 #. Body in the channel gate modal when the current user cannot access a mature community.
+#. Body text on the mature content gate when the viewer cannot open a mature community.
+#: src/features/channel/components/MatureContentChannelGate.tsx:32
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:59
 msgid "This mature community is not available to your account."
 msgstr "이 성인 커뮤니티는 회원님의 계정에서 이용할 수 없습니다."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:124
+#: src/features/channel/components/MatureContentChannelGate.tsx:140
 msgid "This mature community is not available to your account. <0>Learn more</0>"
 msgstr "이 성인 커뮤니티는 회원님의 계정에서 이용할 수 없습니다. <0>자세히 알아보기</0>"
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:106
+#. Body text in the mature media gate details modal when the viewer cannot open mature media.
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:31
+msgid "This mature media is not available to your account."
+msgstr "이 성인용 미디어는 회원님의 계정에서 이용할 수 없습니다."
+
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:113
 msgid "This mature media is not available to your account. <0>Learn more</0>"
 msgstr "이 성인용 미디어는 회원님의 계정에서 이용할 수 없습니다. <0>자세히 알아보기</0>"
 
@@ -35715,9 +35726,14 @@ msgid "This picker is only available in the desktop app."
 msgstr "이 선택 도구는 데스크톱 앱에서만 사용할 수 있습니다."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:153
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
 msgid "This plan isn't available. Contact support."
 msgstr "이용할 수 없는 플랜입니다. 고객지원팀에 문의하세요."
+
+#. Error modal body shown on a self-hosted instance when the selected Plutonium plan has no price ID configured.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+msgid "This plan isn't available. Contact the administrators of this instance."
+msgstr "이용할 수 없는 플랜입니다. 이 인스턴스의 관리자에게 문의하세요."
 
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:191
 msgid "This purchase is not eligible for a refund."
@@ -35837,7 +35853,7 @@ msgstr "이 스레드는 잠겼습니다. 메시지는 관리자만 보낼 수 �
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "이 사용자는 프로필을 제한했습니다. 친구가 아닌 사람에게는 일부 세부 정보가 숨겨집니다."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:395
+#: src/features/user/components/popouts/UserProfileShared.tsx:399
 msgid "This user has no roles in this community."
 msgstr "이 사용자는 이 커뮤니티에서 역할이 없습니다."
 
@@ -36050,14 +36066,14 @@ msgstr "시간"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for app time display format.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:361
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:362
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:26
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:38
 msgid "Time format"
 msgstr "시간 형식"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:62
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:63
 msgid "Time format selection"
 msgstr "시간 형식 선택"
 
@@ -36143,17 +36159,17 @@ msgid "Title bar platform"
 msgstr "제목 표시줄 플랫폼"
 
 #. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:89
 msgid "To change the keys, go to Settings > Apps > {productName}."
 msgstr "키를 변경하려면 설정 > 앱 > {productName}(으)로 이동하세요."
 
 #. Instructions for KDE Plasma. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:87
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:84
 msgid "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "키를 변경하려면 시스템 설정 > 키보드 > 단축키 > {productName}(으)로 이동하세요."
 
 #. Instructions for changing system-wide shortcut keys on an unrecognized Linux desktop.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:108
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:105
 msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "키를 변경하려면 데스크톱의 키보드 단축키 설정을 여세요."
 
@@ -36341,7 +36357,7 @@ msgid "Toolbar"
 msgstr "툴바"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:54
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:55
 msgid "Tooltip shortcuts"
 msgstr "툴팁 단축키"
 
@@ -36864,7 +36880,7 @@ msgstr "24시간"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:42
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:43
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:406
 msgid "Two clicks"
 msgstr "두 번 클릭"
@@ -37263,7 +37279,7 @@ msgstr "범용 대체 코덱. 화질은 가장 낮지만, 모든 환경에서 �
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:770
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:115
-#: src/features/updater/commands/UpdaterModalCommands.tsx:127
+#: src/features/updater/commands/UpdaterModalCommands.tsx:128
 msgid "Unknown"
 msgstr "알 수 없음"
 
@@ -37429,7 +37445,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "{premiumProductName}으로 DM에서 맞춤 이모티콘을 잠금 해제하세요"
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:59
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:60
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "{premiumProductName}으로 HD 화면 공유를 잠금 해제하세요"
 
@@ -37817,7 +37833,7 @@ msgid "Up to 720p at 30 FPS"
 msgstr "최대 720p, 30 FPS"
 
 #. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:152
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:149
 msgid "Update {productName} to use system-wide shortcuts on Wayland."
 msgstr "Wayland에서 시스템 전체 단축키를 사용하려면 {productName}을(를) 업데이트하세요."
 
@@ -37841,7 +37857,7 @@ msgid "Update my status"
 msgstr "내 상태 업데이트"
 
 #. Button label that closes the desktop app and opens the updater to install an available update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:42
+#: src/features/updater/commands/UpdaterModalCommands.tsx:43
 msgid "Update now"
 msgstr "지금 업데이트"
 
@@ -38008,8 +38024,8 @@ msgstr "이 채널에 파일 및 미디어를 업로드합니다."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "아이콘 업로드"
@@ -38166,7 +38182,7 @@ msgid "Use {name} on {domain}"
 msgstr "{name}에서 {domain} 사용"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:44
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:43
 msgid "Use {pixPaymentMethod}"
 msgstr "{pixPaymentMethod} 사용"
 
@@ -38181,7 +38197,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "번역할 텍스트를 삽입할 위치에 {query}를 사용하세요."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:54
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:53
 msgid "Use {upiPaymentMethod}"
 msgstr "{upiPaymentMethod} 사용"
 
@@ -38219,7 +38235,7 @@ msgid "Use actual value"
 msgstr "실제 값 사용"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:63
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:62
 msgid "Use alternative method"
 msgstr "다른 방법 사용"
 
@@ -38245,12 +38261,12 @@ msgid "Use autoscrolling"
 msgstr "자동 스크롤 사용"
 
 #. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:70
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:71
 msgid "Use browser locale for time format"
 msgstr "시간 형식에 브라우저 로캘 사용"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:174
 msgid "Use card"
 msgstr "카드 사용"
 
@@ -38297,7 +38313,7 @@ msgid "Use default"
 msgstr "기본값 사용"
 
 #. Switch label on Linux. When on, the app reads keyboard devices directly for system-wide shortcuts. Not related to the "Direct input" voice processing profile.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:157
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:154
 msgid "Use direct input device access"
 msgstr "입력 장치 직접 접근 사용"
 
@@ -38391,7 +38407,7 @@ msgid "Use stickers from other communities."
 msgstr "다른 커뮤니티의 스티커를 사용합니다."
 
 #. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:66
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:67
 msgid "Use system locale for time format"
 msgstr "시간 형식에 시스템 로캘 사용"
 
@@ -38406,7 +38422,7 @@ msgid "Use the operating system's window chrome"
 msgstr "운영체제 창 테두리 사용"
 
 #. Description for the operating-system spellcheck engine option in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:114
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:115
 msgid "Use the spellchecker built into your operating system."
 msgstr "운영체제에 내장된 맞춤법 검사기를 사용합니다."
 
@@ -38452,7 +38468,7 @@ msgid "Use voice activity"
 msgstr "음성 자동 감지 사용"
 
 #. Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:94
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:95
 msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
 msgstr "사용 가능한 경우 운영체제의 맞춤법 검사기를 사용하고, 그렇지 않으면 {productName}의 인앱 사전을 사용합니다."
 
@@ -38926,7 +38942,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "친구 요청을 보내려면 먼저 이메일을 인증하세요."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:67
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:66
 msgid "Verify your email first"
 msgstr "먼저 이메일을 인증하세요"
 
@@ -39244,7 +39260,7 @@ msgstr "자세히 보기"
 msgid "View devices that are signed in to your account"
 msgstr "내 계정에 로그인된 기기 보기"
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:198
+#: src/features/user/components/popouts/UserProfileShared.tsx:199
 msgid "View full profile"
 msgstr "프로필 전체 보기"
 
@@ -39387,7 +39403,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "Visionary 2단계 인증 알림 표시줄"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:80
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:79
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "Visionary에는 이미 영구 이용 권한이 포함되어 있어 반복 구독이 필요하지 않습니다. 다른 사람에게 줄 선물은 계속 구매할 수 있습니다."
 
@@ -39535,7 +39551,7 @@ msgstr "음성 채널"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:27
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:402
 msgid "Voice channel confirmation"
 msgstr "음성 채널 확인"
@@ -39546,7 +39562,7 @@ msgid "Voice channel full"
 msgstr "음성 채널 정원 초과"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:23
 msgid "Voice channel join behavior"
 msgstr "음성 채널 참여 방식"
 
@@ -39615,7 +39631,7 @@ msgid "Voice participants"
 msgstr "음성 참여자"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:661
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:663
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "음성 처리"
@@ -39661,7 +39677,7 @@ msgstr "음성 소리 켜기"
 msgid "Voice unmute"
 msgstr "음성 음소거 해제"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:590
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:592
 msgid "Voice uses your system output device in this browser. Change it in your system settings."
 msgstr "음성에는 이 브라우저의 시스템 출력 기기가 사용됩니다. 시스템 설정에서 변경하세요."
 
@@ -39675,7 +39691,7 @@ msgstr "무효"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:387
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:179
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
@@ -39723,7 +39739,7 @@ msgstr "메시지를 보낸 후 다음 메시지까지 기다려야 합니다. \
 msgid "Waiting for connection..."
 msgstr "연결 대기 중..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:366
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:374
 msgid "Waiting for passkey…"
 msgstr "패스키를 기다리는 중…"
 
@@ -39743,7 +39759,7 @@ msgid "Waiting for you to..."
 msgstr "기다리고 있어요..."
 
 #. Status text while the Linux desktop shows its own dialog for confirming system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:44
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:41
 msgid "Waiting for your desktop…"
 msgstr "데스크톱 응답 대기 중…"
 
@@ -39887,7 +39903,7 @@ msgid "We couldn't read this theme. It may be corrupted or invalid."
 msgstr "테마를 읽을 수 없습니다. 파일이 손상되었거나 유효하지 않을 수 있습니다."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:91
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:90
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "이 계정에 기존 {premiumProductFullName} 구독이 있습니다. 결제 정보를 업데이트하거나 갱신 상태를 확인하려면 보안 결제 포털에서 관리하세요. 방금 결제했다면 잠시 기다렸다가 이 페이지를 다시 여세요."
 
@@ -39914,7 +39930,7 @@ msgstr "스티커 크기를 320x320픽셀로 조정하고 압축했지만, 여�
 msgid "We sent a code to {email}."
 msgstr "{email}(으)로 코드를 전송했습니다."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:158
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:162
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "브라우저 로그인 창이 열리면 {prefillEmail}이(가) 자동으로 입력됩니다."
 
@@ -40111,7 +40127,7 @@ msgid "Website previews"
 msgstr "웹사이트 미리보기"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:93
+#: src/features/auth/flow/AuthLoginLayout.tsx:92
 msgid "Welcome back"
 msgstr "다시 오신 것을 환영합니다"
 
@@ -40321,7 +40337,7 @@ msgstr "커뮤니티 선택"
 msgid "Which conversations"
 msgstr "대화 선택"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:363
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "눌러서 말하기가 켜져 있는 동안에는 단축키로 마이크를 제어하므로 음소거 버튼이 비활성화됩니다."
 
@@ -40631,7 +40647,7 @@ msgid "You are now a developer!"
 msgstr "이제 개발자입니다!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:165
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "결제를 완료하려면 {paymentProviderName}(으)로 이동합니다. 결제 완료 후 {productName}(으)로 돌아와 주세요."
 
@@ -41052,12 +41068,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Tab 키를 누르셨습니다. 이제 키보드 모드가 켜져 마우스 없이 {productName}을(를) 탐색할 수 있습니다."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:259
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:258
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "다음 갱신일까지 혜택이 유지됩니다. 구독 기록을 유지하려면 그 전에 재활성화하세요."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:280
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:279
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "모든 {PREMIUM_PRODUCT_NAME} 혜택이 즉시 사라지며 구독 기록이 초기화됩니다. 이 작업은 되돌릴 수 없습니다."
 
@@ -41137,8 +41153,8 @@ msgstr "여기에서 다른 커뮤니티의 이모티콘을 사용하려면 \"{p
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "여기에서 다른 커뮤니티의 스티커를 사용하려면 \"{permissionLabel}\" 권한이 필요합니다."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:210
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:438
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:211
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:439
 msgid "You need to claim your account before you can create a community."
 msgstr "커뮤니티를 만들려면 먼저 계정을 등록해야 합니다."
 
@@ -41155,8 +41171,8 @@ msgstr "DM을 보내려면 계정을 등록해야 합니다."
 msgid "You need to claim your account to send messages in this community."
 msgstr "이 커뮤니티에서 메시지를 보내려면 계정을 등록해야 합니다."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:235
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:463
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:236
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:464
 msgid "You need to verify your email address before you can create a community."
 msgstr "커뮤니티를 만들려면 먼저 이메일 주소를 인증해야 합니다."
 
@@ -41170,7 +41186,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "DM을 시작하려면 먼저 이메일 주소를 인증해야 합니다."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:71
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:70
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "{premiumProductFullName}을(를) 구매하려면 먼저 이메일을 인증해야 합니다."
 
@@ -41214,7 +41230,7 @@ msgid "You'll appear offline"
 msgstr "오프라인으로 표시됩니다"
 
 #. Body of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription. The subscription is charged immediately and the unused gift time is appended after the paid period.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:139
 msgid "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost."
 msgstr "지금 결제됩니다. 선물 받은 기간은 유료 기간 이후에 추가되므로 남은 기간이 사라지지 않습니다."
 
@@ -41262,7 +41278,7 @@ msgid "You're already friends with this user."
 msgstr "이미 친구인 사용자입니다."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:76
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:75
 msgid "You're already Visionary"
 msgstr "이미 Visionary이시네요"
 
@@ -41381,7 +41397,7 @@ msgid "You're sending reports too quickly. Try again later."
 msgstr "신고를 너무 자주 보내고 있습니다. 나중에 다시 시도해 주세요."
 
 #. Title of the browser page after the user approved signing in to the app.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:282
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:286
 msgid "You're signed in"
 msgstr "로그인되었습니다"
 
@@ -41500,7 +41516,7 @@ msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "모든 멘션을 확인했습니다. 새로운 멘션이 생기면 여기에 표시됩니다."
 
 #. Modal body for existing-subscription block when the subscription was bought in a mobile app store. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {premiumProductFullName} is the full premium product name.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:97
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:96
 msgid "Your {premiumProductFullName} subscription is billed through {storeName}. Manage it in your {storeName} account to change your plan or check renewal status."
 msgstr "{premiumProductFullName} 구독은 {storeName}에서 청구됩니다. 플랜을 변경하거나 갱신 상태를 확인하려면 {storeName} 계정에서 관리하세요."
 
@@ -41559,9 +41575,13 @@ msgstr "계정을 만든 지 얼마 되지 않아 이 커뮤니티에서 메시�
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "계정 요청이 승인 대기 중입니다. 관리자가 승인한 후 로그인할 수 있습니다."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:297
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:304
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "계정에 다단계 인증이 필요하지만, 이 기기에는 지원되는 방법이 설정되어 있지 않습니다. 인증 앱 또는 보안 키가 있는 기기에서 로그인하거나 지원팀에 문의하세요."
+
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:298
+msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact the administrators of this instance."
+msgstr "계정에 다단계 인증이 필요하지만, 이 기기에는 지원되는 방법이 설정되어 있지 않습니다. 인증 앱 또는 보안 키가 있는 기기에서 로그인하거나 이 인스턴스의 관리자에게 문의하세요."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
@@ -41574,9 +41594,14 @@ msgid "Your accounts and settings have not been changed or deleted."
 msgstr "계정 및 설정은 변경되거나 삭제되지 않았습니다."
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
-#: src/features/auth/components/ContentBlockedHandler.tsx:14
+#: src/features/auth/components/ContentBlockedHandler.tsx:15
 msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "요청하신 작업이 안전 시스템에 감지되어 완료되지 않았습니다. 오류라고 생각하시면 고객지원팀에 문의해 주세요."
+
+#. Modal body shown on a self-hosted instance when the safety system blocks the requested action. Keep plain and calm.
+#: src/features/auth/components/ContentBlockedHandler.tsx:21
+msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
+msgstr "요청하신 작업이 안전 시스템에 감지되어 완료되지 않았습니다. 오류라고 생각하시면 이 인스턴스의 관리자에게 문의해 주세요."
 
 #. Report flow: section heading above the list of answers the reporter picked, on the summary screen.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:26
@@ -41625,22 +41650,22 @@ msgid "Your current kit stops working as soon as the new one is created."
 msgstr "새 복구 키트를 만들면 현재 복구 키트는 작동을 멈춥니다."
 
 #. Linux settings text when the desktop dialog for system-wide shortcuts was dismissed or failed. Neutral wording, the user may not have declined anything.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:134
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:131
 msgid "Your desktop didn't set up system-wide shortcuts."
 msgstr "데스크톱에서 시스템 전체 단축키를 설정하지 못했습니다."
 
 #. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME). A key assigned here stops reaching every other app. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:61
 msgid "Your desktop keeps these keys for {productName}, so other apps can't use them."
 msgstr "데스크톱에서 이 키를 {productName} 전용으로 예약하므로 다른 앱에서는 사용할 수 없습니다."
 
 #. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME), shown when the "Use direct input device access" switch is offered below it. A key assigned here stops reaching every other app. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:69
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:66
 msgid "Your desktop keeps these keys for {productName}, so other apps can't use them. To use the same key in other apps, turn on direct input device access below."
 msgstr "데스크톱에서 이 키를 {productName} 전용으로 예약하므로 다른 앱에서는 사용할 수 없습니다. 다른 앱에서도 같은 키를 사용하려면 아래에서 입력 장치 직접 접근을 켜세요."
 
 #. Subtitle above the list of system-wide shortcuts assigned by the Linux desktop. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:53
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:50
 msgid "Your desktop runs these shortcuts even while {productName} is not focused."
 msgstr "{productName}에 포커스가 없어도 데스크톱이 이 단축키를 실행합니다."
 
@@ -41729,7 +41754,7 @@ msgid "Your gift time has ended. Subscribe to keep {premiumProductName}."
 msgstr "선물 받은 시간이 종료되었습니다. {premiumProductName}을(를) 계속 사용하려면 구독하세요."
 
 #. Title of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:134
 msgid "Your gift time is kept"
 msgstr "선물 받은 시간이 보존됩니다"
 
@@ -41744,7 +41769,7 @@ msgid "Your grace period has ended."
 msgstr "유예 기간이 종료되었습니다."
 
 #. Critical nagbar body shown when the desktop installation appears corrupted. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:13
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:14
 msgid "Your installation is corrupted, and you need to reinstall the app for all functionality to work."
 msgstr "설치 파일이 손상되었습니다. 모든 기능을 사용하려면 앱을 다시 설치해야 합니다."
 
@@ -41771,22 +41796,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "마지막 구매는 환불 가능 기간이 지났습니다. 결제 관련 문제는 고객지원팀에 문의하세요."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:82
+#: src/features/messaging/state/MessageQueue.tsx:83
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "회원님의 메시지가 안전 시스템에 의해 차단되어 전송되지 못했습니다. 오류라고 생각하시면 고객지원팀에 문의해 주세요."
 
+#. Message send error on a self-hosted instance when the safety system blocks the message.
+#: src/features/messaging/state/MessageQueue.tsx:88
+msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
+msgstr "회원님의 메시지가 안전 시스템에 의해 차단되어 전송되지 못했습니다. 오류라고 생각하시면 이 인스턴스의 관리자에게 문의해 주세요."
+
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:69
+#: src/features/messaging/state/MessageQueue.tsx:70
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "메시지를 보낼 수 없습니다. 일반적으로 수신자와 같은 커뮤니티에 속해 있지 않거나, 수신자가 친구에게서만 DM을 받도록 설정했기 때문입니다. {directMessagePrivacySettingsPath}에서 DM 공개 설정을 변경해야 할 수도 있습니다."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:74
+#: src/features/messaging/state/MessageQueue.tsx:75
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "메시지를 보낼 수 없습니다. DM을 보내려면 계정을 등록해야 합니다."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:78
+#: src/features/messaging/state/MessageQueue.tsx:79
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "메시지를 보낼 수 없습니다. 메시지를 보내려면 계정을 등록해야 합니다."
 
@@ -41885,7 +41915,7 @@ msgid "Your report didn't go through. Try again."
 msgstr "신고가 전송되지 않았습니다. 다시 시도해 주세요."
 
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:87
 msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
 msgstr "저장된 {savedResolution} ({savedFrameRate} FPS)를 사용하려면 {premiumProductName}이 필요합니다. 대신 {resolution} ({frameRate} FPS)으로 공유됩니다."
 

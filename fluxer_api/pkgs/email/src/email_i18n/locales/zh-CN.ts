@@ -5,23 +5,23 @@ import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18
 const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_deletion_cancelled": {
 		"subject": "你的 {product_name} 账号已取消删除",
-		"body": "你好 {username}，\n\n你的 {product_name} 账号的计划删除已取消。你的账号不会被删除。\n\n如有任何疑问，请联系 {safety_email}。\n\n– {product_name} 团队"
+		"body": "你好 {username}，\n\n你的 {product_name} 账号的计划删除已取消。你的账号不会被删除。\n\n{safety_email, select, null {如有任何疑问，请联系此实例的管理员。} other {如有任何疑问，请联系 {safety_email}。}}\n\n– {product_name} 团队"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "你的 {product_name} 账号将因长期未活动而被删除",
-		"body": "你好 {username}，\n\n你的 {product_name} 账号已长期未活动，因此将于以下时间永久删除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n如果你想保留账号，请在该日期前使用此邮箱地址联系 {safety_email}。\n\n– {product_name} 团队"
+		"body": "你好 {username}，\n\n你的 {product_name} 账号已长期未活动，因此将于以下时间永久删除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n{safety_email, select, null {如果你想保留账号，请在该日期前联系此实例的管理员。} other {如果你想保留账号，请在该日期前使用此邮箱地址联系 {safety_email}。}}\n\n– {product_name} 团队"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "你的 {product_name} 账号已安排删除",
-		"body": "你好 {username}，\n\n根据你的请求，你的 {product_name} 账号将于以下时间永久删除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n在此之前，你的账号将被锁定。如果你未请求此操作，或者想保留账号，请在该日期前使用此邮箱地址联系 {safety_email}。\n\n– {product_name} 团队"
+		"body": "你好 {username}，\n\n根据你的请求，你的 {product_name} 账号将于以下时间永久删除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n在此之前，你的账号将被锁定。{safety_email, select, null {如果你未请求此操作，或者想保留账号，请在该日期前联系此实例的管理员。} other {如果你未请求此操作，或者想保留账号，请在该日期前使用此邮箱地址联系 {safety_email}。}}\n\n– {product_name} 团队"
 	},
 	"account_scheduled_deletion": {
 		"subject": "你的 {product_name} 账号将被永久删除",
-		"body": "你好 {username}，\n\n由于违反了我们的《服务条款》或《社区准则》，你的 {product_name} 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n这是一项严重的处罚措施。你的账号数据将在预定日期被永久删除。\n\n请查阅：\n- 服务条款：{termsUrl}\n- 社区准则：{guidelinesUrl}\n\n申诉流程：\n如果你认为此处罚决定不正确或不合理，你有 60 天时间提交申诉。请使用此邮箱地址发送邮件至 {appeals_email}。\n\n在你的申诉中：\n- 清楚说明你认为处罚决定不正确或不合理的原因\n- 提供任何相关证据或背景信息\n\n{product_name} 安全团队成员将审核你的申诉，并可能在做出最终决定前暂停此次删除。\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n由于违反了我们的《服务条款》或《社区准则》，你的 {product_name} 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n这是一项严重的处罚措施。你的账号数据将在预定日期被永久删除。\n\n{legalLinks, select,\n  both {请查阅：\n- 服务条款：{termsUrl}\n- 社区准则：{guidelinesUrl}\n\n}\n  terms {请查阅：\n- 服务条款：{termsUrl}\n\n}\n  guidelines {请查阅：\n- 社区准则：{guidelinesUrl}\n\n}\n  other {}\n}申诉流程：\n如果你认为此处罚决定不正确或不合理，你有 60 天时间提交申诉。{appeals_email, select, null {请联系此实例的管理员。} other {请使用此邮箱地址发送邮件至 {appeals_email}。}}\n\n在你的申诉中：\n- 清楚说明你认为处罚决定不正确或不合理的原因\n- 提供任何相关证据或背景信息\n\n{product_name} 安全团队成员将审核你的申诉，并可能在做出最终决定前暂停此次删除。\n\n– {product_name} 安全团队"
 	},
 	"account_temp_banned": {
 		"subject": "你的 {product_name} 账号已被暂时封禁",
-		"body": "你好 {username}，\n\n你的 {product_name} 账号因违反我们的《服务条款》或《社区准则》已被暂时封禁。\n\n封禁时长：{durationHours, plural,\n  =1 {1 小时}\n  other {# 小时}\n}\n封禁至：{bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n在此期间，你将无法访问你的账号。\n\n请查阅：\n- 服务条款：{termsUrl}\n- 社区准则：{guidelinesUrl}\n\n如果你认为此处罚决定不正确或不合理，你可以提交申诉。请使用此邮箱地址发送邮件至 {appeals_email}，并清楚说明你认为该决定不正确的原因。我们会审核你的申诉，并将决定回复你。\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n你的 {product_name} 账号因违反我们的《服务条款》或《社区准则》已被暂时封禁。\n\n封禁时长：{durationHours, plural,\n  =1 {1 小时}\n  other {# 小时}\n}\n封禁至：{bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n在此期间，你将无法访问你的账号。\n\n{legalLinks, select,\n  both {请查阅：\n- 服务条款：{termsUrl}\n- 社区准则：{guidelinesUrl}\n\n}\n  terms {请查阅：\n- 服务条款：{termsUrl}\n\n}\n  guidelines {请查阅：\n- 社区准则：{guidelinesUrl}\n\n}\n  other {}\n}如果你认为此处罚决定不正确或不合理，你可以提交申诉。{appeals_email, select, null {请联系此实例的管理员，并清楚说明你认为该决定不正确的原因。} other {请使用此邮箱地址发送邮件至 {appeals_email}，并清楚说明你认为该决定不正确的原因。}}我们会审核你的申诉，并将决定回复你。\n\n– {product_name} 安全团队"
 	},
 	"donation_confirmation": {
 		"subject": "感谢你的 {product_name} 捐赠",
@@ -33,7 +33,7 @@ const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"dsa_report_resolved": {
 		"subject": "我们已对你的 {product_name} 举报做出决定",
-		"body": "你好，\n\n我们的安全团队已审核你根据《数字服务法》提交的举报（ID：{reportId}）并做出决定。{hasComment, select, yes {\n\n安全团队的回复：\n{publicComment}} other {}}\n\n我们不会透露对他人账号所采取措施的详情，因为这属于对方的个人数据。\n\n如果你不同意此决定，可以在 60 天内免费提交申诉。请使用此邮箱地址发送邮件至 {appeals_email}，注明你的举报 ID，并说明你认为该决定不正确的原因。如果你身在欧盟，还可以将争议提交给经认证的庭外争议解决机构。以上内容均不影响你向法院提起诉讼的权利。\n\n– {product_name} 安全团队"
+		"body": "你好，\n\n我们的安全团队已审核你根据《数字服务法》提交的举报（ID：{reportId}）并做出决定。{hasComment, select, yes {\n\n安全团队的回复：\n{publicComment}} other {}}\n\n我们不会透露对他人账号所采取措施的详情，因为这属于对方的个人数据。\n\n如果你不同意此决定，可以在 60 天内免费提交申诉。{appeals_email, select, null {请联系此实例的管理员，注明你的举报 ID，并说明你认为该决定不正确的原因。} other {请使用此邮箱地址发送邮件至 {appeals_email}，注明你的举报 ID，并说明你认为该决定不正确的原因。}}如果你身在欧盟，还可以将争议提交给经认证的庭外争议解决机构。以上内容均不影响你向法院提起诉讼的权利。\n\n– {product_name} 安全团队"
 	},
 	"dsa_report_verification": {
 		"subject": "验证邮箱以提交 DSA 举报",
@@ -57,15 +57,15 @@ const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"gift_chargeback_notification": {
 		"subject": "已移除你兑换礼品所获得的福利",
-		"body": "你好 {username}，\n\n你兑换的礼品码最初由他人支付。该付款现已被撤销（退单）。\n\n因此，我们已移除你在兑换礼品时添加到你账号的福利。\n\n如果你认为此操作有误，请联系我们的支持团队，并提供有关礼品码以及兑换时间的任何详细信息。\n\n– {product_name} 团队"
+		"body": "你好 {username}，\n\n你兑换的礼品码最初由他人支付。该付款现已被撤销（退单）。\n\n因此，我们已移除你在兑换礼品时添加到你账号的福利。\n\n{support_email, select, null {如果你认为此操作有误，请联系此实例的管理员，并提供有关礼品码以及兑换时间的任何详细信息。} other {如果你认为此操作有误，请联系我们的支持团队，并提供有关礼品码以及兑换时间的任何详细信息。}}\n\n– {product_name} 团队"
 	},
 	"harvest_completed": {
 		"subject": "你的 {product_name} 数据导出已准备就绪",
-		"body": "你好 {username}，\n\n你的数据导出已准备就绪。\n\n下载链接：\n{downloadUrl}\n\n包含消息数：{totalMessages, number}\n文件大小：{fileSizeMB, number} MB\n\n此链接将于 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n如果你未请求此导出，请立即更改密码并联系我们的支持团队。\n\n– {product_name} 团队"
+		"body": "你好 {username}，\n\n你的数据导出已准备就绪。\n\n下载链接：\n{downloadUrl}\n\n包含消息数：{totalMessages, number}\n文件大小：{fileSizeMB, number} MB\n\n此链接将于 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n{support_email, select, null {如果你未请求此导出，请立即更改密码并联系此实例的管理员。} other {如果你未请求此导出，请立即更改密码并联系我们的支持团队。}}\n\n– {product_name} 团队"
 	},
 	"inactivity_warning": {
 		"subject": "你的 {product_name} 账号将因长期未活动而被删除",
-		"body": "你好 {username}，\n\n自 {lastActiveDate, date, full} 以来，我们未检测到你的 {product_name} 账号有任何活动。\n\n如果你未在 {deletionDate, date, full} {deletionDate, time, short} 前登录，你的账号将因长期未活动而被永久删除。\n\n立即登录：\n{loginUrl}\n\n如果你最近使用过 {product_name}，请立即联系我们的支持团队。\n\n– {product_name} 团队"
+		"body": "你好 {username}，\n\n自 {lastActiveDate, date, full} 以来，我们未检测到你的 {product_name} 账号有任何活动。\n\n如果你未在 {deletionDate, date, full} {deletionDate, time, short} 前登录，你的账号将因长期未活动而被永久删除。\n\n立即登录：\n{loginUrl}\n\n{support_email, select, null {如果你最近使用过 {product_name}，请立即联系此实例的管理员。} other {如果你最近使用过 {product_name}，请立即联系我们的支持团队。}}\n\n– {product_name} 团队"
 	},
 	"ip_authorization": {
 		"subject": "授权新 IP 地址登录",
@@ -93,11 +93,11 @@ const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"report_resolved": {
 		"subject": "你的 {product_name} 举报已完成审核",
-		"body": "你好 {username}，\n\n你的举报（ID：{reportId}）已由我们的安全团队完成审核。{hasComment, select, yes {\n\n安全团队的回复：\n{publicComment}} other {}}\n\n感谢你帮助维护 {product_name} 的安全环境。我们会认真对待每一份举报，也感谢你为社区做出的贡献。\n\n如果你对此结果有任何疑问或意见，请联系 {safety_email}。\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n你的举报（ID：{reportId}）已由我们的安全团队完成审核。{hasComment, select, yes {\n\n安全团队的回复：\n{publicComment}} other {}}\n\n感谢你帮助维护 {product_name} 的安全环境。我们会认真对待每一份举报，也感谢你为社区做出的贡献。\n\n{safety_email, select, null {如果你对此结果有任何疑问或意见，请联系此实例的管理员。} other {如果你对此结果有任何疑问或意见，请联系 {safety_email}。}}\n\n– {product_name} 安全团队"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "你的 {product_name} 账号将被永久删除",
-		"body": "你好 {username}，\n\n你的 {product_name} 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n这是一项严重的处罚措施。你的账号数据将在预定日期被永久删除。\n\n如果你认为此处罚决定不正确，可以提交申诉。请使用此邮箱地址发送邮件至 {appeals_email}。\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n你的 {product_name} 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n这是一项严重的处罚措施。你的账号数据将在预定日期被永久删除。\n\n如果你认为此处罚决定不正确，可以提交申诉。{appeals_email, select, null {请联系此实例的管理员。} other {请使用此邮箱地址发送邮件至 {appeals_email}。}}\n\n– {product_name} 安全团队"
 	},
 	"self_deletion_scheduled": {
 		"subject": "你的 {product_name} 账号已安排删除",

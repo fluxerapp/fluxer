@@ -5,7 +5,6 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {
 	installDomainMovedApp,
 	openDomainMovedBrowserMigration,
@@ -16,6 +15,7 @@ import {
 	type DomainMovedStepsPlatform,
 	showDomainMovedStepsModal,
 } from '@app/features/app/domain_migration/DomainMovedStepsModal';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {isIOSMobileOrTabletUserAgent} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {msg} from '@lingui/core/macro';
@@ -112,7 +112,7 @@ export const DomainMovedNagbar = observer(({isMobile}: {isMobile: boolean}) => {
 		RouterUtils.transitionTo(`${Routes.LOGIN}?handoff=1`);
 	}, []);
 	const tone = NAGBAR_TONES[NagbarToneKind.BRAND];
-	const values = {productName: PRODUCT_NAME, host: DomainMovedNotice.targetHost};
+	const values = {productName: RuntimeConfig.productName, host: DomainMovedNotice.targetHost};
 	const linkDeviceButton = (
 		<NagbarButton
 			isMobile={isMobile}

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
@@ -101,7 +101,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 					type: 'icon',
 					key: 'staff',
 					iconUrl: staffBadgeUrl,
-					tooltip: i18n._(STAFF_DESCRIPTOR, {productName: PRODUCT_NAME}),
+					tooltip: i18n._(STAFF_DESCRIPTOR, {productName: RuntimeConfig.productName}),
 					url: Routes.careers(),
 				});
 			}
@@ -110,7 +110,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 					type: 'icon',
 					key: 'partner',
 					iconUrl: partnerBadgeUrl,
-					tooltip: i18n._(PARTNER_DESCRIPTOR, {productName: PRODUCT_NAME}),
+					tooltip: i18n._(PARTNER_DESCRIPTOR, {productName: RuntimeConfig.productName}),
 					url: Routes.partners(),
 				});
 			}
@@ -119,7 +119,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 					type: 'icon',
 					key: 'bug_hunter',
 					iconUrl: bugHunterBadgeUrl,
-					tooltip: i18n._(BUG_HUNTER_DESCRIPTOR, {productName: PRODUCT_NAME}),
+					tooltip: i18n._(BUG_HUNTER_DESCRIPTOR, {productName: RuntimeConfig.productName}),
 					url: Routes.bugs(),
 				});
 			}
@@ -131,11 +131,14 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 				if (!selfHosted && profile.premiumType === UserPremiumTypes.LIFETIME) {
 					if (profile.premiumSince) {
 						const premiumSinceFormatted = DateUtils.getFormattedShortDate(profile.premiumSince);
-						tooltipText = i18n._(VISIONARY_SINCE_DESCRIPTOR, {productName: PRODUCT_NAME, premiumSinceFormatted});
+						tooltipText = i18n._(VISIONARY_SINCE_DESCRIPTOR, {
+							productName: RuntimeConfig.productName,
+							premiumSinceFormatted,
+						});
 					} else {
-						tooltipText = i18n._(VISIONARY_DESCRIPTOR, {productName: PRODUCT_NAME});
+						tooltipText = i18n._(VISIONARY_DESCRIPTOR, {productName: RuntimeConfig.productName});
 					}
-					badgeUrl = Routes.helpArticle('visionary');
+					badgeUrl = Routes.helpArticle('visionary') ?? undefined;
 				} else if (profile.premiumSince) {
 					const premiumSinceFormatted = DateUtils.getFormattedShortDate(profile.premiumSince);
 					tooltipText = i18n._(SUBSCRIBER_SINCE_DESCRIPTOR, {

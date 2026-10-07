@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -387,7 +387,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 				case 'dms':
 					return i18n._(USED_IN_DIRECT_MESSAGE_CALLS_IF_YOU_DO_DESCRIPTOR);
 				case 'guild':
-					return i18n._(USED_IN_THIS_COMMUNITY_IF_YOU_DO_NOT_DESCRIPTOR, {productName: PRODUCT_NAME});
+					return i18n._(USED_IN_THIS_COMMUNITY_IF_YOU_DO_NOT_DESCRIPTOR, {productName: RuntimeConfig.productName});
 			}
 		},
 		[i18n],

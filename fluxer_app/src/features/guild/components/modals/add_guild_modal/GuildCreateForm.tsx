@@ -7,10 +7,10 @@ import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {
 	AVATAR_RECOMMENDED_SIZE_LABEL,
 	IMAGE_MAX_SIZE_BYTES,
-	PRODUCT_NAME,
 	STATIC_IMAGE_FORMATS,
 } from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
@@ -53,7 +53,7 @@ import {Input} from '@app/features/ui/components/form/FormInput';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as StringUtils from '@app/lib/strings';
-import {msg} from '@lingui/core/macro';
+import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {EnvelopeSimpleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
@@ -72,6 +72,7 @@ const CHANGE_ICON_DESCRIPTOR = msg({
 
 export const GuildCreateForm = observer(() => {
 	const {i18n} = useLingui();
+	const guidelinesUrl = Routes.guidelines();
 	const [previewIconUrl, setPreviewIconUrl] = useState<string | null>(null);
 	const form = useForm<GuildCreateFormInputs>({defaultValues: {name: ''}});
 	const modalFooterContext = useContext(ModalFooterContext);
@@ -341,19 +342,21 @@ export const GuildCreateForm = observer(() => {
 						required={true}
 						type="text"
 					/>
-					<p className={styles.guidelines} data-flx="guild.add-guild-modal.guild-create-form.guidelines">
-						<Trans>
-							By creating a community, you agree to follow and uphold the{' '}
-							<ExternalLink
-								href={Routes.guidelines()}
-								className={styles.guidelinesLink}
-								data-flx="guild.add-guild-modal.guild-create-form.guidelines-link"
-							>
-								{PRODUCT_NAME} community guidelines
-							</ExternalLink>
-							.
-						</Trans>
-					</p>
+					{guidelinesUrl && (
+						<p className={styles.guidelines} data-flx="guild.add-guild-modal.guild-create-form.guidelines">
+							<Trans>
+								By creating a community, you agree to follow and uphold the{' '}
+								<ExternalLink
+									href={guidelinesUrl}
+									className={styles.guidelinesLink}
+									data-flx="guild.add-guild-modal.guild-create-form.guidelines-link"
+								>
+									{ph({PRODUCT_NAME: RuntimeConfig.productName})} community guidelines
+								</ExternalLink>
+								.
+							</Trans>
+						</p>
+					)}
 				</div>
 			</Form>
 		</div>

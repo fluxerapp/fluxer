@@ -15,8 +15,9 @@ import {
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
+import {setCachedProductName} from '@app/api/instance/ProductName';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
-import {getRateLimitService} from '@app/api/middleware/ServiceSingletons';
+import {getInstanceConfigRepository, getRateLimitService} from '@app/api/middleware/ServiceSingletons';
 import {
 	getReportFlowResponse,
 	getReportFlowVariant,
@@ -369,6 +370,7 @@ describe('Report flows', () => {
 	afterEach(async () => {
 		getConfig().instance.selfHosted = originalSelfHosted;
 		getConfig().instance.branding.productName = originalProductName;
+		setCachedProductName(null);
 		resetActivityEventsForTests();
 		await harness?.shutdown();
 	});
@@ -533,11 +535,26 @@ describe('Report flows', () => {
 
 		test('the product name comes from the instance config', async () => {
 			getConfig().instance.branding.productName = 'Harbor Chat';
+			setCachedProductName(null);
 			const flow = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
 				.get('/reports/flows/user?locale=en-US')
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(flow.screens[0].options[0].label).toBe('Read the Harbor Chat Community Guidelines');
+		});
+
+		test('a product name saved in the dashboard reaches the flow without a restart', async () => {
+			const before = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
+				.get('/reports/flows/user?locale=en-US')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			await getInstanceConfigRepository().setAppPublicConfig({branding: {product_name: 'Renamed Chat'}});
+			const after = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
+				.get('/reports/flows/user?locale=en-US')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(after.screens[0].options[0].label).toBe('Read the Renamed Chat Community Guidelines');
+			expect(after.revision_hash).toBe(before.revision_hash);
 		});
 	});
 

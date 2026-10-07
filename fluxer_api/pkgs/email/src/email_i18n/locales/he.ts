@@ -5,23 +5,23 @@ import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18
 const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_deletion_cancelled": {
 		"subject": "מחיקת חשבון ה-{product_name} שלכם בוטלה",
-		"body": "שלום {username},\n\nהמחיקה המתוזמנת של חשבון ה-{product_name} שלכם בוטלה. החשבון שלכם לא יימחק.\n\nאם יש לכם שאלות, צרו קשר עם {safety_email}.\n\nצוות {product_name}"
+		"body": "שלום {username},\n\nהמחיקה המתוזמנת של חשבון ה-{product_name} שלכם בוטלה. החשבון שלכם לא יימחק.\n\n{safety_email, select, null {אם יש לכם שאלות, צרו קשר עם מנהלי המערכת של המופע הזה.} other {אם יש לכם שאלות, צרו קשר עם {safety_email}.}}\n\nצוות {product_name}"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "חשבון ה-{product_name} שלכם יימחק עקב חוסר פעילות",
-		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם לא היה פעיל זמן רב, ולכן הוא מתוכנן להימחק לצמיתות בתאריך:\n\n{deletionDate, date, full} בשעה {deletionDate, time, short}{reason, select, null {} other {\n\nסיבה: {reason}}}\n\nאם ברצונכם לשמור על החשבון, צרו קשר עם {safety_email} מכתובת האימייל הזו לפני תאריך זה.\n\nצוות {product_name}"
+		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם לא היה פעיל זמן רב, ולכן הוא מתוכנן להימחק לצמיתות בתאריך:\n\n{deletionDate, date, full} בשעה {deletionDate, time, short}{reason, select, null {} other {\n\nסיבה: {reason}}}\n\n{safety_email, select, null {אם ברצונכם לשמור על החשבון, צרו קשר עם מנהלי המערכת של המופע הזה לפני תאריך זה.} other {אם ברצונכם לשמור על החשבון, צרו קשר עם {safety_email} מכתובת האימייל הזו לפני תאריך זה.}}\n\nצוות {product_name}"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "מחיקת חשבון ה-{product_name} שלכם מתוזמנת",
-		"body": "שלום {username},\n\nבהתאם לבקשתכם, חשבון ה-{product_name} שלכם מתוכנן להימחק לצמיתות בתאריך:\n\n{deletionDate, date, full} בשעה {deletionDate, time, short}{reason, select, null {} other {\n\nסיבה: {reason}}}\n\nעד אז החשבון שלכם נעול. אם לא ביקשתם זאת, או שברצונכם לשמור על החשבון, צרו קשר עם {safety_email} מכתובת האימייל הזו לפני תאריך זה.\n\nצוות {product_name}"
+		"body": "שלום {username},\n\nבהתאם לבקשתכם, חשבון ה-{product_name} שלכם מתוכנן להימחק לצמיתות בתאריך:\n\n{deletionDate, date, full} בשעה {deletionDate, time, short}{reason, select, null {} other {\n\nסיבה: {reason}}}\n\nעד אז החשבון שלכם נעול. {safety_email, select, null {אם לא ביקשתם זאת, או שברצונכם לשמור על החשבון, צרו קשר עם מנהלי המערכת של המופע הזה לפני תאריך זה.} other {אם לא ביקשתם זאת, או שברצונכם לשמור על החשבון, צרו קשר עם {safety_email} מכתובת האימייל הזו לפני תאריך זה.}}\n\nצוות {product_name}"
 	},
 	"account_scheduled_deletion": {
 		"subject": "חשבון ה-{product_name} שלכם יימחק לצמיתות",
-		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם נקבע למחיקה לצמיתות עקב הפרות של תנאי השירות או הנחיות הקהילה שלנו.\n\nמחיקה מתוזמנת: {deletionDate, date, full} בשעה {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}}\n}\n\nזוהי פעולת אכיפה חמורה. נתוני החשבון שלכם יימחקו לצמיתות בתאריך המתוכנן.\n\nאנא עיינו במסמכים הבאים:\n- תנאי השירות: {termsUrl}\n- הנחיות הקהילה: {guidelinesUrl}\n\nתהליך ערעור:\nאם אתם חושבים שהחלטת האכיפה שגויה או בלתי מוצדקת, יש לכם 60 יום להגיש ערעור. שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו.\n\nבערעור:\n- הסבירו בבירור מדוע לדעתכם החלטת האכיפה שגויה או בלתי מוצדקת\n- צרפו כל ראיה או הקשר רלוונטיים\n\nחבר בצוות הבטיחות של {product_name} יבדוק את הערעור שלכם ועשוי להשהות את המחיקה הממתינה עד לקבלת החלטה סופית.\n\nצוות הבטיחות של {product_name}"
+		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם נקבע למחיקה לצמיתות עקב הפרות של תנאי השירות או הנחיות הקהילה שלנו.\n\nמחיקה מתוזמנת: {deletionDate, date, full} בשעה {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}}\n}\n\nזוהי פעולת אכיפה חמורה. נתוני החשבון שלכם יימחקו לצמיתות בתאריך המתוכנן.\n\n{legalLinks, select,\n  both {אנא עיינו במסמכים הבאים:\n- תנאי השירות: {termsUrl}\n- הנחיות הקהילה: {guidelinesUrl}\n\n}\n  terms {אנא עיינו במסמכים הבאים:\n- תנאי השירות: {termsUrl}\n\n}\n  guidelines {אנא עיינו במסמכים הבאים:\n- הנחיות הקהילה: {guidelinesUrl}\n\n}\n  other {}\n}תהליך ערעור:\nאם אתם חושבים שהחלטת האכיפה שגויה או בלתי מוצדקת, יש לכם 60 יום להגיש ערעור. {appeals_email, select, null {צרו קשר עם מנהלי המערכת של המופע הזה.} other {שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו.}}\n\nבערעור:\n- הסבירו בבירור מדוע לדעתכם החלטת האכיפה שגויה או בלתי מוצדקת\n- צרפו כל ראיה או הקשר רלוונטיים\n\nחבר בצוות הבטיחות של {product_name} יבדוק את הערעור שלכם ועשוי להשהות את המחיקה הממתינה עד לקבלת החלטה סופית.\n\nצוות הבטיחות של {product_name}"
 	},
 	"account_temp_banned": {
 		"subject": "חשבון ה-{product_name} שלכם הושעה זמנית",
-		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם הושעה זמנית עקב הפרה של תנאי השירות או הנחיות הקהילה שלנו.\n\nמשך ההשעיה: {durationHours, plural,\n  =1 {שעה אחת}\n  other {# שעות}\n}\nמושעה עד: {bannedUntil, date, full} בשעה {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}}\n}\n\nבמהלך תקופה זו לא תהיה לכם גישה לחשבון.\n\nאנא עיינו במסמכים הבאים:\n- תנאי השירות: {termsUrl}\n- הנחיות הקהילה: {guidelinesUrl}\n\nאם אתם חושבים שהחלטת האכיפה שגויה או בלתי מוצדקת, תוכלו להגיש ערעור. שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו והסבירו בבירור מדוע לדעתכם ההחלטה שגויה. נבדוק את הערעור ונעדכן אתכם בהחלטה שלנו.\n\nצוות הבטיחות של {product_name}"
+		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם הושעה זמנית עקב הפרה של תנאי השירות או הנחיות הקהילה שלנו.\n\nמשך ההשעיה: {durationHours, plural,\n  =1 {שעה אחת}\n  other {# שעות}\n}\nמושעה עד: {bannedUntil, date, full} בשעה {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}}\n}\n\nבמהלך תקופה זו לא תהיה לכם גישה לחשבון.\n\n{legalLinks, select,\n  both {אנא עיינו במסמכים הבאים:\n- תנאי השירות: {termsUrl}\n- הנחיות הקהילה: {guidelinesUrl}\n\n}\n  terms {אנא עיינו במסמכים הבאים:\n- תנאי השירות: {termsUrl}\n\n}\n  guidelines {אנא עיינו במסמכים הבאים:\n- הנחיות הקהילה: {guidelinesUrl}\n\n}\n  other {}\n}אם אתם חושבים שהחלטת האכיפה שגויה או בלתי מוצדקת, תוכלו להגיש ערעור. {appeals_email, select, null {צרו קשר עם מנהלי המערכת של המופע הזה והסבירו בבירור מדוע לדעתכם ההחלטה שגויה.} other {שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו והסבירו בבירור מדוע לדעתכם ההחלטה שגויה.}} נבדוק את הערעור ונעדכן אתכם בהחלטה שלנו.\n\nצוות הבטיחות של {product_name}"
 	},
 	"donation_confirmation": {
 		"subject": "תודה על תרומתכם ל-{product_name}",
@@ -33,7 +33,7 @@ const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"dsa_report_resolved": {
 		"subject": "קיבלנו החלטה בנוגע לדיווח שלכם ב-{product_name}",
-		"body": "שלום,\n\nצוות הבטיחות שלנו בדק את הדיווח שלכם לפי חוק השירותים הדיגיטליים (מזהה: {reportId}) וקיבל החלטה.{hasComment, select, yes {\n\nתגובה מצוות הבטיחות:\n{publicComment}} other {}}\n\nאיננו משתפים פרטים על פעולות שננקטו נגד חשבון של אדם אחר, מכיוון שאלה נתונים אישיים שלו.\n\nאם אינכם מסכימים עם ההחלטה, תוכלו להגיש ערעור ללא תשלום בתוך 60 יום. שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו, ציינו את מזהה הדיווח והסבירו מדוע לדעתכם ההחלטה שגויה. אם אתם נמצאים באיחוד האירופי, תוכלו גם להפנות את המחלוקת לגוף מוסמך ליישוב סכסוכים מחוץ לבית המשפט. אין בכך כדי לפגוע בזכותכם לפנות לבית המשפט.\n\nצוות הבטיחות של {product_name}"
+		"body": "שלום,\n\nצוות הבטיחות שלנו בדק את הדיווח שלכם לפי חוק השירותים הדיגיטליים (מזהה: {reportId}) וקיבל החלטה.{hasComment, select, yes {\n\nתגובה מצוות הבטיחות:\n{publicComment}} other {}}\n\nאיננו משתפים פרטים על פעולות שננקטו נגד חשבון של אדם אחר, מכיוון שאלה נתונים אישיים שלו.\n\nאם אינכם מסכימים עם ההחלטה, תוכלו להגיש ערעור ללא תשלום בתוך 60 יום. {appeals_email, select, null {צרו קשר עם מנהלי המערכת של המופע הזה, ציינו את מזהה הדיווח והסבירו מדוע לדעתכם ההחלטה שגויה.} other {שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו, ציינו את מזהה הדיווח והסבירו מדוע לדעתכם ההחלטה שגויה.}} אם אתם נמצאים באיחוד האירופי, תוכלו גם להפנות את המחלוקת לגוף מוסמך ליישוב סכסוכים מחוץ לבית המשפט. אין בכך כדי לפגוע בזכותכם לפנות לבית המשפט.\n\nצוות הבטיחות של {product_name}"
 	},
 	"dsa_report_verification": {
 		"subject": "אימות האימייל שלכם לדיווח DSA",
@@ -57,15 +57,15 @@ const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"gift_chargeback_notification": {
 		"subject": "ההטבות מהמתנה שמימשתם הוסרו",
-		"body": "שלום {username},\n\nקוד מתנה שמימשתם שולם במקור על ידי מישהו אחר. התשלום הזה בוטל מאז (החזר חיוב).\n\nבשל כך, הסרנו את ההטבות שנוספו לחשבונכם כאשר מימשתם את המתנה.\n\nאם אתם חושבים שזו טעות, אנא צרו קשר עם צוות התמיכה שלנו וצרפו כל פרט שידוע לכם לגבי קוד המתנה ומתי מימשתם אותו.\n\nצוות {product_name}"
+		"body": "שלום {username},\n\nקוד מתנה שמימשתם שולם במקור על ידי מישהו אחר. התשלום הזה בוטל מאז (החזר חיוב).\n\nבשל כך, הסרנו את ההטבות שנוספו לחשבונכם כאשר מימשתם את המתנה.\n\n{support_email, select, null {אם אתם חושבים שזו טעות, אנא צרו קשר עם מנהלי המערכת של המופע הזה וצרפו כל פרט שידוע לכם לגבי קוד המתנה ומתי מימשתם אותו.} other {אם אתם חושבים שזו טעות, אנא צרו קשר עם צוות התמיכה שלנו וצרפו כל פרט שידוע לכם לגבי קוד המתנה ומתי מימשתם אותו.}}\n\nצוות {product_name}"
 	},
 	"harvest_completed": {
 		"subject": "ייצוא הנתונים שלכם מ-{product_name} מוכן להורדה",
-		"body": "שלום {username},\n\nייצוא הנתונים שלכם מוכן.\n\nקישור להורדה:\n{downloadUrl}\n\nהודעות כלולות: {totalMessages, number}\nגודל הקובץ: {fileSizeMB, number} מגה-בייט\n\nקישור זה יפוג בתאריך {expiresAt, date, full} בשעה {expiresAt, time, short}.\n\nאם לא ביקשתם ייצוא זה, אנא שנו את הסיסמה שלכם מיד וצרו קשר עם צוות התמיכה שלנו.\n\nצוות {product_name}"
+		"body": "שלום {username},\n\nייצוא הנתונים שלכם מוכן.\n\nקישור להורדה:\n{downloadUrl}\n\nהודעות כלולות: {totalMessages, number}\nגודל הקובץ: {fileSizeMB, number} מגה-בייט\n\nקישור זה יפוג בתאריך {expiresAt, date, full} בשעה {expiresAt, time, short}.\n\n{support_email, select, null {אם לא ביקשתם ייצוא זה, אנא שנו את הסיסמה שלכם מיד וצרו קשר עם מנהלי המערכת של המופע הזה.} other {אם לא ביקשתם ייצוא זה, אנא שנו את הסיסמה שלכם מיד וצרו קשר עם צוות התמיכה שלנו.}}\n\nצוות {product_name}"
 	},
 	"inactivity_warning": {
 		"subject": "חשבון ה-{product_name} שלכם יימחק עקב חוסר פעילות",
-		"body": "שלום {username},\n\nלא ראינו פעילות בחשבון ה-{product_name} שלכם מאז {lastActiveDate, date, full}.\n\nאם לא תתחברו עד {deletionDate, date, full} בשעה {deletionDate, time, short}, חשבונכם יימחק לצמיתות עקב חוסר פעילות.\n\nהתחברו כאן:\n{loginUrl}\n\nאם השתמשתם ב-{product_name} לאחרונה, אנא צרו קשר עם צוות התמיכה שלנו מיד.\n\nצוות {product_name}"
+		"body": "שלום {username},\n\nלא ראינו פעילות בחשבון ה-{product_name} שלכם מאז {lastActiveDate, date, full}.\n\nאם לא תתחברו עד {deletionDate, date, full} בשעה {deletionDate, time, short}, חשבונכם יימחק לצמיתות עקב חוסר פעילות.\n\nהתחברו כאן:\n{loginUrl}\n\n{support_email, select, null {אם השתמשתם ב-{product_name} לאחרונה, אנא צרו קשר עם מנהלי המערכת של המופע הזה מיד.} other {אם השתמשתם ב-{product_name} לאחרונה, אנא צרו קשר עם צוות התמיכה שלנו מיד.}}\n\nצוות {product_name}"
 	},
 	"ip_authorization": {
 		"subject": "אישור התחברות מכתובת IP חדשה",
@@ -93,11 +93,11 @@ const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"report_resolved": {
 		"subject": "הדיווח שלכם ב-{product_name} נבדק",
-		"body": "שלום {username},\n\nהדיווח שלכם (מזהה: {reportId}) נבדק על ידי צוות הבטיחות שלנו.{hasComment, select, yes {\n\nתגובה מצוות הבטיחות:\n{publicComment}} other {}}\n\nתודה שעזרתם לשמור על {product_name} כמקום בטוח לכולם. אנו מתייחסים לכל הדיווחים ברצינות ומעריכים את תרומתכם לקהילה.\n\nאם יש לכם שאלות או חששות לגבי תוצאה זו, אנא צרו קשר עם {safety_email}.\n\nצוות הבטיחות של {product_name}"
+		"body": "שלום {username},\n\nהדיווח שלכם (מזהה: {reportId}) נבדק על ידי צוות הבטיחות שלנו.{hasComment, select, yes {\n\nתגובה מצוות הבטיחות:\n{publicComment}} other {}}\n\nתודה שעזרתם לשמור על {product_name} כמקום בטוח לכולם. אנו מתייחסים לכל הדיווחים ברצינות ומעריכים את תרומתכם לקהילה.\n\n{safety_email, select, null {אם יש לכם שאלות או חששות לגבי תוצאה זו, אנא צרו קשר עם מנהלי המערכת של המופע הזה.} other {אם יש לכם שאלות או חששות לגבי תוצאה זו, אנא צרו קשר עם {safety_email}.}}\n\nצוות הבטיחות של {product_name}"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "חשבון ה-{product_name} שלכם יימחק לצמיתות",
-		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם נקבע למחיקה לצמיתות.\n\nמחיקה מתוזמנת: {deletionDate, date, full} בשעה {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}}\n}\n\nזוהי פעולת אכיפה חמורה. נתוני החשבון שלכם יימחקו לצמיתות בתאריך המתוכנן.\n\nאם אתם חושבים שהחלטת אכיפה זו שגויה, אתם יכולים להגיש ערעור. שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו.\n\nצוות הבטיחות של {product_name}"
+		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם נקבע למחיקה לצמיתות.\n\nמחיקה מתוזמנת: {deletionDate, date, full} בשעה {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}}\n}\n\nזוהי פעולת אכיפה חמורה. נתוני החשבון שלכם יימחקו לצמיתות בתאריך המתוכנן.\n\nאם אתם חושבים שהחלטת אכיפה זו שגויה, אתם יכולים להגיש ערעור. {appeals_email, select, null {צרו קשר עם מנהלי המערכת של המופע הזה.} other {שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו.}}\n\nצוות הבטיחות של {product_name}"
 	},
 	"self_deletion_scheduled": {
 		"subject": "מחיקת חשבון ה-{product_name} שלכם מתוזמנת",

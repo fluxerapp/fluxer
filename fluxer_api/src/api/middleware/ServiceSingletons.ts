@@ -43,8 +43,11 @@ import {createStorageService} from '@app/api/infrastructure/StorageServiceFactor
 import {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {createUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
 import {VirusScanService} from '@app/api/infrastructure/VirusScanService';
+import {type ContactEmails, resolveContactEmails} from '@app/api/instance/ContactEmails';
 import {GatewayRolloutConfigPublisher} from '@app/api/instance/GatewayRolloutConfigPublisher';
 import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {type LegalUrls, resolveLegalUrls} from '@app/api/instance/LegalUrls';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {PushRelayConfigPublisher} from '@app/api/instance/PushRelayConfigPublisher';
 import {InviteRepository} from '@app/api/invite/InviteRepository';
 import {Logger} from '@app/api/Logger';
@@ -177,27 +180,46 @@ export const getEmailDnsValidationService = singleton(() => new EmailDnsValidati
 
 function createEmailServiceForConfig(
 	emailConfigSource: APIConfig['email'],
+	legalUrls: LegalUrls,
+	contactEmails: ContactEmails,
+	productName: string,
 	bouncedEmailChecker: UserBouncedEmailChecker,
 	emailI18n: EmailI18nService,
 ): IEmailService {
 	const emailConfig: EmailConfig = {
 		enabled: emailConfigSource.enabled,
 		fromEmail: emailConfigSource.fromEmail,
-		fromName: emailConfigSource.fromName,
+		fromName: emailConfigSource.fromName.trim() || productName,
 		replyTo: emailConfigSource.replyToEmail || null,
 		appBaseUrl: emailConfigSource.appBaseUrl,
-		marketingBaseUrl: Config.endpoints.marketing,
+		termsUrl: legalUrls.termsUrl,
+		guidelinesUrl: legalUrls.guidelinesUrl,
+		appealsEmail: contactEmails.appealsEmail,
+		safetyEmail: contactEmails.safetyEmail,
+		supportEmail: contactEmails.supportEmail,
+		productName,
 	};
 	return new EmailService(emailConfig, emailI18n, createEmailProvider(emailConfigSource), bouncedEmailChecker);
 }
 
-function createRuntimeEmailService(bouncedEmailChecker: UserBouncedEmailChecker): IEmailService {
+export function createRuntimeEmailService(bouncedEmailChecker: UserBouncedEmailChecker): IEmailService {
 	const emailI18n = new EmailI18nService();
 	return new Proxy({} as IEmailService, {
 		get(_target, property) {
 			return async (...args: Array<unknown>): Promise<boolean> => {
-				const emailConfig = await getInstanceConfigRepository().getEffectiveEmailConfig();
-				const delegate = createEmailServiceForConfig(emailConfig, bouncedEmailChecker, emailI18n);
+				const instanceConfigRepository = getInstanceConfigRepository();
+				const [emailConfig, appPublic] = await Promise.all([
+					instanceConfigRepository.getEffectiveEmailConfig(),
+					instanceConfigRepository.getAppPublicConfig(),
+				]);
+				const delegate = createEmailServiceForConfig(
+					emailConfig,
+					resolveLegalUrls(appPublic.legal),
+					resolveContactEmails(),
+					getInstanceProductName(),
+					bouncedEmailChecker,
+					emailI18n,
+				);
 				const method = delegate[property as keyof IEmailService];
 				if (typeof method !== 'function') {
 					throw new Error(`Unknown email service method: ${String(property)}`);

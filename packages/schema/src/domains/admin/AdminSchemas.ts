@@ -546,6 +546,7 @@ const AppPublicConfigResponse = z.object({
 	legal: z.object({
 		terms_url: z.string().nullable(),
 		privacy_url: z.string().nullable(),
+		guidelines_url: z.string().nullable(),
 	}),
 	registration: z.object({
 		collect_date_of_birth: z.boolean(),
@@ -587,7 +588,9 @@ const AppPublicConfigUpdateRequest = z.object({
 		.object({
 			terms_url: z.string().trim().max(2048).nullish(),
 			privacy_url: z.string().trim().max(2048).nullish(),
+			guidelines_url: z.string().trim().max(2048).refine(isAbsoluteHttpUrl).nullish(),
 		})
+		.register(schemaMetadata, {preserveNullFields: true})
 		.nullish(),
 	registration: z
 		.object({

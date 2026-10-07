@@ -3,7 +3,7 @@
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Spellcheck from '@app/features/messaging/state/Spellcheck';
 import {isEditableTextInput, replaceSelectedText} from '@app/features/messaging/utils/TextInputEditUtils';
 import type {SpellcheckEngine} from '@app/features/platform/types/Electron';
@@ -440,7 +440,7 @@ const SpellcheckSubmenu = observer(({isElectron: electron, onOpenSpellcheckSetti
 				onClick={onOpenSpellcheckSettings}
 				data-flx="channel.textarea.textarea-context-menu.spellcheck-submenu.menu-item.open-spellcheck-settings"
 			>
-				{i18n._(SPELLCHECK_SETTINGS_DESCRIPTOR, {productName: PRODUCT_NAME})}
+				{i18n._(SPELLCHECK_SETTINGS_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 			</MenuItem>
 		</>
 	);

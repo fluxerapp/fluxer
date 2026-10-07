@@ -7,6 +7,8 @@ import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {SYSTEM_THREAD_VIEWER} from '@app/api/experiment/ChannelThreadsGate';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {resolveContactEmails} from '@app/api/instance/ContactEmails';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
@@ -120,12 +122,18 @@ export class ReporterResolutionNotifier {
 		if (!systemDm) {
 			return false;
 		}
-		const template = getEmailTemplate('report_resolved', reporter.locale, {
-			username: reporter.username,
-			reportId,
-			publicComment: comment,
-			hasComment: comment ? 'yes' : 'no',
-		});
+		const template = getEmailTemplate(
+			'report_resolved',
+			reporter.locale,
+			{
+				username: reporter.username,
+				reportId,
+				publicComment: comment,
+				hasComment: comment ? 'yes' : 'no',
+				safety_email: resolveContactEmails().safetyEmail,
+			},
+			getInstanceProductName(),
+		);
 		if (!template.ok) {
 			Logger.warn(
 				{reportId, reporterId: reporter.id.toString(), locale: reporter.locale, error: template.error},

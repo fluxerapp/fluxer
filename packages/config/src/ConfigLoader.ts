@@ -171,7 +171,7 @@ function defaultConfig(): MasterConfig {
 				enabled: false,
 				provider: 'none',
 				from_email: '',
-				from_name: 'Fluxer',
+				from_name: '',
 				reply_to_email: '',
 				app_base_url: '',
 			},

@@ -10,7 +10,7 @@ import {
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
 import {createGuildID, createReportID, createUserID} from '@app/api/BrandedTypes';
-import {Config} from '@app/api/Config';
+import {Config, getConfig} from '@app/api/Config';
 import {loadFixture, sendMessageWithAttachments} from '@app/api/channel/tests/AttachmentTestUtils';
 import {
 	acceptInvite,
@@ -28,6 +28,8 @@ import {
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {deleteOneOrMany} from '@app/api/database/CassandraQueryExecution';
 import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
+import {resolveContactEmails} from '@app/api/instance/ContactEmails';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {getRateLimitService} from '@app/api/middleware/ServiceSingletons';
 import {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
@@ -350,12 +352,18 @@ describe('Content Reporting', () => {
 			expect(email?.metadata['public_comment']).toBe(publicComment);
 			const systemMessages = await listSystemDmMessages(harness, reporter.token);
 			expect(systemMessages).toHaveLength(1);
-			const template = getEmailTemplate('report_resolved', 'fr', {
-				username: reporter.username!,
-				reportId: report.report_id,
-				publicComment,
-				hasComment: 'yes',
-			});
+			const template = getEmailTemplate(
+				'report_resolved',
+				'fr',
+				{
+					username: reporter.username!,
+					reportId: report.report_id,
+					publicComment,
+					hasComment: 'yes',
+					safety_email: resolveContactEmails().safetyEmail,
+				},
+				getInstanceProductName(),
+			);
 			expect(template.ok).toBe(true);
 			if (!template.ok) {
 				throw new Error('Failed to resolve expected report_resolved email template');
@@ -371,6 +379,36 @@ describe('Content Reporting', () => {
 					return readState?.mentionCount ?? null;
 				})
 				.toBe(1);
+		});
+		test('names no mailbox in the system DM on a self-hosted instance', async () => {
+			const reporter = await createTestAccount(harness);
+			const targetUser = await createTestAccount(harness);
+			let admin = await createTestAccount(harness);
+			admin = await setUserACLs(harness, admin, ['admin:authenticate', 'report:resolve']);
+			const report = await createBuilder<ReportResponse>(harness, reporter.token)
+				.post('/reports/user')
+				.body({
+					user_id: targetUser.userId,
+					category: 'harassment',
+				})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const originalSelfHosted = getConfig().instance.selfHosted;
+			getConfig().instance.selfHosted = true;
+			try {
+				await createBuilder<{report_id: string}>(harness, `${admin.token}`)
+					.patch(`/admin/reports/${report.report_id}`)
+					.body({status: 'resolved', public_comment: 'We reviewed your report.'})
+					.expect(HTTP_STATUS.OK)
+					.execute();
+			} finally {
+				getConfig().instance.selfHosted = originalSelfHosted;
+			}
+			const systemMessages = await listSystemDmMessages(harness, reporter.token);
+			expect(systemMessages).toHaveLength(1);
+			expect(systemMessages[0]?.content).toContain('We reviewed your report.');
+			expect(systemMessages[0]?.content).toContain('please contact the administrators of this instance.');
+			expect(systemMessages[0]?.content).not.toContain('@');
 		});
 	});
 	describe('Report Message', () => {

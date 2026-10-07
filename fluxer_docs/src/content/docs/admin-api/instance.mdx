@@ -294,7 +294,7 @@ Branding, legal, setup and registration field policy, in the Admin form of what 
 | --- | --- | --- |
 | branding | [public branding](/http-api/instance/#public-branding-object) object | Product name, image URLs, and theme colour |
 | setup<sup>1</sup> | object | Has the single boolean `configured` |
-| legal | [public legal configuration](/http-api/instance/#public-legal-configuration-object) object | Terms and privacy URLs |
+| legal | [public legal configuration](/http-api/instance/#public-legal-configuration-object) object | Terms, privacy, and community guidelines URLs |
 | registration<sup>2</sup> | [public registration fields](/http-api/instance/#public-registration-fields-object) object | Registration field collection policy |
 
 <sup>1</sup> The [Instance](/http-api/instance/) resource publishes `admin_url` in this object as well
@@ -360,7 +360,7 @@ Outbound email settings, and the provider resolved from them.
 | provider | ?string | Operator override of `smtp` or `none`, or null for no override |
 | effective_provider | string | Provider in use, either `smtp` or `none` |
 | from_email | ?string | Envelope sender address |
-| from_name | ?string | Envelope sender name |
+| from_name | ?string | Envelope sender name, or null when none is set and mail is sent under the instance product name |
 | smtp<sup>1</sup> | object | `host`, `port`, `username`, `secure`, and `password_set` |
 | disable_new_ip_authorization | boolean | Whether new-IP authorisation email is suppressed by the stored setting |
 | effective_disable_new_ip_authorization<sup>2</sup> | boolean | Whether it is suppressed once outbound email state is taken into account |
@@ -622,7 +622,7 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 
 <sup>1</sup> The supplied fields are merged over the stored configuration and the result is validated as a whole. Every supplied endpoint URL uses `https`, has no credentials and no fragment, and resolves to a publicly routable address, otherwise the request returns 400 `INVALID_FORM_BODY` with `INVALID_URL_FORMAT` or `URL_NOT_PUBLICLY_ROUTABLE`
 
-<sup>2</sup> `branding.product_name` is 1 to 80 characters, every branding and legal URL is at most 2048 characters and nullable, `branding.theme_color` is at most 64 characters and nullable, and `setup.configured` and `registration.collect_date_of_birth` are booleans. `branding.premium_product_name` is 1 to 40 characters, and null restores the default. `branding.premium_info_url` is an absolute `http` or `https` URL. Every string is trimmed before it is stored
+<sup>2</sup> `branding.product_name` is 1 to 80 characters, every branding and legal URL is at most 2048 characters and nullable, `branding.theme_color` is at most 64 characters and nullable, and `setup.configured` and `registration.collect_date_of_birth` are booleans. `branding.premium_product_name` is 1 to 40 characters, and null restores the default. `branding.premium_info_url` and `legal.guidelines_url` are absolute `http` or `https` URLs. Every string is trimmed before it is stored, and null or an empty string clears a legal URL
 
 `push_relay` takes only `relay_consent_accepted`. Fluxer sets `relay_consent_accepted_at` and `relay_consent_accepted_by` itself on the request that changes that flag, and accepts neither from a request. Turning the flag on stamps the current time and the acting account, and turning it off clears both to null. A request that repeats the flag it already holds leaves the stamp alone.
 

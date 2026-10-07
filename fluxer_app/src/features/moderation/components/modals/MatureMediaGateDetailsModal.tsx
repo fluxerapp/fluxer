@@ -28,12 +28,18 @@ const MATURE_MEDIA_DESCRIPTOR = msg({
 	comment: 'Short label in the mature media gate details modal. Keep it concise.',
 });
 
+const MATURE_MEDIA_NOT_AVAILABLE_DESCRIPTOR = msg({
+	message: 'This mature media is not available to your account.',
+	comment: 'Body text in the mature media gate details modal when the viewer cannot open mature media.',
+});
+
 interface MatureMediaGateDetailsModalProps {
 	reason: MatureContentGateReason;
 }
 
 export const MatureMediaGateDetailsModal = observer(({reason}: MatureMediaGateDetailsModalProps) => {
 	const {i18n} = useLingui();
+	const learnMoreUrl = HelpCenterUtils.getURL(HelpCenterArticleSlug.ChangeDateOfBirth);
 	const handleClose = useCallback(() => {
 		ModalCommands.pop();
 	}, []);
@@ -103,15 +109,16 @@ export const MatureMediaGateDetailsModal = observer(({reason}: MatureMediaGateDe
 			<Modal.Content data-flx="moderation.mature-media-gate-details-modal.modal-content--2">
 				<Modal.ContentLayout data-flx="moderation.mature-media-gate-details-modal.modal-content-layout--2">
 					<Modal.Description data-flx="moderation.mature-media-gate-details-modal.modal-description--4">
-						<Trans>
-							This mature media is not available to your account.{' '}
-							<ExternalLink
-								href={HelpCenterUtils.getURL(HelpCenterArticleSlug.ChangeDateOfBirth)}
-								data-flx="moderation.mature-media-gate-details-modal.external-link"
-							>
-								Learn more
-							</ExternalLink>
-						</Trans>
+						{learnMoreUrl ? (
+							<Trans>
+								This mature media is not available to your account.{' '}
+								<ExternalLink href={learnMoreUrl} data-flx="moderation.mature-media-gate-details-modal.external-link">
+									Learn more
+								</ExternalLink>
+							</Trans>
+						) : (
+							i18n._(MATURE_MEDIA_NOT_AVAILABLE_DESCRIPTOR)
+						)}
 					</Modal.Description>
 				</Modal.ContentLayout>
 			</Modal.Content>

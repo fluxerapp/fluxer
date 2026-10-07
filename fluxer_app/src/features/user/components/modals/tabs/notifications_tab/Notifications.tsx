@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {ENABLE_NOTIFICATIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {usePushSubscriptions} from '@app/features/notification/hooks/usePushSubscriptions';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
@@ -161,7 +161,9 @@ export const Notifications: FC<NotificationsProps> = observer(
 							isDesktop()
 								? i18n._(USES_THE_OS_NOTIFICATION_CENTER_FOR_PER_CHANNEL_DESCRIPTOR)
 								: isPwa
-									? i18n._(GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_DESCRIPTOR, {productName: PRODUCT_NAME})
+									? i18n._(GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_DESCRIPTOR, {
+											productName: RuntimeConfig.productName,
+										})
 									: i18n._(GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_2_DESCRIPTOR)
 						}
 						value={browserNotificationsEnabled}
@@ -187,7 +189,9 @@ export const Notifications: FC<NotificationsProps> = observer(
 								{i18n._(PUSH_SUBSCRIPTIONS_FOR_THIS_DEVICE_DESCRIPTOR)}
 							</h3>
 							<p className={styles.pushDescription} data-flx="user.notifications-tab.notifications.push-description">
-								{i18n._(USES_PUSH_NOTIFICATIONS_WHEN_INSTALLED_AS_A_MOBILE_DESCRIPTOR, {productName: PRODUCT_NAME})}
+								{i18n._(USES_PUSH_NOTIFICATIONS_WHEN_INSTALLED_AS_A_MOBILE_DESCRIPTOR, {
+									productName: RuntimeConfig.productName,
+								})}
 							</p>
 						</div>
 						<div className={styles.pushButtons} data-flx="user.notifications-tab.notifications.push-buttons">

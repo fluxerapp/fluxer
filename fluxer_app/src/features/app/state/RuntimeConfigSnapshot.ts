@@ -422,6 +422,10 @@ function readAppPublic(value: unknown): InstanceAppPublic {
 		legal: {
 			terms_url: readNullableAbsoluteHttpUrl(legal, 'terms_url', 'appPublic.legal.terms_url'),
 			privacy_url: readNullableAbsoluteHttpUrl(legal, 'privacy_url', 'appPublic.legal.privacy_url'),
+			guidelines_url:
+				legal['guidelines_url'] === undefined
+					? null
+					: readNullableAbsoluteHttpUrl(legal, 'guidelines_url', 'appPublic.legal.guidelines_url'),
 		},
 		registration: {
 			collect_date_of_birth: readBoolean(

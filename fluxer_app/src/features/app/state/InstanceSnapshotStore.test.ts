@@ -210,7 +210,7 @@ describe('runtimeSnapshotFromDiscovery', () => {
 		document.app_public = {
 			...BOOTSTRAP_APP_PUBLIC,
 			branding: {...BOOTSTRAP_APP_PUBLIC.branding, icon_url: 'https://cdn.d.test/icon.png?v=3'},
-			legal: {terms_url: 'https://d.test/legal?doc=terms', privacy_url: null},
+			legal: {terms_url: 'https://d.test/legal?doc=terms', privacy_url: null, guidelines_url: null},
 		};
 		const snapshot = runtimeSnapshotFromDiscovery(parseInstanceDiscoveryDocument(document));
 		expect(snapshot.appPublic.branding.icon_url).toBe('https://cdn.d.test/icon.png?v=3');

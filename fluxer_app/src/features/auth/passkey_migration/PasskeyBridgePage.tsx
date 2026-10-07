@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/app/components/ErrorFallback.module.css';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import type {DomainMigrationSide} from '@app/features/app/domain_migration/DomainMigrationCore';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
 	readPasskeyBridgePageLoginReturnPath,
 	readPasskeyBridgeReturn,
@@ -183,7 +183,7 @@ const LegacyPasskeyBridgePage: React.FC<PasskeyBridgePageProps> = ({side, hash, 
 			<div className={styles.errorFallbackActions} data-flx="auth.passkey-bridge-page.actions">
 				{expired ? (
 					<Button onClick={handleBack} autoFocus data-flx="auth.passkey-bridge-page.button.back">
-						{i18n._(BACK_TO_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						{i18n._(BACK_TO_PRODUCT_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 					</Button>
 				) : failed ? (
 					<>
@@ -258,7 +258,7 @@ const TargetPasskeyBridgePage: React.FC<{hash: string}> = ({hash}) => {
 					{i18n._(YOU_CAN_CLOSE_THIS_TAB_DESCRIPTOR)}
 				</h1>
 				<p className={styles.errorFallbackDescription} data-flx="auth.passkey-bridge-page.description">
-					{i18n._(GO_BACK_TO_CONTINUE_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(GO_BACK_TO_CONTINUE_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</p>
 			</div>
 		</main>

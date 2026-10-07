@@ -2,7 +2,7 @@
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {COMMUNITY_MEMBERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -110,7 +110,7 @@ export function TimezoneProfileSettings({
 	return (
 		<SettingsTabSection
 			title={i18n._(PROFILE_LOCAL_TIME_DESCRIPTOR)}
-			description={i18n._(PROFILE_LOCAL_TIME_SUMMARY_DESCRIPTOR, {productName: PRODUCT_NAME})}
+			description={i18n._(PROFILE_LOCAL_TIME_SUMMARY_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 			data-flx="user.my-profile-tab.timezone-profile-settings.section"
 		>
 			<Button
@@ -194,13 +194,13 @@ function TimezoneProfileSettingsModal({
 				<Modal.ContentLayout data-flx="user.my-profile-tab.timezone-profile-settings.modal-content-layout">
 					<Modal.Description data-flx="user.my-profile-tab.timezone-profile-settings.privacy-note">
 						{i18n._(TIMEZONE_PRIVACY_NOTE_DESCRIPTOR, {
-							productName: PRODUCT_NAME,
+							productName: RuntimeConfig.productName,
 							timezoneIdentifierExample: TIMEZONE_IDENTIFIER_EXAMPLE,
 						})}
 					</Modal.Description>
 					<Combobox<string, false, TimeZoneSelectOption>
 						label={i18n._(TIMEZONE_DESCRIPTOR)}
-						description={i18n._(TIMEZONE_HELP_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						description={i18n._(TIMEZONE_HELP_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 						placeholder={i18n._(SEARCH_TIMEZONES_DESCRIPTOR)}
 						value={localTimezone ?? ''}
 						options={options}

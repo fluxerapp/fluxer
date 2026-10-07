@@ -3,7 +3,11 @@
 import {createLogger} from '@fluxer/logger/src/Logger';
 import type {IEmailI18nService} from '@pkgs/email/src/EmailI18nService';
 import type {EmailConfig, IEmailProvider, UserBouncedEmailChecker} from '@pkgs/email/src/EmailProviderTypes';
-import type {EmailTemplateVariables, ReportReceivedTargetKind} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
+import type {
+	EmailLegalLinks,
+	EmailTemplateVariables,
+	ReportReceivedTargetKind,
+} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {EmailTemplateKey} from '@pkgs/email/src/email_i18n/EmailI18nTypes.generated';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import {ms} from 'itty-time';
@@ -19,6 +23,16 @@ function formatMinorUnitAmount(amountMinor: number, currency: string, locale: st
 
 function optionalReason(reason: string | null): string | null {
 	return reason?.trim() || null;
+}
+
+function legalLinkVariables(config: EmailConfig): {
+	termsUrl: string | null;
+	guidelinesUrl: string | null;
+	legalLinks: EmailLegalLinks;
+} {
+	const {termsUrl, guidelinesUrl} = config;
+	const legalLinks = termsUrl ? (guidelinesUrl ? 'both' : 'terms') : guidelinesUrl ? 'guidelines' : 'none';
+	return {termsUrl, guidelinesUrl, legalLinks};
 }
 
 export class EmailService implements IEmailService {
@@ -92,8 +106,8 @@ export class EmailService implements IEmailService {
 			reason: optionalReason(reason),
 			durationHours,
 			bannedUntil,
-			termsUrl: `${this.config.marketingBaseUrl}/terms`,
-			guidelinesUrl: `${this.config.marketingBaseUrl}/guidelines`,
+			...legalLinkVariables(this.config),
+			appeals_email: this.config.appealsEmail,
 		});
 	}
 
@@ -108,8 +122,8 @@ export class EmailService implements IEmailService {
 			username,
 			reason: optionalReason(reason),
 			deletionDate,
-			termsUrl: `${this.config.marketingBaseUrl}/terms`,
-			guidelinesUrl: `${this.config.marketingBaseUrl}/guidelines`,
+			...legalLinkVariables(this.config),
+			appeals_email: this.config.appealsEmail,
 		});
 	}
 
@@ -133,6 +147,7 @@ export class EmailService implements IEmailService {
 			username,
 			reason: optionalReason(reason),
 			deletionDate,
+			safety_email: this.config.safetyEmail,
 		});
 	}
 
@@ -147,6 +162,7 @@ export class EmailService implements IEmailService {
 			username,
 			reason: optionalReason(reason),
 			deletionDate,
+			safety_email: this.config.safetyEmail,
 		});
 	}
 
@@ -155,7 +171,10 @@ export class EmailService implements IEmailService {
 		username: string,
 		locale: string | null = null,
 	): Promise<boolean> {
-		return this.sendTemplatedEmail(email, 'account_deletion_cancelled', locale, {username});
+		return this.sendTemplatedEmail(email, 'account_deletion_cancelled', locale, {
+			username,
+			safety_email: this.config.safetyEmail,
+		});
 	}
 
 	async sendUnbanNotification(
@@ -178,6 +197,7 @@ export class EmailService implements IEmailService {
 			username,
 			deletionDate,
 			reason: optionalReason(reason),
+			appeals_email: this.config.appealsEmail,
 		});
 	}
 
@@ -193,6 +213,7 @@ export class EmailService implements IEmailService {
 			deletionDate,
 			lastActiveDate,
 			loginUrl: `${this.config.appBaseUrl}/login`,
+			support_email: this.config.supportEmail,
 		});
 	}
 
@@ -212,6 +233,7 @@ export class EmailService implements IEmailService {
 			totalMessages,
 			fileSizeMB,
 			expiresAt,
+			support_email: this.config.supportEmail,
 		});
 	}
 
@@ -220,7 +242,10 @@ export class EmailService implements IEmailService {
 		username: string,
 		locale: string | null = null,
 	): Promise<boolean> {
-		return this.sendTemplatedEmail(email, 'gift_chargeback_notification', locale, {username});
+		return this.sendTemplatedEmail(email, 'gift_chargeback_notification', locale, {
+			username,
+			support_email: this.config.supportEmail,
+		});
 	}
 
 	async sendReportResolvedEmail(
@@ -235,6 +260,7 @@ export class EmailService implements IEmailService {
 			reportId,
 			publicComment,
 			hasComment: publicComment ? 'yes' : 'no',
+			safety_email: this.config.safetyEmail,
 		});
 	}
 
@@ -248,6 +274,7 @@ export class EmailService implements IEmailService {
 			reportId,
 			publicComment,
 			hasComment: publicComment ? 'yes' : 'no',
+			appeals_email: this.config.appealsEmail,
 		});
 	}
 
@@ -374,7 +401,7 @@ export class EmailService implements IEmailService {
 		locale: string | null,
 		variables: EmailTemplateVariables[T],
 	): Promise<boolean> {
-		const result = this.emailI18n.getTemplate(templateKey, locale, variables);
+		const result = this.emailI18n.getTemplate(templateKey, locale, variables, this.config.productName);
 		if (!result.ok) {
 			logger.error({key: templateKey, locale: result.locale, error: result.error}, 'Failed to resolve email template');
 			return false;

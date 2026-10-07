@@ -29,6 +29,8 @@ import {
 	setCachedDateOfBirthCollection,
 } from '@app/api/instance/DateOfBirthCollectionCache';
 import {InstanceConfigCache} from '@app/api/instance/InstanceConfigCache';
+import {setCachedConfiguredLegalUrls} from '@app/api/instance/LegalUrls';
+import {getDefaultProductName, setCachedProductName} from '@app/api/instance/ProductName';
 import {normalizeSsoAllowedEmailDomains} from '@app/api/instance/SsoConfigValidation';
 import {Logger} from '@app/api/Logger';
 import {isLimitConfigSnapshot} from '@app/api/limits/LimitConfigValidation';
@@ -409,7 +411,7 @@ export function getDefaultPremiumProductName(): string {
 function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 	return {
 		branding: {
-			product_name: Config.instance.branding.productName || 'Fluxer',
+			product_name: getDefaultProductName(),
 			icon_url: normalizeOptionalString(Config.instance.branding.iconUrl),
 			symbol_url: normalizeOptionalString(Config.instance.branding.symbolUrl),
 			logo_url: normalizeOptionalString(Config.instance.branding.logoUrl),
@@ -427,6 +429,7 @@ function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 		legal: {
 			terms_url: null,
 			privacy_url: null,
+			guidelines_url: null,
 		},
 		registration: {
 			collect_date_of_birth: getDefaultDateOfBirthCollection(),
@@ -742,6 +745,7 @@ function buildAppPublicConfig(config: z.infer<typeof StoredInstanceAppPublicSche
 		legal: {
 			terms_url: normalizeOptionalPublicString(legal.terms_url, defaults.legal.terms_url),
 			privacy_url: normalizeOptionalPublicString(legal.privacy_url, defaults.legal.privacy_url),
+			guidelines_url: normalizeOptionalPublicString(legal.guidelines_url, defaults.legal.guidelines_url),
 		},
 		registration: {
 			collect_date_of_birth: registration.collect_date_of_birth ?? defaults.registration.collect_date_of_birth,
@@ -1378,6 +1382,8 @@ export class InstanceConfigRepository {
 		setStoredBillingConfig(parseStoredInstanceBillingConfig(snapshot.get(INSTANCE_BILLING_CONFIG_KEY) ?? null));
 		const appPublic = parseStoredAppPublicConfig(snapshot.get(APP_PUBLIC_CONFIG_KEY) ?? null);
 		setCachedDateOfBirthCollection(appPublic.registration.collect_date_of_birth);
+		setCachedConfiguredLegalUrls(appPublic.legal);
+		setCachedProductName(appPublic.branding.product_name);
 		setCachedAccountIdentity(readStoredAccountIdentity(snapshot.get(ACCOUNT_IDENTITY_CONFIG_KEY) ?? null));
 	}
 
@@ -1659,6 +1665,8 @@ export class InstanceConfigRepository {
 		const raw = await this.getConfig(APP_PUBLIC_CONFIG_KEY);
 		const config = parseStoredAppPublicConfig(raw);
 		setCachedDateOfBirthCollection(config.registration.collect_date_of_birth);
+		setCachedConfiguredLegalUrls(config.legal);
+		setCachedProductName(config.branding.product_name);
 		return config;
 	}
 
@@ -1707,6 +1715,8 @@ export class InstanceConfigRepository {
 		});
 		await this.publishRefresh(cache.sourceId);
 		setCachedDateOfBirthCollection(next.registration.collect_date_of_birth);
+		setCachedConfiguredLegalUrls(next.legal);
+		setCachedProductName(next.branding.product_name);
 		return next;
 	}
 

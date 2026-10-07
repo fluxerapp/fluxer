@@ -20,6 +20,7 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {InternalServerError} from '@fluxer/errors/src/domains/core/InternalServerError';
 import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
+import {IpBannedError} from '@fluxer/errors/src/domains/moderation/IpBannedError';
 import {PremiumPurchaseBlockedError} from '@fluxer/errors/src/domains/payment/PremiumPurchaseBlockedError';
 import {StoreBillingUnavailableError} from '@fluxer/errors/src/domains/payment/StoreBillingUnavailableError';
 import {StoreNotificationUnauthorizedError} from '@fluxer/errors/src/domains/payment/StoreNotificationUnauthorizedError';
@@ -248,6 +249,47 @@ describe('PremiumPurchaseBlockedError', () => {
 			code: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
 			message: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
 			reason: 'purchase_disabled',
+		});
+	});
+});
+
+describe('IpBannedError', () => {
+	it('passes the appeal address through to the data and the message', () => {
+		const error = new IpBannedError({
+			ipAddress: '203.0.113.20',
+			kind: 'temporary_24h',
+			expiresAt: new Date('2026-10-01T23:30:00Z'),
+			appealEmail: 'support@fluxer.com',
+			productName: 'Fluxer',
+		});
+		expect(error.code).toBe(APIErrorCodes.GLOBAL_IP_TEMPORARILY_BANNED);
+		expect(error.data).toEqual({
+			ip_address: '203.0.113.20',
+			appeal_email: 'support@fluxer.com',
+			appeals_supported: true,
+			ban_kind: 'temporary_24h',
+			expires_at: '2026-10-01T23:30:00.000Z',
+		});
+		expect(error.messageVariables).toEqual({
+			ipAddress: '203.0.113.20',
+			appealEmail: 'support@fluxer.com',
+			product_name: 'Fluxer',
+		});
+	});
+
+	it('has no appeal address of its own', () => {
+		const error = new IpBannedError({
+			ipAddress: '203.0.113.20',
+			kind: 'permanent',
+			appealEmail: null,
+			productName: 'Example Chat',
+		});
+		expect(error.code).toBe(APIErrorCodes.GLOBAL_IP_BANNED);
+		expect(error.data).toMatchObject({appeal_email: null, appeals_supported: true, expires_at: null});
+		expect(error.messageVariables).toEqual({
+			ipAddress: '203.0.113.20',
+			appealEmail: null,
+			product_name: 'Example Chat',
 		});
 	});
 });

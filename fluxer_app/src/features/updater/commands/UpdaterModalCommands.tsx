@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {DESKTOP_DOWNLOAD_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {UpdaterDownloadFormat, UpdaterDownloadOption} from '@app/features/platform/types/Electron';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -174,8 +175,8 @@ export function pushUpdateAvailableModal(version: string | null, onDownload: () 
 				title={i18n._(DESKTOP_UPDATE_AVAILABLE_DESCRIPTOR)}
 				description={
 					version
-						? i18n._(DESKTOP_VERSION_IS_READY_TO_DOWNLOAD_DESCRIPTOR, {version, productName: PRODUCT_NAME})
-						: i18n._(A_NEW_DESKTOP_VERSION_IS_READY_TO_DOWNLOAD_DESCRIPTOR, {productName: PRODUCT_NAME})
+						? i18n._(DESKTOP_VERSION_IS_READY_TO_DOWNLOAD_DESCRIPTOR, {version, productName: RuntimeConfig.productName})
+						: i18n._(A_NEW_DESKTOP_VERSION_IS_READY_TO_DOWNLOAD_DESCRIPTOR, {productName: RuntimeConfig.productName})
 				}
 				primaryText={i18n._(DOWNLOAD_INSTALLER_DESCRIPTOR)}
 				secondaryText={i18n._(LATER_DESCRIPTOR)}
@@ -194,7 +195,7 @@ export function pushDesktopUpdateAvailableModal(onUpdate: () => void | Promise<v
 		modal(() => (
 			<ConfirmModal
 				title={i18n._(DESKTOP_UPDATE_AVAILABLE_DESCRIPTOR)}
-				description={i18n._(DESKTOP_UPDATE_RESTARTS_APP_DESCRIPTOR, {productName: PRODUCT_NAME})}
+				description={i18n._(DESKTOP_UPDATE_RESTARTS_APP_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				primaryText={i18n._(UPDATE_NOW_DESCRIPTOR)}
 				secondaryText={i18n._(LATER_DESCRIPTOR)}
 				onPrimary={async () => {
@@ -236,7 +237,7 @@ function ManualUpdateAvailableModal({currentVersion, version, options, onDownloa
 			description={
 				<div className={styles.manualUpdateBody} data-flx="updater.manual-update.body">
 					<p className={styles.manualUpdateIntro} data-flx="updater.manual-update.intro">
-						{i18n._(LINUX_PACKAGE_UPDATE_INTRO_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						{i18n._(LINUX_PACKAGE_UPDATE_INTRO_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 					</p>
 					<dl className={styles.versionList} data-flx="updater.manual-update.version-list">
 						<dt className={styles.versionLabel} data-flx="updater.manual-update.installed-label">
@@ -319,7 +320,7 @@ export function pushUnsupportedUpdateModal(
 				return (
 					<ConfirmModal
 						title={i18n._(SYSTEM_MANAGED_INSTALL_DESCRIPTOR)}
-						description={i18n._(SYSTEM_MANAGED_UPDATE_BODY_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						description={i18n._(SYSTEM_MANAGED_UPDATE_BODY_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 						primaryText={i18n._(OPEN_SOFTWARE_CENTER_DESCRIPTOR)}
 						secondaryText={i18n._(CLOSE_DESCRIPTOR)}
 						onPrimary={() => {
@@ -342,7 +343,7 @@ export function pushUnsupportedUpdateModal(
 					description={
 						reason === 'unpackaged'
 							? i18n._(DEVELOPMENT_BUILD_UPDATE_BODY_DESCRIPTOR)
-							: i18n._(MANUAL_UPDATE_BODY_DESCRIPTOR, {productName: PRODUCT_NAME})
+							: i18n._(MANUAL_UPDATE_BODY_DESCRIPTOR, {productName: RuntimeConfig.productName})
 					}
 					primaryText={i18n._(OPEN_DESKTOP_DOWNLOADS_DESCRIPTOR)}
 					secondaryText={i18n._(LATER_DESCRIPTOR)}
@@ -374,7 +375,7 @@ function pushUpdaterErrorModal(getTitle: () => string, getDescription: () => str
 export function pushUpdateCheckFailedModal(): void {
 	pushUpdaterErrorModal(
 		() => i18n._(UPDATE_CHECK_FAILED_DESCRIPTOR),
-		() => i18n._(UPDATE_CHECK_FAILED_BODY_DESCRIPTOR, {productName: PRODUCT_NAME}),
+		() => i18n._(UPDATE_CHECK_FAILED_BODY_DESCRIPTOR, {productName: RuntimeConfig.productName}),
 	);
 }
 

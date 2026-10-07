@@ -306,7 +306,7 @@ describe('ConfigLoader', () => {
 		const config = await loadConfig();
 
 		expect(config.services.api.port).toBe(8080);
-		expect(config.integrations.email.from_name).toBe('Fluxer');
+		expect(config.integrations.email.from_name).toBe('');
 		expect(config.internal.kv).toBe('redis://localhost:6379/0');
 		expect(config.s3?.force_path_style).toBe(false);
 		expect(config.services.api.storage_change_feed?.skip_buckets).toBeUndefined();

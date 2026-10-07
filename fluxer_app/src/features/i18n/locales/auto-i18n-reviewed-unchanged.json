@@ -4523,6 +4523,9 @@
         "msgid": "This key works while {productName} is focused. Your desktop sets the system-wide key, under {settingsTabName} > {sectionName}."
       },
       {
+        "msgid": "This mature media is not available to your account."
+      },
+      {
         "msgid": "This message can only be forwarded to age-restricted channels"
       },
       {
@@ -4530,6 +4533,9 @@
       },
       {
         "msgid": "This option is required. Please provide a value."
+      },
+      {
+        "msgid": "This plan isn't available. Contact the administrators of this instance."
       },
       {
         "msgid": "This request has expired. Go back and try again."
@@ -4895,10 +4901,16 @@
         "msgid": "Your account has no email address. If you forget your password, a recovery kit is the only way back in. It only takes a minute."
       },
       {
+        "msgid": "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact the administrators of this instance."
+      },
+      {
         "msgid": "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
       },
       {
         "msgid": "Your accounts and settings have not been changed or deleted."
+      },
+      {
+        "msgid": "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
       },
       {
         "msgid": "Your answers"
@@ -4953,6 +4965,9 @@
       },
       {
         "msgid": "Your gift time is kept"
+      },
+      {
+        "msgid": "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
       },
       {
         "msgid": "Your new nickname, or leave blank to reset it."

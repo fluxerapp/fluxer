@@ -14,6 +14,8 @@ import {
 import {createReportID, createUserID} from '@app/api/BrandedTypes';
 import {sendChannelMessage, setupTestGuildWithMembers} from '@app/api/channel/tests/ChannelTestUtils';
 import {createTestChannelService} from '@app/api/channel/tests/CrosspostTestUtils';
+import {resolveContactEmails} from '@app/api/instance/ContactEmails';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {getReportServiceInstance} from '@app/api/middleware/ServiceMiddleware';
 import {getGatewayService, getSnowflakeService, setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {
@@ -185,7 +187,12 @@ async function systemDmMessages(harness: ApiTestHarness, account: TestAccount): 
 const DELETION_WORDING = /delet|\bban|suspend|terminat|remov|enforce/i;
 
 function renderGenericNotice(username: string, reportId: string): {subject: string; body: string} {
-	const rendered = getEmailTemplate('report_resolved', null, {username, reportId, publicComment: '', hasComment: 'no'});
+	const rendered = getEmailTemplate(
+		'report_resolved',
+		null,
+		{username, reportId, publicComment: '', hasComment: 'no', safety_email: resolveContactEmails().safetyEmail},
+		getInstanceProductName(),
+	);
 	if (!rendered.ok) {
 		throw new Error('report_resolved did not render');
 	}
@@ -500,6 +507,44 @@ describe('bulkScheduleUserDeletion', () => {
 		expect(await getReportStatus(reportId)).toBe(ReportStatus.PENDING);
 		const resolutionLogs = await listAuditLogs('auto_resolve_reports_on_deletion');
 		expect(resolutionLogs.some((log) => log.targetId === BigInt(target.userId))).toBe(false);
+	});
+	test('only the reporters of resolved reports are notified and the summary counts only those reports', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const underageReporter = await createTestAccount(harness);
+		const spamReporter = await createTestAccount(harness);
+		const target = await createTestAccount(harness);
+		const underageReportId = await reportUser(harness, underageReporter, target.userId, 'underage_user');
+		const spamReportId = await reportUser(harness, spamReporter, target.userId);
+		await clearTestEmails(harness);
+		const result = await runBulkJob([target.userId], admin.userId, DeletionReasons.HARASSMENT_OR_BULLYING);
+		expect(result.successful_count).toBe(1);
+		expect(await getReportStatus(spamReportId)).toBe(ReportStatus.RESOLVED);
+		expect(await getReportStatus(underageReportId)).toBe(ReportStatus.PENDING);
+		expect(await reportResolvedEmails(harness, spamReporter)).toHaveLength(1);
+		expect(await reportResolvedEmails(harness, underageReporter)).toEqual([]);
+		expect(await systemDmMessages(harness, underageReporter)).toEqual([]);
+		expect(await autoResolveSummary(target.userId)).toEqual({
+			outcome: 'completed',
+			found_count: '1',
+			resolved_count: '1',
+			failed_count: '0',
+			notified_count: '1',
+		});
+	});
+	test('a deletion for a reason that resolves no reports notifies no reporter', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const reporter = await createTestAccount(harness);
+		const target = await createTestAccount(harness);
+		const reportId = await reportUser(harness, reporter, target.userId);
+		await clearTestEmails(harness);
+		const result = await runBulkJob([target.userId], admin.userId, DeletionReasons.OTHER);
+		expect(result.successful_count).toBe(1);
+		expect(await getReportStatus(reportId)).toBe(ReportStatus.PENDING);
+		expect(await reportResolvedEmails(harness, reporter)).toEqual([]);
+		expect(await systemDmMessages(harness, reporter)).toEqual([]);
+		expect(await new AdminRepository().isEmailBanned(target.email)).toBe(true);
 	});
 	test('a payload with notify_user false emails nobody and records it in the summary', async () => {
 		const admin = await createTestAccount(harness);

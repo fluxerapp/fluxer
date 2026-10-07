@@ -6,6 +6,7 @@ import {
 	getErrorMessageUnsafe,
 	hasErrorLocale,
 } from '@fluxer/errors/src/i18n/ErrorI18n';
+import {ERROR_I18N_LOCALE_MESSAGES} from '@fluxer/errors/src/i18n/ErrorI18nLocales';
 import type {ErrorI18nKey} from '@fluxer/errors/src/i18n/ErrorI18nTypes.generated';
 import {beforeEach, describe, expect, it, type MockInstance, vi} from 'vitest';
 
@@ -149,6 +150,98 @@ describe('ErrorI18n', () => {
 		});
 		it('falls back to the source message when the locale has no catalog', () => {
 			expect(getErrorMessage('account.limited', 'zz-ZZ')).toBe(getErrorMessage('account.limited', 'en-US'));
+		});
+	});
+	describe('global IP block messages', () => {
+		const HOSTED = {ipAddress: '203.0.113.20', appealEmail: 'support@fluxer.com', product_name: 'Fluxer'};
+		const SELF_HOSTED = {ipAddress: '203.0.113.20', appealEmail: null, product_name: 'Example Chat'};
+
+		it('names the appeal address when there is one', () => {
+			expect(getErrorMessageUnsafe('GLOBAL_IP_BANNED', 'en-US', HOSTED)).toBe(
+				'Your IP address 203.0.113.20 has been permanently blocked from the Fluxer API by platform administrators. If you believe this is a mistake, contact support@fluxer.com to appeal. Include this IP address in your appeal.',
+			);
+			expect(getErrorMessageUnsafe('GLOBAL_IP_TEMPORARILY_BANNED', 'en-US', HOSTED)).toBe(
+				'Your IP address 203.0.113.20 has been temporarily blocked from the Fluxer API. The block lifts on its own when it expires. If you think this is a mistake, contact support@fluxer.com and include this IP address.',
+			);
+		});
+		it('points at the instance administrators when there is no appeal address', () => {
+			expect(getErrorMessageUnsafe('GLOBAL_IP_BANNED', 'en-US', SELF_HOSTED)).toBe(
+				'Your IP address 203.0.113.20 has been permanently blocked from the Example Chat API by platform administrators. If you believe this is a mistake, contact the administrators of this instance to appeal. Include this IP address in your appeal.',
+			);
+			expect(getErrorMessageUnsafe('GLOBAL_IP_TEMPORARILY_BANNED', 'en-US', SELF_HOSTED)).toBe(
+				'Your IP address 203.0.113.20 has been temporarily blocked from the Example Chat API. The block lifts on its own when it expires. If you think this is a mistake, contact the administrators of this instance and include this IP address.',
+			);
+		});
+		it.each([
+			['de', 'die Administratoren dieser Instanz'],
+			['pt-BR', 'os administradores desta instância'],
+			['ja', 'このインスタンスの管理者'],
+		])('renders both variants in %s', (locale, administrators) => {
+			for (const code of ['GLOBAL_IP_BANNED', 'GLOBAL_IP_TEMPORARILY_BANNED']) {
+				const hosted = getErrorMessageUnsafe(code, locale, HOSTED);
+				const neutral = getErrorMessageUnsafe(code, locale, SELF_HOSTED);
+				expect(hosted).toContain('support@fluxer.com');
+				expect(hosted).toContain('203.0.113.20');
+				expect(hosted).not.toContain(administrators);
+				expect(neutral).toContain(administrators);
+				expect(neutral).toContain('203.0.113.20');
+				expect(neutral).not.toContain('@');
+				expect(neutral).not.toMatch(/\bnull\b/);
+				expect(neutral).not.toContain('{');
+			}
+			expect(consoleWarnSpy).not.toHaveBeenCalled();
+		});
+		it('names the instance and no mailbox in any locale when there is no appeal address', () => {
+			for (const locale of Object.keys(ERROR_I18N_LOCALE_MESSAGES)) {
+				for (const code of ['GLOBAL_IP_BANNED', 'GLOBAL_IP_TEMPORARILY_BANNED']) {
+					const neutral = getErrorMessageUnsafe(code, locale, SELF_HOSTED);
+					expect(neutral, `${locale} ${code}`).toContain('203.0.113.20');
+					expect(neutral, `${locale} ${code}`).not.toMatch(/@|\bnull\b|\{/);
+					expect(neutral, `${locale} ${code}`).toContain('Example Chat');
+					expect(neutral, `${locale} ${code}`).not.toContain('Fluxer');
+					const hosted = getErrorMessageUnsafe(code, locale, HOSTED);
+					expect(hosted, `${locale} ${code}`).toContain('support@fluxer.com');
+					expect(hosted, `${locale} ${code}`).toContain('Fluxer');
+				}
+			}
+		});
+	});
+	describe('payment processing error', () => {
+		const HOSTED = {supportEmail: 'support@fluxer.com'};
+		const SELF_HOSTED = {supportEmail: null};
+		const ENGLISH_NEUTRAL =
+			'Payment processing encountered an error. Please try again or contact the administrators of this instance.';
+
+		it('keeps the hosted text and names the instance administrators on a self-hosted instance', () => {
+			expect(getErrorMessageUnsafe('STRIPE_ERROR', 'en-US', HOSTED)).toBe(
+				'Payment processing encountered an error. Please try again or contact support.',
+			);
+			expect(getErrorMessageUnsafe('STRIPE_ERROR', 'en-US', SELF_HOSTED)).toBe(ENGLISH_NEUTRAL);
+		});
+		it.each([
+			['de', 'kontaktiere den Support', 'die Administratoren dieser Instanz'],
+			['pt-BR', 'com o suporte', 'os administradores desta instância'],
+			['ja', 'サポートにお問い合わせください', 'このインスタンスの管理者'],
+		])('renders both variants in %s', (locale, support, administrators) => {
+			const hosted = getErrorMessageUnsafe('STRIPE_ERROR', locale, HOSTED);
+			const neutral = getErrorMessageUnsafe('STRIPE_ERROR', locale, SELF_HOSTED);
+			expect(hosted).toContain(support);
+			expect(hosted).not.toContain(administrators);
+			expect(neutral).toContain(administrators);
+			expect(neutral).not.toContain(support);
+			expect(consoleWarnSpy).not.toHaveBeenCalled();
+		});
+		it('has a translated neutral variant in every locale', () => {
+			for (const locale of Object.keys(ERROR_I18N_LOCALE_MESSAGES)) {
+				const hosted = getErrorMessageUnsafe('STRIPE_ERROR', locale, HOSTED);
+				const neutral = getErrorMessageUnsafe('STRIPE_ERROR', locale, SELF_HOSTED);
+				expect(neutral, locale).not.toBe(hosted);
+				expect(neutral, locale).not.toMatch(/@|\bnull\b|\{|support/i);
+				if (locale !== 'en-GB') {
+					expect(neutral, locale).not.toBe(ENGLISH_NEUTRAL);
+				}
+			}
+			expect(consoleWarnSpy).not.toHaveBeenCalled();
 		});
 	});
 });

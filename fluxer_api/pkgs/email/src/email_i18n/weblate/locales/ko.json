@@ -1,23 +1,23 @@
 {
 	"account_deletion_cancelled": {
 		"subject": "{product_name} 계정 삭제 예정이 취소되었어요",
-		"body": "안녕하세요, {username}님.\n\n{product_name} 계정의 삭제 예정이 취소되었어요. 계정은 삭제되지 않아요.\n\n궁금한 점이 있다면 {safety_email}으로 문의해 주세요.\n\n– {product_name} 팀"
+		"body": "안녕하세요, {username}님.\n\n{product_name} 계정의 삭제 예정이 취소되었어요. 계정은 삭제되지 않아요.\n\n{safety_email, select, null {궁금한 점이 있다면 이 인스턴스의 관리자에게 문의해 주세요.} other {궁금한 점이 있다면 {safety_email}으로 문의해 주세요.}}\n\n– {product_name} 팀"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "장기간 미접속으로 {product_name} 계정이 삭제될 예정이에요",
-		"body": "안녕하세요, {username}님.\n\n{product_name} 계정이 오랫동안 사용되지 않아 다음 날짜에 영구적으로 삭제될 예정이에요:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n사유: {reason}}}\n\n계정을 유지하고 싶다면 해당 날짜 전에 이 이메일 주소에서 {safety_email}으로 문의해 주세요.\n\n– {product_name} 팀"
+		"body": "안녕하세요, {username}님.\n\n{product_name} 계정이 오랫동안 사용되지 않아 다음 날짜에 영구적으로 삭제될 예정이에요:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n사유: {reason}}}\n\n{safety_email, select, null {계정을 유지하고 싶다면 해당 날짜 전에 이 인스턴스의 관리자에게 문의해 주세요.} other {계정을 유지하고 싶다면 해당 날짜 전에 이 이메일 주소에서 {safety_email}으로 문의해 주세요.}}\n\n– {product_name} 팀"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "{product_name} 계정 삭제가 예정되었어요",
-		"body": "안녕하세요, {username}님.\n\n요청하신 대로 {product_name} 계정이 다음 날짜에 영구적으로 삭제될 예정이에요:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n사유: {reason}}}\n\n그때까지 계정은 잠겨 있어요. 요청하지 않으셨거나 계정을 유지하고 싶다면 해당 날짜 전에 이 이메일 주소에서 {safety_email}으로 문의해 주세요.\n\n– {product_name} 팀"
+		"body": "안녕하세요, {username}님.\n\n요청하신 대로 {product_name} 계정이 다음 날짜에 영구적으로 삭제될 예정이에요:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n사유: {reason}}}\n\n그때까지 계정은 잠겨 있어요. {safety_email, select, null {요청하지 않으셨거나 계정을 유지하고 싶다면 해당 날짜 전에 이 인스턴스의 관리자에게 문의해 주세요.} other {요청하지 않으셨거나 계정을 유지하고 싶다면 해당 날짜 전에 이 이메일 주소에서 {safety_email}으로 문의해 주세요.}}\n\n– {product_name} 팀"
 	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name} 계정이 영구적으로 삭제될 예정이에요",
-		"body": "안녕하세요, {username}님.\n\n서비스 약관 또는 커뮤니티 가이드라인 위반으로 인해 {product_name} 계정이 영구적으로 삭제될 예정이에요.\n\n삭제 예정일: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n이는 중대한 조치이며, 계정 데이터는 예정된 날짜에 영구적으로 삭제될 예정이에요.\n\n다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n이의 제기 절차:\n이 조치가 잘못되었거나 부당하다고 생각되면 60일 이내에 이의를 제기할 수 있어요. 이 이메일 주소에서 {appeals_email}으로 이메일을 보내 이의를 제기해 주세요.\n\n이의 제기 시에는:\n- 조치가 잘못되었거나 부당하다고 생각하는 이유를 명확하게 설명해 주세요.\n- 관련 증거 또는 맥락을 제공해 주세요.\n\n{product_name} 안전팀 담당자가 이의 제기를 검토하고 최종 결정이 내려질 때까지 삭제를 일시적으로 보류할 수 있어요.\n\n– {product_name} 안전팀"
+		"body": "안녕하세요, {username}님.\n\n서비스 약관 또는 커뮤니티 가이드라인 위반으로 인해 {product_name} 계정이 영구적으로 삭제될 예정이에요.\n\n삭제 예정일: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n이는 중대한 조치이며, 계정 데이터는 예정된 날짜에 영구적으로 삭제될 예정이에요.\n\n{legalLinks, select,\n  both {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  terms {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n\n}\n  guidelines {다음 내용을 확인해 주세요:\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  other {}\n}이의 제기 절차:\n이 조치가 잘못되었거나 부당하다고 생각되면 60일 이내에 이의를 제기할 수 있어요. {appeals_email, select, null {이 인스턴스의 관리자에게 연락해 이의를 제기해 주세요.} other {이 이메일 주소에서 {appeals_email}으로 이메일을 보내 이의를 제기해 주세요.}}\n\n이의 제기 시에는:\n- 조치가 잘못되었거나 부당하다고 생각하는 이유를 명확하게 설명해 주세요.\n- 관련 증거 또는 맥락을 제공해 주세요.\n\n{product_name} 안전팀 담당자가 이의 제기를 검토하고 최종 결정이 내려질 때까지 삭제를 일시적으로 보류할 수 있어요.\n\n– {product_name} 안전팀"
 	},
 	"account_temp_banned": {
 		"subject": "{product_name} 계정이 일시적으로 정지되었어요",
-		"body": "안녕하세요, {username}님.\n\n서비스 약관 또는 커뮤니티 가이드라인 위반으로 인해 {product_name} 계정이 일시적으로 정지되었어요.\n\n기간: {durationHours, plural,\n  =1 {1시간}\n  other {#시간}\n}\n정지 해제 일시: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n이 기간 동안에는 계정에 액세스할 수 없어요.\n\n다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n이 조치가 잘못되었거나 부당하다고 생각되면 이의를 제기할 수 있어요. 이 이메일 주소에서 {appeals_email}으로 이메일을 보내 결정이 잘못되었다고 생각하는 이유를 명확하게 설명해 주세요. 이의 제기를 검토한 후 결과를 알려 드릴 예정이에요.\n\n– {product_name} 안전팀"
+		"body": "안녕하세요, {username}님.\n\n서비스 약관 또는 커뮤니티 가이드라인 위반으로 인해 {product_name} 계정이 일시적으로 정지되었어요.\n\n기간: {durationHours, plural,\n  =1 {1시간}\n  other {#시간}\n}\n정지 해제 일시: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n이 기간 동안에는 계정에 액세스할 수 없어요.\n\n{legalLinks, select,\n  both {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  terms {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n\n}\n  guidelines {다음 내용을 확인해 주세요:\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  other {}\n}이 조치가 잘못되었거나 부당하다고 생각되면 이의를 제기할 수 있어요. {appeals_email, select, null {이 인스턴스의 관리자에게 연락해 결정이 잘못되었다고 생각하는 이유를 명확하게 설명해 주세요.} other {이 이메일 주소에서 {appeals_email}으로 이메일을 보내 결정이 잘못되었다고 생각하는 이유를 명확하게 설명해 주세요.}} 이의 제기를 검토한 후 결과를 알려 드릴 예정이에요.\n\n– {product_name} 안전팀"
 	},
 	"donation_confirmation": {
 		"subject": "{product_name} 후원에 감사드려요",
@@ -29,7 +29,7 @@
 	},
 	"dsa_report_resolved": {
 		"subject": "{product_name} 신고에 대한 결정이 내려졌어요",
-		"body": "안녕하세요,\n\n안전팀에서 디지털 서비스법 신고(ID: {reportId})를 검토하고 결정을 내렸어요.{hasComment, select, yes {\n\n안전팀의 답변:\n{publicComment}} other {}}\n\n다른 사람의 계정에 취한 조치의 세부 내용은 그 사람의 개인 정보이므로 공유하지 않아요.\n\n이 결정에 동의하지 않는다면 60일 이내에 무료로 이의를 제기할 수 있어요. 이 이메일 주소에서 {appeals_email}으로 이메일을 보내 신고 ID를 적고 결정이 잘못되었다고 생각하는 이유를 설명해 주세요. EU에 거주하고 있다면 인증된 법원 외 분쟁 해결 기관에 분쟁을 회부할 수도 있어요. 이 내용은 법원에 소송을 제기할 권리에 영향을 주지 않아요.\n\n– {product_name} 안전팀"
+		"body": "안녕하세요,\n\n안전팀에서 디지털 서비스법 신고(ID: {reportId})를 검토하고 결정을 내렸어요.{hasComment, select, yes {\n\n안전팀의 답변:\n{publicComment}} other {}}\n\n다른 사람의 계정에 취한 조치의 세부 내용은 그 사람의 개인 정보이므로 공유하지 않아요.\n\n이 결정에 동의하지 않는다면 60일 이내에 무료로 이의를 제기할 수 있어요. {appeals_email, select, null {이 인스턴스의 관리자에게 연락해 신고 ID를 적고 결정이 잘못되었다고 생각하는 이유를 설명해 주세요.} other {이 이메일 주소에서 {appeals_email}으로 이메일을 보내 신고 ID를 적고 결정이 잘못되었다고 생각하는 이유를 설명해 주세요.}} EU에 거주하고 있다면 인증된 법원 외 분쟁 해결 기관에 분쟁을 회부할 수도 있어요. 이 내용은 법원에 소송을 제기할 권리에 영향을 주지 않아요.\n\n– {product_name} 안전팀"
 	},
 	"dsa_report_verification": {
 		"subject": "DSA 신고를 위한 이메일 인증",
@@ -53,15 +53,15 @@
 	},
 	"gift_chargeback_notification": {
 		"subject": "사용하신 선물 혜택이 제거되었어요",
-		"body": "안녕하세요, {username}님.\n\n사용하신 선물 코드는 다른 사용자가 결제한 것이었어요. 해당 결제가 취소(차지백)되었어요.\n\n이로 인해 선물을 사용했을 때 계정에 추가되었던 혜택이 제거되었어요.\n\n실수라고 생각되면 고객지원팀에 문의하여 선물 코드 및 사용 시기에 대한 자세한 정보를 알려 주세요.\n\n– {product_name} 팀"
+		"body": "안녕하세요, {username}님.\n\n사용하신 선물 코드는 다른 사용자가 결제한 것이었어요. 해당 결제가 취소(차지백)되었어요.\n\n이로 인해 선물을 사용했을 때 계정에 추가되었던 혜택이 제거되었어요.\n\n{support_email, select, null {실수라고 생각되면 이 인스턴스의 관리자에게 문의하여 선물 코드 및 사용 시기에 대한 자세한 정보를 알려 주세요.} other {실수라고 생각되면 고객지원팀에 문의하여 선물 코드 및 사용 시기에 대한 자세한 정보를 알려 주세요.}}\n\n– {product_name} 팀"
 	},
 	"harvest_completed": {
 		"subject": "{product_name} 데이터 내보내기를 다운로드할 수 있어요",
-		"body": "안녕하세요, {username}님.\n\n데이터 내보내기가 준비되었어요.\n\n다운로드 링크:\n{downloadUrl}\n\n포함된 메시지: {totalMessages, number}개\n파일 크기: {fileSizeMB, number} MB\n\n이 링크는 {expiresAt, date, full} {expiresAt, time, short}에 만료돼요.\n\n이 내보내기를 요청하지 않으셨다면 즉시 비밀번호를 변경하고 고객지원팀에 문의해 주세요.\n\n– {product_name} 팀"
+		"body": "안녕하세요, {username}님.\n\n데이터 내보내기가 준비되었어요.\n\n다운로드 링크:\n{downloadUrl}\n\n포함된 메시지: {totalMessages, number}개\n파일 크기: {fileSizeMB, number} MB\n\n이 링크는 {expiresAt, date, full} {expiresAt, time, short}에 만료돼요.\n\n{support_email, select, null {이 내보내기를 요청하지 않으셨다면 즉시 비밀번호를 변경하고 이 인스턴스의 관리자에게 문의해 주세요.} other {이 내보내기를 요청하지 않으셨다면 즉시 비밀번호를 변경하고 고객지원팀에 문의해 주세요.}}\n\n– {product_name} 팀"
 	},
 	"inactivity_warning": {
 		"subject": "장기간 미접속으로 {product_name} 계정이 삭제될 예정이에요",
-		"body": "안녕하세요, {username}님.\n\n{lastActiveDate, date, full} 이후로 {product_name} 계정에서 활동이 없었어요.\n\n{deletionDate, date, full} {deletionDate, time, short}까지 로그인하지 않으면 장기간 미접속으로 계정이 영구적으로 삭제될 예정이에요.\n\n여기에서 로그인해 주세요:\n{loginUrl}\n\n최근에 {product_name}를 사용하셨다면 즉시 고객지원팀에 문의해 주세요.\n\n– {product_name} 팀"
+		"body": "안녕하세요, {username}님.\n\n{lastActiveDate, date, full} 이후로 {product_name} 계정에서 활동이 없었어요.\n\n{deletionDate, date, full} {deletionDate, time, short}까지 로그인하지 않으면 장기간 미접속으로 계정이 영구적으로 삭제될 예정이에요.\n\n여기에서 로그인해 주세요:\n{loginUrl}\n\n{support_email, select, null {최근에 {product_name}를 사용하셨다면 즉시 이 인스턴스의 관리자에게 문의해 주세요.} other {최근에 {product_name}를 사용하셨다면 즉시 고객지원팀에 문의해 주세요.}}\n\n– {product_name} 팀"
 	},
 	"ip_authorization": {
 		"subject": "새 IP 주소 로그인 승인",
@@ -89,11 +89,11 @@
 	},
 	"report_resolved": {
 		"subject": "{product_name} 신고 검토가 완료되었어요",
-		"body": "안녕하세요, {username}님.\n\n접수하신 신고(ID: {reportId})를 안전팀에서 검토했어요.{hasComment, select, yes {\n\n안전팀의 답변:\n{publicComment}} other {}}\n\n모두를 위해 {product_name}를 안전하게 유지하는 데 도움을 주셔서 감사해요. 모든 신고를 진지하게 검토하고 있으며, 커뮤니티에 기여해 주셔서 감사해요.\n\n이 결과에 대해 궁금한 점이나 우려 사항이 있다면 {safety_email}으로 문의해 주세요.\n\n– {product_name} 안전팀"
+		"body": "안녕하세요, {username}님.\n\n접수하신 신고(ID: {reportId})를 안전팀에서 검토했어요.{hasComment, select, yes {\n\n안전팀의 답변:\n{publicComment}} other {}}\n\n모두를 위해 {product_name}를 안전하게 유지하는 데 도움을 주셔서 감사해요. 모든 신고를 진지하게 검토하고 있으며, 커뮤니티에 기여해 주셔서 감사해요.\n\n{safety_email, select, null {이 결과에 대해 궁금한 점이나 우려 사항이 있다면 이 인스턴스의 관리자에게 문의해 주세요.} other {이 결과에 대해 궁금한 점이나 우려 사항이 있다면 {safety_email}으로 문의해 주세요.}}\n\n– {product_name} 안전팀"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "{product_name} 계정이 영구적으로 삭제될 예정이에요",
-		"body": "안녕하세요, {username}님.\n\n{product_name} 계정이 영구적으로 삭제될 예정이에요.\n\n삭제 예정일: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n이는 중대한 조치이며, 계정 데이터는 예정된 날짜에 영구적으로 삭제될 예정이에요.\n\n이 조치가 잘못되었다고 생각되면 이의를 제기할 수 있어요. 이 이메일 주소에서 {appeals_email}으로 이메일을 보내 이의를 제기해 주세요.\n\n– {product_name} 안전팀"
+		"body": "안녕하세요, {username}님.\n\n{product_name} 계정이 영구적으로 삭제될 예정이에요.\n\n삭제 예정일: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n이는 중대한 조치이며, 계정 데이터는 예정된 날짜에 영구적으로 삭제될 예정이에요.\n\n이 조치가 잘못되었다고 생각되면 이의를 제기할 수 있어요. {appeals_email, select, null {이 인스턴스의 관리자에게 연락해 이의를 제기해 주세요.} other {이 이메일 주소에서 {appeals_email}으로 이메일을 보내 이의를 제기해 주세요.}}\n\n– {product_name} 안전팀"
 	},
 	"self_deletion_scheduled": {
 		"subject": "{product_name} 계정 삭제가 예정되었어요",

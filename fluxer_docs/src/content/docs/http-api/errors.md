@@ -25,7 +25,7 @@ The error code determines which supplementary members a failure has, and most co
 `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED` have their own members:
 
 - `ip_address` is the normalised client address.
-- `appeal_email` is the address an appeal is sent to.
+- `appeal_email` is the address an appeal is sent to. It is `null` on a self-hosted instance, where `message` points at the administrators of the instance and names no address.
 - `appeals_supported` is `true` for both kinds of ban.
 - `ban_kind` is `permanent` or `temporary_24h`. `temporary_24h` covers every ban that records an expiry, whatever its length.
 - `expires_at` is an ISO 8601 timestamp when the ban records an expiry, and `null` otherwise, including on every permanent ban.
@@ -468,11 +468,11 @@ Gift code is already redeemed
 
 ### `GLOBAL_IP_BANNED`
 
-Your IP address {ipAddress} has been permanently blocked from the Fluxer API by platform administrators
+Your IP address {ipAddress} has been permanently blocked from the {product_name} API by platform administrators
 
 ### `GLOBAL_IP_TEMPORARILY_BANNED`
 
-Your IP address {ipAddress} has been temporarily blocked from the Fluxer API
+Your IP address {ipAddress} has been temporarily blocked from the {product_name} API
 
 ### `GONE`
 

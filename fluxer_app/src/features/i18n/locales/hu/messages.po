@@ -1404,12 +1404,12 @@ msgid "{domain} runs a newer version of Fluxer than this app. Update Fluxer, the
 msgstr "A(z) {domain} a Fluxernél újabb verziót futtat, mint ez az alkalmazás. Frissítse a Fluxert, majd próbálkozzon újra."
 
 #. Profile timezone difference text. duration is a localized hours/minutes phrase for how far ahead the target user's local time is.
-#: src/features/user/components/popouts/UserProfileShared.tsx:65
+#: src/features/user/components/popouts/UserProfileShared.tsx:66
 msgid "{duration} ahead of you"
 msgstr "Időeltérés hozzád képest: +{duration}"
 
 #. Profile timezone difference text. duration is a localized hours/minutes phrase for how far behind the target user's local time is.
-#: src/features/user/components/popouts/UserProfileShared.tsx:70
+#: src/features/user/components/popouts/UserProfileShared.tsx:71
 msgid "{duration} behind you"
 msgstr "Időeltérés hozzád képest: −{duration}"
 
@@ -1528,7 +1528,7 @@ msgstr "{fps} FPS"
 
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:47
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:48
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:115
 msgid "{frameRate} FPS"
 msgstr "{frameRate} képkocka/mp"
@@ -1553,12 +1553,12 @@ msgstr "{hours, plural, one {# órával ezelőtt} other {# órával ezelőtt}}"
 #. Duration phrase in the profile timezone section. hours is a positive integer.
 #. Generic duration label for a whole number of hours.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:53
-#: src/features/user/components/popouts/UserProfileShared.tsx:79
+#: src/features/user/components/popouts/UserProfileShared.tsx:80
 msgid "{hours, plural, one {# hour} other {# hours}}"
 msgstr "{hours, plural, one {# óra} other {# óra}}"
 
 #. Duration phrase in the profile timezone section. hours and minutes are positive integers.
-#: src/features/user/components/popouts/UserProfileShared.tsx:75
+#: src/features/user/components/popouts/UserProfileShared.tsx:76
 msgid "{hours, plural, one {# hour} other {# hours}} {minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{hours, plural, one {# óra} other {# óra}} {minutes, plural, one {# perc} other {# perc}}"
 
@@ -1602,7 +1602,7 @@ msgstr "A(z) {label} fájl túl nagy. Válassz egy {maxSizeLabel} méretnél kis
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "A(z) {label} képek nem lehetnek animáltak. Használj statikus képet."
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:36
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:37
 msgid "{languageName} flag"
 msgstr "Zászló: {languageName}"
 
@@ -1678,7 +1678,7 @@ msgstr "{minutes, plural, one {# perccel ezelőtt} other {# perccel ezelőtt}}"
 #. Push notification inactive timeout option. The value is a duration in minutes.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:49
 #: src/features/user/components/modals/tabs/notifications_tab/PushSettings.tsx:25
-#: src/features/user/components/popouts/UserProfileShared.tsx:83
+#: src/features/user/components/popouts/UserProfileShared.tsx:84
 msgid "{minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{minutes, plural, one {# perc} other {# perc}}"
 
@@ -1803,15 +1803,15 @@ msgstr "A(z) {PRODUCT_NAME} új hangkimeneti eszközt talált <0>{deviceName}</0
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "A(z) {PRODUCT_NAME} újraindítása szükséges, mielőtt a Chromium natív görgetési beállításai megváltoztatnák a görgetés működését."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:209
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:214
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "A hardveres gyorsítás érvénybe lépéséhez újra kell indítani a(z) {PRODUCT_NAME} alkalmazást."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:166
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:167
 msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 msgstr "A címsor módosításának érvénybe lépéséhez újra kell indítani a(z) {PRODUCT_NAME} alkalmazást."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:211
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:219
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "A(z) {PRODUCT_NAME} újraindítása szükséges a Chromium hardveres gyorsításának kikapcsolásához. Ezt csak akkor használd, ha grafikai hibákat vagy magas GPU-használatot észlelsz."
 
@@ -1836,27 +1836,27 @@ msgid "{productName} Bug Hunter"
 msgstr "{productName} hibavadász"
 
 #. Linux settings text before system-wide shortcuts are set up. The desktop environment owns the keys. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:28
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:25
 msgid "{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys."
 msgstr "A(z) {productName} megkérheti a grafikus környezetedet, hogy akkor is futtassa a billentyűparancsait, ha a(z) {productName} nincs fókuszban. A grafikus környezeted megerősítést kér, és kiválaszthatod a billentyűket."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, on an X11 session. The app now listens for shortcuts through the X11 display server itself. Keep "X11" as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:177
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:174
 msgid "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
 msgstr "A(z) {productName} már nem tudja olvasni a billentyűzetedet, ezért helyette az X11-en keresztül figyeli a billentyűparancsokat."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, for example after a restart removed the access. The app already falls back to the shortcuts the desktop runs. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:172
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:169
 msgid "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
 msgstr "A(z) {productName} már nem tudja olvasni a billentyűzetedet, ezért helyette a grafikus környezeted billentyűparancsai működnek."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read and nothing else runs system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:182
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:179
 msgid "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
 msgstr "A(z) {productName} már nem tudja olvasni a billentyűzetedet. A billentyűparancsok csak akkor működnek, ha a(z) {productName} fókuszban van."
 
 #. Linux settings text before system-wide shortcuts are set up on the Hyprland desktop. Hyprland shows no dialog. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:34
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:31
 msgid "{productName} can register its shortcuts with Hyprland so they run while {productName} is not focused. You then bind the keys in your Hyprland config."
 msgstr "A(z) {productName} regisztrálhatja a billentyűparancsait a Hyprlandben, így azok akkor is működnek, ha a(z) {productName} nincs fókuszban. Ezután a billentyűket a Hyprland konfigurációjában rendelheted hozzá."
 
@@ -1890,12 +1890,12 @@ msgid "{productName} cannot use a hardware encoder for this, so it will use your
 msgstr "A(z) {productName} nem tud hardveres kódolót használni ehhez, ezért a processzorodat fogja használni."
 
 #. Desktop updater modal body after a manual update check finds an update. Confirming closes the app window and opens the updater. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:37
+#: src/features/updater/commands/UpdaterModalCommands.tsx:38
 msgid "{productName} closes, installs the update and opens again."
 msgstr "A(z) {productName} bezár, telepíti a frissítést, majd újra megnyílik."
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:100
+#: src/features/updater/commands/UpdaterModalCommands.tsx:101
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "A(z) {productName} nem tudta elérni a frissítési szolgáltatást. Ellenőrizd a kapcsolatodat, és próbáld újra."
 
@@ -1935,7 +1935,7 @@ msgid "{productName} has moved to {host}. Open it in your browser to install the
 msgstr "A(z) {productName} ide költözött: {host}. Nyisd meg a böngésződben az új alkalmazás telepítéséhez."
 
 #. Profile membership label showing when the user account was created.
-#: src/features/user/components/popouts/UserProfileShared.tsx:53
+#: src/features/user/components/popouts/UserProfileShared.tsx:54
 msgid "{productName} member since"
 msgstr "{productName}-tagság kezdete"
 
@@ -1960,12 +1960,12 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "A(z) {productName} hozzáférést kér a mikrofonodhoz. Engedélyezd a mikrofonhoz való hozzáférést az operációs rendszered adatvédelmi beállításaiban, majd indítsd újra az alkalmazást."
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:55
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:56
 msgid "{productName} needs camera access to list your devices."
 msgstr "A(z) {productName} alkalmazásnak kamera-hozzáférésre van szüksége az eszközök listázásához."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:136
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:137
 msgid "{productName} needs microphone access to list your devices."
 msgstr "A(z) {productName} mikrofon-hozzáférést igényel az eszközök listázásához."
 
@@ -1995,7 +1995,7 @@ msgid "{productName} recovery kit"
 msgstr "{productName} visszaállítási csomag"
 
 #. Subtitle for system-wide shortcuts on the Hyprland desktop after setup. Hyprland shows no list of assigned keys. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:58
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:55
 msgid "{productName} registered its shortcuts with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused."
 msgstr "A(z) {productName} regisztrálta a billentyűparancsait a Hyprlandben. Rendelj hozzájuk billentyűket a Hyprland konfigurációjában, hogy akkor is használhasd őket, ha a(z) {productName} nincs fókuszban."
 
@@ -2511,7 +2511,7 @@ msgid "12 months (1 year)"
 msgstr "12 hónap (1 év)"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:54
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:55
 msgid "12-hour"
 msgstr "12 órás"
 
@@ -2554,7 +2554,7 @@ msgid "24 hours"
 msgstr "24 óra"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:58
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:59
 msgid "24-hour"
 msgstr "24 órás"
 
@@ -2734,7 +2734,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "állomásnév, pl. {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:113
+#: src/features/updater/commands/UpdaterModalCommands.tsx:114
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "Elérhető egy frissítés az asztali Linux-alkalmazáshoz. Válaszd ki a rendszeredhez megfelelő csomagformátumot, és a(z) {productName} helyileg menti a csomagot."
 
@@ -2749,7 +2749,7 @@ msgid "a minute"
 msgstr "egy perc"
 
 #. Desktop updater modal body when the exact target version is unknown. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:25
+#: src/features/updater/commands/UpdaterModalCommands.tsx:26
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "Új asztali verzió érhető el. Töltsd le a telepítőt, majd futtasd a(z) {productName} frissítéséhez."
 
@@ -2817,7 +2817,7 @@ msgstr "Az alkalmazásról: {appName}"
 #: src/features/app/components/pages/YouPage.tsx:171
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:791
-#: src/features/user/components/popouts/UserProfileShared.tsx:41
+#: src/features/user/components/popouts/UserProfileShared.tsx:42
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:133
 msgid "About me"
 msgstr "Rólam"
@@ -3135,7 +3135,7 @@ msgid "Activity sharing"
 msgstr "Tevékenységmegosztás"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:488
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:489
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Tevékenységi küszöb"
@@ -3155,7 +3155,7 @@ msgstr "Tényleges méret"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:599
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:79
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:100
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:586
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:591
 msgid "Add"
 msgstr "Hozzáadás"
 
@@ -3226,7 +3226,7 @@ msgid "Add a username and password to your account first."
 msgstr "Először adj meg egy felhasználónevet és jelszót a fiókodhoz."
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:140
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:141
 msgid "Add a word…"
 msgstr "Szó hozzáadása…"
 
@@ -3244,7 +3244,7 @@ msgstr "Adj hozzá egy YouTube Data API-kulcsot a YouTube-hivatkozások gazdagí
 
 #. Generic action label that starts signing in to an additional account.
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:23
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:902
 msgid "Add account"
 msgstr "Fiók hozzáadása"
@@ -3642,7 +3642,7 @@ msgid "Address"
 msgstr "Cím"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:95
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Állítsd be az egyes beállításokat magad: zajszűrés, visszhangszűrés és erősítés."
 
@@ -3696,7 +3696,7 @@ msgid "Advanced"
 msgstr "Speciális"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:108
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:109
 msgid "Advanced video settings"
 msgstr "Speciális videobeállítások"
 
@@ -3906,22 +3906,22 @@ msgstr "Engedélyezés"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "{everyoneMention} és {hereMention} engedélyezése"
 
-#. Shown in video settings on the macOS app when camera access is denied. {PRODUCT_NAME} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:230
+#. Shown in video settings on the macOS app when camera access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:231
 msgid "Allow {PRODUCT_NAME} to access your camera in System Settings → Privacy & Security → Camera."
 msgstr "Engedélyezd, hogy a(z) {PRODUCT_NAME} hozzáférjen a kamerádhoz a Rendszerbeállítások → Adatvédelem és biztonság → Kamera menüpontban."
 
-#. Shown in voice settings on the macOS app when microphone access is denied. {PRODUCT_NAME} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:546
+#. Shown in voice settings on the macOS app when microphone access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:547
 msgid "Allow {PRODUCT_NAME} to access your microphone in System Settings → Privacy & Security → Microphone."
 msgstr "Engedélyezd, hogy a(z) {PRODUCT_NAME} hozzáférjen a mikrofonodhoz a(z) Rendszerbeállítások → Adatvédelem és biztonság → Mikrofon menüpontban."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:552
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Engedélyezd, hogy a(z) {PRODUCT_NAME} hozzáférjen a mikrofonodhoz. Ellenőrizd a böngésződ címsorát vagy beállításait."
 
 #. Body in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet. {productName} and {productName2} are the app name. Keep "Screen Recording" and "System Settings" as macOS shows them in this language.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:36
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:37
 msgid "Allow {productName} under Screen Recording in System Settings. If it is already allowed, relaunch {productName2} so macOS applies it."
 msgstr "Engedélyezd a(z) {productName} számára a Képernyőfelvétel engedélyt a Rendszerbeállításokban. Ha már engedélyezve van, indítsd újra a(z) {productName2} alkalmazást, hogy a macOS alkalmazza."
 
@@ -3961,7 +3961,7 @@ msgstr "Botok közvetlen üzeneteinek engedélyezése"
 msgid "Allow bots to send you direct messages?"
 msgstr "Engedélyezed, hogy a botok közvetlen üzeneteket küldjenek neked?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:249
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:251
 msgid "Allow camera"
 msgstr "Kamera engedélyezése"
 
@@ -4029,7 +4029,7 @@ msgstr "Engedélyezd a {readMessageHistoryPermissionLabel} jogosultsággal nem r
 msgid "Allow mentions for this role"
 msgstr "Említések engedélyezése ehhez a szerepkörhöz"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:571
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:573
 msgid "Allow microphone"
 msgstr "Mikrofon engedélyezése"
 
@@ -4275,7 +4275,7 @@ msgid "Always underline links"
 msgstr "Mindig aláhúzza a hivatkozásokat"
 
 #. Description for the in-app dictionary spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation. Hunspell is the spellcheck engine name; keep it as a product/protocol term.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:105
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:106
 msgid "Always use {productName}'s Hunspell dictionaries, downloaded on demand."
 msgstr "Mindig a(z) {productName} igény szerint letöltött Hunspell-szótárait használja."
 
@@ -4655,7 +4655,7 @@ msgid "App icon badge"
 msgstr "Alkalmazásikon-jelvény"
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:46
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:47
 msgid "App language: {format}"
 msgstr "Alkalmazás nyelvének időformátuma: {format}"
 
@@ -4804,7 +4804,7 @@ msgid "Approval required"
 msgstr "Jóváhagyás szükséges"
 
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
-#: src/features/auth/flow/AuthLoginLayout.tsx:101
+#: src/features/auth/flow/AuthLoginLayout.tsx:100
 msgid "Approve this app from the {productName} app you already use. No password needed."
 msgstr "Hagyd jóvá ezt az alkalmazást a már használt {productName} alkalmazásodból. Nincs szükség jelszóra."
 
@@ -5344,7 +5344,7 @@ msgid "Authorized on {authorizedOn}"
 msgstr "Engedélyezve: {authorizedOn}"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:50
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:51
 msgid "Auto"
 msgstr "Automatikus"
 
@@ -5369,8 +5369,8 @@ msgid "Auto-detect language"
 msgstr "Nyelv automatikus észlelése"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:115
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:475
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:476
 msgid "Auto-set activity threshold"
 msgstr "Tevékenységi küszöb automatikus beállítása"
 
@@ -5534,7 +5534,7 @@ msgstr "AV1 (külön engedélyezést igényel)"
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
-#: src/features/updater/commands/UpdaterModalCommands.tsx:123
+#: src/features/updater/commands/UpdaterModalCommands.tsx:124
 msgid "Available"
 msgstr "Elérhető"
 
@@ -5608,11 +5608,11 @@ msgstr "Jelenleg távol"
 #. Report flow: footer button that returns to the previous question.
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:164
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:167
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:168
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:61
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:360
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:381
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:401
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:361
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:382
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:402
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
 #: src/features/moderation/components/report/ReportStepDetails.tsx:374
@@ -5927,7 +5927,7 @@ msgid "Best compression. Use it only when WebRTC exposes an encoder and the GPU 
 msgstr "Legjobb tömörítés. Csak akkor használd, ha a WebRTC elérhetővé tesz egy kódolót, és a GPU-jelentés szerint hardveresen támogatott."
 
 #. CTA card title in the screen-share picker promoting the desktop app for richer screen sharing.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:12
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:13
 msgid "Best with the desktop app"
 msgstr "Asztali alkalmazással a legjobb"
 
@@ -6396,7 +6396,7 @@ msgid "Browser home"
 msgstr "Böngésző: kezdőlap"
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:42
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:43
 msgid "Browser locale: {format}"
 msgstr "Böngésző időformátuma: {format}"
 
@@ -6545,8 +6545,8 @@ msgstr "Vásárolj {premiumProductName} ajándékot a(z) {premiumProductName} la
 msgid "Buy gift"
 msgstr "Ajándék vásárlása"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:345
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:663
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:347
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:665
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Közösség létrehozásával vállalod a(z) <0>{PRODUCT_NAME} közösségi irányelvek</0> betartását és betartatását."
 
@@ -6658,7 +6658,7 @@ msgstr "Hívások"
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:734
 #: src/features/permissions/system/components/useMacPermissionControl.ts:15
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:93
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:14
@@ -6736,7 +6736,7 @@ msgstr "Kamera előnézete"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:96
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:97
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:202
 msgid "Camera quality"
 msgstr "Kamera minősége"
@@ -6809,8 +6809,8 @@ msgstr "Ide nem tölthetsz fel fájlokat"
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:74
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:418
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:170
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:426
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:174
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:197
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -6896,13 +6896,13 @@ msgstr "Ütemezett váltás visszavonása"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:980
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:262
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Előfizetés lemondása"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:257
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:256
 msgid "Cancel subscription?"
 msgstr "Előfizetés lemondása?"
 
@@ -7005,7 +7005,7 @@ msgid "Category"
 msgstr "Kategória"
 
 #. Title in a modal shown before opening a category with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:187
+#: src/features/channel/components/MatureContentChannelGate.tsx:214
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:39
 msgid "Category content warning"
 msgstr "A kategória tartalmára vonatkozó figyelmeztetés"
@@ -7131,15 +7131,15 @@ msgstr "Csoportbeli becenév módosítása"
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:67
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:90
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "Ikon módosítása"
 
 #. Button that opens the Linux desktop dialog for changing the keys of system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:83
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:80
 msgid "Change in system settings"
 msgstr "Módosítás a rendszerbeállításokban"
 
@@ -7554,7 +7554,7 @@ msgid "Channel badges"
 msgstr "Csatornajelvények"
 
 #. Title in a modal shown before opening a channel with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:189
+#: src/features/channel/components/MatureContentChannelGate.tsx:216
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:43
 msgid "Channel content warning"
 msgstr "A csatorna tartalmára vonatkozó figyelmeztetés"
@@ -7770,7 +7770,7 @@ msgid "Chat shortcuts"
 msgstr "Csevegési billentyűparancsok"
 
 #. Button on Linux that checks again whether the desktop offers system-wide shortcuts, for example after the desktop service started. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:139
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:136
 msgid "Check again"
 msgstr "Újraellenőrzés"
 
@@ -7833,7 +7833,7 @@ msgid "Checking access..."
 msgstr "Hozzáférés ellenőrzése…"
 
 #. Loading state in the screen-share picker while checking macOS screen recording permission.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:22
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:23
 msgid "Checking screen recording permission..."
 msgstr "A képernyőfelvétel engedélyének ellenőrzése..."
 
@@ -7848,17 +7848,17 @@ msgid "Checkout"
 msgstr "Fizetés"
 
 #. Modal body for the generic "checkout blocked" state on a self-hosted instance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:123
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:122
 msgid "Checkout is blocked for this account."
 msgstr "A fiókod fizetési tranzakciói blokkolva vannak."
 
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:119
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:118
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "Ennél a fióknál le van tiltva a fizetés. Ha segítségre van szükséged, írj erre a címre: {supportEmail}."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:115
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:114
 msgid "Checkout unavailable"
 msgstr "A fizetés nem elérhető"
 
@@ -8036,7 +8036,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "Válaszd ki, hogyan jelenjenek meg az időpontok az alkalmazásban"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:58
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:57
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "Válaszd ki, hogyan szeretnéd kifizetni ezt az előfizetést."
 
@@ -8050,7 +8050,7 @@ msgid "Choose one of the methods below to prove domain ownership. You only need 
 msgstr "Válassz az alábbi módszerek közül a domain tulajdonjogának igazolásához. Elég egyet elvégezned."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:166
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
 msgid "Choose payment method"
 msgstr "Fizetési mód kiválasztása"
 
@@ -8174,7 +8174,7 @@ msgstr "Válaszd ki az alapértelmezett beállításaidat"
 
 #. Heading for an authentication step that requires an instance before continuing.
 #. Heading for the login step that lets a user choose the instance before signing in.
-#: src/features/auth/flow/AuthLoginLayout.tsx:97
+#: src/features/auth/flow/AuthLoginLayout.tsx:96
 #: src/features/auth/flow/AuthRuntimeTargetGate.tsx:11
 msgid "Choose your instance"
 msgstr "Válaszd ki a példányodat"
@@ -8216,8 +8216,8 @@ msgstr "Ajándék beváltása"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:45
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:69
 #: src/features/channel/utils/CreateDMModalUtils.tsx:44
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:216
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:444
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:217
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:445
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:345
 msgid "Claim your account"
 msgstr "Fejezd be a fiókod regisztrációját"
@@ -9047,7 +9047,7 @@ msgid "Community badges"
 msgstr "Közösségi jelvények"
 
 #. Title in a modal shown before opening a community with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:185
+#: src/features/channel/components/MatureContentChannelGate.tsx:212
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:35
 msgid "Community content warning"
 msgstr "Közösségi tartalomra vonatkozó figyelmeztetés"
@@ -9089,8 +9089,8 @@ msgstr "Közösségi DM"
 msgid "Community filter"
 msgstr "Közösségi szűrő"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:277
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:600
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:278
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:601
 msgid "Community icon"
 msgstr "Közösség ikonja"
 
@@ -9235,7 +9235,7 @@ msgid "Community updated"
 msgstr "Közösség frissítve"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:38
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:39
 msgid "Community voice"
 msgstr "Közösségi hang"
 
@@ -9275,11 +9275,11 @@ msgid "Complete mature content check"
 msgstr "Felnőtt tartalomhoz szükséges ellenőrzés elvégzése"
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:157
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
 msgid "Complete payment"
 msgstr "Fizetés befejezése"
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:67
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:73
 msgid "Complete the mature content check to unlock mature media."
 msgstr "Végezd el a felnőtt tartalomhoz szükséges ellenőrzést, hogy megtekinthesd a felnőtt médiatartalmakat."
 
@@ -9409,7 +9409,7 @@ msgstr "Megerősítés"
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice-channel safety preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:24
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:18
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:19
 msgid "Confirm before joining voice channels"
 msgstr "Megerősítés hangcsatornákhoz való csatlakozás előtt"
 
@@ -9457,7 +9457,7 @@ msgstr "Erősítsd meg a nyilatkozatot a bejelentés elküldéséhez."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:30
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:31
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:398
 msgid "Confirm voice join"
 msgstr "Hangcsatornához való csatlakozás megerősítése"
@@ -9468,7 +9468,7 @@ msgid "Confirmation"
 msgstr "Megerősítés"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:46
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:47
 msgid "Confirmation or double-click for community voice joins"
 msgstr "Megerősítés vagy dupla kattintás a közösségi hangcsatornákhoz való csatlakozáshoz."
 
@@ -9476,7 +9476,7 @@ msgstr "Megerősítés vagy dupla kattintás a közösségi hangcsatornákhoz va
 msgid "Conflicts with {conflictLabel}"
 msgstr "Ütközik a(z) {conflictLabel} billentyűkombinációval"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:234
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Connect a camera and try again."
 msgstr "Csatlakoztass egy kamerát, és próbáld újra."
 
@@ -9489,7 +9489,7 @@ msgstr "Csatlakoztass egy kamerát vagy virtuális rögzítőeszközt, majd pró
 msgid "Connect a display, then try again."
 msgstr "Csatlakoztass egy kijelzőt, majd próbáld újra."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
 msgid "Connect a microphone and try again."
 msgstr "Csatlakoztass egy mikrofont, és próbáld újra."
 
@@ -9633,7 +9633,7 @@ msgstr "Kapcsolat: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:424
-#: src/features/user/components/popouts/UserProfileShared.tsx:618
+#: src/features/user/components/popouts/UserProfileShared.tsx:622
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9667,7 +9667,7 @@ msgid "Contact"
 msgstr "Kapcsolat"
 
 #. Short label in the authentication content blocked handler. Keep the tone plain and specific.
-#: src/features/auth/components/ContentBlockedHandler.tsx:10
+#: src/features/auth/components/ContentBlockedHandler.tsx:11
 msgid "Content blocked"
 msgstr "Tartalom blokkolva"
 
@@ -9741,13 +9741,13 @@ msgid "Continue in your browser"
 msgstr "Folytatás a böngészőben"
 
 #. Button in the gift time confirmation that proceeds to subscription checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
 msgid "Continue to checkout"
 msgstr "Tovább a fizetéshez"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:343
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:356
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:379
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:351
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:364
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:387
 msgid "Continue with passkey"
 msgstr "Folytatás jelszókulccsal"
 
@@ -10059,17 +10059,17 @@ msgid "Copy invite URL"
 msgstr "Meghívó URL-jének másolása"
 
 #. Button that copies Hyprland config lines to the clipboard.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:120
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:117
 msgid "Copy lines"
 msgstr "Sorok másolása"
 
 #. Screen reader name of the button that copies Hyprland config lines in the older hyprlang format. Starts with the visible button text "Copy lines". Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:129
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:126
 msgid "Copy lines for hyprland.conf"
 msgstr "Sorok másolása ehhez: hyprland.conf"
 
 #. Screen reader name of the button that copies Hyprland config lines in the Lua format. Starts with the visible button text "Copy lines". Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:124
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:121
 msgid "Copy lines for hyprland.lua"
 msgstr "Sorok másolása ehhez: hyprland.lua"
 
@@ -10343,7 +10343,7 @@ msgid "Couldn't change your price"
 msgstr "Nem sikerült módosítani az árat"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:96
+#: src/features/updater/commands/UpdaterModalCommands.tsx:97
 msgid "Couldn't check for updates"
 msgstr "Nem sikerült frissítéseket keresni"
 
@@ -10475,7 +10475,7 @@ msgid "Couldn't delete your messages"
 msgstr "Nem sikerült törölni az üzeneteket"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:105
 msgid "Couldn't download the desktop update"
 msgstr "Nem sikerült letölteni az asztali frissítést"
 
@@ -10591,7 +10591,7 @@ msgstr "Nem sikerült megnyitni a keresési eredményt"
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:29
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10758,7 +10758,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "Nem sikerült elindítani a(z) {blueskyProviderName} engedélyezési folyamatát"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:127
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:126
 msgid "Couldn't start checkout"
 msgstr "Nem sikerült elindítani a fizetést"
 
@@ -10932,7 +10932,7 @@ msgstr "Létrehozás és megosztás"
 msgid "Create a community"
 msgstr "Közösség létrehozása"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:262
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:263
 msgid "Create a community for you and your friends to chat."
 msgstr "Hozz létre egy közösséget, ahol az ismerőseiddel cseveghetsz."
 
@@ -11365,7 +11365,7 @@ msgstr "Egyéni"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
@@ -11851,7 +11851,7 @@ msgid "Deafened by moderators"
 msgstr "A moderátorok kikapcsolták a hangot"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:143
+#: src/features/updater/commands/UpdaterModalCommands.tsx:144
 msgid "DEB package"
 msgstr "DEB csomag"
 
@@ -12496,7 +12496,7 @@ msgid "Desktop app"
 msgstr "Asztali alkalmazás"
 
 #. Modal title shown after a manual desktop update check finds no update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:50
+#: src/features/updater/commands/UpdaterModalCommands.tsx:51
 msgid "Desktop app is up to date"
 msgstr "Az asztali alkalmazás naprakész"
 
@@ -12555,7 +12555,7 @@ msgid "Desktop update {version} available. Choose a Linux package."
 msgstr "Elérhető a(z) {version} asztali frissítés. Válassz Linux-csomagot."
 
 #. Modal title shown when a new desktop app update can be downloaded.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:16
+#: src/features/updater/commands/UpdaterModalCommands.tsx:17
 msgid "Desktop update available"
 msgstr "Asztali frissítés érhető el"
 
@@ -12565,7 +12565,7 @@ msgid "Desktop update available. Choose a Linux package."
 msgstr "Asztali frissítés érhető el. Válassz Linux-csomagot."
 
 #. Desktop updater modal body. The version placeholder is the target app version; productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:20
+#: src/features/updater/commands/UpdaterModalCommands.tsx:21
 msgid "Desktop version {version} is available. Download the installer, then run it to update {productName}."
 msgstr "Elérhető a(z) {version} asztali verzió. Töltsd le a telepítőt, majd futtasd a(z) {productName} frissítéséhez."
 
@@ -12613,7 +12613,7 @@ msgstr "Részletek: {reason}"
 #. Item in the textarea spellcheck language submenu that detects draft message language and switches dictionaries as the user types.
 #. Spellcheck language mode label in the language tab. The app detects the draft message language and switches dictionaries as the user types.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:83
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:126
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:127
 msgid "Detect while typing"
 msgstr "Észlelés gépelés közben"
 
@@ -12661,7 +12661,7 @@ msgid "Developer tools unavailable"
 msgstr "Fejlesztői eszközök nem érhetők el"
 
 #. Modal title when the desktop app is running unpackaged during development.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:66
+#: src/features/updater/commands/UpdaterModalCommands.tsx:67
 msgid "Development build"
 msgstr "Fejlesztői build"
 
@@ -13455,8 +13455,8 @@ msgstr "Letöltés"
 
 #. Nagbar button label that downloads the desktop app. productName is the app name.
 #. Short label in the sidebar navigation download button. Preserve {productName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:17
-#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:18
+#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:27
 msgid "Download {productName}"
 msgstr "{productName} letöltése"
 
@@ -13465,12 +13465,12 @@ msgid "Download <0>fluxer-verification</0> and place it in your <1>.well-known</
 msgstr "Töltsd le a <0>fluxer-verification</0> fájlt, és helyezd el a <1>.well-known</1> mappádba, hogy érvényesíteni tudjuk a domaint."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:98
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:99
 msgid "Download app"
 msgstr "App letöltése"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:106
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:107
 msgid "Download app button in the sidebar"
 msgstr "Alkalmazás letöltése gomb a sávban"
 
@@ -13485,7 +13485,7 @@ msgid "Download button"
 msgstr "Letöltés gomb"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:103
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:104
 msgid "Download desktop app"
 msgstr "Asztali alkalmazás letöltése"
 
@@ -13513,7 +13513,7 @@ msgid "Download image"
 msgstr "Kép letöltése"
 
 #. Button label that downloads a desktop update installer.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:29
+#: src/features/updater/commands/UpdaterModalCommands.tsx:30
 msgid "Download installer"
 msgstr "Telepítő letöltése"
 
@@ -13527,7 +13527,7 @@ msgid "Download media"
 msgstr "Média letöltése"
 
 #. Button label that downloads a selected Linux desktop update package.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:33
+#: src/features/updater/commands/UpdaterModalCommands.tsx:34
 msgid "Download package"
 msgstr "Csomag letöltése"
 
@@ -13655,11 +13655,11 @@ msgstr "Elem eldobása"
 msgid "Drop to upload background"
 msgstr "Húzd ide a hátteret a feltöltéshez"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:85
+#: src/features/channel/components/MatureContentChannelGate.tsx:100
 msgid "Due to mature content laws in {regionName}, mature content is blocked until you complete the mature content check."
 msgstr "A(z) {regionName} régióban érvényes, felnőtt tartalomra vonatkozó törvények miatt a felnőtt tartalom le van tiltva, amíg el nem végzed a hozzáféréshez szükséges ellenőrzést."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:95
+#: src/features/channel/components/MatureContentChannelGate.tsx:110
 msgid "Due to mature content laws in {regionName}, mature content is not available from here. Mature content checks are available only in the UK."
 msgstr "A(z) {regionName} régióban érvényes, felnőtt tartalomra vonatkozó törvények miatt innen nem érhető el felnőtt tartalom. A hozzáféréshez szükséges ellenőrzés csak az Egyesült Királyságban érhető el."
 
@@ -13673,7 +13673,7 @@ msgstr "A(z) {regionName} régióban érvényes, felnőtt tartalomra vonatkozó 
 msgid "Due to mature content laws in {regionName}, this content is not available from here. Mature content checks are available only in the UK."
 msgstr "A(z) {regionName} régióban érvényes, felnőtt tartalomra vonatkozó törvények miatt ez a tartalom innen nem érhető el. A hozzáféréshez szükséges ellenőrzés csak az Egyesült Királyságban érhető el."
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:61
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:67
 msgid "Due to mature content laws in {regionName}, this media is not available from your current region."
 msgstr "A(z) {regionName} régióban érvényes, felnőtt tartalomra vonatkozó törvények miatt ez a média nem érhető el a jelenlegi régiódból."
 
@@ -13715,7 +13715,7 @@ msgid "Each code works once in place of your authenticator app."
 msgstr "Minden kód egyszer használható az automatikus hitelesítő alkalmazásod helyett."
 
 #. Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:75
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:72
 msgid "Each key can run only one system-wide shortcut."
 msgstr "Egy billentyűhöz csak egy rendszerszintű billentyűparancs tartozhat."
 
@@ -14303,7 +14303,7 @@ msgid "Enable"
 msgstr "Engedélyezés"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:123
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:124
 msgid "Enable {permissionName} permission"
 msgstr "{permissionName} jogosultság engedélyezése"
 
@@ -14508,7 +14508,7 @@ msgid "Enable shortcut"
 msgstr "Billentyűparancs engedélyezése"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:86
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Enable spellcheck"
 msgstr "Helyesírás-ellenőrzés engedélyezése"
 
@@ -14602,12 +14602,12 @@ msgid "End grace now"
 msgstr "Türelmi időszak befejezése most"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:285
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:284
 msgid "End grace period"
 msgstr "Türelmi időszak befejezése"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:278
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:277
 msgid "End grace period now?"
 msgstr "Befejezed most a türelmi időszakot?"
 
@@ -14837,7 +14837,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "A folytatáshoz add meg a biztonsági kulcsod PIN-kódját."
 
 #. Title in the desktop app above the code the user types into a browser on another device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:235
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:240
 msgid "Enter this code in your browser"
 msgstr "Írd be ezt a kódot a böngészőbe"
 
@@ -14845,7 +14845,7 @@ msgstr "Írd be ezt a kódot a böngészőbe"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "Írd be ezt a kódot a böngésződbe a bejelentkezés befejezéséhez."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:148
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:150
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
 msgstr "Írd be ezt a kódot a régi {PRODUCT_NAME} alkalmazásodba a bejelentkezés befejezéséhez."
 
@@ -14916,7 +14916,7 @@ msgstr "Teljes rendszerhang"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:181
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:313
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:188
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:150
 msgid "Entrance sound"
 msgstr "Belépési hang"
@@ -15026,7 +15026,7 @@ msgstr "Este"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:172
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Kiegyenlíti a mikrofonod hangerejét, hogy ne legyél túl halk."
@@ -15249,7 +15249,7 @@ msgstr "Lejárati idő: {earliest} és {latest} között"
 msgid "Expires in {remaining}s"
 msgstr "Lejár {remaining} mp múlva"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:257
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:265
 msgid "Expires in {remainingSeconds}s"
 msgstr "Lejár: {remainingSeconds} mp múlva"
 
@@ -15728,7 +15728,7 @@ msgid "Favorite channel"
 msgstr "Csatorna hozzáadása a kedvencekhez"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:82
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:83
 msgid "Favorite channels"
 msgstr "Kedvenc csatornák"
 
@@ -16243,7 +16243,7 @@ msgstr "{threeHours} órára"
 msgid "For {twentyFourHours} hours"
 msgstr "{twentyFourHours} órára"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:255
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:256
 msgid "For British eyes only..."
 msgstr "Csak brit szemeknek..."
 
@@ -16253,22 +16253,22 @@ msgid "For me"
 msgstr "Nekem"
 
 #. Warning on GNOME when the push-to-mute shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone muted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:204
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:201
 msgid "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
 msgstr "A „Nyomva tartva némítás” funkcióhoz egyetlen billentyűt használj Ctrl, Alt vagy Shift nélkül. Billentyűkombináció esetén először a fő billentyűt engedd fel, különben a mikrofon némítva maradhat."
 
 #. Warning on GNOME when the push-to-talk shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone on.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:198
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:195
 msgid "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
 msgstr "Az adásgombhoz egyetlen billentyűt használj Ctrl, Alt vagy Shift nélkül. Billentyűkombináció esetén először a fő billentyűt engedd fel, különben a mikrofon bekapcsolva maradhat."
 
 #. Warning on GNOME when a hold shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the shortcut active.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:216
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:213
 msgid "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
 msgstr "Ehhez a billentyűparancshoz egyetlen billentyűt használj Ctrl, Alt vagy Shift nélkül. Billentyűkombináció esetén először a fő billentyűt engedd fel, különben a billentyűparancs aktív maradhat."
 
 #. Warning on GNOME when the voice activity priority shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave priority speaking on. "Voice activity priority" is the shortcut name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:210
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:207
 msgid "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
 msgstr "A „Beszédérzékelés elsőbbséggel” funkcióhoz egyetlen billentyűt használj Ctrl, Alt vagy Shift nélkül. Billentyűkombináció esetén először a fő billentyűt engedd fel, különben az elsőbbség bekapcsolva maradhat."
 
@@ -16460,14 +16460,14 @@ msgstr "Keret"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:334
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:336
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:230
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:133
 msgid "Frame rate"
 msgstr "Képkockasebesség"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:63
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "A 30 FPS feletti képkockasebességhez {premiumProductName} szükséges"
 
@@ -16926,12 +16926,12 @@ msgid "Get notified when you receive messages. You may need to allow notificatio
 msgstr "Értesítést kapsz, ha üzeneteket fogadsz. Lehet, hogy engedélyezned kell az értesítéseket a böngészőbeállításaidban. A csatornánkénti/közösségenkénti vezérléshez kattints jobb gombbal egy közösség ikonjára, és nyisd meg az értesítési beállításokat."
 
 #. Nagbar body encouraging web users to download the desktop app. productName is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:17
+#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:18
 msgid "Get the {productName} desktop app for system-wide push-to-talk and a few other goodies."
 msgstr "Töltsd le a(z) {productName} asztali alkalmazást a rendszerszintű adásgomb és néhány további extra használatához."
 
 #. CTA button label in the screen-share picker. Opens the desktop download page.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:20
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:21
 msgid "Get the desktop app"
 msgstr "Töltsd le az asztali alkalmazást"
 
@@ -17241,12 +17241,12 @@ msgid "Go back to {productName} to continue."
 msgstr "A folytatáshoz térj vissza a(z) {productName} alkalmazásba."
 
 #. Shown after approving a sign-in for an app on another device, which signs in by itself shortly. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:296
 msgid "Go back to the {PRODUCT_NAME} app. It finishes signing in on its own."
 msgstr "Vissza a(z) {PRODUCT_NAME} alkalmazásba. A bejelentkezés magától befejeződik."
 
 #. Shown after approving, when the browser has already handed the sign-in back to the desktop app. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:288
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
 msgid "Go back to the {PRODUCT_NAME} app. You can close this tab."
 msgstr "Vissza a(z) {PRODUCT_NAME} alkalmazásba. Bezárhatod ezt a lapot."
 
@@ -17702,7 +17702,7 @@ msgid "Help"
 msgstr "Súgó"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:94
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:95
 msgid "Help button"
 msgstr "Súgó gomb"
 
@@ -17712,11 +17712,11 @@ msgid "Help center"
 msgstr "Súgóközpont"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:102
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:103
 msgid "Help center button in the sidebar"
 msgstr "Súgóközpont gomb a sávban"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:348
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:349
 msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
 msgstr "Segíts a(z) {PRODUCT_NAME} fordításában a saját nyelvedre itt: <0>{I18N_WEBLATE_DOMAIN}</0>."
 
@@ -17841,7 +17841,7 @@ msgstr "Csevegés elrejtése"
 msgid "Hide community owner crown"
 msgstr "Közösségtulajdonosi korona elrejtése"
 
-#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:62
+#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:63
 msgid "Hide download button"
 msgstr "Letöltés gomb elrejtése"
 
@@ -17860,7 +17860,7 @@ msgstr "Kedvencek elrejtése"
 msgid "Hide guidelines"
 msgstr "Útmutató elrejtése"
 
-#: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:63
+#: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:64
 msgid "Hide help center button"
 msgstr "Súgóközpont gomb elrejtése"
 
@@ -17870,7 +17870,7 @@ msgid "Hide join messages"
 msgstr "Csatlakozási üzenetek elrejtése"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:50
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:51
 msgid "Hide keyboard hints"
 msgstr "Billentyűzetsúgók elrejtése"
 
@@ -18156,22 +18156,22 @@ msgid "Hyperlink"
 msgstr "Hivatkozás"
 
 #. Instructions for the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:94
 msgid "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
 msgstr "A Hyprlandben nincs billentyűparancs-párbeszédablak. Add hozzá a Hyprland-verziódnak megfelelő sorokat a Hyprland konfigurációjához, és cseréld le a KEY szót a kívánt billentyűre."
 
 #. Instructions for the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:103
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:100
 msgid "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
 msgstr "A Hyprlandben nincs billentyűparancs-párbeszédablak. A billentyűket a Hyprland konfigurációjában rendelheted hozzá."
 
 #. Label above Hyprland config lines in the older hyprlang format. Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:116
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:113
 msgid "hyprland.conf (before Hyprland 0.55)"
 msgstr "hyprland.conf (Hyprland 0.55 előtt)"
 
 #. Label above Hyprland config lines in the Lua format. Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:112
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:109
 msgid "hyprland.lua (Hyprland 0.55 and later)"
 msgstr "hyprland.lua (Hyprland 0.55 és újabb)"
 
@@ -18218,8 +18218,8 @@ msgid "I confirm in good faith that the information and allegations in this noti
 msgstr "Jóhiszeműen kijelentem, hogy az ebben a bejelentésben szereplő információk és állítások pontosak és teljesek."
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
+#: src/features/channel/components/MatureContentChannelGate.tsx:234
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:108
 msgid "I understand"
 msgstr "Értem"
 
@@ -18598,11 +18598,11 @@ msgstr "Importálás… {processedCount, number} / {totalCount, number} feldolgo
 msgid "In"
 msgstr "Ebben"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:547
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:551
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "„Operációs rendszer” módban a fent felsorolt szótárak tájékoztató jellegűek. A(z) {PRODUCT_NAME} átadja ezeket a nyelvi címkéket az operációs rendszer helyesírás-ellenőrzőjének, ha támogatott. Azokat a címkéket, amelyeket nem ismer fel, figyelmen kívül hagyja."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:318
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "Böngészőben az adásgomb csak akkor működik, ha a(z) {PRODUCT_NAME} lap fókuszban van. Telepítsd az asztali alkalmazást a rendszerszintű adásgomb használatához."
 
@@ -18650,7 +18650,7 @@ msgstr "Hangcsevegésben"
 #. Spellcheck engine option in the language tab. Uses the bundled in-app Hunspell dictionaries. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. The bundled in-app hunspell engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:75
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:100
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:101
 msgid "In-app dictionaries"
 msgstr "Alkalmazáson belüli szótárak"
 
@@ -18875,7 +18875,7 @@ msgid "Input"
 msgstr "Bevitel"
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:175
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:176
 msgid "Input and output"
 msgstr "Bemenet és kimenet"
 
@@ -18939,7 +18939,7 @@ msgid "Insert emoji"
 msgstr "Emoji beszúrása"
 
 #. CTA card body in the screen-share picker promoting the desktop app. {productName} is Fluxer.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:16
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:17
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "Telepítsd a(z) {productName} alkalmazást a teljes forrásválasztó és a gördülékenyebb képernyőmegosztási vezérlők használatához."
 
@@ -18954,12 +18954,12 @@ msgid "Install the new app"
 msgstr "Telepítsd az új alkalmazást"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:119
+#: src/features/updater/commands/UpdaterModalCommands.tsx:120
 msgid "Installed"
 msgstr "Telepítve"
 
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:54
+#: src/features/updater/commands/UpdaterModalCommands.tsx:55
 msgid "Installed version: {currentVersion}."
 msgstr "Telepített verzió: {currentVersion}."
 
@@ -19031,7 +19031,7 @@ msgstr "Felület"
 
 #. Settings section label for interface language selection.
 #. Settings section title in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:82
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:83
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Interface language"
 msgstr "Felület nyelve"
@@ -19467,13 +19467,13 @@ msgstr "Csatlakozás"
 
 #. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:30
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
 #: src/features/expressions/components/ExpressionInfoCard.tsx:94
 msgid "Join {communityName}"
 msgstr "Csatlakozás a(z) {communityName} közösséghez"
 
 #. Nagbar body inviting users to join the official product community. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:25
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "Csatlakozz a(z) {communityName} közösséghez, hogy beszélgethess a csapattal és naprakész maradj."
 
@@ -19561,7 +19561,7 @@ msgstr "Csatlakozás videóhíváshoz"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:67
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:34
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:35
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:454
 msgid "Join voice"
 msgstr "Csatlakozás a hangcsevegéshez"
@@ -19756,7 +19756,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "Tartsd meg az ingyenes és a prémium szinteket. Testre szabhatod a szinteket, prémiumot adhatsz el a Stripe-on keresztül, vagy később ajándékkódokat osztogathatsz az admin panelből."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:169
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:287
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:286
 msgid "Keep grace period"
 msgstr "Türelmi időszak megtartása"
 
@@ -19771,7 +19771,7 @@ msgid "Keep running"
 msgstr "Futtatás folytatása"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:147
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
 msgid "Keep subscription"
 msgstr "Előfizetés megtartása"
 
@@ -19786,7 +19786,7 @@ msgid "Keep this page somewhere safe. If you forget your password, you can use i
 msgstr "Őrizd meg ezt az oldalt biztonságos helyen. Ha elfelejtenéd a jelszavadat, ezzel léphetsz be újra a fiókodba. Bárki, aki birtokolja ezt a visszaállítási kulcsot, visszaállíthatja a jelszavadat, ezért soha ne oszd meg senkivel."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:79
 msgid "Keep transmitting briefly after release."
 msgstr "A gomb elengedése után is tartsa aktívnak a jelet egy rövid ideig."
 
@@ -19829,7 +19829,7 @@ msgid "Keyboard"
 msgstr "Billentyűzet"
 
 #. Linux warning when direct input device access is on but reading the keyboard failed. Not related to the "Direct input" voice processing profile. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:190
 msgid "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
 msgstr "Nem sikerült elindítani a billentyűzet-hozzáférést. A billentyűparancsok csak akkor működnek, ha a(z) {productName} fókuszban van."
 
@@ -19848,7 +19848,7 @@ msgid "Keyboard mode"
 msgstr "Billentyűzetes mód"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:62
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:63
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "Billentyűparancsok jelzése a buboréksúgókban"
 
@@ -19923,7 +19923,7 @@ msgstr "Nyelvi beállítások"
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:88
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:122
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:123
 msgid "Languages"
 msgstr "Nyelvek"
 
@@ -19971,7 +19971,7 @@ msgstr "Késleltetési grafikon"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
-#: src/features/updater/commands/UpdaterModalCommands.tsx:46
+#: src/features/updater/commands/UpdaterModalCommands.tsx:47
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:74
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
@@ -20214,12 +20214,12 @@ msgid "Let the member hear others in this community again"
 msgstr "Ismét engedélyezte, hogy a tag hallja a többieket ebben a közösségben"
 
 #. Description for the Linux direct input device access switch while it is on, on a desktop that can also run system-wide shortcuts itself (KDE, GNOME, Hyprland). {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:166
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:163
 msgid "Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead."
 msgstr "Lehetővé teszi, hogy a(z) {productName} közvetlenül olvassa a billentyűzetedet. Kapcsold ki, ha inkább a grafikus környezeteden keresztül állítanád be a billentyűparancsokat."
 
 #. Description for the Linux direct input device access switch. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:162
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:159
 msgid "Lets {productName} read your keyboard directly. Your system already allows this."
 msgstr "Lehetővé teszi, hogy a(z) {productName} közvetlenül olvassa a billentyűzetedet. A rendszered ezt már engedélyezi."
 
@@ -20512,7 +20512,7 @@ msgid "Linux default"
 msgstr "Linux alapértelmezett"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:135
+#: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Linux package"
 msgstr "Linux-csomag"
 
@@ -20648,7 +20648,7 @@ msgid "Local files"
 msgstr "Helyi fájlok"
 
 #. Profile section title for a user's local time.
-#: src/features/user/components/popouts/UserProfileShared.tsx:57
+#: src/features/user/components/popouts/UserProfileShared.tsx:58
 msgid "Local time"
 msgstr "Helyi idő"
 
@@ -20730,7 +20730,7 @@ msgid "Look and feel"
 msgstr "Megjelenés és érzet"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:673
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Úgy tűnik, ezt használod: {0}. Ha erre a(z) {PRODUCT_NAME} hangfeldolgozása is rákerül, az hangerő-ingadozást vagy torzítást okozhat. A közvetlen bemenet változtatás nélkül továbbítja a hangodat."
 
@@ -20826,7 +20826,7 @@ msgid "Make group owner"
 msgstr "Csoporttulajdonossá tétel"
 
 #. Shown above the code on the browser approval page when the app cannot be signed in automatically. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:253
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:257
 msgid "Make sure this code matches the one in the {PRODUCT_NAME} app."
 msgstr "Győződj meg róla, hogy ez a kód megegyezik a(z) {PRODUCT_NAME} alkalmazásban lévővel."
 
@@ -20966,7 +20966,7 @@ msgid "Manage your subscription"
 msgstr "Előfizetés kezelése"
 
 #. Modal title when automatic in-app desktop updates cannot be used.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:62
+#: src/features/updater/commands/UpdaterModalCommands.tsx:63
 msgid "Manual desktop update"
 msgstr "Asztali alkalmazás manuális frissítése"
 
@@ -21145,15 +21145,15 @@ msgstr "Massachusetts"
 msgid "Master volume"
 msgstr "Fő hangerő"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:141
+#: src/features/channel/components/MatureContentChannelGate.tsx:160
 msgid "Mature category"
 msgstr "Felnőtt tartalmú kategória"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:163
+#: src/features/channel/components/MatureContentChannelGate.tsx:186
 msgid "Mature channel"
 msgstr "Felnőtt tartalmú csatorna"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:118
+#: src/features/channel/components/MatureContentChannelGate.tsx:133
 msgid "Mature community"
 msgstr "Felnőtt tartalmú közösség"
 
@@ -21194,7 +21194,7 @@ msgstr "Felnőtt tartalomhoz való hozzáférés ellenőrzése elküldve"
 
 #. Body copy in the mature content check modal when the check is unavailable.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:36
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:71
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:77
 msgid "Mature content checks are currently available only in the UK."
 msgstr "A felnőtt tartalomhoz való hozzáférés ellenőrzése jelenleg csak az Egyesült Királyságban érhető el."
 
@@ -21462,7 +21462,7 @@ msgid "Member roles updated"
 msgstr "Tag szerepkörei frissítve"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:283
+#: src/features/user/components/popouts/UserProfileShared.tsx:284
 msgid "Member since"
 msgstr "Tag ekkortól"
 
@@ -22013,7 +22013,7 @@ msgstr "Mikrofon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:183
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:184
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:142
 msgid "Mic test"
 msgstr "Mikrofonteszt"
@@ -22127,7 +22127,7 @@ msgstr "Minnesota"
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:100
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:101
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
@@ -23046,7 +23046,7 @@ msgid "Neko"
 msgstr "Neko"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:66
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:67
 msgid "Neko cat that chases your cursor"
 msgstr "Neko macska, amely követi az egérmutatót"
 
@@ -23285,7 +23285,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "Új felhasználók jelenleg nem tudnak csatlakozni. Fiókot továbbra is létrehozhatsz, vagy bejelentkezhetsz, majd később újra megnyithatod ezt a linket."
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:131
+#: src/features/updater/commands/UpdaterModalCommands.tsx:132
 msgid "New version"
 msgstr "Új verzió"
 
@@ -23465,7 +23465,7 @@ msgstr "Nincsenek mentett üzenetek"
 msgid "No bot banner"
 msgstr "A botnak nincs borítóképe"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:226
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:227
 msgid "No camera found"
 msgstr "Nem található kamera"
 
@@ -23541,7 +23541,7 @@ msgid "No description."
 msgstr "Nincs leírás."
 
 #. Desktop updater modal body when no installed version string is available.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:58
+#: src/features/updater/commands/UpdaterModalCommands.tsx:59
 msgid "No desktop update is available."
 msgstr "Nem érhető el asztali frissítés."
 
@@ -23684,7 +23684,7 @@ msgstr "Nincs találat"
 msgid "No mentions yet"
 msgstr "Még nincsenek említések"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:541
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:542
 msgid "No microphone found"
 msgstr "Nem található mikrofon"
 
@@ -23731,7 +23731,7 @@ msgstr "Nincs a keresésnek megfelelő függőben lévő ismerősjelölés"
 msgid "No permissions found"
 msgstr "Nem található jogosultság"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:594
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:599
 msgid "No personal words yet."
 msgstr "Még nincsenek személyes szavak."
 
@@ -24093,7 +24093,7 @@ msgid "Not allowed"
 msgstr "Nem engedélyezett"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:79
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:76
 msgid "Not assigned"
 msgstr "Nincs hozzárendelve"
 
@@ -24423,7 +24423,7 @@ msgid "On click"
 msgstr "Kattintásra"
 
 #. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:243
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:248
 msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
 msgstr "A másik eszközödön jelentkezz be a(z) {signInAddress} címen, és add meg ezt a kódot, amikor a rendszer kéri."
 
@@ -24694,7 +24694,7 @@ msgid "Open {premiumProductFullName}"
 msgstr "Nyissa meg a(z) {premiumProductFullName}"
 
 #. Button on the browser page after approving that opens the desktop app again if it did not come to the front. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:304
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:308
 msgid "Open {PRODUCT_NAME}"
 msgstr "Nyissa meg a {PRODUCT_NAME} alkalmazást"
 
@@ -24726,7 +24726,7 @@ msgid "Open account switcher"
 msgstr "Fiókváltó megnyitása"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:112
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:113
 msgid "Open advanced media settings"
 msgstr "Speciális médiabeállítások megnyitása"
 
@@ -24788,7 +24788,7 @@ msgstr "Borítókép beállításainak megnyitása"
 msgid "Open bookmarks"
 msgstr "Mentett üzenetek megnyitása"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:184
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:188
 msgid "Open browser"
 msgstr "Böngésző megnyitása"
 
@@ -24846,7 +24846,7 @@ msgid "Open date picker"
 msgstr "Dátumválasztó megnyitása"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:92
+#: src/features/updater/commands/UpdaterModalCommands.tsx:93
 msgid "Open desktop downloads"
 msgstr "Asztali letöltések megnyitása"
 
@@ -25043,7 +25043,7 @@ msgid "Open settings"
 msgstr "Beállítások megnyitása"
 
 #. Button label that opens the software center via appstream protocol.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:88
+#: src/features/updater/commands/UpdaterModalCommands.tsx:89
 msgid "Open software center"
 msgstr "Szoftverközpont megnyitása"
 
@@ -25076,11 +25076,11 @@ msgid "Open System Settings"
 msgstr "Rendszerbeállítások megnyitása"
 
 #. Body in the screen-share picker when macOS screen recording permission is missing. {productName} is the app name. Keep "System Settings", "Privacy & Security" and the permission name as macOS shows them in this language.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:26
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:27
 msgid "Open System Settings → Privacy & Security → Screen Recording, then allow {productName}."
 msgstr "Nyisd meg a Rendszerbeállítások > Adatvédelem és biztonság > Képernyőrögzítés menüpontot, majd engedélyezd a(z) {productName} hozzáférését."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:535
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:536
 msgid "Open template JSON"
 msgstr "Sablon JSON-jának megnyitása"
 
@@ -25089,7 +25089,7 @@ msgstr "Sablon JSON-jának megnyitása"
 msgid "Open the context menu"
 msgstr "A helyi menü megnyitása"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:518
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:519
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "Nyisd meg az alábbi linket a böngésződben, majd másold ki a teljes JSON-választ, és illeszd be a mezőbe."
 
@@ -25167,11 +25167,11 @@ msgstr "Hang és videó beállítások megnyitása"
 msgid "Open with {accountName} on {instanceName}"
 msgstr "Megnyitás ezzel: {accountName} itt: {instanceName}"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:137
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:139
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Nyisd meg a böngésződet, jelentkezz be, majd add meg az alábbi kódot a fiókod összekapcsolásához."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:135
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:134
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
 msgstr "Nyisd meg a régi {PRODUCT_NAME} alkalmazásodat, válaszd az „Új eszköz csatolása” lehetőséget, majd add meg az alábbi kódot."
 
@@ -25199,7 +25199,7 @@ msgstr "Megnyitja a Tagok oldalt. Nyomj szóközt vagy entert a megnyitáshoz."
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:99
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:79
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:110
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:111
 msgid "Operating system"
 msgstr "Operációs rendszer"
 
@@ -25629,7 +25629,7 @@ msgstr "Elmúlt 7 nap"
 msgid "Paste"
 msgstr "Beillesztés"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:490
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:491
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "Illeszd be a(z) {theOtherPlatform} egyik sablonjának URL-jét, hogy a szerkezetét új közösségbe importáld."
 
@@ -25734,12 +25734,12 @@ msgid "Pay once and get a gift link to share. Gifts never renew."
 msgstr "Fizess egyszer, és kapsz egy megosztható ajándék linket. Az ajándékok soha nem újulnak meg."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:37
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Fizess a(z) {pixPaymentMethod} Automático használatával, hogy brazil bankodon keresztül engedélyezd az ismétlődő terheléseket. Vagy válaszd a „Kártya használata” lehetőséget, hogy a(z) {paymentProviderName} következő képernyőjén megadd a hitelkártyád adatait."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:48
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:47
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Fizess a(z) {upiPaymentMethod} használatával, hogy az RBI előírásainak megfelelő elektronikus beszedési felhatalmazást adj indiai bankodon keresztül. Vagy válaszd a „Kártya használata” lehetőséget, hogy a(z) {paymentProviderName} következő képernyőjén megadd a hitelkártyád adatait."
 
@@ -25933,7 +25933,7 @@ msgstr "A(z) {0} alkalmazás jogosultságai"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title for personal dictionary settings. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:131
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:132
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:94
 msgid "Personal dictionary"
 msgstr "Személyes szótár"
@@ -26004,7 +26004,7 @@ msgid "Pick at least one tag for this post."
 msgstr "Válassz legalább egy címkét ehhez a bejegyzéshez."
 
 #. Help text above the manual spellcheck dictionary picker in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:135
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:136
 msgid "Pick one or more dictionaries. Words from any selected dictionary are accepted, which is useful for multilingual chats."
 msgstr "Válassz egy vagy több szótárat. A kiválasztott szótárak bármelyikében szereplő szavakat elfogadjuk, ami többnyelvű beszélgetéseknél hasznos."
 
@@ -26690,7 +26690,7 @@ msgid "Pricing"
 msgstr "Árazás"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:149
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
 msgid "Pricing is still loading."
 msgstr "Az árak még töltődnek."
 
@@ -27069,17 +27069,17 @@ msgid "Purchased gifts"
 msgstr "Megvásárolt ajándékok"
 
 #. Modal body shown on a self-hosted instance when purchases are disabled for the account.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:111
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
 msgid "Purchases are disabled for this account."
 msgstr "A vásárlások le vannak tiltva ennél a fióknál."
 
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:107
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "A vásárlások le vannak tiltva ehhez a fiókhoz. Ha ez hibásnak tűnik, vedd fel a kapcsolatot a következő címen: {supportEmail}."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:103
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:102
 msgid "Purchases unavailable"
 msgstr "Vásárlások nem elérhetők"
 
@@ -27173,33 +27173,33 @@ msgid "Push to talk key"
 msgstr "Adásgomb billentyűje"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:353
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:354
 #: src/features/voice/components/VoiceSettingsMenus.tsx:422
 msgid "Push-to-talk"
 msgstr "Adásgomb"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:99
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:100
 msgid "Push-to-talk (limited)"
 msgstr "Adásgomb (korlátozott)"
 
 #. Voice settings warning on GNOME when the desktop has no key assigned to push-to-talk. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:243
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:240
 msgid "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
 msgstr "Az adásgombhoz még nincs rendszerszintű billentyű rendelve. Beállításához nyisd meg a Beállítások > Alkalmazások > {productName} menüpontot."
 
 #. Voice settings warning on KDE Plasma when the desktop has no key assigned to push-to-talk. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:237
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:234
 msgid "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "Az adásgombhoz még nincs rendszerszintű billentyű rendelve. Beállításához nyisd meg a Rendszerbeállítások > Billentyűzet > Gyorsbillentyűk > {productName} menüpontot."
 
 #. Voice settings warning on an unrecognized Linux desktop when the desktop has no key assigned to push-to-talk.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:248
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:245
 msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
 msgstr "Az adásgombhoz még nincs rendszerszintű billentyű rendelve. Beállításához nyisd meg a grafikus környezeted billentyűparancs-beállításait."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:706
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:709
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Közvetlen bemenet használatakor az adásgomb nem működik. A használatához válts Beszédkiemelés vagy Egyéni módra."
 
@@ -27214,27 +27214,27 @@ msgid "Push-to-talk is on. Hold your push-to-talk key to speak."
 msgstr "Az adásgomb be van kapcsolva. A beszédhez tartsd lenyomva az adásgomb billentyűjét."
 
 #. Voice settings warning on Linux when the desktop dialog for system-wide shortcuts was dismissed or failed. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:223
 msgid "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
 msgstr "Az adásgomb csak akkor működik, ha a(z) {productName} fókuszban van, mert a grafikus környezeted nem állította be a rendszerszintű billentyűparancsokat."
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:131
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:132
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled."
 msgstr "A lebegő üzenetküldés csak akkor működik, ha a(z) {productName} van fókuszban, amíg a(z) {permissionName} engedélyezve nincs."
 
 #. Voice settings warning on Linux before system-wide shortcuts are set up. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:222
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:219
 msgid "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
 msgstr "Amíg nem állítod be a rendszerszintű billentyűparancsokat, az adásgomb csak akkor működik, ha a(z) {productName} fókuszban van."
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:127
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:128
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Az adásgomb csak akkor működik, ha a böngészőlap fókuszban van."
 
 #. Linux warning next to the direct input device access switch when push-to-talk only has a key assigned by the desktop. With direct input on, only the push-to-talk key set in the app works, and without one the microphone sends whenever you speak. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:184
 msgid "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
 msgstr "Az adásgomb a(z) {productName} alkalmazásban beállított billentyűt fogja használni. Előbb állíts be egyet, különben a mikrofon hangaktivitás alapján működik."
 
@@ -27244,12 +27244,12 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "Az adásgomb nem oldja fel a mikrofon némítását, amíg a bejövő hang ki van kapcsolva. A beszédhez kapcsold vissza a hangot."
 
 #. Voice settings note on the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:259
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:256
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
 msgstr "Az adásgomb a(z) {productName} alkalmazáson kívül csak akkor működik, ha hozzárendeled a Hyprland konfigurációjában."
 
 #. Voice settings note on the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:253
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:250
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
 msgstr "Az adásgomb a(z) {productName} alkalmazáson kívül csak akkor működik, ha hozzárendeled a Hyprland konfigurációjában. Add hozzá a Hyprland-verziódnak megfelelő sort, és cseréld le a KEY szót a kívánt billentyűre."
 
@@ -27533,12 +27533,12 @@ msgstr "A címzettek a következő helyre kerülnek: {0} <0>{1}</0>"
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:90
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:91
 msgid "Recommended"
 msgstr "Ajánlott"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:83
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Ajánlott. Megtisztítja a mikrofon hangját az érthető beszédhez."
 
@@ -27553,7 +27553,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "Az újracsatlakozás sikeres. Ha folytatni szeretnéd az előző streamet, válassz újra egy képernyőt."
 
 #. Status text on Linux while the app reconnects to the desktop service that runs system-wide shortcuts, for example after it restarted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:48
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:45
 msgid "Reconnecting to your desktop…"
 msgstr "Újracsatlakozás a grafikus környezethez…"
 
@@ -27836,7 +27836,7 @@ msgstr "Újraindítás az alkalmazáshoz"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:75
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:94
 msgid "Release delay"
 msgstr "Késleltetés felengedéskor"
@@ -27853,7 +27853,7 @@ msgstr "Releváns"
 msgid "Reload"
 msgstr "Újratöltés"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:471
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:474
 msgid "Reload {PRODUCT_NAME} to fully apply the engine change. Switching between in-app and system spellcheck requires a renderer reload because Electron can't swap providers while running."
 msgstr "Töltsd újra a(z) {PRODUCT_NAME} alkalmazást a motorváltás teljes érvényesítéséhez. Az alkalmazáson belüli és a rendszer helyesírás-ellenőrzője közötti váltás megköveteli a megjelenítő újratöltését, mert az Electron futás közben nem tud szolgáltatót váltani."
 
@@ -27872,7 +27872,7 @@ msgstr "Töltsd újra a(z) {productName} alkalmazást a(z) {version} webes friss
 msgid "Reload app"
 msgstr "Alkalmazás újratöltése"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:483
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:487
 msgid "Reload now"
 msgstr "Újratöltés most"
 
@@ -27935,7 +27935,7 @@ msgid "Remove"
 msgstr "Eltávolítás"
 
 #. Button or menu action label in the language tab. Keep it concise. Preserve {word}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:144
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:145
 msgid "Remove \"{word}\" from dictionary"
 msgstr "„{word}” eltávolítása a szótárból"
 
@@ -28086,8 +28086,8 @@ msgstr "Eltávolítás az URL-en alapuló GIF-kedvencek közül"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
 #: src/features/channel/components/modals/EditGroupModal.tsx:292
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:320
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:643
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:321
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:644
 msgid "Remove icon"
 msgstr "Ikon eltávolítása"
 
@@ -29495,7 +29495,7 @@ msgid "Rows per page"
 msgstr "Sorok száma oldalanként"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:148
+#: src/features/updater/commands/UpdaterModalCommands.tsx:149
 msgid "RPM package"
 msgstr "RPM csomag"
 
@@ -29530,7 +29530,7 @@ msgid "Safety"
 msgstr "Biztonság"
 
 #. Profile timezone difference text. The target user's timezone currently matches the viewer's timezone.
-#: src/features/user/components/popouts/UserProfileShared.tsx:61
+#: src/features/user/components/popouts/UserProfileShared.tsx:62
 msgid "Same time as you"
 msgstr "Ugyanannyi az idő, mint nálad"
 
@@ -29770,7 +29770,7 @@ msgstr "Képernyőfelvétel"
 #. Heading in the screen-share picker when macOS screen recording permission is missing.
 #. Title of the modal shown when screen recording permission is denied. Keep tone plain.
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:20
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:18
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:19
 msgid "Screen recording permission required"
 msgstr "Képernyőfelvételi engedély szükséges"
 
@@ -29858,7 +29858,7 @@ msgstr "Képernyőmegosztás adatvédelme"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:104
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:105
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:214
 msgid "Screen share quality"
 msgstr "Képernyőmegosztás minősége"
@@ -30119,7 +30119,7 @@ msgid "Search language code…"
 msgstr "Nyelvkód keresése…"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:74
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:75
 msgid "Search languages…"
 msgstr "Nyelvek keresése…"
 
@@ -30552,7 +30552,7 @@ msgid "Select GIF {title}"
 msgstr "GIF kiválasztása {title}"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:78
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:79
 msgid "Select interface language"
 msgstr "Felület nyelvének kiválasztása"
 
@@ -30573,7 +30573,7 @@ msgid "Select the account you want to sign in with on your new device."
 msgstr "Válaszd ki a fiókot, amellyel be szeretnél jelentkezni az új eszközödön."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:119
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
 msgid "Select voice processing mode"
 msgstr "Hangfeldolgozási mód kiválasztása"
 
@@ -30887,7 +30887,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "Nyers mikrofonhang küldése feldolgozás nélkül."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:87
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Érintetlenül küldi a hangot. Akkor a legjobb, ha külső audioszoftvert használsz."
 
@@ -30986,7 +30986,7 @@ msgid "Set a member list position for the role"
 msgstr "Beállította a szerepkör taglistabeli pozícióját"
 
 #. Video settings note shown when a streaming preset decides the screen share resolution and frame rate. preset is the Gaming or Screen share preset label, and Custom is the third preset label.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:81
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:82
 msgid "Set by the {preset} preset. Picking a value here switches to Custom."
 msgstr "A(z) {preset} előbeállítás állította be. Az itt kiválasztott értékre váltás egyénire kapcsol."
 
@@ -31150,7 +31150,7 @@ msgid "Set the voice region to automatic"
 msgstr "A hangcsatorna régiójának automatikusra állítása"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:40
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "Beállítás"
 
@@ -31307,7 +31307,7 @@ msgstr "Megosztás egy ismerőssel"
 msgid "Share your screen"
 msgstr "Képernyő megosztása"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:318
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:320
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Képernyőmegosztás nagy felbontásban (1080p), QHD (1440p) vagy natív forrásfelbontásban, akár 60 FPS-sel."
 
@@ -31399,7 +31399,7 @@ msgstr "Rövidkódok"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:125
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:368
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:369
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -31407,7 +31407,7 @@ msgstr "Billentyűparancs"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:58
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:59
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:370
 msgid "Shortcut badges"
 msgstr "Billentyűparancs-jelvények"
@@ -31616,7 +31616,7 @@ msgid "Show favorite button"
 msgstr "Kedvenc gomb megjelenítése"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:90
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:91
 msgid "Show favorites throughout the app"
 msgstr "A kedvencek megjelenítése az alkalmazásban"
 
@@ -32039,7 +32039,7 @@ msgid "Sign in with your browser"
 msgstr "Böngészővel jelentkezzen be"
 
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:28
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
 msgstr "Jelentkezz be a régi {productName} alkalmazásoddal"
 
@@ -32097,7 +32097,7 @@ msgid "Sign out?"
 msgstr "Kijelentkezés?"
 
 #. Title of the browser page after the user cancelled the sign-in request from the app.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:322
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:326
 msgid "Sign-in cancelled"
 msgstr "Bejelentkezés megszakítva"
 
@@ -32113,7 +32113,7 @@ msgid "Sign-in details"
 msgstr "Bejelentkezési adatok"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:89
+#: src/features/auth/flow/AuthLoginLayout.tsx:88
 msgid "Sign-in flow"
 msgstr "Bejelentkezési folyamat"
 
@@ -32144,7 +32144,7 @@ msgid "Signing in as {name}"
 msgstr "Bejelentkezés ekként: {name}"
 
 #. Text button in the desktop app that shows a code to type into a browser on a different device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:214
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:219
 msgid "Signing in on another device?"
 msgstr "Bejelentkezel egy másik eszközön?"
 
@@ -32654,7 +32654,7 @@ msgstr "Hiba történt a tevékenységnapló betöltése közben."
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:33
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -32694,7 +32694,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "Hiba történt a megerősítő e-mail elküldésekor. Próbáld újra egy kis idő múlva."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:131
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "Hiba történt a fizetés elindításakor. Próbáld újra egy kis idő múlva."
 
@@ -32812,7 +32812,7 @@ msgstr "Hangok"
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Screen share resolution token in the stream info pill on the sharing tile, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:77
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:250
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:111
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:336
@@ -32988,8 +32988,8 @@ msgstr "Sebesség"
 #. Settings section label for spellcheck settings.
 #. Submenu label in the textarea right-click context menu for spellcheck preferences.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:62
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:401
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:443
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:402
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:446
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:78
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:50
@@ -32997,7 +32997,7 @@ msgid "Spellcheck"
 msgstr "Helyesírás-ellenőrzés"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:118
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:119
 msgid "Spellcheck engine"
 msgstr "Helyesírás-ellenőrző motor"
 
@@ -33099,7 +33099,7 @@ msgid "Star animation"
 msgstr "Animáció kedvencnek jelölése"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:86
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:87
 msgid "Starred channels"
 msgstr "Csillagozott csatornák"
 
@@ -33140,7 +33140,7 @@ msgstr "Hanghívás indítása?"
 msgid "Start call"
 msgstr "Hívás indítása"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:279
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:281
 msgid "Start camera test and configure effects"
 msgstr "Kamera tesztelése és effektek beállítása"
 
@@ -33175,7 +33175,7 @@ msgid "Start minimized"
 msgstr "Indítás kis méretben"
 
 #. Button on the browser page after cancelling that goes back to choosing an account.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:337
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:341
 #: src/features/moderation/components/report/ReportStepDetails.tsx:389
 #: src/features/moderation/components/report/ReportStepEmail.tsx:113
 #: src/features/moderation/components/report/ReportStepReason.tsx:149
@@ -33239,7 +33239,7 @@ msgid "Startup"
 msgstr "Indítás"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:78
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:79
 msgid "Static Neko"
 msgstr "Statikus Neko"
 
@@ -33460,12 +33460,12 @@ msgid "Still indexing — check back in a moment"
 msgstr "Még indexelés alatt – nézz vissza egy pillanat múlva"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:74
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:75
 msgid "Still Neko"
 msgstr "Mozdulatlan Neko"
 
 #. Heading in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:31
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:32
 msgid "Still waiting for screen recording access"
 msgstr "Még várunk a képernyőfelvétel engedélyezésére"
 
@@ -33494,7 +33494,7 @@ msgid "Stop mic test"
 msgstr "Mikrofonteszt leállítása"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:70
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
 msgid "Stop Neko from chasing your cursor while keeping it draggable and interactive."
 msgstr "Állítsd le Neko kurzorkövetését úgy, hogy továbbra is húzható és interaktív maradjon."
 
@@ -33777,7 +33777,7 @@ msgid "Subscription"
 msgstr "Előfizetés"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:86
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:85
 msgid "Subscription already exists"
 msgstr "Az előfizetés már létezik"
 
@@ -33957,7 +33957,7 @@ msgstr "Átváltás kényelmes elrendezésre"
 msgid "Switch to dense layout"
 msgstr "Váltás sűrű elrendezésre"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:668
 msgid "Switch to direct input"
 msgstr "Váltás közvetlen bemenetre"
 
@@ -34182,7 +34182,7 @@ msgid "System DMs cannot host voice calls."
 msgstr "A rendszerrel folytatott közvetlen beszélgetésben nem indítható hanghívás."
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:38
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:39
 msgid "System locale: {format}"
 msgstr "Rendszer időformátuma: {format}"
 
@@ -34218,17 +34218,17 @@ msgid "System tray"
 msgstr "Értesítési terület"
 
 #. Modal title when the desktop app is installed through a system package manager such as Flatpak.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:70
+#: src/features/updater/commands/UpdaterModalCommands.tsx:71
 msgid "System-managed install"
 msgstr "Rendszer által kezelt telepítés"
 
 #. Settings subsection title for keyboard and mouse shortcuts that work outside the app.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:24
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:21
 msgid "System-wide shortcuts"
 msgstr "Rendszerszintű billentyűparancsok"
 
 #. Linux settings text when setting up system-wide shortcuts failed.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:148
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:145
 msgid "System-wide shortcuts could not be set up."
 msgstr "Nem sikerült beállítani a rendszerszintű billentyűparancsokat."
 
@@ -34344,7 +34344,7 @@ msgid "Tap to add a note"
 msgstr "Koppints jegyzet hozzáadásához"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:153
+#: src/features/updater/commands/UpdaterModalCommands.tsx:154
 msgid "tar.gz archive"
 msgstr "tar.gz archívum"
 
@@ -34360,7 +34360,7 @@ msgstr "Tálcajelvény"
 msgid "Teleporting you to another voice region..."
 msgstr "Áthelyezés egy másik hangrégióba…"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:567
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:568
 msgid "Template"
 msgstr "Sablon"
 
@@ -34649,7 +34649,7 @@ msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on 
 msgstr "A(z) {PRODUCT_NAME} alkalmazás a másik eszközödön a „Bejelentkezés másik eszközön” alatt jelenik meg. Csak olyan kódot adj meg, amelyik egy általad felügyelt eszközről származik."
 
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:327
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:331
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
 msgstr "A(z) {PRODUCT_NAME} alkalmazás nem jelentkezett be. Bezárhatod ezt a lapot."
 
@@ -34714,12 +34714,12 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "Lehet, hogy a keresett közösséget törölték, vagy nincs hozzáférésed."
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:108
+#: src/features/updater/commands/UpdaterModalCommands.tsx:109
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "Nem sikerült letölteni az asztali frissítést. Próbáld újra a frissítés gombbal, ha stabil a kapcsolatod."
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:139
+#: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "A letöltött fájl a számítógépedre mentve. Telepítsd a szokásos csomagkezelőddel."
 
@@ -35177,7 +35177,7 @@ msgid "This category already contains the maximum of {maxChannelsPerCategory} ch
 msgstr "Ez a kategória már tartalmazza a maximális {maxChannelsPerCategory} csatornát."
 
 #. Body in the channel gate modal for a mature category when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:254
+#: src/features/channel/components/MatureContentChannelGate.tsx:281
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:76
 msgid "This category is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Ez a kategória felnőtt tartalommal van megjelölve, és olyan anyagokat tartalmazhat, amelyek egyes felhasználók számára nem megfelelőek."
@@ -35220,7 +35220,7 @@ msgid "This channel has a content warning. Updates can only go to channels with 
 msgstr "Ez a csatorna tartalmaz egy tartalomra vonatkozó figyelmeztetést. Frissítések csak tartalomra vonatkozó figyelmeztetéssel vagy korhatáros besorolással rendelkező csatornákra küldhetők."
 
 #. Body in the channel gate modal for a mature text channel when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:282
+#: src/features/channel/components/MatureContentChannelGate.tsx:309
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:91
 msgid "This channel is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Ez a csatorna felnőtt tartalommal van megjelölve, és olyan anyagokat tartalmazhat, amelyek egyes felhasználók számára nem megfelelőek."
@@ -35309,7 +35309,7 @@ msgid "This community is full"
 msgstr "Ez a közösség megtelt"
 
 #. Body in the channel gate modal for a mature community when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:225
+#: src/features/channel/components/MatureContentChannelGate.tsx:252
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:71
 msgid "This community is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Ez a közösség felnőtt tartalomként van megjelölve, és olyan anyagokat tartalmazhat, amelyek egyes felhasználók számára nem megfelelőek."
@@ -35324,14 +35324,14 @@ msgstr "Ez a közösség már nem elérhető"
 #. Description text in the linked accounts tab.
 #. Description text in the user profile shared popout.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:43
-#: src/features/user/components/popouts/UserProfileShared.tsx:45
+#: src/features/user/components/popouts/UserProfileShared.tsx:46
 msgid "This connection has been verified."
 msgstr "Ez a kapcsolat ellenőrizve lett."
 
 #. Description text in the linked accounts tab.
 #. Description text in the user profile shared popout.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:47
-#: src/features/user/components/popouts/UserProfileShared.tsx:49
+#: src/features/user/components/popouts/UserProfileShared.tsx:50
 msgid "This connection has not been verified."
 msgstr "Ez a kapcsolat még nincs ellenőrizve."
 
@@ -35349,22 +35349,22 @@ msgid "This conversation is no longer available."
 msgstr "Ez a beszélgetés már nem elérhető."
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:78
+#: src/features/updater/commands/UpdaterModalCommands.tsx:79
 msgid "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 msgstr "Ebben az asztali kiadásban a(z) {productName} alkalmazáson belül nem telepíthetők frissítések. Töltsd le a legújabb asztali telepítőt."
 
 #. Voice settings warning on Linux desktops without system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:232
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:229
 msgid "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused."
 msgstr "Ez a grafikus környezet nem támogatja a rendszerszintű billentyűparancsokat. Az adásgomb csak akkor működik, ha a(z) {productName} fókuszban van."
 
 #. Linux settings text when the desktop has no system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:144
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:141
 msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
 msgstr "Ez a grafikus környezet nem támogatja a rendszerszintű billentyűparancsokat. A billentyűparancsok továbbra is működnek, amíg a(z) {productName} fókuszban van."
 
 #. Desktop updater modal body for development or unpackaged builds.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:74
+#: src/features/updater/commands/UpdaterModalCommands.tsx:75
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
 msgstr "Ez a fejlesztői kiadás nem tudja frissíteni magát. Tölts le egy asztali telepítőt a frissítési folyamat kipróbálásához."
 
@@ -35476,7 +35476,7 @@ msgid "This image couldn't be read. It may be damaged."
 msgstr "A kép nem olvasható be. Lehet, hogy sérült."
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:84
+#: src/features/updater/commands/UpdaterModalCommands.tsx:85
 msgid "This install is managed by your system. Update {productName} from your software center or package manager."
 msgstr "Ezt a telepítést a rendszered kezeli. Frissítsd a(z) {productName} alkalmazást a szoftverközpontból vagy a csomagkezelőből."
 
@@ -35491,7 +35491,7 @@ msgid "This instance already uses usernames to sign in. This can no longer chang
 msgstr "Ez az instance már felhasználóneveket használ a bejelentkezéshez. Ezen már nem lehet változtatni."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:67
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "Ez a példány jelenleg legfeljebb 720p felbontású, 30 FPS-es képernyőmegosztást engedélyez."
 
@@ -35629,33 +35629,44 @@ msgid "This link isn't valid. Open the link from your email again."
 msgstr "Ez a link nem érvényes. Nyissa meg újra a linket az e-mailből."
 
 #. Body in the channel gate modal when the current user cannot access a mature category.
+#. Body text on the mature content gate when the viewer cannot open a mature category.
+#: src/features/channel/components/MatureContentChannelGate.tsx:36
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:63
 msgid "This mature category is not available to your account."
 msgstr "Ez a felnőtt tartalmú kategória nem érhető el a fiókod számára."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:147
+#: src/features/channel/components/MatureContentChannelGate.tsx:167
 msgid "This mature category is not available to your account. <0>Learn more</0>"
 msgstr "Ez a felnőtt tartalmú kategória nem érhető el a fiókod számára. <0>További információ</0>"
 
 #. Body in the channel gate modal when the current user cannot access a mature channel.
+#. Body text on the mature content gate when the viewer cannot open a mature channel.
+#: src/features/channel/components/MatureContentChannelGate.tsx:40
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:67
 msgid "This mature channel is not available to your account."
 msgstr "Ez a felnőtt tartalmú csatorna nem érhető el a fiókod számára."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:169
+#: src/features/channel/components/MatureContentChannelGate.tsx:193
 msgid "This mature channel is not available to your account. <0>Learn more</0>"
 msgstr "Ez a felnőtt tartalmú csatorna nem érhető el a fiókod számára. <0>Tudj meg többet</0>"
 
 #. Body in the channel gate modal when the current user cannot access a mature community.
+#. Body text on the mature content gate when the viewer cannot open a mature community.
+#: src/features/channel/components/MatureContentChannelGate.tsx:32
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:59
 msgid "This mature community is not available to your account."
 msgstr "Ez a felnőtt tartalmú közösség nem érhető el a fiókod számára."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:124
+#: src/features/channel/components/MatureContentChannelGate.tsx:140
 msgid "This mature community is not available to your account. <0>Learn more</0>"
 msgstr "Ez a felnőtt tartalmú közösség nem érhető el a fiókod számára. <0>További információ</0>"
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:106
+#. Body text in the mature media gate details modal when the viewer cannot open mature media.
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:31
+msgid "This mature media is not available to your account."
+msgstr "Ez a felnőtt médiatartalom nem érhető el a fiókod számára."
+
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:113
 msgid "This mature media is not available to your account. <0>Learn more</0>"
 msgstr "Ez a felnőtt médiatartalom nem érhető el a fiókod számára. <0>További információ</0>"
 
@@ -35715,9 +35726,14 @@ msgid "This picker is only available in the desktop app."
 msgstr "Ez a választó csak az asztali alkalmazásban érhető el."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:153
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
 msgid "This plan isn't available. Contact support."
 msgstr "Ez a csomag nem elérhető. Vedd fel a kapcsolatot az ügyfélszolgálattal."
+
+#. Error modal body shown on a self-hosted instance when the selected Plutonium plan has no price ID configured.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+msgid "This plan isn't available. Contact the administrators of this instance."
+msgstr "Ez a csomag nem elérhető. Vedd fel a kapcsolatot ennek a példánynak az adminisztrátoraival."
 
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:191
 msgid "This purchase is not eligible for a refund."
@@ -35837,7 +35853,7 @@ msgstr "Ez a szál lezárva. Csak moderátorok küldhetnek üzeneteket."
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Ez a felhasználó korlátozta a profilját. Néhány adat rejtve van azok elől, akik nem az ismerősei."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:395
+#: src/features/user/components/popouts/UserProfileShared.tsx:399
 msgid "This user has no roles in this community."
 msgstr "Ennek a felhasználónak nincsenek szerepkörei ebben a közösségben."
 
@@ -36050,14 +36066,14 @@ msgstr "Idő"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for app time display format.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:361
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:362
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:26
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:38
 msgid "Time format"
 msgstr "Időformátum"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:62
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:63
 msgid "Time format selection"
 msgstr "Időformátum kiválasztása"
 
@@ -36143,17 +36159,17 @@ msgid "Title bar platform"
 msgstr "Címsor platform"
 
 #. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:89
 msgid "To change the keys, go to Settings > Apps > {productName}."
 msgstr "A billentyűk módosításához nyisd meg a Beállítások > Alkalmazások > {productName} menüpontot."
 
 #. Instructions for KDE Plasma. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:87
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:84
 msgid "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "A billentyűk módosításához nyisd meg a Rendszerbeállítások > Billentyűzet > Gyorsbillentyűk > {productName} menüpontot."
 
 #. Instructions for changing system-wide shortcut keys on an unrecognized Linux desktop.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:108
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:105
 msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "A billentyűk módosításához nyisd meg a grafikus környezeted billentyűparancs-beállításait."
 
@@ -36341,7 +36357,7 @@ msgid "Toolbar"
 msgstr "Eszköztár"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:54
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:55
 msgid "Tooltip shortcuts"
 msgstr "Billentyűparancsok a buboréksúgókban"
 
@@ -36864,7 +36880,7 @@ msgstr "Huszonnégy órás"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:42
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:43
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:406
 msgid "Two clicks"
 msgstr "Két kattintás"
@@ -37263,7 +37279,7 @@ msgstr "Univerzális tartalék. Legalacsonyabb minőség, de mindenhol működik
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:770
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:115
-#: src/features/updater/commands/UpdaterModalCommands.tsx:127
+#: src/features/updater/commands/UpdaterModalCommands.tsx:128
 msgid "Unknown"
 msgstr "Ismeretlen"
 
@@ -37429,7 +37445,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "Egyéni emojik feloldása közvetlen beszélgetésekben a(z) {premiumProductName} csomaggal"
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:59
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:60
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "HD-képernyőmegosztás feloldása a(z) {premiumProductName} csomaggal"
 
@@ -37817,7 +37833,7 @@ msgid "Up to 720p at 30 FPS"
 msgstr "Akár 720p felbontás 30 FPS sebességgel"
 
 #. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:152
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:149
 msgid "Update {productName} to use system-wide shortcuts on Wayland."
 msgstr "Frissítsd a(z) {productName} alkalmazást, hogy Waylanden is használhasd a rendszerszintű billentyűparancsokat."
 
@@ -37841,7 +37857,7 @@ msgid "Update my status"
 msgstr "Állapotom frissítése"
 
 #. Button label that closes the desktop app and opens the updater to install an available update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:42
+#: src/features/updater/commands/UpdaterModalCommands.tsx:43
 msgid "Update now"
 msgstr "Frissítés most"
 
@@ -38008,8 +38024,8 @@ msgstr "Fájlok és média feltöltése ebben a csatornában."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "Ikon feltöltése"
@@ -38166,7 +38182,7 @@ msgid "Use {name} on {domain}"
 msgstr "Használja a(z) {name} szolgáltatást a(z) {domain} címen"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:44
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:43
 msgid "Use {pixPaymentMethod}"
 msgstr "{pixPaymentMethod} használata"
 
@@ -38181,7 +38197,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "A fordítandó szöveg beillesztési helyén használd a(z) {query} helyőrzőt."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:54
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:53
 msgid "Use {upiPaymentMethod}"
 msgstr "{upiPaymentMethod} használata"
 
@@ -38219,7 +38235,7 @@ msgid "Use actual value"
 msgstr "Tényleges érték használata"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:63
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:62
 msgid "Use alternative method"
 msgstr "Másik fizetési mód használata"
 
@@ -38245,12 +38261,12 @@ msgid "Use autoscrolling"
 msgstr "Automatikus görgetés használata"
 
 #. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:70
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:71
 msgid "Use browser locale for time format"
 msgstr "Böngésző területi beállításainak használata az időformátumhoz"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:174
 msgid "Use card"
 msgstr "Kártya használata"
 
@@ -38297,7 +38313,7 @@ msgid "Use default"
 msgstr "Alapértelmezett használata"
 
 #. Switch label on Linux. When on, the app reads keyboard devices directly for system-wide shortcuts. Not related to the "Direct input" voice processing profile.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:157
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:154
 msgid "Use direct input device access"
 msgstr "Közvetlen bemeneti eszközhozzáférés használata"
 
@@ -38391,7 +38407,7 @@ msgid "Use stickers from other communities."
 msgstr "Matricák használata más közösségekből."
 
 #. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:66
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:67
 msgid "Use system locale for time format"
 msgstr "Rendszer területi beállításainak használata az időformátumhoz"
 
@@ -38406,7 +38422,7 @@ msgid "Use the operating system's window chrome"
 msgstr "Az operációs rendszer ablakkeretének használata"
 
 #. Description for the operating-system spellcheck engine option in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:114
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:115
 msgid "Use the spellchecker built into your operating system."
 msgstr "Használd az operációs rendszeredbe beépített helyesírás-ellenőrzőt."
 
@@ -38452,7 +38468,7 @@ msgid "Use voice activity"
 msgstr "Beszédérzékelés használata"
 
 #. Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:94
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:95
 msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
 msgstr "Használd az operációs rendszered helyesírás-ellenőrzőjét, ha elérhető. Ellenkező esetben használd a(z) {productName} beépített szótárait."
 
@@ -38926,7 +38942,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "Ismerősjelölések küldése előtt erősítsd meg az e-mail-címedet."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:67
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:66
 msgid "Verify your email first"
 msgstr "Előbb erősítsd meg az e-mail-címedet"
 
@@ -39244,7 +39260,7 @@ msgstr "Részletek megtekintése"
 msgid "View devices that are signed in to your account"
 msgstr "A fiókodba bejelentkezett eszközök megtekintése"
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:198
+#: src/features/user/components/popouts/UserProfileShared.tsx:199
 msgid "View full profile"
 msgstr "Teljes profil megtekintése"
 
@@ -39387,7 +39403,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "Visionary 2FA értesítősáv"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:80
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:79
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "A Visionary már tartalmazza az állandó hozzáférést, így nincs szükség ismétlődő előfizetésre. Továbbra is vásárolhatsz ajándékokat másoknak."
 
@@ -39535,7 +39551,7 @@ msgstr "Hangcsatorna"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:27
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:402
 msgid "Voice channel confirmation"
 msgstr "Hangcsatorna megerősítése"
@@ -39546,7 +39562,7 @@ msgid "Voice channel full"
 msgstr "A hangcsatorna megtelt"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:23
 msgid "Voice channel join behavior"
 msgstr "Csatlakozási viselkedés hangcsatornán"
 
@@ -39615,7 +39631,7 @@ msgid "Voice participants"
 msgstr "Hanghívás résztvevői"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:661
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:663
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Hangfeldolgozás"
@@ -39661,7 +39677,7 @@ msgstr "Bejövő hang visszakapcsolása"
 msgid "Voice unmute"
 msgstr "Mikrofon némításának feloldása"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:590
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:592
 msgid "Voice uses your system output device in this browser. Change it in your system settings."
 msgstr "A hang a böngészőben az alapértelmezett rendszerkimeneti eszközödet használja. Módosítsd a rendszerbeállításaidban."
 
@@ -39675,7 +39691,7 @@ msgstr "Érvénytelenítve"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:387
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:179
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
@@ -39723,7 +39739,7 @@ msgstr "Várakozás az üzenetek között. A(z) „{bypassSlowmodePermissionLabe
 msgid "Waiting for connection..."
 msgstr "Kapcsolódásra vár..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:366
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:374
 msgid "Waiting for passkey…"
 msgstr "Várakozás a jelszókulcsra…"
 
@@ -39743,7 +39759,7 @@ msgid "Waiting for you to..."
 msgstr "Rád vár, hogy..."
 
 #. Status text while the Linux desktop shows its own dialog for confirming system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:44
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:41
 msgid "Waiting for your desktop…"
 msgstr "Várakozás a grafikus környezetre…"
 
@@ -39887,7 +39903,7 @@ msgid "We couldn't read this theme. It may be corrupted or invalid."
 msgstr "Nem tudtuk beolvasni ezt a témát. Lehet, hogy sérült vagy érvénytelen."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:91
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:90
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "A fiókhoz már tartozik {premiumProductFullName} előfizetés. A biztonságos számlázási portálon módosíthatod a fizetési adatokat és ellenőrizheted a megújítás állapotát. Ha most fizettél, várj egy percet, majd nyisd meg újra ezt az oldalt."
 
@@ -39914,7 +39930,7 @@ msgstr "Átméreteztük és tömörítettük ezt a matricát 320x320 képpontra,
 msgid "We sent a code to {email}."
 msgstr "Kódot küldtünk a következő címre: {email}."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:158
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:162
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Előre kitöltjük a(z) {prefillEmail} címet, amint megnyílik a böngészős bejelentkezés."
 
@@ -40111,7 +40127,7 @@ msgid "Website previews"
 msgstr "Webhelyelőnézetek"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:93
+#: src/features/auth/flow/AuthLoginLayout.tsx:92
 msgid "Welcome back"
 msgstr "Üdv újra"
 
@@ -40321,7 +40337,7 @@ msgstr "Mely közösségek"
 msgid "Which conversations"
 msgstr "Mely beszélgetések"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:363
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Amíg az adásgomb be van kapcsolva, a billentyűparancs vezérli a mikrofonodat, ezért a némítás gomb nem használható."
 
@@ -40631,7 +40647,7 @@ msgid "You are now a developer!"
 msgstr "Mostantól fejlesztő vagy!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:165
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "Most átirányítunk a(z) {paymentProviderName} felületére a fizetés befejezéséhez. Ha végeztél, térj vissza a(z) {productName} alkalmazásba."
 
@@ -41052,12 +41068,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Megnyomtad a Tab billentyűt. Bekapcsolt a billentyűzetes mód, így egér nélkül is navigálhatsz a(z) {productName} alkalmazásban."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:259
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:258
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Az előnyöket a következő megújítási dátumig megtartod. Ha addig újraaktiválod az előfizetést, megőrzöd az előfizetői előzményeidet."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:280
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:279
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Azonnal elveszíted a(z) {PREMIUM_PRODUCT_NAME} összes előnyét, és az előfizetői előzményeid lenullázódnak. Ez nem vonható vissza."
 
@@ -41137,8 +41153,8 @@ msgstr "Más közösségek emojijainak itteni használatához a(z) „{permissio
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Más közösségek matricáinak itteni használatához a(z) „{permissionLabel}” jogosultságra van szükséged."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:210
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:438
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:211
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:439
 msgid "You need to claim your account before you can create a community."
 msgstr "Közösség létrehozása előtt be kell fejezned a fiókod regisztrációját."
 
@@ -41155,8 +41171,8 @@ msgstr "Közvetlen üzenetek küldéséhez be kell fejezned a fiókod regisztrá
 msgid "You need to claim your account to send messages in this community."
 msgstr "Ahhoz, hogy ebben a közösségben üzeneteket küldhess, be kell fejezned a fiókod regisztrációját."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:235
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:463
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:236
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:464
 msgid "You need to verify your email address before you can create a community."
 msgstr "Közösség létrehozása előtt meg kell erősítened az e-mail-címedet."
 
@@ -41170,7 +41186,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "Közvetlen beszélgetés indítása előtt meg kell erősítened az e-mail-címedet."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:71
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:70
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "Az e-mail-címedet igazolnod kell, mielőtt megvásárolhatnád a(z) {premiumProductFullName} terméket."
 
@@ -41214,7 +41230,7 @@ msgid "You'll appear offline"
 msgstr "Offline állapotban fogsz megjelenni"
 
 #. Body of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription. The subscription is charged immediately and the unused gift time is appended after the paid period.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:139
 msgid "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost."
 msgstr "Most terhelünk. A fennmaradó ajándékidő a fizetett időszak után kerül hozzáadásra, így nem vész el."
 
@@ -41262,7 +41278,7 @@ msgid "You're already friends with this user."
 msgstr "Már ismerősök vagytok ezzel a felhasználóval."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:76
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:75
 msgid "You're already Visionary"
 msgstr "Már Visionary vagy"
 
@@ -41381,7 +41397,7 @@ msgid "You're sending reports too quickly. Try again later."
 msgstr "Túl gyorsan küldöd a bejelentéseket. Próbáld újra később."
 
 #. Title of the browser page after the user approved signing in to the app.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:282
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:286
 msgid "You're signed in"
 msgstr "Bejelentkeztél"
 
@@ -41500,7 +41516,7 @@ msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Láttad az összes legutóbbi említésedet. Hamarosan újabbak jelennek meg itt."
 
 #. Modal body for existing-subscription block when the subscription was bought in a mobile app store. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {premiumProductFullName} is the full premium product name.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:97
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:96
 msgid "Your {premiumProductFullName} subscription is billed through {storeName}. Manage it in your {storeName} account to change your plan or check renewal status."
 msgstr "A(z) {premiumProductFullName} előfizetésed számlázása a(z) {storeName} szolgáltatáson keresztül történik. A(z) {storeName} fiókodban módosíthatod a csomagodat és ellenőrizheted a megújítás állapotát."
 
@@ -41559,9 +41575,13 @@ msgstr "A fiókod túl új ahhoz, hogy üzeneteket küldj ebben a közösségben
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "A fiókkérelmed jóváhagyásra vár. Bejelentkezhetsz, miután egy admin jóváhagyta."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:297
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:304
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "A fiókodhoz többlépcsős azonosítás szükséges, de ezen az eszközön nincs beállítva támogatott módszer. Jelentkezz be egy olyan eszközön, amelyen elérhető a hitelesítő alkalmazásod vagy a biztonsági kulcsod, vagy lépj kapcsolatba az ügyfélszolgálattal."
+
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:298
+msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact the administrators of this instance."
+msgstr "A fiókodhoz többlépcsős azonosítás szükséges, de ezen az eszközön nincs beállítva támogatott módszer. Jelentkezz be egy olyan eszközön, amelyen elérhető a hitelesítő alkalmazásod vagy a biztonsági kulcsod, vagy lépj kapcsolatba ennek a példánynak az adminisztrátoraival."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
@@ -41574,9 +41594,14 @@ msgid "Your accounts and settings have not been changed or deleted."
 msgstr "Fiókjaid és beállításaid nem változtak vagy törlődtek."
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
-#: src/features/auth/components/ContentBlockedHandler.tsx:14
+#: src/features/auth/components/ContentBlockedHandler.tsx:15
 msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "A műveletet nem sikerült végrehajtani, mert a biztonsági rendszereink megjelölték. Ha úgy gondolod, ez tévedés, vedd fel a kapcsolatot az ügyfélszolgálattal."
+
+#. Modal body shown on a self-hosted instance when the safety system blocks the requested action. Keep plain and calm.
+#: src/features/auth/components/ContentBlockedHandler.tsx:21
+msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
+msgstr "A műveletet nem sikerült végrehajtani, mert a biztonsági rendszereink megjelölték. Ha úgy gondolod, ez tévedés, vedd fel a kapcsolatot ennek a példánynak az adminisztrátoraival."
 
 #. Report flow: section heading above the list of answers the reporter picked, on the summary screen.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:26
@@ -41625,22 +41650,22 @@ msgid "Your current kit stops working as soon as the new one is created."
 msgstr "Az aktuális készleted azonnal használhatatlanná válik, amint létrehozol egy újat."
 
 #. Linux settings text when the desktop dialog for system-wide shortcuts was dismissed or failed. Neutral wording, the user may not have declined anything.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:134
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:131
 msgid "Your desktop didn't set up system-wide shortcuts."
 msgstr "A grafikus környezeted nem állította be a rendszerszintű billentyűparancsokat."
 
 #. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME). A key assigned here stops reaching every other app. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:61
 msgid "Your desktop keeps these keys for {productName}, so other apps can't use them."
 msgstr "A grafikus környezeted lefoglalja ezeket a billentyűket a(z) {productName} számára, így más alkalmazások nem tudják használni őket."
 
 #. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME), shown when the "Use direct input device access" switch is offered below it. A key assigned here stops reaching every other app. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:69
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:66
 msgid "Your desktop keeps these keys for {productName}, so other apps can't use them. To use the same key in other apps, turn on direct input device access below."
 msgstr "A grafikus környezeted lefoglalja ezeket a billentyűket a(z) {productName} számára, így más alkalmazások nem tudják használni őket. Ha ugyanazt a billentyűt más alkalmazásokban is használnád, kapcsold be lent a közvetlen bemeneti eszközhozzáférést."
 
 #. Subtitle above the list of system-wide shortcuts assigned by the Linux desktop. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:53
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:50
 msgid "Your desktop runs these shortcuts even while {productName} is not focused."
 msgstr "A grafikus környezeted akkor is futtatja ezeket a billentyűparancsokat, ha a(z) {productName} nincs fókuszban."
 
@@ -41729,7 +41754,7 @@ msgid "Your gift time has ended. Subscribe to keep {premiumProductName}."
 msgstr "Ajándékidőszakod lejárt. Iratkozz fel, hogy megtarthasd a(z) {premiumProductName} előfizetést."
 
 #. Title of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:134
 msgid "Your gift time is kept"
 msgstr "Megtartod az ajándékidődet"
 
@@ -41744,7 +41769,7 @@ msgid "Your grace period has ended."
 msgstr "A türelmi időszak lejárt."
 
 #. Critical nagbar body shown when the desktop installation appears corrupted. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:13
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:14
 msgid "Your installation is corrupted, and you need to reinstall the app for all functionality to work."
 msgstr "A telepítés sérült, az alkalmazás minden funkciójának működéséhez újra kell telepítened."
 
@@ -41771,22 +41796,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "Az utolsó vásárlásod már kívül esik a visszatérítési időszakon. Számlázási problémák esetén vedd fel a kapcsolatot az ügyfélszolgálattal."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:82
+#: src/features/messaging/state/MessageQueue.tsx:83
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Az üzenetedet nem sikerült kézbesíteni, mert a biztonsági rendszereink megjelölték. Ha úgy gondolod, ez tévedés, kérjük, vedd fel a kapcsolatot az ügyfélszolgálattal."
 
+#. Message send error on a self-hosted instance when the safety system blocks the message.
+#: src/features/messaging/state/MessageQueue.tsx:88
+msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
+msgstr "Az üzenetedet nem sikerült kézbesíteni, mert a biztonsági rendszereink megjelölték. Ha úgy gondolod, ez tévedés, kérjük, vedd fel a kapcsolatot ennek a példánynak az adminisztrátoraival."
+
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:69
+#: src/features/messaging/state/MessageQueue.tsx:70
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "Az üzenetedet nem sikerült kézbesíteni. Ez általában azért van, mert nem vagytok egy közösségben a címzettel, vagy a címzett csak az ismerőseitől fogad közvetlen üzeneteket. Lehet, hogy a saját, közvetlen üzenetekre vonatkozó adatvédelmi beállításaidat is módosítanod kell itt: {directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:74
+#: src/features/messaging/state/MessageQueue.tsx:75
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "Az üzenetedet nem sikerült kézbesíteni. Közvetlen üzenetek küldéséhez fejezd be a fiókod regisztrációját."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:78
+#: src/features/messaging/state/MessageQueue.tsx:79
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "Az üzenetedet nem sikerült kézbesíteni. Üzenetek küldéséhez fejezd be a fiókod regisztrációját."
 
@@ -41885,7 +41915,7 @@ msgid "Your report didn't go through. Try again."
 msgstr "A bejelentésedet nem sikerült elküldeni. Próbáld újra."
 
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:87
 msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
 msgstr "A mentett {savedResolution} {savedFrameRate} FPS minőséghez {premiumProductName} szükséges, ezért a megosztások {resolution} minőségben, {frameRate} FPS sebességgel történnek."
 

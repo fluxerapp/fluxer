@@ -1404,12 +1404,12 @@ msgid "{domain} runs a newer version of Fluxer than this app. Update Fluxer, the
 msgstr "{domain} používá novější verzi Fluxeru než tato aplikace. Aktualizujte Fluxer a zkuste to znovu."
 
 #. Profile timezone difference text. duration is a localized hours/minutes phrase for how far ahead the target user's local time is.
-#: src/features/user/components/popouts/UserProfileShared.tsx:65
+#: src/features/user/components/popouts/UserProfileShared.tsx:66
 msgid "{duration} ahead of you"
 msgstr "O {duration} před vámi"
 
 #. Profile timezone difference text. duration is a localized hours/minutes phrase for how far behind the target user's local time is.
-#: src/features/user/components/popouts/UserProfileShared.tsx:70
+#: src/features/user/components/popouts/UserProfileShared.tsx:71
 msgid "{duration} behind you"
 msgstr "O {duration} za vámi"
 
@@ -1528,7 +1528,7 @@ msgstr "{fps} FPS"
 
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:47
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:48
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:115
 msgid "{frameRate} FPS"
 msgstr "{frameRate} snímků/s"
@@ -1553,12 +1553,12 @@ msgstr "{hours, plural, one {Před # hodinou} few {Před # hodinami} many {Před
 #. Duration phrase in the profile timezone section. hours is a positive integer.
 #. Generic duration label for a whole number of hours.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:53
-#: src/features/user/components/popouts/UserProfileShared.tsx:79
+#: src/features/user/components/popouts/UserProfileShared.tsx:80
 msgid "{hours, plural, one {# hour} other {# hours}}"
 msgstr "{hours, plural, one {# hodina} few {# hodiny} many {# hodiny} other {# hodin}}"
 
 #. Duration phrase in the profile timezone section. hours and minutes are positive integers.
-#: src/features/user/components/popouts/UserProfileShared.tsx:75
+#: src/features/user/components/popouts/UserProfileShared.tsx:76
 msgid "{hours, plural, one {# hour} other {# hours}} {minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{hours, plural, one {# hodina} few {# hodiny} many {# hodiny} other {# hodin}} {minutes, plural, one {# minuta} few {# minuty} many {# minuty} other {# minut}}"
 
@@ -1602,7 +1602,7 @@ msgstr "Soubor {label} je příliš velký. Vyberte soubor menší než {maxSize
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "Obrázky {label} nemohou být animované. Použijte statický obrázek."
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:36
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:37
 msgid "{languageName} flag"
 msgstr "Vlajka: {languageName}"
 
@@ -1678,7 +1678,7 @@ msgstr "{minutes, plural, one {Před # minutou} few {Před # minutami} many {Př
 #. Push notification inactive timeout option. The value is a duration in minutes.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:49
 #: src/features/user/components/modals/tabs/notifications_tab/PushSettings.tsx:25
-#: src/features/user/components/popouts/UserProfileShared.tsx:83
+#: src/features/user/components/popouts/UserProfileShared.tsx:84
 msgid "{minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{minutes, plural, one {# minuta} few {# minuty} many {# minuty} other {# minut}}"
 
@@ -1803,15 +1803,15 @@ msgstr "Aplikace {PRODUCT_NAME} našla nové výstupní zvukové zařízení s n
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "Aby se změny nastavení nativního posouvání Chromia projevily, je potřeba restartovat aplikaci {PRODUCT_NAME}."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:209
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:214
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "Aby se změna hardwarové akcelerace projevila, je potřeba restartovat aplikaci {PRODUCT_NAME}."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:166
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:167
 msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 msgstr "Aby se změna záhlaví okna projevila, je potřeba restartovat aplikaci {PRODUCT_NAME}."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:211
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:219
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "Aplikace {PRODUCT_NAME} se musí restartovat, aby se vypnula hardwarová akcelerace Chromia. Tuto možnost použijte pouze při řešení problémů s grafikou nebo vysokým využitím GPU."
 
@@ -1836,27 +1836,27 @@ msgid "{productName} Bug Hunter"
 msgstr "Lovec chyb {productName}"
 
 #. Linux settings text before system-wide shortcuts are set up. The desktop environment owns the keys. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:28
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:25
 msgid "{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys."
 msgstr "Aplikace {productName} může požádat vaše desktopové prostředí, aby spouštělo její zkratky, i když okno aplikace {productName} není aktivní. Desktopové prostředí vás požádá o potvrzení a umožní vám vybrat klávesy."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, on an X11 session. The app now listens for shortcuts through the X11 display server itself. Keep "X11" as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:177
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:174
 msgid "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
 msgstr "Aplikace {productName} už nemůže číst vaši klávesnici, a proto místo toho sleduje klávesové zkratky přes X11."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, for example after a restart removed the access. The app already falls back to the shortcuts the desktop runs. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:172
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:169
 msgid "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
 msgstr "Aplikace {productName} už nemůže číst vaši klávesnici, a proto se místo toho používají zkratky vašeho desktopového prostředí."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read and nothing else runs system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:182
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:179
 msgid "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
 msgstr "Aplikace {productName} už nemůže číst vaši klávesnici. Klávesové zkratky fungují jen při aktivním okně aplikace {productName}."
 
 #. Linux settings text before system-wide shortcuts are set up on the Hyprland desktop. Hyprland shows no dialog. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:34
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:31
 msgid "{productName} can register its shortcuts with Hyprland so they run while {productName} is not focused. You then bind the keys in your Hyprland config."
 msgstr "Aplikace {productName} může zaregistrovat své zkratky v Hyprlandu, aby fungovaly, i když okno aplikace {productName} není aktivní. Klávesy pak přiřadíte v konfiguraci Hyprlandu."
 
@@ -1890,12 +1890,12 @@ msgid "{productName} cannot use a hardware encoder for this, so it will use your
 msgstr "Aplikace {productName} nemůže použít hardwarový enkodér, takže bude využívat váš procesor."
 
 #. Desktop updater modal body after a manual update check finds an update. Confirming closes the app window and opens the updater. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:37
+#: src/features/updater/commands/UpdaterModalCommands.tsx:38
 msgid "{productName} closes, installs the update and opens again."
 msgstr "{productName} se zavře, nainstaluje aktualizaci a znovu se otevře."
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:100
+#: src/features/updater/commands/UpdaterModalCommands.tsx:101
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "Aplikace {productName} se nemohla připojit ke službě pro aktualizace. Zkontrolujte své připojení a zkuste to znovu."
 
@@ -1935,7 +1935,7 @@ msgid "{productName} has moved to {host}. Open it in your browser to install the
 msgstr "{productName} se přesunul na {host}. Otevřete jej v prohlížeči a nainstalujte novou aplikaci."
 
 #. Profile membership label showing when the user account was created.
-#: src/features/user/components/popouts/UserProfileShared.tsx:53
+#: src/features/user/components/popouts/UserProfileShared.tsx:54
 msgid "{productName} member since"
 msgstr "Členem {productName} od"
 
@@ -1960,12 +1960,12 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "{productName} potřebuje přístup k vašemu mikrofonu. Povolte přístup k mikrofonu v nastavení soukromí operačního systému a restartujte aplikaci."
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:55
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:56
 msgid "{productName} needs camera access to list your devices."
 msgstr "Aplikace {productName} potřebuje přístup ke kameře, aby mohla zobrazit vaše zařízení."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:136
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:137
 msgid "{productName} needs microphone access to list your devices."
 msgstr "Aplikace {productName} potřebuje přístup k mikrofonu, aby mohla zobrazit vaše zařízení."
 
@@ -1995,7 +1995,7 @@ msgid "{productName} recovery kit"
 msgstr "Klíč k obnovení {productName}"
 
 #. Subtitle for system-wide shortcuts on the Hyprland desktop after setup. Hyprland shows no list of assigned keys. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:58
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:55
 msgid "{productName} registered its shortcuts with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused."
 msgstr "Aplikace {productName} zaregistrovala své zkratky v Hyprlandu. Přiřaďte jim klávesy v konfiguraci Hyprlandu, abyste je mohli používat, i když okno aplikace {productName} není aktivní."
 
@@ -2511,7 +2511,7 @@ msgid "12 months (1 year)"
 msgstr "12 měsíců (1 rok)"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:54
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:55
 msgid "12-hour"
 msgstr "12hodinový"
 
@@ -2554,7 +2554,7 @@ msgid "24 hours"
 msgstr "24 hodin"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:58
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:59
 msgid "24-hour"
 msgstr "24hodinový"
 
@@ -2734,7 +2734,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "název hostitele, např. {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:113
+#: src/features/updater/commands/UpdaterModalCommands.tsx:114
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "Je k dispozici aktualizace desktopové aplikace pro Linux. Vyberte formát balíčku pro tento systém a aplikace {productName} jej uloží do počítače."
 
@@ -2749,7 +2749,7 @@ msgid "a minute"
 msgstr "minutu"
 
 #. Desktop updater modal body when the exact target version is unknown. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:25
+#: src/features/updater/commands/UpdaterModalCommands.tsx:26
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "Je k dispozici nová verze desktopové aplikace. Stáhněte instalační program a spusťte jej, abyste aktualizovali {productName}."
 
@@ -2817,7 +2817,7 @@ msgstr "O aplikaci {appName}"
 #: src/features/app/components/pages/YouPage.tsx:171
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:791
-#: src/features/user/components/popouts/UserProfileShared.tsx:41
+#: src/features/user/components/popouts/UserProfileShared.tsx:42
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:133
 msgid "About me"
 msgstr "O mně"
@@ -3135,7 +3135,7 @@ msgid "Activity sharing"
 msgstr "Sdílení aktivit"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:488
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:489
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Práh aktivity"
@@ -3155,7 +3155,7 @@ msgstr "Skutečná velikost"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:599
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:79
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:100
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:586
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:591
 msgid "Add"
 msgstr "Přidat"
 
@@ -3226,7 +3226,7 @@ msgid "Add a username and password to your account first."
 msgstr "Nejprve si k účtu přidejte uživatelské jméno a heslo."
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:140
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:141
 msgid "Add a word…"
 msgstr "Přidat slovo…"
 
@@ -3244,7 +3244,7 @@ msgstr "Přidejte klíč YouTube Data API pro doplnění informací k odkazům n
 
 #. Generic action label that starts signing in to an additional account.
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:23
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:902
 msgid "Add account"
 msgstr "Přidat účet"
@@ -3642,7 +3642,7 @@ msgid "Address"
 msgstr "Adresa"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:95
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Upravte si každé nastavení sami: potlačení šumu, potlačení ozvěny a zesílení."
 
@@ -3696,7 +3696,7 @@ msgid "Advanced"
 msgstr "Pokročilé"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:108
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:109
 msgid "Advanced video settings"
 msgstr "Pokročilé nastavení videa"
 
@@ -3906,22 +3906,22 @@ msgstr "Povolit"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "Povolit zmínky {everyoneMention} a {hereMention}"
 
-#. Shown in video settings on the macOS app when camera access is denied. {PRODUCT_NAME} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:230
+#. Shown in video settings on the macOS app when camera access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:231
 msgid "Allow {PRODUCT_NAME} to access your camera in System Settings → Privacy & Security → Camera."
 msgstr "Povolte {PRODUCT_NAME} přístup ke kameře v Nastavení systému → Soukromí a zabezpečení → Kamera."
 
-#. Shown in voice settings on the macOS app when microphone access is denied. {PRODUCT_NAME} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:546
+#. Shown in voice settings on the macOS app when microphone access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:547
 msgid "Allow {PRODUCT_NAME} to access your microphone in System Settings → Privacy & Security → Microphone."
 msgstr "Povolte {PRODUCT_NAME} přístup k mikrofonu v Nastavení systému → Soukromí a zabezpečení → Mikrofon."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:552
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Povolte aplikaci {PRODUCT_NAME} přístup k mikrofonu. Zkontrolujte adresní řádek nebo nastavení prohlížeče."
 
 #. Body in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet. {productName} and {productName2} are the app name. Keep "Screen Recording" and "System Settings" as macOS shows them in this language.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:36
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:37
 msgid "Allow {productName} under Screen Recording in System Settings. If it is already allowed, relaunch {productName2} so macOS applies it."
 msgstr "Povolte {productName} v části Nahrávání obrazovky v Nastavení systému. Pokud je již povoleno, restartujte {productName2}, aby se to projevilo v systému macOS."
 
@@ -3961,7 +3961,7 @@ msgstr "Povolit přímé zprávy od botů"
 msgid "Allow bots to send you direct messages?"
 msgstr "Povolit botům posílat vám přímé zprávy?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:249
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:251
 msgid "Allow camera"
 msgstr "Povolit kameru"
 
@@ -4029,7 +4029,7 @@ msgstr "Povolit členům bez oprávnění {readMessageHistoryPermissionLabel} zo
 msgid "Allow mentions for this role"
 msgstr "Povolit zmínky pro tuto roli"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:571
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:573
 msgid "Allow microphone"
 msgstr "Povolit mikrofon"
 
@@ -4275,7 +4275,7 @@ msgid "Always underline links"
 msgstr "Vždy podtrhávat odkazy"
 
 #. Description for the in-app dictionary spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation. Hunspell is the spellcheck engine name; keep it as a product/protocol term.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:105
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:106
 msgid "Always use {productName}'s Hunspell dictionaries, downloaded on demand."
 msgstr "Vždy používat slovníky Hunspell pro {productName}, stažené na vyžádání."
 
@@ -4655,7 +4655,7 @@ msgid "App icon badge"
 msgstr "Označení ikony aplikace"
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:46
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:47
 msgid "App language: {format}"
 msgstr "Čas podle jazyka aplikace: {format}"
 
@@ -4804,7 +4804,7 @@ msgid "Approval required"
 msgstr "Vyžaduje schválení"
 
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
-#: src/features/auth/flow/AuthLoginLayout.tsx:101
+#: src/features/auth/flow/AuthLoginLayout.tsx:100
 msgid "Approve this app from the {productName} app you already use. No password needed."
 msgstr "Schvalte tuto aplikaci z aplikace {productName}, kterou již používáte. Heslo není potřeba."
 
@@ -5344,7 +5344,7 @@ msgid "Authorized on {authorizedOn}"
 msgstr "Autorizováno dne {authorizedOn}"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:50
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:51
 msgid "Auto"
 msgstr "Automaticky"
 
@@ -5369,8 +5369,8 @@ msgid "Auto-detect language"
 msgstr "Automaticky rozpoznat jazyk"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:115
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:475
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:476
 msgid "Auto-set activity threshold"
 msgstr "Automaticky nastavit práh aktivity"
 
@@ -5534,7 +5534,7 @@ msgstr "AV1 (vyžaduje výslovné zapnutí)"
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
-#: src/features/updater/commands/UpdaterModalCommands.tsx:123
+#: src/features/updater/commands/UpdaterModalCommands.tsx:124
 msgid "Available"
 msgstr "K dispozici"
 
@@ -5608,11 +5608,11 @@ msgstr "Momentálně pryč"
 #. Report flow: footer button that returns to the previous question.
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:164
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:167
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:168
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:61
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:360
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:381
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:401
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:361
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:382
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:402
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
 #: src/features/moderation/components/report/ReportStepDetails.tsx:374
@@ -5927,7 +5927,7 @@ msgid "Best compression. Use it only when WebRTC exposes an encoder and the GPU 
 msgstr "Nejlepší komprese. Použijte pouze tehdy, když WebRTC zpřístupňuje enkodér a přehled GPU potvrzuje, že využívá hardware."
 
 #. CTA card title in the screen-share picker promoting the desktop app for richer screen sharing.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:12
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:13
 msgid "Best with the desktop app"
 msgstr "Nejlépe funguje s desktopovou aplikací"
 
@@ -6396,7 +6396,7 @@ msgid "Browser home"
 msgstr "Prohlížeč: domovská stránka"
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:42
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:43
 msgid "Browser locale: {format}"
 msgstr "Čas podle nastavení prohlížeče: {format}"
 
@@ -6545,8 +6545,8 @@ msgstr "Kupte dárkové předplatné {premiumProductName} na kartě {premiumProd
 msgid "Buy gift"
 msgstr "Koupit dárek"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:345
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:663
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:347
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:665
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Vytvořením komunity souhlasíte s dodržováním a prosazováním <0>pravidel komunity {PRODUCT_NAME}</0>."
 
@@ -6658,7 +6658,7 @@ msgstr "Hovory"
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:734
 #: src/features/permissions/system/components/useMacPermissionControl.ts:15
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:93
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:14
@@ -6736,7 +6736,7 @@ msgstr "Náhled kamery"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:96
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:97
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:202
 msgid "Camera quality"
 msgstr "Kvalita kamery"
@@ -6809,8 +6809,8 @@ msgstr "Sem nelze nahrávat soubory"
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:74
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:418
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:170
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:426
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:174
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:197
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -6896,13 +6896,13 @@ msgstr "Zrušit plánovanou změnu"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:980
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:262
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Zrušit předplatné"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:257
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:256
 msgid "Cancel subscription?"
 msgstr "Zrušit předplatné?"
 
@@ -7005,7 +7005,7 @@ msgid "Category"
 msgstr "Kategorie"
 
 #. Title in a modal shown before opening a category with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:187
+#: src/features/channel/components/MatureContentChannelGate.tsx:214
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:39
 msgid "Category content warning"
 msgstr "Upozornění na obsah kategorie"
@@ -7131,15 +7131,15 @@ msgstr "Změnit přezdívku skupiny"
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:67
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:90
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "Změnit ikonu"
 
 #. Button that opens the Linux desktop dialog for changing the keys of system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:83
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:80
 msgid "Change in system settings"
 msgstr "Změnit v systémovém nastavení"
 
@@ -7554,7 +7554,7 @@ msgid "Channel badges"
 msgstr "Odznaky kanálu"
 
 #. Title in a modal shown before opening a channel with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:189
+#: src/features/channel/components/MatureContentChannelGate.tsx:216
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:43
 msgid "Channel content warning"
 msgstr "Upozornění na obsah kanálu"
@@ -7770,7 +7770,7 @@ msgid "Chat shortcuts"
 msgstr "Zkratky chatu"
 
 #. Button on Linux that checks again whether the desktop offers system-wide shortcuts, for example after the desktop service started. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:139
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:136
 msgid "Check again"
 msgstr "Zkontrolovat znovu"
 
@@ -7833,7 +7833,7 @@ msgid "Checking access..."
 msgstr "Kontrola přístupu..."
 
 #. Loading state in the screen-share picker while checking macOS screen recording permission.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:22
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:23
 msgid "Checking screen recording permission..."
 msgstr "Kontrola oprávnění k nahrávání obrazovky..."
 
@@ -7848,17 +7848,17 @@ msgid "Checkout"
 msgstr "Dokončení nákupu"
 
 #. Modal body for the generic "checkout blocked" state on a self-hosted instance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:123
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:122
 msgid "Checkout is blocked for this account."
 msgstr "Platba je pro tento účet zablokována."
 
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:119
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:118
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "Nákupy jsou pro tento účet zablokovány. Pokud potřebujete pomoc, napište na {supportEmail}."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:115
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:114
 msgid "Checkout unavailable"
 msgstr "Dokončení nákupu není k dispozici"
 
@@ -8036,7 +8036,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "Zvolte, jak se má zobrazovat čas v celé aplikaci"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:58
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:57
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "Zvolte, jak chcete zaplatit za toto předplatné."
 
@@ -8050,7 +8050,7 @@ msgid "Choose one of the methods below to prove domain ownership. You only need 
 msgstr "Zvolte jednu z níže uvedených metod k prokázání vlastnictví domény. Stačí dokončit jen jednu."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:166
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
 msgid "Choose payment method"
 msgstr "Zvolte způsob platby"
 
@@ -8174,7 +8174,7 @@ msgstr "Vyberte výchozí nastavení"
 
 #. Heading for an authentication step that requires an instance before continuing.
 #. Heading for the login step that lets a user choose the instance before signing in.
-#: src/features/auth/flow/AuthLoginLayout.tsx:97
+#: src/features/auth/flow/AuthLoginLayout.tsx:96
 #: src/features/auth/flow/AuthRuntimeTargetGate.tsx:11
 msgid "Choose your instance"
 msgstr "Vyberte svou instanci"
@@ -8216,8 +8216,8 @@ msgstr "Převzít dárek"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:45
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:69
 #: src/features/channel/utils/CreateDMModalUtils.tsx:44
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:216
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:444
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:217
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:445
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:345
 msgid "Claim your account"
 msgstr "Dokončit registraci účtu"
@@ -9047,7 +9047,7 @@ msgid "Community badges"
 msgstr "Odznaky komunity"
 
 #. Title in a modal shown before opening a community with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:185
+#: src/features/channel/components/MatureContentChannelGate.tsx:212
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:35
 msgid "Community content warning"
 msgstr "Upozornění na obsah komunity"
@@ -9089,8 +9089,8 @@ msgstr "Přímé zprávy od členů komunity"
 msgid "Community filter"
 msgstr "Filtr komunit"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:277
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:600
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:278
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:601
 msgid "Community icon"
 msgstr "Ikona komunity"
 
@@ -9235,7 +9235,7 @@ msgid "Community updated"
 msgstr "Komunita aktualizována"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:38
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:39
 msgid "Community voice"
 msgstr "Hlasové hovory v komunitě"
 
@@ -9275,11 +9275,11 @@ msgid "Complete mature content check"
 msgstr "Dokončit ověření věku pro obsah pro dospělé"
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:157
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
 msgid "Complete payment"
 msgstr "Dokončit platbu"
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:67
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:73
 msgid "Complete the mature content check to unlock mature media."
 msgstr "Pro zpřístupnění médií pro dospělé dokončete ověření věku."
 
@@ -9409,7 +9409,7 @@ msgstr "Potvrdit"
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice-channel safety preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:24
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:18
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:19
 msgid "Confirm before joining voice channels"
 msgstr "Vyžadovat potvrzení před připojením k hlasovým kanálům"
 
@@ -9457,7 +9457,7 @@ msgstr "Potvrďte prohlášení pro odeslání nahlášení."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:30
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:31
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:398
 msgid "Confirm voice join"
 msgstr "Potvrzení připojení k hlasovému hovoru"
@@ -9468,7 +9468,7 @@ msgid "Confirmation"
 msgstr "Potvrzení"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:46
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:47
 msgid "Confirmation or double-click for community voice joins"
 msgstr "Potvrzení nebo dvojité kliknutí pro připojení k hlasovým kanálům komunity"
 
@@ -9476,7 +9476,7 @@ msgstr "Potvrzení nebo dvojité kliknutí pro připojení k hlasovým kanálům
 msgid "Conflicts with {conflictLabel}"
 msgstr "V konfliktu s {conflictLabel}"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:234
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Connect a camera and try again."
 msgstr "Připojte kameru a zkuste to znovu."
 
@@ -9489,7 +9489,7 @@ msgstr "Připojte kameru nebo virtuální záznamové zařízení a zkuste to zn
 msgid "Connect a display, then try again."
 msgstr "Připojte displej a zkuste to znovu."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
 msgid "Connect a microphone and try again."
 msgstr "Připojte mikrofon a zkuste to znovu."
 
@@ -9633,7 +9633,7 @@ msgstr "Připojení: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:424
-#: src/features/user/components/popouts/UserProfileShared.tsx:618
+#: src/features/user/components/popouts/UserProfileShared.tsx:622
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9667,7 +9667,7 @@ msgid "Contact"
 msgstr "Kontakt"
 
 #. Short label in the authentication content blocked handler. Keep the tone plain and specific.
-#: src/features/auth/components/ContentBlockedHandler.tsx:10
+#: src/features/auth/components/ContentBlockedHandler.tsx:11
 msgid "Content blocked"
 msgstr "Obsah zablokován"
 
@@ -9741,13 +9741,13 @@ msgid "Continue in your browser"
 msgstr "Pokračovat v prohlížeči"
 
 #. Button in the gift time confirmation that proceeds to subscription checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
 msgid "Continue to checkout"
 msgstr "Pokračovat k platbě"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:343
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:356
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:379
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:351
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:364
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:387
 msgid "Continue with passkey"
 msgstr "Pokračovat pomocí přístupového klíče"
 
@@ -10059,17 +10059,17 @@ msgid "Copy invite URL"
 msgstr "Kopírovat URL pozvánky"
 
 #. Button that copies Hyprland config lines to the clipboard.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:120
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:117
 msgid "Copy lines"
 msgstr "Kopírovat řádky"
 
 #. Screen reader name of the button that copies Hyprland config lines in the older hyprlang format. Starts with the visible button text "Copy lines". Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:129
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:126
 msgid "Copy lines for hyprland.conf"
 msgstr "Kopírovat řádky pro hyprland.conf"
 
 #. Screen reader name of the button that copies Hyprland config lines in the Lua format. Starts with the visible button text "Copy lines". Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:124
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:121
 msgid "Copy lines for hyprland.lua"
 msgstr "Kopírovat řádky pro hyprland.lua"
 
@@ -10343,7 +10343,7 @@ msgid "Couldn't change your price"
 msgstr "Nepodařilo se změnit vaši cenu"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:96
+#: src/features/updater/commands/UpdaterModalCommands.tsx:97
 msgid "Couldn't check for updates"
 msgstr "Nepodařilo se zkontrolovat aktualizace"
 
@@ -10475,7 +10475,7 @@ msgid "Couldn't delete your messages"
 msgstr "Zprávy se nepodařilo smazat"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:105
 msgid "Couldn't download the desktop update"
 msgstr "Nepodařilo se stáhnout aktualizaci desktopové aplikace"
 
@@ -10591,7 +10591,7 @@ msgstr "Nepodařilo se otevřít výsledek hledání"
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:29
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10758,7 +10758,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "Nepodařilo se spustit autorizaci pro {blueskyProviderName}"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:127
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:126
 msgid "Couldn't start checkout"
 msgstr "Nepodařilo se spustit platbu"
 
@@ -10932,7 +10932,7 @@ msgstr "Vytvořit a sdílet"
 msgid "Create a community"
 msgstr "Vytvořit komunitu"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:262
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:263
 msgid "Create a community for you and your friends to chat."
 msgstr "Vytvořte komunitu pro sebe a své přátele, kde si můžete povídat."
 
@@ -11365,7 +11365,7 @@ msgstr "Vlastní zdroj"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
@@ -11851,7 +11851,7 @@ msgid "Deafened by moderators"
 msgstr "Zvuk vypnutý moderátory"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:143
+#: src/features/updater/commands/UpdaterModalCommands.tsx:144
 msgid "DEB package"
 msgstr "Balíček DEB"
 
@@ -12496,7 +12496,7 @@ msgid "Desktop app"
 msgstr "Desktopová aplikace"
 
 #. Modal title shown after a manual desktop update check finds no update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:50
+#: src/features/updater/commands/UpdaterModalCommands.tsx:51
 msgid "Desktop app is up to date"
 msgstr "Desktopová aplikace je aktuální"
 
@@ -12555,7 +12555,7 @@ msgid "Desktop update {version} available. Choose a Linux package."
 msgstr "Je k dispozici aktualizace desktopové aplikace {version}. Vyberte balíček pro Linux."
 
 #. Modal title shown when a new desktop app update can be downloaded.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:16
+#: src/features/updater/commands/UpdaterModalCommands.tsx:17
 msgid "Desktop update available"
 msgstr "Je k dispozici aktualizace desktopové aplikace"
 
@@ -12565,7 +12565,7 @@ msgid "Desktop update available. Choose a Linux package."
 msgstr "Je k dispozici aktualizace desktopové aplikace. Vyberte balíček pro Linux."
 
 #. Desktop updater modal body. The version placeholder is the target app version; productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:20
+#: src/features/updater/commands/UpdaterModalCommands.tsx:21
 msgid "Desktop version {version} is available. Download the installer, then run it to update {productName}."
 msgstr "Je k dispozici verze desktopové aplikace {version}. Stáhněte instalační program a spusťte jej, abyste aktualizovali {productName}."
 
@@ -12613,7 +12613,7 @@ msgstr "Podrobnosti: {reason}"
 #. Item in the textarea spellcheck language submenu that detects draft message language and switches dictionaries as the user types.
 #. Spellcheck language mode label in the language tab. The app detects the draft message language and switches dictionaries as the user types.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:83
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:126
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:127
 msgid "Detect while typing"
 msgstr "Zjišťovat při psaní"
 
@@ -12661,7 +12661,7 @@ msgid "Developer tools unavailable"
 msgstr "Nástroje pro vývojáře nejsou k dispozici"
 
 #. Modal title when the desktop app is running unpackaged during development.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:66
+#: src/features/updater/commands/UpdaterModalCommands.tsx:67
 msgid "Development build"
 msgstr "Vývojová verze"
 
@@ -13455,8 +13455,8 @@ msgstr "Stáhnout"
 
 #. Nagbar button label that downloads the desktop app. productName is the app name.
 #. Short label in the sidebar navigation download button. Preserve {productName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:17
-#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:18
+#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:27
 msgid "Download {productName}"
 msgstr "Stáhnout {productName}"
 
@@ -13465,12 +13465,12 @@ msgid "Download <0>fluxer-verification</0> and place it in your <1>.well-known</
 msgstr "Stáhněte si <0>fluxer-verification</0> a umístěte jej do složky <1>.well-known</1>, abychom mohli ověřit doménu."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:98
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:99
 msgid "Download app"
 msgstr "Stáhnout aplikaci"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:106
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:107
 msgid "Download app button in the sidebar"
 msgstr "Stáhnout aplikaci"
 
@@ -13485,7 +13485,7 @@ msgid "Download button"
 msgstr "Tlačítko pro stažení"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:103
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:104
 msgid "Download desktop app"
 msgstr "Stáhnout desktopovou aplikaci"
 
@@ -13513,7 +13513,7 @@ msgid "Download image"
 msgstr "Stáhnout obrázek"
 
 #. Button label that downloads a desktop update installer.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:29
+#: src/features/updater/commands/UpdaterModalCommands.tsx:30
 msgid "Download installer"
 msgstr "Stáhnout instalační program"
 
@@ -13527,7 +13527,7 @@ msgid "Download media"
 msgstr "Stáhnout média"
 
 #. Button label that downloads a selected Linux desktop update package.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:33
+#: src/features/updater/commands/UpdaterModalCommands.tsx:34
 msgid "Download package"
 msgstr "Stáhnout balíček"
 
@@ -13655,11 +13655,11 @@ msgstr "Pustit položku"
 msgid "Drop to upload background"
 msgstr "Puštěním nahrajete pozadí"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:85
+#: src/features/channel/components/MatureContentChannelGate.tsx:100
 msgid "Due to mature content laws in {regionName}, mature content is blocked until you complete the mature content check."
 msgstr "Kvůli zákonům o obsahu pro dospělé v oblasti {regionName} je obsah pro dospělé zablokován, dokud nedokončíte ověření věku."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:95
+#: src/features/channel/components/MatureContentChannelGate.tsx:110
 msgid "Due to mature content laws in {regionName}, mature content is not available from here. Mature content checks are available only in the UK."
 msgstr "Kvůli zákonům o obsahu pro dospělé v oblasti {regionName} zde tento obsah není dostupný. Ověření věku je dostupné pouze ve Spojeném království."
 
@@ -13673,7 +13673,7 @@ msgstr "Kvůli zákonům o obsahu pro dospělé v oblasti {regionName} je tento 
 msgid "Due to mature content laws in {regionName}, this content is not available from here. Mature content checks are available only in the UK."
 msgstr "Kvůli zákonům o obsahu pro dospělé v oblasti {regionName} zde tento obsah není dostupný. Ověření věku je dostupné pouze ve Spojeném království."
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:61
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:67
 msgid "Due to mature content laws in {regionName}, this media is not available from your current region."
 msgstr "Vzhledem k zákonům o obsahu pro dospělé v oblasti {regionName} není toto médium z vašeho aktuálního regionu dostupné."
 
@@ -13715,7 +13715,7 @@ msgid "Each code works once in place of your authenticator app."
 msgstr "Každý kód funguje jednou místo vaší aplikace pro ověřování."
 
 #. Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:75
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:72
 msgid "Each key can run only one system-wide shortcut."
 msgstr "Každá klávesa může spouštět jen jednu zkratku pro celý systém."
 
@@ -14303,7 +14303,7 @@ msgid "Enable"
 msgstr "Zapnout"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:123
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:124
 msgid "Enable {permissionName} permission"
 msgstr "Povolit oprávnění {permissionName}"
 
@@ -14508,7 +14508,7 @@ msgid "Enable shortcut"
 msgstr "Zapnout zkratku"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:86
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Enable spellcheck"
 msgstr "Zapnout kontrolu pravopisu"
 
@@ -14602,12 +14602,12 @@ msgid "End grace now"
 msgstr "Ukončit dodatečnou lhůtu hned"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:285
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:284
 msgid "End grace period"
 msgstr "Ukončit dodatečnou lhůtu"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:278
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:277
 msgid "End grace period now?"
 msgstr "Ukončit dodatečnou lhůtu hned?"
 
@@ -14837,7 +14837,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "Zadejte PIN pro váš bezpečnostní klíč a pokračujte."
 
 #. Title in the desktop app above the code the user types into a browser on another device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:235
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:240
 msgid "Enter this code in your browser"
 msgstr "Zadejte tento kód do prohlížeče"
 
@@ -14845,7 +14845,7 @@ msgstr "Zadejte tento kód do prohlížeče"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "Zadejte tento kód do prohlížeče a dokončete přihlášení."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:148
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:150
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
 msgstr "Zadejte tento kód do své staré aplikace {PRODUCT_NAME} pro dokončení přihlášení."
 
@@ -14916,7 +14916,7 @@ msgstr "Veškerý zvuk systému"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:181
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:313
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:188
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:150
 msgid "Entrance sound"
 msgstr "Zvuk při vstupu"
@@ -15026,7 +15026,7 @@ msgstr "Večer"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:172
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Vyrovnává hlasitost mikrofonu, abyste nebyli příliš potichu."
@@ -15249,7 +15249,7 @@ msgstr "Platnost vyprší mezi {earliest} a {latest}"
 msgid "Expires in {remaining}s"
 msgstr "Vyprší za {remaining} s"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:257
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:265
 msgid "Expires in {remainingSeconds}s"
 msgstr "Vyprší za {remainingSeconds} s"
 
@@ -15728,7 +15728,7 @@ msgid "Favorite channel"
 msgstr "Přidat kanál do oblíbených"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:82
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:83
 msgid "Favorite channels"
 msgstr "Oblíbené kanály"
 
@@ -16243,7 +16243,7 @@ msgstr "Na {threeHours} hodiny"
 msgid "For {twentyFourHours} hours"
 msgstr "Na {twentyFourHours} hodin"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:255
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:256
 msgid "For British eyes only..."
 msgstr "Pouze pro britské oči..."
 
@@ -16253,22 +16253,22 @@ msgid "For me"
 msgstr "Pro mě"
 
 #. Warning on GNOME when the push-to-mute shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone muted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:204
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:201
 msgid "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
 msgstr "Pro funkci Stisknutím ztlumit použijte jednu klávesu bez Ctrl, Alt nebo Shift. U kombinace kláves nejprve uvolněte hlavní klávesu, jinak může mikrofon zůstat ztlumený."
 
 #. Warning on GNOME when the push-to-talk shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone on.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:198
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:195
 msgid "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
 msgstr "Pro funkci Stisknutím mluvit použijte jednu klávesu bez Ctrl, Alt nebo Shift. U kombinace kláves nejprve uvolněte hlavní klávesu, jinak může mikrofon zůstat zapnutý."
 
 #. Warning on GNOME when a hold shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the shortcut active.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:216
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:213
 msgid "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
 msgstr "Pro tuto zkratku použijte jednu klávesu bez Ctrl, Alt nebo Shift. U kombinace kláves nejprve uvolněte hlavní klávesu, jinak může zkratka zůstat aktivní."
 
 #. Warning on GNOME when the voice activity priority shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave priority speaking on. "Voice activity priority" is the shortcut name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:210
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:207
 msgid "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
 msgstr "Pro funkci Priorita hlasové aktivity použijte jednu klávesu bez Ctrl, Alt nebo Shift. U kombinace kláves nejprve uvolněte hlavní klávesu, jinak může priorita zůstat zapnutá."
 
@@ -16460,14 +16460,14 @@ msgstr "Rámeček"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:334
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:336
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:230
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:133
 msgid "Frame rate"
 msgstr "Snímková frekvence"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:63
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Snímková frekvence nad 30 FPS vyžaduje {premiumProductName}"
 
@@ -16926,12 +16926,12 @@ msgid "Get notified when you receive messages. You may need to allow notificatio
 msgstr "Dostávejte oznámení, když obdržíte zprávy. Možná budete muset povolit oznámení v nastavení prohlížeče. Pro ovládání oznámení pro jednotlivé kanály/komunity klikněte pravým tlačítkem na ikonu komunity a otevřete nastavení oznámení."
 
 #. Nagbar body encouraging web users to download the desktop app. productName is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:17
+#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:18
 msgid "Get the {productName} desktop app for system-wide push-to-talk and a few other goodies."
 msgstr "Pořiďte si desktopovou aplikaci {productName} pro funkci Stisknutím mluvit fungující v celém systému a další vychytávky."
 
 #. CTA button label in the screen-share picker. Opens the desktop download page.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:20
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:21
 msgid "Get the desktop app"
 msgstr "Stáhněte si desktopovou aplikaci"
 
@@ -17241,12 +17241,12 @@ msgid "Go back to {productName} to continue."
 msgstr "Pro pokračování se vraťte do aplikace {productName}."
 
 #. Shown after approving a sign-in for an app on another device, which signs in by itself shortly. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:296
 msgid "Go back to the {PRODUCT_NAME} app. It finishes signing in on its own."
 msgstr "Zpět do aplikace {PRODUCT_NAME}. Přihlašování se samo dokončí."
 
 #. Shown after approving, when the browser has already handed the sign-in back to the desktop app. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:288
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
 msgid "Go back to the {PRODUCT_NAME} app. You can close this tab."
 msgstr "Zpět do aplikace {PRODUCT_NAME}. Tuto kartu můžete zavřít."
 
@@ -17702,7 +17702,7 @@ msgid "Help"
 msgstr "Nápověda"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:94
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:95
 msgid "Help button"
 msgstr "Tlačítko Nápověda"
 
@@ -17712,11 +17712,11 @@ msgid "Help center"
 msgstr "Centrum nápovědy"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:102
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:103
 msgid "Help center button in the sidebar"
 msgstr "Centrum nápovědy"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:348
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:349
 msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
 msgstr "Pomozte přeložit {PRODUCT_NAME} do vašeho jazyka na <0>{I18N_WEBLATE_DOMAIN}</0>."
 
@@ -17841,7 +17841,7 @@ msgstr "Skrýt chat"
 msgid "Hide community owner crown"
 msgstr "Skrýt korunku vlastníka komunity"
 
-#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:62
+#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:63
 msgid "Hide download button"
 msgstr "Skrýt tlačítko pro stažení"
 
@@ -17860,7 +17860,7 @@ msgstr "Skrýt oblíbené"
 msgid "Hide guidelines"
 msgstr "Skrýt pokyny"
 
-#: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:63
+#: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:64
 msgid "Hide help center button"
 msgstr "Skrýt tlačítko centra nápovědy"
 
@@ -17870,7 +17870,7 @@ msgid "Hide join messages"
 msgstr "Skrýt zprávy o připojení"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:50
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:51
 msgid "Hide keyboard hints"
 msgstr "Skrýt tipy pro klávesnici"
 
@@ -18156,22 +18156,22 @@ msgid "Hyperlink"
 msgstr "Hypertextový odkaz"
 
 #. Instructions for the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:94
 msgid "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
 msgstr "Hyprland nemá dialog pro klávesové zkratky. Přidejte do konfigurace Hyprlandu řádky pro svou verzi Hyprlandu a nahraďte KEY požadovanou klávesou."
 
 #. Instructions for the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:103
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:100
 msgid "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
 msgstr "Hyprland nemá dialog pro klávesové zkratky. Klávesy přiřaďte v konfiguraci Hyprlandu."
 
 #. Label above Hyprland config lines in the older hyprlang format. Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:116
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:113
 msgid "hyprland.conf (before Hyprland 0.55)"
 msgstr "hyprland.conf (Hyprland před verzí 0.55)"
 
 #. Label above Hyprland config lines in the Lua format. Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:112
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:109
 msgid "hyprland.lua (Hyprland 0.55 and later)"
 msgstr "hyprland.lua (Hyprland 0.55 a novější)"
 
@@ -18218,8 +18218,8 @@ msgid "I confirm in good faith that the information and allegations in this noti
 msgstr "Potvrzuji v dobré víře, že informace a tvrzení uvedená v tomto nahlášení jsou přesná a úplná."
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
+#: src/features/channel/components/MatureContentChannelGate.tsx:234
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:108
 msgid "I understand"
 msgstr "Rozumím"
 
@@ -18598,11 +18598,11 @@ msgstr "Importování… Zpracováno: {processedCount, number} / {totalCount, nu
 msgid "In"
 msgstr "V"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:547
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:551
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "V režimu „Operační systém“ slouží výše uvedené slovníky pouze jako doporučení. Aplikace {PRODUCT_NAME} předá tyto jazykové značky systémové kontrole pravopisu, pokud to podporuje. Značky, které nerozpozná, ignoruje."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:318
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "V prohlížeči funguje funkce Stisknutím mluvit pouze tehdy, když je karta {PRODUCT_NAME} aktivní. Pro použití této funkce v celém systému si nainstalujte desktopovou aplikaci."
 
@@ -18650,7 +18650,7 @@ msgstr "V hlasovém hovoru"
 #. Spellcheck engine option in the language tab. Uses the bundled in-app Hunspell dictionaries. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. The bundled in-app hunspell engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:75
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:100
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:101
 msgid "In-app dictionaries"
 msgstr "Slovníky v aplikaci"
 
@@ -18875,7 +18875,7 @@ msgid "Input"
 msgstr "Zadávání"
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:175
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:176
 msgid "Input and output"
 msgstr "Vstup a výstup"
 
@@ -18939,7 +18939,7 @@ msgid "Insert emoji"
 msgstr "Vložit emoji"
 
 #. CTA card body in the screen-share picker promoting the desktop app. {productName} is Fluxer.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:16
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:17
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "Nainstalujte si aplikaci {productName} a získejte kompletní výběr zdrojů a plynulejší ovládání sdílení obrazovky."
 
@@ -18954,12 +18954,12 @@ msgid "Install the new app"
 msgstr "Nainstalovat novou aplikaci"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:119
+#: src/features/updater/commands/UpdaterModalCommands.tsx:120
 msgid "Installed"
 msgstr "Nainstalováno"
 
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:54
+#: src/features/updater/commands/UpdaterModalCommands.tsx:55
 msgid "Installed version: {currentVersion}."
 msgstr "Nainstalovaná verze: {currentVersion}."
 
@@ -19031,7 +19031,7 @@ msgstr "Rozhraní"
 
 #. Settings section label for interface language selection.
 #. Settings section title in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:82
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:83
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Interface language"
 msgstr "Jazyk rozhraní"
@@ -19467,13 +19467,13 @@ msgstr "Připojit se"
 
 #. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:30
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
 #: src/features/expressions/components/ExpressionInfoCard.tsx:94
 msgid "Join {communityName}"
 msgstr "Připojit se k {communityName}"
 
 #. Nagbar body inviting users to join the official product community. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:25
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "Připojte se ke komunitě {communityName}, povídejte si s týmem a sledujte novinky."
 
@@ -19561,7 +19561,7 @@ msgstr "Připojit se k videohovoru"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:67
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:34
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:35
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:454
 msgid "Join voice"
 msgstr "Připojit se k hovoru"
@@ -19756,7 +19756,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "Ponechte bezplatnou i prémiovou úroveň. Úrovně můžete přizpůsobit, prodávat prémiové členství přes Stripe nebo později rozdávat dárkové kódy z administračního panelu."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:169
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:287
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:286
 msgid "Keep grace period"
 msgstr "Ponechat dodatečnou lhůtu"
 
@@ -19771,7 +19771,7 @@ msgid "Keep running"
 msgstr "Pokračovat v běhu"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:147
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
 msgid "Keep subscription"
 msgstr "Ponechat předplatné"
 
@@ -19786,7 +19786,7 @@ msgid "Keep this page somewhere safe. If you forget your password, you can use i
 msgstr "Tuto stránku si uložte na bezpečné místo. Pokud zapomenete heslo, můžete ji použít k obnovení přístupu ke svému účtu. Kdokoli s tímto obnovovacím klíčem může resetovat vaše heslo, takže ho nikdy nesdílejte."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:79
 msgid "Keep transmitting briefly after release."
 msgstr "Udržovat vysílání krátce po uvolnění tlačítka."
 
@@ -19829,7 +19829,7 @@ msgid "Keyboard"
 msgstr "Klávesnice"
 
 #. Linux warning when direct input device access is on but reading the keyboard failed. Not related to the "Direct input" voice processing profile. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:190
 msgid "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
 msgstr "Přístup ke klávesnici se nepodařilo spustit. Klávesové zkratky fungují jen při aktivním okně aplikace {productName}."
 
@@ -19848,7 +19848,7 @@ msgid "Keyboard mode"
 msgstr "Režim navigace klávesnicí"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:62
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:63
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "Nápověda klávesových zkratek v popiscích"
 
@@ -19923,7 +19923,7 @@ msgstr "Nastavení jazyka"
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:88
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:122
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:123
 msgid "Languages"
 msgstr "Jazyky"
 
@@ -19971,7 +19971,7 @@ msgstr "Graf latence"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
-#: src/features/updater/commands/UpdaterModalCommands.tsx:46
+#: src/features/updater/commands/UpdaterModalCommands.tsx:47
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:74
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
@@ -20214,12 +20214,12 @@ msgid "Let the member hear others in this community again"
 msgstr "Členovi bylo znovu umožněno slyšet ostatní v této komunitě"
 
 #. Description for the Linux direct input device access switch while it is on, on a desktop that can also run system-wide shortcuts itself (KDE, GNOME, Hyprland). {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:166
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:163
 msgid "Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead."
 msgstr "Umožňuje aplikaci {productName} číst vaši klávesnici přímo. Pokud chcete zkratky nastavit přes desktopové prostředí, tuto možnost vypněte."
 
 #. Description for the Linux direct input device access switch. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:162
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:159
 msgid "Lets {productName} read your keyboard directly. Your system already allows this."
 msgstr "Umožňuje aplikaci {productName} číst vaši klávesnici přímo. Váš systém to již povoluje."
 
@@ -20512,7 +20512,7 @@ msgid "Linux default"
 msgstr "Výchozí zařízení v systému Linux"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:135
+#: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Linux package"
 msgstr "Balíček pro Linux"
 
@@ -20648,7 +20648,7 @@ msgid "Local files"
 msgstr "Místní soubory"
 
 #. Profile section title for a user's local time.
-#: src/features/user/components/popouts/UserProfileShared.tsx:57
+#: src/features/user/components/popouts/UserProfileShared.tsx:58
 msgid "Local time"
 msgstr "Místní čas"
 
@@ -20730,7 +20730,7 @@ msgid "Look and feel"
 msgstr "Vzhled a ovládání"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:673
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Zdá se, že používáte {0}. Přidání dalšího zpracování zvuku v aplikaci {PRODUCT_NAME} může způsobit kolísání hlasitosti nebo zkreslení. Přímý vstup propouští zvuk beze změn."
 
@@ -20826,7 +20826,7 @@ msgid "Make group owner"
 msgstr "Nastavit jako vlastníka skupiny"
 
 #. Shown above the code on the browser approval page when the app cannot be signed in automatically. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:253
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:257
 msgid "Make sure this code matches the one in the {PRODUCT_NAME} app."
 msgstr "Ujistěte se, že se tento kód shoduje s kódem v aplikaci {PRODUCT_NAME}."
 
@@ -20966,7 +20966,7 @@ msgid "Manage your subscription"
 msgstr "Spravovat předplatné"
 
 #. Modal title when automatic in-app desktop updates cannot be used.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:62
+#: src/features/updater/commands/UpdaterModalCommands.tsx:63
 msgid "Manual desktop update"
 msgstr "Ruční aktualizace desktopové aplikace"
 
@@ -21145,15 +21145,15 @@ msgstr "Massachusetts"
 msgid "Master volume"
 msgstr "Hlavní hlasitost"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:141
+#: src/features/channel/components/MatureContentChannelGate.tsx:160
 msgid "Mature category"
 msgstr "Kategorie pro dospělé"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:163
+#: src/features/channel/components/MatureContentChannelGate.tsx:186
 msgid "Mature channel"
 msgstr "Kanál pro dospělé"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:118
+#: src/features/channel/components/MatureContentChannelGate.tsx:133
 msgid "Mature community"
 msgstr "Komunita pro dospělé"
 
@@ -21194,7 +21194,7 @@ msgstr "Ověření věku odesláno"
 
 #. Body copy in the mature content check modal when the check is unavailable.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:36
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:71
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:77
 msgid "Mature content checks are currently available only in the UK."
 msgstr "Ověření věku pro obsah pro dospělé je momentálně dostupné pouze ve Spojeném království."
 
@@ -21462,7 +21462,7 @@ msgid "Member roles updated"
 msgstr "Role člena upraveny"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:283
+#: src/features/user/components/popouts/UserProfileShared.tsx:284
 msgid "Member since"
 msgstr "Členem od"
 
@@ -22013,7 +22013,7 @@ msgstr "Mikrofon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:183
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:184
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:142
 msgid "Mic test"
 msgstr "Test mikrofonu"
@@ -22127,7 +22127,7 @@ msgstr "Minnesota"
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:100
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:101
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
@@ -23046,7 +23046,7 @@ msgid "Neko"
 msgstr "Neko"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:66
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:67
 msgid "Neko cat that chases your cursor"
 msgstr "Kočka Neko, která honí váš kurzor"
 
@@ -23285,7 +23285,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "Noví uživatelé se teď nemůžou připojit. Můžete si ale vytvořit účet nebo se přihlásit a zkusit tento odkaz znovu později."
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:131
+#: src/features/updater/commands/UpdaterModalCommands.tsx:132
 msgid "New version"
 msgstr "Nová verze"
 
@@ -23465,7 +23465,7 @@ msgstr "Žádné záložky"
 msgid "No bot banner"
 msgstr "Žádný banner bota"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:226
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:227
 msgid "No camera found"
 msgstr "Nenalezena žádná kamera"
 
@@ -23541,7 +23541,7 @@ msgid "No description."
 msgstr "Bez popisu."
 
 #. Desktop updater modal body when no installed version string is available.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:58
+#: src/features/updater/commands/UpdaterModalCommands.tsx:59
 msgid "No desktop update is available."
 msgstr "Není k dispozici žádná aktualizace desktopové aplikace."
 
@@ -23684,7 +23684,7 @@ msgstr "Žádné odpovídající příspěvky"
 msgid "No mentions yet"
 msgstr "Zatím žádné zmínky"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:541
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:542
 msgid "No microphone found"
 msgstr "Mikrofon nenalezen"
 
@@ -23731,7 +23731,7 @@ msgstr "Žádné čekající žádosti neodpovídají hledání"
 msgid "No permissions found"
 msgstr "Nenalezena žádná oprávnění"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:594
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:599
 msgid "No personal words yet."
 msgstr "Zatím žádná vlastní slova."
 
@@ -24093,7 +24093,7 @@ msgid "Not allowed"
 msgstr "Není povoleno"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:79
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:76
 msgid "Not assigned"
 msgstr "Nepřiřazeno"
 
@@ -24423,7 +24423,7 @@ msgid "On click"
 msgstr "Při kliknutí"
 
 #. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:243
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:248
 msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
 msgstr "Na jiném zařízení se přihlaste na adrese {signInAddress} a na vyžádání zadejte tento kód."
 
@@ -24694,7 +24694,7 @@ msgid "Open {premiumProductFullName}"
 msgstr "Otevřít {premiumProductFullName}"
 
 #. Button on the browser page after approving that opens the desktop app again if it did not come to the front. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:304
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:308
 msgid "Open {PRODUCT_NAME}"
 msgstr "Otevřít {PRODUCT_NAME}"
 
@@ -24726,7 +24726,7 @@ msgid "Open account switcher"
 msgstr "Otevřít přepínač účtů"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:112
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:113
 msgid "Open advanced media settings"
 msgstr "Otevřít rozšířené nastavení médií"
 
@@ -24788,7 +24788,7 @@ msgstr "Otevřít možnosti banneru"
 msgid "Open bookmarks"
 msgstr "Otevřít záložky"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:184
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:188
 msgid "Open browser"
 msgstr "Otevřít prohlížeč"
 
@@ -24846,7 +24846,7 @@ msgid "Open date picker"
 msgstr "Otevřít výběr data"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:92
+#: src/features/updater/commands/UpdaterModalCommands.tsx:93
 msgid "Open desktop downloads"
 msgstr "Otevřít stránku pro stažení desktopové aplikace"
 
@@ -25043,7 +25043,7 @@ msgid "Open settings"
 msgstr "Otevřít nastavení"
 
 #. Button label that opens the software center via appstream protocol.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:88
+#: src/features/updater/commands/UpdaterModalCommands.tsx:89
 msgid "Open software center"
 msgstr "Otevřít centrum softwaru"
 
@@ -25076,11 +25076,11 @@ msgid "Open System Settings"
 msgstr "Otevřít Nastavení systému"
 
 #. Body in the screen-share picker when macOS screen recording permission is missing. {productName} is the app name. Keep "System Settings", "Privacy & Security" and the permission name as macOS shows them in this language.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:26
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:27
 msgid "Open System Settings → Privacy & Security → Screen Recording, then allow {productName}."
 msgstr "Otevřete Nastavení systému → Soukromí a zabezpečení → Nahrávání obrazovky a povolte {productName}."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:535
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:536
 msgid "Open template JSON"
 msgstr "Otevřít šablonu JSON"
 
@@ -25089,7 +25089,7 @@ msgstr "Otevřít šablonu JSON"
 msgid "Open the context menu"
 msgstr "Otevřít kontextovou nabídku"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:518
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:519
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "Otevřete odkaz níže ve svém prohlížeči, zkopírujte celou odpověď JSON a vložte ji do pole."
 
@@ -25167,11 +25167,11 @@ msgstr "Otevřít nastavení zvuku a videa"
 msgid "Open with {accountName} on {instanceName}"
 msgstr "Otevřít s {accountName} na {instanceName}"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:137
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:139
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Otevřete prohlížeč, přihlaste se a poté zadejte níže uvedený kód pro propojení účtu."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:135
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:134
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
 msgstr "Otevřete svou starou aplikaci {PRODUCT_NAME} a vyberte „Propojit nové zařízení“, poté zadejte níže uvedený kód."
 
@@ -25199,7 +25199,7 @@ msgstr "Otevře stránku Členové. Stisknutím mezerníku nebo Enter otevřete.
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:99
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:79
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:110
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:111
 msgid "Operating system"
 msgstr "Operační systém"
 
@@ -25629,7 +25629,7 @@ msgstr "Posledních 7 dní"
 msgid "Paste"
 msgstr "Vložit"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:490
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:491
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "Vložte URL šablony platformy {theOtherPlatform} a importujte její strukturu do nové komunity."
 
@@ -25734,12 +25734,12 @@ msgid "Pay once and get a gift link to share. Gifts never renew."
 msgstr "Zaplaťte jednou a získejte odkaz na dárek ke sdílení. Dárky se nikdy neobnovují."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:37
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Zaplaťte pomocí {pixPaymentMethod} Automático a povolte opakované platby přímo ze svého brazilského bankovního účtu. Nebo zvolte „Použít kartu“ a na další obrazovce poskytovatele {paymentProviderName} zadejte kreditní kartu."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:48
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:47
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Zaplaťte pomocí {upiPaymentMethod} a nastavte elektronický mandát své indické banky v souladu s pravidly RBI. Nebo zvolte „Použít kartu“ a na další obrazovce poskytovatele {paymentProviderName} zadejte kreditní kartu."
 
@@ -25933,7 +25933,7 @@ msgstr "Oprávnění pro {0}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title for personal dictionary settings. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:131
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:132
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:94
 msgid "Personal dictionary"
 msgstr "Osobní slovník"
@@ -26004,7 +26004,7 @@ msgid "Pick at least one tag for this post."
 msgstr "Vyberte alespoň jednu značku pro tento příspěvek."
 
 #. Help text above the manual spellcheck dictionary picker in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:135
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:136
 msgid "Pick one or more dictionaries. Words from any selected dictionary are accepted, which is useful for multilingual chats."
 msgstr "Vyberte jeden nebo více slovníků. Slova z libovolného vybraného slovníku jsou přijata, což je užitečné pro vícejazyčné chaty."
 
@@ -26690,7 +26690,7 @@ msgid "Pricing"
 msgstr "Ceny"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:149
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
 msgid "Pricing is still loading."
 msgstr "Ceny se stále načítají."
 
@@ -27069,17 +27069,17 @@ msgid "Purchased gifts"
 msgstr "Zakoupené dárky"
 
 #. Modal body shown on a self-hosted instance when purchases are disabled for the account.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:111
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
 msgid "Purchases are disabled for this account."
 msgstr "Nákupy jsou pro tento účet zakázány."
 
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:107
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "Nákupy jsou pro tento účet zakázány. Pokud se domníváte, že jde o chybu, napište na {supportEmail}."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:103
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:102
 msgid "Purchases unavailable"
 msgstr "Nákupy nejsou k dispozici"
 
@@ -27173,33 +27173,33 @@ msgid "Push to talk key"
 msgstr "Klávesa pro režim Stisknutím mluvit"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:353
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:354
 #: src/features/voice/components/VoiceSettingsMenus.tsx:422
 msgid "Push-to-talk"
 msgstr "Stisknutím mluvit"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:99
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:100
 msgid "Push-to-talk (limited)"
 msgstr "Stisknutím mluvit (omezená funkčnost)"
 
 #. Voice settings warning on GNOME when the desktop has no key assigned to push-to-talk. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:243
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:240
 msgid "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
 msgstr "Režim Stisknutím mluvit zatím nemá klávesu pro celý systém. Nastavíte ji v Nastavení > Aplikace > {productName}."
 
 #. Voice settings warning on KDE Plasma when the desktop has no key assigned to push-to-talk. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:237
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:234
 msgid "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "Režim Stisknutím mluvit zatím nemá klávesu pro celý systém. Nastavíte ji v Nastavení systému > Klávesnice > Klávesové zkratky > {productName}."
 
 #. Voice settings warning on an unrecognized Linux desktop when the desktop has no key assigned to push-to-talk.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:248
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:245
 msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
 msgstr "Režim Stisknutím mluvit zatím nemá klávesu pro celý systém. Nastavíte ji v nastavení klávesových zkratek vašeho desktopového prostředí."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:706
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:709
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "V režimu Přímý vstup se nastavení Stisknutím mluvit ignoruje. Chcete-li ho použít, přepněte na režim Hlas v popředí nebo Vlastní."
 
@@ -27214,27 +27214,27 @@ msgid "Push-to-talk is on. Hold your push-to-talk key to speak."
 msgstr "Režim Stisknutím mluvit je zapnutý. Chcete-li mluvit, podržte klávesu pro režim Stisknutím mluvit."
 
 #. Voice settings warning on Linux when the desktop dialog for system-wide shortcuts was dismissed or failed. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:223
 msgid "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
 msgstr "Režim Stisknutím mluvit funguje jen při aktivním okně aplikace {productName}, protože vaše desktopové prostředí nenastavilo zkratky pro celý systém."
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:131
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:132
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled."
 msgstr "Fungování funkce „stisknutím promluvit“ je omezeno na dobu, kdy je aplikace {productName} aktivní, dokud neaktivujete {permissionName}."
 
 #. Voice settings warning on Linux before system-wide shortcuts are set up. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:222
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:219
 msgid "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
 msgstr "Dokud nenastavíte zkratky pro celý systém, funguje režim Stisknutím mluvit jen při aktivním okně aplikace {productName}."
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:127
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:128
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Režim Stisknutím mluvit funguje pouze při aktivní kartě prohlížeče."
 
 #. Linux warning next to the direct input device access switch when push-to-talk only has a key assigned by the desktop. With direct input on, only the push-to-talk key set in the app works, and without one the microphone sends whenever you speak. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:184
 msgid "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
 msgstr "Režim Stisknutím mluvit bude používat klávesu nastavenou v aplikaci {productName}. Nejprve ji nastavte, jinak bude mikrofon používat hlasovou aktivitu."
 
@@ -27244,12 +27244,12 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "Režim Stisknutím mluvit nezapne mikrofon, pokud máte vypnutý zvuk. Chcete-li mluvit, nejprve zvuk zapněte."
 
 #. Voice settings note on the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:259
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:256
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
 msgstr "Režim Stisknutím mluvit funguje mimo aplikaci {productName}, až když mu přiřadíte klávesu v konfiguraci Hyprlandu."
 
 #. Voice settings note on the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:253
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:250
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
 msgstr "Režim Stisknutím mluvit funguje mimo aplikaci {productName}, až když mu přiřadíte klávesu v konfiguraci Hyprlandu. Přidejte řádek pro svou verzi Hyprlandu a nahraďte KEY požadovanou klávesou."
 
@@ -27533,12 +27533,12 @@ msgstr "Příjemci budou přesměrováni na {0} <0>{1}</0>"
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:90
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:91
 msgid "Recommended"
 msgstr "Doporučeno"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:83
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Doporučeno. Upravuje zvuk mikrofonu pro srozumitelnou řeč."
 
@@ -27553,7 +27553,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "Opětovné připojení proběhlo úspěšně. Pokud chcete pokračovat v předchozím streamu, vyberte obrazovku znovu."
 
 #. Status text on Linux while the app reconnects to the desktop service that runs system-wide shortcuts, for example after it restarted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:48
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:45
 msgid "Reconnecting to your desktop…"
 msgstr "Znovu se připojujeme k desktopovému prostředí…"
 
@@ -27836,7 +27836,7 @@ msgstr "Znovu spustit pro použití"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:75
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:94
 msgid "Release delay"
 msgstr "Prodleva uvolnění"
@@ -27853,7 +27853,7 @@ msgstr "Relevantní"
 msgid "Reload"
 msgstr "Znovu načíst"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:471
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:474
 msgid "Reload {PRODUCT_NAME} to fully apply the engine change. Switching between in-app and system spellcheck requires a renderer reload because Electron can't swap providers while running."
 msgstr "Aby se změna nástroje pro kontrolu pravopisu plně projevila, znovu načtěte aplikaci {PRODUCT_NAME}. Přepínání mezi kontrolou pravopisu v aplikaci a systémovou kontrolou vyžaduje opětovné načtení vykreslovacího procesu, protože Electron nemůže měnit poskytovatele za běhu."
 
@@ -27872,7 +27872,7 @@ msgstr "Znovu načtěte aplikaci {productName}, aby se použila aktualizace webo
 msgid "Reload app"
 msgstr "Znovu načíst aplikaci"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:483
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:487
 msgid "Reload now"
 msgstr "Znovu načíst"
 
@@ -27935,7 +27935,7 @@ msgid "Remove"
 msgstr "Odebrat"
 
 #. Button or menu action label in the language tab. Keep it concise. Preserve {word}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:144
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:145
 msgid "Remove \"{word}\" from dictionary"
 msgstr "Odebrat \"{word}\" ze slovníku"
 
@@ -28086,8 +28086,8 @@ msgstr "Odebrat z oblíbených GIFů uložených pouze jako URL"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
 #: src/features/channel/components/modals/EditGroupModal.tsx:292
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:320
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:643
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:321
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:644
 msgid "Remove icon"
 msgstr "Odebrat ikonu"
 
@@ -29495,7 +29495,7 @@ msgid "Rows per page"
 msgstr "Řádků na stránku"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:148
+#: src/features/updater/commands/UpdaterModalCommands.tsx:149
 msgid "RPM package"
 msgstr "Balíček RPM"
 
@@ -29530,7 +29530,7 @@ msgid "Safety"
 msgstr "Bezpečnost"
 
 #. Profile timezone difference text. The target user's timezone currently matches the viewer's timezone.
-#: src/features/user/components/popouts/UserProfileShared.tsx:61
+#: src/features/user/components/popouts/UserProfileShared.tsx:62
 msgid "Same time as you"
 msgstr "Má stejný čas jako vy"
 
@@ -29770,7 +29770,7 @@ msgstr "Nahrávání obrazovky"
 #. Heading in the screen-share picker when macOS screen recording permission is missing.
 #. Title of the modal shown when screen recording permission is denied. Keep tone plain.
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:20
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:18
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:19
 msgid "Screen recording permission required"
 msgstr "Je potřeba povolit nahrávání obrazovky"
 
@@ -29858,7 +29858,7 @@ msgstr "Soukromí sdílení obrazovky"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:104
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:105
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:214
 msgid "Screen share quality"
 msgstr "Kvalita sdílení obrazovky"
@@ -30119,7 +30119,7 @@ msgid "Search language code…"
 msgstr "Hledat kód jazyka…"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:74
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:75
 msgid "Search languages…"
 msgstr "Hledat jazyky…"
 
@@ -30552,7 +30552,7 @@ msgid "Select GIF {title}"
 msgstr "Vyberte GIF {title}"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:78
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:79
 msgid "Select interface language"
 msgstr "Vyberte jazyk rozhraní"
 
@@ -30573,7 +30573,7 @@ msgid "Select the account you want to sign in with on your new device."
 msgstr "Vyberte účet, ke kterému se chcete přihlásit na novém zařízení."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:119
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
 msgid "Select voice processing mode"
 msgstr "Vyberte režim zpracování hlasu"
 
@@ -30887,7 +30887,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "Odesílá nezpracovaný zvuk z mikrofonu bez úprav."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:87
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Odesílá váš zvuk beze změn. Nejlepší, pokud používáte externí zvukový software."
 
@@ -30986,7 +30986,7 @@ msgid "Set a member list position for the role"
 msgstr "Nastavena pozice role v seznamu členů"
 
 #. Video settings note shown when a streaming preset decides the screen share resolution and frame rate. preset is the Gaming or Screen share preset label, and Custom is the third preset label.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:81
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:82
 msgid "Set by the {preset} preset. Picking a value here switches to Custom."
 msgstr "Nastaveno předvolbou {preset}. Výběr hodnoty zde přepne na Vlastní."
 
@@ -31150,7 +31150,7 @@ msgid "Set the voice region to automatic"
 msgstr "Hlasový region nastaven na automatický"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:40
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "Nastavit"
 
@@ -31307,7 +31307,7 @@ msgstr "Sdílet s přítelem"
 msgid "Share your screen"
 msgstr "Sdílet obrazovku"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:318
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:320
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Sdílejte obrazovku ve vysokém rozlišení (1080p), Quad HD (1440p) nebo v nativním rozlišení zdroje, a to až při 60 FPS."
 
@@ -31399,7 +31399,7 @@ msgstr "Zkratky"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:125
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:368
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:369
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -31407,7 +31407,7 @@ msgstr "Zkratka"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:58
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:59
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:370
 msgid "Shortcut badges"
 msgstr "Odznaky zkratek"
@@ -31616,7 +31616,7 @@ msgid "Show favorite button"
 msgstr "Zobrazit tlačítko pro přidání do oblíbených"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:90
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:91
 msgid "Show favorites throughout the app"
 msgstr "Zobrazovat oblíbené položky v celé aplikaci"
 
@@ -32039,7 +32039,7 @@ msgid "Sign in with your browser"
 msgstr "Přihlásit se pomocí prohlížeče"
 
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:28
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
 msgstr "Přihlásit se pomocí staré aplikace {productName}"
 
@@ -32097,7 +32097,7 @@ msgid "Sign out?"
 msgstr "Odhlásit se?"
 
 #. Title of the browser page after the user cancelled the sign-in request from the app.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:322
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:326
 msgid "Sign-in cancelled"
 msgstr "Přihlášení zrušeno"
 
@@ -32113,7 +32113,7 @@ msgid "Sign-in details"
 msgstr "Přihlašovací údaje"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:89
+#: src/features/auth/flow/AuthLoginLayout.tsx:88
 msgid "Sign-in flow"
 msgstr "Průběh přihlášení"
 
@@ -32144,7 +32144,7 @@ msgid "Signing in as {name}"
 msgstr "Přihlášení jako {name}"
 
 #. Text button in the desktop app that shows a code to type into a browser on a different device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:214
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:219
 msgid "Signing in on another device?"
 msgstr "Přihlašujete se na jiném zařízení?"
 
@@ -32654,7 +32654,7 @@ msgstr "Při načítání protokolu aktivit se vyskytla chyba."
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:33
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -32694,7 +32694,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "Při odesílání ověřovacího e-mailu se něco pokazilo. Zkuste to prosím za chvíli znovu."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:131
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "Při zahájení platby se něco pokazilo. Zkuste to prosím za chvíli znovu."
 
@@ -32812,7 +32812,7 @@ msgstr "Zvuky"
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Screen share resolution token in the stream info pill on the sharing tile, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:77
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:250
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:111
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:336
@@ -32988,8 +32988,8 @@ msgstr "Rychlost"
 #. Settings section label for spellcheck settings.
 #. Submenu label in the textarea right-click context menu for spellcheck preferences.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:62
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:401
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:443
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:402
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:446
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:78
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:50
@@ -32997,7 +32997,7 @@ msgid "Spellcheck"
 msgstr "Kontrola pravopisu"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:118
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:119
 msgid "Spellcheck engine"
 msgstr "Nástroj pro kontrolu pravopisu"
 
@@ -33099,7 +33099,7 @@ msgid "Star animation"
 msgstr "Animace hvězdy"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:86
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:87
 msgid "Starred channels"
 msgstr "Oblíbené kanály"
 
@@ -33140,7 +33140,7 @@ msgstr "Zahájit hlasový hovor?"
 msgid "Start call"
 msgstr "Zahájit hovor"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:279
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:281
 msgid "Start camera test and configure effects"
 msgstr "Spustit test kamery a konfigurovat efekty"
 
@@ -33175,7 +33175,7 @@ msgid "Start minimized"
 msgstr "Začít minimalizováno"
 
 #. Button on the browser page after cancelling that goes back to choosing an account.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:337
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:341
 #: src/features/moderation/components/report/ReportStepDetails.tsx:389
 #: src/features/moderation/components/report/ReportStepEmail.tsx:113
 #: src/features/moderation/components/report/ReportStepReason.tsx:149
@@ -33239,7 +33239,7 @@ msgid "Startup"
 msgstr "Spuštění"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:78
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:79
 msgid "Static Neko"
 msgstr "Statická Neko"
 
@@ -33460,12 +33460,12 @@ msgid "Still indexing — check back in a moment"
 msgstr "Indexování stále probíhá – zkuste to za chvíli znovu"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:74
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:75
 msgid "Still Neko"
 msgstr "Nehybná Neko"
 
 #. Heading in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:31
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:32
 msgid "Still waiting for screen recording access"
 msgstr "Stále čekáme na přístup k nahrávání obrazovky"
 
@@ -33494,7 +33494,7 @@ msgid "Stop mic test"
 msgstr "Zastavit test mikrofonu"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:70
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
 msgid "Stop Neko from chasing your cursor while keeping it draggable and interactive."
 msgstr "Neko přestane honit kurzor, ale bude možné ji nadále přetahovat a interagovat s ní."
 
@@ -33777,7 +33777,7 @@ msgid "Subscription"
 msgstr "Předplatné"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:86
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:85
 msgid "Subscription already exists"
 msgstr "Předplatné už existuje"
 
@@ -33957,7 +33957,7 @@ msgstr "Přepnout na pohodlné rozvržení"
 msgid "Switch to dense layout"
 msgstr "Přepnout na zhuštěné rozvržení"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:668
 msgid "Switch to direct input"
 msgstr "Přepnout na přímý vstup"
 
@@ -34182,7 +34182,7 @@ msgid "System DMs cannot host voice calls."
 msgstr "V systémových konverzacích nelze zahájit hlasový hovor."
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:38
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:39
 msgid "System locale: {format}"
 msgstr "Čas podle nastavení systému: {format}"
 
@@ -34218,17 +34218,17 @@ msgid "System tray"
 msgstr "Oznamovací oblast"
 
 #. Modal title when the desktop app is installed through a system package manager such as Flatpak.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:70
+#: src/features/updater/commands/UpdaterModalCommands.tsx:71
 msgid "System-managed install"
 msgstr "Instalace spravovaná systémem"
 
 #. Settings subsection title for keyboard and mouse shortcuts that work outside the app.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:24
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:21
 msgid "System-wide shortcuts"
 msgstr "Zkratky pro celý systém"
 
 #. Linux settings text when setting up system-wide shortcuts failed.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:148
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:145
 msgid "System-wide shortcuts could not be set up."
 msgstr "Zkratky pro celý systém se nepodařilo nastavit."
 
@@ -34344,7 +34344,7 @@ msgid "Tap to add a note"
 msgstr "Klepnutím přidáte poznámku"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:153
+#: src/features/updater/commands/UpdaterModalCommands.tsx:154
 msgid "tar.gz archive"
 msgstr "Archiv tar.gz"
 
@@ -34360,7 +34360,7 @@ msgstr "Odznak na hlavním panelu"
 msgid "Teleporting you to another voice region..."
 msgstr "Přesouváme vás do jiného hlasového regionu..."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:567
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:568
 msgid "Template"
 msgstr "Šablona"
 
@@ -34649,7 +34649,7 @@ msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on 
 msgstr "Aplikace {PRODUCT_NAME} na vašem druhém zařízení se zobrazí pod možností Přihlášení na jiném zařízení. Zadejte kód pouze ze zařízení, které ovládáte."
 
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:327
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:331
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
 msgstr "Aplikace {PRODUCT_NAME} nebyla přihlášena. Tuto kartu můžete zavřít."
 
@@ -34714,12 +34714,12 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "Komunita, kterou hledáte, mohla být smazána nebo k ní nemáte přístup."
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:108
+#: src/features/updater/commands/UpdaterModalCommands.tsx:109
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "Aktualizaci desktopové aplikace se nepodařilo stáhnout. Až bude připojení stabilní, zkuste to znovu pomocí tlačítka aktualizace."
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:139
+#: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "Stažený soubor je uložen do vašeho počítače. Nainstalujte jej pomocí svého správce balíčků."
 
@@ -35177,7 +35177,7 @@ msgid "This category already contains the maximum of {maxChannelsPerCategory} ch
 msgstr "Tato kategorie již obsahuje maximální počet {maxChannelsPerCategory} kanálů."
 
 #. Body in the channel gate modal for a mature category when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:254
+#: src/features/channel/components/MatureContentChannelGate.tsx:281
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:76
 msgid "This category is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Tato kategorie je označena jako obsah pro dospělé a může obsahovat materiál, který je pro některé uživatele nevhodný."
@@ -35220,7 +35220,7 @@ msgid "This channel has a content warning. Updates can only go to channels with 
 msgstr "Tento kanál má varování o obsahu. Aktualizace lze posílat pouze do kanálů s varováním o obsahu nebo věkovým omezením."
 
 #. Body in the channel gate modal for a mature text channel when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:282
+#: src/features/channel/components/MatureContentChannelGate.tsx:309
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:91
 msgid "This channel is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Tento kanál je označen jako kanál pro dospělé a může obsahovat materiál, který nemusí být vhodný pro některé uživatele."
@@ -35309,7 +35309,7 @@ msgid "This community is full"
 msgstr "Tato komunita je plná"
 
 #. Body in the channel gate modal for a mature community when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:225
+#: src/features/channel/components/MatureContentChannelGate.tsx:252
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:71
 msgid "This community is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Tato komunita je označena jako komunita pro dospělé a může obsahovat materiál, který nemusí být vhodný pro některé uživatele."
@@ -35324,14 +35324,14 @@ msgstr "Tato komunita již není k dispozici"
 #. Description text in the linked accounts tab.
 #. Description text in the user profile shared popout.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:43
-#: src/features/user/components/popouts/UserProfileShared.tsx:45
+#: src/features/user/components/popouts/UserProfileShared.tsx:46
 msgid "This connection has been verified."
 msgstr "Toto propojení bylo ověřeno."
 
 #. Description text in the linked accounts tab.
 #. Description text in the user profile shared popout.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:47
-#: src/features/user/components/popouts/UserProfileShared.tsx:49
+#: src/features/user/components/popouts/UserProfileShared.tsx:50
 msgid "This connection has not been verified."
 msgstr "Toto propojení nebylo ověřeno."
 
@@ -35349,22 +35349,22 @@ msgid "This conversation is no longer available."
 msgstr "Tato konverzace již není k dispozici."
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:78
+#: src/features/updater/commands/UpdaterModalCommands.tsx:79
 msgid "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 msgstr "Tato verze desktopové aplikace neumožňuje instalovat aktualizace přímo v aplikaci {productName}. Stáhněte si nejnovější instalátor desktopové aplikace."
 
 #. Voice settings warning on Linux desktops without system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:232
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:229
 msgid "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused."
 msgstr "Toto desktopové prostředí nenabízí zkratky pro celý systém. Režim Stisknutím mluvit funguje jen při aktivním okně aplikace {productName}."
 
 #. Linux settings text when the desktop has no system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:144
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:141
 msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
 msgstr "Toto desktopové prostředí nenabízí zkratky pro celý systém. Klávesové zkratky dál fungují při aktivním okně aplikace {productName}."
 
 #. Desktop updater modal body for development or unpackaged builds.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:74
+#: src/features/updater/commands/UpdaterModalCommands.tsx:75
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
 msgstr "Tato vývojová verze se nemůže sama aktualizovat. Stáhněte si desktopový instalátor a otestujte proces aktualizace."
 
@@ -35476,7 +35476,7 @@ msgid "This image couldn't be read. It may be damaged."
 msgstr "Tento obrázek se nepodařilo přečíst. Může být poškozený."
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:84
+#: src/features/updater/commands/UpdaterModalCommands.tsx:85
 msgid "This install is managed by your system. Update {productName} from your software center or package manager."
 msgstr "Tato instalace je spravována vaším systémem. Aktualizujte aplikaci {productName} prostřednictvím vašeho softwarového centra nebo správce balíčků."
 
@@ -35491,7 +35491,7 @@ msgid "This instance already uses usernames to sign in. This can no longer chang
 msgstr "Tato instance už k přihlášení používá uživatelská jména. To už nelze změnit."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:67
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "Tato instance momentálně umožňuje sdílení obrazovky až do rozlišení 720p při 30 snímcích za sekundu."
 
@@ -35629,33 +35629,44 @@ msgid "This link isn't valid. Open the link from your email again."
 msgstr "Tento odkaz není platný. Zkuste znovu otevřít odkaz z e-mailu."
 
 #. Body in the channel gate modal when the current user cannot access a mature category.
+#. Body text on the mature content gate when the viewer cannot open a mature category.
+#: src/features/channel/components/MatureContentChannelGate.tsx:36
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:63
 msgid "This mature category is not available to your account."
 msgstr "Tato kategorie pro dospělé není pro váš účet dostupná."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:147
+#: src/features/channel/components/MatureContentChannelGate.tsx:167
 msgid "This mature category is not available to your account. <0>Learn more</0>"
 msgstr "Tato kategorie pro dospělé není pro váš účet dostupná. <0>Zjistit více</0>"
 
 #. Body in the channel gate modal when the current user cannot access a mature channel.
+#. Body text on the mature content gate when the viewer cannot open a mature channel.
+#: src/features/channel/components/MatureContentChannelGate.tsx:40
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:67
 msgid "This mature channel is not available to your account."
 msgstr "Tento kanál s obsahem pro dospělé není pro váš účet dostupný."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:169
+#: src/features/channel/components/MatureContentChannelGate.tsx:193
 msgid "This mature channel is not available to your account. <0>Learn more</0>"
 msgstr "Tento kanál pro dospělé není pro váš účet dostupný. <0>Zjistit více</0>"
 
 #. Body in the channel gate modal when the current user cannot access a mature community.
+#. Body text on the mature content gate when the viewer cannot open a mature community.
+#: src/features/channel/components/MatureContentChannelGate.tsx:32
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:59
 msgid "This mature community is not available to your account."
 msgstr "Tato komunita pro dospělé není pro váš účet dostupná."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:124
+#: src/features/channel/components/MatureContentChannelGate.tsx:140
 msgid "This mature community is not available to your account. <0>Learn more</0>"
 msgstr "Tato komunita pro dospělé není pro váš účet dostupná. <0>Zjistit více</0>"
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:106
+#. Body text in the mature media gate details modal when the viewer cannot open mature media.
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:31
+msgid "This mature media is not available to your account."
+msgstr "Tento obsah pro dospělé není pro váš účet dostupný."
+
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:113
 msgid "This mature media is not available to your account. <0>Learn more</0>"
 msgstr "Tento obsah pro dospělé není pro váš účet dostupný. <0>Další informace</0>"
 
@@ -35715,9 +35726,14 @@ msgid "This picker is only available in the desktop app."
 msgstr "Tento panel výběru je dostupný pouze v desktopové aplikaci."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:153
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
 msgid "This plan isn't available. Contact support."
 msgstr "Tento tarif není k dispozici. Kontaktujte podporu."
+
+#. Error modal body shown on a self-hosted instance when the selected Plutonium plan has no price ID configured.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+msgid "This plan isn't available. Contact the administrators of this instance."
+msgstr "Tento tarif není k dispozici. Kontaktujte správce této instance."
 
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:191
 msgid "This purchase is not eligible for a refund."
@@ -35837,7 +35853,7 @@ msgstr "Tato konverzace je uzamčena. Zprávy mohou posílat pouze moderátoři.
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Tento uživatel si omezil svůj profil. Některé detaily jsou skryté před lidmi, kteří nejsou jeho přáteli."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:395
+#: src/features/user/components/popouts/UserProfileShared.tsx:399
 msgid "This user has no roles in this community."
 msgstr "Tento uživatel nemá v této komunitě žádné role."
 
@@ -36050,14 +36066,14 @@ msgstr "Čas"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for app time display format.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:361
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:362
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:26
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:38
 msgid "Time format"
 msgstr "Formát času"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:62
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:63
 msgid "Time format selection"
 msgstr "Výběr formátu času"
 
@@ -36143,17 +36159,17 @@ msgid "Title bar platform"
 msgstr "Platforma záhlaví"
 
 #. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:89
 msgid "To change the keys, go to Settings > Apps > {productName}."
 msgstr "Chcete-li změnit klávesy, přejděte do Nastavení > Aplikace > {productName}."
 
 #. Instructions for KDE Plasma. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:87
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:84
 msgid "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "Chcete-li změnit klávesy, přejděte do Nastavení systému > Klávesnice > Klávesové zkratky > {productName}."
 
 #. Instructions for changing system-wide shortcut keys on an unrecognized Linux desktop.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:108
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:105
 msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "Chcete-li změnit klávesy, otevřete nastavení klávesových zkratek vašeho desktopového prostředí."
 
@@ -36341,7 +36357,7 @@ msgid "Toolbar"
 msgstr "Panel nástrojů"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:54
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:55
 msgid "Tooltip shortcuts"
 msgstr "Klávesové zkratky (nápověda)"
 
@@ -36864,7 +36880,7 @@ msgstr "Čtyřiadvacetihodinový formát"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:42
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:43
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:406
 msgid "Two clicks"
 msgstr "Dvě kliknutí"
@@ -37263,7 +37279,7 @@ msgstr "Univerzální záložní volba. Nejnižší kvalita, ale funguje všude.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:770
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:115
-#: src/features/updater/commands/UpdaterModalCommands.tsx:127
+#: src/features/updater/commands/UpdaterModalCommands.tsx:128
 msgid "Unknown"
 msgstr "Neznámý"
 
@@ -37429,7 +37445,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "Odemkněte vlastní emoji v soukromých konverzacích s {premiumProductName}"
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:59
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:60
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Odemkněte sdílení obrazovky v HD rozlišení s {premiumProductName}"
 
@@ -37817,7 +37833,7 @@ msgid "Up to 720p at 30 FPS"
 msgstr "Až 720p při 30 snímcích za sekundu"
 
 #. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:152
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:149
 msgid "Update {productName} to use system-wide shortcuts on Wayland."
 msgstr "Aktualizujte {productName}, abyste mohli na Waylandu používat zkratky pro celý systém."
 
@@ -37841,7 +37857,7 @@ msgid "Update my status"
 msgstr "Aktualizovat můj stav"
 
 #. Button label that closes the desktop app and opens the updater to install an available update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:42
+#: src/features/updater/commands/UpdaterModalCommands.tsx:43
 msgid "Update now"
 msgstr "Aktualizovat nyní"
 
@@ -38008,8 +38024,8 @@ msgstr "Nahrávat soubory a média v tomto kanálu."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "Nahrát ikonu"
@@ -38166,7 +38182,7 @@ msgid "Use {name} on {domain}"
 msgstr "Použít {name} na {domain}"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:44
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:43
 msgid "Use {pixPaymentMethod}"
 msgstr "Použít {pixPaymentMethod}"
 
@@ -38181,7 +38197,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "Použijte {query} tam, kam se má vložit text k překladu."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:54
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:53
 msgid "Use {upiPaymentMethod}"
 msgstr "Použít {upiPaymentMethod}"
 
@@ -38219,7 +38235,7 @@ msgid "Use actual value"
 msgstr "Použít skutečnou hodnotu"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:63
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:62
 msgid "Use alternative method"
 msgstr "Použít jinou metodu"
 
@@ -38245,12 +38261,12 @@ msgid "Use autoscrolling"
 msgstr "Používat automatické posouvání"
 
 #. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:70
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:71
 msgid "Use browser locale for time format"
 msgstr "Použít pro formát času národní nastavení prohlížeče"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:174
 msgid "Use card"
 msgstr "Použít kartu"
 
@@ -38297,7 +38313,7 @@ msgid "Use default"
 msgstr "Použít výchozí"
 
 #. Switch label on Linux. When on, the app reads keyboard devices directly for system-wide shortcuts. Not related to the "Direct input" voice processing profile.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:157
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:154
 msgid "Use direct input device access"
 msgstr "Použít přímý přístup ke vstupním zařízením"
 
@@ -38391,7 +38407,7 @@ msgid "Use stickers from other communities."
 msgstr "Používat samolepky z jiných komunit."
 
 #. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:66
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:67
 msgid "Use system locale for time format"
 msgstr "Použít systémové nastavení pro formát času"
 
@@ -38406,7 +38422,7 @@ msgid "Use the operating system's window chrome"
 msgstr "Použít rám a záhlaví okna operačního systému"
 
 #. Description for the operating-system spellcheck engine option in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:114
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:115
 msgid "Use the spellchecker built into your operating system."
 msgstr "Použít kontrolu pravopisu integrovanou v operačním systému."
 
@@ -38452,7 +38468,7 @@ msgid "Use voice activity"
 msgstr "Používat hlasovou aktivitu"
 
 #. Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:94
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:95
 msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
 msgstr "Použijte kontrolu pravopisu vašeho operačního systému, pokud je k dispozici. Jinak použijte vestavěné slovníky {productName}."
 
@@ -38926,7 +38942,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "Před odesláním žádostí o přátelství si ověřte svůj e-mail."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:67
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:66
 msgid "Verify your email first"
 msgstr "Nejprve ověřte svůj e-mail"
 
@@ -39244,7 +39260,7 @@ msgstr "Zobrazit podrobnosti"
 msgid "View devices that are signed in to your account"
 msgstr "Zobrazit zařízení přihlášená k vašemu účtu"
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:198
+#: src/features/user/components/popouts/UserProfileShared.tsx:199
 msgid "View full profile"
 msgstr "Zobrazit celý profil"
 
@@ -39387,7 +39403,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "Upozornění na dvoufaktorové ověřování pro Visionary"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:80
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:79
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "Visionary už zahrnuje trvalý přístup, takže opakované předplatné není potřeba. Stále můžete kupovat dárky pro ostatní."
 
@@ -39535,7 +39551,7 @@ msgstr "Hlasový kanál"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:27
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:402
 msgid "Voice channel confirmation"
 msgstr "Potvrzení připojení k hlasovému kanálu"
@@ -39546,7 +39562,7 @@ msgid "Voice channel full"
 msgstr "Hlasový kanál je plný"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:23
 msgid "Voice channel join behavior"
 msgstr "Chování při připojení k hlasovému kanálu"
 
@@ -39615,7 +39631,7 @@ msgid "Voice participants"
 msgstr "Účastníci hlasového chatu"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:661
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:663
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Zpracování hlasu"
@@ -39661,7 +39677,7 @@ msgstr "Zapnutí zvuku hovoru"
 msgid "Voice unmute"
 msgstr "Zapnutí mikrofonu"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:590
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:592
 msgid "Voice uses your system output device in this browser. Change it in your system settings."
 msgstr "Hlas používá výchozí výstupní zařízení vašeho systému v tomto prohlížeči. Změňte jej v nastavení systému."
 
@@ -39675,7 +39691,7 @@ msgstr "Zrušeno"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:387
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:179
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
@@ -39723,7 +39739,7 @@ msgstr "Doba čekání mezi zprávami. Členové s oprávněním „{bypassSlowm
 msgid "Waiting for connection..."
 msgstr "Čekání na připojení..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:366
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:374
 msgid "Waiting for passkey…"
 msgstr "Čekání na přístupový klíč…"
 
@@ -39743,7 +39759,7 @@ msgid "Waiting for you to..."
 msgstr "Čeká se, až..."
 
 #. Status text while the Linux desktop shows its own dialog for confirming system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:44
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:41
 msgid "Waiting for your desktop…"
 msgstr "Čekáme na vaše desktopové prostředí…"
 
@@ -39887,7 +39903,7 @@ msgid "We couldn't read this theme. It may be corrupted or invalid."
 msgstr "Tento motiv se nepodařilo načíst. Může být poškozený nebo neplatný."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:91
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:90
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "Pro tento účet jsme našli stávající předplatné {premiumProductFullName}. Spravujte ho v zabezpečeném platebním portálu, kde můžete aktualizovat platební údaje nebo zkontrolovat stav obnovení. Pokud jste právě zaplatili, počkejte minutu a znovu otevřete tuto stránku."
 
@@ -39914,7 +39930,7 @@ msgstr "Změnili jsme velikost této samolepky na 320x320 pixelů a zkomprimoval
 msgid "We sent a code to {email}."
 msgstr "Kód jsme odeslali na {email}."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:158
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:162
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Předvyplníme {prefillEmail}, jakmile se otevře přihlášení v prohlížeči."
 
@@ -40111,7 +40127,7 @@ msgid "Website previews"
 msgstr "Náhledy webových stránek"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:93
+#: src/features/auth/flow/AuthLoginLayout.tsx:92
 msgid "Welcome back"
 msgstr "Vítejte zpět"
 
@@ -40321,7 +40337,7 @@ msgstr "Které komunity"
 msgid "Which conversations"
 msgstr "Které konverzace"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:363
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Když je zapnutý režim Stisknutím mluvit, mikrofon ovládá klávesová zkratka, takže tlačítko ztlumení není dostupné."
 
@@ -40631,7 +40647,7 @@ msgid "You are now a developer!"
 msgstr "Nyní jste vývojář!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:165
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "Nyní přecházíte na {paymentProviderName} k dokončení platby. Po dokončení se vraťte do aplikace {productName}."
 
@@ -41052,12 +41068,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Právě jste stiskli klávesu Tab. Režim klávesnice je nyní zapnutý, takže můžete procházet aplikaci {productName} bez myši."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:259
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:258
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Výhody si ponecháte do data příštího obnovení. Pokud předplatné do té doby znovu aktivujete, zachováte si jeho historii."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:280
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:279
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Okamžitě ztratíte všechny výhody {PREMIUM_PRODUCT_NAME} a historie vašeho předplatného se resetuje. Tuto akci nelze vrátit zpět."
 
@@ -41137,8 +41153,8 @@ msgstr "K používání emoji z jiných komunit zde potřebujete oprávnění \"
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "K používání samolepek z jiných komunit zde potřebujete oprávnění „{permissionLabel}“."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:210
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:438
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:211
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:439
 msgid "You need to claim your account before you can create a community."
 msgstr "Než budete moci vytvořit komunitu, musíte dokončit registraci svého účtu."
 
@@ -41155,8 +41171,8 @@ msgstr "Abyste mohli posílat soukromé zprávy, musíte dokončit registraci sv
 msgid "You need to claim your account to send messages in this community."
 msgstr "Abyste mohli v této komunitě posílat zprávy, musíte dokončit registraci svého účtu."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:235
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:463
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:236
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:464
 msgid "You need to verify your email address before you can create a community."
 msgstr "Než budete moct vytvořit komunitu, musíte si ověřit e-mailovou adresu."
 
@@ -41170,7 +41186,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "Než budete moci zahájit soukromou konverzaci, musíte ověřit svou e-mailovou adresu."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:71
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:70
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "Než si budete moct zakoupit {premiumProductFullName}, musíte si ověřit e-mail."
 
@@ -41214,7 +41230,7 @@ msgid "You'll appear offline"
 msgstr "Budete vypadat offline"
 
 #. Body of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription. The subscription is charged immediately and the unused gift time is appended after the paid period.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:139
 msgid "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost."
 msgstr "Budeme vám účtovat ihned. Zbývající čas z dárku se přidá po placeném období, takže o nic nepřijdete."
 
@@ -41262,7 +41278,7 @@ msgid "You're already friends with this user."
 msgstr "S tímto uživatelem už jste přátelé."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:76
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:75
 msgid "You're already Visionary"
 msgstr "Už máte Visionary"
 
@@ -41381,7 +41397,7 @@ msgid "You're sending reports too quickly. Try again later."
 msgstr "Odesíláte nahlášení příliš rychle. Zkuste to později."
 
 #. Title of the browser page after the user approved signing in to the app.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:282
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:286
 msgid "You're signed in"
 msgstr "Jste přihlášeni"
 
@@ -41500,7 +41516,7 @@ msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Všechny nedávné zmínky jste si prohlédli. Další se zde brzy objeví."
 
 #. Modal body for existing-subscription block when the subscription was bought in a mobile app store. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {premiumProductFullName} is the full premium product name.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:97
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:96
 msgid "Your {premiumProductFullName} subscription is billed through {storeName}. Manage it in your {storeName} account to change your plan or check renewal status."
 msgstr "Vaše předplatné {premiumProductFullName} je účtováno přes {storeName}. Spravujte ho ve svém účtu {storeName}, kde můžete změnit tarif nebo zkontrolovat stav obnovení."
 
@@ -41559,9 +41575,13 @@ msgstr "Váš účet je příliš nový na odesílání zpráv v této komunitě
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Žádost o váš účet čeká na schválení. Přihlásit se můžete, až ji administrátor schválí."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:297
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:304
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "Váš účet vyžaduje vícefaktorové ověřování, ale na tomto zařízení nejsou nastavené žádné podporované metody. Přihlaste se na zařízení s ověřovací aplikací nebo bezpečnostním klíčem, případně kontaktujte podporu."
+
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:298
+msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact the administrators of this instance."
+msgstr "Váš účet vyžaduje vícefaktorové ověřování, ale na tomto zařízení nejsou nastavené žádné podporované metody. Přihlaste se na zařízení s ověřovací aplikací nebo bezpečnostním klíčem, případně kontaktujte správce této instance."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
@@ -41574,9 +41594,14 @@ msgid "Your accounts and settings have not been changed or deleted."
 msgstr "Vaše účty a nastavení nebyly změněny ani smazány."
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
-#: src/features/auth/components/ContentBlockedHandler.tsx:14
+#: src/features/auth/components/ContentBlockedHandler.tsx:15
 msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Vaši akci se nepodařilo dokončit, protože byla označena našimi bezpečnostními systémy. Pokud se domníváte, že jde o chybu, kontaktujte prosím podporu."
+
+#. Modal body shown on a self-hosted instance when the safety system blocks the requested action. Keep plain and calm.
+#: src/features/auth/components/ContentBlockedHandler.tsx:21
+msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
+msgstr "Vaši akci se nepodařilo dokončit, protože byla označena našimi bezpečnostními systémy. Pokud se domníváte, že jde o chybu, kontaktujte prosím správce této instance."
 
 #. Report flow: section heading above the list of answers the reporter picked, on the summary screen.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:26
@@ -41625,22 +41650,22 @@ msgid "Your current kit stops working as soon as the new one is created."
 msgstr "Vaše současná sada přestane fungovat, jakmile bude vytvořena nová."
 
 #. Linux settings text when the desktop dialog for system-wide shortcuts was dismissed or failed. Neutral wording, the user may not have declined anything.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:134
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:131
 msgid "Your desktop didn't set up system-wide shortcuts."
 msgstr "Vaše desktopové prostředí nenastavilo zkratky pro celý systém."
 
 #. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME). A key assigned here stops reaching every other app. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:61
 msgid "Your desktop keeps these keys for {productName}, so other apps can't use them."
 msgstr "Vaše desktopové prostředí vyhradí tyto klávesy pro aplikaci {productName}, takže je ostatní aplikace nemohou používat."
 
 #. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME), shown when the "Use direct input device access" switch is offered below it. A key assigned here stops reaching every other app. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:69
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:66
 msgid "Your desktop keeps these keys for {productName}, so other apps can't use them. To use the same key in other apps, turn on direct input device access below."
 msgstr "Vaše desktopové prostředí vyhradí tyto klávesy pro aplikaci {productName}, takže je ostatní aplikace nemohou používat. Chcete-li stejnou klávesu používat i v jiných aplikacích, zapněte níže přímý přístup ke vstupním zařízením."
 
 #. Subtitle above the list of system-wide shortcuts assigned by the Linux desktop. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:53
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:50
 msgid "Your desktop runs these shortcuts even while {productName} is not focused."
 msgstr "Vaše desktopové prostředí spouští tyto zkratky, i když okno aplikace {productName} není aktivní."
 
@@ -41729,7 +41754,7 @@ msgid "Your gift time has ended. Subscribe to keep {premiumProductName}."
 msgstr "Čas vašeho dárku vypršel. Přihlaste se k odběru a zachovejte si {premiumProductName}."
 
 #. Title of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:134
 msgid "Your gift time is kept"
 msgstr "Váš dárkový čas si ponecháte"
 
@@ -41744,7 +41769,7 @@ msgid "Your grace period has ended."
 msgstr "Vaše dodatečná lhůta skončila."
 
 #. Critical nagbar body shown when the desktop installation appears corrupted. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:13
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:14
 msgid "Your installation is corrupted, and you need to reinstall the app for all functionality to work."
 msgstr "Vaše instalace je poškozená. Pro plnou funkčnost je potřeba aplikaci přeinstalovat."
 
@@ -41771,22 +41796,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "Váš poslední nákup je mimo lhůtu pro vrácení peněz. V případě problémů s fakturací kontaktujte podporu."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:82
+#: src/features/messaging/state/MessageQueue.tsx:83
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Vaše zpráva nemohla být doručena, protože byla označena našimi bezpečnostními systémy. Pokud se domníváte, že jde o chybu, kontaktujte prosím podporu."
 
+#. Message send error on a self-hosted instance when the safety system blocks the message.
+#: src/features/messaging/state/MessageQueue.tsx:88
+msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
+msgstr "Vaše zpráva nemohla být doručena, protože byla označena našimi bezpečnostními systémy. Pokud se domníváte, že jde o chybu, kontaktujte prosím správce této instance."
+
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:69
+#: src/features/messaging/state/MessageQueue.tsx:70
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "Vaši zprávu se nepodařilo doručit. Obvykle je to proto, že s příjemcem nesdílíte komunitu nebo příjemce přijímá přímé zprávy pouze od přátel. Možná budete také muset upravit vlastní nastavení soukromí přímých zpráv v {directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:74
+#: src/features/messaging/state/MessageQueue.tsx:75
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "Vaši zprávu se nepodařilo doručit. Abyste mohli posílat soukromé zprávy, musíte dokončit registraci svého účtu."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:78
+#: src/features/messaging/state/MessageQueue.tsx:79
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "Vaši zprávu se nepodařilo doručit. Abyste mohli posílat zprávy, musíte dokončit registraci svého účtu."
 
@@ -41885,7 +41915,7 @@ msgid "Your report didn't go through. Try again."
 msgstr "Nahlášení se nepodařilo odeslat. Zkuste to znovu."
 
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:87
 msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
 msgstr "Vaše uložené rozlišení {savedResolution} s frekvencí {savedFrameRate} snímků za sekundu vyžaduje {premiumProductName}, takže sdílení používá rozlišení {resolution} s frekvencí {frameRate} snímků za sekundu."
 

@@ -1404,12 +1404,12 @@ msgid "{domain} runs a newer version of Fluxer than this app. Update Fluxer, the
 msgstr "{domain} ejecuta una versión más reciente de Fluxer que esta app. Actualiza Fluxer y vuelve a intentarlo."
 
 #. Profile timezone difference text. duration is a localized hours/minutes phrase for how far ahead the target user's local time is.
-#: src/features/user/components/popouts/UserProfileShared.tsx:65
+#: src/features/user/components/popouts/UserProfileShared.tsx:66
 msgid "{duration} ahead of you"
 msgstr "{duration} por delante de tu hora"
 
 #. Profile timezone difference text. duration is a localized hours/minutes phrase for how far behind the target user's local time is.
-#: src/features/user/components/popouts/UserProfileShared.tsx:70
+#: src/features/user/components/popouts/UserProfileShared.tsx:71
 msgid "{duration} behind you"
 msgstr "{duration} por detrás de tu hora"
 
@@ -1528,7 +1528,7 @@ msgstr "{fps} FPS"
 
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:47
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:48
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:115
 msgid "{frameRate} FPS"
 msgstr "{frameRate} FPS"
@@ -1553,12 +1553,12 @@ msgstr "Hace {hours, plural, one {# hora} other {# horas}}"
 #. Duration phrase in the profile timezone section. hours is a positive integer.
 #. Generic duration label for a whole number of hours.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:53
-#: src/features/user/components/popouts/UserProfileShared.tsx:79
+#: src/features/user/components/popouts/UserProfileShared.tsx:80
 msgid "{hours, plural, one {# hour} other {# hours}}"
 msgstr "{hours, plural, one {# hora} other {# horas}}"
 
 #. Duration phrase in the profile timezone section. hours and minutes are positive integers.
-#: src/features/user/components/popouts/UserProfileShared.tsx:75
+#: src/features/user/components/popouts/UserProfileShared.tsx:76
 msgid "{hours, plural, one {# hour} other {# hours}} {minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{hours, plural, one {# hora} other {# horas}} {minutes, plural, one {# minuto} other {# minutos}}"
 
@@ -1602,7 +1602,7 @@ msgstr "El archivo {label} es demasiado grande. Elige un archivo de menos de {ma
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "Las imágenes de {label} no pueden tener animación. Usa una imagen estática."
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:36
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:37
 msgid "{languageName} flag"
 msgstr "Bandera: {languageName}"
 
@@ -1678,7 +1678,7 @@ msgstr "Hace {minutes, plural, one {# minuto} other {# minutos}}"
 #. Push notification inactive timeout option. The value is a duration in minutes.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:49
 #: src/features/user/components/modals/tabs/notifications_tab/PushSettings.tsx:25
-#: src/features/user/components/popouts/UserProfileShared.tsx:83
+#: src/features/user/components/popouts/UserProfileShared.tsx:84
 msgid "{minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{minutes, plural, one {# minuto} many {# minutos} other {# minutos}}"
 
@@ -1803,15 +1803,15 @@ msgstr "{PRODUCT_NAME} ha encontrado un nuevo dispositivo de salida de audio lla
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "{PRODUCT_NAME} debe reiniciarse para aplicar la configuración de desplazamiento nativo de Chromium."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:209
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:214
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "{PRODUCT_NAME} debe reiniciarse para que la aceleración de hardware surta efecto."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:166
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:167
 msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 msgstr "{PRODUCT_NAME} necesita reiniciarse para que el cambio en la barra de título surta efecto."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:211
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:219
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} debe reiniciarse para deshabilitar la aceleración de hardware de Chromium. Usa esto solo si estás solucionando problemas gráficos o un alto uso de la GPU."
 
@@ -1836,27 +1836,27 @@ msgid "{productName} Bug Hunter"
 msgstr "Cazador de bugs de {productName}"
 
 #. Linux settings text before system-wide shortcuts are set up. The desktop environment owns the keys. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:28
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:25
 msgid "{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys."
 msgstr "{productName} puede pedirle a tu escritorio que ejecute sus atajos cuando {productName} no tiene el foco. Tu escritorio te pedirá que confirmes y te dejará elegir las teclas."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, on an X11 session. The app now listens for shortcuts through the X11 display server itself. Keep "X11" as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:177
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:174
 msgid "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
 msgstr "{productName} ya no puede leer tu teclado, así que ahora escucha los atajos a través de X11."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, for example after a restart removed the access. The app already falls back to the shortcuts the desktop runs. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:172
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:169
 msgid "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
 msgstr "{productName} ya no puede leer tu teclado, así que se usan los atajos de tu escritorio."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read and nothing else runs system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:182
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:179
 msgid "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
 msgstr "{productName} ya no puede leer tu teclado. Los atajos solo funcionan mientras {productName} tiene el foco."
 
 #. Linux settings text before system-wide shortcuts are set up on the Hyprland desktop. Hyprland shows no dialog. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:34
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:31
 msgid "{productName} can register its shortcuts with Hyprland so they run while {productName} is not focused. You then bind the keys in your Hyprland config."
 msgstr "{productName} puede registrar sus atajos en Hyprland para que funcionen cuando {productName} no tiene el foco. Luego asigna las teclas en tu configuración de Hyprland."
 
@@ -1890,12 +1890,12 @@ msgid "{productName} cannot use a hardware encoder for this, so it will use your
 msgstr "{productName} no puede usar un codificador de hardware para esto, por lo que utilizará tu CPU."
 
 #. Desktop updater modal body after a manual update check finds an update. Confirming closes the app window and opens the updater. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:37
+#: src/features/updater/commands/UpdaterModalCommands.tsx:38
 msgid "{productName} closes, installs the update and opens again."
 msgstr "{productName} se cerrará, instalará la actualización y se volverá a abrir."
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:100
+#: src/features/updater/commands/UpdaterModalCommands.tsx:101
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "{productName} no pudo contactar con el servicio de actualizaciones. Comprueba tu conexión e inténtalo de nuevo."
 
@@ -1935,7 +1935,7 @@ msgid "{productName} has moved to {host}. Open it in your browser to install the
 msgstr "{productName} se mudó a {host}. Ábrelo en tu navegador para instalar la nueva app."
 
 #. Profile membership label showing when the user account was created.
-#: src/features/user/components/popouts/UserProfileShared.tsx:53
+#: src/features/user/components/popouts/UserProfileShared.tsx:54
 msgid "{productName} member since"
 msgstr "Miembro de {productName} desde"
 
@@ -1960,12 +1960,12 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "{productName} necesita acceso a tu micrófono. Permite el acceso al micrófono en la configuración de privacidad de tu sistema operativo y reinicia la aplicación."
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:55
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:56
 msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} necesita acceso a la cámara para mostrar tus dispositivos."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:136
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:137
 msgid "{productName} needs microphone access to list your devices."
 msgstr "{productName} necesita acceso al micrófono para mostrar tus dispositivos."
 
@@ -1995,7 +1995,7 @@ msgid "{productName} recovery kit"
 msgstr "Kit de recuperación de {productName}"
 
 #. Subtitle for system-wide shortcuts on the Hyprland desktop after setup. Hyprland shows no list of assigned keys. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:58
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:55
 msgid "{productName} registered its shortcuts with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused."
 msgstr "{productName} registró sus atajos en Hyprland. Asígnalos en tu configuración de Hyprland para usarlos cuando {productName} no tenga el foco."
 
@@ -2511,7 +2511,7 @@ msgid "12 months (1 year)"
 msgstr "12 meses (1 año)"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:54
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:55
 msgid "12-hour"
 msgstr "12 horas"
 
@@ -2554,7 +2554,7 @@ msgid "24 hours"
 msgstr "24 horas"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:58
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:59
 msgid "24-hour"
 msgstr "24 horas"
 
@@ -2734,7 +2734,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "un nombre de host, p. ej. {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:113
+#: src/features/updater/commands/UpdaterModalCommands.tsx:114
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "Hay una actualización de escritorio para Linux disponible. Elige el formato del paquete para este sistema y {productName} lo guardará localmente."
 
@@ -2749,7 +2749,7 @@ msgid "a minute"
 msgstr "un minuto"
 
 #. Desktop updater modal body when the exact target version is unknown. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:25
+#: src/features/updater/commands/UpdaterModalCommands.tsx:26
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "Hay una nueva versión de escritorio disponible. Descarga el instalador y ejecútalo para actualizar {productName}."
 
@@ -2817,7 +2817,7 @@ msgstr "Acerca de {appName}"
 #: src/features/app/components/pages/YouPage.tsx:171
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:791
-#: src/features/user/components/popouts/UserProfileShared.tsx:41
+#: src/features/user/components/popouts/UserProfileShared.tsx:42
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:133
 msgid "About me"
 msgstr "Acerca de mí"
@@ -3135,7 +3135,7 @@ msgid "Activity sharing"
 msgstr "Compartir actividad"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:488
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:489
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Umbral de actividad"
@@ -3155,7 +3155,7 @@ msgstr "Tamaño real"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:599
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:79
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:100
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:586
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:591
 msgid "Add"
 msgstr "Agregar"
 
@@ -3226,7 +3226,7 @@ msgid "Add a username and password to your account first."
 msgstr "Primero, agrega un nombre de usuario y una contraseña a tu cuenta."
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:140
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:141
 msgid "Add a word…"
 msgstr "Agregar una palabra…"
 
@@ -3244,7 +3244,7 @@ msgstr "Agrega una clave de YouTube Data API para enriquecer los enlaces de YouT
 
 #. Generic action label that starts signing in to an additional account.
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:23
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:902
 msgid "Add account"
 msgstr "Agregar cuenta"
@@ -3642,7 +3642,7 @@ msgid "Address"
 msgstr "Dirección"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:95
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Ajusta cada opción tú mismo: supresión de ruido, cancelación de eco y ganancia."
 
@@ -3696,7 +3696,7 @@ msgid "Advanced"
 msgstr "Avanzado"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:108
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:109
 msgid "Advanced video settings"
 msgstr "Configuración avanzada de video"
 
@@ -3906,22 +3906,22 @@ msgstr "Permitir"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "Permitir {everyoneMention} y {hereMention}"
 
-#. Shown in video settings on the macOS app when camera access is denied. {PRODUCT_NAME} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:230
+#. Shown in video settings on the macOS app when camera access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:231
 msgid "Allow {PRODUCT_NAME} to access your camera in System Settings → Privacy & Security → Camera."
 msgstr "Permite que {PRODUCT_NAME} acceda a tu cámara en Configuración del sistema → Privacidad y seguridad → Cámara."
 
-#. Shown in voice settings on the macOS app when microphone access is denied. {PRODUCT_NAME} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:546
+#. Shown in voice settings on the macOS app when microphone access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:547
 msgid "Allow {PRODUCT_NAME} to access your microphone in System Settings → Privacy & Security → Microphone."
 msgstr "Permite que {PRODUCT_NAME} acceda a tu micrófono en Configuración del Sistema → Privacidad y seguridad → Micrófono."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:552
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Permite que {PRODUCT_NAME} acceda a tu micrófono. Revisa la barra de direcciones o la configuración de tu navegador."
 
 #. Body in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet. {productName} and {productName2} are the app name. Keep "Screen Recording" and "System Settings" as macOS shows them in this language.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:36
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:37
 msgid "Allow {productName} under Screen Recording in System Settings. If it is already allowed, relaunch {productName2} so macOS applies it."
 msgstr "Permite {productName} en Grabación de pantalla en Configuración del sistema. Si ya está permitido, reinicia {productName2} para que macOS lo aplique."
 
@@ -3961,7 +3961,7 @@ msgstr "Permitir mensajes directos de bots"
 msgid "Allow bots to send you direct messages?"
 msgstr "¿Permitir que los bots te envíen mensajes directos?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:249
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:251
 msgid "Allow camera"
 msgstr "Permitir acceso a la cámara"
 
@@ -4029,7 +4029,7 @@ msgstr "Permitir que los miembros sin el permiso {readMessageHistoryPermissionLa
 msgid "Allow mentions for this role"
 msgstr "Permitir menciones para este rol"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:571
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:573
 msgid "Allow microphone"
 msgstr "Permitir micrófono"
 
@@ -4275,7 +4275,7 @@ msgid "Always underline links"
 msgstr "Subrayar siempre los enlaces"
 
 #. Description for the in-app dictionary spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation. Hunspell is the spellcheck engine name; keep it as a product/protocol term.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:105
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:106
 msgid "Always use {productName}'s Hunspell dictionaries, downloaded on demand."
 msgstr "Usar siempre los diccionarios Hunspell de {productName}, descargados a demanda."
 
@@ -4655,7 +4655,7 @@ msgid "App icon badge"
 msgstr "Indicador en el ícono de la aplicación"
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:46
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:47
 msgid "App language: {format}"
 msgstr "Formato de hora según el idioma de la aplicación: {format}"
 
@@ -4804,7 +4804,7 @@ msgid "Approval required"
 msgstr "Se requiere aprobación"
 
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
-#: src/features/auth/flow/AuthLoginLayout.tsx:101
+#: src/features/auth/flow/AuthLoginLayout.tsx:100
 msgid "Approve this app from the {productName} app you already use. No password needed."
 msgstr "Aprueba esta app desde la app {productName} que ya usas. No necesitas contraseña."
 
@@ -5344,7 +5344,7 @@ msgid "Authorized on {authorizedOn}"
 msgstr "Autorizada el {authorizedOn}"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:50
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:51
 msgid "Auto"
 msgstr "Automático"
 
@@ -5369,8 +5369,8 @@ msgid "Auto-detect language"
 msgstr "Detectar idioma automáticamente"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:115
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:475
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:476
 msgid "Auto-set activity threshold"
 msgstr "Establecer umbral de actividad automáticamente"
 
@@ -5534,7 +5534,7 @@ msgstr "AV1 (requiere activación)"
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
-#: src/features/updater/commands/UpdaterModalCommands.tsx:123
+#: src/features/updater/commands/UpdaterModalCommands.tsx:124
 msgid "Available"
 msgstr "Disponible"
 
@@ -5608,11 +5608,11 @@ msgstr "Ausente en este momento"
 #. Report flow: footer button that returns to the previous question.
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:164
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:167
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:168
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:61
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:360
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:381
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:401
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:361
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:382
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:402
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
 #: src/features/moderation/components/report/ReportStepDetails.tsx:374
@@ -5927,7 +5927,7 @@ msgid "Best compression. Use it only when WebRTC exposes an encoder and the GPU 
 msgstr "Mejor compresión. Úsala solo cuando WebRTC exponga un codificador y el informe de la GPU diga que está respaldado por hardware."
 
 #. CTA card title in the screen-share picker promoting the desktop app for richer screen sharing.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:12
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:13
 msgid "Best with the desktop app"
 msgstr "Funciona mejor con la app de escritorio"
 
@@ -6396,7 +6396,7 @@ msgid "Browser home"
 msgstr "Página de inicio del navegador"
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:42
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:43
 msgid "Browser locale: {format}"
 msgstr "Formato de hora del navegador: {format}"
 
@@ -6545,8 +6545,8 @@ msgstr "Compra un regalo de {premiumProductName} desde la pestaña {premiumProdu
 msgid "Buy gift"
 msgstr "Comprar regalo"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:345
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:663
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:347
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:665
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Al crear una comunidad, aceptas seguir y respetar las <0>normas de la comunidad de {PRODUCT_NAME}</0>."
 
@@ -6658,7 +6658,7 @@ msgstr "Llamadas"
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:734
 #: src/features/permissions/system/components/useMacPermissionControl.ts:15
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:93
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:14
@@ -6736,7 +6736,7 @@ msgstr "Vista previa de la cámara"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:96
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:97
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:202
 msgid "Camera quality"
 msgstr "Calidad de la cámara"
@@ -6809,8 +6809,8 @@ msgstr "No se pueden subir archivos aquí"
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:74
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:418
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:170
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:426
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:174
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:197
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -6896,13 +6896,13 @@ msgstr "Cancelar cambio programado"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:980
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:262
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Cancelar suscripción"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:257
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:256
 msgid "Cancel subscription?"
 msgstr "¿Cancelar suscripción?"
 
@@ -7005,7 +7005,7 @@ msgid "Category"
 msgstr "Categoría"
 
 #. Title in a modal shown before opening a category with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:187
+#: src/features/channel/components/MatureContentChannelGate.tsx:214
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:39
 msgid "Category content warning"
 msgstr "Advertencia de contenido por categoría"
@@ -7131,15 +7131,15 @@ msgstr "Cambiar apodo en el grupo"
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:67
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:90
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "Cambiar ícono"
 
 #. Button that opens the Linux desktop dialog for changing the keys of system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:83
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:80
 msgid "Change in system settings"
 msgstr "Cambiar en la configuración del sistema"
 
@@ -7554,7 +7554,7 @@ msgid "Channel badges"
 msgstr "Insignias del canal"
 
 #. Title in a modal shown before opening a channel with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:189
+#: src/features/channel/components/MatureContentChannelGate.tsx:216
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:43
 msgid "Channel content warning"
 msgstr "Advertencia sobre el contenido del canal"
@@ -7770,7 +7770,7 @@ msgid "Chat shortcuts"
 msgstr "Atajos de chat"
 
 #. Button on Linux that checks again whether the desktop offers system-wide shortcuts, for example after the desktop service started. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:139
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:136
 msgid "Check again"
 msgstr "Volver a comprobar"
 
@@ -7833,7 +7833,7 @@ msgid "Checking access..."
 msgstr "Comprobando acceso..."
 
 #. Loading state in the screen-share picker while checking macOS screen recording permission.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:22
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:23
 msgid "Checking screen recording permission..."
 msgstr "Verificando el permiso para grabar la pantalla..."
 
@@ -7848,17 +7848,17 @@ msgid "Checkout"
 msgstr "Pagar"
 
 #. Modal body for the generic "checkout blocked" state on a self-hosted instance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:123
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:122
 msgid "Checkout is blocked for this account."
 msgstr "El pago está bloqueado para esta cuenta."
 
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:119
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:118
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "El pago está bloqueado para esta cuenta. Si necesitas ayuda, contacta a {supportEmail}."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:115
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:114
 msgid "Checkout unavailable"
 msgstr "Pago no disponible"
 
@@ -8036,7 +8036,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "Elige cómo se muestran las horas en la app"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:58
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:57
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "Elige cómo quieres pagar esta suscripción."
 
@@ -8050,7 +8050,7 @@ msgid "Choose one of the methods below to prove domain ownership. You only need 
 msgstr "Elige uno de los métodos a continuación para verificar la propiedad del dominio. Solo tienes que completar uno."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:166
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
 msgid "Choose payment method"
 msgstr "Elige un método de pago"
 
@@ -8174,7 +8174,7 @@ msgstr "Elige tus predeterminados"
 
 #. Heading for an authentication step that requires an instance before continuing.
 #. Heading for the login step that lets a user choose the instance before signing in.
-#: src/features/auth/flow/AuthLoginLayout.tsx:97
+#: src/features/auth/flow/AuthLoginLayout.tsx:96
 #: src/features/auth/flow/AuthRuntimeTargetGate.tsx:11
 msgid "Choose your instance"
 msgstr "Elige tu instancia"
@@ -8216,8 +8216,8 @@ msgstr "Reclamar regalo"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:45
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:69
 #: src/features/channel/utils/CreateDMModalUtils.tsx:44
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:216
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:444
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:217
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:445
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:345
 msgid "Claim your account"
 msgstr "Completa el registro de tu cuenta"
@@ -9047,7 +9047,7 @@ msgid "Community badges"
 msgstr "Insignias de la comunidad"
 
 #. Title in a modal shown before opening a community with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:185
+#: src/features/channel/components/MatureContentChannelGate.tsx:212
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:35
 msgid "Community content warning"
 msgstr "Advertencia de contenido de la comunidad"
@@ -9089,8 +9089,8 @@ msgstr "MD de la comunidad"
 msgid "Community filter"
 msgstr "Filtro de comunidad"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:277
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:600
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:278
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:601
 msgid "Community icon"
 msgstr "Ícono de la comunidad"
 
@@ -9235,7 +9235,7 @@ msgid "Community updated"
 msgstr "Comunidad actualizada"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:38
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:39
 msgid "Community voice"
 msgstr "Voz de la comunidad"
 
@@ -9275,11 +9275,11 @@ msgid "Complete mature content check"
 msgstr "Completar verificación de contenido para adultos"
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:157
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
 msgid "Complete payment"
 msgstr "Completar pago"
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:67
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:73
 msgid "Complete the mature content check to unlock mature media."
 msgstr "Completa la verificación de contenido para adultos para desbloquear contenido para adultos."
 
@@ -9409,7 +9409,7 @@ msgstr "Confirmar"
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice-channel safety preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:24
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:18
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:19
 msgid "Confirm before joining voice channels"
 msgstr "Confirmar antes de unirte a canales de voz"
 
@@ -9457,7 +9457,7 @@ msgstr "Confirma la declaración para enviar el reporte."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:30
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:31
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:398
 msgid "Confirm voice join"
 msgstr "Confirmar conexión a canales de voz"
@@ -9468,7 +9468,7 @@ msgid "Confirmation"
 msgstr "Confirmación"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:46
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:47
 msgid "Confirmation or double-click for community voice joins"
 msgstr "Confirmación o doble clic para unirse a canales de voz de la comunidad"
 
@@ -9476,7 +9476,7 @@ msgstr "Confirmación o doble clic para unirse a canales de voz de la comunidad"
 msgid "Conflicts with {conflictLabel}"
 msgstr "Conflicto con {conflictLabel}"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:234
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Connect a camera and try again."
 msgstr "Conecta una cámara e inténtalo de nuevo."
 
@@ -9489,7 +9489,7 @@ msgstr "Conecta una cámara o un dispositivo de captura virtual y vuelve a inten
 msgid "Connect a display, then try again."
 msgstr "Conecta una pantalla y vuelve a intentarlo."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
 msgid "Connect a microphone and try again."
 msgstr "Conecta un micrófono e inténtalo de nuevo."
 
@@ -9633,7 +9633,7 @@ msgstr "Conexión: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:424
-#: src/features/user/components/popouts/UserProfileShared.tsx:618
+#: src/features/user/components/popouts/UserProfileShared.tsx:622
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9667,7 +9667,7 @@ msgid "Contact"
 msgstr "Contacto"
 
 #. Short label in the authentication content blocked handler. Keep the tone plain and specific.
-#: src/features/auth/components/ContentBlockedHandler.tsx:10
+#: src/features/auth/components/ContentBlockedHandler.tsx:11
 msgid "Content blocked"
 msgstr "Contenido bloqueado"
 
@@ -9741,13 +9741,13 @@ msgid "Continue in your browser"
 msgstr "Continuar en tu navegador"
 
 #. Button in the gift time confirmation that proceeds to subscription checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
 msgid "Continue to checkout"
 msgstr "Continuar al pago"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:343
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:356
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:379
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:351
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:364
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:387
 msgid "Continue with passkey"
 msgstr "Continuar con llave de acceso"
 
@@ -10059,17 +10059,17 @@ msgid "Copy invite URL"
 msgstr "Copiar enlace de invitación"
 
 #. Button that copies Hyprland config lines to the clipboard.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:120
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:117
 msgid "Copy lines"
 msgstr "Copiar líneas"
 
 #. Screen reader name of the button that copies Hyprland config lines in the older hyprlang format. Starts with the visible button text "Copy lines". Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:129
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:126
 msgid "Copy lines for hyprland.conf"
 msgstr "Copiar líneas para hyprland.conf"
 
 #. Screen reader name of the button that copies Hyprland config lines in the Lua format. Starts with the visible button text "Copy lines". Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:124
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:121
 msgid "Copy lines for hyprland.lua"
 msgstr "Copiar líneas para hyprland.lua"
 
@@ -10343,7 +10343,7 @@ msgid "Couldn't change your price"
 msgstr "No se pudo cambiar tu precio"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:96
+#: src/features/updater/commands/UpdaterModalCommands.tsx:97
 msgid "Couldn't check for updates"
 msgstr "No se pudieron buscar actualizaciones"
 
@@ -10475,7 +10475,7 @@ msgid "Couldn't delete your messages"
 msgstr "No se pudieron eliminar tus mensajes"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:105
 msgid "Couldn't download the desktop update"
 msgstr "No se pudo descargar la actualización de escritorio"
 
@@ -10591,7 +10591,7 @@ msgstr "No se pudo abrir el resultado de búsqueda"
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:29
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10758,7 +10758,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "No se pudo iniciar la autorización de {blueskyProviderName}"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:127
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:126
 msgid "Couldn't start checkout"
 msgstr "No se pudo iniciar el pago"
 
@@ -10932,7 +10932,7 @@ msgstr "Crear y compartir"
 msgid "Create a community"
 msgstr "Crear una comunidad"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:262
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:263
 msgid "Create a community for you and your friends to chat."
 msgstr "Crea una comunidad para chatear con tus amigos."
 
@@ -11365,7 +11365,7 @@ msgstr "Personalizado"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
@@ -11851,7 +11851,7 @@ msgid "Deafened by moderators"
 msgstr "Sonido desactivado por los moderadores"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:143
+#: src/features/updater/commands/UpdaterModalCommands.tsx:144
 msgid "DEB package"
 msgstr "Paquete DEB"
 
@@ -12496,7 +12496,7 @@ msgid "Desktop app"
 msgstr "Aplicación de escritorio"
 
 #. Modal title shown after a manual desktop update check finds no update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:50
+#: src/features/updater/commands/UpdaterModalCommands.tsx:51
 msgid "Desktop app is up to date"
 msgstr "La aplicación de escritorio está actualizada"
 
@@ -12555,7 +12555,7 @@ msgid "Desktop update {version} available. Choose a Linux package."
 msgstr "Actualización de escritorio {version} disponible. Elige un paquete de Linux."
 
 #. Modal title shown when a new desktop app update can be downloaded.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:16
+#: src/features/updater/commands/UpdaterModalCommands.tsx:17
 msgid "Desktop update available"
 msgstr "Actualización de escritorio disponible"
 
@@ -12565,7 +12565,7 @@ msgid "Desktop update available. Choose a Linux package."
 msgstr "Actualización de escritorio disponible. Elige un paquete de Linux."
 
 #. Desktop updater modal body. The version placeholder is the target app version; productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:20
+#: src/features/updater/commands/UpdaterModalCommands.tsx:21
 msgid "Desktop version {version} is available. Download the installer, then run it to update {productName}."
 msgstr "Ya está disponible la versión de escritorio {version}. Descarga el instalador y ejecútalo para actualizar {productName}."
 
@@ -12613,7 +12613,7 @@ msgstr "Detalles: {reason}"
 #. Item in the textarea spellcheck language submenu that detects draft message language and switches dictionaries as the user types.
 #. Spellcheck language mode label in the language tab. The app detects the draft message language and switches dictionaries as the user types.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:83
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:126
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:127
 msgid "Detect while typing"
 msgstr "Detectar al escribir"
 
@@ -12661,7 +12661,7 @@ msgid "Developer tools unavailable"
 msgstr "Herramientas de desarrollador no disponibles"
 
 #. Modal title when the desktop app is running unpackaged during development.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:66
+#: src/features/updater/commands/UpdaterModalCommands.tsx:67
 msgid "Development build"
 msgstr "Versión de desarrollo"
 
@@ -13455,8 +13455,8 @@ msgstr "Descargar"
 
 #. Nagbar button label that downloads the desktop app. productName is the app name.
 #. Short label in the sidebar navigation download button. Preserve {productName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:17
-#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:18
+#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:27
 msgid "Download {productName}"
 msgstr "Descargar {productName}"
 
@@ -13465,12 +13465,12 @@ msgid "Download <0>fluxer-verification</0> and place it in your <1>.well-known</
 msgstr "Descarga <0>fluxer-verification</0> y colócalo en tu carpeta <1>.well-known</1> para que podamos validar el dominio."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:98
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:99
 msgid "Download app"
 msgstr "Descargar app"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:106
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:107
 msgid "Download app button in the sidebar"
 msgstr "Descargar la app"
 
@@ -13485,7 +13485,7 @@ msgid "Download button"
 msgstr "Botón de descarga"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:103
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:104
 msgid "Download desktop app"
 msgstr "Descargar la aplicación de escritorio"
 
@@ -13513,7 +13513,7 @@ msgid "Download image"
 msgstr "Descargar imagen"
 
 #. Button label that downloads a desktop update installer.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:29
+#: src/features/updater/commands/UpdaterModalCommands.tsx:30
 msgid "Download installer"
 msgstr "Descargar instalador"
 
@@ -13527,7 +13527,7 @@ msgid "Download media"
 msgstr "Descargar contenido multimedia"
 
 #. Button label that downloads a selected Linux desktop update package.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:33
+#: src/features/updater/commands/UpdaterModalCommands.tsx:34
 msgid "Download package"
 msgstr "Descargar paquete"
 
@@ -13655,11 +13655,11 @@ msgstr "Soltar objeto"
 msgid "Drop to upload background"
 msgstr "Suelta para subir el fondo"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:85
+#: src/features/channel/components/MatureContentChannelGate.tsx:100
 msgid "Due to mature content laws in {regionName}, mature content is blocked until you complete the mature content check."
 msgstr "Debido a las leyes de contenido para adultos en {regionName}, el contenido para adultos está bloqueado hasta que completes la verificación de contenido para adultos."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:95
+#: src/features/channel/components/MatureContentChannelGate.tsx:110
 msgid "Due to mature content laws in {regionName}, mature content is not available from here. Mature content checks are available only in the UK."
 msgstr "Debido a las leyes de contenido para adultos en {regionName}, el contenido para adultos no está disponible aquí. Las verificaciones de contenido para adultos solo están disponibles en el Reino Unido."
 
@@ -13673,7 +13673,7 @@ msgstr "Debido a las leyes de contenido para adultos en {regionName}, este conte
 msgid "Due to mature content laws in {regionName}, this content is not available from here. Mature content checks are available only in the UK."
 msgstr "Debido a las leyes de contenido para adultos en {regionName}, este contenido no está disponible aquí. Las verificaciones de contenido para adultos solo están disponibles en el Reino Unido."
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:61
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:67
 msgid "Due to mature content laws in {regionName}, this media is not available from your current region."
 msgstr "Debido a las leyes de contenido para adultos en {regionName}, este contenido multimedia no está disponible en tu región actual."
 
@@ -13715,7 +13715,7 @@ msgid "Each code works once in place of your authenticator app."
 msgstr "Cada código funciona una vez en lugar de tu app de autenticación."
 
 #. Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:75
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:72
 msgid "Each key can run only one system-wide shortcut."
 msgstr "Cada tecla puede ejecutar solo un atajo de sistema."
 
@@ -14303,7 +14303,7 @@ msgid "Enable"
 msgstr "Habilitar"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:123
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:124
 msgid "Enable {permissionName} permission"
 msgstr "Habilitar el permiso de {permissionName}"
 
@@ -14508,7 +14508,7 @@ msgid "Enable shortcut"
 msgstr "Habilitar atajo"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:86
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Enable spellcheck"
 msgstr "Activar corrector ortográfico"
 
@@ -14602,12 +14602,12 @@ msgid "End grace now"
 msgstr "Terminar período de gracia ahora"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:285
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:284
 msgid "End grace period"
 msgstr "Finalizar período de gracia"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:278
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:277
 msgid "End grace period now?"
 msgstr "¿Terminar período de gracia ahora?"
 
@@ -14837,7 +14837,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "Ingresa el PIN de tu llave de seguridad para continuar."
 
 #. Title in the desktop app above the code the user types into a browser on another device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:235
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:240
 msgid "Enter this code in your browser"
 msgstr "Ingresa este código en tu navegador"
 
@@ -14845,7 +14845,7 @@ msgstr "Ingresa este código en tu navegador"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "Ingresa este código en tu navegador para completar el inicio de sesión."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:148
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:150
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
 msgstr "Ingresa este código en tu antigua app de {PRODUCT_NAME} para completar el inicio de sesión."
 
@@ -14916,7 +14916,7 @@ msgstr "Audio de todo el sistema"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:181
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:313
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:188
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:150
 msgid "Entrance sound"
 msgstr "Sonido de entrada"
@@ -15026,7 +15026,7 @@ msgstr "Noche"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:172
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Ajusta el volumen de tu micrófono para que no suenes demasiado bajo."
@@ -15249,7 +15249,7 @@ msgstr "Vence entre {earliest} y {latest}"
 msgid "Expires in {remaining}s"
 msgstr "Expira en {remaining} s"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:257
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:265
 msgid "Expires in {remainingSeconds}s"
 msgstr "Expira en {remainingSeconds}s"
 
@@ -15728,7 +15728,7 @@ msgid "Favorite channel"
 msgstr "Marcar canal como favorito"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:82
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:83
 msgid "Favorite channels"
 msgstr "Canales favoritos"
 
@@ -16243,7 +16243,7 @@ msgstr "Durante {threeHours} horas"
 msgid "For {twentyFourHours} hours"
 msgstr "Durante {twentyFourHours} horas"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:255
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:256
 msgid "For British eyes only..."
 msgstr "Solo para ojos británicos..."
 
@@ -16253,22 +16253,22 @@ msgid "For me"
 msgstr "Para mí"
 
 #. Warning on GNOME when the push-to-mute shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone muted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:204
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:201
 msgid "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
 msgstr "Para \"Pulsar para silenciar\", usa una sola tecla sin Ctrl, Alt ni Shift. Con una combinación, suelta primero la tecla principal o el micrófono podría quedarse silenciado."
 
 #. Warning on GNOME when the push-to-talk shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone on.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:198
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:195
 msgid "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
 msgstr "Para \"Pulsar para hablar\", usa una sola tecla sin Ctrl, Alt ni Shift. Con una combinación, suelta primero la tecla principal o el micrófono podría quedarse encendido."
 
 #. Warning on GNOME when a hold shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the shortcut active.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:216
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:213
 msgid "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
 msgstr "Para este atajo, usa una sola tecla sin Ctrl, Alt ni Shift. Con una combinación, suelta primero la tecla principal o el atajo podría quedarse activo."
 
 #. Warning on GNOME when the voice activity priority shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave priority speaking on. "Voice activity priority" is the shortcut name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:210
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:207
 msgid "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
 msgstr "Para \"Prioridad de actividad de voz\", usa una sola tecla sin Ctrl, Alt ni Shift. Con una combinación, suelta primero la tecla principal o la prioridad podría quedarse activada."
 
@@ -16460,14 +16460,14 @@ msgstr "Marco"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:334
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:336
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:230
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:133
 msgid "Frame rate"
 msgstr "Velocidad de fotogramas"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:63
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Las velocidades de fotogramas superiores a 30 FPS requieren {premiumProductName}"
 
@@ -16926,12 +16926,12 @@ msgid "Get notified when you receive messages. You may need to allow notificatio
 msgstr "Recibe notificaciones cuando te lleguen mensajes. Puede que tengas que permitir las notificaciones en la configuración de tu navegador. Para controles por canal o comunidad, haz clic derecho en el ícono de una comunidad y abre la configuración de notificaciones."
 
 #. Nagbar body encouraging web users to download the desktop app. productName is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:17
+#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:18
 msgid "Get the {productName} desktop app for system-wide push-to-talk and a few other goodies."
 msgstr "Obtén la aplicación de escritorio de {productName} para usar la función \"presionar para hablar\" en todo el sistema y otras funciones geniales."
 
 #. CTA button label in the screen-share picker. Opens the desktop download page.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:20
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:21
 msgid "Get the desktop app"
 msgstr "Obtén la aplicación de escritorio"
 
@@ -17241,12 +17241,12 @@ msgid "Go back to {productName} to continue."
 msgstr "Regresa a {productName} para continuar."
 
 #. Shown after approving a sign-in for an app on another device, which signs in by itself shortly. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:296
 msgid "Go back to the {PRODUCT_NAME} app. It finishes signing in on its own."
 msgstr "Regresar a la app {PRODUCT_NAME}. Termina de iniciar sesión sola."
 
 #. Shown after approving, when the browser has already handed the sign-in back to the desktop app. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:288
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
 msgid "Go back to the {PRODUCT_NAME} app. You can close this tab."
 msgstr "Regresa a la app {PRODUCT_NAME}. Puedes cerrar esta pestaña."
 
@@ -17702,7 +17702,7 @@ msgid "Help"
 msgstr "Ayuda"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:94
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:95
 msgid "Help button"
 msgstr "Botón de ayuda"
 
@@ -17712,11 +17712,11 @@ msgid "Help center"
 msgstr "Centro de ayuda"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:102
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:103
 msgid "Help center button in the sidebar"
 msgstr "Centro de ayuda"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:348
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:349
 msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
 msgstr "Ayuda a traducir {PRODUCT_NAME} a tu idioma en <0>{I18N_WEBLATE_DOMAIN}</0>."
 
@@ -17841,7 +17841,7 @@ msgstr "Ocultar chat"
 msgid "Hide community owner crown"
 msgstr "Ocultar la corona del dueño de la comunidad"
 
-#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:62
+#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:63
 msgid "Hide download button"
 msgstr "Ocultar botón de descarga"
 
@@ -17860,7 +17860,7 @@ msgstr "Ocultar favoritos"
 msgid "Hide guidelines"
 msgstr "Ocultar lineamientos"
 
-#: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:63
+#: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:64
 msgid "Hide help center button"
 msgstr "Ocultar el botón de ayuda"
 
@@ -17870,7 +17870,7 @@ msgid "Hide join messages"
 msgstr "Ocultar avisos de incorporación"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:50
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:51
 msgid "Hide keyboard hints"
 msgstr "Ocultar sugerencias del teclado"
 
@@ -18156,22 +18156,22 @@ msgid "Hyperlink"
 msgstr "Hipervínculo"
 
 #. Instructions for the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:94
 msgid "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
 msgstr "Hyprland no tiene un diálogo de atajos. Agrega las líneas de tu versión de Hyprland a tu configuración de Hyprland y reemplaza KEY por la tecla que quieras."
 
 #. Instructions for the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:103
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:100
 msgid "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
 msgstr "Hyprland no tiene un diálogo de atajos. Asigna las teclas en tu configuración de Hyprland."
 
 #. Label above Hyprland config lines in the older hyprlang format. Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:116
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:113
 msgid "hyprland.conf (before Hyprland 0.55)"
 msgstr "hyprland.conf (antes de Hyprland 0.55)"
 
 #. Label above Hyprland config lines in the Lua format. Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:112
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:109
 msgid "hyprland.lua (Hyprland 0.55 and later)"
 msgstr "hyprland.lua (Hyprland 0.55 y posteriores)"
 
@@ -18218,8 +18218,8 @@ msgid "I confirm in good faith that the information and allegations in this noti
 msgstr "Confirmo de buena fe que la información y las alegaciones de este aviso son precisas y completas."
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
+#: src/features/channel/components/MatureContentChannelGate.tsx:234
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:108
 msgid "I understand"
 msgstr "Entiendo"
 
@@ -18598,11 +18598,11 @@ msgstr "Importando… Procesados: {processedCount, number} / {totalCount, number
 msgid "In"
 msgstr "En"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:547
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:551
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "En el modo \"Sistema operativo\", los diccionarios que se muestran arriba son orientativos. {PRODUCT_NAME} pasará estas etiquetas de idioma al corrector ortográfico de tu sistema operativo cuando sea compatible. Las etiquetas que no reconozca serán ignoradas."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:318
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "En un navegador, la función pulsar para hablar solo funciona mientras la pestaña de {PRODUCT_NAME} esté activa. Instala la aplicación de escritorio para usar pulsar para hablar en todo el sistema."
 
@@ -18650,7 +18650,7 @@ msgstr "En el chat de voz"
 #. Spellcheck engine option in the language tab. Uses the bundled in-app Hunspell dictionaries. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. The bundled in-app hunspell engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:75
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:100
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:101
 msgid "In-app dictionaries"
 msgstr "Diccionarios en la aplicación"
 
@@ -18875,7 +18875,7 @@ msgid "Input"
 msgstr "Entrada"
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:175
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:176
 msgid "Input and output"
 msgstr "Entrada y salida"
 
@@ -18939,7 +18939,7 @@ msgid "Insert emoji"
 msgstr "Insertar emoji"
 
 #. CTA card body in the screen-share picker promoting the desktop app. {productName} is Fluxer.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:16
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:17
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "Instala {productName} para tener el selector de fuentes completo y controles de pantalla compartida más fluidos."
 
@@ -18954,12 +18954,12 @@ msgid "Install the new app"
 msgstr "Instalar la nueva app"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:119
+#: src/features/updater/commands/UpdaterModalCommands.tsx:120
 msgid "Installed"
 msgstr "Instalado"
 
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:54
+#: src/features/updater/commands/UpdaterModalCommands.tsx:55
 msgid "Installed version: {currentVersion}."
 msgstr "Versión instalada: {currentVersion}."
 
@@ -19031,7 +19031,7 @@ msgstr "Interfaz"
 
 #. Settings section label for interface language selection.
 #. Settings section title in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:82
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:83
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Interface language"
 msgstr "Idioma de la interfaz"
@@ -19467,13 +19467,13 @@ msgstr "Unirse"
 
 #. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:30
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
 #: src/features/expressions/components/ExpressionInfoCard.tsx:94
 msgid "Join {communityName}"
 msgstr "Unirse a {communityName}"
 
 #. Nagbar body inviting users to join the official product community. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:25
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "Únete a {communityName} para chatear con el equipo y mantenerte al día."
 
@@ -19561,7 +19561,7 @@ msgstr "Unirse a la videollamada"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:67
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:34
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:35
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:454
 msgid "Join voice"
 msgstr "Unirse a la llamada de voz"
@@ -19756,7 +19756,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "Mantén los niveles gratuito y premium. Puedes personalizar los niveles, vender premium a través de Stripe o entregar códigos de regalo más tarde desde el panel de administración."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:169
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:287
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:286
 msgid "Keep grace period"
 msgstr "Mantener período de gracia"
 
@@ -19771,7 +19771,7 @@ msgid "Keep running"
 msgstr "Seguir ejecutándose"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:147
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
 msgid "Keep subscription"
 msgstr "Mantener suscripción"
 
@@ -19786,7 +19786,7 @@ msgid "Keep this page somewhere safe. If you forget your password, you can use i
 msgstr "Guarda esta página en un lugar seguro. Si olvidas tu contraseña, puedes usarla para volver a acceder a tu cuenta. Cualquiera que tenga esta clave de recuperación puede restablecer tu contraseña, así que nunca la compartas."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:79
 msgid "Keep transmitting briefly after release."
 msgstr "Continúa transmitiendo brevemente después de soltar el botón."
 
@@ -19829,7 +19829,7 @@ msgid "Keyboard"
 msgstr "Teclado"
 
 #. Linux warning when direct input device access is on but reading the keyboard failed. Not related to the "Direct input" voice processing profile. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:190
 msgid "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
 msgstr "No se pudo iniciar el acceso al teclado. Los atajos solo funcionan mientras {productName} tiene el foco."
 
@@ -19848,7 +19848,7 @@ msgid "Keyboard mode"
 msgstr "Modo teclado"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:62
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:63
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "Indicaciones de atajos de teclado en la ayuda emergente"
 
@@ -19923,7 +19923,7 @@ msgstr "Configuración de idioma"
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:88
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:122
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:123
 msgid "Languages"
 msgstr "Idiomas"
 
@@ -19971,7 +19971,7 @@ msgstr "Gráfico de latencia"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
-#: src/features/updater/commands/UpdaterModalCommands.tsx:46
+#: src/features/updater/commands/UpdaterModalCommands.tsx:47
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:74
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
@@ -20214,12 +20214,12 @@ msgid "Let the member hear others in this community again"
 msgstr "Se permitió que el miembro volviera a escuchar a otros en esta comunidad"
 
 #. Description for the Linux direct input device access switch while it is on, on a desktop that can also run system-wide shortcuts itself (KDE, GNOME, Hyprland). {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:166
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:163
 msgid "Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead."
 msgstr "Permite que {productName} lea tu teclado directamente. Desactiva esta opción para configurar los atajos desde tu escritorio."
 
 #. Description for the Linux direct input device access switch. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:162
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:159
 msgid "Lets {productName} read your keyboard directly. Your system already allows this."
 msgstr "Permite que {productName} lea tu teclado directamente. Tu sistema ya lo permite."
 
@@ -20512,7 +20512,7 @@ msgid "Linux default"
 msgstr "Predeterminado de Linux"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:135
+#: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Linux package"
 msgstr "Paquete para Linux"
 
@@ -20648,7 +20648,7 @@ msgid "Local files"
 msgstr "Archivos locales"
 
 #. Profile section title for a user's local time.
-#: src/features/user/components/popouts/UserProfileShared.tsx:57
+#: src/features/user/components/popouts/UserProfileShared.tsx:58
 msgid "Local time"
 msgstr "Hora local"
 
@@ -20730,7 +20730,7 @@ msgid "Look and feel"
 msgstr "Apariencia y estilo"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:673
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Parece que estás usando {0}. Si agregas el procesamiento de {PRODUCT_NAME} encima, puede causar bombeo o distorsión. La entrada directa pasa tu audio sin modificaciones."
 
@@ -20826,7 +20826,7 @@ msgid "Make group owner"
 msgstr "Hacer propietario del grupo"
 
 #. Shown above the code on the browser approval page when the app cannot be signed in automatically. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:253
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:257
 msgid "Make sure this code matches the one in the {PRODUCT_NAME} app."
 msgstr "Asegúrate de que este código coincida con el de la app {PRODUCT_NAME}."
 
@@ -20966,7 +20966,7 @@ msgid "Manage your subscription"
 msgstr "Administra tu suscripción"
 
 #. Modal title when automatic in-app desktop updates cannot be used.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:62
+#: src/features/updater/commands/UpdaterModalCommands.tsx:63
 msgid "Manual desktop update"
 msgstr "Actualización manual de la aplicación de escritorio"
 
@@ -21145,15 +21145,15 @@ msgstr "Massachusetts"
 msgid "Master volume"
 msgstr "Volumen principal"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:141
+#: src/features/channel/components/MatureContentChannelGate.tsx:160
 msgid "Mature category"
 msgstr "Categoría para adultos"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:163
+#: src/features/channel/components/MatureContentChannelGate.tsx:186
 msgid "Mature channel"
 msgstr "Canal para adultos"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:118
+#: src/features/channel/components/MatureContentChannelGate.tsx:133
 msgid "Mature community"
 msgstr "Comunidad para adultos"
 
@@ -21194,7 +21194,7 @@ msgstr "Verificación de contenido para adultos enviada"
 
 #. Body copy in the mature content check modal when the check is unavailable.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:36
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:71
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:77
 msgid "Mature content checks are currently available only in the UK."
 msgstr "Las verificaciones de contenido para adultos solo están disponibles en el Reino Unido."
 
@@ -21462,7 +21462,7 @@ msgid "Member roles updated"
 msgstr "Roles de miembro actualizados"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:283
+#: src/features/user/components/popouts/UserProfileShared.tsx:284
 msgid "Member since"
 msgstr "Miembro desde"
 
@@ -22013,7 +22013,7 @@ msgstr "Micrófono"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:183
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:184
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:142
 msgid "Mic test"
 msgstr "Prueba de micrófono"
@@ -22127,7 +22127,7 @@ msgstr "Minnesota"
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:100
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:101
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
@@ -23046,7 +23046,7 @@ msgid "Neko"
 msgstr "Neko"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:66
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:67
 msgid "Neko cat that chases your cursor"
 msgstr "Gato Neko que persigue tu cursor"
 
@@ -23285,7 +23285,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "Los usuarios nuevos no pueden unirse en este momento. Puedes crear una cuenta o iniciar sesión y volver a intentar con este enlace más tarde."
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:131
+#: src/features/updater/commands/UpdaterModalCommands.tsx:132
 msgid "New version"
 msgstr "Nueva versión"
 
@@ -23465,7 +23465,7 @@ msgstr "Sin mensajes guardados"
 msgid "No bot banner"
 msgstr "Sin banner de bot"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:226
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:227
 msgid "No camera found"
 msgstr "No se encontró ninguna cámara"
 
@@ -23541,7 +23541,7 @@ msgid "No description."
 msgstr "Sin descripción."
 
 #. Desktop updater modal body when no installed version string is available.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:58
+#: src/features/updater/commands/UpdaterModalCommands.tsx:59
 msgid "No desktop update is available."
 msgstr "No hay actualizaciones disponibles para la aplicación de escritorio."
 
@@ -23684,7 +23684,7 @@ msgstr "No hay publicaciones que coincidan"
 msgid "No mentions yet"
 msgstr "Aún no hay menciones"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:541
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:542
 msgid "No microphone found"
 msgstr "No se encontró ningún micrófono"
 
@@ -23731,7 +23731,7 @@ msgstr "No hay solicitudes pendientes que coincidan con la búsqueda"
 msgid "No permissions found"
 msgstr "No se encontraron permisos"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:594
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:599
 msgid "No personal words yet."
 msgstr "Aún no hay palabras personales."
 
@@ -24093,7 +24093,7 @@ msgid "Not allowed"
 msgstr "No permitido"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:79
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:76
 msgid "Not assigned"
 msgstr "Sin asignar"
 
@@ -24423,7 +24423,7 @@ msgid "On click"
 msgstr "Al hacer clic"
 
 #. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:243
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:248
 msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
 msgstr "En tu otro dispositivo, inicia sesión en {signInAddress} e introduce este código cuando se te solicite."
 
@@ -24694,7 +24694,7 @@ msgid "Open {premiumProductFullName}"
 msgstr "Abrir {premiumProductFullName}"
 
 #. Button on the browser page after approving that opens the desktop app again if it did not come to the front. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:304
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:308
 msgid "Open {PRODUCT_NAME}"
 msgstr "Abrir {PRODUCT_NAME}"
 
@@ -24726,7 +24726,7 @@ msgid "Open account switcher"
 msgstr "Abrir selector de cuentas"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:112
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:113
 msgid "Open advanced media settings"
 msgstr "Abrir configuración avanzada de contenido multimedia"
 
@@ -24788,7 +24788,7 @@ msgstr "Abrir opciones del banner"
 msgid "Open bookmarks"
 msgstr "Abrir mensajes guardados"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:184
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:188
 msgid "Open browser"
 msgstr "Abrir navegador"
 
@@ -24846,7 +24846,7 @@ msgid "Open date picker"
 msgstr "Abrir selector de fecha"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:92
+#: src/features/updater/commands/UpdaterModalCommands.tsx:93
 msgid "Open desktop downloads"
 msgstr "Abrir descargas de escritorio"
 
@@ -25043,7 +25043,7 @@ msgid "Open settings"
 msgstr "Abrir configuración"
 
 #. Button label that opens the software center via appstream protocol.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:88
+#: src/features/updater/commands/UpdaterModalCommands.tsx:89
 msgid "Open software center"
 msgstr "Abrir centro de software"
 
@@ -25076,11 +25076,11 @@ msgid "Open System Settings"
 msgstr "Abrir Configuración del Sistema"
 
 #. Body in the screen-share picker when macOS screen recording permission is missing. {productName} is the app name. Keep "System Settings", "Privacy & Security" and the permission name as macOS shows them in this language.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:26
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:27
 msgid "Open System Settings → Privacy & Security → Screen Recording, then allow {productName}."
 msgstr "Abre Configuración del Sistema → Privacidad y seguridad → Grabación de pantalla, y luego permite {productName}."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:535
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:536
 msgid "Open template JSON"
 msgstr "Abrir plantilla JSON"
 
@@ -25089,7 +25089,7 @@ msgstr "Abrir plantilla JSON"
 msgid "Open the context menu"
 msgstr "Abrir el menú contextual"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:518
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:519
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "Abre el siguiente enlace en tu navegador, luego copia la respuesta JSON completa y pégala en el cuadro."
 
@@ -25167,11 +25167,11 @@ msgstr "Abrir configuración de audio y video"
 msgid "Open with {accountName} on {instanceName}"
 msgstr "Abrir con {accountName} en {instanceName}"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:137
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:139
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Abre tu navegador, inicia sesión y luego ingresa el código a continuación para vincular tu cuenta."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:135
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:134
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
 msgstr "Abre tu antigua app de {PRODUCT_NAME}, selecciona \"Vincular un dispositivo nuevo\" y luego ingresa el código de abajo."
 
@@ -25199,7 +25199,7 @@ msgstr "Abre la página de Miembros. Presiona Espacio o Enter para abrir."
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:99
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:79
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:110
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:111
 msgid "Operating system"
 msgstr "Sistema operativo"
 
@@ -25629,7 +25629,7 @@ msgstr "Últimos 7 días"
 msgid "Paste"
 msgstr "Pegar"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:490
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:491
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "Pega la URL de una plantilla de {theOtherPlatform} para importar su estructura a una nueva comunidad."
 
@@ -25734,12 +25734,12 @@ msgid "Pay once and get a gift link to share. Gifts never renew."
 msgstr "Paga una vez y obtén un enlace de regalo para compartir. Los regalos nunca se renuevan."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:37
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Paga con {pixPaymentMethod} Automático para autorizar cargos recurrentes directamente desde tu banco brasileño. O elige \"Usar tarjeta\" para ingresar una tarjeta de crédito en la siguiente pantalla de {paymentProviderName}."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:48
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:47
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Paga con {upiPaymentMethod} para autorizar cargos mediante un mandato electrónico de tu banco indio que cumpla los requisitos del RBI. O elige \"Usar tarjeta\" para ingresar una tarjeta de crédito en la siguiente pantalla de {paymentProviderName}."
 
@@ -25933,7 +25933,7 @@ msgstr "Permisos para {0}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title for personal dictionary settings. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:131
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:132
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:94
 msgid "Personal dictionary"
 msgstr "Diccionario personal"
@@ -26004,7 +26004,7 @@ msgid "Pick at least one tag for this post."
 msgstr "Elige al menos una etiqueta para esta publicación."
 
 #. Help text above the manual spellcheck dictionary picker in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:135
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:136
 msgid "Pick one or more dictionaries. Words from any selected dictionary are accepted, which is useful for multilingual chats."
 msgstr "Elige uno o más diccionarios. Se aceptan las palabras de cualquier diccionario seleccionado, lo que es útil para chats multilingües."
 
@@ -26690,7 +26690,7 @@ msgid "Pricing"
 msgstr "Precios"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:149
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
 msgid "Pricing is still loading."
 msgstr "Los precios aún se están cargando."
 
@@ -27069,17 +27069,17 @@ msgid "Purchased gifts"
 msgstr "Regalos comprados"
 
 #. Modal body shown on a self-hosted instance when purchases are disabled for the account.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:111
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
 msgid "Purchases are disabled for this account."
 msgstr "Las compras están deshabilitadas para esta cuenta."
 
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:107
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "Las compras están desactivadas para esta cuenta. Si crees que es un error, contacta a {supportEmail}."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:103
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:102
 msgid "Purchases unavailable"
 msgstr "Compras no disponibles"
 
@@ -27173,33 +27173,33 @@ msgid "Push to talk key"
 msgstr "Tecla para pulsar y hablar"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:353
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:354
 #: src/features/voice/components/VoiceSettingsMenus.tsx:422
 msgid "Push-to-talk"
 msgstr "Pulsar para hablar"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:99
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:100
 msgid "Push-to-talk (limited)"
 msgstr "Pulsar para hablar (limitado)"
 
 #. Voice settings warning on GNOME when the desktop has no key assigned to push-to-talk. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:243
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:240
 msgid "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
 msgstr "\"Pulsar para hablar\" aún no tiene una tecla en todo el sistema. Para asignar una, ve a Configuración > Aplicaciones > {productName}."
 
 #. Voice settings warning on KDE Plasma when the desktop has no key assigned to push-to-talk. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:237
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:234
 msgid "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "\"Pulsar para hablar\" aún no tiene una tecla en todo el sistema. Para asignar una, ve a Preferencias del sistema > Teclado > Accesos rápidos > {productName}."
 
 #. Voice settings warning on an unrecognized Linux desktop when the desktop has no key assigned to push-to-talk.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:248
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:245
 msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
 msgstr "\"Pulsar para hablar\" aún no tiene una tecla en todo el sistema. Para asignar una, abre la configuración de atajos de teclado de tu escritorio."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:706
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:709
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "La función pulsar para hablar se ignora en la entrada directa. Cambia a voz enfocada o personalizada para usarla."
 
@@ -27214,27 +27214,27 @@ msgid "Push-to-talk is on. Hold your push-to-talk key to speak."
 msgstr "\"Pulsar para hablar\" está activado. Mantén presionada tu tecla para hablar."
 
 #. Voice settings warning on Linux when the desktop dialog for system-wide shortcuts was dismissed or failed. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:223
 msgid "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
 msgstr "\"Pulsar para hablar\" solo funciona mientras {productName} tiene el foco porque tu escritorio no configuró los atajos de todo el sistema."
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:131
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:132
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled."
 msgstr "El \"hablar para activar\" solo funciona mientras {productName} está enfocado hasta que se habilite {permissionName}."
 
 #. Voice settings warning on Linux before system-wide shortcuts are set up. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:222
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:219
 msgid "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
 msgstr "\"Pulsar para hablar\" solo funciona mientras {productName} tiene el foco hasta que configures los atajos de todo el sistema."
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:127
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:128
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Pulsar para hablar solo funciona cuando la pestaña del navegador está activa."
 
 #. Linux warning next to the direct input device access switch when push-to-talk only has a key assigned by the desktop. With direct input on, only the push-to-talk key set in the app works, and without one the microphone sends whenever you speak. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:184
 msgid "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
 msgstr "\"Pulsar para hablar\" usará la tecla que configures en {productName}. Configura una primero o tu micrófono usará la actividad de voz."
 
@@ -27244,12 +27244,12 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "La función \"pulsar para hablar\" no activará el micrófono mientras tengas el sonido desactivado. Activa el sonido para poder hablar."
 
 #. Voice settings note on the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:259
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:256
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
 msgstr "\"Pulsar para hablar\" solo funciona fuera de {productName} después de asignarlo en tu configuración de Hyprland."
 
 #. Voice settings note on the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:253
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:250
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
 msgstr "\"Pulsar para hablar\" solo funciona fuera de {productName} después de asignarlo en tu configuración de Hyprland. Agrega la línea de tu versión de Hyprland y reemplaza KEY por la tecla que quieras."
 
@@ -27533,12 +27533,12 @@ msgstr "Los destinatarios serán llevados a {0} <0>{1}</0>"
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:90
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:91
 msgid "Recommended"
 msgstr "Recomendado"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:83
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Recomendado. Reduce el ruido del micrófono para que la voz se escuche con claridad."
 
@@ -27553,7 +27553,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "Reconexión exitosa. Elige una pantalla de nuevo si quieres reanudar tu transmisión anterior."
 
 #. Status text on Linux while the app reconnects to the desktop service that runs system-wide shortcuts, for example after it restarted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:48
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:45
 msgid "Reconnecting to your desktop…"
 msgstr "Reconectando con tu escritorio…"
 
@@ -27836,7 +27836,7 @@ msgstr "Reiniciar para aplicar"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:75
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:94
 msgid "Release delay"
 msgstr "Retraso de liberación"
@@ -27853,7 +27853,7 @@ msgstr "Relevante"
 msgid "Reload"
 msgstr "Recargar"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:471
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:474
 msgid "Reload {PRODUCT_NAME} to fully apply the engine change. Switching between in-app and system spellcheck requires a renderer reload because Electron can't swap providers while running."
 msgstr "Recarga {PRODUCT_NAME} para aplicar por completo el cambio de motor. Cambiar entre el corrector ortográfico de la aplicación y el del sistema requiere recargar el proceso de renderizado, ya que Electron no puede cambiar de proveedor mientras se ejecuta."
 
@@ -27872,7 +27872,7 @@ msgstr "Recarga {productName} para usar la actualización web {version}"
 msgid "Reload app"
 msgstr "Recargar la aplicación"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:483
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:487
 msgid "Reload now"
 msgstr "Recargar ahora"
 
@@ -27935,7 +27935,7 @@ msgid "Remove"
 msgstr "Eliminar"
 
 #. Button or menu action label in the language tab. Keep it concise. Preserve {word}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:144
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:145
 msgid "Remove \"{word}\" from dictionary"
 msgstr "Quitar \"{word}\" del diccionario"
 
@@ -28086,8 +28086,8 @@ msgstr "Quitar de los GIF favoritos guardados por URL"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
 #: src/features/channel/components/modals/EditGroupModal.tsx:292
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:320
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:643
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:321
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:644
 msgid "Remove icon"
 msgstr "Quitar ícono"
 
@@ -29495,7 +29495,7 @@ msgid "Rows per page"
 msgstr "Filas por página"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:148
+#: src/features/updater/commands/UpdaterModalCommands.tsx:149
 msgid "RPM package"
 msgstr "Paquete RPM"
 
@@ -29530,7 +29530,7 @@ msgid "Safety"
 msgstr "Seguridad"
 
 #. Profile timezone difference text. The target user's timezone currently matches the viewer's timezone.
-#: src/features/user/components/popouts/UserProfileShared.tsx:61
+#: src/features/user/components/popouts/UserProfileShared.tsx:62
 msgid "Same time as you"
 msgstr "Misma hora que tú"
 
@@ -29770,7 +29770,7 @@ msgstr "Grabación de pantalla"
 #. Heading in the screen-share picker when macOS screen recording permission is missing.
 #. Title of the modal shown when screen recording permission is denied. Keep tone plain.
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:20
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:18
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:19
 msgid "Screen recording permission required"
 msgstr "Se necesita permiso para grabar la pantalla"
 
@@ -29858,7 +29858,7 @@ msgstr "Privacidad de compartir pantalla"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:104
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:105
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:214
 msgid "Screen share quality"
 msgstr "Calidad de la pantalla compartida"
@@ -30119,7 +30119,7 @@ msgid "Search language code…"
 msgstr "Buscar código de idioma…"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:74
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:75
 msgid "Search languages…"
 msgstr "Buscar idiomas…"
 
@@ -30552,7 +30552,7 @@ msgid "Select GIF {title}"
 msgstr "Seleccionar GIF {title}"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:78
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:79
 msgid "Select interface language"
 msgstr "Selecciona el idioma de la interfaz"
 
@@ -30573,7 +30573,7 @@ msgid "Select the account you want to sign in with on your new device."
 msgstr "Selecciona la cuenta con la que quieres iniciar sesión en tu nuevo dispositivo."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:119
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
 msgid "Select voice processing mode"
 msgstr "Seleccionar modo de procesamiento de voz"
 
@@ -30887,7 +30887,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "Envía el audio puro del micrófono sin procesar."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:87
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Envía tu audio sin modificar. Ideal si usas software de audio externo."
 
@@ -30986,7 +30986,7 @@ msgid "Set a member list position for the role"
 msgstr "Se estableció una posición en la lista de miembros para el rol"
 
 #. Video settings note shown when a streaming preset decides the screen share resolution and frame rate. preset is the Gaming or Screen share preset label, and Custom is the third preset label.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:81
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:82
 msgid "Set by the {preset} preset. Picking a value here switches to Custom."
 msgstr "Establecido por el preset {preset}. Al elegir un valor aquí, se cambiará a Personalizado."
 
@@ -31150,7 +31150,7 @@ msgid "Set the voice region to automatic"
 msgstr "Se estableció la región de voz en automática"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:40
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "Configurar"
 
@@ -31307,7 +31307,7 @@ msgstr "Compartir con un amigo"
 msgid "Share your screen"
 msgstr "Compartir pantalla"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:318
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:320
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Comparte tu pantalla en alta definición (1080p), quad HD (1440p) o a la resolución nativa de la fuente, hasta a 60 FPS."
 
@@ -31399,7 +31399,7 @@ msgstr "Códigos cortos"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:125
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:368
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:369
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -31407,7 +31407,7 @@ msgstr "Atajo"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:58
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:59
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:370
 msgid "Shortcut badges"
 msgstr "Insignias de atajos"
@@ -31616,7 +31616,7 @@ msgid "Show favorite button"
 msgstr "Mostrar botón de favoritos"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:90
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:91
 msgid "Show favorites throughout the app"
 msgstr "Mostrar favoritos en toda la aplicación"
 
@@ -32039,7 +32039,7 @@ msgid "Sign in with your browser"
 msgstr "Iniciar sesión con tu navegador"
 
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:28
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
 msgstr "Iniciar sesión con tu antigua app de {productName}"
 
@@ -32097,7 +32097,7 @@ msgid "Sign out?"
 msgstr "¿Cerrar sesión?"
 
 #. Title of the browser page after the user cancelled the sign-in request from the app.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:322
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:326
 msgid "Sign-in cancelled"
 msgstr "Inicio de sesión cancelado"
 
@@ -32113,7 +32113,7 @@ msgid "Sign-in details"
 msgstr "Detalles de inicio de sesión"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:89
+#: src/features/auth/flow/AuthLoginLayout.tsx:88
 msgid "Sign-in flow"
 msgstr "Flujo de inicio de sesión"
 
@@ -32144,7 +32144,7 @@ msgid "Signing in as {name}"
 msgstr "Iniciando sesión como {name}"
 
 #. Text button in the desktop app that shows a code to type into a browser on a different device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:214
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:219
 msgid "Signing in on another device?"
 msgstr "¿Iniciando sesión en otro dispositivo?"
 
@@ -32654,7 +32654,7 @@ msgstr "Ocurrió un problema al cargar el registro de actividad."
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:33
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -32694,7 +32694,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "Algo salió mal al enviar tu correo electrónico de verificación. Intenta de nuevo en un momento."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:131
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "Algo salió mal al iniciar el proceso de pago. Intenta de nuevo en un momento."
 
@@ -32812,7 +32812,7 @@ msgstr "Sonidos"
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Screen share resolution token in the stream info pill on the sharing tile, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:77
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:250
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:111
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:336
@@ -32988,8 +32988,8 @@ msgstr "Velocidad"
 #. Settings section label for spellcheck settings.
 #. Submenu label in the textarea right-click context menu for spellcheck preferences.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:62
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:401
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:443
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:402
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:446
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:78
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:50
@@ -32997,7 +32997,7 @@ msgid "Spellcheck"
 msgstr "Corrector ortográfico"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:118
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:119
 msgid "Spellcheck engine"
 msgstr "Motor de corrección ortográfica"
 
@@ -33099,7 +33099,7 @@ msgid "Star animation"
 msgstr "Animación de estrella"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:86
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:87
 msgid "Starred channels"
 msgstr "Canales favoritos"
 
@@ -33140,7 +33140,7 @@ msgstr "¿Iniciar una llamada de voz?"
 msgid "Start call"
 msgstr "Iniciar llamada"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:279
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:281
 msgid "Start camera test and configure effects"
 msgstr "Iniciar prueba de cámara y configurar efectos"
 
@@ -33175,7 +33175,7 @@ msgid "Start minimized"
 msgstr "Empezar minimizado"
 
 #. Button on the browser page after cancelling that goes back to choosing an account.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:337
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:341
 #: src/features/moderation/components/report/ReportStepDetails.tsx:389
 #: src/features/moderation/components/report/ReportStepEmail.tsx:113
 #: src/features/moderation/components/report/ReportStepReason.tsx:149
@@ -33239,7 +33239,7 @@ msgid "Startup"
 msgstr "Inicio"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:78
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:79
 msgid "Static Neko"
 msgstr "Neko estático"
 
@@ -33460,12 +33460,12 @@ msgid "Still indexing — check back in a moment"
 msgstr "Aún indexando; vuelve a intentarlo en un momento"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:74
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:75
 msgid "Still Neko"
 msgstr "Neko inmóvil"
 
 #. Heading in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:31
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:32
 msgid "Still waiting for screen recording access"
 msgstr "Aún esperando acceso a la grabación de pantalla"
 
@@ -33494,7 +33494,7 @@ msgid "Stop mic test"
 msgstr "Detener prueba del micrófono"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:70
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
 msgid "Stop Neko from chasing your cursor while keeping it draggable and interactive."
 msgstr "Evita que Neko persiga tu cursor, pero permite seguir arrastrándolo e interactuando con él."
 
@@ -33777,7 +33777,7 @@ msgid "Subscription"
 msgstr "Suscripción"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:86
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:85
 msgid "Subscription already exists"
 msgstr "Ya tienes esta suscripción"
 
@@ -33957,7 +33957,7 @@ msgstr "Cambiar a diseño cómodo"
 msgid "Switch to dense layout"
 msgstr "Cambiar a diseño compacto"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:668
 msgid "Switch to direct input"
 msgstr "Cambiar a entrada directa"
 
@@ -34182,7 +34182,7 @@ msgid "System DMs cannot host voice calls."
 msgstr "Los MD del sistema no pueden alojar llamadas de voz."
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:38
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:39
 msgid "System locale: {format}"
 msgstr "Formato de hora del sistema: {format}"
 
@@ -34218,17 +34218,17 @@ msgid "System tray"
 msgstr "Bandeja del sistema"
 
 #. Modal title when the desktop app is installed through a system package manager such as Flatpak.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:70
+#: src/features/updater/commands/UpdaterModalCommands.tsx:71
 msgid "System-managed install"
 msgstr "Instalación gestionada por el sistema"
 
 #. Settings subsection title for keyboard and mouse shortcuts that work outside the app.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:24
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:21
 msgid "System-wide shortcuts"
 msgstr "Atajos de todo el sistema"
 
 #. Linux settings text when setting up system-wide shortcuts failed.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:148
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:145
 msgid "System-wide shortcuts could not be set up."
 msgstr "No se pudieron configurar los atajos de todo el sistema."
 
@@ -34344,7 +34344,7 @@ msgid "Tap to add a note"
 msgstr "Toca para agregar una nota"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:153
+#: src/features/updater/commands/UpdaterModalCommands.tsx:154
 msgid "tar.gz archive"
 msgstr "Archivo tar.gz"
 
@@ -34360,7 +34360,7 @@ msgstr "Insignia de la barra de tareas"
 msgid "Teleporting you to another voice region..."
 msgstr "Teletransportándote a otra región de voz..."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:567
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:568
 msgid "Template"
 msgstr "Plantilla"
 
@@ -34649,7 +34649,7 @@ msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on 
 msgstr "La app {PRODUCT_NAME} en tu otro dispositivo la muestra en \"Iniciar sesión en otro dispositivo\". Solo ingresa un código de un dispositivo que controles."
 
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:327
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:331
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
 msgstr "La app {PRODUCT_NAME} no inició sesión. Puedes cerrar esta pestaña."
 
@@ -34714,12 +34714,12 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "Es posible que la comunidad que buscas haya sido eliminada o que no tengas acceso a ella."
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:108
+#: src/features/updater/commands/UpdaterModalCommands.tsx:109
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "No se pudo descargar la actualización de escritorio. Intenta de nuevo desde el botón de actualización cuando tu conexión sea estable."
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:139
+#: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "El archivo descargado se guarda en tu computadora. Instálalo con tu gestor de paquetes habitual."
 
@@ -35177,7 +35177,7 @@ msgid "This category already contains the maximum of {maxChannelsPerCategory} ch
 msgstr "Esta categoría ya contiene el máximo de {maxChannelsPerCategory} canales."
 
 #. Body in the channel gate modal for a mature category when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:254
+#: src/features/channel/components/MatureContentChannelGate.tsx:281
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:76
 msgid "This category is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Esta categoría está marcada para contenido para adultos y puede contener material que no sea apropiado para algunos usuarios."
@@ -35220,7 +35220,7 @@ msgid "This channel has a content warning. Updates can only go to channels with 
 msgstr "Este canal tiene una advertencia de contenido. Las actualizaciones solo pueden enviarse a canales con advertencia de contenido o restricción de edad."
 
 #. Body in the channel gate modal for a mature text channel when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:282
+#: src/features/channel/components/MatureContentChannelGate.tsx:309
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:91
 msgid "This channel is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Este canal está marcado para contenido para adultos y puede contener material que podría ser inapropiado para algunos usuarios."
@@ -35309,7 +35309,7 @@ msgid "This community is full"
 msgstr "Esta comunidad está llena"
 
 #. Body in the channel gate modal for a mature community when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:225
+#: src/features/channel/components/MatureContentChannelGate.tsx:252
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:71
 msgid "This community is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Esta comunidad está marcada para contenido para adultos y puede contener material que no sea apropiado para algunos usuarios."
@@ -35324,14 +35324,14 @@ msgstr "Esta comunidad ya no está disponible"
 #. Description text in the linked accounts tab.
 #. Description text in the user profile shared popout.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:43
-#: src/features/user/components/popouts/UserProfileShared.tsx:45
+#: src/features/user/components/popouts/UserProfileShared.tsx:46
 msgid "This connection has been verified."
 msgstr "Esta conexión ha sido verificada."
 
 #. Description text in the linked accounts tab.
 #. Description text in the user profile shared popout.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:47
-#: src/features/user/components/popouts/UserProfileShared.tsx:49
+#: src/features/user/components/popouts/UserProfileShared.tsx:50
 msgid "This connection has not been verified."
 msgstr "Esta conexión no se ha verificado."
 
@@ -35349,22 +35349,22 @@ msgid "This conversation is no longer available."
 msgstr "Esta conversación ya no está disponible."
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:78
+#: src/features/updater/commands/UpdaterModalCommands.tsx:79
 msgid "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 msgstr "Esta versión de escritorio no puede instalar actualizaciones dentro de {productName}. Descarga el instalador de escritorio más reciente en su lugar."
 
 #. Voice settings warning on Linux desktops without system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:232
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:229
 msgid "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused."
 msgstr "Este escritorio no ofrece atajos de todo el sistema. \"Pulsar para hablar\" solo funciona mientras {productName} tiene el foco."
 
 #. Linux settings text when the desktop has no system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:144
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:141
 msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
 msgstr "Este escritorio no ofrece atajos de todo el sistema. Los atajos siguen funcionando mientras {productName} tiene el foco."
 
 #. Desktop updater modal body for development or unpackaged builds.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:74
+#: src/features/updater/commands/UpdaterModalCommands.tsx:75
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
 msgstr "Esta versión de desarrollo no se puede actualizar automáticamente. Descarga un instalador de escritorio para probar el flujo de actualización."
 
@@ -35476,7 +35476,7 @@ msgid "This image couldn't be read. It may be damaged."
 msgstr "Esta imagen no se pudo leer. Podría estar dañada."
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:84
+#: src/features/updater/commands/UpdaterModalCommands.tsx:85
 msgid "This install is managed by your system. Update {productName} from your software center or package manager."
 msgstr "Esta instalación está gestionada por tu sistema. Actualiza {productName} desde tu centro de software o gestor de paquetes."
 
@@ -35491,7 +35491,7 @@ msgid "This instance already uses usernames to sign in. This can no longer chang
 msgstr "Esta instancia ya usa nombres de usuario para iniciar sesión. Esto ya no se puede cambiar."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:67
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "Esta instancia actualmente permite compartir pantalla hasta 720p a 30 FPS."
 
@@ -35629,33 +35629,44 @@ msgid "This link isn't valid. Open the link from your email again."
 msgstr "Este enlace no es válido. Vuelve a abrir el enlace de tu correo electrónico."
 
 #. Body in the channel gate modal when the current user cannot access a mature category.
+#. Body text on the mature content gate when the viewer cannot open a mature category.
+#: src/features/channel/components/MatureContentChannelGate.tsx:36
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:63
 msgid "This mature category is not available to your account."
 msgstr "Esta categoría para adultos no está disponible para tu cuenta."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:147
+#: src/features/channel/components/MatureContentChannelGate.tsx:167
 msgid "This mature category is not available to your account. <0>Learn more</0>"
 msgstr "Esta categoría para adultos no está disponible para tu cuenta. <0>Más información</0>"
 
 #. Body in the channel gate modal when the current user cannot access a mature channel.
+#. Body text on the mature content gate when the viewer cannot open a mature channel.
+#: src/features/channel/components/MatureContentChannelGate.tsx:40
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:67
 msgid "This mature channel is not available to your account."
 msgstr "Este canal para adultos no está disponible para tu cuenta."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:169
+#: src/features/channel/components/MatureContentChannelGate.tsx:193
 msgid "This mature channel is not available to your account. <0>Learn more</0>"
 msgstr "Este canal para adultos no está disponible para tu cuenta. <0>Más información</0>"
 
 #. Body in the channel gate modal when the current user cannot access a mature community.
+#. Body text on the mature content gate when the viewer cannot open a mature community.
+#: src/features/channel/components/MatureContentChannelGate.tsx:32
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:59
 msgid "This mature community is not available to your account."
 msgstr "Esta comunidad para adultos no está disponible para tu cuenta."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:124
+#: src/features/channel/components/MatureContentChannelGate.tsx:140
 msgid "This mature community is not available to your account. <0>Learn more</0>"
 msgstr "Esta comunidad para adultos no está disponible para tu cuenta. <0>Más información</0>"
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:106
+#. Body text in the mature media gate details modal when the viewer cannot open mature media.
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:31
+msgid "This mature media is not available to your account."
+msgstr "Este contenido para adultos no está disponible para tu cuenta."
+
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:113
 msgid "This mature media is not available to your account. <0>Learn more</0>"
 msgstr "Este contenido para adultos no está disponible para tu cuenta. <0>Más información</0>"
 
@@ -35715,9 +35726,14 @@ msgid "This picker is only available in the desktop app."
 msgstr "Este selector solo está disponible en la aplicación de escritorio."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:153
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
 msgid "This plan isn't available. Contact support."
 msgstr "Este plan no está disponible. Contacta a soporte."
+
+#. Error modal body shown on a self-hosted instance when the selected Plutonium plan has no price ID configured.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+msgid "This plan isn't available. Contact the administrators of this instance."
+msgstr "Este plan no está disponible. Contacta a los administradores de esta instancia."
 
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:191
 msgid "This purchase is not eligible for a refund."
@@ -35837,7 +35853,7 @@ msgstr "Este hilo está bloqueado. Solo los moderadores pueden enviar mensajes."
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Este usuario ha limitado su perfil. Algunos detalles están ocultos para quienes no son sus amigos."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:395
+#: src/features/user/components/popouts/UserProfileShared.tsx:399
 msgid "This user has no roles in this community."
 msgstr "Este usuario no tiene roles en esta comunidad."
 
@@ -36050,14 +36066,14 @@ msgstr "Hora"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for app time display format.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:361
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:362
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:26
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:38
 msgid "Time format"
 msgstr "Formato de hora"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:62
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:63
 msgid "Time format selection"
 msgstr "Selección de formato de hora"
 
@@ -36143,17 +36159,17 @@ msgid "Title bar platform"
 msgstr "Plataforma de la barra de título"
 
 #. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:89
 msgid "To change the keys, go to Settings > Apps > {productName}."
 msgstr "Para cambiar las teclas, ve a Configuración > Aplicaciones > {productName}."
 
 #. Instructions for KDE Plasma. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:87
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:84
 msgid "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "Para cambiar las teclas, ve a Preferencias del sistema > Teclado > Accesos rápidos > {productName}."
 
 #. Instructions for changing system-wide shortcut keys on an unrecognized Linux desktop.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:108
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:105
 msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "Para cambiar las teclas, abre la configuración de atajos de teclado de tu escritorio."
 
@@ -36341,7 +36357,7 @@ msgid "Toolbar"
 msgstr "Barra de herramientas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:54
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:55
 msgid "Tooltip shortcuts"
 msgstr "Atajos en las ayudas emergentes"
 
@@ -36864,7 +36880,7 @@ msgstr "24 horas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:42
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:43
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:406
 msgid "Two clicks"
 msgstr "Dos clics"
@@ -37263,7 +37279,7 @@ msgstr "Alternativa universal. La calidad más baja, pero funciona en todas part
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:770
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:115
-#: src/features/updater/commands/UpdaterModalCommands.tsx:127
+#: src/features/updater/commands/UpdaterModalCommands.tsx:128
 msgid "Unknown"
 msgstr "Desconocido"
 
@@ -37429,7 +37445,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "Desbloquea los emojis personalizados en los MD con {premiumProductName}"
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:59
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:60
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Desbloquea la pantalla compartida en HD con {premiumProductName}"
 
@@ -37817,7 +37833,7 @@ msgid "Up to 720p at 30 FPS"
 msgstr "Hasta 720p a 30 FPS"
 
 #. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:152
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:149
 msgid "Update {productName} to use system-wide shortcuts on Wayland."
 msgstr "Actualiza {productName} para usar atajos de todo el sistema en Wayland."
 
@@ -37841,7 +37857,7 @@ msgid "Update my status"
 msgstr "Actualizar mi estado"
 
 #. Button label that closes the desktop app and opens the updater to install an available update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:42
+#: src/features/updater/commands/UpdaterModalCommands.tsx:43
 msgid "Update now"
 msgstr "Actualizar ahora"
 
@@ -38008,8 +38024,8 @@ msgstr "Sube archivos y contenido multimedia en este canal."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "Subir ícono"
@@ -38166,7 +38182,7 @@ msgid "Use {name} on {domain}"
 msgstr "Usar {name} en {domain}"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:44
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:43
 msgid "Use {pixPaymentMethod}"
 msgstr "Usar {pixPaymentMethod}"
 
@@ -38181,7 +38197,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "Usa {query} donde deba insertarse el texto a traducir."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:54
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:53
 msgid "Use {upiPaymentMethod}"
 msgstr "Usar {upiPaymentMethod}"
 
@@ -38219,7 +38235,7 @@ msgid "Use actual value"
 msgstr "Usar valor real"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:63
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:62
 msgid "Use alternative method"
 msgstr "Usar otro método"
 
@@ -38245,12 +38261,12 @@ msgid "Use autoscrolling"
 msgstr "Usar desplazamiento automático"
 
 #. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:70
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:71
 msgid "Use browser locale for time format"
 msgstr "Usar la configuración regional del navegador para el formato de hora"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:174
 msgid "Use card"
 msgstr "Usar tarjeta"
 
@@ -38297,7 +38313,7 @@ msgid "Use default"
 msgstr "Usar predeterminado"
 
 #. Switch label on Linux. When on, the app reads keyboard devices directly for system-wide shortcuts. Not related to the "Direct input" voice processing profile.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:157
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:154
 msgid "Use direct input device access"
 msgstr "Usar acceso directo a los dispositivos de entrada"
 
@@ -38391,7 +38407,7 @@ msgid "Use stickers from other communities."
 msgstr "Usar stickers de otras comunidades."
 
 #. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:66
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:67
 msgid "Use system locale for time format"
 msgstr "Usar la configuración regional del sistema para el formato de hora"
 
@@ -38406,7 +38422,7 @@ msgid "Use the operating system's window chrome"
 msgstr "Usar el marco de ventana del sistema operativo"
 
 #. Description for the operating-system spellcheck engine option in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:114
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:115
 msgid "Use the spellchecker built into your operating system."
 msgstr "Usar el corrector ortográfico integrado en tu sistema operativo."
 
@@ -38452,7 +38468,7 @@ msgid "Use voice activity"
 msgstr "Usar actividad de voz"
 
 #. Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:94
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:95
 msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
 msgstr "Usa el corrector ortográfico de tu sistema operativo cuando esté disponible. De lo contrario, usa los diccionarios integrados de {productName}."
 
@@ -38926,7 +38942,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "Verifica tu correo electrónico antes de enviar solicitudes de amistad."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:67
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:66
 msgid "Verify your email first"
 msgstr "Verifica tu correo electrónico primero"
 
@@ -39244,7 +39260,7 @@ msgstr "Ver detalles"
 msgid "View devices that are signed in to your account"
 msgstr "Ver los dispositivos que tienen una sesión iniciada en tu cuenta"
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:198
+#: src/features/user/components/popouts/UserProfileShared.tsx:199
 msgid "View full profile"
 msgstr "Ver perfil completo"
 
@@ -39387,7 +39403,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "Barra de notificación de 2FA Visionary"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:80
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:79
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "Visionary ya incluye acceso permanente, por lo que no necesitas una suscripción recurrente. Aún puedes comprar regalos para otros."
 
@@ -39535,7 +39551,7 @@ msgstr "Canal de voz"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:27
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:402
 msgid "Voice channel confirmation"
 msgstr "Confirmación de canal de voz"
@@ -39546,7 +39562,7 @@ msgid "Voice channel full"
 msgstr "Canal de voz lleno"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:23
 msgid "Voice channel join behavior"
 msgstr "Comportamiento al unirse a canales de voz"
 
@@ -39615,7 +39631,7 @@ msgid "Voice participants"
 msgstr "Participantes en la llamada"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:661
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:663
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Procesamiento de voz"
@@ -39661,7 +39677,7 @@ msgstr "Activar sonido"
 msgid "Voice unmute"
 msgstr "Activar micrófono"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:590
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:592
 msgid "Voice uses your system output device in this browser. Change it in your system settings."
 msgstr "La voz usa el dispositivo de salida de tu sistema en este navegador. Cámbialo en la configuración de tu sistema."
 
@@ -39675,7 +39691,7 @@ msgstr "Anulada"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:387
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:179
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
@@ -39723,7 +39739,7 @@ msgstr "Tiempo de espera entre mensajes. Los miembros con el permiso \"{bypassSl
 msgid "Waiting for connection..."
 msgstr "Esperando conexión..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:366
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:374
 msgid "Waiting for passkey…"
 msgstr "Esperando la llave de acceso…"
 
@@ -39743,7 +39759,7 @@ msgid "Waiting for you to..."
 msgstr "Esperando que..."
 
 #. Status text while the Linux desktop shows its own dialog for confirming system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:44
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:41
 msgid "Waiting for your desktop…"
 msgstr "Esperando a tu escritorio…"
 
@@ -39887,7 +39903,7 @@ msgid "We couldn't read this theme. It may be corrupted or invalid."
 msgstr "No pudimos leer este tema. Puede que esté dañado o no sea válido."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:91
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:90
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "Encontramos una suscripción a {premiumProductFullName} existente para esta cuenta. Adminístrala en el portal de facturación seguro para actualizar los detalles de pago o verificar el estado de la renovación. Si acabas de pagar, espera un minuto y vuelve a abrir esta página."
 
@@ -39914,7 +39930,7 @@ msgstr "Redimensionamos y comprimimos este sticker a 320x320 píxeles, pero sigu
 msgid "We sent a code to {email}."
 msgstr "Enviamos un código a {email}."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:158
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:162
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Vamos a rellenar automáticamente {prefillEmail} cuando se abra el inicio de sesión en el navegador."
 
@@ -40111,7 +40127,7 @@ msgid "Website previews"
 msgstr "Vistas previas de sitios web"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:93
+#: src/features/auth/flow/AuthLoginLayout.tsx:92
 msgid "Welcome back"
 msgstr "Te damos la bienvenida de nuevo"
 
@@ -40321,7 +40337,7 @@ msgstr "Qué comunidades"
 msgid "Which conversations"
 msgstr "Qué conversaciones"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:363
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Mientras la función pulsar para hablar esté activada, tu atajo controlará el micrófono, por lo que el botón de silenciar estará deshabilitado."
 
@@ -40631,7 +40647,7 @@ msgid "You are now a developer!"
 msgstr "¡Ahora eres desarrollador!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:165
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "Ahora vas a {paymentProviderName} para completar el pago. Vuelve a {productName} cuando lo hayas completado."
 
@@ -41052,12 +41068,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Acabas de presionar Tab. El modo de teclado está activado para que puedas navegar por {productName} sin mouse."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:259
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:258
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Conservarás tus beneficios hasta la próxima fecha de renovación. Reactiva tu suscripción antes de esa fecha para mantener tu historial de suscriptor."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:280
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:279
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Perderás todos los beneficios de {PREMIUM_PRODUCT_NAME} inmediatamente y tu historial de suscripción se restablecerá. Esto no se puede deshacer."
 
@@ -41137,8 +41153,8 @@ msgstr "Necesitas el permiso \"{permissionLabel}\" para usar emojis de otras com
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Necesitas el permiso \"{permissionLabel}\" para usar stickers de otras comunidades aquí."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:210
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:438
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:211
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:439
 msgid "You need to claim your account before you can create a community."
 msgstr "Debes completar el registro de tu cuenta antes de poder crear una comunidad."
 
@@ -41155,8 +41171,8 @@ msgstr "Debes completar el registro de tu cuenta para enviar mensajes directos."
 msgid "You need to claim your account to send messages in this community."
 msgstr "Debes completar el registro de tu cuenta para enviar mensajes en esta comunidad."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:235
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:463
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:236
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:464
 msgid "You need to verify your email address before you can create a community."
 msgstr "Necesitas verificar tu dirección de correo electrónico antes de poder crear una comunidad."
 
@@ -41170,7 +41186,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "Debes verificar tu dirección de correo electrónico antes de poder iniciar un mensaje directo."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:71
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:70
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "Debes verificar tu correo electrónico antes de poder comprar {premiumProductFullName}."
 
@@ -41214,7 +41230,7 @@ msgid "You'll appear offline"
 msgstr "Aparecerás como desconectado"
 
 #. Body of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription. The subscription is charged immediately and the unused gift time is appended after the paid period.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:139
 msgid "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost."
 msgstr "Se te cobrará ahora. Tu tiempo de regalo restante se agregará después de tu período de pago, para que no se pierda nada."
 
@@ -41262,7 +41278,7 @@ msgid "You're already friends with this user."
 msgstr "Ya eres amigo de este usuario."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:76
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:75
 msgid "You're already Visionary"
 msgstr "Ya eres Visionary"
 
@@ -41381,7 +41397,7 @@ msgid "You're sending reports too quickly. Try again later."
 msgstr "Estás enviando reportes muy rápido. Intenta de nuevo más tarde."
 
 #. Title of the browser page after the user approved signing in to the app.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:282
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:286
 msgid "You're signed in"
 msgstr "Has iniciado sesión"
 
@@ -41500,7 +41516,7 @@ msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Ya viste todas tus menciones recientes. Pronto aparecerán más aquí."
 
 #. Modal body for existing-subscription block when the subscription was bought in a mobile app store. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {premiumProductFullName} is the full premium product name.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:97
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:96
 msgid "Your {premiumProductFullName} subscription is billed through {storeName}. Manage it in your {storeName} account to change your plan or check renewal status."
 msgstr "Tu suscripción a {premiumProductFullName} se factura a través de {storeName}. Adminístrala en tu cuenta de {storeName} para cambiar de plan o verificar el estado de la renovación."
 
@@ -41559,9 +41575,13 @@ msgstr "Tu cuenta es demasiado nueva para enviar mensajes en esta comunidad."
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Tu solicitud de cuenta está pendiente de aprobación. Podrás iniciar sesión cuando un administrador la apruebe."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:297
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:304
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "Tu cuenta requiere autenticación multifactor, pero no hay métodos compatibles configurados en este dispositivo. Inicia sesión en un dispositivo con tu aplicación de autenticación o llave de seguridad, o contacta a soporte."
+
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:298
+msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact the administrators of this instance."
+msgstr "Tu cuenta requiere autenticación multifactor, pero no hay métodos compatibles configurados en este dispositivo. Inicia sesión en un dispositivo con tu aplicación de autenticación o llave de seguridad, o contacta a los administradores de esta instancia."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
@@ -41574,9 +41594,14 @@ msgid "Your accounts and settings have not been changed or deleted."
 msgstr "Tus cuentas y configuraciones no han sido cambiadas ni eliminadas."
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
-#: src/features/auth/components/ContentBlockedHandler.tsx:14
+#: src/features/auth/components/ContentBlockedHandler.tsx:15
 msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "No pudimos completar tu acción porque fue marcada por nuestros sistemas de seguridad. Si crees que es un error, comunícate con soporte."
+
+#. Modal body shown on a self-hosted instance when the safety system blocks the requested action. Keep plain and calm.
+#: src/features/auth/components/ContentBlockedHandler.tsx:21
+msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
+msgstr "No pudimos completar tu acción porque fue marcada por nuestros sistemas de seguridad. Si crees que es un error, comunícate con los administradores de esta instancia."
 
 #. Report flow: section heading above the list of answers the reporter picked, on the summary screen.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:26
@@ -41625,22 +41650,22 @@ msgid "Your current kit stops working as soon as the new one is created."
 msgstr "Tu kit actual deja de funcionar tan pronto como se crea uno nuevo."
 
 #. Linux settings text when the desktop dialog for system-wide shortcuts was dismissed or failed. Neutral wording, the user may not have declined anything.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:134
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:131
 msgid "Your desktop didn't set up system-wide shortcuts."
 msgstr "Tu escritorio no configuró los atajos de todo el sistema."
 
 #. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME). A key assigned here stops reaching every other app. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:61
 msgid "Your desktop keeps these keys for {productName}, so other apps can't use them."
 msgstr "Tu escritorio reserva estas teclas para {productName}, por lo que otras aplicaciones no pueden usarlas."
 
 #. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME), shown when the "Use direct input device access" switch is offered below it. A key assigned here stops reaching every other app. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:69
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:66
 msgid "Your desktop keeps these keys for {productName}, so other apps can't use them. To use the same key in other apps, turn on direct input device access below."
 msgstr "Tu escritorio reserva estas teclas para {productName}, por lo que otras aplicaciones no pueden usarlas. Para usar la misma tecla en otras aplicaciones, activa el acceso directo a los dispositivos de entrada más abajo."
 
 #. Subtitle above the list of system-wide shortcuts assigned by the Linux desktop. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:53
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:50
 msgid "Your desktop runs these shortcuts even while {productName} is not focused."
 msgstr "Tu escritorio ejecuta estos atajos incluso cuando {productName} no tiene el foco."
 
@@ -41729,7 +41754,7 @@ msgid "Your gift time has ended. Subscribe to keep {premiumProductName}."
 msgstr "Tu tiempo de regalo terminó. Suscríbete para conservar {premiumProductName}."
 
 #. Title of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:134
 msgid "Your gift time is kept"
 msgstr "Tu tiempo de regalo se conserva"
 
@@ -41744,7 +41769,7 @@ msgid "Your grace period has ended."
 msgstr "Tu período de gracia ha terminado."
 
 #. Critical nagbar body shown when the desktop installation appears corrupted. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:13
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:14
 msgid "Your installation is corrupted, and you need to reinstall the app for all functionality to work."
 msgstr "Tu instalación está dañada y necesitas reinstalar la aplicación para que todas las funciones anden."
 
@@ -41771,22 +41796,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "Tu última compra está fuera del período de reembolso. Contacta a soporte técnico para problemas de facturación."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:82
+#: src/features/messaging/state/MessageQueue.tsx:83
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "No pudimos entregar tu mensaje porque fue marcado por nuestros sistemas de seguridad. Si crees que es un error, comunícate con soporte."
 
+#. Message send error on a self-hosted instance when the safety system blocks the message.
+#: src/features/messaging/state/MessageQueue.tsx:88
+msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
+msgstr "No pudimos entregar tu mensaje porque fue marcado por nuestros sistemas de seguridad. Si crees que es un error, comunícate con los administradores de esta instancia."
+
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:69
+#: src/features/messaging/state/MessageQueue.tsx:70
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "No se pudo entregar tu mensaje. Esto suele ocurrir porque no compartes una comunidad con el destinatario o porque el destinatario solo acepta mensajes directos de amigos. También es posible que debas ajustar tu propia configuración de privacidad de mensajes directos en {directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:74
+#: src/features/messaging/state/MessageQueue.tsx:75
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "No se pudo entregar tu mensaje. Debes completar el registro de tu cuenta para enviar mensajes directos."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:78
+#: src/features/messaging/state/MessageQueue.tsx:79
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "No se pudo entregar tu mensaje. Debes completar el registro de tu cuenta para enviar mensajes."
 
@@ -41885,7 +41915,7 @@ msgid "Your report didn't go through. Try again."
 msgstr "Tu reporte no se envió. Intenta de nuevo."
 
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:87
 msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
 msgstr "Tu {savedResolution} guardado a {savedFrameRate} FPS requiere {premiumProductName}, por lo que los envíos usan {resolution} a {frameRate} FPS."
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import styles from '@app/features/auth/components/pages/LoginPage.module.css';
 import {useAuthSingleUseRequest} from '@app/features/auth/flow/AuthSingleUseRequest';
@@ -267,7 +267,7 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 						className={styles.ssoRetryButton}
 						data-flx="auth.sso-callback-page.sso-open-app-button"
 					>
-						{i18n._(OPEN_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						{i18n._(OPEN_PRODUCT_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 					</a>
 				</flx-auth-sso-callback-page-actions>
 			</flx-auth-sso-callback-page>

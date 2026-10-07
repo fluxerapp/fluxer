@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	CANARY_DESKTOP_ENTRY_NAME,
-	DESKTOP_ENTRY_NAME,
-	PRODUCT_NAME,
-} from '@app/features/app/config/I18nDisplayConstants';
+import {CANARY_DESKTOP_ENTRY_NAME, DESKTOP_ENTRY_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GlobalShortcuts from '@app/features/input/state/GlobalShortcuts';
 import Keybind from '@app/features/input/state/InputKeybind';
@@ -477,7 +474,7 @@ const BoundPortalShortcuts: React.FC<{'data-flx': string}> = observer(({'data-fl
 					</h3>
 					<p className={styles.customSubtitle} data-flx="user.system-shortcuts-section.bound.subtitle">
 						{i18n._(desktop === 'hyprland' ? HYPRLAND_BOUND_DESCRIPTION_DESCRIPTOR : BOUND_DESCRIPTION_DESCRIPTOR, {
-							productName: PRODUCT_NAME,
+							productName: RuntimeConfig.productName,
 						})}
 					</p>
 					{GlobalShortcuts.portalRecovering ? (
@@ -531,7 +528,7 @@ const BoundPortalShortcuts: React.FC<{'data-flx': string}> = observer(({'data-fl
 			{desktop === 'hyprland' ? null : (
 				<p className={styles.permissionSectionHelper} data-flx="user.system-shortcuts-section.bound.keys-reserved">
 					{i18n._(shouldShowDirectInputSwitch() ? KEYS_RESERVED_DIRECT_INPUT_DESCRIPTOR : KEYS_RESERVED_DESCRIPTOR, {
-						productName: PRODUCT_NAME,
+						productName: RuntimeConfig.productName,
 					})}
 				</p>
 			)}
@@ -566,7 +563,7 @@ const PortalStateSection: React.FC<{'data-flx': string}> = observer(({'data-flx'
 				>
 					{i18n._(
 						GlobalShortcuts.linux?.desktop === 'hyprland' ? HYPRLAND_NOT_SET_UP_DESCRIPTOR : NOT_SET_UP_DESCRIPTOR,
-						{productName: PRODUCT_NAME},
+						{productName: RuntimeConfig.productName},
 					)}
 				</WarningAlert>
 			);
@@ -614,7 +611,7 @@ const PortalStateSection: React.FC<{'data-flx': string}> = observer(({'data-flx'
 					}
 					data-flx={`${dataFlx}.unsupported`}
 				>
-					{i18n._(UNSUPPORTED_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(UNSUPPORTED_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</WarningAlert>
 			);
 		case 'error':
@@ -671,12 +668,12 @@ const DirectInputSwitch: React.FC<{'data-flx': string}> = observer(({'data-flx':
 		<>
 			{!directInput.enabled && isPushToTalkDesktopOnly() ? (
 				<WarningAlert data-flx={`${dataFlx}.push-to-talk-warning`}>
-					{i18n._(DIRECT_INPUT_PUSH_TO_TALK_WARNING_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(DIRECT_INPUT_PUSH_TO_TALK_WARNING_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</WarningAlert>
 			) : null}
 			<Switch
 				label={i18n._(DIRECT_INPUT_LABEL_DESCRIPTOR)}
-				description={i18n._(getDirectInputDescription(directInput.available), {productName: PRODUCT_NAME})}
+				description={i18n._(getDirectInputDescription(directInput.available), {productName: RuntimeConfig.productName})}
 				value={directInput.enabled}
 				onChange={(value) => void GlobalShortcuts.setDirectInputEnabled(value)}
 				disabled={GlobalShortcuts.pendingAction !== null}
@@ -702,7 +699,7 @@ export const SystemShortcutsSection: React.FC<{'data-flx'?: string}> = observer(
 		if (GlobalShortcuts.legacyWaylandNeedsUpdate) {
 			return (
 				<WarningAlert title={i18n._(SYSTEM_WIDE_SHORTCUTS_DESCRIPTOR)} data-flx={`${dataFlx}.update`}>
-					{i18n._(UPDATE_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(UPDATE_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</WarningAlert>
 			);
 		}
@@ -719,7 +716,7 @@ export const SystemShortcutsSection: React.FC<{'data-flx'?: string}> = observer(
 				<DirectInputSwitch data-flx={`${dataFlx}.switch.direct-input`} />
 				{showDirectInputError ? (
 					<WarningAlert data-flx={`${dataFlx}.direct-input-error`}>
-						{i18n._(DIRECT_INPUT_ERROR_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						{i18n._(DIRECT_INPUT_ERROR_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 					</WarningAlert>
 				) : null}
 			</div>
@@ -734,8 +731,8 @@ const HyprlandPushToTalkCard: React.FC<{portalAppId: string | null; 'data-flx': 
 			<div className={styles.customSection} data-flx={dataFlx}>
 				<p className={styles.permissionSectionHelper} data-flx={`${dataFlx}.text`}>
 					{portalAppId
-						? i18n._(PTT_HYPRLAND_DESCRIPTOR, {productName: PRODUCT_NAME})
-						: i18n._(PTT_HYPRLAND_NO_APP_ID_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						? i18n._(PTT_HYPRLAND_DESCRIPTOR, {productName: RuntimeConfig.productName})
+						: i18n._(PTT_HYPRLAND_NO_APP_ID_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</p>
 				{portalAppId ? (
 					<HyprlandBindLines portalAppId={portalAppId} actions={['voice_push_to_talk']} data-flx={`${dataFlx}.lines`} />
@@ -751,7 +748,7 @@ export const SystemShortcutsPushToTalkAlert: React.FC<{'data-flx'?: string}> = o
 		if (GlobalShortcuts.legacyWaylandNeedsUpdate) {
 			return (
 				<WarningAlert data-flx={`${dataFlx}.update`}>
-					{i18n._(UPDATE_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(UPDATE_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</WarningAlert>
 			);
 		}
@@ -760,7 +757,7 @@ export const SystemShortcutsPushToTalkAlert: React.FC<{'data-flx'?: string}> = o
 		if (hasDirectInputError()) {
 			return (
 				<WarningAlert data-flx={`${dataFlx}.direct-input-error`}>
-					{i18n._(DIRECT_INPUT_ERROR_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(DIRECT_INPUT_ERROR_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</WarningAlert>
 			);
 		}
@@ -776,7 +773,7 @@ export const SystemShortcutsPushToTalkAlert: React.FC<{'data-flx'?: string}> = o
 						actions={<SetUpButton label={i18n._(SET_UP_DESCRIPTOR)} data-flx={`${dataFlx}.button.set-up`} />}
 						data-flx={`${dataFlx}.not-set-up`}
 					>
-						{i18n._(PTT_NOT_SET_UP_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						{i18n._(PTT_NOT_SET_UP_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 					</WarningAlert>
 				);
 			case 'binding':
@@ -787,7 +784,7 @@ export const SystemShortcutsPushToTalkAlert: React.FC<{'data-flx'?: string}> = o
 						actions={<SetUpButton label={i18n._(TRY_AGAIN_DESCRIPTOR)} data-flx={`${dataFlx}.button.retry-declined`} />}
 						data-flx={`${dataFlx}.declined`}
 					>
-						{i18n._(PTT_DECLINED_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						{i18n._(PTT_DECLINED_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 					</WarningAlert>
 				);
 			case 'error':
@@ -805,7 +802,7 @@ export const SystemShortcutsPushToTalkAlert: React.FC<{'data-flx'?: string}> = o
 						actions={portal.canRecheck ? <CheckAgainButton data-flx={`${dataFlx}.button.check-again`} /> : undefined}
 						data-flx={`${dataFlx}.unsupported`}
 					>
-						{i18n._(PTT_UNSUPPORTED_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						{i18n._(PTT_UNSUPPORTED_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 					</WarningAlert>
 				);
 			case 'bound': {

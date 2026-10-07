@@ -6,14 +6,10 @@ import type {I18nResult} from '@fluxer/i18n/src/runtime/I18nTypes';
 import {validateMessageTemplateVariables} from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
 import {EMAIL_I18N_LOCALE_MESSAGES} from '@pkgs/email/src/email_i18n/EmailI18nLocales';
 import {EMAIL_I18N_MESSAGES} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
+import type {EmailTemplateVariables} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {EmailTemplate, EmailTemplateKey} from '@pkgs/email/src/email_i18n/EmailI18nTypes.generated';
 
 const DEFAULT_LOCALE = 'en-US';
-const DEFAULT_EMAIL_TEMPLATE_VARIABLES = {
-	product_name: 'Fluxer',
-	appeals_email: 'appeals@fluxer.app',
-	safety_email: 'safety@fluxer.app',
-} satisfies Record<string, string>;
 
 function formatEmailDate(value: unknown, locale: string, style: string | null): string {
 	const options: Intl.DateTimeFormatOptions = {timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric'};
@@ -68,12 +64,13 @@ const emailI18n = createStaticI18n<EmailTemplateKey, EmailTemplate, Record<strin
 	},
 );
 
-export function getEmailTemplate(
-	templateKey: EmailTemplateKey,
+export function getEmailTemplate<T extends EmailTemplateKey>(
+	templateKey: T,
 	locale: string | null,
-	variables: Record<string, unknown>,
+	variables: EmailTemplateVariables[T],
+	productName: string,
 ): I18nResult<EmailTemplateKey, EmailTemplate> {
-	return emailI18n.getTemplate(templateKey, locale, {...DEFAULT_EMAIL_TEMPLATE_VARIABLES, ...variables});
+	return emailI18n.getTemplate(templateKey, locale, {...variables, product_name: productName});
 }
 
 export function resetEmailI18n(): void {

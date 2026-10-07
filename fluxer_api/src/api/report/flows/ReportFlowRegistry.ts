@@ -4,6 +4,8 @@ import {createHash} from 'node:crypto';
 import {Config} from '@app/api/Config';
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import {CONTENT_I18N_MESSAGES} from '@app/api/content_i18n/ContentI18nMessages';
+import {getLegalUrls} from '@app/api/instance/LegalUrls';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {REPORT_FLOWS, type ReportFlowDef} from '@app/api/report/flows/ReportFlowDefinitions';
 import {
 	REPORT_FLOW_NOTICES,
@@ -38,6 +40,7 @@ export interface ReportFlowLibrary {
 
 export interface ReportFlowInstance {
 	selfHosted: boolean;
+	guidelinesLinked: boolean;
 }
 
 export type ReportFlowScreenKind = 'choice' | 'checklist' | 'info';
@@ -103,6 +106,12 @@ const REPORT_FLOW_SURFACES: ReadonlyArray<ReportFlowSurface> = ['in_app', 'dsa']
 const REPORT_FLOW_ID_PATTERN = /^[a-z0-9_]{1,48}$/;
 const MAX_WALK_SCREENS = 10;
 const CRISIS_LINES_URL = 'https://befrienders.org';
+const HOSTED_REPORT_FLOW_INSTANCE: ReportFlowInstance = {selfHosted: false, guidelinesLinked: true};
+const REPORT_FLOW_CHECKED_INSTANCES: ReadonlyArray<ReportFlowInstance> = [
+	HOSTED_REPORT_FLOW_INSTANCE,
+	{selfHosted: true, guidelinesLinked: false},
+	{selfHosted: true, guidelinesLinked: true},
+];
 const ADMIN_LOCALE = 'en-US';
 const NORWEGIAN_LANGUAGE_CODES: ReadonlySet<string> = new Set(['nb', 'nn']);
 
@@ -117,7 +126,15 @@ export function getReportFlowScreenKind(screen: ReportFlowScreenDef): ReportFlow
 }
 
 function isLinkAvailable(link: ReportFlowLinkId, instance: ReportFlowInstance): boolean {
-	return link === 'crisis_lines' || !instance.selfHosted;
+	switch (link) {
+		case 'crisis_lines':
+			return true;
+		case 'guidelines':
+			return instance.guidelinesLinked;
+		case 'dsa':
+		case 'copyright':
+			return !instance.selfHosted;
+	}
 }
 
 function resolveScreenSubtitle(
@@ -457,10 +474,10 @@ export function assertValidReportFlowLibrary(library: ReportFlowLibrary): void {
 	const errors = collectDefinitionErrors(library);
 	if (errors.length === 0) {
 		const reachable = new Set<string>();
-		for (const selfHosted of [false, true]) {
+		for (const instance of REPORT_FLOW_CHECKED_INSTANCES) {
 			for (const target of REPORT_FLOW_TARGETS) {
 				for (const surface of REPORT_FLOW_SURFACES) {
-					const variant = buildReportFlowVariant(library, target, surface, {selfHosted});
+					const variant = buildReportFlowVariant(library, target, surface, instance);
 					if (!variant) {
 						continue;
 					}
@@ -486,7 +503,7 @@ export function buildReportFlowLedger(library: ReportFlowLibrary): Record<string
 	const ledger: Record<string, string> = {};
 	for (const target of REPORT_FLOW_TARGETS) {
 		for (const surface of REPORT_FLOW_SURFACES) {
-			const variant = buildReportFlowVariant(library, target, surface, {selfHosted: false});
+			const variant = buildReportFlowVariant(library, target, surface, HOSTED_REPORT_FLOW_INSTANCE);
 			if (!variant) {
 				continue;
 			}
@@ -515,19 +532,11 @@ assertValidReportFlowLibrary(REPORT_FLOW_LIBRARY);
 const variantCache = new Map<string, ReportFlowVariant | null>();
 const responseCache = new Map<string, ReportFlowResponse>();
 
-function getCurrentInstance(): ReportFlowInstance {
-	return {selfHosted: Config.instance.selfHosted};
+function getReportFlowInstance(guidelinesUrl: string | null): ReportFlowInstance {
+	return {selfHosted: Config.instance.selfHosted, guidelinesLinked: guidelinesUrl !== null};
 }
 
-function getProductName(): string {
-	return Config.instance.branding.productName || 'Fluxer';
-}
-
-function getGuidelinesUrl(instance: ReportFlowInstance): string | null {
-	return isLinkAvailable('guidelines', instance) ? `${Config.endpoints.marketing}/guidelines` : null;
-}
-
-function getLinkUrl(link: ReportFlowLinkId, instance: ReportFlowInstance): string | null {
+function getLinkUrl(link: ReportFlowLinkId, guidelinesUrl: string | null): string | null {
 	switch (link) {
 		case 'dsa':
 			return `${Config.endpoints.webApp}/report`;
@@ -536,25 +545,36 @@ function getLinkUrl(link: ReportFlowLinkId, instance: ReportFlowInstance): strin
 		case 'crisis_lines':
 			return CRISIS_LINES_URL;
 		case 'guidelines':
-			return getGuidelinesUrl(instance);
+			return guidelinesUrl;
 	}
 }
 
-function findReportFlowVariant(target: ReportFlowTargetType, surface: ReportFlowSurface): ReportFlowVariant | null {
-	const instance = getCurrentInstance();
-	const cacheKey = `${target}:${surface}:${instance.selfHosted}`;
+function findReportFlowVariant(
+	target: ReportFlowTargetType,
+	surface: ReportFlowSurface,
+	instance: ReportFlowInstance,
+): ReportFlowVariant | null {
+	const cacheKey = `${target}:${surface}:${instance.selfHosted}:${instance.guidelinesLinked}`;
 	if (!variantCache.has(cacheKey)) {
 		variantCache.set(cacheKey, buildReportFlowVariant(REPORT_FLOW_LIBRARY, target, surface, instance));
 	}
 	return variantCache.get(cacheKey) ?? null;
 }
 
-export function getReportFlowVariant(target: ReportFlowTargetType, surface: ReportFlowSurface): ReportFlowVariant {
-	const variant = findReportFlowVariant(target, surface);
+function requireReportFlowVariant(
+	target: ReportFlowTargetType,
+	surface: ReportFlowSurface,
+	instance: ReportFlowInstance,
+): ReportFlowVariant {
+	const variant = findReportFlowVariant(target, surface, instance);
 	if (!variant) {
 		throw InputValidationError.fromCode('surface', ValidationErrorCodes.INVALID_FORMAT);
 	}
 	return variant;
+}
+
+export function getReportFlowVariant(target: ReportFlowTargetType, surface: ReportFlowSurface): ReportFlowVariant {
+	return requireReportFlowVariant(target, surface, getReportFlowInstance(getLegalUrls().guidelinesUrl));
 }
 
 export function resolveReportFlowLocale(raw: string | null | undefined): LocaleCode {
@@ -567,20 +587,20 @@ export function resolveReportFlowLocale(raw: string | null | undefined): LocaleC
 }
 
 function renderCopy(key: ReportFlowCopyKey, locale: string): string {
-	return getContentMessage(key, locale, {product_name: getProductName()});
+	return getContentMessage(key, locale, {product_name: getInstanceProductName()});
 }
 
-function renderOutcome(outcome: ReportFlowOutcomeDef, instance: ReportFlowInstance): ReportFlowOutcome {
+function renderOutcome(outcome: ReportFlowOutcomeDef, guidelinesUrl: string | null): ReportFlowOutcome {
 	return {
 		type: outcome.type,
 		screen_id: outcome.type === 'screen' ? outcome.screenId : null,
 		reason: outcome.type === 'submit' ? outcome.reason : null,
 		notice_id: outcome.type === 'end' ? (outcome.noticeId ?? null) : null,
-		url: outcome.type === 'link' ? getLinkUrl(outcome.link, instance) : null,
+		url: outcome.type === 'link' ? getLinkUrl(outcome.link, guidelinesUrl) : null,
 	};
 }
 
-function renderScreen(screen: ReportFlowVariantScreen, locale: string, instance: ReportFlowInstance): ReportFlowScreen {
+function renderScreen(screen: ReportFlowVariantScreen, locale: string, guidelinesUrl: string | null): ReportFlowScreen {
 	const {def} = screen;
 	return {
 		id: def.id,
@@ -590,7 +610,7 @@ function renderScreen(screen: ReportFlowVariantScreen, locale: string, instance:
 		options: screen.options.map((option) => ({
 			id: option.id,
 			label: renderCopy(option.label, locale),
-			outcome: renderOutcome(option.outcome, instance),
+			outcome: renderOutcome(option.outcome, guidelinesUrl),
 		})),
 		options_heading: def.optionsHeading && screen.options.length > 0 ? renderCopy(def.optionsHeading, locale) : null,
 		checklist: def.checklist
@@ -601,7 +621,7 @@ function renderScreen(screen: ReportFlowVariantScreen, locale: string, instance:
 						description: item.description ? renderCopy(item.description, locale) : null,
 					})),
 					min_checked: def.checklist.minChecked,
-					outcome: renderOutcome(def.checklist.outcome, instance),
+					outcome: renderOutcome(def.checklist.outcome, guidelinesUrl),
 				}
 			: null,
 		next_screen_id: def.nextScreenId ?? null,
@@ -613,17 +633,18 @@ export function getReportFlowResponse(
 	surface: ReportFlowSurface,
 	rawLocale: string | null | undefined,
 ): ReportFlowResponse {
-	const variant = getReportFlowVariant(target, surface);
+	const {guidelinesUrl} = getLegalUrls();
+	const instance = getReportFlowInstance(guidelinesUrl);
+	const variant = requireReportFlowVariant(target, surface, instance);
 	const locale = resolveReportFlowLocale(rawLocale);
-	const instance = getCurrentInstance();
 	const cacheKey = [
 		target,
 		surface,
 		locale,
 		instance.selfHosted,
-		getProductName(),
+		guidelinesUrl ?? '',
+		getInstanceProductName(),
 		Config.endpoints.webApp,
-		Config.endpoints.marketing,
 	].join('\u0000');
 	const cached = responseCache.get(cacheKey);
 	if (cached) {
@@ -635,8 +656,8 @@ export function getReportFlowResponse(
 		revision_hash: variant.revisionHash,
 		locale,
 		start_screen_id: variant.startScreenId,
-		guidelines_url: getGuidelinesUrl(instance),
-		screens: [...variant.screens.values()].map((screen) => renderScreen(screen, locale, instance)),
+		guidelines_url: guidelinesUrl,
+		screens: [...variant.screens.values()].map((screen) => renderScreen(screen, locale, guidelinesUrl)),
 		notices: variant.notices.map((notice) => ({
 			id: notice.id,
 			title: renderCopy(notice.title, locale),

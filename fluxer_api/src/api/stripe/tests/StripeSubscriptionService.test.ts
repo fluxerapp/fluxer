@@ -155,10 +155,11 @@ describe('StripeSubscriptionService', () => {
 				.execute();
 			stripeHandlers.reset();
 			server.use(...createStripeApiHandlers({subscriptionShouldFail: true}).handlers);
-			await createBuilder(harness, account.token)
+			const response = await createBuilder<{message: string}>(harness, account.token)
 				.post('/premium/cancel-subscription')
 				.expect(400, APIErrorCodes.STRIPE_ERROR)
 				.execute();
+			expect(response.message).toBe('Payment processing encountered an error. Please try again or contact support.');
 		});
 	});
 	describe('POST /premium/reactivate-subscription', () => {

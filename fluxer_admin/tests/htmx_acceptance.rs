@@ -813,6 +813,90 @@ async fn report_legal_hold_form_places_and_clears_the_hold() {
 }
 
 #[tokio::test]
+async fn instance_config_legal_form_round_trips_the_guidelines_url() {
+    let patches = Arc::new(Mutex::new(Vec::<Value>::new()));
+    let sink = patches.clone();
+    let configured = || {
+        let mut config = instance_config();
+        config["self_hosted"] = json!(true);
+        config["app_public"] = json!({
+            "branding": {"product_name": "Fluxer", "premium_product_name": "Premium"},
+            "setup": {"configured": true},
+            "legal": {
+                "terms_url": "https://example.com/terms",
+                "privacy_url": null,
+                "guidelines_url": "https://example.com/community-guidelines"
+            },
+            "registration": {"collect_date_of_birth": true}
+        });
+        config
+    };
+    let api = Router::new()
+        .route(
+            "/admin/instance/config",
+            routing::get(move || async move { json_response(configured()) }).patch(
+                move |Json(body): Json<Value>| {
+                    let sink = sink.clone();
+                    async move {
+                        sink.lock().unwrap().push(body);
+                        json_response(configured())
+                    }
+                },
+            ),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (headers, page) = get_with_headers(&app, "/instance-config", &[]).await;
+    assert!(
+        page.contains(r#"id="app_guidelines_url" name="app_guidelines_url" value="https://example.com/community-guidelines""#),
+        "{page}"
+    );
+    assert!(page.contains("Community Guidelines URL"), "{page}");
+    let csrf_token = csrf_cookie(&headers)
+        .unwrap_or_else(|| panic!("instance config page did not set csrf_token cookie\n{page}"));
+    assert_form_has_csrf(
+        &page,
+        "/instance-config?action=update_app_legal",
+        &csrf_token,
+    );
+    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
+    for form in [
+        format!(
+            "_csrf={csrf_token}&app_terms_url=https%3A%2F%2Fexample.com%2Fterms&app_privacy_url=&app_guidelines_url=https%3A%2F%2Frules.example.org%2Fguidelines"
+        ),
+        format!("_csrf={csrf_token}&app_terms_url=&app_privacy_url=&app_guidelines_url="),
+    ] {
+        let (status, _, body) = post_form_with_headers(
+            &app,
+            "/instance-config?action=update_app_legal",
+            &[("Cookie", &cookie)],
+            &form,
+        )
+        .await;
+        assert!(
+            status.is_redirection() || status.is_success(),
+            "{status} {body}"
+        );
+    }
+    let patches = patches.lock().unwrap();
+    assert_eq!(
+        *patches,
+        vec![
+            json!({"app_public": {"legal": {
+                "terms_url": "https://example.com/terms",
+                "privacy_url": null,
+                "guidelines_url": "https://rules.example.org/guidelines"
+            }}}),
+            json!({"app_public": {"legal": {
+                "terms_url": null,
+                "privacy_url": null,
+                "guidelines_url": null
+            }}}),
+        ]
+    );
+}
+
+#[tokio::test]
 async fn user_fragment_alias_returns_drawer_fragment() {
     let app = setup().await;
     let fragment = get(&app, "/users/1500000000000000001/fragment", &[]).await;

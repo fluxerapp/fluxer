@@ -12,7 +12,6 @@ import {useSubscriptionStatus} from '@app/features/app/components/dialogs/compon
 import {PurchaseHistorySection} from '@app/features/app/components/dialogs/components/plutonium/PurchaseHistorySection';
 import {SelfServeRefundSection} from '@app/features/app/components/dialogs/components/plutonium/SelfServeRefundSection';
 import {SubscriptionCard} from '@app/features/app/components/dialogs/components/plutonium/SubscriptionCard';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import GeoIP from '@app/features/app/state/GeoIP';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -362,10 +361,17 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 			? i18n._(CLOSING_GIFT_BODY_DESCRIPTOR)
 			: i18n._(CLOSING_BODY_DESCRIPTOR);
 	const showDonationHint = !RuntimeConfig.isSelfHosted();
-	const donationTemplate = i18n._(DONATION_HINT_DESCRIPTOR, {productName: PRODUCT_NAME, donateLink: '\u0000'});
+	const donationTemplate = i18n._(DONATION_HINT_DESCRIPTOR, {
+		productName: RuntimeConfig.productName,
+		donateLink: '\u0000',
+	});
 	const [donationBefore, donationAfter] = splitTemplate(donationTemplate, '\u0000');
-	const footnoteTemplate = i18n._(TAG_FOOTNOTE_DESCRIPTOR, {productName: PRODUCT_NAME, visionaryLink: '\u0000'});
+	const footnoteTemplate = i18n._(TAG_FOOTNOTE_DESCRIPTOR, {
+		productName: RuntimeConfig.productName,
+		visionaryLink: '\u0000',
+	});
 	const [footnoteBefore, footnoteAfter] = splitTemplate(footnoteTemplate, '\u0000');
+	const visionaryHelpUrl = Routes.helpArticle('visionary');
 	const secondaryLinks = (
 		<div className={styles.secondaryLinks} data-flx="premium.plutonium-page.hero.secondary-links">
 			{giftPurchasesAvailable && (
@@ -701,17 +707,23 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 					{!RuntimeConfig.usesUniqueUsernames && (
 						<p id={FOOTNOTE_ID} className={styles.footnote} data-flx="premium.plutonium-page.footnote">
 							<span data-flx="premium.plutonium-page.plutonium-page.span--5">{`* ${footnoteBefore}`}</span>
-							<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring--5">
-								<a
-									className={styles.inlineLink}
-									href={Routes.helpArticle('visionary')}
-									target="_blank"
-									rel="noopener noreferrer"
-									data-flx="premium.plutonium-page.footnote.visionary-link"
-								>
+							{visionaryHelpUrl ? (
+								<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring--5">
+									<a
+										className={styles.inlineLink}
+										href={visionaryHelpUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										data-flx="premium.plutonium-page.footnote.visionary-link"
+									>
+										{i18n._(TAG_FOOTNOTE_LINK_DESCRIPTOR)}
+									</a>
+								</FocusRing>
+							) : (
+								<span data-flx="premium.plutonium-page.footnote.visionary-text">
 									{i18n._(TAG_FOOTNOTE_LINK_DESCRIPTOR)}
-								</a>
-							</FocusRing>
+								</span>
+							)}
 							<span data-flx="premium.plutonium-page.plutonium-page.span--6">{footnoteAfter}</span>
 						</p>
 					)}

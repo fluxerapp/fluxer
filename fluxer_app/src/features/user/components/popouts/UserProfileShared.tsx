@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BLUESKY_PROVIDER_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {BLUESKY_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import {AddRoleButton, RoleList} from '@app/features/guild/components/RoleManagement';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
@@ -290,7 +291,10 @@ export const UserProfileMembershipInfo: React.FC<{profile: Profile; user: User}>
 						className={styles.membershipDate}
 						data-flx="user.user-profile-shared.user-profile-membership-info.membership-date"
 					>
-						<Tooltip text={PRODUCT_NAME} data-flx="user.user-profile-shared.user-profile-membership-info.tooltip">
+						<Tooltip
+							text={RuntimeConfig.productName}
+							data-flx="user.user-profile-shared.user-profile-membership-info.tooltip"
+						>
 							<div
 								className={styles.membershipIcon}
 								data-flx="user.user-profile-shared.user-profile-membership-info.membership-icon"
@@ -350,7 +354,7 @@ export const UserProfileMembershipInfo: React.FC<{profile: Profile; user: User}>
 				className={styles.membershipTitle}
 				data-flx="user.user-profile-shared.user-profile-membership-info.membership-title--2"
 			>
-				{i18n._(PRODUCT_MEMBER_SINCE_DESCRIPTOR, {productName: PRODUCT_NAME})}
+				{i18n._(PRODUCT_MEMBER_SINCE_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 			</span>
 			<span
 				className={styles.membershipDateText}

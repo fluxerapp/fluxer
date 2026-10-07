@@ -3,7 +3,7 @@
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {resolveMotionPreferencesModel} from '@app/features/accessibility/state/MotionPreferencesMachine';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import type {RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
@@ -165,7 +165,7 @@ export const AnimationTabContent: React.FC = observer(() => {
 				label={
 					mobileLayout.enabled
 						? i18n._(AUTOMATICALLY_PLAY_GIFS_DESCRIPTOR)
-						: i18n._(AUTOMATICALLY_PLAY_GIFS_WHEN_IS_FOCUSED_DESCRIPTOR, {productName: PRODUCT_NAME})
+						: i18n._(AUTOMATICALLY_PLAY_GIFS_WHEN_IS_FOCUSED_DESCRIPTOR, {productName: RuntimeConfig.productName})
 				}
 				description={gifDescription()}
 				value={motion.effectiveGifAutoPlay}

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+
 import {
 	OPEN_SETTINGS_DESCRIPTOR,
 	RELAUNCH_TO_APPLY_DESCRIPTOR,
@@ -80,11 +81,11 @@ export function ScreenSharePickerDisplayPermissionPrompt({
 			<div className={styles.stateTitle} data-flx="voice.screen-share-picker-modal.screen-recording-permission.copy">
 				{restartRequired
 					? i18n._(SCREEN_RECORDING_PERMISSION_RELAUNCH_PROMPT_DESCRIPTOR, {
-							productName: PRODUCT_NAME,
-							productName2: PRODUCT_NAME,
+							productName: RuntimeConfig.productName,
+							productName2: RuntimeConfig.productName,
 						})
 					: i18n._(SCREEN_RECORDING_PERMISSION_PROMPT_DESCRIPTOR, {
-							productName: PRODUCT_NAME,
+							productName: RuntimeConfig.productName,
 						})}
 			</div>
 			<div

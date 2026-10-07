@@ -36,11 +36,12 @@ export const HelpButton = observer(() => {
 	const itemRef = useRef<HTMLElement | null>(null);
 	const contextMenuOpen = useContextMenuHoverState(itemRef);
 	const mergedButtonRef = useMergeRefs([hoverRef, buttonRef, itemRef]);
-	if (HiddenGuildListButtons.helpButtonHidden) {
+	const helpUrl = Routes.help();
+	if (HiddenGuildListButtons.helpButtonHidden || !helpUrl) {
 		return null;
 	}
 	const handleHelp = () => {
-		openExternalUrlWithWarning(Routes.help());
+		openExternalUrlWithWarning(helpUrl);
 	};
 	const handleContextMenu = (e: React.MouseEvent) => {
 		e.preventDefault();

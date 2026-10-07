@@ -5,6 +5,7 @@ import {readFile} from 'node:fs/promises';
 import {type ClientHttp2Session, connect, constants} from 'node:http2';
 import {Config} from '@app/api/Config';
 import type {PushProviderEnvironment} from '@app/api/config/APIConfig';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Logger} from '@app/api/Logger';
 import {type CryptoKey, importPKCS8, SignJWT} from 'jose';
 
@@ -186,7 +187,7 @@ function buildApnsPayload(payload: Record<string, unknown>): Record<string, unkn
 	}
 	const data = isRecord(payload.data) ? payload.data : {};
 	const notification = isRecord(payload.notification) ? payload.notification : {};
-	const title = optionalString(notification.title) ?? optionalString(payload.title) ?? 'Fluxer';
+	const title = optionalString(notification.title) ?? optionalString(payload.title) ?? getInstanceProductName();
 	const body = optionalString(notification.body) ?? optionalString(payload.body) ?? '';
 	const badge = normalizeBadgeCount(data.badge_count);
 	const channelId = optionalString(data.channel_id);

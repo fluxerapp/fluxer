@@ -407,7 +407,7 @@ Branding, setup state, legal documents, and registration fields a client reads b
 | --- | --- | --- |
 | branding | [public branding](#public-branding-object) object | Public instance identity |
 | setup | [public setup state](#public-setup-state-object) object | Initial configuration state |
-| legal | [public legal configuration](#public-legal-configuration-object) object | Registration legal document URLs |
+| legal | [public legal configuration](#public-legal-configuration-object) object | Legal and policy document URLs |
 | registration | [public registration fields](#public-registration-fields-object) object | Registration field collection policy |
 
 ## Public branding object
@@ -448,7 +448,7 @@ Whether the deployment has finished its initial configuration, and where an oper
 
 ## Public legal configuration object
 
-The public URLs a client links from its registration form.
+The public document URLs a client links from its registration form and its report flows.
 
 ### Structure
 
@@ -456,6 +456,9 @@ The public URLs a client links from its registration form.
 | --- | --- | --- |
 | terms_url | ?string | Public terms of service URL, or null |
 | privacy_url | ?string | Public privacy policy URL, or null |
+| guidelines_url<sup>1</sup> | ?string | Public community guidelines URL, or null |
+
+<sup>1</sup> The URL the operator set. A [report flow](/http-api/reports/#report-flows) and the account enforcement emails link it. When it is null, a hosted instance links its own guidelines page, and a self-hosted instance hides every guidelines link
 
 ## Public registration fields object
 

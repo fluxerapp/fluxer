@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {HoldAction} from '@app/features/app/keybindings/utils/RuntimeKeybinds';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {COPY_TEXT_DESCRIPTOR, DELETE_MESSAGE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GlobalShortcuts from '@app/features/input/state/GlobalShortcuts';
 import {HoldSources} from '@app/features/input/state/HoldSources';
@@ -683,12 +684,16 @@ const getDefaultKeybinds = (
 			assignable: true,
 			section: 'voice_and_video',
 		},
-		{
-			action: 'misc_help',
-			label: i18n._(OPEN_HELP_DESCRIPTOR),
-			combo: {key: 'h', ctrlOrMeta: true, shift: true},
-			section: 'misc',
-		},
+		...(RuntimeConfig.getSnapshotOrNull()?.features.self_hosted
+			? []
+			: [
+					{
+						action: 'misc_help',
+						label: i18n._(OPEN_HELP_DESCRIPTOR),
+						combo: {key: 'h', ctrlOrMeta: true, shift: true},
+						section: 'misc',
+					} as const,
+				]),
 		{
 			action: 'misc_search',
 			label: i18n._(SEARCH_MESSAGES_DESCRIPTOR),

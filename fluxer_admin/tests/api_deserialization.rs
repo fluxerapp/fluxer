@@ -17,7 +17,7 @@ fn deserialize_admin_users_me_response() {
             "premium_flags": 2,
             "avatar": "563de430",
             "banner": "bd221c57",
-            "bio": "For support, please contact support@fluxer.app.",
+            "bio": "For support, please contact support@fluxer.com.",
             "pronouns": "he/him",
             "accent_color": 2631308,
             "email": "hampus@fluxer.com",
@@ -1325,6 +1325,51 @@ fn deserialize_report_legal_hold_fields_and_hold_response() {
             json["legal_hold_until"].as_str()
         );
     }
+}
+
+#[test]
+fn instance_legal_config_carries_the_guidelines_url() {
+    let with: types::AppLegalConfigResponse = serde_json::from_value(serde_json::json!({
+        "terms_url": "https://example.com/terms",
+        "privacy_url": null,
+        "guidelines_url": "https://example.com/rules"
+    }))
+    .expect("legal config with guidelines");
+    assert_eq!(
+        with.guidelines_url.as_deref(),
+        Some("https://example.com/rules")
+    );
+    let generated: generated_types::InstanceConfigResponseAppPublicLegal =
+        serde_json::from_value(serde_json::json!({
+            "terms_url": null,
+            "privacy_url": null,
+            "guidelines_url": "https://example.com/rules"
+        }))
+        .expect("generated legal config");
+    assert_eq!(
+        generated.guidelines_url.as_deref(),
+        Some("https://example.com/rules")
+    );
+    let old: types::AppLegalConfigResponse = serde_json::from_value(serde_json::json!({
+        "terms_url": "https://example.com/terms",
+        "privacy_url": "https://example.com/privacy"
+    }))
+    .expect("legal config from an older api");
+    assert!(old.guidelines_url.is_none());
+
+    let update = types::AppLegalConfigUpdateRequest {
+        terms_url: Some(None),
+        privacy_url: None,
+        guidelines_url: Some(Some("https://example.com/rules".to_owned())),
+    };
+    let body = serde_json::to_value(&update).expect("serialize legal update");
+    assert_eq!(
+        body,
+        serde_json::json!({"terms_url": null, "guidelines_url": "https://example.com/rules"})
+    );
+    let accepted: generated_types::InstanceConfigUpdateRequestAppPublicLegal =
+        serde_json::from_value(body).expect("the update matches the generated request contract");
+    assert!(accepted.guidelines_url.is_some());
 }
 
 #[test]

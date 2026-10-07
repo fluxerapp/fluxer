@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import styles from '@app/features/app/domain_migration/DomainMovedStepsModal.module.css';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CLOSE_DESCRIPTOR, COPY_LINK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -81,7 +81,7 @@ interface DomainMovedStepsModalProps {
 function DomainMovedStepsModal({target, platform}: DomainMovedStepsModalProps) {
 	const {i18n} = useLingui();
 	const host = new URL(target).host;
-	const values = {host, productName: PRODUCT_NAME};
+	const values = {host, productName: RuntimeConfig.productName};
 	const [first, second, third] = PLATFORM_STEPS[platform];
 	const handleCopy = useCallback(() => {
 		void TextCopyCommands.copy(i18n, `${target}/`);

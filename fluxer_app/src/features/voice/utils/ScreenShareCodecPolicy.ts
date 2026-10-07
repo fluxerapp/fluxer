@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {HardwareEncodeReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -67,7 +67,7 @@ export function hardwareSuffix(codec: VideoCodec, gpu: HardwareEncodeReport | nu
 		case 'hardware':
 			return ` ${i18n._(YOUR_GPU_ENCODES_THIS_IN_HARDWARE_DESCRIPTOR)}`;
 		case 'software':
-			return ` ${i18n._(YOUR_GPU_HAS_NO_HARDWARE_ENCODER_FOR_THIS_DESCRIPTOR, {productName: PRODUCT_NAME})}`;
+			return ` ${i18n._(YOUR_GPU_HAS_NO_HARDWARE_ENCODER_FOR_THIS_DESCRIPTOR, {productName: RuntimeConfig.productName})}`;
 		case 'unknown':
 			return '';
 	}

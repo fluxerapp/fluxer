@@ -2,7 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {acceptTerms} from '@app/features/terms/commands/TermsAcceptanceCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -72,7 +72,7 @@ export const TermsAcceptanceModal = observer(() => {
 	const kind = getUpdateKind(user.termsAgreedAt, user.privacyAgreedAt);
 	const termsUrl = Routes.terms();
 	const privacyUrl = Routes.privacy();
-	const productName = PRODUCT_NAME;
+	const productName = RuntimeConfig.productName;
 	return (
 		<Modal.Root
 			size="small"

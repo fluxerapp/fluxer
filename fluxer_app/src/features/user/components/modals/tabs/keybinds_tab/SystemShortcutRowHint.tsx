@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import GlobalShortcuts from '@app/features/input/state/GlobalShortcuts';
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
 import {
@@ -62,11 +62,11 @@ export const SystemShortcutRowHint = observer(
 				<div data-flx={`${dataFlx}.focused`}>
 					{variant === 'voice-tab'
 						? i18n._(IN_APP_KEY_DESCRIPTOR, {
-								productName: PRODUCT_NAME,
+								productName: RuntimeConfig.productName,
 								settingsTabName: getUserSettingsTabLabel(i18n, 'keybinds'),
 								sectionName: i18n._(SYSTEM_WIDE_SHORTCUTS_DESCRIPTOR),
 							})
-						: i18n._(WORKS_WHILE_FOCUSED_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						: i18n._(WORKS_WHILE_FOCUSED_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</div>
 				{showTrigger ? (
 					<div data-flx={`${dataFlx}.trigger`}>

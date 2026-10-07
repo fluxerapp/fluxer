@@ -6,7 +6,7 @@ import Accessibility, {
 	ZOOM_LEVEL_MAX,
 	ZOOM_LEVEL_MIN,
 } from '@app/features/accessibility/state/Accessibility';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {APP_ZOOM_LEVEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import Keybind from '@app/features/input/state/InputKeybind';
@@ -180,7 +180,7 @@ export function useAppZoomLevelDescription(): string {
 	const {i18n} = useLingui();
 	return useMemo(() => {
 		if (shouldWarnAboutFirefoxWebZoomShortcuts()) {
-			return i18n._(ADJUST_THE_OVERALL_ZOOM_LEVEL_OF_THE_APP_DESCRIPTOR, {productName: PRODUCT_NAME});
+			return i18n._(ADJUST_THE_OVERALL_ZOOM_LEVEL_OF_THE_APP_DESCRIPTOR, {productName: RuntimeConfig.productName});
 		}
 		const zoomIn = formatKeyCombo(i18n, Keybind.getByAction('system_zoom_in').combo);
 		const zoomOut = formatKeyCombo(i18n, Keybind.getByAction('system_zoom_out').combo);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CANCEL_DESCRIPTOR, TRANSLATE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Translation from '@app/features/messaging/state/Translation';
 import ReverseImageSearch from '@app/features/search/state/ReverseImageSearch';
@@ -10,7 +10,7 @@ import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {formatUserSettingsPath} from '@app/features/user/components/settings_utils/SettingsConstants';
-import {msg} from '@lingui/core/macro';
+import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -93,18 +93,18 @@ export const SearchProviderPickerModal: React.FC<SearchProviderPickerModalProps>
 			: i18n._(PICK_A_WEB_SEARCH_PROVIDER_DESCRIPTOR);
 	const description = isImageMode ? (
 		<Trans>
-			Choose where {PRODUCT_NAME} should send images for reverse image search. We'll remember your pick. You can change
-			it or add your own provider later in {searchEnginesSettingsPath}.
+			Choose where {ph({PRODUCT_NAME: RuntimeConfig.productName})} should send images for reverse image search. We'll
+			remember your pick. You can change it or add your own provider later in {searchEnginesSettingsPath}.
 		</Trans>
 	) : isTranslateMode ? (
 		<Trans>
-			Choose where {PRODUCT_NAME} should send highlighted text for translation. We'll remember your pick. You can change
-			it or add your own provider later in {searchEnginesSettingsPath}.
+			Choose where {ph({PRODUCT_NAME: RuntimeConfig.productName})} should send highlighted text for translation. We'll
+			remember your pick. You can change it or add your own provider later in {searchEnginesSettingsPath}.
 		</Trans>
 	) : (
 		<Trans>
-			Choose where {PRODUCT_NAME} should search highlighted text. We'll remember your pick. You can change it or add
-			your own provider later in {searchEnginesSettingsPath}.
+			Choose where {ph({PRODUCT_NAME: RuntimeConfig.productName})} should search highlighted text. We'll remember your
+			pick. You can change it or add your own provider later in {searchEnginesSettingsPath}.
 		</Trans>
 	);
 	const selectLabel = isImageMode

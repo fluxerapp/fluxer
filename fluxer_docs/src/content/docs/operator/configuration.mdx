@@ -768,7 +768,7 @@ The same conditions turn on a DNS check at registration. The check runs when ema
 
 #### `FLUXER_EMAIL_FROM_NAME`
 
-`.env.example` `Fluxer`. The sender name. Default `Fluxer`, which an empty value also gives. Compose forwards it from `.env`.
+`.env.example` empty. The sender name. Default empty. An empty value sends mail under the instance product name, which is the name saved in the admin dashboard or else `FLUXER_APP_PRODUCT_NAME`, and a rename in the dashboard applies to the next email. A set value always wins. Compose forwards it from `.env`.
 
 #### `FLUXER_EMAIL_REPLY_TO_EMAIL`
 
@@ -1203,7 +1203,7 @@ Compose forwards every name below from `.env`. The admin dashboard also sets the
 
 #### `FLUXER_APP_PRODUCT_NAME`
 
-Default `Fluxer`. The product name clients display. Also settable in the admin dashboard, which wins. Compose forwards it from `.env`.
+Default `Fluxer`. The product name clients display and the API writes in its emails and report flows. Also settable in the admin dashboard, which wins. Compose forwards it from `.env`.
 
 #### `FLUXER_APP_ICON_URL`
 
@@ -1737,7 +1737,7 @@ The admin dashboard at `FLUXER_ADMIN_BASE_PATH` stores these in the database. Th
 
 #### Instance Config, Public App Identity
 
-Product name, client-visible brand assets, the terms, privacy, and community guidelines links, and the setup state in the instance discovery document. No environment variable sets a legal link. On a self-hosted instance, the enforcement emails list only the terms and guidelines links set here, and the clients and report flows show no guidelines link until one is set.
+Product name, client-visible brand assets, the terms, privacy, and community guidelines links, and the setup state in the instance discovery document. No environment variable sets a legal link. On a self-hosted instance, the enforcement emails list only the terms and guidelines links set here, and the clients and report flows show no guidelines link until one is set. Its emails and its IP block errors name no contact address. They tell the reader to contact the administrators of the instance, and no setting adds an address. The emails, the report flows, the IP block errors, the title of an APNs alert that has none, and the built-in admin application use the product name set here, and a rename applies without a restart.
 
 #### Instance Config, Registration Controls
 

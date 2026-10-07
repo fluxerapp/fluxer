@@ -5,7 +5,8 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {DESKTOP_DOWNLOAD_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {DOWNLOAD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
@@ -38,7 +39,7 @@ export const DesktopDownloadNagbar = observer(({isMobile}: {isMobile: boolean}) 
 			<NagbarContent
 				isMobile={isMobile}
 				onDismiss={handleDismiss}
-				message={i18n._(DESKTOP_APP_DOWNLOAD_MESSAGE_DESCRIPTOR, {productName: PRODUCT_NAME})}
+				message={i18n._(DESKTOP_APP_DOWNLOAD_MESSAGE_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				actions={
 					<>
 						<span

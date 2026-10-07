@@ -1404,12 +1404,12 @@ msgid "{domain} runs a newer version of Fluxer than this app. Update Fluxer, the
 msgstr "{domain} naudoja naujesnę „Fluxer“ versiją nei ši programėlė. Atnaujinkite „Fluxer“ ir bandykite dar kartą."
 
 #. Profile timezone difference text. duration is a localized hours/minutes phrase for how far ahead the target user's local time is.
-#: src/features/user/components/popouts/UserProfileShared.tsx:65
+#: src/features/user/components/popouts/UserProfileShared.tsx:66
 msgid "{duration} ahead of you"
 msgstr "{duration} vėliau nei pas jus"
 
 #. Profile timezone difference text. duration is a localized hours/minutes phrase for how far behind the target user's local time is.
-#: src/features/user/components/popouts/UserProfileShared.tsx:70
+#: src/features/user/components/popouts/UserProfileShared.tsx:71
 msgid "{duration} behind you"
 msgstr "{duration} anksčiau nei pas jus"
 
@@ -1528,7 +1528,7 @@ msgstr "{fps} FPS"
 
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:47
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:48
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:115
 msgid "{frameRate} FPS"
 msgstr "{frameRate} FPS"
@@ -1553,12 +1553,12 @@ msgstr "prieš {hours, plural, one {# valandą} few {# valandas} other {# valand
 #. Duration phrase in the profile timezone section. hours is a positive integer.
 #. Generic duration label for a whole number of hours.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:53
-#: src/features/user/components/popouts/UserProfileShared.tsx:79
+#: src/features/user/components/popouts/UserProfileShared.tsx:80
 msgid "{hours, plural, one {# hour} other {# hours}}"
 msgstr "{hours, plural, one {# valanda} few {# valandos} other {# valandų}}"
 
 #. Duration phrase in the profile timezone section. hours and minutes are positive integers.
-#: src/features/user/components/popouts/UserProfileShared.tsx:75
+#: src/features/user/components/popouts/UserProfileShared.tsx:76
 msgid "{hours, plural, one {# hour} other {# hours}} {minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{hours, plural, one {# valanda} few {# valandos} many {# valandos} other {# valandų}} {minutes, plural, one {# minutė} few {# minutės} many {# minutės} other {# minučių}}"
 
@@ -1602,7 +1602,7 @@ msgstr "{label} failas per didelis. Pasirinkite failą, mažesnį nei {maxSizeLa
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "{label} vaizdai negali būti animuoti. Naudokite statinį vaizdą."
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:36
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:37
 msgid "{languageName} flag"
 msgstr "Vėliava: {languageName}"
 
@@ -1678,7 +1678,7 @@ msgstr "prieš {minutes, plural, one {# minutę} few {# minutes} other {# minuč
 #. Push notification inactive timeout option. The value is a duration in minutes.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:49
 #: src/features/user/components/modals/tabs/notifications_tab/PushSettings.tsx:25
-#: src/features/user/components/popouts/UserProfileShared.tsx:83
+#: src/features/user/components/popouts/UserProfileShared.tsx:84
 msgid "{minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{minutes, plural, one {# minutė} few {# minutės} many {# minutės} other {# minučių}}"
 
@@ -1803,15 +1803,15 @@ msgstr "{PRODUCT_NAME} aptiko naują garso išvesties įrenginį pavadinimu <0>{
 msgid "{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works."
 msgstr "{PRODUCT_NAME} reikia paleisti iš naujo, kad „Chromium“ slinkties nustatymai pakeistų slinkties veikimą."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:209
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:214
 msgid "{PRODUCT_NAME} needs to restart for hardware acceleration to take effect."
 msgstr "Kad aparatinės įrangos spartinimas įsigaliotų, „{PRODUCT_NAME}“ reikia paleisti iš naujo."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:166
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:167
 msgid "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
 msgstr "Kad pavadinimo juostos pakeitimas įsigaliotų, {PRODUCT_NAME} reikia paleisti iš naujo."
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:211
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:219
 msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage."
 msgstr "{PRODUCT_NAME} reikia paleisti iš naujo, kad būtų išjungtas „Chromium“ aparatinės įrangos spartinimas. Naudokite tai tik tada, kai sprendžiate grafikos trikdžių arba didelio GPU naudojimo problemas."
 
@@ -1836,27 +1836,27 @@ msgid "{productName} Bug Hunter"
 msgstr "{productName} klaidų medžiotojas"
 
 #. Linux settings text before system-wide shortcuts are set up. The desktop environment owns the keys. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:28
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:25
 msgid "{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys."
 msgstr "{productName} gali paprašyti jūsų darbalaukio vykdyti jo sparčiuosius klavišus, kai {productName} nėra aktyvus. Darbalaukis paprašys patvirtinti ir leis pasirinkti klavišus."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, on an X11 session. The app now listens for shortcuts through the X11 display server itself. Keep "X11" as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:177
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:174
 msgid "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
 msgstr "{productName} nebegali skaityti jūsų klaviatūros, todėl sparčiųjų klavišų klausosi per X11."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, for example after a restart removed the access. The app already falls back to the shortcuts the desktop runs. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:172
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:169
 msgid "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
 msgstr "{productName} nebegali skaityti jūsų klaviatūros, todėl naudojami jūsų darbalaukio spartieji klavišai."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read and nothing else runs system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:182
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:179
 msgid "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
 msgstr "{productName} nebegali nuskaityti jūsų klaviatūros. Spartieji klavišai veikia tik tada, kai {productName} yra aktyvus."
 
 #. Linux settings text before system-wide shortcuts are set up on the Hyprland desktop. Hyprland shows no dialog. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:34
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:31
 msgid "{productName} can register its shortcuts with Hyprland so they run while {productName} is not focused. You then bind the keys in your Hyprland config."
 msgstr "{productName} gali užregistruoti savo sparčiuosius klavišus Hyprland, kad jie veiktų, net kai {productName} nėra aktyvus. Tada klavišus susiesite savo Hyprland konfigūracijoje."
 
@@ -1890,12 +1890,12 @@ msgid "{productName} cannot use a hardware encoder for this, so it will use your
 msgstr "„{productName}“ tam negali naudoti aparatinio kodavimo įrenginio, todėl bus naudojamas jūsų procesorius."
 
 #. Desktop updater modal body after a manual update check finds an update. Confirming closes the app window and opens the updater. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:37
+#: src/features/updater/commands/UpdaterModalCommands.tsx:38
 msgid "{productName} closes, installs the update and opens again."
 msgstr "{productName} užsidarys, įdiegs naujinį ir vėl atsidarys."
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:100
+#: src/features/updater/commands/UpdaterModalCommands.tsx:101
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "„{productName}“ nepavyko pasiekti atnaujinimų tarnybos. Patikrinkite interneto ryšį ir bandykite dar kartą."
 
@@ -1935,7 +1935,7 @@ msgid "{productName} has moved to {host}. Open it in your browser to install the
 msgstr "{productName} perkeltas į {host}. Atidarykite jį naršyklėje, kad įdiegtumėte naująją programėlę."
 
 #. Profile membership label showing when the user account was created.
-#: src/features/user/components/popouts/UserProfileShared.tsx:53
+#: src/features/user/components/popouts/UserProfileShared.tsx:54
 msgid "{productName} member since"
 msgstr "{productName} narys nuo"
 
@@ -1960,12 +1960,12 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "{productName} reikia prieigos prie jūsų mikrofono. Leiskite naudoti mikrofoną operacinės sistemos privatumo nustatymuose ir iš naujo paleiskite programą."
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:55
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:56
 msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} reikia prieigos prie kameros, kad būtų galima parodyti jūsų įrenginius."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:136
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:137
 msgid "{productName} needs microphone access to list your devices."
 msgstr "{productName} reikia prieigos prie mikrofono, kad būtų galima parodyti jūsų įrenginius."
 
@@ -1995,7 +1995,7 @@ msgid "{productName} recovery kit"
 msgstr "{productName} atkūrimo rinkinys"
 
 #. Subtitle for system-wide shortcuts on the Hyprland desktop after setup. Hyprland shows no list of assigned keys. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:58
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:55
 msgid "{productName} registered its shortcuts with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused."
 msgstr "{productName} užregistravo savo sparčiuosius klavišus Hyprland. Susiekite juos savo Hyprland konfigūracijoje, kad galėtumėte juos naudoti, kai {productName} nėra aktyvus."
 
@@ -2511,7 +2511,7 @@ msgid "12 months (1 year)"
 msgstr "12 mėnesių (1 metai)"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:54
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:55
 msgid "12-hour"
 msgstr "12 valandų"
 
@@ -2554,7 +2554,7 @@ msgid "24 hours"
 msgstr "24 valandos"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:58
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:59
 msgid "24-hour"
 msgstr "24 valandų"
 
@@ -2734,7 +2734,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "pagrindinio kompiuterio pavadinimas, pvz., {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:113
+#: src/features/updater/commands/UpdaterModalCommands.tsx:114
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "Prieinamas „Linux“ darbalaukio atnaujinimas. Pasirinkite šios sistemos paketų formatą, o programa „{productName}“ išsaugos jį jūsų įrenginyje."
 
@@ -2749,7 +2749,7 @@ msgid "a minute"
 msgstr "minutę"
 
 #. Desktop updater modal body when the exact target version is unknown. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:25
+#: src/features/updater/commands/UpdaterModalCommands.tsx:26
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "Prieinama nauja darbalaukio versija. Atsisiųskite diegimo programą ir paleiskite ją, kad atnaujintumėte {productName}."
 
@@ -2817,7 +2817,7 @@ msgstr "Apie {appName}"
 #: src/features/app/components/pages/YouPage.tsx:171
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:791
-#: src/features/user/components/popouts/UserProfileShared.tsx:41
+#: src/features/user/components/popouts/UserProfileShared.tsx:42
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:133
 msgid "About me"
 msgstr "Apie mane"
@@ -3135,7 +3135,7 @@ msgid "Activity sharing"
 msgstr "Dalijimasis veikla"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:488
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:489
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Aktyvumo slenkstis"
@@ -3155,7 +3155,7 @@ msgstr "Tikrasis dydis"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:599
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:79
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:100
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:586
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:591
 msgid "Add"
 msgstr "Pridėti"
 
@@ -3226,7 +3226,7 @@ msgid "Add a username and password to your account first."
 msgstr "Pirmiausia pridėkite vartotojo vardą ir slaptažodį prie savo paskyros."
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:140
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:141
 msgid "Add a word…"
 msgstr "Pridėti žodį…"
 
@@ -3244,7 +3244,7 @@ msgstr "Pridėkite YouTube Data API raktą, kad praturtintumėte YouTube nuoroda
 
 #. Generic action label that starts signing in to an additional account.
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:23
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:902
 msgid "Add account"
 msgstr "Pridėti paskyrą"
@@ -3642,7 +3642,7 @@ msgid "Address"
 msgstr "Adresas"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:95
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Reguliuokite kiekvieną nustatymą patys: triukšmo slopinimą, aido slopinimą ir stiprinimą."
 
@@ -3696,7 +3696,7 @@ msgid "Advanced"
 msgstr "Išplėstiniai"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:108
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:109
 msgid "Advanced video settings"
 msgstr "Išplėstiniai vaizdo nustatymai"
 
@@ -3906,22 +3906,22 @@ msgstr "Leisti"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "Leisti {everyoneMention} ir {hereMention}"
 
-#. Shown in video settings on the macOS app when camera access is denied. {PRODUCT_NAME} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:230
+#. Shown in video settings on the macOS app when camera access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:231
 msgid "Allow {PRODUCT_NAME} to access your camera in System Settings → Privacy & Security → Camera."
 msgstr "Leiskite {PRODUCT_NAME} pasiekti jūsų kamerą sistemoje „System Settings“ → „Privacy & Security“ → „Camera“."
 
-#. Shown in voice settings on the macOS app when microphone access is denied. {PRODUCT_NAME} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:546
+#. Shown in voice settings on the macOS app when microphone access is denied. {ph({PRODUCT_NAME: RuntimeConfig.productName})} is the app name. Keep 'System Settings', 'Privacy & Security' and the permission name as macOS shows them in this language.
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:547
 msgid "Allow {PRODUCT_NAME} to access your microphone in System Settings → Privacy & Security → Microphone."
 msgstr "Leiskite {PRODUCT_NAME} pasiekti jūsų mikrofoną sistemoje „System Settings“ → „Privacy & Security“ → „Microphone“."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:552
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Leiskite {PRODUCT_NAME} pasiekti jūsų mikrofoną. Patikrinkite naršyklės adreso juostą arba nustatymus."
 
 #. Body in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet. {productName} and {productName2} are the app name. Keep "Screen Recording" and "System Settings" as macOS shows them in this language.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:36
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:37
 msgid "Allow {productName} under Screen Recording in System Settings. If it is already allowed, relaunch {productName2} so macOS applies it."
 msgstr "Leiskite {productName} „Ekrano įrašymo“ skiltyje „Sistemos nuostatos“. Jei leidimas jau suteiktas, paleiskite iš naujo {productName2}, kad „macOS“ jį pritaikytų."
 
@@ -3961,7 +3961,7 @@ msgstr "Leisti botų tiesiogines žinutes"
 msgid "Allow bots to send you direct messages?"
 msgstr "Leisti botams siųsti jums tiesiogines žinutes?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:249
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:251
 msgid "Allow camera"
 msgstr "Leisti naudoti kamerą"
 
@@ -4029,7 +4029,7 @@ msgstr "Leisti nariams be leidimo „{readMessageHistoryPermissionLabel}“ maty
 msgid "Allow mentions for this role"
 msgstr "Leisti paminėti šį vaidmenį"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:571
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:573
 msgid "Allow microphone"
 msgstr "Leisti naudoti mikrofoną"
 
@@ -4275,7 +4275,7 @@ msgid "Always underline links"
 msgstr "Visada pabraukti nuorodas"
 
 #. Description for the in-app dictionary spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation. Hunspell is the spellcheck engine name; keep it as a product/protocol term.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:105
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:106
 msgid "Always use {productName}'s Hunspell dictionaries, downloaded on demand."
 msgstr "Visada naudoti „{productName}“ „Hunspell“ žodynus, atsisiunčiamus pagal poreikį."
 
@@ -4655,7 +4655,7 @@ msgid "App icon badge"
 msgstr "Programėlės piktogramos ženklelis"
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:46
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:47
 msgid "App language: {format}"
 msgstr "Programos kalbos laiko formatas: {format}"
 
@@ -4804,7 +4804,7 @@ msgid "Approval required"
 msgstr "Reikalingas patvirtinimas"
 
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
-#: src/features/auth/flow/AuthLoginLayout.tsx:101
+#: src/features/auth/flow/AuthLoginLayout.tsx:100
 msgid "Approve this app from the {productName} app you already use. No password needed."
 msgstr "Patvirtinkite šią programėlę iš jau naudojamos {productName} programėlės. Slaptažodis nereikalingas."
 
@@ -5344,7 +5344,7 @@ msgid "Authorized on {authorizedOn}"
 msgstr "Įgaliota {authorizedOn}"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:50
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:51
 msgid "Auto"
 msgstr "Automatinis"
 
@@ -5369,8 +5369,8 @@ msgid "Auto-detect language"
 msgstr "Automatiškai aptikti kalbą"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:115
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:475
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:476
 msgid "Auto-set activity threshold"
 msgstr "Automatiškai nustatyti aktyvumo slenkstį"
 
@@ -5534,7 +5534,7 @@ msgstr "AV1 (reikia įjungti)"
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
-#: src/features/updater/commands/UpdaterModalCommands.tsx:123
+#: src/features/updater/commands/UpdaterModalCommands.tsx:124
 msgid "Available"
 msgstr "Pasiekiama"
 
@@ -5608,11 +5608,11 @@ msgstr "Šiuo metu nesu prie kompiuterio"
 #. Report flow: footer button that returns to the previous question.
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:164
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:167
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:168
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:61
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:360
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:381
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:401
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:361
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:382
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:402
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
 #: src/features/moderation/components/report/ReportStepDetails.tsx:374
@@ -5927,7 +5927,7 @@ msgid "Best compression. Use it only when WebRTC exposes an encoder and the GPU 
 msgstr "Geriausias glaudinimas. Naudokite tik tada, kai WebRTC pateikia koduotuvą, o GPU ataskaita rodo, kad jis aparatinis."
 
 #. CTA card title in the screen-share picker promoting the desktop app for richer screen sharing.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:12
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:13
 msgid "Best with the desktop app"
 msgstr "Geriausia su darbalaukio programėle"
 
@@ -6396,7 +6396,7 @@ msgid "Browser home"
 msgstr "Naršyklė: pradžios puslapis"
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:42
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:43
 msgid "Browser locale: {format}"
 msgstr "Naršyklės lokalė: {format}"
 
@@ -6545,8 +6545,8 @@ msgstr "Įsigykite {premiumProductName} dovaną skirtuke „{premiumProductName}
 msgid "Buy gift"
 msgstr "Pirkti dovaną"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:345
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:663
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:347
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:665
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Kurdami bendruomenę, sutinkate laikytis <0>{PRODUCT_NAME} bendruomenės gairių</0>."
 
@@ -6658,7 +6658,7 @@ msgstr "Skambučiai"
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:734
 #: src/features/permissions/system/components/useMacPermissionControl.ts:15
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:93
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:14
@@ -6736,7 +6736,7 @@ msgstr "Kameros peržiūra"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:96
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:97
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:202
 msgid "Camera quality"
 msgstr "Kameros kokybė"
@@ -6809,8 +6809,8 @@ msgstr "Čia negalima įkelti failų"
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:74
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:418
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:170
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:426
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:174
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:197
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -6896,13 +6896,13 @@ msgstr "Atšaukti suplanuotą keitimą"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:980
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:262
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Atšaukti prenumeratą"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:257
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:256
 msgid "Cancel subscription?"
 msgstr "Atšaukti prenumeratą?"
 
@@ -7005,7 +7005,7 @@ msgid "Category"
 msgstr "Kategorija"
 
 #. Title in a modal shown before opening a category with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:187
+#: src/features/channel/components/MatureContentChannelGate.tsx:214
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:39
 msgid "Category content warning"
 msgstr "Kategorijos turinio įspėjimas"
@@ -7131,15 +7131,15 @@ msgstr "Keisti grupės slapyvardį"
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:67
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:90
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "Keisti piktogramą"
 
 #. Button that opens the Linux desktop dialog for changing the keys of system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:83
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:80
 msgid "Change in system settings"
 msgstr "Keisti sistemos nustatymuose"
 
@@ -7554,7 +7554,7 @@ msgid "Channel badges"
 msgstr "Kanalo ženkleliai"
 
 #. Title in a modal shown before opening a channel with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:189
+#: src/features/channel/components/MatureContentChannelGate.tsx:216
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:43
 msgid "Channel content warning"
 msgstr "Kanalo turinio įspėjimas"
@@ -7770,7 +7770,7 @@ msgid "Chat shortcuts"
 msgstr "Pokalbių spartieji klavišai"
 
 #. Button on Linux that checks again whether the desktop offers system-wide shortcuts, for example after the desktop service started. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:139
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:136
 msgid "Check again"
 msgstr "Patikrinti dar kartą"
 
@@ -7833,7 +7833,7 @@ msgid "Checking access..."
 msgstr "Tikrinama prieiga..."
 
 #. Loading state in the screen-share picker while checking macOS screen recording permission.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:22
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:23
 msgid "Checking screen recording permission..."
 msgstr "Tikrinamas ekrano įrašymo leidimas…"
 
@@ -7848,17 +7848,17 @@ msgid "Checkout"
 msgstr "Atsiskaitymas"
 
 #. Modal body for the generic "checkout blocked" state on a self-hosted instance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:123
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:122
 msgid "Checkout is blocked for this account."
 msgstr "Apmokėjimas šiai paskyrai užblokuotas."
 
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:119
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:118
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "Šiai paskyrai atsiskaitymas yra užblokuotas. Jei reikia pagalbos, susisiekite su {supportEmail}."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:115
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:114
 msgid "Checkout unavailable"
 msgstr "Atsiskaitymas negalimas"
 
@@ -8036,7 +8036,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "Pasirinkite, kaip laikas rodomas programėlėje"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:58
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:57
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "Pasirinkite, kaip norėtumėte apmokėti šią prenumeratą."
 
@@ -8050,7 +8050,7 @@ msgid "Choose one of the methods below to prove domain ownership. You only need 
 msgstr "Pasirinkite vieną iš toliau nurodytų būdų, kad įrodytumėte domeno nuosavybę. Jums reikia užbaigti tik vieną."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:166
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
 msgid "Choose payment method"
 msgstr "Pasirinkite mokėjimo būdą"
 
@@ -8174,7 +8174,7 @@ msgstr "Pasirinkite numatytuosius nustatymus"
 
 #. Heading for an authentication step that requires an instance before continuing.
 #. Heading for the login step that lets a user choose the instance before signing in.
-#: src/features/auth/flow/AuthLoginLayout.tsx:97
+#: src/features/auth/flow/AuthLoginLayout.tsx:96
 #: src/features/auth/flow/AuthRuntimeTargetGate.tsx:11
 msgid "Choose your instance"
 msgstr "Pasirinkite savo serverį"
@@ -8216,8 +8216,8 @@ msgstr "Atsiimti dovaną"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:45
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:69
 #: src/features/channel/utils/CreateDMModalUtils.tsx:44
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:216
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:444
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:217
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:445
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:345
 msgid "Claim your account"
 msgstr "Užregistruokite paskyrą"
@@ -9047,7 +9047,7 @@ msgid "Community badges"
 msgstr "Bendruomenių ženkleliai"
 
 #. Title in a modal shown before opening a community with a custom content warning.
-#: src/features/channel/components/MatureContentChannelGate.tsx:185
+#: src/features/channel/components/MatureContentChannelGate.tsx:212
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:35
 msgid "Community content warning"
 msgstr "Bendruomenės turinio įspėjimas"
@@ -9089,8 +9089,8 @@ msgstr "Bendruomenės DM"
 msgid "Community filter"
 msgstr "Bendruomenės filtras"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:277
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:600
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:278
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:601
 msgid "Community icon"
 msgstr "Bendruomenės piktograma"
 
@@ -9235,7 +9235,7 @@ msgid "Community updated"
 msgstr "Bendruomenė atnaujinta"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:38
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:39
 msgid "Community voice"
 msgstr "Bendruomenės balso kanalai"
 
@@ -9275,11 +9275,11 @@ msgid "Complete mature content check"
 msgstr "Užbaigti brandaus turinio patikrą"
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:157
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
 msgid "Complete payment"
 msgstr "Užbaigti mokėjimą"
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:67
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:73
 msgid "Complete the mature content check to unlock mature media."
 msgstr "Užbaikite brandaus turinio patikrą, kad atrakintumėte brandžią mediją."
 
@@ -9409,7 +9409,7 @@ msgstr "Patvirtinti"
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice-channel safety preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:24
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:18
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:19
 msgid "Confirm before joining voice channels"
 msgstr "Patvirtinti prieš prisijungiant prie balso kanalų"
 
@@ -9457,7 +9457,7 @@ msgstr "Patvirtinkite pareiškimą, kad išsiųstumėte pranešimą."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:30
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:31
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:398
 msgid "Confirm voice join"
 msgstr "Patvirtinti prisijungimą prie balso kanalo"
@@ -9468,7 +9468,7 @@ msgid "Confirmation"
 msgstr "Patvirtinimas"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:46
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:47
 msgid "Confirmation or double-click for community voice joins"
 msgstr "Patvirtinimas arba dvigubas spustelėjimas prisijungiant prie bendruomenės balso kanalų"
 
@@ -9476,7 +9476,7 @@ msgstr "Patvirtinimas arba dvigubas spustelėjimas prisijungiant prie bendruomen
 msgid "Conflicts with {conflictLabel}"
 msgstr "Kertasi su „{conflictLabel}“"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:234
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Connect a camera and try again."
 msgstr "Prijunkite kamerą ir bandykite dar kartą."
 
@@ -9489,7 +9489,7 @@ msgstr "Prijunkite kamerą arba virtualų fiksavimo įrenginį ir bandykite dar 
 msgid "Connect a display, then try again."
 msgstr "Prijunkite ekraną ir bandykite dar kartą."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
 msgid "Connect a microphone and try again."
 msgstr "Prijunkite mikrofoną ir bandykite dar kartą."
 
@@ -9633,7 +9633,7 @@ msgstr "Ryšys: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:424
-#: src/features/user/components/popouts/UserProfileShared.tsx:618
+#: src/features/user/components/popouts/UserProfileShared.tsx:622
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9667,7 +9667,7 @@ msgid "Contact"
 msgstr "Kontaktas"
 
 #. Short label in the authentication content blocked handler. Keep the tone plain and specific.
-#: src/features/auth/components/ContentBlockedHandler.tsx:10
+#: src/features/auth/components/ContentBlockedHandler.tsx:11
 msgid "Content blocked"
 msgstr "Turinys užblokuotas"
 
@@ -9741,13 +9741,13 @@ msgid "Continue in your browser"
 msgstr "Tęsti naršyklėje"
 
 #. Button in the gift time confirmation that proceeds to subscription checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
 msgid "Continue to checkout"
 msgstr "Tęsti į kasą"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:343
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:356
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:379
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:351
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:364
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:387
 msgid "Continue with passkey"
 msgstr "Tęsti su prieigos raktu"
 
@@ -10059,17 +10059,17 @@ msgid "Copy invite URL"
 msgstr "Kopijuoti kvietimo URL"
 
 #. Button that copies Hyprland config lines to the clipboard.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:120
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:117
 msgid "Copy lines"
 msgstr "Kopijuoti eilutes"
 
 #. Screen reader name of the button that copies Hyprland config lines in the older hyprlang format. Starts with the visible button text "Copy lines". Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:129
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:126
 msgid "Copy lines for hyprland.conf"
 msgstr "Kopijuoti eilutes, skirtas hyprland.conf"
 
 #. Screen reader name of the button that copies Hyprland config lines in the Lua format. Starts with the visible button text "Copy lines". Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:124
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:121
 msgid "Copy lines for hyprland.lua"
 msgstr "Kopijuoti eilutes, skirtas hyprland.lua"
 
@@ -10343,7 +10343,7 @@ msgid "Couldn't change your price"
 msgstr "Nepavyko pakeisti jūsų kainos"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:96
+#: src/features/updater/commands/UpdaterModalCommands.tsx:97
 msgid "Couldn't check for updates"
 msgstr "Nepavyko patikrinti, ar yra naujinimų"
 
@@ -10475,7 +10475,7 @@ msgid "Couldn't delete your messages"
 msgstr "Nepavyko ištrinti jūsų žinučių"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:105
 msgid "Couldn't download the desktop update"
 msgstr "Nepavyko atsisiųsti darbalaukio naujinimo"
 
@@ -10591,7 +10591,7 @@ msgstr "Nepavyko atidaryti paieškos rezultato"
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:29
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10758,7 +10758,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "Nepavyko pradėti „{blueskyProviderName}“ autorizavimo"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:127
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:126
 msgid "Couldn't start checkout"
 msgstr "Nepavyko pradėti atsiskaitymo"
 
@@ -10932,7 +10932,7 @@ msgstr "Sukurti ir bendrinti"
 msgid "Create a community"
 msgstr "Sukurti bendruomenę"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:262
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:263
 msgid "Create a community for you and your friends to chat."
 msgstr "Sukurkite bendruomenę, kurioje galėsite bendrauti su draugais."
 
@@ -11365,7 +11365,7 @@ msgstr "Pasirinktinis šaltinis"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
@@ -11851,7 +11851,7 @@ msgid "Deafened by moderators"
 msgstr "Garsą išjungė moderatoriai"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:143
+#: src/features/updater/commands/UpdaterModalCommands.tsx:144
 msgid "DEB package"
 msgstr "DEB paketas"
 
@@ -12496,7 +12496,7 @@ msgid "Desktop app"
 msgstr "Darbalaukio programa"
 
 #. Modal title shown after a manual desktop update check finds no update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:50
+#: src/features/updater/commands/UpdaterModalCommands.tsx:51
 msgid "Desktop app is up to date"
 msgstr "Darbalaukio programa yra naujausios versijos"
 
@@ -12555,7 +12555,7 @@ msgid "Desktop update {version} available. Choose a Linux package."
 msgstr "Galimas darbalaukio naujinimas {version}. Pasirinkite „Linux“ paketą."
 
 #. Modal title shown when a new desktop app update can be downloaded.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:16
+#: src/features/updater/commands/UpdaterModalCommands.tsx:17
 msgid "Desktop update available"
 msgstr "Galimas darbalaukio naujinimas"
 
@@ -12565,7 +12565,7 @@ msgid "Desktop update available. Choose a Linux package."
 msgstr "Galimas darbalaukio naujinimas. Pasirinkite „Linux“ paketą."
 
 #. Desktop updater modal body. The version placeholder is the target app version; productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:20
+#: src/features/updater/commands/UpdaterModalCommands.tsx:21
 msgid "Desktop version {version} is available. Download the installer, then run it to update {productName}."
 msgstr "Darbalaukio versija {version} yra prieinama. Atsisiųskite diegimo programą ir paleiskite ją, kad atnaujintumėte {productName}."
 
@@ -12613,7 +12613,7 @@ msgstr "Išsami informacija: {reason}"
 #. Item in the textarea spellcheck language submenu that detects draft message language and switches dictionaries as the user types.
 #. Spellcheck language mode label in the language tab. The app detects the draft message language and switches dictionaries as the user types.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:83
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:126
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:127
 msgid "Detect while typing"
 msgstr "Aptikti rašant"
 
@@ -12661,7 +12661,7 @@ msgid "Developer tools unavailable"
 msgstr "Kūrėjo įrankiai nepasiekiami"
 
 #. Modal title when the desktop app is running unpackaged during development.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:66
+#: src/features/updater/commands/UpdaterModalCommands.tsx:67
 msgid "Development build"
 msgstr "Kūrimo versija"
 
@@ -13455,8 +13455,8 @@ msgstr "Atsisiųsti"
 
 #. Nagbar button label that downloads the desktop app. productName is the app name.
 #. Short label in the sidebar navigation download button. Preserve {productName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:17
-#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:18
+#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:27
 msgid "Download {productName}"
 msgstr "Atsisiųsti „{productName}“"
 
@@ -13465,12 +13465,12 @@ msgid "Download <0>fluxer-verification</0> and place it in your <1>.well-known</
 msgstr "Atsisiųskite <0>fluxer-verification</0> ir įdėkite į savo <1>.well-known</1> aplanką, kad galėtume patvirtinti domeną."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:98
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:99
 msgid "Download app"
 msgstr "Atsisiųsti programėlę"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:106
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:107
 msgid "Download app button in the sidebar"
 msgstr "Atsisiųsti programėlę"
 
@@ -13485,7 +13485,7 @@ msgid "Download button"
 msgstr "Atsisiuntimo mygtukas"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:103
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:104
 msgid "Download desktop app"
 msgstr "Atsisiųsti darbalaukio programėlę"
 
@@ -13513,7 +13513,7 @@ msgid "Download image"
 msgstr "Atsisiųsti paveikslėlį"
 
 #. Button label that downloads a desktop update installer.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:29
+#: src/features/updater/commands/UpdaterModalCommands.tsx:30
 msgid "Download installer"
 msgstr "Atsisiųsti diegimo programą"
 
@@ -13527,7 +13527,7 @@ msgid "Download media"
 msgstr "Atsisiųsti mediją"
 
 #. Button label that downloads a selected Linux desktop update package.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:33
+#: src/features/updater/commands/UpdaterModalCommands.tsx:34
 msgid "Download package"
 msgstr "Atsisiųsti paketą"
 
@@ -13655,11 +13655,11 @@ msgstr "Numesti elementą"
 msgid "Drop to upload background"
 msgstr "Nuvilkite, kad įkeltumėte foną"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:85
+#: src/features/channel/components/MatureContentChannelGate.tsx:100
 msgid "Due to mature content laws in {regionName}, mature content is blocked until you complete the mature content check."
 msgstr "Dėl brandaus turinio įstatymų, galiojančių regione „{regionName}“, brandus turinys blokuojamas, kol neatliksite brandaus turinio patikros."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:95
+#: src/features/channel/components/MatureContentChannelGate.tsx:110
 msgid "Due to mature content laws in {regionName}, mature content is not available from here. Mature content checks are available only in the UK."
 msgstr "Dėl brandaus turinio įstatymų, galiojančių regione „{regionName}“, brandus turinys iš čia nepasiekiamas. Brandaus turinio patikros galimos tik Jungtinėje Karalystėje."
 
@@ -13673,7 +13673,7 @@ msgstr "Dėl brandaus turinio įstatymų, galiojančių regione „{regionName}�
 msgid "Due to mature content laws in {regionName}, this content is not available from here. Mature content checks are available only in the UK."
 msgstr "Dėl brandaus turinio įstatymų, galiojančių regione „{regionName}“, šis turinys iš čia nepasiekiamas. Brandaus turinio patikros galimos tik Jungtinėje Karalystėje."
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:61
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:67
 msgid "Due to mature content laws in {regionName}, this media is not available from your current region."
 msgstr "Dėl brandaus turinio įstatymų, galiojančių regione „{regionName}“, ši medija nepasiekiama jūsų dabartiniame regione."
 
@@ -13715,7 +13715,7 @@ msgid "Each code works once in place of your authenticator app."
 msgstr "Kiekvienas kodas veikia vieną kartą, pakeisdamas jūsų autentifikavimo programėlę."
 
 #. Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:75
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:72
 msgid "Each key can run only one system-wide shortcut."
 msgstr "Kiekvienas klavišas gali paleisti tik vieną sistemos spartųjį klavišą."
 
@@ -14303,7 +14303,7 @@ msgid "Enable"
 msgstr "Įjungti"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:123
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:124
 msgid "Enable {permissionName} permission"
 msgstr "Įjungti {permissionName} leidimą"
 
@@ -14508,7 +14508,7 @@ msgid "Enable shortcut"
 msgstr "Įjungti spartųjį klavišą"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:86
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:87
 msgid "Enable spellcheck"
 msgstr "Įjungti rašybos tikrinimą"
 
@@ -14602,12 +14602,12 @@ msgid "End grace now"
 msgstr "Baigti lengvatinį laikotarpį dabar"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:285
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:284
 msgid "End grace period"
 msgstr "Baigti lengvatinį laikotarpį"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:278
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:277
 msgid "End grace period now?"
 msgstr "Baigti lengvatinį laikotarpį dabar?"
 
@@ -14837,7 +14837,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "Įveskite savo saugos rakto PIN kodą, kad tęstumėte."
 
 #. Title in the desktop app above the code the user types into a browser on another device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:235
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:240
 msgid "Enter this code in your browser"
 msgstr "Įveskite šį kodą savo naršyklėje"
 
@@ -14845,7 +14845,7 @@ msgstr "Įveskite šį kodą savo naršyklėje"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "Įveskite šį kodą naršyklėje, kad prisijungtumėte."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:148
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:150
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
 msgstr "Įveskite šį kodą savo senojoje „{PRODUCT_NAME}“ programėlėje, kad užbaigtumėte prisijungimą."
 
@@ -14916,7 +14916,7 @@ msgstr "Visos sistemos garsas"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:181
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:313
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:187
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:188
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:150
 msgid "Entrance sound"
 msgstr "Įėjimo garsas"
@@ -15026,7 +15026,7 @@ msgstr "Vakaras"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:171
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:172
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Sulygina mikrofono garsumą, kad jūsų balsas nebūtų per tylus."
@@ -15249,7 +15249,7 @@ msgstr "Baigia galioti tarp {earliest} ir {latest}"
 msgid "Expires in {remaining}s"
 msgstr "Baigs galioti po {remaining} s"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:257
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:265
 msgid "Expires in {remainingSeconds}s"
 msgstr "Baigiasi po {remainingSeconds}s"
 
@@ -15728,7 +15728,7 @@ msgid "Favorite channel"
 msgstr "Pridėti kanalą prie mėgstamiausių"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:82
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:83
 msgid "Favorite channels"
 msgstr "Mėgstamiausi kanalai"
 
@@ -16243,7 +16243,7 @@ msgstr "{threeHours} valandoms"
 msgid "For {twentyFourHours} hours"
 msgstr "{twentyFourHours} valandoms"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:255
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:256
 msgid "For British eyes only..."
 msgstr "Tik britams skirta..."
 
@@ -16253,22 +16253,22 @@ msgid "For me"
 msgstr "Man"
 
 #. Warning on GNOME when the push-to-mute shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone muted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:204
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:201
 msgid "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
 msgstr "Nutildymui paspaudus naudokite vieną klavišą be Ctrl, Alt ar Shift. Jei naudojate kombinaciją, pirmiausia atleiskite pagrindinį klavišą, kitaip mikrofonas gali likti išjungtas."
 
 #. Warning on GNOME when the push-to-talk shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone on.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:198
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:195
 msgid "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
 msgstr "Kalbėjimui paspaudus naudokite vieną klavišą be Ctrl, Alt ar Shift. Jei naudojate kombinaciją, pirmiausia atleiskite pagrindinį klavišą, kitaip mikrofonas gali likti įjungtas."
 
 #. Warning on GNOME when a hold shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the shortcut active.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:216
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:213
 msgid "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
 msgstr "Šiam sparčiajam klavišui naudokite vieną klavišą be Ctrl, Alt ar Shift. Jei naudojate kombinaciją, pirmiausia atleiskite pagrindinį klavišą, kitaip spartusis klavišas gali likti aktyvus."
 
 #. Warning on GNOME when the voice activity priority shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave priority speaking on. "Voice activity priority" is the shortcut name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:210
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:207
 msgid "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
 msgstr "Balso aktyvumo prioritetui naudokite vieną klavišą be Ctrl, Alt ar Shift. Jei naudojate kombinaciją, pirmiausia atleiskite pagrindinį klavišą, kitaip prioritetas gali likti įjungtas."
 
@@ -16460,14 +16460,14 @@ msgstr "Rėmelis"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:334
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:336
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:230
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:133
 msgid "Frame rate"
 msgstr "Kadrų dažnis"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:63
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:64
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Didesniam nei 30 FPS kadrų dažniui reikalingas {premiumProductName}"
 
@@ -16926,12 +16926,12 @@ msgid "Get notified when you receive messages. You may need to allow notificatio
 msgstr "Gaukite pranešimus, kai gaunate žinučių. Gali reikėti leisti pranešimus naršyklės nustatymuose. Norėdami valdyti pranešimus pagal kanalą / bendruomenę, dešiniuoju pelės mygtuku spustelėkite bendruomenės piktogramą ir atidarykite pranešimų nustatymus."
 
 #. Nagbar body encouraging web users to download the desktop app. productName is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:17
+#: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:18
 msgid "Get the {productName} desktop app for system-wide push-to-talk and a few other goodies."
 msgstr "Atsisiųskite {productName} darbalaukio programėlę, kad galėtumėte naudoti „push-to-talk“ visoje sistemoje ir mėgautis kitais privalumais."
 
 #. CTA button label in the screen-share picker. Opens the desktop download page.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:20
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:21
 msgid "Get the desktop app"
 msgstr "Gauti darbalaukio programėlę"
 
@@ -17241,12 +17241,12 @@ msgid "Go back to {productName} to continue."
 msgstr "Grįžkite į {productName}, kad tęstumėte."
 
 #. Shown after approving a sign-in for an app on another device, which signs in by itself shortly. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:296
 msgid "Go back to the {PRODUCT_NAME} app. It finishes signing in on its own."
 msgstr "Grįžkite į {PRODUCT_NAME} programėlę. Ji baigs prisijungti pati."
 
 #. Shown after approving, when the browser has already handed the sign-in back to the desktop app. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:288
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
 msgid "Go back to the {PRODUCT_NAME} app. You can close this tab."
 msgstr "Grįžkite į „{PRODUCT_NAME}“ programėlę. Galite uždaryti šią kortelę."
 
@@ -17702,7 +17702,7 @@ msgid "Help"
 msgstr "Pagalba"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:94
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:95
 msgid "Help button"
 msgstr "Mygtukas „Pagalba“"
 
@@ -17712,12 +17712,12 @@ msgid "Help center"
 msgstr "Pagalbos centras"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:102
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:103
 msgid "Help center button in the sidebar"
 msgstr "My suggestion:\n"
 "Pagalbos centro mygtukas šoninėje juostoje"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:348
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:349
 msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
 msgstr "Padėkite išversti {PRODUCT_NAME} į savo kalbą svetainėje <0>{I18N_WEBLATE_DOMAIN}</0>."
 
@@ -17842,7 +17842,7 @@ msgstr "Slėpti pokalbį"
 msgid "Hide community owner crown"
 msgstr "Slėpti bendruomenės savininko karūną"
 
-#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:62
+#: src/features/app/components/layout/sidebar_nav/DownloadButton.tsx:63
 msgid "Hide download button"
 msgstr "Slėpti atsisiuntimo mygtuką"
 
@@ -17861,7 +17861,7 @@ msgstr "Slėpti mėgstamiausius"
 msgid "Hide guidelines"
 msgstr "Sutrumpinti gaires"
 
-#: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:63
+#: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:64
 msgid "Hide help center button"
 msgstr "Slėpti pagalbos centro mygtuką"
 
@@ -17871,7 +17871,7 @@ msgid "Hide join messages"
 msgstr "Slėpti prisijungimo pranešimus"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:50
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:51
 msgid "Hide keyboard hints"
 msgstr "Slėpti klaviatūros patarimus"
 
@@ -18157,22 +18157,22 @@ msgid "Hyperlink"
 msgstr "Hipersaitas"
 
 #. Instructions for the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:94
 msgid "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
 msgstr "Hyprland neturi sparčiųjų klavišų dialogo lango. Pridėkite savo Hyprland versijai skirtas eilutes į Hyprland konfigūraciją ir pakeiskite KEY norimu klavišu."
 
 #. Instructions for the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:103
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:100
 msgid "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
 msgstr "Hyprland neturi sparčiųjų klavišų dialogo lango. Susiekite klavišus savo Hyprland konfigūracijoje."
 
 #. Label above Hyprland config lines in the older hyprlang format. Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:116
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:113
 msgid "hyprland.conf (before Hyprland 0.55)"
 msgstr "hyprland.conf (prieš Hyprland 0.55)"
 
 #. Label above Hyprland config lines in the Lua format. Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:112
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:109
 msgid "hyprland.lua (Hyprland 0.55 and later)"
 msgstr "hyprland.lua (Hyprland 0.55 ir vėlesnės versijos)"
 
@@ -18219,8 +18219,8 @@ msgid "I confirm in good faith that the information and allegations in this noti
 msgstr "Sąžiningai patvirtinu, kad šiame pranešime pateikta informacija ir teiginiai yra tikslūs ir išsamūs."
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
+#: src/features/channel/components/MatureContentChannelGate.tsx:234
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:108
 msgid "I understand"
 msgstr "Supratau"
 
@@ -18599,11 +18599,11 @@ msgstr "Importuojama… apdorota {processedCount, number} / {totalCount, number}
 msgid "In"
 msgstr "Kanale"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:547
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:551
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "Režimu „Operacinė sistema“ aukščiau išvardyti žodynai yra tik patariamieji. {PRODUCT_NAME} perduos šias kalbų žymas jūsų OS rašybos tikrintuvui, kai tai bus palaikoma. Žymų, kurių jis neatpažįsta, bus nepaisoma."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:317
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:318
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "Naršyklėje funkcija „Kalbėti paspaudus“ veikia tik tada, kai {PRODUCT_NAME} skirtukas yra aktyvus. Įdiekite darbalaukio programą, kad ji veiktų visoje sistemoje."
 
@@ -18651,7 +18651,7 @@ msgstr "Balso pokalbyje"
 #. Spellcheck engine option in the language tab. Uses the bundled in-app Hunspell dictionaries. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. The bundled in-app hunspell engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:75
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:100
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:101
 msgid "In-app dictionaries"
 msgstr "Programėlės žodynai"
 
@@ -18876,7 +18876,7 @@ msgid "Input"
 msgstr "Įvestis"
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:175
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:176
 msgid "Input and output"
 msgstr "Įvestis ir išvestis"
 
@@ -18940,7 +18940,7 @@ msgid "Insert emoji"
 msgstr "Įterpti jaustuką"
 
 #. CTA card body in the screen-share picker promoting the desktop app. {productName} is Fluxer.
-#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:16
+#: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:17
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "Įdiekite „{productName}“, kad galėtumėte naudoti visą šaltinio parinkiklį ir sklandesnius ekrano bendrinimo valdiklius."
 
@@ -18955,12 +18955,12 @@ msgid "Install the new app"
 msgstr "Įdiegti naująją programėlę"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:119
+#: src/features/updater/commands/UpdaterModalCommands.tsx:120
 msgid "Installed"
 msgstr "Įdiegta"
 
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:54
+#: src/features/updater/commands/UpdaterModalCommands.tsx:55
 msgid "Installed version: {currentVersion}."
 msgstr "Įdiegta versija: {currentVersion}."
 
@@ -19032,7 +19032,7 @@ msgstr "Sąsaja"
 
 #. Settings section label for interface language selection.
 #. Settings section title in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:82
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:83
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:42
 msgid "Interface language"
 msgstr "Sąsajos kalba"
@@ -19468,13 +19468,13 @@ msgstr "Prisijungti"
 
 #. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:30
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
 #: src/features/expressions/components/ExpressionInfoCard.tsx:94
 msgid "Join {communityName}"
 msgstr "Prisijungti prie „{communityName}“"
 
 #. Nagbar body inviting users to join the official product community. communityName is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:26
+#: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:25
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "Prisijunkite prie „{communityName}“, kad galėtumėte bendrauti su komanda ir gauti naujausią informaciją."
 
@@ -19562,7 +19562,7 @@ msgstr "Prisijungti prie vaizdo skambučio"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:67
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:34
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:35
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:454
 msgid "Join voice"
 msgstr "Prisijungti prie balso pokalbio"
@@ -19757,7 +19757,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "Pasilikite nemokamą ir mokamą lygius. Vėliau galėsite tinkinti lygius, parduoti mokamą turinį per „Stripe“ arba dalyti dovanų kodus iš administratoriaus skydelio."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:169
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:287
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:286
 msgid "Keep grace period"
 msgstr "Palikti lengvatinį laikotarpį"
 
@@ -19772,7 +19772,7 @@ msgid "Keep running"
 msgstr "Palikti veikti"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:147
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
 msgid "Keep subscription"
 msgstr "Palikti prenumeratą"
 
@@ -19787,7 +19787,7 @@ msgid "Keep this page somewhere safe. If you forget your password, you can use i
 msgstr "Laikykite šį puslapį saugioje vietoje. Jei pamiršite slaptažodį, galėsite jį naudoti, kad vėl prisijungtumėte prie savo paskyros. Bet kas, turintis šį atkūrimo raktą, gali pakeisti jūsų slaptažodį, todėl niekada juo nesidalinkite."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:79
 msgid "Keep transmitting briefly after release."
 msgstr "Tęsti perdavimą trumpą laiką po mygtuko atleidimo."
 
@@ -19830,7 +19830,7 @@ msgid "Keyboard"
 msgstr "Klaviatūra"
 
 #. Linux warning when direct input device access is on but reading the keyboard failed. Not related to the "Direct input" voice processing profile. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:190
 msgid "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
 msgstr "Nepavyko įjungti prieigos prie klaviatūros. Spartieji klavišai veikia tik tada, kai {productName} yra aktyvus."
 
@@ -19849,7 +19849,7 @@ msgid "Keyboard mode"
 msgstr "Klaviatūros režimas"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:62
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:63
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "Sparčiųjų klavišų užuominos patarimuose"
 
@@ -19924,7 +19924,7 @@ msgstr "Kalbos nustatymai"
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:88
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:122
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:123
 msgid "Languages"
 msgstr "Kalbos"
 
@@ -19972,7 +19972,7 @@ msgstr "Delsos grafikas"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
-#: src/features/updater/commands/UpdaterModalCommands.tsx:46
+#: src/features/updater/commands/UpdaterModalCommands.tsx:47
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:74
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
@@ -20215,12 +20215,12 @@ msgid "Let the member hear others in this community again"
 msgstr "Nariui vėl leista girdėti kitus šioje bendruomenėje"
 
 #. Description for the Linux direct input device access switch while it is on, on a desktop that can also run system-wide shortcuts itself (KDE, GNOME, Hyprland). {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:166
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:163
 msgid "Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead."
 msgstr "Leidžia {productName} tiesiogiai skaityti jūsų klaviatūrą. Išjunkite, jei sparčiuosius klavišus norite nustatyti per savo darbalaukį."
 
 #. Description for the Linux direct input device access switch. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:162
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:159
 msgid "Lets {productName} read your keyboard directly. Your system already allows this."
 msgstr "Leidžia {productName} tiesiogiai skaityti jūsų klaviatūrą. Jūsų sistema tai jau leidžia."
 
@@ -20513,7 +20513,7 @@ msgid "Linux default"
 msgstr "„Linux“ numatytasis įrenginys"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:135
+#: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Linux package"
 msgstr "„Linux“ paketas"
 
@@ -20649,7 +20649,7 @@ msgid "Local files"
 msgstr "Vietiniai failai"
 
 #. Profile section title for a user's local time.
-#: src/features/user/components/popouts/UserProfileShared.tsx:57
+#: src/features/user/components/popouts/UserProfileShared.tsx:58
 msgid "Local time"
 msgstr "Vietinis laikas"
 
@@ -20731,7 +20731,7 @@ msgid "Look and feel"
 msgstr "Išvaizda ir stilius"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:673
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Panašu, kad naudojate „{0}“. Papildomas „{PRODUCT_NAME}“ apdorojimas gali sukelti garso pulsavimą arba iškraipymus. Tiesioginė įvestis perduoda jūsų garsą nepakeistą."
 
@@ -20827,7 +20827,7 @@ msgid "Make group owner"
 msgstr "Padaryti grupės savininku"
 
 #. Shown above the code on the browser approval page when the app cannot be signed in automatically. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:253
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:257
 msgid "Make sure this code matches the one in the {PRODUCT_NAME} app."
 msgstr "Įsitikinkite, kad šis kodas sutampa su kodu programėlėje {PRODUCT_NAME}."
 
@@ -20967,7 +20967,7 @@ msgid "Manage your subscription"
 msgstr "Tvarkyti prenumeratą"
 
 #. Modal title when automatic in-app desktop updates cannot be used.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:62
+#: src/features/updater/commands/UpdaterModalCommands.tsx:63
 msgid "Manual desktop update"
 msgstr "Rankinis darbalaukio naujinimas"
 
@@ -21146,15 +21146,15 @@ msgstr "Masačusetsas"
 msgid "Master volume"
 msgstr "Pagrindinis garsumas"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:141
+#: src/features/channel/components/MatureContentChannelGate.tsx:160
 msgid "Mature category"
 msgstr "Brandaus turinio kategorija"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:163
+#: src/features/channel/components/MatureContentChannelGate.tsx:186
 msgid "Mature channel"
 msgstr "Brandaus turinio kanalas"
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:118
+#: src/features/channel/components/MatureContentChannelGate.tsx:133
 msgid "Mature community"
 msgstr "Brandaus turinio bendruomenė"
 
@@ -21195,7 +21195,7 @@ msgstr "Brandaus turinio patikra išsiųsta"
 
 #. Body copy in the mature content check modal when the check is unavailable.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:36
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:71
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:77
 msgid "Mature content checks are currently available only in the UK."
 msgstr "Brandaus turinio patikros šiuo metu galimos tik JK."
 
@@ -21463,7 +21463,7 @@ msgid "Member roles updated"
 msgstr "Nario vaidmenys atnaujinti"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:283
+#: src/features/user/components/popouts/UserProfileShared.tsx:284
 msgid "Member since"
 msgstr "Narys nuo"
 
@@ -22014,7 +22014,7 @@ msgstr "Mikrofonas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:183
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:184
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:142
 msgid "Mic test"
 msgstr "Mikrofono patikra"
@@ -22128,7 +22128,7 @@ msgstr "Minesota"
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:100
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:101
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
@@ -23047,7 +23047,7 @@ msgid "Neko"
 msgstr "Neko"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:66
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:67
 msgid "Neko cat that chases your cursor"
 msgstr "Neko katė, kuri vejasi jūsų žymeklį"
 
@@ -23286,7 +23286,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "Nauji naudotojai šiuo metu negali prisijungti. Vis tiek galite susikurti paskyrą arba prisijungti, o vėliau vėl pabandyti pasinaudoti šia nuoroda."
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:131
+#: src/features/updater/commands/UpdaterModalCommands.tsx:132
 msgid "New version"
 msgstr "Nauja versija"
 
@@ -23466,7 +23466,7 @@ msgstr "Nėra žymių"
 msgid "No bot banner"
 msgstr "Nėra boto reklamjuostės"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:226
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:227
 msgid "No camera found"
 msgstr "Kamera nerasta"
 
@@ -23542,7 +23542,7 @@ msgid "No description."
 msgstr "Aprašo nėra."
 
 #. Desktop updater modal body when no installed version string is available.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:58
+#: src/features/updater/commands/UpdaterModalCommands.tsx:59
 msgid "No desktop update is available."
 msgstr "Nėra galimų darbalaukio naujinimų."
 
@@ -23685,7 +23685,7 @@ msgstr "Nėra atitinkančių įrašų"
 msgid "No mentions yet"
 msgstr "Kol kas nėra paminėjimų"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:541
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:542
 msgid "No microphone found"
 msgstr "Mikrofonas nerastas"
 
@@ -23732,7 +23732,7 @@ msgstr "Nėra laukiančių užklausų, atitinkančių paiešką"
 msgid "No permissions found"
 msgstr "Leidimų nerasta"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:594
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:599
 msgid "No personal words yet."
 msgstr "Kol kas nėra asmeninių žodžių."
 
@@ -24094,7 +24094,7 @@ msgid "Not allowed"
 msgstr "Neleidžiama"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:79
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:76
 msgid "Not assigned"
 msgstr "Nepriskirta"
 
@@ -24424,7 +24424,7 @@ msgid "On click"
 msgstr "Spustelėjus"
 
 #. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:243
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:248
 msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
 msgstr "Kitame įrenginyje prisijunkite adresu {signInAddress} ir įveskite šį kodą, kai būsite paprašyti."
 
@@ -24695,7 +24695,7 @@ msgid "Open {premiumProductFullName}"
 msgstr "Atidarykite {premiumProductFullName}"
 
 #. Button on the browser page after approving that opens the desktop app again if it did not come to the front. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:304
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:308
 msgid "Open {PRODUCT_NAME}"
 msgstr "Atidarykite {PRODUCT_NAME}"
 
@@ -24727,7 +24727,7 @@ msgid "Open account switcher"
 msgstr "Atidaryti paskyros parinkiklį"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:112
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:113
 msgid "Open advanced media settings"
 msgstr "Atidaryti papildomus medijos nustatymus"
 
@@ -24789,7 +24789,7 @@ msgstr "Atidaryti reklamjuostės parinktis"
 msgid "Open bookmarks"
 msgstr "Atidaryti žymes"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:184
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:188
 msgid "Open browser"
 msgstr "Atidaryti naršyklę"
 
@@ -24847,7 +24847,7 @@ msgid "Open date picker"
 msgstr "Atidaryti datos parinkiklį"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:92
+#: src/features/updater/commands/UpdaterModalCommands.tsx:93
 msgid "Open desktop downloads"
 msgstr "Atidaryti darbalaukio programos atsisiuntimus"
 
@@ -25044,7 +25044,7 @@ msgid "Open settings"
 msgstr "Atidaryti nustatymus"
 
 #. Button label that opens the software center via appstream protocol.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:88
+#: src/features/updater/commands/UpdaterModalCommands.tsx:89
 msgid "Open software center"
 msgstr "Atidaryti programų centrą"
 
@@ -25077,11 +25077,11 @@ msgid "Open System Settings"
 msgstr "Atidaryti sistemos nuostatas"
 
 #. Body in the screen-share picker when macOS screen recording permission is missing. {productName} is the app name. Keep "System Settings", "Privacy & Security" and the permission name as macOS shows them in this language.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:26
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:27
 msgid "Open System Settings → Privacy & Security → Screen Recording, then allow {productName}."
 msgstr "Atidarykite „System Settings“ → „Privacy & Security“ → „Screen Recording“ ir leiskite „{productName}“."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:535
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:536
 msgid "Open template JSON"
 msgstr "Atidaryti šablono JSON"
 
@@ -25090,7 +25090,7 @@ msgstr "Atidaryti šablono JSON"
 msgid "Open the context menu"
 msgstr "Atidaryti kontekstinį meniu"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:518
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:519
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "Atidarykite toliau esančią nuorodą naršyklėje, tada nukopijuokite visą JSON atsakymą ir įklijuokite jį į laukelį."
 
@@ -25168,11 +25168,11 @@ msgstr "Atidaryti balso ir vaizdo nustatymus"
 msgid "Open with {accountName} on {instanceName}"
 msgstr "Atidaryti su {accountName} per {instanceName}"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:137
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:139
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Atidarykite naršyklę, prisijunkite, tada įveskite toliau pateiktą kodą, kad susietumėte paskyrą."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:135
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:134
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
 msgstr "Atidarykite savo senąją „{PRODUCT_NAME}“ programėlę ir pasirinkite „Susieti naują įrenginį“, tada įveskite žemiau pateiktą kodą."
 
@@ -25200,7 +25200,7 @@ msgstr "Atidaro narių puslapį. Paspauskite tarpą arba Enter, kad atidarytumė
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:99
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:79
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:110
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:111
 msgid "Operating system"
 msgstr "Operacinė sistema"
 
@@ -25630,7 +25630,7 @@ msgstr "Paskutinės 7 dienos"
 msgid "Paste"
 msgstr "Įklijuoti"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:490
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:491
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "Įklijuokite „{theOtherPlatform}“ šablono URL, kad jo struktūrą importuotumėte į naują bendruomenę."
 
@@ -25735,12 +25735,12 @@ msgid "Pay once and get a gift link to share. Gifts never renew."
 msgstr "Mokėkite vieną kartą ir gaukite dovanos nuorodą pasidalinti. Dovanos niekada nepratęsiamos."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:37
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Mokėkite naudodami „{pixPaymentMethod} Automático“, kad leistumėte pasikartojančius mokėjimus tiesiai iš savo Brazilijos banko. Arba pasirinkite „Naudoti kortelę“, kad kitame „{paymentProviderName}“ ekrane įvestumėte kredito kortelės duomenis."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:48
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:47
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Mokėkite naudodami „{upiPaymentMethod}“, kad nustatytumėte RBI reikalavimus atitinkantį elektroninį mokėjimo įgaliojimą iš savo Indijos banko. Arba pasirinkite „Naudoti kortelę“, kad kitame „{paymentProviderName}“ ekrane įvestumėte kredito kortelės duomenis."
 
@@ -25934,7 +25934,7 @@ msgstr "{0} leidimai"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title for personal dictionary settings. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:131
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:132
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:94
 msgid "Personal dictionary"
 msgstr "Asmeninis žodynas"
@@ -26005,7 +26005,7 @@ msgid "Pick at least one tag for this post."
 msgstr "Pasirinkite bent vieną žymą šiam įrašui."
 
 #. Help text above the manual spellcheck dictionary picker in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:135
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:136
 msgid "Pick one or more dictionaries. Words from any selected dictionary are accepted, which is useful for multilingual chats."
 msgstr "Pasirinkite vieną ar daugiau žodynų. Žodžiai iš bet kurio pasirinkto žodyno bus priimami, o tai naudinga daugiakalbiuose pokalbiuose."
 
@@ -26691,7 +26691,7 @@ msgid "Pricing"
 msgstr "Kainodara"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:149
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
 msgid "Pricing is still loading."
 msgstr "Kainos vis dar įkeliamos."
 
@@ -27070,17 +27070,17 @@ msgid "Purchased gifts"
 msgstr "Įsigytos dovanos"
 
 #. Modal body shown on a self-hosted instance when purchases are disabled for the account.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:111
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
 msgid "Purchases are disabled for this account."
 msgstr "Pirkimai šiai paskyrai išjungti."
 
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:107
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "Pirkimai šiai paskyrai išjungti. Jei tai atrodo neteisinga, susisiekite su {supportEmail}."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:103
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:102
 msgid "Purchases unavailable"
 msgstr "Pirkimai negalimi"
 
@@ -27174,33 +27174,33 @@ msgid "Push to talk key"
 msgstr "Kalbėjimo paspaudus klavišas"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:353
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:354
 #: src/features/voice/components/VoiceSettingsMenus.tsx:422
 msgid "Push-to-talk"
 msgstr "Kalbėjimas paspaudus"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:99
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:100
 msgid "Push-to-talk (limited)"
 msgstr "Kalbėjimas paspaudus (ribotas)"
 
 #. Voice settings warning on GNOME when the desktop has no key assigned to push-to-talk. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:243
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:240
 msgid "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
 msgstr "Kalbėjimui paspaudus dar nepriskirtas sistemos klavišas. Norėdami jį nustatyti, eikite į Nustatymai > Programos > {productName}."
 
 #. Voice settings warning on KDE Plasma when the desktop has no key assigned to push-to-talk. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:237
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:234
 msgid "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "Kalbėjimui paspaudus dar nepriskirtas sistemos klavišas. Norėdami jį nustatyti, eikite į Sistemos nuostatos > Klaviatūra > Spartieji klavišai > {productName}."
 
 #. Voice settings warning on an unrecognized Linux desktop when the desktop has no key assigned to push-to-talk.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:248
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:245
 msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
 msgstr "Kalbėjimui paspaudus dar nepriskirtas sistemos klavišas. Norėdami jį nustatyti, atidarykite darbalaukio klaviatūros sparčiųjų klavišų nustatymus."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:706
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:709
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Kalbėjimas paspaudus tiesioginėje įvestyje ignoruojamas. Norėdami jį naudoti, perjunkite į fokusuotą balsą arba pasirinktinį."
 
@@ -27215,27 +27215,27 @@ msgid "Push-to-talk is on. Hold your push-to-talk key to speak."
 msgstr "Kalbėjimas paspaudus įjungtas. Norėdami kalbėti, laikykite nuspaudę kalbėjimo paspaudus klavišą."
 
 #. Voice settings warning on Linux when the desktop dialog for system-wide shortcuts was dismissed or failed. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:223
 msgid "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
 msgstr "Kalbėjimas paspaudus veikia tik tada, kai {productName} yra aktyvus, nes jūsų darbalaukis nenustatė sistemos sparčiųjų klavišų."
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:131
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:132
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled."
 msgstr "Pokalbis paspaudus mygtuką veikia tik tada, kai {productName} yra aktyvus, kol nebus įjungtas {permissionName}."
 
 #. Voice settings warning on Linux before system-wide shortcuts are set up. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:222
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:219
 msgid "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
 msgstr "Kalbėjimas paspaudus veikia tik tada, kai {productName} yra aktyvus, kol nenustatysite sistemos sparčiųjų klavišų."
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:127
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:128
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Kalbėjimas paspaudus veikia tik tada, kai naršyklės skirtukas yra aktyvus."
 
 #. Linux warning next to the direct input device access switch when push-to-talk only has a key assigned by the desktop. With direct input on, only the push-to-talk key set in the app works, and without one the microphone sends whenever you speak. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:184
 msgid "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
 msgstr "Kalbėjimas paspaudus naudos klavišą, kurį nustatėte {productName}. Pirmiausia jį nustatykite, kitaip mikrofonas veiks pagal balso aktyvumą."
 
@@ -27245,12 +27245,12 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "Kalbėjimas paspaudus neįjungs mikrofono, kol jūsų garsas išjungtas. Norėdami kalbėti, vėl įjunkite garsą."
 
 #. Voice settings note on the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:259
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:256
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
 msgstr "Kalbėjimas paspaudus veikia už {productName} ribų tik tada, kai jį susiesite savo Hyprland konfigūracijoje."
 
 #. Voice settings note on the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:253
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:250
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
 msgstr "Kalbėjimas paspaudus veikia už {productName} ribų tik tada, kai jį susiesite savo Hyprland konfigūracijoje. Pridėkite savo Hyprland versijai skirtą eilutę ir pakeiskite KEY norimu klavišu."
 
@@ -27534,12 +27534,12 @@ msgstr "Gavėjai bus nukreipti į {0} <0>{1}</0>"
 #. Spellcheck engine option in the language tab. Lets the app choose the best available spellcheck engine.
 #. Spellcheck engine option in the textarea spellcheck submenu. Lets the app choose the best available engine.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:70
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:90
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:91
 msgid "Recommended"
 msgstr "Rekomenduojama"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:83
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Rekomenduojama. Išvalo mikrofoną, kad kalba būtų aiški."
 
@@ -27554,7 +27554,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "Pavyko prisijungti iš naujo. Jei norite tęsti ankstesnę transliaciją, pasirinkite ekraną dar kartą."
 
 #. Status text on Linux while the app reconnects to the desktop service that runs system-wide shortcuts, for example after it restarted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:48
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:45
 msgid "Reconnecting to your desktop…"
 msgstr "Jungiamasi iš naujo prie darbalaukio…"
 
@@ -27837,7 +27837,7 @@ msgstr "Perleiskite, kad pritaikytumėte"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:74
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:75
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:94
 msgid "Release delay"
 msgstr "Atleidimo delsa"
@@ -27854,7 +27854,7 @@ msgstr "Aktualu"
 msgid "Reload"
 msgstr "Įkelti iš naujo"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:471
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:474
 msgid "Reload {PRODUCT_NAME} to fully apply the engine change. Switching between in-app and system spellcheck requires a renderer reload because Electron can't swap providers while running."
 msgstr "Įkelkite „{PRODUCT_NAME}“ iš naujo, kad variklio pakeitimas būtų visiškai pritaikytas. Perjungiant tarp programėlės ir sistemos rašybos tikrinimo reikia iš naujo įkelti atvaizdavimo variklį, nes „Electron“ negali pakeisti teikėjų veikimo metu."
 
@@ -27873,7 +27873,7 @@ msgstr "Įkelkite „{productName}“ iš naujo, kad pritaikytumėte žiniatinkl
 msgid "Reload app"
 msgstr "Iš naujo įkelti programėlę"
 
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:483
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:487
 msgid "Reload now"
 msgstr "Įkelti iš naujo dabar"
 
@@ -27936,7 +27936,7 @@ msgid "Remove"
 msgstr "Pašalinti"
 
 #. Button or menu action label in the language tab. Keep it concise. Preserve {word}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:144
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:145
 msgid "Remove \"{word}\" from dictionary"
 msgstr "Pašalinti „{word}“ iš žodyno"
 
@@ -28087,8 +28087,8 @@ msgstr "Pašalinti iš mėgstamiausių GIF (tik URL)"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
 #: src/features/channel/components/modals/EditGroupModal.tsx:292
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:320
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:643
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:321
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:644
 msgid "Remove icon"
 msgstr "Pašalinti piktogramą"
 
@@ -29496,7 +29496,7 @@ msgid "Rows per page"
 msgstr "Eilutės puslapyje"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:148
+#: src/features/updater/commands/UpdaterModalCommands.tsx:149
 msgid "RPM package"
 msgstr "RPM paketas"
 
@@ -29531,7 +29531,7 @@ msgid "Safety"
 msgstr "Saugumas"
 
 #. Profile timezone difference text. The target user's timezone currently matches the viewer's timezone.
-#: src/features/user/components/popouts/UserProfileShared.tsx:61
+#: src/features/user/components/popouts/UserProfileShared.tsx:62
 msgid "Same time as you"
 msgstr "Toks pat laikas kaip ir jūsų"
 
@@ -29771,7 +29771,7 @@ msgstr "Ekrano įrašymas"
 #. Heading in the screen-share picker when macOS screen recording permission is missing.
 #. Title of the modal shown when screen recording permission is denied. Keep tone plain.
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:20
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:18
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:19
 msgid "Screen recording permission required"
 msgstr "Reikalingas ekrano įrašymo leidimas"
 
@@ -29859,7 +29859,7 @@ msgstr "Ekrano bendrinimo privatumas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:104
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:105
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:214
 msgid "Screen share quality"
 msgstr "Ekrano bendrinimo kokybė"
@@ -30120,7 +30120,7 @@ msgid "Search language code…"
 msgstr "Ieškoti kalbos kodo…"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:74
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:75
 msgid "Search languages…"
 msgstr "Ieškoti kalbų…"
 
@@ -30553,7 +30553,7 @@ msgid "Select GIF {title}"
 msgstr "Pasirinkite GIF {title}"
 
 #. Button or menu action label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:78
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:79
 msgid "Select interface language"
 msgstr "Pasirinkite sąsajos kalbą"
 
@@ -30574,7 +30574,7 @@ msgid "Select the account you want to sign in with on your new device."
 msgstr "Pasirinkite paskyrą, su kuria norite prisijungti naujame įrenginyje."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:119
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
 msgid "Select voice processing mode"
 msgstr "Pasirinkite balso apdorojimo režimą"
 
@@ -30888,7 +30888,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "Siunčia neapdorotą mikrofono garsą be apdorojimo."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:87
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Siunčia jūsų garsą be pakeitimų. Geriausia, jei naudojate išorinę garso programinę įrangą."
 
@@ -30987,7 +30987,7 @@ msgid "Set a member list position for the role"
 msgstr "Nustatyta vaidmens pozicija narių sąraše"
 
 #. Video settings note shown when a streaming preset decides the screen share resolution and frame rate. preset is the Gaming or Screen share preset label, and Custom is the third preset label.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:81
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:82
 msgid "Set by the {preset} preset. Picking a value here switches to Custom."
 msgstr "Nustatyta pagal {preset} iš anksto nustatytą parinktį. Pasirinkus reikšmę čia, bus pereita prie pasirinktinio nustatymo."
 
@@ -31151,7 +31151,7 @@ msgid "Set the voice region to automatic"
 msgstr "Nustatytas automatinis balso regionas"
 
 #. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:40
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:37
 msgid "Set up"
 msgstr "Nustatyti"
 
@@ -31308,7 +31308,7 @@ msgstr "Bendrinti su draugu"
 msgid "Share your screen"
 msgstr "Bendrinti ekraną"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:318
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:320
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Bendrinkite ekraną didele raiška (1080p), Quad HD (1440p) arba natūralia šaltinio raiška, iki 60 kadrų per sekundę."
 
@@ -31400,7 +31400,7 @@ msgstr "Trumpieji kodai"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:125
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:368
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:369
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -31408,7 +31408,7 @@ msgstr "Spartusis klavišas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:58
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:59
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:370
 msgid "Shortcut badges"
 msgstr "Sparčiųjų klavišų ženkleliai"
@@ -31617,7 +31617,7 @@ msgid "Show favorite button"
 msgstr "Rodyti mėgstamiausių mygtuką"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:90
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:91
 msgid "Show favorites throughout the app"
 msgstr "Rodyti mėgstamiausius elementus visoje programoje"
 
@@ -32040,7 +32040,7 @@ msgid "Sign in with your browser"
 msgstr "Prisijunkite per naršyklę"
 
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:28
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
 msgstr "Prisijungti naudojant senąją {productName} programėlę"
 
@@ -32098,7 +32098,7 @@ msgid "Sign out?"
 msgstr "Atsijungti?"
 
 #. Title of the browser page after the user cancelled the sign-in request from the app.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:322
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:326
 msgid "Sign-in cancelled"
 msgstr "Prisijungimas atšauktas"
 
@@ -32114,7 +32114,7 @@ msgid "Sign-in details"
 msgstr "Prisijungimo duomenys"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:89
+#: src/features/auth/flow/AuthLoginLayout.tsx:88
 msgid "Sign-in flow"
 msgstr "Prisijungimo eiga"
 
@@ -32145,7 +32145,7 @@ msgid "Signing in as {name}"
 msgstr "Prisijungiama kaip {name}"
 
 #. Text button in the desktop app that shows a code to type into a browser on a different device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:214
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:219
 msgid "Signing in on another device?"
 msgstr "Prisijungiate kitame įrenginyje?"
 
@@ -32655,7 +32655,7 @@ msgstr "Nepavyko įkelti veiklos žurnalo."
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:33
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -32695,7 +32695,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "Nepavyko išsiųsti patvirtinimo el. laiško. Bandykite dar kartą po akimirkos."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:131
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "Nepavyko pradėti atsiskaitymo. Bandykite dar kartą po akimirkos."
 
@@ -32813,7 +32813,7 @@ msgstr "Garsai"
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
 #. Screen share resolution token in the stream info pill on the sharing tile, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:77
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:78
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:250
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:111
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:336
@@ -32989,8 +32989,8 @@ msgstr "Greitis"
 #. Settings section label for spellcheck settings.
 #. Submenu label in the textarea right-click context menu for spellcheck preferences.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:62
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:401
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:443
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:402
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:446
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:74
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:78
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:50
@@ -32998,7 +32998,7 @@ msgid "Spellcheck"
 msgstr "Rašybos tikrinimas"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:118
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:119
 msgid "Spellcheck engine"
 msgstr "Rašybos tikrinimo modulis"
 
@@ -33100,7 +33100,7 @@ msgid "Star animation"
 msgstr "Žvaigždės animacija"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:86
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:87
 msgid "Starred channels"
 msgstr "Pažymėti kanalai"
 
@@ -33141,7 +33141,7 @@ msgstr "Pradėti balso skambutį?"
 msgid "Start call"
 msgstr "Pradėti skambutį"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:279
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:281
 msgid "Start camera test and configure effects"
 msgstr "Pradėti kameros testą ir konfigūruoti efektus"
 
@@ -33176,7 +33176,7 @@ msgid "Start minimized"
 msgstr "Pradėti sumažintą"
 
 #. Button on the browser page after cancelling that goes back to choosing an account.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:337
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:341
 #: src/features/moderation/components/report/ReportStepDetails.tsx:389
 #: src/features/moderation/components/report/ReportStepEmail.tsx:113
 #: src/features/moderation/components/report/ReportStepReason.tsx:149
@@ -33240,7 +33240,7 @@ msgid "Startup"
 msgstr "Paleidimas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:78
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:79
 msgid "Static Neko"
 msgstr "Statinis Neko"
 
@@ -33461,12 +33461,12 @@ msgid "Still indexing — check back in a moment"
 msgstr "Vis dar indeksuojama – patikrinkite po akimirkos"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:74
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:75
 msgid "Still Neko"
 msgstr "Nejudantis Neko"
 
 #. Heading in the screen-share picker after the user has opened macOS screen recording settings and the permission is not active yet.
-#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:31
+#: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:32
 msgid "Still waiting for screen recording access"
 msgstr "Vis dar laukiama ekrano įrašymo prieigos"
 
@@ -33495,7 +33495,7 @@ msgid "Stop mic test"
 msgstr "Sustabdyti mikrofono testą"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:70
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
 msgid "Stop Neko from chasing your cursor while keeping it draggable and interactive."
 msgstr "Neko nebesivaiko žymeklio, bet jį vis tiek galima vilkti ir su juo sąveikauti."
 
@@ -33778,7 +33778,7 @@ msgid "Subscription"
 msgstr "Prenumerata"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:86
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:85
 msgid "Subscription already exists"
 msgstr "Prenumerata jau yra"
 
@@ -33958,7 +33958,7 @@ msgstr "Perjungti į patogų išdėstymą"
 msgid "Switch to dense layout"
 msgstr "Perjungti į tankų išdėstymą"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:668
 msgid "Switch to direct input"
 msgstr "Perjungti į tiesioginį įvedimą"
 
@@ -34183,7 +34183,7 @@ msgid "System DMs cannot host voice calls."
 msgstr "Sistemos DM negali rengti balso skambučių."
 
 #. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:38
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:39
 msgid "System locale: {format}"
 msgstr "Sistemos lokalė: {format}"
 
@@ -34219,17 +34219,17 @@ msgid "System tray"
 msgstr "Sistemos dėklas"
 
 #. Modal title when the desktop app is installed through a system package manager such as Flatpak.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:70
+#: src/features/updater/commands/UpdaterModalCommands.tsx:71
 msgid "System-managed install"
 msgstr "Sistemos tvarkomas diegimas"
 
 #. Settings subsection title for keyboard and mouse shortcuts that work outside the app.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:24
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:21
 msgid "System-wide shortcuts"
 msgstr "Visos sistemos spartieji klavišai"
 
 #. Linux settings text when setting up system-wide shortcuts failed.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:148
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:145
 msgid "System-wide shortcuts could not be set up."
 msgstr "Nepavyko nustatyti sistemos sparčiųjų klavišų."
 
@@ -34345,7 +34345,7 @@ msgid "Tap to add a note"
 msgstr "Palieskite, kad pridėtumėte pastabą"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:153
+#: src/features/updater/commands/UpdaterModalCommands.tsx:154
 msgid "tar.gz archive"
 msgstr "tar.gz archyvas"
 
@@ -34361,7 +34361,7 @@ msgstr "Užduočių juostos ženkliukas"
 msgid "Teleporting you to another voice region..."
 msgstr "Perkeliame jus į kitą balso regioną..."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:567
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:568
 msgid "Template"
 msgstr "Šablonas"
 
@@ -34650,7 +34650,7 @@ msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on 
 msgstr "„{PRODUCT_NAME}“ programa jūsų kitame įrenginyje rodoma skiltyje „Prisijungimas kitu įrenginiu“. Įveskite kodą tik iš įrenginio, kurį kontroliuojate."
 
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:327
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:331
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
 msgstr "„{PRODUCT_NAME}“ programa nebuvo prisijungta. Galite uždaryti šią skirtuką."
 
@@ -34715,12 +34715,12 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "Bendruomenė, kurios ieškote, galėjo būti ištrinta arba neturite prieigos prie jos."
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:108
+#: src/features/updater/commands/UpdaterModalCommands.tsx:109
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "Nepavyko atsisiųsti darbalaukio naujinimo. Bandykite dar kartą paspaudę naujinimo mygtuką, kai ryšys bus stabilus."
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:139
+#: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "Atsisiųstas failas išsaugotas jūsų kompiuteryje. Įdiekite jį naudodami įprastą paketų tvarkyklę."
 
@@ -35178,7 +35178,7 @@ msgid "This category already contains the maximum of {maxChannelsPerCategory} ch
 msgstr "Šioje kategorijoje jau yra didžiausias leistinas kanalų skaičius: {maxChannelsPerCategory}."
 
 #. Body in the channel gate modal for a mature category when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:254
+#: src/features/channel/components/MatureContentChannelGate.tsx:281
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:76
 msgid "This category is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Ši kategorija pažymėta kaip skirta brandžiam turiniui ir joje gali būti medžiagos, kuri kai kuriems naudotojams gali būti netinkama."
@@ -35221,7 +35221,7 @@ msgid "This channel has a content warning. Updates can only go to channels with 
 msgstr "Šiame kanale yra turinio įspėjimas. Naujienos gali būti siunčiamos tik į kanalus su turinio įspėjimu arba amžiaus apribojimu."
 
 #. Body in the channel gate modal for a mature text channel when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:282
+#: src/features/channel/components/MatureContentChannelGate.tsx:309
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:91
 msgid "This channel is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Šis kanalas pažymėtas kaip skirtas brandžiam turiniui ir jame gali būti medžiagos, kuri kai kuriems naudotojams gali būti netinkama."
@@ -35310,7 +35310,7 @@ msgid "This community is full"
 msgstr "Ši bendruomenė pilna"
 
 #. Body in the channel gate modal for a mature community when no custom warning is set.
-#: src/features/channel/components/MatureContentChannelGate.tsx:225
+#: src/features/channel/components/MatureContentChannelGate.tsx:252
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:71
 msgid "This community is marked for mature content and may contain material that may be inappropriate for some users."
 msgstr "Ši bendruomenė pažymėta kaip skirta brandžiam turiniui ir joje gali būti medžiagos, kuri kai kuriems naudotojams gali būti netinkama."
@@ -35325,14 +35325,14 @@ msgstr "Ši bendruomenė nebepasiekiama"
 #. Description text in the linked accounts tab.
 #. Description text in the user profile shared popout.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:43
-#: src/features/user/components/popouts/UserProfileShared.tsx:45
+#: src/features/user/components/popouts/UserProfileShared.tsx:46
 msgid "This connection has been verified."
 msgstr "Šis ryšys patvirtintas."
 
 #. Description text in the linked accounts tab.
 #. Description text in the user profile shared popout.
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:47
-#: src/features/user/components/popouts/UserProfileShared.tsx:49
+#: src/features/user/components/popouts/UserProfileShared.tsx:50
 msgid "This connection has not been verified."
 msgstr "Šis ryšys nepatvirtintas."
 
@@ -35350,22 +35350,22 @@ msgid "This conversation is no longer available."
 msgstr "Šis pokalbis nebepasiekiamas."
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:78
+#: src/features/updater/commands/UpdaterModalCommands.tsx:79
 msgid "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 msgstr "Ši darbalaukio versija negali diegti naujinimų programoje {productName}. Vietoj to atsisiųskite naujausią darbalaukio diegimo programą."
 
 #. Voice settings warning on Linux desktops without system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:232
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:229
 msgid "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused."
 msgstr "Šis darbalaukis nepalaiko sistemos sparčiųjų klavišų. Kalbėjimas paspaudus veikia tik tada, kai {productName} yra aktyvus."
 
 #. Linux settings text when the desktop has no system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:144
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:141
 msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
 msgstr "Šis darbalaukis nepalaiko sistemos sparčiųjų klavišų. Spartieji klavišai vis tiek veikia, kai {productName} yra aktyvus."
 
 #. Desktop updater modal body for development or unpackaged builds.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:74
+#: src/features/updater/commands/UpdaterModalCommands.tsx:75
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
 msgstr "Ši kūrimo versija negali atsinaujinti. Atsisiųskite darbalaukio diegimo programą, kad išbandytumėte naujinimo eigą."
 
@@ -35477,7 +35477,7 @@ msgid "This image couldn't be read. It may be damaged."
 msgstr "Šio paveikslėlio nepavyko nuskaityti. Jis gali būti sugadintas."
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:84
+#: src/features/updater/commands/UpdaterModalCommands.tsx:85
 msgid "This install is managed by your system. Update {productName} from your software center or package manager."
 msgstr "Šią programą valdo jūsų sistema. Atnaujinkite „{productName}“ naudodami programų centrą arba paketų tvarkyklę."
 
@@ -35492,7 +35492,7 @@ msgid "This instance already uses usernames to sign in. This can no longer chang
 msgstr "Ši instancija jau naudoja prisijungimui vartotojo vardus. Tai nebegali būti pakeista."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:67
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "Ši instancija šiuo metu leidžia bendrinti ekraną iki 720p raiškos ir 30 kadrų per sekundę."
 
@@ -35630,33 +35630,44 @@ msgid "This link isn't valid. Open the link from your email again."
 msgstr "Ši nuoroda netinkama. Dar kartą atidarykite nuorodą iš savo el. laiško."
 
 #. Body in the channel gate modal when the current user cannot access a mature category.
+#. Body text on the mature content gate when the viewer cannot open a mature category.
+#: src/features/channel/components/MatureContentChannelGate.tsx:36
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:63
 msgid "This mature category is not available to your account."
 msgstr "Ši brandaus turinio kategorija nepasiekiama jūsų paskyrai."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:147
+#: src/features/channel/components/MatureContentChannelGate.tsx:167
 msgid "This mature category is not available to your account. <0>Learn more</0>"
 msgstr "Ši brandaus turinio kategorija nepasiekiama jūsų paskyrai. <0>Sužinoti daugiau</0>"
 
 #. Body in the channel gate modal when the current user cannot access a mature channel.
+#. Body text on the mature content gate when the viewer cannot open a mature channel.
+#: src/features/channel/components/MatureContentChannelGate.tsx:40
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:67
 msgid "This mature channel is not available to your account."
 msgstr "Šis brandaus turinio kanalas nepasiekiamas jūsų paskyrai."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:169
+#: src/features/channel/components/MatureContentChannelGate.tsx:193
 msgid "This mature channel is not available to your account. <0>Learn more</0>"
 msgstr "Šis brandaus turinio kanalas nepasiekiamas jūsų paskyrai. <0>Sužinoti daugiau</0>"
 
 #. Body in the channel gate modal when the current user cannot access a mature community.
+#. Body text on the mature content gate when the viewer cannot open a mature community.
+#: src/features/channel/components/MatureContentChannelGate.tsx:32
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:59
 msgid "This mature community is not available to your account."
 msgstr "Ši brandaus turinio bendruomenė nepasiekiama jūsų paskyrai."
 
-#: src/features/channel/components/MatureContentChannelGate.tsx:124
+#: src/features/channel/components/MatureContentChannelGate.tsx:140
 msgid "This mature community is not available to your account. <0>Learn more</0>"
 msgstr "Ši brandaus turinio bendruomenė nepasiekiama jūsų paskyrai. <0>Sužinoti daugiau</0>"
 
-#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:106
+#. Body text in the mature media gate details modal when the viewer cannot open mature media.
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:31
+msgid "This mature media is not available to your account."
+msgstr "Ši brandi medija nepasiekiama jūsų paskyrai."
+
+#: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:113
 msgid "This mature media is not available to your account. <0>Learn more</0>"
 msgstr "Ši brandi medija nepasiekiama jūsų paskyrai. <0>Sužinoti daugiau</0>"
 
@@ -35716,9 +35727,14 @@ msgid "This picker is only available in the desktop app."
 msgstr "Šis parinkiklis pasiekiamas tik darbalaukio programoje."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:153
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
 msgid "This plan isn't available. Contact support."
 msgstr "Šis planas nepasiekiamas. Susisiekite su palaikymo komanda."
+
+#. Error modal body shown on a self-hosted instance when the selected Plutonium plan has no price ID configured.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+msgid "This plan isn't available. Contact the administrators of this instance."
+msgstr "Šis planas nepasiekiamas. Susisiekite su šios instancijos administratoriais."
 
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:191
 msgid "This purchase is not eligible for a refund."
@@ -35838,7 +35854,7 @@ msgstr "Ši tema užrakinta. Tik moderatoriai gali siųsti žinutes."
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Šis naudotojas apribojo savo profilį. Dalis informacijos nematoma žmonėms, kurie nėra jo draugai."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:395
+#: src/features/user/components/popouts/UserProfileShared.tsx:399
 msgid "This user has no roles in this community."
 msgstr "Šis naudotojas neturi vaidmenų šioje bendruomenėje."
 
@@ -36051,14 +36067,14 @@ msgstr "Laikas"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for app time display format.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:361
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:362
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:26
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:38
 msgid "Time format"
 msgstr "Laiko formatas"
 
 #. Short label in the language tab. Keep it concise.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:62
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:63
 msgid "Time format selection"
 msgstr "Laiko formato pasirinkimas"
 
@@ -36144,17 +36160,17 @@ msgid "Title bar platform"
 msgstr "Pavadinimo juostos platforma"
 
 #. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:89
 msgid "To change the keys, go to Settings > Apps > {productName}."
 msgstr "Norėdami pakeisti klavišus, eikite į Nustatymai > Programos > {productName}."
 
 #. Instructions for KDE Plasma. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:87
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:84
 msgid "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "Norėdami pakeisti klavišus, eikite į Sistemos nuostatos > Klaviatūra > Spartieji klavišai > {productName}."
 
 #. Instructions for changing system-wide shortcut keys on an unrecognized Linux desktop.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:108
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:105
 msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "Norėdami pakeisti klavišus, atidarykite savo darbalaukio klaviatūros sparčiųjų klavišų nustatymus."
 
@@ -36342,7 +36358,7 @@ msgid "Toolbar"
 msgstr "Įrankių juosta"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:54
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:55
 msgid "Tooltip shortcuts"
 msgstr "Spartieji klavišai patarimuose"
 
@@ -36865,7 +36881,7 @@ msgstr "Dvidešimt keturių valandų"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:42
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:43
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:406
 msgid "Two clicks"
 msgstr "Du paspaudimai"
@@ -37264,7 +37280,7 @@ msgstr "Universalus atsarginis variantas. Žemiausia kokybė, bet veikia visur."
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:770
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:115
-#: src/features/updater/commands/UpdaterModalCommands.tsx:127
+#: src/features/updater/commands/UpdaterModalCommands.tsx:128
 msgid "Unknown"
 msgstr "Nežinoma"
 
@@ -37430,7 +37446,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "Atrakinkite pasirinktinius jaustukus DM pokalbiuose su „{premiumProductName}“"
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:59
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:60
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Atrakinkite HD ekrano bendrinimą su „{premiumProductName}“"
 
@@ -37818,7 +37834,7 @@ msgid "Up to 720p at 30 FPS"
 msgstr "Iki 720p esant 30 kadrų per sekundę"
 
 #. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:152
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:149
 msgid "Update {productName} to use system-wide shortcuts on Wayland."
 msgstr "Atnaujinkite {productName}, kad galėtumėte naudoti sistemos sparčiuosius klavišus Wayland aplinkoje."
 
@@ -37842,7 +37858,7 @@ msgid "Update my status"
 msgstr "Atnaujinti mano būseną"
 
 #. Button label that closes the desktop app and opens the updater to install an available update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:42
+#: src/features/updater/commands/UpdaterModalCommands.tsx:43
 msgid "Update now"
 msgstr "Atnaujinti dabar"
 
@@ -38009,8 +38025,8 @@ msgstr "Įkelkite failus ir mediją į šį kanalą."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "Įkelti piktogramą"
@@ -38167,7 +38183,7 @@ msgid "Use {name} on {domain}"
 msgstr "Naudoti {name} adresu {domain}"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:44
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:43
 msgid "Use {pixPaymentMethod}"
 msgstr "Naudoti {pixPaymentMethod}"
 
@@ -38182,7 +38198,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "Naudokite „{query}“ ten, kur turėtų būti įterptas verčiamas tekstas."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:54
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:53
 msgid "Use {upiPaymentMethod}"
 msgstr "Naudoti {upiPaymentMethod}"
 
@@ -38220,7 +38236,7 @@ msgid "Use actual value"
 msgstr "Naudoti tikrąją reikšmę"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:63
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:62
 msgid "Use alternative method"
 msgstr "Naudoti kitą būdą"
 
@@ -38246,12 +38262,12 @@ msgid "Use autoscrolling"
 msgstr "Naudoti automatinį slinkimą"
 
 #. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:70
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:71
 msgid "Use browser locale for time format"
 msgstr "Naudoti naršyklės lokalę laiko formatui"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:174
 msgid "Use card"
 msgstr "Naudoti kortelę"
 
@@ -38298,7 +38314,7 @@ msgid "Use default"
 msgstr "Naudoti numatytąjį"
 
 #. Switch label on Linux. When on, the app reads keyboard devices directly for system-wide shortcuts. Not related to the "Direct input" voice processing profile.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:157
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:154
 msgid "Use direct input device access"
 msgstr "Naudoti tiesioginę prieigą prie įvesties įrenginių"
 
@@ -38392,7 +38408,7 @@ msgid "Use stickers from other communities."
 msgstr "Naudoti lipdukus iš kitų bendruomenių."
 
 #. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:66
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:67
 msgid "Use system locale for time format"
 msgstr "Naudoti sistemos lokalę laiko formatui"
 
@@ -38407,7 +38423,7 @@ msgid "Use the operating system's window chrome"
 msgstr "Naudoti operacinės sistemos lango apvadą"
 
 #. Description for the operating-system spellcheck engine option in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:114
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:115
 msgid "Use the spellchecker built into your operating system."
 msgstr "Naudoti operacinėje sistemoje integruotą rašybos tikrintuvą."
 
@@ -38453,7 +38469,7 @@ msgid "Use voice activity"
 msgstr "Naudoti balso aktyvavimą"
 
 #. Description for the recommended spellcheck engine option in the language tab. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx:94
+#: src/features/user/components/modals/tabs/LanguageTab.tsx:95
 msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
 msgstr "Naudokite savo operacinės sistemos rašybos tikrintuvą, jei jis pasiekiamas. Kitu atveju naudokite {productName} programoje esančius žodynus."
 
@@ -38927,7 +38943,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "Prieš siųsdami draugystės užklausas, patvirtinkite savo el. pašto adresą."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:67
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:66
 msgid "Verify your email first"
 msgstr "Pirmiausia patvirtinkite savo el. paštą"
 
@@ -39245,7 +39261,7 @@ msgstr "Peržiūrėti išsamią informaciją"
 msgid "View devices that are signed in to your account"
 msgstr "Peržiūrėti įrenginius, kurie prisijungę prie jūsų paskyros"
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:198
+#: src/features/user/components/popouts/UserProfileShared.tsx:199
 msgid "View full profile"
 msgstr "Peržiūrėti visą profilį"
 
@@ -39388,7 +39404,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "Visionary 2FA pranešimų juosta"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:80
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:79
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "„Visionary“ jau apima nuolatinę prieigą, todėl pasikartojanti prenumerata nereikalinga. Vis tiek galite pirkti dovanų kitiems."
 
@@ -39536,7 +39552,7 @@ msgstr "Balso kanalas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:26
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:27
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:402
 msgid "Voice channel confirmation"
 msgstr "Balso kanalo patvirtinimas"
@@ -39547,7 +39563,7 @@ msgid "Voice channel full"
 msgstr "Balso kanalas pilnas"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:22
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:23
 msgid "Voice channel join behavior"
 msgstr "Prisijungimo prie balso kanalo veiksena"
 
@@ -39616,7 +39632,7 @@ msgid "Voice participants"
 msgstr "Balso pokalbio dalyviai"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:661
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:663
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Balso apdorojimas"
@@ -39662,7 +39678,7 @@ msgstr "Garso įjungimas"
 msgid "Voice unmute"
 msgstr "Mikrofono įjungimas"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:590
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:592
 msgid "Voice uses your system output device in this browser. Change it in your system settings."
 msgstr "Šioje naršyklėje balso pokalbiams naudojamas sistemos garso išvesties įrenginys. Pakeiskite jį sistemos nustatymuose."
 
@@ -39676,7 +39692,7 @@ msgstr "Anuliuota"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:387
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:179
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
@@ -39724,7 +39740,7 @@ msgstr "Laikas tarp žinučių. Nariai, turintys leidimą „{bypassSlowmodePerm
 msgid "Waiting for connection..."
 msgstr "Laukiama prisijungimo..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:366
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:374
 msgid "Waiting for passkey…"
 msgstr "Laukiama prieigos rakto…"
 
@@ -39744,7 +39760,7 @@ msgid "Waiting for you to..."
 msgstr "Laukiama, kol jūs..."
 
 #. Status text while the Linux desktop shows its own dialog for confirming system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:44
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:41
 msgid "Waiting for your desktop…"
 msgstr "Laukiama jūsų darbalaukio…"
 
@@ -39888,7 +39904,7 @@ msgid "We couldn't read this theme. It may be corrupted or invalid."
 msgstr "Nepavyko nuskaityti šios temos. Ji gali būti sugadinta arba netinkama."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:91
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:90
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "Radome esamą {premiumProductFullName} prenumeratą šiai paskyrai. Tvarkykite ją saugiame atsiskaitymo portale, kad atnaujintumėte mokėjimo duomenis arba patikrintumėte atnaujinimo būseną. Jei ką tik sumokėjote, palaukite minutę ir iš naujo atidarykite šį puslapį."
 
@@ -39915,7 +39931,7 @@ msgstr "Šį lipduką pakeitėme ir suglaudinome iki 320x320 pikselių, bet jo d
 msgid "We sent a code to {email}."
 msgstr "Išsiuntėme kodą į {email}."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:158
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:162
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Atidarius prisijungimo naršyklėje langą, iš anksto užpildysime {prefillEmail}."
 
@@ -40112,7 +40128,7 @@ msgid "Website previews"
 msgstr "Svetainių peržiūros"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:93
+#: src/features/auth/flow/AuthLoginLayout.tsx:92
 msgid "Welcome back"
 msgstr "Sveiki sugrįžę"
 
@@ -40322,7 +40338,7 @@ msgstr "Kurios bendruomenės"
 msgid "Which conversations"
 msgstr "Kurie pokalbiai"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:363
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Kai įjungtas kalbėjimas paspaudus, mikrofoną valdo jūsų spartusis klavišas, todėl nutildymo mygtukas išjungtas."
 
@@ -40632,7 +40648,7 @@ msgid "You are now a developer!"
 msgstr "Dabar esate kūrėjas!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:165
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "Dabar būsite nukreipti į {paymentProviderName}, kad užbaigtumėte mokėjimą. Kai tai padarysite, grįžkite į {productName}."
 
@@ -41053,12 +41069,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Ką tik paspaudėte „Tab“. Įjungtas klaviatūros režimas, kad galėtumėte naršyti {productName} be pelės."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:259
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:258
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Privilegijas išsaugosite iki kito atnaujinimo datos. Suaktyvinkite prenumeratą iš naujo iki tol, kad išsaugotumėte prenumeratos istoriją."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:280
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:279
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Iškart prarasite visas „{PREMIUM_PRODUCT_NAME}“ privilegijas, o jūsų prenumeratos istorija bus nustatyta iš naujo. Šio veiksmo anuliuoti negalima."
 
@@ -41138,8 +41154,8 @@ msgstr "Norėdami čia naudoti jaustukus iš kitų bendruomenių, turite turėti
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Norėdami čia naudoti lipdukus iš kitų bendruomenių, turite turėti leidimą „{permissionLabel}“."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:210
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:438
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:211
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:439
 msgid "You need to claim your account before you can create a community."
 msgstr "Prieš kurdami bendruomenę turite užregistruoti savo paskyrą."
 
@@ -41156,8 +41172,8 @@ msgstr "Kad galėtumėte siųsti tiesiogines žinutes, turite užregistruoti sav
 msgid "You need to claim your account to send messages in this community."
 msgstr "Kad galėtumėte siųsti žinutes šioje bendruomenėje, turite užregistruoti savo paskyrą."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:235
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:463
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:236
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:464
 msgid "You need to verify your email address before you can create a community."
 msgstr "Prieš kurdami bendruomenę, turite patvirtinti savo el. pašto adresą."
 
@@ -41171,7 +41187,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "Prieš pradėdami tiesioginį pokalbį turite patvirtinti savo el. pašto adresą."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:71
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:70
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "Prieš pirkdami „{premiumProductFullName}“ turite patvirtinti el. pašto adresą."
 
@@ -41215,7 +41231,7 @@ msgid "You'll appear offline"
 msgstr "Atrodysite neprisijungę"
 
 #. Body of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription. The subscription is charged immediately and the unused gift time is appended after the paid period.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:139
 msgid "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost."
 msgstr "Jums bus apmokestinta dabar. Jūsų likęs dovanų laikas bus pridėtas po apmokėto laikotarpio, todėl niekas nebus prarasta."
 
@@ -41263,7 +41279,7 @@ msgid "You're already friends with this user."
 msgstr "Jūs jau draugaujate su šiuo naudotoju."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:76
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:75
 msgid "You're already Visionary"
 msgstr "Jau esate Visionary"
 
@@ -41382,7 +41398,7 @@ msgid "You're sending reports too quickly. Try again later."
 msgstr "Siunčiate pranešimus per greitai. Bandykite vėliau."
 
 #. Title of the browser page after the user approved signing in to the app.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:282
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:286
 msgid "You're signed in"
 msgstr "Esate prisijungę"
 
@@ -41501,7 +41517,7 @@ msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Peržiūrėjote visus naujausius paminėjimus. Netrukus čia atsiras daugiau."
 
 #. Modal body for existing-subscription block when the subscription was bought in a mobile app store. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {premiumProductFullName} is the full premium product name.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:97
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:96
 msgid "Your {premiumProductFullName} subscription is billed through {storeName}. Manage it in your {storeName} account to change your plan or check renewal status."
 msgstr "Jūsų {premiumProductFullName} prenumerata apmokestinama per {storeName}. Tvarkykite ją savo {storeName} paskyroje, kad pakeistumėte planą arba patikrintumėte atnaujinimo būseną."
 
@@ -41560,9 +41576,13 @@ msgstr "Jūsų paskyra per nauja, kad galėtų siųsti žinutes šioje bendruome
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Jūsų paskyros užklausa laukia patvirtinimo. Prisijungti galėsite, kai administratorius ją patvirtins."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:297
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:304
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "Jūsų paskyrai reikalingas daugiafaktorinis autentifikavimas, tačiau šiame įrenginyje nėra nustatytų palaikomų metodų. Prisijunkite įrenginyje, kuriame yra jūsų autentifikavimo programa arba saugos raktas, arba susisiekite su palaikymo komanda."
+
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:298
+msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact the administrators of this instance."
+msgstr "Jūsų paskyrai reikalingas daugiafaktorinis autentifikavimas, tačiau šiame įrenginyje nėra nustatytų palaikomų metodų. Prisijunkite įrenginyje, kuriame yra jūsų autentifikavimo programa arba saugos raktas, arba susisiekite su šios instancijos administratoriais."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
@@ -41575,9 +41595,14 @@ msgid "Your accounts and settings have not been changed or deleted."
 msgstr "Jūsų paskyros ir nustatymai nebuvo pakeisti ar ištrinti."
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
-#: src/features/auth/components/ContentBlockedHandler.tsx:14
+#: src/features/auth/components/ContentBlockedHandler.tsx:15
 msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Jūsų veiksmas negalėjo būti atliktas, nes jį pažymėjo mūsų saugos sistemos. Jei manote, kad tai klaida, susisiekite su palaikymo komanda."
+
+#. Modal body shown on a self-hosted instance when the safety system blocks the requested action. Keep plain and calm.
+#: src/features/auth/components/ContentBlockedHandler.tsx:21
+msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
+msgstr "Jūsų veiksmas negalėjo būti atliktas, nes jį pažymėjo mūsų saugos sistemos. Jei manote, kad tai klaida, susisiekite su šios instancijos administratoriais."
 
 #. Report flow: section heading above the list of answers the reporter picked, on the summary screen.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:26
@@ -41626,22 +41651,22 @@ msgid "Your current kit stops working as soon as the new one is created."
 msgstr "Jūsų dabartinis rinkinys nustos veikti, kai tik bus sukurtas naujas."
 
 #. Linux settings text when the desktop dialog for system-wide shortcuts was dismissed or failed. Neutral wording, the user may not have declined anything.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:134
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:131
 msgid "Your desktop didn't set up system-wide shortcuts."
 msgstr "Jūsų darbalaukis nenustatė sistemos sparčiųjų klavišų."
 
 #. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME). A key assigned here stops reaching every other app. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:61
 msgid "Your desktop keeps these keys for {productName}, so other apps can't use them."
 msgstr "Jūsų darbalaukis šiuos klavišus rezervuoja programai {productName}, todėl kitos programos negali jų naudoti."
 
 #. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME), shown when the "Use direct input device access" switch is offered below it. A key assigned here stops reaching every other app. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:69
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:66
 msgid "Your desktop keeps these keys for {productName}, so other apps can't use them. To use the same key in other apps, turn on direct input device access below."
 msgstr "Jūsų darbalaukis šiuos klavišus rezervuoja programai {productName}, todėl kitos programos negali jų naudoti. Jei norite tą patį klavišą naudoti kitose programose, žemiau įjunkite tiesioginę prieigą prie įvesties įrenginių."
 
 #. Subtitle above the list of system-wide shortcuts assigned by the Linux desktop. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:53
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:50
 msgid "Your desktop runs these shortcuts even while {productName} is not focused."
 msgstr "Jūsų darbalaukis vykdo šiuos sparčiuosius klavišus net tada, kai {productName} nėra aktyvus."
 
@@ -41730,7 +41755,7 @@ msgid "Your gift time has ended. Subscribe to keep {premiumProductName}."
 msgstr "Jūsų dovanos laikas baigėsi. Prenumeruokite, kad išsaugotumėte {premiumProductName}."
 
 #. Title of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:134
 msgid "Your gift time is kept"
 msgstr "Jūsų dovanotas laikas išsaugotas"
 
@@ -41745,7 +41770,7 @@ msgid "Your grace period has ended."
 msgstr "Jūsų lengvatinis laikotarpis baigėsi."
 
 #. Critical nagbar body shown when the desktop installation appears corrupted. Keep the tone plain.
-#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:13
+#: src/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar.tsx:14
 msgid "Your installation is corrupted, and you need to reinstall the app for all functionality to work."
 msgstr "Jūsų diegimas pažeistas, todėl turite iš naujo įdiegti programėlę, kad visos funkcijos veiktų."
 
@@ -41772,22 +41797,27 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "Paskutinis pirkinys nepatenka į pinigų grąžinimo laikotarpį. Dėl atsiskaitymo problemų susisiekite su palaikymo komanda."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:82
+#: src/features/messaging/state/MessageQueue.tsx:83
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Jūsų žinutė nebuvo pristatyta, nes ją pažymėjo mūsų saugos sistemos. Jei manote, kad tai klaida, susisiekite su palaikymo komanda."
 
+#. Message send error on a self-hosted instance when the safety system blocks the message.
+#: src/features/messaging/state/MessageQueue.tsx:88
+msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
+msgstr "Jūsų žinutė nebuvo pristatyta, nes ją pažymėjo mūsų saugos sistemos. Jei manote, kad tai klaida, susisiekite su šios instancijos administratoriais."
+
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:69
+#: src/features/messaging/state/MessageQueue.tsx:70
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "Jūsų žinutės nepavyko pristatyti. Paprastai taip nutinka, nes neturite bendros bendruomenės su gavėju arba gavėjas priima tiesiogines žinutes tik iš draugų. Jums taip pat gali reikėti pakoreguoti savo tiesioginių žinučių privatumo nustatymus čia: {directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:74
+#: src/features/messaging/state/MessageQueue.tsx:75
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "Jūsų žinutės nepavyko pristatyti. Norėdami siųsti tiesiogines žinutes, turite užregistruoti savo paskyrą."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:78
+#: src/features/messaging/state/MessageQueue.tsx:79
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "Jūsų žinutės nepavyko pristatyti. Norėdami siųsti žinutes, turite užregistruoti savo paskyrą."
 
@@ -41886,7 +41916,7 @@ msgid "Your report didn't go through. Try again."
 msgstr "Nepavyko išsiųsti jūsų pranešimo. Bandykite dar kartą."
 
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:87
 msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
 msgstr "Jūsų išsaugotas vaizdo įrašas {savedResolution} su {savedFrameRate} kadrų per sekundę reikalauja {premiumProductName}, todėl bendrinama naudojant {resolution} su {frameRate} kadrų per sekundę."
 

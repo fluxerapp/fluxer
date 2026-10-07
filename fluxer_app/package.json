@@ -4,7 +4,7 @@
 	"private": true,
 	"description": "Fluxer is a free and open source instant messaging and VoIP chat app built for friends, groups, and communities.",
 	"homepage": "https://fluxer.app",
-	"author": "Fluxer Platform AB <support@fluxer.app>",
+	"author": "Fluxer Platform AB <support@fluxer.com>",
 	"sideEffects": [
 		"*.css",
 		"**/*.css"

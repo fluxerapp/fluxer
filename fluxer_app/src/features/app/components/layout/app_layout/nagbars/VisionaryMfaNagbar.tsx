@@ -5,7 +5,7 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {ENABLE_TWO_FACTOR_AUTH_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -51,7 +51,7 @@ export const VisionaryMfaNagbar = observer(({isMobile}: {isMobile: boolean}) => 
 			<NagbarContent
 				isMobile={isMobile}
 				onDismiss={handleDismiss}
-				message={i18n._(VISIONARY_MFA_MESSAGE_DESCRIPTOR, {productName: PRODUCT_NAME})}
+				message={i18n._(VISIONARY_MFA_MESSAGE_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				actions={
 					<NagbarButton
 						isMobile={isMobile}

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
 import {VOICE_CHANNEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Platform} from '@app/features/platform/types/Platform';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
@@ -157,6 +158,7 @@ export const appearanceIndex: Array<SearchableSettingDescriptor> = [
 		description: HELP_CENTER_BUTTON_IN_THE_SIDEBAR_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['appearance'],
+		isVisible: () => Routes.help() != null,
 	},
 	{
 		id: 'appearance-show-download-button',

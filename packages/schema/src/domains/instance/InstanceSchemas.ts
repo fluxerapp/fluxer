@@ -64,8 +64,12 @@ const InstanceLegalSchema = z
 	.object({
 		terms_url: z.string().nullable().describe('Optional public terms of service URL for account registration'),
 		privacy_url: z.string().nullable().describe('Optional public privacy policy URL for account registration'),
+		guidelines_url: z
+			.string()
+			.nullable()
+			.describe('Optional public community guidelines URL linked from reporting and enforcement notices'),
 	})
-	.describe('Optional legal document URLs shown during public registration');
+	.describe('Optional legal and policy document URLs shown to users');
 
 const InstanceAppRegistrationSchema = z
 	.object({

@@ -5,7 +5,7 @@
 		"title": "Fluxer API",
 		"version": "1.0.0",
 		"description": "API for Fluxer, a free and open source instant messaging and VoIP chat app built for friends, groups, and communities.",
-		"contact": {"name": "Fluxer Platform AB", "email": "support@fluxer.app"},
+		"contact": {"name": "Fluxer Platform AB", "email": "support@fluxer.com"},
 		"license": {"name": "AGPL-3.0", "url": "https://www.gnu.org/licenses/agpl-3.0.html"}
 	},
 	"servers": [{"url": "https://api.fluxer.app/v1", "description": "Production API"}],
@@ -33270,11 +33270,15 @@
 									"privacy_url": {
 										"description": "Optional public privacy policy URL for account registration",
 										"type": ["string", "null"]
+									},
+									"guidelines_url": {
+										"description": "Optional public community guidelines URL linked from reporting and enforcement notices",
+										"type": ["string", "null"]
 									}
 								},
-								"required": ["terms_url", "privacy_url"],
+								"required": ["terms_url", "privacy_url", "guidelines_url"],
 								"additionalProperties": false,
-								"description": "Optional legal document URLs shown during public registration"
+								"description": "Optional legal and policy document URLs shown to users"
 							},
 							"registration": {
 								"type": "object",
@@ -33367,11 +33371,15 @@
 							"privacy_url": {
 								"description": "Optional public privacy policy URL for account registration",
 								"type": ["string", "null"]
+							},
+							"guidelines_url": {
+								"description": "Optional public community guidelines URL linked from reporting and enforcement notices",
+								"type": ["string", "null"]
 							}
 						},
-						"required": ["terms_url", "privacy_url"],
+						"required": ["terms_url", "privacy_url", "guidelines_url"],
 						"additionalProperties": false,
-						"description": "Optional legal document URLs shown during public registration"
+						"description": "Optional legal and policy document URLs shown to users"
 					},
 					"registration": {
 						"type": "object",
@@ -40004,8 +40012,8 @@
 					"IP authorization is required.",
 					"IP authorization resend is on cooldown.",
 					"IP authorization resend limit exceeded.",
-					"Your IP address {ipAddress} has been permanently blocked from the Fluxer API by platform administrators. If you believe this is a mistake, contact support@fluxer.app to appeal. Include this IP address in your appeal.",
-					"Your IP address {ipAddress} has been temporarily blocked from the Fluxer API. The block lifts on its own when it expires. If you think this is a mistake, contact support@fluxer.com and include this IP address.",
+					"Your IP address {ipAddress} has been permanently blocked from the {product_name} API by platform administrators. {appealEmail, select, null {If you believe this is a mistake, contact the administrators of this instance to appeal.} other {If you believe this is a mistake, contact {appealEmail} to appeal.}} Include this IP address in your appeal.",
+					"Your IP address {ipAddress} has been temporarily blocked from the {product_name} API. The block lifts on its own when it expires. {appealEmail, select, null {If you think this is a mistake, contact the administrators of this instance and include this IP address.} other {If you think this is a mistake, contact {appealEmail} and include this IP address.}}",
 					"This IP address cannot be added to the blocklist.",
 					"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
 					"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
@@ -40073,7 +40081,7 @@
 					"Test purchases cannot be applied to this account.",
 					"Stream key channel mismatch.",
 					"Stream key scope mismatch.",
-					"Payment processing encountered an error. Please try again or contact support.",
+					"{supportEmail, select, null {Payment processing encountered an error. Please try again or contact the administrators of this instance.} other {Payment processing encountered an error. Please try again or contact support.}}",
 					"Gift code redemption is in progress. Try again in a moment.",
 					"Invalid product selection.",
 					"Invalid product configuration.",

@@ -5,7 +5,6 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {
 	PAYMENT_PROVIDER_NAME,
 	PIX_PAYMENT_METHOD,
-	PRODUCT_NAME,
 	SUPPORT_EMAIL,
 	UPI_PAYMENT_METHOD,
 } from '@app/features/app/config/I18nDisplayConstants';
@@ -153,6 +152,11 @@ const PRICING_NOT_LOADED_TOAST_DESCRIPTOR = msg({
 const PLAN_UNAVAILABLE_TOAST_DESCRIPTOR = msg({
 	message: "This plan isn't available. Contact support.",
 	comment: 'Error modal body shown when the selected Plutonium plan has no price ID configured.',
+});
+const PLAN_UNAVAILABLE_SELF_HOSTED_TOAST_DESCRIPTOR = msg({
+	message: "This plan isn't available. Contact the administrators of this instance.",
+	comment:
+		'Error modal body shown on a self-hosted instance when the selected Plutonium plan has no price ID configured.',
 });
 const COMPLETE_PAYMENT_MODAL_TITLE_DESCRIPTOR = msg({
 	message: 'Complete payment',
@@ -438,7 +442,11 @@ export const useCheckoutActions = (
 			if (!priceId) {
 				logger.error('Price ID not available for plan', {plan});
 				showCheckoutPlanErrorModal(
-					i18n._(PLAN_UNAVAILABLE_TOAST_DESCRIPTOR),
+					i18n._(
+						RuntimeConfig.isSelfHosted()
+							? PLAN_UNAVAILABLE_SELF_HOSTED_TOAST_DESCRIPTOR
+							: PLAN_UNAVAILABLE_TOAST_DESCRIPTOR,
+					),
 					'app.plutonium.use-checkout-actions.plan-unavailable.generic-error-modal',
 				);
 				return;
@@ -459,7 +467,7 @@ export const useCheckoutActions = (
 								title={i18n._(COMPLETE_PAYMENT_MODAL_TITLE_DESCRIPTOR)}
 								description={i18n._(COMPLETE_PAYMENT_MODAL_BODY_DESCRIPTOR, {
 									paymentProviderName: PAYMENT_PROVIDER_NAME,
-									productName: PRODUCT_NAME,
+									productName: RuntimeConfig.productName,
 								})}
 								primaryText={i18n._(OKAY_DESCRIPTOR)}
 								primaryVariant="primary"

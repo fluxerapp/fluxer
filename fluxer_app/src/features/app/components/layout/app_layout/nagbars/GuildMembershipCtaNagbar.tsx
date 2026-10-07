@@ -4,7 +4,6 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {PRODUCT_HQ_COMMUNITY_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -79,6 +78,7 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 	const handleDismiss = () => {
 		NagbarState.guildMembershipCtaDismissed = true;
 	};
+	const communityName = `${RuntimeConfig.productName} HQ`;
 	return (
 		<Nagbar
 			isMobile={isMobile}
@@ -92,7 +92,7 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 				isMobile={isMobile}
 				onDismiss={handleDismiss}
 				message={i18n._(JOIN_PRODUCT_COMMUNITY_MESSAGE_DESCRIPTOR, {
-					communityName: PRODUCT_HQ_COMMUNITY_NAME,
+					communityName,
 				})}
 				actions={
 					<NagbarButton
@@ -102,7 +102,7 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 						disabled={isSubmitting}
 						data-flx="app.app-layout.nagbars.guild-membership-cta-nagbar.nagbar-button.join-guild"
 					>
-						{i18n._(JOIN_PRODUCT_COMMUNITY_BUTTON_DESCRIPTOR, {communityName: PRODUCT_HQ_COMMUNITY_NAME})}
+						{i18n._(JOIN_PRODUCT_COMMUNITY_BUTTON_DESCRIPTOR, {communityName})}
 					</NagbarButton>
 				}
 				data-flx="app.app-layout.nagbars.guild-membership-cta-nagbar.nagbar-content"

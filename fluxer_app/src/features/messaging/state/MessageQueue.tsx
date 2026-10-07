@@ -4,6 +4,7 @@ import i18n from '@app/app/I18n';
 import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {createSystemMessage} from '@app/features/devtools/utils/CommandUtils';
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
@@ -83,6 +84,11 @@ const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_DESCRIPTOR = msg({
 	message:
 		'Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support.',
 	comment: 'Label in the message queue state.',
+});
+const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_SELF_HOSTED_DESCRIPTOR = msg({
+	message:
+		'Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance.',
+	comment: 'Message send error on a self-hosted instance when the safety system blocks the message.',
 });
 const logger = new Logger('MessageQueue');
 const DEFAULT_MAX_SIZE = 5;
@@ -1086,7 +1092,11 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		if (getApiErrorBody(error)?.code === APIErrorCodes.CONTENT_BLOCKED) {
 			const systemMessage = createSystemMessage(
 				channelId,
-				i18n._(YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_DESCRIPTOR),
+				i18n._(
+					RuntimeConfig.isSelfHosted()
+						? YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_SELF_HOSTED_DESCRIPTOR
+						: YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_DESCRIPTOR,
+				),
 			);
 			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
 			return;

@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {marketingUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
+
+function hostedMarketingUrl(path: string): string | null {
+	return RuntimeConfig.isSelfHosted() ? null : marketingUrl(path);
+}
 
 export const Routes = {
 	HOME: '/',
@@ -39,13 +44,13 @@ export const Routes = {
 	LEGACY_PLUTONIUM: '/plutonium',
 	terms: () => marketingUrl('terms'),
 	privacy: () => marketingUrl('privacy'),
-	guidelines: () => marketingUrl('guidelines'),
+	guidelines: (): string | null => RuntimeConfig.guidelinesUrl ?? hostedMarketingUrl('guidelines'),
 	careers: () => marketingUrl('careers'),
 	partners: () => marketingUrl('partners'),
 	bugs: () => marketingUrl('help/report-bug'),
 	plutonium: () => marketingUrl('plutonium'),
-	help: () => marketingUrl('help'),
-	helpArticle: (slug: string) => marketingUrl(`help/${slug}`),
+	help: (): string | null => hostedMarketingUrl('help'),
+	helpArticle: (slug: string): string | null => hostedMarketingUrl(`help/${slug}`),
 	dmChannel: (channelId: string) => `/channels/@me/${channelId}`,
 	favoritesChannel: (channelId: string) => `/channels/@favorites/${channelId}`,
 	guildMembers: (guildId: string) => `/channels/${guildId}/members`,

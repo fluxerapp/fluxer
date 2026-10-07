@@ -5,6 +5,8 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {getConfig} from '@app/api/Config';
 import {CONTENT_I18N_MESSAGES} from '@app/api/content_i18n/ContentI18nMessages';
+import {setCachedConfiguredLegalUrls} from '@app/api/instance/LegalUrls';
+import {getInstanceProductName, setCachedProductName} from '@app/api/instance/ProductName';
 import {
 	assertValidReportFlowLibrary,
 	buildReportFlowLedger,
@@ -14,6 +16,7 @@ import {
 	getReportFlowVariant,
 	parseReportFlowSteps,
 	REPORT_FLOW_LIBRARY,
+	type ReportFlowInstance,
 	type ReportFlowLibrary,
 	type ReportFlowStepInput,
 	type ReportFlowVariant,
@@ -97,13 +100,17 @@ function addOption(library: ReportFlowLibrary, screenId: string, option: ReportF
 	return editScreen(library, screenId, (screen) => ({...screen, options: [...(screen.options ?? []), option]}));
 }
 
+const HOSTED: ReportFlowInstance = {selfHosted: false, guidelinesLinked: true};
+const SELF_HOSTED: ReportFlowInstance = {selfHosted: true, guidelinesLinked: false};
+const SELF_HOSTED_WITH_GUIDELINES: ReportFlowInstance = {selfHosted: true, guidelinesLinked: true};
+
 function variantOf(
 	target: ReportFlowTargetType,
 	surface: ReportFlowSurface,
 	library: ReportFlowLibrary = REPORT_FLOW_LIBRARY,
-	selfHosted = false,
+	instance: ReportFlowInstance = HOSTED,
 ): ReportFlowVariant {
-	const variant = buildReportFlowVariant(library, target, surface, {selfHosted});
+	const variant = buildReportFlowVariant(library, target, surface, instance);
 	if (!variant) {
 		throw new Error(`no variant ${target}/${surface}`);
 	}
@@ -171,16 +178,21 @@ function expectInvalidStep(
 
 const originalSelfHosted = getConfig().instance.selfHosted;
 
+const originalProductName = getConfig().instance.branding.productName;
+
 afterEach(() => {
 	getConfig().instance.selfHosted = originalSelfHosted;
+	getConfig().instance.branding.productName = originalProductName;
+	setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: null});
+	setCachedProductName(null);
 });
 
 describe('report flow definitions', () => {
 	test('the shipped library passes every rule on every variant', () => {
 		expect(() => assertValidReportFlowLibrary(REPORT_FLOW_LIBRARY)).not.toThrow();
-		for (const selfHosted of [false, true]) {
+		for (const instance of [HOSTED, SELF_HOSTED, SELF_HOSTED_WITH_GUIDELINES]) {
 			for (const [target, surface] of VARIANTS) {
-				const variant = variantOf(target, surface, REPORT_FLOW_LIBRARY, selfHosted);
+				const variant = variantOf(target, surface, REPORT_FLOW_LIBRARY, instance);
 				for (const screen of variant.screens.values()) {
 					const hasOptions = (screen.def.options ?? []).length > 0;
 					if (screen.kind === 'checklist') {
@@ -205,7 +217,7 @@ describe('report flow definitions', () => {
 				);
 			}
 		}
-		expect(buildReportFlowVariant(REPORT_FLOW_LIBRARY, 'guild', 'in_app', {selfHosted: false})).toBeNull();
+		expect(buildReportFlowVariant(REPORT_FLOW_LIBRARY, 'guild', 'in_app', HOSTED)).toBeNull();
 	});
 
 	test('every screen in the library is used by a variant', () => {
@@ -1060,8 +1072,103 @@ describe('report flow rendering', () => {
 		expect(getReportFlowResponse('user', 'in_app', 'en-US')).toBe(hostedUser);
 	});
 
+	test('a self-hosted instance with a configured guidelines URL links it', () => {
+		const hostedUser = getReportFlowResponse('user', 'in_app', 'en-US');
+		getConfig().instance.selfHosted = true;
+		const unconfigured = getReportFlowResponse('user', 'in_app', 'en-US');
+		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: 'https://rules.example.org/community'});
+		const user = getReportFlowResponse('user', 'in_app', 'en-US');
+		expect(user).not.toBe(unconfigured);
+		expect(user.guidelines_url).toBe('https://rules.example.org/community');
+		expect(user.revision_hash).not.toBe(unconfigured.revision_hash);
+		expect(user.revision_hash).not.toBe(hostedUser.revision_hash);
+		const intro = user.screens[0];
+		expect(intro.options_heading).toBe('Learn more');
+		expect(intro.options.map((option) => option.id)).toEqual(['learn_more']);
+		expect(intro.options[0].outcome.url).toBe('https://rules.example.org/community');
+		const userScreens = new Map(user.screens.map((screen) => [screen.id, screen]));
+		expect(userScreens.get('root_user')?.options.map((option) => option.id)).not.toContain('dsa');
+		expect(getReportFlowVariant('user', 'in_app').revisionHash).toBe(user.revision_hash);
+		resolveReportFlowAnswers({
+			target: 'user',
+			surface: 'in_app',
+			revisionHash: user.revision_hash,
+			steps: [
+				{screen_id: 'profile_intro'},
+				{screen_id: 'profile_parts', item_ids: ['photo']},
+				{screen_id: 'root_user', option_id: 'spam'},
+				{screen_id: 'spam_profile', option_id: 'spam_profile'},
+			],
+		});
+		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: 'https://rules.example.org/v2'});
+		const moved = getReportFlowResponse('user', 'in_app', 'en-US');
+		expect(moved.guidelines_url).toBe('https://rules.example.org/v2');
+		expect(moved.screens[0].options[0].outcome.url).toBe('https://rules.example.org/v2');
+		expect(moved.revision_hash).toBe(user.revision_hash);
+		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: null});
+		expect(getReportFlowResponse('user', 'in_app', 'en-US')).toBe(unconfigured);
+	});
+
+	test('a configured guidelines URL replaces the hosted default', () => {
+		const hostedUser = getReportFlowResponse('user', 'in_app', 'en-US');
+		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: 'https://rules.example.org/community'});
+		const user = getReportFlowResponse('user', 'in_app', 'en-US');
+		expect(user.guidelines_url).toBe('https://rules.example.org/community');
+		expect(user.screens[0].options[0].outcome.url).toBe('https://rules.example.org/community');
+		expect(user.revision_hash).toBe(hostedUser.revision_hash);
+		setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: null});
+		expect(getReportFlowResponse('user', 'in_app', 'en-US')).toBe(hostedUser);
+	});
+
+	test('the hosted default names Fluxer', () => {
+		getConfig().instance.branding.productName = '';
+		const rendered = JSON.stringify(getReportFlowResponse('user', 'in_app', 'en-US'));
+		expect(rendered).toContain("They're under the minimum age to use Fluxer");
+		expect(rendered).toContain('Fluxer staff or support');
+	});
+
+	test('a self-hosted instance names the configured product in every locale', () => {
+		getConfig().instance.selfHosted = true;
+		getConfig().instance.branding.productName = 'Configured Chat';
+		for (const locale of ['en-US', 'de', 'ja', 'sv-SE']) {
+			for (const [target, surface] of VARIANTS) {
+				const rendered = JSON.stringify(getReportFlowResponse(target, surface, locale));
+				expect(rendered, `${target} ${surface} ${locale}`).not.toContain('Fluxer');
+				expect(rendered, `${target} ${surface} ${locale}`).not.toContain('{product_name}');
+			}
+		}
+		expect(JSON.stringify(getReportFlowResponse('user', 'in_app', 'en-US'))).toContain(
+			"They're under the minimum age to use Configured Chat",
+		);
+	});
+
+	test('a name saved in the dashboard replaces the configured name without a restart', () => {
+		getConfig().instance.branding.productName = 'Configured Chat';
+		const configured = getReportFlowResponse('user', 'in_app', 'en-US');
+		expect(JSON.stringify(configured)).toContain("They're under the minimum age to use Configured Chat");
+		setCachedProductName('Renamed Chat');
+		const renamed = getReportFlowResponse('user', 'in_app', 'en-US');
+		expect(renamed).not.toBe(configured);
+		expect(JSON.stringify(renamed)).toContain("They're under the minimum age to use Renamed Chat");
+		expect(JSON.stringify(renamed)).not.toContain('Configured Chat');
+		expect(getReportFlowResponse('user', 'in_app', 'en-US')).toBe(renamed);
+		setCachedProductName('Configured Chat');
+		expect(getReportFlowResponse('user', 'in_app', 'en-US')).toBe(configured);
+	});
+
+	test('the revision hash does not depend on the product name or the locale', () => {
+		for (const [target, surface] of VARIANTS) {
+			setCachedProductName(null);
+			const hosted = getReportFlowResponse(target, surface, 'en-US').revision_hash;
+			setCachedProductName('Renamed Chat');
+			expect(getReportFlowResponse(target, surface, 'en-US').revision_hash).toBe(hosted);
+			expect(getReportFlowResponse(target, surface, 'de').revision_hash).toBe(hosted);
+			expect(getReportFlowVariant(target, surface).revisionHash).toBe(hosted);
+		}
+	});
+
 	test('English copy names the product, uses US spelling and never names another product', () => {
-		const productName = getConfig().instance.branding.productName || 'Fluxer';
+		const productName = getInstanceProductName();
 		const rendered = VARIANTS.map(([target, surface]) =>
 			JSON.stringify(getReportFlowResponse(target, surface, 'en-US')),
 		).join('\n');

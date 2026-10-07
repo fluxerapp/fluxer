@@ -2,7 +2,7 @@
 
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Channels from '@app/features/channel/state/Channels';
 import {
 	CANCEL_DESCRIPTOR,
@@ -729,10 +729,10 @@ const ScreenSharePreviewInfoModal = observer(() => {
 					data-flx="voice.screen-share-picker-modal.preview-info-modal.content-layout"
 				>
 					<Modal.Description data-flx="voice.screen-share-picker-modal.preview-info-modal.description">
-						{i18n._(getScreenSharePreviewInfoBodyDescriptor(callContext), {productName: PRODUCT_NAME})}
+						{i18n._(getScreenSharePreviewInfoBodyDescriptor(callContext), {productName: RuntimeConfig.productName})}
 					</Modal.Description>
 					<p className={styles.previewInfoParagraph} data-flx="voice.screen-share-picker-modal.preview-info-modal.e2ee">
-						{i18n._(getScreenSharePreviewPrivacyBodyDescriptor(callContext), {productName: PRODUCT_NAME})}
+						{i18n._(getScreenSharePreviewPrivacyBodyDescriptor(callContext), {productName: RuntimeConfig.productName})}
 					</p>
 					<p
 						className={styles.previewInfoParagraph}

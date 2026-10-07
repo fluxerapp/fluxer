@@ -90,7 +90,7 @@ export class OpenAPIGenerator {
 				description: this.settings.description,
 				contact: {
 					name: 'Fluxer Platform AB',
-					email: 'support@fluxer.app',
+					email: 'support@fluxer.com',
 				},
 				license: {
 					name: 'AGPL-3.0',
