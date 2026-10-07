@@ -38,6 +38,7 @@ known_event_map() ->
             channel_event_map(),
             guild_event_map(),
             message_event_map(),
+            thread_event_map(),
             user_voice_event_map()
         ]
     ).
@@ -115,6 +116,19 @@ message_event_map() ->
         <<"MESSAGE_UPDATE">> => message_update
     }.
 
+-spec thread_event_map() -> #{binary() => atom()}.
+thread_event_map() ->
+    #{
+        <<"FORUM_UNREADS">> => forum_unreads,
+        <<"THREAD_CREATE">> => thread_create,
+        <<"THREAD_DELETE">> => thread_delete,
+        <<"THREAD_LIST_SYNC">> => thread_list_sync,
+        <<"THREAD_MEMBER_LIST_UPDATE">> => thread_member_list_update,
+        <<"THREAD_MEMBER_UPDATE">> => thread_member_update,
+        <<"THREAD_MEMBERS_UPDATE">> => thread_members_update,
+        <<"THREAD_UPDATE">> => thread_update
+    }.
+
 -spec user_voice_event_map() -> #{binary() => atom()}.
 user_voice_event_map() ->
     #{
@@ -144,6 +158,16 @@ normalize_binary_existing_atom_test() ->
 normalize_known_private_event_test() ->
     ?assertEqual(user_guild_settings_update, normalize(<<"USER_GUILD_SETTINGS_UPDATE">>)),
     ?assertEqual(user_note_update, normalize(<<"USER_NOTE_UPDATE">>)).
+
+normalize_thread_events_test() ->
+    ?assertEqual(thread_create, normalize(<<"THREAD_CREATE">>)),
+    ?assertEqual(thread_update, normalize(<<"THREAD_UPDATE">>)),
+    ?assertEqual(thread_delete, normalize(<<"THREAD_DELETE">>)),
+    ?assertEqual(thread_list_sync, normalize(<<"THREAD_LIST_SYNC">>)),
+    ?assertEqual(thread_member_update, normalize(<<"THREAD_MEMBER_UPDATE">>)),
+    ?assertEqual(thread_members_update, normalize(<<"THREAD_MEMBERS_UPDATE">>)),
+    ?assertEqual(thread_member_list_update, normalize(<<"THREAD_MEMBER_LIST_UPDATE">>)),
+    ?assertEqual(forum_unreads, normalize(<<"FORUM_UNREADS">>)).
 
 normalize_binary_unknown_test() ->
     Result = normalize(<<"UNKNOWN_EVENT_XYZ_12345">>),

@@ -53,7 +53,8 @@ normalize_map(Data) ->
     ),
     Roles = guild_data_index_roles:role_list(Data0),
     Channels = guild_data_index_channels:channel_list(Data0),
-    Data0#{
+    Data1 = guild_data_index_channels:put_forum_categories(Channels, Data0),
+    Data1#{
         <<"members">> => MemberMap,
         members_normalized => MemberMap,
         member_list_revision => make_ref(),

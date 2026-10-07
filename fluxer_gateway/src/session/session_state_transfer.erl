@@ -196,6 +196,7 @@ build_round_trip_state(SessionId) ->
         ignored_events => [<<"TYPING_START">>],
         initial_guild_id => 100,
         debounce_reactions => true,
+        thread_channels_capable => true,
         channels => #{1 => #{}},
         relationships => #{10 => 1},
         seq => 15,
@@ -219,7 +220,8 @@ assert_round_trip_fields(SessionId, RS) ->
     ?assert(sets:is_element(100, maps:get(active_guilds, RS))),
     ?assert(sets:is_element(300, maps:get(active_guilds, RS))),
     ?assertEqual(true, maps:get(e2ee_capable, RS)),
-    ?assertEqual(true, maps:get(debounce_reactions, RS)).
+    ?assertEqual(true, maps:get(debounce_reactions, RS)),
+    ?assertEqual(true, maps:get(thread_channels_capable, RS)).
 
 push_and_pop(SessionId, SessionState, Store0) ->
     {reply, ok, Store1} = handle_call(

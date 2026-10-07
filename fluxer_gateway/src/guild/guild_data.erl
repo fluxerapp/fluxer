@@ -12,7 +12,7 @@
 -export([search_guild_members/2]).
 -export([get_vanity_url_channel/1]).
 -export([get_first_viewable_text_channel/1]).
--export([get_guild_state/2]).
+-export([get_guild_state/2, get_guild_state/3]).
 -export([build_connect_snapshot/2]).
 -export([fetch_latest_voice_states/1]).
 -export([find_everyone_viewable_text_channel/2]).
@@ -86,7 +86,22 @@ build_auth_guild(Data, State) ->
 find_channel(null, _Data) ->
     null;
 find_channel(ChannelId, Data) ->
-    maps:get(ChannelId, guild_data_index:channel_index(Data), null).
+    Index = guild_data_index:channel_index(Data),
+    case maps:get(ChannelId, Index, null) of
+        null -> find_thread_parent_channel(ChannelId, Index, Data);
+        Channel -> Channel
+    end.
+
+-spec find_thread_parent_channel(term(), map(), map()) -> map() | null.
+find_thread_parent_channel(ChannelId, Index, Data) when is_integer(ChannelId) ->
+    case guild_thread_gate:thread(ChannelId, Data) of
+        undefined ->
+            null;
+        Thread ->
+            maps:get(guild_thread_permissions:parent_id(Thread), Index, null)
+    end;
+find_thread_parent_channel(_ChannelId, _Index, _Data) ->
+    null.
 
 -spec get_guild_member(map(), guild_state()) -> guild_reply(map()).
 get_guild_member(Request, State) ->
@@ -130,6 +145,33 @@ find_everyone_viewable_text_channel(Channels, State) ->
 
 -spec get_guild_state(user_id(), guild_state()) -> map().
 get_guild_state(UserId, State) ->
+    get_guild_state(UserId, State, #{}).
+
+-spec get_guild_state(user_id(), guild_state(), map()) -> map().
+get_guild_state(UserId, State, Opts) ->
+    GuildState = base_guild_state(UserId, State),
+    case guild_thread_gate:needs_variant(State) of
+        false -> GuildState;
+        true -> apply_thread_view(UserId, Opts, State, GuildState)
+    end.
+
+-spec apply_thread_view(user_id(), map(), guild_state(), map()) -> map().
+apply_thread_view(UserId, #{thread_viewer := true} = Opts, State, GuildState) ->
+    Member = guild_data_members:find_member_by_user_id(UserId, State),
+    GuildState#{<<"threads">> => guild_thread_view:guild_threads(UserId, Opts, Member, State)};
+apply_thread_view(UserId, _Opts, State, GuildState) ->
+    Member = guild_data_members:find_member_by_user_id(UserId, State),
+    Channels = guild_thread_view:hide_for_non_viewer(
+        UserId, Member, State, maps:get(<<"channels">>, GuildState, [])
+    ),
+    Roles = [
+        guild_thread_gate:mask_role(R)
+     || R <- maps:get(<<"roles">>, GuildState, []), is_map(R)
+    ],
+    GuildState#{<<"channels">> => Channels, <<"roles">> => Roles}.
+
+-spec base_guild_state(user_id(), guild_state()) -> map().
+base_guild_state(UserId, State) ->
     Data = guild_data_index:ensure_data_map(State),
     GuildId = guild_id(State),
     AllChannels = guild_data_channels:channels_from_data(Data),

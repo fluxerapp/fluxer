@@ -16,6 +16,38 @@ finalize_pending_session_tracks_connected_user_test() ->
     ?assertEqual(2, maps:get(UserId, maps:get(presence_subscriptions, State1))),
     flush_connect_result().
 
+finalize_records_the_thread_viewer_flag_test() ->
+    Key = channel_threads_config,
+    Previous = persistent_term:get(Key, undefined),
+    persistent_term:put(Key, (channel_threads_config:default_config())#{
+        enabled => true, included_users => #{<<"10">> => true}
+    }),
+    try
+        SessionId = <<"s-thread">>,
+        Attempt = 2,
+        State0 = finalize_state(SessionId, 10, Attempt, true, #{}, sets:new(), #{}),
+        State1 = State0#{data => #{thread_gate => #{active => true, version => 1}}},
+        Computed0 = finalize_computed(SessionId, 10),
+        Request = (maps:get(request, Computed0))#{thread_channels_capable => true},
+        Computed = Computed0#{request => Request, thread_viewer => true},
+        State2 = guild_connect_async:finalize_session_connect_async(
+            SessionId, Attempt, {ok, #{}}, Computed, State1
+        ),
+        Session = maps:get(SessionId, maps:get(sessions, State2)),
+        ?assertEqual(true, maps:get(thread_viewer, Session)),
+        ?assertEqual(true, maps:get(thread_capable, Session)),
+        receive
+            {thread_flip_resend, SessionId} -> ?assert(false)
+        after 0 -> ok
+        end,
+        flush_connect_result()
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end
+    end.
+
 finalize_connected_session_does_not_double_count_test() ->
     SessionId = <<"s1">>,
     UserId = 10,

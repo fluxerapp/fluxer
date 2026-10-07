@@ -17,6 +17,7 @@
 -define(MAX_RANGE_SPAN, 99).
 -define(MAX_RANGES_PER_CHANNEL, 10).
 -define(MAX_MEMBER_SUBSCRIPTION_IDS, 1000).
+-define(MAX_THREAD_MEMBER_LISTS, 10).
 
 -spec handle_subscriptions(term(), pid(), session_state()) -> ok.
 handle_subscriptions(Data, SocketPid, SessionState) when is_map(Data) ->
@@ -108,7 +109,52 @@ process_guild_sub_options(GuildId, GuildPid, GuildSubData, SessionId, SocketPid,
     process_member_list_channels(GuildSubData, GuildId, GuildPid, SessionId, SocketPid),
     process_member_subscriptions(GuildSubData, GuildPid, SessionId),
     process_typing_flag(GuildSubData, GuildPid, SessionId),
+    process_thread_subscriptions(GuildSubData, GuildPid, SessionId, SessionState),
     ok.
+
+-spec process_thread_subscriptions(map(), pid(), session_id(), session_state()) -> ok.
+process_thread_subscriptions(GuildSubData, GuildPid, SessionId, SessionState) when
+    is_binary(SessionId)
+->
+    Capable =
+        maps:get(bot, SessionState, false) =:= true orelse
+            maps:get(thread_channels_capable, SessionState, false) =:= true,
+    Threads =
+        case maps:get(<<"threads">>, GuildSubData, undefined) of
+            Flag when is_boolean(Flag) -> Flag;
+            _ -> undefined
+        end,
+    Lists =
+        case maps:get(<<"thread_member_lists">>, GuildSubData, undefined) of
+            Ids when is_list(Ids) -> parse_thread_ids(Ids);
+            _ -> undefined
+        end,
+    case {Capable, Threads, Lists} of
+        {false, _, _} ->
+            ok;
+        {true, undefined, undefined} ->
+            ok;
+        {true, _, _} ->
+            _ = shard_utils:safe_cast(
+                GuildPid,
+                {thread_subscriptions, SessionId, #{threads => Threads, member_lists => Lists}}
+            ),
+            ok
+    end;
+process_thread_subscriptions(_GuildSubData, _GuildPid, _SessionId, _SessionState) ->
+    ok.
+
+-spec parse_thread_ids(list()) -> [integer()].
+parse_thread_ids(Ids) ->
+    lists:sublist(
+        [
+            Id
+         || Raw <- Ids,
+            Id <- [snowflake_id:parse_maybe(Raw)],
+            is_integer(Id)
+        ],
+        ?MAX_THREAD_MEMBER_LISTS
+    ).
 
 -spec process_active_flag(map(), pid(), session_id(), boolean()) -> boolean().
 process_active_flag(GuildSubData, GuildPid, SessionId, WasActive) ->
@@ -324,5 +370,21 @@ parse_member_ids_caps_at_max_test() ->
     ?assertEqual(?MAX_MEMBER_SUBSCRIPTION_IDS + 200, length(AllParsed)),
     Capped = lists:sublist(AllParsed, ?MAX_MEMBER_SUBSCRIPTION_IDS),
     ?assertEqual(?MAX_MEMBER_SUBSCRIPTION_IDS, length(Capped)).
+
+thread_keys_are_forwarded_only_for_capable_sessions_test() ->
+    Sub = #{<<"threads">> => true, <<"thread_member_lists">> => [<<"5">>, <<"x">>]},
+    ok = process_thread_subscriptions(Sub, self(), <<"s">>, #{}),
+    ok = process_thread_subscriptions(Sub, self(), <<"s">>, #{thread_channels_capable => true}),
+    receive
+        {'$gen_cast', {thread_subscriptions, <<"s">>, Subs}} ->
+            ?assertEqual(#{threads => true, member_lists => [5]}, Subs)
+    after 1000 -> ?assert(false)
+    end,
+    ok = process_thread_subscriptions(#{<<"active">> => true}, self(), <<"s">>, #{bot => true}),
+    receive
+        {'$gen_cast', {thread_subscriptions, _, _}} = Unexpected ->
+            ?assertEqual(none, Unexpected)
+    after 100 -> ok
+    end.
 
 -endif.

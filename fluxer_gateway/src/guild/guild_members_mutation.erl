@@ -28,7 +28,7 @@ resolve_all_mentions(Request, State) ->
     UserIds =
         case MentionEveryone of
             true ->
-                resolve_mentions(Members, Context);
+                resolve_mentions(thread_universe_members(Members, Context), Context);
             false ->
                 CandidateUserIds = candidate_user_ids(Context),
                 resolve_mentions_for_ids(CandidateUserIds, MemberMap, Context)
@@ -84,8 +84,9 @@ collect_direct_user_ids(DirectUserIds, AuthorId, ChannelId, State) ->
 
 -spec collect_user_mentions([user_id()], user_id(), channel_id(), guild_state()) -> [user_id()].
 collect_user_mentions(UserIds, AuthorId, ChannelId, State) ->
+    ThreadRecipient = guild_thread_gate:recipient_active(ChannelId, State),
     guild_members_common:collect_mentions_for_user_ids(
-        UserIds, AuthorId, ChannelId, State, fun(_UserId, _Member) -> true end
+        UserIds, AuthorId, ChannelId, State, fun(UserId, _Member) -> ThreadRecipient(UserId) end
     ).
 
 -spec resolve_mention_sources_page(map(), guild_state()) -> guild_reply(map()).
@@ -151,8 +152,44 @@ build_mention_context(
         connected_user_ids => guild_members_common:build_connected_user_ids(
             MentionHere, Sessions
         ),
+        thread_universe => guild_thread_push:mention_universe(ChannelId, State),
         state => State
     }.
+
+-spec thread_universe_members([member()], map()) -> [member()].
+thread_universe_members(Members, #{thread_universe := Universe}) when is_map(Universe) ->
+    [
+        Member
+     || Member <- Members,
+        maps:is_key(guild_members_common:member_user_id(Member), Universe)
+    ];
+thread_universe_members(Members, _Context) ->
+    Members.
+
+-spec thread_here_set(gb_sets:set(user_id()), map()) -> gb_sets:set(user_id()).
+thread_here_set(HereSet, #{thread_universe := Universe}) when is_map(Universe) ->
+    gb_sets:filter(fun(UserId) -> maps:is_key(UserId, Universe) end, HereSet);
+thread_here_set(HereSet, _Context) ->
+    HereSet.
+
+-spec thread_recipients([user_id()], map()) -> [user_id()].
+thread_recipients(UserIds, #{
+    thread_universe := Universe, channel_id := ChannelId, state := State
+}) when
+    is_map(Universe)
+->
+    Recipient = guild_thread_gate:recipient_active(ChannelId, State),
+    [UserId || UserId <- UserIds, Recipient(UserId)];
+thread_recipients(UserIds, _Context) ->
+    UserIds.
+
+-spec thread_recipient_set(gb_sets:set(user_id()), map()) -> gb_sets:set(user_id()).
+thread_recipient_set(UserIdSet, #{thread_universe := Universe} = Context) when
+    is_map(Universe)
+->
+    gb_sets:from_list(thread_recipients(gb_sets:to_list(UserIdSet), Context));
+thread_recipient_set(UserIdSet, _Context) ->
+    UserIdSet.
 
 -spec resolve_mentions([member()], map()) -> [user_id()].
 resolve_mentions(Members, Context) ->
@@ -227,7 +264,7 @@ candidate_user_ids(Context) ->
     } = Context,
     HereSet =
         case MentionHere of
-            true -> ConnectedUserIds;
+            true -> thread_here_set(ConnectedUserIds, Context);
             false -> gb_sets:empty()
         end,
     RoleUsersSet =
@@ -235,18 +272,27 @@ candidate_user_ids(Context) ->
             true ->
                 RoleIds = gb_sets:to_list(RoleIdSet),
                 RoleUserIds = guild_members_roles:user_ids_for_any_role(RoleIds, State),
-                gb_sets:from_list(RoleUserIds);
+                gb_sets:from_list(thread_recipients(RoleUserIds, Context));
             false ->
                 gb_sets:empty()
         end,
     DirectSet =
         case HasDirectMentions of
-            true -> DirectUserIdSet;
+            true -> thread_recipient_set(DirectUserIdSet, Context);
             false -> gb_sets:empty()
         end,
     gb_sets:to_list(gb_sets:union(HereSet, gb_sets:union(RoleUsersSet, DirectSet))).
 
 -spec paged_candidates(map(), map()) -> [user_id()].
+paged_candidates(
+    #{mention_everyone := true, thread_universe := Universe} = Context, MemberMap
+) when
+    is_map(Universe)
+->
+    lists:usort(
+        [UserId || UserId <- maps:keys(Universe), maps:is_key(UserId, MemberMap)] ++
+            candidate_user_ids(Context)
+    );
 paged_candidates(#{mention_everyone := true}, MemberMap) ->
     lists:sort(maps:keys(MemberMap));
 paged_candidates(Context, _MemberMap) ->
@@ -302,6 +348,10 @@ maybe_channel_mention(ChannelId, ChannelIndex, GuildId, BasePerms) ->
     end.
 
 -spec maybe_channel_mention_for_channel(map(), role_id(), integer()) -> {true, map()} | false.
+maybe_channel_mention_for_channel(#{<<"type">> := Type}, _GuildId, _BasePerms) when
+    Type =:= 15; Type =:= 16
+->
+    false;
 maybe_channel_mention_for_channel(Channel, GuildId, BasePerms) ->
     case everyone_can_view(Channel, GuildId, BasePerms) of
         true -> build_channel_mention(Channel);

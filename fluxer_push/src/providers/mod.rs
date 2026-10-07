@@ -239,6 +239,7 @@ mod consent_tests {
             platform: Some("web_push".to_owned()),
             app_id: None,
             provider_environment: None,
+            thread_channels: false,
         }
     }
 

@@ -103,7 +103,8 @@ spawn_guild_connect_worker(GuildId, Attempt, SessionId, UserId, Bot, IsStaff, In
         bot => Bot,
         is_staff => IsStaff,
         initial_guild_id => maps:get(initial_guild_id, State, undefined),
-        user_data => maps:get(user_data, State, #{})
+        user_data => maps:get(user_data, State, #{}),
+        thread_channels_capable => maps:get(thread_channels_capable, State, false)
     },
     {WorkerPid, WorkerRef} = spawn_monitor(fun() ->
         do_guild_connect_with_release(Ctx)

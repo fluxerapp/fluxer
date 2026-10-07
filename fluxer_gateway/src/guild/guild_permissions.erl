@@ -55,9 +55,14 @@ get_member_permissions(UserId, ChannelId, State) ->
 -spec compute_member_permissions(user_id(), maybe_channel_id(), maybe_member(), guild_state()) ->
     permission().
 compute_member_permissions(UserId, ChannelId, ProvidedMember, State) ->
-    channel_permissions(
-        member_base_permissions(UserId, ProvidedMember, State), UserId, ChannelId, State
-    ).
+    case thread_for_channel(ChannelId, State) of
+        undefined ->
+            overwrite_permissions(
+                member_base_permissions(UserId, ProvidedMember, State), UserId, ChannelId, State
+            );
+        Thread ->
+            guild_thread_permissions:resolve(UserId, Thread, ProvidedMember, State)
+    end.
 
 -spec member_base_permissions(user_id(), maybe_member(), guild_state()) -> base_permissions().
 member_base_permissions(UserId, ProvidedMember, State) when is_integer(UserId) ->
@@ -72,12 +77,39 @@ member_base_permissions(_, _, _) ->
 
 -spec channel_permissions(base_permissions(), user_id(), maybe_channel_id(), guild_state()) ->
     permission().
-channel_permissions({Permissions, MemberRoles, GuildId}, UserId, ChannelId, State) ->
+channel_permissions(Base, UserId, ChannelId, State) ->
+    case thread_for_channel(ChannelId, State) of
+        undefined ->
+            overwrite_permissions(Base, UserId, ChannelId, State);
+        Thread ->
+            guild_thread_permissions:resolve(
+                UserId, Thread, find_member_by_user_id(UserId, State), State
+            )
+    end.
+
+-spec overwrite_permissions(base_permissions(), user_id(), maybe_channel_id(), guild_state()) ->
+    permission().
+overwrite_permissions({Permissions, MemberRoles, GuildId}, UserId, ChannelId, State) ->
     guild_permissions_overwrites:maybe_apply_channel_overwrites(
         Permissions, UserId, MemberRoles, ChannelId, GuildId, State
     );
-channel_permissions(Permissions, _UserId, _ChannelId, _State) ->
+overwrite_permissions(Permissions, _UserId, _ChannelId, _State) ->
     Permissions.
+
+-spec thread_for_channel(maybe_channel_id(), guild_state()) -> map() | undefined.
+thread_for_channel(ChannelId, State) when is_integer(ChannelId) ->
+    case guild_thread_gate:store(State) of
+        undefined ->
+            undefined;
+        Tab ->
+            try
+                guild_thread_store:get_thread(Tab, ChannelId)
+            catch
+                error:badarg -> undefined
+            end
+    end;
+thread_for_channel(_ChannelId, _State) ->
+    undefined.
 
 -spec base_permissions_for_data(user_id(), maybe_member(), guild_state(), guild_data()) ->
     base_permissions().

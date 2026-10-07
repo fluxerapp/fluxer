@@ -487,7 +487,7 @@ do_handle_message_create_context(Context) ->
     }),
     publish_eligible_users(
         EligibleUsers,
-        MessageData,
+        push_eligibility_checks:strip_thread_eligibility(MessageData),
         MarkdownContext,
         GuildId,
         ChannelId,

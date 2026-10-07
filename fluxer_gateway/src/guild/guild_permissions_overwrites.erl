@@ -84,8 +84,15 @@ maybe_apply_channel_overwrites(
 ) -> permission().
 apply_from_channel_lookup(Permissions, UserId, MemberRoles, ChannelId, GuildId, State) ->
     case guild_permissions_check:find_channel_by_id(ChannelId, State) of
-        undefined -> Permissions;
+        undefined -> unknown_channel_permissions(Permissions, State);
         Channel -> apply_channel_overwrites(Permissions, UserId, MemberRoles, Channel, GuildId)
+    end.
+
+-spec unknown_channel_permissions(permission(), guild_state()) -> permission().
+unknown_channel_permissions(Permissions, State) ->
+    case guild_thread_gate:active(State) of
+        true -> 0;
+        false -> Permissions
     end.
 
 -spec overwrite_cache_from_data(map() | undefined) -> map().

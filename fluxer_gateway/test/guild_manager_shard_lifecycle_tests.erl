@@ -47,6 +47,10 @@ normalize_transferred_guild_state_keeps_only_transferable_fields_test() ->
         sessions => #{<<"s1">> => #{pid => self()}},
         voice_states => #{<<"v1">> => #{}},
         virtual_channel_access => #{10 => sets:from_list([20])},
+        thread_handoff_resends => [<<"s1">>],
+        thread_handoff_syncs => [<<"s2">>],
+        thread_handoff_lists => [30],
+        thread_resend_pending => #{<<"s1">> => true},
         member_list_engine => make_ref(),
         channel_member_list_engines => #{<<"500">> => make_ref()},
         voice_server_pid => self()
@@ -60,6 +64,10 @@ normalize_transferred_guild_state_keeps_only_transferable_fields_test() ->
     ?assertEqual(#{<<"v1">> => #{}}, maps:get(voice_states, Normalized)),
     ?assertNot(maps:is_key(member_list_engine, Normalized)),
     ?assertNot(maps:is_key(channel_member_list_engines, Normalized)),
+    ?assertEqual([<<"s1">>], maps:get(thread_handoff_resends, Normalized)),
+    ?assertEqual([<<"s2">>], maps:get(thread_handoff_syncs, Normalized)),
+    ?assertEqual([30], maps:get(thread_handoff_lists, Normalized)),
+    ?assertNot(maps:is_key(thread_resend_pending, Normalized)),
     ?assertNot(maps:is_key(voice_server_pid, Normalized)).
 
 register_and_monitor_race_kills_duplicate_test_() ->

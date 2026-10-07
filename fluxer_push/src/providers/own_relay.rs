@@ -47,6 +47,7 @@ impl Hop {
                 }
                 .to_owned()
             }),
+            thread_channels: sub.thread_channels,
         }
     }
 }

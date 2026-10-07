@@ -603,6 +603,7 @@ serialize_state(State) ->
         bot => maps:get(bot, State, false),
         shard => maps:get(shard, State, undefined),
         e2ee_capable => maps:get(e2ee_capable, State, false),
+        thread_channels_capable => maps:get(thread_channels_capable, State, false),
         guilds => maps:get(guilds, State, #{}),
         active_guilds => maps:get(active_guilds, State, sets:new()),
         collected_guild_states => maps:get(collected_guild_states, State),
@@ -640,7 +641,8 @@ serialize_transfer_identity(State) ->
         ignored_events => maps:keys(maps:get(ignored_events, State, #{})),
         initial_guild_id => maps:get(initial_guild_id, State, undefined),
         active_guilds => maps:get(active_guilds, State, sets:new()),
-        debounce_reactions => maps:get(debounce_reactions, State, false)
+        debounce_reactions => maps:get(debounce_reactions, State, false),
+        thread_channels_capable => maps:get(thread_channels_capable, State, false)
     }.
 
 -spec serialize_transfer_runtime(session_state()) -> map().

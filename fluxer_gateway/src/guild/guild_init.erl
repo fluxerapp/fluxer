@@ -27,7 +27,8 @@ init_base_state(GuildState) ->
     Data0 = maps:get(data, TransferSafe, #{}),
     ExistingVoice = maps:get(voice_states, TransferSafe, #{}),
     {VoiceStates, Data1} = extract_voice_states_from_data(Data0, ExistingVoice),
-    NormalizedData = guild_data_index:normalize_map(Data1),
+    {ThreadExtras, Data2} = guild_thread_load:take_extras(Data1),
+    NormalizedData = guild_data_index:normalize_map(Data2),
     MemberTab = ets:new(guild_members_data, [set, public, {read_concurrency, true}]),
     populate_member_ets(MemberTab, NormalizedData),
     BaseState = TransferSafe#{
@@ -44,7 +45,15 @@ init_base_state(GuildState) ->
         ),
         viewable_channels_cache => ets:new(viewable_channels_cache, [set, public])
     },
-    guild_handoff:restore_transferred_session_state(BaseState).
+    guild_thread_flip:converge(
+        guild_thread_subscriptions:restore_handoff(
+            guild_thread_flip:restore_handoff(
+                guild_handoff:restore_transferred_session_state(
+                    guild_thread_load:install(ThreadExtras, BaseState)
+                )
+            )
+        )
+    ).
 
 -spec populate_member_ets(ets:table(), map()) -> ok.
 populate_member_ets(Tab, Data) ->
@@ -129,10 +138,17 @@ handle_reload(NewData, State) ->
     {ReloadVoiceStates, ReloadData} = extract_voice_states_from_data(
         NewData, ExistingVoiceStates
     ),
-    NormalizedNewData0 = guild_data_index:normalize_map(ReloadData),
+    {ThreadExtras, ReloadData1} = guild_thread_load:take_extras(ReloadData),
+    NormalizedNewData0 = guild_data_index:normalize_map(ReloadData1),
     NormalizedNewData = reuse_members_table(OldData, NormalizedNewData0),
     NewState0 = guild_member_list_engine_inputs:forget_all(
-        State#{voice_states => ReloadVoiceStates, data => NormalizedNewData}
+        guild_thread_flip:converge(
+            guild_thread_flip:reinstall(
+                ThreadExtras, State, State#{
+                    voice_states => ReloadVoiceStates, data => NormalizedNewData
+                }
+            )
+        )
     ),
     NewState1 = guild_availability:handle_unavailability_transition(State, NewState0),
     NewState2 = guild_sessions:refresh_all_viewable_channels(NewState1),

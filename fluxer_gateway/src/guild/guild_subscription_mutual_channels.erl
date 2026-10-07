@@ -3,7 +3,7 @@
 -module(guild_subscription_mutual_channels).
 -typing([eqwalizer]).
 
--export([filter_member_ids/3, filter_session_member_ids/2, filter_session_member_ids/3]).
+-export([filter_member_ids/4, filter_session_member_ids/2, filter_session_member_ids/3]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -16,11 +16,13 @@
 -type view_memo() :: #{exceptions => sets:set(user_id()), views => view_cache()}.
 -export_type([guild_state/0, user_id/0, view_memo/0]).
 
--spec filter_member_ids(user_id(), [user_id()], guild_state()) -> [user_id()].
-filter_member_ids(_SessionUserId, [], _State) ->
+-spec filter_member_ids(map(), user_id(), [user_id()], guild_state()) -> [user_id()].
+filter_member_ids(_Session, _SessionUserId, [], _State) ->
     [];
-filter_member_ids(SessionUserId, MemberIds, State) ->
-    SessionMap = session_channel_map(SessionUserId, State),
+filter_member_ids(Session, SessionUserId, MemberIds, State) ->
+    SessionMap = visible_session_map(
+        Session#{user_id => SessionUserId}, session_channel_map(SessionUserId, State), State
+    ),
     {Kept, _Memo} = lists:foldl(
         fun(MemberId, Acc) ->
             keep_member_with_mutual_channel(MemberId, SessionUserId, SessionMap, State, Acc)
@@ -71,6 +73,36 @@ is_role_key(_Key) -> false.
 
 -spec request_session_map(term(), user_id(), map(), guild_state()) -> map().
 request_session_map(SessionId, SessionUserId, Sessions, State) ->
+    Session =
+        case maps:get(SessionId, Sessions, undefined) of
+            Found when is_map(Found) -> Found;
+            _ -> #{}
+        end,
+    visible_session_map(
+        Session#{user_id => SessionUserId},
+        raw_request_session_map(SessionId, SessionUserId, Sessions, State),
+        State
+    ).
+
+-spec visible_session_map(map(), map(), guild_state()) -> map().
+visible_session_map(Session, Map, State) ->
+    case
+        guild_thread_gate:needs_variant(State) andalso
+            not guild_thread_gate:session_viewer(Session)
+    of
+        true ->
+            maps:filter(
+                fun(ChannelId, _) ->
+                    guild_thread_gate:channel_visible(Session, ChannelId, State)
+                end,
+                Map
+            );
+        false ->
+            Map
+    end.
+
+-spec raw_request_session_map(term(), user_id(), map(), guild_state()) -> map().
+raw_request_session_map(SessionId, SessionUserId, Sessions, State) ->
     case maps:get(SessionId, Sessions, undefined) of
         #{user_id := SessionUserId, viewable_channels := Map} = SessionData when is_map(Map) ->
             case maps:get(pending_connect, SessionData, false) of
@@ -350,10 +382,10 @@ exceptions_cover_owner_virtual_and_overwrite_targets_test() ->
 filter_member_ids_matches_unmemoised_test() ->
     State = test_state(),
     Ids = candidate_ids(),
-    ?assertEqual([20, 21, 7, 99, 4242, 20], filter_member_ids(10, Ids, State)),
+    ?assertEqual([20, 21, 7, 99, 4242, 20], filter_member_ids(#{}, 10, Ids, State)),
     ?assertEqual(
         [reference_filter_member_ids(Viewer, Ids, State) || Viewer <- [10, 30, 7, 99]],
-        [filter_member_ids(Viewer, Ids, State) || Viewer <- [10, 30, 7, 99]]
+        [filter_member_ids(#{}, Viewer, Ids, State) || Viewer <- [10, 30, 7, 99]]
     ).
 
 memo_holds_one_entry_per_roles_term_test() ->
@@ -376,7 +408,7 @@ exception_user_is_not_answered_from_its_role_set_test() ->
 
 non_member_candidate_is_dropped_test() ->
     State = test_state(),
-    ?assertEqual([], filter_member_ids(10, [777], State)),
+    ?assertEqual([], filter_member_ids(#{}, 10, [777], State)),
     ?assertEqual([], reference_filter_member_ids(10, [777], State)).
 
 filter_session_member_ids_matches_filter_member_ids_test() ->
@@ -385,7 +417,10 @@ filter_session_member_ids_matches_filter_member_ids_test() ->
     Viewers = [10, 30, 7, 99],
     Requests = [{Viewer, Viewer, Ids} || Viewer <- Viewers],
     ?assertEqual(
-        maps:from_list([{Viewer, filter_member_ids(Viewer, Ids, State)} || Viewer <- Viewers]),
+        maps:from_list([
+            {Viewer, filter_member_ids(#{}, Viewer, Ids, State)}
+         || Viewer <- Viewers
+        ]),
         filter_session_member_ids(Requests, State)
     ).
 

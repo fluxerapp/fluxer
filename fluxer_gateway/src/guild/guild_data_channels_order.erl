@@ -175,7 +175,8 @@ channel_is_category(Channel) ->
 -spec channel_is_layout_text(map()) -> boolean().
 channel_is_layout_text(Channel) ->
     ChannelType = channel_type(Channel),
-    ChannelType =:= 0 orelse ChannelType =:= 5 orelse ChannelType =:= 998.
+    ChannelType =:= 0 orelse ChannelType =:= 5 orelse ChannelType =:= 998 orelse
+        ChannelType =:= 15 orelse ChannelType =:= 16.
 
 -spec channel_is_layout_voice(map()) -> boolean().
 channel_is_layout_voice(Channel) ->

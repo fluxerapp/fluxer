@@ -60,7 +60,7 @@ count_mutually_visible_indexed(UserId, ViewerSet, State) ->
     {non_neg_integer(), memo() | undefined}.
 count_and_memo(UserId, ViewerSet, State) ->
     Tab = maps:get(member_presence, State),
-    Ctx = {viewer_channel_map(ViewerSet), build_viewable_index(State), State},
+    Ctx = {viewer_channel_map(ViewerSet, State), build_viewable_index(State), State},
     sets:fold(
         fun(OtherUserId, Acc) ->
             Presence = guild_state_member:lookup_presence(Tab, OtherUserId),
@@ -109,9 +109,29 @@ ensure_memo(undefined, State) ->
 ensure_memo(Memo, _State) ->
     Memo.
 
--spec viewer_channel_map(sets:set()) -> map().
-viewer_channel_map(ViewerSet) ->
-    sets:fold(fun(ChannelId, Acc) -> Acc#{ChannelId => true} end, #{}, ViewerSet).
+-spec viewer_channel_map(sets:set(), guild_state()) -> map().
+viewer_channel_map(ViewerSet, State) ->
+    case guild_thread_gate:needs_variant(State) of
+        false ->
+            sets:fold(fun(ChannelId, Acc) -> Acc#{ChannelId => true} end, #{}, ViewerSet);
+        true ->
+            Index = guild_data_index:channel_index(maps:get(data, State, #{})),
+            sets:fold(
+                fun(ChannelId, Acc) -> put_shared(ChannelId, Index, Acc) end, #{}, ViewerSet
+            )
+    end.
+
+-spec put_shared(term(), map(), map()) -> map().
+put_shared(ChannelId, Index, Acc) ->
+    case maps:get(ChannelId, Index, undefined) of
+        #{<<"type">> := Type} ->
+            case guild_thread_gate:is_thread_only_type(Type) of
+                true -> Acc;
+                false -> Acc#{ChannelId => true}
+            end;
+        _ ->
+            Acc#{ChannelId => true}
+    end.
 
 -spec build_viewable_index(guild_state()) -> viewable_index().
 build_viewable_index(State) ->
@@ -240,6 +260,31 @@ slow_path_counts_only_mutually_visible_members_test() ->
     State = mutual_visibility_state(GuildId, BotRoleId),
     Result = compute_count(10, State),
     ?assertEqual(2, Result).
+
+forum_shared_only_with_a_member_is_not_counted_in_an_active_guild_test() ->
+    State = mutual_visibility_state(1, 5000),
+    Data = maps:get(data, State),
+    Forum = #{
+        <<"id">> => <<"200">>,
+        <<"type">> => 15,
+        <<"permission_overwrites">> => [
+            user_view_overwrite(<<"10">>), user_view_overwrite(<<"40">>)
+        ]
+    },
+    Members = maps:get(<<"members">>, Data),
+    WithMember = Data#{
+        <<"members">> => Members#{
+            40 => #{<<"user">> => #{<<"id">> => <<"40">>}, <<"roles">> => []}
+        }
+    },
+    WithForum = WithMember#{<<"channels">> => [Forum | maps:get(<<"channels">>, Data)]},
+    Gate = #{thread_gate => #{active => true, version => 1}},
+    ?assertEqual(3, compute_count(10, State#{data => WithForum})),
+    ?assertEqual(
+        compute_count(10, State#{data => maps:merge(WithMember, Gate)}),
+        compute_count(10, State#{data => maps:merge(WithForum, Gate)})
+    ),
+    ?assertEqual(2, compute_count(10, State#{data => maps:merge(WithForum, Gate)})).
 
 mutual_visibility_state(GuildId, BotRoleId) ->
     #{

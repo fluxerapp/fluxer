@@ -23,18 +23,90 @@
     {noreply, session_state()}.
 handle_dispatch(Event, {pre_encoded, _} = Data, State) ->
     case
-        should_skip_for_shard(Event, Data, State) orelse should_ignore_event(Event, Data, State)
+        should_skip_for_shard(Event, Data, State) orelse should_ignore_event(Event, Data, State) orelse
+            thread_backstop(Event, #{}, State) =:= drop
     of
         true -> {noreply, State};
         false -> do_handle_dispatch_pre_encoded(Event, Data, State)
     end;
 handle_dispatch(Event, Data, State) ->
+    case thread_backstop(Event, Data, State) of
+        drop -> {noreply, State};
+        {ok, Data1} -> handle_plain_dispatch(Event, Data1, State)
+    end.
+
+-spec handle_plain_dispatch(event(), map() | list(), session_state()) ->
+    {noreply, session_state()}.
+handle_plain_dispatch(Event, Data, State) ->
     case
         should_skip_for_shard(Event, Data, State) orelse should_ignore_event(Event, Data, State)
     of
         true -> {noreply, State};
         false -> route_bot_guild_event(Event, Data, State)
     end.
+
+-spec thread_backstop(event(), map() | list(), session_state()) -> drop | {ok, map() | list()}.
+thread_backstop(Event, Data, State) ->
+    Capable =
+        maps:get(bot, State, false) =:= true orelse
+            maps:get(thread_channels_capable, State, false) =:= true,
+    case {Capable, is_thread_event(Event), Data} of
+        {false, true, _} ->
+            drop;
+        {_, _, #{<<"__thread_scoped">> := GuildId}} ->
+            thread_scoped(Capable, GuildId, Data, State);
+        {_, _, #{<<"__thread_unscoped">> := GuildId}} ->
+            thread_unscoped(thread_viewer(Capable, GuildId, State), Data);
+        _ ->
+            {ok, Data}
+    end.
+
+-spec thread_scoped(boolean(), term(), map(), session_state()) -> drop | {ok, map()}.
+thread_scoped(false, _GuildId, _Data, _State) ->
+    drop;
+thread_scoped(true, GuildId, Data, State) ->
+    case thread_viewer(true, GuildId, State) of
+        true -> {ok, maps:remove(<<"__thread_scoped">>, Data)};
+        false -> drop
+    end.
+
+-spec thread_unscoped(boolean(), map()) -> drop | {ok, map()}.
+thread_unscoped(true, _Data) ->
+    drop;
+thread_unscoped(false, Data) ->
+    {ok, maps:remove(<<"__thread_unscoped">>, Data)}.
+
+-spec thread_viewer(boolean(), term(), session_state()) -> boolean().
+thread_viewer(false, _GuildId, _State) ->
+    false;
+thread_viewer(true, GuildId, State) ->
+    UserId = maps:get(user_id, State, undefined),
+    case {channel_threads_config:loaded(), snowflake_id:parse_maybe(GuildId)} of
+        {false, _} ->
+            true;
+        {true, G} when is_integer(G), is_integer(UserId) ->
+            guild_thread_gate:compute_viewer(
+                channel_threads_config:guild_active(G),
+                maps:get(bot, State, false) =:= true,
+                true,
+                UserId
+            );
+        _ ->
+            false
+    end.
+
+-spec is_thread_event(event()) -> boolean().
+is_thread_event(thread_create) -> true;
+is_thread_event(thread_update) -> true;
+is_thread_event(thread_delete) -> true;
+is_thread_event(thread_list_sync) -> true;
+is_thread_event(thread_member_update) -> true;
+is_thread_event(thread_members_update) -> true;
+is_thread_event(thread_member_list_update) -> true;
+is_thread_event(forum_unreads) -> true;
+is_thread_event(<<"THREAD_", _/binary>>) -> true;
+is_thread_event(<<"FORUM_UNREADS">>) -> true;
+is_thread_event(_) -> false.
 
 -spec route_bot_guild_event(event(), map() | list(), session_state()) ->
     {noreply, session_state()}.
@@ -310,6 +382,8 @@ should_skip_replay_buffer(Event) ->
         <<"GUILD_MEMBERS_CHUNK">> -> true;
         <<"GUILD_MEMBER_LIST_UPDATE">> -> true;
         <<"GUILD_SYNC">> -> true;
+        <<"THREAD_LIST_SYNC">> -> true;
+        <<"THREAD_MEMBER_LIST_UPDATE">> -> true;
         _Other -> false
     end.
 
@@ -401,6 +475,7 @@ base_state(Opts) ->
             presence_pid => undefined,
             ignored_events => #{},
             debounce_reactions => false,
+            thread_channels_capable => false,
             reaction_buffer => [],
             reaction_buffer_timer => undefined
         },
@@ -640,5 +715,113 @@ assert_no_dispatch() ->
     after 100 ->
         ok
     end.
+
+thread_backstop_drops_thread_events_for_incapable_sessions_test() ->
+    State = base_state(#{}),
+    ?assertEqual(drop, thread_backstop(thread_create, #{}, State)),
+    ?assertEqual(drop, thread_backstop(<<"THREAD_LIST_SYNC">>, #{}, State)),
+    ?assertEqual(
+        drop, thread_backstop(message_ack, #{<<"__thread_scoped">> => <<"5">>}, State)
+    ),
+    ?assertEqual({ok, #{}}, thread_backstop(message_create, #{}, State)),
+    ?assertEqual({ok, #{}}, thread_backstop(thread_create, #{}, State#{bot => true})),
+    ?assertEqual(
+        {ok, #{}}, thread_backstop(thread_create, #{}, State#{thread_channels_capable => true})
+    ).
+
+thread_backstop_passes_scoped_events_before_the_config_loads_test() ->
+    with_default_config(false, fun() ->
+        Data = #{<<"__thread_scoped">> => <<"5">>, <<"id">> => <<"9">>},
+        Unscoped = #{<<"__thread_unscoped">> => <<"5">>, <<"id">> => <<"9">>},
+        Capable = base_state(#{thread_channels_capable => true}),
+        ?assertEqual({ok, #{<<"id">> => <<"9">>}}, thread_backstop(message_ack, Data, Capable)),
+        ?assertEqual(drop, thread_backstop(user_guild_settings_update, Unscoped, Capable)),
+        ?assertEqual(drop, thread_backstop(message_ack, Data, base_state(#{}))),
+        ?assertEqual(
+            {ok, #{<<"id">> => <<"9">>}},
+            thread_backstop(user_guild_settings_update, Unscoped, base_state(#{}))
+        )
+    end).
+
+thread_backstop_fails_closed_once_a_default_config_is_pulled_test() ->
+    with_default_config(true, fun() ->
+        Data = #{<<"__thread_scoped">> => <<"5">>, <<"id">> => <<"9">>},
+        Unscoped = #{<<"__thread_unscoped">> => <<"5">>, <<"id">> => <<"9">>},
+        Capable = base_state(#{thread_channels_capable => true, user_id => 7}),
+        Bot = base_state(#{thread_channels_capable => true, bot => true, user_id => 7}),
+        ?assertEqual(drop, thread_backstop(message_ack, Data, Capable)),
+        ?assertEqual(drop, thread_backstop(message_ack, Data, Bot)),
+        ?assertEqual(
+            {ok, #{<<"id">> => <<"9">>}},
+            thread_backstop(user_guild_settings_update, Unscoped, Capable)
+        )
+    end).
+
+with_default_config(Pulled, Fun) ->
+    Key = channel_threads_config,
+    PulledKey = {channel_threads_config, pulled},
+    Previous = persistent_term:get(Key, undefined),
+    PreviousPulled = persistent_term:get(PulledKey, undefined),
+    persistent_term:put(Key, channel_threads_config:default_config()),
+    _ = persistent_term:erase(PulledKey),
+    Pulled andalso persistent_term:put(PulledKey, true),
+    try
+        Fun()
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end,
+        case PreviousPulled of
+            undefined -> persistent_term:erase(PulledKey);
+            _ -> persistent_term:put(PulledKey, PreviousPulled)
+        end
+    end.
+
+thread_backstop_strips_the_scope_key_for_viewers_test() ->
+    Key = channel_threads_config,
+    Previous = persistent_term:get(Key, undefined),
+    persistent_term:put(Key, (channel_threads_config:default_config())#{
+        enabled => true,
+        enabled_guilds => #{<<"5">> => true},
+        included_users => #{<<"1">> => true}
+    }),
+    try
+        Data = #{<<"__thread_scoped">> => <<"5">>, <<"id">> => <<"9">>},
+        Capable = base_state(#{thread_channels_capable => true}),
+        ?assertEqual({ok, #{<<"id">> => <<"9">>}}, thread_backstop(message_ack, Data, Capable)),
+        ?assertEqual(
+            drop,
+            thread_backstop(message_ack, Data#{<<"__thread_scoped">> => <<"6">>}, Capable)
+        ),
+        ?assertEqual(drop, thread_backstop(message_ack, Data, Capable#{user_id => 2})),
+        Unscoped = #{<<"__thread_unscoped">> => <<"5">>, <<"id">> => <<"9">>},
+        ?assertEqual(drop, thread_backstop(user_guild_settings_update, Unscoped, Capable)),
+        ?assertEqual(
+            {ok, #{<<"id">> => <<"9">>}},
+            thread_backstop(user_guild_settings_update, Unscoped, Capable#{user_id => 2})
+        ),
+        ?assertEqual(
+            {ok, #{<<"id">> => <<"9">>}},
+            thread_backstop(
+                user_guild_settings_update,
+                Unscoped#{<<"__thread_unscoped">> => <<"6">>},
+                Capable
+            )
+        ),
+        ?assertEqual(
+            {ok, #{<<"id">> => <<"9">>}},
+            thread_backstop(user_guild_settings_update, Unscoped, base_state(#{}))
+        )
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end
+    end.
+
+thread_subscription_events_skip_the_replay_buffer_test() ->
+    ?assert(should_skip_replay_buffer(thread_list_sync)),
+    ?assert(should_skip_replay_buffer(thread_member_list_update)).
 
 -endif.

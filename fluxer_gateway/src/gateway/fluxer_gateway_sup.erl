@@ -38,7 +38,9 @@ common_children() ->
         child_spec(gateway_nats_pool, gateway_nats_pool),
         child_spec(gateway_event_pause, gateway_event_pause),
         child_spec(gateway_concurrency, gateway_concurrency),
-        child_spec(gateway_rollout_config, gateway_rollout_config)
+        child_spec(gateway_rollout_config, gateway_rollout_config),
+        child_spec(channel_threads_flip, channel_threads_flip),
+        child_spec(channel_threads_config, channel_threads_config)
     ] ++ cluster_children() ++
         [
             child_spec(gateway_dispatch_relay, gateway_dispatch_relay),
@@ -263,6 +265,18 @@ index_of(Id, [_Other | Rest], Index) ->
     index_of(Id, Rest, Index + 1);
 index_of(_Id, [], _Index) ->
     1000000.
+
+channel_threads_config_runs_on_every_role_after_the_flip_scheduler_test() ->
+    lists:foreach(
+        fun(Role) ->
+            Ids = init_child_ids(#{cluster_enabled => false, gateway_role => Role}),
+            ?assertEqual(1, count_id(channel_threads_config, Ids)),
+            ?assertEqual(1, count_id(channel_threads_flip, Ids)),
+            ?assert(owner_precedes(gateway_nats_rpc, channel_threads_config, Ids)),
+            ?assert(owner_precedes(channel_threads_flip, channel_threads_config, Ids))
+        end,
+        [all, websocket, sessions, presence, guilds, calls, push]
+    ).
 
 count_id(Id, Ids) ->
     length([Item || Item <- Ids, Item =:= Id]).

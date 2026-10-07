@@ -45,7 +45,9 @@ set_session_passive_guild(SessionId, GuildId, State) ->
 set_passive_for_session(SessionId, ValidGuildId, State) ->
     update_session(SessionId, State, fun(SD) ->
         NewSD = session_passive:set_passive(ValidGuildId, SD),
-        session_passive:clear_guild_synced(ValidGuildId, NewSD)
+        guild_thread_subscriptions:clear_on_passive(
+            session_passive:clear_guild_synced(ValidGuildId, NewSD)
+        )
     end).
 
 -spec is_session_active(session_id(), guild_state()) -> boolean().
@@ -133,7 +135,9 @@ guild_id(State) ->
 dispatch_guild_sync(SessionId, SessionData, GuildId, Sessions, State) ->
     case {session_user_id(SessionData), maps:get(pid, SessionData, undefined)} of
         {UserId, SessionPid} when is_integer(UserId), UserId > 0, is_pid(SessionPid) ->
-            GuildData = guild_data:get_guild_state(UserId, State),
+            GuildData = guild_data:get_guild_state(
+                UserId, State, guild_thread_gate:state_opts(SessionData)
+            ),
             Encoded =
                 {pre_encoded,
                     iolist_to_binary(

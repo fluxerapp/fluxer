@@ -42,7 +42,8 @@
 -type session_pair() :: {session_id(), session_data()}.
 -type perm_memo() :: #{user_id() => non_neg_integer()}.
 -type view_memo() :: #{user_id() => boolean()}.
--type message_ctx() :: {channel_id(), binary(), session_id() | undefined, guild_state()}.
+-type message_ctx() ::
+    {channel_id(), binary(), session_id() | undefined, boolean(), guild_state()}.
 -export_type([
     guild_state/0,
     session_id/0,
@@ -174,9 +175,10 @@ handle_send_members_chunk(SessionId, ChunkData, State) ->
     sessions_map(), channel_id(), session_id() | undefined, guild_state()
 ) -> [session_pair()].
 filter_sessions_for_channel(Sessions, ChannelId, SessionIdOpt, State) ->
+    Gated = guild_thread_gate:needs_variant(State),
     {Acc, _Memo} = maps:fold(
         fun(Sid, S, In) ->
-            collect_channel_session(Sid, S, ChannelId, SessionIdOpt, State, In)
+            collect_channel_session(Sid, S, ChannelId, SessionIdOpt, Gated, State, In)
         end,
         {[], #{}},
         Sessions
@@ -188,15 +190,16 @@ filter_sessions_for_channel(Sessions, ChannelId, SessionIdOpt, State) ->
     session_data(),
     channel_id(),
     session_id() | undefined,
+    boolean(),
     guild_state(),
     {[session_pair()], view_memo()}
 ) -> {[session_pair()], view_memo()}.
-collect_channel_session(Sid, S, ChannelId, SessionIdOpt, State, {Acc, Memo}) ->
+collect_channel_session(Sid, S, ChannelId, SessionIdOpt, Gated, State, {Acc, Memo}) ->
     case is_pending_or_excluded(Sid, S, SessionIdOpt) of
         true ->
             {Acc, Memo};
         false ->
-            {Visible, Memo1} = memo_session_can_view_channel(S, ChannelId, State, Memo),
+            {Visible, Memo1} = memo_session_can_view_channel(Gated, S, ChannelId, State, Memo),
             {prepend_session(Visible, Sid, S, Acc), Memo1}
     end.
 
@@ -210,7 +213,7 @@ filter_sessions_for_message(Sessions, ChannelId, MessageId, SessionIdOpt, State)
     sessions_map(), channel_id(), binary(), session_id() | undefined, guild_state()
 ) -> [session_pair()].
 filter_message_memo(Sessions, ChannelId, MessageId, SessionIdOpt, State) ->
-    Ctx = {ChannelId, MessageId, SessionIdOpt, State},
+    Ctx = {ChannelId, MessageId, SessionIdOpt, guild_thread_gate:needs_variant(State), State},
     {Acc, _ViewMemo, _PermMemo} = maps:fold(
         fun(Sid, S, In) -> collect_message_session(Sid, S, Ctx, In) end,
         {[], #{}, #{}},
@@ -222,7 +225,7 @@ filter_message_memo(Sessions, ChannelId, MessageId, SessionIdOpt, State) ->
     session_id(), session_data(), message_ctx(), {[session_pair()], view_memo(), perm_memo()}
 ) -> {[session_pair()], view_memo(), perm_memo()}.
 collect_message_session(Sid, S, Ctx, {Acc, ViewMemo, PermMemo}) ->
-    {ChannelId, _MessageId, SessionIdOpt, State} = Ctx,
+    {ChannelId, _MessageId, SessionIdOpt, Gated, State} = Ctx,
     case is_pending_or_excluded(Sid, S, SessionIdOpt) of
         true ->
             {Acc, ViewMemo, PermMemo};
@@ -232,7 +235,7 @@ collect_message_session(Sid, S, Ctx, {Acc, ViewMemo, PermMemo}) ->
                 S,
                 Ctx,
                 Acc,
-                memo_session_can_view_channel(S, ChannelId, State, ViewMemo),
+                memo_session_can_view_channel(Gated, S, ChannelId, State, ViewMemo),
                 PermMemo
             )
     end.
@@ -254,7 +257,7 @@ collect_visible_message_session(_Sid, _S, _Ctx, Acc, {false, ViewMemo}, PermMemo
 -spec memo_message_session(
     session_id(), session_data(), message_ctx(), [session_pair()], perm_memo()
 ) -> {[session_pair()], perm_memo()}.
-memo_message_session(Sid, S, {ChannelId, MessageId, _SessionIdOpt, State}, Acc, Memo) ->
+memo_message_session(Sid, S, {ChannelId, MessageId, _SessionIdOpt, _Gated, State}, Acc, Memo) ->
     case maps:get(user_id, S, undefined) of
         UserId when is_integer(UserId) ->
             {Perms, Memo1} = memo_member_permissions(UserId, ChannelId, State, Memo),
@@ -418,9 +421,25 @@ refresh_session_viewable(SessionId, SessionData, AccState) ->
             AccState
     end.
 
--spec memo_session_can_view_channel(session_data(), channel_id(), guild_state(), view_memo()) ->
+-spec memo_session_can_view_channel(
+    boolean(), session_data(), channel_id(), guild_state(), view_memo()
+) ->
     {boolean(), view_memo()}.
-memo_session_can_view_channel(SessionData, ChannelId, State, Memo) ->
+memo_session_can_view_channel(false, SessionData, ChannelId, State, Memo) ->
+    memo_session_can_view_channel_by_permissions(SessionData, ChannelId, State, Memo);
+memo_session_can_view_channel(true, SessionData, ChannelId, State, Memo) ->
+    case guild_thread_gate:channel_visible(SessionData, ChannelId, State) of
+        true ->
+            memo_session_can_view_channel_by_permissions(SessionData, ChannelId, State, Memo);
+        false ->
+            {false, Memo}
+    end.
+
+-spec memo_session_can_view_channel_by_permissions(
+    session_data(), channel_id(), guild_state(), view_memo()
+) ->
+    {boolean(), view_memo()}.
+memo_session_can_view_channel_by_permissions(SessionData, ChannelId, State, Memo) ->
     UserId = maps:get(user_id, SessionData, undefined),
     case {UserId, maps:get(viewable_channels, SessionData, undefined)} of
         {Uid, ViewableChannels} when is_integer(Uid), is_map(ViewableChannels) ->
@@ -535,6 +554,14 @@ reference_session_can_access_message(SessionData, ChannelId, MessageId, State) -
 -spec reference_session_can_view_channel(session_data(), channel_id(), guild_state()) ->
     boolean().
 reference_session_can_view_channel(SessionData, ChannelId, State) ->
+    guild_thread_gate:channel_visible(SessionData, ChannelId, State) andalso
+        reference_session_can_view_channel_by_permissions(SessionData, ChannelId, State).
+
+-spec reference_session_can_view_channel_by_permissions(
+    session_data(), channel_id(), guild_state()
+) ->
+    boolean().
+reference_session_can_view_channel_by_permissions(SessionData, ChannelId, State) ->
     UserId = maps:get(user_id, SessionData, undefined),
     case {UserId, maps:get(viewable_channels, SessionData, undefined)} of
         {Uid, ViewableChannels} when is_integer(Uid), is_map(ViewableChannels) ->
@@ -572,11 +599,11 @@ memo_member_channel_access_miss_test() ->
 
 memo_session_can_view_channel_listed_skips_memo_test() ->
     Session = #{user_id => 1001, viewable_channels => #{10 => true}},
-    ?assertEqual({true, #{}}, memo_session_can_view_channel(Session, 10, #{}, #{})).
+    ?assertEqual({true, #{}}, memo_session_can_view_channel(false, Session, 10, #{}, #{})).
 
 memo_session_can_view_channel_without_user_test() ->
     Session = #{viewable_channels => #{10 => true}},
-    ?assertEqual({false, #{}}, memo_session_can_view_channel(Session, 10, #{}, #{})).
+    ?assertEqual({false, #{}}, memo_session_can_view_channel(false, Session, 10, #{}, #{})).
 
 channel_filters_match_per_session_reference_test() ->
     State = visibility_fixture_state(),

@@ -15,6 +15,62 @@ should_debounce_reactions_test() ->
     ?assertEqual(false, session_manager_shard_drain:should_debounce_reactions(#{flags => -1})),
     ok.
 
+thread_channels_capable_reads_identify_flag_bit_two_test() ->
+    ?assertEqual(false, session_manager_shard_drain:thread_channels_capable(#{})),
+    ?assertEqual(false, session_manager_shard_drain:thread_channels_capable(#{flags => 0})),
+    ?assertEqual(false, session_manager_shard_drain:thread_channels_capable(#{flags => 2})),
+    ?assertEqual(true, session_manager_shard_drain:thread_channels_capable(#{flags => 4})),
+    ?assertEqual(true, session_manager_shard_drain:thread_channels_capable(#{flags => 6})),
+    ?assertEqual(false, session_manager_shard_drain:thread_channels_capable(#{flags => -4})),
+    ?assertEqual(
+        false, session_manager_shard_drain:thread_channels_capable(#{flags => <<"4">>})
+    ).
+
+build_session_data_carries_thread_channels_capability_test() ->
+    UserDataMap = #{
+        <<"id">> => <<"123">>,
+        <<"username">> => <<"tester">>,
+        <<"discriminator">> => <<"0001">>,
+        <<"avatar">> => null,
+        <<"flags">> => 0
+    },
+    Data = #{<<"guilds">> => [], <<"user">> => UserDataMap, <<"user_settings">> => null},
+    Base = #{properties => #{}, token => <<"token">>, presence => null},
+    Capable = build_test_session_data(Data, Base#{flags => 6}, UserDataMap),
+    Incapable = build_test_session_data(Data, Base#{flags => 2}, UserDataMap),
+    Unflagged = build_test_session_data(Data, Base, UserDataMap),
+    ?assertEqual(true, maps:get(thread_channels_capable, Capable)),
+    ?assertEqual(true, maps:get(debounce_reactions, Capable)),
+    ?assertEqual(false, maps:get(thread_channels_capable, Incapable)),
+    ?assertEqual(false, maps:get(thread_channels_capable, Unflagged)).
+
+session_rpc_sends_thread_channels_capable_only_when_flagged_test() ->
+    meck:new(api_rpc_client, [passthrough, no_link]),
+    Self = self(),
+    meck:expect(api_rpc_client, call_with_retry, fun(Request, _Config) ->
+        Self ! {session_rpc_request, Request},
+        {ok, #{}}
+    end),
+    try
+        Identify = #{token => <<"token">>, properties => #{}},
+        {ok, _} = session_manager_shard_drain:fetch_rpc_data(
+            #{identify_data => Identify#{flags => 4}, version => 1}, <<"127.0.0.1">>
+        ),
+        ?assertMatch(#{<<"thread_channels_capable">> := true}, receive_session_rpc_request()),
+        {ok, _} = session_manager_shard_drain:fetch_rpc_data(
+            #{identify_data => Identify#{flags => 2}, version => 1}, <<"127.0.0.1">>
+        ),
+        ?assertNot(maps:is_key(<<"thread_channels_capable">>, receive_session_rpc_request()))
+    after
+        meck:unload(api_rpc_client)
+    end.
+
+receive_session_rpc_request() ->
+    receive
+        {session_rpc_request, Request} -> Request
+    after 1000 -> erlang:error(session_rpc_request_not_sent)
+    end.
+
 reconnect_drain_casts_each_active_session_test() ->
     TestPid = self(),
     SessionPidA = spawn(fun() -> reconnect_drain_test_session(TestPid) end),

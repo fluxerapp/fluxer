@@ -7,6 +7,7 @@
     channel_list/1,
     channel_index/1,
     put_channels/2,
+    put_forum_categories/2,
     build_overwrite_perms_cache/1
 ]).
 
@@ -46,13 +47,57 @@ put_channels(Channels, Data) when is_map(Data) ->
         fun normalize_channel_item/1,
         guild_data_index:ensure_list(Channels)
     ),
-    Data#{
+    put_forum_categories(ChannelList, Data#{
         <<"channels">> => ChannelList,
         <<"channel_index">> => guild_data_index:build_id_index(ChannelList),
         overwrite_perms_cache => build_overwrite_perms_cache(ChannelList)
-    };
+    });
 put_channels(_, Data) ->
     Data.
+
+-spec put_forum_categories([channel()], map()) -> map().
+put_forum_categories(Channels, Data) ->
+    case forum_categories(Channels) of
+        Categories when map_size(Categories) =:= 0 ->
+            maps:remove(thread_forum_categories, Data);
+        Categories ->
+            Data#{thread_forum_categories => Categories}
+    end.
+
+-spec forum_categories([channel()]) -> #{snowflake_id() => [snowflake_id()]}.
+forum_categories(Channels) ->
+    case [parent_of(C) || #{<<"type">> := Type} = C <- Channels, is_forum_type(Type)] of
+        [] ->
+            #{};
+        Parents ->
+            Categories = maps:from_list([{P, []} || P <- Parents, is_integer(P)]),
+            lists:foldl(fun add_plain_child/2, Categories, Channels)
+    end.
+
+-spec add_plain_child(channel(), #{snowflake_id() => [snowflake_id()]}) ->
+    #{snowflake_id() => [snowflake_id()]}.
+add_plain_child(Channel, Categories) ->
+    case
+        {
+            parent_of(Channel),
+            is_forum_type(maps:get(<<"type">>, Channel, undefined)),
+            snowflake_id:parse_maybe(maps:get(<<"id">>, Channel, undefined))
+        }
+    of
+        {Parent, false, ChildId} when is_map_key(Parent, Categories), is_integer(ChildId) ->
+            Categories#{Parent := [ChildId | maps:get(Parent, Categories)]};
+        _ ->
+            Categories
+    end.
+
+-spec parent_of(channel()) -> snowflake_id() | undefined.
+parent_of(Channel) ->
+    snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Channel, undefined)).
+
+-spec is_forum_type(term()) -> boolean().
+is_forum_type(15) -> true;
+is_forum_type(16) -> true;
+is_forum_type(_) -> false.
 
 -spec build_overwrite_perms_cache([channel()]) ->
     #{integer() => [{integer(), integer(), integer()}]}.
@@ -185,6 +230,20 @@ channel_index_from_list_test() ->
     Index = channel_index(Data),
     ?assertEqual(2, map_size(Index)),
     ?assertEqual(<<"general">>, maps:get(<<"name">>, maps:get(300, Index))).
+
+forum_categories_list_plain_children_of_forum_parents_test() ->
+    Channels = [
+        #{<<"id">> => 1, <<"type">> => 4},
+        #{<<"id">> => 2, <<"type">> => 4},
+        #{<<"id">> => 10, <<"type">> => 15, <<"parent_id">> => 1},
+        #{<<"id">> => 11, <<"type">> => 0, <<"parent_id">> => 1},
+        #{<<"id">> => 12, <<"type">> => 0, <<"parent_id">> => 2}
+    ],
+    ?assertEqual(#{1 => [11]}, forum_categories(Channels)),
+    ?assertEqual(#{}, forum_categories(tl(tl(tl(Channels))))),
+    Data = put_channels(Channels, #{}),
+    ?assertEqual(#{1 => [11]}, maps:get(thread_forum_categories, Data)),
+    ?assertNot(maps:is_key(thread_forum_categories, put_channels([], Data))).
 
 put_channels_updates_list_and_index_test() ->
     Data = #{<<"channels">> => []},

@@ -183,6 +183,9 @@ handle_info({initial_presences, Presences}, State) when is_list(Presences) ->
     {noreply, State};
 handle_info({'DOWN', Ref, process, _Pid, Reason}, State) when is_reference(Ref) ->
     presence_connect:handle_process_down(Ref, Reason, State);
+handle_info({thread_user_flip, Version} = Flip, State) when is_integer(Version) ->
+    lists:foreach(fun(Pid) -> Pid ! Flip end, presence_connect:collect_session_pids(State)),
+    {noreply, State};
 handle_info(_, State) ->
     {noreply, State}.
 
@@ -314,6 +317,14 @@ presence_rejoin_notifies_all_sessions_test() ->
     ?assertEqual({noreply, State}, handle_cast(presence_rejoin, State)),
     ?assert(received_rejoin_ack(one)),
     ?assert(received_rejoin_ack(two)).
+
+thread_user_flip_is_forwarded_to_every_session_test() ->
+    State = test_state(#{<<"s1">> => test_session_entry(self())}),
+    ?assertEqual({noreply, State}, handle_info({thread_user_flip, 4}, State)),
+    receive
+        {thread_user_flip, 4} -> ok
+    after 1000 -> ?assert(false)
+    end.
 
 presence_rejoin_with_no_sessions_is_noop_test() ->
     State = test_state(#{}),

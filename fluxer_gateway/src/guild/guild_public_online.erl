@@ -28,7 +28,12 @@ compute_count(State) ->
 
 -spec compute_count_for_data(map(), guild_state()) -> non_neg_integer().
 compute_count_for_data(Data, State) ->
-    Channels = [C || C <- ensure_list(maps:get(<<"channels">>, Data, [])), is_map(C)],
+    Channels = [
+        C
+     || C <- ensure_list(maps:get(<<"channels">>, Data, [])),
+        is_map(C),
+        not guild_thread_gate:is_thread_only_type(maps:get(<<"type">>, C, undefined))
+    ],
     case classify_everyone_viewable(Channels, State) of
         {open, _ChannelIds} -> guild_member_list:get_online_count(State);
         {restricted, ChannelIdSet} -> count_online_with_access(ChannelIdSet, State);

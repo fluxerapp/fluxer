@@ -293,6 +293,7 @@ build_test_voice_state() ->
         voice_queue => queue:new(),
         voice_queue_timer => undefined,
         debounce_reactions => false,
+        thread_channels_capable => false,
         reaction_buffer => [],
         reaction_buffer_timer => undefined
     }.

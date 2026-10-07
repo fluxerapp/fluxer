@@ -23,6 +23,8 @@ pub struct Subscription {
     pub platform: Option<String>,
     pub app_id: Option<String>,
     pub provider_environment: Option<String>,
+    #[serde(default)]
+    pub thread_channels: bool,
 }
 
 impl Subscription {

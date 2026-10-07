@@ -205,7 +205,7 @@ fresh_pending_sibling_keeps_mutual_members() ->
                 ?assertEqual(
                     [?USER_C],
                     guild_subscription_mutual_channels:filter_member_ids(
-                        ?USER_A, [?USER_C], State
+                        #{}, ?USER_A, [?USER_C], State
                     )
                 )
             end)

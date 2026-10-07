@@ -44,6 +44,7 @@ render_metrics() ->
         render_gateway_gauges(),
         render_cluster_counters(),
         render_process_counts(),
+        render_channel_threads_stats(),
         render_push_outbox_stats(safe_apply_map(fun push_outbox:stats/0)),
         render_vm_metrics()
     ].
@@ -272,6 +273,134 @@ count_registry_prefix(Prefix) ->
     catch
         error:badarg -> 0
     end.
+
+-spec render_channel_threads_stats() -> iolist().
+render_channel_threads_stats() ->
+    UpdateCounts = safe_apply_map(fun channel_threads_config:update_counts/0),
+    FlipCounts = safe_apply_map(fun channel_threads_flip:flip_counts/0),
+    [
+        format_metric(
+            <<"fluxer_gateway_channel_threads_config_version">>,
+            <<"gauge">>,
+            <<"Channel threads config version in effect">>,
+            integer_to_binary(safe_apply_int(fun channel_threads_config:version/0))
+        ),
+        format_labeled_series(
+            <<"fluxer_gateway_channel_threads_config_updates_total">>,
+            <<"counter">>,
+            <<"Channel threads config reads by outcome">>,
+            [
+                {
+                    <<"result=\"", (atom_to_binary(Result))/binary, "\"">>,
+                    gate_counter(Result, UpdateCounts)
+                }
+             || Result <- [updated, unchanged, stale, rejected]
+            ]
+        ),
+        format_labeled_series(
+            <<"fluxer_gateway_channel_threads_flips_total">>,
+            <<"counter">>,
+            <<"Channel threads gate flips scheduled by kind">>,
+            [
+                {
+                    <<"kind=\"", (atom_to_binary(Kind))/binary, "\"">>,
+                    gate_counter(Kind, FlipCounts)
+                }
+             || Kind <- [guild, viewers, user, heal]
+            ]
+        ),
+        render_identify_counts(safe_apply_map(fun channel_threads_config:identify_counts/0)),
+        render_thread_stats()
+    ].
+
+-spec render_thread_stats() -> iolist().
+render_thread_stats() ->
+    DispatchCounts = safe_apply_map(fun guild_thread_dispatch:dispatch_counts/0),
+    SyncCounts = safe_apply_map(fun guild_thread_subscriptions:list_sync_counts/0),
+    FetchCounts = safe_apply_map(fun guild_thread_load:fetch_counts/0),
+    [
+        format_metric(
+            <<"fluxer_gateway_thread_store_threads">>,
+            <<"gauge">>,
+            <<"Active threads held in guild thread stores on this node">>,
+            integer_to_binary(safe_apply_int(fun guild_thread_store:total_threads/0))
+        ),
+        format_labeled_series(
+            <<"fluxer_gateway_thread_dispatch_total">>,
+            <<"counter">>,
+            <<"Thread-gated events delivered to sessions by event and variant">>,
+            [
+                {
+                    <<"event=\"", (atom_to_binary(Event))/binary, "\",variant=\"",
+                        (atom_to_binary(Variant))/binary, "\"">>,
+                    integer_to_binary(Count)
+                }
+             || {{Event, Variant}, Count} <- lists:sort(maps:to_list(DispatchCounts)),
+                is_atom(Event),
+                is_atom(Variant),
+                is_integer(Count)
+            ]
+        ),
+        format_labeled_series(
+            <<"fluxer_gateway_thread_list_sync_total">>,
+            <<"counter">>,
+            <<"THREAD_LIST_SYNC sends by reason">>,
+            [
+                {
+                    <<"reason=\"", (atom_to_binary(Reason))/binary, "\"">>,
+                    gate_counter(Reason, SyncCounts)
+                }
+             || Reason <- [full, access]
+            ]
+        ),
+        format_labeled_series(
+            <<"fluxer_gateway_thread_collection_fetch_total">>,
+            <<"counter">>,
+            <<"Thread collection fetches by result">>,
+            [
+                {
+                    <<"result=\"", (atom_to_binary(Result))/binary, "\"">>,
+                    gate_counter(Result, FetchCounts)
+                }
+             || Result <- [ok, error, refetch]
+            ]
+        ),
+        format_metric(
+            <<"fluxer_gateway_thread_permission_unknown_parent_total">>,
+            <<"counter">>,
+            <<"Thread permission checks whose parent channel was unknown">>,
+            integer_to_binary(
+                safe_apply_int(fun guild_thread_permissions:unknown_parent_count/0)
+            )
+        ),
+        format_metric(
+            <<"fluxer_gateway_channel_threads_flip_resend_total">>,
+            <<"counter">>,
+            <<"GUILD_CREATE resends after a channel threads gate flip">>,
+            integer_to_binary(safe_apply_int(fun guild_thread_flip:resend_count/0))
+        )
+    ].
+
+-spec render_identify_counts(map()) -> iolist().
+render_identify_counts(Counts) when map_size(Counts) =:= 0 ->
+    [];
+render_identify_counts(Counts) ->
+    format_labeled_series(
+        <<"fluxer_gateway_identify_total">>,
+        <<"counter">>,
+        <<"Identify attempts by channel threads capability and OS">>,
+        [
+            {identify_labels(Key), integer_to_binary(Count)}
+         || {Key, Count} <- lists:sort(maps:to_list(Counts)), is_integer(Count)
+        ]
+    ).
+
+-spec identify_labels(term()) -> binary().
+identify_labels({Capable, Os}) when is_boolean(Capable), is_binary(Os) ->
+    <<"channel_threads_capable=\"", (atom_to_binary(Capable))/binary, "\",os=\"", Os/binary,
+        "\"">>;
+identify_labels(_Key) ->
+    <<"channel_threads_capable=\"false\",os=\"other\"">>.
 
 -spec render_push_outbox_stats(map()) -> iolist().
 render_push_outbox_stats(Stats) when map_size(Stats) =:= 0 ->

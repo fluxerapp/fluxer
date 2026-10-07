@@ -417,6 +417,7 @@ leave_dispatch_state() ->
         presence_pid => undefined,
         ignored_events => #{},
         debounce_reactions => false,
+        thread_channels_capable => false,
         reaction_buffer => [],
         reaction_buffer_timer => undefined
     }.

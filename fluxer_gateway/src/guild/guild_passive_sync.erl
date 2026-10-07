@@ -143,8 +143,27 @@ process_single_passive_session(SessionId, SessionData, GuildId, Channels, State)
     UserId = maps:get(user_id, SessionData),
     Member = guild_permissions:find_member_by_user_id(UserId, State),
     RegState = passive_sync_registry:lookup(SessionId, GuildId),
-    Diffs = compute_passive_diffs(Channels, UserId, Member, GuildId, State, RegState),
+    Visible =
+        session_channels(SessionData, Channels, State) ++
+            guild_thread_push:passive_threads(SessionData, UserId, State),
+    Diffs = compute_passive_diffs(Visible, UserId, Member, GuildId, State, RegState),
     dispatch_passive_diffs(SessionId, GuildId, Pid, Diffs).
+
+-spec session_channels(map(), [map()], guild_state()) -> [map()].
+session_channels(SessionData, Channels, State) ->
+    case
+        guild_thread_gate:needs_variant(State) andalso
+            not guild_thread_gate:session_viewer(SessionData)
+    of
+        true ->
+            [
+                C
+             || C <- Channels,
+                not guild_thread_gate:is_thread_only_type(maps:get(<<"type">>, C, undefined))
+            ];
+        false ->
+            Channels
+    end.
 
 -spec compute_passive_diffs(
     [map()], integer(), map() | undefined, integer(), guild_state(), map()

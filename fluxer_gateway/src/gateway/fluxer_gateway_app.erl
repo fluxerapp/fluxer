@@ -20,6 +20,7 @@ init_subsystems() ->
     gateway_compress:init(),
     gateway_cluster_metrics:init(),
     process_registry:init(),
+    guild_thread_store:init(),
     passive_sync_registry:init(),
     ok.
 

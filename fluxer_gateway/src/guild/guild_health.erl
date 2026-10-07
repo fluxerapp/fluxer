@@ -7,6 +7,7 @@
 -export([
     start_link/0,
     is_overloaded/1,
+    is_degraded/1,
     register_guild/1,
     put_session/2,
     remove_session/2,
@@ -40,6 +41,13 @@ is_overloaded(Pid) ->
         _ -> false
     catch
         _:_ -> false
+    end.
+
+-spec is_degraded(pid()) -> boolean().
+is_degraded(Pid) ->
+    case lookup(Pid) of
+        {Pid, _GuildId, Degraded, _Targets, _Pending} -> Degraded =:= true;
+        undefined -> false
     end.
 
 -spec register_guild(map()) -> map().

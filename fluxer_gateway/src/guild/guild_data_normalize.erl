@@ -7,7 +7,9 @@
     guild_data/1,
     member/1,
     role/1,
-    channel/1
+    channel/1,
+    thread/1,
+    thread_member/1
 ]).
 
 -spec guild_data(term()) -> term().
@@ -51,15 +53,67 @@ channel(Channel) when is_map(Channel) ->
     Channel5 = normalize_nick_map(Channel4),
     Channel6 = normalize_overwrite_list(Channel5),
     Channel7 = guild_data_normalize_schema:normalize_int_fields(
-        [<<"type">>, <<"position">>, <<"content_warning_level">>, <<"rate_limit_per_user">>],
+        [
+            <<"type">>,
+            <<"position">>,
+            <<"content_warning_level">>,
+            <<"rate_limit_per_user">>,
+            <<"flags">>,
+            <<"default_thread_rate_limit_per_user">>,
+            <<"default_forum_layout">>
+        ],
         Channel6
     ),
     guild_data_normalize_schema:normalize_nullable_int_fields(
-        [<<"bitrate">>, <<"user_limit">>, <<"voice_connection_limit">>],
+        [
+            <<"bitrate">>,
+            <<"user_limit">>,
+            <<"voice_connection_limit">>,
+            <<"default_auto_archive_duration">>,
+            <<"default_sort_order">>
+        ],
         Channel7
     );
 channel(Channel) ->
     Channel.
+
+-spec thread(term()) -> term().
+thread(Thread) when is_map(Thread) ->
+    Thread1 = channel(
+        maps:without(
+            [
+                <<"member">>,
+                <<"newly_created">>,
+                <<"position">>,
+                <<"permission_overwrites">>,
+                <<"nsfw">>,
+                <<"topic">>
+            ],
+            Thread
+        )
+    ),
+    Thread2 = normalize_snowflake_list_field(<<"applied_tags">>, Thread1),
+    Thread3 = normalize_snowflake_list_field(<<"member_ids_preview">>, Thread2),
+    Thread4 = guild_data_normalize_schema:normalize_int_fields(
+        [<<"message_count">>, <<"total_message_sent">>, <<"member_count">>],
+        Thread3
+    ),
+    maps:filter(fun(Key, _Value) -> not internal_key(Key) end, Thread4);
+thread(Thread) ->
+    Thread.
+
+-spec thread_member(term()) -> term().
+thread_member(Member) when is_map(Member) ->
+    Member1 = normalize_required_snowflake_fields([<<"id">>, <<"user_id">>], Member),
+    Member2 = guild_data_normalize_schema:normalize_int_fields([<<"flags">>], Member1),
+    maps:without([<<"member">>, <<"presence">>, <<"guild_id">>], Member2);
+thread_member(Member) ->
+    Member.
+
+-spec internal_key(term()) -> boolean().
+internal_key(<<"_fluxer_", _/binary>>) -> true;
+internal_key(<<"__thread_", _/binary>>) -> true;
+internal_key(_) -> false.
 
 -spec guild(map()) -> map().
 guild(Guild) ->

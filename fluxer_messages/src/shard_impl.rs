@@ -89,6 +89,9 @@ fn copy_source(message: &Message) -> Option<(i64, i64)> {
 }
 
 const MESSAGE_FLAG_SUPPRESS_EMBEDS: i64 = 1 << 2;
+const MESSAGE_TYPE_THREAD_CREATED: i32 = 18;
+const THREAD_MESSAGE_FLAG_MASK: i64 = 0x120;
+const THREAD_FEATURE_CHANNEL_TYPES: [i32; 5] = [10, 11, 12, 15, 16];
 const EMBED_MEDIA_OWNED_ATTACHMENT_FLAG: i32 = 1 << 30;
 #[cfg(test)]
 const USER_FLAG_DELETED: i64 = 1_i64 << 34;
@@ -103,6 +106,8 @@ const ENRICHMENT_QUERY_CONCURRENCY: usize = 16;
 const REACTION_MESSAGE_BATCH_SIZE: usize = 64;
 const ATTACHMENT_DECAY_BATCH_SIZE: usize = 128;
 const BUCKET_INDEX_PAGE_SIZE: u32 = 200;
+const EXCLUDED_TYPE_REFILL_PAGE_SIZE: u32 = 100;
+const EXCLUDED_TYPE_SCAN_ROW_CAP: usize = 5_000;
 const JS_MAX_SAFE_INTEGER: i64 = 9_007_199_254_740_991;
 
 fn assert_safe_byte_size(value: i64) -> i64 {
@@ -397,6 +402,22 @@ struct ResponseBuildOptions {
     nonce: Option<String>,
     tts: bool,
     include_hidden: bool,
+    threads_mask: bool,
+    excluded_types: Vec<i32>,
+}
+
+impl ResponseBuildOptions {
+    fn hides(&self, message: &Message) -> bool {
+        self.threads_mask && message.message_type == MESSAGE_TYPE_THREAD_CREATED
+    }
+
+    fn mask_flags(&self, flags: i64) -> i64 {
+        if self.threads_mask {
+            flags & !THREAD_MESSAGE_FLAG_MASK
+        } else {
+            flags
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -697,11 +718,51 @@ impl<T: Transport> MessagesShard<T> {
         channel_id: i64,
         cursor: PageCursor,
         limit: u32,
+        floor: Option<i64>,
+        excluded_types: &[i32],
     ) -> anyhow::Result<Vec<Message>> {
+        if excluded_types.is_empty() {
+            return match cursor {
+                PageCursor::Latest => self.get_latest(channel_id, limit).await,
+                PageCursor::Before(before_id) => {
+                    self.get_before(channel_id, before_id, limit).await
+                }
+                PageCursor::After(after_id) => self.get_after(channel_id, after_id, limit).await,
+            };
+        }
         match cursor {
-            PageCursor::Latest => self.get_latest(channel_id, limit).await,
-            PageCursor::Before(before_id) => self.get_before(channel_id, before_id, limit).await,
-            PageCursor::After(after_id) => self.get_after(channel_id, after_id, limit).await,
+            PageCursor::Latest => {
+                collect_excluding(limit, excluded_types, None, |cursor, size| async move {
+                    match cursor {
+                        Some(cursor) => self.get_before(channel_id, cursor, size).await,
+                        None => self.get_latest(channel_id, size).await,
+                    }
+                })
+                .await
+            }
+            PageCursor::Before(before_id) => {
+                collect_excluding(
+                    limit,
+                    excluded_types,
+                    Some(before_id),
+                    |cursor, size| async move {
+                        let mut page = self
+                            .get_before(channel_id, cursor.unwrap_or(before_id), size)
+                            .await?;
+                        if let Some(floor) = floor {
+                            page.retain(|message| message.message_id > floor);
+                        }
+                        Ok(page)
+                    },
+                )
+                .await
+            }
+            PageCursor::After(after_id) => {
+                collect_excluding(limit, excluded_types, Some(after_id), |cursor, size| {
+                    self.get_after(channel_id, cursor.unwrap_or(after_id), size)
+                })
+                .await
+            }
         }
     }
 
@@ -721,7 +782,15 @@ impl<T: Transport> MessagesShard<T> {
             if limit == 0 {
                 break;
             }
-            let page = self.fetch_page(channel_id, cursor, page_size).await?;
+            let page = self
+                .fetch_page(
+                    channel_id,
+                    cursor,
+                    page_size,
+                    floor,
+                    &options.excluded_types,
+                )
+                .await?;
             let exhausted = page.len() < page_size as usize;
             let reached_floor =
                 floor.is_some_and(|floor| page.iter().any(|message| message.message_id <= floor));
@@ -776,7 +845,9 @@ impl<T: Transport> MessagesShard<T> {
                 let hidden = self
                     .hidden_message_ids(std::slice::from_ref(&target), options, &mut target_users)
                     .await;
-                Ok((!hidden.contains(&target.message_id)).then_some(target))
+                Ok((!hidden.contains(&target.message_id)
+                    && !options.excluded_types.contains(&target.message_type))
+                .then_some(target))
             },
             self.visible_page(
                 channel_id,
@@ -885,6 +956,9 @@ impl<T: Transport> MessagesShard<T> {
         let Some(message) = self.get_by_id(channel_id, message_id).await? else {
             return Ok(None);
         };
+        if options.hides(&message) {
+            return Ok(None);
+        }
         if message.author_id.is_none() && message.webhook_id.is_none() {
             self.cleanup_orphaned_messages(vec![message]).await;
             return Ok(None);
@@ -909,7 +983,9 @@ impl<T: Transport> MessagesShard<T> {
         message: Message,
         options: ResponseBuildOptions,
     ) -> anyhow::Result<Option<ApiMessageResponse>> {
-        if !self.is_message_visible_to_requester(message.message_id, &options) {
+        if !self.is_message_visible_to_requester(message.message_id, &options)
+            || options.hides(&message)
+        {
             return Ok(None);
         }
         if message.author_id.is_none() && message.webhook_id.is_none() {
@@ -936,7 +1012,10 @@ impl<T: Transport> MessagesShard<T> {
     ) -> anyhow::Result<Vec<ApiMessageResponse>> {
         let (messages, orphaned_messages): (Vec<_>, Vec<_>) = messages
             .into_iter()
-            .filter(|message| self.is_message_visible_to_requester(message.message_id, &options))
+            .filter(|message| {
+                self.is_message_visible_to_requester(message.message_id, &options)
+                    && !options.hides(message)
+            })
             .partition(|message| message.author_id.is_some() || message.webhook_id.is_some());
         self.cleanup_orphaned_messages(orphaned_messages).await;
         let mut users = UserLookup::default();
@@ -1279,10 +1358,13 @@ impl<T: Transport> MessagesShard<T> {
             channel_ids.into_iter().map(|id| id.to_string()).collect();
         channel_ids.sort();
         channel_ids.dedup();
-        let payload = serde_json::json!({
+        let mut payload = serde_json::json!({
             "guild_id": guild_id.to_string(),
             "channel_ids": channel_ids,
         });
+        if options.threads_mask {
+            payload["exclude_thread_channels"] = serde_json::Value::Bool(true);
+        }
         let payload_bytes = serde_json::to_vec(&payload).unwrap_or_default();
         let response = self
             .transport
@@ -1308,6 +1390,10 @@ impl<T: Transport> MessagesShard<T> {
             .and_then(|result| result.channels)
             .unwrap_or_default()
             .into_iter()
+            .filter(|channel| {
+                !(options.threads_mask
+                    && THREAD_FEATURE_CHANNEL_TYPES.contains(&channel.channel_type))
+            })
             .map(|channel| {
                 let item = ApiChannelMentionResponse {
                     id: channel.id,
@@ -1397,6 +1483,7 @@ impl<T: Transport> MessagesShard<T> {
                 context
                     .referenced_messages
                     .get(&(channel_id, message_id))
+                    .filter(|referenced| !options.hides(referenced))
                     .map(|referenced| {
                         let mut referenced_options = options.clone();
                         referenced_options.nonce = None;
@@ -1418,7 +1505,7 @@ impl<T: Transport> MessagesShard<T> {
             author,
             webhook_id: message.webhook_id.map(|id| id.to_string()),
             message_type: message.message_type,
-            flags: message.flags.unwrap_or_default(),
+            flags: options.mask_flags(message.flags.unwrap_or_default()),
             content: message.content.clone().unwrap_or_default(),
             timestamp: epoch_millis_to_iso(snowflake_to_epoch_millis(message.message_id)),
             edited_timestamp: message.edited_timestamp.map(epoch_millis_to_iso),
@@ -1762,7 +1849,7 @@ impl<T: Transport> MessagesShard<T> {
                 .as_ref()
                 .map(|stickers| stickers.iter().filter_map(map_sticker).collect::<Vec<_>>()),
             snapshot_type: snapshot.snapshot_type.unwrap_or_default(),
-            flags: snapshot.flags.unwrap_or_default(),
+            flags: options.mask_flags(i64::from(snapshot.flags.unwrap_or_default())) as i32,
         }
     }
 }
@@ -2499,6 +2586,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 nonce,
                 tts,
                 include_hidden,
+                threads_mask,
             } => {
                 let channel_id = parse_i64(&channel_id, "channel_id")?;
                 let message_id = parse_i64(&message_id, "message_id")?;
@@ -2525,6 +2613,8 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce,
                             tts: tts.unwrap_or(false),
                             include_hidden,
+                            threads_mask,
+                            excluded_types: Vec::new(),
                         },
                     )
                     .await?;
@@ -2546,6 +2636,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 nonce,
                 tts,
                 include_hidden,
+                threads_mask,
             } => {
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
                 let source_guild_id = source_guild_id
@@ -2569,6 +2660,8 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce,
                             tts: tts.unwrap_or(false),
                             include_hidden,
+                            threads_mask,
+                            excluded_types: Vec::new(),
                         },
                     )
                     .await?;
@@ -2588,6 +2681,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 attachment_url_secret_base64,
                 include_reactions,
                 include_hidden,
+                threads_mask,
             } => {
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
                 let source_guild_id = source_guild_id
@@ -2611,6 +2705,8 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce: None,
                             tts: false,
                             include_hidden,
+                            threads_mask,
+                            excluded_types: Vec::new(),
                         },
                     )
                     .await?;
@@ -2631,8 +2727,13 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 attachment_url_secret_base64,
                 include_reactions,
                 include_hidden,
+                threads_mask,
+                mut exclude_types,
             } => {
                 let channel_id = parse_i64(&channel_id, "channel_id")?;
+                if threads_mask && !exclude_types.contains(&MESSAGE_TYPE_THREAD_CREATED) {
+                    exclude_types.push(MESSAGE_TYPE_THREAD_CREATED);
+                }
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
                 let before_id = before_id
                     .as_deref()
@@ -2671,6 +2772,8 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             nonce: None,
                             tts: false,
                             include_hidden,
+                            threads_mask,
+                            excluded_types: exclude_types,
                         },
                     )
                     .await?;
@@ -2807,6 +2910,40 @@ where
         wave = next_bucket_wave(wave);
     }
     Ok(())
+}
+
+async fn collect_excluding<Fetch, Fut>(
+    limit: u32,
+    excluded_types: &[i32],
+    mut cursor: Option<i64>,
+    fetch: Fetch,
+) -> anyhow::Result<Vec<Message>>
+where
+    Fetch: Fn(Option<i64>, u32) -> Fut,
+    Fut: std::future::Future<Output = anyhow::Result<Vec<Message>>>,
+{
+    let mut collected = Vec::new();
+    let mut scanned = 0_usize;
+    let mut page_size = limit;
+    while collected.len() < limit as usize && scanned < EXCLUDED_TYPE_SCAN_ROW_CAP {
+        let page = fetch(cursor, page_size).await?;
+        let exhausted = page.len() < page_size as usize;
+        let Some(last) = page.last() else {
+            break;
+        };
+        cursor = Some(last.message_id);
+        scanned += page.len();
+        collected.extend(
+            page.into_iter()
+                .filter(|message| !excluded_types.contains(&message.message_type)),
+        );
+        if exhausted {
+            break;
+        }
+        page_size = limit.max(EXCLUDED_TYPE_REFILL_PAGE_SIZE);
+    }
+    collected.truncate(limit as usize);
+    Ok(collected)
 }
 
 fn around_window_limits(limit: u32) -> (u32, u32) {
@@ -4110,6 +4247,8 @@ mod tests {
             nonce: None,
             tts: false,
             include_hidden: false,
+            threads_mask: false,
+            excluded_types: Vec::new(),
         }
     }
 
@@ -4914,6 +5053,522 @@ mod tests {
             (0u8..32).collect::<Vec<u8>>(),
             decode_attachment_url_secret(Some("AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8="))
         );
+    }
+
+    fn typed_message(message_id: i64, message_type: i32, flags: i64) -> Message {
+        serde_json::from_value(json!({
+            "message_id": message_id.to_string(),
+            "channel_id": "10",
+            "bucket": 416,
+            "author_id": "1472426752046002208",
+            "type": message_type,
+            "flags": flags,
+            "version": 1
+        }))
+        .unwrap()
+    }
+
+    fn masked_options() -> ResponseBuildOptions {
+        ResponseBuildOptions {
+            threads_mask: true,
+            ..build_options()
+        }
+    }
+
+    #[tokio::test]
+    async fn excluded_types_refill_the_page_past_hidden_rows() {
+        let channel = [
+            (100, 18),
+            (99, 0),
+            (98, 18),
+            (97, 18),
+            (96, 0),
+            (95, 0),
+            (94, 0),
+        ]
+        .map(|(id, message_type)| typed_message(id, message_type, 0));
+        let fetches = std::sync::Mutex::new(Vec::new());
+
+        let collected = collect_excluding(3, &[18], None, |cursor, size| {
+            let fetches = &fetches;
+            let channel = &channel;
+            async move {
+                fetches.lock().unwrap().push((cursor, size));
+                Ok(channel
+                    .iter()
+                    .filter(|message| cursor.is_none_or(|cursor| message.message_id < cursor))
+                    .take(size as usize)
+                    .cloned()
+                    .collect())
+            }
+        })
+        .await
+        .unwrap();
+
+        assert_eq!(
+            collected.iter().map(|m| m.message_id).collect::<Vec<_>>(),
+            vec![99, 96, 95]
+        );
+        assert_eq!(
+            *fetches.lock().unwrap(),
+            vec![(None, 3), (Some(98), EXCLUDED_TYPE_REFILL_PAGE_SIZE)]
+        );
+    }
+
+    #[tokio::test]
+    async fn excluded_types_stop_at_the_end_of_the_channel() {
+        let channel = [(100, 18), (99, 0), (98, 18)]
+            .map(|(id, message_type)| typed_message(id, message_type, 0));
+        let fetches = std::sync::Mutex::new(0_usize);
+
+        let collected = collect_excluding(2, &[18], None, |cursor, size| {
+            let fetches = &fetches;
+            let channel = &channel;
+            async move {
+                *fetches.lock().unwrap() += 1;
+                Ok(channel
+                    .iter()
+                    .filter(|message| cursor.is_none_or(|cursor| message.message_id < cursor))
+                    .take(size as usize)
+                    .cloned()
+                    .collect())
+            }
+        })
+        .await
+        .unwrap();
+
+        assert_eq!(
+            collected.iter().map(|m| m.message_id).collect::<Vec<_>>(),
+            vec![99]
+        );
+        assert_eq!(*fetches.lock().unwrap(), 2);
+    }
+
+    #[tokio::test]
+    async fn excluded_types_reach_past_a_long_hidden_run() {
+        let channel = (0..3_000_i64)
+            .map(|offset| typed_message(10_000 - offset, 18, 0))
+            .chain([typed_message(6_999, 0, 0), typed_message(6_998, 0, 0)])
+            .collect::<Vec<_>>();
+
+        let collected = collect_excluding(2, &[18], None, |cursor, size| {
+            let channel = &channel;
+            async move {
+                Ok(channel
+                    .iter()
+                    .filter(|message| cursor.is_none_or(|cursor| message.message_id < cursor))
+                    .take(size as usize)
+                    .cloned()
+                    .collect())
+            }
+        })
+        .await
+        .unwrap();
+
+        assert_eq!(
+            collected.iter().map(|m| m.message_id).collect::<Vec<_>>(),
+            vec![6_999, 6_998]
+        );
+    }
+
+    #[tokio::test]
+    async fn excluded_types_stop_at_the_scan_row_cap() {
+        let scanned = std::sync::Mutex::new(0_usize);
+
+        let collected = collect_excluding(2, &[18], None, |cursor, size| {
+            let scanned = &scanned;
+            async move {
+                *scanned.lock().unwrap() += size as usize;
+                let top = cursor.unwrap_or(1_000_000);
+                Ok((1..=i64::from(size))
+                    .map(|offset| typed_message(top - offset, 18, 0))
+                    .collect())
+            }
+        })
+        .await
+        .unwrap();
+
+        assert!(collected.is_empty());
+        let scanned = *scanned.lock().unwrap();
+        assert!(scanned >= EXCLUDED_TYPE_SCAN_ROW_CAP);
+        assert!(scanned < EXCLUDED_TYPE_SCAN_ROW_CAP + EXCLUDED_TYPE_REFILL_PAGE_SIZE as usize);
+    }
+
+    const LISTED_BASE_ID: i64 = 1_509_197_195_776_110_592;
+
+    async fn listed_ids(
+        types: &[i32],
+        limit: u32,
+        before: Option<i64>,
+        after: Option<i64>,
+        around: Option<i64>,
+        excluded_types: &[i32],
+    ) -> Vec<i64> {
+        let rows = types
+            .iter()
+            .enumerate()
+            .map(|(index, message_type)| {
+                typed_message(LISTED_BASE_ID + index as i64 + 1, *message_type, 0)
+            })
+            .collect::<Vec<_>>();
+        let shard = MessagesShard {
+            storage: MessagesStorage::Memory(std::sync::Arc::new(rows)),
+            transport: InMemoryTransport::new(),
+        };
+        let users = stub_user_service(&shard.transport).await;
+        let at = |offset: i64| LISTED_BASE_ID + offset;
+        let responses = shard
+            .list_api_responses(
+                10,
+                limit,
+                before.map(at),
+                after.map(at),
+                around.map(at),
+                ResponseBuildOptions {
+                    excluded_types: excluded_types.to_vec(),
+                    ..build_options()
+                },
+            )
+            .await
+            .unwrap();
+        users.abort();
+        responses
+            .iter()
+            .map(|response| response.id.parse::<i64>().unwrap() - LISTED_BASE_ID)
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn excluded_types_list_the_latest_page_past_hidden_rows() {
+        let types = [0, 0, 18, 0, 18, 18, 0, 18];
+
+        assert_eq!(
+            listed_ids(&types, 3, None, None, None, &[18]).await,
+            [7, 4, 2]
+        );
+        assert_eq!(
+            listed_ids(&types, 3, None, None, None, &[]).await,
+            [8, 7, 6]
+        );
+    }
+
+    #[tokio::test]
+    async fn excluded_types_list_after_an_id_in_ascending_pages() {
+        let types = [18, 18, 18, 0, 18, 0, 0, 0];
+
+        assert_eq!(
+            listed_ids(&types, 3, None, Some(0), None, &[18]).await,
+            [7, 6, 4]
+        );
+        assert_eq!(
+            listed_ids(&types, 3, None, Some(0), None, &[]).await,
+            [3, 2, 1]
+        );
+    }
+
+    #[tokio::test]
+    async fn excluded_types_keep_a_before_and_after_window_inside_its_bounds() {
+        let types = [0, 0, 0, 18, 0, 18, 18, 0];
+
+        assert_eq!(
+            listed_ids(&types, 3, Some(9), Some(1), None, &[18]).await,
+            [8, 5, 3]
+        );
+        assert_eq!(
+            listed_ids(&types, 3, Some(9), Some(4), None, &[18]).await,
+            [8, 5]
+        );
+        assert_eq!(
+            listed_ids(&types, 3, Some(9), Some(1), None, &[]).await,
+            [8, 7, 6]
+        );
+    }
+
+    #[tokio::test]
+    async fn excluded_types_drop_a_hidden_around_target_and_refill_both_sides() {
+        let types = [0, 0, 18, 0, 18, 0, 18, 0, 0];
+
+        assert_eq!(
+            listed_ids(&types, 5, None, None, Some(5), &[18]).await,
+            [8, 6, 4, 2]
+        );
+        assert_eq!(
+            listed_ids(&types, 5, None, None, Some(5), &[]).await,
+            [7, 6, 5, 4, 3]
+        );
+    }
+
+    #[tokio::test]
+    async fn threads_mask_drops_thread_created_rows_and_clears_thread_flags() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let users = stub_user_service(&shard.transport).await;
+        let mut forwarded = typed_message(1_509_197_195_776_110_594, 0, 0x120 | 0x4);
+        forwarded.message_snapshots = Some(vec![
+            serde_json::from_value(json!({"content": "x", "type": 0, "flags": 0x124})).unwrap(),
+        ]);
+        let messages = vec![
+            forwarded,
+            typed_message(1_509_197_195_776_110_593, MESSAGE_TYPE_THREAD_CREATED, 0),
+        ];
+
+        let masked = shard
+            .build_api_responses_from_messages(messages.clone(), masked_options())
+            .await
+            .unwrap();
+        let control = shard
+            .build_api_responses_from_messages(messages, build_options())
+            .await
+            .unwrap();
+        users.abort();
+
+        assert_eq!(masked.len(), 1);
+        assert_eq!(masked[0].flags, 0x4);
+        assert_eq!(masked[0].message_snapshots.as_ref().unwrap()[0].flags, 0x4);
+        assert_eq!(control.len(), 2);
+        assert_eq!(control[0].flags, 0x124);
+        assert_eq!(
+            control[0].message_snapshots.as_ref().unwrap()[0].flags,
+            0x124
+        );
+        assert_eq!(control[1].message_type, MESSAGE_TYPE_THREAD_CREATED);
+        assert!(recorded_deletions(&deleted).is_empty());
+    }
+
+    #[tokio::test]
+    async fn threads_mask_drops_a_single_thread_created_row() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let users = stub_user_service(&shard.transport).await;
+        let starter = typed_message(1_509_197_195_776_110_593, MESSAGE_TYPE_THREAD_CREATED, 0);
+
+        let masked = shard
+            .build_api_response_from_message(starter.clone(), masked_options())
+            .await
+            .unwrap();
+        let control = shard
+            .build_api_response_from_message(starter, build_options())
+            .await
+            .unwrap();
+        users.abort();
+
+        assert!(masked.is_none());
+        assert!(control.is_some());
+    }
+
+    #[test]
+    fn threads_mask_clears_nested_referenced_flags_and_nulls_a_thread_created_reference() {
+        let shard = recording_shard(&DeletedMessageKeys::default());
+        let reply_to = |target: i64| {
+            let mut reply = typed_message(1_509_197_195_776_110_600, 19, 0x20);
+            reply.message_reference = Some(MessageReference {
+                channel_id: Some(10),
+                message_id: Some(target),
+                guild_id: None,
+                reference_type: Some(0),
+            });
+            reply
+        };
+        let referenced = typed_message(1_509_197_195_776_110_590, 0, 0x120);
+        let thread_created =
+            typed_message(1_509_197_195_776_110_591, MESSAGE_TYPE_THREAD_CREATED, 0);
+        let context = ResponseContext {
+            referenced_messages: HashMap::from([
+                ((10, referenced.message_id), referenced.clone()),
+                ((10, thread_created.message_id), thread_created.clone()),
+            ]),
+            ..ResponseContext::default()
+        };
+
+        let masked = shard.map_message_response(
+            &reply_to(referenced.message_id),
+            &masked_options(),
+            &context,
+            true,
+        );
+        assert_eq!(masked.flags, 0);
+        let nested = masked.referenced_message.unwrap().unwrap();
+        assert_eq!(nested.flags, 0);
+
+        let control = shard.map_message_response(
+            &reply_to(referenced.message_id),
+            &build_options(),
+            &context,
+            true,
+        );
+        assert_eq!(control.flags, 0x20);
+        assert_eq!(control.referenced_message.unwrap().unwrap().flags, 0x120);
+
+        let masked_starter = shard.map_message_response(
+            &reply_to(thread_created.message_id),
+            &masked_options(),
+            &context,
+            true,
+        );
+        assert!(matches!(masked_starter.referenced_message, Some(None)));
+        let control_starter = shard.map_message_response(
+            &reply_to(thread_created.message_id),
+            &build_options(),
+            &context,
+            true,
+        );
+        assert!(matches!(control_starter.referenced_message, Some(Some(_))));
+    }
+
+    #[test]
+    fn thread_options_default_to_off_for_older_callers() {
+        let list: MessageRequest = serde_json::from_value(json!({
+            "op": "ListResponses",
+            "channel_id": "10",
+            "viewer_user_id": "1",
+            "limit": 50,
+            "can_read_message_history": true,
+            "media_endpoint": "https://media.test",
+            "media_proxy_secret_key": "secret",
+        }))
+        .unwrap();
+        match list {
+            MessageRequest::ListResponses {
+                threads_mask,
+                exclude_types,
+                ..
+            } => {
+                assert!(!threads_mask);
+                assert!(exclude_types.is_empty());
+            }
+            other => panic!("unexpected request {other:?}"),
+        }
+        let get: MessageRequest = serde_json::from_value(json!({
+            "op": "GetResponseById",
+            "channel_id": "10",
+            "message_id": "11",
+            "viewer_user_id": "1",
+            "can_read_message_history": true,
+            "media_endpoint": "https://media.test",
+            "media_proxy_secret_key": "secret",
+        }))
+        .unwrap();
+        match get {
+            MessageRequest::GetResponseById { threads_mask, .. } => assert!(!threads_mask),
+            other => panic!("unexpected request {other:?}"),
+        }
+        let options = build_options();
+        assert_eq!(options.mask_flags(0x1ff), 0x1ff);
+        assert!(!options.hides(&typed_message(1, MESSAGE_TYPE_THREAD_CREATED, 0)));
+    }
+
+    #[test]
+    fn a_reference_without_a_message_id_round_trips() {
+        let message: Message = serde_json::from_value(json!({
+            "message_id": "1509197195776110592",
+            "channel_id": "10",
+            "bucket": 416,
+            "author_id": "1472426752046002208",
+            "type": MESSAGE_TYPE_THREAD_CREATED,
+            "version": 1,
+            "message_reference": {"channel_id": "1509197195776110500", "guild_id": "7", "type": 0}
+        }))
+        .unwrap();
+        let reference = message.message_reference.as_ref().unwrap();
+        assert_eq!(reference.message_id, None);
+
+        let mapped = map_message_reference(reference).expect("a thread reference maps");
+        assert_eq!(mapped.message_id, None);
+        let encoded = serde_json::to_value(&mapped).unwrap();
+        assert_eq!(
+            encoded,
+            json!({"channel_id": "1509197195776110500", "guild_id": "7", "type": 0})
+        );
+        let decoded: ApiMessageReferenceResponse = serde_json::from_value(encoded).unwrap();
+        assert_eq!(decoded.message_id, None);
+
+        let shard = recording_shard(&DeletedMessageKeys::default());
+        let response = shard.map_message_response(
+            &message,
+            &build_options(),
+            &ResponseContext::default(),
+            true,
+        );
+        assert!(response.referenced_message.is_none());
+        let packed = rmp_serde::to_vec_named(&response).unwrap();
+        let unpacked: ApiMessageResponse = rmp_serde::from_slice(&packed).unwrap();
+        let unpacked_reference = unpacked.message_reference.unwrap();
+        assert_eq!(unpacked_reference.message_id, None);
+        assert_eq!(unpacked_reference.channel_id, "1509197195776110500");
+
+        let reply = MessageReference {
+            channel_id: Some(1),
+            message_id: Some(2),
+            guild_id: None,
+            reference_type: None,
+        };
+        assert_eq!(
+            serde_json::to_value(map_message_reference(&reply).unwrap()).unwrap(),
+            json!({"channel_id": "1", "message_id": "2", "type": 0})
+        );
+    }
+
+    async fn stub_channel_mentions(
+        transport: &InMemoryTransport,
+        payloads: std::sync::Arc<std::sync::Mutex<Vec<serde_json::Value>>>,
+    ) -> tokio::task::JoinHandle<()> {
+        let mut subscriber = transport
+            .subscribe("rpc.gateway.guild.resolve_channel_mentions")
+            .await
+            .unwrap();
+        let transport = transport.clone();
+        tokio::spawn(async move {
+            while let Some(message) = subscriber.next().await {
+                payloads
+                    .lock()
+                    .unwrap()
+                    .push(serde_json::from_slice(TransportMessage::payload(&message)).unwrap());
+                let reply = json!({"ok": true, "result": {"channels": [
+                    {"id": "20", "name": "general", "type": 0},
+                    {"id": "21", "name": "thread", "type": 11},
+                    {"id": "22", "name": "forum", "type": 15},
+                    {"id": "23", "name": "news-thread", "type": 10}
+                ]}});
+                let _ = reply_message(&message, &transport, reply.to_string().as_bytes()).await;
+            }
+        })
+    }
+
+    #[tokio::test]
+    async fn threads_mask_excludes_thread_channels_from_mention_resolution() {
+        let shard = recording_shard(&DeletedMessageKeys::default());
+        let payloads = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let stub = stub_channel_mentions(&shard.transport, payloads.clone()).await;
+        let ids = HashSet::from([20, 21, 22, 23]);
+
+        let masked = shard
+            .resolve_channel_mentions(
+                ids.clone(),
+                &ResponseBuildOptions {
+                    source_guild_id: Some(7),
+                    ..masked_options()
+                },
+            )
+            .await;
+        let control = shard
+            .resolve_channel_mentions(
+                ids,
+                &ResponseBuildOptions {
+                    source_guild_id: Some(7),
+                    ..build_options()
+                },
+            )
+            .await;
+        stub.abort();
+
+        let mut masked_ids = masked.into_keys().collect::<Vec<_>>();
+        masked_ids.sort();
+        assert_eq!(masked_ids, vec!["20"]);
+        assert_eq!(control.len(), 4);
+        assert_eq!(control["23"].channel_type, 10);
+        let payloads = payloads.lock().unwrap();
+        assert_eq!(payloads[0]["exclude_thread_channels"], json!(true));
+        assert!(payloads[1].get("exclude_thread_channels").is_none());
     }
 
     const CROSSPOST_SOURCE_CHANNEL_ID: i64 = 500;

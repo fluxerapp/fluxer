@@ -41,6 +41,40 @@ publish_message(
     GuildName,
     ChannelName
 ) ->
+    Job = message_job(
+        MessageData,
+        MarkdownContext,
+        GuildId,
+        ChannelId,
+        MessageId,
+        GuildName,
+        ChannelName
+    ),
+    publish_recipients(Job, UserIds, #{
+        kind => message,
+        user_ids => UserIds,
+        channel_id => ChannelId,
+        message_id => MessageId
+    }).
+
+-spec message_job(
+    map(),
+    map(),
+    integer(),
+    integer(),
+    integer(),
+    binary() | undefined,
+    binary() | undefined
+) -> map().
+message_job(
+    MessageData,
+    MarkdownContext,
+    GuildId,
+    ChannelId,
+    MessageId,
+    GuildName,
+    ChannelName
+) ->
     Job = #{
         <<"v">> => ?JOB_VERSION,
         <<"config_version">> => ?LEGACY_CONFIG_VERSION,
@@ -57,12 +91,7 @@ publish_message(
             ChannelName
         )
     },
-    publish_recipients(Job, UserIds, #{
-        kind => message,
-        user_ids => UserIds,
-        channel_id => ChannelId,
-        message_id => MessageId
-    }).
+    maps:merge(Job, thread_job_fields(MessageData, ChannelName)).
 
 -spec publish_recipients(map(), [integer()], meta()) -> ok | {error, term()}.
 publish_recipients(Job, UserIds, Meta) ->
@@ -219,6 +248,19 @@ notification_fields(
         <<"image_url">> => nullable(push_notification_format:extract_image_url(MessageData))
     }.
 
+-spec thread_job_fields(map(), binary() | undefined) -> map().
+thread_job_fields(MessageData, ChannelName) ->
+    case push_notification:thread_fields(MessageData, ChannelName) of
+        Fields when map_size(Fields) =:= 0 -> Fields;
+        Fields -> Fields#{<<"kind">> => thread_job_kind(MessageData)}
+    end.
+
+-spec thread_job_kind(map()) -> binary().
+thread_job_kind(#{<<"__thread_push">> := #{<<"forum_thread_created">> := true}}) ->
+    <<"forum_thread_created">>;
+thread_job_kind(_MessageData) ->
+    <<"thread">>.
+
 -spec nullable(binary() | undefined) -> binary() | null.
 nullable(undefined) ->
     null;
@@ -342,6 +384,89 @@ caller_fields_falls_back_to_the_default_avatar_test() ->
     ?assertMatch(
         #{<<"caller_avatar_url">> := <<"https://static.example/avatars/", _/binary>>},
         Fields
+    ).
+
+thread_job_fields_are_absent_for_channel_messages_test() ->
+    ?assertEqual(#{}, thread_job_fields(#{}, <<"general">>)).
+
+thread_job_fields_mark_thread_jobs_test() ->
+    MessageData = #{
+        <<"__thread_push">> => #{<<"parent_id">> => 200, <<"parent_name">> => <<"general">>}
+    },
+    ?assertEqual(
+        #{
+            <<"kind">> => <<"thread">>,
+            <<"channel_name">> => <<"ideas">>,
+            <<"parent_id">> => <<"200">>,
+            <<"parent_name">> => <<"general">>
+        },
+        thread_job_fields(MessageData, <<"ideas">>)
+    ).
+
+thread_job_fields_mark_forum_thread_created_jobs_test() ->
+    MessageData = #{
+        <<"__thread_push">> => #{
+            <<"parent_id">> => 300,
+            <<"parent_name">> => <<"ideas">>,
+            <<"forum_thread_created">> => true
+        }
+    },
+    ?assertMatch(
+        #{<<"kind">> := <<"forum_thread_created">>, <<"parent_id">> := <<"300">>},
+        thread_job_fields(MessageData, <<"post">>)
+    ).
+
+encoded_message_job(MessageData, ChannelName) ->
+    ok = meck:new(push_notification_format, [passthrough, no_link]),
+    ok = meck:new(push_utils, [passthrough, no_link]),
+    try
+        ok = meck:expect(
+            push_notification_format, resolve_author_avatar_url, fun(_) -> <<"icon">> end
+        ),
+        ok = meck:expect(push_utils, construct_static_asset_url, fun(_) -> <<"badge">> end),
+        Job = message_job(MessageData, #{}, 5, 6, 7, <<"Guild">>, ChannelName),
+        json:decode(iolist_to_binary(json:encode(Job)))
+    after
+        meck:unload(push_utils),
+        meck:unload(push_notification_format)
+    end.
+
+message_job_puts_thread_fields_at_the_top_level_test() ->
+    MessageData = #{
+        <<"author">> => #{<<"username">> => <<"ada">>},
+        <<"content">> => <<"hi">>,
+        <<"__thread_push">> => #{<<"parent_id">> => 200, <<"parent_name">> => <<"general">>}
+    },
+    Decoded = encoded_message_job(MessageData, <<"ideas">>),
+    ?assertMatch(
+        #{
+            <<"kind">> := <<"thread">>,
+            <<"parent_id">> := <<"200">>,
+            <<"parent_name">> := <<"general">>,
+            <<"channel_name">> := <<"ideas">>
+        },
+        Decoded
+    ),
+    Notification = maps:get(<<"notification">>, Decoded),
+    ?assertEqual(
+        [],
+        [
+            K
+         || K <- [<<"kind">>, <<"parent_id">>, <<"parent_name">>, <<"channel_name">>],
+            maps:is_key(K, Notification)
+        ]
+    ).
+
+message_job_has_no_thread_fields_for_channel_messages_test() ->
+    MessageData = #{<<"author">> => #{<<"username">> => <<"ada">>}, <<"content">> => <<"hi">>},
+    Decoded = encoded_message_job(MessageData, <<"general">>),
+    ?assertEqual(
+        [],
+        [
+            K
+         || K <- [<<"kind">>, <<"parent_id">>, <<"parent_name">>, <<"channel_name">>],
+            maps:is_key(K, Decoded)
+        ]
     ).
 
 caller_fields_caps_the_caller_name_test() ->

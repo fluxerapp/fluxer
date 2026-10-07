@@ -142,11 +142,30 @@ dispatch_session_changes(
     UserId = maps:get(user_id, SessionData),
     Pid = maps:get(pid, SessionData),
     ConnectedSet = maps:get(UserId, ConnectedVoiceByUser, sets:new()),
-    {StateWithCache, Removed, Added} =
+    {StateWithCache, Removed0, Added0} =
         compute_channel_diffs(SessionId, SessionData, UserId, OldState, AccState, ConnectedSet),
+    Removed = gate_channel_set(SessionData, Removed0, OldState),
+    Added = gate_channel_set(SessionData, Added0, StateWithCache),
     dispatch_removed_channels(Removed, Pid, OldState, GuildId),
-    dispatch_added_channels(Added, Pid, SessionId, SessionData, StateWithCache, GuildId),
+    dispatch_added_channels(Added, SessionId, SessionData, StateWithCache, GuildId),
+    ok = guild_thread_subscriptions:access_gained(
+        SessionData, sets:to_list(Added), StateWithCache, GuildId
+    ),
     StateWithCache.
+
+-spec gate_channel_set(map(), sets:set(channel_id()), guild_state()) -> sets:set(channel_id()).
+gate_channel_set(SessionData, ChannelIds, State) ->
+    case guild_thread_gate:needs_variant(State) of
+        false ->
+            ChannelIds;
+        true ->
+            sets:filter(
+                fun(ChannelId) ->
+                    guild_thread_gate:channel_visible(SessionData, ChannelId, State)
+                end,
+                ChannelIds
+            )
+    end.
 
 -spec compute_channel_diffs(
     binary(), map(), user_id(), guild_state(), guild_state(), sets:set(channel_id())
@@ -180,13 +199,13 @@ dispatch_removed_channels(Removed, Pid, OldState, GuildId) ->
     ).
 
 -spec dispatch_added_channels(
-    sets:set(channel_id()), pid(), binary(), map(), guild_state(), integer()
+    sets:set(channel_id()), binary(), map(), guild_state(), integer()
 ) -> ok.
-dispatch_added_channels(Added, Pid, SessionId, SessionData, StateWithCache, GuildId) ->
+dispatch_added_channels(Added, SessionId, SessionData, StateWithCache, GuildId) ->
     lists:foreach(
         fun(ChannelId) ->
             guild_visibility_roles:dispatch_channel_create(
-                ChannelId, Pid, StateWithCache, GuildId
+                ChannelId, SessionData, StateWithCache, GuildId
             ),
             guild_visibility_roles:send_member_list_sync(
                 SessionId, SessionData, ChannelId, GuildId, StateWithCache
@@ -401,22 +420,35 @@ apply_visibility(ChannelId, OldVisible, NewVisible, {ViewableMapAcc, StateAcc}, 
     integer(),
     map()
 ) -> {map(), guild_state()}.
-handle_visibility_transition(true, false, ChId, Pid, _Sid, _SD, Old, New, GId, VMap) when
+handle_visibility_transition(true, false, ChId, Pid, _Sid, SD, Old, New, GId, VMap) when
     is_pid(Pid)
 ->
-    guild_visibility_roles:dispatch_channel_delete(ChId, Pid, Old, GId),
+    case guild_thread_gate:channel_visible(SD, ChId, Old) of
+        true -> guild_visibility_roles:dispatch_channel_delete(ChId, Pid, Old, GId);
+        false -> ok
+    end,
     {VMap, New};
 handle_visibility_transition(false, true, ChId, Pid, Sid, SD, _Old, New, GId, VMap) when
     is_pid(Pid)
 ->
-    guild_visibility_roles:dispatch_channel_create(ChId, Pid, New, GId),
-    guild_visibility_roles:send_member_list_sync(Sid, SD, ChId, GId, New),
-    FinalMap = guild_visibility_roles:maybe_ensure_parent_category_visible(
-        ChId, VMap, New, Pid, GId
-    ),
-    {FinalMap, New};
+    case guild_thread_gate:channel_visible(SD, ChId, New) of
+        true -> gated_channel_create(ChId, Sid, SD, New, GId, VMap);
+        false -> {VMap, New}
+    end;
 handle_visibility_transition(_, _, _ChId, _Pid, _Sid, _SD, _Old, New, _GId, VMap) ->
     {VMap, New}.
+
+-spec gated_channel_create(
+    channel_id(), binary(), map(), guild_state(), integer(), map()
+) -> {map(), guild_state()}.
+gated_channel_create(ChId, Sid, SD, New, GId, VMap) ->
+    guild_visibility_roles:dispatch_channel_create(ChId, SD, New, GId),
+    ok = guild_thread_subscriptions:access_gained(SD, [ChId], New, GId),
+    guild_visibility_roles:send_member_list_sync(Sid, SD, ChId, GId, New),
+    FinalMap = guild_visibility_roles:maybe_ensure_parent_category_visible(
+        ChId, VMap, New, SD, GId
+    ),
+    {FinalMap, New}.
 
 -spec guild_id(guild_state()) -> integer() | undefined.
 guild_id(State) ->

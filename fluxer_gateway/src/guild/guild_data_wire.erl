@@ -99,6 +99,8 @@ is_fast_snowflake_scalar(_) ->
 -spec binary_key_kind(binary()) -> key_kind().
 binary_key_kind(<<First, _/binary>> = Key) when First >= $1, First =< $9 ->
     numeric_binary_key_kind(Key);
+binary_key_kind(<<"_fluxer_", _/binary>>) ->
+    drop;
 binary_key_kind(Key) ->
     named_or_suffix_kind(Key).
 
@@ -161,6 +163,9 @@ named_key_kind(<<"member_role_index">>) -> drop;
 named_key_kind(<<"member_list_revision">>) -> drop;
 named_key_kind(<<"role_perms_cache">>) -> drop;
 named_key_kind(<<"overwrite_perms_cache">>) -> drop;
+named_key_kind(<<"thread_index">>) -> drop;
+named_key_kind(<<"member_ids_preview">>) -> drop;
+named_key_kind(<<"applied_tags">>) -> scalar_list;
 named_key_kind(_) -> unknown.
 
 -spec has_suffix(binary(), binary()) -> boolean().
@@ -206,6 +211,19 @@ fast_payload_keeps_restricted_ids_opaque_test() ->
 fast_payload_drops_internal_keys_test() ->
     Data = #{<<"id">> => 1, <<"role_index">> => #{}, role_perms_cache => #{}},
     ?assertEqual(#{<<"id">> => <<"1">>}, fast_payload(Data, false)).
+
+fast_payload_shapes_thread_keys_test() ->
+    Data = #{
+        <<"id">> => 1,
+        <<"applied_tags">> => [2, 3],
+        <<"member_ids_preview">> => [4],
+        <<"_fluxer_thread">> => #{},
+        <<"thread_index">> => #{}
+    },
+    ?assertEqual(
+        #{<<"id">> => <<"1">>, <<"applied_tags">> => [<<"2">>, <<"3">>]},
+        fast_payload(Data, false)
+    ).
 
 pre_encoded_payload_passes_through_unchanged_test() ->
     Data = {pre_encoded, <<"{}">>},

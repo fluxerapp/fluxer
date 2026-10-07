@@ -211,14 +211,15 @@ strip_data(Data) when is_map(Data) ->
     ChannelIndex = strip_channel_index(maps:get(<<"channel_index">>, Data, #{})),
     RolePermsCache = maps:get(role_perms_cache, Data, #{}),
     OverwritePermsCache = maps:get(overwrite_perms_cache, Data, #{}),
-    with_member_source(Data, #{
+    Base = maps:merge(maps:with([thread_gate, thread_store, thread_forum_categories], Data), #{
         <<"guild">> => Guild,
         <<"roles">> => Roles,
         <<"channels">> => Channels,
         <<"channel_index">> => ChannelIndex,
         role_perms_cache => RolePermsCache,
         overwrite_perms_cache => OverwritePermsCache
-    });
+    }),
+    with_member_source(Data, Base);
 strip_data(Data) ->
     Data.
 

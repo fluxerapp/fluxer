@@ -100,8 +100,9 @@ process_presence_change(UserId, PresenceMap, PresenceMap, Status, _ListSync, Sta
 process_presence_change(UserId, OldPresence, PresenceMap, Status, ListSync, State) ->
     StateWithPresence = store_member_presence(UserId, PresenceMap, State),
     ok = guild_presence_sync:sync_online_status(UserId, StateWithPresence),
+    StateWithThreads = guild_thread_subscriptions:presence_changed(UserId, StateWithPresence),
     StateAfterBroadcast = spawn_presence_broadcast(
-        UserId, OldPresence, PresenceMap, State, StateWithPresence, ListSync
+        UserId, OldPresence, PresenceMap, State, StateWithThreads, ListSync
     ),
     StateAfterOffline = maybe_handle_offline(Status, UserId, StateAfterBroadcast),
     {noreply, StateAfterOffline}.

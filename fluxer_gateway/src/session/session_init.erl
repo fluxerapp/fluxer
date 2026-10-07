@@ -267,6 +267,7 @@ extract_extra_fields(D, Ready) ->
         guild_connect_workers => #{},
         guild_connect_timers => #{},
         debounce_reactions => maps:get(debounce_reactions, D, false),
+        thread_channels_capable => maps:get(thread_channels_capable, D, false),
         reaction_buffer => [],
         reaction_buffer_timer => undefined
     }.

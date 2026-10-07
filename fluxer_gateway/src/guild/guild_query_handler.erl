@@ -80,6 +80,7 @@ caller_timeout_ms(get_large_guild_metadata) -> 200;
 caller_timeout_ms(get_user_counts) -> 2000;
 caller_timeout_ms(get_viewer_counts) -> 2000;
 caller_timeout_ms(get_channel_member_counts) -> 2000;
+caller_timeout_ms(get_forum_unread_scope) -> 2000;
 caller_timeout_ms(check_permission) -> 5000;
 caller_timeout_ms(get_guild_members_batch) -> 5000;
 caller_timeout_ms(list_guild_members) -> 10000;
@@ -126,6 +127,9 @@ handle_query({get_channel_member_counts, Request}, _From, State) when is_map(Req
     handle_get_channel_member_counts(Request, State);
 handle_query({get_large_guild_metadata}, _From, State) ->
     handle_get_large_guild_metadata(State);
+handle_query({get_forum_unread_scope, Request}, _From, State) when is_map(Request) ->
+    Session = request_session_data(Request, State),
+    {reply, guild_request_forum_unreads:scope(Session, Request, State), State};
 handle_query(Msg, From, State) ->
     handle_call_dispatch(Msg, From, State).
 
@@ -197,7 +201,7 @@ channel_member_count_entry(ChannelId, SessionData, State) when
     case
         guild_member_list_connected:session_can_view_channel_members(
             SessionData, ChannelId, State
-        )
+        ) andalso not guild_thread_gate:is_thread_id(ChannelId, State)
     of
         true -> channel_member_count_entry_for_visible_channel(ChannelId, State);
         false -> false
@@ -549,6 +553,16 @@ monotonic_deadline_ignores_the_legacy_wall_clock_test() ->
     ),
     ?assertNot(is_expired({get_data, #{deadline => 0}}, From)).
 
+expired_forum_unread_scope_is_shed_test() ->
+    From = {self(), make_ref()},
+    State = #{id => 1},
+    Request = #{
+        channel_id => 2,
+        thread_ids => [3],
+        deadline_monotonic => erlang:monotonic_time(millisecond) - 1
+    },
+    ?assertEqual({noreply, State}, handle_call({get_forum_unread_scope, Request}, From, State)).
+
 deadline_less_queries_expire_once_every_known_caller_has_given_up_test() ->
     Self = self(),
     Ref = make_ref(),
@@ -563,6 +577,7 @@ deadline_less_queries_expire_once_every_known_caller_has_given_up_test() ->
             fresh => Fresh,
             metadata => is_expired({get_large_guild_metadata}, From),
             counts => is_expired({get_user_counts, 1}, From),
+            forum_unreads => is_expired({get_forum_unread_scope, #{}}, From),
             unknown_tag => is_expired({get_sessions}, From),
             explicit_deadline =>
                 is_expired({get_large_guild_metadata, #{deadline_monotonic => Future}}, From)
@@ -582,6 +597,7 @@ deadline_less_queries_expire_once_every_known_caller_has_given_up_test() ->
             fresh => false,
             metadata => true,
             counts => false,
+            forum_unreads => false,
             unknown_tag => false,
             explicit_deadline => false,
             disabled => false

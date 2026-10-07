@@ -53,6 +53,7 @@ impl Job {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Audience {
     Standard,
+    Thread,
     Ring,
 }
 
@@ -60,6 +61,7 @@ impl Audience {
     fn admits(self, subscription: &Subscription) -> bool {
         match self {
             Self::Standard => subscription.platform() != Some(Platform::IosApnsVoip),
+            Self::Thread => Self::Standard.admits(subscription) && subscription.thread_channels,
             Self::Ring => Self::rings(subscription),
         }
     }
@@ -377,7 +379,11 @@ async fn run_message_job(
         &subscriptions,
         envelopes,
         deadline,
-        Audience::Standard,
+        if job.is_thread() {
+            Audience::Thread
+        } else {
+            Audience::Standard
+        },
     )
     .await;
     let duration_ms = elapsed_ms(started_ms);
@@ -670,5 +676,36 @@ fn record_depth(state: &AppState, admission: &Semaphore, capacity: usize) {
 fn reap(result: Result<(), tokio::task::JoinError>) {
     if let Err(error) = result {
         warn!(error = %error, "push job task failed");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn subscription(platform: &str, thread_channels: bool) -> Subscription {
+        Subscription {
+            subscription_id: "sub".to_owned(),
+            endpoint: "token".to_owned(),
+            p256dh_key: None,
+            auth_key: None,
+            platform: Some(platform.to_owned()),
+            app_id: None,
+            provider_environment: None,
+            thread_channels,
+        }
+    }
+
+    #[test]
+    fn a_thread_push_reaches_only_devices_that_registered_the_capability() {
+        assert!(Audience::Thread.admits(&subscription("android_fcm", true)));
+        assert!(!Audience::Thread.admits(&subscription("android_fcm", false)));
+        assert!(!Audience::Thread.admits(&subscription("ios_apns_voip", true)));
+    }
+
+    #[test]
+    fn a_standard_push_ignores_the_capability() {
+        assert!(Audience::Standard.admits(&subscription("ios_apns", false)));
+        assert!(Audience::Standard.admits(&subscription("ios_apns", true)));
     }
 }

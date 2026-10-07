@@ -55,6 +55,8 @@ handle_channel_delete(EventData, Data) ->
     guild_data_index:put_channels(FilteredChannels, Data).
 
 -spec handle_message_create(event_data(), guild_data()) -> guild_data().
+handle_message_create(#{<<"type">> := 18}, Data) ->
+    Data;
 handle_message_create(EventData, Data) ->
     ChannelId = snowflake_id:parse_optional(
         maps:get(<<"channel_id">>, EventData, undefined)

@@ -124,6 +124,7 @@ query_call_handler(get_counts) -> query;
 query_call_handler(get_user_counts) -> query;
 query_call_handler(get_viewer_counts) -> query;
 query_call_handler(get_channel_member_counts) -> query;
+query_call_handler(get_forum_unread_scope) -> query;
 query_call_handler(get_large_guild_metadata) -> query;
 query_call_handler(get_users_to_mention_by_roles) -> query;
 query_call_handler(get_users_to_mention_by_user_ids) -> query;
@@ -184,6 +185,15 @@ subscription_call_handler(_) -> undefined.
 -spec handle_cast_internal(term(), guild_state()) -> cast_reply().
 handle_cast_internal({dispatch, Request}, State) ->
     handle_dispatch_cast(Request, State);
+handle_cast_internal({dispatch_many, Requests}, State) when is_list(Requests) ->
+    {noreply,
+        lists:foldl(
+            fun(#{event := Event, data := EventData}, Acc) ->
+                dispatch_event(Event, EventData, Acc)
+            end,
+            State,
+            Requests
+        )};
 handle_cast_internal(
     {session_connect_async,
         #{guild_id := GuildId, attempt := Attempt, request := Request} = Msg},
@@ -214,6 +224,12 @@ handle_cast_internal({send_guild_sync, SessionId}, State) ->
     handle_send_guild_sync_cast(SessionId, State);
 handle_cast_internal({send_members_chunk, SessionId, ChunkData}, State) ->
     handle_send_members_chunk_cast(SessionId, ChunkData, State);
+handle_cast_internal({thread_user_flip, SessionId}, State) when is_binary(SessionId) ->
+    {noreply, guild_thread_flip:user_flip(SessionId, State)};
+handle_cast_internal({thread_subscriptions, SessionId, Subscriptions}, State) when
+    is_binary(SessionId), is_map(Subscriptions)
+->
+    {noreply, guild_thread_subscriptions:update(SessionId, Subscriptions, State)};
 handle_cast_internal({patch_everyone_perms, Bit}, State) when is_integer(Bit), Bit > 0 ->
     {noreply, guild_maintenance:apply_everyone_perm_bit(Bit, State)};
 handle_cast_internal(Msg, State) when is_tuple(Msg) ->
@@ -278,6 +294,29 @@ handle_info_internal(flush_member_list_sync_batch, State) ->
 handle_info_internal({check_auto_stop_empty, Token}, State) ->
     handle_auto_stop_info(Token, State);
 handle_info_internal(check_auto_stop_empty, State) ->
+    {noreply, State};
+handle_info_internal({thread_list_sync_tick, GuildIdToken}, State) ->
+    {noreply, guild_thread_subscriptions:handle_tick(GuildIdToken, State)};
+handle_info_internal(thread_list_sync_drain, State) ->
+    {noreply, guild_thread_subscriptions:handle_drain(State)};
+handle_info_internal(thread_member_list_flush, State) ->
+    {noreply, guild_thread_subscriptions:handle_list_flush(State)};
+handle_info_internal(thread_load_retry, State) ->
+    {noreply, guild_thread_load:handle_retry(State)};
+handle_info_internal({thread_load_result, Ref, Result}, State) when is_reference(Ref) ->
+    {noreply, guild_thread_load:handle_load_result(Ref, Result, State)};
+handle_info_internal({thread_gate_flip, Version}, State) when is_integer(Version) ->
+    {noreply, guild_thread_flip:start(Version, State)};
+handle_info_internal({thread_flip_result, Ref, Result}, State) when is_reference(Ref) ->
+    {noreply, guild_thread_flip:handle_result(Ref, Result, State)};
+handle_info_internal({thread_flip_resend, SessionId}, State) when is_binary(SessionId) ->
+    {noreply, guild_thread_flip:resend(SessionId, State)};
+handle_info_internal({thread_store_retire, Tab}, State) ->
+    ok =
+        case maps:get(thread_store, maps:get(data, State, #{}), undefined) of
+            Tab -> ok;
+            _ -> guild_thread_store:destroy(Tab)
+        end,
     {noreply, State};
 handle_info_internal({timeout, TimerRef, member_list_sync_item_cache_rotate}, State) when
     is_reference(TimerRef)
@@ -534,6 +573,7 @@ safe_cleanup(Fun, Label) ->
 cleanup_per_guild_ets(State) ->
     Data = maps:get(data, State, #{}),
     safe_delete_ets(maps:get(members_ets, Data, undefined)),
+    safe_delete_ets(maps:get(thread_store, Data, undefined)),
     safe_delete_ets(maps:get(member_presence, State, undefined)),
     safe_delete_ets(maps:get(viewable_channels_cache, State, undefined)),
     ok.
@@ -759,7 +799,9 @@ voice_guild_data_keys() ->
         <<"channels">>,
         <<"channel_index">>,
         overwrite_perms_cache,
-        members_ets
+        members_ets,
+        thread_gate,
+        thread_store
     ].
 
 -spec voice_members_table_unavailable(guild_state()) -> map().
@@ -798,6 +840,23 @@ handle_non_voice_exit_broadcaster_keeps_guild_alive_test() ->
     BPid = list_to_pid("<0.250.0>"),
     State = #{id => 42, broadcaster_pid => BPid},
     ?assertEqual({noreply, #{id => 42}}, handle_non_voice_exit(BPid, killed, State)).
+
+unknown_binary_event_dispatch_cast_keeps_guild_state_test() ->
+    State = #{
+        id => 1,
+        data => #{<<"guild">> => #{}},
+        sessions => #{},
+        dm_partners => #{
+            <<"s1">> => #{user_id => 2, pid => self(), partners => #{}, eligible => #{}}
+        }
+    },
+    Event = <<"FUTURE_EVENT_THE_GATEWAY_HAS_NEVER_SEEN">>,
+    ?assertEqual(
+        {noreply, State}, handle_cast({dispatch, #{event => Event, data => #{}}}, State)
+    ),
+    ?assertEqual(
+        {noreply, State}, handle_cast({dispatch, #{event => Event, data => <<"{}">>}}, State)
+    ).
 
 handle_non_voice_exit_other_linked_stops_guild_test() ->
     BPid = list_to_pid("<0.250.0>"),

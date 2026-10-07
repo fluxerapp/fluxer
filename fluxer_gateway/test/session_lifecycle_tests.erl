@@ -31,6 +31,9 @@ serialize_state_test() ->
     ?assertEqual({2, 8}, maps:get(shard, Serialized)),
     ?assert(sets:is_element(123, maps:get(active_guilds, Serialized))),
     ?assertEqual(10, maps:get(seq, Serialized)),
+    ?assertEqual(false, maps:get(thread_channels_capable, Serialized)),
+    Capable = session_lifecycle:serialize_state(State#{thread_channels_capable => true}),
+    ?assertEqual(true, maps:get(thread_channels_capable, Capable)),
     ok.
 
 serialize_transfer_state_includes_resume_fields_test() ->
@@ -55,6 +58,7 @@ serialize_transfer_state_includes_resume_fields_test() ->
         ignored_events => #{<<"TYPING_START">> => true},
         initial_guild_id => 123,
         debounce_reactions => true,
+        thread_channels_capable => true,
         channels => #{},
         relationships => #{},
         seq => 10,
@@ -73,7 +77,8 @@ serialize_transfer_state_includes_resume_fields_test() ->
     ?assertEqual(10, maps:get(seq, TransferState)),
     ?assertEqual(8, maps:get(ack_seq, TransferState)),
     ?assertEqual(8, maps:get(replay_floor, TransferState)),
-    ?assertEqual([#{seq => 9}], maps:get(buffer, TransferState)).
+    ?assertEqual([#{seq => 9}], maps:get(buffer, TransferState)),
+    ?assertEqual(true, maps:get(thread_channels_capable, TransferState)).
 
 serialize_transfer_state_strips_socket_pid_test() ->
     State = #{
@@ -108,7 +113,8 @@ serialize_transfer_state_strips_socket_pid_test() ->
         collected_presences => []
     },
     TransferState = session_lifecycle:serialize_transfer_state(State),
-    ?assertEqual(undefined, maps:get(socket_pid, TransferState)).
+    ?assertEqual(undefined, maps:get(socket_pid, TransferState)),
+    ?assertEqual(false, maps:get(thread_channels_capable, TransferState)).
 
 serialize_transfer_state_preserves_deque_replay_buffer_test() ->
     Deque = lists:foldl(

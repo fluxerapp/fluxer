@@ -26,7 +26,9 @@ transfer_test_() ->
         instantiate(fun abort_after_forwarding_reports_the_forwarded_count/1),
         instantiate(fun late_source_stop_keeps_the_committed_target/1),
         instantiate(fun controller_death_after_commit_keeps_the_target/1),
-        instantiate(fun lost_guard_aborts_before_other_nodes_route_to_the_target/1)
+        instantiate(fun lost_guard_aborts_before_other_nodes_route_to_the_target/1),
+        instantiate(fun thread_state_survives_the_frozen_export/1),
+        instantiate(fun stale_thread_sessions_do_not_break_a_sessionless_restore/1)
     ]}.
 
 instantiate(Test) ->
@@ -242,6 +244,47 @@ lost_guard_aborts_before_other_nodes_route_to_the_target(#{
     ?assertEqual(false, guild_handoff_freeze:is_frozen(Src)),
     ?assertEqual([a], gen_server:call(Src, get_log, 5000)).
 
+thread_state_survives_the_frozen_export(#{src := Src, src_shard := SrcShard}) ->
+    ok = gen_server:call(Src, {put_session, <<"s1">>, #{pid => self(), user_id => 7}}),
+    ok = gen_server:call(Src, install_threads),
+    Result = guild_handoff_freeze:transfer(?GUILD_ID, Src, SrcShard, node(), #{}),
+    ?assertMatch({ok, #{new_pid := _}}, Result),
+    {ok, #{new_pid := NewPid}} = Result,
+    ?assertEqual(ok, wait_dead(Src)),
+    State = guild_init:init_base_state(gen_server:call(NewPid, get_export)),
+    try
+        ?assertMatch(#{<<"id">> := 10}, guild_thread_gate:thread(10, State)),
+        ?assert(guild_thread_gate:active(State)),
+        ?assertEqual([<<"s1">>], maps:keys(maps:get(thread_resend_pending, State))),
+        ?assertEqual([<<"s1">>], maps:keys(maps:get(thread_sync_pending, State))),
+        ?assertEqual([10], maps:keys(maps:get(thread_list_dirty, State))),
+        ?assertEqual(
+            thread_member_list_flush, receive_tagged(thread_member_list_flush, 2000)
+        )
+    after
+        guild_thread_store:destroy(guild_thread_gate:store(State))
+    end.
+
+stale_thread_sessions_do_not_break_a_sessionless_restore(#{src := Src, src_shard := SrcShard}) ->
+    ok = gen_server:call(Src, {put_session, <<"s1">>, #{pid => self(), user_id => 7}}),
+    ok = gen_server:call(Src, install_threads),
+    Opts = #{transfer_sessions => false},
+    {ok, #{new_pid := NewPid}} =
+        guild_handoff_freeze:transfer(?GUILD_ID, Src, SrcShard, node(), Opts),
+    Export = gen_server:call(NewPid, get_export),
+    ?assertEqual(#{}, maps:get(sessions, Export)),
+    ?assertEqual([<<"s1">>], maps:get(thread_handoff_resends, Export)),
+    State = guild_init:init_base_state(Export),
+    try
+        ?assertMatch(#{<<"id">> := 10}, guild_thread_gate:thread(10, State)),
+        Resent = guild_thread_flip:resend(<<"s1">>, State),
+        ?assertNot(maps:is_key(thread_resend_pending, Resent)),
+        Synced = guild_thread_subscriptions:handle_tick(<<"s1">>, Resent),
+        ?assertNot(maps:is_key(thread_sync_pending, Synced))
+    after
+        guild_thread_store:destroy(guild_thread_gate:store(State))
+    end.
+
 hold(Pid, Ms) ->
     Test = self(),
     spawn(fun() ->
@@ -373,6 +416,18 @@ handle_call(flush_down_on_terminate, _From, #{role := guild} = State) ->
     {reply, ok, State#{flush_down => {Helper, erlang:monitor(process, Helper)}}};
 handle_call(cast_late_on_terminate, _From, #{role := guild} = State) ->
     {reply, ok, State#{cast_late => true}};
+handle_call(install_threads, _From, #{role := guild, data := Data} = State) ->
+    Tab = guild_thread_store:new(),
+    ok = guild_thread_store:put_thread(Tab, #{<<"id">> => 10, <<"parent_id">> => 1}),
+    {reply, ok, State#{
+        data => Data#{thread_store => Tab, thread_gate => #{active => true, version => 1}},
+        thread_load => #{status => ready, queue => [], queued => 0, attempt => 0},
+        thread_resend_pending => #{<<"s1">> => true},
+        thread_sync_pending => #{<<"s1">> => scheduled},
+        thread_list_dirty => #{10 => true}
+    }};
+handle_call(get_export, _From, #{role := guild} = State) ->
+    {reply, maps:remove(role, State), State};
 handle_call(get_sessions, _From, #{role := guild, sessions := Sessions} = State) ->
     {reply, Sessions, State};
 handle_call(get_log, _From, #{role := guild} = State) ->

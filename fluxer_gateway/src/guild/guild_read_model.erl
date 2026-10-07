@@ -17,7 +17,11 @@
     <<"stickers">>,
     role_perms_cache,
     overwrite_perms_cache,
-    members_ets
+    members_ets,
+    thread_gate,
+    thread_tainted,
+    thread_store,
+    thread_forum_categories
 ]).
 
 -spec put_state(map()) -> ok.

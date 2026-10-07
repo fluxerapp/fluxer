@@ -367,6 +367,13 @@ resolve_owner_node_returns_unavailable_when_invalid_owner_test() ->
         resolve_owner_node(123, fun(_UserId) -> {bad_owner} end)
     ).
 
+dispatch_event_atom_accepts_thread_events_test() ->
+    ?assertEqual(
+        thread_member_update, dispatch_event_atom_or_error(<<"THREAD_MEMBER_UPDATE">>)
+    ),
+    ?assertEqual(thread_list_sync, dispatch_event_atom_or_error(<<"THREAD_LIST_SYNC">>)),
+    ?assertEqual(forum_unreads, dispatch_event_atom_or_error(<<"FORUM_UNREADS">>)).
+
 presence_manager_server_ref_local_test() ->
     ?assertEqual(presence_manager, presence_manager_server_ref(node())).
 
