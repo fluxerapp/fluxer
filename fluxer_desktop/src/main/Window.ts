@@ -364,6 +364,12 @@ function recoverMainWindowRendererBeforeShow(reason: string): void {
 	reloadMainWindowRendererAfterGone(reason);
 }
 
+export function isAppDocumentWindowContents(contents: Electron.WebContents): boolean {
+	return [mainWindow, themeStudioPopoutWindow].some(
+		(window) => isAliveWindow(window) && window.webContents === contents,
+	);
+}
+
 function getThemeStudioPopoutWindow(): BrowserWindow | null {
 	if (isAliveWindow(themeStudioPopoutWindow)) {
 		return themeStudioPopoutWindow;

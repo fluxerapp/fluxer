@@ -3,7 +3,7 @@
 import {DESKTOP_APP_ORIGIN} from '@electron/common/Constants';
 import {createChildLogger} from '@electron/common/Logger';
 import {RendererDocumentOwnerFactory} from '@electron/main/RendererDocumentOwner';
-import {getMainWindow, isTrustedOrigin} from '@electron/main/Window';
+import {isAppDocumentWindowContents, isTrustedOrigin} from '@electron/main/Window';
 import type {IpcMainInvokeEvent} from 'electron';
 
 const BLANK_DOCUMENT_URL = 'about:blank';
@@ -49,7 +49,7 @@ export function createPrivilegedRendererDocumentOwners(componentName: string): R
 	const log = createChildLogger(componentName);
 	return new RendererDocumentOwnerFactory({
 		policy: {
-			isPrivilegedRendererDocument: ({sender, url}) => sender === getMainWindow()?.webContents && isTrustedOrigin(url),
+			isPrivilegedRendererDocument: ({sender, url}) => isAppDocumentWindowContents(sender) && isTrustedOrigin(url),
 		},
 		onWatcherFailure: (error, reason) => {
 			log.warn('Renderer document invalidation handling failed', {reason, error});
