@@ -25,12 +25,6 @@ class GuildSettingsModal {
 		}
 	}
 
-	isOpen(guildId?: string): boolean {
-		if (!this.activeHandler) return false;
-		if (guildId) return this.activeHandler.guildId === guildId;
-		return true;
-	}
-
 	navigateToTab(guildId: string, tab: GuildSettingsTabType): boolean {
 		if (!this.activeHandler) return false;
 		if (this.activeHandler.guildId !== guildId) return false;

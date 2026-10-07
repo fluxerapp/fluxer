@@ -9,25 +9,25 @@ import {msg} from '@lingui/core/macro';
 
 export const logger = new Logger('VoiceConnectionStatus');
 
-export const AUDIO_PROCESSING_DIRECT_INPUT_RAW_DESCRIPTOR = msg({
+const AUDIO_PROCESSING_DIRECT_INPUT_RAW_DESCRIPTOR = msg({
 	message: 'Audio processing (direct input, raw)',
 	comment: 'Tooltip in the voice status popout. Describes the studio / direct-input mic processing profile.',
 });
-export const AUDIO_PROCESSING_FOCUSED_VOICE_DESCRIPTOR = msg({
+const AUDIO_PROCESSING_FOCUSED_VOICE_DESCRIPTOR = msg({
 	message: 'Audio processing (focused voice)',
 	comment: 'Tooltip in the voice status popout. Describes the focused-voice mic processing profile.',
 });
-export const AUDIO_PROCESSING_CUSTOM_ENHANCED_DESCRIPTOR = msg({
+const AUDIO_PROCESSING_CUSTOM_ENHANCED_DESCRIPTOR = msg({
 	message: 'Audio processing (custom, enhanced)',
 	comment:
 		'Tooltip in the voice status popout. Describes the custom mic processing profile with enhanced (DeepFilterNet3) noise suppression.',
 });
-export const AUDIO_PROCESSING_CUSTOM_DESCRIPTOR = msg({
+const AUDIO_PROCESSING_CUSTOM_DESCRIPTOR = msg({
 	message: 'Audio processing (custom)',
 	comment:
 		'Tooltip in the voice status popout. Describes the custom mic processing profile with browser-built-in noise suppression.',
 });
-export const AUDIO_PROCESSING_CUSTOM_NO_SUPPRESSION_DESCRIPTOR = msg({
+const AUDIO_PROCESSING_CUSTOM_NO_SUPPRESSION_DESCRIPTOR = msg({
 	message: 'Audio processing (custom, no suppression)',
 	comment: 'Tooltip in the voice status popout. Describes the custom mic processing profile with no noise suppression.',
 });

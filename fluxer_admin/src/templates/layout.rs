@@ -126,9 +126,3 @@ fn render_flash(flash: &crate::api::types::FlashMessage) -> Markup {
         }
     }
 }
-
-pub fn flash_container() -> Markup {
-    html! {
-        div id="flash-container" class="mb-4 sm:mb-6 empty:hidden" {}
-    }
-}

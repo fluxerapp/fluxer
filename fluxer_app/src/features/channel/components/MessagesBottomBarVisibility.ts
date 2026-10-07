@@ -17,14 +17,11 @@ const initialMessagesBottomBarVisibilityState: MessagesBottomBarVisibilityState 
 	visible: false,
 };
 
-export function getMessagesBottomBarVisibleForChannel(
-	state: MessagesBottomBarVisibilityState,
-	channelId: string,
-): boolean {
+function getMessagesBottomBarVisibleForChannel(state: MessagesBottomBarVisibilityState, channelId: string): boolean {
 	return state.channelId === channelId && state.visible;
 }
 
-export function getNextMessagesBottomBarVisibilityState(
+function getNextMessagesBottomBarVisibilityState(
 	state: MessagesBottomBarVisibilityState,
 	report: MessagesBottomBarVisibilityReport,
 	activeChannelId: string,

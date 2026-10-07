@@ -6,20 +6,24 @@
 	"ignoreFiles": [
 		"fluxer_admin/src/styles/app.css",
 		"fluxer_admin/static/htmx.min.js",
+		"fluxer_app/src/features/voice/utils/camera-effects/models/selfie_segmentation_256x256.d.onnx.ts",
+		"fluxer_app/src/media/images/badges/bug-hunter.d.svg.ts",
+		"fluxer_app/src/media/images/badges/partner.d.svg.ts",
+		"fluxer_app/src/media/images/badges/plutonium.d.svg.ts",
+		"fluxer_app/src/media/images/badges/staff.d.svg.ts",
+		"fluxer_app/src/media/images/i-like-food.d.svg.ts",
 		"tools/ci/templates/libfluxcore_wrapper.d.ts",
 		"tools/ci/templates/libfluxcore_wrapper.js"
 	],
 	"ignoreIssues": {
+		"fluxer_api/src/api/infrastructure/activity/Contract.generated.ts": ["exports", "types"],
 		"fluxer_app/scripts/build/Config.tsx": ["exports"],
 		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],
+		"fluxer_app/src/features/notification/utils/EntranceSoundScopes.ts": ["exports"],
+		"fluxer_app/src/features/platform/state/PersistentStorage.ts": ["exports"],
+		"fluxer_app/src/features/voice/utils/CodecCapabilityDetector.ts": ["exports"],
 		"fluxer_app/src/index.tsx": ["unlisted"],
-		"fluxer_api/src/api/infrastructure/activity/Contract.generated.ts": ["exports", "types"],
 		"fluxer_desktop/native/mac-app-audio/index.test.mjs": ["unlisted"],
-		"fluxer_desktop/src/common/DesktopConfig.ts": ["types"],
-		"fluxer_desktop/src/common/Types.ts": ["types"],
-		"fluxer_desktop/src/main/Autostart.ts": ["exports"],
-		"fluxer_desktop/src/main/LinuxDesktopEntry.ts": ["exports"],
-		"fluxer_desktop/src/main/NotificationState.ts": ["exports", "types"],
 		"packages/schema/src/domains/admin/AdminUserSchemas.ts": ["exports"],
 		"packages/schema/src/domains/download/DownloadSchemas.ts": ["exports"],
 		"packages/schema/src/domains/geolocation/GeolocationSchemas.ts": ["exports"],
@@ -47,7 +51,12 @@
 			]
 		},
 		"fluxer_app": {
-			"entry": ["lingui.config.js", "scripts/build-sw.mjs", "scripts/Generate*.ts"]
+			"entry": [
+				"lingui.config.js",
+				"scripts/build-sw.mjs",
+				"scripts/Generate*.ts",
+				"src/features/platform/utils/BrowserAssertStrict.ts"
+			]
 		},
 		"fluxer_desktop": {
 			"entry": [
@@ -63,7 +72,7 @@
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
 			"ignoreBinaries": ["reg.exe", "update-desktop-database", "xdg-mime"],
-			"ignoreDependencies": ["electron-builder", "electron-builder-squirrel-windows"]
+			"ignoreDependencies": ["electron-builder"]
 		},
 		"fluxer_docs": {
 			"entry": ["scripts/*.ts", "src/**/*.astro"],

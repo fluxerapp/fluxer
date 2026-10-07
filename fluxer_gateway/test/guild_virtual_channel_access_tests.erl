@@ -49,12 +49,6 @@ get_virtual_channels_for_user_test() ->
     ),
     ?assertEqual([500, 501], Channels).
 
-get_users_with_virtual_access_test() ->
-    State = guild_virtual_channel_access:add_virtual_access(100, 500, #{}),
-    State1 = guild_virtual_channel_access:add_virtual_access(101, 500, State),
-    Users = lists:sort(guild_virtual_channel_access:get_users_with_virtual_access(500, State1)),
-    ?assertEqual([100, 101], Users).
-
 mark_and_clear_preserve_test() ->
     State = guild_virtual_channel_access:add_virtual_access(100, 500, #{}),
     State1 = guild_virtual_channel_access:mark_preserve(100, 500, State),

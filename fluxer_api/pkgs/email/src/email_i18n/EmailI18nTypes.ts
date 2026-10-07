@@ -118,10 +118,6 @@ export interface EmailTemplateVariables {
 		username: string;
 		resetUrl: string;
 	};
-	registration_approved: {
-		username: string;
-		channelsUrl: string;
-	};
 	report_received: {
 		reportId: string;
 		targetKind: ReportReceivedTargetKind;

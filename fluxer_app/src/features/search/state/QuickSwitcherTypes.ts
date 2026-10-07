@@ -5,9 +5,6 @@ import type {Guild} from '@app/features/guild/models/Guild';
 import type {SettingsSubtab, SettingsTab} from '@app/features/user/components/settings_utils/SettingsConstants';
 import type {User} from '@app/features/user/models/User';
 import type {QuickSwitcherResultType, QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
-import {DAYS_PER_WEEK, MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
-
-export const UNREAD_SORT_WEIGHT_BOOST = DAYS_PER_WEEK * MS_PER_DAY;
 export const QUICK_SWITCHER_OVERLAY_ID = 'nav_quick_switcher';
 export const MEMBER_SEARCH_LIMIT = 25;
 

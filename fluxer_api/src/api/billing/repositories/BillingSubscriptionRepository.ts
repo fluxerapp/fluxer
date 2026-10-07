@@ -30,11 +30,6 @@ const FETCH_BY_USER = BillingSubscriptionsByUser.selectCql({
 const FETCH_BY_PROVIDER_IDS = BillingSubscriptions.selectCql({
 	where: BillingSubscriptions.where.in('provider_id', 'provider_ids'),
 });
-const ACTIVE_SUBSCRIPTION_STATUSES = new Set<BillingSubscriptionRow['status']>(['active', 'trialing']);
-
-function getSubscriptionEndMs(row: BillingSubscriptionRow): number {
-	return row.current_period_end?.getTime() ?? 0;
-}
 
 export class BillingSubscriptionRepository {
 	async findById(providerId: string): Promise<BillingSubscriptionRow | null> {
@@ -60,15 +55,6 @@ export class BillingSubscriptionRepository {
 		const ids = refs.map((r) => r.provider_id);
 		const rows = await fetchMany<BillingSubscriptionRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
 		return rows.map(normalizeBillingSubscriptionRow);
-	}
-
-	async findActiveForUser(userId: bigint): Promise<BillingSubscriptionRow | null> {
-		const subs = await this.listByUser(userId);
-		return (
-			subs
-				.filter((subscription) => ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status))
-				.sort((left, right) => getSubscriptionEndMs(right) - getSubscriptionEndMs(left))[0] ?? null
-		);
 	}
 
 	async upsertFromStripe(

@@ -2,11 +2,11 @@
 
 import {initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export type HoverStateValue = 'idle' | 'hovering';
+type HoverStateValue = 'idle' | 'hovering';
 
 export type HoverStateEvent = {type: 'hover.enter'} | {type: 'hover.leave'};
 
-export const hoverStateMachine = setup({
+const hoverStateMachine = setup({
 	types: {} as {
 		events: HoverStateEvent;
 	},
@@ -39,7 +39,7 @@ export function transitionHoverStateSnapshot(snapshot: HoverStateSnapshot, event
 	return transition(hoverStateMachine, snapshot, event)[0] as HoverStateSnapshot;
 }
 
-export function getHoverStateValue(snapshot: HoverStateSnapshot): HoverStateValue {
+function getHoverStateValue(snapshot: HoverStateSnapshot): HoverStateValue {
 	return snapshot.value === 'hovering' ? 'hovering' : 'idle';
 }
 

@@ -150,7 +150,7 @@ const ADMIN_RECOVERY_KIT_MISSING_DESCRIPTOR = msg({
 	message: 'Create a recovery kit to continue.',
 	comment: 'Status shown in the setup wizard while the administrator has no recovery kit.',
 });
-export const CREATE_ADMIN_ACCOUNT_DESCRIPTOR = msg({
+const CREATE_ADMIN_ACCOUNT_DESCRIPTOR = msg({
 	message: 'Create administrator account',
 	comment: 'Button that opens the registration flow to create the first administrator account.',
 });

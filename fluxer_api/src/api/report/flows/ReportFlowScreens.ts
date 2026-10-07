@@ -21,20 +21,20 @@ export interface ReportFlowOptionDef {
 	surface?: ReportFlowSurface;
 }
 
-export interface ReportFlowChecklistItemDef {
+interface ReportFlowChecklistItemDef {
 	id: string;
 	label: ReportFlowCopyKey;
 	description?: ReportFlowCopyKey;
 	reason?: ReportReasonKey;
 }
 
-export interface ReportFlowChecklistDef {
+interface ReportFlowChecklistDef {
 	items: ReadonlyArray<ReportFlowChecklistItemDef>;
 	minChecked: number;
 	outcome: Extract<ReportFlowOutcomeDef, {type: 'screen' | 'submit'}>;
 }
 
-export interface ReportFlowSubtitleVariantsDef {
+interface ReportFlowSubtitleVariantsDef {
 	dsa?: ReportFlowCopyKey | null;
 	selfHosted?: ReportFlowCopyKey | null;
 }
@@ -70,7 +70,7 @@ export const REPORT_FLOW_NOTICES: ReadonlyArray<ReportFlowNoticeDef> = [
 	},
 ];
 
-export const PRIVATE_INFO_ITEMS: ReadonlyArray<ReportFlowChecklistItemDef> = [
+const PRIVATE_INFO_ITEMS: ReadonlyArray<ReportFlowChecklistItemDef> = [
 	{id: 'email', label: 'report_flow.label.email'},
 	{id: 'phone', label: 'report_flow.label.phone'},
 	{id: 'address', label: 'report_flow.label.address'},

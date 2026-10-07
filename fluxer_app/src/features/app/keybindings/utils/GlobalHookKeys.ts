@@ -138,7 +138,7 @@ export const physicalKeyNameForGlobalHook = (combo: KeyCombo): string | null => 
 	if (combo.mouseButton != null || combo.gamepadButton != null || combo.modifierOnly) return null;
 	return keyNameForGlobalHookCode(combo.code);
 };
-export const keyNameForGlobalHookCode = (code: string | undefined): string | null => {
+const keyNameForGlobalHookCode = (code: string | undefined): string | null => {
 	if (!code) return null;
 	const mapped = globalHookCodeKeyMap[code];
 	if (mapped) return mapped;

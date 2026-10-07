@@ -40,14 +40,7 @@ function createInitialContext(): ReportMachineContext {
 	};
 }
 
-export function createInitialState(): State {
-	return {
-		...createInitialContext(),
-		flowStep: 'selection',
-	};
-}
-
-export const reportStateMachine = setup({
+const reportStateMachine = setup({
 	types: {} as {
 		context: ReportMachineContext;
 		events: Action;
@@ -254,7 +247,7 @@ export function transitionReportSnapshot(snapshot: ReportMachineSnapshot, event:
 	return transition(reportStateMachine, snapshot, event)[0] as ReportMachineSnapshot;
 }
 
-export function getReportFlowStep(snapshot: ReportMachineSnapshot): FlowStep {
+function getReportFlowStep(snapshot: ReportMachineSnapshot): FlowStep {
 	switch (snapshot.value) {
 		case 'email':
 		case 'verification':

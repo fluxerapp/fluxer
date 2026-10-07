@@ -79,10 +79,6 @@
 		"subject": "Zresetuj hasło w {product_name}",
 		"body": "Witaj {username},\n\nPoprosiłeś o zresetowanie hasła w {product_name}. Użyj poniższego linku, aby ustawić nowe hasło:\n\n{resetUrl}\n\nJeśli nie prosiłeś o to, możesz bezpiecznie zignorować tę wiadomość e-mail.\n\nTen link jest ważny przez 1 godzinę.\n\n– Zespół {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Twoja rejestracja w {product_name} została zatwierdzona",
-		"body": "Witaj {username},\n\nDobre wieści: Twoja rejestracja w {product_name} została zatwierdzona.\n\nMożesz teraz zalogować się do aplikacji {product_name} tutaj:\n{channelsUrl}\n\nWitaj w społeczności {product_name}.\n\n– Zespół {product_name}"
-	},
 	"report_received": {
 		"subject": "Otrzymaliśmy Twoje zgłoszenie w {product_name}",
 		"body": "Witaj,\n\nOtrzymaliśmy Twoje zgłoszenie w ramach aktu o usługach cyfrowych (DSA) dotyczące {targetKind, select, message {wiadomości} user {konta} guild {społeczności} other {treści}} w {product_name}.\n\nID zgłoszenia: {reportId}\n\nNasz zespół ds. bezpieczeństwa rozpatrzy Twoje zgłoszenie, a gdy podejmiemy decyzję, napiszemy do Ciebie na ten adres. Zachowaj tę wiadomość e-mail na przyszłość.\n\n– Zespół ds. bezpieczeństwa {product_name}"

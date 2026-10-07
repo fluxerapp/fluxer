@@ -1,11 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.sectionTitle {
-	font-size: 1rem;
-	font-weight: 600;
-	color: var(--text-primary);
-}
-
 .subsectionTitle {
 	font-size: 0.875rem;
 	font-weight: 500;

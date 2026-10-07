@@ -9,7 +9,7 @@ mod stream_containers;
 mod tests;
 
 use self::image_containers::{
-    GIFAnimation, PNGAnimation, gif_animation, png_animation, webp_sniff, webp_sniff_complete,
+    GIFAnimation, PNGAnimation, gif_animation, png_animation, webp_sniff,
 };
 use self::iso_bmff::iso_bmff_sniff;
 use self::stream_containers::{is_adts, looks_like_svg, matroska_sniff, mpeg_ts_sniff, ogg_sniff};
@@ -17,7 +17,6 @@ use crate::media_type::MediaType;
 
 pub use self::registry::{
     INERT_CONTENT_TYPE, category, extension_mime, is_javascript_content_type, normalize,
-    passthrough_mime,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -52,12 +51,6 @@ impl Default for SniffInfo {
             color_space: "unknown",
         }
     }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct MediaPrefixSniff {
-    pub media: SniffInfo,
-    pub complete: bool,
 }
 
 pub fn is_supported_media_mime(mime_type_raw: &str) -> bool {
@@ -266,40 +259,6 @@ pub fn sniff(data: &[u8]) -> SniffInfo {
     SniffInfo::default()
 }
 
-pub fn sniff_prefix(data: &[u8], total_len: usize) -> MediaPrefixSniff {
-    assert!(data.len() <= total_len);
-    let sniffed = sniff(data);
-    if data.len() == total_len {
-        return MediaPrefixSniff {
-            media: sniffed,
-            complete: true,
-        };
-    }
-    let complete =
-        if sniffed.mime == MediaType::PNG.mime() || sniffed.mime == MediaType::APNG.mime() {
-            png_animation(data) != PNGAnimation::Incomplete
-        } else if sniffed.mime == MediaType::WebP.mime() {
-            webp_sniff_complete(data)
-        } else if sniffed.mime == MediaType::GIF.mime() {
-            gif_animation(data) != GIFAnimation::Incomplete
-        } else {
-            matches!(
-                MediaType::from_mime(sniffed.mime),
-                Some(
-                    MediaType::JPEG
-                        | MediaType::JXL
-                        | MediaType::TIFF
-                        | MediaType::BMP
-                        | MediaType::SVG
-                )
-            )
-        };
-    MediaPrefixSniff {
-        media: sniffed,
-        complete,
-    }
-}
-
 pub fn detect(data: &[u8], filename: &str, header_mime: Option<&str>) -> String {
     let sniffed = sniff(data);
     if sniffed.mime != "application/octet-stream" {
@@ -315,19 +274,4 @@ pub fn detect(data: &[u8], filename: &str, header_mime: Option<&str>) -> String 
         return m.to_owned();
     }
     "application/octet-stream".to_owned()
-}
-
-pub fn filename_for_mime(mime_type: &str, fallback: &str) -> String {
-    if fallback.contains('.') {
-        return fallback.to_owned();
-    }
-    let ext = match mime_type {
-        "image/jpeg" => "jpg",
-        "image/png" => "png",
-        "image/webp" => "webp",
-        "image/gif" => "gif",
-        "video/mp4" => "mp4",
-        _ => "bin",
-    };
-    format!("{fallback}.{ext}")
 }

@@ -59,7 +59,7 @@ const ARCHITECTURE_PATTERNS: ReadonlyArray<{
 	{pattern: /\bx86\b|\bi[3-6]86\b/i, label: 'x86'},
 ];
 
-export function normalizeArchitectureValue(value: string | null | undefined): string | undefined {
+function normalizeArchitectureValue(value: string | null | undefined): string | undefined {
 	if (!value) {
 		return undefined;
 	}

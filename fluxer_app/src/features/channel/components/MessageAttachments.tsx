@@ -289,7 +289,7 @@ interface ForwardedMessageContentProps {
 	onDelete?: (bypassConfirm?: boolean) => void;
 }
 
-export const ForwardedMessageContent = observer(({message, snapshot, onDelete}: ForwardedMessageContentProps) => {
+const ForwardedMessageContent = observer(({message, snapshot, onDelete}: ForwardedMessageContentProps) => {
 	const {i18n} = useLingui();
 	const snapshotIndex = 0;
 	const snapshotEditedTimestamp = snapshot.edited_timestamp ? new Date(snapshot.edited_timestamp) : null;

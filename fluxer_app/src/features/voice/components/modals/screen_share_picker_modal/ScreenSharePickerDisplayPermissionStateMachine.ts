@@ -23,7 +23,7 @@ export function screenRecordingPermissionAllowsPickerSources(permission: NativeP
 	return permissionAllowsDisplaySources(permission);
 }
 
-export const screenSharePickerDisplayPermissionStateMachine = setup({
+const screenSharePickerDisplayPermissionStateMachine = setup({
 	types: {} as {
 		context: ScreenSharePickerDisplayPermissionContext;
 		events: ScreenSharePickerDisplayPermissionEvent;

@@ -291,11 +291,6 @@
 	}
 }
 
-.clickableItemPressed:not(.clickableItemSelected) {
-	background-color: var(--surface-interactive-hover-bg);
-	color: var(--text-primary);
-}
-
 .clickableItemSelected {
 	composes: clickableItem;
 	background-color: color-mix(in srgb, var(--surface-interactive-selected-bg) 35%, transparent);
@@ -313,12 +308,6 @@
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
-}
-
-.callIcon {
-	height: 1rem;
-	width: 1rem;
-	color: white;
 }
 
 .sendIcon {
@@ -390,11 +379,6 @@
 
 .dmCreateButton:disabled:hover {
 	color: var(--text-primary-muted);
-}
-
-.dmCreateButtonActive {
-	composes: dmCreateButton;
-	color: var(--text-primary);
 }
 
 .dmChannelList {
@@ -633,17 +617,6 @@
 	color: var(--surface-interactive-selected-color);
 }
 
-.dmItemCallBadge {
-	display: flex;
-	height: 1.5rem;
-	width: 1.5rem;
-	flex-shrink: 0;
-	align-items: center;
-	justify-content: center;
-	border-radius: var(--radius-full);
-	background-color: var(--status-online);
-}
-
 .dmItemCloseButton {
 	display: flex;
 	height: 1.5rem;
@@ -704,11 +677,6 @@
 }
 
 .dmItemMobilePressed:not(.dmItemMobileSelected) {
-	background-color: var(--surface-interactive-hover-bg);
-	color: var(--text-primary);
-}
-
-.dmItemPressed:not(.dmItemSelected) {
 	background-color: var(--surface-interactive-hover-bg);
 	color: var(--text-primary);
 }

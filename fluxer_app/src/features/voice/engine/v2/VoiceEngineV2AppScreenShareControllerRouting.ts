@@ -14,10 +14,10 @@ const SCREEN_SHARE_CONTROLLER_PUBLISH_HEIGHT_DEFAULT = 1080;
 const SCREEN_SHARE_CONTROLLER_PUBLISH_REQUESTS_CAP = 8;
 const SCREEN_SHARE_CONTROLLER_STOP_REQUESTS_CAP = 8;
 
-export const SCREEN_SHARE_PUBLISH_INACTIVE_ERROR_NAME = 'VoiceEngineV2AppScreenSharePublishInactiveError';
-export const SCREEN_SHARE_ROUTING_SATURATED_ERROR_NAME = 'VoiceEngineV2AppScreenShareRoutingSaturatedError';
+const SCREEN_SHARE_PUBLISH_INACTIVE_ERROR_NAME = 'VoiceEngineV2AppScreenSharePublishInactiveError';
+const SCREEN_SHARE_ROUTING_SATURATED_ERROR_NAME = 'VoiceEngineV2AppScreenShareRoutingSaturatedError';
 
-export type VoiceEngineV2AppScreenSharePlannedOperationsListener = (operationIds: ReadonlyArray<number>) => void;
+type VoiceEngineV2AppScreenSharePlannedOperationsListener = (operationIds: ReadonlyArray<number>) => void;
 
 export interface VoiceEngineV2AppScreenShareControllerGateway {
 	isScreenCommandRoutable(): boolean;
@@ -115,7 +115,7 @@ function roundPublishDimension(value: number, fallback: number): number {
 	return Math.round(value);
 }
 
-export function buildControllerScreenPublishOptions(args: {
+function buildControllerScreenPublishOptions(args: {
 	captureId: string;
 	options: VoiceEngineV2AppScreenShareSetEnabledOptions | undefined;
 	publishOptions: TrackPublishOptions | undefined;
@@ -172,22 +172,6 @@ export class VoiceEngineV2AppScreenShareControllerRouting {
 			assert.equal(typeof gateway.unpublishScreen, 'function');
 		}
 		this.gateway = gateway;
-	}
-
-	isStopRoutable(): boolean {
-		const gateway = this.gateway;
-		if (gateway === null) return false;
-		if (!gateway.isScreenCommandRoutable()) return false;
-		if (gateway.hasScreenPublication()) return true;
-		return gateway.hasScreenDesired();
-	}
-
-	get pendingPublishRequestCount(): number {
-		return this.pendingPublishRequests.size;
-	}
-
-	get pendingStopRequestCount(): number {
-		return this.pendingStopRequestsByOperationId.size;
 	}
 
 	async setEnabled(

@@ -296,13 +296,6 @@ export class EmailService implements IEmailService {
 		return this.sendTemplatedEmail(email, 'dsa_report_verification', locale, {code, expiresAt});
 	}
 
-	async sendRegistrationApprovedEmail(email: string, username: string, locale: string | null = null): Promise<boolean> {
-		return this.sendTemplatedEmail(email, 'registration_approved', locale, {
-			username,
-			channelsUrl: `${this.config.appBaseUrl}/channels/@me`,
-		});
-	}
-
 	async sendPasswordChangeVerification(
 		email: string,
 		username: string,

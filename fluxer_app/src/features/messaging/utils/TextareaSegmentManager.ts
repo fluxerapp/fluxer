@@ -62,27 +62,6 @@ export class TextareaSegmentManager {
 		return pieces.join('');
 	}
 
-	displayToActualSubstring(displayText: string, start: number, end: number): string {
-		const sorted = sortedByStart(this.segments);
-		const pieces: Array<string> = [];
-		let cursor = start;
-		for (let i = 0; i < sorted.length; i++) {
-			const segment = sorted[i];
-			if (segment.end <= start) continue;
-			if (segment.start >= end) break;
-			if (segment.start < start || segment.end > end) continue;
-			if (segment.start > cursor) {
-				pieces.push(displayText.slice(cursor, segment.start));
-			}
-			pieces.push(segment.actualText);
-			cursor = segment.end;
-		}
-		if (cursor < end) {
-			pieces.push(displayText.slice(cursor, end));
-		}
-		return pieces.join('');
-	}
-
 	updateSegmentsForTextChange(
 		changeStart: number,
 		changeEnd: number,

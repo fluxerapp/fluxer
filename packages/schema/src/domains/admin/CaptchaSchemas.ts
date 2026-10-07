@@ -2,10 +2,10 @@
 
 import {z} from 'zod';
 
-export const CAPTCHA_MIN_COST = 1000;
-export const CAPTCHA_MAX_COST = 20000;
-export const CAPTCHA_MIN_MAX_COUNTER = 100;
-export const CAPTCHA_MAX_MAX_COUNTER = 20000;
+const CAPTCHA_MIN_COST = 1000;
+const CAPTCHA_MAX_COST = 20000;
+const CAPTCHA_MIN_MAX_COUNTER = 100;
+const CAPTCHA_MAX_MAX_COUNTER = 20000;
 
 const captchaConfigFields = {
 	enabled: z.boolean(),

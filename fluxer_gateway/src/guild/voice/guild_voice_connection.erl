@@ -6,9 +6,6 @@
 
 -export([voice_state_update/2]).
 -export([confirm_voice_connection_from_livekit/2]).
--export([request_voice_token/4]).
--export([request_voice_token/5]).
--export([request_voice_token/6]).
 -export([request_voice_token/8]).
 -export([sweep_expired_pending_joins/1]).
 
@@ -35,28 +32,6 @@ voice_state_update(Request, State) ->
 -spec confirm_voice_connection_from_livekit(map(), guild_state()) -> voice_reply().
 confirm_voice_connection_from_livekit(Request, State) ->
     guild_voice_connection_confirm:confirm_voice_connection_from_livekit(Request, State).
-
--spec request_voice_token(integer(), integer(), integer(), map()) ->
-    {ok, map()} | {error, term()}.
-request_voice_token(GuildId, ChannelId, UserId, VoicePermissions) ->
-    guild_voice_connection_token:request_voice_token(
-        GuildId, ChannelId, UserId, VoicePermissions
-    ).
-
--spec request_voice_token(integer(), integer(), integer(), binary() | null, map()) ->
-    {ok, map()} | {error, term()}.
-request_voice_token(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions) ->
-    guild_voice_connection_token:request_voice_token(
-        GuildId, ChannelId, UserId, ConnectionId, VoicePermissions
-    ).
-
--spec request_voice_token(
-    integer(), integer(), integer(), binary() | null, map(), binary() | null
-) -> {ok, map()} | {error, term()}.
-request_voice_token(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions, TokenNonce) ->
-    guild_voice_connection_token:request_voice_token(
-        GuildId, ChannelId, UserId, ConnectionId, VoicePermissions, TokenNonce
-    ).
 
 -spec request_voice_token(
     integer(),

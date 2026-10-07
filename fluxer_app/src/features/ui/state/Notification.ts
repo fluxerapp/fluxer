@@ -201,14 +201,6 @@ class NotificationState {
 		this.accountReactionDisposer = null;
 	}
 
-	getUnreadMessageBadgeEnabled(): boolean {
-		return this.unreadMessageBadgeEnabled;
-	}
-
-	getBrowserNotificationsEnabled(): boolean {
-		return this.browserNotificationsEnabled;
-	}
-
 	getTTSNotificationMode(): TTSNotificationMode {
 		return this.ttsNotificationMode;
 	}

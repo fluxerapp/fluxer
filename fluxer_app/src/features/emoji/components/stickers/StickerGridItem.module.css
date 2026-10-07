@@ -62,15 +62,6 @@
 	font-size: 0.875rem;
 }
 
-.gifBadge {
-	flex-shrink: 0;
-	border-radius: 0.25rem;
-	background-color: var(--brand-primary);
-	padding: 0.125rem 0.375rem;
-	color: white;
-	font-size: 0.75rem;
-}
-
 .authorInfo {
 	margin-top: 0.25rem;
 	display: flex;

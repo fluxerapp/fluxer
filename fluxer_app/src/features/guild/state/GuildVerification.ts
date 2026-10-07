@@ -186,11 +186,6 @@ class GuildVerification {
 	getFailureReason(guildId: string): VerificationFailureReason | null {
 		return this.verificationStatus[guildId]?.reason ?? null;
 	}
-
-	getTimeRemaining(guildId: string): number | null {
-		const verificationEndsAt = this.verificationStatus[guildId]?.verificationEndsAt;
-		return verificationEndsAt ? Math.max(0, verificationEndsAt - Date.now()) : null;
-	}
 }
 
 export default new GuildVerification();

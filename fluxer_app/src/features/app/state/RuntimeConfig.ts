@@ -42,7 +42,6 @@ import type {
 	InstanceAgePolicy,
 	InstanceAppPublic,
 	InstanceCommunity,
-	InstanceDiscoveryResponse,
 	InstanceFeatures,
 	InstanceRegistration,
 	InstanceServices,
@@ -58,19 +57,7 @@ export {
 	runtimeConfigSnapshotsAreSameInstance,
 	runtimeInstanceKey,
 } from '@app/features/app/state/InstanceSnapshotStore';
-export type {
-	GifProvider,
-	GifProviderInfo,
-	InstanceCommunity,
-	InstanceDiscoveryResponse,
-	InstanceFeatures,
-	InstanceRegistration,
-	InstanceServices,
-	InstanceSnapshotResolution,
-	InstanceSnapshotResolveRequest,
-	InstanceSsoConfig,
-	RuntimeConfigSnapshot,
-};
+export type {InstanceSsoConfig, RuntimeConfigSnapshot};
 
 export interface ApplyRuntimeConfigSnapshotRequest {
 	snapshot: RuntimeConfigSnapshot;

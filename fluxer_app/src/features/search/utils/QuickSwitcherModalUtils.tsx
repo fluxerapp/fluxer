@@ -88,24 +88,6 @@ export interface QuickSwitcherResultAccessibilityMetadata {
 	unreadCount: number;
 }
 
-export interface QuickSwitcherSharedProps {
-	isOpen: boolean;
-	query: string;
-	results: Array<QuickSwitcherResult>;
-	selectedIndex: number;
-	onClose: () => void;
-	onSearch: (value: string) => void;
-	onMoveSelection: (direction: 'up' | 'down') => void;
-	onConfirmSelection: () => Promise<void>;
-}
-
-export interface QuickSwitcherMobileTabProps {
-	activeTab: 'search' | 'friends';
-	onTabChange: (tab: 'search' | 'friends') => void;
-	friendsSearchQuery: string;
-	onFriendsSearchChange: (value: string) => void;
-}
-
 export function getQuickSwitcherTabs(i18n: I18n): Array<SegmentedTab<'search' | 'friends'>> {
 	return [
 		{id: 'search', label: i18n._(SEARCH_DESCRIPTOR)},
@@ -376,7 +358,7 @@ export function handleContextMenu(event: React.MouseEvent, result: QuickSwitcher
 	}
 }
 
-export function getChannelId(result: QuickSwitcherExecutableResult): string | null {
+function getChannelId(result: QuickSwitcherExecutableResult): string | null {
 	switch (result.type) {
 		case QuickSwitcherResultTypes.USER: {
 			const userResult = result as UserResult;

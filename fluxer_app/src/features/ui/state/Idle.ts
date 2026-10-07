@@ -61,12 +61,6 @@ class Idle {
 		}
 	}
 
-	markBackground(): void {
-		this.lastLocalActivityTime = 0;
-		this.lastSystemActivityTime = 0;
-		this.applyIdleState(true);
-	}
-
 	isIdle(): boolean {
 		return this.idle;
 	}

@@ -138,9 +138,6 @@ async fn exercise_kv_shapes(kv: &KvClient) -> anyhow::Result<Vec<String>> {
     observations.push(render_sorted(
         kv.get_partition_rows(TABLE_NAME, "p0").await?,
     ));
-    observations.push(render_sorted(
-        kv.get_row_key_prefix_rows(TABLE_NAME, "r").await?,
-    ));
     observations.push(render(
         kv.get_partition_rows_by_bigint_field(
             TABLE_NAME,
@@ -304,7 +301,7 @@ async fn drops_server_side_prepared_statements_when_disabled() -> anyhow::Result
     let _ = docker(&["rm", "-f", &container]);
     let (named, unnamed, named_executions, unnamed_executions) = result?;
 
-    assert_eq!(9, named.prepared.len(), "{:#?}", named.prepared);
+    assert_eq!(8, named.prepared.len(), "{:#?}", named.prepared);
     assert!(named.prepared.iter().all(|sql| sql.contains(KV_TABLE)));
     assert!(
         named.after_session_reset.contains("prepared statement"),

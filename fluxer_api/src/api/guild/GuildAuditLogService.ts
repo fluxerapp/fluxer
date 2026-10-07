@@ -343,27 +343,6 @@ export class GuildAuditLogService {
 		return changes;
 	}
 
-	computeArrayChange<T>(
-		previous: Array<T> | null | undefined,
-		next: Array<T> | null | undefined,
-		key: string,
-	): AuditLogChange | null {
-		if (!previous?.length && !next?.length) {
-			return null;
-		}
-		if (!this.areArraysEqual(previous, next)) {
-			const change: AuditLogChange = {key};
-			if (previous !== undefined && previous !== null) {
-				change.old_value = previous;
-			}
-			if (next !== undefined && next !== null) {
-				change.new_value = next;
-			}
-			return change;
-		}
-		return null;
-	}
-
 	private areValuesEqual(a: unknown, b: unknown): boolean {
 		if (a === b) return true;
 		if (a == null || b == null) return false;
@@ -372,13 +351,6 @@ export class GuildAuditLogService {
 			return JSON.stringify(a) === JSON.stringify(b);
 		}
 		return false;
-	}
-
-	private areArraysEqual(a: Array<unknown> | null | undefined, b: Array<unknown> | null | undefined): boolean {
-		if (a === b) return true;
-		if (!a || !b) return false;
-		if (a.length !== b.length) return false;
-		return JSON.stringify(a) === JSON.stringify(b);
 	}
 
 	private async dispatchAuditLogEntryCreate(log: GuildAuditLog, threadScoped = false): Promise<void> {
@@ -434,24 +406,8 @@ class GuildAuditLogBuilder {
 		return this;
 	}
 
-	withMetadataEntry(key: string, value: string): this {
-		if (!this.metadataMap) {
-			this.metadataMap = new Map();
-		}
-		this.metadataMap.set(key, value);
-		return this;
-	}
-
 	withChanges(changes: GuildAuditLogChange | null): this {
 		this.params.changes = changes;
-		return this;
-	}
-
-	withComputedChanges(
-		previous: Record<string, unknown> | null | undefined,
-		next: Record<string, unknown> | null | undefined,
-	): this {
-		this.params.changes = this.service.computeChanges(previous, next);
 		return this;
 	}
 

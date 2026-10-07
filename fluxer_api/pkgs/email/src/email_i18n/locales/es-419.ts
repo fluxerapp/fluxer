@@ -83,10 +83,6 @@ const EMAIL_I18N_ES_419_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Restablece tu contraseña de {product_name}",
 		"body": "Hola {username}:\n\nSolicitaste un restablecimiento de contraseña de {product_name}. Usa el siguiente enlace para establecer una nueva contraseña:\n\n{resetUrl}\n\nSi no solicitaste esto, puedes ignorar este correo electrónico de forma segura.\n\nEste enlace es válido por 1 hora.\n\n– Equipo de {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Tu registro en {product_name} ha sido aprobado",
-		"body": "Hola {username}:\n\nBuenas noticias: tu registro en {product_name} ha sido aprobado.\n\nAhora puedes iniciar sesión en la aplicación de {product_name} aquí:\n{channelsUrl}\n\nBienvenido a la comunidad de {product_name}.\n\n– Equipo de {product_name}"
-	},
 	"report_received": {
 		"subject": "Recibimos tu reporte en {product_name}",
 		"body": "Hola:\n\nRecibimos tu reporte conforme a la Ley de Servicios Digitales sobre {targetKind, select, message {un mensaje} user {una cuenta} guild {una comunidad} other {contenido}} en {product_name}.\n\nID del reporte: {reportId}\n\nNuestro equipo de seguridad revisará tu reporte y te escribiremos a esta dirección cuando hayamos tomado una decisión. Guarda este correo electrónico para tus registros.\n\n– Equipo de seguridad de {product_name}"

@@ -16,13 +16,13 @@ import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 const PLAYBACK_RATE_STORAGE_KEY = 'fluxer:media:playbackRates';
 const logger = new Logger('useMediaPlayer');
 
-export type PlaybackHoldReason = 'user' | 'hidden-document' | 'seek';
+type PlaybackHoldReason = 'user' | 'hidden-document' | 'seek';
 
-export type MediaPlaybackKind = 'video' | 'audio' | 'voice-message';
+type MediaPlaybackKind = 'video' | 'audio' | 'voice-message';
 
-export type MediaFailureCode = 'error' | 'abort' | 'emptied' | 'stalled';
+type MediaFailureCode = 'error' | 'abort' | 'emptied' | 'stalled';
 
-export interface MediaPlayerState {
+interface MediaPlayerState {
 	isPlaying: boolean;
 	isPaused: boolean;
 	isEnded: boolean;
@@ -94,8 +94,7 @@ const isAbortError = (error: unknown): boolean => {
 	return error.message.toLowerCase().includes('interrupted');
 };
 
-export const isAutoplayBlockedError = (error: unknown): boolean =>
-	error instanceof Error && error.name === 'NotAllowedError';
+const isAutoplayBlockedError = (error: unknown): boolean => error instanceof Error && error.name === 'NotAllowedError';
 
 const normalizeError = (error: unknown): Error => {
 	if (error instanceof Error) return error;

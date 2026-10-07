@@ -101,7 +101,3 @@
 	padding: 1rem;
 	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 1.25rem));
 }
-
-.fullWidth {
-	width: 100%;
-}

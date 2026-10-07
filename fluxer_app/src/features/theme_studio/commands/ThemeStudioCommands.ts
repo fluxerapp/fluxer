@@ -29,10 +29,6 @@ export function openThemeStudio(): void {
 	openThemeStudioPopout();
 }
 
-export function closeThemeStudio(): void {
-	requestPopoutClose();
-}
-
 export function openThemeStudioPopout(): void {
 	if (typeof window === 'undefined') return;
 	const electronApi = getElectronAPI();
@@ -78,44 +74,4 @@ function openThemeStudioPopoutWindow(): void {
 	} catch (error) {
 		logger.warn('Failed to open Theme Studio popout', error);
 	}
-}
-
-export function focusThemeStudioPopout(): void {
-	const electronApi = getElectronAPI();
-	if (electronApi?.focusThemeStudioPopout) {
-		void electronApi
-			.focusThemeStudioPopout()
-			.then((focused) => {
-				if (focused) return;
-				const popup = ThemeStudioState.popupRef;
-				if (popup && !popup.closed) {
-					popup.focus();
-				}
-			})
-			.catch((error) => {
-				logger.warn('Failed to focus Theme Studio popout via Electron', error);
-			});
-		return;
-	}
-	const popup = ThemeStudioState.popupRef;
-	if (popup && !popup.closed) {
-		popup.focus();
-		return;
-	}
-	broadcastThemeStudioMessage({type: 'studio:focus-popout'});
-}
-
-export function requestPopoutClose(): void {
-	const electronApi = getElectronAPI();
-	if (electronApi?.closeThemeStudioPopout) {
-		void electronApi.closeThemeStudioPopout().catch((error) => {
-			logger.warn('Failed to close Theme Studio popout via Electron', error);
-		});
-	}
-	const popup = ThemeStudioState.popupRef;
-	if (popup && !popup.closed) {
-		popup.close();
-	}
-	broadcastThemeStudioMessage({type: 'studio:close-popout'});
-	ThemeStudioState.clearPoppedOut();
 }

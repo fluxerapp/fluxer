@@ -181,11 +181,6 @@
 	}
 }
 
-.iconHint {
-	color: var(--text-primary-muted);
-	font-size: 0.875rem;
-}
-
 .iconError {
 	margin-top: 0.5rem;
 	color: var(--status-danger);

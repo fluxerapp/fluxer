@@ -40,13 +40,6 @@ export class VoiceTopology {
 		}
 	}
 
-	getDefaultRegion(): VoiceRegionRecord | null {
-		if (this.defaultRegionId === null) {
-			return null;
-		}
-		return this.regions.get(this.defaultRegionId) ?? null;
-	}
-
 	getDefaultRegionId(): string | null {
 		return this.defaultRegionId;
 	}
@@ -86,21 +79,6 @@ export class VoiceTopology {
 
 	registerSubscriber(subscriber: Subscriber): void {
 		this.subscribers.add(subscriber);
-	}
-
-	unregisterSubscriber(subscriber: Subscriber): void {
-		this.subscribers.delete(subscriber);
-	}
-
-	getNextServer(regionId: string): VoiceServerRecord | null {
-		const servers = this.serversByRegion.get(regionId);
-		if (!servers || servers.length === 0) {
-			return null;
-		}
-		const currentIndex = this.serverRotationIndex.get(regionId) ?? 0;
-		const server = servers[currentIndex % servers.length];
-		this.serverRotationIndex.set(regionId, (currentIndex + 1) % servers.length);
-		return server;
 	}
 
 	private async reload(): Promise<void> {

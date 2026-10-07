@@ -35,7 +35,7 @@ export interface ChannelStreamItem {
 	showUnreadDividerBefore?: boolean;
 }
 
-export const MESSAGE_GROUP_TIMEOUT = 7 * 60 * 1000;
+const MESSAGE_GROUP_TIMEOUT = 7 * 60 * 1000;
 
 export function isNewMessageGroup(
 	_channel: Channel | undefined,

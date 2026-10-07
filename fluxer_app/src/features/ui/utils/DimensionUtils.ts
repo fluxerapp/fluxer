@@ -22,8 +22,8 @@ interface DimensionResult {
 	scale: number;
 }
 
-export const MEDIA_MAX_WIDTH = 550;
-export const MEDIA_MAX_HEIGHT = 350;
+const MEDIA_MAX_WIDTH = 550;
+const MEDIA_MAX_HEIGHT = 350;
 
 const DEFAULT_OPTIONS: Required<DimensionOptions> = {
 	maxWidth: MEDIA_MAX_WIDTH,
@@ -60,7 +60,7 @@ export function fitMediaWithinBounds({
 	return {width: fittedWidth, height: fittedHeight};
 }
 
-export function mediaContainRatio({width, height, maxWidth, maxHeight}: FitMediaInput): number {
+function mediaContainRatio({width, height, maxWidth, maxHeight}: FitMediaInput): number {
 	const widthRatio = width > maxWidth ? maxWidth / width : 1;
 	const scaledHeight = Math.round(height * widthRatio);
 	const heightRatio = scaledHeight > maxHeight ? maxHeight / scaledHeight : 1;
@@ -85,14 +85,6 @@ export class MediaDimensionCalculator {
 			return this.preserveDimensions(safeDimensions, config);
 		}
 		return this.containDimensions(safeDimensions, config);
-	}
-
-	public calculateImage(dimensions: MediaDimensions, options?: DimensionOptions): DimensionResult {
-		return this.calculate(dimensions, options);
-	}
-
-	public calculateVideo(dimensions: MediaDimensions, options?: Omit<DimensionOptions, 'preserve'>): DimensionResult {
-		return this.calculate(dimensions, {...options, preserve: false});
 	}
 
 	private preserveDimensions(dimensions: MediaDimensions, options: Required<DimensionOptions>): DimensionResult {

@@ -260,7 +260,3 @@ export function tryParseSingleIp(value: string): ParsedIpSingle | null {
 	const parsed = parseIpBanEntry(value);
 	return parsed?.type === 'single' ? parsed : null;
 }
-
-export function isValidIpOrRange(value: string): boolean {
-	return parseIpBanEntry(value) !== null;
-}

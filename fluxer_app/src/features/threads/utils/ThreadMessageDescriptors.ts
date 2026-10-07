@@ -6,10 +6,6 @@ export const THREADS_DESCRIPTOR = msg({
 	message: 'Threads',
 	comment: 'Title of the thread browser and label of the threads button in the channel header.',
 });
-export const THREAD_DESCRIPTOR = msg({
-	message: 'Thread',
-	comment: 'Generic noun for a single thread inside a text channel.',
-});
 export const CREATE_THREAD_DESCRIPTOR = msg({
 	message: 'Create thread',
 	comment: 'Action that opens the new thread pane for a channel or a message.',

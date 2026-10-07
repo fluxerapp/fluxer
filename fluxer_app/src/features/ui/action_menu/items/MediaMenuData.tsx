@@ -331,10 +331,9 @@ export const mediaMenuItemIds = {
 	openLink: 'media-open-link',
 	favorite: 'media-favorite',
 	editAltText: 'media-edit-alt-text',
-	copyAttachmentId: 'media-copy-attachment-id',
 } as const;
 
-export interface MediaMenuState {
+interface MediaMenuState {
 	isFavorited: boolean;
 	copyLabel: string;
 	downloadLabel: string;

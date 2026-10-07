@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	getErrorMessage,
-	getErrorMessageResult,
-	getErrorMessageUnsafe,
-	hasErrorLocale,
-} from '@fluxer/errors/src/i18n/ErrorI18n';
+import {getErrorMessageResult, getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
 import {ERROR_I18N_LOCALE_MESSAGES} from '@fluxer/errors/src/i18n/ErrorI18nLocales';
-import type {ErrorI18nKey} from '@fluxer/errors/src/i18n/ErrorI18nTypes.generated';
+import type {ErrorI18nKey} from '@fluxer/errors/src/i18n/ErrorI18nMessages';
 import {beforeEach, describe, expect, it, type MockInstance, vi} from 'vitest';
 
 describe('ErrorI18n', () => {
@@ -18,11 +13,8 @@ describe('ErrorI18n', () => {
 	});
 	describe('constructor and initialization', () => {
 		it('loads the default TypeScript catalog', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'en-US');
+			const message = getErrorMessageUnsafe('rate_limits.rate_limited', 'en-US');
 			expect(message).toBe("You're being rate limited.");
-		});
-		it('initializes internal state correctly', () => {
-			expect(hasErrorLocale('en-US')).toBe(true);
 		});
 		it('handles missing default bundle gracefully', () => {
 			const message = getErrorMessageUnsafe('nonexistent.key', 'en-US', undefined, 'Fallback message');
@@ -31,7 +23,7 @@ describe('ErrorI18n', () => {
 	});
 	describe('getMessage() - basic retrieval', () => {
 		it('returns message for valid key in default locale', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'en-US');
+			const message = getErrorMessageUnsafe('rate_limits.rate_limited', 'en-US');
 			expect(message).toBe("You're being rate limited.");
 		});
 		it('maps API error codes to localized messages', () => {
@@ -40,7 +32,7 @@ describe('ErrorI18n', () => {
 			expect(consoleWarnSpy).not.toHaveBeenCalled();
 		});
 		it('returns message for valid key in supported locale', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'fr');
+			const message = getErrorMessageUnsafe('rate_limits.rate_limited', 'fr');
 			expect(message).toBe('Vous avez atteint la limite de requêtes.');
 		});
 		it('returns key when translation missing', () => {
@@ -57,63 +49,62 @@ describe('ErrorI18n', () => {
 	});
 	describe('getMessage() - locale handling', () => {
 		it('normalizes en-GB locale to en-US', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'en-GB');
+			const message = getErrorMessageUnsafe('rate_limits.rate_limited', 'en-GB');
 			expect(message).toBe("You're being rate limited.");
 		});
 		it('normalizes en-CA locale to en-US', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'en-CA');
+			const message = getErrorMessageUnsafe('rate_limits.rate_limited', 'en-CA');
 			expect(message).toBe("You're being rate limited.");
 		});
 		it('falls back to en-US for unsupported locales', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'de-DE');
+			const message = getErrorMessageUnsafe('rate_limits.rate_limited', 'de-DE');
 			expect(message).toBe("You're being rate limited.");
 			expect(consoleWarnSpy).toHaveBeenCalledWith('Unsupported locale, falling back to en-US: de-DE');
 		});
 		it('handles null locale by defaulting to en-US', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', null);
+			const message = getErrorMessageUnsafe('rate_limits.rate_limited', null);
 			expect(message).toBe("You're being rate limited.");
 		});
 		it('handles undefined locale by defaulting to en-US', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', undefined);
+			const message = getErrorMessageUnsafe('rate_limits.rate_limited', undefined);
 			expect(message).toBe("You're being rate limited.");
 		});
 		it('loads locale on-demand when first accessed', () => {
-			expect(hasErrorLocale('fr')).toBe(true);
-			const message = getErrorMessage('account.suspended_permanently', 'fr');
+			const message = getErrorMessageUnsafe('account.suspended_permanently', 'fr');
 			expect(message).toBe('Ce compte a été suspendu définitivement.');
 		});
 	});
 	describe('getMessage() - variable interpolation', () => {
 		it('interpolates simple {variable} placeholders', () => {
-			const message = getErrorMessage('channels_and_guilds.invalid_channel_id', 'en-US', {
+			const message = getErrorMessageUnsafe('channels_and_guilds.invalid_channel_id', 'en-US', {
 				channelId: '123456789',
 			});
 			expect(message).toBe('Invalid channel ID: 123456789.');
 		});
 		it('handles MessageFormat plural syntax', () => {
-			const message = getErrorMessage('rate_limits.username_changed_too_often', 'en-US', {
+			const message = getErrorMessageUnsafe('rate_limits.username_changed_too_often', 'en-US', {
 				minutes: 1,
 			});
 			expect(message).toBe("You've changed your username too often recently. Please try again in 1 minute.");
 		});
 		it('handles MessageFormat plural syntax for multiple values', () => {
-			const message = getErrorMessage('rate_limits.username_changed_too_often', 'en-US', {
+			const message = getErrorMessageUnsafe('rate_limits.username_changed_too_often', 'en-US', {
 				minutes: 5,
 			});
 			expect(message).toBe("You've changed your username too often recently. Please try again in 5 minutes.");
 		});
 		it('falls back to simple interpolation on MessageFormat failure', () => {
-			const message = getErrorMessage('channels_and_guilds.invalid_channel_id', 'en-US', {
+			const message = getErrorMessageUnsafe('channels_and_guilds.invalid_channel_id', 'en-US', {
 				channelId: 'test-channel',
 			});
 			expect(message).toBe('Invalid channel ID: test-channel.');
 		});
 		it('returns raw message when no variables provided', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'en-US');
+			const message = getErrorMessageUnsafe('rate_limits.rate_limited', 'en-US');
 			expect(message).toBe("You're being rate limited.");
 		});
 		it('handles complex nested error keys', () => {
-			const message = getErrorMessage('roles.invalid_role_id', 'en-US', {roleId: '999'});
+			const message = getErrorMessageUnsafe('roles.invalid_role_id', 'en-US', {roleId: '999'});
 			expect(message).toBe('Invalid role ID: 999.');
 		});
 	});
@@ -127,7 +118,7 @@ describe('ErrorI18n', () => {
 			expect(message).toBe('Fallback used');
 		});
 		it('returns source message when locale translation missing but source exists', () => {
-			const message = getErrorMessage('rate_limits.rate_limited', 'xx-XX');
+			const message = getErrorMessageUnsafe('rate_limits.rate_limited', 'xx-XX');
 			expect(message).toBe("You're being rate limited.");
 			expect(consoleWarnSpy).toHaveBeenCalledWith('Unsupported locale, falling back to en-US: xx-XX');
 		});
@@ -149,7 +140,7 @@ describe('ErrorI18n', () => {
 			expect(consoleWarnSpy).not.toHaveBeenCalled();
 		});
 		it('falls back to the source message when the locale has no catalog', () => {
-			expect(getErrorMessage('account.limited', 'zz-ZZ')).toBe(getErrorMessage('account.limited', 'en-US'));
+			expect(getErrorMessageUnsafe('account.limited', 'zz-ZZ')).toBe(getErrorMessageUnsafe('account.limited', 'en-US'));
 		});
 	});
 	describe('global IP block messages', () => {

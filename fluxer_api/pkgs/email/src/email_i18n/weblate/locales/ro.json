@@ -79,10 +79,6 @@
 		"subject": "Resetează-ți parola pentru {product_name}",
 		"body": "Salut {username},\n\nAi solicitat o resetare a parolei pentru {product_name}. Folosește linkul de mai jos pentru a seta o nouă parolă:\n\n{resetUrl}\n\nDacă nu ai solicitat acest lucru, poți ignora în siguranță acest e-mail.\n\nAcest link este valabil o oră.\n\n– Echipa {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Înregistrarea ta pentru {product_name} a fost aprobată",
-		"body": "Salut {username},\n\nVești bune: înregistrarea ta pentru {product_name} a fost aprobată.\n\nAcum te poți conecta la aplicația {product_name} aici:\n{channelsUrl}\n\nBun venit în comunitatea {product_name}.\n\n– Echipa {product_name}"
-	},
 	"report_received": {
 		"subject": "Am primit raportul tău de pe {product_name}",
 		"body": "Salut,\n\nAm primit raportul tău conform Digital Services Act despre {targetKind, select, message {un mesaj} user {un cont} guild {o comunitate} other {conținut}} de pe {product_name}.\n\nID raport: {reportId}\n\nEchipa noastră de siguranță va analiza raportul tău și îți vom scrie la această adresă după ce luăm o decizie. Păstrează acest e-mail pentru evidența ta.\n\n– Echipa de siguranță {product_name}"

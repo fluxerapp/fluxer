@@ -260,23 +260,6 @@ class NewDeviceMonitoring {
 		}
 	}
 
-	clearIgnoredDevices(): void {
-		this.ignoredDeviceIds = [];
-		logger.debug('Cleared all ignored devices');
-	}
-
-	removeFromIgnored(deviceId: string): void {
-		const index = this.ignoredDeviceIds.indexOf(deviceId);
-		if (index !== -1) {
-			this.ignoredDeviceIds.splice(index, 1);
-			logger.debug('Removed device from ignore list', {deviceId});
-		}
-	}
-
-	getIgnoredDeviceIds(): ReadonlyArray<string> {
-		return this.ignoredDeviceIds;
-	}
-
 	setSuppressAlerts(suppress: boolean): void {
 		this.suppressAlerts = suppress;
 		logger.debug('Suppress alerts setting changed', {suppress});

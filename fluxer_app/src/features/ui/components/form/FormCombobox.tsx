@@ -29,7 +29,7 @@ export interface ComboboxFilterOption<O> {
 	data: O;
 }
 
-export type ComboboxInputValueResolver<V extends Primitive, O extends ComboboxOption<V>> = (
+type ComboboxInputValueResolver<V extends Primitive, O extends ComboboxOption<V>> = (
 	inputValue: string,
 	options: ReadonlyArray<O>,
 ) => V | undefined;

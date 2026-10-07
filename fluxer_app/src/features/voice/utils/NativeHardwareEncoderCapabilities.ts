@@ -4,7 +4,6 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {
 	hasVoiceEngineV2NativeHardwareEncoder,
-	hasVoiceEngineV2NativeNvencEncoder,
 	normalizeVoiceEngineV2HardwareEncoderCapabilities,
 	unavailableVoiceEngineV2HardwareEncoderCapabilities,
 	type VoiceEngineV2HardwareEncoderCapabilities,
@@ -45,10 +44,6 @@ export function loadNativeHardwareEncoderCapabilities(): Promise<VoiceEngineV2Ha
 
 export function getNativeHardwareEncoderCapabilitiesSync(): VoiceEngineV2HardwareEncoderCapabilities | null {
 	return cachedCapabilities;
-}
-
-export function hasNativeNvencEncoder(codec: VideoCodec): boolean {
-	return hasVoiceEngineV2NativeNvencEncoder(getNativeHardwareEncoderCapabilitiesSync(), codec);
 }
 
 export function hasNativeHardwareEncoder(codec: VideoCodec): boolean {

@@ -8,7 +8,7 @@ export const CameraBackgroundMode = Object.freeze({
 
 export type CameraBackgroundMode = (typeof CameraBackgroundMode)[keyof typeof CameraBackgroundMode];
 
-export const MAX_VIDEO_FRAME_RATE = 60;
+const MAX_VIDEO_FRAME_RATE = 60;
 
 export function clampVideoFrameRate(frameRate: number): number {
 	if (!Number.isFinite(frameRate)) {

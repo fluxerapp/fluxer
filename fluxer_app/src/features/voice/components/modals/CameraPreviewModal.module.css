@@ -18,10 +18,6 @@
 	font-size: 0.875rem;
 }
 
-.iconMargin {
-	margin-right: 0.5rem;
-}
-
 .effectStrengthSlider {
 	display: flex;
 	flex-direction: column;
@@ -39,14 +35,6 @@
 	font-weight: 500;
 	color: var(--text-primary);
 	font-size: 0.875rem;
-}
-
-.effectsNotice {
-	border-radius: 0.25rem;
-	background-color: rgba(0, 0, 0, 0.4);
-	padding: 0.5rem 0.75rem;
-	color: rgb(253 224 71);
-	font-size: 0.75rem;
 }
 
 .videoContainer {
@@ -74,10 +62,6 @@
 	height: 100%;
 	width: 100%;
 	object-fit: contain;
-}
-
-.videoMirrored {
-	transform: scaleX(-1);
 }
 
 .overlay {
@@ -123,48 +107,4 @@
 .errorDetail {
 	font-size: 0.75rem;
 	color: color-mix(in srgb, currentcolor 75%, transparent);
-}
-
-.liveLabel {
-	position: absolute;
-	top: 0.5rem;
-	left: 0.5rem;
-	border-radius: 0.25rem;
-	background-color: rgba(0, 0, 0, 0.7);
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
-	padding-top: 0.25rem;
-	padding-bottom: 0.25rem;
-	font-size: 0.875rem;
-	color: white;
-}
-
-.resolutionInfo {
-	position: absolute;
-	right: 0.5rem;
-	bottom: 0.5rem;
-	border-radius: 0.25rem;
-	background-color: rgba(0, 0, 0, 0.7);
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
-	padding-top: 0.25rem;
-	padding-bottom: 0.25rem;
-	color: white;
-	font-size: 0.75rem;
-}
-
-.resolutionDetails {
-	display: flex;
-	flex-direction: column;
-	gap: 0.125rem;
-}
-
-.resolutionRow {
-	display: flex;
-	align-items: center;
-	gap: 0.25rem;
-}
-
-.warningIcon {
-	color: rgb(253 224 71);
 }

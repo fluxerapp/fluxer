@@ -15,16 +15,12 @@ const CLASSIFYING_CARDS: [&str; 3] = ["summary_large_image", "photo", "player"];
 const INERT_ELEMENTS: [&str; 4] = ["script", "style", "noscript", "template"];
 
 #[derive(Debug, Default, Clone)]
-#[allow(dead_code)]
 pub struct OgMetadata {
     pub title: Option<String>,
     pub description: Option<String>,
-    pub url: Option<String>,
     pub image: Option<String>,
     pub images: Vec<String>,
     pub image_alt: Option<String>,
-    pub image_width: Option<u32>,
-    pub image_height: Option<u32>,
     pub video_primary: Option<String>,
     pub audio: Option<String>,
     pub site_name: Option<String>,
@@ -34,17 +30,9 @@ pub struct OgMetadata {
 }
 
 #[derive(Debug, Default, Clone)]
-#[allow(dead_code)]
 pub struct TwitterCardMetadata {
-    pub card: Option<String>,
     pub classifying_card: Option<String>,
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub image: Option<String>,
-    pub image_alt: Option<String>,
     pub player: Option<String>,
-    pub player_width: Option<u32>,
-    pub player_height: Option<u32>,
 }
 
 struct MetaTags {
@@ -110,15 +98,12 @@ pub fn parse_opengraph(html: &str) -> OgMetadata {
     let mut og = OgMetadata {
         title: meta.first("og:title"),
         description,
-        url: meta.first("og:url"),
         image,
         images: extract_image_urls(&meta),
         image_alt: meta
             .first("og:image:alt")
             .or_else(|| meta.first("twitter:image:alt"))
             .or_else(|| meta.first("og:image:description")),
-        image_width: meta.first("og:image:width").and_then(|v| v.parse().ok()),
-        image_height: meta.first("og:image:height").and_then(|v| v.parse().ok()),
         video_primary,
         audio: meta
             .first("og:audio")
@@ -158,30 +143,16 @@ fn document_title(doc: &Html) -> Option<String> {
     Some(trimmed.to_owned())
 }
 
-#[allow(dead_code)]
 pub fn parse_twitter_card(html: &str) -> TwitterCardMetadata {
     let doc = Html::parse_document(html);
     let meta = MetaTags::parse(&doc);
 
     TwitterCardMetadata {
-        card: meta.first("twitter:card"),
         classifying_card: meta
             .all("twitter:card")
             .find(|value| CLASSIFYING_CARDS.contains(value))
             .map(ToOwned::to_owned),
-        title: meta.first("twitter:title"),
-        description: meta.first("twitter:description"),
-        image: meta
-            .first("twitter:image")
-            .or_else(|| meta.first("twitter:image:src")),
-        image_alt: meta.first("twitter:image:alt"),
         player: meta.first("twitter:player"),
-        player_width: meta
-            .first("twitter:player:width")
-            .and_then(|v| v.parse().ok()),
-        player_height: meta
-            .first("twitter:player:height")
-            .and_then(|v| v.parse().ok()),
     }
 }
 
@@ -245,7 +216,6 @@ pub fn find_activity_pub_link(html: &str) -> Option<String> {
     None
 }
 
-#[allow(dead_code)]
 pub fn find_canonical_url(html: &str, base_url: &url::Url) -> Option<String> {
     let doc = Html::parse_document(html);
     let sel = Selector::parse("link[rel=\"canonical\"]").ok()?;
@@ -331,25 +301,23 @@ mod tests {
     }
 
     #[test]
-    fn extracts_og_title_desc_image_url() {
+    fn extracts_og_title_desc_image() {
         let h = r#"<html><head>
             <meta property="og:title" content="T">
             <meta property="og:description" content="D">
             <meta property="og:image" content="https://i.example.com/a.png">
-            <meta property="og:url" content="https://example.com/p">
         </head></html>"#;
         let m = og(h);
         assert_eq!(m.title.as_deref(), Some("T"));
         assert_eq!(m.description.as_deref(), Some("D"));
         assert_eq!(m.image.as_deref(), Some("https://i.example.com/a.png"));
-        assert_eq!(m.url.as_deref(), Some("https://example.com/p"));
     }
 
     #[test]
     fn handles_missing_tags() {
         let m = og("<html><head><title>X</title></head></html>");
         assert_eq!(m.title.as_deref(), Some("X"));
-        assert!(m.description.is_none() && m.image.is_none() && m.url.is_none());
+        assert!(m.description.is_none() && m.image.is_none());
     }
 
     #[test]
@@ -478,16 +446,6 @@ mod tests {
     }
 
     #[test]
-    fn extracts_image_dimensions() {
-        let m = og(r#"<head>
-            <meta property="og:image:width" content="1200">
-            <meta property="og:image:height" content="630">
-        </head>"#);
-        assert_eq!(m.image_width, Some(1200));
-        assert_eq!(m.image_height, Some(630));
-    }
-
-    #[test]
     fn extracts_theme_color() {
         let m = og(r##"<head><meta name="theme-color" content="#FF0000"></head>"##);
         assert_eq!(m.theme_color.as_deref(), Some("#FF0000"));
@@ -550,28 +508,11 @@ mod tests {
     fn twitter_card_parsing() {
         let h = r#"<head>
             <meta name="twitter:card" content="summary_large_image">
-            <meta name="twitter:title" content="Title">
-            <meta name="twitter:description" content="Desc">
-            <meta name="twitter:image" content="https://i.com/a.png">
             <meta name="twitter:player" content="https://p.com/embed">
-            <meta name="twitter:player:width" content="640">
-            <meta name="twitter:player:height" content="360">
         </head>"#;
         let tc = parse_twitter_card(h);
-        assert_eq!(tc.card.as_deref(), Some("summary_large_image"));
-        assert_eq!(tc.title.as_deref(), Some("Title"));
-        assert_eq!(tc.description.as_deref(), Some("Desc"));
-        assert_eq!(tc.image.as_deref(), Some("https://i.com/a.png"));
+        assert_eq!(tc.classifying_card.as_deref(), Some("summary_large_image"));
         assert_eq!(tc.player.as_deref(), Some("https://p.com/embed"));
-        assert_eq!(tc.player_width, Some(640));
-        assert_eq!(tc.player_height, Some(360));
-    }
-
-    #[test]
-    fn twitter_card_image_falls_back_to_src() {
-        let h = r#"<head><meta name="twitter:image:src" content="https://i.com/a.png"></head>"#;
-        let tc = parse_twitter_card(h);
-        assert_eq!(tc.image.as_deref(), Some("https://i.com/a.png"));
     }
 
     #[test]
@@ -682,12 +623,6 @@ mod tests {
     }
 
     #[test]
-    fn og_keys_do_not_alias_to_twitter_keys() {
-        let m = og(r#"<head><meta name="twitter:url" content="https://e.com/p"></head>"#);
-        assert!(m.url.is_none());
-    }
-
-    #[test]
     fn metas_inside_inert_elements_are_skipped() {
         for tag in ["noscript", "template"] {
             let h = format!(
@@ -732,7 +667,6 @@ mod tests {
             <meta name="twitter:card" content="photo">
         </head>"#;
         let tc = parse_twitter_card(h);
-        assert_eq!(tc.card.as_deref(), Some("summary"));
         assert_eq!(tc.classifying_card.as_deref(), Some("photo"));
     }
 

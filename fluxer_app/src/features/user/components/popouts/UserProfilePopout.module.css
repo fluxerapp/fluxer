@@ -16,22 +16,6 @@
 	width: 1rem;
 }
 
-.iconMedium {
-	height: 1.25rem;
-	width: 1.25rem;
-}
-
-.loadingContainer {
-	display: flex;
-	height: 6.25rem;
-	width: 18.75rem;
-	align-items: center;
-	justify-content: center;
-	border-radius: 0.375rem;
-	border: 0.125rem solid var(--brand-primary);
-	background-color: var(--background-primary);
-}
-
 .profileCustomStatus {
 	display: flex;
 	align-items: center;

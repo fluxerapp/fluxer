@@ -192,11 +192,6 @@ class Spellcheck {
 		void this.pushToElectron();
 	}
 
-	setLanguages(languages: Array<string>): void {
-		this.languages = this.normalizeLanguages(languages);
-		void this.pushToElectron();
-	}
-
 	toggleLanguage(tag: string): void {
 		const lower = tag.toLowerCase();
 		const existing = this.languages.findIndex((l) => l.toLowerCase() === lower);

@@ -83,10 +83,6 @@ const EMAIL_I18N_NL_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Stel je {product_name}-wachtwoord opnieuw in",
 		"body": "Hallo {username},\n\nJe hebt een {product_name}-wachtwoordreset aangevraagd. Gebruik de onderstaande link om een nieuw wachtwoord in te stellen:\n\n{resetUrl}\n\nAls je dit niet hebt aangevraagd, kun je deze e-mail veilig negeren.\n\nDeze link is 1 uur geldig.\n\n– Het team van {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Je {product_name}-registratie is goedgekeurd",
-		"body": "Hallo {username},\n\nGoed nieuws: je {product_name}-registratie is goedgekeurd.\n\nJe kunt nu inloggen op de {product_name}-app via:\n{channelsUrl}\n\nWelkom bij de {product_name}-community.\n\n– Het team van {product_name}"
-	},
 	"report_received": {
 		"subject": "We hebben je melding op {product_name} ontvangen",
 		"body": "Hallo,\n\nWe hebben je melding op grond van de Digital Services Act over {targetKind, select, message {een bericht} user {een account} guild {een community} other {inhoud}} op {product_name} ontvangen.\n\nMeldings-ID: {reportId}\n\nOns veiligheidsteam beoordeelt je melding en we mailen je op dit adres zodra we een beslissing hebben genomen. Bewaar deze e-mail voor je eigen administratie.\n\n– Het veiligheidsteam van {product_name}"

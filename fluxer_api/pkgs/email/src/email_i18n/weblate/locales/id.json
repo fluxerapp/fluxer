@@ -79,10 +79,6 @@
 		"subject": "Atur ulang kata sandi {product_name} kamu",
 		"body": "Halo {username},\n\nKamu meminta pengaturan ulang kata sandi {product_name}. Gunakan tautan di bawah ini untuk mengatur kata sandi baru:\n\n{resetUrl}\n\nJika kamu tidak meminta ini, kamu bisa mengabaikan email ini dengan aman.\n\nTautan ini berlaku selama 1 jam.\n\n– Tim {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Pendaftaranmu di {product_name} telah disetujui",
-		"body": "Halo {username},\n\nKabar baik: pendaftaranmu di {product_name} telah disetujui.\n\nKamu sekarang bisa masuk ke aplikasi {product_name} di sini:\n{channelsUrl}\n\nSelamat datang di komunitas {product_name}.\n\n– Tim {product_name}"
-	},
 	"report_received": {
 		"subject": "Kami telah menerima laporanmu di {product_name}",
 		"body": "Halo,\n\nKami telah menerima laporan Digital Services Act kamu tentang {targetKind, select, message {sebuah pesan} user {sebuah akun} guild {sebuah komunitas} other {konten}} di {product_name}.\n\nID laporan: {reportId}\n\nTim Keamanan kami akan meninjau laporanmu dan kami akan mengirim email ke alamat ini setelah mengambil keputusan. Simpan email ini sebagai arsip.\n\n– Tim Keamanan {product_name}"

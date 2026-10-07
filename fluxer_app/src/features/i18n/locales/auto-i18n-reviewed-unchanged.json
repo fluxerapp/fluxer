@@ -343,9 +343,6 @@
         "msgid": "WebAuthn"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -914,9 +911,6 @@
       },
       {
         "msgid": "Webcam"
-      },
-      {
-        "msgid": "Webhook"
       },
       {
         "msgid": "Webhook {currentName}"
@@ -1557,9 +1551,6 @@
         "msgid": "Webcam"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -1958,9 +1949,6 @@
         "msgid": "WebAuthn"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -2265,9 +2253,6 @@
       },
       {
         "msgid": "Browser sign-in is unavailable here."
-      },
-      {
-        "msgid": "Built-in suppression from your browser or system."
       },
       {
         "msgid": "By purchasing, you agree to our <0>Privacy policy</0>."
@@ -3398,12 +3383,6 @@
         "msgid": "Neko cat that chases your cursor"
       },
       {
-        "msgid": "Neural filter that removes most background noise."
-      },
-      {
-        "msgid": "Neural filter, full audio bandwidth."
-      },
-      {
         "msgid": "New post"
       },
       {
@@ -4094,9 +4073,6 @@
         "msgid": "Sends both channels of a stereo microphone. Needs all processing off and a channel at 64 kbps or higher."
       },
       {
-        "msgid": "Sends your microphone audio with no suppression."
-      },
-      {
         "msgid": "Sequential send"
       },
       {
@@ -4359,9 +4335,6 @@
       },
       {
         "msgid": "Subscriber badge on your profile"
-      },
-      {
-        "msgid": "Support an independent communication platform and unlock some sweet perks."
       },
       {
         "msgid": "Switch price"
@@ -5210,9 +5183,6 @@
         "msgid": "{premiumProductName} page"
       },
       {
-        "msgid": "{productName} application logo"
-      },
-      {
         "msgid": "{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys."
       },
       {
@@ -5489,9 +5459,6 @@
       },
       {
         "msgid": "WebAuthn"
-      },
-      {
-        "msgid": "Webhook"
       },
       {
         "msgid": "Webhook {currentName}"
@@ -5865,9 +5832,6 @@
         "msgid": "WebAuthn"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -6196,9 +6160,6 @@
         "msgid": "WebAuthn"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -6462,9 +6423,6 @@
       },
       {
         "msgid": "Action"
-      },
-      {
-        "msgid": "Actions"
       },
       {
         "msgid": "Alt"
@@ -6747,9 +6705,6 @@
       },
       {
         "msgid": "Webcam"
-      },
-      {
-        "msgid": "Webhook"
       },
       {
         "msgid": "Webhook {currentName}"
@@ -7354,9 +7309,6 @@
         "msgid": "WebAuthn"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -7701,9 +7653,6 @@
       },
       {
         "msgid": "WebAuthn"
-      },
-      {
-        "msgid": "Webhook"
       },
       {
         "msgid": "Webhook URL"
@@ -8241,9 +8190,6 @@
       },
       {
         "msgid": "Webcam"
-      },
-      {
-        "msgid": "Webhook"
       },
       {
         "msgid": "Webhook {currentName}"
@@ -8800,9 +8746,6 @@
         "msgid": "Webcam"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -9154,9 +9097,6 @@
       },
       {
         "msgid": "WebAuthn"
-      },
-      {
-        "msgid": "Webhook"
       },
       {
         "msgid": "Win"
@@ -9892,9 +9832,6 @@
         "msgid": "Webcam"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -10418,9 +10355,6 @@
         "msgid": "WebAuthn"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -10824,9 +10758,6 @@
       },
       {
         "msgid": "WebAuthn"
-      },
-      {
-        "msgid": "Webhook"
       },
       {
         "msgid": "Webhook {currentName}"
@@ -11233,9 +11164,6 @@
       },
       {
         "msgid": "Webcam"
-      },
-      {
-        "msgid": "Webhook"
       },
       {
         "msgid": "Webhook {currentName}"
@@ -11732,9 +11660,6 @@
         "msgid": "WebAuthn"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -12225,9 +12150,6 @@
         "msgid": "Markdown"
       },
       {
-        "msgid": "Max {maxSize}."
-      },
-      {
         "msgid": "Moderator"
       },
       {
@@ -12328,9 +12250,6 @@
       },
       {
         "msgid": "WebAuthn"
-      },
-      {
-        "msgid": "Webhook"
       },
       {
         "msgid": "Webhook {currentName}"
@@ -12702,9 +12621,6 @@
         "msgid": "WebAuthn"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -12887,9 +12803,6 @@
       },
       {
         "msgid": "WebAuthn"
-      },
-      {
-        "msgid": "Webhook"
       },
       {
         "msgid": "Webhook {currentName}"
@@ -13379,9 +13292,6 @@
         "msgid": "Webcam"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -13689,9 +13599,6 @@
         "msgid": "WebAuthn"
       },
       {
-        "msgid": "Webhook"
-      },
-      {
         "msgid": "Webhook {currentName}"
       },
       {
@@ -13801,9 +13708,6 @@
       },
       {
         "msgid": "WebAuthn"
-      },
-      {
-        "msgid": "Webhook"
       },
       {
         "msgid": "Webhook {currentName}"

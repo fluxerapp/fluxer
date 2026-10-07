@@ -4,7 +4,7 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Locales} from '@fluxer/constants/src/Locales';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
-import {getErrorMessage} from '@fluxer/errors/src/i18n/ErrorI18n';
+import {getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
 import type {BaseHonoEnv} from '@fluxer/hono_types/src/HonoTypes';
 import {Logger} from '@fluxer/logger/src/Logger';
 import {Hono} from 'hono';
@@ -78,7 +78,7 @@ describe('AppErrorHandler i18n fallbacks', () => {
 		expect(response.status).toBe(400);
 		expect(await response.json()).toEqual({
 			code: APIErrorCodes.BAD_REQUEST,
-			message: getErrorMessage('http.bad_request', 'fr'),
+			message: getErrorMessageUnsafe('http.bad_request', 'fr'),
 		});
 		expect(errorLogger).not.toHaveBeenCalled();
 		expect(debugLogger).toHaveBeenCalledExactlyOnceWith(

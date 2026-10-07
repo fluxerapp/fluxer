@@ -1,37 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Authentication from '@app/features/auth/state/Authentication';
-import {TransferOwnershipModal} from '@app/features/guild/components/modals/TransferOwnershipModal';
 import Guilds from '@app/features/guild/state/Guilds';
-import {
-	CHANGE_NICKNAME_DESCRIPTOR,
-	KICK_MEMBER_DESCRIPTOR,
-	ROLES_DESCRIPTOR,
-	TRANSFER_OWNERSHIP_DESCRIPTOR,
-} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CHANGE_NICKNAME_DESCRIPTOR, ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as GuildMemberCommands from '@app/features/member/commands/GuildMemberCommands';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
-import {BanMemberModal} from '@app/features/moderation/components/modals/BanMemberModal';
-import {KickMemberModal} from '@app/features/moderation/components/modals/KickMemberModal';
-import {RemoveTimeoutModal} from '@app/features/moderation/components/modals/RemoveTimeoutModal';
-import {TimeoutMemberModal} from '@app/features/moderation/components/modals/TimeoutMemberModal';
-import {
-	REMOVE_TIMEOUT_DESCRIPTOR,
-	TIMEOUT_DESCRIPTOR,
-} from '@app/features/moderation/utils/ModerationMessageDescriptors';
 import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
 import Permission from '@app/features/permissions/state/Permission';
-import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
-import {
-	BanMemberIcon,
-	ChangeNicknameIcon,
-	KickMemberIcon,
-	TimeoutIcon,
-	TransferOwnershipIcon,
-} from '@app/features/ui/action_menu/ContextMenuIcons';
+import {ChangeNicknameIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import itemStyles from '@app/features/ui/action_menu/items/MenuItems.module.css';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
@@ -42,138 +21,10 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {ChangeNicknameModal} from '@app/features/user/components/modals/ChangeNicknameModal';
 import type {User} from '@app/features/user/models/User';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useMemo} from 'react';
-
-const BAN_MEMBER_DESCRIPTOR = msg({
-	message: 'Ban member',
-	comment: 'Moderation action that bans the selected member from the community.',
-});
-
-interface TransferOwnershipMenuItemProps {
-	guildId: string;
-	user: User;
-	member: GuildMember;
-	onClose: () => void;
-}
-
-export const TransferOwnershipMenuItem: React.FC<TransferOwnershipMenuItemProps> = observer(
-	function TransferOwnershipMenuItem({guildId, user, member, onClose}) {
-		const {i18n} = useLingui();
-		const handleTransferOwnership = useCallback(() => {
-			ModalCommands.pushAfterBottomSheetClose(
-				onClose,
-				modal(() => (
-					<TransferOwnershipModal
-						guildId={guildId}
-						targetUser={user}
-						targetMember={member}
-						data-flx="ui.action-menu.items.guild-member-menu-items.handle-transfer-ownership.transfer-ownership-modal"
-					/>
-				)),
-			);
-		}, [guildId, user, member, onClose]);
-		return (
-			<MenuItem
-				icon={
-					<TransferOwnershipIcon
-						size={16}
-						data-flx="ui.action-menu.items.guild-member-menu-items.transfer-ownership-menu-item.transfer-ownership-icon"
-					/>
-				}
-				onClick={handleTransferOwnership}
-				data-flx="ui.action-menu.items.guild-member-menu-items.transfer-ownership-menu-item.menu-item.transfer-ownership"
-			>
-				{i18n._(TRANSFER_OWNERSHIP_DESCRIPTOR)}
-			</MenuItem>
-		);
-	},
-);
-
-interface KickMemberMenuItemProps {
-	guildId: string;
-	user: User;
-	onClose: () => void;
-}
-
-export const KickMemberMenuItem: React.FC<KickMemberMenuItemProps> = observer(function KickMemberMenuItem({
-	guildId,
-	user,
-	onClose,
-}) {
-	const {i18n} = useLingui();
-	const handleKickMember = useCallback(() => {
-		ModalCommands.pushAfterBottomSheetClose(
-			onClose,
-			modal(() => (
-				<KickMemberModal
-					guildId={guildId}
-					targetUser={user}
-					data-flx="ui.action-menu.items.guild-member-menu-items.handle-kick-member.kick-member-modal"
-				/>
-			)),
-		);
-	}, [guildId, user, onClose]);
-	return (
-		<MenuItem
-			icon={
-				<KickMemberIcon
-					size={16}
-					data-flx="ui.action-menu.items.guild-member-menu-items.kick-member-menu-item.kick-member-icon"
-				/>
-			}
-			onClick={handleKickMember}
-			danger
-			data-flx="ui.action-menu.items.guild-member-menu-items.kick-member-menu-item.menu-item.kick-member"
-		>
-			{i18n._(KICK_MEMBER_DESCRIPTOR)}
-		</MenuItem>
-	);
-});
-
-interface BanMemberMenuItemProps {
-	guildId: string;
-	user: User;
-	onClose: () => void;
-}
-
-export const BanMemberMenuItem: React.FC<BanMemberMenuItemProps> = observer(function BanMemberMenuItem({
-	guildId,
-	user,
-	onClose,
-}) {
-	const {i18n} = useLingui();
-	const handleBanMember = useCallback(() => {
-		ModalCommands.pushAfterBottomSheetClose(
-			onClose,
-			modal(() => (
-				<BanMemberModal
-					guildId={guildId}
-					targetUser={user}
-					data-flx="ui.action-menu.items.guild-member-menu-items.handle-ban-member.ban-member-modal"
-				/>
-			)),
-		);
-	}, [guildId, user, onClose]);
-	return (
-		<MenuItem
-			icon={
-				<BanMemberIcon
-					size={16}
-					data-flx="ui.action-menu.items.guild-member-menu-items.ban-member-menu-item.ban-member-icon"
-				/>
-			}
-			onClick={handleBanMember}
-			danger
-			data-flx="ui.action-menu.items.guild-member-menu-items.ban-member-menu-item.menu-item.ban-member"
-		>
-			{i18n._(BAN_MEMBER_DESCRIPTOR)}
-		</MenuItem>
-	);
-});
 
 interface ManageRolesMenuItemProps {
 	guildId: string;
@@ -347,74 +198,6 @@ export const ChangeNicknameMenuItem: React.FC<ChangeNicknameMenuItemProps> = obs
 			data-flx="ui.action-menu.items.guild-member-menu-items.change-nickname-menu-item.menu-item.change-nickname"
 		>
 			{isCurrentUser ? i18n._(CHANGE_NICKNAME_DESCRIPTOR) : i18n._(CHANGE_NICKNAME_DESCRIPTOR)}
-		</MenuItem>
-	);
-});
-
-interface TimeoutMemberMenuItemProps {
-	guildId: string;
-	user: User;
-	member: GuildMember;
-	onClose: () => void;
-}
-
-export const TimeoutMemberMenuItem: React.FC<TimeoutMemberMenuItemProps> = observer(function TimeoutMemberMenuItem({
-	guildId,
-	user,
-	member,
-	onClose,
-}) {
-	const {i18n} = useLingui();
-	const guild = Guilds.getGuild(guildId);
-	const currentUserId = Authentication.currentUserId;
-	const isCurrentUser = user.id === currentUserId;
-	const {canManageTarget} = useRoleHierarchy(guild);
-	const canModerateTarget = !isCurrentUser && canManageTarget(user.id);
-	const guildSnapshot = guild?.toJSON();
-	const targetHasAdministratorPermission =
-		guildSnapshot !== undefined && PermissionUtils.can(Permissions.ADMINISTRATOR, user.id, guildSnapshot);
-	const handleTimeoutMember = useCallback(() => {
-		ModalCommands.pushAfterBottomSheetClose(
-			onClose,
-			modal(() => (
-				<TimeoutMemberModal
-					guildId={guildId}
-					targetUser={user}
-					data-flx="ui.action-menu.items.guild-member-menu-items.handle-timeout-member.timeout-member-modal"
-				/>
-			)),
-		);
-	}, [guildId, user, onClose]);
-	const handleRemoveTimeout = useCallback(() => {
-		ModalCommands.pushAfterBottomSheetClose(
-			onClose,
-			modal(() => (
-				<RemoveTimeoutModal
-					guildId={guildId}
-					targetUser={user}
-					data-flx="ui.action-menu.items.guild-member-menu-items.handle-remove-timeout.remove-timeout-modal"
-				/>
-			)),
-		);
-	}, [guildId, user, onClose]);
-	if (!canModerateTarget || targetHasAdministratorPermission) {
-		return null;
-	}
-	const isTimedOut = member.isTimedOut();
-	const handleClick = isTimedOut ? handleRemoveTimeout : handleTimeoutMember;
-	return (
-		<MenuItem
-			icon={
-				<TimeoutIcon
-					size={16}
-					data-flx="ui.action-menu.items.guild-member-menu-items.timeout-member-menu-item.timeout-icon"
-				/>
-			}
-			onClick={handleClick}
-			danger={!isTimedOut}
-			data-flx="ui.action-menu.items.guild-member-menu-items.timeout-member-menu-item.menu-item.click"
-		>
-			{isTimedOut ? i18n._(REMOVE_TIMEOUT_DESCRIPTOR) : i18n._(TIMEOUT_DESCRIPTOR)}
 		</MenuItem>
 	);
 });

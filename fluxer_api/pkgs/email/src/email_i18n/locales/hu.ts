@@ -83,10 +83,6 @@ const EMAIL_I18N_HU_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Állítsd vissza {product_name}-fiókod jelszavát",
 		"body": "Szia, {username}!\n\n{product_name}-fiókod jelszavának visszaállítását kérted. Használd az alábbi linket új jelszó beállításához:\n\n{resetUrl}\n\nHa nem kérted ezt, nyugodtan figyelmen kívül hagyhatod ezt az e-mailt.\n\nEz a link 1 óráig érvényes.\n\n– {product_name} csapata"
 	},
-	"registration_approved": {
-		"subject": "Jóváhagytuk a regisztrációdat a {product_name} felületén",
-		"body": "Szia, {username}!\n\nJó hír: jóváhagytuk a regisztrációdat a {product_name} felületén.\n\nMost már bejelentkezhetsz az alkalmazásba:\n{channelsUrl}\n\nÜdvözlünk a {product_name} közösségében!\n\n– {product_name} csapata"
-	},
 	"report_received": {
 		"subject": "Megkaptuk a {product_name} felületén tett bejelentésedet",
 		"body": "Szia!\n\nMegkaptuk a digitális szolgáltatásokról szóló rendelet (DSA) szerinti bejelentésedet a {product_name} felületén. A bejelentés tárgya: {targetKind, select, message {egy üzenet} user {egy fiók} guild {egy közösség} other {tartalom}}.\n\nBejelentés azonosítója: {reportId}\n\nBiztonsági csapatunk elbírálja a bejelentésedet, és erre a címre írunk neked, amint döntést hoztunk. Őrizd meg ezt az e-mailt, hogy később is meglegyen.\n\n– {product_name} biztonsági csapata"

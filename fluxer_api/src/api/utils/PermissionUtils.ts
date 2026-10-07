@@ -48,18 +48,6 @@ export async function requirePermission(
 	}
 }
 
-export async function hasPermission(
-	gatewayService: IGatewayService,
-	params: {
-		guildId: GuildID;
-		userId: UserID;
-		permission: bigint;
-		channelId?: ChannelID;
-	},
-): Promise<boolean> {
-	return await gatewayService.checkPermission(params);
-}
-
 export function overwriteGrantedBits(
 	before: {allow: bigint; deny: bigint} | null | undefined,
 	after: {allow: bigint; deny: bigint} | null | undefined,

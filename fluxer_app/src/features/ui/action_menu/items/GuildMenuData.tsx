@@ -98,7 +98,7 @@ interface UseGuildMenuDataOptions {
 	preserveInitialMarkAsReadVisibility?: boolean;
 }
 
-export interface GuildMenuHandlers {
+interface GuildMenuHandlers {
 	handleMarkAsRead: () => void;
 	handleInviteMembers: () => void;
 	handleCommunitySettings: () => void;
@@ -115,7 +115,7 @@ export interface GuildMenuHandlers {
 	handleToggleHideMutedChannels: (checked: boolean) => void;
 }
 
-export interface GuildMenuPermissions {
+interface GuildMenuPermissions {
 	canManageGuild: boolean;
 	canManageChannels: boolean;
 	canInvite: boolean;

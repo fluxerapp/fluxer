@@ -3,9 +3,7 @@
 import type {Channel} from '@app/features/channel/models/Channel';
 import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
 import {
-	COMPACT_HEIGHT_CHAT_AREA_RESERVATION as COMPACT_HEIGHT_CHAT_AREA_RESERVATION_BOUND,
 	COMPACT_HEIGHT_MIN as COMPACT_HEIGHT_MIN_BOUND,
-	COMPACT_HEIGHT_VIEWPORT_MARGIN as COMPACT_HEIGHT_VIEWPORT_MARGIN_BOUND,
 	getCompactHeightMax as getCompactHeightMaxFromBounds,
 } from '@app/features/voice/components/compact_voice_call_view/CompactVoiceCallHeightBounds';
 import {getCompactVoiceCallExpansionKey} from '@app/features/voice/state/CompactVoiceCallHeight';
@@ -40,7 +38,7 @@ export interface CompactVoiceCallHeightToggle {
 	unreadCount?: number;
 }
 
-export type CompactVoiceCallMediaMode = 'live' | 'placeholder';
+type CompactVoiceCallMediaMode = 'live' | 'placeholder';
 
 export interface CompactVoiceCallViewProps {
 	channel: Channel;
@@ -93,11 +91,9 @@ export interface CompactVoiceCallContainerStyle extends React.CSSProperties {
 
 export const COMPACT_HEIGHT_DRAG_THRESHOLD_SQ = 9;
 export const COMPACT_HEIGHT_MIN = COMPACT_HEIGHT_MIN_BOUND;
-export const COMPACT_HEIGHT_VIEWPORT_MARGIN = COMPACT_HEIGHT_VIEWPORT_MARGIN_BOUND;
-export const COMPACT_HEIGHT_CHAT_AREA_RESERVATION = COMPACT_HEIGHT_CHAT_AREA_RESERVATION_BOUND;
 export const COMPACT_HEIGHT_STEP = 16;
 export const VOICE_HUD_IDLE_TIMEOUT_MS = 2500;
-export const COMPACT_METRICS_CHANGE_EPSILON = 0.5;
+const COMPACT_METRICS_CHANGE_EPSILON = 0.5;
 
 export function toLayoutPx(value: number): number {
 	if (!Number.isFinite(value)) {

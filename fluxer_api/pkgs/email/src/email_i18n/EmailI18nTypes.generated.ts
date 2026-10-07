@@ -21,7 +21,6 @@ export type EmailTemplateKey =
 	| 'mfa_backup_codes_view'
 	| 'password_change_verification'
 	| 'password_reset'
-	| 'registration_approved'
 	| 'report_received'
 	| 'report_resolved'
 	| 'scheduled_deletion_notification'

@@ -16,7 +16,7 @@ export interface FavoriteChannel {
 	nickname: string | null;
 }
 
-export interface FavoriteCategory {
+interface FavoriteCategory {
 	id: string;
 	name: string;
 	position: number;
@@ -92,10 +92,6 @@ class Favorites {
 		return this.channels.find((ch) => ch.channelId === channelId);
 	}
 
-	getCategory(categoryId: string): FavoriteCategory | undefined {
-		return this.categories.find((cat) => cat.id === categoryId);
-	}
-
 	getChannelsInCategory(categoryId: string | null): ReadonlyArray<FavoriteChannel> {
 		return this.sortedChannels.filter((ch) => ch.parentId === categoryId);
 	}
@@ -143,12 +139,6 @@ class Favorites {
 			position,
 			nickname: null,
 		});
-	}
-
-	addChannels(channelIds: Array<string>, guildId: string, parentId: string | null = null): void {
-		for (const channelId of channelIds) {
-			this.addChannel(channelId, guildId, parentId);
-		}
 	}
 
 	removeChannel(channelId: string): void {
@@ -239,10 +229,6 @@ class Favorites {
 
 	setHideMutedChannels(value: boolean): void {
 		this.hideMutedChannels = value;
-	}
-
-	toggleMuted(): void {
-		this.isMuted = !this.isMuted;
 	}
 
 	private reorderChannels(): void {

@@ -14,7 +14,7 @@ import {listReportProfileSnapshotAssets} from '@fluxer/schema/src/domains/report
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
 
-export const REPORT_RETENTION_DAYS = 365;
+const REPORT_RETENTION_DAYS = 365;
 const REPORT_RETENTION_MS = REPORT_RETENTION_DAYS * ms('1 day');
 const DEFAULT_SCAN_PAGE_SIZE = 500;
 

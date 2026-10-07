@@ -79,10 +79,6 @@
 		"subject": "重置你的 {product_name} 账号密码",
 		"body": "你好 {username}，\n\n你请求重置 {product_name} 账号密码。请使用下方链接设置新密码：\n\n{resetUrl}\n\n如果你未请求此操作，可以放心忽略此邮件。\n\n此链接 1 小时内有效。\n\n– {product_name} 团队"
 	},
-	"registration_approved": {
-		"subject": "你的 {product_name} 注册已通过",
-		"body": "你好 {username}，\n\n好消息：你的 {product_name} 注册已通过。\n\n你现在可以登录 {product_name} 应用：\n{channelsUrl}\n\n欢迎加入 {product_name} 社区。\n\n– {product_name} 团队"
-	},
 	"report_received": {
 		"subject": "我们已收到你的 {product_name} 举报",
 		"body": "你好，\n\n我们已收到你根据《数字服务法》提交的关于 {product_name} 上{targetKind, select, message {一条消息} user {一个账号} guild {一个社区} other {内容}}的举报。\n\n举报 ID：{reportId}\n\n我们的安全团队会审核你的举报，并在做出决定后发送邮件至此邮箱地址。请保留此邮件以备查阅。\n\n– {product_name} 安全团队"

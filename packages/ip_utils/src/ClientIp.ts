@@ -16,10 +16,6 @@ interface ExtractedClientIp {
 	ipVersion: IpAddressFamily;
 }
 
-interface HeadersLike {
-	[key: string]: string | Array<string> | undefined;
-}
-
 export class MissingClientIpError extends Error {
 	readonly code = 'FORBIDDEN';
 	readonly status = 403;
@@ -44,41 +40,11 @@ export function resolveClientIpHeaderName(clientIpHeaderName?: string): string {
 	return normalizeHeaderName(clientIpHeaderName ?? DEFAULT_CLIENT_IP_HEADER_NAME);
 }
 
-function toStringHeaderValue(value: string | Array<string> | null | undefined): string | null {
-	if (Array.isArray(value)) {
-		const first = value[0];
-		return typeof first === 'string' ? first : null;
-	}
-	return typeof value === 'string' ? value : null;
-}
-
 function parseClientIpHeaderValue(value: string | null): ParsedIpAddress | null {
 	if (value === null) {
 		return null;
 	}
 	return parseIpAddress(value.split(',', 1)[0]);
-}
-
-function getHeaderValue(headers: HeadersLike, name: string): string | null {
-	const lowerName = name.toLowerCase();
-	const directMatch = toStringHeaderValue(headers[lowerName]);
-	if (directMatch !== null) {
-		return directMatch;
-	}
-	for (const [key, value] of Object.entries(headers)) {
-		if (key.toLowerCase() === lowerName) {
-			return toStringHeaderValue(value);
-		}
-	}
-	return null;
-}
-
-function createNodeHeaderReader(headers: HeadersLike): HeaderReader {
-	return {
-		get: (name: string): string | null => {
-			return getHeaderValue(headers, name);
-		},
-	};
 }
 
 function extractClientIpDetailsFromReader(
@@ -115,16 +81,4 @@ export function requireClientIp(req: Request, options?: ClientIpExtractionOption
 		throw new MissingClientIpError();
 	}
 	return ip;
-}
-
-export function extractClientIpDetailsFromHeaders(
-	headers: HeadersLike,
-	options?: ClientIpExtractionOptions,
-): ExtractedClientIp | null {
-	return extractClientIpDetailsFromReader(createNodeHeaderReader(headers), options);
-}
-
-export function extractClientIpFromHeaders(headers: HeadersLike, options?: ClientIpExtractionOptions): string | null {
-	const extracted = extractClientIpDetailsFromHeaders(headers, options);
-	return extracted?.ip ?? null;
 }

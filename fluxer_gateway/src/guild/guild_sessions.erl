@@ -15,8 +15,6 @@
     set_session_active_guild/3,
     set_session_passive_guild/3,
     build_initial_last_message_ids/1,
-    is_session_active/2,
-    subscribe_connected_user_presence/2,
     subscribe_to_user_presence/2,
     unsubscribe_from_user_presence/2,
     set_session_viewable_channels/3,
@@ -112,10 +110,6 @@ remove_session(SessionId, State) ->
 build_initial_last_message_ids(GuildState) ->
     guild_sessions_connect:build_initial_last_message_ids(GuildState).
 
--spec subscribe_connected_user_presence(user_id(), guild_state()) -> guild_state().
-subscribe_connected_user_presence(UserId, State) ->
-    guild_sessions_presence:subscribe_connected_user_presence(UserId, State).
-
 -spec subscribe_to_user_presence(user_id(), guild_state()) -> guild_state().
 subscribe_to_user_presence(UserId, State) ->
     guild_sessions_presence:subscribe_to_user_presence(UserId, State).
@@ -135,10 +129,6 @@ set_session_active_guild(SessionId, GuildId, State) ->
 -spec set_session_passive_guild(session_id(), guild_id(), guild_state()) -> guild_state().
 set_session_passive_guild(SessionId, GuildId, State) ->
     guild_sessions_passive:set_session_passive_guild(SessionId, GuildId, State).
-
--spec is_session_active(session_id(), guild_state()) -> boolean().
-is_session_active(SessionId, State) ->
-    guild_sessions_passive:is_session_active(SessionId, State).
 
 -spec handle_set_typing_override(session_id(), boolean(), guild_state()) -> guild_state().
 handle_set_typing_override(SessionId, TypingFlag, State) ->

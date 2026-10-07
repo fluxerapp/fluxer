@@ -26,10 +26,3 @@ export function getMutualGuildsForDmAccess({
 	const userGuildIdSet: ReadonlySet<bigint> = new Set(userGuilds.map((guild) => guild.id));
 	return targetGuilds.filter((guild) => userGuildIdSet.has(guild.id) && guildQualifiesForMutualGuildDmAccess(guild));
 }
-
-export function hasMutualGuildForDmAccess(params: {
-	userGuilds: ReadonlyArray<Guild>;
-	targetGuilds: ReadonlyArray<Guild>;
-}): boolean {
-	return getMutualGuildsForDmAccess(params).length > 0;
-}

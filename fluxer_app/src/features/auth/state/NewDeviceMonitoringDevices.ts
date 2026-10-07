@@ -6,7 +6,7 @@ import {
 	type VoiceDeviceState,
 } from '@app/features/voice/utils/VoiceDeviceManager';
 
-export type DeviceType = 'input' | 'output' | 'input_output';
+type DeviceType = 'input' | 'output' | 'input_output';
 
 export interface PendingDevicePrompt {
 	deviceIds: Array<string>;

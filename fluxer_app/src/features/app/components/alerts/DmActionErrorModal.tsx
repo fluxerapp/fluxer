@@ -70,10 +70,7 @@ const GENERIC_TITLE_DESCRIPTOR = msg({
 	comment: 'Title of the generic fallback error modal shown when opening or creating a DM fails.',
 });
 
-export function resolveDmActionErrorContent(
-	code: string | undefined,
-	apiMessage?: string,
-): {title: string; message: string} {
+function resolveDmActionErrorContent(code: string | undefined, apiMessage?: string): {title: string; message: string} {
 	switch (code) {
 		case APIErrorCodes.NEW_CONVERSATIONS_LIMITED:
 			return {

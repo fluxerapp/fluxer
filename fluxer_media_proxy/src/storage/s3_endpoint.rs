@@ -83,20 +83,6 @@ impl Store {
         }
         None
     }
-
-    pub(super) fn s3_bucket_url(&self, bucket: &str) -> Result<String, StorageError> {
-        super::keys::safe_bucket(bucket)?;
-        let endpoint = &self.cfg.storage.s3_endpoint;
-        if endpoint.is_empty() {
-            return Err(StorageError::InvalidS3Endpoint);
-        }
-        let endpoint = endpoint.trim_end_matches('/');
-        if self.cfg.storage.s3_force_path_style {
-            return Ok(format!("{endpoint}/{bucket}"));
-        }
-        let (scheme, host, port, base_path) = virtual_hosted_endpoint(endpoint, bucket)?;
-        Ok(format!("{scheme}://{bucket}.{host}{port}{base_path}"))
-    }
 }
 
 fn write_bucket_style(cfg: &Config) -> BucketStyle {

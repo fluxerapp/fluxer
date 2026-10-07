@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const MIN_BUFFERED_RANGE_SECONDS = 1;
+const MIN_BUFFERED_RANGE_SECONDS = 1;
 
 export const EMPTY_BUFFERED_SPANS: ReadonlyArray<BufferedSpanFraction> = Object.freeze([]);
 
@@ -50,7 +50,7 @@ export function quantiseMediaTimeToSecond(time: number): number {
 	return Math.trunc(time);
 }
 
-export function getFiniteMediaDuration(media: HTMLMediaElement | null | undefined): number {
+function getFiniteMediaDuration(media: HTMLMediaElement | null | undefined): number {
 	if (!media || !Number.isFinite(media.duration) || media.duration <= 0) return 0;
 	return media.duration;
 }
@@ -172,9 +172,9 @@ export function resolveDoubleTapSeekDirection(
 	return null;
 }
 
-export const PLAYHEAD_SNAP_THRESHOLD_SECONDS = 0.5;
+const PLAYHEAD_SNAP_THRESHOLD_SECONDS = 0.5;
 
-export const PLAYHEAD_CONVERGENCE_RATE = 0.1;
+const PLAYHEAD_CONVERGENCE_RATE = 0.1;
 
 export interface PlayheadPredictionStep {
 	predictedSeconds: number | null;

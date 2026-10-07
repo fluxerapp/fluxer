@@ -4,7 +4,7 @@ import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import {makeAutoObservable} from 'mobx';
 
-export interface ChannelMemberCounts {
+interface ChannelMemberCounts {
 	memberCount: number;
 	onlineCount: number;
 	fetchedAt: number;

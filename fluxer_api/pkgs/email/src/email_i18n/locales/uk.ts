@@ -83,10 +83,6 @@ const EMAIL_I18N_UK_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Скинь свій пароль для {product_name}",
 		"body": "Привіт, {username},\n\nМи отримали твій запит на скидання пароля для {product_name}. Використай посилання нижче, щоб встановити новий пароль:\n\n{resetUrl}\n\nЯкщо цей запит не від тебе, можеш сміливо проігнорувати цей лист.\n\nЦе посилання діє протягом 1 години.\n\n– Команда {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Твою реєстрацію в {product_name} схвалено",
-		"body": "Привіт, {username},\n\nГарні новини: твою реєстрацію в {product_name} схвалено.\n\nТепер ти можеш увійти до застосунку {product_name} тут:\n{channelsUrl}\n\nЛаскаво просимо до спільноти {product_name}.\n\n– Команда {product_name}"
-	},
 	"report_received": {
 		"subject": "Ми отримали твій звіт у {product_name}",
 		"body": "Привіт,\n\nМи отримали твій звіт за Законом про цифрові послуги (DSA) щодо {targetKind, select, message {повідомлення} user {акаунта} guild {спільноти} other {вмісту}} у {product_name}.\n\nID звіту: {reportId}\n\nНаша команда безпеки розгляне твій звіт, і ми напишемо тобі на цю адресу, коли ухвалимо рішення. Збережи цей лист на майбутнє.\n\n– Команда безпеки {product_name}"

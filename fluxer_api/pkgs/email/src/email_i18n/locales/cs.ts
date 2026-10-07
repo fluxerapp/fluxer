@@ -83,10 +83,6 @@ const EMAIL_I18N_CS_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Obnovte své heslo k účtu {product_name}",
 		"body": "Dobrý den, {username},\n\nPožádali jste o obnovení hesla k účtu {product_name}. Pomocí odkazu níže si nastavte nové heslo:\n\n{resetUrl}\n\nPokud jste o to nežádali, můžete tento e-mail bez obav ignorovat.\n\nTento odkaz je platný 1 hodinu.\n\n– Tým {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Vaše registrace do {product_name} byla schválena",
-		"body": "Dobrý den, {username},\n\nDobrá zpráva: vaše registrace do {product_name} byla schválena.\n\nNyní se můžete přihlásit do aplikace {product_name} zde:\n{channelsUrl}\n\nVítejte v komunitě {product_name}.\n\n– Tým {product_name}"
-	},
 	"report_received": {
 		"subject": "Obdrželi jsme vaše nahlášení na {product_name}",
 		"body": "Dobrý den,\n\nObdrželi jsme vaše nahlášení podle nařízení o digitálních službách, které se týká {targetKind, select, message {zprávy} user {účtu} guild {komunity} other {obsahu}} na {product_name}.\n\nID nahlášení: {reportId}\n\nNáš bezpečnostní tým vaše nahlášení přezkoumá a jakmile rozhodneme, napíšeme vám na tuto adresu. Tento e-mail si uschovejte pro své záznamy.\n\n– Bezpečnostní tým {product_name}"

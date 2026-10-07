@@ -84,7 +84,7 @@ function getChannelsInChannelListOrder(channels: ReadonlyArray<Channel>): Array<
 	];
 }
 
-export function getFirstInvitableChannel(guildId: string): string | undefined {
+function getFirstInvitableChannel(guildId: string): string | undefined {
 	const channels = getChannelsInChannelListOrder(Channels.getGuildChannels(guildId));
 	const invitableChannel = channels.find(
 		(channel) => GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) && canInviteToChannel(channel.id, channel.guildId),
@@ -115,7 +115,7 @@ export function getDefaultCommunityInviteChannelId(guildId: string): string | un
 	return getInvitableChannelId(guildId, {preferSelectedChannel: false});
 }
 
-export function isChannelVisibleToEveryone(channel: Channel, guild: Guild): boolean {
+function isChannelVisibleToEveryone(channel: Channel, guild: Guild): boolean {
 	const everyoneOverwrite = channel.permissionOverwrites[guild.id];
 	if (!everyoneOverwrite) {
 		return true;

@@ -181,7 +181,7 @@ async function fetchDeepFilterAssets(): Promise<DeepFilterAssets> {
 
 let assetsLoad: Promise<DeepFilterAssets> | null = null;
 
-export function loadDeepFilterAssets(signal?: AbortSignal): Promise<DeepFilterAssets> {
+function loadDeepFilterAssets(signal?: AbortSignal): Promise<DeepFilterAssets> {
 	if (!assetsLoad) {
 		const load = fetchDeepFilterAssets();
 		assetsLoad = load;

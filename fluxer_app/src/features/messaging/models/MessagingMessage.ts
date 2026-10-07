@@ -248,14 +248,6 @@ export class Message {
 		return this.hasFlag(MessageFlags.SUPPRESS_EMBEDS);
 	}
 
-	get suppressNotifications(): boolean {
-		return this.hasFlag(MessageFlags.SUPPRESS_NOTIFICATIONS);
-	}
-
-	get isSilent(): boolean {
-		return this.hasFlag(MessageFlags.SUPPRESS_NOTIFICATIONS);
-	}
-
 	get isCrossposted(): boolean {
 		return this.hasFlag(MessageFlags.CROSSPOSTED);
 	}
@@ -296,10 +288,6 @@ export class Message {
 
 	get isSending(): boolean {
 		return this.state === MessageStates.SENDING;
-	}
-
-	get isSent(): boolean {
-		return this.state === MessageStates.SENT;
 	}
 
 	get hasFailed(): boolean {
@@ -516,12 +504,6 @@ export class Message {
 			}
 		}
 		return true;
-	}
-
-	static hasRenderChanges(prev: Message | undefined, next: Message | undefined): boolean {
-		if (!prev && !next) return false;
-		if (!prev || !next) return true;
-		return !prev.equals(next);
 	}
 
 	toJSON(): WireMessage {

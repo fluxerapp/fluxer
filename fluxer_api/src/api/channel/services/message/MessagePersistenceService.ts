@@ -579,55 +579,6 @@ export class MessagePersistenceService {
 		return {message: updatedMessage, enqueueDeferredEmbeds};
 	}
 
-	async updateSnapshotAttachments(params: {
-		message: Message;
-		snapshotEdits: ReadonlyArray<{
-			attachments?: ReadonlyArray<{
-				id: bigint | number;
-				title?: string | null;
-				description?: string | null;
-			}>;
-		}>;
-	}): Promise<Message> {
-		const {message, snapshotEdits} = params;
-		if (!message.messageSnapshots || message.messageSnapshots.length === 0) {
-			throw InputValidationError.fromCode('message_snapshots', ValidationErrorCodes.INVALID_MESSAGE_DATA);
-		}
-		const updatedSnapshots = message.messageSnapshots.map((snapshot, index) => {
-			const edit = snapshotEdits[index];
-			if (!edit?.attachments || edit.attachments.length === 0) {
-				return snapshot.toMessageSnapshot();
-			}
-			const snapshotRow = snapshot.toMessageSnapshot();
-			const existingAttachments = snapshotRow.attachments ?? [];
-			const editsByRefId = new Map<
-				bigint,
-				{
-					title?: string | null;
-					description?: string | null;
-				}
-			>();
-			for (const att of edit.attachments) {
-				const refId = createAttachmentID(typeof att.id === 'number' ? BigInt(att.id) : att.id);
-				editsByRefId.set(refId, {title: att.title, description: att.description});
-			}
-			const newAttachments = existingAttachments.map((existing, attIndex) => {
-				const matchById = editsByRefId.get(existing.attachment_id);
-				const fallback = matchById === undefined ? editsByRefId.get(createAttachmentID(BigInt(attIndex))) : undefined;
-				const patch = matchById ?? fallback;
-				if (!patch) return existing;
-				return {
-					...existing,
-					title: patch.title !== undefined ? patch.title : existing.title,
-					description: patch.description !== undefined ? patch.description : existing.description,
-				};
-			});
-			return {...snapshotRow, attachments: newAttachments.length > 0 ? newAttachments : null};
-		});
-		const updatedRowData = {...message.toRow(), message_snapshots: updatedSnapshots};
-		return await this.channelRepository.messages.upsertMessage(updatedRowData, message.toRow());
-	}
-
 	async handleNonAuthorEdit(params: {
 		message: Message;
 		data: MessageUpdateRequest;

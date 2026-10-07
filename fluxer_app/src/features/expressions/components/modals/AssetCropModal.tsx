@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	clampAspectRatio,
 	getAspectRatioRange,
 	type ImageDimensions,
 	isOriginalImageWithinAssetBounds,
@@ -212,12 +211,10 @@ const ASSET_CONFIGS: Record<AssetType, AssetConfig> = {
 	},
 };
 export const getAssetConfig = (type: AssetType): AssetConfig => ASSET_CONFIGS[type];
-export const getAssetAspectRatioRange = (type: AssetType) => {
+const getAssetAspectRatioRange = (type: AssetType) => {
 	const config = getAssetConfig(type);
 	return getAspectRatioRange(config.aspectRatio, config.minHeightRatio, config.maxHeightRatio);
 };
-export const clampAssetAspectRatio = (type: AssetType, aspectRatio: number | undefined): number | undefined =>
-	clampAspectRatio(aspectRatio, getAssetAspectRatioRange(type));
 const canSkipOriginalAssetImage = (type: AssetType, dimensions: ImageDimensions): boolean => {
 	const config = getAssetConfig(type);
 	return isOriginalImageWithinAssetBounds(

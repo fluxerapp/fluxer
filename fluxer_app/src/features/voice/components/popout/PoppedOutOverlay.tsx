@@ -32,7 +32,7 @@ const FOCUS_WINDOW_DESCRIPTOR = msg({
 const OVERLAY_ICON_SIZE = 32;
 const OVERLAY_ICON_SIZE_COMPACT = 22;
 
-export type PoppedOutOverlayVariant = 'call' | 'tile';
+type PoppedOutOverlayVariant = 'call' | 'tile';
 
 interface PoppedOutOverlayProps {
 	popoutKey: string;

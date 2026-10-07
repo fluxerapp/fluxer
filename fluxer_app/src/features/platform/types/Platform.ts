@@ -46,23 +46,12 @@ function selectValue<T>(options: PlatformSelector<T>): T | undefined {
 export const Platform = {
 	OS: 'web' as const,
 	isWeb: true,
-	isIOS: isIOSDevice,
-	isAndroid: isAndroidDevice,
 	isElectron,
 	isIOSWeb,
 	isPWA,
-	isAppleDevice: isIOSDevice,
 	isMobileBrowser,
 	select: selectValue,
 };
-
-export function isWebPlatform(): boolean {
-	return Platform.isWeb;
-}
-
-export function isElectronPlatform(): boolean {
-	return Platform.isElectron;
-}
 
 export function getNativeLocaleIdentifier(): string | null {
 	const languages = navigator.languages;

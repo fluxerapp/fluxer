@@ -4,9 +4,7 @@ import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {
 	getAppStoreApp,
-	getAppStoreConfig,
 	getAppStoreProductSlot,
-	getGooglePlayConfig,
 	getGooglePlayOneTimeProductSlot,
 	getGooglePlaySubscriptionSlot,
 	isAppStoreConfigured,
@@ -57,8 +55,8 @@ describe('store billing config', () => {
 	});
 
 	it('treats both stores as configured with the test credentials', () => {
-		expect(getAppStoreConfig().enabled).toBe(true);
-		expect(getGooglePlayConfig().packages).toEqual(['com.fluxer']);
+		expect(Config.appStore.enabled).toBe(true);
+		expect(Config.googlePlay.packages).toEqual(['com.fluxer']);
 		expect(isAppStoreConfigured()).toBe(true);
 		expect(isGooglePlayConfigured()).toBe(true);
 	});

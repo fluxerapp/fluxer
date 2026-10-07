@@ -279,16 +279,6 @@ const DESKTOP_NATIVE_ADDONS: &[DesktopNativeAddon] = &[
         special: DesktopNativeSpecialBuild::None,
     },
     DesktopNativeAddon {
-        package_dir: "win-toast",
-        package_name: "@fluxer/win-toast",
-        crate_name: "fluxer_win_toast",
-        node_file_stem: "win-toast",
-        required_platform: Some("win32"),
-        features: &[],
-        pkg_config: &[],
-        special: DesktopNativeSpecialBuild::None,
-    },
-    DesktopNativeAddon {
         package_dir: "windows-input-hook",
         package_name: "@fluxer/windows-input-hook",
         crate_name: "fluxer_windows_input_hook",
@@ -1016,7 +1006,7 @@ mod tests {
         assert!(names.contains(&"win-game-capture"));
         assert!(names.contains(&"app-store"));
         assert!(names.contains(&"gateway-socket"));
-        assert_eq!(DESKTOP_NATIVE_ADDONS.len(), 24);
+        assert_eq!(DESKTOP_NATIVE_ADDONS.len(), 23);
     }
 
     #[test]

@@ -41,10 +41,7 @@ use crate::tokens::{
     normalize_localized_capitalization, restore_masked_tokens, should_keep_unchanged,
     validate_locale_specific_localization, validate_localization,
 };
-use crate::ts_catalog::{
-    StaticTsCatalogConfig, StaticTsCatalogKind, read_static_ts_entries,
-    rebuild_static_ts_allow_replacing, reset_static_ts_translations,
-};
+use crate::ts_catalog::StaticTsCatalogKind;
 
 const FULL_TRANSLATION_ATTEMPTS: usize = 3;
 const SEGMENT_TRANSLATION_ATTEMPTS: usize = 2;
@@ -70,7 +67,6 @@ pub struct TranslateArgs {
 pub enum CatalogLayout {
     NestedMessages,
     FlatPo,
-    StaticTs(StaticTsCatalogConfig),
     StaticJson(StaticJsonCatalogConfig),
 }
 
@@ -415,18 +411,11 @@ pub fn run_translation(config: &RuntimeConfig, args: &TranslateArgs) -> Result<u
             match &config.catalog_layout {
                 CatalogLayout::NestedMessages => "nested messages.po",
                 CatalogLayout::FlatPo => "flat .po",
-                CatalogLayout::StaticTs(_) => "static TypeScript locale map",
                 CatalogLayout::StaticJson(_) => "weblate JSON locale catalog",
             }
         ),
         false,
     );
-    if let CatalogLayout::StaticTs(static_config) = &config.catalog_layout {
-        log(
-            &format!("Source catalog: {}", static_config.source_path.display()),
-            false,
-        );
-    }
     if let CatalogLayout::StaticJson(static_config) = &config.catalog_layout {
         log(
             &format!("Source catalog: {}", static_config.source_path.display()),
@@ -586,14 +575,9 @@ fn available_locales(config: &RuntimeConfig) -> Result<Vec<String>> {
                 };
                 stem.to_string()
             }
-            CatalogLayout::StaticTs(_) | CatalogLayout::StaticJson(_) => {
-                let extension = if matches!(&config.catalog_layout, CatalogLayout::StaticJson(_)) {
-                    "json"
-                } else {
-                    "ts"
-                };
+            CatalogLayout::StaticJson(_) => {
                 let path = entry.path();
-                if path.extension().and_then(|ext| ext.to_str()) != Some(extension) {
+                if path.extension().and_then(|ext| ext.to_str()) != Some("json") {
                     continue;
                 }
                 let Some(stem) = path.file_stem().and_then(|stem| stem.to_str()) else {
@@ -1187,10 +1171,7 @@ pub fn sync_source_locale(
     catalog_path: &Path,
     args: &TranslateArgs,
 ) -> Result<LocaleResult> {
-    if matches!(
-        &config.catalog_layout,
-        CatalogLayout::StaticTs(_) | CatalogLayout::StaticJson(_)
-    ) {
+    if matches!(&config.catalog_layout, CatalogLayout::StaticJson(_)) {
         log(
             &format!(
                 "[{SOURCE_LOCALE}] Source strings live in the static source catalog; nothing to sync"
@@ -1257,10 +1238,6 @@ fn read_catalog_entries_from_content(
             };
             parse_po(&content)
         }
-        CatalogLayout::StaticTs(static_config) => {
-            let source_content = read_static_source_catalog(&static_config.source_path)?;
-            read_static_ts_entries(static_config, &source_content, content, reset)
-        }
         CatalogLayout::StaticJson(static_config) => {
             let source_content = read_static_source_catalog(&static_config.source_path)?;
             read_static_json_entries(static_config, &source_content, content, reset)
@@ -1271,9 +1248,6 @@ fn read_catalog_entries_from_content(
 fn reset_catalog_translations(config: &RuntimeConfig, content: &str) -> Result<String> {
     match &config.catalog_layout {
         CatalogLayout::NestedMessages | CatalogLayout::FlatPo => reset_po_translations(content),
-        CatalogLayout::StaticTs(static_config) => {
-            reset_static_ts_translations(static_config, content)
-        }
         CatalogLayout::StaticJson(static_config) => {
             reset_static_json_translations(static_config, content)
         }
@@ -1288,10 +1262,6 @@ fn rebuild_catalog_allow_replacing(
     match &config.catalog_layout {
         CatalogLayout::NestedMessages | CatalogLayout::FlatPo => {
             rebuild_po_allow_replacing(content, translations)
-        }
-        CatalogLayout::StaticTs(static_config) => {
-            let source_content = read_static_source_catalog(&static_config.source_path)?;
-            rebuild_static_ts_allow_replacing(static_config, &source_content, content, translations)
         }
         CatalogLayout::StaticJson(static_config) => {
             let source_content = read_static_source_catalog(&static_config.source_path)?;
@@ -1314,7 +1284,6 @@ fn catalog_path(config: &RuntimeConfig, locale: &str) -> PathBuf {
     match &config.catalog_layout {
         CatalogLayout::NestedMessages => config.locales_dir.join(locale).join("messages.po"),
         CatalogLayout::FlatPo => config.locales_dir.join(format!("{locale}.po")),
-        CatalogLayout::StaticTs(_) => config.locales_dir.join(format!("{locale}.ts")),
         CatalogLayout::StaticJson(_) => config.locales_dir.join(format!("{locale}.json")),
     }
 }
@@ -1438,22 +1407,6 @@ pub fn localize_string<C: LocalizationClient>(
 struct BatchLocalizationOutcome {
     translations: Vec<Translation>,
     failed_entries: Vec<(Entry, String)>,
-}
-
-pub fn localize_batch<C: LocalizationClient>(
-    client: &C,
-    entries: &[Entry],
-    locale: &str,
-    prompt_guidance: &[String],
-) -> Result<Vec<Translation>> {
-    let outcome = localize_batch_partial(client, entries, locale, prompt_guidance)?;
-    if let Some((entry, reason)) = outcome.failed_entries.first() {
-        bail!(
-            "Batch response failed validation for {:?}: {reason}",
-            entry.msgid
-        );
-    }
-    Ok(outcome.translations)
 }
 
 fn localize_batch_partial<C: LocalizationClient>(
@@ -2719,49 +2672,6 @@ mod tests {
         process_locale(&config, &EchoClient, "de", &args).unwrap();
         let entries = parse_po(&fs::read_to_string(&po_path).unwrap()).unwrap();
         assert_eq!(entries[0].msgstr, "");
-    }
-
-    #[test]
-    fn static_ts_catalog_processes_missing_entries() {
-        let temp = tempdir().unwrap();
-        let source_path = temp.path().join("SourceMessages.ts");
-        fs::write(
-            &source_path,
-            "export const SOURCE_MESSAGES = {\n\t'hello': 'Hello',\n\t'bye': 'Bye',\n} as const;\n",
-        )
-        .unwrap();
-        let locales_dir = temp.path().join("locales");
-        fs::create_dir_all(&locales_dir).unwrap();
-        let locale_path = locales_dir.join("de.ts");
-        fs::write(
-            &locale_path,
-            "import {defineLocaleMessages} from '../Messages';\n\nexport const DE = defineLocaleMessages({\n\t'hello': 'Hallo',\n});\n",
-        )
-        .unwrap();
-        let config = test_config(
-            temp.path(),
-            CatalogLayout::StaticTs(StaticTsCatalogConfig {
-                kind: StaticTsCatalogKind::SimpleMessages,
-                source_path,
-                source_export: "SOURCE_MESSAGES".to_string(),
-                locale_function: "defineLocaleMessages".to_string(),
-            }),
-            locales_dir,
-        );
-        let args = TranslateArgs {
-            catalog: CatalogName::Errors,
-            dry_run: false,
-            ..TranslateArgs::for_test(false, None, false)
-        };
-        let plan = build_locale_plan(&config, "de", &args).unwrap();
-        assert_eq!(plan.pending, 1);
-        let result = process_locale(&config, &EchoClient, "de", &args).unwrap();
-        assert_eq!(result.translated, 1);
-        assert!(
-            fs::read_to_string(&locale_path)
-                .unwrap()
-                .contains("'bye': 'Bye',")
-        );
     }
 
     #[test]

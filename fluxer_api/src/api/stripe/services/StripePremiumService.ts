@@ -284,20 +284,6 @@ export class StripePremiumService {
 		return true;
 	}
 
-	async revokePremium(userId: UserID): Promise<void> {
-		const user = await this.userRepository.findUniqueAssert(userId);
-		const updatedUser = await this.userRepository.patchUpsert(
-			userId,
-			{
-				premium_type: UserPremiumTypes.NONE,
-				premium_until: null,
-				premium_gift_extension_ends_at: null,
-			},
-			user.toRow(),
-		);
-		await this.dispatchUser(updatedUser);
-	}
-
 	async rejoinVisionariesGuild(userId: UserID): Promise<void> {
 		await this.assertHasVisionaryCommunityAccess(userId);
 		await this.addToVisionariesGuild(userId);

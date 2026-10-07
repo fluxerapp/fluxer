@@ -87,7 +87,7 @@ export const RequestErrorTelemetry = createMiddleware<HonoEnv>(async (ctx, next)
 	recordRequestStatus(ctx.req.raw, ctx.res.status);
 });
 
-export function flushRequestErrorTelemetry(nowMs = Date.now()): number {
+function flushRequestErrorTelemetry(nowMs = Date.now()): number {
 	const flushed = pending;
 	const windowMs = Math.max(0, Math.min(nowMs - windowStartedAt, 0xffffffff));
 	pending = new Map();

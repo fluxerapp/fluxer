@@ -5,7 +5,6 @@ import {resolveKeybindCommand} from '@app/features/input/state/input_keybind/Key
 import {isActiveCustomKeybind, keyComboHasTriggerInput} from '@app/features/input/state/KeybindResolution';
 
 export {
-	comboModifierSignature,
 	hookShortcutIdForAction,
 	hookShortcutIdForKeybind,
 } from '@app/features/app/keybindings/utils/HookShortcutIds';
@@ -46,15 +45,11 @@ export function gamepadSourceIdForKeybind(keybind: {id: string | null; action: K
 	return `gamepad:${keybind.id}`;
 }
 
-export function hasTriggerKey(combo: KeyCombo): boolean {
-	return (combo.key ?? '') !== '' || (combo.code ?? '') !== '';
-}
-
-export function hasTriggerInput(combo: KeyCombo): boolean {
+function hasTriggerInput(combo: KeyCombo): boolean {
 	return keyComboHasTriggerInput(combo);
 }
 
-export function isEnabledDefaultCombo(combo: KeyCombo): boolean {
+function isEnabledDefaultCombo(combo: KeyCombo): boolean {
 	return (combo.enabled ?? true) !== false && hasTriggerInput(combo);
 }
 

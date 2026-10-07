@@ -79,10 +79,6 @@
 		"subject": "Nollaa {product_name}-salasanasi",
 		"body": "Hei {username},\n\nPyysit {product_name}-salasanan nollausta. Käytä alla olevaa linkkiä asettaaksesi uuden salasanan:\n\n{resetUrl}\n\nJos et pyytänyt tätä, voit jättää tämän sähköpostin turvallisesti huomiotta.\n\nTämä linkki on voimassa 1 tunnin.\n\n– {product_name}-tiimi"
 	},
-	"registration_approved": {
-		"subject": "{product_name}-rekisteröitymisesi on hyväksytty",
-		"body": "Hei {username},\n\nHyviä uutisia: {product_name}-rekisteröitymisesi on hyväksytty.\n\nVoit nyt kirjautua {product_name}-sovellukseen täältä:\n{channelsUrl}\n\nTervetuloa {product_name}-yhteisöön.\n\n– {product_name}-tiimi"
-	},
 	"report_received": {
 		"subject": "Vastaanotimme {product_name}-ilmoituksesi",
 		"body": "Hei,\n\nVastaanotimme digipalvelusäädöksen mukaisen ilmoituksesi, joka koskee {targetKind, select, message {viestiä} user {tiliä} guild {yhteisöä} other {sisältöä}} {product_name}-palvelussa.\n\nIlmoituksen tunnus: {reportId}\n\nTurvallisuustiimimme käsittelee ilmoituksesi, ja lähetämme sinulle sähköpostia tähän osoitteeseen, kun olemme tehneet päätöksen. Säilytä tämä sähköposti myöhempää tarvetta varten.\n\n– {product_name}-turvallisuustiimi"

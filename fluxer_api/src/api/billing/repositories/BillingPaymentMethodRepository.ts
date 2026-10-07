@@ -40,11 +40,6 @@ export class BillingPaymentMethodRepository {
 		return rows.filter((row) => row.customer_id === customerId);
 	}
 
-	async findDefaultForCustomer(customerId: string): Promise<BillingPaymentMethodRow | null> {
-		const list = await this.listByCustomer(customerId);
-		return list.find((r) => r.is_default === true) ?? null;
-	}
-
 	async upsertFromStripe(
 		pm: Stripe.PaymentMethod,
 		hints?: {

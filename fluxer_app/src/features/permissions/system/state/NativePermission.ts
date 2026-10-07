@@ -57,10 +57,6 @@ class NativePermission {
 		return this._platform === 'macos';
 	}
 
-	get isNativeMacDesktop(): boolean {
-		return this._isDesktop && this._platform === 'macos';
-	}
-
 	get isLinuxWaylandDesktop(): boolean {
 		return this._isDesktop && this._platform === 'linux' && this._waylandSession;
 	}
@@ -75,10 +71,6 @@ class NativePermission {
 
 	get isInputMonitoringGranted(): boolean {
 		return MacPermissions.statuses['input-monitoring'] === 'granted';
-	}
-
-	async recheckInputMonitoring(): Promise<NativePermissionResult> {
-		return MacPermissions.refreshKind('input-monitoring');
 	}
 
 	setInputMonitoringStatus(status: NativePermissionResult): void {

@@ -12,7 +12,7 @@ import {
 } from '@app/features/messaging/utils/ReactionShorthandUtils';
 import {type MentionSegment, TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
 
-export interface ComposerReplacementPlan {
+interface ComposerReplacementPlan {
 	start: number;
 	end: number;
 	payload: ComposerInsertPayload;
@@ -70,7 +70,7 @@ function getPayloadSegment(payload: ComposerInsertPayload): ComposerPayloadSegme
 	}
 }
 
-export function createComposerReplacementPlan(
+function createComposerReplacementPlan(
 	display: string,
 	segments: ReadonlyArray<MentionSegment>,
 	selection: ComposerSelectionRange | null,

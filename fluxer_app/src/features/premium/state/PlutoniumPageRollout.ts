@@ -36,6 +36,6 @@ class PlutoniumPageRolloutSelector {
 	}
 }
 
-export const PlutoniumPageRollout = new PlutoniumPageRolloutSelector();
+const PlutoniumPageRollout = new PlutoniumPageRolloutSelector();
 
 export default PlutoniumPageRollout;

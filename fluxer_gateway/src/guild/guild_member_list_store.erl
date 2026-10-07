@@ -13,8 +13,6 @@
     get_counts/1,
     get_groups/1,
     get_items/3,
-    get_all_item_keys/1,
-    get_sorted_user_ids/1,
     prepare_member_tuples/2,
     prepare_hoisted_role_ids/2,
     extract_role_ids/1
@@ -25,8 +23,6 @@
 -type guild_state() :: #{member_presence := ets:tid() | map(), term() => term()}.
 
 -export_type([store_ref/0, member_tuple/0, guild_state/0]).
-
--define(DEFAULT_LIST_ID, <<"0">>).
 
 -spec new(integer()) -> store_ref().
 new(_GuildId) ->
@@ -64,14 +60,6 @@ get_groups(Ref) ->
     [{group, binary(), non_neg_integer()} | {member, integer()}].
 get_items(Ref, Start, End) ->
     guild_member_list_engine:get_items(Ref, Start, End).
-
--spec get_all_item_keys(store_ref()) -> list().
-get_all_item_keys(Ref) ->
-    guild_member_list_engine:get_all_item_keys(Ref).
-
--spec get_sorted_user_ids(store_ref()) -> [integer()].
-get_sorted_user_ids(Ref) ->
-    guild_member_list_engine:get_sorted_user_ids(Ref).
 
 -spec prepare_member_tuples(map(), guild_state()) -> [member_tuple()].
 prepare_member_tuples(MemberMap, State) ->

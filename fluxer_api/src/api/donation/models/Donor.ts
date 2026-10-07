@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {nextVersion} from '@app/api/database/CassandraTypes';
 import type {DonorRow} from '@app/api/database/types/DonationTypes';
 
 const ACTIVE_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set(['active', 'trialing']);
@@ -75,37 +73,5 @@ export class Donor {
 
 	isBusiness(): boolean {
 		return this.taxId !== null;
-	}
-
-	withUpdatedSubscription(data: {
-		stripeCustomerId: string | null;
-		businessName?: string | null;
-		taxId?: string | null;
-		taxIdType?: string | null;
-		stripeSubscriptionId: string | null;
-		subscriptionAmountCents: number | null;
-		subscriptionCurrency: string | null;
-		subscriptionInterval: string | null;
-		subscriptionCurrentPeriodEnd: Date | null;
-		subscriptionCancelAt?: Date | null;
-		subscriptionStatus?: string | null;
-	}): DonorRow {
-		return {
-			email: this.email,
-			stripe_customer_id: data.stripeCustomerId,
-			business_name: data.businessName ?? this.businessName,
-			tax_id: data.taxId ?? this.taxId,
-			tax_id_type: data.taxIdType ?? this.taxIdType,
-			stripe_subscription_id: data.stripeSubscriptionId,
-			subscription_amount_cents: data.subscriptionAmountCents,
-			subscription_currency: data.subscriptionCurrency,
-			subscription_interval: data.subscriptionInterval,
-			subscription_current_period_end: data.subscriptionCurrentPeriodEnd,
-			subscription_cancel_at: data.subscriptionCancelAt ?? this.subscriptionCancelAt,
-			subscription_status: data.subscriptionStatus ?? this.subscriptionStatus,
-			created_at: this.createdAt,
-			updated_at: new Date(),
-			version: nextVersion(this.version),
-		};
 	}
 }

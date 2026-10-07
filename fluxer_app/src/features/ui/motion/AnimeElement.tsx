@@ -16,7 +16,6 @@ import React, {
 	isValidElement,
 	useCallback,
 	useContext,
-	useEffect,
 	useImperativeHandle,
 	useLayoutEffect,
 	useMemo,
@@ -63,16 +62,16 @@ export interface AnimeTween {
 	readonly [key: string]: unknown;
 }
 export type AnimeStyle = Readonly<Record<string, AnimeStyleValue>>;
-export type AnimeElementProps<TagName extends keyof React.JSX.IntrinsicElements> = Omit<
+type AnimeElementProps<TagName extends keyof React.JSX.IntrinsicElements> = Omit<
 	React.JSX.IntrinsicElements[TagName],
 	keyof AnimeElementAnimationProps | 'style'
 > &
 	AnimeElementAnimationProps & {readonly style?: AnimeStyle};
-export interface AnimePlaybackControls {
+interface AnimePlaybackControls {
 	readonly stop: () => void;
 	readonly cancel: () => void;
 }
-export interface AnimeValue<T = number> {
+interface AnimeValue<T = number> {
 	readonly get: () => T;
 	readonly set: (value: T) => void;
 	readonly subscribe: (listener: (value: T) => void) => () => void;
@@ -152,12 +151,6 @@ const ANIME_TRANSFORM_KEYS = Object.freeze([
 	AnimeTransformKey.ROTATE_X,
 	AnimeTransformKey.ROTATE_Y,
 ] as const satisfies ReadonlyArray<AnimeTransformKey>);
-
-type AssertNever<T extends never> = T;
-
-export type AnimeTransformKeyCoverageGap = AssertNever<
-	Exclude<AnimeTransformKey, (typeof ANIME_TRANSFORM_KEYS)[number]>
->;
 const ROTATE_TRANSFORM_KEY_PREFIX = 'rotate';
 const AUTO_SIZE_VALUE = 'auto';
 const DEFAULT_ANIME_EASE: AnimeEase = AnimeEaseExpression.OUT;
@@ -504,45 +497,6 @@ export function AnimePresence({children, enterOnMount}: AnimePresenceProps): Rea
 	);
 }
 
-class AnimeReactiveValue<T> implements AnimeValue<T> {
-	private current: T;
-	private readonly listeners = new Set<(value: T) => void>();
-
-	constructor(initialValue: T) {
-		this.current = initialValue;
-	}
-
-	get(): T {
-		return this.current;
-	}
-
-	set(value: T): void {
-		if (Object.is(this.current, value)) return;
-		this.current = value;
-		let failures: Array<unknown> | null = null;
-		for (const listener of this.listeners) {
-			try {
-				listener(value);
-			} catch (error) {
-				if (failures == null) {
-					failures = [];
-				}
-				failures.push(error);
-			}
-		}
-		if (failures != null) {
-			throw new AggregateError(failures, 'Anime reactive value listeners failed');
-		}
-	}
-
-	subscribe(listener: (value: T) => void): () => void {
-		this.listeners.add(listener);
-		return () => {
-			this.listeners.delete(listener);
-		};
-	}
-}
-
 function isAnimeValue(value: unknown): value is AnimeValueLike {
 	return (
 		typeof value === 'object' &&
@@ -554,23 +508,6 @@ function isAnimeValue(value: unknown): value is AnimeValueLike {
 		typeof (value as AnimeValueLike).set === 'function' &&
 		typeof (value as AnimeValueLike).subscribe === 'function'
 	);
-}
-
-export function useAnimeValue<T = number>(initialValue: T): AnimeValue<T> {
-	const valueRef = useRef<AnimeValue<T> | null>(null);
-	if (valueRef.current == null) {
-		valueRef.current = new AnimeReactiveValue(initialValue);
-	}
-	return valueRef.current;
-}
-
-export interface UseAnimeValueEventRequest<T> {
-	readonly value: AnimeValue<T>;
-	readonly listener: (latest: T) => void;
-}
-
-export function useAnimeValueEvent<T>({value, listener}: UseAnimeValueEventRequest<T>): void {
-	useEffect(() => value.subscribe(listener), [listener, value]);
 }
 
 function isFiniteNumber(value: unknown): value is number {
@@ -1091,32 +1028,6 @@ interface RunElementAnimationRequest {
 	readonly onComplete: () => void;
 }
 
-interface AnimateAnimeValueRequest {
-	readonly value: AnimeValue<number>;
-	readonly to: number;
-	readonly tween: AnimeTween | null;
-}
-
-interface AnimateNumberRequest {
-	readonly from: number;
-	readonly to: number;
-	readonly tween: AnimeTween | null;
-}
-
-export interface AnimateAnimeNumberRequest {
-	readonly from: number;
-	readonly to: number;
-	readonly tween?: AnimeTween;
-}
-
-export interface AnimateAnimeReactiveValueRequest {
-	readonly value: AnimeValue<number>;
-	readonly to: number;
-	readonly tween?: AnimeTween;
-}
-
-export type AnimateAnimeRequest = AnimateAnimeNumberRequest | AnimateAnimeReactiveValueRequest;
-
 function measureAutoSize({element, property}: MeasureAutoSizeRequest): number {
 	const style = (element as HTMLElement).style;
 	const previousValue = style.getPropertyValue(property);
@@ -1247,91 +1158,6 @@ function createPlaybackControls(animation: JSAnimation): AnimePlaybackControls {
 		animation.cancel();
 	};
 	return Object.freeze({stop: cancel, cancel});
-}
-
-function animateAnimeValue({value, to, tween}: AnimateAnimeValueRequest): AnimePlaybackControls {
-	const state = {value: value.get()};
-	const onUpdate = resolveTweenUpdateHandler(tween);
-	const onComplete = resolveTweenCompleteHandler(tween);
-	const animation = animeAnimate(state, {
-		value: to,
-		duration: getTweenDuration(tween),
-		delay: getTweenDelay(tween),
-		ease: getTweenEase(tween),
-		onUpdate: () => {
-			value.set(state.value);
-			if (onUpdate != null) {
-				onUpdate(state.value);
-			}
-		},
-		onComplete: () => {
-			value.set(to);
-			if (onUpdate != null) {
-				onUpdate(to);
-			}
-			if (onComplete != null) {
-				onComplete();
-			}
-		},
-	});
-	return createPlaybackControls(animation);
-}
-
-function resolveTweenUpdateHandler(tween: AnimeTween | null): ((latest: number) => void) | null {
-	if (tween == null) {
-		return null;
-	}
-	if (typeof tween.onUpdate !== 'function') {
-		return null;
-	}
-	return tween.onUpdate;
-}
-
-function resolveTweenCompleteHandler(tween: AnimeTween | null): (() => void) | null {
-	if (tween == null) {
-		return null;
-	}
-	if (typeof tween.onComplete !== 'function') {
-		return null;
-	}
-	return tween.onComplete;
-}
-
-function animateNumber({from, to, tween}: AnimateNumberRequest): AnimePlaybackControls {
-	const state = {value: from};
-	const onUpdate = resolveTweenUpdateHandler(tween);
-	const onComplete = resolveTweenCompleteHandler(tween);
-	const animation = animeAnimate(state, {
-		value: to,
-		duration: getTweenDuration(tween),
-		delay: getTweenDelay(tween),
-		ease: getTweenEase(tween),
-		onUpdate: () => {
-			if (onUpdate != null) {
-				onUpdate(state.value);
-			}
-		},
-		onComplete: () => {
-			if (onUpdate != null) {
-				onUpdate(to);
-			}
-			if (onComplete != null) {
-				onComplete();
-			}
-		},
-	});
-	return createPlaybackControls(animation);
-}
-
-export function animateAnime(request: AnimateAnimeRequest): AnimePlaybackControls {
-	let tween: AnimeTween | null = null;
-	if (request.tween != null) {
-		tween = request.tween;
-	}
-	if ('from' in request) {
-		return animateNumber({from: request.from, to: request.to, tween});
-	}
-	return animateAnimeValue({value: request.value, to: request.to, tween});
 }
 
 interface StartAnimationArgs {
@@ -1778,6 +1604,4 @@ export const AnimeButton = createAnimeElement({
 	tagName: 'button',
 	normalizeClassName: null,
 }) as AnimeComponent<'button'>;
-export const AnimeImg = createAnimeElement({tagName: 'img', normalizeClassName: null}) as AnimeComponent<'img'>;
 export const AnimeSpan = createAnimeElement({tagName: 'span', normalizeClassName: null}) as AnimeComponent<'span'>;
-export const AnimeVideo = createAnimeElement({tagName: 'video', normalizeClassName: null}) as AnimeComponent<'video'>;

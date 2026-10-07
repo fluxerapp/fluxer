@@ -3,7 +3,7 @@
 import type * as React from 'react';
 
 export type SearchParamsInput = Record<string, string | ReadonlyArray<string>>;
-export type NavigateDestination =
+type NavigateDestination =
 	| string
 	| {
 			to: string;
@@ -55,7 +55,7 @@ export interface RouteComponentProps {
 	url: URL;
 }
 
-export interface RouteLayoutProps extends RouteComponentProps {
+interface RouteLayoutProps extends RouteComponentProps {
 	children: React.ReactNode;
 }
 

@@ -151,12 +151,6 @@ export const FLUXER_ACCOUNTS_V2_RECORD_CLASSES: ReadonlyArray<AccountRecordClass
 	},
 ];
 
-export const FLUXER_ACCOUNTS_V2_GOLDEN_RECORDS: ReadonlyArray<StoredAccount> =
-	FLUXER_ACCOUNTS_V2_RECORD_CLASSES.flatMap((recordClass) => recordClass.records);
-
-export const FLUXER_ACCOUNTS_V2_EXPECTED_STORAGE_KEYS: ReadonlyArray<string> =
-	FLUXER_ACCOUNTS_V2_RECORD_CLASSES.flatMap((recordClass) => recordClass.expectedStorageKeys);
-
 const FLUXER_ACCOUNTS_DB_NAME = 'FluxerAccounts';
 export const FLUXER_ACCOUNTS_DB_VERSION = 2;
 export const FLUXER_ACCOUNTS_STORE_NAME = 'accounts';
@@ -173,13 +167,5 @@ export function openGoldenAccountsDatabase(factory: IDBFactory): Promise<IDBData
 		};
 		request.onsuccess = () => resolve(request.result);
 		request.onerror = () => reject(request.error ?? new Error('IndexedDB open failed'));
-	});
-}
-
-export function deleteGoldenAccountsDatabase(factory: IDBFactory): Promise<void> {
-	return new Promise<void>((resolve, reject) => {
-		const request = factory.deleteDatabase(FLUXER_ACCOUNTS_DB_NAME);
-		request.onsuccess = () => resolve();
-		request.onerror = () => reject(request.error ?? new Error('IndexedDB deleteDatabase failed'));
 	});
 }

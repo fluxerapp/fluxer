@@ -32,7 +32,7 @@ const KNOWN_PORTAL_STATES: ReadonlySet<GlobalShortcutsPortalState> = new Set([
 	'error',
 ]);
 
-export type GlobalShortcutsPendingAction = 'set-up' | 'configure' | 'direct-input' | 'recheck';
+type GlobalShortcutsPendingAction = 'set-up' | 'configure' | 'direct-input' | 'recheck';
 
 const PORTAL_ASSIGNED_ACTIONS_KEY = 'GlobalShortcuts:portalAssignedActions:v1';
 

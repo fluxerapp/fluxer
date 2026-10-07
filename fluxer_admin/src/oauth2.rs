@@ -9,17 +9,11 @@ pub const ADMIN_OAUTH_SCOPE: &str = "identify email";
 #[derive(Debug, Deserialize)]
 pub struct TokenResponse {
     pub access_token: String,
-    pub token_type: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct UserInfo {
     pub id: String,
-    pub username: String,
-    pub discriminator: String,
-    pub avatar: Option<String>,
-    pub email: Option<String>,
-    pub global_name: Option<String>,
 }
 
 pub fn authorize_url(config: &AdminConfig, state: &str) -> String {

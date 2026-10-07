@@ -83,10 +83,6 @@ const EMAIL_I18N_JA_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "{product_name}のパスワードをリセット",
 		"body": "こんにちは、{username}さん\n\n{product_name}のパスワードリセットをリクエストされました。以下のリンクを使用して新しいパスワードを設定してください。\n\n{resetUrl}\n\nご自身でリクエストしていない場合は、このメールを無視して問題ありません。\n\nこのリンクは1時間有効です。\n\n– {product_name}チーム"
 	},
-	"registration_approved": {
-		"subject": "{product_name}の登録が承認されました",
-		"body": "こんにちは、{username}さん\n\n良いお知らせです。{product_name}の登録が承認されました。\n\nこちらから{product_name}アプリにログインできます。\n{channelsUrl}\n\n{product_name}コミュニティへようこそ。\n\n– {product_name}チーム"
-	},
 	"report_received": {
 		"subject": "{product_name}への報告を受け付けました",
 		"body": "こんにちは。\n\n{product_name}上の{targetKind, select, message {メッセージ} user {アカウント} guild {コミュニティ} other {コンテンツ}}に関する、デジタルサービス法に基づく報告を受け付けました。\n\n報告ID: {reportId}\n\n安全チームが報告を審査し、決定が出ましたらこのメールアドレス宛にご連絡します。このメールは記録として保管してください。\n\n– {product_name}安全チーム"

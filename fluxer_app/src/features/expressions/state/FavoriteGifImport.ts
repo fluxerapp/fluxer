@@ -30,10 +30,6 @@ class FavoriteGifImport {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
 
-	get isIdle(): boolean {
-		return !this.isRunning && !this.isDone;
-	}
-
 	get progress(): number {
 		if (this.totalToImport === 0) return 0;
 		return this.processedCount / this.totalToImport;

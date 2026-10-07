@@ -169,7 +169,7 @@ interface QuickReactionButtonProps {
 	hidden?: boolean;
 }
 
-export const QuickReactionButton = observer(
+const QuickReactionButton = observer(
 	React.forwardRef<HTMLButtonElement, QuickReactionButtonProps>(({emoji, onReact, hidden}, ref) => {
 		const {i18n} = useLingui();
 		const isAnimatedEmoji = emoji.animated === true;

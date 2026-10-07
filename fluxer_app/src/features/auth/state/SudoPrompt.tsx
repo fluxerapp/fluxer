@@ -54,7 +54,7 @@ export function isAbortError(error: unknown): boolean {
 
 export const SUDO_MODAL_KEY = 'sudo-verification-modal';
 
-export interface AvailableMethods {
+interface AvailableMethods {
 	password: boolean;
 	totp: boolean;
 	webauthn: boolean;
@@ -142,10 +142,6 @@ class SudoPrompt {
 				s.lastUsedMfaMethod = method;
 			},
 		});
-	}
-
-	get hardMfaLock(): boolean {
-		return this.availableMethods.hasMfa;
 	}
 
 	requestVerification(context: SudoRequestContext = {method: 'POST', path: ''}): Promise<SudoVerificationPayload> {

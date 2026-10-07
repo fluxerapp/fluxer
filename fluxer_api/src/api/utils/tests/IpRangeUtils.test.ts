@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {isValidIpOrRange, parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
+import {parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
 import {describe, expect, it} from 'vitest';
 
 describe('parseIpBanEntry', () => {
@@ -252,25 +252,5 @@ describe('tryParseSingleIp', () => {
 	});
 	it('returns null for invalid input', () => {
 		expect(tryParseSingleIp('invalid')).toBeNull();
-	});
-});
-
-describe('isValidIpOrRange', () => {
-	it('returns true for valid single IPv4', () => {
-		expect(isValidIpOrRange('192.168.1.1')).toBe(true);
-	});
-	it('returns true for valid single IPv6', () => {
-		expect(isValidIpOrRange('2001:db8::1')).toBe(true);
-	});
-	it('returns true for valid IPv4 CIDR', () => {
-		expect(isValidIpOrRange('192.168.1.0/24')).toBe(true);
-	});
-	it('returns true for valid IPv6 CIDR', () => {
-		expect(isValidIpOrRange('2001:db8::/32')).toBe(true);
-	});
-	it('returns false for invalid input', () => {
-		expect(isValidIpOrRange('')).toBe(false);
-		expect(isValidIpOrRange('invalid')).toBe(false);
-		expect(isValidIpOrRange('256.256.256.256')).toBe(false);
 	});
 });

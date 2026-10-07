@@ -345,40 +345,7 @@ fn mime_sniffing_stays_bounded_on_adversarial_containers() {
     for bytes in adversarial_media_bytes() {
         let sniffed = sniff(&bytes);
         assert!(sniffed.frames >= 1, "zero frames for {} bytes", bytes.len());
-
-        let complete = sniff_prefix(&bytes, bytes.len());
-        assert!(complete.complete, "incomplete for {} bytes", bytes.len());
-        assert!(complete.media.frames >= 1);
-
-        let truncated = sniff_prefix(&bytes, bytes.len().saturating_add(1024));
-        assert!(truncated.media.frames >= 1);
     }
-}
-
-#[test]
-fn prefix_sniffing_reports_truncated_containers_as_incomplete() {
-    let gif = minimal_gif();
-    for prefix_length in 0..gif.len() {
-        let result = sniff_prefix(&gif[..prefix_length], gif.len());
-        if prefix_length < 6 {
-            assert_eq!("application/octet-stream", result.media.mime);
-        }
-    }
-    let complete = sniff_prefix(&gif, gif.len());
-    assert!(complete.complete);
-    assert_eq!("image/gif", complete.media.mime);
-    assert!(!sniff_prefix(&gif[..gif.len() - 1], gif.len()).complete);
-
-    let apng = apng_header(2);
-    assert!(sniff_prefix(&apng, apng.len() + 1024).complete);
-    assert!(!sniff_prefix(&apng[..20], apng.len()).complete);
-
-    let webp = vp8x_webp(0x02, 0, 0);
-    assert!(sniff_prefix(&webp, webp.len() + 1024).complete);
-    assert!(!sniff_prefix(&webp[..24], webp.len()).complete);
-
-    assert!(sniff_prefix(b"\xff\xd8\xff\xe0", 4096).complete);
-    assert!(!sniff_prefix(b"OggS\x00\x02", 4096).complete);
 }
 
 #[test]
@@ -414,9 +381,6 @@ fn detect_falls_back_to_the_extension_then_the_declared_header() {
         "image/png",
         detect(b"\x89PNG\r\n\x1a\nxxxx", "audio.m4a", Some("image/gif"))
     );
-    assert_eq!("photo.png", filename_for_mime("image/png", "photo"));
-    assert_eq!("photo.gif", filename_for_mime("image/png", "photo.gif"));
-    assert_eq!("blob.bin", filename_for_mime("application/pdf", "blob"));
 }
 
 #[test]
@@ -448,31 +412,12 @@ fn content_type_normalization_and_categories_ignore_case_and_reject_control_byte
 }
 
 #[test]
-fn registry_lookups_canonicalize_extensions_and_passthrough_types() {
+fn registry_lookups_canonicalize_extensions() {
     assert_eq!(Some("image/jpeg"), extension_mime("photo.JPG"));
     assert_eq!(Some("text/css; charset=utf-8"), extension_mime("app.css"));
     assert_eq!(None, extension_mime("manual.PDF"));
     assert_eq!(None, extension_mime("archive.zip"));
     assert_eq!(None, extension_mime("noextension"));
-
-    assert_eq!(
-        Some("image/png"),
-        passthrough_mime(Some("IMAGE/PNG; charset=binary"))
-    );
-    assert_eq!(
-        Some("image/avif"),
-        passthrough_mime(Some("image/avif-sequence"))
-    );
-    assert_eq!(
-        Some("application/pdf"),
-        passthrough_mime(Some("Application/PDF"))
-    );
-    assert_eq!(
-        Some("text/css; charset=utf-8"),
-        passthrough_mime(Some("text/css"))
-    );
-    assert_eq!(None, passthrough_mime(Some("application/octet-stream")));
-    assert_eq!(None, passthrough_mime(None));
 }
 
 #[test]

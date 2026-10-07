@@ -34,7 +34,7 @@ interface InboundVideoStatsEntry {
 	powerEfficientDecoder?: boolean;
 }
 
-export interface SoftwareVideoDecoderInfo {
+interface SoftwareVideoDecoderInfo {
 	codec: string | null;
 	implementation: string;
 	powerEfficientDecoder: boolean | null;
@@ -170,7 +170,7 @@ export function findInboundVideoDecodeSample(stats: RTCStatsReport): InboundVide
 	return null;
 }
 
-export function findSoftwareVideoDecoder(sample: InboundVideoDecodeSample): SoftwareVideoDecoderInfo | null {
+function findSoftwareVideoDecoder(sample: InboundVideoDecodeSample): SoftwareVideoDecoderInfo | null {
 	if (!isSoftwareVideoStats(sample.decoderImplementation, sample.powerEfficientDecoder)) return null;
 	return {
 		codec: getCodecLabel(sample.mimeType),
@@ -195,7 +195,7 @@ export function findStalledVideoDecoder(sample: InboundVideoDecodeSample): Stall
 	};
 }
 
-export function confirmDecodeStall(
+function confirmDecodeStall(
 	first: StalledVideoDecoderInfo | null,
 	second: StalledVideoDecoderInfo | null,
 ): StalledVideoDecoderInfo | null {

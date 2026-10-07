@@ -41,14 +41,6 @@ const FROZEN_SERIES: &[(&str, &str)] = &[
     ("fluxer_media_proxy_decode_failures_total", "counter"),
     ("fluxer_media_proxy_fetch_failures_total", "counter"),
     ("fluxer_media_proxy_blocked_url_attempts_total", "counter"),
-    (
-        "fluxer_media_proxy_framebuffer_pool_borrows_total",
-        "counter",
-    ),
-    (
-        "fluxer_media_proxy_framebuffer_pool_grow_events_total",
-        "counter",
-    ),
     ("fluxer_media_proxy_relay_upstream_success_total", "counter"),
     ("fluxer_media_proxy_relay_upstream_retries_total", "counter"),
     ("fluxer_media_proxy_http_retries_total", "counter"),

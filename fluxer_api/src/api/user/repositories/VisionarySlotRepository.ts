@@ -19,13 +19,6 @@ export class VisionarySlotRepository {
 		return slots.map((slot) => new VisionarySlot(slot));
 	}
 
-	async getVisionarySlot(slotIndex: number): Promise<VisionarySlot | null> {
-		const slot = await fetchOne<VisionarySlotRow>(FETCH_VISIONARY_SLOT_QUERY, {
-			slot_index: slotIndex,
-		});
-		return slot ? new VisionarySlot(slot) : null;
-	}
-
 	async expandVisionarySlots(byCount: number): Promise<void> {
 		const existingSlots = await this.listVisionarySlots();
 		const maxSlotIndex = existingSlots.length > 0 ? Math.max(...existingSlots.map((s) => s.slotIndex)) : 0;
@@ -77,36 +70,6 @@ export class VisionarySlotRepository {
 				}),
 			);
 		}
-	}
-
-	async swapVisionarySlotReservations(
-		slotIndexA: number,
-		slotIndexB: number,
-	): Promise<{
-		userIdA: UserID | null;
-		userIdB: UserID | null;
-	}> {
-		const [slotA, slotB] = await Promise.all([
-			fetchOne<VisionarySlotRow>(FETCH_VISIONARY_SLOT_QUERY, {slot_index: slotIndexA}),
-			fetchOne<VisionarySlotRow>(FETCH_VISIONARY_SLOT_QUERY, {slot_index: slotIndexB}),
-		]);
-		const userIdA = slotA?.user_id ?? null;
-		const userIdB = slotB?.user_id ?? null;
-		const batch = new BatchBuilder();
-		batch.addPrepared(
-			VisionarySlots.upsertAll({
-				slot_index: slotIndexA,
-				user_id: userIdB,
-			}),
-		);
-		batch.addPrepared(
-			VisionarySlots.upsertAll({
-				slot_index: slotIndexB,
-				user_id: userIdA,
-			}),
-		);
-		await batch.execute();
-		return {userIdA, userIdB};
 	}
 
 	async unreserveVisionarySlot(slotIndex: number, userId: UserID): Promise<void> {

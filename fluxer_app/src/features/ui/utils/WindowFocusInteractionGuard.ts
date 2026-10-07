@@ -23,7 +23,7 @@ export interface WindowFocusInteractionGuard {
 	destroy: () => void;
 }
 
-export function isWindowFocusActivationGuardActive(root: HTMLElement = document.documentElement): boolean {
+function isWindowFocusActivationGuardActive(root: HTMLElement = document.documentElement): boolean {
 	return root.classList.contains(WINDOW_FOCUS_ACTIVATION_GUARD_CLASS);
 }
 

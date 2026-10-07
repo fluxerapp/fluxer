@@ -102,8 +102,6 @@ vi.mock('@app/features/voice/state/LocalVoiceState', () => ({
 	},
 }));
 
-vi.mock('@app/features/voice/utils/LinuxScreenShareAudio', () => ({disarmVirtmic: () => undefined}));
-
 vi.mock('@app/features/voice/utils/NativeAudioCaptureBridge', () => ({
 	armNativeAudioForLinuxRouting: async () => false,
 	armNativeAudioForNextCapture: async () => false,

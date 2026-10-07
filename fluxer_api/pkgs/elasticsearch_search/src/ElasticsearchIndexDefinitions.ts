@@ -10,7 +10,7 @@ export type FluxerSearchIndexName =
 	| 'guild_members'
 	| 'threads';
 
-export interface ElasticsearchFieldMapping {
+interface ElasticsearchFieldMapping {
 	type: ElasticsearchFieldType;
 	index?: boolean;
 	analyzer?: string;
@@ -18,7 +18,7 @@ export interface ElasticsearchFieldMapping {
 	fields?: Record<string, ElasticsearchFieldMapping>;
 }
 
-export interface ElasticsearchIndexSettings {
+interface ElasticsearchIndexSettings {
 	number_of_shards?: number;
 	number_of_replicas?: number;
 	analysis?: Record<string, unknown>;

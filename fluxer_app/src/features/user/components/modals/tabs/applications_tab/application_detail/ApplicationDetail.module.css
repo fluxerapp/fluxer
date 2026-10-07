@@ -42,15 +42,6 @@
 	min-width: 20rem;
 }
 
-.eyebrow {
-	margin: 0;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	font-size: 0.78rem;
-	color: var(--text-primary-muted);
-	font-weight: 700;
-}
-
 .heroTitle {
 	margin: 0 0 var(--spacing-2) 0;
 	font-size: 1.35rem;
@@ -61,52 +52,10 @@
 	gap: var(--spacing-2);
 }
 
-.heroMeta {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-1);
-	color: var(--text-primary-muted);
-}
-
-.metaValue {
-	padding: 0.55rem 0.9rem;
-	border-radius: var(--radius-lg);
-	background: var(--background-primary);
-	border: 0.0625rem solid var(--background-modifier-accent);
-	color: var(--text-primary);
-	font-family: var(--font-mono);
-	font-size: 0.9rem;
-	word-break: break-all;
-	min-width: 15rem;
-}
-
 .metaInput {
 	width: 100%;
 	max-width: none;
 	font-family: var(--font-mono);
-}
-
-.pill {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--spacing-1);
-	padding: 0.35rem 0.75rem;
-	border-radius: 62.4375rem;
-	background: var(--background-tertiary);
-	color: var(--text-primary);
-	font-weight: 700;
-	font-size: 0.85rem;
-}
-
-.actions {
-	display: flex;
-	gap: var(--spacing-2);
-	flex-wrap: wrap;
-}
-
-.actions > * {
-	flex: 1;
-	min-width: fit-content;
 }
 
 .detailGrid {
@@ -121,12 +70,6 @@
 	flex-direction: column;
 	align-self: stretch;
 	gap: var(--spacing-5);
-}
-
-.builderSection {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-4);
 }
 
 .sectionSpacer {
@@ -192,20 +135,6 @@
 	gap: var(--spacing-2);
 }
 
-.secretLabel {
-	font-weight: 700;
-	color: var(--text-primary);
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-1);
-}
-
-.secretInputRow {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-2);
-}
-
 .secretActions {
 	display: flex;
 	align-items: center;
@@ -217,34 +146,6 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-3);
-}
-
-.toggleRow {
-	display: flex;
-	align-items: flex-start;
-	gap: var(--spacing-2);
-}
-
-.toggleSwitch {
-	flex-shrink: 0;
-}
-
-.toggleLabel {
-	display: flex;
-	flex: 1;
-	min-width: 0;
-	flex-direction: column;
-	gap: 0.125rem;
-}
-
-.toggleTitle {
-	font-weight: 700;
-	color: var(--text-primary);
-}
-
-.toggleDescription {
-	font-size: 0.85rem;
-	color: var(--text-primary-muted);
 }
 
 .redirectList {
@@ -414,14 +315,6 @@
 	align-self: end;
 }
 
-.metaRow {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--spacing-2);
-	align-items: center;
-	color: var(--text-primary-muted);
-}
-
 .validationBox {
 	margin-top: -0.25rem;
 }
@@ -445,63 +338,6 @@
 	justify-content: center;
 	min-height: 20rem;
 	padding: var(--spacing-5);
-}
-
-.loadingCard,
-.errorCard {
-	padding: var(--spacing-4);
-	border: 0.0625rem solid var(--background-modifier-accent);
-	border-radius: var(--radius-xl);
-	background-color: var(--background-primary);
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-2);
-	align-items: flex-start;
-	justify-content: center;
-	min-height: 20rem;
-}
-
-.errorState {
-	width: 100%;
-	min-height: 20rem;
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-3);
-	align-items: center;
-	justify-content: center;
-	text-align: center;
-}
-
-.statusActions {
-	display: flex;
-	gap: var(--spacing-2);
-	flex-wrap: wrap;
-	justify-content: center;
-	width: 100%;
-}
-
-.spinnerRow {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-2);
-}
-
-.errorTitle {
-	margin: 0;
-	font-size: 1.05rem;
-	font-weight: 700;
-	color: var(--text-primary);
-}
-
-.errorSubtitle {
-	margin: 0;
-	color: var(--text-primary-muted);
-}
-
-.errorActions {
-	display: flex;
-	gap: var(--spacing-2);
-	flex-wrap: wrap;
 }
 
 .helperText {

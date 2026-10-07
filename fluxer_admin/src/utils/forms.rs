@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use axum::{body, extract::Request};
-use serde::Deserialize;
 use std::collections::BTreeMap;
 use url::form_urlencoded;
 
@@ -130,36 +129,6 @@ impl MultiValueForm {
     }
 }
 
-pub fn parse_page(value: Option<&str>) -> u32 {
-    value
-        .and_then(|s| s.parse::<u32>().ok())
-        .unwrap_or(1)
-        .max(1)
-}
-
-pub fn parse_per_page(value: Option<&str>, default: u32) -> u32 {
-    value
-        .and_then(|s| s.parse::<u32>().ok())
-        .unwrap_or(default)
-        .clamp(1, 100)
-}
-
-pub fn sanitize_redirect(value: &str) -> String {
-    let trimmed = value.trim();
-    if trimmed.is_empty() || !trimmed.starts_with('/') || trimmed.starts_with("//") {
-        return "/".to_owned();
-    }
-    trimmed.to_owned()
-}
-
-#[derive(Deserialize)]
-pub struct HtmxFormData {
-    #[serde(default)]
-    pub _csrf: String,
-    #[serde(flatten)]
-    pub fields: std::collections::HashMap<String, String>,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -227,46 +196,5 @@ mod tests {
         assert!(MultiValueForm::parse(b"enabled=on").bool_value("enabled"));
         assert!(MultiValueForm::parse(b"enabled=true").bool_value("enabled"));
         assert!(!MultiValueForm::parse(b"enabled=false").bool_value("enabled"));
-    }
-
-    #[test]
-    fn parse_page_defaults_to_one() {
-        assert_eq!(parse_page(None), 1);
-        assert_eq!(parse_page(Some("")), 1);
-        assert_eq!(parse_page(Some("abc")), 1);
-    }
-
-    #[test]
-    fn parse_page_clamps_to_minimum_one() {
-        assert_eq!(parse_page(Some("0")), 1);
-    }
-
-    #[test]
-    fn parse_page_valid_input() {
-        assert_eq!(parse_page(Some("5")), 5);
-        assert_eq!(parse_page(Some("100")), 100);
-    }
-
-    #[test]
-    fn sanitize_redirect_prevents_open_redirect() {
-        assert_eq!(sanitize_redirect(""), "/");
-        assert_eq!(sanitize_redirect("https://evil.com"), "/");
-        assert_eq!(sanitize_redirect("//evil.com"), "/");
-        assert_eq!(sanitize_redirect("javascript:alert(1)"), "/");
-    }
-
-    #[test]
-    fn sanitize_redirect_allows_valid_paths() {
-        assert_eq!(sanitize_redirect("/users"), "/users");
-        assert_eq!(sanitize_redirect("/guilds/123"), "/guilds/123");
-        assert_eq!(sanitize_redirect("  /trimmed  "), "/trimmed");
-    }
-
-    #[test]
-    fn parse_per_page_clamps_range() {
-        assert_eq!(parse_per_page(None, 25), 25);
-        assert_eq!(parse_per_page(Some("0"), 25), 1);
-        assert_eq!(parse_per_page(Some("200"), 25), 100);
-        assert_eq!(parse_per_page(Some("50"), 25), 50);
     }
 }

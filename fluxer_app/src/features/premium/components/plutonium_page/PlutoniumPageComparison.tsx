@@ -83,7 +83,7 @@ const PERK_DEFINITIONS: ReadonlyArray<PerkDefinition> = [
 
 const BYTES_PER_MEGABYTE = 1024 * 1024;
 
-export function formatMegabytes(locale: string, bytes: number): string {
+function formatMegabytes(locale: string, bytes: number): string {
 	return new Intl.NumberFormat(locale, {style: 'unit', unit: 'megabyte', unitDisplay: 'short'}).format(
 		Math.floor(bytes / BYTES_PER_MEGABYTE),
 	);

@@ -43,7 +43,7 @@ import React, {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, 
 const logger = new Logger('Tooltip');
 
 export type TooltipPosition = 'top' | 'left' | 'right' | 'bottom';
-export type TooltipType = 'normal' | 'error';
+type TooltipType = 'normal' | 'error';
 
 const TOOLTIP_AUTO_UPDATE_OPTIONS = {
 	ancestorScroll: false,

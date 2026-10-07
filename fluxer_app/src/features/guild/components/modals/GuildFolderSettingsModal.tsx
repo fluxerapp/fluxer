@@ -128,7 +128,7 @@ interface GuildFolderSettingsModalProps {
 	folderId: number;
 }
 
-export const GuildFolderSettingsModal = observer(({folderId}: GuildFolderSettingsModalProps) => {
+const GuildFolderSettingsModal = observer(({folderId}: GuildFolderSettingsModalProps) => {
 	const {i18n} = useLingui();
 	const folder = useMemo(() => {
 		return UserSettings.guildFolders.find((f) => f.id === folderId);

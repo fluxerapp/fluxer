@@ -40,7 +40,7 @@ export type ContextMenuActionEvent =
 	| {
 			readonly shiftKey?: boolean;
 	  };
-export type ContextMenuActionHandler = {bivarianceHack(event: ContextMenuActionEvent): void}['bivarianceHack'];
+type ContextMenuActionHandler = {bivarianceHack(event: ContextMenuActionEvent): void}['bivarianceHack'];
 
 function stopHoverEventWhenWindowCannotUseHover(event: React.SyntheticEvent): void {
 	const eventRoot = (event.currentTarget as HTMLElement | null)?.ownerDocument?.documentElement;
@@ -288,7 +288,7 @@ const RootContextMenuInner: React.FC<RootContextMenuProps> = observer(({contextM
 	);
 });
 
-export const RootContextMenu: React.FC<RootContextMenuProps> = observer(({contextMenu}) => {
+const RootContextMenu: React.FC<RootContextMenuProps> = observer(({contextMenu}) => {
 	return <RootContextMenuInner contextMenu={contextMenu} data-flx="ui.action-menu.context-menu.root-inner" />;
 });
 

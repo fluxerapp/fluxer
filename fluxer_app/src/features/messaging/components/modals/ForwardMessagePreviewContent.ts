@@ -18,7 +18,7 @@ import type {
 
 const FORWARD_MESSAGE_PREVIEW_THUMBNAIL_SIZE = 56;
 
-export type ForwardMessagePreviewMessage = Pick<
+type ForwardMessagePreviewMessage = Pick<
 	Message,
 	'attachments' | 'content' | 'editedTimestamp' | 'embeds' | 'mentionChannels' | 'messageSnapshots'
 >;

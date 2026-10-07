@@ -108,7 +108,7 @@ interface SubscriptionScheduleParams {
 	proration_behavior?: string;
 }
 
-export interface StripeApiMockSpies {
+interface StripeApiMockSpies {
 	createdCheckoutSessions: Array<CheckoutSessionParams>;
 	createdPortalSessions: Array<PortalSessionParams>;
 	createdCustomers: Array<{

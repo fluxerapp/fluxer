@@ -388,7 +388,7 @@ const EmailClaimAccountModal = observer(() => {
 		</Modal.Root>
 	);
 });
-export const ClaimAccountModal = observer(() =>
+const ClaimAccountModal = observer(() =>
 	RuntimeConfig.usesUsernameSignIn ? (
 		<UsernameClaimAccountModal data-flx="auth.claim-account-modal.username-claim-account-modal" />
 	) : (

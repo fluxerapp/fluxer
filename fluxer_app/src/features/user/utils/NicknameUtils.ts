@@ -16,7 +16,7 @@ export interface UserDisplayNameLike {
 	global_name?: string | null;
 }
 
-export function truncateStreamerModeName(name: string): string {
+function truncateStreamerModeName(name: string): string {
 	const trimmed = name.trim();
 	if (!trimmed) return '…';
 	return `${Array.from(trimmed)[0]}…`;

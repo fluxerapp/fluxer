@@ -129,21 +129,6 @@ export class VideoSubscriptionManager extends Store {
 		return this.getSubscriptionEntry(participantIdentity)?.subscribed ?? false;
 	}
 
-	getQuality(participantIdentity: string): VoiceMediaGraphVideoQuality | null {
-		return this.getSubscriptionEntry(participantIdentity)?.quality ?? null;
-	}
-
-	reattachAfterPublish(participantIdentity: string): void {
-		const state = this.getSubscriptionEntry(participantIdentity);
-		if (!state?.subscribed || !this.room) return;
-		this.transition({
-			type: 'subscription.reattachAfterPublish',
-			participantIdentity,
-			source: VoiceTrackSource.Camera,
-			hasPublication: this.hasCameraPublicationForIdentity(participantIdentity),
-		});
-	}
-
 	private findCameraPublication(participant: RemoteParticipant | null | undefined): RemoteTrackPublication | undefined {
 		if (!participant) return undefined;
 		for (const pub of participant.videoTrackPublications.values()) {

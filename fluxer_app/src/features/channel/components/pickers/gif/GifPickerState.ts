@@ -239,10 +239,6 @@ export class GifPickerState {
 		return this.model.searchTerm;
 	}
 
-	get previousSearchTerm(): string {
-		return this.model.committedSearchTerm;
-	}
-
 	get loading(): boolean {
 		return this.model.isLoading;
 	}
@@ -259,16 +255,8 @@ export class GifPickerState {
 		return this.model.initialFeaturedLoading;
 	}
 
-	get hasSearchResults(): boolean {
-		return this.model.isShowingResults && this.gifs.length > 0;
-	}
-
 	get shouldRenderSearchResults(): boolean {
 		return this.model.isShowingResults || this.model.isResultsLoading;
-	}
-
-	get pendingView(): View | null {
-		return this.model.isResultsLoading && this.model.resultKind === 'trending' ? 'trending' : null;
 	}
 
 	get isLandingPage(): boolean {

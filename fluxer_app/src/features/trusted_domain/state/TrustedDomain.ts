@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import AppStorage from '@app/features/platform/state/PersistentStorage';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {makeAutoObservable} from 'mobx';
 
@@ -16,8 +15,6 @@ const BUILT_IN_TRUST_PATTERNS = [
 	'fluxer.gift',
 ] as const;
 const TRUST_EVERYTHING_PATTERN = '*';
-const LEGACY_TRUSTED_DOMAINS_KEY = 'TrustedDomain';
-
 type DomainPattern = (typeof BUILT_IN_TRUST_PATTERNS)[number] | string;
 
 function toComparableHost(hostname: string): string {
@@ -36,10 +33,6 @@ function uniqueDomains(domains: ReadonlyArray<string>): Array<string> {
 	return Array.from(new Set(domains));
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 function configuredTrustedDomainPatterns(): Array<string> {
 	return uniqueDomains([RuntimeConfig.mediaEndpoint, RuntimeConfig.staticCdnEndpoint].flatMap(domainPatternFromUrl));
 }
@@ -54,31 +47,12 @@ function domainPatternFromUrl(endpoint: string): Array<string> {
 	}
 }
 
-function readLegacyTrustedDomains(): Array<string> | null {
-	const raw = AppStorage.getItem(LEGACY_TRUSTED_DOMAINS_KEY);
-	if (raw == null) return null;
-	try {
-		const decoded: unknown = JSON.parse(raw);
-		if (!isRecord(decoded)) return [];
-		if (!Array.isArray(decoded.trustedDomains)) return [];
-		return decoded.trustedDomains.filter((domain): domain is string => typeof domain === 'string');
-	} catch {
-		return [];
-	}
-}
-
 function addDomain(current: ReadonlyArray<string>, domain: string): Array<string> {
 	if (current.includes(domain)) return [...current];
 	return [...current, domain];
 }
 
-function removeDomain(current: ReadonlyArray<string>, domain: string): Array<string> {
-	return current.filter((storedDomain) => storedDomain !== domain);
-}
-
 class TrustedDomainState {
-	private legacyMigrationDone = false;
-
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
@@ -91,24 +65,9 @@ class TrustedDomainState {
 		return UserSettings.trustAllDomains();
 	}
 
-	async checkAndMigrateLegacyData(): Promise<void> {
-		if (this.legacyMigrationDone) return;
-		this.legacyMigrationDone = true;
-		const legacyDomains = readLegacyTrustedDomains();
-		if (legacyDomains == null || legacyDomains.length === 0 || this.trustedDomains.length > 0) return;
-		await UserSettings.saveSettings({trustedDomains: uniqueDomains(legacyDomains)});
-		AppStorage.removeItem(LEGACY_TRUSTED_DOMAINS_KEY);
-	}
-
 	async addTrustedDomain(domain: string): Promise<void> {
 		if (this.trustAllDomains) return;
 		const nextDomains = addDomain(this.trustedDomains, domain);
-		if (nextDomains.length === this.trustedDomains.length) return;
-		await UserSettings.saveSettings({trustedDomains: nextDomains});
-	}
-
-	async removeTrustedDomain(domain: string): Promise<void> {
-		const nextDomains = removeDomain(this.trustedDomains, domain);
 		if (nextDomains.length === this.trustedDomains.length) return;
 		await UserSettings.saveSettings({trustedDomains: nextDomains});
 	}
@@ -128,10 +87,6 @@ class TrustedDomainState {
 		if (currentHostname !== '' && normalizedHostname === currentHostname) return true;
 		const patterns = [...BUILT_IN_TRUST_PATTERNS, ...configuredTrustedDomainPatterns(), ...this.trustedDomains];
 		return patterns.some((pattern) => coversHost(pattern, normalizedHostname));
-	}
-
-	getTrustedDomains(): ReadonlyArray<string> {
-		return this.trustedDomains;
 	}
 
 	getTrustedDomainsCount(): number {

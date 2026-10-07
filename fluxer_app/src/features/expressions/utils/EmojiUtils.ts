@@ -24,10 +24,6 @@ function getStaticOrigin(): string | null {
 	return normalizedEndpoint;
 }
 
-export function fromHexCodePoint(hex: string): string {
-	return String.fromCodePoint(Number.parseInt(hex, 16));
-}
-
 export function getTwemojiURL(codePoints: string): string | null {
 	if (MODE === 'test' || !codePoints) {
 		return null;

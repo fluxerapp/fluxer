@@ -48,7 +48,7 @@ function resolveCSSPixelLength(element: HTMLElement, propertyName: string): numb
 	}
 }
 
-export function resolveScrollViewportBottomInset(element: HTMLElement): number {
+function resolveScrollViewportBottomInset(element: HTMLElement): number {
 	return Math.min(
 		element.clientHeight,
 		Math.max(0, resolveCSSPixelLength(element, SCROLLER_TRACK_BLOCK_END_INSET_VARIABLE)),

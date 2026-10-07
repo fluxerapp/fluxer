@@ -3,7 +3,6 @@
 import {
 	selectVoiceMediaGraphAttempt,
 	selectVoiceMediaGraphFailure,
-	selectVoiceMediaGraphHasFailureForStreamKey,
 	selectVoiceMediaGraphWatchGeneration,
 	VOICE_MEDIA_GRAPH_SCREEN_SHARE_SOURCE,
 	type VoiceMediaGraphEvent,
@@ -37,7 +36,7 @@ export const ScreenShareWatchErrorCode = {
 
 export type ScreenShareWatchErrorCode = (typeof ScreenShareWatchErrorCode)[keyof typeof ScreenShareWatchErrorCode];
 
-export type ScreenShareWatchFailureReason =
+type ScreenShareWatchFailureReason =
 	| 'subscription-set-subscribed-failed'
 	| 'subscription-set-enabled-failed'
 	| 'subscription-set-video-quality-failed'
@@ -65,7 +64,7 @@ export interface ScreenShareWatchFailure {
 	generation?: number;
 }
 
-export interface ScreenShareWatchFailureTarget {
+interface ScreenShareWatchFailureTarget {
 	streamKey?: string | null;
 	participantIdentity?: string | null;
 	participantSid?: string | null;
@@ -73,14 +72,14 @@ export interface ScreenShareWatchFailureTarget {
 	source?: string | null;
 }
 
-export interface ScreenShareWatchAttempt {
+interface ScreenShareWatchAttempt {
 	attemptKey: string;
 	startedAt: number;
 	hasRenderedVideoFrame: boolean;
 	generation: number;
 }
 
-export interface ScreenShareWatchFailureInboundSnapshot {
+interface ScreenShareWatchFailureInboundSnapshot {
 	packetsReceived: number | null;
 	bytesReceived: number | null;
 	framesReceived: number | null;
@@ -99,7 +98,7 @@ export interface ScreenShareWatchFailureInboundSnapshot {
 	frameHeight: number | null;
 }
 
-export interface ScreenShareWatchFailureTileSnapshot {
+interface ScreenShareWatchFailureTileSnapshot {
 	hasVideoElement: boolean;
 	readyState: number | null;
 	videoWidth: number | null;
@@ -109,7 +108,7 @@ export interface ScreenShareWatchFailureTileSnapshot {
 	visibilityState: string | null;
 }
 
-export interface ScreenShareWatchFailureRecord {
+interface ScreenShareWatchFailureRecord {
 	code: ScreenShareWatchErrorCode;
 	reason: ScreenShareWatchFailureReason;
 	reportedAt: number;
@@ -120,11 +119,11 @@ export interface ScreenShareWatchFailureRecord {
 	tile: ScreenShareWatchFailureTileSnapshot | null;
 }
 
-export interface ScreenShareWatchVideoElementRef {
+interface ScreenShareWatchVideoElementRef {
 	current: HTMLVideoElement | null;
 }
 
-export interface ScreenShareWatchTarget {
+interface ScreenShareWatchTarget {
 	videoRef?: ScreenShareWatchVideoElementRef | null;
 	publication?: RemoteTrackPublication | null;
 }
@@ -262,41 +261,6 @@ export function getScreenShareWatchFailureForPublicationOperation(
 				reason: 'subscription-emit-track-update-failed',
 			};
 	}
-}
-
-export function selectScreenShareWatchTimeoutFailureCode({
-	hasPublication,
-	isPublicationDesired,
-	hasSubscribedVideo,
-	isRepublishBuffering = false,
-}: {
-	hasPublication: boolean;
-	isPublicationDesired: boolean;
-	hasSubscribedVideo: boolean;
-	isRepublishBuffering?: boolean;
-}): Pick<ScreenShareWatchFailure, 'code' | 'reason'> {
-	if (isRepublishBuffering) {
-		return {
-			code: ScreenShareWatchErrorCode.RepublishTimeout,
-			reason: 'republish-timeout',
-		};
-	}
-	if (!hasPublication) {
-		return {
-			code: ScreenShareWatchErrorCode.PublicationMissingTimeout,
-			reason: 'publication-missing-timeout',
-		};
-	}
-	if (!isPublicationDesired || !hasSubscribedVideo) {
-		return {
-			code: ScreenShareWatchErrorCode.SubscriptionAttachTimeout,
-			reason: 'subscription-attach-timeout',
-		};
-	}
-	return {
-		code: ScreenShareWatchErrorCode.FirstFrameTimeout,
-		reason: 'first-frame-timeout',
-	};
 }
 
 class ScreenShareWatchFailuresStore {
@@ -470,19 +434,8 @@ class ScreenShareWatchFailuresStore {
 		return normalizedFailure;
 	}
 
-	hasFailureForStreamKey(streamKey: string | null | undefined): boolean {
-		return selectVoiceMediaGraphHasFailureForStreamKey(this.graph, streamKey);
-	}
-
 	getFailure(target: ScreenShareWatchFailureTarget): ScreenShareWatchFailure | null {
 		return selectVoiceMediaGraphFailure(this.graph, target);
-	}
-
-	clearFailure(target: ScreenShareWatchFailureTarget): void {
-		this.harvestGraphFailures();
-		runInAction(() => {
-			this.transition({type: 'failure.cleared', target});
-		});
 	}
 
 	clearAll(): void {
@@ -494,5 +447,3 @@ class ScreenShareWatchFailuresStore {
 }
 
 export const ScreenShareWatchFailures = new ScreenShareWatchFailuresStore();
-
-export default ScreenShareWatchFailures;

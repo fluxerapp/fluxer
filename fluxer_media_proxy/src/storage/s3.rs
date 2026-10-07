@@ -37,22 +37,6 @@ const QUERY_ENCODE_SET: &AsciiSet = &CONTROLS
     .add(b'}');
 
 impl Store {
-    pub(super) async fn ensure_bucket_s3(&self, bucket: &str) -> Result<(), StorageError> {
-        let url = self.s3_bucket_url(bucket)?;
-        let signed = self.sign(Method::PUT, &url, &[], None, &[])?;
-        let response = self
-            .client
-            .put(&url)
-            .headers(signed_headers(&signed, &self.cfg))
-            .send()
-            .await?;
-        if response.status().is_success() || response.status() == StatusCode::CONFLICT {
-            Ok(())
-        } else {
-            Err(StorageError::S3(response.status().to_string()))
-        }
-    }
-
     pub(super) async fn read_s3(
         &self,
         request: BufferedObjectReadRequest<'_>,

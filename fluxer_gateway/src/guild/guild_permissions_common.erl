@@ -4,7 +4,6 @@
 -typing([eqwalizer]).
 
 -export([
-    to_int/1,
     ensure_list/1,
     extract_integer_list/1,
     resolve_data_map/1,
@@ -19,13 +18,6 @@
 -type role() :: map().
 -type guild_state() :: map().
 -type guild_data() :: map().
-
--spec to_int(term()) -> integer().
-to_int(Value) ->
-    case type_conv:to_integer(Value) of
-        undefined -> 0;
-        Int -> Int
-    end.
 
 -spec ensure_list(term()) -> list().
 ensure_list(Value) -> map_utils:ensure_list(Value).
@@ -71,11 +63,6 @@ role_permissions(Role) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-to_int_test() ->
-    ?assertEqual(123, to_int(123)),
-    ?assertEqual(123, to_int(<<"123">>)),
-    ?assertEqual(0, to_int(undefined)).
 
 ensure_list_test() ->
     ?assertEqual([1, 2], ensure_list([1, 2])),

@@ -3,7 +3,6 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {
-	type AttachmentID,
 	type ChannelID,
 	createAttachmentID,
 	createChannelID,
@@ -60,24 +59,6 @@ interface ChannelNsfwContext {
 
 export class AdminMessageService {
 	constructor(private readonly deps: AdminMessageServiceDeps) {}
-
-	async lookupAttachment({
-		channelId,
-		attachmentId,
-		filename,
-	}: {
-		channelId: ChannelID;
-		attachmentId: AttachmentID;
-		filename: string;
-	}): Promise<{
-		message_id: MessageID | null;
-	}> {
-		const {channelRepository} = this.deps;
-		const messageId = await channelRepository.lookupAttachmentByChannelAndFilename(channelId, attachmentId, filename);
-		return {
-			message_id: messageId,
-		};
-	}
 
 	async lookupMessage(data: LookupMessageRequest) {
 		const channelId = createChannelID(data.channel_id);

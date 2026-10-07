@@ -52,31 +52,3 @@
 	color: white;
 	text-decoration: underline;
 }
-
-.selfHostedNotice {
-	display: flex;
-	align-items: flex-start;
-	gap: 0.5rem;
-	padding: 0.75rem;
-	border-radius: var(--radius-md);
-	background-color: var(--bg-tertiary);
-}
-
-.selfHostedTextContainer {
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
-}
-
-.selfHostedIcon {
-	flex-shrink: 0;
-	margin-top: 0.125rem;
-	color: var(--text-secondary);
-}
-
-.selfHostedText {
-	font-size: 0.8125rem;
-	color: var(--text-secondary);
-	margin: 0;
-	line-height: 1.4;
-}

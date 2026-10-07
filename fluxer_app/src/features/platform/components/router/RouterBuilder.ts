@@ -24,7 +24,6 @@ function generateRouteId(): string {
 export class RouteBuilder {
 	private config: RouteBuilderConfig;
 	private children: Array<RouteBuilder> = [];
-	private parent: RouteBuilder | null = null;
 	readonly id: string;
 
 	constructor(config: RouteBuilderConfig) {
@@ -34,14 +33,9 @@ export class RouteBuilder {
 
 	addChildren(children: Array<RouteBuilder>): this {
 		for (const child of children) {
-			child.parent = this;
 			this.children.push(child);
 		}
 		return this;
-	}
-
-	getParent(): RouteBuilder | null {
-		return this.parent;
 	}
 
 	private collectRoutes(parentId?: string): Array<RouteConfig> {

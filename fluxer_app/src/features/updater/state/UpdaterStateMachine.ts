@@ -4,14 +4,13 @@ import type {UpdaterDownloadOption} from '@app/features/platform/types/Electron'
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type UpdaterState = 'idle' | 'checking' | 'available';
-export type UpdateType = 'native' | 'web' | 'both' | null;
 
-export interface NativeUpdateInfo {
+interface NativeUpdateInfo {
 	available: boolean;
 	version: string | null;
 }
 
-export interface WebUpdateInfo {
+interface WebUpdateInfo {
 	available: boolean;
 	version: string | null;
 }
@@ -21,12 +20,12 @@ export interface UpdateInfo {
 	web: WebUpdateInfo;
 }
 
-export interface NativeUnsupportedUpdate {
+interface NativeUnsupportedUpdate {
 	reason: 'platform' | 'unpackaged' | 'managed-package';
 	downloadUrl: string | null;
 }
 
-export interface UpdaterMachineContext {
+interface UpdaterMachineContext {
 	updateInfo: UpdateInfo;
 	lastCheckedAt: number | null;
 	isChecking: boolean;
@@ -76,7 +75,7 @@ function createInitialUpdateInfo(): UpdateInfo {
 	};
 }
 
-export function createInitialUpdaterContext(): UpdaterMachineContext {
+function createInitialUpdaterContext(): UpdaterMachineContext {
 	return {
 		updateInfo: createInitialUpdateInfo(),
 		lastCheckedAt: null,
@@ -105,7 +104,7 @@ function clearNativeUpdate(context: UpdaterMachineContext): UpdaterMachineContex
 	};
 }
 
-export const updaterStateMachine = setup({
+const updaterStateMachine = setup({
 	types: {} as {
 		context: UpdaterMachineContext;
 		events: UpdaterMachineEvent;
@@ -246,15 +245,6 @@ export function getUpdaterMachineStateValue(snapshot: UpdaterMachineSnapshot): U
 		default:
 			return 'idle';
 	}
-}
-
-export function getUpdaterUpdateType(snapshot: UpdaterMachineSnapshot): UpdateType {
-	const hasNative = snapshot.context.updateInfo.native.available;
-	const hasWeb = snapshot.context.updateInfo.web.available;
-	if (hasNative && hasWeb) return 'both';
-	if (hasNative) return 'native';
-	if (hasWeb) return 'web';
-	return null;
 }
 
 export function hasManualNativeDownload(snapshot: UpdaterMachineSnapshot): boolean {

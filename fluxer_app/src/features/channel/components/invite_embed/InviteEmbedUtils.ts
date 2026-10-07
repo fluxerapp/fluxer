@@ -10,7 +10,7 @@ export function getGroupDMTitle(channel: Channel, unnamedGroupLabel: string): st
 	return getChannelDisplayName(channel, unnamedGroupLabel);
 }
 
-export function getChannelDisplayName(channel: Channel, unnamedGroupLabel: string): string {
+function getChannelDisplayName(channel: Channel, unnamedGroupLabel: string): string {
 	const channelName = channel.name?.trim();
 	if (channelName && channelName.length > 0) {
 		return channelName;
@@ -26,15 +26,6 @@ export function getChannelDisplayName(channel: Channel, unnamedGroupLabel: strin
 }
 
 type InviteGuild = Guild | WireGuild;
-
-export const getGuildSplashAspectRatio = (guild: InviteGuild): number | undefined => {
-	const width = 'splashWidth' in guild ? guild.splashWidth : guild.splash_width;
-	const height = 'splashHeight' in guild ? guild.splashHeight : guild.splash_height;
-	if (width != null && height != null && width > 0 && height > 0) {
-		return clampWideAssetAspectRatio(width / height);
-	}
-	return undefined;
-};
 export const getGuildEmbedSplashAspectRatio = (guild: InviteGuild): number | undefined => {
 	const width = 'embedSplashWidth' in guild ? guild.embedSplashWidth : guild.embed_splash_width;
 	const height = 'embedSplashHeight' in guild ? guild.embedSplashHeight : guild.embed_splash_height;

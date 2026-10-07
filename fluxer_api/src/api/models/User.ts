@@ -2,9 +2,6 @@
 
 import type {UserID} from '@app/api/BrandedTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
-import {getGlobalLimitConfigSnapshot} from '@app/api/limits/LimitConfigService';
-import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
-import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import {checkIsPremium, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {
 	extractPremiumFlagsFromLegacyUserFlags,
@@ -159,16 +156,6 @@ export class User {
 
 	isUnclaimedAccount(): boolean {
 		return this.passwordHash === null && !this.isBot && !this._traits.has('sso');
-	}
-
-	canUseGlobalExpressions(): boolean {
-		if (this.isBot) {
-			return true;
-		}
-		const ctx = createLimitMatchContext({user: this});
-		const snapshot = getGlobalLimitConfigSnapshot();
-		const hasGlobalExpressions = resolveLimitSafe(snapshot, ctx, 'feature_global_expressions', 0);
-		return hasGlobalExpressions > 0;
 	}
 
 	toRow(): UserRow {

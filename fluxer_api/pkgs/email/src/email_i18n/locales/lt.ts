@@ -83,10 +83,6 @@ const EMAIL_I18N_LT_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Iš naujo nustatyk savo {product_name} slaptažodį",
 		"body": "Sveiki, {username},\n\nPaprašei iš naujo nustatyti {product_name} slaptažodį. Naudok žemiau esančią nuorodą, kad nustatytum naują slaptažodį:\n\n{resetUrl}\n\nJei to neprašei, gali saugiai ignoruoti šį el. laišką.\n\nŠi nuoroda galioja 1 valandą.\n\n– {product_name} komanda"
 	},
-	"registration_approved": {
-		"subject": "Tavo {product_name} registracija patvirtinta",
-		"body": "Sveiki, {username},\n\nGeros naujienos: tavo {product_name} registracija patvirtinta.\n\nDabar gali prisijungti prie {product_name} programėlės čia:\n{channelsUrl}\n\nSveiki atvykę į {product_name} bendruomenę.\n\n– {product_name} komanda"
-	},
 	"report_received": {
 		"subject": "Gavome tavo {product_name} pranešimą",
 		"body": "Sveiki,\n\nGavome tavo pranešimą pagal Skaitmeninių paslaugų aktą apie {targetKind, select, message {žinutę} user {paskyrą} guild {bendruomenę} other {turinį}} {product_name} platformoje.\n\nPranešimo ID: {reportId}\n\nMūsų saugos komanda peržiūrės tavo pranešimą, o priėmę sprendimą parašysime tau šiuo adresu. Išsaugok šį el. laišką, kad turėtum jį ateičiai.\n\n– {product_name} saugos komanda"

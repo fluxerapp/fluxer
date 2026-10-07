@@ -8,7 +8,7 @@ import {create} from '@bufbuild/protobuf';
 import {SearchEngineSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable} from 'mobx';
 
-export interface SearchEngine {
+interface SearchEngine {
 	id: string;
 	name: string;
 	urlTemplate: string;
@@ -46,9 +46,9 @@ const BUILT_IN_SEARCH_ENGINES: ReadonlyArray<Omit<SearchEngine, 'enabled'>> = [
 	{id: 'github', name: 'GitHub', urlTemplate: 'https://github.com/search?q={query}', isBuiltIn: true},
 	{id: 'reddit', name: 'Reddit', urlTemplate: 'https://www.reddit.com/search/?q={query}', isBuiltIn: true},
 ];
-export const SUGGESTED_DEFAULT_SEARCH_ENGINE_ID = 'google';
+const SUGGESTED_DEFAULT_SEARCH_ENGINE_ID = 'google';
 
-export function createDefaultSearchEngines(): Array<SearchEngine> {
+function createDefaultSearchEngines(): Array<SearchEngine> {
 	return BUILT_IN_SEARCH_ENGINES.map((engine) => ({
 		...engine,
 		enabled: engine.id === SUGGESTED_DEFAULT_SEARCH_ENGINE_ID,
@@ -85,17 +85,9 @@ class SearchEngines {
 		return enabled.length === 1 ? enabled[0] : null;
 	}
 
-	get hasUserPreference(): boolean {
-		return this.defaultEngine != null;
-	}
-
 	get nonDefaultEnabledEngines(): ReadonlyArray<SearchEngine> {
 		const defaultId = this.defaultEngine?.id;
 		return this.enabledEngines.filter((engine) => engine.id !== defaultId);
-	}
-
-	get hasMultipleEnabled(): boolean {
-		return this.enabledEngines.length > 1;
 	}
 
 	setEnabled(engineId: string, enabled: boolean): void {
@@ -114,10 +106,6 @@ class SearchEngines {
 			engine.enabled = true;
 		}
 		return this.persistDefault(engineId);
-	}
-
-	clearDefaultEngine(): void {
-		void this.persistDefault(null);
 	}
 
 	addCustomEngine(name: string, urlTemplate: string): string {

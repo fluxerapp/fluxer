@@ -180,10 +180,6 @@ export class AuthSessionManager {
 		return this._snapshot.context.error;
 	}
 
-	get isIdle(): boolean {
-		return this.state === SessionState.Idle;
-	}
-
 	get isAuthenticated(): boolean {
 		return (
 			this.state === SessionState.Authenticated ||

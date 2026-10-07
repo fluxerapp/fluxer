@@ -14,7 +14,7 @@ export interface MessageWriteLockReader {
 	getMessage(channelId: ChannelID, messageId: MessageID): Promise<Message | null>;
 }
 
-export function messageWriteLockKey(channelId: ChannelID, messageId: MessageID): string {
+function messageWriteLockKey(channelId: ChannelID, messageId: MessageID): string {
 	return `message:${channelId}:${messageId}:write`;
 }
 

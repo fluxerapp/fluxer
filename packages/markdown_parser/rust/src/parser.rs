@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use crate::ast::{Node, ParserFlags};
+use crate::ast::Node;
 use crate::constants::{MAX_AST_NODES, MAX_LINE_LENGTH};
 use crate::emoji::EmojiContext;
 use crate::normalize::{
@@ -198,9 +198,4 @@ impl RuntimeState<'_> {
         self.current_line += consumed - 1;
         Ok(())
     }
-}
-
-#[allow(dead_code)]
-pub(crate) fn all_flags() -> u32 {
-    ParserFlags::ALL
 }

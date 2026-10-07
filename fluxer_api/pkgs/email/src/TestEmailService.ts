@@ -259,11 +259,6 @@ export class TestEmailService implements ITestEmailService {
 		return this.record(email, 'dsa_report_verification', {code, expires_at: expiresAt.toISOString()});
 	}
 
-	async sendRegistrationApprovedEmail(email: string, username: string, _locale?: string | null): Promise<boolean> {
-		this.logger.info(`Registration approved email sent to ${email} for user ${username}`);
-		return this.record(email, 'registration_approved');
-	}
-
 	async sendPasswordChangeVerification(
 		email: string,
 		username: string,

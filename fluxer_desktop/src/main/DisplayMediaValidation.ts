@@ -31,10 +31,6 @@ export function isValidDesktopSourceId(value: unknown): value is string {
 	return value.length > 'screen:'.length && (value.startsWith('screen:') || value.startsWith('window:'));
 }
 
-export function shouldHonorSelectedAudio(audioRequested: boolean, selectedWithAudio: unknown): boolean {
-	return audioRequested && selectedWithAudio === true;
-}
-
 export function isListOnlyDesktopSourcesOption(value: unknown): boolean {
 	if (typeof value !== 'object' || value === null) return false;
 	return (value as {listOnly?: unknown}).listOnly === true;

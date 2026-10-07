@@ -10,14 +10,9 @@ import {createWebCameraEffectImageFrameSource} from '@app/features/voice/utils/c
 
 export type {
 	WebCameraEffectCustomFrame,
-	WebCameraEffectCustomFrameImage,
-	WebCameraEffectCustomFrameLease,
 	WebCameraEffectCustomFrameSource,
 } from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomFrameSource';
-export {
-	createWebCameraEffectVideoFrameSource,
-	WebCameraEffectCustomFrameSourceKind,
-} from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomFrameSource';
+export {createWebCameraEffectVideoFrameSource} from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomFrameSource';
 
 const MAX_CUSTOM_MEDIA_BYTES = 10 * 1024 * 1024;
 const MAX_CUSTOM_MEDIA_URL_LENGTH = 16 * 1024;
@@ -96,7 +91,7 @@ function sniffImageMediaType(bytes: Uint8Array): string | null {
 	return null;
 }
 
-export async function resolveWebCameraEffectCustomImageMediaType(blob: Blob, signal: AbortSignal): Promise<string> {
+async function resolveWebCameraEffectCustomImageMediaType(blob: Blob, signal: AbortSignal): Promise<string> {
 	const header = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
 	throwIfCustomMediaOperationAborted(signal);
 	const detectedMediaType = sniffImageMediaType(header);

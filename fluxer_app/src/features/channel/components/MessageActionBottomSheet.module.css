@@ -4,32 +4,3 @@
 	padding: 1rem;
 	padding-bottom: 0;
 }
-
-.quickReactionRow {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.5rem;
-	padding-bottom: 0.75rem;
-}
-
-.quickReactionButton {
-	composes: item roundItem from '@app/features/ui/action_toolbar/ActionToolbar.module.css';
-	--action-toolbar-item-size: 2.75rem;
-	--action-toolbar-item-border-width: 0px;
-	--action-toolbar-item-background: var(--background-modifier-hover);
-}
-
-.quickReactionButton:hover {
-	background-color: var(--background-modifier-selected);
-}
-
-.quickReactionEmoji {
-	height: 1.75rem;
-	width: 1.75rem;
-}
-
-.reactionPickerIcon {
-	height: 1.25rem;
-	width: 1.25rem;
-}

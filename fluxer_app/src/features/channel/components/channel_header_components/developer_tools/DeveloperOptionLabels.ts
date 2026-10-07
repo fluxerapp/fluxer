@@ -29,7 +29,7 @@ import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
 const ACTIVE_DEVELOPER_OPTION_KEYS = DEVELOPER_OPTION_KEYS.filter((key) => key !== 'premiumScenarioOverride');
-export const ATTACHMENT_MOCKS_DESCRIPTOR = msg({
+const ATTACHMENT_MOCKS_DESCRIPTOR = msg({
 	message: 'Attachment mocks',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
@@ -240,7 +240,7 @@ const DEVELOPER_OPTION_DESCRIPTOR = msg({
 const DEVELOPER_OPTION_LABEL_FALLBACKS: Partial<Record<keyof DeveloperOptionsState, MessageDescriptor>> = {
 	mockAttachmentStates: ATTACHMENT_MOCKS_DESCRIPTOR,
 };
-export const getDeveloperOptionFallbackLabel = (i18n: I18n, key: keyof DeveloperOptionsState): string => {
+const getDeveloperOptionFallbackLabel = (i18n: I18n, key: keyof DeveloperOptionsState): string => {
 	const descriptor = DEVELOPER_OPTION_LABEL_FALLBACKS[key];
 	return descriptor ? i18n._(descriptor) : humanizeDeveloperStateKey(String(key));
 };
@@ -305,7 +305,7 @@ const formatDeveloperOptionValue = <K extends keyof DeveloperOptionsState>(
 			return String(value);
 	}
 };
-export const getDeveloperOptionLabel = (key: keyof DeveloperOptionsState): MessageDescriptor => {
+const getDeveloperOptionLabel = (key: keyof DeveloperOptionsState): MessageDescriptor => {
 	switch (key) {
 		case 'bypassLoadingSkeleton':
 			return BYPASS_LOADING_SKELETON_DESCRIPTOR;

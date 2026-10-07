@@ -7,7 +7,7 @@ import {
 	STREAM_PREVIEW_UPLOAD_JITTER_MS,
 } from '@fluxer/constants/src/StreamConstants';
 
-export const STREAM_PREVIEW_UPLOAD_URL_REFRESH_SKEW_MS = 60_000;
+const STREAM_PREVIEW_UPLOAD_URL_REFRESH_SKEW_MS = 60_000;
 const STREAM_PREVIEW_DEMAND_IDLE_POLL_MS = 5_000;
 
 export interface StreamPreviewUploadUrlResponseLike {

@@ -1041,25 +1041,6 @@ export function retryLocal(channelId: string, messageId: string): void {
 	Messages.handleSendRetry({channelId, messageId});
 }
 
-export function editOptimistic(
-	channelId: string,
-	messageId: string,
-	content: string,
-): {originalContent: string; originalEditedTimestamp: string | null} | null {
-	logger.debug(`Applying optimistic edit for message ${messageId} in channel ${channelId}`);
-	return Messages.handleOptimisticEdit({channelId, messageId, content});
-}
-
-export function editRollback(
-	channelId: string,
-	messageId: string,
-	originalContent: string,
-	originalEditedTimestamp: string | null,
-): void {
-	logger.debug(`Rolling back edit for message ${messageId} in channel ${channelId}`);
-	Messages.handleEditRollback({channelId, messageId, originalContent, originalEditedTimestamp});
-}
-
 export async function forward(
 	channelIds: Array<string>,
 	messageReference: ForwardMessageReference,

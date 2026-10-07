@@ -52,7 +52,6 @@ pub fn extract_post_id(url: &Url) -> Option<String> {
     })
 }
 
-#[allow(dead_code)]
 pub fn is_http_url(url: &str) -> bool {
     matches!(
         Url::parse(url).ok().map(|u| u.scheme().to_owned()),

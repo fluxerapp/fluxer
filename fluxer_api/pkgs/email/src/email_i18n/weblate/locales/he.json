@@ -79,10 +79,6 @@
 		"subject": "איפוס הסיסמה שלכם ב-{product_name}",
 		"body": "שלום {username},\n\nביקשתם איפוס סיסמה ל-{product_name}. השתמשו בקישור למטה כדי להגדיר סיסמה חדשה:\n\n{resetUrl}\n\nאם לא ביקשתם זאת, אתם יכולים להתעלם בבטחה מאימייל זה.\n\nקישור זה תקף למשך שעה אחת.\n\nצוות {product_name}"
 	},
-	"registration_approved": {
-		"subject": "ההרשמה שלכם ל-{product_name} אושרה",
-		"body": "שלום {username},\n\nחדשות טובות: ההרשמה שלכם ל-{product_name} אושרה.\n\nכעת אתם יכולים להתחבר לאפליקציית {product_name} כאן:\n{channelsUrl}\n\nברוכים הבאים לקהילת {product_name}.\n\nצוות {product_name}"
-	},
 	"report_received": {
 		"subject": "קיבלנו את הדיווח שלכם ב-{product_name}",
 		"body": "שלום,\n\nקיבלנו את הדיווח שלכם לפי חוק השירותים הדיגיטליים על {targetKind, select, message {הודעה} user {חשבון} guild {קהילה} other {תוכן}} ב-{product_name}.\n\nמזהה הדיווח: {reportId}\n\nצוות הבטיחות שלנו יבדוק את הדיווח, ונשלח לכם אימייל לכתובת זו כשנקבל החלטה. שמרו את האימייל הזה לתיעוד.\n\nצוות הבטיחות של {product_name}"

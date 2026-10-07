@@ -14,9 +14,9 @@ export interface MediaEngineFacadePendingSessionRestore extends MediaEngineFacad
 	restoreStream: boolean;
 }
 
-export type MediaEngineFacadeLocalCleanupReason = 'disconnect' | 'channelMove' | 'logout' | 'cleanup' | null;
+type MediaEngineFacadeLocalCleanupReason = 'disconnect' | 'channelMove' | 'logout' | 'cleanup' | null;
 
-export interface MediaEngineFacadeMachineContext {
+interface MediaEngineFacadeMachineContext {
 	activeConnection: MediaEngineFacadeConnectionTarget | null;
 	pendingUserMove: MediaEngineFacadeConnectionTarget | null;
 	pendingSessionRestore: MediaEngineFacadePendingSessionRestore | null;
@@ -51,9 +51,6 @@ export type MediaEngineFacadeEvent =
 	| {type: 'cleanup.cleanupStarted'}
 	| {type: 'cleanup.reset'}
 	| {type: 'cleanup.complete'};
-
-export type MediaEngineFacadeStateValue = 'idle' | 'disconnecting' | 'channelMoving' | 'loggingOut' | 'cleaningUp';
-
 export type MediaEngineFacadeConnectRequestDecision =
 	| {type: 'noop'; reason: 'same-channel'}
 	| {type: 'start'}
@@ -113,7 +110,7 @@ export interface MediaEngineFacadeServerVoiceStateRemovalInput {
 	connecting: boolean;
 }
 
-export function createInitialMediaEngineFacadeContext(): MediaEngineFacadeMachineContext {
+function createInitialMediaEngineFacadeContext(): MediaEngineFacadeMachineContext {
 	return {
 		activeConnection: null,
 		pendingUserMove: null,
@@ -183,7 +180,7 @@ function resetAll(localCleanupReason: MediaEngineFacadeLocalCleanupReason): Medi
 	};
 }
 
-export const mediaEngineFacadeStateMachine = setup({
+const mediaEngineFacadeStateMachine = setup({
 	types: {} as {
 		context: MediaEngineFacadeMachineContext;
 		events: MediaEngineFacadeEvent;
@@ -348,10 +345,6 @@ export function transitionMediaEngineFacadeSnapshot(
 	event: MediaEngineFacadeEvent,
 ): MediaEngineFacadeSnapshot {
 	return transition(mediaEngineFacadeStateMachine, snapshot, event)[0] as MediaEngineFacadeSnapshot;
-}
-
-export function getMediaEngineFacadeStateValue(snapshot: MediaEngineFacadeSnapshot): MediaEngineFacadeStateValue {
-	return snapshot.value as MediaEngineFacadeStateValue;
 }
 
 export function selectMediaEngineConnectRequestDecision(

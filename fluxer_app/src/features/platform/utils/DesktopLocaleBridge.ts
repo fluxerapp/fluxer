@@ -459,7 +459,7 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 };
 const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 
-export function resolvePreservingPlaceholders(descriptor: NativeMessage): string {
+function resolvePreservingPlaceholders(descriptor: NativeMessage): string {
 	if (typeof descriptor === 'string') return descriptor;
 	const template = descriptor.message ?? descriptor.id ?? '';
 	const values: Record<string, string> = {};
@@ -484,7 +484,7 @@ function buildPayload(): Record<string, string> {
 
 let pushed = false;
 
-export function pushNativeLocale(): void {
+function pushNativeLocale(): void {
 	const electronApi = getElectronAPI();
 	if (!electronApi || typeof electronApi.setNativeLocale !== 'function') return;
 	try {

@@ -3334,7 +3334,6 @@ const WINDOWS_NATIVE_ADDON_STEMS: &[&str] = &[
     "win-process-loopback",
     "win-clipboard",
     "win-shell",
-    "win-toast",
     "windows-input-hook",
     "platform-info",
 ];

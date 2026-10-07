@@ -386,31 +386,6 @@ pub struct RequestHead {
     pub headers: Vec<(String, String)>,
 }
 
-pub fn parse_request_head(head: &[u8]) -> Result<RequestHead> {
-    let text = String::from_utf8_lossy(head);
-    let mut lines = text.split("\r\n");
-    let request_line = lines.next().unwrap_or_default();
-    let parts = request_line.splitn(3, ' ').collect::<Vec<_>>();
-    if parts.len() != 3 {
-        bail!("invalid request line: {request_line:?}");
-    }
-    let headers = lines
-        .filter_map(|line| {
-            if line.is_empty() {
-                return None;
-            }
-            let (name, value) = line.split_once(':')?;
-            (!name.is_empty()).then(|| (name.to_owned(), value.trim().to_owned()))
-        })
-        .collect();
-    Ok(RequestHead {
-        method: parts[0].to_owned(),
-        path: parts[1].to_owned(),
-        version: parts[2].to_owned(),
-        headers,
-    })
-}
-
 pub fn tunnel_public_redirect_location(request: &RequestHead) -> Option<String> {
     let public_url = env::var("FLUXER_PUBLIC_URL").ok()?;
     redirect_location_for_public_url(request, &public_url)

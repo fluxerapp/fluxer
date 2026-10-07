@@ -51,12 +51,10 @@ mod tests {
     }
 
     #[test]
-    fn clamping_respects_kind_bounds_and_leaves_attachments_alone() {
+    fn clamping_respects_kind_bounds() {
         assert_eq!(128, clamp_size(1, AssetKind::Avatar));
         assert_eq!(1024, clamp_size(4096, AssetKind::Avatar));
         assert_eq!(480, clamp_size(16, AssetKind::Banner));
         assert_eq!(512, clamp_size(4096, AssetKind::Emoji));
-        assert_eq!(4096, clamp_size(4096, AssetKind::Attachment));
-        assert_eq!(1, clamp_size(0, AssetKind::Attachment));
     }
 }

@@ -89,15 +89,3 @@ export function createDesktopPersistentStorageBackend(api: DesktopStorageAPI): P
 		},
 	};
 }
-
-export async function resolveDesktopPersistentStorageBackend(): Promise<PersistentStorageBackend | null> {
-	const api = getDesktopStorageAPI();
-	if (api == null) {
-		return null;
-	}
-	const status = await run('read desktop store status', () => api.getStatus());
-	if (!status.available) {
-		return null;
-	}
-	return createDesktopPersistentStorageBackend(api);
-}

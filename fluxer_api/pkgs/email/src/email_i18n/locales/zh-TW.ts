@@ -83,10 +83,6 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "重設您的 {product_name} 密碼",
 		"body": "哈囉 {username}，\n\n您已要求重設 {product_name} 密碼。請使用下方連結設定新密碼：\n\n{resetUrl}\n\n如果您沒有提出此要求，可以直接忽略這封電子郵件。\n\n此連結在 1 小時內有效。\n\n– {product_name} 團隊"
 	},
-	"registration_approved": {
-		"subject": "您的 {product_name} 註冊已獲核准",
-		"body": "哈囉 {username}，\n\n好消息：您的 {product_name} 註冊已獲核准。\n\n您現在可以從這裡登入 {product_name} 應用程式：\n{channelsUrl}\n\n歡迎加入 {product_name} 社群。\n\n– {product_name} 團隊"
-	},
 	"report_received": {
 		"subject": "我們已收到您的 {product_name} 檢舉",
 		"body": "哈囉，\n\n我們已收到您依據數位服務法提出、關於 {product_name} 上{targetKind, select, message {一則訊息} user {一個帳號} guild {一個社群} other {內容}}的檢舉。\n\n檢舉 ID：{reportId}\n\n我們的安全團隊會審核您的檢舉，並在做出決定後寄信至此電子郵件地址。請保留這封電子郵件以供日後查閱。\n\n– {product_name} 安全團隊"

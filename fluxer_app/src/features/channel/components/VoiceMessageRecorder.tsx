@@ -74,14 +74,14 @@ const logger = new Logger('VoiceMessageRecorder');
 const UNIVERSALLY_PLAYABLE_RECORDING_MIME = 'audio/mp4';
 const OPUS_RECORDING_MIME_CANDIDATES = ['audio/ogg;codecs=opus', 'audio/webm;codecs=opus'] as const;
 
-export function selectRecordingMimeType(isTypeSupported: (mimeType: string) => boolean): string | undefined {
+function selectRecordingMimeType(isTypeSupported: (mimeType: string) => boolean): string | undefined {
 	if (isTypeSupported(UNIVERSALLY_PLAYABLE_RECORDING_MIME)) {
 		return UNIVERSALLY_PLAYABLE_RECORDING_MIME;
 	}
 	return OPUS_RECORDING_MIME_CANDIDATES.find((candidate) => isTypeSupported(candidate));
 }
 
-export function isUniversallyPlayableContainer(mimeType: string): boolean {
+function isUniversallyPlayableContainer(mimeType: string): boolean {
 	return mimeType.split(';')[0].trim().toLowerCase() === UNIVERSALLY_PLAYABLE_RECORDING_MIME;
 }
 

@@ -9,29 +9,29 @@ export type GifPickerRequestId = number & {
 	readonly [gifPickerRequestIdBrand]: 'GifPickerRequestId';
 };
 
-export type GifPickerSurface = 'featured' | 'results' | 'favorites';
-export type GifPickerResultKind = 'search' | 'trending' | null;
-export type GifPickerFetchErrorKind = 'featured' | 'search' | 'trending' | null;
+type GifPickerSurface = 'featured' | 'results' | 'favorites';
+type GifPickerResultKind = 'search' | 'trending' | null;
+type GifPickerFetchErrorKind = 'featured' | 'search' | 'trending' | null;
 
-export const GIF_PICKER_MAX_SEARCH_TERM_LENGTH = 100;
+const GIF_PICKER_MAX_SEARCH_TERM_LENGTH = 100;
 export const GIF_PICKER_SEARCH_DEBOUNCE_MS = 350;
 export const GIF_PICKER_SEARCH_MAX_WAIT_MS = 1000;
 export const GIF_PICKER_LOADING_SKELETON_DELAY_MS = 800;
 export const GIF_PICKER_SUGGEST_DEBOUNCE_MS = 250;
 export const GIF_PICKER_SUGGEST_MAX_WAIT_MS = 900;
 
-export interface GifPickerResultRequest {
+interface GifPickerResultRequest {
 	id: GifPickerRequestId;
 	kind: Exclude<GifPickerResultKind, null>;
 	term: string | null;
 }
 
-export interface GifPickerSuggestRequest {
+interface GifPickerSuggestRequest {
 	id: GifPickerRequestId;
 	term: string;
 }
 
-export interface GifPickerMachineContext {
+interface GifPickerMachineContext {
 	searchTerm: string;
 	committedSearchTerm: string;
 	pendingSearchTerm: string | null;
@@ -201,7 +201,7 @@ function isActiveSuggestRequest(
 	return activeRequest?.id === requestId && activeRequest.term === term;
 }
 
-export const gifPickerStateMachine = setup({
+const gifPickerStateMachine = setup({
 	types: {} as {
 		context: GifPickerMachineContext;
 		events: GifPickerMachineEvent;

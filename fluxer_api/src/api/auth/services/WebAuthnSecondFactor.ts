@@ -9,7 +9,7 @@ interface WebAuthnSecondFactorUser {
 	authenticatorTypes?: Set<number> | null;
 }
 
-export function webAuthnIsSecondFactor(user: WebAuthnSecondFactorUser, hasPasskeyCredentials: boolean): boolean {
+function webAuthnIsSecondFactor(user: WebAuthnSecondFactorUser, hasPasskeyCredentials: boolean): boolean {
 	return (
 		(user.authenticatorTypes?.has(UserAuthenticatorTypes.WEBAUTHN) ?? false) ||
 		(user.passwordHash === null && hasPasskeyCredentials)

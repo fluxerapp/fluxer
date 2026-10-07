@@ -211,39 +211,3 @@ export function openFromElementLeftStart(
 	const point = {x: rect.left - gutter, y: rect.top - CONTEXT_MENU_OFFSET};
 	openAtPoint(point, render, {align: 'top-right', trackDynamicPosition: true, ...options?.config}, anchor);
 }
-
-export function openFromElementTopLeft(
-	event: React.MouseEvent | MouseEvent,
-	render: RenderFn,
-	config?: ContextMenuConfig,
-): void {
-	event.preventDefault?.();
-	event.stopPropagation?.();
-	const currentTarget = 'currentTarget' in event ? toHTMLElement(event.currentTarget) : null;
-	const target = 'target' in event ? toHTMLElement(event.target) : null;
-	const anchor = currentTarget ?? target;
-	if (!anchor) {
-		openFromEvent(event, render, config);
-		return;
-	}
-	const rect = anchor.getBoundingClientRect();
-	const point = {x: rect.left, y: rect.top};
-	openAtPoint(point, render, {align: 'bottom-left', trackDynamicPosition: true, ...config}, anchor);
-}
-
-export function openNativeContextMenu(render: RenderFn, config?: ContextMenu['config']): void {
-	const contextMenu: ContextMenu = {
-		id: makeId('native-context-menu'),
-		target: {
-			x: 0,
-			y: 0,
-			target: nativeContextMenuTarget,
-		},
-		render,
-		config: {
-			returnFocus: false,
-			...config,
-		},
-	};
-	ContextMenuState.open(contextMenu);
-}

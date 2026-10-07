@@ -246,7 +246,7 @@ export function getEffectiveBillingConfig(): EffectiveBillingConfig {
 	return config;
 }
 
-export function hasRecurringPricePair(config: EffectiveBillingConfig = getEffectiveBillingConfig()): boolean {
+function hasRecurringPricePair(config: EffectiveBillingConfig = getEffectiveBillingConfig()): boolean {
 	return Object.values(config.prices).some((set) => set.monthly !== null && set.yearly !== null);
 }
 

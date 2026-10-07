@@ -20,10 +20,6 @@ pub enum Decision {
 }
 
 impl Decision {
-    pub fn is_attachment(self) -> bool {
-        self == Self::Attachment
-    }
-
     pub fn header_value(self) -> HeaderValue {
         HeaderValue::from_static(self.directive())
     }

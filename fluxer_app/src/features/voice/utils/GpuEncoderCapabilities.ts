@@ -20,49 +20,49 @@ export interface HardwareEncodeReport {
 	raw?: GpuInfo;
 }
 
-export const PCI_VENDOR_NVIDIA = 0x10de;
-export const PCI_VENDOR_AMD = 0x1002;
-export const PCI_VENDOR_INTEL = 0x8086;
-export const PCI_VENDOR_APPLE = 0x106b;
+const PCI_VENDOR_NVIDIA = 0x10de;
+const PCI_VENDOR_AMD = 0x1002;
+const PCI_VENDOR_INTEL = 0x8086;
+const PCI_VENDOR_APPLE = 0x106b;
 
-export interface GpuFamilyRule {
+interface GpuFamilyRule {
 	family: string;
 	caps: Pick<HardwareEncodeReport, 'av1' | 'h265' | 'h264' | 'vp9' | 'vp8'>;
 }
 
-export const NVIDIA_AV1_FAMILIES: GpuFamilyRule = {
+const NVIDIA_AV1_FAMILIES: GpuFamilyRule = {
 	family: 'nvidia-ada-or-blackwell',
 	caps: {av1: 'hardware', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const NVIDIA_PRE_ADA: GpuFamilyRule = {
+const NVIDIA_PRE_ADA: GpuFamilyRule = {
 	family: 'nvidia-pre-ada',
 	caps: {av1: 'software', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const NVIDIA_PRE_MAXWELL2: GpuFamilyRule = {
+const NVIDIA_PRE_MAXWELL2: GpuFamilyRule = {
 	family: 'nvidia-pre-maxwell2',
 	caps: {av1: 'software', h265: 'software', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const AMD_RDNA3_PLUS: GpuFamilyRule = {
+const AMD_RDNA3_PLUS: GpuFamilyRule = {
 	family: 'amd-rdna3-plus',
 	caps: {av1: 'hardware', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const AMD_VCN_NO_AV1: GpuFamilyRule = {
+const AMD_VCN_NO_AV1: GpuFamilyRule = {
 	family: 'amd-vcn-pre-rdna3',
 	caps: {av1: 'software', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const INTEL_AV1_FAMILY: GpuFamilyRule = {
+const INTEL_AV1_FAMILY: GpuFamilyRule = {
 	family: 'intel-arc-or-xe-lpg-plus',
 	caps: {av1: 'hardware', h265: 'hardware', h264: 'hardware', vp9: 'hardware', vp8: 'software'},
 };
-export const INTEL_GEN9_PLUS: GpuFamilyRule = {
+const INTEL_GEN9_PLUS: GpuFamilyRule = {
 	family: 'intel-gen9-plus-no-av1',
 	caps: {av1: 'software', h265: 'hardware', h264: 'hardware', vp9: 'hardware', vp8: 'software'},
 };
-export const APPLE_SILICON: GpuFamilyRule = {
+const APPLE_SILICON: GpuFamilyRule = {
 	family: 'apple-silicon',
 	caps: {av1: 'software', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
-export const APPLE_AV1_ENCODE: GpuFamilyRule = {
+const APPLE_AV1_ENCODE: GpuFamilyRule = {
 	family: 'apple-m4-pro-max-or-newer',
 	caps: {av1: 'hardware', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'},
 };
@@ -120,7 +120,7 @@ function classifyAmdByPciId(deviceId: number): GpuFamilyRule | null {
 	return null;
 }
 
-export function classifyByPciId(vendorId: number, deviceId: number): GpuFamilyRule | null {
+function classifyByPciId(vendorId: number, deviceId: number): GpuFamilyRule | null {
 	if (!deviceId) return null;
 	if (vendorId === PCI_VENDOR_INTEL) return classifyIntelByPciId(deviceId);
 	if (vendorId === PCI_VENDOR_NVIDIA) return classifyNvidiaByPciId(deviceId);
@@ -128,7 +128,7 @@ export function classifyByPciId(vendorId: number, deviceId: number): GpuFamilyRu
 	return null;
 }
 
-export function classifyByRenderer(renderer: string, vendorId: number): GpuFamilyRule | null {
+function classifyByRenderer(renderer: string, vendorId: number): GpuFamilyRule | null {
 	const r = renderer;
 	if (vendorId === PCI_VENDOR_NVIDIA || /\bNVIDIA\b/i.test(r)) {
 		if (/\bRTX\s*(50|60|70|80|90)\d{2}\b/i.test(r)) return NVIDIA_AV1_FAMILIES;
@@ -164,7 +164,7 @@ export function classifyByRenderer(renderer: string, vendorId: number): GpuFamil
 	return null;
 }
 
-export function classifyDevice(vendorId: number, deviceId: number, renderer: string): GpuFamilyRule | null {
+function classifyDevice(vendorId: number, deviceId: number, renderer: string): GpuFamilyRule | null {
 	return classifyByPciId(vendorId, deviceId) ?? classifyByRenderer(renderer, vendorId);
 }
 
@@ -380,7 +380,7 @@ export function getH264HardwareProfilesSync(): H264HardwareProfileProbe | null {
 	return h264HardwareProfileProbes.get(latestH264HardwareProfileProbeKey) ?? null;
 }
 
-export async function probeH264HardwareProfiles(
+async function probeH264HardwareProfiles(
 	config?: Partial<EncodeProbeVideoConfig>,
 ): Promise<H264HardwareProfileProbe | null> {
 	const video = resolveEncodeProbeVideoConfig(config);
@@ -483,20 +483,6 @@ export function loadGpuEncoderReport(): Promise<HardwareEncodeReport | null> {
 
 export function getGpuEncoderReportSync(): HardwareEncodeReport | null {
 	return cachedReport;
-}
-
-export function resetGpuEncoderReport(): void {
-	cachedReport = null;
-	pendingPromise = null;
-	h264HardwareProfileProbes.clear();
-	pendingH264HardwareProfileProbes.clear();
-	latestH264HardwareProfileProbeKey = null;
-}
-
-export function hasHardwareEncodeFor(codec: VideoCodec): HardwareEncodeAnswer {
-	const report = cachedReport;
-	if (!report) return 'unknown';
-	return report[codec];
 }
 
 if (typeof window !== 'undefined' && isDesktop()) {

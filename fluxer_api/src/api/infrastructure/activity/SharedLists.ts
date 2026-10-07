@@ -24,7 +24,7 @@ function isSharedListName(name: string): name is SharedListName {
 	return (SHARED_LISTS as ReadonlyArray<string>).includes(name);
 }
 
-export function parseSharedList(value: string): ReadonlySet<string> {
+function parseSharedList(value: string): ReadonlySet<string> {
 	const entries = new Set<string>();
 	for (const line of value.split('\n')) {
 		const entry = line.trim().toLowerCase();
@@ -52,7 +52,7 @@ export function isBlockedEmailDomain(domain: string | null | undefined): boolean
 	return !!tld && sharedListHas('email_tld_blocked', tld);
 }
 
-export function sharedListSizes(): Record<SharedListName, number | null> {
+function sharedListSizes(): Record<SharedListName, number | null> {
 	const sizes = {} as Record<SharedListName, number | null>;
 	for (const name of SHARED_LISTS) {
 		sizes[name] = lists.get(name)?.size ?? null;

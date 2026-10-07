@@ -34,7 +34,7 @@ export interface CallStartConfirmationEvent {
 	shiftKey?: boolean;
 }
 
-export function shouldBypassCallStartConfirmation(event?: CallStartConfirmationEvent | null): boolean {
+function shouldBypassCallStartConfirmation(event?: CallStartConfirmationEvent | null): boolean {
 	return Boolean(event?.shiftKey);
 }
 
@@ -49,7 +49,7 @@ export function getCallStartRequestOptions(
 	};
 }
 
-export async function checkAndStartCall(channelId: string): Promise<boolean> {
+async function checkAndStartCall(channelId: string): Promise<boolean> {
 	try {
 		const {ringable} = await CallCommands.checkCallEligibility(channelId);
 		if (!ringable) {

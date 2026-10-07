@@ -37,7 +37,7 @@ export const DEFAULT_KEYBIND_SECTIONS: ReadonlyArray<KeybindSection> = [
 	'voice_and_video',
 	'misc',
 ];
-export const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray<KeybindCommand>>> = {
+const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray<KeybindCommand>>> = {
 	messages: [
 		'message_reply',
 		'message_reply_prev',
@@ -102,7 +102,7 @@ export const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray
 	],
 	misc: ['misc_search', 'misc_open_context_menu', 'misc_help'],
 };
-export const SHORTCUT_MERGE_PAIRS: ReadonlyArray<readonly [KeybindCommand, KeybindCommand]> = [
+const SHORTCUT_MERGE_PAIRS: ReadonlyArray<readonly [KeybindCommand, KeybindCommand]> = [
 	['message_reply_prev', 'message_reply_next'],
 	['message_edit_prev', 'message_edit_next'],
 	['nav_guild_prev', 'nav_guild_next'],
@@ -117,28 +117,6 @@ export const SHORTCUT_MERGE_PAIRS: ReadonlyArray<readonly [KeybindCommand, Keybi
 export type ShortcutRowModel = KeybindConfig | [KeybindConfig, KeybindConfig];
 
 export const OVERRIDDEN_CHIP_STYLE: React.CSSProperties = {opacity: 0.5, textDecoration: 'line-through'};
-export const PRINTABLE_NAV_KEYS_TO_SWALLOW = new Set([
-	'Tab',
-	'Escape',
-	'F1',
-	'F2',
-	'F3',
-	'F4',
-	'F5',
-	'F6',
-	'F7',
-	'F8',
-	'F9',
-	'F10',
-	'F11',
-	'F12',
-	'PageUp',
-	'PageDown',
-	'Home',
-	'End',
-	'Insert',
-	'ContextMenu',
-]);
 
 export function isShortcutMergePair(row: ShortcutRowModel): row is [KeybindConfig, KeybindConfig] {
 	return Array.isArray(row);
@@ -223,10 +201,4 @@ export function combosLooseEqual(a: KeyCombo, b: KeyCombo): boolean {
 	if ((a.mouseButton ?? null) !== (b.mouseButton ?? null)) return false;
 	if ((a.gamepadButton ?? null) !== (b.gamepadButton ?? null)) return false;
 	return true;
-}
-
-export function isShortcutLikeKeyEvent(event: KeyboardEvent): boolean {
-	if (event.ctrlKey || event.metaKey || event.altKey) return true;
-	if (event.key.length > 1 && PRINTABLE_NAV_KEYS_TO_SWALLOW.has(event.key)) return true;
-	return false;
 }

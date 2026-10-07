@@ -111,7 +111,7 @@ function chunkText(text: string, maxChunkLength: number): Array<string> {
 	return chunks;
 }
 
-export function prepareTextForSpeech(text: string, maxLength?: number): string {
+function prepareTextForSpeech(text: string, maxLength?: number): string {
 	let processed = stripUrlsToDomain(text);
 	processed = normaliseText(processed);
 	processed = capTextAtWordBoundary(processed, maxLength);
@@ -128,19 +128,6 @@ export function createUtteranceTexts(
 		return [];
 	}
 	return chunkText(processed, maxChunkLength);
-}
-
-export function createUtterance(text: string, maxLength?: number): SpeechSynthesisUtterance | null {
-	if (!synthesisSupported) {
-		return null;
-	}
-	const processed = prepareTextForSpeech(text, maxLength);
-	if (!processed) {
-		return null;
-	}
-	const utterance = new SpeechSynthesisUtterance(processed);
-	utterance.rate = Accessibility.ttsRate;
-	return utterance;
 }
 
 export function createUtterances(text: string, maxLength?: number): Array<SpeechSynthesisUtterance> {

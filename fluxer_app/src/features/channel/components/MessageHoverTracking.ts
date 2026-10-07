@@ -194,24 +194,10 @@ export function registerMessageHoverTarget(element: HTMLElement, listener: Messa
 	};
 }
 
-export function refreshMessageHoverTargets(): void {
-	scheduleResolve();
-}
-
 export function resolveMessageHoverTargetsNow(): void {
 	if (suspendedByScroll) {
 		return;
 	}
 	cancelScheduledResolve();
 	setHoveredTarget(resolveHoveredTarget());
-}
-
-export function resetMessageHoverTrackingForTests(): void {
-	detachGlobalListeners();
-	cancelScheduledResolve();
-	clearScrollIdleTimer();
-	suspendedByScroll = false;
-	hoverTargets.clear();
-	pointerPosition = null;
-	hoveredTarget = null;
 }

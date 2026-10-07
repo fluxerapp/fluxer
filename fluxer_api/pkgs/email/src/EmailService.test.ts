@@ -28,7 +28,7 @@ async function sendWith(config: EmailConfig): Promise<EmailMessage> {
 		},
 	};
 	const service = new EmailService(config, new EmailI18nService(), provider);
-	await expect(service.sendRegistrationApprovedEmail('user@example.com', 'testuser', 'en-US')).resolves.toBe(true);
+	await expect(service.sendEmailChangeNew('user@example.com', 'testuser', '123456', 'en-US')).resolves.toBe(true);
 	expect(sent).toHaveLength(1);
 	return sent[0];
 }

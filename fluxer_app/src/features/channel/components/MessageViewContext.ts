@@ -10,7 +10,7 @@ interface MessagePreviewOverrides {
 	displayName?: string;
 }
 
-export interface MessagePreviewPermissions {
+interface MessagePreviewPermissions {
 	isDM: boolean;
 	canSendMessages: boolean;
 	canAddReactions: boolean;

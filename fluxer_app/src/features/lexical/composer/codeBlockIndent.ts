@@ -12,7 +12,7 @@ const LIST_ITEM_RE = /^( *)(?:[-*]|\d+\.) /;
 const INVISIBLE_RE =
 	/[\p{White_Space}\0\u00ad\u061c\u115f\u1160\u180e\u200b-\u200f\u202a-\u202e\u2060-\u2069\u2800\u3164\ufeff\uffa0]|\u034f|\u17b4|\u17b5|[\ufe00-\ufe0f]|[\u{e0100}-\u{e01ef}]/gu;
 
-export interface CodeIndentEdit {
+interface CodeIndentEdit {
 	start: number;
 	end: number;
 	text: string;

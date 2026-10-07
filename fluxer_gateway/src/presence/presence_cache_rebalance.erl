@@ -20,7 +20,6 @@
     sanitize_pending_operations/1,
     queue_pending_operation/3,
     clear_pending_operation/2,
-    ensure_pending_retry_timer/1,
     cancel_pending_retry_timer/1,
     ensure_pending_state/1,
     count_pending_operations/1,
@@ -137,10 +136,6 @@ queue_pending_operation(UserId, Operation, State) ->
 -spec clear_pending_operation(integer(), state()) -> state().
 clear_pending_operation(UserId, State) ->
     presence_cache_pending:clear_pending_operation(UserId, State).
-
--spec ensure_pending_retry_timer(state()) -> state().
-ensure_pending_retry_timer(State) ->
-    presence_cache_pending:ensure_pending_retry_timer(State).
 
 -spec cancel_pending_retry_timer(state()) -> ok.
 cancel_pending_retry_timer(State) ->

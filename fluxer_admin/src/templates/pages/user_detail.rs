@@ -33,26 +33,6 @@ pub const USER_TABS: &[(&str, &str)] = &[
     ("audit_logs", "Audit Logs"),
 ];
 
-pub fn user_detail_page(
-    config: &AdminConfig,
-    auth: &AuthContext,
-    user: Option<&AdminUser>,
-    user_id: &str,
-    premium_badge_name: Option<&str>,
-    is_htmx: bool,
-) -> Markup {
-    user_detail_with_tab(
-        config,
-        auth,
-        user,
-        user_id,
-        "overview",
-        None,
-        premium_badge_name,
-        is_htmx,
-    )
-}
-
 #[allow(clippy::too_many_arguments)]
 pub fn user_detail_with_tab(
     config: &AdminConfig,

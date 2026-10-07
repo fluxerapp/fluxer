@@ -8,11 +8,6 @@ import {MS_PER_DAY, MS_PER_HOUR, MS_PER_MINUTE, MS_PER_SECOND} from '@fluxer/dat
 import {fromTimestamp, isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {DateTime} from 'luxon';
 
-export interface ParserContext {
-	usersByTag?: Record<string, string>;
-	channelsByName?: Record<string, string>;
-}
-
 export interface SearchHints {
 	usersByTag?: Record<string, string>;
 	channelsByName?: Record<string, string>;
@@ -394,7 +389,7 @@ export interface ParseContext {
 
 const toSnowflakeAt = (dt: DateTime) => fromTimestamp(dt.toMillis()).toString();
 
-export function parseCompactDateTime(input: string, now: DateTime = DateTime.local()): DateTime | null {
+function parseCompactDateTime(input: string, now: DateTime = DateTime.local()): DateTime | null {
 	const trimmed = input['trim']();
 	if (trimmed.length === 0) return null;
 	if (trimmed.toLowerCase() === 'now') return now;
@@ -424,7 +419,7 @@ export function parseCompactDateTime(input: string, now: DateTime = DateTime.loc
 	return null;
 }
 
-export interface SearchDatePeriod {
+interface SearchDatePeriod {
 	readonly start: DateTime;
 	readonly end: DateTime;
 }
@@ -462,7 +457,7 @@ const MONTH_NAMES: ReadonlyArray<string> = [
 
 const RELATIVE_DATE_WORDS: ReadonlyArray<string> = ['today', 'yesterday', ...Object.keys(RELATIVE_PERIOD_UNITS)];
 
-export function getSearchDateWords(now: DateTime = DateTime.local()): Array<string> {
+function getSearchDateWords(now: DateTime = DateTime.local()): Array<string> {
 	const years: Array<string> = [];
 	for (let year = now.year; year >= SEARCH_DATE_YEAR_FLOOR; year -= 1) {
 		years.push(String(year));
@@ -542,7 +537,7 @@ function resolveSearchDateWord(word: string, now: DateTime): SearchDatePeriod | 
 	return {start: floor, end: floor.plus({years: 1})};
 }
 
-export function resolveSearchDatePeriod(input: string, now: DateTime = DateTime.local()): SearchDatePeriod | null {
+function resolveSearchDatePeriod(input: string, now: DateTime = DateTime.local()): SearchDatePeriod | null {
 	const word = input.trim().toLowerCase();
 	if (word.length === 0) return null;
 	const wordPeriod = resolveSearchDateWord(word, now);
@@ -583,7 +578,7 @@ const normalizeSearchFilterKey = (key: string): string => {
 
 const NON_MUTABLE_VALUE_KEYS: ReadonlySet<string> = new Set(['has', 'pinned', 'author-type']);
 
-export function isSearchFilterValueMutable(key: string): boolean {
+function isSearchFilterValueMutable(key: string): boolean {
 	return !NON_MUTABLE_VALUE_KEYS.has(normalizeSearchFilterKey(key));
 }
 
@@ -615,7 +610,7 @@ const SEARCH_FILTER_VALUE_VALIDATORS: Record<string, (value: string) => boolean>
 	during: isSearchDateValue,
 };
 
-export function isSearchFilterValueChippable(key: string, value: string): boolean {
+function isSearchFilterValueChippable(key: string, value: string): boolean {
 	const trimmed = value.trim();
 	if (trimmed.length === 0) return false;
 	const validator = SEARCH_FILTER_VALUE_VALIDATORS[normalizeSearchFilterKey(key)];

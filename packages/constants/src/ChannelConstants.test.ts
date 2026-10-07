@@ -4,7 +4,6 @@ import {
 	ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES,
 	CHANNEL_FOLLOW_TARGET_TYPES,
 	ChannelTypes,
-	CROSSPOST_SERVER_FLAGS,
 	GUILD_TEXT_BASED_CHANNEL_TYPES,
 	isMessageTypeDeletable,
 	MessageFlags,
@@ -37,10 +36,8 @@ describe('announcement channel constants', () => {
 	});
 
 	it('keeps the crosspost flags out of the sendable flags', () => {
-		expect(CROSSPOST_SERVER_FLAGS).toBe(
-			MessageFlags.CROSSPOSTED | MessageFlags.IS_CROSSPOST | MessageFlags.SOURCE_MESSAGE_DELETED,
-		);
-		expect(CROSSPOST_SERVER_FLAGS & SENDABLE_MESSAGE_FLAGS).toBe(0);
+		const crosspostFlags = MessageFlags.CROSSPOSTED | MessageFlags.IS_CROSSPOST | MessageFlags.SOURCE_MESSAGE_DELETED;
+		expect(crosspostFlags & SENDABLE_MESSAGE_FLAGS).toBe(0);
 	});
 
 	it('names both webhook types', () => {

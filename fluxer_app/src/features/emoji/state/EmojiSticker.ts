@@ -31,10 +31,6 @@ class Sticker {
 		return this.guildStickers.get(guildId)?.stickers ?? [];
 	}
 
-	getSticker(guildId: string, stickerId: string): GuildSticker | null {
-		return this.guildStickers.get(guildId)?.stickers.find((s) => s.id === stickerId) ?? null;
-	}
-
 	getStickerById(stickerId: string): GuildSticker | null {
 		return this.stickerById.get(stickerId) ?? null;
 	}

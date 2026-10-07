@@ -83,10 +83,6 @@ const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "{product_name} şifreni sıfırla",
 		"body": "Merhaba {username},\n\n{product_name} şifre sıfırlama talebinde bulundun. Yeni bir şifre belirlemek için aşağıdaki bağlantıyı kullan:\n\n{resetUrl}\n\nBunu sen talep etmediysen, bu e-postayı güvenle yok sayabilirsin.\n\nBu bağlantı 1 saat geçerlidir.\n\n– {product_name} Ekibi"
 	},
-	"registration_approved": {
-		"subject": "{product_name} kaydın onaylandı",
-		"body": "Merhaba {username},\n\nİyi haber: {product_name} kaydın onaylandı.\n\nArtık {product_name} uygulamasına buradan giriş yapabilirsin:\n{channelsUrl}\n\n{product_name} topluluğuna hoş geldin.\n\n– {product_name} Ekibi"
-	},
 	"report_received": {
 		"subject": "{product_name} raporunu aldık",
 		"body": "Merhaba,\n\n{product_name} üzerindeki {targetKind, select, message {bir mesaj} user {bir hesap} guild {bir topluluk} other {içerik}} hakkındaki Dijital Hizmetler Yasası raporunu aldık.\n\nRapor Kimliği: {reportId}\n\nGüvenlik Ekibimiz raporunu inceleyecek ve bir karar verdiğimizde sana bu adrese e-posta göndereceğiz. Bu e-postayı kayıtların için sakla.\n\n– {product_name} Güvenlik Ekibi"

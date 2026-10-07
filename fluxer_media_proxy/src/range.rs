@@ -103,26 +103,6 @@ pub fn parse_range(header: Option<&str>, file_size: usize) -> RangeSelection {
     })
 }
 
-pub fn parse_bounded_request_range(header: Option<&str>, max_len: usize) -> Option<ByteRange> {
-    let raw = header?.trim_matches([' ', '\t']);
-    let spec = raw.strip_prefix("bytes=")?;
-    if spec.contains(',') {
-        return None;
-    }
-    let dash = spec.find('-')?;
-    let end_offset = dash.checked_add(1)?;
-    let start = parse_decimal_usize(spec[..dash].trim_matches([' ', '\t']))?;
-    let end = parse_decimal_usize(spec[end_offset..].trim_matches([' ', '\t']))?;
-    if end < start {
-        return None;
-    }
-    let len = end.checked_sub(start)?.checked_add(1)?;
-    if len > max_len {
-        return None;
-    }
-    Some(ByteRange { start, end })
-}
-
 pub fn classify_request_range(header: Option<&str>) -> RequestRange<'_> {
     let Some(raw) = header else {
         return RequestRange::Absent;
@@ -355,7 +335,6 @@ mod tests {
             RequestRange::Absent,
             classify_request_range(Some("BYTES=0-1"))
         );
-        assert_eq!(None, parse_bounded_request_range(Some("BYTES=0-1"), 32));
         // The response side reads the object store's own reply rather than client input, so a
         // lenient unit there only rescues a Content-Range the strict match would drop.
         assert_eq!(
@@ -387,26 +366,6 @@ mod tests {
             RequestRange::Forwardable("bytes=+5-"),
             classify_request_range(Some("bytes=+5-")),
             "forwarding is unchanged: the object store still settles the spec it always saw"
-        );
-    }
-
-    #[test]
-    fn bounded_request_range_only_accepts_explicit_spans_within_cap() {
-        assert_eq!(
-            Some(ByteRange { start: 10, end: 19 }),
-            parse_bounded_request_range(Some("bytes=10-19"), 32)
-        );
-        assert_eq!(None, parse_bounded_request_range(Some("bytes=10-"), 32));
-        assert_eq!(None, parse_bounded_request_range(Some("bytes=-10"), 32));
-        assert_eq!(None, parse_bounded_request_range(Some("bytes=10-9"), 32));
-        assert_eq!(None, parse_bounded_request_range(Some("bytes=0-32"), 32));
-        assert_eq!(
-            None,
-            parse_bounded_request_range(Some("bytes=0-1, 2-3"), 32)
-        );
-        assert_eq!(
-            None,
-            parse_bounded_request_range(Some("bytes=0-18446744073709551615"), usize::MAX)
         );
     }
 
@@ -519,11 +478,6 @@ mod tests {
                     );
                     assert!(selected.end < file_size, "range beyond file from {header}");
                 }
-                assert!(
-                    parse_bounded_request_range(Some(header), file_size)
-                        .is_none_or(|selected| selected.start <= selected.end
-                            && selected.end - selected.start < file_size)
-                );
             }
             if let Some(parsed) = parse_content_range(Some(header)) {
                 assert!(

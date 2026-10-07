@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AppStorageBootstrapHandle} from '@app/features/platform/state/AppStorageBootstrapContract';
-import {
-	DesktopStorageAuthority,
-	DesktopStorageAuthorityUnavailableError,
-} from '@app/features/platform/state/AppStorageDesktopAuthority';
+import {DesktopStorageAuthority} from '@app/features/platform/state/AppStorageDesktopAuthority';
 import {AppStorageFinalizationSession} from '@app/features/platform/state/AppStorageFinalizationSession';
 import {AppStorageMigrationCoordinator} from '@app/features/platform/state/AppStorageMigrationCoordinator';
 import {activateAppStorageScope, initializeAppStorage} from '@app/features/platform/state/PersistentStorage';
@@ -16,7 +13,6 @@ export type {
 	AppStorageFinalizationResult,
 	AppStorageSessionAccount,
 } from '@app/features/platform/state/AppStorageBootstrapContract';
-export {DesktopStorageAuthorityUnavailableError};
 
 async function initializeSignedOutStorage(options?: {readonly scoped?: boolean}): Promise<void> {
 	await initializeAppStorage(options);

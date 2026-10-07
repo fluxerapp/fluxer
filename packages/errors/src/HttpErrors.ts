@@ -60,18 +60,6 @@ export class NotFoundError extends FluxerError {
 	}
 }
 
-export class MethodNotAllowedError extends FluxerError {
-	constructor(options: HttpErrorOptions = {}) {
-		super({
-			...options,
-			code: options.code ?? APIErrorCodes.METHOD_NOT_ALLOWED,
-			message: options.message ?? 'Method Not Allowed',
-			status: HttpStatus.METHOD_NOT_ALLOWED,
-		});
-		this.name = 'MethodNotAllowedError';
-	}
-}
-
 export class ConflictError extends FluxerError {
 	constructor(options: HttpErrorOptions = {}) {
 		super({
@@ -84,18 +72,6 @@ export class ConflictError extends FluxerError {
 	}
 }
 
-export class GoneError extends FluxerError {
-	constructor(options: HttpErrorOptions = {}) {
-		super({
-			...options,
-			code: options.code ?? APIErrorCodes.GONE,
-			message: options.message ?? 'Gone',
-			status: HttpStatus.GONE,
-		});
-		this.name = 'GoneError';
-	}
-}
-
 export class InternalServerError extends FluxerError {
 	constructor(options: HttpErrorOptions = {}) {
 		super({
@@ -105,18 +81,6 @@ export class InternalServerError extends FluxerError {
 			status: HttpStatus.INTERNAL_SERVER_ERROR,
 		});
 		this.name = 'InternalServerError';
-	}
-}
-
-export class NotImplementedError extends FluxerError {
-	constructor(options: HttpErrorOptions = {}) {
-		super({
-			...options,
-			code: options.code ?? APIErrorCodes.NOT_IMPLEMENTED,
-			message: options.message ?? 'Not Implemented',
-			status: HttpStatus.NOT_IMPLEMENTED,
-		});
-		this.name = 'NotImplementedError';
 	}
 }
 

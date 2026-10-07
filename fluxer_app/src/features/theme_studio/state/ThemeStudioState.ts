@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import AppStorage from '@app/features/platform/state/PersistentStorage';
-import {makeAutoObservable, runInAction} from 'mobx';
+import {makeAutoObservable} from 'mobx';
 
-export type ThemeStudioSection = 'library' | 'tokens' | 'quickCss' | 'assets' | 'settings';
+type ThemeStudioSection = 'library' | 'tokens' | 'quickCss' | 'assets' | 'settings';
 
 const SECTION_STORAGE_KEY = 'ThemeStudio:section';
 const EXPANDED_GROUPS_STORAGE_KEY = 'ThemeStudio:expandedGroups';
@@ -82,12 +82,6 @@ class ThemeStudioState {
 		this.persistExpansion();
 	}
 
-	collapseAllGroups(): void {
-		this.expandedGroups = new Set();
-		this.hasInitializedExpansion = true;
-		this.persistExpansion();
-	}
-
 	private persistExpansion(): void {
 		if (typeof window === 'undefined') return;
 		try {
@@ -103,18 +97,6 @@ class ThemeStudioState {
 	clearPoppedOut(): void {
 		this.isPoppedOut = false;
 		this.popupRef = null;
-	}
-
-	resetForTesting(): void {
-		runInAction(() => {
-			this.section = 'tokens';
-			this.tokenSearch = '';
-			this.librarySearch = '';
-			this.expandedGroups = new Set();
-			this.hasInitializedExpansion = false;
-			this.isPoppedOut = false;
-			this.popupRef = null;
-		});
 	}
 }
 

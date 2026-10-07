@@ -2,21 +2,6 @@
 
 use maud::{Markup, PreEscaped, html};
 
-pub fn page_container(spacing: &str, content: Markup) -> Markup {
-    let class = match spacing {
-        "sm" => "space-y-4",
-        "lg" => "space-y-8",
-        _ => "space-y-6",
-    };
-    html! {
-        div class=(class) { (content) }
-    }
-}
-
-pub fn page_container_md(content: Markup) -> Markup {
-    page_container("md", content)
-}
-
 pub fn page_header(title: &str, description: Option<&str>) -> Markup {
     page_header_full(title, description, None, None, None, maud::html! {})
 }
@@ -118,28 +103,6 @@ pub fn detail_row(label: &str, value: Markup) -> Markup {
             }
             dd class="text-sm text-neutral-900" {
                 (value)
-            }
-        }
-    }
-}
-
-pub fn tabs(tabs: &[(&str, &str, bool)], base_url: &str) -> Markup {
-    html! {
-        div class="border-b border-neutral-200 mb-6" {
-            nav class="-mb-px flex gap-6" aria-label="Tabs" {
-                @for (id, label, active) in tabs {
-                    @let classes = if *active {
-                        "border-brand-primary text-brand-primary whitespace-nowrap border-b-2 \
-                         pb-3 pt-1 text-sm font-medium"
-                    } else {
-                        "border-transparent text-neutral-500 hover:border-neutral-300 \
-                         hover:text-neutral-700 whitespace-nowrap border-b-2 pb-3 pt-1 \
-                         text-sm font-medium"
-                    };
-                    a href={(base_url) "?tab=" (id)} class=(classes) {
-                        (label)
-                    }
-                }
             }
         }
     }

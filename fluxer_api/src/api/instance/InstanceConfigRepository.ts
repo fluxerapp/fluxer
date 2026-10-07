@@ -155,7 +155,7 @@ type InstanceBrandingPatch = Partial<Omit<InstanceBranding, 'premium_product_nam
 
 export type InstanceBillingConfig = StoredBillingConfig;
 
-export type InstanceBillingPriceSetPatch = Partial<NonNullable<StoredBillingConfig['prices']>[string]>;
+type InstanceBillingPriceSetPatch = Partial<NonNullable<StoredBillingConfig['prices']>[string]>;
 
 export interface InstanceBillingConfigPatch {
 	enabled?: boolean | null;
@@ -404,7 +404,7 @@ function normalizeOptionalPublicString(value: string | null | undefined, fallbac
 	return value === undefined ? fallback : normalizeOptionalString(value);
 }
 
-export function getDefaultPremiumProductName(): string {
+function getDefaultPremiumProductName(): string {
 	return Config.instance.selfHosted ? 'Premium' : 'Plutonium';
 }
 
@@ -576,7 +576,7 @@ const StoredAccountIdentityConfigSchema = z.object({
 	source: z.enum(['new_instance', 'existing_instance', 'setup']),
 });
 
-export type StoredAccountIdentityConfig = z.infer<typeof StoredAccountIdentityConfigSchema>;
+type StoredAccountIdentityConfig = z.infer<typeof StoredAccountIdentityConfigSchema>;
 
 function parseStoredAccountIdentityConfig(raw: string | null): StoredAccountIdentityConfig | null {
 	if (raw === null) return null;
@@ -1882,10 +1882,6 @@ export class InstanceConfigRepository {
 			renew_threshold_days: attachmentDecay.renew_threshold_days ?? DEFAULT_RENEWAL_CONSTANTS.RENEW_THRESHOLD_DAYS,
 			renew_window_days: attachmentDecay.renew_window_days ?? DEFAULT_RENEWAL_CONSTANTS.RENEW_WINDOW_DAYS,
 		};
-	}
-
-	async isAttachmentDecayEnabled(): Promise<boolean> {
-		return (await this.getEffectiveAttachmentDecayConfig()).enabled;
 	}
 
 	async getInstanceMediaAdminConfig(): Promise<InstanceMediaAdminConfig> {

@@ -79,10 +79,6 @@
 		"subject": "إعادة تعيين كلمة المرور في {product_name}",
 		"body": "مرحبًا {username}،\n\nلقد طلبت إعادة تعيين كلمة المرور الخاصة بك في {product_name}. استخدم الرابط أدناه لتعيين كلمة مرور جديدة:\n\n{resetUrl}\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد الإلكتروني بأمان.\n\nهذا الرابط صالح لمدة ساعة واحدة.\n\n– فريق {product_name}"
 	},
-	"registration_approved": {
-		"subject": "تمت الموافقة على تسجيلك في {product_name}",
-		"body": "مرحبًا {username}،\n\nأخبار سارة: تمت الموافقة على تسجيلك في {product_name}.\n\nيمكنك الآن تسجيل الدخول إلى تطبيق {product_name} من هنا:\n{channelsUrl}\n\nمرحبًا بك في مجتمع {product_name}.\n\n– فريق {product_name}"
-	},
 	"report_received": {
 		"subject": "لقد استلمنا بلاغك في {product_name}",
 		"body": "مرحبًا،\n\nلقد استلمنا بلاغك بموجب قانون الخدمات الرقمية بشأن {targetKind, select, message {رسالة} user {حساب} guild {مجتمع} other {محتوى}} على {product_name}.\n\nمعرف البلاغ: {reportId}\n\nسيراجع فريق الأمان لدينا بلاغك وسنراسلك على هذا العنوان عندما نتخذ قرارًا. احتفظ بهذه الرسالة للرجوع إليها.\n\n– فريق أمان {product_name}"

@@ -43,36 +43,6 @@ export interface LinuxScreenCaptureBackendInfo {
 
 export declare function getBackendInfo(): LinuxScreenCaptureBackendInfo;
 
-export interface LinuxGameCaptureLaunchEnvironmentOptions {
-	env?: NodeJS.ProcessEnv;
-	nativeRoot?: string;
-	name?: string;
-	mode?: 'auto' | 'vulkan' | 'opengl';
-	preferDiscreteGpu?: boolean;
-	forceNvidiaIcd?: boolean | string;
-}
-
-export interface LinuxGameCaptureLaunchEnvironmentResult {
-	env: NodeJS.ProcessEnv;
-	diagnostics: {
-		mode: 'auto' | 'vulkan' | 'opengl';
-		preferDiscreteGpu: boolean;
-		forceNvidiaIcd: boolean;
-		nvidiaIcdPath: string | null;
-		bundledVulkanLayerDir: string | null;
-		systemVulkanLayerManifest: string | null;
-		vulkanLayerName: string | null;
-		bundledGlCaptureLib: string | null;
-		systemGlCaptureLib: string | null;
-		glCaptureLib: string | null;
-		licenseBoundary: string;
-	};
-}
-
-export declare function getGameCaptureLaunchEnvironment(
-	options?: LinuxGameCaptureLaunchEnvironmentOptions,
-): LinuxGameCaptureLaunchEnvironmentResult;
-
 export interface ScreenCaptureRect {
 	x: number;
 	y: number;

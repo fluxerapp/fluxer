@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type BillingSubscriptionStatus =
+type BillingSubscriptionStatus =
 	| 'active'
 	| 'trialing'
 	| 'past_due'
@@ -9,9 +9,9 @@ export type BillingSubscriptionStatus =
 	| 'incomplete'
 	| 'incomplete_expired'
 	| 'paused';
-export type BillingInvoiceStatus = 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
-export type BillingRefundStatus = 'pending' | 'succeeded' | 'failed' | 'canceled' | 'requires_action';
-export type BillingPaymentIntentStatus =
+type BillingInvoiceStatus = 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
+type BillingRefundStatus = 'pending' | 'succeeded' | 'failed' | 'canceled' | 'requires_action';
+type BillingPaymentIntentStatus =
 	| 'requires_payment_method'
 	| 'requires_confirmation'
 	| 'requires_action'
@@ -19,7 +19,7 @@ export type BillingPaymentIntentStatus =
 	| 'requires_capture'
 	| 'canceled'
 	| 'succeeded';
-export type BillingDisputeStatus =
+type BillingDisputeStatus =
 	| 'warning_needs_response'
 	| 'warning_under_review'
 	| 'warning_closed'
@@ -27,10 +27,10 @@ export type BillingDisputeStatus =
 	| 'under_review'
 	| 'won'
 	| 'lost';
-export type BillingCheckoutSessionStatus = 'open' | 'complete' | 'expired';
+type BillingCheckoutSessionStatus = 'open' | 'complete' | 'expired';
 export type BillingActionIntentStatus = 'pending' | 'sub_canceled' | 'refund_created' | 'complete' | 'failed';
-export type BillingPaymentStatus = 'open' | 'paid' | 'canceled' | 'abandoned';
-export type BillingChargeStatus = 'succeeded' | 'pending' | 'failed';
+type BillingPaymentStatus = 'open' | 'paid' | 'canceled' | 'abandoned';
+type BillingChargeStatus = 'succeeded' | 'pending' | 'failed';
 export type BillingActionType = 'cancel_and_refund' | 'cancel_immediate' | 'refund_only';
 
 export interface BillingCustomerRow {

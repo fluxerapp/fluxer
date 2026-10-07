@@ -13,11 +13,11 @@ export class PreviewSizeLimitError extends Error {
 	}
 }
 
-export function isAttachmentSignatureRefusal(status: number): boolean {
+function isAttachmentSignatureRefusal(status: number): boolean {
 	return SIGNATURE_REFUSAL_STATUSES.has(status);
 }
 
-export async function readPreviewText(response: Response): Promise<string> {
+async function readPreviewText(response: Response): Promise<string> {
 	const contentLength = response.headers.get('content-length');
 	if (contentLength !== null) {
 		const parsedContentLength = Number(contentLength);

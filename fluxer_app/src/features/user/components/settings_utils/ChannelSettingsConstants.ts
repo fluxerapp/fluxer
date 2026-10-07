@@ -99,7 +99,7 @@ export const CATEGORY_SETTINGS_LABEL_DESCRIPTOR = msg({
 	comment: 'Root label for category settings modal and settings search paths.',
 });
 
-export function getChannelSettingsTabLabel(i18n: I18n, tabType: ChannelSettingsTabType): string {
+function getChannelSettingsTabLabel(i18n: I18n, tabType: ChannelSettingsTabType): string {
 	const tab = CHANNEL_SETTINGS_TABS_DESCRIPTORS.find((candidate) => candidate.type === tabType);
 	return tab ? i18n._(tab.label) : '';
 }

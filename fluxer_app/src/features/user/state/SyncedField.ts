@@ -16,8 +16,6 @@ import {create, equals, type Message, type MessageInitShape, toBinary} from '@bu
 import type {GenMessage} from '@bufbuild/protobuf/codegenv2';
 import {compareShallow, reaction, runInAction} from 'mobx';
 
-export {verifyRoundtripStability};
-
 const logger = new Logger('SyncedField');
 
 interface SyncedFieldUserSettings {

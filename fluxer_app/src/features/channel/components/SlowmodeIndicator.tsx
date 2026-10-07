@@ -68,7 +68,7 @@ export function formatSlowmodeTime(ms: number, locale: string): string {
 	return `${formatTimeSegment(minutes, locale)}:${formatTimeSegment(seconds, locale)}`;
 }
 
-export function formatSlowmodeDuration(ms: number, locale: string): string {
+function formatSlowmodeDuration(ms: number, locale: string): string {
 	const totalSeconds = Math.max(1, Math.round(ms / MS_PER_SECOND));
 	if (totalSeconds < SECONDS_PER_MINUTE) {
 		return formatDurationPart(totalSeconds, 'second', locale);

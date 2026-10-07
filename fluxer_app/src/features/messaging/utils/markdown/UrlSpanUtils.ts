@@ -10,7 +10,7 @@ export interface TextSpan {
 	end: number;
 }
 
-export function isUrlStart(content: string, index: number): boolean {
+function isUrlStart(content: string, index: number): boolean {
 	if (content.startsWith(HTTP_PREFIX, index) || content.startsWith(HTTPS_PREFIX, index)) {
 		return true;
 	}

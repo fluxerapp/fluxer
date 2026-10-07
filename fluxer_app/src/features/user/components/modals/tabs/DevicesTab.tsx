@@ -340,7 +340,7 @@ interface DevicesTabContentProps {
 	presentation?: 'settings' | 'modal';
 }
 
-export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({presentation = 'settings'}) => {
+const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({presentation = 'settings'}) => {
 	const {i18n} = useLingui();
 	const [authSessionTarget] = useState(currentInstanceTarget);
 	const isModalPresentation = presentation === 'modal';
@@ -548,7 +548,3 @@ export const LinkedDevicesManagementModal = observer(() => (
 		/>
 	</Modal.Root>
 ));
-
-const DevicesTab: React.FC = observer(() => <DevicesTabContent data-flx="user.devices-tab.devices-tab-content" />);
-
-export default DevicesTab;

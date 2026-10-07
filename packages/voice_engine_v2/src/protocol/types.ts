@@ -35,8 +35,8 @@ export type VoiceEngineV2RemoteTrackQuality = 'low' | 'medium' | 'high';
 export type VoiceEngineV2VideoCodec = '' | 'vp8' | 'vp9' | 'h264' | 'h265' | 'av1';
 
 export type VoiceEngineV2ScreenPacing = 'sender' | 'source';
-export type VoiceEngineV2CameraBackgroundMode = 'none' | 'non' | 'blur' | 'custom';
-export type VoiceEngineV2CameraBackgroundCustomMediaKind = 'static' | 'animated' | 'video';
+type VoiceEngineV2CameraBackgroundMode = 'none' | 'non' | 'blur' | 'custom';
+type VoiceEngineV2CameraBackgroundCustomMediaKind = 'static' | 'animated' | 'video';
 
 export type VoiceEngineV2ResourceKey =
 	| 'implementation'

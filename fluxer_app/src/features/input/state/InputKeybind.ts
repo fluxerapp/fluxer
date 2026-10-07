@@ -158,8 +158,8 @@ export type KeybindSection =
 	| 'chat'
 	| 'voice_and_video'
 	| 'misc';
-export type DefaultsShortcutDisplayKind = 'any_key' | 'space_or_enter';
-export type EditableFocusShortcutBehavior = 'allow' | 'allow_when_empty';
+type DefaultsShortcutDisplayKind = 'any_key' | 'space_or_enter';
+type EditableFocusShortcutBehavior = 'allow' | 'allow_when_empty';
 
 export interface KeybindConfig {
 	action: KeybindCommand;
@@ -1332,9 +1332,4 @@ export default new Keybind();
 export function getDefaultKeybind(action: KeybindCommand, i18n: I18n): KeyCombo | null {
 	const entry = getDefaultKeybinds(i18n).find((k) => k.action === action);
 	return entry ? {...entry.combo} : null;
-}
-
-export function getActionLabel(action: KeybindCommand, i18n: I18n): string {
-	const entry = getDefaultKeybinds(i18n).find((k) => k.action === action);
-	return entry?.label ?? action;
 }

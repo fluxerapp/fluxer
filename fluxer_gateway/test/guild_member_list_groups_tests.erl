@@ -59,41 +59,6 @@ hoisted_roles_hoist_position_undefined_falls_back_test() ->
 hoisted_roles_empty_list_test() ->
     ?assertEqual([], guild_member_list_groups:get_hoisted_roles_sorted([], 100)).
 
-build_role_groups_empty_guild_test() ->
-    ?assertEqual([], guild_member_list_groups:build_role_groups([], [])).
-
-build_role_groups_all_members_same_hoisted_role_test() ->
-    HoistedRole = #{<<"id">> => <<"200">>, <<"hoist">> => true, <<"position">> => 5},
-    Member1 = #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => [<<"200">>]},
-    Member2 = #{<<"user">> => #{<<"id">> => <<"2">>}, <<"roles">> => [<<"200">>]},
-    Groups = guild_member_list_groups:build_role_groups([HoistedRole], [Member1, Member2]),
-    ?assertEqual(1, length(Groups)),
-    ?assertEqual(2, maps:get(<<"count">>, hd(Groups))).
-
-count_ungrouped_online_no_hoisted_roles_test() ->
-    Members = [
-        #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => []},
-        #{<<"user">> => #{<<"id">> => <<"2">>}, <<"roles">> => []}
-    ],
-    ?assertEqual(2, guild_member_list_groups:count_ungrouped_online(Members, [])).
-
-count_ungrouped_online_all_hoisted_test() ->
-    HoistedRole = #{<<"id">> => <<"200">>, <<"hoist">> => true, <<"position">> => 5},
-    Members = [
-        #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => [<<"200">>]},
-        #{<<"user">> => #{<<"id">> => <<"2">>}, <<"roles">> => [<<"200">>]}
-    ],
-    ?assertEqual(0, guild_member_list_groups:count_ungrouped_online(Members, [HoistedRole])).
-
-count_members_with_top_role_no_matching_members_test() ->
-    HoistedRole = #{<<"id">> => <<"200">>, <<"hoist">> => true, <<"position">> => 5},
-    Members = [
-        #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => [<<"300">>]}
-    ],
-    ?assertEqual(
-        0, guild_member_list_groups:count_members_with_top_role(200, Members, [HoistedRole])
-    ).
-
 find_top_hoisted_role_respects_position_test() ->
     MemberRoleIds = [100, 200, 300],
     HoistedRoleIdsSortedByPosition = [300, 200],

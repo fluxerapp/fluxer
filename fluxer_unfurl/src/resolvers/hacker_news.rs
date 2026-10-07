@@ -29,9 +29,6 @@ struct HnItem {
     dead: Option<bool>,
     deleted: Option<bool>,
     title: Option<String>,
-    #[serde(default)]
-    #[allow(dead_code)]
-    score: Option<u64>,
 }
 
 impl Resolver for HackerNewsResolver {

@@ -10,7 +10,6 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(PID_CACHE_TABLE, presence_pid_cache).
--define(CACHE_TTL_MS, 300000).
 
 -type user_id() :: integer().
 -type presence_ref() :: {pid(), reference()}.

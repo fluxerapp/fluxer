@@ -17,7 +17,7 @@ export const REACT_WITH_EMOJI_DESCRIPTOR = msg({
 		'Accessible label for a quick reaction emoji button. Preserve {emojiShortcode}; it is inserted by code, usually like :smile:.',
 });
 
-export function getQuickReactionEmojiSrc(emoji: FlatEmoji): string {
+function getQuickReactionEmojiSrc(emoji: FlatEmoji): string {
 	const {url: displayUrl} = getEmojiDisplayData(emoji);
 	return emoji.id ? buildCustomEmojiURL({id: emoji.id, animated: emoji.animated === true}) : (displayUrl ?? '');
 }
@@ -36,7 +36,7 @@ export function renderQuickReactionEmoji(emoji: FlatEmoji): React.ReactNode {
 	);
 }
 
-export function getReactionSubmenuEmojiSrc(emoji: FlatEmoji, animationAllowed: boolean): string {
+function getReactionSubmenuEmojiSrc(emoji: FlatEmoji, animationAllowed: boolean): string {
 	const {url: displayUrl} = getEmojiDisplayData(emoji);
 	return emoji.id
 		? buildCustomEmojiURL({id: emoji.id, animated: emoji.animated === true && animationAllowed})

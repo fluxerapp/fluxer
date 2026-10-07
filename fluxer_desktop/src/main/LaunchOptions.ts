@@ -143,7 +143,7 @@ export function getNativeGatewayDisableReason(argv: ReadonlyArray<string> = proc
 	return null;
 }
 
-export function isPortableLaunchFlag(argv: ReadonlyArray<string> = process.argv): boolean {
+function isPortableLaunchFlag(argv: ReadonlyArray<string> = process.argv): boolean {
 	return hasFlag(argv, PORTABLE_MODE_ARGS);
 }
 

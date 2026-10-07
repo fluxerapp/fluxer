@@ -227,13 +227,6 @@ class SelectedChannel {
 		return true;
 	}
 
-	deselectChannel(): void {
-		const guildId = this.getCurrentGuildId();
-		if (guildId != null) {
-			this.removeGuildSelection(guildId);
-		}
-	}
-
 	clearGuildSelection(guildId: string): void {
 		const normalizedGuildId = this.normalizeGuildId(guildId);
 		if (!normalizedGuildId) return;

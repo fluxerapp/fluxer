@@ -61,8 +61,6 @@ module.exports = {
 	resolveKwinWindowPid: binding ? binding.resolveKwinWindowPid : null,
 	resolveX11WindowPid: binding ? binding.resolveX11WindowPid : null,
 	resolveWindowPid: binding ? binding.resolveWindowPid : null,
-	openFile: binding ? binding.openFile : null,
-	saveFile: binding ? binding.saveFile : null,
 	requestBackground: binding ? binding.requestBackground : null,
 	GlobalShortcutsPortal: binding ? binding.GlobalShortcutsPortal : null,
 	SessionStateMonitor: binding ? binding.SessionStateMonitor : null,

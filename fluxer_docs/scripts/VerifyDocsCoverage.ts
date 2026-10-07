@@ -1225,11 +1225,11 @@ console.log('media proxy image constants');
 	const ladderBlock = constants.match(/pub const IMAGE_SIZES: &\[u32\] = &\[([\s\S]*?)\];/u);
 	const ladder = ladderBlock == null ? [] : [...ladderBlock[1].matchAll(/\d+/gu)].map((m) => Number.parseInt(m[0], 10));
 	const defaultSize = constants.match(/pub const DEFAULT_IMAGE_SIZE: u32 = (\d+);/u);
-	const dimsBlock = constants.match(/pub fn dims_for\(kind: AssetKind\) -> Option<Dims> \{([\s\S]*?)\n\}/u);
+	const dimsBlock = constants.match(/pub fn dims_for\(kind: AssetKind\) -> Dims \{([\s\S]*?)\n\}/u);
 	const dims: Array<[string, number, number]> = [];
 	if (dimsBlock != null) {
 		for (const entry of dimsBlock[1].matchAll(
-			/((?:AssetKind::\w+\s*\|?\s*)+)=> Some\(Dims \{\s*min:\s*(\d+),\s*max:\s*(\d+),?\s*\}\)/gu,
+			/((?:AssetKind::\w+\s*\|?\s*)+)=> Dims \{\s*min:\s*(\d+),\s*max:\s*(\d+),?\s*\}/gu,
 		)) {
 			dims.push([entry[1].trim(), Number.parseInt(entry[2], 10), Number.parseInt(entry[3], 10)]);
 		}
@@ -1250,6 +1250,10 @@ console.log('media proxy image constants');
 		if (listed.join(',') !== ladder.join(',')) {
 			problems.push(`size ladder differs. documented [${listed.join(', ')}] vs IMAGE_SIZES [${ladder.join(', ')}]`);
 		}
+	}
+
+	if (dims.length === 0) {
+		problems.push('no asset class clamps parsed from dims_for in fluxer_media_proxy/src/constants.rs');
 	}
 
 	if (defaultSize != null && !ladderPage.includes(`resolves to ${defaultSize[1]} before clamping`)) {

@@ -47,7 +47,7 @@ export interface TemplateCreateFormInputs {
 	name: string;
 }
 
-export const THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE = 13;
+const THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE = 13;
 
 export function mapTemplateChannelTypeToFluxer(channelType: number): number | null {
 	if (

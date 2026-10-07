@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type InspectedImageFormat = 'unknown' | 'png' | 'gif' | 'webp' | 'avif' | 'jpeg';
+type InspectedImageFormat = 'unknown' | 'png' | 'gif' | 'webp' | 'avif' | 'jpeg';
 
 export interface InspectedImage {
 	format: InspectedImageFormat;

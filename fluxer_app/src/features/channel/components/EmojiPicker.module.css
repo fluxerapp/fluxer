@@ -17,14 +17,6 @@
 	cursor: pointer;
 }
 
-.cursorPointer {
-	cursor: pointer;
-}
-
-.cursorText {
-	cursor: text;
-}
-
 .skinTonePickerOptions {
 	position: absolute;
 	top: -0.25rem;
@@ -127,110 +119,9 @@
 	font-size: 0.875rem;
 }
 
-.header {
-	display: flex;
-	align-items: center;
-	position: relative;
-	grid-column: 1 / 3;
-	padding: var(--spacing-3);
-	z-index: 100;
-}
-
-.headerMobile {
-	grid-column: 1;
-}
-
-.searchBar {
-	display: flex;
-	flex: 1;
-	margin-right: var(--spacing-3);
-	box-sizing: border-box;
-	border-radius: var(--radius-md);
-	overflow: hidden;
-	background-color: var(--background-primary);
-}
-
-:global(.theme-light) .searchBar {
-	background-color: var(--background-secondary);
-	box-shadow: inset 0 0 0 0.0625rem var(--background-modifier-accent);
-}
-
-.searchBarInner {
-	display: flex;
-	position: relative;
-	flex: 1 1 auto;
-	flex-direction: row;
-	flex-wrap: wrap;
-	padding: 0.0625rem;
-	box-sizing: border-box;
-}
-
-.searchBarInput {
-	flex: 1;
-	min-width: 3rem;
-	height: 1.875rem;
-	margin: 0.0625rem;
-	padding: 0 0.5rem;
-	box-sizing: border-box;
-	font-size: 1rem;
-	line-height: 2rem;
-	background: transparent;
-	border: none;
-	resize: none;
-	appearance: none;
-	color: var(--text-tertiary);
-}
-
-.searchBarInput::placeholder {
-	color: var(--text-primary-muted);
-}
-
-.iconLayout {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	width: 2rem;
-	height: 2rem;
-	box-sizing: border-box;
-	cursor: text;
-}
-
-.iconContainer {
-	position: relative;
-	width: 1.25rem;
-	height: 1.25rem;
-	box-sizing: border-box;
-}
-
-.icon {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	opacity: 0;
-	transform: rotate(90deg);
-	z-index: 2;
-	transition:
-		transform 0.1s ease-out,
-		opacity 0.1s ease-out;
-	color: var(--text-tertiary-muted);
-}
-
-.icon.visible {
-	transform: rotate(0);
-	opacity: 1;
-}
-
 .iconSize {
 	width: 1.5rem;
 	height: 1.5rem;
-}
-
-.categoryIcon {
-	width: 1.25rem;
-	height: 1.25rem;
-	flex-shrink: 0;
 }
 
 .headerIcon {
@@ -359,21 +250,8 @@
 	color: var(--text-primary);
 }
 
-.categoryListIconActive {
-	background-color: var(--background-modifier-hover);
-	color: var(--text-primary);
-}
-
 .textPrimaryMuted {
 	color: var(--text-primary-muted);
-}
-
-.emojiRowContainer {
-	height: 3rem;
-	display: flex;
-	align-items: center;
-	min-width: 0;
-	padding: 0 var(--spacing-3);
 }
 
 .emojiGrid {
@@ -388,10 +266,6 @@
 .emojiGridFixedTrack {
 	grid-auto-flow: column;
 	justify-content: start;
-}
-
-.emojiGridCategory {
-	margin-bottom: 1rem;
 }
 
 .categoryTitle {
@@ -429,12 +303,6 @@
 	background-color: var(--background-modifier-selected) !important;
 }
 
-.focusedEmojiRenderer {
-	background-color: var(--background-modifier-hover);
-	outline: 0.125rem solid var(--brand-primary-light);
-	outline-offset: -0.125rem;
-}
-
 .emojiImage {
 	width: 83.33%;
 	height: 83.33%;
@@ -459,11 +327,6 @@
 	min-height: 2rem;
 	background-repeat: no-repeat;
 	flex-shrink: 0;
-}
-
-.iconSmall {
-	height: 1rem;
-	width: 1rem;
 }
 
 .horizontalCategories {

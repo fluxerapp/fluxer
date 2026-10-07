@@ -35,7 +35,7 @@ const NOOP_SETTINGS_TREE_API: SettingsTreeApi = {
 };
 const SettingsTreeContext = React.createContext<SettingsTreeApi>(NOOP_SETTINGS_TREE_API);
 export const SettingsTreeProvider = SettingsTreeContext.Provider;
-export function useSettingsTree(): SettingsTreeApi {
+function useSettingsTree(): SettingsTreeApi {
 	return useContext(SettingsTreeContext);
 }
 

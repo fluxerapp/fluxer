@@ -6,7 +6,6 @@
 -export([
     set_session_active_guild/3,
     set_session_passive_guild/3,
-    is_session_active/2,
     handle_set_typing_override/3,
     handle_send_guild_sync/2,
     handle_send_members_chunk/3
@@ -49,15 +48,6 @@ set_passive_for_session(SessionId, ValidGuildId, State) ->
             session_passive:clear_guild_synced(ValidGuildId, NewSD)
         )
     end).
-
--spec is_session_active(session_id(), guild_state()) -> boolean().
-is_session_active(SessionId, State) ->
-    case guild_session(SessionId, State) of
-        {GuildId, _Sessions, SessionData} ->
-            not session_passive:is_passive(GuildId, SessionData);
-        undefined ->
-            false
-    end.
 
 -spec handle_set_typing_override(session_id(), boolean(), guild_state()) -> guild_state().
 handle_set_typing_override(SessionId, TypingFlag, State) ->
@@ -172,9 +162,5 @@ set_session_passive_guild_missing_session_test() ->
     State = #{sessions => #{}},
     Result = set_session_passive_guild(<<"nonexistent">>, 42, State),
     ?assertEqual(State, Result).
-
-is_session_active_missing_session_test() ->
-    State = #{id => 42, sessions => #{}},
-    ?assertEqual(false, is_session_active(<<"nonexistent">>, State)).
 
 -endif.

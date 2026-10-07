@@ -69,7 +69,7 @@ export function buildEmojiRowOffsets(
 	return rowOffsets;
 }
 
-export function findEmojiRowForOffset(rowOffsets: ReadonlyArray<number>, pixel: number): number {
+function findEmojiRowForOffset(rowOffsets: ReadonlyArray<number>, pixel: number): number {
 	const lastRow = rowOffsets.length - 2;
 	if (lastRow < 0 || pixel <= 0) {
 		return 0;
@@ -139,7 +139,7 @@ const getSpriteSheetKey = (skinTone?: string): string => {
 	const codepoint = convertToCodePoints(skinTone);
 	return SPRITE_SHEET_RESOURCES[codepoint] ? codepoint : 'default';
 };
-export const getSpriteSheetPath = (skinTone?: string, options?: SpriteSheetOptions): string => {
+const getSpriteSheetPath = (skinTone?: string, options?: SpriteSheetOptions): string => {
 	const key = getSpriteSheetKey(skinTone);
 	const sheet = SPRITE_SHEET_RESOURCES[key];
 	return options?.retina ? sheet.retina : sheet.standard;

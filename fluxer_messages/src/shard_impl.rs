@@ -363,11 +363,6 @@ impl PageCursor {
 enum UserServiceResponse {
     FoundPartials(Vec<UserPartialServiceResponse>),
     FoundPartial(UserPartialServiceResponse),
-    NotFound,
-    #[allow(dead_code)]
-    Found(serde_json::Value),
-    #[allow(dead_code)]
-    Invalidated,
 }
 
 #[derive(Debug, Deserialize)]

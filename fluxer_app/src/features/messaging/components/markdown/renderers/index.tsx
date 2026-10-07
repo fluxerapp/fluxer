@@ -34,7 +34,6 @@ import {TextRenderer} from '@app/features/messaging/components/markdown/renderer
 import {TimestampRenderer} from '@app/features/messaging/components/markdown/renderers/TimestampRenderer';
 import {shouldRenderAsJumboEmojis} from '@app/features/messaging/utils/markdown/JumboDetector';
 import {parseMarkdownContent} from '@app/features/messaging/utils/markdown/MarkdownParseCache';
-import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
 import {NodeType} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -43,9 +42,6 @@ import {i18n} from '@lingui/core';
 import React from 'react';
 
 const logger = new Logger('MarkdownRenderers');
-
-export {getParserFlagsForContext};
-
 export const parse = parseMarkdownContent;
 
 const renderers = {

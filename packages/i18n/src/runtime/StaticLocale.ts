@@ -2,7 +2,7 @@
 
 import type {StaticI18nConfig} from '@fluxer/i18n/src/runtime/CreateStaticI18n';
 
-export function hasStaticLocale<TKey extends string, TValue, TVariables>(
+function hasStaticLocale<TKey extends string, TValue, TVariables>(
 	config: StaticI18nConfig<TKey, TValue, TVariables>,
 	normalizedLocale: string,
 ): boolean {

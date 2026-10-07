@@ -4,7 +4,7 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--export([start_link/1, cast_member_list/4, cast_event/4, ensure/1]).
+-export([start_link/1, cast_event/4, ensure/1]).
 
 -define(MAX_MAILBOX, 500).
 -define(IDLE_GC_DELAY_MS, 1000).
@@ -12,7 +12,6 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -type broadcaster_ref() :: pid() | undefined.
--type snapshot() :: map().
 
 -spec start_link(integer()) -> gen_server:start_ret().
 start_link(GuildId) ->
@@ -35,13 +34,6 @@ ensure_alive(Pid, State) ->
         true -> {Pid, State};
         false -> start_and_store(State)
     end.
-
--spec cast_member_list(broadcaster_ref(), integer(), snapshot(), snapshot()) -> boolean().
-cast_member_list(BroadcasterPid, UserId, OldSnapshot, NewSnapshot) ->
-    maybe_cast(
-        BroadcasterPid,
-        {member_list_broadcast, UserId, OldSnapshot, NewSnapshot}
-    ).
 
 -spec cast_event(broadcaster_ref(), atom(), term(), [pid()]) -> boolean().
 cast_event(BroadcasterPid, Event, EncodedPayload, FilteredSessionPids) ->
@@ -73,8 +65,6 @@ handle_call(_Req, _From, State) ->
     {reply, {error, unknown_call}, State}.
 
 -spec handle_cast(term(), map()) -> {noreply, map()}.
-handle_cast({member_list_broadcast, _UserId, _OldSnapshot, _NewSnapshot}, State) ->
-    {noreply, maybe_schedule_gc(State)};
 handle_cast({event_broadcast, Event, EncodedPayload, FilteredSessionPids}, State) ->
     maybe_dispatch_event_from_terms(Event, EncodedPayload, FilteredSessionPids, State),
     {noreply, maybe_schedule_gc(State)};

@@ -47,13 +47,6 @@
 	gap: var(--spacing-3);
 }
 
-.dnsMeta {
-	margin: 0;
-	color: var(--text-secondary);
-	font-size: 0.8125rem;
-	line-height: 1.5;
-}
-
 .inlineCode {
 	font-family: var(--font-mono);
 	font-size: 0.85em;

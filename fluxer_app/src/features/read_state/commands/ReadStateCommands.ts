@@ -52,7 +52,7 @@ export function ackWithStickyUnread(channelId: string): void {
 	ReadStates.handleChannelAckWithStickyUnread({channelId});
 }
 
-export async function manualAck(channelId: string, messageId: string): Promise<void> {
+async function manualAck(channelId: string, messageId: string): Promise<void> {
 	try {
 		logger.debug(`Manual ack: ${messageId} in ${channelId}`);
 		const mentionCount = ReadStates.getManualAckMentionCount(channelId, messageId);

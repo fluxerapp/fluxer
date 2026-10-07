@@ -1,13 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {mkdirSync, mkdtempSync, readFileSync, writeFileSync} from 'node:fs';
-import {tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {readFileSync} from 'node:fs';
 import {afterEach, describe, it} from 'node:test';
 import linuxScreenCapture from './index.js';
-
-const {getGameCaptureLaunchEnvironment} = linuxScreenCapture;
 
 function makeFakeBinding({
 	sources = [],
@@ -75,83 +71,7 @@ afterEach(() => {
 	linuxScreenCapture.__setBindingForTests(null);
 });
 
-describe('linux-screen-capture game capture launch environment', () => {
-	it('enables OBS Vulkan capture and names the client', () => {
-		const result = getGameCaptureLaunchEnvironment({
-			env: {},
-			name: 'fluxer-test',
-			mode: 'vulkan',
-		});
-		assert.equal(result.env.OBS_VKCAPTURE, '1');
-		assert.equal(result.env.OBS_VKCAPTURE_NAME, 'fluxer-test');
-		assert.equal(result.env.LD_PRELOAD, undefined);
-		assert.equal(result.diagnostics.mode, 'vulkan');
-		assert.match(result.diagnostics.licenseBoundary, /GPL-covered runtime tools/);
-	});
-
-	it('prefers bundled hook assets and can force PRIME/NVIDIA launch variables', () => {
-		const nativeRoot = mkdtempSync(join(tmpdir(), 'fluxer-linux-screen-capture-'));
-		const bundledRoot = join(nativeRoot, 'obs-vkcapture');
-		const glRoot = join(bundledRoot, 'obs_glcapture');
-		mkdirSync(glRoot, {recursive: true});
-		writeFileSync(join(bundledRoot, 'obs_vkcapture_64.json'), '{}');
-		writeFileSync(join(bundledRoot, 'libVkLayer_obs_vkcapture.so'), '');
-		writeFileSync(join(glRoot, 'libobs_glcapture.so'), '');
-
-		const result = getGameCaptureLaunchEnvironment({
-			env: {LD_PRELOAD: '/tmp/existing.so'},
-			nativeRoot,
-			preferDiscreteGpu: true,
-		});
-
-		assert.equal(result.env.OBS_VKCAPTURE, '1');
-		assert.equal(result.env.__NV_PRIME_RENDER_OFFLOAD, '1');
-		assert.equal(result.env.__VK_LAYER_NV_optimus, 'NVIDIA_only');
-		assert.equal(result.env.__GLX_VENDOR_LIBRARY_NAME, 'nvidia');
-		assert.equal(result.env.DRI_PRIME, '1');
-		assert.equal(result.env.VK_ADD_LAYER_PATH, bundledRoot);
-		assert.equal(result.env.VK_INSTANCE_LAYERS, 'VK_LAYER_OBS_vkcapture_64');
-		assert.equal(result.env.LD_PRELOAD, `/tmp/existing.so:${join(glRoot, 'libobs_glcapture.so')}`);
-		assert.equal(result.diagnostics.forceNvidiaIcd, false);
-		assert.equal(result.diagnostics.nvidiaIcdPath, null);
-		assert.equal(result.diagnostics.bundledVulkanLayerDir, bundledRoot);
-		assert.equal(result.diagnostics.bundledGlCaptureLib, join(glRoot, 'libobs_glcapture.so'));
-	});
-
-	it('does not duplicate launch path entries or Vulkan layer names', () => {
-		const nativeRoot = mkdtempSync(join(tmpdir(), 'fluxer-linux-screen-capture-'));
-		const bundledRoot = join(nativeRoot, 'obs-vkcapture', 'vulkan');
-		mkdirSync(bundledRoot, {recursive: true});
-		writeFileSync(join(bundledRoot, 'obs_vkcapture_64.json'), '{}');
-		writeFileSync(join(bundledRoot, 'libVkLayer_obs_vkcapture.so'), '');
-
-		const result = getGameCaptureLaunchEnvironment({
-			env: {
-				VK_ADD_LAYER_PATH: `/tmp/other:${bundledRoot}`,
-				VK_INSTANCE_LAYERS: 'VK_LAYER_OBS_vkcapture_64:VK_LAYER_KHRONOS_validation',
-			},
-			nativeRoot,
-			mode: 'vulkan',
-		});
-
-		assert.equal(result.env.VK_ADD_LAYER_PATH, `/tmp/other:${bundledRoot}`);
-		assert.equal(result.env.VK_INSTANCE_LAYERS, 'VK_LAYER_OBS_vkcapture_64:VK_LAYER_KHRONOS_validation');
-		assert.equal(result.diagnostics.bundledVulkanLayerDir, bundledRoot);
-		assert.equal(result.diagnostics.vulkanLayerName, 'VK_LAYER_OBS_vkcapture_64');
-	});
-
-	it('can force a specific NVIDIA Vulkan ICD for hybrid GPU systems', () => {
-		const result = getGameCaptureLaunchEnvironment({
-			env: {},
-			preferDiscreteGpu: true,
-			forceNvidiaIcd: '/tmp/nvidia_icd.json',
-		});
-
-		assert.equal(result.env.VK_ICD_FILENAMES, '/tmp/nvidia_icd.json');
-		assert.equal(result.diagnostics.forceNvidiaIcd, true);
-		assert.equal(result.diagnostics.nvidiaIcdPath, '/tmp/nvidia_icd.json');
-	});
-
+describe('linux-screen-capture package surface', () => {
 	it('keeps obs-vkcapture runtime assets and license notes in the package surface', () => {
 		const packageJson = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 		assert.equal(packageJson.license, 'AGPL-3.0-or-later');

@@ -18,7 +18,7 @@ function freshAttachmentUrl(url: string | null): string | null {
 	return url === null ? null : AttachmentUrlRefresher.fresh(url);
 }
 
-export function withFreshAttachmentUrls(attachment: MessageAttachment): MessageAttachment {
+function withFreshAttachmentUrls(attachment: MessageAttachment): MessageAttachment {
 	const url = freshAttachmentUrl(attachment.url);
 	const proxyUrl = freshAttachmentUrl(attachment.proxy_url);
 	if (url === attachment.url && proxyUrl === attachment.proxy_url) return attachment;

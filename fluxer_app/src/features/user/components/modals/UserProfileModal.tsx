@@ -132,7 +132,7 @@ const SEND_FRIEND_REQUEST_DESCRIPTOR = msg({
 });
 const logger = new Logger('UserProfileModal');
 
-export interface UserProfileModalProps {
+interface UserProfileModalProps {
 	userId: string;
 	guildId?: string;
 	autoFocusNote?: boolean;

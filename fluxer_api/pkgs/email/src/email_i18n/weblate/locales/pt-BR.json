@@ -79,10 +79,6 @@
 		"subject": "Redefina a senha da sua conta do {product_name}",
 		"body": "Olá, {username},\n\nVocê solicitou uma redefinição de senha da sua conta do {product_name}. Use o link abaixo para definir uma nova senha:\n\n{resetUrl}\n\nSe você não solicitou isso, pode ignorar este e-mail com segurança.\n\nEste link é válido por 1 hora.\n\n– Equipe do {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Seu cadastro no {product_name} foi aprovado",
-		"body": "Olá, {username},\n\nBoas notícias: seu cadastro no {product_name} foi aprovado.\n\nAgora você pode entrar no aplicativo do {product_name} aqui:\n{channelsUrl}\n\nBem-vindo à comunidade do {product_name}.\n\n– Equipe do {product_name}"
-	},
 	"report_received": {
 		"subject": "Recebemos sua denúncia no {product_name}",
 		"body": "Olá,\n\nRecebemos sua denúncia nos termos da Lei dos Serviços Digitais (DSA) sobre {targetKind, select, message {uma mensagem} user {uma conta} guild {uma comunidade} other {conteúdo}} no {product_name}.\n\nID da denúncia: {reportId}\n\nNossa equipe de segurança analisará sua denúncia e enviaremos um e-mail para este endereço quando tomarmos uma decisão. Guarde este e-mail para seus registros.\n\n– equipe de segurança do {product_name}"

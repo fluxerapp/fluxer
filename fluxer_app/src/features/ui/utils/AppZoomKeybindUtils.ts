@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeybindCommand, KeyCombo} from '@app/features/input/state/InputKeybind';
-import {isDesktop, isFirefoxBrowser} from '@app/features/ui/utils/NativeUtils';
+import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 
 type ZoomKeybindAction = Extract<KeybindCommand, 'system_zoom_in' | 'system_zoom_out' | 'system_zoom_reset'>;
 
@@ -21,23 +21,6 @@ const normalizeKey = (rawKey: string | undefined): string => {
 const usesBrowserZoomModifier = (combo: KeyCombo): boolean => {
 	return !!(combo.ctrlOrMeta || combo.ctrl || combo.meta);
 };
-
-export function shouldWarnAboutFirefoxWebZoomShortcuts(environment: ZoomKeybindEnvironment = {}): boolean {
-	const desktop = environment.isDesktop ?? isDesktop();
-	const firefox = environment.isFirefoxBrowser ?? isFirefoxBrowser();
-	return !desktop && firefox;
-}
-
-export function isFirefoxWebReservedZoomShortcut(
-	action: KeybindCommand,
-	combo: KeyCombo,
-	environment: ZoomKeybindEnvironment = {},
-): boolean {
-	if (!shouldWarnAboutFirefoxWebZoomShortcuts(environment)) {
-		return false;
-	}
-	return isWebReservedZoomShortcut(action, combo, environment);
-}
 
 export function isWebReservedZoomShortcut(
 	action: KeybindCommand,

@@ -4,14 +4,9 @@
 -typing([eqwalizer]).
 
 -export([
-    none/0,
     parse/1,
     parse_optional/1,
     parse_maybe/1,
-    normalize/1,
-    require/1,
-    to_integer/1,
-    to_binary/1,
     has/2,
     any/2,
     add/2,
@@ -23,10 +18,6 @@
 
 -type t() :: non_neg_integer().
 -type bit() :: pos_integer().
-
--spec none() -> t().
-none() ->
-    0.
 
 -spec parse(term()) -> t().
 parse(Value) when is_integer(Value), Value >= 0 ->
@@ -53,22 +44,6 @@ parse_maybe(Value) ->
     catch
         error:{invalid_bitset, _} -> undefined
     end.
-
--spec normalize(term()) -> t().
-normalize(Value) ->
-    parse(Value).
-
--spec require(term()) -> t().
-require(Value) ->
-    parse(Value).
-
--spec to_integer(t()) -> non_neg_integer().
-to_integer(Bits) when is_integer(Bits), Bits >= 0 ->
-    Bits.
-
--spec to_binary(t()) -> binary().
-to_binary(Bits) when is_integer(Bits), Bits >= 0 ->
-    integer_to_binary(Bits).
 
 -spec has(t(), bit()) -> boolean().
 has(Bits, Bit) when is_integer(Bits), Bits >= 0, is_integer(Bit), Bit > 0 ->

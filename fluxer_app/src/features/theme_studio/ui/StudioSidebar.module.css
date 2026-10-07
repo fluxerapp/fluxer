@@ -95,14 +95,6 @@
 	color: var(--studio-fg-on-accent);
 }
 
-.groupLabel {
-	font-size: 0.65625rem;
-	font-weight: 600;
-	letter-spacing: 0;
-	color: var(--studio-fg-subtle);
-	padding: 0.75rem 0.625rem 0.3125rem;
-}
-
 .footer {
 	margin-top: auto;
 	padding: 0.625rem 1rem;
@@ -129,7 +121,6 @@
 
 	.itemLabel,
 	.itemBadge,
-	.groupLabel,
 	.footerText {
 		display: none;
 	}

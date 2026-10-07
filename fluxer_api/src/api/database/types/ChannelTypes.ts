@@ -82,7 +82,7 @@ export interface WebhooksBySourceChannelRow {
 	guild_id: GuildID;
 }
 
-export type CrosspostedMessageState = 'pending' | 'delivered';
+type CrosspostedMessageState = 'pending' | 'delivered';
 
 export interface CrosspostedMessageRow {
 	source_message_id: MessageID;

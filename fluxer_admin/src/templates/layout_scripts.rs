@@ -585,25 +585,6 @@ window.__adminCopyToClipboard = function (text, btn, successLabel) {
 };
 "#;
 
-pub const ARCHIVE_POLL_SCRIPT: &str = r#"
-(function () {
-	var rows = document.querySelectorAll('tr[data-archive-id]');
-	var hasPending = false;
-	for (var i = 0; i < rows.length; i++) {
-		var status = rows[i].querySelector('.archive-status');
-		if (status && status.textContent.indexOf('Completed') === -1 && status.textContent.indexOf('Failed') === -1) {
-			hasPending = true;
-			break;
-		}
-	}
-	if (hasPending) {
-		setTimeout(function () {
-			window.location.reload();
-		}, 5000);
-	}
-})();
-"#;
-
 pub const SH_LINK_REWRITE_SCRIPT: &str = r#"
 (function () {
 	if (window.location.search.indexOf('sh=1') === -1) return;

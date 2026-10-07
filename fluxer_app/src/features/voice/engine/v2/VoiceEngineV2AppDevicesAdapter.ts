@@ -9,31 +9,29 @@ import {
 	type VoiceEngineV2Error,
 } from '@fluxer/voice_engine_v2';
 
-export const VOICE_ENGINE_V2_APP_DEVICES_MAX_DEVICES_PER_KIND = 256;
+const VOICE_ENGINE_V2_APP_DEVICES_MAX_DEVICES_PER_KIND = 256;
 
-export type VoiceEngineV2AppDevicesEnumerator = Pick<MediaDevices, 'enumerateDevices'>;
+type VoiceEngineV2AppDevicesEnumerator = Pick<MediaDevices, 'enumerateDevices'>;
 
-export type VoiceEngineV2AppDevicesKind = 'audioInput' | 'audioOutput' | 'camera';
+type VoiceEngineV2AppDevicesKind = 'audioInput' | 'audioOutput' | 'camera';
 
-export interface VoiceEngineV2AppDevicesChangedEvent {
+interface VoiceEngineV2AppDevicesChangedEvent {
 	type: 'devices.changed';
 	reason: VoiceEngineV2DeviceChangeReason;
 	devices: VoiceEngineV2DeviceInventory;
 	requiresPermission: boolean;
 }
 
-export interface VoiceEngineV2AppDevicesSelectFailedEvent {
+interface VoiceEngineV2AppDevicesSelectFailedEvent {
 	type: 'devices.selectFailed';
 	kind: VoiceEngineV2AppDevicesKind;
 	deviceId: string | null;
 	error: VoiceEngineV2Error;
 }
 
-export type VoiceEngineV2AppDevicesEvent =
-	| VoiceEngineV2AppDevicesChangedEvent
-	| VoiceEngineV2AppDevicesSelectFailedEvent;
+type VoiceEngineV2AppDevicesEvent = VoiceEngineV2AppDevicesChangedEvent | VoiceEngineV2AppDevicesSelectFailedEvent;
 
-export type VoiceEngineV2AppDevicesListener = (event: VoiceEngineV2AppDevicesEvent) => void;
+type VoiceEngineV2AppDevicesListener = (event: VoiceEngineV2AppDevicesEvent) => void;
 
 export interface VoiceEngineV2AppDevicesAdapterOptions {
 	enumerator?: VoiceEngineV2AppDevicesEnumerator | null;

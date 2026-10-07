@@ -8,7 +8,7 @@ use fluxer_media_proxy::{
     image_transform::{EncodeEffort, ResizeMode},
     mime,
     output_format::OutputFormat,
-    percent_decode, range,
+    range,
     server::transform::{
         cache_key::{TransformCacheKeyInput, transform_cache_key},
         parameters::TransformRoute,
@@ -83,13 +83,6 @@ fn bench_mime(c: &mut Criterion) {
     });
 }
 
-fn bench_percent_decode(c: &mut Criterion) {
-    let encoded = "users/not-decoded/photo%20name-%E2%82%AC.webp";
-    c.bench_function("percent_decode_utf8", |b| {
-        b.iter(|| percent_decode::decode_utf8(black_box(encoded)).unwrap())
-    });
-}
-
 fn bench_asset_hash(c: &mut Criterion) {
     c.bench_function("asset_hash_parse", |b| {
         b.iter(|| AssetHash::parse(black_box("deadbeef")))
@@ -125,7 +118,6 @@ criterion_group!(
     bench_range,
     bench_signing,
     bench_mime,
-    bench_percent_decode,
     bench_asset_hash,
     bench_transform_cache_key,
     bench_thumbhash

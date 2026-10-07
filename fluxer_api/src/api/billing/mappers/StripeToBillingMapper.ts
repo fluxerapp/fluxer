@@ -46,7 +46,7 @@ type StripeExpandableId =
 	| null
 	| undefined;
 
-export interface StripeSubscriptionPendingUpdatePayload {
+interface StripeSubscriptionPendingUpdatePayload {
 	expires_at?: number | null;
 	subscription_proration_subtotal?: number | null;
 }
@@ -57,7 +57,7 @@ interface StripeSubscriptionItemPricePayload {
 	unit_amount?: number | null;
 }
 
-export interface StripeSubscriptionItemPayload {
+interface StripeSubscriptionItemPayload {
 	id: string;
 	current_period_start?: number | null;
 	current_period_end?: number | null;

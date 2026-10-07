@@ -29,9 +29,9 @@ import type {LinuxPortalShortcutsManager, PortalShortcutDefinition} from '@elect
 
 export type HookBackendKind = 'x11' | 'evdev' | 'windows' | 'macos';
 export type HookStartResult = 'ok' | 'permission' | 'start-failed';
-export type InputHookMode = 'auto' | 'off' | 'evdev' | 'native';
+type InputHookMode = 'auto' | 'off' | 'evdev' | 'native';
 
-export interface NativeKeyIdentity {
+interface NativeKeyIdentity {
 	keycode: number;
 	keyName: string;
 }
@@ -92,13 +92,13 @@ export interface GlobalShortcutsEngineDeps {
 	log: (message: string, details?: Record<string, unknown>) => void;
 }
 
-export interface SanitizedSyncBinding {
+interface SanitizedSyncBinding {
 	sourceId: string;
 	action: string;
 	combo: GlobalShortcutCombo;
 }
 
-export interface SanitizedSyncAction {
+interface SanitizedSyncAction {
 	action: GlobalShortcutAction;
 	description: string;
 	preferredCombo: GlobalShortcutCombo | null;

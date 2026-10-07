@@ -19,30 +19,6 @@ user_matches_voice_state_undefined_test() ->
     VoiceState = #{},
     ?assertNot(guild_voice_state:user_matches_voice_state(VoiceState, 10)).
 
-create_voice_state_test() ->
-    Flags = #{
-        self_mute => true,
-        self_deaf => false,
-        self_video => true,
-        self_stream => false,
-        is_mobile => true,
-        suppress => false
-    },
-    VS = guild_voice_state:create_voice_state(
-        <<"1">>, <<"2">>, <<"3">>, <<"conn">>, false, false, Flags, []
-    ),
-    ?assertEqual(<<"1">>, maps:get(<<"guild_id">>, VS)),
-    ?assertEqual(<<"2">>, maps:get(<<"channel_id">>, VS)),
-    ?assertEqual(<<"3">>, maps:get(<<"user_id">>, VS)),
-    ?assertEqual(<<"conn">>, maps:get(<<"connection_id">>, VS)),
-    ?assertEqual(true, maps:get(<<"self_mute">>, VS)),
-    ?assertEqual(false, maps:get(<<"self_deaf">>, VS)),
-    ?assertEqual(true, maps:get(<<"self_video">>, VS)),
-    ?assertEqual(false, maps:get(<<"self_stream">>, VS)),
-    ?assertEqual(true, maps:get(<<"is_mobile">>, VS)),
-    ?assertEqual(false, maps:get(<<"suppress">>, VS)),
-    ?assertEqual(0, maps:get(<<"version">>, VS)).
-
 extract_session_info_from_voice_state_test() ->
     VoiceState = #{
         <<"session_id">> => <<"sess">>,
@@ -66,27 +42,6 @@ extract_session_info_from_voice_state_test() ->
     ?assertEqual(<<"1.0">>, maps:get(latitude, Info)),
     ?assertEqual(<<"2.0">>, maps:get(longitude, Info)),
     ?assertEqual(#{<<"id">> => <<"m">>}, maps:get(member, Info)).
-
-create_voice_state_is_complete_test() ->
-    Flags = #{
-        self_mute => false,
-        self_deaf => false,
-        self_video => false,
-        self_stream => false,
-        is_mobile => false,
-        suppress => false
-    },
-    VS = guild_voice_state:create_voice_state(
-        <<"1">>, <<"2">>, <<"3">>, <<"conn">>, false, false, Flags, []
-    ),
-    ?assertEqual(null, maps:get(<<"session_id">>, VS)),
-    ?assertEqual(null, maps:get(<<"member">>, VS)),
-    ?assertEqual(null, maps:get(<<"region_id">>, VS)),
-    ?assertEqual(null, maps:get(<<"server_id">>, VS)),
-    ?assertEqual(false, maps:get(<<"e2ee_capable">>, VS)),
-    ?assertEqual([], maps:get(<<"viewer_stream_keys">>, VS)),
-    ?assertNot(maps:is_key(<<"latitude">>, VS)),
-    ?assertNot(maps:is_key(<<"longitude">>, VS)).
 
 update_voice_state_data_no_change_reply_is_external_test() ->
     ExistingVS = #{

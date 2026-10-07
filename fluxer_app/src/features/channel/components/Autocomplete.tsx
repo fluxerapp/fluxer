@@ -152,16 +152,11 @@ type ScrollerWithScrollableElement = ScrollerHandle & {
 
 export type {AutocompleteOption, AutocompleteType} from '@app/features/channel/components/AutocompleteTypes';
 export {
-	getAutocompleteOptionId,
 	isChannel,
 	isCommand,
 	isEmoji,
 	isGif,
 	isMeme,
-	isMentionMember,
-	isMentionRole,
-	isMentionUser,
-	isSpecialMention,
 	isSticker,
 } from '@app/features/channel/components/AutocompleteTypes';
 

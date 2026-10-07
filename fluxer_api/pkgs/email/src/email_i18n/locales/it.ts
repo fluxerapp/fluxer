@@ -83,10 +83,6 @@ const EMAIL_I18N_IT_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Reimposta la password di {product_name}",
 		"body": "Ciao {username},\n\nHai richiesto la reimpostazione della tua password di {product_name}. Usa il link qui sotto per impostare una nuova password:\n\n{resetUrl}\n\nSe non hai richiesto questa operazione, puoi ignorare tranquillamente questa email.\n\nQuesto link è valido per 1 ora.\n\n– Il team di {product_name}"
 	},
-	"registration_approved": {
-		"subject": "La tua registrazione a {product_name} è stata approvata",
-		"body": "Ciao {username},\n\nBuone notizie: la tua registrazione a {product_name} è stata approvata.\n\nOra puoi accedere all'app {product_name} qui:\n{channelsUrl}\n\nBenvenuto nella community di {product_name}.\n\n– Il team di {product_name}"
-	},
 	"report_received": {
 		"subject": "Abbiamo ricevuto la tua segnalazione su {product_name}",
 		"body": "Ciao,\n\nAbbiamo ricevuto la tua segnalazione ai sensi del Digital Services Act relativa a {targetKind, select, message {un messaggio} user {un account} guild {una community} other {un contenuto}} su {product_name}.\n\nID segnalazione: {reportId}\n\nIl nostro team per la sicurezza esaminerà la tua segnalazione e ti scriveremo a questo indirizzo quando avremo preso una decisione. Conserva questa email per riferimento futuro.\n\n– Il team per la sicurezza di {product_name}"

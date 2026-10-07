@@ -23,9 +23,8 @@ import {
 	MEDIA_PROXY_ICON_SIZE_DEFAULT,
 } from '@fluxer/constants/src/MediaProxyAssetSizes';
 import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
-import {SOUNDBOARD_SOUND_PATH_PREFIX} from '@fluxer/constants/src/SoundboardConstants';
 
-export {MEDIA_PROXY_IMAGE_SIZE_LADDER, snapMediaProxyImageSize};
+export {snapMediaProxyImageSize};
 
 const GUILD_BANNER_CSS_WIDTH = 360;
 const GUILD_EMBED_SPLASH_CSS_WIDTH = 360;
@@ -258,22 +257,6 @@ export function getUserBannerURL({id, banner}: BannerOptions, animated = false, 
 }
 
 const mediaURLCacheScope = (): string => `${RuntimeConfig.apiEndpoint} ${RuntimeConfig.mediaEndpoint}`;
-
-const SOUNDBOARD_SOUND_URL_CACHE = new Map<string, string>();
-const SOUNDBOARD_SOUND_URL_CACHE_LIMIT = 4096;
-
-export function getSoundboardSoundURL(soundId: string): string {
-	if (DeveloperOptions.forceRenderPlaceholders) {
-		return '';
-	}
-	const key = `${mediaURLCacheScope()}:${soundId}`;
-	const cached = SOUNDBOARD_SOUND_URL_CACHE.get(key);
-	if (cached !== undefined) return cached;
-	const result = mediaUrl(`${SOUNDBOARD_SOUND_PATH_PREFIX}/${soundId}`);
-	if (SOUNDBOARD_SOUND_URL_CACHE.size >= SOUNDBOARD_SOUND_URL_CACHE_LIMIT) SOUNDBOARD_SOUND_URL_CACHE.clear();
-	SOUNDBOARD_SOUND_URL_CACHE.set(key, result);
-	return result;
-}
 
 export function getGuildIconURL({id, icon}: IconOptions, animated = false) {
 	if (!icon) {

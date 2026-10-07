@@ -8,8 +8,6 @@ pub mod token;
 use std::sync::atomic::{AtomicU64, Ordering};
 use thiserror::Error;
 
-pub const RELAY_PATH_PREFIX: &str = "/v1/relay/";
-
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
 pub enum RelayError {
     #[error("missing relay token")]
@@ -77,10 +75,6 @@ pub fn release_spool_budget(amount: u64) {
     SPOOL_IN_FLIGHT_BYTES.fetch_sub(amount, Ordering::AcqRel);
 }
 
-pub fn spool_in_flight_bytes() -> u64 {
-    SPOOL_IN_FLIGHT_BYTES.load(Ordering::Relaxed)
-}
-
 fn try_reserve(counter: &AtomicU64, needed: u64, ceiling: u64) -> bool {
     if ceiling == 0 || needed > ceiling {
         return false;
@@ -100,8 +94,4 @@ fn try_reserve(counter: &AtomicU64, needed: u64, ceiling: u64) -> bool {
             Err(next) => current = next,
         }
     }
-}
-
-pub fn is_relay_path(path: &str) -> bool {
-    path.starts_with(RELAY_PATH_PREFIX)
 }

@@ -723,7 +723,7 @@ export const ChannelAttachmentArea = observer(({channelId}: {channelId: string})
 		</>
 	);
 });
-export const ImageThumbnail = observer(({attachment, spoiler}: {attachment: CloudAttachment; spoiler: boolean}) => {
+const ImageThumbnail = observer(({attachment, spoiler}: {attachment: CloudAttachment; spoiler: boolean}) => {
 	const [hasError, setHasError] = useState(false);
 	const src = attachment.previewURL;
 	if (hasError || !src) return null;
@@ -738,7 +738,7 @@ export const ImageThumbnail = observer(({attachment, spoiler}: {attachment: Clou
 		/>
 	);
 });
-export const VideoThumbnail = observer(({attachment, spoiler}: {attachment: CloudAttachment; spoiler: boolean}) => {
+const VideoThumbnail = observer(({attachment, spoiler}: {attachment: CloudAttachment; spoiler: boolean}) => {
 	const [hasError, setHasError] = useState(false);
 	const src = attachment.thumbnailURL;
 	if (hasError || !src) return null;

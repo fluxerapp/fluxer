@@ -52,7 +52,6 @@ windows_workspaces=(
 	"win-game-capture/Cargo.toml"
 	"win-process-loopback/Cargo.toml"
 	"win-shell/Cargo.toml"
-	"win-toast/Cargo.toml"
 	"windows-input-hook/Cargo.toml"
 )
 

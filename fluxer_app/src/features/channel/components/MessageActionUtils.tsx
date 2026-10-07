@@ -135,10 +135,6 @@ export function canDeleteAttachmentUtil(message: Message | undefined): boolean {
 	return !sendMessageDisabled;
 }
 
-export function requestOpenReactionPicker(messageId: string): void {
-	ComponentBus.dispatch('EMOJI_PICKER_OPEN', {messageId});
-}
-
 function messageElementSelector(messageId: string): string {
 	const escaped =
 		typeof CSS === 'undefined' || typeof CSS.escape !== 'function'
@@ -533,7 +529,7 @@ export function requestMessageCrosspost(message: Message, i18n: I18n, options: {
 	);
 }
 
-export function requestRemoveAllReactions(message: Message, i18n: I18n): void {
+function requestRemoveAllReactions(message: Message, i18n: I18n): void {
 	ModalCommands.push(
 		modal(() => (
 			<ConfirmModal

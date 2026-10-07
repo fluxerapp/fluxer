@@ -71,15 +71,6 @@ function addSharedVideoFramePollTarget(target: SharedVideoFramePollTarget): () =
 	return () => removeSharedVideoFramePollTarget(id);
 }
 
-export function getActiveVideoFrameWatcherCountForTests(): number {
-	return sharedVideoFramePollTargets.size;
-}
-
-export function clearVideoFrameWatchersForTests(): void {
-	sharedVideoFramePollTargets.clear();
-	stopSharedVideoFramePollIntervalIfIdle();
-}
-
 export function watchVideoElementRenderedFrame({videoRef, onFrame}: VideoElementRenderedFrameWatchOptions): () => void {
 	let disposed = false;
 	let frameCallbackHandle: VideoFrameCallbackHandle | null = null;

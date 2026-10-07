@@ -79,10 +79,6 @@
 		"subject": "Tilbakestill {product_name}-passordet ditt",
 		"body": "Hei {username},\n\nDu ba om å tilbakestille {product_name}-passordet ditt. Bruk lenken nedenfor for å angi et nytt passord:\n\n{resetUrl}\n\nHvis du ikke ba om dette, kan du trygt se bort fra denne e-posten.\n\nDenne lenken er gyldig i 1 time.\n\n– {product_name}-teamet"
 	},
-	"registration_approved": {
-		"subject": "{product_name}-registreringen din er godkjent",
-		"body": "Hei {username},\n\nGode nyheter! Registreringen din hos {product_name} er godkjent.\n\nDu kan nå logge inn på {product_name}-appen her:\n{channelsUrl}\n\nVelkommen til {product_name}-fellesskapet.\n\n– {product_name}-teamet"
-	},
 	"report_received": {
 		"subject": "Vi har mottatt {product_name}-rapporten din",
 		"body": "Hei,\n\nVi har mottatt rapporten din i henhold til Digital Services Act om {targetKind, select, message {en melding} user {en konto} guild {et fellesskap} other {innhold}} på {product_name}.\n\nRapport-ID: {reportId}\n\nSikkerhetsteamet vårt går gjennom rapporten din, og vi sender deg en e-post på denne adressen når vi har tatt en avgjørelse. Ta vare på denne e-posten.\n\n– Sikkerhetsteamet hos {product_name}"

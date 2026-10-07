@@ -11,10 +11,6 @@ import type {PremiumCurrency} from '@fluxer/schema/src/domains/premium/PremiumSc
 
 export type Currency = PremiumCurrency;
 
-export function getCurrency(countryCode: string | null | undefined): Currency {
-	return getCurrencyPreferences(countryCode)[0];
-}
-
 export function getCurrencyPreferences(
 	countryCode: string | null | undefined,
 	config: EffectiveBillingConfig = getEffectiveBillingConfig(),

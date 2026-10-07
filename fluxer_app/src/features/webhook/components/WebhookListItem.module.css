@@ -220,10 +220,6 @@
 	gap: var(--spacing-2);
 }
 
-.fileInput {
-	display: none;
-}
-
 .urlWrapper {
 	display: flex;
 	flex-direction: column;

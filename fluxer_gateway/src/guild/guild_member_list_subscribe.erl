@@ -8,7 +8,6 @@
     unsubscribe_session/2,
     send_member_list_update_to_sessions/5,
     dispatch_sync_to_subscribed_list/7,
-    dispatch_sync_to_subscribed_sessions/6,
     handle_sync_item_cache_timeout/1,
     sync_cache_find/1,
     sync_cache_store/2
@@ -130,24 +129,6 @@ add_if_viewable(Pid, SD, ChId, State, Acc) ->
         false -> Acc
     end.
 
--spec dispatch_sync_to_subscribed_sessions(
-    map(), map(), channel_id() | undefined, integer(), guild_state(), fun(([range()]) -> map())
-) -> ok.
-dispatch_sync_to_subscribed_sessions(
-    _ListSubs, _Sessions, _ChannelId, GuildId, _State, _SyncFun
-) when
-    not is_integer(GuildId); GuildId =< 0
-->
-    ok;
-dispatch_sync_to_subscribed_sessions(ListSubs, Sessions, ChannelId, GuildId, State, SyncFun) ->
-    Groups = collect_sync_range_groups(ListSubs, Sessions, ChannelId, State),
-    maps:foreach(
-        fun(Ranges, Pids) ->
-            dispatch_sync_group(Ranges, Pids, GuildId, SyncFun)
-        end,
-        Groups
-    ).
-
 -spec dispatch_sync_to_subscribed_list(
     list_id(),
     ets:table(),
@@ -207,17 +188,6 @@ compute_delta_or_full(NormalizedRanges, OldRanges) ->
         [] -> NormalizedRanges;
         Delta -> Delta
     end.
-
--spec collect_sync_range_groups(map(), map(), channel_id() | undefined, guild_state()) ->
-    #{[range()] => [pid()]}.
-collect_sync_range_groups(ListSubs, Sessions, ChannelId, State) ->
-    maps:fold(
-        fun(SessionId, Ranges, Acc) ->
-            collect_sync_session_group(SessionId, Ranges, Sessions, ChannelId, State, Acc)
-        end,
-        #{},
-        ListSubs
-    ).
 
 -spec collect_sync_session_group(
     binary(), [range()], map(), channel_id() | undefined, guild_state(), #{[range()] => [pid()]}

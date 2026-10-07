@@ -2,10 +2,8 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import {ChannelDebugModal} from '@app/features/devtools/components/debug/ChannelDebugModal';
-import {GuildDebugModal} from '@app/features/devtools/components/debug/GuildDebugModal';
 import {GuildMemberDebugModal} from '@app/features/devtools/components/debug/GuildMemberDebugModal';
 import {UserDebugModal} from '@app/features/devtools/components/debug/UserDebugModal';
-import type {Guild} from '@app/features/guild/models/Guild';
 import {
 	CHANNEL_DEBUG_DESCRIPTOR,
 	DEBUG_CHANNEL_DESCRIPTOR,
@@ -24,14 +22,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback} from 'react';
 
-const COMMUNITY_DEBUG_DESCRIPTOR = msg({
-	message: 'Community debug',
-	comment: 'Title of the developer-mode community debug modal.',
-});
-const DEBUG_COMMUNITY_DESCRIPTOR = msg({
-	message: 'Debug community',
-	comment: 'Developer-mode action that opens the community debug modal.',
-});
 const COMMUNITY_MEMBER_DEBUG_DESCRIPTOR = msg({
 	message: 'Community member debug',
 	comment: 'Title of the developer-mode community member debug modal.',
@@ -102,36 +92,6 @@ export const DebugChannelMenuItem: React.FC<DebugChannelMenuItemProps> = observe
 		</MenuItem>
 	);
 });
-
-type DebugGuildMenuItemProps = BaseDebugMenuItemProps & {
-	guild: Guild;
-};
-
-export const DebugGuildMenuItem: React.FC<DebugGuildMenuItemProps> = observer(({guild, onClose}) => {
-	const {i18n} = useLingui();
-	const handleDebug = useCallback(() => {
-		ModalCommands.push(
-			modal(() => (
-				<GuildDebugModal
-					title={i18n._(COMMUNITY_DEBUG_DESCRIPTOR)}
-					guild={guild}
-					data-flx="ui.action-menu.items.debug-menu-items.handle-debug.guild-debug-modal"
-				/>
-			)),
-		);
-		onClose();
-	}, [guild, onClose]);
-	return (
-		<MenuItem
-			icon={<DebugIcon data-flx="ui.action-menu.items.debug-menu-items.debug-guild-menu-item.debug-icon" />}
-			onClick={handleDebug}
-			data-flx="ui.action-menu.items.debug-menu-items.debug-guild-menu-item.menu-item.debug"
-		>
-			{i18n._(DEBUG_COMMUNITY_DESCRIPTOR)}
-		</MenuItem>
-	);
-});
-
 type DebugGuildMemberMenuItemProps = BaseDebugMenuItemProps & {
 	member: GuildMember;
 };

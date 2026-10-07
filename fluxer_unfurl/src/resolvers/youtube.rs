@@ -224,7 +224,6 @@ struct YouTubePlayer {
 
 #[derive(Debug, Deserialize)]
 struct YouTubeThumbnails {
-    #[allow(dead_code)]
     default: Option<YouTubeThumbnail>,
     medium: Option<YouTubeThumbnail>,
     high: Option<YouTubeThumbnail>,

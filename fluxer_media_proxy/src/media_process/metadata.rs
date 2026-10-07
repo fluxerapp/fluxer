@@ -283,20 +283,3 @@ pub async fn metadata_json_with_options(
     let response = metadata_finalize(prepared, verdict);
     serde_json::to_string(&response).map_err(|_| MediaError::MediaEncodeFailed)
 }
-
-pub async fn metadata_json(
-    input: &[u8],
-    filename: &str,
-    media_limits: &MediaLimits,
-    metrics: &TransformMetrics,
-) -> Result<String, MediaError> {
-    metadata_json_with_options(
-        input,
-        filename,
-        MetadataOptions::default(),
-        media_limits,
-        &NSFWClient::disabled(),
-        metrics,
-    )
-    .await
-}

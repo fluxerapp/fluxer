@@ -41,12 +41,6 @@ export class EntranceSoundRepository {
 		await deleteOneOrMany(UserEntranceSounds.deleteByPk({user_id: userId, sound_id: soundId}));
 	}
 
-	async deleteAllSoundsForUser(userId: UserID): Promise<void> {
-		await deleteOneOrMany(
-			UserEntranceSounds.delete({where: UserEntranceSounds.where.eq('user_id')}).bind({user_id: userId}),
-		);
-	}
-
 	async listSelections(userId: UserID): Promise<Array<EntranceSoundSelection>> {
 		const rows = await fetchMany<UserEntranceSoundSelectionRow>(LIST_SELECTIONS_CQL.bind({user_id: userId}));
 		return rows.map((row) => new EntranceSoundSelection(row));
@@ -75,13 +69,5 @@ export class EntranceSoundRepository {
 				await this.deleteSelection(userId, selection.scopeId);
 			}
 		}
-	}
-
-	async deleteAllSelectionsForUser(userId: UserID): Promise<void> {
-		await deleteOneOrMany(
-			UserEntranceSoundSelections.delete({where: UserEntranceSoundSelections.where.eq('user_id')}).bind({
-				user_id: userId,
-			}),
-		);
 	}
 }

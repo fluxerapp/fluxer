@@ -261,7 +261,7 @@ function tokenBody(token: string): {token: string} {
 	return {token};
 }
 
-export class MalformedIpAuthorizationChallengeError extends HttpError {
+class MalformedIpAuthorizationChallengeError extends HttpError {
 	constructor(error: HttpError) {
 		super({
 			method: error.method,

@@ -172,21 +172,6 @@ class MediaPermission {
 		logger.debug('Marked screen recording as explicitly denied');
 	}
 
-	clearMicrophoneDenial(): void {
-		this.microphoneExplicitlyDenied = false;
-		logger.debug('Cleared microphone denial');
-	}
-
-	clearCameraDenial(): void {
-		this.cameraExplicitlyDenied = false;
-		logger.debug('Cleared camera denial');
-	}
-
-	clearScreenRecordingDenial(): void {
-		this.screenRecordingExplicitlyDenied = false;
-		logger.debug('Cleared screen recording denial');
-	}
-
 	updateMicrophonePermissionGranted(options: MediaPermissionUpdateOptions = {}): void {
 		const shouldRefresh =
 			options.refreshDevices !== false &&
@@ -238,10 +223,6 @@ class MediaPermission {
 		return this.microphoneExplicitlyDenied;
 	}
 
-	isCameraExplicitlyDenied(): boolean {
-		return this.cameraExplicitlyDenied;
-	}
-
 	isScreenRecordingExplicitlyDenied(): boolean {
 		return this.screenRecordingExplicitlyDenied;
 	}
@@ -254,20 +235,12 @@ class MediaPermission {
 		return this.cameraPermissionState === 'granted';
 	}
 
-	isScreenRecordingGranted(): boolean {
-		return this.screenRecordingPermissionState === 'granted';
-	}
-
 	getMicrophonePermissionState(): PermissionState | null {
 		return this.microphonePermissionState;
 	}
 
 	getCameraPermissionState(): PermissionState | null {
 		return this.cameraPermissionState;
-	}
-
-	getScreenRecordingPermissionState(): PermissionState | null {
-		return this.screenRecordingPermissionState;
 	}
 
 	addChangeListener(callback: () => void): () => void {

@@ -8,10 +8,10 @@ import {extractTimestampFromSnowflake} from '@fluxer/snowflake/src/SnowflakeUtil
 import {makeAutoObservable} from 'mobx';
 
 const SHOW_ACTIVE_NOW_DEFAULT = true;
-export const PREUPLOAD_MESSAGE_ATTACHMENTS_DEFAULT_ON_AFTER = '2026-06-04T16:10:00.000Z';
+const PREUPLOAD_MESSAGE_ATTACHMENTS_DEFAULT_ON_AFTER = '2026-06-04T16:10:00.000Z';
 const PREUPLOAD_MESSAGE_ATTACHMENTS_DEFAULT_ON_AFTER_MS = Date.parse(PREUPLOAD_MESSAGE_ATTACHMENTS_DEFAULT_ON_AFTER);
 
-export function getPreuploadMessageAttachmentsDefaultForUserId(userId: string | null | undefined): boolean {
+function getPreuploadMessageAttachmentsDefaultForUserId(userId: string | null | undefined): boolean {
 	if (!userId) {
 		return false;
 	}

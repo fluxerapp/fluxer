@@ -104,7 +104,6 @@ export interface IEmailService {
 		locale?: string | null,
 	): Promise<boolean>;
 	sendDsaReportVerificationCode(email: string, code: string, expiresAt: Date, locale?: string | null): Promise<boolean>;
-	sendRegistrationApprovedEmail(email: string, username: string, locale?: string | null): Promise<boolean>;
 	sendEmailChangeOriginal(email: string, username: string, code: string, locale?: string | null): Promise<boolean>;
 	sendEmailChangeNew(email: string, username: string, code: string, locale?: string | null): Promise<boolean>;
 	sendEmailChangeRevert(

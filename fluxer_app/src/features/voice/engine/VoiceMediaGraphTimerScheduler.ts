@@ -20,7 +20,7 @@ export interface VoiceMediaGraphTimerSchedulerStore {
 	nowMs(): number;
 }
 
-export const systemVoiceMediaGraphTimerSchedulerPlatform: VoiceMediaGraphTimerSchedulerPlatform = {
+const systemVoiceMediaGraphTimerSchedulerPlatform: VoiceMediaGraphTimerSchedulerPlatform = {
 	setTimeout: (callback, delayMs) => globalThis.setTimeout(callback, delayMs),
 	clearTimeout: (handle) => globalThis.clearTimeout(handle as Parameters<typeof globalThis.clearTimeout>[0]),
 };
@@ -113,12 +113,4 @@ export function startVoiceMediaGraphTimerScheduler(
 	activeVoiceMediaGraphTimerSchedulerStore = store;
 	activeVoiceMediaGraphTimerSchedulerPlatform = platform;
 	return scheduler;
-}
-
-export function stopVoiceMediaGraphTimerScheduler(): void {
-	if (!activeVoiceMediaGraphTimerScheduler) return;
-	activeVoiceMediaGraphTimerScheduler.stop();
-	activeVoiceMediaGraphTimerScheduler = null;
-	activeVoiceMediaGraphTimerSchedulerStore = null;
-	activeVoiceMediaGraphTimerSchedulerPlatform = null;
 }

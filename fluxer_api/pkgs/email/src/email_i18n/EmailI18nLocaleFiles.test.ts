@@ -5,12 +5,12 @@ import {extractMessageTemplatePlaceholders} from '@fluxer/i18n/src/runtime/Messa
 import {EmailI18nService} from '@pkgs/email/src/EmailI18nService';
 import type {EmailMessage, IEmailProvider} from '@pkgs/email/src/EmailProviderTypes';
 import {EmailService} from '@pkgs/email/src/EmailService';
-import {getEmailTemplate, resetEmailI18n} from '@pkgs/email/src/email_i18n/EmailI18n';
+import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
 import {EMAIL_I18N_LOCALE_MESSAGES} from '@pkgs/email/src/email_i18n/EmailI18nLocales';
 import {EMAIL_I18N_MESSAGES} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 import type {EmailLegalLinks, EmailTemplateVariables} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {EmailTemplateKey} from '@pkgs/email/src/email_i18n/EmailI18nTypes.generated';
-import {afterEach, describe, expect, it} from 'vitest';
+import {describe, expect, it} from 'vitest';
 
 const LOCALES = Object.keys(EMAIL_I18N_LOCALE_MESSAGES) as Array<keyof typeof EMAIL_I18N_LOCALE_MESSAGES>;
 const TEMPLATE_KEYS = Object.keys(EMAIL_I18N_MESSAGES) as Array<EmailTemplateKey>;
@@ -83,7 +83,6 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 	password_change_verification: {username: 'testuser', code: '123456', expiresAt: DATE},
 	password_reset: {username: 'testuser', resetUrl: 'https://example.com/reset'},
 	report_received: {reportId: '1', targetKind: 'message'},
-	registration_approved: {username: 'testuser', channelsUrl: 'https://example.com/channels'},
 	report_resolved: {
 		username: 'testuser',
 		reportId: '1',
@@ -127,9 +126,6 @@ function renderBody<K extends EmailTemplateKey>(key: K, locale: string, variable
 }
 
 describe('EmailI18n locale files', () => {
-	afterEach(() => {
-		resetEmailI18n();
-	});
 	it.each(LOCALES)('%s loads without module errors', (locale) => {
 		const template = getEmailTemplate(
 			'email_verification',

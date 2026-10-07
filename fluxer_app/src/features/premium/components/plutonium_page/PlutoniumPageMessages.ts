@@ -72,10 +72,6 @@ export const GIFT_GRACE_DESCRIPTOR = msg({
 	comment:
 		'Plutonium page hero subtitle while gifted premium time is in its short grace period after ending. premiumProductName is the paid tier name.',
 });
-export const HERO_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Support an independent communication platform and unlock some sweet perks.',
-	comment: 'Plutonium page hero subtitle for people without the paid tier.',
-});
 export const REDEEM_ONLY_DESCRIPTOR = msg({
 	message: 'Have a gift code? Redeem it to unlock {premiumProductName}.',
 	comment:

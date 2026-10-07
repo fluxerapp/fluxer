@@ -237,14 +237,6 @@ class Webhooks {
 		this.channelFetchStatus = nextChannelFetchStatus;
 		this.guildFetchStatus = nextGuildFetchStatus;
 	}
-
-	handleLogout(): void {
-		this.webhooks = new Map();
-		this.channelWebhooks = new Map();
-		this.channelGuildMap = new Map();
-		this.channelFetchStatus = new Map();
-		this.guildFetchStatus = new Map();
-	}
 }
 
 export default new Webhooks();

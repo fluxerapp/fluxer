@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {
-	NativeAudioStartOptions,
-	VirtmicLinkOptions,
-	VirtmicNode,
-	VirtmicSystemLinkOptions,
-} from '@electron/common/Types';
+import type {NativeAudioStartOptions, VirtmicNode} from '@electron/common/Types';
 
 interface InternalAudioFrame {
 	samples: Float32Array;
@@ -51,47 +46,12 @@ function isValidVirtmicNodePattern(value: unknown): value is VirtmicNode {
 	);
 }
 
-export function isValidVirtmicNodeList(value: unknown): value is Array<VirtmicNode> {
+function isValidVirtmicNodeList(value: unknown): value is Array<VirtmicNode> {
 	return Array.isArray(value) && value.length <= MAX_LINUX_RULE_PATTERNS && value.every(isValidVirtmicNodePattern);
 }
 
 function isValidOptionalVirtmicNodeList(value: unknown): value is Array<VirtmicNode> | undefined {
 	return value === undefined || isValidVirtmicNodeList(value);
-}
-
-export function isValidVirtmicLinkOptions(options: unknown): options is VirtmicLinkOptions {
-	if (!isPlainObject(options)) return false;
-	const allowedKeys = new Set(['ignoreDevices', 'ignoreInputMedia', 'ignoreVirtual', 'workaround']);
-	if (!Object.keys(options).every((key) => allowedKeys.has(key))) return false;
-	return (
-		isBooleanOrUndefined(options.ignoreDevices) &&
-		isBooleanOrUndefined(options.ignoreInputMedia) &&
-		isBooleanOrUndefined(options.ignoreVirtual) &&
-		isBooleanOrUndefined(options.workaround)
-	);
-}
-
-export function isValidVirtmicSystemLinkOptions(options: unknown): options is VirtmicSystemLinkOptions {
-	if (!isPlainObject(options)) return false;
-	const allowedKeys = new Set([
-		'ignoreDevices',
-		'ignoreInputMedia',
-		'ignoreVirtual',
-		'workaround',
-		'onlySpeakers',
-		'onlyDefaultSpeakers',
-	]);
-	if (!Object.keys(options).every((key) => allowedKeys.has(key))) return false;
-	return (
-		isValidVirtmicLinkOptions({
-			ignoreDevices: options.ignoreDevices,
-			ignoreInputMedia: options.ignoreInputMedia,
-			ignoreVirtual: options.ignoreVirtual,
-			workaround: options.workaround,
-		}) &&
-		isBooleanOrUndefined(options.onlySpeakers) &&
-		isBooleanOrUndefined(options.onlyDefaultSpeakers)
-	);
 }
 
 export function isValidLinuxRule(

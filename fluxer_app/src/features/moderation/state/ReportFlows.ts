@@ -12,7 +12,7 @@ import {makeAutoObservable} from 'mobx';
 
 const logger = new Logger('ReportFlows');
 
-export type ReportFlowLoadState =
+type ReportFlowLoadState =
 	| {status: 'loading'; productName: string}
 	| {status: 'loaded'; flow: ReportFlowResponse; productName: string}
 	| {status: 'error'};

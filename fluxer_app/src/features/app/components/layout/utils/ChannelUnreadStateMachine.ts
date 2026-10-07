@@ -5,16 +5,16 @@ import type {
 	ChannelUnreadStateInput,
 } from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup} from 'xstate';
 
 interface ChannelUnreadMachineContext extends ChannelUnreadStateInput {}
 
-export type ChannelUnreadMachineEvent = {
+type ChannelUnreadMachineEvent = {
 	type: 'channelUnread.updated';
 	input: ChannelUnreadStateInput;
 };
 
-export type ChannelUnreadStateValue = 'disabled' | 'onlyMentions' | 'allMessages' | 'legacy';
+type ChannelUnreadStateValue = 'disabled' | 'onlyMentions' | 'allMessages' | 'legacy';
 
 function getUnreadStateValue(snapshot: ChannelUnreadSnapshot): ChannelUnreadStateValue {
 	switch (snapshot.value) {
@@ -29,7 +29,7 @@ function getUnreadStateValue(snapshot: ChannelUnreadSnapshot): ChannelUnreadStat
 	}
 }
 
-export const channelUnreadStateMachine = setup({
+const channelUnreadStateMachine = setup({
 	types: {} as {
 		context: ChannelUnreadMachineContext;
 		events: ChannelUnreadMachineEvent;
@@ -74,20 +74,13 @@ export const channelUnreadStateMachine = setup({
 	},
 });
 
-export type ChannelUnreadSnapshot = SnapshotFrom<typeof channelUnreadStateMachine>;
+type ChannelUnreadSnapshot = SnapshotFrom<typeof channelUnreadStateMachine>;
 
-export function createChannelUnreadSnapshot(input: ChannelUnreadStateInput): ChannelUnreadSnapshot {
+function createChannelUnreadSnapshot(input: ChannelUnreadStateInput): ChannelUnreadSnapshot {
 	return initialTransition(channelUnreadStateMachine, input)[0];
 }
 
-export function transitionChannelUnreadSnapshot(
-	snapshot: ChannelUnreadSnapshot,
-	event: ChannelUnreadMachineEvent,
-): ChannelUnreadSnapshot {
-	return transition(channelUnreadStateMachine, snapshot, event)[0] as ChannelUnreadSnapshot;
-}
-
-export function selectChannelUnreadState(snapshot: ChannelUnreadSnapshot): ChannelUnreadState {
+function selectChannelUnreadState(snapshot: ChannelUnreadSnapshot): ChannelUnreadState {
 	const context = snapshot.context;
 	const hasUnreadMessages = context.hasUnread;
 	const rawHasMentions = context.mentionCount > 0;

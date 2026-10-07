@@ -21,22 +21,16 @@ import {
 	createUpdaterMachineSnapshot,
 	getUpdaterDisplayVersion,
 	getUpdaterMachineStateValue,
-	getUpdaterUpdateType,
 	hasManualNativeDownload,
-	type NativeUpdateInfo,
 	transitionUpdaterMachineSnapshot,
 	type UpdateInfo,
 	type UpdaterMachineEvent,
 	type UpdaterMachineSnapshot,
 	type UpdaterState,
-	type UpdateType,
-	type WebUpdateInfo,
 } from '@app/features/updater/state/UpdaterStateMachine';
 import {buildLinuxManualUpdateOptions} from '@app/features/updater/utils/LinuxManualUpdateOptions';
 import type {UpdaterEvent as NativeUpdaterEvent} from '@app/types/electron.d';
 import {makeAutoObservable, runInAction} from 'mobx';
-
-export type {NativeUpdateInfo, UpdateInfo, UpdaterState, UpdateType, WebUpdateInfo};
 
 const logger = new Logger('Updater');
 const CHECK_INTERVAL_MS = 5 * 60 * 1000;
@@ -150,10 +144,6 @@ class Updater {
 		makeAutoObservable(this, {}, {autoBind: true});
 		this.isNative = isElectron();
 		initializeStore(this, () => this.bootstrap());
-	}
-
-	get updateType(): UpdateType {
-		return getUpdaterUpdateType(this.snapshot);
 	}
 
 	get updateInfo(): UpdateInfo {

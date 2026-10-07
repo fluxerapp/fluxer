@@ -37,10 +37,6 @@ export function getZIndexForStack(stackIndex: number): number {
 	return BASE_Z_INDEX + stackIndex * Z_INDEX_INCREMENT;
 }
 
-export function getBackdropZIndexForStack(stackIndex: number): number {
-	return BASE_Z_INDEX + stackIndex * Z_INDEX_INCREMENT - 1;
-}
-
 interface ModalEntry {
 	modal: ModalRender;
 	modalType: ModalType | undefined;

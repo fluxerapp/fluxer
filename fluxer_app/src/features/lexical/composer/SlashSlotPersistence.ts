@@ -5,9 +5,9 @@ import type {SlashSlotValidity} from '@app/features/lexical/composer/nodes/Slash
 import type {SlashSlotType, SlashSlotValidationError} from '@app/features/lexical/composer/slashSlotValidation';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 
-export const COMPOSER_SLASH_COMMAND_STATE_SEGMENT_PREFIX = 'slash-command-state:';
-export const COMPOSER_SLASH_COMMAND_STATE_MAX_ID_LENGTH = 32_768;
-export const COMPOSER_SLASH_SLOT_STATE_SEGMENT_PREFIX = 'slash-slot-state:';
+const COMPOSER_SLASH_COMMAND_STATE_SEGMENT_PREFIX = 'slash-command-state:';
+const COMPOSER_SLASH_COMMAND_STATE_MAX_ID_LENGTH = 32_768;
+const COMPOSER_SLASH_SLOT_STATE_SEGMENT_PREFIX = 'slash-slot-state:';
 export const COMPOSER_SLASH_SLOT_STATE_MAX_ID_LENGTH = 32_768;
 
 interface PersistedSlashSlotStateBase {
@@ -278,7 +278,7 @@ export function createSlashCommandStateSegmentId(
 	return id.length <= COMPOSER_SLASH_COMMAND_STATE_MAX_ID_LENGTH ? id : null;
 }
 
-export function parseSlashCommandStateSegmentId(id: string): PersistedSlashCommandState | null {
+function parseSlashCommandStateSegmentId(id: string): PersistedSlashCommandState | null {
 	if (
 		!id.startsWith(COMPOSER_SLASH_COMMAND_STATE_SEGMENT_PREFIX) ||
 		id.length > COMPOSER_SLASH_COMMAND_STATE_MAX_ID_LENGTH

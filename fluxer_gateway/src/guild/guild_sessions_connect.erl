@@ -5,7 +5,6 @@
 
 -export([
     handle_session_connect/3,
-    resection_connected_user/3,
     resection_connected_user/4,
     build_initial_last_message_ids/1,
     build_initial_channel_versions/1,
@@ -439,11 +438,6 @@ maybe_resection_disconnected_user(UserId, OldState, NewState) ->
         true -> resection_user_after_connection_change(UserId, OldState, NewState);
         false -> NewState
     end.
-
--spec resection_connected_user(user_id() | undefined, guild_state(), guild_state()) ->
-    guild_state().
-resection_connected_user(UserId, OldState, NewState) ->
-    resection_connected_user(UserId, undefined, OldState, NewState).
 
 -spec resection_connected_user(
     user_id() | undefined, map() | undefined, guild_state(), guild_state()

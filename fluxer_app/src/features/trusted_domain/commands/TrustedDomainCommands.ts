@@ -10,11 +10,6 @@ export async function addTrustedDomain(domain: string): Promise<void> {
 	await TrustedDomain.addTrustedDomain(domain);
 }
 
-export async function removeTrustedDomain(domain: string): Promise<void> {
-	logger.debug(`Removing trusted domain: ${domain}`);
-	await TrustedDomain.removeTrustedDomain(domain);
-}
-
 export async function clearAllTrustedDomains(): Promise<void> {
 	logger.debug('Clearing all trusted domains');
 	await TrustedDomain.clearAllTrustedDomains();
@@ -23,8 +18,4 @@ export async function clearAllTrustedDomains(): Promise<void> {
 export async function setTrustAllDomains(trustAll: boolean): Promise<void> {
 	logger.debug(`Setting trust all domains: ${trustAll}`);
 	await TrustedDomain.setTrustAllDomains(trustAll);
-}
-
-export function checkAndMigrateLegacyData(): void {
-	void TrustedDomain.checkAndMigrateLegacyData();
 }

@@ -4,9 +4,6 @@
 -typing([eqwalizer]).
 -include_lib("eunit/include/eunit.hrl").
 
--define(ONLINE_IDX, 16#F0000000).
--define(OFFLINE_IDX, 16#F0000001).
-
 new_returns_reference_test() ->
     Ref = guild_member_list_engine:new(),
     ?assert(is_reference(Ref)),

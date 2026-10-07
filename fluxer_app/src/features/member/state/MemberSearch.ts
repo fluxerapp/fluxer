@@ -12,14 +12,7 @@ import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {makeAutoObservable} from 'mobx';
 
-export enum MemberSearchActionTypes {
-	INGEST_DIRECTORY = 'INGEST_DIRECTORY',
-	MATCHES_READY = 'MATCHES_READY',
-	SEARCH_BEGIN = 'SEARCH_BEGIN',
-	SEARCH_CANCEL = 'SEARCH_CANCEL',
-}
-
-export enum MemberSearchWorkerMessageTypes {
+enum MemberSearchWorkerMessageTypes {
 	INGEST_DIRECTORY = 'INGEST_DIRECTORY',
 	MATCHES_READY = 'MATCHES_READY',
 	SEARCH_BEGIN = 'SEARCH_BEGIN',
@@ -405,24 +398,6 @@ class MemberSearch {
 		if (!worker) return;
 		const transformedMembers = updateMembersList(members, guildId);
 		updateMembers(transformedMembers);
-	}
-
-	handleUserUpdate(userId: string): void {
-		if (!worker) return;
-		const user = Users.getUser(userId);
-		if (user == null) return;
-		const allMembers: Array<TransformedMember> = [getTransformedUser(user)];
-		const guilds = Guilds.getGuilds();
-		for (const guild of guilds) {
-			const member = GuildMembers.getMember(guild.id, userId);
-			if (member) {
-				const transformedMember = getTransformedMember(member, guild.id);
-				if (transformedMember) {
-					allMembers.push(transformedMember);
-				}
-			}
-		}
-		updateMembers(allMembers);
 	}
 
 	handleFriendshipChange(userId: string, isFriend: boolean): void {

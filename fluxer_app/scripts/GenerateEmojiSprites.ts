@@ -8,8 +8,6 @@ import sharp, {type OverlayOptions} from 'sharp';
 const EMOJI_SPRITES = {
 	basePerRow: 42,
 	skinTonePerRow: 10,
-	pickerPerRow: 11,
-	pickerCount: 50,
 } as const;
 const EMOJI_SIZE = 32;
 const SPRITE_SCALES = [1, 2] as const;
@@ -143,43 +141,6 @@ async function generateSkinToneSpriteSheets(
 	}
 }
 
-async function generatePickerSpriteSheet(outputDir: string): Promise<void> {
-	const basicEmojis = [
-		'\u{1F600}',
-		'\u{1F603}',
-		'\u{1F604}',
-		'\u{1F601}',
-		'\u{1F606}',
-		'\u{1F605}',
-		'\u{1F602}',
-		'\u{1F923}',
-		'\u{1F60A}',
-		'\u{1F607}',
-		'\u{1F642}',
-		'\u{1F609}',
-		'\u{1F60C}',
-		'\u{1F60D}',
-		'\u{1F970}',
-		'\u{1F618}',
-		'\u{1F617}',
-		'\u{1F619}',
-		'\u{1F61A}',
-		'\u{1F60B}',
-		'\u{1F61B}',
-		'\u{1F61D}',
-		'\u{1F61C}',
-		'\u{1F92A}',
-		'\u{1F928}',
-		'\u{1F9D0}',
-		'\u{1F913}',
-		'\u{1F60E}',
-		'\u{1F973}',
-		'\u{1F60F}',
-	];
-	const entries: Array<EmojiEntry> = basicEmojis.map((e) => ({surrogates: e}));
-	await renderSpriteSheet(entries, EMOJI_SPRITES.pickerPerRow, 'spritesheet-picker', outputDir);
-}
-
 async function main(): Promise<void> {
 	const scriptDir = import.meta.dirname;
 	const appDir = join(scriptDir, '..');
@@ -191,8 +152,6 @@ async function main(): Promise<void> {
 	await generateMainSpriteSheet(emojiData.categories, outputDir);
 	console.log('Generating skin tone sprite sheets...');
 	await generateSkinToneSpriteSheets(emojiData.categories, outputDir);
-	console.log('Generating picker sprite sheet...');
-	await generatePickerSpriteSheet(outputDir);
 	console.log('Emoji sprites generated successfully.');
 }
 

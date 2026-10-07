@@ -94,7 +94,6 @@ skip = [
     { crate = "http@0.2.12", reason = "transitive dependency requires the older HTTP API" },
     { crate = "http-body@0.4.6", reason = "transitive dependency requires the older HTTP body API" },
     { crate = "markup5ever@0.39.0", reason = "transitive dependency requires the older release line" },
-    { crate = "miniz_oxide@0.8.9", reason = "transitive dependency requires the older release line" },
     { crate = "phf@0.13.1", reason = "transitive dependency requires the older release line" },
     { crate = "phf_codegen@0.13.1", reason = "transitive dependency requires the older release line" },
     { crate = "phf_generator@0.13.1", reason = "transitive dependency requires the older release line" },

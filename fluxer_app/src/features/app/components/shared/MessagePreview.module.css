@@ -197,12 +197,6 @@
 	justify-content: center;
 }
 
-.loadingText {
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: var(--text-primary-muted);
-}
-
 .menuIcon {
 	height: 1.25rem;
 	width: 1.25rem;

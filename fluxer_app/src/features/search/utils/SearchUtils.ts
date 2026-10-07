@@ -109,13 +109,6 @@ const HINT_EXCLUDE_EXT_DESCRIPTOR = msg({
 	comment: 'Hint shown beside -ext: (negation). Sentence case, no trailing punctuation.',
 });
 
-export interface SearchOption {
-	value: string;
-	label: string;
-	description?: string;
-	isDefault?: boolean;
-}
-
 export interface SearchValueOption {
 	value: string;
 	label: string;
@@ -478,7 +471,7 @@ export function getSearchFilterOptions(i18n: I18n): Array<SearchFilterOption> {
 	];
 }
 
-export function toApiParams(params: MessageSearchParams, extraParams?: MessageSearchApiParams): MessageSearchApiParams {
+function toApiParams(params: MessageSearchParams, extraParams?: MessageSearchApiParams): MessageSearchApiParams {
 	const hitsPerPage = params.hitsPerPage ?? 25;
 	const page = params.page ?? 1;
 	const apiParams: MessageSearchApiParams = {

@@ -14,7 +14,7 @@ const DATE_OPTIONS_DESCRIPTOR = msg({
 	comment: 'Section header in the message search popout listing date presets and the custom date input.',
 });
 
-export interface DateSectionOption {
+interface DateSectionOption {
 	label: string;
 	value: string;
 }

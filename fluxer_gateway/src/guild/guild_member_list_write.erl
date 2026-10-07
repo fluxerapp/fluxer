@@ -13,10 +13,7 @@
     queue_synced_connection_change/2,
     presence_change_resyncs_lists/2,
     flush_pending_member_list_syncs/1,
-    resync_hoisted_member_lists/1,
-    rebuild_channels_for_permission_change/2,
-    resync_channels_for_permission_change/2,
-    resync_all_channels_for_permission_change/1
+    rebuild_channels_for_permission_change/2
 ]).
 
 -type guild_state() :: map().
@@ -146,39 +143,9 @@ broadcast_all_member_list_updates(State) ->
         {ok, guild_member_list_sync_batch:queue_subscribed_list_syncs(Rebuilt, SubsTab)}
     end).
 
--spec resync_channels_for_permission_change([channel_id()], guild_state()) -> guild_state().
-resync_channels_for_permission_change(ChannelIds, State) ->
-    State1 = rebuild_channels_for_permission_change(ChannelIds, State),
-    lists:foldl(
-        fun(ChannelId, Acc) ->
-            {ok, Next} = broadcast_member_list_updates_for_channel(ChannelId, Acc),
-            Next
-        end,
-        State1,
-        ChannelIds
-    ).
-
 -spec rebuild_channels_for_permission_change([channel_id()], guild_state()) -> guild_state().
 rebuild_channels_for_permission_change(ChannelIds, State) ->
     guild_member_list_channel_engine:rebuild_channels(ChannelIds, State).
-
--spec resync_all_channels_for_permission_change(guild_state()) -> guild_state().
-resync_all_channels_for_permission_change(State) ->
-    State1 = guild_member_list_channel_engine:rebuild_all(State),
-    resync_hoisted_member_lists(State1).
-
--spec resync_hoisted_member_lists(guild_state()) -> guild_state().
-resync_hoisted_member_lists(State) ->
-    case maps:get(member_list_subscriptions, State, undefined) of
-        undefined ->
-            State;
-        SubsTab ->
-            resync_hoisted_member_lists(State, SubsTab)
-    end.
-
--spec resync_hoisted_member_lists(guild_state(), ets:table()) -> guild_state().
-resync_hoisted_member_lists(State, SubsTab) ->
-    guild_member_list_sync_batch:queue_subscribed_list_syncs(State, SubsTab).
 
 -spec broadcast_member_list_updates_for_channel(channel_id(), guild_state()) ->
     {ok, guild_state()}.

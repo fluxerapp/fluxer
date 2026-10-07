@@ -83,10 +83,6 @@ const EMAIL_I18N_TH_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "รีเซ็ตรหัสผ่านสำหรับ {product_name}",
 		"body": "สวัสดี {username},\n\nคุณได้ร้องขอการรีเซ็ตรหัสผ่าน {product_name} ใช้ลิงก์ด้านล่างเพื่อตั้งรหัสผ่านใหม่:\n\n{resetUrl}\n\nหากคุณไม่ได้ร้องขอ คุณสามารถเพิกเฉยต่ออีเมลนี้ได้เลย\n\nลิงก์นี้ใช้ได้เป็นเวลา 1 ชั่วโมง\n\n– ทีม {product_name}"
 	},
-	"registration_approved": {
-		"subject": "การลงทะเบียนสำหรับ {product_name} ได้รับการอนุมัติแล้ว",
-		"body": "สวัสดี {username},\n\nข่าวดี: การลงทะเบียน {product_name} ของคุณได้รับการอนุมัติแล้ว\n\nตอนนี้คุณสามารถเข้าสู่ระบบแอป {product_name} ได้ที่นี่:\n{channelsUrl}\n\nยินดีต้อนรับสู่คอมมูนิตี้ {product_name}\n\n– ทีม {product_name}"
-	},
 	"report_received": {
 		"subject": "เราได้รับรายงานของคุณใน {product_name} แล้ว",
 		"body": "สวัสดี,\n\nเราได้รับรายงานตามกฎหมายบริการดิจิทัล (Digital Services Act) ของคุณเกี่ยวกับ{targetKind, select, message {ข้อความ} user {บัญชี} guild {คอมมูนิตี้} other {เนื้อหา}}บน {product_name} แล้ว\n\nID รายงาน: {reportId}\n\nทีมความปลอดภัยของเราจะตรวจสอบรายงานของคุณ และเราจะส่งอีเมลถึงคุณตามที่อยู่นี้เมื่อตัดสินใจแล้ว โปรดเก็บอีเมลนี้ไว้เป็นหลักฐาน\n\n– ทีมความปลอดภัย {product_name}"

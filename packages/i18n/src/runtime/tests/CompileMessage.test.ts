@@ -79,9 +79,6 @@ describe('compileMessage', () => {
 		expect(unwrap(i18n.getTemplate('greeting', 'en-US', {name: 'Taylor'}))).toBe('Hello Taylor');
 		expect(unwrap(i18n.getTemplate('greeting', 'en-US', {name: 'Jordan'}))).toBe('Hello Jordan');
 		expect(compileSpy).toHaveBeenCalledTimes(3);
-		i18n.reset();
-		expect(unwrap(i18n.getTemplate('files', 'en-US', {count: 3}))).toBe('3 files other');
-		expect(compileSpy).toHaveBeenCalledTimes(4);
 	});
 });
 

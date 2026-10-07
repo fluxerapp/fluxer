@@ -361,25 +361,6 @@ class Channels {
 		return changed;
 	}
 
-	handleChannelUpdateBulk({channels}: {channels: Array<WireChannel>}): void {
-		for (const channel of channels) {
-			this.setChannel(channel);
-		}
-	}
-
-	handleChannelPinsUpdate({channelId, lastPinTimestamp}: {channelId: string; lastPinTimestamp: string}): void {
-		const channel = this.channelsById.get(channelId);
-		if (!channel) {
-			return;
-		}
-		this.setChannel(
-			new Channel({
-				...channel.toJSON(),
-				last_pin_timestamp: lastPinTimestamp,
-			}),
-		);
-	}
-
 	handleChannelRecipientAdd({channelId, user}: {channelId: string; user: UserPartial}): void {
 		const channel = this.channelsById.get(channelId);
 		if (!channel) {

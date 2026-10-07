@@ -236,7 +236,7 @@ export async function setLimitOverride(
 	};
 }
 
-export const crosspostTaskHandlers: Record<string, WorkerTaskHandler> = {
+const crosspostTaskHandlers: Record<string, WorkerTaskHandler> = {
 	crosspostMessage,
 	crosspostMessageChunk,
 	syncCrosspostedMessage,

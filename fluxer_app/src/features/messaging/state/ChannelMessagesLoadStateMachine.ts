@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
-
 export interface ChannelMessagesLoadInput {
 	isBefore: boolean;
 	isAfter: boolean;
@@ -20,26 +18,10 @@ export interface ChannelMessagesLoadDecision {
 	preserveHasMoreAfter: boolean;
 }
 
-export type ChannelMessagesLoadEvent = {
-	type: 'channelMessagesLoad.updated';
-	input: ChannelMessagesLoadInput;
-};
-
 function shouldReplaceVisibleWindow(context: ChannelMessagesLoadInput): boolean {
 	if (context.hasJump) return true;
 	if (!context.wasReady) return true;
 	return !context.isBefore && !context.isAfter;
-}
-
-function getLoadMode(snapshot: ChannelMessagesLoadSnapshot): ChannelMessagesLoadMode {
-	switch (snapshot.value) {
-		case 'mergeBefore':
-			return 'mergeBefore';
-		case 'mergeAfter':
-			return 'mergeAfter';
-		default:
-			return 'replace';
-	}
 }
 
 function getLoadModeFromInput(input: ChannelMessagesLoadInput): ChannelMessagesLoadMode {
@@ -80,63 +62,6 @@ function buildChannelMessagesLoadDecision(mode: ChannelMessagesLoadMode): Channe
 	}
 }
 
-export const channelMessagesLoadMachine = setup({
-	types: {} as {
-		context: ChannelMessagesLoadInput;
-		events: ChannelMessagesLoadEvent;
-		input: ChannelMessagesLoadInput;
-	},
-	actions: {
-		applyInput: assign(({event}) => {
-			if (event.type !== 'channelMessagesLoad.updated') return {};
-			return event.input;
-		}),
-	},
-	guards: {
-		shouldReplaceVisibleWindow: ({context}) => shouldReplaceVisibleWindow(context),
-		isBeforePage: ({context}) => context.isBefore,
-	},
-}).createMachine({
-	id: 'channelMessagesLoad',
-	context: ({input}) => input,
-	initial: 'routing',
-	states: {
-		routing: {
-			always: [
-				{guard: 'shouldReplaceVisibleWindow', target: 'replace'},
-				{guard: 'isBeforePage', target: 'mergeBefore'},
-				{target: 'mergeAfter'},
-			],
-		},
-		replace: {
-			on: {'channelMessagesLoad.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-		mergeBefore: {
-			on: {'channelMessagesLoad.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-		mergeAfter: {
-			on: {'channelMessagesLoad.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-	},
-});
-
-export type ChannelMessagesLoadSnapshot = SnapshotFrom<typeof channelMessagesLoadMachine>;
-
-export function createChannelMessagesLoadSnapshot(input: ChannelMessagesLoadInput): ChannelMessagesLoadSnapshot {
-	return initialTransition(channelMessagesLoadMachine, input)[0];
-}
-
-export function transitionChannelMessagesLoadSnapshot(
-	snapshot: ChannelMessagesLoadSnapshot,
-	event: ChannelMessagesLoadEvent,
-): ChannelMessagesLoadSnapshot {
-	return transition(channelMessagesLoadMachine, snapshot, event)[0] as ChannelMessagesLoadSnapshot;
-}
-
-export function selectChannelMessagesLoadDecision(snapshot: ChannelMessagesLoadSnapshot): ChannelMessagesLoadDecision {
-	return buildChannelMessagesLoadDecision(getLoadMode(snapshot));
-}
-
 export function resolveChannelMessagesLoadDecision(input: ChannelMessagesLoadInput): ChannelMessagesLoadDecision {
 	return buildChannelMessagesLoadDecision(getLoadModeFromInput(input));
 }
@@ -158,30 +83,14 @@ export type ChannelMessagesWindowStatus = {
 	retryVisible: boolean;
 };
 
-export type ChannelMessagesWindowPhase = 'placeholder' | 'retry' | 'stream';
+type ChannelMessagesWindowPhase = 'placeholder' | 'retry' | 'stream';
 
 export type ChannelMessagesWindowBar = 'none' | 'retry' | 'present';
-
-export type ChannelMessagesWindowEvent = {
-	type: 'channelMessagesWindow.updated';
-	input: ChannelMessagesWindowInput;
-};
 
 function hasLoadedWindow(context: ChannelMessagesWindowInput): boolean {
 	if (!context.ready) return false;
 	if (context.messageCount > 0) return true;
 	return !context.hasMoreBefore && !context.hasMoreAfter;
-}
-
-function getWindowPhase(snapshot: ChannelMessagesWindowSnapshot): ChannelMessagesWindowPhase {
-	switch (snapshot.value) {
-		case 'stream':
-			return 'stream';
-		case 'retry':
-			return 'retry';
-		default:
-			return 'placeholder';
-	}
 }
 
 function getWindowPhaseFromInput(input: ChannelMessagesWindowInput): ChannelMessagesWindowPhase {
@@ -201,65 +110,6 @@ function buildChannelMessagesWindowStatus(
 		needsPage: phase === 'placeholder' && !input.loading,
 		retryVisible: input.failed,
 	};
-}
-
-export const channelMessagesWindowMachine = setup({
-	types: {} as {
-		context: ChannelMessagesWindowInput;
-		events: ChannelMessagesWindowEvent;
-		input: ChannelMessagesWindowInput;
-	},
-	actions: {
-		applyInput: assign(({event}) => {
-			if (event.type !== 'channelMessagesWindow.updated') return {};
-			return event.input;
-		}),
-	},
-	guards: {
-		hasLoadedWindow: ({context}) => hasLoadedWindow(context),
-		hasFailedLoad: ({context}) => context.failed,
-	},
-}).createMachine({
-	id: 'channelMessagesWindow',
-	context: ({input}) => input,
-	initial: 'routing',
-	states: {
-		routing: {
-			always: [
-				{guard: 'hasLoadedWindow', target: 'stream'},
-				{guard: 'hasFailedLoad', target: 'retry'},
-				{target: 'placeholder'},
-			],
-		},
-		stream: {
-			on: {'channelMessagesWindow.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-		retry: {
-			on: {'channelMessagesWindow.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-		placeholder: {
-			on: {'channelMessagesWindow.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-	},
-});
-
-export type ChannelMessagesWindowSnapshot = SnapshotFrom<typeof channelMessagesWindowMachine>;
-
-export function createChannelMessagesWindowSnapshot(input: ChannelMessagesWindowInput): ChannelMessagesWindowSnapshot {
-	return initialTransition(channelMessagesWindowMachine, input)[0];
-}
-
-export function transitionChannelMessagesWindowSnapshot(
-	snapshot: ChannelMessagesWindowSnapshot,
-	event: ChannelMessagesWindowEvent,
-): ChannelMessagesWindowSnapshot {
-	return transition(channelMessagesWindowMachine, snapshot, event)[0] as ChannelMessagesWindowSnapshot;
-}
-
-export function selectChannelMessagesWindowStatus(
-	snapshot: ChannelMessagesWindowSnapshot,
-): ChannelMessagesWindowStatus {
-	return buildChannelMessagesWindowStatus(getWindowPhase(snapshot), snapshot.context);
 }
 
 export function resolveChannelMessagesWindowStatus(input: ChannelMessagesWindowInput): ChannelMessagesWindowStatus {

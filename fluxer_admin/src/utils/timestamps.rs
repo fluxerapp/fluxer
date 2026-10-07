@@ -1,46 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::time::{SystemTime, UNIX_EPOCH};
-
 const FLUXER_EPOCH: u64 = 1_420_070_400_000;
 
 pub fn snowflake_to_timestamp_ms(snowflake: &str) -> Option<u64> {
     let id: u64 = snowflake.parse().ok()?;
     let timestamp_ms = (id >> 22) + FLUXER_EPOCH;
     Some(timestamp_ms)
-}
-
-pub fn relative_time(unix_seconds: u64) -> String {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("system clock before Unix epoch")
-        .as_secs();
-    let diff = now.saturating_sub(unix_seconds);
-    if diff < 60 {
-        return "just now".to_owned();
-    }
-    if diff < 3600 {
-        let minutes = diff / 60;
-        return format!(
-            "{} minute{} ago",
-            minutes,
-            if minutes == 1 { "" } else { "s" }
-        );
-    }
-    if diff < 86400 {
-        let hours = diff / 3600;
-        return format!("{} hour{} ago", hours, if hours == 1 { "" } else { "s" });
-    }
-    let days = diff / 86400;
-    if days < 30 {
-        return format!("{} day{} ago", days, if days == 1 { "" } else { "s" });
-    }
-    let months = days / 30;
-    if months < 12 {
-        return format!("{} month{} ago", months, if months == 1 { "" } else { "s" });
-    }
-    let years = months / 12;
-    format!("{} year{} ago", years, if years == 1 { "" } else { "s" })
 }
 
 pub fn format_admin_timestamp(iso: &str) -> String {
@@ -113,45 +78,6 @@ mod tests {
         assert_eq!(snowflake_to_timestamp_ms(""), None);
         assert_eq!(snowflake_to_timestamp_ms("abc"), None);
         assert_eq!(snowflake_to_timestamp_ms("-1"), None);
-    }
-
-    #[test]
-    fn relative_time_just_now() {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        assert_eq!(relative_time(now), "just now");
-    }
-
-    #[test]
-    fn relative_time_minutes() {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        assert_eq!(relative_time(now - 120), "2 minutes ago");
-        assert_eq!(relative_time(now - 60), "1 minute ago");
-    }
-
-    #[test]
-    fn relative_time_hours() {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        assert_eq!(relative_time(now - 3600), "1 hour ago");
-        assert_eq!(relative_time(now - 7200), "2 hours ago");
-    }
-
-    #[test]
-    fn relative_time_days() {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        assert_eq!(relative_time(now - 86400), "1 day ago");
-        assert_eq!(relative_time(now - 86400 * 5), "5 days ago");
     }
 
     #[test]

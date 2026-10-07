@@ -83,10 +83,6 @@ const EMAIL_I18N_DE_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Setze dein {product_name}-Passwort zurück",
 		"body": "Hallo {username},\n\ndu hast angefordert, dein {product_name}-Passwort zurückzusetzen. Verwende den untenstehenden Link, um ein neues Passwort festzulegen:\n\n{resetUrl}\n\nWenn du dies nicht angefordert hast, kannst du diese E-Mail ignorieren.\n\nDieser Link ist 1 Stunde gültig.\n\n– {product_name}-Team"
 	},
-	"registration_approved": {
-		"subject": "Deine {product_name}-Registrierung wurde genehmigt",
-		"body": "Hallo {username},\n\ngute Nachrichten: Deine {product_name}-Registrierung wurde genehmigt.\n\nDu kannst dich jetzt hier in die {product_name}-App einloggen:\n{channelsUrl}\n\nWillkommen in der {product_name}-Community.\n\n– {product_name}-Team"
-	},
 	"report_received": {
 		"subject": "Wir haben deine {product_name}-Meldung erhalten",
 		"body": "Hallo,\n\nwir haben deine Meldung nach dem Digital Services Act (DSA) über {targetKind, select, message {eine Nachricht} user {einen Account} guild {eine Community} other {Inhalte}} auf {product_name} erhalten.\n\nMeldungs-ID: {reportId}\n\nUnser Sicherheitsteam prüft deine Meldung. Sobald wir eine Entscheidung getroffen haben, schreiben wir dir an diese E-Mail-Adresse. Bitte bewahre diese E-Mail für deine Unterlagen auf.\n\n– {product_name}-Sicherheitsteam"

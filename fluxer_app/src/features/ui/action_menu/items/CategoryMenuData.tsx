@@ -103,7 +103,7 @@ export interface CategoryMenuData {
 	state: CategoryMenuState;
 }
 
-export interface CategoryMenuHandlers {
+interface CategoryMenuHandlers {
 	handleMarkAsRead: () => void;
 	handleToggleCollapse: () => void;
 	handleToggleCollapseAll: () => void;
@@ -115,7 +115,7 @@ export interface CategoryMenuHandlers {
 	handleResetMatureContentAgreeState: () => void;
 }
 
-export interface CategoryMenuState {
+interface CategoryMenuState {
 	hasUnread: boolean;
 	isCollapsed: boolean;
 	allCategoriesCollapsed: boolean;

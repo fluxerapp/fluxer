@@ -345,17 +345,14 @@ mod tests {
     #[test]
     fn build_embed_media_payload_keeps_metadata_fields() {
         let meta = MediaMetadata {
-            format: "mp4".to_owned(),
             content_type: "video/mp4".to_owned(),
             content_hash: "hash".to_owned(),
-            size: 123,
             width: Some(320),
             height: Some(240),
             duration: Some(1.5),
             placeholder: Some("placeholder".to_owned()),
             animated: Some(true),
             nsfw: true,
-            nsfw_probability: None,
         };
         let media = build_embed_media_payload("https://tenor.example/a.mp4", &meta);
         assert_eq!(media.content_type.as_deref(), Some("video/mp4"));

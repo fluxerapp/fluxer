@@ -91,7 +91,7 @@ export function getScreenShareBitrateBps(
 	return computeScreenShareBitrateBps(fit.width * fit.height, fit.rung, frameRate);
 }
 
-export const STREAMING_MODE_PRESETS: Record<
+const STREAMING_MODE_PRESETS: Record<
 	Exclude<StreamingMode, 'custom'>,
 	{
 		resolution: ScreenshareResolution;

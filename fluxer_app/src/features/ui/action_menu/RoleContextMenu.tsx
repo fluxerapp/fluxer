@@ -32,7 +32,7 @@ interface RoleContextMenuProps extends RoleContextMenuActions {
 	onClose: () => void;
 }
 
-export const RoleContextMenu: React.FC<RoleContextMenuProps> = ({
+const RoleContextMenu: React.FC<RoleContextMenuProps> = ({
 	roleId,
 	onClose,
 	canDuplicate,

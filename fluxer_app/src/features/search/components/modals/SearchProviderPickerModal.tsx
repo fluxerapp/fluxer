@@ -49,7 +49,7 @@ const SEARCH_THE_WEB_DESCRIPTOR = msg({
 	comment: 'Confirm button label in the web search provider picker. Initiates the web search.',
 });
 
-export type SearchProviderPickerMode = 'text' | 'image' | 'translate';
+type SearchProviderPickerMode = 'text' | 'image' | 'translate';
 
 interface SearchProviderPickerModalProps {
 	mode: SearchProviderPickerMode;

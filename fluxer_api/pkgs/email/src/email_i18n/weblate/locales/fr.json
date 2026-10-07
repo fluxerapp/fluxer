@@ -79,10 +79,6 @@
 		"subject": "Réinitialiser votre mot de passe {product_name}",
 		"body": "Bonjour {username},\n\nVous avez demandé la réinitialisation de votre mot de passe {product_name}. Utilisez le lien ci-dessous pour en définir un nouveau :\n\n{resetUrl}\n\nSi vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet e-mail.\n\nCe lien est valable pendant 1 heure.\n\n– L’équipe {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Votre inscription à {product_name} a été approuvée",
-		"body": "Bonjour {username},\n\nBonne nouvelle : votre inscription à {product_name} a été approuvée.\n\nVous pouvez maintenant vous connecter à l’application {product_name} ici :\n{channelsUrl}\n\nBienvenue dans la communauté {product_name}.\n\n– L’équipe {product_name}"
-	},
 	"report_received": {
 		"subject": "Nous avons bien reçu votre signalement sur {product_name}",
 		"body": "Bonjour,\n\nNous avons bien reçu votre signalement au titre du règlement sur les services numériques (DSA) concernant {targetKind, select, message {un message} user {un compte} guild {une communauté} other {du contenu}} sur {product_name}.\n\nID du signalement : {reportId}\n\nNotre équipe de sécurité examinera votre signalement et nous vous écrirons à cette adresse dès qu’une décision aura été prise. Conservez cet e-mail pour vos archives.\n\n– L’équipe de sécurité de {product_name}"

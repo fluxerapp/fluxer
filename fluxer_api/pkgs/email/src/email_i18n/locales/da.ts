@@ -83,10 +83,6 @@ const EMAIL_I18N_DA_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Nulstil din {product_name}-adgangskode",
 		"body": "Hej {username},\n\nDu har anmodet om at nulstille din {product_name}-adgangskode. Brug linket nedenfor til at vælge en ny adgangskode:\n\n{resetUrl}\n\nHvis du ikke har anmodet om dette, kan du trygt ignorere denne e-mail.\n\nDette link er gyldigt i 1 time.\n\n– Teamet bag {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Din tilmelding til {product_name} er godkendt",
-		"body": "Hej {username},\n\nGode nyheder: Din tilmelding til {product_name} er godkendt.\n\nDu kan nu logge ind på {product_name}-appen her:\n{channelsUrl}\n\nVelkommen til fællesskabet på {product_name}.\n\n– Teamet bag {product_name}"
-	},
 	"report_received": {
 		"subject": "Vi har modtaget din anmeldelse på {product_name}",
 		"body": "Hej,\n\nVi har modtaget din anmeldelse i henhold til Digital Services Act om {targetKind, select, message {en besked} user {en konto} guild {et fællesskab} other {indhold}} på {product_name}.\n\nAnmeldelses-ID: {reportId}\n\nVores sikkerhedsteam gennemgår din anmeldelse, og vi sender dig en e-mail på denne adresse, når vi har truffet en afgørelse. Gem denne e-mail, så du har den til senere.\n\n– Sikkerhedsteamet hos {product_name}"

@@ -4,8 +4,6 @@
 
 -typing([eqwalizer]).
 
--include_lib("fluxer_gateway/include/voice_state.hrl").
-
 -export([
     pending_voice_connections/1,
     store_pending/3,

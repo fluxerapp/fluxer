@@ -19,7 +19,6 @@
     is_empty/1,
     filter/2,
     drop_while_front/2,
-    recompute_bytes/2,
     entry_bytes/1
 ]).
 
@@ -143,12 +142,6 @@ continue_drop_while_front(true, Pred, _Item, D) ->
     drop_while_front(Pred, D);
 continue_drop_while_front(false, _Pred, Item, D) ->
     push_front(Item, D).
-
--spec recompute_bytes(fun((term()) -> non_neg_integer()), deque()) -> deque().
-recompute_bytes(ByteFun, #{front := Front, rear := Rear} = D) ->
-    FrontBytes = lists:foldl(fun(I, Acc) -> Acc + ByteFun(I) end, 0, Front),
-    RearBytes = lists:foldl(fun(I, Acc) -> Acc + ByteFun(I) end, 0, Rear),
-    D#{bytes := FrontBytes + RearBytes}.
 
 -spec trim_front(deque()) -> deque().
 trim_front(

@@ -7,7 +7,6 @@ import type {SettingsTab} from '@app/features/user/components/settings_utils/Set
 import {
 	getSettingsAudience,
 	type SettingsCategoryTag,
-	type SettingsStatusBadgeKind,
 } from '@app/features/user/components/settings_utils/SettingsMetadata';
 import {
 	ACCOUNT_SETTINGS_TAB,
@@ -126,14 +125,14 @@ function createSearchableItems(): Array<SearchableSettingItem> {
 
 let cachedSearchableItems: Array<SearchableSettingItem> | null = null;
 
-export function getSearchableItems(): Array<SearchableSettingItem> {
+function getSearchableItems(): Array<SearchableSettingItem> {
 	if (!cachedSearchableItems) {
 		cachedSearchableItems = createSearchableItems();
 	}
 	return cachedSearchableItems;
 }
 
-export function invalidateSearchCache(): void {
+function invalidateSearchCache(): void {
 	cachedSearchableItems = null;
 }
 
@@ -285,22 +284,6 @@ export function filterAdvancedSettingItems(
 		.filter(({score}) => score > 0)
 		.sort((a, b) => b.score - a.score || a.item.label.localeCompare(b.item.label))
 		.map(({item}) => item);
-}
-
-export function getSearchableItemStatusBadges(item: SearchableSettingItem): ReadonlyArray<SettingsStatusBadgeKind> {
-	return item.badges ?? [];
-}
-
-export function getMatchedSectionIds(results: Array<SettingsSearchResult>): Set<string> {
-	const sectionIds = new Set<string>();
-	for (const result of results) {
-		for (const item of result.matchedItems) {
-			if (item.sectionId) {
-				sectionIds.add(item.sectionId);
-			}
-		}
-	}
-	return sectionIds;
 }
 
 export function getMatchedTabTypes(results: Array<SettingsSearchResult>): Set<UserSettingsTabType> {

@@ -395,22 +395,6 @@ is_small_guild_test() ->
     ?assertEqual(false, session_passive:is_small_guild(#{})),
     ok.
 
-is_message_event_test() ->
-    ?assertEqual(true, session_passive:is_message_event(message_create)),
-    ?assertEqual(true, session_passive:is_message_event(message_update)),
-    ?assertEqual(true, session_passive:is_message_event(message_delete)),
-    ?assertEqual(true, session_passive:is_message_event(message_delete_bulk)),
-    ?assertEqual(false, session_passive:is_message_event(typing_start)),
-    ?assertEqual(false, session_passive:is_message_event(guild_create)),
-    ok.
-
-is_lazy_guild_event_test() ->
-    ?assertEqual(true, session_passive:is_lazy_guild_event(message_create)),
-    ?assertEqual(true, session_passive:is_lazy_guild_event(voice_state_update)),
-    ?assertEqual(false, session_passive:is_lazy_guild_event(typing_start)),
-    ?assertEqual(false, session_passive:is_lazy_guild_event(channel_create)),
-    ok.
-
 extract_role_ids_test() ->
     ?assertEqual([123], session_passive:extract_role_ids([<<"123">>])),
     ?assertEqual([456], session_passive:extract_role_ids([456])),
@@ -465,17 +449,6 @@ active_to_passive_transition_filters_events_test() ->
         true,
         session_passive:should_receive_event(guild_delete, #{}, GuildId, SessionData1, State)
     ),
-    ok.
-
-typing_override_survives_passive_active_toggle_test() ->
-    GuildId = 777,
-    SessionData0 = #{user_id => 1, active_guilds => sets:new(), bot => false},
-    SessionData1 = session_passive:set_typing_override(GuildId, true, SessionData0),
-    ?assertEqual(true, session_passive:should_receive_typing(GuildId, SessionData1)),
-    SessionData2 = session_passive:set_active(GuildId, SessionData1),
-    ?assertEqual(true, session_passive:should_receive_typing(GuildId, SessionData2)),
-    SessionData3 = session_passive:set_passive(GuildId, SessionData2),
-    ?assertEqual(true, session_passive:should_receive_typing(GuildId, SessionData3)),
     ok.
 
 guild_synced_state_test() ->

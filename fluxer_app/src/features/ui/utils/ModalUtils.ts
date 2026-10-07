@@ -81,8 +81,8 @@ function isBackdropActivationLeftOver(ownerDocument: Document): boolean {
 	return watcher.isRepeatActivation || watcher.isPressTargetDetached;
 }
 
-export type ModalSize = 'medium' | 'small' | 'large' | 'xlarge' | 'fullscreen';
-export type LabelSource = 'header' | 'screen-reader';
+type ModalSize = 'medium' | 'small' | 'large' | 'xlarge' | 'fullscreen';
+type LabelSource = 'header' | 'screen-reader';
 
 export type ModalTransitionPreset = 'default' | 'instant' | 'quick' | 'profile-slide';
 

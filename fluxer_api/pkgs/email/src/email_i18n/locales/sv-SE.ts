@@ -83,10 +83,6 @@ const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Återställ ditt lösenord på {product_name}",
 		"body": "Hej {username},\n\nDu har begärt att återställa ditt lösenord på {product_name}. Använd länken nedan för att välja ett nytt lösenord:\n\n{resetUrl}\n\nOm du inte begärde detta kan du tryggt ignorera det här mejlet.\n\nDen här länken är giltig i 1 timme.\n\n– {product_name}-teamet"
 	},
-	"registration_approved": {
-		"subject": "Din registrering på {product_name} har godkänts",
-		"body": "Hej {username},\n\nGoda nyheter: din registrering på {product_name} har godkänts.\n\nDu kan nu logga in i {product_name}-appen här:\n{channelsUrl}\n\nVälkommen till {product_name}-communityn.\n\n– {product_name}-teamet"
-	},
 	"report_received": {
 		"subject": "Vi har tagit emot din anmälan på {product_name}",
 		"body": "Hej,\n\nVi har tagit emot din anmälan enligt förordningen om digitala tjänster om {targetKind, select, message {ett meddelande} user {ett konto} guild {en community} other {innehåll}} på {product_name}.\n\nAnmälnings-ID: {reportId}\n\nVårt säkerhetsteam granskar din anmälan och vi mejlar dig på den här adressen när vi har fattat ett beslut. Spara det här mejlet så att du har det kvar.\n\n– Säkerhetsteamet på {product_name}"

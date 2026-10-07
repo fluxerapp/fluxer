@@ -66,10 +66,6 @@ class Window {
 	isVisible(): boolean {
 		return this.visible;
 	}
-
-	getWindowSize(): WindowSize {
-		return this.windowSize;
-	}
 }
 
 export default new Window();

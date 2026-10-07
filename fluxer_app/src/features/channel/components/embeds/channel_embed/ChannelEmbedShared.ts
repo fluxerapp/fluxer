@@ -19,10 +19,10 @@ import type React from 'react';
 
 export const logger = new Logger('Embed');
 export const THUMBNAIL_SIZE = 80;
-export const MAX_GALLERY_MEDIA = 10;
-export const EMBED_PADDING_X = 12;
-export const EMBED_LEFT_BORDER_WIDTH = 4;
-export const EMBED_RIGHT_BORDER_WIDTH = 1;
+const MAX_GALLERY_MEDIA = 10;
+const EMBED_PADDING_X = 12;
+const EMBED_LEFT_BORDER_WIDTH = 4;
+const EMBED_RIGHT_BORDER_WIDTH = 1;
 export const EMBED_MEDIA_CHROME_WIDTH = EMBED_PADDING_X * 2 + EMBED_LEFT_BORDER_WIDTH + EMBED_RIGHT_BORDER_WIDTH;
 export const EMBED_MEDIA_MAX_WIDTH = 432;
 
@@ -112,12 +112,12 @@ export const getOptimizedMediaURL = (proxyURL: string, width: number, height: nu
 		height: target.height,
 	});
 };
-export const getOptimizedAnimatedMediaURL = (proxyURL: string, width: number, height: number): string => {
+const getOptimizedAnimatedMediaURL = (proxyURL: string, width: number, height: number): string => {
 	if (!proxyURL) return proxyURL;
 	const target = toEmbedMediaPixels(width, height);
 	return buildAnimatedImageProxyURL(stripMediaProxyParams(proxyURL), target.width, target.height);
 };
-export const isAnimatedEmbedMedia = (media: Pick<EmbedMedia, 'content_type' | 'flags'>): boolean => {
+const isAnimatedEmbedMedia = (media: Pick<EmbedMedia, 'content_type' | 'flags'>): boolean => {
 	if (media.content_type === 'image/gif') return true;
 	return ((media.flags ?? 0) & MessageAttachmentFlags.IS_ANIMATED) === MessageAttachmentFlags.IS_ANIMATED;
 };
@@ -134,7 +134,7 @@ export const resolveEmbedImageSource = (
 		animated,
 	};
 };
-export const mediaIdentityKey = (media?: EmbedMedia): string => {
+const mediaIdentityKey = (media?: EmbedMedia): string => {
 	if (!media) return '';
 	return [
 		media.url ?? '',
@@ -150,7 +150,7 @@ export const mediaIdentityKey = (media?: EmbedMedia): string => {
 		media.description ?? '',
 	].join('|');
 };
-export const embedMediaSignature = (embed: MessageEmbed): string => {
+const embedMediaSignature = (embed: MessageEmbed): string => {
 	return [
 		embed.url ?? '',
 		embed.provider?.url ?? '',
@@ -177,7 +177,7 @@ export const isMediaMatureContent = (media?: EmbedMedia): boolean => {
 	if (!media) return false;
 	return Boolean(media.nsfw || ((media.flags ?? 0) & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) !== 0);
 };
-export const normalizeUrl = (url?: string): string | null => {
+const normalizeUrl = (url?: string): string | null => {
 	if (!url) return null;
 	if (normalizedUrlCache.has(url)) {
 		return normalizedUrlCache.get(url) ?? null;

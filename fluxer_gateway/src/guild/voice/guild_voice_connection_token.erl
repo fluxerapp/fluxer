@@ -4,35 +4,7 @@
 
 -typing([eqwalizer]).
 
--export([request_voice_token/4]).
--export([request_voice_token/5]).
--export([request_voice_token/6]).
 -export([request_voice_token/8]).
-
--spec request_voice_token(integer(), integer(), integer(), map()) ->
-    {ok, map()} | {error, term()}.
-request_voice_token(GuildId, ChannelId, UserId, VoicePermissions) ->
-    request_voice_token(GuildId, ChannelId, UserId, null, VoicePermissions).
-
--spec request_voice_token(integer(), integer(), integer(), binary() | null, map()) ->
-    {ok, map()} | {error, term()}.
-request_voice_token(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions) ->
-    request_voice_token(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions, null).
-
--spec request_voice_token(
-    integer(), integer(), integer(), binary() | null, map(), binary() | null
-) -> {ok, map()} | {error, term()}.
-request_voice_token(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions, TokenNonce) ->
-    request_voice_token(
-        GuildId,
-        ChannelId,
-        UserId,
-        ConnectionId,
-        VoicePermissions,
-        TokenNonce,
-        null,
-        null
-    ).
 
 -spec request_voice_token(
     integer(),

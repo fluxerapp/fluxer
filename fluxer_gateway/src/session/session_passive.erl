@@ -10,15 +10,12 @@
     set_passive/2,
     should_receive_event/5,
     get_user_roles_for_guild/2,
-    should_receive_typing/2,
     set_typing_override/3,
     get_typing_override/2,
     is_user_mentioned/2,
     is_guild_synced/2,
     mark_guild_synced/2,
     clear_guild_synced/2,
-    is_message_event/1,
-    is_lazy_guild_event/1,
     extract_role_ids/1,
     mention_role_set/1
 ]).
@@ -116,17 +113,6 @@ is_small_guild(State) ->
 -spec is_effectively_active(guild_id(), session_data(), guild_state()) -> boolean().
 is_effectively_active(GuildId, SessionData, State) ->
     (not is_passive(GuildId, SessionData)) orelse is_small_guild(State).
-
--spec is_message_event(event()) -> boolean().
-is_message_event(message_create) -> true;
-is_message_event(message_update) -> true;
-is_message_event(message_delete) -> true;
-is_message_event(message_delete_bulk) -> true;
-is_message_event(_) -> false.
-
--spec is_lazy_guild_event(event()) -> boolean().
-is_lazy_guild_event(Event) ->
-    is_message_event(Event) orelse Event =:= voice_state_update.
 
 -spec should_passive_receive(event(), map(), session_data()) -> boolean().
 should_passive_receive(channel_create, _EventData, _SessionData) ->
@@ -246,15 +232,6 @@ parse_role_id(Role) when is_integer(Role) ->
     {true, Role};
 parse_role_id(_) ->
     false.
-
--spec should_receive_typing(guild_id(), session_data()) -> boolean().
-should_receive_typing(GuildId, SessionData) ->
-    case get_typing_override(GuildId, SessionData) of
-        undefined ->
-            not is_passive(GuildId, SessionData);
-        TypingFlag ->
-            TypingFlag
-    end.
 
 -spec should_receive_typing(guild_id(), session_data(), guild_state()) -> boolean().
 should_receive_typing(GuildId, SessionData, State) ->

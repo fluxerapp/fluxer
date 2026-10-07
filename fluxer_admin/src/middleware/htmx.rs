@@ -18,13 +18,6 @@ pub fn is_htmx_request(headers: &HeaderMap) -> bool {
         .is_some_and(|value| value == "true")
 }
 
-pub fn htmx_current_url(headers: &HeaderMap) -> Option<String> {
-    headers
-        .get("HX-Current-URL")
-        .and_then(|value| value.to_str().ok())
-        .map(|s| s.to_owned())
-}
-
 pub fn htmx_target(headers: &HeaderMap) -> Option<String> {
     headers
         .get("HX-Target")

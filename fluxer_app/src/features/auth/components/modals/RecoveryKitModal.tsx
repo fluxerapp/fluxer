@@ -118,7 +118,7 @@ const RECOVERY_KIT_BACKUP_CODES_FAILED_DESCRIPTOR = msg({
 	comment: 'Toast shown when the two-factor backup codes for the recovery kit cannot be loaded.',
 });
 
-export type RecoveryKitModalReason = 'created' | 'replaced' | 'recovered';
+type RecoveryKitModalReason = 'created' | 'replaced' | 'recovered';
 
 export interface RecoveryKitModalProps {
 	recoveryKey: string;
@@ -207,7 +207,7 @@ const RecoveryKitPrintView = ({sheet, qrDataUrl}: {sheet: RecoveryKitSheet; qrDa
 		document.body,
 	);
 
-export const RecoveryKitModal = observer(
+const RecoveryKitModal = observer(
 	({recoveryKey, createdAt, username, discriminator, reason = 'created', onDone}: RecoveryKitModalProps) => {
 		const {i18n} = useLingui();
 		const currentUser = Users.currentUser;

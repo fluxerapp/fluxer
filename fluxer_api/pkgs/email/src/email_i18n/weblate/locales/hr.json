@@ -79,10 +79,6 @@
 		"subject": "Poništi svoju lozinku za {product_name}",
 		"body": "Pozdrav {username},\n\nPrimili smo tvoj zahtjev za poništavanje lozinke za {product_name}. Upotrijebi poveznicu ispod za postavljanje nove lozinke:\n\n{resetUrl}\n\nAko ovaj zahtjev ne dolazi od tebe, slobodno zanemari ovu e-poštu.\n\nOva poveznica vrijedi 1 sat.\n\n– Tim {product_name}a"
 	},
-	"registration_approved": {
-		"subject": "Tvoja registracija za {product_name} je odobrena",
-		"body": "Pozdrav {username},\n\nDobre vijesti: tvoja registracija za {product_name} je odobrena.\n\nSada se možeš prijaviti u aplikaciju {product_name} ovdje:\n{channelsUrl}\n\nDobro došli u zajednicu {product_name}a.\n\n– Tim {product_name}a"
-	},
 	"report_received": {
 		"subject": "Primili smo tvoju prijavu na platformi {product_name}",
 		"body": "Pozdrav,\n\nPrimili smo tvoju prijavu prema Zakonu o digitalnim uslugama koja se odnosi na {targetKind, select, message {poruku} user {račun} guild {zajednicu} other {sadržaj}} na platformi {product_name}.\n\nID prijave: {reportId}\n\nNaš sigurnosni tim pregledat će tvoju prijavu, a mi ćemo ti poslati e-poštu na ovu adresu kada donesemo odluku. Sačuvaj ovu e-poštu za svoju evidenciju.\n\n– Sigurnosni tim {product_name}a"

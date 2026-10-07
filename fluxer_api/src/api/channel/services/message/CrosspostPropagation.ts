@@ -26,20 +26,20 @@ export const CrosspostTaskNames = {
 	REMOVE_CHANNEL_FOLLOWERS: 'removeChannelFollowers',
 } as const;
 
-export type CrosspostTaskName = (typeof CrosspostTaskNames)[keyof typeof CrosspostTaskNames];
+type CrosspostTaskName = (typeof CrosspostTaskNames)[keyof typeof CrosspostTaskNames];
 
 export type CrosspostWorkerService = IWorkerService<WorkerTaskName | CrosspostTaskName>;
 
-export const CrosspostSyncModeSchema = z.enum(['update', 'source_deleted', 'purge']);
+const CrosspostSyncModeSchema = z.enum(['update', 'source_deleted', 'purge']);
 export type CrosspostSyncMode = z.infer<typeof CrosspostSyncModeSchema>;
-export type CrosspostRemovalMode = Exclude<CrosspostSyncMode, 'update'>;
+type CrosspostRemovalMode = Exclude<CrosspostSyncMode, 'update'>;
 
 export const CrosspostMessagePayloadSchema = z.object({
 	channelId: z.string(),
 	messageId: z.string(),
 	afterWebhookId: z.string().optional(),
 });
-export type CrosspostMessagePayload = z.infer<typeof CrosspostMessagePayloadSchema>;
+type CrosspostMessagePayload = z.infer<typeof CrosspostMessagePayloadSchema>;
 
 export const CrosspostMessageChunkPayloadSchema = z.object({
 	channelId: z.string(),
@@ -54,7 +54,7 @@ export const SyncCrosspostedMessagePayloadSchema = z.object({
 	mode: CrosspostSyncModeSchema,
 	deleteSource: z.boolean().optional(),
 });
-export type SyncCrosspostedMessagePayload = z.infer<typeof SyncCrosspostedMessagePayloadSchema>;
+type SyncCrosspostedMessagePayload = z.infer<typeof SyncCrosspostedMessagePayloadSchema>;
 
 export const SyncCrosspostCopiesPayloadSchema = z.object({
 	channelId: z.string(),

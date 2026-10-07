@@ -92,49 +92,6 @@ validate_config_ignores_unknown_keys_and_merges_defaults_test() ->
     ?assertEqual(false, maps:is_key(<<"unknown">>, Config)),
     ?assertEqual(256, maps:get(<<"max_concurrent_guild_starts">>, Config)).
 
-session_start_rollout_decision_eligible_test() ->
-    persistent_term:put(?PERSISTENT_TERM_KEY, default_config()),
-    ?assertEqual(
-        eligible,
-        gateway_rollout_config:session_start_rollout_decision(#{<<"user_id">> => <<"123">>})
-    ).
-
-session_start_rollout_decision_missing_user_id_test() ->
-    Config = (default_config())#{<<"session_rollout_percentage">> => 50},
-    persistent_term:put(?PERSISTENT_TERM_KEY, Config),
-    ?assertEqual(missing_user_id, gateway_rollout_config:session_start_rollout_decision(#{})).
-
-is_clustered_false_when_flag_unset_test() ->
-    persistent_term:put({fluxer_gateway, runtime_config}, #{}),
-    ?assertEqual(false, gateway_rollout_config:is_clustered()).
-
-is_clustered_false_when_flag_not_true_test() ->
-    persistent_term:put({fluxer_gateway, runtime_config}, #{cluster_enabled => false}),
-    ?assertEqual(false, gateway_rollout_config:is_clustered()),
-    persistent_term:put({fluxer_gateway, runtime_config}, #{cluster_enabled => <<"true">>}),
-    ?assertEqual(false, gateway_rollout_config:is_clustered()),
-    persistent_term:put({fluxer_gateway, runtime_config}, #{cluster_enabled => 1}),
-    ?assertEqual(false, gateway_rollout_config:is_clustered()).
-
-is_clustered_false_when_flag_true_but_only_self_test() ->
-    persistent_term:put({fluxer_gateway, runtime_config}, #{cluster_enabled => true}),
-    persistent_term:erase({gateway_cluster_membership, members}),
-    ?assertEqual(false, gateway_rollout_config:is_clustered()),
-    persistent_term:put({gateway_cluster_membership, members}, [node()]),
-    ?assertEqual(false, gateway_rollout_config:is_clustered()),
-    persistent_term:erase({gateway_cluster_membership, members}),
-    persistent_term:erase({fluxer_gateway, runtime_config}).
-
-is_clustered_true_when_flag_and_multiple_members_test() ->
-    persistent_term:put({fluxer_gateway, runtime_config}, #{cluster_enabled => true}),
-    persistent_term:put(
-        {gateway_cluster_membership, members},
-        [node(), 'peer@host']
-    ),
-    ?assertEqual(true, gateway_rollout_config:is_clustered()),
-    persistent_term:erase({gateway_cluster_membership, members}),
-    persistent_term:erase({fluxer_gateway, runtime_config}).
-
 rollout_percentage_update_applies_atomically_across_concurrent_reads_test() ->
     Config50 = (default_config())#{<<"session_rollout_percentage">> => 50},
     persistent_term:put(?PERSISTENT_TERM_KEY, Config50),

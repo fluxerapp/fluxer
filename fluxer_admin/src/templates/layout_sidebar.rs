@@ -4,7 +4,7 @@ use crate::{acl, config::AdminConfig};
 use maud::{Markup, PreEscaped, html};
 
 use super::layout_scripts::SIDEBAR_ACTIVE_SCROLL_SCRIPT;
-pub use super::layout_sidebar_nav::{NAV_SECTIONS, NavItem, NavSection};
+use super::layout_sidebar_nav::NAV_SECTIONS;
 
 pub fn render_sidebar(
     config: &AdminConfig,

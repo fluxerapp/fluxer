@@ -1774,9 +1774,6 @@ importers:
       electron-builder:
         specifier: 27.0.0-alpha.8
         version: 27.0.0-alpha.8(electron-builder-squirrel-windows@27.0.0-alpha.8)(supports-color@7.2.0)
-      electron-builder-squirrel-windows:
-        specifier: 27.0.0-alpha.8
-        version: 27.0.0-alpha.8(dmg-builder@27.0.0-alpha.8)(supports-color@7.2.0)
       esbuild:
         specifier: 'catalog:'
         version: 0.28.2
@@ -1850,9 +1847,6 @@ importers:
       '@fluxer/win-shell':
         specifier: file:./native/win-shell
         version: file:fluxer_desktop/native/win-shell
-      '@fluxer/win-toast':
-        specifier: file:./native/win-toast
-        version: file:fluxer_desktop/native/win-toast
       '@fluxer/windows-input-hook':
         specifier: file:./native/windows-input-hook
         version: file:fluxer_desktop/native/windows-input-hook
@@ -2065,9 +2059,6 @@ importers:
       '@messageformat/parser':
         specifier: 'catalog:'
         version: 5.1.1
-      yaml:
-        specifier: 'catalog:'
-        version: 2.9.1
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -4588,11 +4579,6 @@ packages:
 
   '@fluxer/win-shell@file:fluxer_desktop/native/win-shell':
     resolution: {directory: fluxer_desktop/native/win-shell, type: directory}
-    cpu: [x64, arm64]
-    os: [win32]
-
-  '@fluxer/win-toast@file:fluxer_desktop/native/win-toast':
-    resolution: {directory: fluxer_desktop/native/win-toast, type: directory}
     cpu: [x64, arm64]
     os: [win32]
 
@@ -13646,9 +13632,6 @@ snapshots:
     optional: true
 
   '@fluxer/win-shell@file:fluxer_desktop/native/win-shell':
-    optional: true
-
-  '@fluxer/win-toast@file:fluxer_desktop/native/win-toast':
     optional: true
 
   '@fluxer/windows-input-hook@file:fluxer_desktop/native/windows-input-hook':

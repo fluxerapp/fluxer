@@ -3,7 +3,7 @@
 -module(guild_voice_permissions).
 -typing([eqwalizer]).
 
--export([check_voice_permissions_and_limits/6, users_in_channel/2]).
+-export([check_voice_permissions_and_limits/6]).
 
 -export_type([
     guild_state/0,
@@ -268,32 +268,6 @@ member_timed_out(Member) ->
     case TimeoutMs of
         undefined -> false;
         Value when is_integer(Value) -> Value > erlang:system_time(millisecond)
-    end.
-
--spec users_in_channel(integer(), voice_state_map()) -> sets:set(integer()).
-users_in_channel(ChannelIdValue, VoiceStates0) ->
-    VoiceStates = voice_state_utils:ensure_voice_states(VoiceStates0),
-    maps:fold(
-        fun(_ConnId, VState, Acc) ->
-            add_user_if_voice_state_in_channel(VState, ChannelIdValue, Acc)
-        end,
-        sets:new(),
-        VoiceStates
-    ).
-
--spec add_user_if_voice_state_in_channel(map(), integer(), sets:set(integer())) ->
-    sets:set(integer()).
-add_user_if_voice_state_in_channel(VState, ChannelIdValue, Acc) ->
-    case voice_state_utils:voice_state_channel_id(VState) of
-        ChannelIdValue -> add_voice_state_user(VState, Acc);
-        _ -> Acc
-    end.
-
--spec add_voice_state_user(map(), sets:set(integer())) -> sets:set(integer()).
-add_voice_state_user(VState, Acc) ->
-    case voice_state_utils:voice_state_user_id(VState) of
-        undefined -> Acc;
-        UserId -> sets:add_element(UserId, Acc)
     end.
 
 -spec resolve_permissions(integer(), integer(), guild_state()) -> integer().

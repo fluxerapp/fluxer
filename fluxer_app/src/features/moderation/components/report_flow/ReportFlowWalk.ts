@@ -7,7 +7,7 @@ import type {
 	ReportFlowStep,
 } from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
 
-export type ReportFlowPhase = 'screen' | 'summary' | 'notice' | 'thanks';
+type ReportFlowPhase = 'screen' | 'summary' | 'notice' | 'thanks';
 
 export interface ReportFlowWalk {
 	readonly steps: ReadonlyArray<ReportFlowStep>;

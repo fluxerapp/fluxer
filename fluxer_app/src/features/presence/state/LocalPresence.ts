@@ -18,7 +18,7 @@ type Presence = Readonly<{
 	custom_status: GatewayCustomStatusPayload | null;
 }>;
 
-export const ACCOUNT_PRESENCE_INTENT_MAX_AGE_MS = 60 * 1000;
+const ACCOUNT_PRESENCE_INTENT_MAX_AGE_MS = 60 * 1000;
 
 interface LocalPresenceUserSettings {
 	status: StatusType;

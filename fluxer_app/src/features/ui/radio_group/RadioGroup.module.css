@@ -152,32 +152,3 @@
 .focusRing {
 	border-radius: var(--radius-sm);
 }
-
-.enable-forced-colors .outerRadioBase {
-	fill: Canvas;
-}
-
-.enable-forced-colors .innerDotRadio {
-	fill: HighlightText;
-}
-
-.enable-forced-colors .radioGroupOption[data-disabled] {
-	opacity: 1;
-}
-
-.enable-forced-colors .radioGroupOption[data-disabled],
-.enable-forced-colors .radioGroupOption[data-disabled]:hover {
-	color: GrayText;
-}
-
-.enable-forced-colors .radioGroupOption[data-state='checked'] .outerRadioBase {
-	fill: Highlight;
-}
-
-.enable-forced-colors .radioGroupOption[data-disabled] .outerRadioBase {
-	fill: Canvas;
-}
-
-.enable-forced-colors .radioGroupOption[data-disabled] .innerDotRadio {
-	fill: GrayText;
-}

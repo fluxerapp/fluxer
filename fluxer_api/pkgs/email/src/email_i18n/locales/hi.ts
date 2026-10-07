@@ -83,10 +83,6 @@ const EMAIL_I18N_HI_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "अपना {product_name} पासवर्ड रीसेट करें",
 		"body": "नमस्ते {username},\n\nआपने {product_name} पासवर्ड रीसेट का अनुरोध किया है। नया पासवर्ड सेट करने के लिए नीचे दिए गए लिंक का उपयोग करें:\n\n{resetUrl}\n\nअगर आपने इसका अनुरोध नहीं किया था, तो आप इस ईमेल को बेझिझक अनदेखा कर सकते हैं।\n\nयह लिंक 1 घंटे तक मान्य है।\n\n– {product_name} टीम"
 	},
-	"registration_approved": {
-		"subject": "आपका {product_name} रजिस्ट्रेशन अप्रूव हो गया है",
-		"body": "नमस्ते {username},\n\nअच्छी खबर: आपका {product_name} रजिस्ट्रेशन अप्रूव हो गया है।\n\nअब आप {product_name} ऐप में यहाँ लॉगिन कर सकते हैं:\n{channelsUrl}\n\n{product_name} कम्युनिटी में आपका स्वागत है।\n\n– {product_name} टीम"
-	},
 	"report_received": {
 		"subject": "हमें आपकी {product_name} रिपोर्ट मिल गई है",
 		"body": "नमस्ते,\n\nहमें {product_name} पर {targetKind, select, message {एक मैसेज} user {एक अकाउंट} guild {एक कम्युनिटी} other {सामग्री}} के बारे में आपकी Digital Services Act रिपोर्ट मिल गई है।\n\nरिपोर्ट ID: {reportId}\n\nहमारी सेफ्टी टीम आपकी रिपोर्ट का रिव्यू करेगी और फैसला लेने के बाद हम आपको इसी पते पर ईमेल करेंगे। इस ईमेल को अपने रिकॉर्ड के लिए संभालकर रखें।\n\n– {product_name} सेफ्टी टीम"

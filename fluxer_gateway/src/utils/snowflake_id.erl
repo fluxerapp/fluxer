@@ -10,8 +10,6 @@
     parse_list/1,
     first/1,
     filter/1,
-    require/1,
-    to_integer/1,
     to_binary/1,
     is_valid/1,
     equal/2,
@@ -90,14 +88,6 @@ filter(Value) ->
         undefined -> false;
         Id -> {true, Id}
     end.
-
--spec require(term()) -> t().
-require(Value) ->
-    parse(Value).
-
--spec to_integer(t()) -> pos_integer().
-to_integer(Id) when is_integer(Id), Id > 0 ->
-    Id.
 
 -spec to_binary(t()) -> binary().
 to_binary(Id) when is_integer(Id), Id > 0 ->

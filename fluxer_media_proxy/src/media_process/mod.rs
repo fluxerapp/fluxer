@@ -32,7 +32,7 @@ mod tests;
 pub use av_metadata::{
     AVMetadata, AVMetadataFrame, AVProbe, NSFW_PREVIEW_MAX_DIMENSION, probe_av_metadata,
 };
-pub use metadata::{MetadataOptions, metadata_json, metadata_json_with_options};
+pub use metadata::{MetadataOptions, metadata_json_with_options};
 pub use nsfw_processing::encode_static_image_for_nsfw;
 pub use transform::transform_image;
 pub use video_thumbnail::{
@@ -149,8 +149,6 @@ pub enum MediaError {
     InvalidImageDimensions,
     #[error("unsupported media type")]
     UnsupportedMediaType,
-    #[error("unsupported output format")]
-    UnsupportedOutputFormat,
     #[error("stream too long")]
     StreamTooLong,
     #[error("request timed out")]

@@ -151,14 +151,6 @@ function applyUpdatedVoiceSettings(settings: VoiceSettingsPatch, options: VoiceS
 	}
 }
 
-export function setVoiceProcessingModeForDeviceLabel(label: string, mode: VoiceProcessingMode): void {
-	VoiceSettings.setVoiceProcessingModeForDeviceLabel(label, mode);
-}
-
-export function clearVoiceProcessingModeForDeviceLabel(label: string): void {
-	VoiceSettings.clearVoiceProcessingModeForDeviceLabel(label);
-}
-
 export function setActiveInputVoiceProcessingMode(mode: VoiceProcessingMode): void {
 	const label = getActiveInputDeviceLabel(VoiceSettings);
 	if (label) {

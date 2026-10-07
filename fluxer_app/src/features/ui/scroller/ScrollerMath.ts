@@ -97,13 +97,6 @@ export function getAxisPointerPosition(clientX: number, clientY: number, orienta
 	return clientX;
 }
 
-export function getAxisScrollPosition(element: HTMLElement, orientation: ScrollAxis): number {
-	if (orientation === 'vertical') {
-		return element.scrollTop;
-	}
-	return element.scrollLeft;
-}
-
 export function setAxisScrollPosition(element: HTMLElement, orientation: ScrollAxis, value: number): void {
 	if (orientation === 'vertical') {
 		element.scrollTop = value;

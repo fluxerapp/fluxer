@@ -157,7 +157,7 @@ function isAvailable(i18n: I18n, emoji: FlatEmoji, channel: Channel | null, guil
 	return availability.canUse;
 }
 
-export function replaceTypedEmojiShortcodes(content: string, resolveShortcode: ShortcodeResolver): string {
+function replaceTypedEmojiShortcodes(content: string, resolveShortcode: ShortcodeResolver): string {
 	if (!content.includes(':')) {
 		return content;
 	}

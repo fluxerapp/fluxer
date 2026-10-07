@@ -23,19 +23,15 @@ struct MetadataRequest<'a> {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[allow(dead_code)]
 pub struct MediaMetadata {
-    pub format: String,
     pub content_type: String,
     pub content_hash: String,
-    pub size: u64,
     pub width: Option<u32>,
     pub height: Option<u32>,
     pub duration: Option<f64>,
     pub placeholder: Option<String>,
     pub animated: Option<bool>,
     pub nsfw: bool,
-    pub nsfw_probability: Option<f64>,
 }
 
 pub fn embed_media_flags(meta: &MediaMetadata) -> u32 {

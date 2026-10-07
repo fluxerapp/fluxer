@@ -79,10 +79,6 @@
 		"subject": "{product_name} 비밀번호 재설정",
 		"body": "안녕하세요, {username}님.\n\n{product_name} 비밀번호 재설정을 요청하셨어요. 아래 링크를 사용하여 새 비밀번호를 설정해 주세요:\n\n{resetUrl}\n\n요청하지 않으셨다면 이 이메일을 무시해도 괜찮아요.\n\n이 링크는 1시간 동안 유효해요.\n\n– {product_name} 팀"
 	},
-	"registration_approved": {
-		"subject": "{product_name} 가입이 승인되었어요",
-		"body": "안녕하세요, {username}님.\n\n좋은 소식이에요: {product_name} 가입이 승인되었어요.\n\n이제 여기에서 {product_name} 앱에 로그인할 수 있어요:\n{channelsUrl}\n\n{product_name} 커뮤니티에 오신 것을 환영해요.\n\n– {product_name} 팀"
-	},
 	"report_received": {
 		"subject": "{product_name} 신고가 접수되었어요",
 		"body": "안녕하세요,\n\n{product_name}의 {targetKind, select, message {메시지} user {계정} guild {커뮤니티} other {콘텐츠}}에 대한 디지털 서비스법 신고가 접수되었어요.\n\n신고 ID: {reportId}\n\n안전팀에서 신고를 검토한 뒤 결정이 내려지면 이 이메일 주소로 알려 드릴게요. 이 이메일은 기록용으로 보관해 주세요.\n\n– {product_name} 안전팀"

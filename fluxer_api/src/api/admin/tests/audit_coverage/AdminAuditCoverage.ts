@@ -39,13 +39,13 @@ interface AdminAuditCoverageCaseBase {
 	auditLogReason?: unknown;
 }
 
-export interface AdminAuditAuditedCase extends AdminAuditCoverageCaseBase {
+interface AdminAuditAuditedCase extends AdminAuditCoverageCaseBase {
 	prepare(
 		context: AdminAuditCoverageContext,
 	): Promise<{request: AdminAuditCoverageRequest; expected: AdminAuditExpectedEntry}>;
 }
 
-export interface AdminAuditExemptCase extends AdminAuditCoverageCaseBase {
+interface AdminAuditExemptCase extends AdminAuditCoverageCaseBase {
 	exempt: true;
 	prepare(context: AdminAuditCoverageContext): Promise<{request: AdminAuditCoverageRequest}>;
 }

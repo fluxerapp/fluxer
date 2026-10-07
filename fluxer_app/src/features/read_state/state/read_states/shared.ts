@@ -1,10 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import {compare as compareSnowflakes, extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-
-export const OLD_MESSAGE_AGE_THRESHOLD = 7 * MS_PER_DAY;
-export const RECENT_MESSAGE_THRESHOLD = 3 * MS_PER_DAY;
 export const ACK_BATCH_DELAY_MS = 3000;
 export const ACK_BATCH_SIZE = 100;
 export const ACK_RETRY_BASE_DELAY_MS = 5000;

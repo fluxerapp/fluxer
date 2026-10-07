@@ -711,10 +711,6 @@ export const HIDE_FAVORITES_DESCRIPTOR = msg({
 	message: 'Hide favorites',
 	comment: 'Toggle / action label that collapses or hides the favorites section.',
 });
-export const NOTIFICATIONS_DESCRIPTOR = msg({
-	message: 'Notifications',
-	comment: 'Generic section header / tab label for the notifications area.',
-});
 export const FAILED_TO_SEND_INVITE_DESCRIPTOR = msg({
 	message: "Couldn't send invite. Try again.",
 	comment: 'Toast shown when sending an invite (group DM or community) fails.',
@@ -794,10 +790,6 @@ export const APP_ZOOM_LEVEL_DESCRIPTOR = msg({
 export const ENABLE_NOTIFICATIONS_DESCRIPTOR = msg({
 	message: 'Enable notifications',
 	comment: 'Generic action label / toggle that turns on push or desktop notifications.',
-});
-export const ENHANCED_DESCRIPTOR = msg({
-	message: 'Enhanced',
-	comment: 'Generic radio / dropdown option label for an "enhanced" tier.',
 });
 export const CHANNEL_REMOVED_FROM_FAVORITES_DESCRIPTOR = msg({
 	message: 'Channel removed from favorites',
@@ -902,8 +894,4 @@ export const ACTIVE_ACCOUNT_DESCRIPTOR = msg({
 export const ADD_ACCOUNT_DESCRIPTOR = msg({
 	message: 'Add account',
 	comment: 'Generic action label that starts signing in to an additional account.',
-});
-export const SWITCH_ACCOUNT_DESCRIPTOR = msg({
-	message: 'Switch account',
-	comment: 'Short button label that opens the account switcher overlay.',
 });

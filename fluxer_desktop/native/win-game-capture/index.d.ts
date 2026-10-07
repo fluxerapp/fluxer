@@ -133,7 +133,6 @@ export declare class ScreenCapture extends EventEmitter {
 export declare function isSupported(): boolean;
 export declare function getAvailability(): AvailabilityInfo;
 export declare function listSources(): Promise<Array<ScreenCaptureSourceDescriptor>>;
-export declare function parseFallbackRecommendation(message: string | undefined): CaptureStrategyName | 'none' | null;
 export declare function elevateGpuSchedulingPriority(processId?: number, priorityClass?: 'high' | 'realtime'): boolean;
 export declare function restoreGpuSchedulingPriority(processId?: number): boolean;
 export declare function __setBindingForTests(binding: unknown): void;

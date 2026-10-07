@@ -37,14 +37,6 @@ pub fn read_env_file(path: &Path) -> Result<BTreeMap<String, String>> {
     Ok(values)
 }
 
-pub fn read_env_files(paths: &[&Path]) -> Result<BTreeMap<String, String>> {
-    let mut values = BTreeMap::new();
-    for path in paths {
-        values.extend(read_env_file(path)?);
-    }
-    Ok(values)
-}
-
 pub fn merge_env_layers(layers: &[BTreeMap<String, String>]) -> BTreeMap<String, String> {
     let mut merged = BTreeMap::new();
     for layer in layers {

@@ -9,9 +9,9 @@ import {
 
 const logger = new Logger('PopoutWindowDocument');
 
-export const POPOUT_STYLESHEET_COPY_MAX = 256;
-export const POPOUT_THEME_ATTRIBUTE_COPY_MAX = 64;
-export const POPOUT_THEME_CLASS_COPY_MAX = 128;
+const POPOUT_STYLESHEET_COPY_MAX = 256;
+const POPOUT_THEME_ATTRIBUTE_COPY_MAX = 64;
+const POPOUT_THEME_CLASS_COPY_MAX = 128;
 
 const POPOUT_OWNED_ROOT_CLASSES = new Set([
 	WINDOW_FOCUSED_CLASS,

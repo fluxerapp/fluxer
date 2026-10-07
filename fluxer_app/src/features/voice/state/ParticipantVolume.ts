@@ -154,17 +154,6 @@ class ParticipantVolume {
 		return this.localMutes[userId] ?? false;
 	}
 
-	resetUserSettings(userId: string): void {
-		const newVolumes = {...this.volumes};
-		const newLocalMutes = {...this.localMutes};
-		delete newVolumes[userId];
-		delete newLocalMutes[userId];
-		this.volumes = newVolumes;
-		this.localMutes = newLocalMutes;
-		this.notifyListeners();
-		logger.debug(`Reset settings for ${userId}`);
-	}
-
 	subscribe(listener: () => void): () => void {
 		this.listeners.add(listener);
 		return () => {

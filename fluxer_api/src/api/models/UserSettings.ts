@@ -122,14 +122,6 @@ export class UserSettings {
 		this.version = row.version;
 	}
 
-	getUncategorizedFolder(): UserGuildFolder | null {
-		return this.guildFolders.find((folder) => folder.folderId === UNCATEGORIZED_FOLDER_ID) ?? null;
-	}
-
-	getOrderedGuildIds(): Array<GuildID> {
-		return this.guildFolders.flatMap((folder) => folder.guildIds);
-	}
-
 	toRow(): UserSettingsRow {
 		return {
 			user_id: this.userId,

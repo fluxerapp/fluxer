@@ -160,7 +160,7 @@ const getDefaultInviteChannelId = (guildId: string): string | null => {
 	return InviteUtils.getDefaultCommunityInviteChannelId(guildId) ?? null;
 };
 
-export interface DMMenuHandlers {
+interface DMMenuHandlers {
 	handleMarkAsRead: () => void;
 	handleToggleFavorite: () => void;
 	handleViewProfile: () => void;

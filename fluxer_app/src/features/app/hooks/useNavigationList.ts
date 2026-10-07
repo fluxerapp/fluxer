@@ -38,16 +38,16 @@ export interface NavigationRowBounds {
 	readonly bottom: number;
 }
 
-export interface NavigationListPosition {
+interface NavigationListPosition {
 	readonly position: number;
 	readonly setSize: number;
 }
 
-export interface ResolveMissingNavigationActiveKeyRequest {
+interface ResolveMissingNavigationActiveKeyRequest {
 	readonly missingActiveKey: string;
 }
 
-export type MissingNavigationActiveKeyResolver = (request: ResolveMissingNavigationActiveKeyRequest) => string | null;
+type MissingNavigationActiveKeyResolver = (request: ResolveMissingNavigationActiveKeyRequest) => string | null;
 
 interface NavigationListOptions {
 	readonly scrollerRef: React.RefObject<ScrollerHandle | null>;

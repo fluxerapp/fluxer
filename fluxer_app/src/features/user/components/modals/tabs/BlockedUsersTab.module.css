@@ -1,37 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.container {
-	display: flex;
-	height: 100%;
-	flex-direction: column;
-}
-
-.header {
-	padding: 1rem 2rem;
-}
-
-.title {
-	font-size: 1.25rem;
-	font-weight: 600;
-	color: var(--text-primary);
-}
-
-.description {
-	margin-top: 0.5rem;
-	font-size: 0.875rem;
-	color: var(--text-secondary);
-}
-
-.scrollContainer {
-	flex: 1;
-	overflow: hidden;
-}
-
-.scrollerPadding {
-	padding-left: 2rem;
-	padding-right: 2rem;
-}
-
 .userList {
 	display: flex;
 	flex-direction: column;

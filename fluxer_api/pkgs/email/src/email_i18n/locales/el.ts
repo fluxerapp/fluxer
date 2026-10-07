@@ -83,10 +83,6 @@ const EMAIL_I18N_EL_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Επανάφερε τον κωδικό πρόσβασής σου στο {product_name}",
 		"body": "Γεια σου {username},\n\nΖήτησες επαναφορά του κωδικού πρόσβασής σου στο {product_name}. Χρησιμοποίησε τον παρακάτω σύνδεσμο για να ορίσεις νέο κωδικό πρόσβασης:\n\n{resetUrl}\n\nΕάν δεν το ζήτησες, μπορείς να αγνοήσεις με ασφάλεια αυτό το email.\n\nΑυτός ο σύνδεσμος ισχύει για 1 ώρα.\n\n– Η ομάδα του {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Η εγγραφή σου στο {product_name} έχει εγκριθεί",
-		"body": "Γεια σου {username},\n\nΚαλά νέα: η εγγραφή σου στο {product_name} έχει εγκριθεί.\n\nΜπορείς τώρα να συνδεθείς στην εφαρμογή του {product_name} εδώ:\n{channelsUrl}\n\nΚαλώς ήρθες στην κοινότητα του {product_name}.\n\n– Η ομάδα του {product_name}"
-	},
 	"report_received": {
 		"subject": "Λάβαμε την αναφορά σου στο {product_name}",
 		"body": "Γεια σου,\n\nΛάβαμε την αναφορά σου βάσει της Πράξης για τις ψηφιακές υπηρεσίες σχετικά με {targetKind, select, message {ένα μήνυμα} user {έναν λογαριασμό} guild {μια κοινότητα} other {περιεχόμενο}} στο {product_name}.\n\nID αναφοράς: {reportId}\n\nΗ ομάδα ασφαλείας μας θα εξετάσει την αναφορά σου και θα σου στείλουμε email σε αυτήν τη διεύθυνση μόλις λάβουμε απόφαση. Κράτησε αυτό το email για το αρχείο σου.\n\n– Η ομάδα ασφαλείας του {product_name}"

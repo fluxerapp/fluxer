@@ -14,7 +14,7 @@ export interface UnitPoint {
 	y: number;
 }
 
-export function clampUnit(value: number): number {
+function clampUnit(value: number): number {
 	if (!Number.isFinite(value)) return 0;
 	return Math.max(0, Math.min(1, value));
 }
@@ -40,7 +40,7 @@ export function getColorWithHue(color: Color, unitValue: number): Color {
 	return color.withChannelValue('hue', clampUnit(unitValue) * 360);
 }
 
-export function getColorHex(color: Color): string {
+function getColorHex(color: Color): string {
 	return color.toString('hex').toUpperCase();
 }
 

@@ -211,5 +211,3 @@ export function showBrowserLoginHandoffModal(
 		)),
 	);
 }
-
-export default BrowserLoginHandoffModal;

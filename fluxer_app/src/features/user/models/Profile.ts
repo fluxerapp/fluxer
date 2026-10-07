@@ -14,10 +14,6 @@ export interface ProfileMutualGuild {
 	nick: string | null;
 }
 
-export type MiniGuildMember = Readonly<{
-	id: string;
-	nick: string | null;
-}>;
 export type ProfileWire = Readonly<{
 	user: UserPartial;
 	user_profile: UserProfile;

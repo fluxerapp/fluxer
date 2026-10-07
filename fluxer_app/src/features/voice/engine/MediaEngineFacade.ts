@@ -2696,22 +2696,9 @@ export function useMediaEngineVersion(): number {
 	return useStoreVersion(instance);
 }
 
-export function getVoiceEngineV2Model(): VoiceEngineV2Model {
-	return instance.voiceEngineV2Model;
-}
-
-export function getVoiceEngineV2Snapshot(): VoiceEngineV2Snapshot {
-	return instance.voiceEngineV2Snapshot;
-}
-
 export function useVoiceEngineV2Model(): VoiceEngineV2Model {
 	useMediaEngineVersion();
 	return instance.voiceEngineV2Model;
-}
-
-export function useVoiceEngineV2Snapshot(): VoiceEngineV2Snapshot {
-	useMediaEngineVersion();
-	return instance.voiceEngineV2Snapshot;
 }
 
 (

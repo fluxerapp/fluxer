@@ -92,7 +92,7 @@ export function parseUserSettingsDeepLink(rawUrl: string): UserSettingsDeepLinkT
 	return parseUserSettingsDeepLinkPath(normalized);
 }
 
-export const parseDeepLink = (rawUrl: string): DeepLinkTarget | null => {
+const parseDeepLink = (rawUrl: string): DeepLinkTarget | null => {
 	const directUserId = parseUserProfileUrl(rawUrl);
 	if (directUserId) {
 		return {type: 'user', userId: directUserId};

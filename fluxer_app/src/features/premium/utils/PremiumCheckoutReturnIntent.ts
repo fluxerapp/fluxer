@@ -123,6 +123,6 @@ export function consumeCompletedPremiumCheckoutReturnIntent(): PremiumCheckoutRe
 	return intent;
 }
 
-export function clearPremiumCheckoutReturnIntent(): void {
+function clearPremiumCheckoutReturnIntent(): void {
 	getStorage()?.removeItem(STORAGE_KEY);
 }

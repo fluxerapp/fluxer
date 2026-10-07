@@ -4,8 +4,6 @@
 
 -typing([eqwalizer]).
 
--include_lib("fluxer_gateway/include/voice_state.hrl").
-
 -export([handle_client_channel_move/6]).
 
 -export_type([

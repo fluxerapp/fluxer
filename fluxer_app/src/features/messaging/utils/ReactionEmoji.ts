@@ -7,11 +7,3 @@ export interface ReactionEmoji {
 	url?: string | null;
 	uniqueName?: string;
 }
-
-export function getReactionKey(messageId: string, emoji: ReactionEmoji): string {
-	let emojiId = '';
-	if (emoji.id != null) {
-		emojiId = emoji.id;
-	}
-	return `${messageId}:${emoji.name}:${emojiId}`;
-}

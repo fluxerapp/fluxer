@@ -28,7 +28,6 @@
     maybe_add_member/2,
     update_members/2,
     add_subscriber/2,
-    role_members/1,
     reconcile_against_connected_nodes/1
 ]).
 
@@ -249,10 +248,6 @@ do_update_members(NewMembers, NewRoleMembers, State) ->
     _ = gateway_node_metadata:refresh_node_pod_names(NewMembers),
     notify_subscribers(NewMembers, State),
     State#{members := NewMembers, members_by_role := NewRoleMembers}.
-
--spec role_members([node()]) -> #{atom() => [node()]}.
-role_members(Members) ->
-    role_members(Members, fun role_for_node/1).
 
 -spec role_members([node()], fun((node()) -> atom())) -> #{atom() => [node()]}.
 role_members(Members, RoleFun) ->

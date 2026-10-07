@@ -6,7 +6,7 @@ import type {VoiceEngineV2AppControllerHost} from '@app/features/voice/engine/v2
 import type {VoiceEngineV2Model, VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2';
 import {isVoiceEngineV2FrameReceivedEvent} from '@fluxer/voice_engine_v2/runtime';
 
-export const FRAME_NOTIFY_FLUSH_INTERVAL_MS = 1000;
+const FRAME_NOTIFY_FLUSH_INTERVAL_MS = 1000;
 
 export class VoiceEngineV2AppProjectionStore extends Store {
 	private readonly unsubscribeHost: () => void;

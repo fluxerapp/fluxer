@@ -17,8 +17,6 @@ import {SnapshotWriter} from '@app/features/gateway/snapshot/SnapshotWriter';
 import {isDesktopNativeGatewayTransportAvailable} from '@app/features/gateway/transport/GatewayWireTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 
-export type {ReadyPayload, SnapshotDispatch};
-
 export type SnapshotAccountMode = 'foreground' | 'background';
 
 interface SnapshotAccount {

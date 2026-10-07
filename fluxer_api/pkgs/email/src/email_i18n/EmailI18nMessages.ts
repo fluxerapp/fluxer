@@ -83,10 +83,6 @@ export const EMAIL_I18N_MESSAGES = {
 		subject: 'Reset your {product_name} password',
 		body: "Hello {username},\n\nYou requested a {product_name} password reset. Use the link below to set a new password:\n\n{resetUrl}\n\nIf you didn't request this, you can safely ignore this email.\n\nThis link is valid for 1 hour.\n\n– {product_name} Team",
 	},
-	registration_approved: {
-		subject: 'Your {product_name} registration has been approved',
-		body: 'Hello {username},\n\nGood news: your {product_name} registration has been approved.\n\nYou can now log in to the {product_name} app here:\n{channelsUrl}\n\nWelcome to the {product_name} community.\n\n– {product_name} Team',
-	},
 	report_received: {
 		subject: 'We received your {product_name} report',
 		body: 'Hello,\n\nWe received your Digital Services Act report about {targetKind, select, message {a message} user {an account} guild {a community} other {content}} on {product_name}.\n\nReport ID: {reportId}\n\nOur Safety Team will review your report and email you at this address once we have made a decision. Keep this email for your records.\n\n– {product_name} Safety Team',

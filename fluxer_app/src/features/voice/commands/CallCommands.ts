@@ -13,7 +13,6 @@ import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import CallInitiator from '@app/features/voice/state/CallInitiator';
 import CallState from '@app/features/voice/state/CallState';
 import RtcRegions from '@app/features/voice/state/RtcRegions';
-import type {VoiceSessionRestoreSnapshot} from '@app/features/voice/state/VoiceSessionRestore';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {AUTOMATIC_VOICE_REGION_ID} from '@fluxer/constants/src/ChannelConstants';
 import type {RtcRegionResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
@@ -153,37 +152,6 @@ export function joinCall(channelId: string): void {
 	CallState.clearPendingRinging(channelId, [currentUser.id]);
 	Sound.stopIncomingRing();
 	void MediaEngine.connectToVoiceChannel(null, channelId);
-}
-
-export async function restoreOrStartDirectCall(
-	channelId: string,
-	snapshot: VoiceSessionRestoreSnapshot,
-	options?: {
-		restoreVideo?: boolean;
-		restoreStream?: boolean;
-	},
-): Promise<void> {
-	const currentUser = Users.getCurrentUser();
-	if (!currentUser) {
-		return;
-	}
-	const recipients = channelRecipientIds(channelId, currentUser.id);
-	CallInitiator.markInitiated(channelId, recipients);
-	clearPendingRing();
-	MediaEngine.prepareVoiceSessionRestore(snapshot, options);
-	try {
-		await ringCallRecipients(channelId, []);
-		await MediaEngine.connectToVoiceChannel(null, channelId);
-		if (
-			!MediaEngine.connecting &&
-			!(MediaEngine.connected && MediaEngine.guildId === null && MediaEngine.channelId === channelId)
-		) {
-			MediaEngine.clearPreparedVoiceSessionRestore(snapshot);
-		}
-	} catch (error) {
-		MediaEngine.clearPreparedVoiceSessionRestore(snapshot);
-		throw error;
-	}
 }
 
 export async function leaveCall(channelId: string): Promise<void> {

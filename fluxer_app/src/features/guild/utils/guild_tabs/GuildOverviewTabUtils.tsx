@@ -87,11 +87,6 @@ export const afkTimeoutOptionsRaw: Array<AfkTimeoutOptionRaw> = [
 	{value: 3600, label: ONE_HOUR_DURATION_DESCRIPTOR},
 ];
 
-export interface SelectOption {
-	value: string | null;
-	label: string;
-}
-
 export function useGuildOverviewData(guildId: string) {
 	const {i18n} = useLingui();
 	const guild = Guilds.getGuild(guildId);

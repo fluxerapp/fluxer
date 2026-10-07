@@ -29,7 +29,7 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useMemo, useState} from 'react';
 
-export type DataRequestVariant = 'export' | 'delete';
+type DataRequestVariant = 'export' | 'delete';
 type ScopeValue = 'everything' | 'custom' | 'selected' | 'inaccessible_only';
 type DateMode = 'all_time' | 'custom';
 type GuildFilterMode = 'exclude' | 'include_only';

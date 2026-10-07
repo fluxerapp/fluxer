@@ -54,8 +54,6 @@ const FLAGS_DESCRIPTOR = msg({
 export const EMOJI_SPRITES = {
 	BasePerRow: 42,
 	SkinTonePerRow: 10,
-	PickerPerRow: 11,
-	PickerCount: 50,
 };
 const categories = Object.freeze(Object.keys(emojiData.categories));
 

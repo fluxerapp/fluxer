@@ -147,19 +147,6 @@ pub fn public_url_env_text(public_url: &str) -> Result<String> {
     Ok(text)
 }
 
-pub fn write_public_url_local_env(path: &Path, public_url: &str) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)
-            .with_context(|| format!("failed to create {}", parent.display()))?;
-    }
-    let generated = public_url_env_text(public_url)?;
-    let existing = fs::read_to_string(path).unwrap_or_default();
-    let next = replace_marked_block(&existing, &generated);
-    fs::write(path, next).with_context(|| format!("failed to write {}", path.display()))?;
-    println!("Wrote public URL overrides to {}", path.display());
-    Ok(())
-}
-
 pub fn default_token_file() -> PathBuf {
     DEV_STATE_DIR.join(DEFAULT_TOKEN_FILE_NAME)
 }
@@ -371,40 +358,6 @@ fn docker_socket_is_writable() -> bool {
     std::os::unix::net::UnixStream::connect("/var/run/docker.sock").is_ok()
 }
 
-fn replace_marked_block(existing: &str, generated: &str) -> String {
-    let Some(start) = existing.find(LOCAL_ENV_START) else {
-        return append_block(existing, generated);
-    };
-    let Some(relative_end) = existing[start..].find(LOCAL_ENV_END) else {
-        return append_block(existing, generated);
-    };
-    let end = start + relative_end + LOCAL_ENV_END.len();
-    let mut next = String::new();
-    next.push_str(existing[..start].trim_end());
-    if !next.is_empty() {
-        next.push_str("\n\n");
-    }
-    next.push_str(generated.trim_end());
-    let suffix = existing[end..].trim_start_matches(['\r', '\n']);
-    if !suffix.is_empty() {
-        next.push_str("\n\n");
-        next.push_str(suffix);
-    } else {
-        next.push('\n');
-    }
-    next
-}
-
-fn append_block(existing: &str, generated: &str) -> String {
-    let mut next = existing.trim_end().to_owned();
-    if !next.is_empty() {
-        next.push_str("\n\n");
-    }
-    next.push_str(generated.trim_end());
-    next.push('\n');
-    next
-}
-
 #[cfg(unix)]
 fn set_private_file_mode(path: &Path) -> Result<()> {
     use std::os::unix::fs::PermissionsExt;
@@ -456,13 +409,5 @@ mod tests {
             resolve_cloudflare_public_url(Some("https://example.com/")).unwrap(),
             "https://example.com"
         );
-    }
-
-    #[test]
-    fn replaces_existing_generated_block() {
-        let existing =
-            "A=1\n\n# BEGIN fluxer-dev public URL\nOLD=1\n# END fluxer-dev public URL\n\nB=2\n";
-        let next = replace_marked_block(existing, "NEW=1\n");
-        assert_eq!(next, "A=1\n\nNEW=1\n\nB=2\n");
     }
 }

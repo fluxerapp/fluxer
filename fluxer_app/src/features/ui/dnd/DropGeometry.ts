@@ -11,11 +11,11 @@ export interface VerticalDropRect {
 	bottom: number;
 }
 
-export const VerticalDropZone = Object.freeze({
+const VerticalDropZone = Object.freeze({
 	CENTER: 'center',
 } as const);
 
-export type VerticalDropZone = (typeof VerticalDropZone)[keyof typeof VerticalDropZone];
+type VerticalDropZone = (typeof VerticalDropZone)[keyof typeof VerticalDropZone];
 export type ResolvedVerticalDropZone = VerticalDropZone | RelativePosition;
 
 export function getVerticalDropTargetHeight(rect: VerticalDropRect): number {

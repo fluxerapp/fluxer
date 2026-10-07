@@ -20,7 +20,7 @@ export interface FavoriteGifEntry {
 	placeholder: string | null;
 }
 
-export const PREVIEW_TILE_CSS_WIDTH = 200;
+const PREVIEW_TILE_CSS_WIDTH = 200;
 
 const PLAYABLE_CLASS = 0;
 const STILL_CLASS = 1;
@@ -59,7 +59,7 @@ function currentDevicePixelRatio(): number {
 	return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
 }
 
-export function previewTileDeviceWidth(tile: PreviewTileBox = {}): number {
+function previewTileDeviceWidth(tile: PreviewTileBox = {}): number {
 	return (tile.cssWidth ?? PREVIEW_TILE_CSS_WIDTH) * (tile.devicePixelRatio ?? currentDevicePixelRatio());
 }
 
@@ -106,7 +106,7 @@ export function pickCanonicalPreviewFormat(
 	return null;
 }
 
-export const STORED_PREVIEW_DEVICE_PIXEL_RATIO = 2;
+const STORED_PREVIEW_DEVICE_PIXEL_RATIO = 2;
 
 export function stripFavoriteGifEntrySignatures(entry: FavoriteGifEntry): FavoriteGifEntry {
 	const url = stripAttachmentSignature(entry.url);

@@ -21,7 +21,6 @@ use maud::{Markup, html};
 
 pub struct GuildsListParams {
     pub q: String,
-    pub ids: String,
     pub requested_ids: Vec<String>,
     pub limit: u32,
     pub page: u32,
@@ -38,7 +37,6 @@ impl GuildsListParams {
         Self {
             q: q.unwrap_or_default().trim().to_owned(),
             requested_ids: parse_comma_separated(&ids),
-            ids: ids.trim().to_owned(),
             limit: match limit.unwrap_or(50) {
                 25 => 25,
                 100 => 100,

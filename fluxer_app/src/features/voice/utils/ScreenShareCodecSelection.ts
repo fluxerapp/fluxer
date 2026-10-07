@@ -19,7 +19,7 @@ export const VIDEO_CODEC_NAMES: Record<VideoCodec, FluxerVideoCodecName> = {
 	vp9: 'VP9',
 	vp8: 'VP8',
 };
-export const NAME_TO_VIDEO_CODEC: Record<FluxerVideoCodecName, VideoCodec> = {
+const NAME_TO_VIDEO_CODEC: Record<FluxerVideoCodecName, VideoCodec> = {
 	AV1: 'av1',
 	H265: 'h265',
 	H264: 'h264',

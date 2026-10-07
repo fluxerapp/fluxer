@@ -34,5 +34,3 @@ export const PlutoniumPageLayout = observer(function PlutoniumPageLayout() {
 		</div>
 	);
 });
-
-export default PlutoniumPageLayout;

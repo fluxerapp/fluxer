@@ -43,9 +43,9 @@ export interface ReportFlowInstance {
 	guidelinesLinked: boolean;
 }
 
-export type ReportFlowScreenKind = 'choice' | 'checklist' | 'info';
+type ReportFlowScreenKind = 'choice' | 'checklist' | 'info';
 
-export interface ReportFlowVariantScreen {
+interface ReportFlowVariantScreen {
 	def: ReportFlowScreenDef;
 	kind: ReportFlowScreenKind;
 	subtitle: ReportFlowCopyKey | null;
@@ -114,7 +114,7 @@ const REPORT_FLOW_CHECKED_INSTANCES: ReadonlyArray<ReportFlowInstance> = [
 ];
 const ADMIN_LOCALE = 'en-US';
 
-export function getReportFlowScreenKind(screen: ReportFlowScreenDef): ReportFlowScreenKind {
+function getReportFlowScreenKind(screen: ReportFlowScreenDef): ReportFlowScreenKind {
 	if (screen.checklist) {
 		return 'checklist';
 	}

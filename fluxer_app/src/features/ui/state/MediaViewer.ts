@@ -87,21 +87,6 @@ class MediaViewer {
 		}
 		this.currentIndex = index;
 	}
-
-	getCurrentItem(): MediaViewerItem | undefined {
-		if (!this.isOpen || this.items.length === 0) {
-			return;
-		}
-		return this.items[this.currentIndex];
-	}
-
-	canNavigatePrevious(): boolean {
-		return this.isOpen && this.currentIndex > 0;
-	}
-
-	canNavigateNext(): boolean {
-		return this.isOpen && this.currentIndex < this.items.length - 1;
-	}
 }
 
 const mediaViewer = new MediaViewer();

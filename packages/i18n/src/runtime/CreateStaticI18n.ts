@@ -2,10 +2,10 @@
 
 import type {I18nResult, TemplateCompiler} from '@fluxer/i18n/src/runtime/I18nTypes';
 import {renderTemplate} from '@fluxer/i18n/src/runtime/RenderTemplate';
-import {getEffectiveStaticLocale, hasStaticLocale} from '@fluxer/i18n/src/runtime/StaticLocale';
+import {getEffectiveStaticLocale} from '@fluxer/i18n/src/runtime/StaticLocale';
 import type {default as MessageFormat, MessageFormatOptions} from '@messageformat/core';
 
-export type StaticLocaleMessages<TKey extends string, TValue> = Partial<Record<TKey, TValue>>;
+type StaticLocaleMessages<TKey extends string, TValue> = Partial<Record<TKey, TValue>>;
 
 export interface StaticI18nConfig<TKey extends string, TValue, TVariables> {
 	defaultLocale: string;
@@ -19,21 +19,16 @@ export interface StaticI18nConfig<TKey extends string, TValue, TVariables> {
 
 interface StaticI18nModule<TKey extends string, TValue, TVariables> {
 	getTemplate(key: TKey, locale: string | null, variables: TVariables): I18nResult<TKey, TValue>;
-	hasLocale(locale: string): boolean;
-	getLoadedLocales(): Set<string>;
-	reset(): void;
 }
 
 export function createStaticI18n<TKey extends string, TValue, TVariables>(
 	config: StaticI18nConfig<TKey, TValue, TVariables>,
 	compile: TemplateCompiler<TValue, TVariables>,
 ): StaticI18nModule<TKey, TValue, TVariables> {
-	const loadedLocales = new Set<string>([config.defaultLocale]);
 	const messageFormatCache = new Map<string, MessageFormat>();
 	return {
 		getTemplate(key: TKey, locale: string | null, variables: TVariables): I18nResult<TKey, TValue> {
 			const effectiveLocale = getEffectiveStaticLocale(config, locale);
-			loadedLocales.add(effectiveLocale);
 			const sourceTemplate = Object.hasOwn(config.defaultMessages, key) ? config.defaultMessages[key] : undefined;
 			if (sourceTemplate === undefined) {
 				return {
@@ -73,18 +68,6 @@ export function createStaticI18n<TKey extends string, TValue, TVariables>(
 				messageFormatCache,
 				messageFormatOptions: config.messageFormatOptions,
 			});
-		},
-		hasLocale(locale: string): boolean {
-			const normalizedLocale = config.normalizeLocale?.(locale) ?? locale;
-			return hasStaticLocale(config, normalizedLocale);
-		},
-		getLoadedLocales(): Set<string> {
-			return new Set(loadedLocales);
-		},
-		reset(): void {
-			loadedLocales.clear();
-			loadedLocales.add(config.defaultLocale);
-			messageFormatCache.clear();
 		},
 	};
 }

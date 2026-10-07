@@ -21,7 +21,7 @@ interface VoiceOutputRoute {
 
 const voiceOutputRoutes = new WeakMap<AudioContext, VoiceOutputRoute>();
 
-export function supportsVoiceOutputElementRouting(): boolean {
+function supportsVoiceOutputElementRouting(): boolean {
 	if (typeof HTMLMediaElement === 'undefined' || !('setSinkId' in HTMLMediaElement.prototype)) return false;
 	if (typeof navigator === 'undefined') return false;
 	const firefoxVersion = Number(/Firefox\/(\d+)/.exec(navigator.userAgent)?.[1]);
@@ -91,7 +91,7 @@ function softClipSample(x: number): number {
 	return x < 0 ? -shaped : shaped;
 }
 
-export function createVoiceSoftClipCurve(): Float32Array<ArrayBuffer> {
+function createVoiceSoftClipCurve(): Float32Array<ArrayBuffer> {
 	const curve = new Float32Array(new ArrayBuffer(MASTER_SOFT_CLIP_CURVE_POINTS * Float32Array.BYTES_PER_ELEMENT));
 	for (let i = 0; i < MASTER_SOFT_CLIP_CURVE_POINTS; i++) {
 		const normalized = (i / (MASTER_SOFT_CLIP_CURVE_POINTS - 1)) * 2 - 1;

@@ -126,10 +126,6 @@ export function filterCommandsByQuery(commands: Array<Command>, query: string): 
 	return commands.filter((command) => command.name.toLowerCase().includes(query.toLowerCase()));
 }
 
-export function isCommandRequiringUserMention(commandName: string): boolean {
-	return ['/kick', '/ban', '/msg', '/saved'].includes(commandName);
-}
-
 export function getCommandInsertionText(command: Command): string {
 	if (command.type === 'simple') {
 		return command.content;

@@ -5,28 +5,21 @@ use reqwest::header::{HeaderMap, LOCATION};
 use std::time::Duration;
 use tokio::time::timeout;
 
-#[allow(dead_code)]
 pub const DEFAULT_MAX_BYTES: usize = 8 * 1024 * 1024;
 
 pub const DEFAULT_HTML_MAX_BYTES: usize = DEFAULT_MAX_BYTES;
 
-#[allow(dead_code)]
 pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(10);
 pub const DEFAULT_MAX_REDIRECTS: usize = 5;
 
-#[allow(dead_code)]
 pub struct FetchResult {
     pub bytes: Vec<u8>,
-    pub content_type: Option<String>,
     pub headers: HeaderMap,
-    pub final_url: String,
     pub status: u16,
 }
 
-#[allow(dead_code)]
 pub struct FetchHead {
     pub content_type: Option<String>,
-    pub headers: HeaderMap,
     pub final_url: String,
     pub status: u16,
 }
@@ -67,9 +60,7 @@ pub async fn fetch_url_with_headers(
 
     Ok(FetchResult {
         bytes: result.bytes.unwrap_or_default(),
-        content_type: result.content_type,
         headers: result.headers,
-        final_url: result.final_url,
         status: result.status,
     })
 }
@@ -148,7 +139,6 @@ where
 
         let head = FetchHead {
             content_type: content_type.clone(),
-            headers: headers.clone(),
             final_url: final_url.clone(),
             status: status.as_u16(),
         };

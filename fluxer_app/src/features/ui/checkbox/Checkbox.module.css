@@ -60,10 +60,6 @@
 	border-color: white;
 }
 
-.focused {
-	box-shadow: none;
-}
-
 .checkIcon {
 	color: white;
 }
@@ -89,16 +85,6 @@
 
 .labelText {
 	line-height: 1.25rem;
-}
-
-.keyboardShortcutHints {
-	margin-inline-start: 0.5rem;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.25rem;
-	align-items: flex-start;
-	font-size: 0.75rem;
-	color: var(--text-tertiary);
 }
 
 .keyboardShortcut {
@@ -159,10 +145,6 @@
 
 .labelFocusRing {
 	border-radius: var(--radius-sm);
-}
-
-.noOutline {
-	outline: none !important;
 }
 
 .menuChecked {

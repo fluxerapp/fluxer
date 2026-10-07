@@ -70,7 +70,7 @@ export function getBestContrastColor(colorInt: number): 'black' | 'white' {
 	return rememberColor(CONTRAST_CACHE, colorInt, luminance > 0.5 ? 'black' : 'white', COLOR_CACHE_LIMIT);
 }
 
-export const AVATAR_BACKGROUND_DIM_AMOUNT = 0.12;
+const AVATAR_BACKGROUND_DIM_AMOUNT = 0.12;
 
 function clampChannel(value: number): number {
 	return Math.max(0, Math.min(255, Math.round(value)));

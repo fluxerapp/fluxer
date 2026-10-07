@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup} from 'xstate';
 
 export interface GuildReadStateContributionInput {
 	isEligibleTextChannel: boolean;
@@ -18,7 +18,7 @@ export interface GuildReadStateContribution {
 	mentionCount: number;
 }
 
-export type GuildReadStateContributionEvent = {
+type GuildReadStateContributionEvent = {
 	type: 'guildReadContribution.updated';
 	input: GuildReadStateContributionInput;
 };
@@ -45,7 +45,7 @@ function isUnreadAllowed(snapshot: GuildReadStateContributionSnapshot): boolean 
 	}
 }
 
-export const guildReadStateContributionMachine = setup({
+const guildReadStateContributionMachine = setup({
 	types: {} as {
 		context: GuildReadStateContributionInput;
 		events: GuildReadStateContributionEvent;
@@ -105,24 +105,15 @@ export const guildReadStateContributionMachine = setup({
 	},
 });
 
-export type GuildReadStateContributionSnapshot = SnapshotFrom<typeof guildReadStateContributionMachine>;
+type GuildReadStateContributionSnapshot = SnapshotFrom<typeof guildReadStateContributionMachine>;
 
-export function createGuildReadStateContributionSnapshot(
+function createGuildReadStateContributionSnapshot(
 	input: GuildReadStateContributionInput,
 ): GuildReadStateContributionSnapshot {
 	return initialTransition(guildReadStateContributionMachine, input)[0];
 }
 
-export function transitionGuildReadStateContributionSnapshot(
-	snapshot: GuildReadStateContributionSnapshot,
-	event: GuildReadStateContributionEvent,
-): GuildReadStateContributionSnapshot {
-	return transition(guildReadStateContributionMachine, snapshot, event)[0] as GuildReadStateContributionSnapshot;
-}
-
-export function selectGuildReadStateContribution(
-	snapshot: GuildReadStateContributionSnapshot,
-): GuildReadStateContribution {
+function selectGuildReadStateContribution(snapshot: GuildReadStateContributionSnapshot): GuildReadStateContribution {
 	return {
 		mentionAllowed: isMentionAllowed(snapshot),
 		unreadAllowed: isUnreadAllowed(snapshot),

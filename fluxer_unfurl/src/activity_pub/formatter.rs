@@ -702,14 +702,11 @@ mod tests {
     #[test]
     fn activity_pub_engagement_fields_use_threshold() {
         let post = ActivityPubPost {
-            id: None,
-            object_type: None,
             url: None,
             published: None,
             attributed_to: None,
             content: None,
             summary: None,
-            sensitive: None,
             attachment: None,
             in_reply_to: None,
             likes: Some(ActivityPubCollectionCount::Count(100)),
@@ -737,7 +734,6 @@ mod tests {
     #[test]
     fn mastodon_poll_field_formats_votes() {
         let post = MastodonPost {
-            id: None,
             created_at: None,
             in_reply_to_id: None,
             in_reply_to_account_id: None,
@@ -781,7 +777,6 @@ mod tests {
             url: Some("https://cdn.example.test/a.jpg".to_owned()),
             preview_url: None,
             description: None,
-            blurhash: None,
             meta: Some(MastodonMediaMeta {
                 original: None,
                 small: Some(MastodonMediaMetaSize {
@@ -798,13 +793,11 @@ mod tests {
     #[test]
     fn attachment_kind_uses_media_type() {
         let image = ActivityPubAttachment {
-            attachment_type: Some("Document".to_owned()),
             media_type: Some("image/png".to_owned()),
             url: Some("https://cdn.example.test/a.png".to_owned()),
             width: None,
             height: None,
             name: None,
-            blurhash: None,
         };
         let video = ActivityPubAttachment {
             media_type: Some("video/mp4".to_owned()),
@@ -820,17 +813,14 @@ mod tests {
     #[test]
     fn metadata_builds_embed_media_payload() {
         let metadata = MediaMetadata {
-            format: "jpeg".to_owned(),
             content_type: "image/jpeg".to_owned(),
             content_hash: "abc123".to_owned(),
-            size: 42,
             width: Some(800),
             height: Some(600),
             duration: None,
             placeholder: Some("blur".to_owned()),
             animated: Some(true),
             nsfw: true,
-            nsfw_probability: Some(0.9),
         };
 
         let media = build_media_from_metadata(
@@ -921,7 +911,6 @@ mod tests {
             reblogs_count: Some(99),
             replies_count: Some(1),
             ..MastodonPost {
-                id: None,
                 created_at: None,
                 in_reply_to_id: None,
                 in_reply_to_account_id: None,
@@ -947,7 +936,6 @@ mod tests {
             favourites_count: Some(100),
             reblogs_count: Some(200),
             replies_count: Some(50),
-            id: None,
             created_at: None,
             in_reply_to_id: None,
             in_reply_to_account_id: None,
@@ -994,14 +982,11 @@ mod tests {
         let post = ActivityPubPost {
             attributed_to: Some(serde_json::json!("https://example.test/@bob")),
             ..ActivityPubPost {
-                id: None,
-                object_type: None,
                 url: None,
                 published: None,
                 attributed_to: None,
                 content: None,
                 summary: None,
-                sensitive: None,
                 attachment: None,
                 in_reply_to: None,
                 likes: None,
@@ -1026,14 +1011,11 @@ mod tests {
     #[test]
     fn resolve_author_missing_returns_unknown() {
         let post = ActivityPubPost {
-            id: None,
-            object_type: None,
             url: None,
             published: None,
             attributed_to: None,
             content: None,
             summary: None,
-            sensitive: None,
             attachment: None,
             in_reply_to: None,
             likes: None,
@@ -1084,17 +1066,14 @@ mod tests {
     #[test]
     fn embed_media_flags_nsfw_only() {
         let meta = MediaMetadata {
-            format: "jpeg".to_owned(),
             content_type: "image/jpeg".to_owned(),
             content_hash: "h".to_owned(),
-            size: 0,
             width: None,
             height: None,
             duration: None,
             placeholder: None,
             animated: None,
             nsfw: true,
-            nsfw_probability: None,
         };
         assert_eq!(embed_media_flags(&meta), 1 << 4);
     }
@@ -1102,17 +1081,14 @@ mod tests {
     #[test]
     fn embed_media_flags_animated_only() {
         let meta = MediaMetadata {
-            format: "gif".to_owned(),
             content_type: "image/gif".to_owned(),
             content_hash: "h".to_owned(),
-            size: 0,
             width: None,
             height: None,
             duration: None,
             placeholder: None,
             animated: Some(true),
             nsfw: false,
-            nsfw_probability: None,
         };
         assert_eq!(embed_media_flags(&meta), 1 << 5);
     }
@@ -1120,17 +1096,14 @@ mod tests {
     #[test]
     fn embed_media_flags_both() {
         let meta = MediaMetadata {
-            format: "gif".to_owned(),
             content_type: "image/gif".to_owned(),
             content_hash: "h".to_owned(),
-            size: 0,
             width: None,
             height: None,
             duration: None,
             placeholder: None,
             animated: Some(true),
             nsfw: true,
-            nsfw_probability: None,
         };
         assert_eq!(embed_media_flags(&meta), (1 << 4) | (1 << 5));
     }
@@ -1138,17 +1111,14 @@ mod tests {
     #[test]
     fn embed_media_flags_neither() {
         let meta = MediaMetadata {
-            format: "jpeg".to_owned(),
             content_type: "image/jpeg".to_owned(),
             content_hash: "h".to_owned(),
-            size: 0,
             width: None,
             height: None,
             duration: None,
             placeholder: None,
             animated: Some(false),
             nsfw: false,
-            nsfw_probability: None,
         };
         assert_eq!(embed_media_flags(&meta), 0);
     }
@@ -1156,17 +1126,14 @@ mod tests {
     #[test]
     fn empty_description_not_included_in_media() {
         let meta = MediaMetadata {
-            format: "jpeg".to_owned(),
             content_type: "image/jpeg".to_owned(),
             content_hash: "h".to_owned(),
-            size: 0,
             width: None,
             height: None,
             duration: None,
             placeholder: None,
             animated: None,
             nsfw: false,
-            nsfw_probability: None,
         };
         let media = build_media_from_metadata("https://e.com/a.jpg", &meta, None, None, Some(""));
         assert!(media.description.is_none());

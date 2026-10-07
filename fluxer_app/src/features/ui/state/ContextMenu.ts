@@ -9,9 +9,9 @@ import type React from 'react';
 
 const logger = new Logger('ContextMenu');
 
-export const CONTEXT_MENU_OPEN_ATTRIBUTE = 'data-context-menu-open';
+const CONTEXT_MENU_OPEN_ATTRIBUTE = 'data-context-menu-open';
 
-export interface FocusableContextMenuTarget {
+interface FocusableContextMenuTarget {
 	tagName: string;
 	isConnected: boolean;
 	focus: (options?: FocusOptions) => void;
@@ -33,7 +33,7 @@ export function isContextMenuNodeTarget(target: ContextMenuTargetElement | null 
 	return target instanceof HTMLElement;
 }
 
-export interface ContextMenuTarget {
+interface ContextMenuTarget {
 	x: number;
 	y: number;
 	target: ContextMenuTargetElement;
@@ -56,7 +56,7 @@ export interface ContextMenu {
 	config?: ContextMenuConfig;
 }
 
-export interface FocusRestoreState {
+interface FocusRestoreState {
 	target: ContextMenuTargetElement | null;
 	keyboardModeEnabled: boolean;
 	restoreFocus: boolean;
@@ -80,10 +80,6 @@ class ContextMenuState {
 
 	get contextMenu(): ContextMenu | null {
 		return this.currentEntry?.contextMenu ?? null;
-	}
-
-	get contextMenus(): Array<ContextMenu> {
-		return this.currentEntry ? [this.currentEntry.contextMenu] : [];
 	}
 
 	getContextMenu(ownerDocument: Document = document): ContextMenu | null {

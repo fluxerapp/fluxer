@@ -95,7 +95,7 @@ export interface GatewayHandlerContext {
 	markGuildSynced: (guildId: string) => void;
 }
 
-export type GatewayEventHandler = (data: unknown, context: GatewayHandlerContext) => void;
+type GatewayEventHandler = (data: unknown, context: GatewayHandlerContext) => void;
 export type GatewayHandlerRegistry = Map<string, GatewayEventHandler>;
 
 export function createHandlerRegistry(): GatewayHandlerRegistry {

@@ -134,72 +134,6 @@
 	cursor: not-allowed;
 }
 
-.fileInfoInline {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	min-width: 0;
-	flex: 1;
-}
-
-.fileInfoContent {
-	display: flex;
-	min-width: 0;
-	flex-direction: column;
-	gap: 0.0625rem;
-}
-
-.fileInfoName {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	font-weight: 500;
-	font-size: 0.875rem;
-	line-height: 1.125rem;
-	color: var(--media-hud-color, rgb(255 255 255 / 0.92));
-}
-
-.fileInfoMeta {
-	color: var(--media-hud-color-muted, rgb(255 255 255 / 0.68));
-	font-size: 0.75rem;
-	line-height: 0.875rem;
-}
-
-.fileInfoExpiry {
-	color: var(--media-hud-color-muted, rgb(255 255 255 / 0.68));
-}
-
-.fileInfoNavigation {
-	display: flex;
-	align-items: center;
-	gap: 0.25rem;
-	margin-left: auto;
-	flex-shrink: 0;
-}
-
-.fileInfoNavigationText {
-	font-size: 0.75rem;
-	line-height: 1rem;
-	color: var(--media-hud-color-muted, rgb(255 255 255 / 0.68));
-	padding: 0 0.25rem;
-}
-
-.controlsBox {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	pointer-events: auto;
-	flex-shrink: 0;
-}
-
-.controlsDivider {
-	margin-left: 0.25rem;
-	margin-right: 0.25rem;
-	height: 1.25rem;
-	width: 0.0625rem;
-	background-color: rgb(255 255 255 / 0.12);
-}
-
 .modalOverlay {
 	position: fixed;
 	inset: 0;
@@ -280,25 +214,9 @@
 	}
 }
 
-.headerBar {
-	position: absolute;
-	top: var(--media-hud-safe-top);
-	left: var(--media-hud-safe-left);
-	right: var(--media-hud-safe-right);
-	display: flex;
-	align-items: stretch;
-	justify-content: space-between;
-	gap: 0.5rem;
-	z-index: 100;
-	pointer-events: none;
-	min-height: 3rem;
-}
-
-.headerBar,
 .overlayActionBar,
 .mobileOverlayActionBar,
 .bottomInfoBar,
-.navigationOverlay,
 .thumbnailCarouselWrapper,
 .floatingNavButtonLeft,
 .floatingNavButtonRight {
@@ -307,115 +225,15 @@
 		visibility 120ms ease;
 }
 
-.modalContentInner[data-media-hud-hidden='true'] .headerBar,
 .modalContentInner[data-media-hud-hidden='true'] .overlayActionBar,
 .modalContentInner[data-media-hud-hidden='true'] .mobileOverlayActionBar,
 .modalContentInner[data-media-hud-hidden='true'] .bottomInfoBar,
-.modalContentInner[data-media-hud-hidden='true'] .navigationOverlay,
 .modalContentInner[data-media-hud-hidden='true'] .thumbnailCarouselWrapper,
 .modalContentInner[data-media-hud-hidden='true'] .floatingNavButtonLeft,
 .modalContentInner[data-media-hud-hidden='true'] .floatingNavButtonRight {
 	visibility: hidden;
 	opacity: 0;
 	pointer-events: none;
-}
-
-@media (max-width: 768px) {
-	.headerBar {
-		min-height: 2.5rem;
-	}
-}
-
-.headerMeta {
-	display: flex;
-	align-items: center;
-	gap: 0.375rem;
-	padding: var(--media-hud-surface-padding);
-	padding-inline: 0.75rem 0.625rem;
-	border-radius: var(--media-hud-surface-radius);
-	background-color: var(--media-hud-surface-bg);
-	border: 0.0625rem solid var(--media-hud-surface-border);
-	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem);
-	-webkit-backdrop-filter: blur(2.25rem);
-	pointer-events: auto;
-	min-width: 0;
-	max-width: calc(100% - 11.25rem);
-	height: 100%;
-	box-sizing: border-box;
-}
-
-@media (max-width: 768px) {
-	.headerMeta {
-		display: none;
-	}
-}
-
-.headerControls {
-	display: flex;
-	align-items: stretch;
-	gap: 0.75rem;
-	margin-left: auto;
-	flex-shrink: 0;
-	pointer-events: none;
-	height: 100%;
-}
-
-@media (max-width: 768px) {
-	.headerControls {
-		width: 100%;
-		margin-left: 0;
-	}
-}
-
-.mobileTopBarControls {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	width: 100%;
-	pointer-events: none;
-}
-
-.mobileTopBarControls .controlButton {
-	pointer-events: auto;
-	background: transparent;
-	color: white;
-}
-
-.mobileTopBarControls .controlButton:hover {
-	color: white;
-}
-
-.actionControlsBox {
-	display: flex;
-	align-items: center;
-	gap: 0.25rem;
-	padding: var(--media-hud-surface-padding);
-	border-radius: var(--media-hud-surface-radius);
-	background-color: var(--media-hud-surface-bg);
-	border: 0.0625rem solid var(--media-hud-surface-border);
-	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem);
-	-webkit-backdrop-filter: blur(2.25rem);
-	pointer-events: auto;
-	height: 100%;
-	box-sizing: border-box;
-}
-
-.closeControlBox {
-	display: flex;
-	align-items: center;
-	padding: var(--media-hud-surface-padding);
-	border-radius: var(--media-hud-surface-radius);
-	background-color: var(--media-hud-surface-bg);
-	border: 0.0625rem solid var(--media-hud-surface-border);
-	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem);
-	-webkit-backdrop-filter: blur(2.25rem);
-	pointer-events: auto;
-	height: 100%;
-	box-sizing: border-box;
-	aspect-ratio: 1 / 1;
 }
 
 .mediaArea {
@@ -638,31 +456,6 @@
 	}
 }
 
-.navigationOverlay {
-	position: absolute;
-	bottom: var(--media-hud-safe-bottom);
-	left: 50%;
-	transform: translateX(-50%);
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	border-radius: var(--media-hud-surface-radius);
-	background-color: var(--media-hud-surface-bg);
-	border: 0.0625rem solid var(--media-hud-surface-border);
-	box-shadow: var(--media-hud-shadow);
-	padding: var(--media-hud-surface-padding) 0.75rem;
-	backdrop-filter: blur(2.25rem);
-	-webkit-backdrop-filter: blur(2.25rem);
-	pointer-events: auto;
-}
-
-.navigationText {
-	font-weight: 500;
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: white;
-}
-
 .thumbnailCarouselWrapper {
 	position: absolute;
 	top: var(--media-hud-safe-top);
@@ -810,18 +603,4 @@
 
 .floatingNavButton:active {
 	transform: translateY(0.0625rem);
-}
-
-.floatingNavButtonDisabled {
-	opacity: 0.4;
-	cursor: not-allowed;
-}
-
-.floatingNavButtonDisabled:hover {
-	background-color: var(--media-hud-surface-bg);
-	color: var(--media-hud-color-muted, rgb(255 255 255 / 0.72));
-}
-
-.floatingNavButtonDisabled:active {
-	transform: none;
 }

@@ -8,7 +8,7 @@ import {
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable} from 'mobx';
 
-export type GuildMemberViewMode = 'table' | 'grid';
+type GuildMemberViewMode = 'table' | 'grid';
 
 const MODE_FROM_PROTO: Record<ProtoGuildMemberViewMode, GuildMemberViewMode | null> = {
 	[ProtoGuildMemberViewMode.UNSPECIFIED]: null,
@@ -43,10 +43,6 @@ class GuildMemberLayout {
 
 	getViewMode(): GuildMemberViewMode {
 		return this.memberViewMode;
-	}
-
-	setViewMode(mode: GuildMemberViewMode): void {
-		this.memberViewMode = mode;
 	}
 }
 

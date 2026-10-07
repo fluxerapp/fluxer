@@ -2,7 +2,7 @@
 
 export const CHANNEL_MESSAGE_ID_PREFIX = 'chat-messages';
 
-export const escapeSelectorValue = (value: string): string =>
+const escapeSelectorValue = (value: string): string =>
 	value.replace(/[\\"]/gu, '\\$&').replace(/[\n\r\f]/gu, (char) => `\\${char.charCodeAt(0).toString(16)} `);
 
 export const getMessageSelector = (channelId?: string, messageId?: string): string => {

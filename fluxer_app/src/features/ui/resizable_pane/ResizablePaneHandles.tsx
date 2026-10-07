@@ -24,7 +24,7 @@ const EDGES_AWAY_FROM_ANCHOR: Readonly<Record<PopoutPosition, ReadonlyArray<Resi
 	'right-end': ['right', 'top', 'top-right'],
 };
 
-export function getResizablePaneHandleEdges(placement: PopoutPosition | null): ReadonlyArray<ResizeEdge> {
+function getResizablePaneHandleEdges(placement: PopoutPosition | null): ReadonlyArray<ResizeEdge> {
 	if (placement == null) return ALL_RESIZE_EDGES;
 	return EDGES_AWAY_FROM_ANCHOR[placement];
 }

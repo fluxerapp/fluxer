@@ -75,7 +75,7 @@ function requestFavoriteGifResolution(urls: Array<string>): Promise<ResolveGifUr
 		.then((response) => response.body);
 }
 
-export function addFavoriteGif(i18n: I18n, entry: FavoriteGifEntry): void {
+function addFavoriteGif(i18n: I18n, entry: FavoriteGifEntry): void {
 	if (FavoriteGif.hasUrl(entry.url)) return;
 	if (FavoriteGif.totalCount >= MAX_FAVORITE_GIFS) {
 		showFavoriteGifLimitModal(i18n);

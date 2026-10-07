@@ -1045,21 +1045,6 @@ class MemberSidebar {
 		this.lists = {...this.lists, [guildId]: guildLists};
 	}
 
-	unsubscribeFromChannel(
-		guildId: string,
-		channelId: string,
-		clearLocalSubscription = true,
-		ownerId?: string | null,
-	): void {
-		this.clearChannelSubscription({
-			guildId,
-			channelId,
-			clearLocalSubscription,
-			ownerId,
-			updateGateway: true,
-		});
-	}
-
 	releaseMemberListSubscription(guildId: string, channelId: string, ownerId: string): void {
 		this.clearChannelSubscription({
 			guildId,
@@ -1174,22 +1159,6 @@ class MemberSidebar {
 		return this.activeMemberListSubscription != null;
 	}
 
-	getVisibleItems(guildId: string, listId: string, rowRange: [number, number]): Array<MemberListItem> {
-		const listState = this.getList(guildId, listId);
-		if (!listState) {
-			return [];
-		}
-		const [start, end] = rowRange;
-		const items: Array<MemberListItem> = [];
-		for (let i = start; i <= end; i++) {
-			const item = listState.items.get(i);
-			if (item) {
-				items.push(item);
-			}
-		}
-		return items;
-	}
-
 	getList(guildId: string, channelId: string): MemberListState | undefined {
 		return this.lists[guildId]?.[this.resolveStorageKey(guildId, channelId)];
 	}
@@ -1204,14 +1173,6 @@ class MemberSidebar {
 			return false;
 		}
 		return areNormalizedMemberListRangesCovered(normalizeMemberListRanges(ranges), listState.subscribedRanges);
-	}
-
-	getMemberCount(guildId: string, listId: string): number {
-		return this.getList(guildId, listId)?.memberCount ?? 0;
-	}
-
-	getOnlineCount(guildId: string, listId: string): number {
-		return this.getList(guildId, listId)?.onlineCount ?? 0;
 	}
 
 	getPresence(guildId: string, listId: string, userId: string): StatusType | null {

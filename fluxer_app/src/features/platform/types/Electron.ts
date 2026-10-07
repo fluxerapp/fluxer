@@ -37,13 +37,13 @@ export interface DesktopInfo {
 	chromiumRuntime: ChromiumRuntimeInfo;
 }
 
-export interface ChromiumRuntimeInfo {
+interface ChromiumRuntimeInfo {
 	enableFeatures: Array<string>;
 	disableFeatures: Array<string>;
 	switches: Array<string>;
 }
 
-export interface GpuDeviceInfo {
+interface GpuDeviceInfo {
 	active: boolean;
 	vendorId: number;
 	deviceId: number;
@@ -73,7 +73,7 @@ export interface GpuInfo {
 	nativeSource?: 'metal' | 'dxgi' | 'linux-sysfs';
 }
 
-export interface DesktopWindowBehaviorSettings {
+interface DesktopWindowBehaviorSettings {
 	showTrayIcon: boolean;
 	minimizeToTray: boolean;
 	closeToTray: boolean;
@@ -89,7 +89,7 @@ export interface DesktopWindowBehaviorSettings {
 	activeMiddleClickAutoscroll: boolean;
 }
 
-export interface ThemeLocalFileReference {
+interface ThemeLocalFileReference {
 	id: string;
 	name: string;
 	path: string;
@@ -97,54 +97,54 @@ export interface ThemeLocalFileReference {
 	size: number;
 }
 
-export interface ThemeLocalFileReadResult {
+interface ThemeLocalFileReadResult {
 	path: string;
 	dataUrl?: string;
 	error?: string;
 }
 
-export interface ThemeDirectoryCssFile {
+interface ThemeDirectoryCssFile {
 	fileName: string;
 	path: string;
 	css: string;
 }
 
-export type ThemeLinkedFileError = 'not_allowed' | 'missing' | 'not_file' | 'too_large' | 'too_many' | 'read_failed';
+type ThemeLinkedFileError = 'not_allowed' | 'missing' | 'not_file' | 'too_large' | 'too_many' | 'read_failed';
 
-export interface ThemeLinkedFileChange {
+interface ThemeLinkedFileChange {
 	path: string;
 	css?: string;
 	error?: ThemeLinkedFileError;
 }
 
-export type VoiceBackgroundMediaKind = 'static' | 'animated' | 'video';
+type VoiceBackgroundMediaKind = 'static' | 'animated' | 'video';
 
-export interface VoiceBackgroundMediaCacheRequest {
+interface VoiceBackgroundMediaCacheRequest {
 	id: string;
 	mimeType: string;
 	fileName?: string;
 	data: ArrayBuffer;
 }
 
-export interface VoiceBackgroundMediaCacheResult {
+interface VoiceBackgroundMediaCacheResult {
 	path: string;
 	mediaKind: VoiceBackgroundMediaKind;
 }
 
-export interface VoiceBackgroundMediaReadResult {
+interface VoiceBackgroundMediaReadResult {
 	path: string;
 	mediaKind: VoiceBackgroundMediaKind;
 	dataUrl: string;
 }
 
-export interface DesktopVoiceDebugEventSinkEntry {
+interface DesktopVoiceDebugEventSinkEntry {
 	sequence: number;
 	line: string;
 }
 
-export type TrayPresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible';
+type TrayPresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible';
 
-export interface TrayRuntimeStatePayload {
+interface TrayRuntimeStatePayload {
 	voiceConnected: boolean;
 	voiceChannelLabel: string | null;
 	selfMute: boolean;
@@ -153,7 +153,7 @@ export interface TrayRuntimeStatePayload {
 	buildInfo: string | null;
 }
 
-export type TrayActionPayload =
+type TrayActionPayload =
 	| {
 			action: 'set-status';
 			status: TrayPresenceStatus;
@@ -211,12 +211,7 @@ export type UpdaterEvent =
 			downloadUrl?: string;
 	  };
 
-export interface DownloadFileOptions {
-	url: string;
-	defaultPath: string;
-}
-
-export interface DownloadFileResult {
+interface DownloadFileResult {
 	success: boolean;
 	canceled?: boolean;
 	checksumMismatch?: boolean;
@@ -224,15 +219,15 @@ export interface DownloadFileResult {
 	error?: string;
 }
 
-export type ClipboardWriteFileMediaType = 'image' | 'gif' | 'video' | 'audio';
+type ClipboardWriteFileMediaType = 'image' | 'gif' | 'video' | 'audio';
 
-export interface ClipboardWriteFileOptions {
+interface ClipboardWriteFileOptions {
 	url: string;
 	suggestedName?: string;
 	mediaType: ClipboardWriteFileMediaType;
 }
 
-export interface ClipboardWriteFileResult {
+interface ClipboardWriteFileResult {
 	success: boolean;
 	path?: string;
 	error?: string;
@@ -240,9 +235,9 @@ export interface ClipboardWriteFileResult {
 
 export type MediaAccessType = 'microphone' | 'camera' | 'screen' | 'audio-capture';
 export type MediaAccessStatus = 'granted' | 'denied' | 'not-determined' | 'restricted' | 'unknown';
-export type InputMonitoringPermissionStatus = 'granted' | 'denied' | 'not-determined' | 'unsupported';
+type InputMonitoringPermissionStatus = 'granted' | 'denied' | 'not-determined' | 'unsupported';
 
-export interface DesktopSource {
+interface DesktopSource {
 	id: string;
 	name: string;
 	thumbnailDataUrl?: string;
@@ -253,13 +248,13 @@ export interface DesktopSource {
 	isOwnWindow?: boolean;
 }
 
-export interface DisplayMediaRequestInfo {
+interface DisplayMediaRequestInfo {
 	audioRequested: boolean;
 	videoRequested: boolean;
 	supportsLoopbackAudio?: boolean;
 }
 
-export interface NotificationOptions {
+interface NotificationOptions {
 	id?: string;
 	title: string;
 	subtitle?: string;
@@ -268,28 +263,28 @@ export interface NotificationOptions {
 	url?: string;
 }
 
-export interface NotificationResult {
+interface NotificationResult {
 	id: string;
 }
 
-export interface StreamerModeCaptureProcess {
+interface StreamerModeCaptureProcess {
 	name: string;
 	pid?: number;
 }
 
-export interface StreamerModeCaptureAppStatus {
+interface StreamerModeCaptureAppStatus {
 	detected: boolean;
 	processes: Array<StreamerModeCaptureProcess>;
 }
 
-export interface CpuInfo {
+interface CpuInfo {
 	model: string;
 	speed: number;
 	cores: number;
 	physicalCores: number;
 }
 
-export interface ProcessMetrics {
+interface ProcessMetrics {
 	cpu: {
 		percentCPUUsage: number;
 	};
@@ -385,7 +380,6 @@ export interface ElectronAPI {
 	getScreenRecordingPermissionStatus?: () => Promise<InputMonitoringPermissionStatus>;
 	requestScreenRecordingPermission?: () => Promise<InputMonitoringPermissionStatus>;
 	downloadFile: (url: string, defaultPath: string, sha256?: string | null) => Promise<DownloadFileResult>;
-	toggleDevTools: () => void;
 	showNotification: (options: NotificationOptions) => Promise<NotificationResult>;
 	shouldPlayNotificationSound?: () => Promise<boolean>;
 	getStreamerModeCaptureAppStatus?: () => Promise<StreamerModeCaptureAppStatus>;
@@ -393,16 +387,12 @@ export interface ElectronAPI {
 	closeNotifications: (ids: Array<string>) => void;
 	onNotificationClick: (callback: (id: string, url?: string) => void) => () => void;
 	setBadgeCount: (count: number) => void;
-	getBadgeCount: () => Promise<number>;
-	bounceDock: (type?: 'critical' | 'informational') => number;
-	cancelBounceDock: (id: number) => void;
 	setNativeLocale: (locale: string, strings: Record<string, string>) => void;
 	flashFrame: (persistent?: boolean) => void;
 	stopFlashFrame: () => void;
 	setTaskbarProgress: (fraction: number, mode?: 'normal' | 'indeterminate' | 'error' | 'paused' | 'none') => void;
 	onJumpListNewDm: (callback: () => void) => () => void;
 	setZoomFactor: (factor: number) => void;
-	getZoomFactor: () => Promise<number>;
 	getAccessibilitySupportEnabled: () => Promise<boolean>;
 	onAccessibilitySupportChanged: (callback: (enabled: boolean) => void) => () => void;
 	onZoomIn: (callback: () => void) => () => void;
@@ -413,7 +403,6 @@ export interface ElectronAPI {
 	onTrayAction: (callback: (payload: TrayActionPayload) => void) => () => void;
 	globalKeyHookStart: () => Promise<boolean>;
 	globalKeyHookStop: () => Promise<void>;
-	globalKeyHookIsRunning: () => Promise<boolean>;
 	checkInputMonitoringAccess: () => Promise<boolean>;
 	globalKeyHookRegister: (options: GlobalKeyHookRegisterOptions) => Promise<void>;
 	globalKeyHookUnregister: (id: string) => Promise<void>;
@@ -432,11 +421,9 @@ export interface ElectronAPI {
 	onGlobalKeyEvent: (callback: (event: GlobalKeyEvent) => void) => () => void;
 	onGlobalMouseEvent: (callback: (event: GlobalMouseEvent) => void) => () => void;
 	onGlobalKeybindTriggered: (callback: (event: GlobalKeybindTriggeredEvent) => void) => () => void;
-	spellcheckGetState: () => Promise<SpellcheckState>;
 	spellcheckSetState: (state: Partial<SpellcheckState>) => Promise<SpellcheckState>;
 	spellcheckGetAvailableLanguages: () => Promise<Array<string>>;
 	spellcheckGetBundledDictionaries?: () => Promise<Array<SpellcheckBundledDictionary>>;
-	spellcheckSuggest?: (word: string) => Promise<Array<string>>;
 	onSpellcheckStateChanged: (callback: (state: SpellcheckState) => void) => () => void;
 	onSpellcheckEngineResolved?: (callback: (info: SpellcheckResolvedEngineInfo) => void) => () => void;
 	onTextareaContextMenu: (callback: (params: TextareaContextMenuParams) => void) => () => void;
@@ -478,51 +465,43 @@ export interface ElectronAPI {
 	nativeGatewayTransport?: NativeGatewayTransportAPI;
 }
 
-export type VirtmicUnavailableReason =
+type VirtmicUnavailableReason =
 	| 'not-linux'
 	| 'addon-not-installed'
 	| 'load-failed'
 	| 'no-pipewire'
 	| 'disabled-by-launch'
 	| 'glibcxx-too-old';
-export type VirtmicBackend = 'pipewire';
+type VirtmicBackend = 'pipewire';
 
-export interface VirtmicAvailability {
+interface VirtmicAvailability {
 	available: boolean;
 	reason?: VirtmicUnavailableReason;
 	backend?: VirtmicBackend;
 }
 
-export type VirtmicNode = Record<string, string>;
+type VirtmicNode = Record<string, string>;
 
-export interface VirtmicLinkOptions {
+interface VirtmicLinkOptions {
 	ignoreDevices?: boolean;
 	ignoreInputMedia?: boolean;
 	ignoreVirtual?: boolean;
 	workaround?: boolean;
 }
 
-export interface VirtmicSystemLinkOptions extends VirtmicLinkOptions {
-	onlySpeakers?: boolean;
-	onlyDefaultSpeakers?: boolean;
-}
-
-export interface VirtmicApi {
+interface VirtmicApi {
 	getAvailability: () => Promise<VirtmicAvailability>;
 	listTargets: (options?: {granular?: boolean}) => Promise<{
 		ok: boolean;
 		targets?: Array<VirtmicNode>;
 		availability: VirtmicAvailability;
 	}>;
-	startInclude: (include: Array<VirtmicNode>, options?: VirtmicLinkOptions) => Promise<boolean>;
-	startSystem: (exclude: Array<VirtmicNode>, options?: VirtmicSystemLinkOptions) => Promise<boolean>;
-	resolveWindowPid: (sourceId: string) => Promise<number | null>;
 	stop: () => Promise<void>;
 }
 
-export type NativeAudioBackend = 'macos-sck' | 'macos-coreaudio' | 'windows-wasapi-loopback' | 'linux-pipewire';
+type NativeAudioBackend = 'macos-sck' | 'macos-coreaudio' | 'windows-wasapi-loopback' | 'linux-pipewire';
 
-export interface NativeAudioAvailability {
+interface NativeAudioAvailability {
 	available: boolean;
 	backend?: NativeAudioBackend;
 	capabilities?: {
@@ -545,14 +524,14 @@ export interface NativeAudioAvailability {
 	detail?: string;
 }
 
-export interface NativeAudioApplication {
+interface NativeAudioApplication {
 	pid: number;
 	identifier: string;
 	name: string;
 	audible?: boolean;
 }
 
-export interface NativeAudioStartOptions {
+interface NativeAudioStartOptions {
 	targetPid?: number;
 	includeProcessTree?: boolean;
 	macBackend?: 'sck' | 'coreaudio' | 'auto';
@@ -566,13 +545,13 @@ export interface NativeAudioStartOptions {
 	};
 }
 
-export interface NativeAudioStartResult {
+interface NativeAudioStartResult {
 	captureId: string;
 	sampleRate: number;
 	channels: number;
 }
 
-export interface NativeAudioFrameMessage {
+interface NativeAudioFrameMessage {
 	captureId: string;
 	sampleRate: number;
 	channels: number;
@@ -580,15 +559,15 @@ export interface NativeAudioFrameMessage {
 	samples: ArrayBuffer;
 }
 
-export type NativeAudioEndReason = 'stopped' | 'target-exited' | 'addon-error';
+type NativeAudioEndReason = 'stopped' | 'target-exited' | 'addon-error';
 
-export interface NativeAudioEndMessage {
+interface NativeAudioEndMessage {
 	captureId: string;
 	reason: NativeAudioEndReason;
 	detail?: string;
 }
 
-export interface NativeAudioApi {
+interface NativeAudioApi {
 	getAvailability: () => Promise<NativeAudioAvailability>;
 	listAudibleApplications: () => Promise<Array<NativeAudioApplication>>;
 	resolveAudioRootPidForSource: (sourceId: string) => Promise<number | null>;
@@ -599,7 +578,7 @@ export interface NativeAudioApi {
 	onEnd: (callback: (message: NativeAudioEndMessage) => void) => () => void;
 }
 
-export interface GlobalKeyHookRegisterOptions {
+interface GlobalKeyHookRegisterOptions {
 	id: string;
 	description?: string;
 	keycode?: number;
@@ -623,7 +602,7 @@ export interface GlobalKeyEvent {
 	metaKey: boolean;
 }
 
-export interface GlobalMouseEvent {
+interface GlobalMouseEvent {
 	type: 'mousedown' | 'mouseup';
 	button: number;
 	altKey: boolean;
@@ -632,14 +611,14 @@ export interface GlobalMouseEvent {
 	metaKey: boolean;
 }
 
-export interface GlobalKeybindTriggeredEvent {
+interface GlobalKeybindTriggeredEvent {
 	id: string;
 	type: 'keydown' | 'keyup';
 }
 
-export type GlobalShortcutsBackend = 'portal' | 'x11' | 'evdev' | 'windows' | 'macos' | 'none';
+type GlobalShortcutsBackend = 'portal' | 'x11' | 'evdev' | 'windows' | 'macos' | 'none';
 
-export type GlobalShortcutsPortalState =
+type GlobalShortcutsPortalState =
 	| 'unknown'
 	| 'probing'
 	| 'unsupported'
@@ -649,12 +628,12 @@ export type GlobalShortcutsPortalState =
 	| 'declined'
 	| 'error';
 
-export interface GlobalShortcutsPortalShortcut {
+interface GlobalShortcutsPortalShortcut {
 	action: string;
 	triggerDescription: string | null;
 }
 
-export interface GlobalShortcutsPortalStatus {
+interface GlobalShortcutsPortalStatus {
 	state: GlobalShortcutsPortalState;
 	version: number | null;
 	canConfigure: boolean;
@@ -665,7 +644,7 @@ export interface GlobalShortcutsPortalStatus {
 	recovering: boolean;
 }
 
-export interface GlobalShortcutsLinuxStatus {
+interface GlobalShortcutsLinuxStatus {
 	session: 'wayland' | 'x11' | 'unknown';
 	sandbox: 'flatpak' | 'none';
 	desktop: 'kde' | 'gnome' | 'hyprland' | 'other';
@@ -673,7 +652,7 @@ export interface GlobalShortcutsLinuxStatus {
 	directInput: {available: boolean; enabled: boolean; locked: boolean};
 }
 
-export interface GlobalShortcutsStatus {
+interface GlobalShortcutsStatus {
 	backend: GlobalShortcutsBackend;
 	platform: 'linux' | 'windows' | 'macos';
 	linux: GlobalShortcutsLinuxStatus | null;
@@ -683,7 +662,7 @@ export interface GlobalShortcutsStatus {
 	supportsModifierOnly: boolean;
 }
 
-export interface GlobalShortcutCombo {
+interface GlobalShortcutCombo {
 	code?: string;
 	key: string;
 	ctrl: boolean;
@@ -695,24 +674,24 @@ export interface GlobalShortcutCombo {
 	bothSides?: boolean;
 }
 
-export interface GlobalShortcutBinding {
+interface GlobalShortcutBinding {
 	sourceId: string;
 	action: string;
 	combo: GlobalShortcutCombo;
 }
 
-export interface GlobalShortcutActionDefinition {
+interface GlobalShortcutActionDefinition {
 	action: string;
 	description: string;
 	preferredCombo: GlobalShortcutCombo | null;
 }
 
-export interface GlobalShortcutsSyncPayload {
+interface GlobalShortcutsSyncPayload {
 	bindings: Array<GlobalShortcutBinding>;
 	actions: Array<GlobalShortcutActionDefinition>;
 }
 
-export interface GlobalShortcutEvent {
+interface GlobalShortcutEvent {
 	action: string;
 	sourceId: string;
 	phase: 'press' | 'release';
@@ -746,7 +725,7 @@ export interface GlobalShortcutsApi {
 
 export type SpellcheckEngine = 'auto' | 'hunspell' | 'system';
 
-export interface SpellcheckState {
+interface SpellcheckState {
 	enabled: boolean;
 	engine: SpellcheckEngine;
 	autoDetect: boolean;
@@ -767,7 +746,7 @@ export interface SpellcheckResolvedEngineInfo {
 	systemLangs: Array<string>;
 }
 
-export interface TextareaContextMenuParams {
+interface TextareaContextMenuParams {
 	misspelledWord?: string;
 	suggestions?: Array<string>;
 	editFlags: {

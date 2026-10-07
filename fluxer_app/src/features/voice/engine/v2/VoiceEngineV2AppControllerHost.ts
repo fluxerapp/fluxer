@@ -144,19 +144,6 @@ export class VoiceEngineV2AppControllerHost {
 		return this.runtime.isOperationPending(operationId);
 	}
 
-	dispatchAndWait(
-		event: VoiceEngineV2Event,
-		options: VoiceEngineV2AppControllerHostWaitOptions = {},
-	): Promise<VoiceEngineV2Transition> {
-		let transition: VoiceEngineV2Transition | null = null;
-		return this.runAndWait(() => {
-			transition = this.dispatch(event);
-		}, options).then(() => {
-			if (transition === null) throw new Error('VoiceEngineV2AppControllerHost.dispatchAndWait did not dispatch');
-			return transition;
-		});
-	}
-
 	runAndWait(action: () => void, options: VoiceEngineV2AppControllerHostWaitOptions = {}): Promise<void> {
 		const pending = new Set<VoiceEngineV2OperationId>();
 		const description = options.description ?? 'voice engine v2 command';

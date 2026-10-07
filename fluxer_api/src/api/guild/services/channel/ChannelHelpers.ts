@@ -3,7 +3,6 @@
 import type {ChannelID} from '@app/api/BrandedTypes';
 import type {Channel} from '@app/api/models/Channel';
 import {serializeChannelForAudit as serializeChannelForAuditUtil} from '@app/api/utils/AuditSerializationUtils';
-import {toIdString} from '@app/api/utils/IdUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -129,24 +128,5 @@ export class ChannelHelpers {
 
 	static serializeChannelForAudit(channel: Channel): Record<string, unknown> {
 		return serializeChannelForAuditUtil(channel);
-	}
-
-	static serializeChannelOrdering(channels: Array<Channel>): Array<{
-		channel_id: string;
-		parent_id: string | null;
-		position: number;
-	}> {
-		return [...channels]
-			.sort((a, b) => {
-				if (a.position !== b.position) {
-					return a.position - b.position;
-				}
-				return a.id.toString().localeCompare(b.id.toString());
-			})
-			.map((channel) => ({
-				channel_id: channel.id.toString(),
-				parent_id: toIdString(channel.parentId),
-				position: channel.position,
-			}));
 	}
 }

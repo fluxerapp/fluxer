@@ -227,11 +227,6 @@ export function updateUnreadBadgesLevel(
 	}
 }
 
-export function toggleChannelMuted(guildId: string | null, channelId: string, options?: PersistenceOptions): void {
-	const isMuted = UserGuildSettings.isChannelDirectlyMuted(guildId, channelId);
-	updateChannelOverride(guildId, channelId, {muted: !isMuted}, options);
-}
-
 export function toggleAllCategoriesCollapsed(guildId: string | null, categoryIds: Array<string>): void {
 	const uniqueCategoryIds = Array.from(new Set(categoryIds));
 	if (uniqueCategoryIds.length === 0) return;

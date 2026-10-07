@@ -219,28 +219,6 @@
 	color: var(--background-modifier-accent);
 }
 
-.link {
-	font-size: 0.9rem;
-	color: var(--text-tertiary);
-	text-decoration: none;
-	background: none;
-	border: none;
-	cursor: pointer;
-	padding: 0;
-	transition: color 120ms ease;
-}
-
-.link:hover {
-	color: var(--text-primary);
-	text-decoration: underline;
-}
-
-.link:disabled {
-	opacity: 0.6;
-	cursor: not-allowed;
-	text-decoration: none;
-}
-
 .errorBox {
 	padding: 0.75rem 1rem;
 	border-radius: var(--radius-lg);

@@ -8,7 +8,6 @@ import {
 	EMPTY_SYNCED_PREFERENCES_ENCODED,
 	encodedSyncedPreferencesByteLength,
 	encodeSyncedPreferences,
-	isEmptySyncedPreferencesEncoded,
 	isValidSyncedPreferencesEncoding,
 	SYNCED_PREFERENCES_MAX_ENCODED_LENGTH,
 	SyncedPreferencesDecodeError,
@@ -132,13 +131,6 @@ describe('SyncedPreferencesCodec', () => {
 		expect(encoded).not.toBe('');
 		expect(encodedSyncedPreferencesByteLength(encoded)).toBeGreaterThan(0);
 		expect(encodedSyncedPreferencesByteLength('')).toBe(0);
-	});
-	it('isEmptySyncedPreferencesEncoded matches the empty sentinel', () => {
-		const populated = create(SyncedPreferencesSchema, {sanitizeUrls: true});
-		expect(isEmptySyncedPreferencesEncoded('')).toBe(true);
-		expect(isEmptySyncedPreferencesEncoded(null)).toBe(true);
-		expect(isEmptySyncedPreferencesEncoded(undefined)).toBe(true);
-		expect(isEmptySyncedPreferencesEncoded(encodeSyncedPreferences(populated))).toBe(false);
 	});
 	it('EMPTY_SYNCED_PREFERENCES_ENCODED round-trips to an empty message', () => {
 		const decoded = decodeSyncedPreferences(EMPTY_SYNCED_PREFERENCES_ENCODED);

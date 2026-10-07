@@ -18,8 +18,3 @@ export function isX11WindowToken(token: string): boolean {
 export function isDBusObjectPathSegment(token: string): boolean {
 	return /^[A-Za-z0-9_]+$/.test(token);
 }
-
-function _gnomeShellPidExpression(token: string): string {
-	const tokenLiteral = JSON.stringify(token);
-	return `global.get_window_actors().map(a=>a.meta_window).filter(w=>w.get_id&&w.get_id().toString()===${tokenLiteral}).map(w=>w.get_pid())[0]`;
-}

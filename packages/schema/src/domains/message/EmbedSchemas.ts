@@ -94,7 +94,7 @@ export interface EmbedAuthor {
 	readonly proxy_icon_url?: string;
 }
 
-export interface EmbedProvider {
+interface EmbedProvider {
 	readonly name: string;
 	readonly url?: string;
 }
@@ -125,7 +125,7 @@ export interface MessageEmbed extends MessageEmbedChild {
 	readonly children?: ReadonlyArray<MessageEmbedChild>;
 }
 
-export interface MessageEmbedChild {
+interface MessageEmbedChild {
 	readonly id?: string;
 	readonly type: string;
 	readonly url?: string;

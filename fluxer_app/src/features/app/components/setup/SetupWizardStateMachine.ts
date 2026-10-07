@@ -24,17 +24,17 @@ export type WizardStep =
 	| 'premium'
 	| 'finish';
 
-export type WizardPhase = 'register' | 'loading' | 'configure';
+type WizardPhase = 'register' | 'loading' | 'configure';
 
-export const REGISTER_STEPS: ReadonlyArray<WizardStep> = [
+const REGISTER_STEPS: ReadonlyArray<WizardStep> = [
 	'welcome',
 	'theme',
 	'sign_in_method',
 	'admin_intro',
 	'admin_account',
 ];
-export const LOADING_STEPS: ReadonlyArray<WizardStep> = ['loading'];
-export const CONFIGURE_STEPS: ReadonlyArray<WizardStep> = [
+const LOADING_STEPS: ReadonlyArray<WizardStep> = ['loading'];
+const CONFIGURE_STEPS: ReadonlyArray<WizardStep> = [
 	'welcome',
 	'branding',
 	'registration',
@@ -50,7 +50,7 @@ export const CONFIGURE_STEPS: ReadonlyArray<WizardStep> = [
 	'finish',
 ];
 
-export function derivePhase(isAuthenticated: boolean, hasConfig: boolean): WizardPhase {
+function derivePhase(isAuthenticated: boolean, hasConfig: boolean): WizardPhase {
 	if (!isAuthenticated) return 'register';
 	if (!hasConfig) return 'loading';
 	return 'configure';
@@ -62,7 +62,7 @@ const USERNAME_CONFIGURE_STEPS: ReadonlyArray<WizardStep> = [
 	...CONFIGURE_STEPS.slice(1).filter((step) => step !== 'integration_email'),
 ];
 
-export function phaseSteps(
+function phaseSteps(
 	phase: WizardPhase,
 	accountIdentity: AccountIdentityMode,
 	identityLocked = false,
@@ -125,7 +125,7 @@ function targetsPhase(event: SetupWizardMachineEvent, context: SetupWizardMachin
 	);
 }
 
-export const setupWizardStateMachine = setup({
+const setupWizardStateMachine = setup({
 	types: {} as {
 		context: SetupWizardMachineContext;
 		events: SetupWizardMachineEvent;

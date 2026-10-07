@@ -621,7 +621,7 @@ describe('win-game-capture loader wrapper -- injected fake binding', () => {
 		]);
 		assert.equal(errors.length, 1);
 		assert.ok(errors[0] instanceof Error);
-		assert.equal(winGameCapture.parseFallbackRecommendation(errors[0].message), 'dxgi-duplication');
+		assert.match(errors[0].message, /\[next-strategy=dxgi-duplication\]/);
 	});
 
 	test('lifecycle fallback "diagnostic" (upgrade, next-strategy=...) re-emits WITHOUT stopping', {
@@ -641,53 +641,8 @@ describe('win-game-capture loader wrapper -- injected fake binding', () => {
 			'upgrade: window-gdi -> dxgi-duplication (window-gdi has been stable) [next-strategy=dxgi-duplication]',
 		]);
 		assert.equal(diags.length, 1);
-		assert.equal(winGameCapture.parseFallbackRecommendation(diags[0]), 'dxgi-duplication');
+		assert.match(diags[0], /\[next-strategy=dxgi-duplication\]/);
 		assert.equal(natives[0].stopCount, 0);
 		assert.equal(closed, 0);
-	});
-});
-
-describe('win-game-capture loader wrapper -- parseFallbackRecommendation', () => {
-	test('extracts the recommended strategy from a transition error message', () => {
-		assert.equal(
-			winGameCapture.parseFallbackRecommendation(
-				'fallback: dxgi-duplication -> window-gdi (reason) [next-strategy=window-gdi]',
-			),
-			'window-gdi',
-		);
-	});
-
-	test('returns "none" for an exhausted give-up message', () => {
-		assert.equal(
-			winGameCapture.parseFallbackRecommendation(
-				'fallback exhausted: window-gdi was the last resort [next-strategy=none]',
-			),
-			'none',
-		);
-	});
-
-	test('returns null for an ordinary error with no recommendation', () => {
-		assert.equal(winGameCapture.parseFallbackRecommendation('DXGI device removed'), null);
-		assert.equal(winGameCapture.parseFallbackRecommendation(undefined), null);
-		assert.equal(winGameCapture.parseFallbackRecommendation(''), null);
-	});
-
-	test('returns null for an unrecognised strategy token', () => {
-		assert.equal(winGameCapture.parseFallbackRecommendation('[next-strategy=teleporter]'), null);
-	});
-
-	test('accepts the WGC fallback strategy token', () => {
-		assert.equal(winGameCapture.parseFallbackRecommendation('[next-strategy=wgc]'), 'wgc');
-		assert.equal(
-			winGameCapture.parseFallbackRecommendation(
-				'fallback: dxgi-duplication -> wgc (dxgi-duplication capture stopped delivering frames) [next-strategy=wgc]',
-			),
-			'wgc',
-		);
-	});
-
-	test('rejects browser fallback strategy tokens', () => {
-		assert.equal(winGameCapture.parseFallbackRecommendation('[next-strategy=browser-display]'), null);
-		assert.equal(winGameCapture.parseFallbackRecommendation('[next-strategy=desktop-capturer]'), null);
 	});
 });

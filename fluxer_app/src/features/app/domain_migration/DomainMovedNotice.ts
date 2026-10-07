@@ -75,13 +75,6 @@ class DomainMovedNotice {
 		} catch {}
 	}
 
-	resetDismissal(): void {
-		this.dismissedAt = null;
-		try {
-			getProtectedLocalStorage()?.removeItem(DOMAIN_MIGRATION_MOVED_DISMISSED_KEY);
-		} catch {}
-	}
-
 	private handleStorage(event: StorageEvent): void {
 		if (event.key === DOMAIN_MIGRATION_MARKER_KEY || event.key === null) {
 			this.marker = readDomainMigrationMarker(getProtectedLocalStorage());

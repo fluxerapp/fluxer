@@ -83,10 +83,6 @@ const EMAIL_I18N_VI_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Đặt lại mật khẩu của bạn trên {product_name}",
 		"body": "Xin chào {username},\n\nBạn đã yêu cầu đặt lại mật khẩu {product_name}. Sử dụng liên kết bên dưới để đặt mật khẩu mới:\n\n{resetUrl}\n\nNếu bạn không yêu cầu điều này, bạn có thể bỏ qua email này.\n\nLiên kết này có hiệu lực trong 1 giờ.\n\n– Đội ngũ {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Đăng ký {product_name} của bạn đã được chấp thuận",
-		"body": "Xin chào {username},\n\nTin tốt: đăng ký {product_name} của bạn đã được chấp thuận.\n\nBây giờ bạn có thể đăng nhập vào ứng dụng {product_name} tại đây:\n{channelsUrl}\n\nChào mừng bạn đến với cộng đồng {product_name}.\n\n– Đội ngũ {product_name}"
-	},
 	"report_received": {
 		"subject": "Chúng tôi đã nhận được báo cáo của bạn trên {product_name}",
 		"body": "Xin chào,\n\nChúng tôi đã nhận được báo cáo theo Đạo luật Dịch vụ kỹ thuật số của bạn về {targetKind, select, message {một tin nhắn} user {một tài khoản} guild {một cộng đồng} other {nội dung}} trên {product_name}.\n\nID báo cáo: {reportId}\n\nĐội ngũ An toàn của chúng tôi sẽ xem xét báo cáo của bạn và chúng tôi sẽ gửi email đến địa chỉ này khi có quyết định. Hãy giữ lại email này để tiện tra cứu.\n\n– Đội ngũ An toàn {product_name}"

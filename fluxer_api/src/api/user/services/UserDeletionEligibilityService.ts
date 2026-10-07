@@ -35,14 +35,6 @@ export class UserDeletionEligibilityService {
 		return Date.now() - lastActiveAt >= inactivityThresholdMs;
 	}
 
-	async isEligibleForWarningEmail(user: User): Promise<boolean> {
-		const isEligibleForDeletion = await this.isEligibleForInactivityDeletion(user);
-		if (!isEligibleForDeletion) {
-			return false;
-		}
-		return !(await this.hasWarningSent(user.id));
-	}
-
 	async markWarningSent(userId: UserID): Promise<void> {
 		const key = this.getWarningKey(userId);
 		const ttlSeconds = seconds(`${INACTIVITY_WARNING_TTL_DAYS + 5} days`);

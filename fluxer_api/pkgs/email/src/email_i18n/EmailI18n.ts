@@ -73,7 +73,3 @@ export function getEmailTemplate<T extends EmailTemplateKey>(
 ): I18nResult<EmailTemplateKey, EmailTemplate> {
 	return emailI18n.getTemplate(templateKey, locale, {...variables, product_name: productName});
 }
-
-export function resetEmailI18n(): void {
-	emailI18n.reset();
-}

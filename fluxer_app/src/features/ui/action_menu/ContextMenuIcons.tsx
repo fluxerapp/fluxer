@@ -9,8 +9,6 @@ import {
 	ArrowRightIcon,
 	ArrowSquareOutIcon,
 	ArrowsClockwiseIcon,
-	ArrowsLeftRightIcon,
-	ArrowsOutCardinalIcon,
 	AtIcon,
 	BellIcon,
 	BellSlashIcon,
@@ -43,7 +41,6 @@ import {
 	FunnelIcon,
 	GavelIcon,
 	GearIcon,
-	GlobeIcon,
 	GridFourIcon,
 	type IconWeight,
 	LinkBreakIcon,
@@ -73,7 +70,6 @@ import {
 	SnowflakeIcon,
 	SortAscendingIcon,
 	SpeakerHighIcon,
-	SpeakerSimpleSlashIcon,
 	SpeakerSlashIcon,
 	StarIcon,
 	StopCircleIcon,
@@ -81,14 +77,12 @@ import {
 	TrashIcon,
 	UserCircleIcon,
 	UserIcon,
-	UserListIcon,
 	UserMinusIcon,
 	UserPlusIcon,
 	UsersIcon,
 	VideoCameraIcon,
 	VideoCameraSlashIcon,
 	VideoIcon,
-	WrenchIcon,
 	XIcon,
 } from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
@@ -214,13 +208,6 @@ export const RetryIcon: React.FC<IconProps> = observer(({size = 16}) => (
 		data-flx="ui.action-menu.context-menu-icons.retry-icon.arrows-clockwise-icon"
 	/>
 ));
-export const SaveIcon: React.FC<IconProps> = observer(({size = 16}) => (
-	<DownloadSimpleIcon
-		size={remFromPx(size)}
-		weight="fill"
-		data-flx="ui.action-menu.context-menu-icons.save-icon.download-simple-icon"
-	/>
-));
 export const SuppressEmbedsIcon: React.FC<IconProps> = observer(({size = 16}) => (
 	<LinkBreakIcon
 		size={remFromPx(size)}
@@ -301,13 +288,6 @@ export const EditProfileIcon: React.FC<IconProps> = observer(({size = 16}) => (
 		data-flx="ui.action-menu.context-menu-icons.edit-profile-icon.user-circle-icon"
 	/>
 ));
-export const ViewGlobalProfileIcon: React.FC<IconProps> = observer(({size = 16}) => (
-	<GlobeIcon
-		size={remFromPx(size)}
-		weight="fill"
-		data-flx="ui.action-menu.context-menu-icons.view-global-profile-icon.globe-icon"
-	/>
-));
 export const VoiceCallIcon: React.FC<IconProps> = observer(({size = 16}) => (
 	<PhoneIcon
 		size={remFromPx(size)}
@@ -320,13 +300,6 @@ export const VideoCallIcon: React.FC<IconProps> = observer(({size = 16}) => (
 		size={remFromPx(size)}
 		weight="fill"
 		data-flx="ui.action-menu.context-menu-icons.video-call-icon.video-camera-icon"
-	/>
-));
-export const SpeakIcon: React.FC<IconProps> = observer(({size = 16}) => (
-	<SpeakerHighIcon
-		size={remFromPx(size)}
-		weight="fill"
-		data-flx="ui.action-menu.context-menu-icons.speak-icon.speaker-high-icon"
 	/>
 ));
 export const SendFriendRequestIcon: React.FC<IconProps> = observer(({size = 16, weight = 'fill'}) => (
@@ -383,13 +356,6 @@ export const DebugIcon: React.FC<IconProps> = observer(({size = 16}) => (
 		size={remFromPx(size)}
 		weight="fill"
 		data-flx="ui.action-menu.context-menu-icons.debug-icon.bug-beetle-icon"
-	/>
-));
-export const WrenchToolIcon: React.FC<IconProps> = observer(({size = 16}) => (
-	<WrenchIcon
-		size={remFromPx(size)}
-		weight="fill"
-		data-flx="ui.action-menu.context-menu-icons.wrench-tool-icon.wrench-icon"
 	/>
 ));
 export const EditMessageIcon: React.FC<IconProps> = observer(({size = 16}) => (
@@ -501,13 +467,6 @@ export const HideIcon: React.FC<IconProps> = observer(({size = 16}) => (
 		size={remFromPx(size)}
 		weight="fill"
 		data-flx="ui.action-menu.context-menu-icons.hide-icon.eye-slash-icon"
-	/>
-));
-export const MoveToIcon: React.FC<IconProps> = observer(({size = 16}) => (
-	<ArrowsOutCardinalIcon
-		size={remFromPx(size)}
-		weight="fill"
-		data-flx="ui.action-menu.context-menu-icons.move-to-icon.arrows-out-cardinal-icon"
 	/>
 ));
 export const ViewDetailsIcon: React.FC<IconProps> = observer(({size = 16}) => (
@@ -752,14 +711,6 @@ export const GridViewIcon: React.FC<IconProps> = observer(({size = 16, className
 		data-flx="ui.action-menu.context-menu-icons.grid-view-icon.grid-four-icon"
 	/>
 ));
-export const EchoCancellationIcon: React.FC<IconProps> = observer(({size = 16, className}) => (
-	<SpeakerSimpleSlashIcon
-		size={remFromPx(size)}
-		weight="fill"
-		className={className}
-		data-flx="ui.action-menu.context-menu-icons.echo-cancellation-icon.speaker-simple-slash-icon"
-	/>
-));
 export const VideoSettingsIcon: React.FC<IconProps> = observer(({size = 16, className}) => (
 	<VideoIcon
 		size={remFromPx(size)}
@@ -842,13 +793,6 @@ export const StopRingingIcon: React.FC<IconProps> = observer(({size = 16}) => (
 		data-flx="ui.action-menu.context-menu-icons.stop-ringing-icon.phone-x-icon"
 	/>
 ));
-export const MoveToChannelIcon: React.FC<IconProps> = observer(({size = 16}) => (
-	<ArrowsLeftRightIcon
-		size={remFromPx(size)}
-		weight="fill"
-		data-flx="ui.action-menu.context-menu-icons.move-to-channel-icon.arrows-left-right-icon"
-	/>
-));
 export const KickMemberIcon: React.FC<IconProps> = observer(({size = 16}) => (
 	<BootIcon
 		size={remFromPx(size)}
@@ -861,13 +805,6 @@ export const BanMemberIcon: React.FC<IconProps> = observer(({size = 16}) => (
 		size={remFromPx(size)}
 		weight="fill"
 		data-flx="ui.action-menu.context-menu-icons.ban-member-icon.gavel-icon"
-	/>
-));
-export const ManageRolesIcon: React.FC<IconProps> = observer(({size = 16}) => (
-	<UserListIcon
-		size={remFromPx(size)}
-		weight="fill"
-		data-flx="ui.action-menu.context-menu-icons.manage-roles-icon.user-list-icon"
 	/>
 ));
 export const TimeoutIcon: React.FC<IconProps> = observer(({size = 16}) => (

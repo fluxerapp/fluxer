@@ -54,18 +54,6 @@ export const getNativeTitlebarHeight = () => {
 	const parsed = Number.parseFloat(raw);
 	return Number.isFinite(parsed) ? parsed : 0;
 };
-export const PREVIOUS_ATTACHMENT_DESCRIPTOR = msg({
-	message: 'Previous attachment',
-	comment: 'Media viewer navigation button label for the previous attachment.',
-});
-export const MESSAGE_DESCRIPTOR = msg({
-	message: '{currentAttachmentNumber}/{totalAttachments}',
-	comment: 'Compact media viewer attachment position, such as 2/5.',
-});
-export const NEXT_ATTACHMENT_DESCRIPTOR = msg({
-	message: 'Next attachment',
-	comment: 'Media viewer navigation button label for the next attachment.',
-});
 export const MEDIA_CONTROLS_DESCRIPTOR = msg({
 	message: 'Media controls',
 	comment: 'Accessible label for the floating media controls toolbar in the media viewer modal.',
@@ -77,10 +65,6 @@ export const DOWNLOAD_MEDIA_DESCRIPTOR = msg({
 export const OPEN_IN_BROWSER_DESCRIPTOR = msg({
 	message: 'Open in browser',
 	comment: 'Media viewer action that opens the current media in the system default browser.',
-});
-export const SHOW_MEDIA_INFORMATION_DESCRIPTOR = msg({
-	message: 'Show media information',
-	comment: 'Tooltip on the info button in the media viewer modal. Toggles a metadata sidebar.',
 });
 export const COPY_MEDIA_TO_CLIPBOARD_DESCRIPTOR = msg({
 	message: 'Copy media to clipboard',
@@ -133,16 +117,4 @@ export const ATTACHMENT_DESCRIPTOR = msg({
 export const VIDEO_PREVIEW_DESCRIPTOR = msg({
 	message: 'Video preview',
 	comment: 'Accessible label for a video thumbnail in the media viewer thumbnail strip.',
-});
-export const PREVIOUS_ATTACHMENT_3_DESCRIPTOR = msg({
-	message: 'Previous attachment',
-	comment: 'Media viewer navigation tooltip for the previous attachment.',
-});
-export const OF_DESCRIPTOR = msg({
-	message: '{currentAttachmentNumber} of {totalAttachments}',
-	comment: 'Media viewer attachment position text, such as 2 of 5.',
-});
-export const NEXT_ATTACHMENT_3_DESCRIPTOR = msg({
-	message: 'Next attachment',
-	comment: 'Media viewer navigation tooltip for the next attachment.',
 });
