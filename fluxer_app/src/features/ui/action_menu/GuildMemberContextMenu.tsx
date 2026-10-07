@@ -22,6 +22,7 @@ import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy
 import Permission from '@app/features/permissions/state/Permission';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import Relationships from '@app/features/relationship/state/Relationships';
+import {getRemovableThread, RemoveFromThreadMenuItem} from '@app/features/threads/components/RemoveFromThreadMenuItem';
 import {
 	BanMemberIcon,
 	KickMemberIcon,
@@ -132,6 +133,7 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 		const hasVisibleRoles = Boolean(member && hasRoles && (canManageRoles || member.roles.size > 0));
 		const hasModerationActions = canTransfer || Boolean(((canTimeout || canKick) && member) || canBan);
 		const isTimedOut = member?.isTimedOut() ?? false;
+		const removableThread = getRemovableThread(guildId, channelId, user.id);
 		const handleTimeout = useCallback(() => {
 			ModalCommands.pushAfterBottomSheetClose(
 				onClose,
@@ -300,6 +302,16 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 							showSpammerOverrideControls={canShowSpammerOverrideControls}
 							developerMode={isDeveloper}
 							data-flx="ui.action-menu.guild-member-context-menu.staff-developer-user-controls-menu-item"
+						/>
+					</MenuGroup>
+				)}
+				{removableThread && (
+					<MenuGroup data-flx="ui.action-menu.guild-member-context-menu.menu-group--thread">
+						<RemoveFromThreadMenuItem
+							thread={removableThread}
+							user={user}
+							onClose={onClose}
+							data-flx="ui.action-menu.guild-member-context-menu.remove-from-thread-menu-item"
 						/>
 					</MenuGroup>
 				)}

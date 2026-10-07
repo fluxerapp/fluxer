@@ -8,6 +8,7 @@ import FavoriteGif from '@app/features/expressions/state/FavoriteGif';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import * as FavoriteGifUtils from '@app/features/expressions/utils/FavoriteGifUtils';
 import * as FavoriteMemeUtils from '@app/features/expressions/utils/FavoriteMemeUtils';
+import {isMediaDownloadHidden} from '@app/features/forum/utils/MediaDownloadPolicy';
 import {
 	ADD_TO_FAVORITES_DESCRIPTOR,
 	COPY_LINK_DESCRIPTOR,
@@ -838,6 +839,7 @@ export function useMediaMenuData(props: MediaMenuDataProps, options: MediaMenuDa
 				],
 			});
 		}
+		if (isMediaDownloadHidden(message.channelId, type)) return result;
 		result.push({
 			items: [
 				{

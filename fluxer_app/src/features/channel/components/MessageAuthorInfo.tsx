@@ -5,6 +5,7 @@ import {MessageAvatar} from '@app/features/channel/components/MessageAvatar';
 import {MessageTimeoutIndicator} from '@app/features/channel/components/MessageTimeoutIndicator';
 import {MessageUsername} from '@app/features/channel/components/MessageUsername';
 import {TimestampWithTooltip} from '@app/features/channel/components/TimestampWithTooltip';
+import {isOriginalPoster} from '@app/features/forum/utils/ForumChannelUtils';
 import type {Guild} from '@app/features/guild/models/Guild';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -109,6 +110,13 @@ export const MessageAuthorInfo = observer((props: MessageAuthorInfoProps) => {
 									system={author.system}
 									variant={message.isCrosspostCopy ? 'community' : undefined}
 									data-flx="channel.message-author-info.user-tag-offset"
+								/>
+							)}
+							{isOriginalPoster(message.channelId, author.id) && (
+								<UserTag
+									className={styles.userTagOffset}
+									variant="op"
+									data-flx="channel.message-author-info.user-tag-offset--op1"
 								/>
 							)}
 						</span>

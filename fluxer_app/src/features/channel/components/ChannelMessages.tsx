@@ -42,6 +42,7 @@ import {
 } from '@app/features/messaging/utils/MessageGroupingUtils';
 import {findMessageElement, getMessageSelector} from '@app/features/messaging/utils/MessageNodeSelectors';
 import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
+import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
@@ -50,6 +51,7 @@ import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateC
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {shouldAutoAck} from '@app/features/read_state/utils/AutoAckPredicate';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import ActiveComposer from '@app/features/threads/state/ActiveComposer';
 import {Button} from '@app/features/ui/button/Button';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
@@ -188,6 +190,7 @@ export const Messages = observer(function Messages({
 	const isModalOpen = Modal.hasModalOpen();
 	const isGatewayConnected = GatewayConnection.isConnected;
 	const selectedChannelId = SelectedChannel.currentChannelId;
+	const openThreadPanelId = Navigation.threadId;
 	const placeholderSpecs = useMessageListPlaceholderSpecs({
 		channelId: channel.id,
 		compact: state.messageDisplayCompact,
@@ -393,11 +396,17 @@ export const Messages = observer(function Messages({
 			UserSettings.subscribe(updateFromState),
 			MessageEdit.subscribe(updateFromState),
 		];
-		const onForceJumpToPresent = () => {
+		const onForceJumpToPresent = (payload?: unknown) => {
+			const data = payload as {channelId?: string} | undefined;
+			if (data?.channelId && data.channelId !== channel.id) return;
 			MessageCommands.jumpToLiveEdge(channel.id, MAX_MESSAGES_PER_CHANNEL);
 		};
-		const onScrollPageUp = () => scrollManager.pageBackward(true);
-		const onScrollPageDown = () => scrollManager.pageForward(true);
+		const onScrollPageUp = () => {
+			if (ActiveComposer.accepts(channel.id)) scrollManager.pageBackward(true);
+		};
+		const onScrollPageDown = () => {
+			if (ActiveComposer.accepts(channel.id)) scrollManager.pageForward(true);
+		};
 		const onLayoutResized = (payload?: unknown) => {
 			const data = payload as {channelId?: string} | undefined;
 			if (data?.channelId && data.channelId !== channel.id) return;
@@ -465,7 +474,11 @@ export const Messages = observer(function Messages({
 		}
 	}, [state.editingMessageId, scrollManager]);
 	useEffect(() => {
-		if (!windowNeedsPage || !isGatewayConnected || selectedChannelId !== channel.id) {
+		if (
+			!windowNeedsPage ||
+			!isGatewayConnected ||
+			(selectedChannelId !== channel.id && openThreadPanelId !== channel.id)
+		) {
 			if (recoveryFetchChannelIdRef.current === channel.id) {
 				recoveryFetchChannelIdRef.current = null;
 			}
@@ -480,7 +493,7 @@ export const Messages = observer(function Messages({
 				recoveryFetchChannelIdRef.current = null;
 			}
 		});
-	}, [channel.id, isGatewayConnected, selectedChannelId, windowNeedsPage, state.messageVersion]);
+	}, [channel.id, isGatewayConnected, selectedChannelId, openThreadPanelId, windowNeedsPage, state.messageVersion]);
 	useMessageListKeyboardNavigation({
 		containerRef: scrollManager.ref,
 		channelId: channel.id,

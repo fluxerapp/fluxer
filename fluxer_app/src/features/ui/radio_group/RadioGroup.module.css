@@ -31,6 +31,10 @@
 	width: 100%;
 }
 
+.radioGroupOptionCenter {
+	align-items: center;
+}
+
 .label {
 	align-items: flex-start;
 	display: flex;

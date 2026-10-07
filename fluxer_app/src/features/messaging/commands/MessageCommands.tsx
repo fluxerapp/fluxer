@@ -58,6 +58,8 @@ import {failureCode, failureMessage} from '@app/features/platform/utils/Response
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import * as SlowmodeCommands from '@app/features/slowmode/commands/SlowmodeCommands';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -172,6 +174,9 @@ function shouldBlockMessageFetch(channelId: string): boolean {
 	const channel = Channels.getChannel(channelId);
 	if (!channel || channel.isPrivate()) {
 		return false;
+	}
+	if (channel.isThreadOnly()) {
+		return true;
 	}
 	return GuildMatureContentAgree.shouldShowGate({channelId: channel.id, guildId: channel.guildId ?? null});
 }
@@ -291,6 +296,9 @@ function handleMessageFetchSuccess(
 	cached: boolean,
 	jump?: JumpOptions,
 ): void {
+	if (ThreadGuilds.anyActive) {
+		ChannelThreads.ingestMessageThreads(messages);
+	}
 	Messages.handleLoadMessagesSuccess({
 		channelId,
 		messages,

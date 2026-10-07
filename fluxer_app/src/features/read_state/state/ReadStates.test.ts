@@ -879,3 +879,157 @@ describe('ReadStates guessed ack for private channels', () => {
 		expect(ReadStates.ackMessageId(CHANNEL.dm)).toBeNull();
 	});
 });
+
+describe('ReadStates thread seeding', () => {
+	const THREAD = '1547743600000000000';
+	const PARENT = '1547743500000000000';
+
+	function threadChannel(lastMessageId: string | null, overrides: Partial<WireChannel> = {}): WireChannel {
+		return {
+			id: THREAD,
+			guild_id: 'guild-1',
+			parent_id: PARENT,
+			type: ChannelTypes.PUBLIC_THREAD,
+			last_message_id: lastMessageId,
+			last_pin_timestamp: null,
+			...overrides,
+		};
+	}
+
+	afterEach(() => {
+		ReadStates.clearAll();
+	});
+
+	it('seeds READY threads like text channels so an unacked thread is unread', () => {
+		ready([{id: THREAD, last_message_id: MESSAGE.last, mention_count: 1}], [threadChannel(MESSAGE.incoming)]);
+		expect(ReadStates.lastMessageId(THREAD)).toBe(MESSAGE.incoming);
+		expect(ReadStates.hasUnread(THREAD)).toBe(true);
+		expect(ReadStates.getMentionCount(THREAD)).toBe(1);
+	});
+
+	it('keeps an unknown thread read state for when the thread loads', () => {
+		ready([{id: THREAD, last_message_id: MESSAGE.last, mention_count: 0}], []);
+		channelCreate(threadChannel(MESSAGE.last));
+		expect(ReadStates.ackMessageId(THREAD)).toBe(MESSAGE.last);
+		expect(ReadStates.hasUnread(THREAD)).toBe(false);
+	});
+
+	it('never walks the thread last message id back on a thread update', () => {
+		ready([{id: THREAD, last_message_id: MESSAGE.last, mention_count: 0}], [threadChannel(MESSAGE.incoming)]);
+		channelCreate(threadChannel(MESSAGE.last));
+		expect(ReadStates.lastMessageId(THREAD)).toBe(MESSAGE.incoming);
+		expect(ReadStates.hasUnread(THREAD)).toBe(true);
+	});
+
+	it('restores the ack of a purged thread when it comes back', () => {
+		ready([{id: THREAD, last_message_id: MESSAGE.last, mention_count: 0}], [threadChannel(MESSAGE.last)]);
+		channelDelete({id: THREAD, type: ChannelTypes.PUBLIC_THREAD, guild_id: 'guild-1'});
+		expect(ReadStates.getIfExists(THREAD)).toBeUndefined();
+		channelCreate(threadChannel(MESSAGE.incoming));
+		expect(ReadStates.ackMessageId(THREAD)).toBe(MESSAGE.last);
+		expect(ReadStates.hasUnread(THREAD)).toBe(true);
+		expect(vi.mocked(http.post)).not.toHaveBeenCalled();
+	});
+
+	it('applies passive last message updates to threads of the guild', () => {
+		ready([{id: THREAD, last_message_id: MESSAGE.last, mention_count: 0}], [threadChannel(MESSAGE.last)]);
+		ReadStates.handlePassiveLastMessageUpdates({[THREAD]: MESSAGE.incoming}, 'guild-1');
+		expect(ReadStates.hasUnread(THREAD)).toBe(true);
+	});
+
+	it('leaves control channel seeding untouched', () => {
+		ready([], [{id: CHANNEL.guildText, guild_id: 'guild-1', type: ChannelTypes.GUILD_TEXT, last_message_id: null}]);
+		ReadStates.handleGuildCreate({
+			guild: {
+				id: 'guild-1',
+				channels: [{id: CHANNEL.guildText, type: ChannelTypes.GUILD_TEXT, last_message_id: MESSAGE.last}],
+			},
+		});
+		expect(ReadStates.lastMessageId(CHANNEL.guildText)).toBe(MESSAGE.last);
+		expect(ReadStates.getIfExists(THREAD)).toBeUndefined();
+	});
+});
+
+vi.mock('@app/features/auth/state/Authentication', () => ({default: {currentUserId: 'me'}}));
+vi.mock('@app/features/user/commands/UserGuildSettingsCommands', () => ({updateChannelOverride: vi.fn()}));
+vi.mock('@app/features/gateway/transport/GatewayConnection', () => ({default: {}}));
+vi.mock('@app/features/threads/state/ThreadGuilds', () => ({default: {isActive: () => true}}));
+
+describe('ReadStates forum read state', () => {
+	const FORUM = '1547743400000000000';
+	const OLD_POST = '1547743000000000000';
+	const NEW_POST = '1547743701495717888';
+
+	function forumChannel(lastMessageId: string | null): WireChannel {
+		return {
+			id: FORUM,
+			guild_id: 'guild-1',
+			type: ChannelTypes.GUILD_FORUM,
+			name: 'forum',
+			last_message_id: lastMessageId,
+			last_pin_timestamp: null,
+		};
+	}
+
+	function post(id: string, ownerId: string): Channel {
+		return new Channel({
+			id,
+			guild_id: 'guild-1',
+			parent_id: FORUM,
+			owner_id: ownerId,
+			type: ChannelTypes.PUBLIC_THREAD,
+		});
+	}
+
+	afterEach(async () => {
+		const {default: ForumReadState} = await import('@app/features/forum/state/ForumReadState');
+		ForumReadState.endViewing(FORUM);
+		ReadStates.clearAll();
+	});
+
+	it('seeds a forum from READY so a post newer than the ack makes it unread', () => {
+		ready([{id: FORUM, last_message_id: OLD_POST, mention_count: 0}], [forumChannel(NEW_POST)]);
+		expect(ReadStates.lastMessageId(FORUM)).toBe(NEW_POST);
+		expect(ReadStates.hasUnread(FORUM)).toBe(true);
+	});
+
+	it('seeds a forum from GUILD_CREATE', () => {
+		ready([{id: FORUM, last_message_id: OLD_POST, mention_count: 0}], []);
+		ReadStates.handleGuildCreate({guild: {id: 'guild-1', channels: [forumChannel(NEW_POST)]}});
+		expect(ReadStates.hasUnread(FORUM)).toBe(true);
+	});
+
+	it('never walks the newest post back on a forum update without it', () => {
+		ready([{id: FORUM, last_message_id: OLD_POST, mention_count: 0}], [forumChannel(NEW_POST)]);
+		channelCreate(forumChannel(OLD_POST));
+		expect(ReadStates.lastMessageId(FORUM)).toBe(NEW_POST);
+		expect(ReadStates.hasUnread(FORUM)).toBe(true);
+	});
+
+	it('reads the forum once it is acked', () => {
+		ready([{id: FORUM, last_message_id: OLD_POST, mention_count: 0}], [forumChannel(NEW_POST)]);
+		ReadStates.handleChannelAck({channelId: FORUM});
+		expect(ReadStates.ackMessageId(FORUM)).toBe(NEW_POST);
+		expect(ReadStates.hasUnread(FORUM)).toBe(false);
+	});
+
+	it('keeps the New snapshot at the ack from before the forum was opened', async () => {
+		const {default: ForumReadState} = await import('@app/features/forum/state/ForumReadState');
+		ready([{id: FORUM, last_message_id: OLD_POST, mention_count: 0}], [forumChannel(NEW_POST)]);
+		ForumReadState.beginViewing(FORUM);
+		ReadStates.handleChannelAck({channelId: FORUM});
+		expect(ForumReadState.getSnapshot(FORUM)).toBe(OLD_POST);
+		expect(ForumReadState.isNewPost(post(NEW_POST, 'someone'))).toBe(true);
+		expect(ForumReadState.isNewPost(post(OLD_POST, 'someone'))).toBe(false);
+		expect(ForumReadState.isNewPost(post(NEW_POST, 'me'))).toBe(false);
+		ForumReadState.endViewing(FORUM);
+		ForumReadState.beginViewing(FORUM);
+		expect(ForumReadState.isNewPost(post(NEW_POST, 'someone'))).toBe(false);
+	});
+
+	it('marks nothing new while the forum is not open', async () => {
+		const {default: ForumReadState} = await import('@app/features/forum/state/ForumReadState');
+		ready([{id: FORUM, last_message_id: OLD_POST, mention_count: 0}], [forumChannel(NEW_POST)]);
+		expect(ForumReadState.isNewPost(post(NEW_POST, 'someone'))).toBe(false);
+	});
+});

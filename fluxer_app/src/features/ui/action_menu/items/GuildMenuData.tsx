@@ -7,6 +7,7 @@ import {ChannelCreateModal} from '@app/features/channel/components/modals/Channe
 import Channels from '@app/features/channel/state/Channels';
 import {DELETE_MY_MESSAGES_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import {GuildDebugModal} from '@app/features/devtools/components/debug/GuildDebugModal';
+import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import {GuildNotificationSettingsModal} from '@app/features/guild/components/modals/GuildNotificationSettingsModal';
 import {GuildPrivacySettingsModal} from '@app/features/guild/components/modals/GuildPrivacySettingsModal';
 import {GuildSettingsModal} from '@app/features/guild/components/modals/GuildSettingsModal';
@@ -36,6 +37,7 @@ import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {getUnreadThreadIds} from '@app/features/threads/utils/ThreadViewUtils';
 import {
 	CopyIdIcon,
 	CreateCategoryIcon,
@@ -172,18 +174,24 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 	const hasCurrentGuildMatureContentGate =
 		guild.nsfw || guild.contentWarningLevel === ContentWarningLevel.CONTENT_WARNING;
 	const initialHasGuildUnread = useMemo(
-		() => Channels.getGuildChannels(guild.id).some((channel) => ReadStates.hasUnread(channel.id)),
+		() =>
+			Channels.getGuildChannels(guild.id).some((channel) =>
+				channel.isThreadOnly() ? hasForumUnread(channel) : ReadStates.hasUnread(channel.id),
+			) || getUnreadThreadIds(guild.id).length > 0,
 		[guild.id],
 	);
 	const hasGuildUnread = preserveInitialMarkAsReadVisibility
 		? initialHasGuildUnread
-		: channels.some((channel) => ReadStates.hasUnread(channel.id));
+		: channels.some((channel) =>
+				channel.isThreadOnly() ? hasForumUnread(channel) : ReadStates.hasUnread(channel.id),
+			) || getUnreadThreadIds(guild.id).length > 0;
 	const handlers = useMemo(
 		() => ({
 			handleMarkAsRead: () => {
 				const channelIds = channels
 					.filter((channel) => ReadStates.isUnreadOrMentioned(channel.id))
 					.map((channel) => channel.id);
+				channelIds.push(...getUnreadThreadIds(guild.id));
 				if (channelIds.length > 0) {
 					void ReadStateCommands.bulkAckChannels(channelIds);
 				}

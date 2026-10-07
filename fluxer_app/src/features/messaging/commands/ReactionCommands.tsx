@@ -4,6 +4,7 @@ import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActi
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Authentication from '@app/features/auth/state/Authentication';
+import ForumPosts from '@app/features/forum/state/ForumPosts';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import {TooManyReactionsModal} from '@app/features/messaging/components/alerts/TooManyReactionsModal';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
@@ -119,10 +120,15 @@ const optimisticUpdate = (
 			optimistic: true,
 			skipReactionStore: true,
 		});
+		if (actualUserId === Authentication.currentUserId) {
+			ForumPosts.handleReaction(channelId, messageId, emoji, type === 'MESSAGE_REACTION_ADD', true);
+		}
 	} else if (type === 'MESSAGE_REACTION_REMOVE_ALL') {
 		Messages.handleRemoveAllReactions({channelId, messageId});
+		ForumPosts.handleReactionClear(channelId, messageId);
 	} else if (type === 'MESSAGE_REACTION_REMOVE_EMOJI') {
 		Messages.handleRemoveReactionEmoji({channelId, messageId, emoji});
+		ForumPosts.handleReactionClear(channelId, messageId, emoji);
 	}
 	logger.debug(
 		`Optimistically applied ${type} for message ${messageId} ` +

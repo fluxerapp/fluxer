@@ -332,7 +332,7 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 			canFavorite,
 			isPreview ? undefined : message,
 			isRealAttachment ? attachment.id : undefined,
-			{disableDelete: !!isPreview || snapshotIndex !== undefined},
+			{disableDelete: !!isPreview || snapshotIndex !== undefined, mediaType},
 		);
 		const gridItemStyle: CSSProperties = {
 			...style,

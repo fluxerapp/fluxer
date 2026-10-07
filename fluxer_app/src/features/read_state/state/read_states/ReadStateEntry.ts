@@ -14,6 +14,7 @@ import {
 	snowflakeTimestamp,
 } from '@app/features/read_state/state/read_states/shared';
 import Relationships from '@app/features/relationship/state/Relationships';
+import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -277,7 +278,7 @@ export class ReadStateEntry {
 					const mentionEveryone = message.mentionEveryone;
 					const mentionRoles = message.mentionRoles;
 					const hasUserMention = mentions?.some((m) => m.id === userId) ?? false;
-					const hasEveryoneMention = !suppressEveryone && !!mentionEveryone;
+					const hasEveryoneMention = !suppressEveryone && !!mentionEveryone && !this.isNonMemberThread();
 					const hasRoleMention = !suppressRoles && hasMatchingRoleMention(mentionRoles, memberRoles);
 					const mention = resolveReadStateMention({
 						authorBlocked: false,
@@ -345,7 +346,7 @@ export class ReadStateEntry {
 		const mentionEveryone = 'mentionEveryone' in message ? message.mentionEveryone : message.mention_everyone;
 		const mentionRoles = 'mentionRoles' in message ? message.mentionRoles : message.mention_roles;
 		const hasUserMention = mentions?.some((m) => m.id === userId) ?? false;
-		const hasEveryoneMention = !suppressEveryone && !!mentionEveryone;
+		const hasEveryoneMention = !suppressEveryone && !!mentionEveryone && !this.isNonMemberThread();
 		const hasRoleMention = !suppressRoles && this.hasMatchingMemberRoleMention(userId, mentionRoles);
 		const isMuted = UserGuildSettings.isGuildOrChannelMuted(this.guildId, this.channelId);
 		return resolveReadStateMention({
@@ -356,6 +357,10 @@ export class ReadStateEntry {
 			isPrivate,
 			isMuted,
 		}).shouldMention;
+	}
+
+	private isNonMemberThread(): boolean {
+		return Channels.getChannel(this.channelId)?.isThread() === true && !ThreadMemberships.isMember(this.channelId);
 	}
 
 	private hasMatchingMemberRoleMention(userId: string, mentionRoles?: ReadonlyArray<string> | null): boolean {

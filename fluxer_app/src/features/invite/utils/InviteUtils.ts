@@ -8,6 +8,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import * as CodeLinkUtils from '@app/features/messaging/utils/CodeLinkUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
+import {isSyncExcludedChannelId} from '@app/features/threads/utils/SyncedPreferenceGuard';
 import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {compareChannelOrdering} from '@fluxer/schema/src/domains/channel/GuildChannelOrdering';
 
@@ -129,7 +130,7 @@ export interface InviteCapability {
 }
 
 export function getInviteCapability(channelId: string | undefined, guildId: string | undefined): InviteCapability {
-	if (!channelId || !guildId) {
+	if (!channelId || !guildId || isSyncExcludedChannelId(channelId)) {
 		return {canInvite: false, useVanityUrl: false, vanityUrlCode: null};
 	}
 	const canCreateInvite = Permission.can(Permissions.CREATE_INSTANT_INVITE, {channelId, guildId});

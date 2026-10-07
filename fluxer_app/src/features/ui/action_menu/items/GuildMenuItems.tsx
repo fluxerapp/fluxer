@@ -6,6 +6,7 @@ import {getMuteDurationOptions} from '@app/features/channel/components/MuteOptio
 import {CategoryCreateModal} from '@app/features/channel/components/modals/CategoryCreateModal';
 import {ChannelCreateModal} from '@app/features/channel/components/modals/ChannelCreateModal';
 import Channels from '@app/features/channel/state/Channels';
+import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import {GuildNotificationSettingsModal} from '@app/features/guild/components/modals/GuildNotificationSettingsModal';
 import {GuildPrivacySettingsModal} from '@app/features/guild/components/modals/GuildPrivacySettingsModal';
 import {GuildSettingsModal} from '@app/features/guild/components/modals/GuildSettingsModal';
@@ -33,6 +34,7 @@ import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {getUnreadThreadIds} from '@app/features/threads/utils/ThreadViewUtils';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {
 	CopyIdIcon,
@@ -95,18 +97,22 @@ interface GuildMenuItemProps {
 export const MarkAsReadMenuItem: React.FC<GuildMenuItemProps> = observer(({guild, onClose}) => {
 	const {i18n} = useLingui();
 	const channels = Channels.getGuildChannels(guild.id);
-	const hasUnread = useMemo(() => {
-		return channels.some((channel) => ReadStates.hasUnread(channel.id));
+	const hasChannelUnread = useMemo(() => {
+		return channels.some((channel) =>
+			channel.isThreadOnly() ? hasForumUnread(channel) : ReadStates.hasUnread(channel.id),
+		);
 	}, [channels]);
+	const hasUnread = hasChannelUnread || getUnreadThreadIds(guild.id).length > 0;
 	const handleMarkAsRead = useCallback(() => {
 		const channelIds = channels
 			.filter((channel) => ReadStates.isUnreadOrMentioned(channel.id))
 			.map((channel) => channel.id);
+		channelIds.push(...getUnreadThreadIds(guild.id));
 		if (channelIds.length > 0) {
 			void ReadStateCommands.bulkAckChannels(channelIds);
 		}
 		onClose();
-	}, [channels, onClose]);
+	}, [channels, guild.id, onClose]);
 	return (
 		<MenuItem
 			icon={

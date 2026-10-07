@@ -11,7 +11,11 @@ import {RecipientRemoveMessage} from '@app/features/channel/components/Recipient
 import {UnknownMessage} from '@app/features/channel/components/UnknownMessage';
 import {UserMessage} from '@app/features/channel/components/UserMessage';
 import type {Channel} from '@app/features/channel/models/Channel';
+import {ForumPostActions} from '@app/features/forum/components/ForumPostActions';
+import {getPostForum} from '@app/features/forum/utils/ForumChannelUtils';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import {ThreadCreatedMessage, ThreadStarterMessage} from '@app/features/threads/components/ThreadSystemMessages';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import Users from '@app/features/user/state/Users';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type React from 'react';
@@ -82,9 +86,39 @@ export function getMessageComponent(
 					data-flx="messaging.message-component-utils.get-message-component.channel-follow-add-message"
 				/>
 			);
+		case MessageTypes.THREAD_CREATED:
+			return ThreadGuilds.isActive(message.guildId ?? _channel.guildId) ? (
+				<ThreadCreatedMessage
+					message={message}
+					data-flx="messaging.message-component-utils.get-message-component.thread-created-message"
+				/>
+			) : (
+				<UnknownMessage data-flx="messaging.message-component-utils.get-message-component.unknown-message--3" />
+			);
+		case MessageTypes.THREAD_STARTER_MESSAGE:
+			return ThreadGuilds.isActive(message.guildId ?? _channel.guildId) ? (
+				<ThreadStarterMessage
+					message={message}
+					data-flx="messaging.message-component-utils.get-message-component.thread-starter-message"
+				/>
+			) : (
+				<UnknownMessage data-flx="messaging.message-component-utils.get-message-component.unknown-message--4" />
+			);
 		case MessageTypes.DEFAULT:
 		case MessageTypes.REPLY:
 		case MessageTypes.CLIENT_SYSTEM:
+			if (message.id === _channel.id && getPostForum(_channel)) {
+				return (
+					<>
+						<UserMessage data-flx="messaging.message-component-utils.get-message-component.user-message--post" />
+						<ForumPostActions
+							post={_channel}
+							messageId={message.id}
+							data-flx="messaging.message-component-utils.get-message-component.forum-post-actions"
+						/>
+					</>
+				);
+			}
 			return <UserMessage data-flx="messaging.message-component-utils.get-message-component.user-message" />;
 		default:
 			return <UnknownMessage data-flx="messaging.message-component-utils.get-message-component.unknown-message--2" />;

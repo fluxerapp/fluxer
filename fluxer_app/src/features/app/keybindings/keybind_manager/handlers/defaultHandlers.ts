@@ -37,6 +37,7 @@ import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateC
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import * as ThemeStudioCommands from '@app/features/theme_studio/commands/ThemeStudioCommands';
+import {getUnreadThreadIds} from '@app/features/threads/utils/ThreadViewUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
@@ -326,6 +327,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (!guildId) return;
 		const channels = Channels.getGuildChannels(guildId);
 		const channelIds = channels.filter((channel) => ReadStates.hasUnread(channel.id)).map((channel) => channel.id);
+		channelIds.push(...getUnreadThreadIds(guildId));
 		if (channelIds.length > 0) {
 			void ReadStateCommands.bulkAckChannels(channelIds);
 		}

@@ -18,6 +18,7 @@ import {TimestampWithTooltip} from '@app/features/channel/components/TimestampWi
 import {createSystemMessage} from '@app/features/devtools/utils/CommandUtils';
 import Emoji from '@app/features/emoji/state/Emoji';
 import {checkEmojiAvailability} from '@app/features/expressions/utils/ExpressionPermissionUtils';
+import {isOriginalPoster} from '@app/features/forum/utils/ForumChannelUtils';
 import Guilds from '@app/features/guild/state/Guilds';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
@@ -617,6 +618,13 @@ export const UserMessage = observer(() => {
 											data-flx="channel.user-message.user-tag-offset--2"
 										/>
 									)}
+									{isOriginalPoster(message.channelId, author.id) && (
+										<UserTag
+											className={styles.userTagOffset}
+											variant="op"
+											data-flx="channel.user-message.user-tag-offset--op1"
+										/>
+									)}
 								</span>
 								<TimestampWithTooltip
 									date={message.timestamp}
@@ -715,6 +723,13 @@ export const UserMessage = observer(() => {
 										system={author.system}
 										variant={message.isCrosspostCopy ? 'community' : undefined}
 										data-flx="channel.user-message.user-tag-offset--3"
+									/>
+								)}
+								{isOriginalPoster(message.channelId, author.id) && (
+									<UserTag
+										className={styles.userTagOffset}
+										variant="op"
+										data-flx="channel.user-message.user-tag-offset--op2"
 									/>
 								)}
 							</span>

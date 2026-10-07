@@ -4,6 +4,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {ensureMembersForMessages} from '@app/features/messaging/commands/MessageCommands';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {useCallback, useEffect, useRef} from 'react';
 
@@ -53,6 +54,9 @@ export function useChannelHoverPreload({
 			channel.type === ChannelTypes.GUILD_CATEGORY ||
 			channel.type === ChannelTypes.GUILD_LINK
 		) {
+			return;
+		}
+		if (channel.isThreadOnly() || (channel.isThread() && !ThreadGuilds.isActive(channel.guildId))) {
 			return;
 		}
 		if (preloadMessages) {

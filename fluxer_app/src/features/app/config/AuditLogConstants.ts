@@ -375,12 +375,47 @@ export const AUDIT_LOG_ACTIONS: ReadonlyArray<AuditLogActionDefinition> = [
 	},
 ];
 
-export function getTranslatedAuditLogActions(i18n: I18n): Array<{
+const THREAD_CREATED_DESCRIPTOR = msg({
+	message: 'Thread created',
+	comment: 'Activity log action filter option for threads that were started.',
+});
+const THREAD_UPDATED_DESCRIPTOR = msg({
+	message: 'Thread updated',
+	comment: 'Activity log action filter option for threads that were changed.',
+});
+const THREAD_DELETED_DESCRIPTOR = msg({
+	message: 'Thread deleted',
+	comment: 'Activity log action filter option for threads that were deleted.',
+});
+
+export const THREAD_AUDIT_LOG_ACTIONS: ReadonlyArray<AuditLogActionDefinition> = [
+	{
+		value: AuditLogActionType.THREAD_CREATE,
+		label: THREAD_CREATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+	{
+		value: AuditLogActionType.THREAD_UPDATE,
+		label: THREAD_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+	{
+		value: AuditLogActionType.THREAD_DELETE,
+		label: THREAD_DELETED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+];
+
+export function getTranslatedAuditLogActions(
+	i18n: I18n,
+	{includeThreads = false}: {includeThreads?: boolean} = {},
+): Array<{
 	value: AuditLogActionType;
 	label: string;
 	targetType: AuditLogTargetType;
 }> {
-	return AUDIT_LOG_ACTIONS.map((action) => ({
+	const actions = includeThreads ? [...AUDIT_LOG_ACTIONS, ...THREAD_AUDIT_LOG_ACTIONS] : AUDIT_LOG_ACTIONS;
+	return actions.map((action) => ({
 		...action,
 		label: i18n._(action.label),
 	}));

@@ -35,6 +35,7 @@ import {getTypingText, usePresentableTypingUsers} from '@app/features/channel/co
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
+import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {
 	CREATE_CHANNEL_DESCRIPTOR,
@@ -230,7 +231,7 @@ export const ChannelItem = observer(
 		const isVoiceDragActive = draggingChannel?.channelType === ChannelTypes.GUILD_VOICE;
 		const shouldDimForVoiceDrag = Boolean(isVoiceDragActive && channelIsText && channel.parentId !== null);
 		const unreadCount = ReadStates.getUnreadCount(channel.id);
-		const hasUnread = ReadStates.hasUnread(channel.id);
+		const hasUnread = channel.isThreadOnly() ? hasForumUnread(channel) : ReadStates.hasUnread(channel.id);
 		const connectedVoiceGuildId = channelIsVoice ? MediaEngine.guildId : null;
 		const connectedVoiceChannelId = channelIsVoice ? MediaEngine.channelId : null;
 		const canManageChannels = Permission.can(Permissions.MANAGE_CHANNELS, channel);

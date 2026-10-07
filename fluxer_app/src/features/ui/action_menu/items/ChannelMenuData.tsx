@@ -30,6 +30,8 @@ import {
 	UNPIN_GROUP_DM_DESCRIPTOR,
 } from '@app/features/channel/utils/ChannelMessageDescriptors';
 import {ChannelDebugModal} from '@app/features/devtools/components/debug/ChannelDebugModal';
+import {isNewPostsUnreadEnabled, setNewPostsUnreadEnabled} from '@app/features/forum/state/ForumReadState';
+import {NEW_POSTS_NOTIFICATION_DESCRIPTOR} from '@app/features/forum/utils/ForumMessageDescriptors';
 import {GuildNotificationSettingsModal} from '@app/features/guild/components/modals/GuildNotificationSettingsModal';
 import {useLeaveGroup} from '@app/features/guild/hooks/useLeaveGroup';
 import type {Guild} from '@app/features/guild/models/Guild';
@@ -648,7 +650,7 @@ export function useChannelMenuData(
 			menuGroups.push({items});
 			return menuGroups;
 		}
-		if (guild && (state.isTextChannel || state.isVoiceChannel || state.isLinkChannel)) {
+		if (guild && (state.isTextChannel || state.isVoiceChannel || state.isLinkChannel || channel.isThreadOnly())) {
 			if (state.isVoiceChannel && !Accessibility.voiceChannelJoinRequiresDoubleClick) {
 				menuGroups.push({
 					items: [
@@ -670,7 +672,7 @@ export function useChannelMenuData(
 					onClick: handlers.handleMarkAsRead,
 				});
 			}
-			if (Accessibility.showFavorites) {
+			if (Accessibility.showFavorites && !channel.isThread() && !channel.isThreadOnly()) {
 				metaItems.push({
 					icon: (
 						<FavoriteIcon
@@ -687,7 +689,7 @@ export function useChannelMenuData(
 				menuGroups.push({items: metaItems});
 			}
 			const inviteItems: Array<MenuItemType> = [];
-			if (state.canInvite) {
+			if (state.canInvite && !channel.isThreadOnly()) {
 				inviteItems.push({
 					icon: <InviteIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.invite-icon" />,
 					label: i18n._(INVITE_PEOPLE_DESCRIPTOR),
@@ -756,6 +758,17 @@ export function useChannelMenuData(
 				onClick: handlers.handleNotificationSettings,
 			});
 			menuGroups.push({items: notificationItems});
+			if (channel.isThreadOnly()) {
+				menuGroups.push({
+					items: [
+						{
+							label: i18n._(NEW_POSTS_NOTIFICATION_DESCRIPTOR),
+							checked: isNewPostsUnreadEnabled(channel),
+							onChange: (checked: boolean) => setNewPostsUnreadEnabled(channel, checked),
+						},
+					],
+				});
+			}
 			if (state.canEditChannel) {
 				const manageItems: Array<MenuItemType> = [
 					{

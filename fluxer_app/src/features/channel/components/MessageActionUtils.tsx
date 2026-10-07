@@ -30,6 +30,9 @@ import Permission from '@app/features/permissions/state/Permission';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import Relationships from '@app/features/relationship/state/Relationships';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
+import {canCreateThreadIn, canWriteInThread} from '@app/features/threads/utils/ThreadActionRules';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
@@ -47,6 +50,7 @@ import {
 	Permissions,
 } from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
+import {TEXT_THREAD_PARENT_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -173,6 +177,13 @@ export interface MessagePermissions {
 	canCrosspostMessage: boolean;
 	canSuppressEmbeds: boolean;
 	shouldRenderSuppressEmbeds: boolean;
+	canCreateThread: boolean;
+}
+
+function canCreateThreadFromMessage(message: Message, channel: Channel): boolean {
+	if (!ThreadGuilds.isActive(channel.guildId) || !TEXT_THREAD_PARENT_CHANNEL_TYPES.has(channel.type)) return false;
+	if (message.state !== MessageStates.SENT || !message.isUserMessage() || message.isClientSystemMessage()) return false;
+	return !ChannelThreads.hasThread(message.id) && canCreateThreadIn(channel, 'from_message');
 }
 
 function canForwardMessageFromChannel(message: Message, channel: Channel, isDM: boolean): boolean {
@@ -249,19 +260,21 @@ function getMessagePermissionsForChannel(message: Message, channel: Channel): Me
 		(message.isCurrentUserAuthor() || (!isDM && canDeleteMessage));
 	const shouldRenderSuppressEmbeds =
 		message.isUserMessage() && canSuppressEmbeds && (isEmbedsSuppressed(message) || message.embeds.length > 0);
+	const isThread = channel.isThread();
 	return {
 		channel,
 		isDM,
 		canSendMessages,
-		canAddReactions,
-		canEditMessage,
+		canAddReactions: canAddReactions && (!isThread || canWriteInThread(channel, 'react')),
+		canEditMessage: canEditMessage && (!isThread || canWriteInThread(channel, 'edit')),
 		canDeleteMessage,
 		canDeleteAttachment,
-		canPinMessage,
+		canPinMessage: canPinMessage && (!isThread || canWriteInThread(channel, 'pin')),
 		canForwardMessage,
 		canCrosspostMessage,
 		canSuppressEmbeds,
 		shouldRenderSuppressEmbeds,
+		canCreateThread: canCreateThreadFromMessage(message, channel),
 	};
 }
 
@@ -286,6 +299,7 @@ export function useMessagePermissions(message: Message, sourceChannel?: Channel 
 	if (context?.previewPermissions) {
 		return {
 			channel: channel ?? context.channel,
+			canCreateThread: false,
 			...context.previewPermissions,
 		};
 	}

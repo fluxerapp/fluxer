@@ -91,6 +91,8 @@ import MentionFrecency from '@app/features/notification/state/MentionFrecency';
 import Permission from '@app/features/permissions/state/Permission';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import {formatUserTagForStreamerMode} from '@app/features/user/utils/DisplayNameUtils';
@@ -168,6 +170,18 @@ function buildRecentSpeakerOptions(
 }
 
 export type {TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
+
+function getMentionableGuildChannels(guildId: string): ReadonlyArray<Channel> {
+	const channels = Channels.getGuildChannels(guildId);
+	if (!ThreadGuilds.isActive(guildId)) return channels;
+	const threads = ChannelThreads.getGuildThreads(guildId).filter((thread) => !thread.isArchived);
+	return threads.length === 0 ? channels : [...channels, ...threads];
+}
+
+function mentionSortPosition(channel: Channel): number {
+	if (channel.isThread()) return Number.MAX_SAFE_INTEGER;
+	return channel.position == null ? 0 : channel.position;
+}
 
 export function useLexicalAutocomplete({
 	channel,
@@ -429,19 +443,19 @@ export function useLexicalAutocomplete({
 				if (channel == null) {
 					break;
 				}
-				options = matchSorter(Channels.getGuildChannels(channel.guildId == null ? '' : channel.guildId), matchedText, {
-					keys: ['name'],
-				})
+				options = matchSorter(
+					getMentionableGuildChannels(channel.guildId == null ? '' : channel.guildId),
+					matchedText,
+					{
+						keys: ['name'],
+					},
+				)
 					.filter((candidate) => !candidate.isGuildCategory())
 					.map((candidate) => ({
 						type: 'channel' as const,
 						channel: candidate,
 					}))
-					.sort(
-						(a, b) =>
-							(a.channel.position == null ? 0 : a.channel.position) -
-							(b.channel.position == null ? 0 : b.channel.position),
-					)
+					.sort((a, b) => mentionSortPosition(a.channel) - mentionSortPosition(b.channel))
 					.slice(0, MENTION_RESULT_LIMIT);
 				break;
 			}

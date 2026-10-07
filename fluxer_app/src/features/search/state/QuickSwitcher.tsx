@@ -309,7 +309,7 @@ class QuickSwitcher {
 
 	private getSearchContext(i18n: I18n): QuickSwitcherSearchContext {
 		const sets = this.getCandidateSets(i18n);
-		this.searchSources ??= createForwardSearchCandidates(i18n).get();
+		this.searchSources ??= createForwardSearchCandidates(i18n, {includeThreadOnlyChannels: true}).get();
 		return {confusables: this.confusables, sets, sources: this.searchSources};
 	}
 

@@ -4,6 +4,7 @@ import GeoIP from '@app/features/app/state/GeoIP';
 import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
+import ChannelFrecency from '@app/features/channel/state/ChannelFrecency';
 import Channels from '@app/features/channel/state/Channels';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import {
@@ -40,6 +41,9 @@ import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilMo
 import LocalPresence from '@app/features/presence/state/LocalPresence';
 import Presence from '@app/features/presence/state/Presence';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
+import ThreadRoster from '@app/features/threads/state/ThreadRoster';
+import ThreadSubscriptions from '@app/features/threads/state/ThreadSubscriptions';
 import TypingIndicator from '@app/features/typing/state/TypingIndicator';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
@@ -272,6 +276,7 @@ class GatewayConnection {
 		logger.info(`Using gateway compression: ${compression}`);
 		let identifyFlags = 0;
 		identifyFlags |= GatewayIdentifyFlags.DEBOUNCE_MESSAGE_REACTIONS;
+		identifyFlags |= GatewayIdentifyFlags.CHANNEL_THREADS;
 		const initialGuildId = SelectedGuild.selectedGuildId ?? null;
 		this.initialGuildIdAtIdentify = initialGuildId;
 		const socket = new GatewaySocket(gatewayUrl, {
@@ -591,7 +596,10 @@ class GatewayConnection {
 		AttachmentUrlRefresher.reset();
 		GuildMatureContentAgree.reset();
 		Initialization.reset();
+		ChannelFrecency.handleLogout();
 		MemberSearch.handleLogout();
+		ThreadGuilds.reset();
+		ThreadRoster.reset();
 		this.isConnected = false;
 		this.isConnecting = false;
 		this.isReady = false;
@@ -625,6 +633,7 @@ class GatewayConnection {
 		this.isReady = true;
 		SessionManager.handleConnectionReady();
 		this.markInitialGuildSynced(this.sessionId);
+		ThreadSubscriptions.handleConnectionReady();
 		LocalPresence.updatePresence();
 		TypingIndicator.reset();
 		QuickSwitcher.recomputeIfOpen();
@@ -681,7 +690,7 @@ class GatewayConnection {
 
 	private handleGatewayDispatch(eventType: string, data: unknown): void {
 		const handler = this.handlerRegistry.get(eventType);
-		if (!handler) {
+		if (!handler || ThreadGuilds.isPurgedEvent(data)) {
 			return;
 		}
 		const context = this.createHandlerContext();

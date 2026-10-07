@@ -34,10 +34,13 @@ import {
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {getEmojiNameWithColons, toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import {openCreateThread} from '@app/features/threads/commands/ThreadNavigation';
+import {CREATE_THREAD_DESCRIPTOR} from '@app/features/threads/utils/ThreadMessageDescriptors';
 import {
 	AddReactionIcon,
 	CopyIdIcon,
 	CopyLinkIcon,
+	CreateThreadIcon,
 	CrosspostIcon,
 	DebugMessageIcon,
 	DeleteIcon,
@@ -252,6 +255,7 @@ interface MessageActionBarCoreProps {
 		canForwardMessage: boolean;
 		canCrosspostMessage: boolean;
 		shouldRenderSuppressEmbeds: boolean;
+		canCreateThread?: boolean;
 	};
 	developerMode: boolean;
 	isActive: boolean;
@@ -645,6 +649,19 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 										disabled={message.isCrossposted}
 										onClick={handlers.handleCrosspostMessage}
 										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.crosspost"
+									/>
+								)}
+								{permissions.canCreateThread && (
+									<MessageActionBarButton
+										icon={
+											<CreateThreadIcon
+												size={20}
+												data-flx="channel.message-action-bar.message-action-bar-core.create-thread-icon"
+											/>
+										}
+										label={i18n._(CREATE_THREAD_DESCRIPTOR)}
+										onClick={() => openCreateThread(channel, message.id)}
+										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.create-thread"
 									/>
 								)}
 								{showFullActions && canDeleteMessage && (

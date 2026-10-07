@@ -20,6 +20,7 @@ import MentionFeed from '@app/features/notification/state/MentionFeed';
 import Permission from '@app/features/permissions/state/Permission';
 import Presence from '@app/features/presence/state/Presence';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import UserProfile from '@app/features/user/state/UserProfile';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import Webhooks from '@app/features/webhook/state/Webhooks';
@@ -42,6 +43,7 @@ export function handleGuildDelete(data: GuildDeletePayload, _context: GatewayHan
 	ChannelMemberCount.handleGuildDelete(data.id);
 	GuildReadState.handleGuildDelete({guild: data as Guild});
 	GuildVerification.handleGuildDelete(data.id);
+	ThreadGuilds.handleGuildDelete(data.id, data.unavailable ?? false);
 	Channels.handleGuildDelete({guildId: data.id});
 	Sticker.handleGuildDelete(data.id);
 	Emoji.handleGuildDelete({guildId: data.id});

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isSyncExcludedChannelId} from '@app/features/threads/utils/SyncedPreferenceGuard';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {UnreadChannelsStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable} from 'mobx';
@@ -29,6 +30,7 @@ class UnreadChannels {
 	}
 
 	setCollapsed(channelId: string, collapsed: boolean): void {
+		if (isSyncExcludedChannelId(channelId)) return;
 		const next = new Set(this.collapsedChannelIds);
 		if (collapsed) {
 			next.add(channelId);

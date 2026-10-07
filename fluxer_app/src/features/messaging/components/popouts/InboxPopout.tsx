@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getUnreadChannels, UnreadChannelsContent} from '@app/features/app/components/floating/UnreadChannelsContent';
+import {
+	getMarkableUnreadChannels,
+	UnreadChannelsContent,
+} from '@app/features/app/components/floating/UnreadChannelsContent';
 import {MENTIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InboxCommands from '@app/features/inbox/commands/InboxCommands';
 import Inbox, {type InboxTab} from '@app/features/inbox/state/Inbox';
@@ -117,7 +120,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 	});
 	const readStateVersion = ReadStates.version;
 	const settingsVersion = UserGuildSettings.version;
-	const unreadChannels = useMemo(() => getUnreadChannels(), [readStateVersion, settingsVersion]);
+	const markableUnreadChannels = useMemo(() => getMarkableUnreadChannels(), [readStateVersion, settingsVersion]);
 	const tabs: Array<TabConfig> = [
 		{
 			key: 'unreadChannels',
@@ -279,7 +282,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 										type="button"
 										className={styles.sidebarActionButton}
 										onClick={handleMarkAllRead}
-										disabled={unreadChannels.length === 0}
+										disabled={markableUnreadChannels.length === 0}
 										aria-label={i18n._(MARK_ALL_INBOX_CHANNELS_AS_READ_DESCRIPTOR)}
 										data-flx="messaging.inbox-popout.sidebar-action-button.mark-all-read"
 									>

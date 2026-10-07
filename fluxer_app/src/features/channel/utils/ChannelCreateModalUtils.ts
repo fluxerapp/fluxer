@@ -2,13 +2,17 @@
 
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import type {Channel} from '@app/features/channel/models/Channel';
+import {getForumChannelTypeOptions} from '@app/features/forum/utils/ForumChannelTypeOptions';
 import {selectChannel} from '@app/features/navigation/commands/NavigationCommands';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {
 	VOICE_CHANNEL_BITRATE_DEFAULT,
 	VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
 } from '@fluxer/constants/src/LimitConstants';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import type {I18n} from '@lingui/core';
 
 export interface FormInputs {
 	name: string;
@@ -30,7 +34,7 @@ export interface ChannelTypeOption {
 	desc: string;
 }
 
-export const channelTypeOptions: Array<ChannelTypeOption> = [
+const CHANNEL_TYPE_OPTIONS: ReadonlyArray<ChannelTypeOption> = [
 	{
 		value: ChannelTypes.GUILD_TEXT,
 		name: 'Text Channel',
@@ -53,8 +57,14 @@ export const channelTypeOptions: Array<ChannelTypeOption> = [
 	},
 ];
 
+export function getChannelTypeOptions(i18n: I18n, {forums = false}: {forums?: boolean} = {}): Array<ChannelTypeOption> {
+	if (!forums) return [...CHANNEL_TYPE_OPTIONS];
+	return [...CHANNEL_TYPE_OPTIONS, ...getForumChannelTypeOptions(i18n)];
+}
+
 export async function createChannel(guildId: string, data: FormInputs, parentId?: string): Promise<void> {
 	const channelType = Number(data.type);
+	if (THREAD_ONLY_CHANNEL_TYPES.has(channelType) && !ThreadGuilds.isActive(guildId)) return;
 	const channel = await ChannelCommands.create(guildId, {
 		name: data.name,
 		url: data.url,
@@ -64,7 +74,7 @@ export async function createChannel(guildId: string, data: FormInputs, parentId?
 		user_limit: channelType === ChannelTypes.GUILD_VOICE ? 0 : null,
 		voice_connection_limit: channelType === ChannelTypes.GUILD_VOICE ? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT : null,
 	});
-	if (GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type)) {
+	if (GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) {
 		setTimeout(() => {
 			selectChannel(guildId, channel.id);
 		}, 50);
@@ -79,6 +89,7 @@ export async function duplicateChannel(
 	options: DuplicateChannelOptions = {},
 ): Promise<void> {
 	const {closeModal = true} = options;
+	if (THREAD_ONLY_CHANNEL_TYPES.has(sourceChannel.type) && !ThreadGuilds.isActive(guildId)) return;
 	const channel = await ChannelCommands.create(guildId, {
 		name: data.name,
 		url: sourceChannel.type === ChannelTypes.GUILD_LINK ? sourceChannel.url : null,

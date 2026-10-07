@@ -24,6 +24,7 @@ import {
 	CaretRightIcon,
 	CaretUpIcon,
 	ChatCircleIcon,
+	ChatsIcon,
 	CheckCircleIcon,
 	CircleNotchIcon,
 	ClipboardTextIcon,
@@ -104,6 +105,13 @@ export const ReplyIcon: React.FC<IconProps> = observer(({size = 16}) => (
 		size={remFromPx(size)}
 		weight="fill"
 		data-flx="ui.action-menu.context-menu-icons.reply-icon.arrow-bend-up-left-icon"
+	/>
+));
+export const CreateThreadIcon: React.FC<IconProps> = observer(({size = 16}) => (
+	<ChatsIcon
+		size={remFromPx(size)}
+		weight="fill"
+		data-flx="ui.action-menu.context-menu-icons.create-thread-icon.chats-icon"
 	/>
 ));
 export const ForwardIcon: React.FC<IconProps> = observer(({size = 16}) => (

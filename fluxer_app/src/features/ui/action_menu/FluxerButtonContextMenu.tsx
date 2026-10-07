@@ -4,6 +4,7 @@ import Channels from '@app/features/channel/state/Channels';
 import Guilds from '@app/features/guild/state/Guilds';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {getUnreadThreadIds} from '@app/features/threads/utils/ThreadViewUtils';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {HideIcon, MarkAsReadIcon, ViewDetailsIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {
@@ -63,6 +64,7 @@ export const FluxerButtonContextMenu: React.FC<FluxerButtonContextMenuProps> = o
 				unreadGuildChannelIds.push(channel.id);
 			}
 		}
+		unreadGuildChannelIds.push(...getUnreadThreadIds(guild.id));
 	}
 	const handleMarkAllDmsRead = useCallback(() => {
 		if (unreadDmIds.length > 0) {

@@ -14,6 +14,7 @@ import Permission from '@app/features/permissions/state/Permission';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import * as PiPCommands from '@app/features/ui/commands/PiPCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import Webhooks from '@app/features/webhook/state/Webhooks';
@@ -25,23 +26,27 @@ interface ChannelDeletePayload {
 	guild_id?: string;
 }
 
-export function handleChannelDelete(data: ChannelDeletePayload, _context: GatewayHandlerContext): void {
-	const channel = data as Channel;
-	const guildId = data.guild_id;
-	PiPCommands.clearPiPForChannel(data.id);
-	MediaEngine.handleChannelDelete(data.id);
-	Slowmode.deleteChannel(data.id);
-	Drafts.deleteChannelDraft(data.id);
+export function cleanupChannelLocalState(channel: Channel): void {
+	const guildId = channel.guild_id;
+	PiPCommands.clearPiPForChannel(channel.id);
+	MediaEngine.handleChannelDelete(channel.id);
+	Slowmode.deleteChannel(channel.id);
+	Drafts.deleteChannelDraft(channel.id);
 	SavedMessages.handleChannelDelete(channel);
 	ChannelPins.handleChannelDelete(channel);
 	Channels.handleChannelDelete({channel});
-	Permission.handleChannelDelete(data.id, guildId);
-	GuildReadState.handleChannelDelete(data.id);
-	Invites.handleChannelDelete(data.id);
-	Webhooks.handleChannelDelete(data.id);
+	Permission.handleChannelDelete(channel.id, guildId);
+	GuildReadState.handleChannelDelete(channel.id);
+	Invites.handleChannelDelete(channel.id);
+	Webhooks.handleChannelDelete(channel.id);
 	ReadStates.handleChannelDelete({channel});
 	SelectedChannel.handleChannelDelete(channel);
-	Messages.handleCleanup();
 	MentionFeed.handleChannelDelete(channel);
+}
+
+export function handleChannelDelete(data: ChannelDeletePayload, _context: GatewayHandlerContext): void {
+	ChannelThreads.handleParentDelete(data.id);
+	cleanupChannelLocalState(data as Channel);
+	Messages.handleCleanup();
 	QuickSwitcher.recomputeIfOpen();
 }

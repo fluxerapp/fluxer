@@ -465,7 +465,7 @@ interface AssembleHeadersInput {
 function assembleHeaders(input: AssembleHeadersInput): Record<string, string> {
 	const accumulator: Record<string, string> = {};
 	if (input.sameOrigin) {
-		accumulator['X-Fluxer-Features'] = 'view_channel_members_permission';
+		accumulator['X-Fluxer-Features'] = 'view_channel_members_permission,channel_threads';
 	}
 	const contentType = inferContentType(input.body);
 	if (contentType) accumulator['Content-Type'] = contentType;

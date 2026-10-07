@@ -15,6 +15,8 @@ import Sticker from '@app/features/emoji/state/EmojiSticker';
 import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import type {FavoriteMemeWire} from '@app/features/expressions/models/FavoriteMeme';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
+import ForumPosts from '@app/features/forum/state/ForumPosts';
+import ForumReadState from '@app/features/forum/state/ForumReadState';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {PresenceRecord} from '@app/features/gateway/types/GatewayPresenceTypes';
@@ -31,6 +33,7 @@ import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
+import NavigationSideEffects from '@app/features/navigation/state/NavigationSideEffects';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -39,6 +42,9 @@ import Presence from '@app/features/presence/state/Presence';
 import ReadStates, {type GatewayReadState} from '@app/features/read_state/state/ReadStates';
 import type {RelationshipWire} from '@app/features/relationship/models/Relationship';
 import Relationships from '@app/features/relationship/state/Relationships';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
+import ThreadSubscriptions from '@app/features/threads/state/ThreadSubscriptions';
 import UserGuildSettings, {type GatewayGuildSettings} from '@app/features/user/state/UserGuildSettings';
 import UserNote from '@app/features/user/state/UserNote';
 import UserPinnedDM from '@app/features/user/state/UserPinnedDM';
@@ -105,6 +111,11 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 		for (const channel of guild.channels) {
 			channels.push({...channel, guild_id: guild.id});
 		}
+		if (guild.threads) {
+			for (const thread of guild.threads) {
+				channels.push({...thread, guild_id: guild.id});
+			}
+		}
 	}
 	GuildAvailability.loadUnavailableGuilds(guilds);
 	if (data.notes) {
@@ -154,7 +165,13 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	GuildCount.handleGatewayReady(guilds);
 	GuildMembers.handleGatewayReady(guilds);
 	GuildVerification.handleGatewayReady();
+	ThreadGuilds.handleGatewayReady(guilds);
 	Channels.handleGatewayReady({channels});
+	ChannelThreads.handleGatewayReady(guilds);
+	ThreadSubscriptions.handleConnectionReady();
+	ForumPosts.handleGatewayReady();
+	ForumReadState.handleGatewayReady();
+	NavigationSideEffects.handleGatewayReady();
 	if (data.auth_session_id_hash) {
 		AuthSession.handleGatewayReady(data.auth_session_id_hash);
 	} else {

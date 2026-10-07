@@ -6,6 +6,7 @@ import {GroupDMWelcomeSection} from '@app/features/channel/components/direct_mes
 import {PersonalNotesWelcomeSection} from '@app/features/channel/components/direct_message/PersonalNotesWelcomeSection';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
+import {ThreadWelcomeSection} from '@app/features/threads/components/ThreadWelcomeSection';
 import Users from '@app/features/user/state/Users';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {Trans} from '@lingui/react/macro';
@@ -39,6 +40,9 @@ export const ChannelWelcomeSection = observer(({channel}: ChannelWelcomeSectionP
 		return (
 			<GroupDMWelcomeSection channel={channel} data-flx="channel.channel-welcome-section.group-dm-welcome-section" />
 		);
+	}
+	if (channel.isThread()) {
+		return <ThreadWelcomeSection thread={channel} data-flx="channel.channel-welcome-section.thread-welcome-section" />;
 	}
 	const channelDisplayName = `#${channel.name ?? ''}`;
 	return (

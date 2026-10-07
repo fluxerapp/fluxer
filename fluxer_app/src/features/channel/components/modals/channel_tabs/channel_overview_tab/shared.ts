@@ -18,6 +18,8 @@ export interface FormInputs {
 	user_limit?: number;
 	voice_connection_limit?: number;
 	rtc_region: string | null;
+	default_auto_archive_duration?: number;
+	default_thread_rate_limit_per_user?: number;
 }
 
 export const CHANNEL_OVERVIEW_TAB_ID = 'overview';

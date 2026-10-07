@@ -33,7 +33,7 @@ const SYSTEM_WIDE_TRIGGER_DESCRIPTOR = msg({
 		'Hint under a shortcut on Linux showing the key the desktop assigned. {trigger} is the key, as named by the desktop.',
 });
 const SYSTEM_WIDE_NOT_ASSIGNED_DESCRIPTOR = msg({
-	message: 'System-wide: Not assigned',
+	message: 'System-wide: not assigned',
 	comment: 'Hint under a shortcut on Linux when the desktop has no key assigned for it system-wide.',
 });
 const EXTRA_MODIFIERS_DESCRIPTOR = msg({

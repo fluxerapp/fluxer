@@ -4,6 +4,7 @@ import i18n from '@app/app/I18n';
 import type {Channel} from '@app/features/channel/models/Channel';
 import ChannelDisplayName from '@app/features/channel/state/ChannelDisplayName';
 import {UNKNOWN_CHANNEL_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
+import {FORUM_DESCRIPTOR, MEDIA_DESCRIPTOR} from '@app/features/forum/utils/ForumMessageDescriptors';
 import {PERSONAL_NOTES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {compareChannelPosition} from '@app/features/messaging/utils/ChannelShared';
 import {AnnouncementChannelIcon} from '@app/features/ui/components/icons/AnnouncementChannelIcon';
@@ -25,7 +26,14 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
-import {CaretDownIcon, type IconProps, NotePencilIcon} from '@phosphor-icons/react';
+import {
+	CaretDownIcon,
+	ChatsIcon,
+	ChatsTeardropIcon,
+	type IconProps,
+	ImagesSquareIcon,
+	NotePencilIcon,
+} from '@phosphor-icons/react';
 
 const VOICE_MATURE_DESCRIPTOR = msg({
 	message: 'Voice (mature)',
@@ -64,6 +72,10 @@ const TEXT_MATURE_DESCRIPTOR = msg({
 const TEXT_DESCRIPTOR = msg({
 	message: 'Text',
 	comment: 'Channel type chip label for a text channel.',
+});
+const THREAD_DESCRIPTOR = msg({
+	message: 'Thread',
+	comment: 'Channel type chip label for a thread inside a text channel.',
 });
 const UNKNOWN_USER_DESCRIPTOR = msg({
 	message: 'Unknown user',
@@ -165,6 +177,14 @@ export function getIcon(
 			return <CaretDownIcon weight="bold" data-flx="channel.channel-utils.get-icon.caret-down-icon" {...props} />;
 		case ChannelTypes.DM_PERSONAL_NOTES:
 			return <NotePencilIcon weight="bold" data-flx="channel.channel-utils.get-icon.note-pencil-icon" {...props} />;
+		case ChannelTypes.ANNOUNCEMENT_THREAD:
+		case ChannelTypes.PUBLIC_THREAD:
+		case ChannelTypes.PRIVATE_THREAD:
+			return <ChatsIcon data-flx="channel.channel-utils.get-icon.thread-icon" {...props} />;
+		case ChannelTypes.GUILD_FORUM:
+			return <ChatsTeardropIcon data-flx="channel.channel-utils.get-icon.forum-icon" {...props} />;
+		case ChannelTypes.GUILD_MEDIA:
+			return <ImagesSquareIcon data-flx="channel.channel-utils.get-icon.media-icon" {...props} />;
 		default:
 			return <TextChannelIcon data-flx="channel.channel-utils.get-icon.text-channel-icon--2" {...props} />;
 	}
@@ -180,6 +200,14 @@ export function getName(channel: Channel) {
 			return channel.nsfw ? i18n._(LINK_MATURE_DESCRIPTOR) : i18n._(LINK_DESCRIPTOR);
 		case ChannelTypes.GUILD_ANNOUNCEMENT:
 			return channel.nsfw ? i18n._(ANNOUNCEMENT_MATURE_DESCRIPTOR) : i18n._(ANNOUNCEMENT_DESCRIPTOR);
+		case ChannelTypes.ANNOUNCEMENT_THREAD:
+		case ChannelTypes.PUBLIC_THREAD:
+		case ChannelTypes.PRIVATE_THREAD:
+			return i18n._(THREAD_DESCRIPTOR);
+		case ChannelTypes.GUILD_FORUM:
+			return i18n._(FORUM_DESCRIPTOR);
+		case ChannelTypes.GUILD_MEDIA:
+			return i18n._(MEDIA_DESCRIPTOR);
 		default:
 			return channel.nsfw ? i18n._(TEXT_MATURE_DESCRIPTOR) : i18n._(TEXT_DESCRIPTOR);
 	}

@@ -572,6 +572,8 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				typing?: boolean;
 				members?: Array<string>;
 				sync?: boolean;
+				threads?: boolean;
+				thread_member_lists?: Array<string>;
 			}
 		>;
 	}): void {
@@ -604,6 +606,18 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				channel_ids: uniqueChannelIds,
 				...(params.nonce !== undefined && {nonce: params.nonce}),
 			},
+		});
+	}
+
+	requestForumUnreads(params: {
+		guild_id: string;
+		channel_id: string;
+		threads: Array<{thread_id: string; ack_message_id: string}>;
+	}): void {
+		if (!this.isConnected()) return;
+		this.sendPayload({
+			op: GatewayOpcodes.REQUEST_FORUM_UNREADS,
+			d: params,
 		});
 	}
 

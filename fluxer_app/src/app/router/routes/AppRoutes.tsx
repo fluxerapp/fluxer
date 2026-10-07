@@ -8,12 +8,14 @@ import {AppLayout} from '@app/features/app/components/layout/AppLayout';
 import {DiscoveryLayout} from '@app/features/app/components/layout/DiscoveryLayout';
 import {FavoritesLayout} from '@app/features/app/components/layout/FavoritesLayout';
 import {GuildsLayout} from '@app/features/app/components/layout/GuildsLayout';
+import {NotFoundPage} from '@app/features/app/components/pages/NotFoundPage';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import {ChannelIndexPage} from '@app/features/channel/components/ChannelIndexPage';
 import {ChannelLayout} from '@app/features/channel/components/ChannelLayout';
 import {DMLayout} from '@app/features/channel/components/direct_message/DirectMessageLayout';
 import Channels from '@app/features/channel/state/Channels';
+import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {navigateToLinkedUserProfile} from '@app/features/navigation/utils/DeepLinkUtils';
@@ -23,9 +25,11 @@ import {
 	createNamedLoadableComponent,
 } from '@app/features/platform/components/loadable/LoadableComponent';
 import {createRoute} from '@app/features/platform/components/router/RouterBuilder';
+import {notFound} from '@app/features/platform/components/router/RouterErrors';
 import {useParams} from '@app/features/platform/components/router/RouterReact';
 import {Redirect} from '@app/features/platform/components/router/RouterTypes';
 import SessionManager from '@app/features/platform/state/AuthSession';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -331,6 +335,34 @@ const messageRoute = createRoute({
 		</ChannelLayout>
 	),
 });
+const ThreadPanelRoutePage = observer(() => {
+	const {guildId} = useParams() as {guildId?: string};
+	if (GatewayConnection.isReady && !ThreadGuilds.isActive(guildId)) {
+		return <NotFoundPage data-flx="app.router.app-routes.thread-panel-not-found-page" />;
+	}
+	return (
+		<ChannelLayout data-flx="app.router.app-routes.channel-layout--4">
+			<ChannelIndexPage data-flx="app.router.app-routes.channel-index-page--4" />
+		</ChannelLayout>
+	);
+});
+const threadPanelRoute = createRoute({
+	getParentRoute: () => channelRoute,
+	id: 'threadPanel',
+	path: '/channels/:guildId/:channelId/threads/:threadId/:threadMessageId?',
+	onEnter: (ctx) => {
+		const {guildId, channelId} = ctx.params;
+		if (guildId === ME || (GatewayConnection.isReady && !ThreadGuilds.isActive(guildId))) {
+			return notFound();
+		}
+		const channel = Channels.getChannel(channelId);
+		if (channel && channel.type === ChannelTypes.GUILD_CATEGORY) {
+			return new Redirect(Routes.guildChannel(guildId));
+		}
+		return undefined;
+	},
+	component: () => <ThreadPanelRoutePage data-flx="app.router.app-routes.thread-panel-route-page" />,
+});
 export const appRouteTree = appLayoutRoute.addChildren([
 	notificationsRoute,
 	youRoute,
@@ -343,6 +375,6 @@ export const appRouteTree = appLayoutRoute.addChildren([
 		plutoniumRoute,
 		legacyPlutoniumRoute,
 		favoritesRoute.addChildren([favoritesChannelRoute]),
-		channelsRoute.addChildren([membersRoute, channelRoute.addChildren([messageRoute])]),
+		channelsRoute.addChildren([membersRoute, channelRoute.addChildren([messageRoute, threadPanelRoute])]),
 	]),
 ]);

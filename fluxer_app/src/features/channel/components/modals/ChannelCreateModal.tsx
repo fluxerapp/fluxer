@@ -5,12 +5,13 @@ import {EXAMPLE_CHANNEL_NAME, EXAMPLE_URL} from '@app/features/app/config/I18nDi
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import styles from '@app/features/channel/components/modals/ChannelCreateModal.module.css';
 import {
-	channelTypeOptions,
 	createChannel,
 	type FormInputs,
+	getChannelTypeOptions,
 	getDefaultValues,
 } from '@app/features/channel/utils/ChannelCreateModalUtils';
 import {CANCEL_DESCRIPTOR, CREATE_CHANNEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Form} from '@app/features/ui/components/form/Form';
@@ -68,7 +69,7 @@ export const ChannelCreateModal = observer(({guildId, parentId}: {guildId: strin
 									aria-label={i18n._(CHANNEL_TYPE_SELECTION_DESCRIPTOR)}
 									value={Number(field.value)}
 									onChange={(value) => field.onChange(value.toString())}
-									options={channelTypeOptions}
+									options={getChannelTypeOptions(i18n, {forums: ThreadGuilds.isActive(guildId)})}
 									data-flx="channel.channel-create-modal.radio-group.change"
 								/>
 							)}

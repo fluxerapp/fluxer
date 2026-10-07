@@ -15,6 +15,8 @@ class Navigation {
 	guildId: string | null = null;
 	channelId: string | null = null;
 	messageId: string | null = null;
+	threadId: string | null = null;
+	threadMessageId: string | null = null;
 	private router: Router | null = null;
 	private unsubscribe: (() => void) | null = null;
 	currentLocation: URL | null = null;
@@ -40,12 +42,16 @@ class Navigation {
 			this.guildId = null;
 			this.channelId = null;
 			this.messageId = null;
+			this.threadId = null;
+			this.threadMessageId = null;
 			return;
 		}
 		const params = match.params;
 		this.guildId = (params.guildId as string) ?? null;
 		this.channelId = (params.channelId as string) ?? null;
 		this.messageId = (params.messageId as string) ?? null;
+		this.threadId = (params.threadId as string) ?? null;
+		this.threadMessageId = (params.threadMessageId as string) ?? null;
 	}
 
 	get pathname(): string {

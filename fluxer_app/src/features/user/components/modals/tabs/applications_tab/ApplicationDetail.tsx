@@ -11,6 +11,7 @@ import {formatBotPermissionsQuery, getAllBotPermissions} from '@app/features/per
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -497,7 +498,11 @@ export const ApplicationDetail: React.FC<ApplicationDetailProps> = observer(
 					.map(([scope]) => scope),
 			[builderScopes],
 		);
-		const botPermissionsList = useMemo(() => getAllBotPermissions(i18n), [i18n.locale]);
+		const threadsActive = ThreadGuilds.anyActive;
+		const botPermissionsList = useMemo(
+			() => getAllBotPermissions(i18n, {threads: threadsActive}),
+			[i18n.locale, threadsActive],
+		);
 		const builderUrl = useMemo(() => {
 			if (!application) return '';
 			const authorizeUrl = new URL(Endpoints.OAUTH_AUTHORIZE, window.location.origin);
@@ -507,9 +512,7 @@ export const ApplicationDetail: React.FC<ApplicationDetailProps> = observer(
 			}
 			const isBotOnly = builderScopeList.length === 1 && builderScopeList[0] === 'bot';
 			const requireRedirectUri = builderScopeList.length > 0 && (!isBotOnly || botRequireCodeGrant);
-			const botPerms = Object.entries(builderPermissions)
-				.filter(([, enabled]) => enabled)
-				.map(([perm]) => perm);
+			const botPerms = botPermissionsList.filter((perm) => builderPermissions[perm.id]).map((perm) => perm.id);
 			if (builderScopeList.includes('bot') && botPerms.length > 0) {
 				authorizeUrl.searchParams.set('permissions', formatBotPermissionsQuery(botPerms));
 			}
@@ -525,7 +528,14 @@ export const ApplicationDetail: React.FC<ApplicationDetailProps> = observer(
 				return '';
 			}
 			return authorizeUrl.toString();
-		}, [application, builderScopeList, builderPermissions, builderRedirectUri, botRequireCodeGrant]);
+		}, [
+			application,
+			builderScopeList,
+			builderPermissions,
+			botPermissionsList,
+			builderRedirectUri,
+			botRequireCodeGrant,
+		]);
 		const redirectOptions = useMemo(() => {
 			const normalized = Array.from(new Set((redirectInputs ?? []).map((u) => u.trim()).filter(Boolean)));
 			const current = builderRedirectUri?.trim();

@@ -88,6 +88,7 @@ interface UseTextareaSubmitOptions {
 		maybeFavoriteMemeId?: string,
 	) => boolean;
 	onMentionConfirmationNeeded?: (info: MentionConfirmationInfo) => void;
+	commandsEnabled?: boolean;
 	i18n: I18n;
 }
 
@@ -256,6 +257,7 @@ export const useTextareaSubmit = ({
 	hasPendingSticker,
 	handleSendMessage,
 	onMentionConfirmationNeeded,
+	commandsEnabled = true,
 	i18n,
 }: UseTextareaSubmitOptions) => {
 	const checkMentionConfirmation = useCallback(
@@ -452,19 +454,22 @@ export const useTextareaSubmit = ({
 		let lexicalCommand: LexicalMessageCommandResolution | null = null;
 		let actualContent = displayToActual(value).trim();
 		if (composerHandle !== null) {
-			lexicalCommand = LexicalMessageCommandResolver.resolve(composerHandle);
+			if (commandsEnabled) {
+				lexicalCommand = LexicalMessageCommandResolver.resolve(composerHandle);
+			}
 			actualContent = dropTrailingEmptyBlockquoteLines(composerHandle.getWireValue()).trim();
 		}
 		const resolvedContent = resolveTypedEmojiContent(actualContent);
 		let parsedCommand: CommandUtils.ParsedCommand | null = null;
 		if (lexicalCommand === null) {
-			parsedCommand = CommandUtils.isCommand(actualContent) ? CommandUtils.parseCommand(actualContent) : null;
+			parsedCommand =
+				commandsEnabled && CommandUtils.isCommand(actualContent) ? CommandUtils.parseCommand(actualContent) : null;
 		} else if (lexicalCommand.status === LexicalMessageCommandResolutionStatus.VALID_COMMAND) {
 			parsedCommand = lexicalCommand.command;
 		}
-		const replaceCommand = ReplaceCommandUtils.parseReplaceCommand(actualContent);
+		const replaceCommand = commandsEnabled ? ReplaceCommandUtils.parseReplaceCommand(actualContent) : null;
 		const reactionShorthand =
-			editingMessage === null && uploadAttachmentsLength === 0 && !hasPendingSticker
+			commandsEnabled && editingMessage === null && uploadAttachmentsLength === 0 && !hasPendingSticker
 				? parseReactionShorthand(actualContent, Channels.getChannel(channelId) ?? null, guildId, i18n)
 				: null;
 		const reactionTargetId = reactionShorthand === null ? null : getReactionShorthandTargetId(channelId);
@@ -659,6 +664,7 @@ export const useTextareaSubmit = ({
 		checkMentionConfirmation,
 		resolveTypedEmojiContent,
 		ttsCommandEnabled,
+		commandsEnabled,
 	]);
 	return {onSubmit};
 };

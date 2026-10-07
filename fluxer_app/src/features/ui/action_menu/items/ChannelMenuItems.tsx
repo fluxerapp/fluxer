@@ -267,7 +267,7 @@ const ResolvedMuteChannelMenuItem: React.FC<GuildChannelMenuItemProps> = observe
 	);
 });
 export const MuteChannelMenuItem: React.FC<ChannelMenuItemProps> = observer(({channel, onClose}) => {
-	const isChannelMuteable = GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type);
+	const isChannelMuteable = GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || channel.isThreadOnly();
 	const guildId = channel.guildId;
 	if (!isChannelMuteable || !guildId) return null;
 	return (

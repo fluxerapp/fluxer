@@ -7,7 +7,8 @@ import {compareChannelOrdering} from '@fluxer/schema/src/domains/channel/GuildCh
 export const isTextChannel = (ch: Channel) =>
 	ch.type === ChannelTypes.GUILD_TEXT ||
 	ch.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
-	ch.type === ChannelTypes.GUILD_LINK;
+	ch.type === ChannelTypes.GUILD_LINK ||
+	ch.isThreadOnly();
 const isVoiceChannel = (ch: Channel) => ch.type === ChannelTypes.GUILD_VOICE;
 export const isCategory = (ch: Channel) => ch.type === ChannelTypes.GUILD_CATEGORY;
 

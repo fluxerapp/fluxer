@@ -51,6 +51,8 @@ import {useLocation} from '@app/features/platform/components/router/RouterReact'
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {SidebarThreadList} from '@app/features/threads/components/SidebarThreadList';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {ChannelListContextMenu} from '@app/features/ui/action_menu/ChannelListContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as DimensionCommands from '@app/features/ui/commands/DimensionCommands';
@@ -171,6 +173,7 @@ interface ChannelListContentProps {
 	readonly banner: GuildBannerPresentation;
 }
 export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelListContentProps) => {
+	const threadsActive = ThreadGuilds.isActive(guild.id);
 	const {i18n} = useLingui();
 	const channels = Channels.getGuildChannels(guild.id);
 	const location = useLocation();
@@ -625,6 +628,7 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 									/>
 								)}
 								{group.showTextChannels &&
+									!threadsActive &&
 									group.visibleTextChannels.map((ch) => (
 										<ChannelItem
 											key={ch.id}
@@ -638,6 +642,29 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 											isOnMembersRoute={isMembersSelected}
 											data-flx="app.channel-list-content.channel-item--2"
 										/>
+									))}
+								{group.showTextChannels &&
+									threadsActive &&
+									group.visibleTextChannels.map((ch) => (
+										<React.Fragment key={ch.id}>
+											<ChannelItem
+												guild={guild}
+												channel={ch}
+												isDraggingAnything={isDraggingAnything}
+												activeDragItem={activeDragItem}
+												onChannelDrop={handleChannelDrop}
+												onDragStateChange={setActiveDragItem}
+												isSelectedByPath={selectedChannelInGuildId === ch.id}
+												isOnMembersRoute={isMembersSelected}
+												data-flx="app.channel-list-content.channel-item--4"
+											/>
+											<SidebarThreadList
+												guildId={guild.id}
+												parentId={ch.id}
+												onlySelected={group.isCollapsed}
+												data-flx="app.channel-list-content.sidebar-thread-list"
+											/>
+										</React.Fragment>
 									))}
 								{group.showVoiceChannels &&
 									group.visibleVoiceChannels.map((ch) => {

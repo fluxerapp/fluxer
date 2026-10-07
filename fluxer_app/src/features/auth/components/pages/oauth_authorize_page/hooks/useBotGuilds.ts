@@ -2,6 +2,7 @@
 
 import type {GuildComboboxOption} from '@app/features/app/components/dialogs/shared/GuildComboboxRenderers';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {parseRequestedBotPermissions} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/usePermissionSelection';
 import {
 	type GuildSummary,
 	type GuildWithPermissions,
@@ -82,6 +83,7 @@ export function mapBotGuilds(
 				userPermissions: permissionsValue,
 				requestedPermissions,
 			}),
+			threadsActive: guild.threads_active === true,
 		};
 	});
 }
@@ -165,8 +167,9 @@ export function useBotGuilds(enabled: boolean, requestedPermissions: bigint): Bo
 	return {status, guilds, options, labelById, error};
 }
 
-export function useBotInviteDestinations(enabled: boolean, requestedPermissions: bigint): BotInviteDestinationsResult {
+export function useBotInviteDestinations(enabled: boolean, rawPermissions: string | null): BotInviteDestinationsResult {
 	const {i18n} = useLingui();
+	const requestedPermissions = useMemo(() => parseRequestedBotPermissions(rawPermissions, false), [rawPermissions]);
 	const i18nRef = useRef(i18n);
 	i18nRef.current = i18n;
 	const [status, setStatus] = useState<BotGuildsStatus>(enabled ? 'loading' : 'idle');

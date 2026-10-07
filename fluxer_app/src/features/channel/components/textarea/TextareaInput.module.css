@@ -224,3 +224,21 @@
 .textareaOuterRow:focus-within {
 	--composer-box-ring-color: var(--floating-surface-ring-color-strong);
 }
+
+.textareaOuterBare {
+	--composer-box-padding-inline: 0px;
+	--textarea-padding-y: 0px;
+	--textarea-min-height: 1.5rem;
+	padding-inline: 0;
+	background-color: transparent;
+}
+
+.mainWrapperBare {
+	grid-template-columns: minmax(0, 1fr);
+	column-gap: 0;
+}
+
+.mainWrapperBare > .contentAreaDense {
+	grid-column: 1;
+	padding-top: 0;
+}

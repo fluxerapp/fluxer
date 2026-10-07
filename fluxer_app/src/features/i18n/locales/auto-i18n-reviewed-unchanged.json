@@ -27,10 +27,16 @@
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "PgDn"
       },
       {
         "msgid": "PgUp"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "WebAuthn"
@@ -96,6 +102,12 @@
       },
       {
         "msgid": "NCMEC {ncmecReportId}"
+      },
+      {
+        "msgid": "OP"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "WebAuthn"
@@ -232,6 +244,9 @@
         "msgid": "Neko"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Offline"
       },
       {
@@ -257,6 +272,9 @@
       },
       {
         "msgid": "Role"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Shift"
@@ -485,6 +503,9 @@
         "msgid": "Fluxer"
       },
       {
+        "msgid": "Forum"
+      },
+      {
         "msgid": "Gaming"
       },
       {
@@ -566,6 +587,9 @@
         "msgid": "Normal"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Offline"
       },
       {
@@ -615,6 +639,9 @@
       },
       {
         "msgid": "Relevant"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Send"
@@ -785,9 +812,6 @@
         "msgid": "{actor} banned {target}."
       },
       {
-        "msgid": "{actor} started the thread {channel}"
-      },
-      {
         "msgid": "{actor} stopped following an announcement channel in {channel}"
       },
       {
@@ -955,6 +979,9 @@
         "msgid": "Fluxer"
       },
       {
+        "msgid": "Forum"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -1006,6 +1033,9 @@
         "msgid": "Normal"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Offline"
       },
       {
@@ -1046,6 +1076,9 @@
       },
       {
         "msgid": "Region: {regionName}"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Smileys"
@@ -1094,6 +1127,12 @@
       },
       {
         "msgid": "Text"
+      },
+      {
+        "msgid": "Thread"
+      },
+      {
+        "msgid": "Threads"
       },
       {
         "msgid": "Toast"
@@ -1281,6 +1320,9 @@
         "msgid": "Neko"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -1294,6 +1336,9 @@
       },
       {
         "msgid": "Premium"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Spam"
@@ -1369,7 +1414,13 @@
         "msgid": "128 kbps voice quality"
       },
       {
+        "msgid": "24 hours"
+      },
+      {
         "msgid": "256 kbps voice quality"
+      },
+      {
+        "msgid": "3 Days"
       },
       {
         "msgid": "384 kbps voice quality"
@@ -1429,10 +1480,28 @@
         "msgid": "Add a Klipy API key to enable GIF search at runtime."
       },
       {
+        "msgid": "Add a description (optional)"
+      },
+      {
         "msgid": "Add a username and password to your account first."
       },
       {
+        "msgid": "Add emoji"
+      },
+      {
+        "msgid": "Add images or files"
+      },
+      {
+        "msgid": "Add members or roles"
+      },
+      {
         "msgid": "Add new reactions to messages in this channel."
+      },
+      {
+        "msgid": "Add tag"
+      },
+      {
+        "msgid": "Add tags"
       },
       {
         "msgid": "Added a chat embed background."
@@ -1465,16 +1534,25 @@
         "msgid": "Added the role {role}."
       },
       {
+        "msgid": "Added the tag {name}"
+      },
+      {
         "msgid": "Adds a manual audio source picker to the stream settings menu. Without it, a shared window already captures that app and a shared screen captures your desktop."
       },
       {
         "msgid": "Advertise a capped decode codec to force publisher migration"
       },
       {
+        "msgid": "All Messages"
+      },
+      {
         "msgid": "Allow AV1 for screen sharing"
       },
       {
         "msgid": "Allow H.265 (HEVC) for screen sharing"
+      },
+      {
+        "msgid": "Allow anyone to invite"
       },
       {
         "msgid": "Allowed all members to mention this role."
@@ -1496,6 +1574,27 @@
       },
       {
         "msgid": "Allowed {permissions}."
+      },
+      {
+        "msgid": "Allows members to create posts in this channel."
+      },
+      {
+        "msgid": "Allows members to rename, close, lock and delete threads, and to view private threads."
+      },
+      {
+        "msgid": "Allows members to rename, close, lock, pin and delete posts, and to edit their tags."
+      },
+      {
+        "msgid": "Allows members to send messages in posts."
+      },
+      {
+        "msgid": "Allows members to send messages in threads."
+      },
+      {
+        "msgid": "Allows members to start threads that everyone in the channel can see."
+      },
+      {
+        "msgid": "Allows members to start threads that only invited members and moderators can see."
       },
       {
         "msgid": "Animated avatar and profile banner"
@@ -1549,10 +1648,16 @@
         "msgid": "Approve this app from the {productName} app you already use. No password needed."
       },
       {
+        "msgid": "Are you sure you want to delete {threadName}? This cannot be undone."
+      },
+      {
         "msgid": "Are you sure you want to kick <0>{targetUserTag}</0> from the community? They will be able to rejoin with a new invite."
       },
       {
         "msgid": "Ask for a passkey after your password when you sign in"
+      },
+      {
+        "msgid": "Attach an image or a video to post in a media channel."
       },
       {
         "msgid": "Attachment {pendingFilename}"
@@ -1586,6 +1691,9 @@
       },
       {
         "msgid": "Be heard over other members while holding the push to talk (priority) keybind."
+      },
+      {
+        "msgid": "Be the first to start a conversation here."
       },
       {
         "msgid": "Blocked the member from sending messages, reacting and joining voice until {date}."
@@ -1717,7 +1825,19 @@
         "msgid": "Changed the custom warning text from {oldText} to {newText}."
       },
       {
+        "msgid": "Changed the default hide after inactivity time to {duration}"
+      },
+      {
+        "msgid": "Changed the default layout to {layout}"
+      },
+      {
         "msgid": "Changed the default notification setting from {oldSetting} to {newSetting}."
+      },
+      {
+        "msgid": "Changed the default slowmode in threads to {duration}"
+      },
+      {
+        "msgid": "Changed the default sort order to {order}"
       },
       {
         "msgid": "Changed the description from {oldText} to {newText}."
@@ -1846,7 +1966,13 @@
         "msgid": "Clone sticker"
       },
       {
+        "msgid": "Close thread"
+      },
+      {
         "msgid": "Closed"
+      },
+      {
+        "msgid": "Closed private"
       },
       {
         "msgid": "Closed the thread"
@@ -1921,7 +2047,13 @@
         "msgid": "Copy lines for hyprland.lua"
       },
       {
+        "msgid": "Copy post link"
+      },
+      {
         "msgid": "Copy sticker"
+      },
+      {
+        "msgid": "Copy thread ID"
       },
       {
         "msgid": "Could not create a recovery kit"
@@ -1931,6 +2063,9 @@
       },
       {
         "msgid": "Could not load the instance configuration. Try reloading the page."
+      },
+      {
+        "msgid": "Could not start the thread: {detail}"
       },
       {
         "msgid": "Couldn't change your price"
@@ -1945,10 +2080,16 @@
         "msgid": "Couldn't create the PDF. Try again or print the kit instead."
       },
       {
+        "msgid": "Couldn't create the post: {detail}"
+      },
+      {
         "msgid": "Couldn't create your recovery kit. You can create one later in your account settings."
       },
       {
         "msgid": "Couldn't duplicate this channel"
+      },
+      {
+        "msgid": "Couldn't load posts. Try again later."
       },
       {
         "msgid": "Couldn't load this community. Try again in a moment."
@@ -1963,10 +2104,19 @@
         "msgid": "Couldn't save channel settings"
       },
       {
+        "msgid": "Couldn't save the tag: {detail}"
+      },
+      {
+        "msgid": "Couldn't search threads. Try again later."
+      },
+      {
         "msgid": "Couldn't unfollow this channel"
       },
       {
         "msgid": "Couldn't update passkey two-factor authentication"
+      },
+      {
+        "msgid": "Couldn't update the post: {detail}"
       },
       {
         "msgid": "Couldn't update your passkey. Try again."
@@ -1987,10 +2137,25 @@
         "msgid": "Create administrator account"
       },
       {
+        "msgid": "Create posts"
+      },
+      {
+        "msgid": "Create private threads"
+      },
+      {
+        "msgid": "Create public threads"
+      },
+      {
         "msgid": "Create recovery kit"
       },
       {
+        "msgid": "Create tag"
+      },
+      {
         "msgid": "Create the administrator account"
+      },
+      {
+        "msgid": "Create thread"
       },
       {
         "msgid": "Created {0}"
@@ -2011,10 +2176,28 @@
         "msgid": "Cuts audio below a loudness threshold, lowest CPU cost."
       },
       {
+        "msgid": "Date posted"
+      },
+      {
         "msgid": "Deafen other members in this voice channel, so they cannot hear or speak."
       },
       {
         "msgid": "Decide how premium limits apply to people on this instance."
+      },
+      {
+        "msgid": "Default Hide After Inactivity"
+      },
+      {
+        "msgid": "Default hide after inactivity"
+      },
+      {
+        "msgid": "Default layout"
+      },
+      {
+        "msgid": "Default reaction"
+      },
+      {
+        "msgid": "Default sort order"
       },
       {
         "msgid": "Delete other members' messages in this channel. Pinning is controlled separately."
@@ -2023,7 +2206,13 @@
         "msgid": "Delete prompt"
       },
       {
+        "msgid": "Delete tag"
+      },
+      {
         "msgid": "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
+      },
+      {
+        "msgid": "Delete thread"
       },
       {
         "msgid": "Delete user"
@@ -2066,6 +2255,9 @@
       },
       {
         "msgid": "Disable translation DOM guard"
+      },
+      {
+        "msgid": "Discard post"
       },
       {
         "msgid": "Displayed members with this role separately."
@@ -2113,7 +2305,22 @@
         "msgid": "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again later."
       },
       {
+        "msgid": "Edit Tag"
+      },
+      {
+        "msgid": "Edit Tags"
+      },
+      {
         "msgid": "Edit published message?"
+      },
+      {
+        "msgid": "Edit tag"
+      },
+      {
+        "msgid": "Edit tags"
+      },
+      {
+        "msgid": "Edit thread"
       },
       {
         "msgid": "Edit your message above"
@@ -2123,6 +2330,9 @@
       },
       {
         "msgid": "Edit your messages above or below"
+      },
+      {
+        "msgid": "Edited the tag {name}"
       },
       {
         "msgid": "Editing limit reached"
@@ -2159,6 +2369,12 @@
       },
       {
         "msgid": "Enter a community name between 1 and 100 characters."
+      },
+      {
+        "msgid": "Enter a message"
+      },
+      {
+        "msgid": "Enter a message to start the conversation!"
       },
       {
         "msgid": "Enter a product name between 1 and 80 characters."
@@ -2242,6 +2458,9 @@
         "msgid": "Followed channels"
       },
       {
+        "msgid": "Following"
+      },
+      {
         "msgid": "Footnote about custom tags"
       },
       {
@@ -2257,6 +2476,15 @@
         "msgid": "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
       },
       {
+        "msgid": "Forum"
+      },
+      {
+        "msgid": "Forum Channel"
+      },
+      {
+        "msgid": "Forum channel"
+      },
+      {
         "msgid": "From {sourceGuildName}"
       },
       {
@@ -2267,6 +2495,9 @@
       },
       {
         "msgid": "Fully quit and restart {productName} so macOS applies this permission."
+      },
+      {
+        "msgid": "Gallery"
       },
       {
         "msgid": "Get an animated avatar and banner, a subscriber badge and a separate profile for each community."
@@ -2294,6 +2525,12 @@
       },
       {
         "msgid": "Give everyone on this instance the highest premium limits."
+      },
+      {
+        "msgid": "Give the thread a name before you send."
+      },
+      {
+        "msgid": "Give your post a title"
       },
       {
         "msgid": "Global shortcut"
@@ -2326,6 +2563,12 @@
         "msgid": "HEVC"
       },
       {
+        "msgid": "Hang out together with voice, video and screen share"
+      },
+      {
+        "msgid": "Hang out with voice, video and screen share"
+      },
+      {
         "msgid": "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
       },
       {
@@ -2344,7 +2587,22 @@
         "msgid": "Hid join messages in the system channel."
       },
       {
+        "msgid": "Hid media download options"
+      },
+      {
         "msgid": "Hid the community owner crown."
+      },
+      {
+        "msgid": "Hide after inactivity"
+      },
+      {
+        "msgid": "Hide guidelines"
+      },
+      {
+        "msgid": "Hide media download options"
+      },
+      {
+        "msgid": "Hides the download, open in browser and copy buttons on images and videos in this channel."
       },
       {
         "msgid": "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your system settings."
@@ -2413,10 +2671,19 @@
         "msgid": "Italic"
       },
       {
+        "msgid": "Join this thread to follow it in your channel list and get notifications."
+      },
+      {
         "msgid": "Join this voice channel and hear others. Denying it along with View channel for {everyoneMention} makes the channel private."
       },
       {
+        "msgid": "Join thread"
+      },
+      {
         "msgid": "Join voice channels and hear others."
+      },
+      {
+        "msgid": "Joined"
       },
       {
         "msgid": "Just want to support {productName}'s open source development? {donateLink}."
@@ -2446,10 +2713,16 @@
         "msgid": "Largest file you can upload"
       },
       {
+        "msgid": "Leave thread"
+      },
+      {
         "msgid": "Let others clone your emojis"
       },
       {
         "msgid": "Let others clone your stickers"
+      },
+      {
+        "msgid": "Let people know how to post in this forum"
       },
       {
         "msgid": "Let people link their Bluesky account to their profile."
@@ -2503,7 +2776,19 @@
         "msgid": "Linked {length, plural, one {# theme file} other {# theme files}}. Changes you save to them apply right away."
       },
       {
+        "msgid": "List"
+      },
+      {
+        "msgid": "Load more"
+      },
+      {
+        "msgid": "Load older posts"
+      },
+      {
         "msgid": "Loading instance configuration"
+      },
+      {
+        "msgid": "Lock thread"
       },
       {
         "msgid": "Locked the thread"
@@ -2521,6 +2806,18 @@
         "msgid": "Make the instance yours"
       },
       {
+        "msgid": "Manage Posts"
+      },
+      {
+        "msgid": "Manage Threads"
+      },
+      {
+        "msgid": "Manage posts"
+      },
+      {
+        "msgid": "Manage threads"
+      },
+      {
         "msgid": "Marked the channel as containing mature content."
       },
       {
@@ -2536,7 +2833,19 @@
         "msgid": "May cause compatibility issues for viewers. We’re working on improving this."
       },
       {
+        "msgid": "Media Channel"
+      },
+      {
+        "msgid": "Media channel"
+      },
+      {
         "msgid": "Media items you can save for later"
+      },
+      {
+        "msgid": "Members who can manage posts can add or remove it."
+      },
+      {
+        "msgid": "Members with Manage Posts can add or remove it."
       },
       {
         "msgid": "Mention everyone or any role in this channel (even if the role isn't set to be mentionable)."
@@ -2611,6 +2920,9 @@
         "msgid": "Mute other members in voice channels for everyone."
       },
       {
+        "msgid": "Mute thread"
+      },
+      {
         "msgid": "My community"
       },
       {
@@ -2626,10 +2938,22 @@
         "msgid": "Neural filter, full audio bandwidth."
       },
       {
+        "msgid": "New post"
+      },
+      {
+        "msgid": "New post in #{forumName}"
+      },
+      {
         "msgid": "New price scheduled for <0>{pendingChangeDate}</0>."
       },
       {
         "msgid": "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
+      },
+      {
+        "msgid": "New thread"
+      },
+      {
+        "msgid": "New threads will stop showing in the channel list after this period of inactivity."
       },
       {
         "msgid": "No application windows found"
@@ -2644,10 +2968,19 @@
         "msgid": "No hardware encoder was found on this device, so Prefer hardware works like Automatic."
       },
       {
+        "msgid": "No matching members or roles"
+      },
+      {
+        "msgid": "No matching posts"
+      },
+      {
         "msgid": "No optional services are available on this instance. You can skip this step."
       },
       {
         "msgid": "No part of {query} could be applied. Fix the underlined value or add something to search for."
+      },
+      {
+        "msgid": "No posts match your search"
       },
       {
         "msgid": "No recovery kit? Ask an admin of this instance for a password reset link."
@@ -2659,6 +2992,9 @@
         "msgid": "No tags (recommended)"
       },
       {
+        "msgid": "No threads match"
+      },
+      {
         "msgid": "Not accepted"
       },
       {
@@ -2668,10 +3004,37 @@
         "msgid": "Not sent to followers yet."
       },
       {
+        "msgid": "Nothing to preview yet."
+      },
+      {
         "msgid": "Nothing to search for"
       },
       {
+        "msgid": "OP"
+      },
+      {
+        "msgid": "Older posts"
+      },
+      {
         "msgid": "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
+      },
+      {
+        "msgid": "Only @mentions"
+      },
+      {
+        "msgid": "Only moderators can apply this tag."
+      },
+      {
+        "msgid": "Only moderators can use this tag"
+      },
+      {
+        "msgid": "Only people you invite and moderators can see this thread."
+      },
+      {
+        "msgid": "Only selected members and roles will be able to view this channel."
+      },
+      {
+        "msgid": "Only the members and roles you pick, plus admins, can view this channel."
       },
       {
         "msgid": "Open Settings"
@@ -2680,10 +3043,19 @@
         "msgid": "Open an application window, then try again."
       },
       {
+        "msgid": "Open in full view"
+      },
+      {
         "msgid": "Open popup"
       },
       {
         "msgid": "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
+      },
+      {
+        "msgid": "Open thread"
+      },
+      {
+        "msgid": "Open thread again"
       },
       {
         "msgid": "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
@@ -2716,6 +3088,9 @@
         "msgid": "Ordered upload"
       },
       {
+        "msgid": "Original message was deleted."
+      },
+      {
         "msgid": "Originally banned by {user} on {date}."
       },
       {
@@ -2723,6 +3098,12 @@
       },
       {
         "msgid": "Originally banned on {date}."
+      },
+      {
+        "msgid": "Other Active Threads"
+      },
+      {
+        "msgid": "Other active threads"
       },
       {
         "msgid": "Passkey updated"
@@ -2761,7 +3142,13 @@
         "msgid": "Pick a plan and your perks switch on the moment checkout finishes."
       },
       {
+        "msgid": "Pick an emoji"
+      },
+      {
         "msgid": "Pick application audio while sharing a video device on Linux"
+      },
+      {
+        "msgid": "Pick at least one tag for this post."
       },
       {
         "msgid": "Pick the 4-digit number after your username"
@@ -2779,6 +3166,12 @@
         "msgid": "Pin or unpin any message."
       },
       {
+        "msgid": "Pin post"
+      },
+      {
+        "msgid": "Pinned"
+      },
+      {
         "msgid": "Plans, perks, gifts and your subscription all live on one page."
       },
       {
@@ -2791,7 +3184,31 @@
         "msgid": "Popped out"
       },
       {
+        "msgid": "Post"
+      },
+      {
+        "msgid": "Post guidelines"
+      },
+      {
+        "msgid": "Post link copied"
+      },
+      {
+        "msgid": "Post title"
+      },
+      {
         "msgid": "Post to"
+      },
+      {
+        "msgid": "Post updates other communities can follow"
+      },
+      {
+        "msgid": "Post updates that other communities can follow"
+      },
+      {
+        "msgid": "Post updates that other communities can follow into their own channels"
+      },
+      {
+        "msgid": "Posts built around images and videos"
       },
       {
         "msgid": "Preferred screen share codec"
@@ -2833,10 +3250,22 @@
         "msgid": "Print"
       },
       {
+        "msgid": "Private"
+      },
+      {
+        "msgid": "Private channel"
+      },
+      {
+        "msgid": "Private thread"
+      },
+      {
         "msgid": "Product name"
       },
       {
         "msgid": "Profile banners are not enabled on this instance."
+      },
+      {
+        "msgid": "Public"
       },
       {
         "msgid": "Public registration is closed."
@@ -2890,7 +3319,13 @@
         "msgid": "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
       },
       {
+        "msgid": "Quick access to an external website or resource"
+      },
+      {
         "msgid": "Random tags"
+      },
+      {
+        "msgid": "React to post"
       },
       {
         "msgid": "Read messages sent before they opened a channel. Without it, they only see messages that arrive while it is open."
@@ -2903,6 +3338,12 @@
       },
       {
         "msgid": "Reason (optional)."
+      },
+      {
+        "msgid": "Recently Active"
+      },
+      {
+        "msgid": "Recently active"
       },
       {
         "msgid": "Reconnecting to your desktop…"
@@ -2921,6 +3362,9 @@
       },
       {
         "msgid": "Registration"
+      },
+      {
+        "msgid": "Remove from thread"
       },
       {
         "msgid": "Remove members from the community. They can rejoin with a new invite."
@@ -2980,6 +3424,9 @@
         "msgid": "Removed the custom warning text."
       },
       {
+        "msgid": "Removed the default reaction"
+      },
+      {
         "msgid": "Removed the description {text}."
       },
       {
@@ -3019,6 +3466,9 @@
         "msgid": "Removed the server mute."
       },
       {
+        "msgid": "Removed the tag {name}"
+      },
+      {
         "msgid": "Removed the timeout."
       },
       {
@@ -3052,7 +3502,13 @@
         "msgid": "Require passkey"
       },
       {
+        "msgid": "Require people to select tags when posting"
+      },
+      {
         "msgid": "Required 2FA for moderation actions."
+      },
+      {
+        "msgid": "Required a tag on new posts"
       },
       {
         "msgid": "Requires a claimed account that's at least 5 minutes old."
@@ -3145,6 +3601,9 @@
         "msgid": "Resumed invites."
       },
       {
+        "msgid": "Retry"
+      },
+      {
         "msgid": "Review"
       },
       {
@@ -3172,6 +3631,9 @@
         "msgid": "Save {percent}%"
       },
       {
+        "msgid": "Saved media cannot start a post. Upload the file instead."
+      },
+      {
         "msgid": "Scan to open the recovery page with your details filled in."
       },
       {
@@ -3193,6 +3655,18 @@
         "msgid": "Search for {query}"
       },
       {
+        "msgid": "Search is getting ready for this community. Trying again shortly..."
+      },
+      {
+        "msgid": "Search members or roles"
+      },
+      {
+        "msgid": "Search posts"
+      },
+      {
+        "msgid": "Search threads"
+      },
+      {
         "msgid": "Searching all users"
       },
       {
@@ -3208,6 +3682,9 @@
         "msgid": "Searching voice channels"
       },
       {
+        "msgid": "Searching..."
+      },
+      {
         "msgid": "Second factor"
       },
       {
@@ -3215,6 +3692,9 @@
       },
       {
         "msgid": "Security key PIN form"
+      },
+      {
+        "msgid": "See all threads"
       },
       {
         "msgid": "See this channel. Denying it for {everyoneMention} makes the channel private."
@@ -3226,6 +3706,9 @@
         "msgid": "Self-host setup"
       },
       {
+        "msgid": "Send a message in \"{name}\""
+      },
+      {
         "msgid": "Send file messages in order"
       },
       {
@@ -3235,7 +3718,16 @@
         "msgid": "Send messages in channels."
       },
       {
+        "msgid": "Send messages in posts"
+      },
+      {
         "msgid": "Send messages in this channel."
+      },
+      {
+        "msgid": "Send messages in threads"
+      },
+      {
+        "msgid": "Send messages, images, GIFs and emoji"
       },
       {
         "msgid": "Sending {resolution} at {frameRate} FPS with {codec}"
@@ -3313,6 +3805,9 @@
         "msgid": "Set the custom warning text to {text}."
       },
       {
+        "msgid": "Set the default reaction to {emoji}"
+      },
+      {
         "msgid": "Set the description to {text}."
       },
       {
@@ -3364,6 +3859,9 @@
         "msgid": "Share full-length videos and big files without shrinking them first. Free accounts can send up to {freeSize}."
       },
       {
+        "msgid": "Share images and videos as posts with their own discussions"
+      },
+      {
         "msgid": "Share screen"
       },
       {
@@ -3394,6 +3892,9 @@
         "msgid": "Sharper text at 720p, 30 FPS"
       },
       {
+        "msgid": "Shortcut to an external website"
+      },
+      {
         "msgid": "Shorten your about me and try again."
       },
       {
@@ -3412,7 +3913,13 @@
         "msgid": "Show fewer filters"
       },
       {
+        "msgid": "Show guidelines"
+      },
+      {
         "msgid": "Show me how"
+      },
+      {
+        "msgid": "Show new posts as unread"
       },
       {
         "msgid": "Show per-device participant volume sliders in voice menus"
@@ -3424,7 +3931,13 @@
         "msgid": "Show {count, plural, one {# more filter} other {# more filters}}"
       },
       {
+        "msgid": "Showed media download options"
+      },
+      {
         "msgid": "Showed members with this role in their own section in the member list."
+      },
+      {
+        "msgid": "Shown on every post so people can react with one click."
       },
       {
         "msgid": "Sign in with your old {productName} app"
@@ -3443,6 +3956,9 @@
       },
       {
         "msgid": "Single community mode"
+      },
+      {
+        "msgid": "Slowmode for creating posts"
       },
       {
         "msgid": "Slowmode is active ({remaining})"
@@ -3484,13 +4000,31 @@
         "msgid": "Something went wrong while publishing. Try again in a moment."
       },
       {
+        "msgid": "Something went wrong: {detail}"
+      },
+      {
+        "msgid": "Sort & View"
+      },
+      {
+        "msgid": "Sort & view"
+      },
+      {
+        "msgid": "Sort by"
+      },
+      {
         "msgid": "Start in the tray instead of opening the window when launched at login"
+      },
+      {
+        "msgid": "Started by {name}"
       },
       {
         "msgid": "Started displaying members with this role separately."
       },
       {
         "msgid": "Static Neko"
+      },
+      {
+        "msgid": "Stay focused on a conversation with a thread, a temporary text channel."
       },
       {
         "msgid": "Stereo microphone"
@@ -3544,6 +4078,9 @@
         "msgid": "Stopped requiring 2FA for moderation actions."
       },
       {
+        "msgid": "Stopped requiring a tag on new posts"
+      },
+      {
         "msgid": "Stopped the member from hearing others in this community."
       },
       {
@@ -3589,7 +4126,16 @@
         "msgid": "System-wide: Not assigned"
       },
       {
+        "msgid": "System-wide: not assigned"
+      },
+      {
         "msgid": "System-wide: {trigger}"
+      },
+      {
+        "msgid": "Tag name"
+      },
+      {
+        "msgid": "Tags help people find posts. You can add up to {count} tags."
       },
       {
         "msgid": "Talk in calls and test your input."
@@ -3688,6 +4234,18 @@
         "msgid": "The webhook was created by {user}."
       },
       {
+        "msgid": "There are no posts yet"
+      },
+      {
+        "msgid": "There are no recent messages in this thread."
+      },
+      {
+        "msgid": "There are no threads"
+      },
+      {
+        "msgid": "There are no threads."
+      },
+      {
         "msgid": "These options change how people use the instance. Some can only be chosen during setup."
       },
       {
@@ -3725,6 +4283,9 @@
       },
       {
         "msgid": "This emoji is from"
+      },
+      {
+        "msgid": "This forum has no tags yet."
       },
       {
         "msgid": "This image couldn't be read. It may be damaged."
@@ -3793,10 +4354,43 @@
         "msgid": "This sticker is from"
       },
       {
+        "msgid": "This thread is locked. Only moderators can send messages."
+      },
+      {
         "msgid": "This username is already taken"
       },
       {
         "msgid": "This username is available"
+      },
+      {
+        "msgid": "Thread"
+      },
+      {
+        "msgid": "Thread Members"
+      },
+      {
+        "msgid": "Thread created"
+      },
+      {
+        "msgid": "Thread deleted"
+      },
+      {
+        "msgid": "Thread link copied"
+      },
+      {
+        "msgid": "Thread members"
+      },
+      {
+        "msgid": "Thread name"
+      },
+      {
+        "msgid": "Thread settings"
+      },
+      {
+        "msgid": "Thread updated"
+      },
+      {
+        "msgid": "Threads"
       },
       {
         "msgid": "Timed out the member until {date}."
@@ -3818,6 +4412,12 @@
       },
       {
         "msgid": "Transferred community ownership to {user}."
+      },
+      {
+        "msgid": "Try a different name or check the other tab."
+      },
+      {
+        "msgid": "Try different words or clear the tag filter."
       },
       {
         "msgid": "Try full quality again"
@@ -3877,7 +4477,16 @@
         "msgid": "Unlink"
       },
       {
+        "msgid": "Unlock thread"
+      },
+      {
         "msgid": "Unlocked the thread"
+      },
+      {
+        "msgid": "Unmute thread"
+      },
+      {
+        "msgid": "Unpin post"
       },
       {
         "msgid": "Unread channels"
@@ -3911,6 +4520,9 @@
       },
       {
         "msgid": "Use animated emojis in messages"
+      },
+      {
+        "msgid": "Use channel default"
       },
       {
         "msgid": "Use custom emojis and stickers in any community"
@@ -3980,6 +4592,9 @@
       },
       {
         "msgid": "Video call backgrounds you can save"
+      },
+      {
+        "msgid": "View as"
       },
       {
         "msgid": "Virtual microphone"
@@ -4055,6 +4670,12 @@
       },
       {
         "msgid": "You can only pick a tag that nobody else with the same username already has. Usernames aren't case sensitive, so Mina#4821 and mina#4821 count as the same. The #0000 tag is reserved for {productName} Visionary members. {visionaryLink}."
+      },
+      {
+        "msgid": "You can pick up to {count} tags."
+      },
+      {
+        "msgid": "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
       },
       {
         "msgid": "You can't manage webhooks in any community. Ask an admin to follow this channel."
@@ -4225,6 +4846,12 @@
         "msgid": "page link"
       },
       {
+        "msgid": "started a thread"
+      },
+      {
+        "msgid": "to create a post"
+      },
+      {
         "msgid": "{PAYMENT_PROVIDER_NAME} handles payment securely."
       },
       {
@@ -4279,7 +4906,13 @@
         "msgid": "{actor} changed the permission overrides of the channel {channel}."
       },
       {
+        "msgid": "{actor} changed the permission overrides of the forum channel {channel}"
+      },
+      {
         "msgid": "{actor} changed the permission overrides of the link channel {channel}."
+      },
+      {
+        "msgid": "{actor} changed the permission overrides of the media channel {channel}"
       },
       {
         "msgid": "{actor} changed the permission overrides of the text channel {channel}."
@@ -4336,6 +4969,12 @@
         "msgid": "{actor} created the channel {channel}."
       },
       {
+        "msgid": "{actor} created the forum channel {channel}"
+      },
+      {
+        "msgid": "{actor} created the forum channel {channel} in {category}"
+      },
+      {
         "msgid": "{actor} created the invite {code} for {channel}."
       },
       {
@@ -4346,6 +4985,12 @@
       },
       {
         "msgid": "{actor} created the link channel {channel}."
+      },
+      {
+        "msgid": "{actor} created the media channel {channel}"
+      },
+      {
+        "msgid": "{actor} created the media channel {channel} in {category}"
       },
       {
         "msgid": "{actor} created the role {role}."
@@ -4402,6 +5047,9 @@
         "msgid": "{actor} deleted the emoji {emoji}."
       },
       {
+        "msgid": "{actor} deleted the forum channel {channel}"
+      },
+      {
         "msgid": "{actor} deleted the invite {code} for {channel}."
       },
       {
@@ -4409,6 +5057,9 @@
       },
       {
         "msgid": "{actor} deleted the link channel {channel}."
+      },
+      {
+        "msgid": "{actor} deleted the media channel {channel}"
       },
       {
         "msgid": "{actor} deleted the role {role}."
@@ -4570,6 +5221,12 @@
         "msgid": "{actor} renamed the emoji {oldEmoji} to {newEmoji}."
       },
       {
+        "msgid": "{actor} renamed the forum channel {oldName} to {newName}"
+      },
+      {
+        "msgid": "{actor} renamed the media channel {oldName} to {newName}"
+      },
+      {
         "msgid": "{actor} renamed the role {oldName} to {newName}."
       },
       {
@@ -4681,10 +5338,16 @@
         "msgid": "{actor} updated the emoji {emoji}."
       },
       {
+        "msgid": "{actor} updated the forum channel {channel}"
+      },
+      {
         "msgid": "{actor} updated the invite {code}."
       },
       {
         "msgid": "{actor} updated the link channel {channel}."
+      },
+      {
+        "msgid": "{actor} updated the media channel {channel}"
       },
       {
         "msgid": "{actor} updated the permission override for @everyone in {channel}."
@@ -4735,6 +5398,9 @@
         "msgid": "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
       },
       {
+        "msgid": "{count, plural, one {# Message} other {# Messages}}"
+      },
+      {
         "msgid": "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
       },
       {
@@ -4744,10 +5410,19 @@
         "msgid": "{count, plural, one {# image} other {# images}}"
       },
       {
+        "msgid": "{count, plural, one {# matching post} other {# matching posts}}"
+      },
+      {
+        "msgid": "{count, plural, one {# message} other {# messages}}"
+      },
+      {
         "msgid": "{count, plural, one {# minute} other {# minutes}}"
       },
       {
         "msgid": "{count, plural, one {# more permission} other {# more permissions}}"
+      },
+      {
+        "msgid": "{count, plural, one {# new message} other {# new messages}}"
       },
       {
         "msgid": "{count, plural, one {# video} other {# videos}}"
@@ -4853,6 +5528,9 @@
       },
       {
         "msgid": "{username} followed {name} into this channel. Messages published there will appear here."
+      },
+      {
+        "msgid": "{username} started a thread: {threadName}"
       },
       {
         "msgid": "{yearlyPrice}/yr"
@@ -5044,6 +5722,9 @@
         "msgid": "Normal"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "PiP"
       },
       {
@@ -5060,6 +5741,9 @@
       },
       {
         "msgid": "Roles ({roleCount})"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Social"
@@ -5312,7 +5996,13 @@
         "msgid": "Neko"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Roles ({roleCount})"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Token"
@@ -5479,6 +6169,9 @@
         "msgid": "Neko"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Plutonium"
       },
       {
@@ -5486,6 +6179,9 @@
       },
       {
         "msgid": "Romania"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Slovakia"
@@ -5702,6 +6398,9 @@
         "msgid": "Fluxer"
       },
       {
+        "msgid": "Forum"
+      },
+      {
         "msgid": "France"
       },
       {
@@ -5792,6 +6491,9 @@
         "msgid": "Notifications"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Options"
       },
       {
@@ -5834,7 +6536,13 @@
         "msgid": "Premium"
       },
       {
+        "msgid": "Public"
+      },
+      {
         "msgid": "Saturation"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Secret"
@@ -5969,6 +6677,9 @@
         "msgid": "{count, plural, one {# image} other {# images}}"
       },
       {
+        "msgid": "{count, plural, one {# message} other {# messages}}"
+      },
+      {
         "msgid": "{count, plural, one {# minute} other {# minutes}}"
       },
       {
@@ -6086,10 +6797,19 @@
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "PgDn"
       },
       {
         "msgid": "PgUp"
+      },
+      {
+        "msgid": "Searching..."
+      },
+      {
+        "msgid": "Threads"
       },
       {
         "msgid": "Visionary"
@@ -6175,10 +6895,16 @@
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "PgDn"
       },
       {
         "msgid": "PgUp"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Win"
@@ -6273,6 +6999,9 @@
         "msgid": "Font"
       },
       {
+        "msgid": "Forum"
+      },
+      {
         "msgid": "Gateway"
       },
       {
@@ -6295,6 +7024,9 @@
       },
       {
         "msgid": "Neko"
+      },
+      {
+        "msgid": "OP"
       },
       {
         "msgid": "Online"
@@ -6322,6 +7054,9 @@
       },
       {
         "msgid": "Premium model"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Spam"
@@ -6476,6 +7211,9 @@
         "msgid": "Neko"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Offline"
       },
       {
@@ -6492,6 +7230,9 @@
       },
       {
         "msgid": "Port"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Token"
@@ -6652,6 +7393,15 @@
         "msgid": "Edit \"{0}\""
       },
       {
+        "msgid": "Edit Tag"
+      },
+      {
+        "msgid": "Edit Thread"
+      },
+      {
+        "msgid": "Edit tag"
+      },
+      {
         "msgid": "Edit {engineName}"
       },
       {
@@ -6659,6 +7409,9 @@
       },
       {
         "msgid": "Fluxer"
+      },
+      {
+        "msgid": "Forum"
       },
       {
         "msgid": "HEVC"
@@ -6706,6 +7459,9 @@
         "msgid": "Normal"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Offline"
       },
       {
@@ -6746,6 +7502,9 @@
       },
       {
         "msgid": "SHA-256 Hash"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Shift"
@@ -7012,6 +7771,9 @@
         "msgid": "Fluxer"
       },
       {
+        "msgid": "Forum"
+      },
+      {
         "msgid": "Gateway"
       },
       {
@@ -7066,6 +7828,9 @@
         "msgid": "No"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Online"
       },
       {
@@ -7105,6 +7870,9 @@
         "msgid": "Romania"
       },
       {
+        "msgid": "Searching..."
+      },
+      {
         "msgid": "Slovenia"
       },
       {
@@ -7127,6 +7895,9 @@
       },
       {
         "msgid": "Test SMTP"
+      },
+      {
+        "msgid": "Thread"
       },
       {
         "msgid": "Token"
@@ -7305,6 +8076,9 @@
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Ping"
       },
       {
@@ -7312,6 +8086,9 @@
       },
       {
         "msgid": "Ping: {latency}ms"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Visionary"
@@ -7424,6 +8201,12 @@
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
+        "msgid": "OP"
+      },
+      {
+        "msgid": "Searching..."
+      },
+      {
         "msgid": "Visionary"
       },
       {
@@ -7504,6 +8287,9 @@
         "msgid": "Neko"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -7511,6 +8297,9 @@
       },
       {
         "msgid": "Premium"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "YubiKey"
@@ -7680,6 +8469,9 @@
         "msgid": "Focus"
       },
       {
+        "msgid": "Forum"
+      },
+      {
         "msgid": "Gaming"
       },
       {
@@ -7770,6 +8562,9 @@
         "msgid": "Nodes"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Offline"
       },
       {
@@ -7786,6 +8581,9 @@
       },
       {
         "msgid": "Open event sink"
+      },
+      {
+        "msgid": "Open thread"
       },
       {
         "msgid": "Open {contextName}"
@@ -7860,6 +8658,9 @@
         "msgid": "Relevant"
       },
       {
+        "msgid": "Searching..."
+      },
+      {
         "msgid": "Spam"
       },
       {
@@ -7906,6 +8707,12 @@
       },
       {
         "msgid": "Test SMTP"
+      },
+      {
+        "msgid": "Thread"
+      },
+      {
+        "msgid": "Threads"
       },
       {
         "msgid": "Tip"
@@ -8157,6 +8964,9 @@
         "msgid": "Fluxer"
       },
       {
+        "msgid": "Forum"
+      },
+      {
         "msgid": "Full"
       },
       {
@@ -8214,6 +9024,9 @@
         "msgid": "Normal"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Pause"
       },
       {
@@ -8245,6 +9058,9 @@
       },
       {
         "msgid": "Romania"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Send"
@@ -8421,6 +9237,9 @@
         "msgid": "Folder"
       },
       {
+        "msgid": "Forum"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -8457,6 +9276,9 @@
         "msgid": "Neko"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Offline"
       },
       {
@@ -8482,6 +9304,9 @@
       },
       {
         "msgid": "Region: {regionName}"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Spam"
@@ -8685,6 +9510,9 @@
         "msgid": "Normal"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Online"
       },
       {
@@ -8709,6 +9537,9 @@
         "msgid": "Prompt"
       },
       {
+        "msgid": "Searching..."
+      },
+      {
         "msgid": "Social"
       },
       {
@@ -8728,6 +9559,9 @@
       },
       {
         "msgid": "Tags ({tagCount}/{tagLimit})"
+      },
+      {
+        "msgid": "Thread"
       },
       {
         "msgid": "Token"
@@ -8976,6 +9810,9 @@
         "msgid": "Font"
       },
       {
+        "msgid": "Forum"
+      },
+      {
         "msgid": "Gateway"
       },
       {
@@ -9039,6 +9876,9 @@
         "msgid": "Normal"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Permanent"
       },
       {
@@ -9058,6 +9898,12 @@
       },
       {
         "msgid": "Premium"
+      },
+      {
+        "msgid": "Public"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Secret"
@@ -9256,10 +10102,16 @@
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "PgDn"
       },
       {
         "msgid": "PgUp"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Visionary"
@@ -9384,6 +10236,9 @@
         "msgid": "Fluxer"
       },
       {
+        "msgid": "Forum"
+      },
+      {
         "msgid": "Gateway"
       },
       {
@@ -9429,6 +10284,9 @@
         "msgid": "Normal"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Permanent"
       },
       {
@@ -9469,6 +10327,9 @@
       },
       {
         "msgid": "Ring"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Session"
@@ -9648,6 +10509,9 @@
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -9655,6 +10519,9 @@
       },
       {
         "msgid": "PiP"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Static Neko"
@@ -9752,6 +10619,9 @@
         "msgid": "Fluxer"
       },
       {
+        "msgid": "Forum"
+      },
+      {
         "msgid": "HEVC"
       },
       {
@@ -9779,6 +10649,9 @@
         "msgid": "Normal"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "Ping"
       },
       {
@@ -9801,6 +10674,9 @@
       },
       {
         "msgid": "Premium model"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Spam"
@@ -9912,10 +10788,16 @@
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "PgDn"
       },
       {
         "msgid": "PgUp"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Visionary"
@@ -10052,6 +10934,9 @@
         "msgid": "Neko"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "PgDn"
       },
       {
@@ -10065,6 +10950,9 @@
       },
       {
         "msgid": "Romania"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "Slovakia"
@@ -10193,6 +11081,12 @@
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
+        "msgid": "OP"
+      },
+      {
+        "msgid": "Searching..."
+      },
+      {
         "msgid": "WebAuthn"
       },
       {
@@ -10285,10 +11179,19 @@
         "msgid": "Markdown"
       },
       {
+        "msgid": "Mute thread"
+      },
+      {
         "msgid": "NCMEC {ncmecReportId}"
       },
       {
+        "msgid": "OP"
+      },
+      {
         "msgid": "PgDn"
+      },
+      {
+        "msgid": "Searching..."
       },
       {
         "msgid": "WebAuthn"

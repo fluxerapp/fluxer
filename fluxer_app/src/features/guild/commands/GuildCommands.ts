@@ -2,6 +2,7 @@
 
 import type {ChannelMoveOperation} from '@app/features/app/components/layout/utils/ChannelMoveOperation';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import type {ChannelWire} from '@app/features/channel/models/Channel';
 import Guilds from '@app/features/guild/state/Guilds';
 import {createRoleHoistOrderPayload, createRoleOrderPayload} from '@app/features/guild/utils/GuildRoleOrderUtils';
 import Invites from '@app/features/invite/state/Invites';
@@ -38,6 +39,7 @@ interface GuildAuditLogFetchResponse {
 	audit_log_entries: Array<GuildAuditLogEntryResponse>;
 	users: Array<UserPartial>;
 	webhooks: Array<AuditLogWebhookResponse>;
+	threads?: Array<ChannelWire>;
 }
 
 type GuildCreateParams = Pick<Guild, 'name'> & {

@@ -6,6 +6,7 @@ import type {DomainMigrationAssignmentResponse} from '@fluxer/schema/src/domains
 import {
 	type ExperimentAssignmentsResponse,
 	INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE,
+	readChannelThreadsAssignment,
 	readDomainMigrationAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
@@ -130,6 +131,21 @@ describe('ExperimentAssignments response handling', () => {
 		await adopt(CANARY_ENVELOPE);
 		expect(ExperimentAssignments.response).toEqual(CANARY_ENVELOPE);
 		expect(readDomainMigrationAssignment(ExperimentAssignments.response)).toEqual(CANARY_ASSIGNMENT);
+	});
+
+	it('parses the channel_threads assignment alongside the others', async () => {
+		const envelope: ExperimentAssignmentsResponse = {
+			...CANARY_ENVELOPE,
+			assignments: {...CANARY_ENVELOPE.assignments, channel_threads: {active: true, config_version: 3}},
+		};
+		await adopt(envelope);
+		expect(readChannelThreadsAssignment(ExperimentAssignments.response)).toEqual({active: true, config_version: 3});
+		expect(readDomainMigrationAssignment(ExperimentAssignments.response)).toEqual(CANARY_ASSIGNMENT);
+	});
+
+	it('reads no channel_threads assignment when the key is absent', async () => {
+		await adopt(CANARY_ENVELOPE);
+		expect(readChannelThreadsAssignment(ExperimentAssignments.response)).toBeNull();
 	});
 
 	it('requests the shared experiment endpoint', async () => {

@@ -16,6 +16,10 @@ import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import mentionRendererStyles from '@app/features/theme/styles/MentionRenderer.module.css';
 import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
+import {openThread} from '@app/features/threads/commands/ThreadNavigation';
+import {ThreadContextMenu} from '@app/features/threads/components/ThreadContextMenu';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {ChannelContextMenu} from '@app/features/ui/action_menu/ChannelContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -42,6 +46,12 @@ const CHANNEL_LINK_DESCRIPTOR = msg({
 });
 const UNKNOWN_MENTION_DESCRIPTOR = msg({message: 'unknown-mention'});
 
+function isMentionableThreadFeatureChannel(channel: Channel): boolean {
+	if (!ThreadGuilds.isActive(channel.guildId)) return false;
+	if (channel.isThread()) return ChannelThreads.getThread(channel.id) != null;
+	return channel.isThreadOnly();
+}
+
 interface InteractiveChannelMentionProps {
 	channel: Channel;
 	roleDescription: string;
@@ -56,6 +66,10 @@ function InteractiveChannelMention({channel, roleDescription}: InteractiveChanne
 		const guildId = channel.guildId;
 		if (guildId == null) {
 			throw new Error('Interactive channel mentions must belong to a guild');
+		}
+		if (channel.isThread()) {
+			openThread(channel);
+			return;
 		}
 		NavigationCommands.selectChannel(guildId, channel.id);
 	};
@@ -83,13 +97,20 @@ function InteractiveChannelMention({channel, roleDescription}: InteractiveChanne
 					event.stopPropagation();
 					ContextMenuCommands.openFromEvent(
 						event,
-						({onClose}) => (
-							<ChannelContextMenu
-								channel={channel}
-								onClose={onClose}
-								data-flx="messaging.markdown.renderers.mention-renderer.channel-context-menu"
-							/>
-						),
+						({onClose}) =>
+							channel.isThread() ? (
+								<ThreadContextMenu
+									thread={channel}
+									onClose={onClose}
+									data-flx="messaging.markdown.renderers.mention-renderer.thread-context-menu"
+								/>
+							) : (
+								<ChannelContextMenu
+									channel={channel}
+									onClose={onClose}
+									data-flx="messaging.markdown.renderers.mention-renderer.channel-context-menu"
+								/>
+							),
 						withTracking(),
 					);
 				}}
@@ -259,7 +280,8 @@ export const MentionRenderer = observer(function MentionRenderer({
 				channel.type !== ChannelTypes.GUILD_TEXT &&
 				channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT &&
 				channel.type !== ChannelTypes.GUILD_VOICE &&
-				channel.type !== ChannelTypes.GUILD_LINK
+				channel.type !== ChannelTypes.GUILD_LINK &&
+				!isMentionableThreadFeatureChannel(channel)
 			) {
 				return unknownMention;
 			}

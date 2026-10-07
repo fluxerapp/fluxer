@@ -34,7 +34,7 @@ export const ChannelContextMenu: React.FC<ChannelContextMenuProps> = observer(({
 		() => [i18n._(MUTE_CHANNEL_DESCRIPTOR), i18n._(UNMUTE_CHANNEL_DESCRIPTOR)],
 		[i18n.locale],
 	);
-	const showMuteMenuItem = GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type);
+	const showMuteMenuItem = GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || channel.isThreadOnly();
 	const notificationSettingsLabel = i18n._(NOTIFICATION_SETTINGS_DESCRIPTOR);
 	const splitGroups = useMemo<{
 		beforeBehavior: Array<MenuGroupType>;

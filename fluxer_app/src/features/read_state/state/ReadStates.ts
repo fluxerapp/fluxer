@@ -38,6 +38,7 @@ import {
 	GUILD_TEXT_BASED_CHANNEL_TYPES,
 	TEXT_BASED_CHANNEL_TYPES,
 } from '@fluxer/constants/src/ChannelConstants';
+import {THREAD_FEATURE_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import type {ChannelId, GuildId} from '@fluxer/schema/src/branded/WireIds';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {decodeReadStateProto} from '@fluxer/schema/src/domains/read_state/ReadStateProtoCodec';
@@ -401,7 +402,7 @@ class ReadStates {
 				state.serverVersion = readState.version ?? null;
 			}
 			for (const channel of action.channels) {
-				if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type)) continue;
+				if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_FEATURE_CHANNEL_TYPES.has(channel.type)) continue;
 				const state = this.get(channel.id);
 				state.lastMessageId = channel.last_message_id ?? null;
 				state.lastPinTimestamp = parseTimestamp(channel.last_pin_timestamp);
@@ -419,22 +420,34 @@ class ReadStates {
 		guild: {
 			id: string;
 			channels?: ReadonlyArray<ChannelPayload>;
+			threads?: ReadonlyArray<ChannelPayload>;
 		};
 	}): void {
 		this.suppressVersionBumps(() => {
 			if (action.guild.channels) {
 				for (const channel of action.guild.channels) {
-					if (!GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type)) continue;
-					const state = this.get(channel.id);
-					state.lastMessageId = channel.last_message_id ?? null;
-					state.lastPinTimestamp = parseTimestamp(channel.last_pin_timestamp);
-					state.storedGuildId = action.guild.id;
-					this.clearUnreadStateIfRead(state);
-					this.refreshMentionChannel(channel.id);
+					if (!GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) {
+						continue;
+					}
+					this.seedGuildChannel(action.guild.id, channel);
+				}
+			}
+			if (action.guild.threads) {
+				for (const thread of action.guild.threads) {
+					this.seedGuildChannel(action.guild.id, thread);
 				}
 			}
 			this.notifyChange(undefined, {global: true});
 		});
+	}
+
+	private seedGuildChannel(guildId: string, channel: ChannelPayload): void {
+		const state = this.get(channel.id);
+		state.lastMessageId = channel.last_message_id ?? null;
+		state.lastPinTimestamp = parseTimestamp(channel.last_pin_timestamp);
+		state.storedGuildId = guildId;
+		this.clearUnreadStateIfRead(state);
+		this.refreshMentionChannel(channel.id);
 	}
 
 	handleLoadMessages(action: {channelId: string; isAfter?: boolean; messages: Array<WireMessage>}): void {
@@ -537,11 +550,25 @@ class ReadStates {
 		this.notifyChange(action.channelId);
 	}
 
+	handleForumPostDiscarded(channelId: string, lastMessageId: string | null): void {
+		const state = this.getIfExists(channelId);
+		if (state == null) return;
+		state.lastMessageId = lastMessageId;
+		this.clearUnreadStateIfRead(state);
+		this.notifyChange(channelId);
+	}
+
 	handleChannelCreate(action: {channel: ChannelPayload}): void {
-		if (!TEXT_BASED_CHANNEL_TYPES.has(action.channel.type)) {
+		const isThread = THREAD_FEATURE_CHANNEL_TYPES.has(action.channel.type);
+		if (!TEXT_BASED_CHANNEL_TYPES.has(action.channel.type) && !isThread) {
 			return;
 		}
 		const state = this.get(action.channel.id);
+		if (isThread && !isNewerMessageId(action.channel.last_message_id, state.lastMessageId)) {
+			state.storedGuildId = action.channel.guild_id ?? state.storedGuildId;
+			this.notifyChange(action.channel.id);
+			return;
+		}
 		state.lastMessageId = action.channel.last_message_id ?? null;
 		state.lastPinTimestamp = parseTimestamp(action.channel.last_pin_timestamp);
 		state.storedGuildId = action.channel.guild_id ?? null;
@@ -562,7 +589,9 @@ class ReadStates {
 			if (
 				channel == null ||
 				state == null ||
-				(guildId != null && (channel.guildId !== guildId || !TEXT_BASED_CHANNEL_TYPES.has(channel.type)))
+				(guildId != null &&
+					(channel.guildId !== guildId ||
+						!(TEXT_BASED_CHANNEL_TYPES.has(channel.type) || THREAD_FEATURE_CHANNEL_TYPES.has(channel.type))))
 			) {
 				continue;
 			}
@@ -617,7 +646,11 @@ class ReadStates {
 			this.notifyChange(action.channel.id);
 			return;
 		}
-		if (action.channel.guild_id != null && GUILD_TEXT_BASED_CHANNEL_TYPES.has(action.channel.type ?? -1)) {
+		if (
+			action.channel.guild_id != null &&
+			(GUILD_TEXT_BASED_CHANNEL_TYPES.has(action.channel.type ?? -1) ||
+				THREAD_FEATURE_CHANNEL_TYPES.has(action.channel.type ?? -1))
+		) {
 			this.archiveState(action.channel.id);
 		}
 		this.clear(action.channel.id);

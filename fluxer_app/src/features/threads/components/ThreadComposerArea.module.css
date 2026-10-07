@@ -1,0 +1,35 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.notice {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 0 1rem 0.5rem;
+	padding: 0.625rem 0.75rem;
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary-alt);
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.notice:has(~ * :is(flx-channel-textarea-typing-slot, flx-channel-textarea-slowmode-slot)) {
+	margin-bottom: var(--composer-status-safe-area);
+}
+
+.noticeIcon {
+	flex-shrink: 0;
+	width: 1.25rem;
+	height: 1.25rem;
+	color: var(--text-tertiary);
+}
+
+.noticeText {
+	flex: 1;
+	min-width: 0;
+}
+
+.lockedIcon {
+	width: 1.25rem;
+	height: 1.25rem;
+}

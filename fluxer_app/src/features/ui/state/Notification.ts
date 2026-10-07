@@ -6,6 +6,10 @@ import AccountManager from '@app/features/auth/state/AccountManager';
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
+import {
+	formatNewPostNotificationSuffix,
+	resolveNewPostNotificationLevel,
+} from '@app/features/forum/utils/ForumNotificationUtils';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import Guilds from '@app/features/guild/state/Guilds';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -25,6 +29,8 @@ import FriendsTab from '@app/features/relationship/state/FriendsTab';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {FRIEND_ADDED_DESCRIPTOR} from '@app/features/relationship/utils/RelationshipMessageDescriptors';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
+import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
+import {isThreadMuted, resolveThreadNotificationLevel} from '@app/features/threads/utils/ThreadNotificationUtils';
 import Modal from '@app/features/ui/state/Modal';
 import {isInstalledPwa} from '@app/features/ui/utils/PwaUtils';
 import type {User} from '@app/features/user/models/User';
@@ -216,8 +222,8 @@ class NotificationState {
 		return this.focused;
 	}
 
-	private isMessageMentionLike(channel: Channel, message: Message, currentUser: User): boolean {
-		if (MessageUtils.isMentioned(currentUser, message)) {
+	private isMessageMentionLike(channel: Channel, message: Message, currentUser: User, ignoreEveryone = false): boolean {
+		if (MessageUtils.isMentioned(currentUser, message, ignoreEveryone)) {
 			return true;
 		}
 		if (channel.isPrivate()) {
@@ -227,6 +233,15 @@ class NotificationState {
 	}
 
 	private shouldNotifyBasedOnSettings(channel: Channel, messageRecord: Message, currentUser: User): boolean {
+		if (channel.isThread()) {
+			const isMember = ThreadMemberships.isMember(channel.id);
+			const threadLevel = isMember
+				? resolveThreadNotificationLevel(channel)
+				: (resolveNewPostNotificationLevel(channel, messageRecord.id) ?? MessageNotifications.ONLY_MENTIONS);
+			if (threadLevel === MessageNotifications.NO_MESSAGES) return false;
+			if (threadLevel === MessageNotifications.ALL_MESSAGES) return true;
+			return this.isMessageMentionLike(channel, messageRecord, currentUser, !isMember);
+		}
 		const level = UserGuildSettings.resolveEffectiveMessageNotifications({
 			id: channel.id,
 			guildId: channel.guildId,
@@ -251,7 +266,7 @@ class NotificationState {
 	}
 
 	private isViewingChannel(channelId: string): boolean {
-		return this.getVisibleChannelId() === channelId;
+		return this.getVisibleChannelId() === channelId || Navigation.threadId === channelId;
 	}
 
 	private validateNotificationData(message: WireMessage): NotificationData | null {
@@ -264,7 +279,9 @@ class NotificationState {
 		if ((message.flags & MessageFlags.SUPPRESS_NOTIFICATIONS) === MessageFlags.SUPPRESS_NOTIFICATIONS) {
 			return null;
 		}
-		if (
+		if (channel.isThread()) {
+			if (isThreadMuted(channel)) return null;
+		} else if (
 			UserGuildSettings.resolvesToNoMessages({
 				id: channel.id,
 				guildId: channel.guildId,
@@ -340,6 +357,23 @@ class NotificationState {
 					}
 				}
 				break;
+			case ChannelTypes.ANNOUNCEMENT_THREAD:
+			case ChannelTypes.PUBLIC_THREAD:
+			case ChannelTypes.PRIVATE_THREAD: {
+				const parent = channel.parentId ? Channels.getChannel(channel.parentId) : undefined;
+				const guild = channel.guildId ? Guilds.getGuild(channel.guildId) : null;
+				const context =
+					formatNewPostNotificationSuffix(i18n, channel, message.id) ??
+					[`#${channel.name}`, parent ? `#${parent.name}` : null, guild?.name ?? null]
+						.filter((part) => part != null)
+						.join(', ');
+				if (useMacOSNotificationPresentation) {
+					subtitle = context;
+				} else {
+					title = `${title} (${context})`;
+				}
+				break;
+			}
 			case ChannelTypes.GROUP_DM: {
 				const groupDmName = channel.name || i18n._(GROUP_DM_DESCRIPTOR);
 				if (useMacOSNotificationPresentation) {

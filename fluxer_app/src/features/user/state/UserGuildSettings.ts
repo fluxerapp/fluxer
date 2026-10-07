@@ -25,6 +25,7 @@ export interface ChannelOverride {
 		end_time?: string;
 	} | null;
 	unread_badges?: number | null;
+	flags?: number;
 }
 
 interface StoredGuildSettings {

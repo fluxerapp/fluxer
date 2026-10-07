@@ -6,7 +6,14 @@ import UserPinnedDM from '@app/features/user/state/UserPinnedDM';
 import Users from '@app/features/user/state/Users';
 import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT} from '@fluxer/constants/src/LimitConstants';
+import {THREAD_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import type {ChannelOverwrite, Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import type {
+	DefaultReactionEmojiResponse,
+	ForumTagResponse,
+	ThreadMemberResponse,
+	ThreadMetadataResponse,
+} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 
@@ -50,6 +57,68 @@ interface ChannelRecordOptions {
 	instanceId?: string;
 }
 
+export interface ThreadChannelFields {
+	readonly flags?: number;
+	readonly thread_metadata?: ThreadMetadataResponse;
+	readonly applied_tags?: ReadonlyArray<string>;
+	readonly message_count?: number;
+	readonly total_message_sent?: number;
+	readonly member_count?: number;
+	readonly default_auto_archive_duration?: number | null;
+	readonly default_thread_rate_limit_per_user?: number;
+	readonly available_tags?: ReadonlyArray<ForumTagResponse>;
+	readonly default_reaction_emoji?: DefaultReactionEmojiResponse | null;
+	readonly default_sort_order?: number | null;
+	readonly default_forum_layout?: number;
+	readonly default_tag_setting?: 'match_some' | 'match_all';
+}
+
+export interface ChannelWire extends WireChannel, ThreadChannelFields {
+	readonly member?: ThreadMemberResponse;
+	readonly newly_created?: boolean;
+}
+
+const THREAD_FIELD_KEYS: ReadonlyArray<keyof ThreadChannelFields> = [
+	'flags',
+	'thread_metadata',
+	'applied_tags',
+	'message_count',
+	'total_message_sent',
+	'member_count',
+	'default_auto_archive_duration',
+	'default_thread_rate_limit_per_user',
+	'available_tags',
+	'default_reaction_emoji',
+	'default_sort_order',
+	'default_forum_layout',
+	'default_tag_setting',
+];
+
+function pickThreadFields(source: ThreadChannelFields, base?: ThreadChannelFields | null): ThreadChannelFields | null {
+	let picked: Record<string, unknown> | null = base ? {...base} : null;
+	for (const key of THREAD_FIELD_KEYS) {
+		const value = source[key];
+		if (value !== undefined) {
+			picked ??= {};
+			picked[key] = value;
+		}
+	}
+	return picked as ThreadChannelFields | null;
+}
+
+function threadFieldsEqual(a: ThreadChannelFields | null, b: ThreadChannelFields | null): boolean {
+	if (a === b) return true;
+	if (a == null || b == null) return false;
+	for (const key of THREAD_FIELD_KEYS) {
+		const left = a[key];
+		const right = b[key];
+		if (left === right) continue;
+		if (typeof left !== 'object' || typeof right !== 'object' || left == null || right == null) return false;
+		if (JSON.stringify(left) !== JSON.stringify(right)) return false;
+	}
+	return true;
+}
+
 function getRecipientPartials(recipientIds: ReadonlyArray<string>): Array<UserPartial> {
 	return recipientIds
 		.map((id) => Users?.getUser(id)?.toJSON())
@@ -82,8 +151,9 @@ export class Channel {
 	readonly contentWarningText: string | null;
 	readonly rateLimitPerUser: number;
 	readonly nicks: Readonly<Record<string, string>>;
+	readonly threadFields: ThreadChannelFields | null;
 
-	constructor(channel: WireChannel, options?: ChannelRecordOptions) {
+	constructor(channel: ChannelWire, options?: ChannelRecordOptions) {
 		this.instanceId = options?.instanceId ?? RuntimeConfig.localInstanceDomain;
 		this.id = channel.id;
 		this.guildId = channel.guild_id;
@@ -110,6 +180,7 @@ export class Channel {
 		this.contentWarningText = channel.content_warning_text ?? null;
 		this.rateLimitPerUser = channel.rate_limit_per_user ?? 0;
 		this.nicks = channel.nicks ?? {};
+		this.threadFields = pickThreadFields(channel);
 		if ((this.type === ChannelTypes.DM || this.type === ChannelTypes.GROUP_DM) && channel.recipients) {
 			Users?.cacheUsers(Array.from(channel.recipients));
 		}
@@ -184,6 +255,62 @@ export class Channel {
 		return this.nsfw;
 	}
 
+	isThread(): boolean {
+		return THREAD_CHANNEL_TYPES.has(this.type);
+	}
+
+	isPrivateThread(): boolean {
+		return this.type === ChannelTypes.PRIVATE_THREAD;
+	}
+
+	isThreadOnly(): boolean {
+		return THREAD_ONLY_CHANNEL_TYPES.has(this.type);
+	}
+
+	get flags(): number {
+		return this.threadFields?.flags ?? 0;
+	}
+
+	get threadMetadata(): ThreadMetadataResponse | null {
+		return this.threadFields?.thread_metadata ?? null;
+	}
+
+	get isArchived(): boolean {
+		return this.threadFields?.thread_metadata?.archived ?? false;
+	}
+
+	get isLocked(): boolean {
+		return this.threadFields?.thread_metadata?.locked ?? false;
+	}
+
+	get messageCount(): number {
+		return this.threadFields?.message_count ?? 0;
+	}
+
+	get totalMessageSent(): number {
+		return this.threadFields?.total_message_sent ?? 0;
+	}
+
+	get memberCount(): number {
+		return this.threadFields?.member_count ?? 0;
+	}
+
+	get appliedTags(): ReadonlyArray<string> {
+		return this.threadFields?.applied_tags ?? [];
+	}
+
+	get availableTags(): ReadonlyArray<ForumTagResponse> {
+		return this.threadFields?.available_tags ?? [];
+	}
+
+	get defaultAutoArchiveDuration(): number | null {
+		return this.threadFields?.default_auto_archive_duration ?? null;
+	}
+
+	get defaultThreadRateLimitPerUser(): number {
+		return this.threadFields?.default_thread_rate_limit_per_user ?? 0;
+	}
+
 	isRoleRequired(): boolean {
 		if (
 			this.guildId == null ||
@@ -208,7 +335,7 @@ export class Channel {
 		return new Date(SnowflakeUtils.extractTimestamp(this.id));
 	}
 
-	withUpdates(updates: Partial<WireChannel>): Channel {
+	withUpdates(updates: Partial<ChannelWire>): Channel {
 		let newRecipients: Array<UserPartial> = [];
 		if (
 			updates.type === ChannelTypes.DM_PERSONAL_NOTES ||
@@ -255,6 +382,7 @@ export class Channel {
 					updates.content_warning_text !== undefined ? updates.content_warning_text : this.contentWarningText,
 				rate_limit_per_user: updates.rate_limit_per_user ?? this.rateLimitPerUser,
 				nicks: updates.nicks ?? this.nicks,
+				...pickThreadFields(updates, this.threadFields),
 			},
 			{instanceId: this.instanceId},
 		);
@@ -300,6 +428,7 @@ export class Channel {
 		if (this.contentWarningLevel !== other.contentWarningLevel) return false;
 		if (this.contentWarningText !== other.contentWarningText) return false;
 		if (this.rateLimitPerUser !== other.rateLimitPerUser) return false;
+		if (!threadFieldsEqual(this.threadFields, other.threadFields)) return false;
 		if (this.recipientIds.length !== other.recipientIds.length) return false;
 		for (let i = 0; i < this.recipientIds.length; i++) {
 			if (this.recipientIds[i] !== other.recipientIds[i]) return false;
@@ -316,7 +445,7 @@ export class Channel {
 		return true;
 	}
 
-	toJSON(): WireChannel {
+	toJSON(): ChannelWire {
 		return {
 			id: this.id,
 			guild_id: this.guildId,
@@ -345,6 +474,7 @@ export class Channel {
 			content_warning_text: this.contentWarningText,
 			rate_limit_per_user: this.rateLimitPerUser,
 			nicks: this.nicks,
+			...this.threadFields,
 		};
 	}
 }

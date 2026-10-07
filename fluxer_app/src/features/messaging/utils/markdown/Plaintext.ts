@@ -101,6 +101,11 @@ const COPYABLE_CHANNEL_MENTION_TYPES = new Set<number>([
 	ChannelTypes.GUILD_VOICE,
 	ChannelTypes.GUILD_LINK,
 	ChannelTypes.GUILD_CATEGORY,
+	ChannelTypes.ANNOUNCEMENT_THREAD,
+	ChannelTypes.PUBLIC_THREAD,
+	ChannelTypes.PRIVATE_THREAD,
+	ChannelTypes.GUILD_FORUM,
+	ChannelTypes.GUILD_MEDIA,
 ]);
 
 function isBlockNode(node: Node): boolean {

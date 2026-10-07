@@ -52,7 +52,7 @@ const SYSTEM_ANNOUNCEMENTS_FROM_STAFF_DESCRIPTOR = msg({
 	message: "System announcements from {productName} staff. You can't reply here.",
 	comment: 'Read-only system DM barrier message. productName is the Fluxer product name.',
 });
-const BarrierBase = observer(({message, action, icon}: BarrierBaseProps) => {
+export const BarrierBase = observer(({message, action, icon}: BarrierBaseProps) => {
 	const hasAction = Boolean(action);
 	return (
 		<div

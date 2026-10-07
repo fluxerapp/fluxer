@@ -665,6 +665,15 @@ class Messages {
 		return hasChanges;
 	}
 
+	handleGuildThreadsPurged(guildId: string): void {
+		ChannelMessages.forEach(({channelId}) => {
+			if (Channels.getChannel(channelId)?.guildId === guildId) {
+				this.clearMessages(channelId);
+				Dimension.forgetChannelDimensions(channelId);
+			}
+		});
+	}
+
 	handleCleanup(): boolean {
 		ChannelMessages.forEach(({channelId}) => {
 			if (Channels.getChannel(channelId) == null) {

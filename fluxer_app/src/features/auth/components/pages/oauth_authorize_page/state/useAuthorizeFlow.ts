@@ -31,6 +31,7 @@ import type {BotPermissionOption} from '@app/features/permissions/utils/Permissi
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {failureMessage} from '@app/features/platform/utils/ResponseInspection';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
@@ -183,8 +184,15 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 	const initialMissingClientId = !params;
 	const publicAppState = useOAuthPublicApp(params?.clientId ?? null);
 	const scopeSelection = useScopeSelection(scopes);
-	const permissionSelection = usePermissionSelection(params?.permissions ?? null);
-	const destinations = useBotInviteDestinations(hasBotScope, permissionSelection.requestedBitfield);
+	const destinations = useBotInviteDestinations(hasBotScope, params?.permissions ?? null);
+	const selectedDestinationTarget = parseBotInviteDestinationKey(selectedDestinationKey);
+	const selectedGuildId = selectedDestinationTarget?.kind === 'guild' ? selectedDestinationTarget.id : null;
+	const permissionSelection = usePermissionSelection(
+		params?.permissions ?? null,
+		selectedGuildId != null &&
+			(ThreadGuilds.isActive(selectedGuildId) ||
+				destinations.guilds.some((guild) => guild.id === selectedGuildId && guild.threadsActive)),
+	);
 	const initialReviewStep: ReviewStep = includeAccountStep ? 'account' : 'scopes';
 	const preFetchValidationError = useMemo(() => {
 		if (!params) return i18n._(MISSING_CLIENT_ID_DESCRIPTOR);

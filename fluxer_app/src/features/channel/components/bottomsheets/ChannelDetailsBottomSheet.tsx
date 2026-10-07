@@ -97,6 +97,7 @@ import {buildChannelLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
+import {ThreadMembersList} from '@app/features/threads/components/ThreadMembersPanel';
 import {
 	MembersIcon,
 	MoreOptionsVerticalIcon,
@@ -657,7 +658,13 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 												data-flx="channel.channel-details-bottom-sheet.dm-members-list"
 											/>
 										)}
-										{isGuildChannel && guild && (
+										{isGuildChannel && guild && channel.isThread() && (
+											<ThreadMembersList
+												thread={channel}
+												data-flx="channel.channel-details-bottom-sheet.thread-members-list"
+											/>
+										)}
+										{isGuildChannel && guild && !channel.isThread() && (
 											<GuildMemberList
 												guild={guild}
 												channel={channel}

@@ -9,6 +9,7 @@ import {
 	type ForwardSearchWeights,
 	type ForwardUserCandidate,
 } from '@app/features/app/components/dialogs/shared/ForwardDestinationSearch';
+import type {Channel} from '@app/features/channel/models/Channel';
 import ChannelFrecency from '@app/features/channel/state/ChannelFrecency';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
@@ -17,6 +18,10 @@ import {PERSONAL_NOTES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageD
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import Permission from '@app/features/permissions/state/Permission';
 import Relationships from '@app/features/relationship/state/Relationships';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
+import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
+import {canJoinThreadChannel} from '@app/features/threads/utils/ThreadActionRules';
 import Users from '@app/features/user/state/Users';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
@@ -105,10 +110,35 @@ function buildForwardGroupDMCandidates(i18n: I18n): ReadonlyArray<ForwardGroupDM
 	return Object.freeze(candidates);
 }
 
-function buildForwardChannelCandidates(): ReadonlyArray<ForwardChannelCandidate> {
+function isForwardableThread(thread: Channel): boolean {
+	if (!ThreadGuilds.isActive(thread.guildId) || ChannelThreads.getThread(thread.id) == null) return false;
+	if (thread.isArchived && thread.isLocked) return false;
+	return ThreadMemberships.isMember(thread.id) || canJoinThreadChannel(thread);
+}
+
+function buildForwardChannelCandidates(includeThreadOnlyChannels: boolean): ReadonlyArray<ForwardChannelCandidate> {
 	const candidates: Array<ForwardChannelCandidate> = [];
 	for (const channel of Channels.allChannels) {
+		if (channel.isThread()) {
+			if (isForwardableThread(channel)) {
+				candidates.push(
+					Object.freeze({
+						canAccess: Permission.can(Permissions.SEND_MESSAGES, channel),
+						guildName: channel.guildId == null ? null : (Guilds.getGuild(channel.guildId)?.name ?? null),
+						hasFrecency: false,
+						id: channel.id,
+						kind: 'text',
+						name: channel.name ?? '',
+						parentName: channel.parentId == null ? null : (Channels.getChannel(channel.parentId)?.name ?? null),
+					}),
+				);
+			}
+			continue;
+		}
+		const isSearchableThreadOnlyChannel =
+			includeThreadOnlyChannels && channel.isThreadOnly() && ThreadGuilds.isActive(channel.guildId);
 		if (
+			!isSearchableThreadOnlyChannel &&
 			channel.type !== ChannelTypes.GUILD_TEXT &&
 			channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT &&
 			channel.type !== ChannelTypes.GUILD_VOICE
@@ -171,11 +201,14 @@ function buildForwardGuildCandidates(): ReadonlyArray<ForwardGuildCandidate> {
 	return Object.freeze(Guilds.getGuilds().map((guild) => Object.freeze({id: guild.id, name: guild.name})));
 }
 
-export function createForwardSearchCandidates(i18n: I18n): IComputedValue<ForwardSearchCandidates> {
+export function createForwardSearchCandidates(
+	i18n: I18n,
+	{includeThreadOnlyChannels = false}: {includeThreadOnlyChannels?: boolean} = {},
+): IComputedValue<ForwardSearchCandidates> {
 	const options = {equals: compareStructural};
 	const users = computed(buildForwardUserCandidates, options);
 	const groupDMs = computed(() => buildForwardGroupDMCandidates(i18n), options);
-	const channels = computed(buildForwardChannelCandidates, options);
+	const channels = computed(() => buildForwardChannelCandidates(includeThreadOnlyChannels), options);
 	const guilds = computed(buildForwardGuildCandidates, options);
 	const weights = computed(buildForwardSearchWeightsFromStores, options);
 	return computed(() =>

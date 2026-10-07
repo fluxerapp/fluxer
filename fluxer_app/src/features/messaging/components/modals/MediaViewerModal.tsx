@@ -10,6 +10,7 @@ import {
 	requestMessageReply,
 } from '@app/features/channel/components/MessageActionUtils';
 import type {Channel} from '@app/features/channel/models/Channel';
+import {isMediaDownloadHidden} from '@app/features/forum/utils/MediaDownloadPolicy';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import type {ForwardModalSuccess} from '@app/features/messaging/components/modals/ForwardModal';
 import {MediaModal} from '@app/features/messaging/components/modals/MediaModal';
@@ -674,6 +675,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 			/>
 		);
 	};
+	const downloadHidden = isMediaDownloadHidden(channelId ?? message?.channelId, currentItem.type);
 	const canFavoriteCurrentItem =
 		Boolean(channelId) &&
 		Boolean(messageId) &&
@@ -698,10 +700,10 @@ const MediaViewerModalComponent: FC = observer(() => {
 				dimensions={dimensions}
 				isFavorited={canFavoriteCurrentItem ? isFavorited : undefined}
 				onFavorite={canFavoriteCurrentItem ? handleFavoriteClick : undefined}
-				onDownload={handleDownload}
-				onOpenInBrowser={handleOpenInBrowser}
-				onCopyLink={handleCopyLink}
-				onCopyMedia={handleCopyMedia}
+				onDownload={downloadHidden ? undefined : handleDownload}
+				onOpenInBrowser={downloadHidden ? undefined : handleOpenInBrowser}
+				onCopyLink={downloadHidden ? undefined : handleCopyLink}
+				onCopyMedia={downloadHidden ? undefined : handleCopyMedia}
 				onDeleteAttachment={deletableAttachmentId ? handleDeleteAttachment : undefined}
 				onReply={permissions?.canSendMessages ? handleReply : undefined}
 				onForward={canForwardCurrentMedia ? handleForward : undefined}
