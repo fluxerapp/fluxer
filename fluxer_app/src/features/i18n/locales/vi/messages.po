@@ -19217,7 +19217,7 @@ msgstr "Phiên bản đã cài đặt: {currentVersion}."
 #. Label for the server address in the printed or downloaded recovery kit.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:76
 msgid "Instance"
-msgstr "Phiên bản"
+msgstr "Máy chủ"
 
 #. Accessible label for the authentication instance selector carousel.
 #: src/features/auth/flow/InstanceSelector.tsx:80
@@ -24076,7 +24076,7 @@ msgstr "Không có lượt nhắc gần đây"
 
 #: src/features/auth/components/pages/RecoverAccountPage.tsx:284
 msgid "No recovery kit? Ask an admin of this instance for a password reset link."
-msgstr "Không có bộ phục hồi? Hãy yêu cầu quản trị viên của phiên bản này cung cấp liên kết đặt lại mật khẩu."
+msgstr "Không có bộ phục hồi? Hãy yêu cầu quản trị viên của máy chủ này cung cấp liên kết đặt lại mật khẩu."
 
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:101
 msgid "No remaining recipients to create a group DM with."
@@ -35356,7 +35356,7 @@ msgstr "Tên người dùng <0>{fluxerTag}</0> đã có người sử dụng. Ti
 #. Setup wizard error when the username style was already fixed because an account exists.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:117
 msgid "The username tags on this instance are already set. They can no longer change."
-msgstr "Các thẻ tên người dùng trên phiên bản này đã được đặt. Chúng không thể thay đổi nữa."
+msgstr "Các thẻ tên người dùng trên máy chủ này đã được đặt. Chúng không thể thay đổi nữa."
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
 #: src/features/moderation/components/pages/ReportPage.tsx:88
@@ -35924,12 +35924,12 @@ msgstr "Bản cài đặt này do hệ thống của bạn quản lý. Hãy cậ
 #. Setup wizard error when the operator picks username sign-in but the instance is already fixed to email.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:121
 msgid "This instance already uses email to sign in. This can no longer change."
-msgstr "Tài khoản này đã sử dụng email để đăng nhập. Không thể thay đổi cài đặt này nữa."
+msgstr "Máy chủ này đã sử dụng email để đăng nhập. Không thể thay đổi cài đặt này nữa."
 
 #. Setup wizard error when the operator picks email sign-in but the instance is already fixed to usernames.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:113
 msgid "This instance already uses usernames to sign in. This can no longer change."
-msgstr "Phiên bản này đã sử dụng tên người dùng để đăng nhập. Tùy chọn này không thể thay đổi nữa."
+msgstr "Máy chủ này đã sử dụng tên người dùng để đăng nhập. Tùy chọn này không thể thay đổi nữa."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:67

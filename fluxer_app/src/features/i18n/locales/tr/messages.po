@@ -19217,7 +19217,7 @@ msgstr "Yüklü sürüm: {currentVersion}."
 #. Label for the server address in the printed or downloaded recovery kit.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:76
 msgid "Instance"
-msgstr "Sunucu Adresi"
+msgstr "Kurulum"
 
 #. Accessible label for the authentication instance selector carousel.
 #: src/features/auth/flow/InstanceSelector.tsx:80
@@ -24076,7 +24076,7 @@ msgstr "Yakın zamanda bahsedilmediniz"
 
 #: src/features/auth/components/pages/RecoverAccountPage.tsx:284
 msgid "No recovery kit? Ask an admin of this instance for a password reset link."
-msgstr "Kurtarma kiti yok mu? Parola sıfırlama bağlantısı için bu örneğin yöneticisinden yardım isteyin."
+msgstr "Kurtarma kiti yok mu? Parola sıfırlama bağlantısı için bu kurulumun yöneticisinden yardım isteyin."
 
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:101
 msgid "No remaining recipients to create a group DM with."
@@ -35356,7 +35356,7 @@ msgstr "<0>{fluxerTag}</0> kullanıcı adı zaten alınmış. Devam ederseniz et
 #. Setup wizard error when the username style was already fixed because an account exists.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:117
 msgid "The username tags on this instance are already set. They can no longer change."
-msgstr "Bu örnekteki kullanıcı adları zaten ayarlanmış. Artık değiştirilemezler."
+msgstr "Bu kurulumdaki kullanıcı adı etiketleri zaten ayarlanmış. Artık değiştirilemezler."
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
 #: src/features/moderation/components/pages/ReportPage.tsx:88
@@ -35924,12 +35924,12 @@ msgstr "Bu kurulum sisteminiz tarafından yönetiliyor. {productName} uygulamas�
 #. Setup wizard error when the operator picks username sign-in but the instance is already fixed to email.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:121
 msgid "This instance already uses email to sign in. This can no longer change."
-msgstr "Bu örneklemde oturum açmak için zaten e-posta kullanılıyor. Bu artık değiştirilemez."
+msgstr "Bu kurulumda oturum açmak için zaten e-posta kullanılıyor. Bu artık değiştirilemez."
 
 #. Setup wizard error when the operator picks email sign-in but the instance is already fixed to usernames.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:113
 msgid "This instance already uses usernames to sign in. This can no longer change."
-msgstr "Bu örnekte oturum açmak için zaten kullanıcı adları kullanılıyor. Bu artık değiştirilemez."
+msgstr "Bu kurulumda oturum açmak için zaten kullanıcı adları kullanılıyor. Bu artık değiştirilemez."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:67

@@ -19217,7 +19217,7 @@ msgstr "Versi terinstal: {currentVersion}."
 #. Label for the server address in the printed or downloaded recovery kit.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:76
 msgid "Instance"
-msgstr "Instans"
+msgstr "Instance"
 
 #. Accessible label for the authentication instance selector carousel.
 #: src/features/auth/flow/InstanceSelector.tsx:80
@@ -35924,12 +35924,12 @@ msgstr "Instalasi ini dikelola oleh sistemmu. Perbarui {productName} lewat pusat
 #. Setup wizard error when the operator picks username sign-in but the instance is already fixed to email.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:121
 msgid "This instance already uses email to sign in. This can no longer change."
-msgstr "Instans ini sudah menggunakan email untuk masuk. Ini tidak dapat diubah lagi."
+msgstr "Instance ini sudah menggunakan email untuk masuk. Ini tidak dapat diubah lagi."
 
 #. Setup wizard error when the operator picks email sign-in but the instance is already fixed to usernames.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:113
 msgid "This instance already uses usernames to sign in. This can no longer change."
-msgstr "Instans ini sudah menggunakan nama pengguna untuk masuk. Ini tidak dapat diubah lagi."
+msgstr "Instance ini sudah menggunakan nama pengguna untuk masuk. Ini tidak dapat diubah lagi."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:67
