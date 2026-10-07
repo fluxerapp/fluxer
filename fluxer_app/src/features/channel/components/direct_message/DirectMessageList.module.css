@@ -88,8 +88,7 @@
 	font-family: var(--font-keybind);
 }
 
-.theme-light .dmListHeaderShortcut kbd {
-	border-color: hsla(0, 0%, 100%, 0.15);
+:global(.theme-light) .dmListHeaderShortcut kbd {
 	background-color: hsl(220, calc(13% * var(--saturation-factor)), 18.44%);
 	color: var(--text-on-brand-primary);
 	box-shadow: 0 0.0625rem 0 rgba(0, 0, 0, 0.4);

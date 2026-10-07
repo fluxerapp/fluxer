@@ -2810,6 +2810,9 @@
         "msgid": "Editing limit reached"
       },
       {
+        "msgid": "Email reports aren't available here"
+      },
+      {
         "msgid": "Emails to your current address are not being delivered. Enter a new email and we'll send a code there."
       },
       {
@@ -3872,6 +3875,9 @@
         "msgid": "Report profile"
       },
       {
+        "msgid": "Reported user's username (optional)"
+      },
+      {
         "msgid": "Require a passkey as your second factor"
       },
       {
@@ -4497,6 +4503,9 @@
       },
       {
         "msgid": "This instance already uses usernames to sign in. This can no longer change."
+      },
+      {
+        "msgid": "This instance doesn't use email, so it can't take reports through this form. Report content from inside the app, or contact the administrators of this instance."
       },
       {
         "msgid": "This invite is on {instanceName}, where you also have an account."

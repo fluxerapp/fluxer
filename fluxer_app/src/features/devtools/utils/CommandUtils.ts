@@ -304,7 +304,7 @@ export async function executeCommand(
 			if (!guildId) {
 				throw new Error('Cannot kick members outside of a guild');
 			}
-			await GuildMemberCommands.kick(guildId, command.userId);
+			await GuildMemberCommands.kick(guildId, command.userId, command.reason);
 			break;
 		}
 		case 'ban': {

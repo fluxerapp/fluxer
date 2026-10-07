@@ -1192,7 +1192,15 @@ describe('report flow rendering', () => {
 		expect(resolveReportFlowLocale('nb')).toBe('no');
 		expect(resolveReportFlowLocale('nb_NO')).toBe('no');
 		expect(resolveReportFlowLocale('nn')).toBe('no');
-		expect(resolveReportFlowLocale('zh-Hant')).toBe('zh-CN');
+		expect(resolveReportFlowLocale('nn-NO')).toBe('no');
+		expect(resolveReportFlowLocale('zh-Hant')).toBe('zh-TW');
+		expect(resolveReportFlowLocale('zh_Hant_TW')).toBe('zh-TW');
+		expect(resolveReportFlowLocale('zh-HK')).toBe('zh-TW');
+		expect(resolveReportFlowLocale('zh-Hans')).toBe('zh-CN');
+		expect(resolveReportFlowLocale('zh')).toBe('zh-CN');
+		expect(resolveReportFlowLocale('fr-CA')).toBe('fr');
+		expect(resolveReportFlowLocale('de-DE')).toBe('de');
+		expect(resolveReportFlowLocale(' de ')).toBe('de');
 		expect(resolveReportFlowLocale('sv')).toBe('sv-SE');
 		expect(resolveReportFlowLocale('pt')).toBe('pt-BR');
 		expect(resolveReportFlowLocale('pt_BR')).toBe('pt-BR');
@@ -1200,6 +1208,7 @@ describe('report flow rendering', () => {
 		expect(resolveReportFlowLocale('xx-YY')).toBe('en-US');
 		expect(resolveReportFlowLocale(undefined)).toBe('en-US');
 		expect(getReportFlowResponse('message', 'in_app', 'nb').locale).toBe('no');
+		expect(getReportFlowResponse('message', 'in_app', 'zh-Hant').locale).toBe('zh-TW');
 		expect(getReportFlowResponse('message', 'in_app', 'xx-YY').locale).toBe('en-US');
 	});
 });

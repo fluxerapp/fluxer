@@ -1093,7 +1093,7 @@ msgstr "{count, plural, one {# канал подписан} few {# канала 
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {Найдено # сообщество} few {Найдено # сообщества} many {Найдено # сообществ} other {Найдено # сообщества}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1952
+#: src/features/app/components/layout/GuildsLayout.tsx:1953
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# сообщество временно недоступно из-за неисправности потокового накопителя.} few {# сообщества временно недоступны из-за неисправности потокового накопителя.} many {# сообществ временно недоступны из-за неисправности потокового накопителя.} other {# сообществ временно недоступны из-за неисправности потокового накопителя.}}"
 
@@ -5615,7 +5615,7 @@ msgstr "Сейчас нет на месте"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:402
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
-#: src/features/moderation/components/report/ReportStepDetails.tsx:374
+#: src/features/moderation/components/report/ReportStepDetails.tsx:393
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
 msgid "Back"
 msgstr "Назад"
@@ -8069,7 +8069,7 @@ msgid "Choose the premium model"
 msgstr "Выберите премиум-модель"
 
 #. Button on the details step of the DSA report form, shown when the server no longer accepts the chosen reason. Reloads the questions and returns to the reason step.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:80
+#: src/features/moderation/components/report/ReportStepDetails.tsx:95
 msgid "Choose the reason again"
 msgstr "Выберите причину заново"
 
@@ -8804,7 +8804,7 @@ msgstr "Код из приложения {productName}"
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Success toast on the verification step of the DSA report flow after resending the email verification code.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
-#: src/features/moderation/components/pages/ReportPage.tsx:83
+#: src/features/moderation/components/pages/ReportPage.tsx:85
 msgid "Code resent"
 msgstr "Код отправлен повторно"
 
@@ -9095,11 +9095,11 @@ msgid "Community icon"
 msgstr "Значок сообщества"
 
 #. Field label on the details step of the DSA report form (community report). The reported community's snowflake ID.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:42
+#: src/features/moderation/components/report/ReportStepDetails.tsx:57
 msgid "Community ID"
 msgstr "ID сообщества"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:283
+#: src/features/moderation/components/report/ReportStepDetails.tsx:302
 msgid "Community ID is required."
 msgstr "Требуется ID сообщества."
 
@@ -9451,7 +9451,7 @@ msgid "Confirm password"
 msgstr "Подтвердите пароль"
 
 #. Inline validation error on the details step of the DSA report flow when the good-faith statement checkbox is not ticked.
-#: src/features/moderation/components/pages/ReportPage.tsx:128
+#: src/features/moderation/components/pages/ReportPage.tsx:130
 msgid "Confirm the statement to send the report."
 msgstr "Подтвердите заявление, чтобы отправить жалобу."
 
@@ -10903,7 +10903,7 @@ msgid "Countdown timer"
 msgstr "Таймер обратного отсчёта"
 
 #. Field label on the details step of the DSA report form. The country where the reporter resides, used for the legal declaration.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:70
+#: src/features/moderation/components/report/ReportStepDetails.tsx:85
 msgid "Country of residence"
 msgstr "Страна проживания"
 
@@ -14070,7 +14070,7 @@ msgid "Email address"
 msgstr "Эл. почта"
 
 #. Inline validation error on the email step of the DSA report flow when the email field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:75
+#: src/features/moderation/components/pages/ReportPage.tsx:77
 msgid "Email address required."
 msgstr "Требуется адрес электронной почты."
 
@@ -14085,6 +14085,10 @@ msgstr "Эл. почта изменена"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1093
 msgid "Email delivery"
 msgstr "Доставка электронной почты"
+
+#: src/features/moderation/components/report/ReportStepUnavailable.tsx:11
+msgid "Email reports aren't available here"
+msgstr "Жалобы по электронной почте здесь недоступны"
 
 #. Developer control label for the email-verification banner.
 #: src/features/devtools/components/NagbarControls.ts:37
@@ -14667,7 +14671,7 @@ msgid "Enter"
 msgstr "Enter"
 
 #. Inline validation error on the verification step of the DSA report flow when the code does not match the expected 4-letter-dash-4-digit format. "ABCD-1234" is a literal example pattern.
-#: src/features/moderation/components/pages/ReportPage.tsx:104
+#: src/features/moderation/components/pages/ReportPage.tsx:106
 msgid "Enter a code in the format ABCD-1234."
 msgstr "Введите код в формате ABCD-1234."
 
@@ -14712,12 +14716,12 @@ msgid "Enter a valid {theOtherPlatform} template URL or code."
 msgstr "Введите допустимый URL-адрес или код шаблона {theOtherPlatform}."
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
-#: src/features/moderation/components/pages/ReportPage.tsx:79
+#: src/features/moderation/components/pages/ReportPage.tsx:81
 msgid "Enter a valid email address."
 msgstr "Введите действительный адрес электронной почты."
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is not a valid URL.
-#: src/features/moderation/components/pages/ReportPage.tsx:148
+#: src/features/moderation/components/pages/ReportPage.tsx:150
 msgid "Enter a valid message link."
 msgstr "Введите действительную ссылку на сообщение."
 
@@ -14791,7 +14795,7 @@ msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "Введите {digitCount}-значный код из приложения-аутентификатора."
 
 #. Inline validation error on the verification step of the DSA report flow when the code field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:100
+#: src/features/moderation/components/pages/ReportPage.tsx:102
 msgid "Enter the code before continuing."
 msgstr "Введите код, чтобы продолжить."
 
@@ -14868,7 +14872,7 @@ msgid "Enter your email address and we'll send you a link to reset your password
 msgstr "Введите адрес электронной почты, и мы отправим вам ссылку для сброса пароля."
 
 #. Inline validation error on the Full legal name field of the DSA report form, shown when the server requires the name for the chosen reason. The name is required for every reason except child sexual abuse.
-#: src/features/moderation/components/pages/ReportPage.tsx:133
+#: src/features/moderation/components/pages/ReportPage.tsx:135
 msgid "Enter your full legal name to send the report."
 msgstr "Введите полное юридическое имя, чтобы отправить жалобу."
 
@@ -15268,12 +15272,12 @@ msgid "Expires:"
 msgstr "Истекает:"
 
 #. Field label on the details step of the DSA report form. Required free text where the reporter explains what is wrong with the reported content.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:52
+#: src/features/moderation/components/report/ReportStepDetails.tsx:67
 msgid "Explain the problem"
 msgstr "Опишите проблему"
 
 #. Inline validation error on the details step of the DSA report flow when the Explain the problem field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:123
+#: src/features/moderation/components/pages/ReportPage.tsx:125
 msgid "Explain the problem to send the report."
 msgstr "Опишите проблему, чтобы отправить жалобу."
 
@@ -15589,7 +15593,7 @@ msgid "Failed to remove vanity URL. Try again."
 msgstr "Не удалось удалить пользовательский URL. Повторите попытку."
 
 #. Error toast when the resend-code request fails on the verification step of the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:91
+#: src/features/moderation/components/pages/ReportPage.tsx:93
 msgid "Failed to resend code. Try again."
 msgstr "Не удалось отправить код повторно. Повторите попытку."
 
@@ -15599,7 +15603,7 @@ msgid "Failed to reset premium state."
 msgstr "Не удалось сбросить премиум-статус."
 
 #. Error shown when the initial email verification code send fails on the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:87
+#: src/features/moderation/components/pages/ReportPage.tsx:89
 msgid "Failed to send code. Try again."
 msgstr "Не удалось отправить код. Повторите попытку."
 
@@ -15614,7 +15618,7 @@ msgid "Failed to send message. Hold for options."
 msgstr "Не удалось отправить сообщение. Нажмите и удерживайте, чтобы увидеть опции."
 
 #. Generic error shown on the DSA report submission page when the report could not be sent.
-#: src/features/moderation/components/pages/ReportPage.tsx:71
+#: src/features/moderation/components/pages/ReportPage.tsx:73
 msgid "Failed to send report. Try again."
 msgstr "Не удалось отправить жалобу. Повторите попытку."
 
@@ -16027,7 +16031,7 @@ msgid "Finnish"
 msgstr "Финский"
 
 #. Placeholder in the Full legal name input on the DSA report form.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:66
+#: src/features/moderation/components/report/ReportStepDetails.tsx:81
 msgid "First and last name"
 msgstr "Имя и фамилия"
 
@@ -16690,7 +16694,7 @@ msgid "Full dynamic range"
 msgstr "Полный динамический диапазон"
 
 #. Field label on the details step of the DSA report form. Legal name of the reporter for the formal declaration. The law lets people who report child sexual abuse material leave it empty. Keep the tone neutral.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:61
+#: src/features/moderation/components/report/ReportStepDetails.tsx:76
 msgid "Full legal name (optional for child sexual abuse reports)"
 msgstr "Полное имя по документам (необязательно для жалоб на сексуальное насилие над детьми)"
 
@@ -17231,7 +17235,7 @@ msgid "Go back"
 msgstr "Назад"
 
 #. Inline error on the verification step of the DSA report flow when the stored email is missing or malformed and the user must return to the email step.
-#: src/features/moderation/components/pages/ReportPage.tsx:109
+#: src/features/moderation/components/pages/ReportPage.tsx:111
 msgid "Go back and enter a valid email."
 msgstr "Вернитесь и введите действительный адрес электронной почты."
 
@@ -18213,7 +18217,7 @@ msgid "I changed my mind"
 msgstr "Я передумал(а)"
 
 #. Required checkbox on the details step of the DSA report form. A formal statement the law asks every reporter to make. Keep the tone formal.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:75
+#: src/features/moderation/components/report/ReportStepDetails.tsx:90
 msgid "I confirm in good faith that the information and allegations in this notice are accurate and complete."
 msgstr "Настоящим добросовестно подтверждаю, что сведения и утверждения в этом уведомлении точны и полны."
 
@@ -18299,7 +18303,7 @@ msgid "If someone told you to paste something here, it is a scam that can hand t
 msgstr "Если кто-то попросил вас что-то сюда вставить, это мошенничество, и так злоумышленник может получить доступ к вашему аккаунту {productName}."
 
 #. Helper text under the Explain the problem field on the details step of the DSA report form.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:57
+#: src/features/moderation/components/report/ReportStepDetails.tsx:72
 msgid "If you believe it is illegal, say which law and why."
 msgstr "Если вы считаете, что это незаконно, укажите, какой закон и почему."
 
@@ -18712,7 +18716,7 @@ msgid "Include my two-factor backup codes in the PDF and printout"
 msgstr "Включить мои резервные коды двухфакторной аутентификации в PDF и распечатку"
 
 #. Inline validation error on the details step of the DSA report flow (community report) when the community ID field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:158
+#: src/features/moderation/components/pages/ReportPage.tsx:160
 msgid "Include the community ID."
 msgstr "Укажите ID сообщества."
 
@@ -19152,7 +19156,7 @@ msgid "Invite background"
 msgstr "Фон приглашения"
 
 #. Field label on the details step of the DSA report form (community report). Optional invite code to the reported community.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:47
+#: src/features/moderation/components/report/ReportStepDetails.tsx:62
 msgid "Invite code (optional)"
 msgstr "Код приглашения (необязательно)"
 
@@ -21825,7 +21829,7 @@ msgid "message link"
 msgstr "ссылка на сообщение"
 
 #. Field label on the details step of the DSA report form (message report). The reporter pastes a direct link to the offending message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:22
+#: src/features/moderation/components/report/ReportStepDetails.tsx:27
 msgid "Message link"
 msgstr "Ссылка на сообщение"
 
@@ -23120,7 +23124,7 @@ msgid "New"
 msgstr "Новое"
 
 #. Small badge on a new or recently added app navigation item.
-#: src/features/app/components/layout/GuildsLayout.tsx:134
+#: src/features/app/components/layout/GuildsLayout.tsx:135
 msgctxt "navigation-badge"
 msgid "New"
 msgstr "Новое"
@@ -25654,7 +25658,7 @@ msgid "Paste the JSON response here"
 msgstr "Вставьте сюда JSON-ответ"
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:143
+#: src/features/moderation/components/pages/ReportPage.tsx:145
 msgid "Paste the message link."
 msgstr "Вставьте ссылку на сообщение."
 
@@ -26972,12 +26976,12 @@ msgstr "Местоимения: "
 msgid "Protect your Visionary account by enabling two-factor authentication. Thanks for supporting {productName}!"
 msgstr "Защитите свой аккаунт Visionary, включив двухфакторную аутентификацию. Спасибо за поддержку {productName}!"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:261
+#: src/features/moderation/components/report/ReportStepDetails.tsx:280
 msgid "Provide at least a user ID or a user tag."
 msgstr "Укажите хотя бы ID пользователя или тег пользователя."
 
 #. Inline validation error on the details step of the DSA report flow (user report) when both user ID and username fields are empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:153
+#: src/features/moderation/components/pages/ReportPage.tsx:155
 msgid "Provide either a user ID or a username for the person you are reporting."
 msgstr "Укажите ID пользователя или имя пользователя, на которого вы жалуетесь."
 
@@ -28552,12 +28556,12 @@ msgstr "Пожаловаться на сообщение"
 msgid "Report a user profile"
 msgstr "Пожаловаться на профиль пользователя"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:151
+#: src/features/moderation/components/report/ReportStepDetails.tsx:168
 msgid "Report details"
 msgstr "Детали жалобы"
 
 #. Document/page title for the public DSA illegal-content report page. Sensitive/legal flow; keep tone plain and factual.
-#: src/features/moderation/components/pages/ReportPage.tsx:66
+#: src/features/moderation/components/pages/ReportPage.tsx:68
 #: src/features/moderation/components/report/ReportStepSelection.tsx:33
 msgid "Report illegal content"
 msgstr "Пожаловаться на незаконный контент"
@@ -28589,9 +28593,14 @@ msgid "Report type"
 msgstr "Тип жалобы"
 
 #. Field label on the details step of the DSA report form (message report). Optional FluxerTag of the user who sent the message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:27
+#: src/features/moderation/components/report/ReportStepDetails.tsx:32
 msgid "Reported user tag (optional)"
 msgstr "Тег пользователя, на которого жалуетесь (необязательно)"
+
+#. Field label on the details step of the DSA report form (message report) on an instance without user tags. Optional username of the user who sent the message.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:42
+msgid "Reported user's username (optional)"
+msgstr "Имя пользователя, на которого жалуетесь (необязательно)"
 
 #: src/features/channel/components/embeds/channel_embed/BlueskyEmbed.tsx:45
 msgid "Reposts: <0>{countLabel}</0>"
@@ -30582,7 +30591,7 @@ msgid "Select what you want to report."
 msgstr "Выберите, на что хотите пожаловаться."
 
 #. Inline validation error on the details step of the DSA report flow when the country dropdown has no selection.
-#: src/features/moderation/components/pages/ReportPage.tsx:138
+#: src/features/moderation/components/pages/ReportPage.tsx:140
 msgid "Select your country of residence."
 msgstr "Выберите страну проживания."
 
@@ -30736,7 +30745,7 @@ msgstr "Кнопка отправки"
 msgid "Send code"
 msgstr "Отправить код"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:364
+#: src/features/moderation/components/report/ReportStepDetails.tsx:383
 msgid "Send DSA report"
 msgstr "Отправить жалобу по DSA"
 
@@ -31294,7 +31303,7 @@ msgstr "Поделиться темой"
 msgid "Share voice activity with all friends?"
 msgstr "Делиться голосовой активностью со всеми друзьями?"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:154
+#: src/features/moderation/components/report/ReportStepDetails.tsx:171
 msgid "Share what our team needs to assess this."
 msgstr "Расскажите, что нашей команде нужно знать для оценки."
 
@@ -33176,7 +33185,7 @@ msgstr "Начинать свернутым"
 
 #. Button on the browser page after cancelling that goes back to choosing an account.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:341
-#: src/features/moderation/components/report/ReportStepDetails.tsx:389
+#: src/features/moderation/components/report/ReportStepDetails.tsx:408
 #: src/features/moderation/components/report/ReportStepEmail.tsx:113
 #: src/features/moderation/components/report/ReportStepReason.tsx:149
 #: src/features/moderation/components/report/ReportStepReason.tsx:219
@@ -33318,7 +33327,7 @@ msgstr "Шаг 3"
 msgid "Step 4"
 msgstr "Шаг 4"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:148
+#: src/features/moderation/components/report/ReportStepDetails.tsx:165
 msgid "Step 5"
 msgstr "Шаг 5"
 
@@ -34597,7 +34606,7 @@ msgstr "Не получилось. Повторите попытку или от
 msgid "That doesn't look like a valid color. Try hex, rgb(), hsl(), or a CSS color name."
 msgstr "Это не похоже на действительный цвет. Попробуйте шестнадцатеричный код, rgb(), hsl() или название цвета CSS."
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:217
+#: src/features/moderation/components/report/ReportStepDetails.tsx:234
 msgid "That doesn't look like a valid URL."
 msgstr "Похоже, это недействительная ссылка."
 
@@ -34918,7 +34927,7 @@ msgid "The username tags on this instance are already set. They can no longer ch
 msgstr "Теги имен пользователей в этом экземпляре уже настроены. Их больше нельзя изменить."
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
-#: src/features/moderation/components/pages/ReportPage.tsx:114
+#: src/features/moderation/components/pages/ReportPage.tsx:116
 msgid "The verification code is invalid or expired."
 msgstr "Неверный код подтверждения или срок его действия истёк."
 
@@ -35494,6 +35503,10 @@ msgstr "Этот экземпляр уже использует имена по�
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "В этом экземпляре демонстрация экрана ограничена качеством 720p при 30 FPS."
+
+#: src/features/moderation/components/report/ReportStepUnavailable.tsx:13
+msgid "This instance doesn't use email, so it can't take reports through this form. Report content from inside the app, or contact the administrators of this instance."
+msgstr "Этот экземпляр не использует электронную почту, поэтому не может принимать жалобы через эту форму. Пожалуйтесь на контент в приложении или свяжитесь с администраторами этого экземпляра."
 
 #. Setup wizard body prompting the operator to register the first account.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:50
@@ -36338,7 +36351,7 @@ msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "Тональная компрессия HDR-изображений до стандартного диапазона, уменьшающая пиковую яркость."
 
 #. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
-#: src/features/moderation/components/pages/ReportPage.tsx:95
+#: src/features/moderation/components/pages/ReportPage.tsx:97
 msgid "Too many codes sent. Wait {duration} and try again."
 msgstr "Отправлено слишком много кодов. Подождите {duration} и повторите попытку."
 
@@ -38546,7 +38559,7 @@ msgid "User debug"
 msgstr "Отладка пользователя"
 
 #. Field label on the details step of the DSA report form (user report). Optional Fluxer user snowflake ID. "ID" is conventional.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:32
+#: src/features/moderation/components/report/ReportStepDetails.tsx:37
 msgid "User ID (optional)"
 msgstr "ID пользователя (необязательно)"
 
@@ -38606,7 +38619,7 @@ msgid "User settings"
 msgstr "Настройки пользователя"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:37
+#: src/features/moderation/components/report/ReportStepDetails.tsx:52
 msgid "User tag (optional)"
 msgstr "Тег пользователя (необязательно)"
 
@@ -38626,8 +38639,10 @@ msgstr "Громкость пользователя"
 msgid "Username"
 msgstr "Имя пользователя"
 
+#. Field label on the details step of the DSA report form (user report) on an instance without user tags. Optional username of the reported user.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:58
+#: src/features/moderation/components/report/ReportStepDetails.tsx:47
 msgid "Username (optional)"
 msgstr "Имя пользователя (необязательно)"
 
@@ -41106,7 +41121,7 @@ msgid "You must agree to the terms of service to create an account"
 msgstr "Чтобы создать аккаунт, вы должны согласиться с условиями использования"
 
 #. Inline error on the details step of the DSA report flow when the user has not completed email verification.
-#: src/features/moderation/components/pages/ReportPage.tsx:118
+#: src/features/moderation/components/pages/ReportPage.tsx:120
 msgid "You must verify your email before sending a report."
 msgstr "Чтобы отправить жалобу, подтвердите адрес электронной почты."
 

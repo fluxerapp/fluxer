@@ -13,11 +13,11 @@
 	},
 	"account_scheduled_deletion": {
 		"subject": "你的 {product_name} 账号将被永久删除",
-		"body": "你好 {username}，\n\n由于违反了我们的《服务条款》或《社区准则》，你的 {product_name} 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n这是一项严重的处罚措施。你的账号数据将在预定日期被永久删除。\n\n{legalLinks, select,\n  both {请查阅：\n- 服务条款：{termsUrl}\n- 社区准则：{guidelinesUrl}\n\n}\n  terms {请查阅：\n- 服务条款：{termsUrl}\n\n}\n  guidelines {请查阅：\n- 社区准则：{guidelinesUrl}\n\n}\n  other {}\n}申诉流程：\n如果你认为此处罚决定不正确或不合理，你有 60 天时间提交申诉。{appeals_email, select, null {请联系此实例的管理员。} other {请使用此邮箱地址发送邮件至 {appeals_email}。}}\n\n在你的申诉中：\n- 清楚说明你认为处罚决定不正确或不合理的原因\n- 提供任何相关证据或背景信息\n\n{product_name} 安全团队成员将审核你的申诉，并可能在做出最终决定前暂停此次删除。\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n由于违反了我们的《服务条款》或《社区准则》，你的 {product_name} 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}这是一项严重的处罚措施。你的账号数据将在预定日期被永久删除。\n\n{legalLinks, select,\n  both {请查阅：\n- 服务条款：{termsUrl}\n- 社区准则：{guidelinesUrl}\n\n}\n  terms {请查阅：\n- 服务条款：{termsUrl}\n\n}\n  guidelines {请查阅：\n- 社区准则：{guidelinesUrl}\n\n}\n  other {}\n}申诉流程：\n如果你认为此处罚决定不正确或不合理，你有 60 天时间提交申诉。{appeals_email, select, null {请联系此实例的管理员。} other {请使用此邮箱地址发送邮件至 {appeals_email}。}}\n\n在你的申诉中：\n- 清楚说明你认为处罚决定不正确或不合理的原因\n- 提供任何相关证据或背景信息\n\n{product_name} 安全团队成员将审核你的申诉，并可能在做出最终决定前暂停此次删除。\n\n– {product_name} 安全团队"
 	},
 	"account_temp_banned": {
 		"subject": "你的 {product_name} 账号已被暂时封禁",
-		"body": "你好 {username}，\n\n你的 {product_name} 账号因违反我们的《服务条款》或《社区准则》已被暂时封禁。\n\n封禁时长：{durationHours, plural,\n  =1 {1 小时}\n  other {# 小时}\n}\n封禁至：{bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n在此期间，你将无法访问你的账号。\n\n{legalLinks, select,\n  both {请查阅：\n- 服务条款：{termsUrl}\n- 社区准则：{guidelinesUrl}\n\n}\n  terms {请查阅：\n- 服务条款：{termsUrl}\n\n}\n  guidelines {请查阅：\n- 社区准则：{guidelinesUrl}\n\n}\n  other {}\n}如果你认为此处罚决定不正确或不合理，你可以提交申诉。{appeals_email, select, null {请联系此实例的管理员，并清楚说明你认为该决定不正确的原因。} other {请使用此邮箱地址发送邮件至 {appeals_email}，并清楚说明你认为该决定不正确的原因。}}我们会审核你的申诉，并将决定回复你。\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n你的 {product_name} 账号因违反我们的《服务条款》或《社区准则》已被暂时封禁。\n\n封禁时长：{durationHours, plural,\n  =1 {1 小时}\n  other {# 小时}\n}\n封禁至：{bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}在此期间，你将无法访问你的账号。\n\n{legalLinks, select,\n  both {请查阅：\n- 服务条款：{termsUrl}\n- 社区准则：{guidelinesUrl}\n\n}\n  terms {请查阅：\n- 服务条款：{termsUrl}\n\n}\n  guidelines {请查阅：\n- 社区准则：{guidelinesUrl}\n\n}\n  other {}\n}如果你认为此处罚决定不正确或不合理，你可以提交申诉。{appeals_email, select, null {请联系此实例的管理员，并清楚说明你认为该决定不正确的原因。} other {请使用此邮箱地址发送邮件至 {appeals_email}，并清楚说明你认为该决定不正确的原因。}}我们会审核你的申诉，并将决定回复你。\n\n– {product_name} 安全团队"
 	},
 	"donation_confirmation": {
 		"subject": "感谢你的 {product_name} 捐赠",
@@ -93,7 +93,7 @@
 	},
 	"scheduled_deletion_notification": {
 		"subject": "你的 {product_name} 账号将被永久删除",
-		"body": "你好 {username}，\n\n你的 {product_name} 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n这是一项严重的处罚措施。你的账号数据将在预定日期被永久删除。\n\n如果你认为此处罚决定不正确，可以提交申诉。{appeals_email, select, null {请联系此实例的管理员。} other {请使用此邮箱地址发送邮件至 {appeals_email}。}}\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n你的 {product_name} 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}这是一项严重的处罚措施。你的账号数据将在预定日期被永久删除。\n\n如果你认为此处罚决定不正确，可以提交申诉。{appeals_email, select, null {请联系此实例的管理员。} other {请使用此邮箱地址发送邮件至 {appeals_email}。}}\n\n– {product_name} 安全团队"
 	},
 	"self_deletion_scheduled": {
 		"subject": "你的 {product_name} 账号已安排删除",
@@ -101,6 +101,6 @@
 	},
 	"unban_notification": {
 		"subject": "你的 {product_name} 账号已解除封禁",
-		"body": "你好 {username}，\n\n好消息：你的 {product_name} 账号已解除封禁。\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n你现在可以重新登录，继续正常使用 {product_name}。\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n好消息：你的 {product_name} 账号已解除封禁。\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}你现在可以重新登录，继续正常使用 {product_name}。\n\n– {product_name} 安全团队"
 	}
 }

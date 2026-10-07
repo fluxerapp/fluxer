@@ -17,11 +17,11 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"account_scheduled_deletion": {
 		"subject": "您的 {product_name} 帳號將被永久刪除",
-		"body": "哈囉 {username}，\n\n由於您違反了我們的服務條款或社群準則，您的 {product_name} 帳號已排定永久刪除。\n\n排定刪除時間：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n這是一項嚴重的處分。您的帳號資料將在排定日期永久刪除。\n\n{legalLinks, select,\n  both {請參閱：\n- 服務條款：{termsUrl}\n- 社群準則：{guidelinesUrl}\n\n}\n  terms {請參閱：\n- 服務條款：{termsUrl}\n\n}\n  guidelines {請參閱：\n- 社群準則：{guidelinesUrl}\n\n}\n  other {}\n}申訴流程：\n如果您認為此處分不正確或不合理，您有 60 天的時間可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員。} other {請使用此電子郵件地址寄信至 {appeals_email}。}}\n\n在您的申訴中：\n- 請清楚說明您認為此處分不正確或不合理的原因\n- 提供任何相關證據或背景資訊\n\n{product_name} 安全團隊的成員將會審查您的申訴，並可能在做出最終決定前暫停這項刪除。\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n由於您違反了我們的服務條款或社群準則，您的 {product_name} 帳號已排定永久刪除。\n\n排定刪除時間：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}這是一項嚴重的處分。您的帳號資料將在排定日期永久刪除。\n\n{legalLinks, select,\n  both {請參閱：\n- 服務條款：{termsUrl}\n- 社群準則：{guidelinesUrl}\n\n}\n  terms {請參閱：\n- 服務條款：{termsUrl}\n\n}\n  guidelines {請參閱：\n- 社群準則：{guidelinesUrl}\n\n}\n  other {}\n}申訴流程：\n如果您認為此處分不正確或不合理，您有 60 天的時間可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員。} other {請使用此電子郵件地址寄信至 {appeals_email}。}}\n\n在您的申訴中：\n- 請清楚說明您認為此處分不正確或不合理的原因\n- 提供任何相關證據或背景資訊\n\n{product_name} 安全團隊的成員將會審查您的申訴，並可能在做出最終決定前暫停這項刪除。\n\n– {product_name} 安全團隊"
 	},
 	"account_temp_banned": {
 		"subject": "您的 {product_name} 帳號已暫時停權",
-		"body": "哈囉 {username}，\n\n由於您違反了我們的服務條款或社群準則，您的 {product_name} 帳號已暫時停權。\n\n持續時間：{durationHours, plural,\n  =1 {1 小時}\n  other {# 小時}\n}\n停權至：{bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n在此期間，您將無法存取您的帳號。\n\n{legalLinks, select,\n  both {請參閱：\n- 服務條款：{termsUrl}\n- 社群準則：{guidelinesUrl}\n\n}\n  terms {請參閱：\n- 服務條款：{termsUrl}\n\n}\n  guidelines {請參閱：\n- 社群準則：{guidelinesUrl}\n\n}\n  other {}\n}如果您認為此處分不正確或不合理，可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員，並清楚說明您認為此處分不正確的原因。} other {請使用此電子郵件地址寄信至 {appeals_email}，並清楚說明您認為此處分不正確的原因。}}我們會審查您的申訴，並回覆我們的決定。\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n由於您違反了我們的服務條款或社群準則，您的 {product_name} 帳號已暫時停權。\n\n持續時間：{durationHours, plural,\n  =1 {1 小時}\n  other {# 小時}\n}\n停權至：{bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}在此期間，您將無法存取您的帳號。\n\n{legalLinks, select,\n  both {請參閱：\n- 服務條款：{termsUrl}\n- 社群準則：{guidelinesUrl}\n\n}\n  terms {請參閱：\n- 服務條款：{termsUrl}\n\n}\n  guidelines {請參閱：\n- 社群準則：{guidelinesUrl}\n\n}\n  other {}\n}如果您認為此處分不正確或不合理，可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員，並清楚說明您認為此處分不正確的原因。} other {請使用此電子郵件地址寄信至 {appeals_email}，並清楚說明您認為此處分不正確的原因。}}我們會審查您的申訴，並回覆我們的決定。\n\n– {product_name} 安全團隊"
 	},
 	"donation_confirmation": {
 		"subject": "感謝您對 {product_name} 的捐款",
@@ -97,7 +97,7 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"scheduled_deletion_notification": {
 		"subject": "您的 {product_name} 帳號將被永久刪除",
-		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號已排定永久刪除。\n\n排定刪除時間：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n這是一項嚴重的處分。您的帳號資料將在排定日期永久刪除。\n\n如果您認為此處分不正確，可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員。} other {請使用此電子郵件地址寄信至 {appeals_email}。}}\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號已排定永久刪除。\n\n排定刪除時間：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}這是一項嚴重的處分。您的帳號資料將在排定日期永久刪除。\n\n如果您認為此處分不正確，可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員。} other {請使用此電子郵件地址寄信至 {appeals_email}。}}\n\n– {product_name} 安全團隊"
 	},
 	"self_deletion_scheduled": {
 		"subject": "您的 {product_name} 帳號已排定刪除",
@@ -105,7 +105,7 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"unban_notification": {
 		"subject": "您的 {product_name} 帳號停權已解除",
-		"body": "哈囉 {username}，\n\n好消息：您的 {product_name} 帳號停權已解除。\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n您現在可以重新登入並繼續正常使用 {product_name}。\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n好消息：您的 {product_name} 帳號停權已解除。\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}您現在可以重新登入並繼續正常使用 {product_name}。\n\n– {product_name} 安全團隊"
 	}
 });
 

@@ -55,6 +55,7 @@ const LANGUAGE_OVERRIDES: Record<string, LocaleCode> = {
 	en: 'en-US',
 	es: 'es-ES',
 	nb: 'no',
+	nn: 'no',
 	pt: 'pt-BR',
 	sv: 'sv-SE',
 	zh: 'zh-CN',

@@ -609,8 +609,6 @@ There is no retry key. A repeated request with the same values creates a second 
 | 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
 | 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
 
-The response schema also declares the [MFA challenge response](#mfa-challenge-response), which registration never returns, because a new account has no second factor.
-
 ### Side effects
 
 The operation applies the instance's registration, email-domain, breached-password, and regional policies before creating the account. It records the accepted terms and privacy policy, authorises the registering client IP address, and sends an email verification message when the instance sends email. An instance that sends no email marks the address verified at creation instead.
@@ -1207,8 +1205,6 @@ Fluxer checks the replacement password against the same breached-password corpus
 | 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
 | 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
 | 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
-
-The response schema also declares the [MFA challenge response](#mfa-challenge-response), which this operation never returns, because the reversion clears every second factor.
 
 ### Side effects
 

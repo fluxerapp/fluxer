@@ -17,11 +17,11 @@ const EMAIL_I18N_KO_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name} 계정이 영구적으로 삭제될 예정이에요",
-		"body": "안녕하세요, {username}님.\n\n서비스 약관 또는 커뮤니티 가이드라인 위반으로 인해 {product_name} 계정이 영구적으로 삭제될 예정이에요.\n\n삭제 예정일: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n이는 중대한 조치이며, 계정 데이터는 예정된 날짜에 영구적으로 삭제될 예정이에요.\n\n{legalLinks, select,\n  both {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  terms {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n\n}\n  guidelines {다음 내용을 확인해 주세요:\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  other {}\n}이의 제기 절차:\n이 조치가 잘못되었거나 부당하다고 생각되면 60일 이내에 이의를 제기할 수 있어요. {appeals_email, select, null {이 인스턴스의 관리자에게 연락해 이의를 제기해 주세요.} other {이 이메일 주소에서 {appeals_email}으로 이메일을 보내 이의를 제기해 주세요.}}\n\n이의 제기 시에는:\n- 조치가 잘못되었거나 부당하다고 생각하는 이유를 명확하게 설명해 주세요.\n- 관련 증거 또는 맥락을 제공해 주세요.\n\n{product_name} 안전팀 담당자가 이의 제기를 검토하고 최종 결정이 내려질 때까지 삭제를 일시적으로 보류할 수 있어요.\n\n– {product_name} 안전팀"
+		"body": "안녕하세요, {username}님.\n\n서비스 약관 또는 커뮤니티 가이드라인 위반으로 인해 {product_name} 계정이 영구적으로 삭제될 예정이에요.\n\n삭제 예정일: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}\n\n}\n}이는 중대한 조치이며, 계정 데이터는 예정된 날짜에 영구적으로 삭제될 예정이에요.\n\n{legalLinks, select,\n  both {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  terms {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n\n}\n  guidelines {다음 내용을 확인해 주세요:\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  other {}\n}이의 제기 절차:\n이 조치가 잘못되었거나 부당하다고 생각되면 60일 이내에 이의를 제기할 수 있어요. {appeals_email, select, null {이 인스턴스의 관리자에게 연락해 이의를 제기해 주세요.} other {이 이메일 주소에서 {appeals_email}으로 이메일을 보내 이의를 제기해 주세요.}}\n\n이의 제기 시에는:\n- 조치가 잘못되었거나 부당하다고 생각하는 이유를 명확하게 설명해 주세요.\n- 관련 증거 또는 맥락을 제공해 주세요.\n\n{product_name} 안전팀 담당자가 이의 제기를 검토하고 최종 결정이 내려질 때까지 삭제를 일시적으로 보류할 수 있어요.\n\n– {product_name} 안전팀"
 	},
 	"account_temp_banned": {
 		"subject": "{product_name} 계정이 일시적으로 정지되었어요",
-		"body": "안녕하세요, {username}님.\n\n서비스 약관 또는 커뮤니티 가이드라인 위반으로 인해 {product_name} 계정이 일시적으로 정지되었어요.\n\n기간: {durationHours, plural,\n  =1 {1시간}\n  other {#시간}\n}\n정지 해제 일시: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n이 기간 동안에는 계정에 액세스할 수 없어요.\n\n{legalLinks, select,\n  both {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  terms {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n\n}\n  guidelines {다음 내용을 확인해 주세요:\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  other {}\n}이 조치가 잘못되었거나 부당하다고 생각되면 이의를 제기할 수 있어요. {appeals_email, select, null {이 인스턴스의 관리자에게 연락해 결정이 잘못되었다고 생각하는 이유를 명확하게 설명해 주세요.} other {이 이메일 주소에서 {appeals_email}으로 이메일을 보내 결정이 잘못되었다고 생각하는 이유를 명확하게 설명해 주세요.}} 이의 제기를 검토한 후 결과를 알려 드릴 예정이에요.\n\n– {product_name} 안전팀"
+		"body": "안녕하세요, {username}님.\n\n서비스 약관 또는 커뮤니티 가이드라인 위반으로 인해 {product_name} 계정이 일시적으로 정지되었어요.\n\n기간: {durationHours, plural,\n  =1 {1시간}\n  other {#시간}\n}\n정지 해제 일시: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}\n\n}\n}이 기간 동안에는 계정에 액세스할 수 없어요.\n\n{legalLinks, select,\n  both {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  terms {다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n\n}\n  guidelines {다음 내용을 확인해 주세요:\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n}\n  other {}\n}이 조치가 잘못되었거나 부당하다고 생각되면 이의를 제기할 수 있어요. {appeals_email, select, null {이 인스턴스의 관리자에게 연락해 결정이 잘못되었다고 생각하는 이유를 명확하게 설명해 주세요.} other {이 이메일 주소에서 {appeals_email}으로 이메일을 보내 결정이 잘못되었다고 생각하는 이유를 명확하게 설명해 주세요.}} 이의 제기를 검토한 후 결과를 알려 드릴 예정이에요.\n\n– {product_name} 안전팀"
 	},
 	"donation_confirmation": {
 		"subject": "{product_name} 후원에 감사드려요",
@@ -97,7 +97,7 @@ const EMAIL_I18N_KO_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"scheduled_deletion_notification": {
 		"subject": "{product_name} 계정이 영구적으로 삭제될 예정이에요",
-		"body": "안녕하세요, {username}님.\n\n{product_name} 계정이 영구적으로 삭제될 예정이에요.\n\n삭제 예정일: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n이는 중대한 조치이며, 계정 데이터는 예정된 날짜에 영구적으로 삭제될 예정이에요.\n\n이 조치가 잘못되었다고 생각되면 이의를 제기할 수 있어요. {appeals_email, select, null {이 인스턴스의 관리자에게 연락해 이의를 제기해 주세요.} other {이 이메일 주소에서 {appeals_email}으로 이메일을 보내 이의를 제기해 주세요.}}\n\n– {product_name} 안전팀"
+		"body": "안녕하세요, {username}님.\n\n{product_name} 계정이 영구적으로 삭제될 예정이에요.\n\n삭제 예정일: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}\n\n}\n}이는 중대한 조치이며, 계정 데이터는 예정된 날짜에 영구적으로 삭제될 예정이에요.\n\n이 조치가 잘못되었다고 생각되면 이의를 제기할 수 있어요. {appeals_email, select, null {이 인스턴스의 관리자에게 연락해 이의를 제기해 주세요.} other {이 이메일 주소에서 {appeals_email}으로 이메일을 보내 이의를 제기해 주세요.}}\n\n– {product_name} 안전팀"
 	},
 	"self_deletion_scheduled": {
 		"subject": "{product_name} 계정 삭제가 예정되었어요",
@@ -105,7 +105,7 @@ const EMAIL_I18N_KO_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"unban_notification": {
 		"subject": "{product_name} 계정 정지가 해제되었어요",
-		"body": "안녕하세요, {username}님.\n\n좋은 소식이에요: {product_name} 계정 정지가 해제되었어요.\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n이제 다시 로그인하여 평소처럼 {product_name}를 계속 사용할 수 있어요.\n\n– {product_name} 안전팀"
+		"body": "안녕하세요, {username}님.\n\n좋은 소식이에요: {product_name} 계정 정지가 해제되었어요.\n\n{reason, select,\n  null {}\n  other {사유: {reason}\n\n}\n}이제 다시 로그인하여 평소처럼 {product_name}를 계속 사용할 수 있어요.\n\n– {product_name} 안전팀"
 	}
 });
 

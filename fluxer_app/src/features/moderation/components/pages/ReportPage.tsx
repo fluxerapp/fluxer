@@ -2,6 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
 import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import {showModerationErrorModal} from '@app/features/moderation/components/alerts/ModerationErrorModalUtils';
@@ -21,6 +22,7 @@ import {ReportStepDetails} from '@app/features/moderation/components/report/Repo
 import {ReportStepEmail} from '@app/features/moderation/components/report/ReportStepEmail';
 import {ReportStepReason} from '@app/features/moderation/components/report/ReportStepReason';
 import {ReportStepSelection} from '@app/features/moderation/components/report/ReportStepSelection';
+import {ReportStepUnavailable} from '@app/features/moderation/components/report/ReportStepUnavailable';
 import {
 	formatCooldownDuration,
 	ReportStepVerification,
@@ -747,6 +749,15 @@ export const ReportPage = observer(() => {
 				)}
 			</div>
 		);
+	if (RuntimeConfig.usesUsernameSignIn) {
+		return (
+			<div className={styles.page} dir={getLocaleDirection(locale)} data-flx="moderation.report-page.page">
+				<div className={styles.mainColumn} data-flx="moderation.report-page.main-column">
+					<ReportStepUnavailable data-flx="moderation.report-page.report-step-unavailable" />
+				</div>
+			</div>
+		);
+	}
 	return (
 		<div className={styles.page} dir={getLocaleDirection(locale)} data-flx="moderation.report-page.page">
 			{breadcrumbShell}

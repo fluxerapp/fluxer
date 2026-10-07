@@ -132,7 +132,7 @@ impl Resolver for YouTubeResolver {
             }
 
             embed.provider = Some(EmbedProvider {
-                name: Some("YouTube".to_owned()),
+                name: "YouTube".to_owned(),
                 url: Some("https://www.youtube.com".to_owned()),
             });
 

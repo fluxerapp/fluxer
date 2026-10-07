@@ -217,7 +217,7 @@
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AuthLoginResponse"}}}
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AuthTokenWithUserIdResponse"}}}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -11364,6 +11364,13 @@
 						"required": true,
 						"schema": {"description": "The ID of the harvest request", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the harvest request"
+					},
+					{
+						"name": "token",
+						"in": "query",
+						"required": true,
+						"schema": {"description": "The signed download token from the harvest download URL", "type": "string"},
+						"description": "The signed download token from the harvest download URL"
 					}
 				]
 			}
@@ -32650,31 +32657,6 @@
 			"AuthRegisterResponse": {
 				"anyOf": [
 					{"$ref": "#/components/schemas/AuthTokenWithUserIdResponse"},
-					{
-						"type": "object",
-						"properties": {
-							"mfa": {
-								"type": "boolean",
-								"const": true,
-								"description": "Indicates MFA is required to complete authentication"
-							},
-							"ticket": {"type": "string", "description": "MFA ticket to use when completing MFA verification"},
-							"allowed_methods": {
-								"maxItems": 10,
-								"type": "array",
-								"items": {"type": "string"},
-								"description": "List of allowed MFA methods"
-							},
-							"totp": {"type": "boolean", "description": "Whether TOTP authenticator MFA is available"},
-							"webauthn": {"type": "boolean", "description": "Whether WebAuthn security key MFA is available"},
-							"backup_codes": {
-								"type": "boolean",
-								"description": "Whether the account has at least one unconsumed backup code"
-							}
-						},
-						"required": ["mfa", "ticket", "allowed_methods", "totp", "webauthn", "backup_codes"],
-						"additionalProperties": false
-					},
 					{"$ref": "#/components/schemas/AuthRegistrationPendingApprovalResponse"}
 				]
 			},
@@ -35490,7 +35472,7 @@
 					},
 					"provider": {
 						"description": "The provider of the embed (e.g., YouTube, Twitter)",
-						"anyOf": [{"$ref": "#/components/schemas/EmbedAuthorResponse"}, {"type": "null"}]
+						"anyOf": [{"$ref": "#/components/schemas/EmbedProviderResponse"}, {"type": "null"}]
 					},
 					"video": {
 						"description": "The video of the embed",
@@ -35618,7 +35600,7 @@
 					},
 					"provider": {
 						"description": "The provider of the embed (e.g., YouTube, Twitter)",
-						"anyOf": [{"$ref": "#/components/schemas/EmbedAuthorResponse"}, {"type": "null"}]
+						"anyOf": [{"$ref": "#/components/schemas/EmbedProviderResponse"}, {"type": "null"}]
 					},
 					"video": {
 						"description": "The video of the embed",
@@ -35677,20 +35659,12 @@
 				"required": ["url", "flags"],
 				"additionalProperties": false
 			},
-			"EmbedAuthorResponse": {
+			"EmbedProviderResponse": {
 				"type": "object",
 				"properties": {
-					"name": {"type": "string", "description": "The name of the author"},
+					"name": {"type": "string", "description": "The name of the provider"},
 					"url": {
-						"description": "The URL of the author",
-						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
-					},
-					"icon_url": {
-						"description": "The URL of the author icon",
-						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
-					},
-					"proxy_icon_url": {
-						"description": "The proxied URL of the author icon",
+						"description": "The URL of the provider",
 						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
 					}
 				},
@@ -35721,6 +35695,26 @@
 					}
 				},
 				"required": ["text"],
+				"additionalProperties": false
+			},
+			"EmbedAuthorResponse": {
+				"type": "object",
+				"properties": {
+					"name": {"type": "string", "description": "The name of the author"},
+					"url": {
+						"description": "The URL of the author",
+						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
+					},
+					"icon_url": {
+						"description": "The URL of the author icon",
+						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
+					},
+					"proxy_icon_url": {
+						"description": "The proxied URL of the author icon",
+						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
+					}
+				},
+				"required": ["name"],
 				"additionalProperties": false
 			},
 			"EmbedMediaFlags": {
@@ -38281,7 +38275,7 @@
 					"user_tag": {
 						"description": "Fluxer tag of the user being reported",
 						"type": "string",
-						"minLength": 3,
+						"minLength": 1,
 						"maxLength": 37
 					}
 				},
@@ -38333,7 +38327,7 @@
 					"reported_user_tag": {
 						"description": "Fluxer tag of the user who sent the message",
 						"type": "string",
-						"minLength": 3,
+						"minLength": 1,
 						"maxLength": 37
 					}
 				},

@@ -131,11 +131,11 @@ describe('EmailService enforcement notices', () => {
 		return {service: new EmailService(config, new EmailI18nService(), provider), sent};
 	}
 
-	async function sendBoth(config: EmailConfig): Promise<Array<string>> {
+	async function sendBoth(config: EmailConfig, reason: string | null = 'Spam'): Promise<Array<string>> {
 		const {service, sent} = capture(config);
 		const until = new Date('2026-10-01T23:30:00Z');
-		await service.sendAccountTempBannedEmail('user@example.com', 'testuser', 'Spam', 24, until, 'en-US');
-		await service.sendAccountScheduledForDeletionEmail('user@example.com', 'testuser', 'Spam', until, 'en-US');
+		await service.sendAccountTempBannedEmail('user@example.com', 'testuser', reason, 24, until, 'en-US');
+		await service.sendAccountScheduledForDeletionEmail('user@example.com', 'testuser', reason, until, 'en-US');
 		expect(sent).toHaveLength(2);
 		return sent.map((message) => message.text);
 	}
@@ -165,6 +165,27 @@ describe('EmailService enforcement notices', () => {
 		for (const text of await sendBoth({...CONFIG, termsUrl: 'https://tos.example.org', guidelinesUrl: null})) {
 			expect(text).toContain('Please review:\n- Terms of Service: https://tos.example.org\n\n');
 			expect(text).not.toContain('Community Guidelines:');
+		}
+	});
+
+	it('states the reason as its own paragraph', async () => {
+		const [suspended, deletion] = await sendBoth(CONFIG);
+		expect(suspended).toContain(' UTC\n\nReason: Spam\n\nDuring this time,');
+		expect(deletion).toContain(' UTC\n\nReason: Spam\n\nThis is a serious enforcement action.');
+		for (const text of [suspended, deletion]) {
+			expect(text).not.toContain('\n\n\n');
+		}
+	});
+
+	it.each([null, '', '  '])('leaves no gap when the reason is %j', async (reason) => {
+		const withReason = await sendBoth(CONFIG);
+		const [suspended, deletion] = await sendBoth(CONFIG, reason);
+		expect(suspended).toContain(' UTC\n\nDuring this time,');
+		expect(deletion).toContain(' UTC\n\nThis is a serious enforcement action.');
+		for (const [index, text] of [suspended, deletion].entries()) {
+			expect(text).not.toContain('Reason:');
+			expect(text).not.toContain('\n\n\n');
+			expect(text.split('\n\n')).toHaveLength(withReason[index].split('\n\n').length - 1);
 		}
 	});
 });

@@ -101,7 +101,7 @@ export function getCollapsedGroupType(
 	message: Message,
 	treatSpam: boolean,
 ): ChannelStreamType | null {
-	if (message.blocked) {
+	if (message.blocked && message.isUserMessage()) {
 		return ChannelStreamType.MESSAGE_GROUP_BLOCKED;
 	}
 	if (

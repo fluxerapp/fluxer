@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {identityLocale} from '@fluxer/i18n/src/normalization/IdentityLocale';
+import {compileMessage} from '@fluxer/i18n/src/runtime/CompileMessage';
 import {createStaticI18n} from '@fluxer/i18n/src/runtime/CreateStaticI18n';
 import type {I18nResult} from '@fluxer/i18n/src/runtime/I18nTypes';
 import {validateMessageTemplateVariables} from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
@@ -58,8 +59,8 @@ const emailI18n = createStaticI18n<EmailTemplateKey, EmailTemplate, Record<strin
 		messageFormatOptions: {customFormatters: {date: formatEmailDate, time: formatEmailTime}},
 	},
 	(template, variables, mf) => {
-		const compiledSubject = String(mf.compile(template.subject)(variables));
-		const compiledBody = String(mf.compile(template.body)(variables));
+		const compiledSubject = String(compileMessage(mf, template.subject)(variables));
+		const compiledBody = String(compileMessage(mf, template.body)(variables));
 		return {subject: compiledSubject, body: compiledBody};
 	},
 );

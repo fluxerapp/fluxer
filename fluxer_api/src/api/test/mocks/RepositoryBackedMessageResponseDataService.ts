@@ -423,7 +423,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			thumbnail: this.mapEmbedMedia(embed.thumbnail, message),
 			footer: this.mapEmbedFooter(embed.footer),
 			fields: embed.fields.length > 0 ? embed.fields.map((field) => this.mapEmbedField(field)) : null,
-			provider: this.mapEmbedAuthor(embed.provider),
+			provider: this.mapEmbedProvider(embed.provider),
 			video: this.mapEmbedMedia(embed.video, message),
 			audio: this.mapEmbedMedia(embed.audio, message),
 			html: embed.html,
@@ -434,14 +434,21 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		};
 	}
 
-	private mapEmbedAuthor(author: EmbedAuthor | EmbedProvider | null) {
+	private mapEmbedAuthor(author: EmbedAuthor | null) {
 		if (!author?.name) return null;
-		const iconUrl = 'iconUrl' in author ? author.iconUrl : null;
 		return {
 			name: author.name,
 			url: signOwnUrl(author.url),
-			icon_url: signOwnUrl(iconUrl),
-			proxy_icon_url: mediaProxyUrl(iconUrl),
+			icon_url: signOwnUrl(author.iconUrl),
+			proxy_icon_url: mediaProxyUrl(author.iconUrl),
+		};
+	}
+
+	private mapEmbedProvider(provider: EmbedProvider | null) {
+		if (!provider?.name) return null;
+		return {
+			name: provider.name,
+			url: signOwnUrl(provider.url),
 		};
 	}
 

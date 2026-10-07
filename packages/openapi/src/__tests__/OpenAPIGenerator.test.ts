@@ -297,6 +297,72 @@ describe('published public and admin documents', () => {
 		expect(status).toEqual({type: 'string', description: 'Current status of the report (pending, resolved)'});
 	});
 
+	it('declares the token query parameter of the harvest archive download', () => {
+		const operation = documentFor('public').paths['/harvest-downloads/{harvestId}'].get;
+		expect(operation.parameters?.map(({name, in: location, required}) => ({name, in: location, required}))).toEqual([
+			{name: 'harvestId', in: 'path', required: true},
+			{name: 'token', in: 'query', required: true},
+		]);
+		expect(operation.parameters?.[1].schema).toMatchObject({type: 'string'});
+	});
+
+	it('leaves the MFA challenge out of responses that never return one', () => {
+		const document = documentFor('public');
+		const responseSchema = (path: string) =>
+			document.paths[path].post.responses['200'].content?.['application/json']?.schema;
+		expect(document.components.schemas.AuthRegisterResponse).toEqual({
+			anyOf: [
+				{$ref: '#/components/schemas/AuthTokenWithUserIdResponse'},
+				{$ref: '#/components/schemas/AuthRegistrationPendingApprovalResponse'},
+			],
+		});
+		expect(responseSchema('/auth/register')).toEqual({$ref: '#/components/schemas/AuthRegisterResponse'});
+		expect(responseSchema('/auth/email-revert')).toEqual({$ref: '#/components/schemas/AuthTokenWithUserIdResponse'});
+		for (const path of ['/auth/login', '/auth/reset']) {
+			expect(responseSchema(path)).toEqual({$ref: '#/components/schemas/AuthLoginResponse'});
+		}
+		const login = document.components.schemas.AuthLoginResponse.anyOf ?? [];
+		expect(login).toHaveLength(2);
+		expect(login[0]).toEqual({$ref: '#/components/schemas/AuthTokenWithUserIdResponse'});
+		expect(login[1]).toHaveProperty('properties.mfa');
+	});
+
+	it('describes an embed provider with a name and a link only', () => {
+		const document = documentFor('public');
+		expect(Object.keys(document.components.schemas.EmbedProviderResponse.properties ?? {})).toEqual(['name', 'url']);
+		for (const name of ['MessageEmbedResponse', 'MessageEmbedChildResponse']) {
+			const properties = document.components.schemas[name].properties;
+			expect(properties?.provider).toMatchObject({
+				anyOf: [{$ref: '#/components/schemas/EmbedProviderResponse'}, {type: 'null'}],
+			});
+			expect(properties?.author).toMatchObject({
+				anyOf: [{$ref: '#/components/schemas/EmbedAuthorResponse'}, {type: 'null'}],
+			});
+		}
+		expect(Object.keys(document.components.schemas.EmbedAuthorResponse.properties ?? {})).toEqual([
+			'name',
+			'url',
+			'icon_url',
+			'proxy_icon_url',
+		]);
+	});
+
+	it('lists only the fields the admin guild update returns', () => {
+		const document = documentFor('admin');
+		const guild = document.components.schemas.GuildUpdateResponse.properties?.guild;
+		assert(typeof guild === 'object', 'the guild member of GuildUpdateResponse must be an object schema');
+		expect(Object.keys(guild.properties ?? {})).toEqual([
+			'id',
+			'name',
+			'features',
+			'owner_id',
+			'icon',
+			'banner',
+			'member_count',
+			'nsfw_level',
+		]);
+	});
+
 	it('keeps the report status and type enums in the admin document', () => {
 		const {schemas} = documentFor('admin').components;
 		expect(schemas.ReportStatus).toMatchObject({type: 'integer', format: 'int32', enum: [0, 1]});

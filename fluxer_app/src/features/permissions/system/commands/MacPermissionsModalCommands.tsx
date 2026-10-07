@@ -4,12 +4,27 @@ import {
 	type MediaPermissionBlockedKind,
 	MediaPermissionBlockedModal,
 } from '@app/features/permissions/system/components/MediaPermissionBlockedModal';
+import type * as MacPermissionsModalModule from '@app/features/permissions/system/components/modals/MacPermissionsModal';
 import type {MacPermissionKind} from '@app/features/permissions/system/state/MacPermissions';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import {modal, push, pushWithKey} from '@app/features/ui/commands/ModalCommands';
 import {getNativePlatformSync, isDesktop} from '@app/features/ui/utils/NativeUtils';
 
+const logger = new Logger('MacPermissionsModalCommands');
+
+function loadMacPermissionsModal(): Promise<typeof MacPermissionsModalModule> {
+	return import('@app/features/permissions/system/components/modals/MacPermissionsModal');
+}
+
+export function preloadMacPermissionsModal(): void {
+	if (!isDesktop() || getNativePlatformSync() !== 'macos') return;
+	void loadMacPermissionsModal().catch((error) => {
+		logger.debug('Failed to preload the macOS permissions modal', error);
+	});
+}
+
 export function openMacPermissionsModal(focus: MacPermissionKind): void {
-	void import('@app/features/permissions/system/components/modals/MacPermissionsModal').then(
+	void loadMacPermissionsModal().then(
 		({MAC_PERMISSIONS_MODAL_KEY, MacPermissionsModal}) => {
 			pushWithKey(
 				modal(() => (
@@ -20,6 +35,9 @@ export function openMacPermissionsModal(focus: MacPermissionKind): void {
 				)),
 				MAC_PERMISSIONS_MODAL_KEY,
 			);
+		},
+		(error) => {
+			logger.warn('Failed to load the macOS permissions modal', error);
 		},
 	);
 }

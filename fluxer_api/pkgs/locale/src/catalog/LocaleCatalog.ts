@@ -14,6 +14,9 @@ const SUPPORTED_LOCALE_SET: ReadonlySet<LocaleCode> = new Set<LocaleCode>(SUPPOR
 const LANGUAGE_FALLBACK_BY_LANGUAGE_CODE: Record<string, LocaleCode> = {
 	en: Locales.EN_US,
 	es: Locales.ES_ES,
+	nb: Locales.NO,
+	nn: Locales.NO,
+	no: Locales.NO,
 	pt: Locales.PT_BR,
 	zh: Locales.ZH_CN,
 	sv: Locales.SV_SE,
@@ -111,6 +114,7 @@ const LOCALE_METADATA_BY_CODE: Record<LocaleCode, LocaleMetadata> = {
 	[Locales.NO]: {
 		displayName: 'Norsk',
 		flagCode: '1f1f3-1f1f4',
+		aliases: ['nb', 'nn'],
 	},
 	[Locales.PL]: {
 		displayName: 'Polski',

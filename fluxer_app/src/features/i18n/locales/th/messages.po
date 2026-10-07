@@ -1093,7 +1093,7 @@ msgstr "{count, plural, one {# ช่องทางติดตาม} other {#
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {พบ # คอมมูนิตี้} other {พบ # คอมมูนิตี้}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1952
+#: src/features/app/components/layout/GuildsLayout.tsx:1953
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# คอมมูนิตี้ไม่พร้อมใช้งานชั่วคราว เนื่องจากเครื่องฟลักซ์คาปาซิเตอร์ทำงานผิดปกติ} other {# คอมมูนิตี้ไม่พร้อมใช้งานชั่วคราว เนื่องจากเครื่องฟลักซ์คาปาซิเตอร์ทำงานผิดปกติ}}"
 
@@ -5615,7 +5615,7 @@ msgstr "ไม่อยู่ตอนนี้"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:402
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
-#: src/features/moderation/components/report/ReportStepDetails.tsx:374
+#: src/features/moderation/components/report/ReportStepDetails.tsx:393
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
 msgid "Back"
 msgstr "ย้อนกลับ"
@@ -8069,7 +8069,7 @@ msgid "Choose the premium model"
 msgstr "เลือกโมเดลพรีเมียม"
 
 #. Button on the details step of the DSA report form, shown when the server no longer accepts the chosen reason. Reloads the questions and returns to the reason step.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:80
+#: src/features/moderation/components/report/ReportStepDetails.tsx:95
 msgid "Choose the reason again"
 msgstr "เลือกเหตุผลอีกครั้ง"
 
@@ -8804,7 +8804,7 @@ msgstr "รหัสจากแอป {productName}"
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Success toast on the verification step of the DSA report flow after resending the email verification code.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
-#: src/features/moderation/components/pages/ReportPage.tsx:83
+#: src/features/moderation/components/pages/ReportPage.tsx:85
 msgid "Code resent"
 msgstr "ส่งรหัสอีกครั้งแล้ว"
 
@@ -9095,11 +9095,11 @@ msgid "Community icon"
 msgstr "ไอคอนคอมมูนิตี้"
 
 #. Field label on the details step of the DSA report form (community report). The reported community's snowflake ID.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:42
+#: src/features/moderation/components/report/ReportStepDetails.tsx:57
 msgid "Community ID"
 msgstr "ID คอมมูนิตี้"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:283
+#: src/features/moderation/components/report/ReportStepDetails.tsx:302
 msgid "Community ID is required."
 msgstr "ต้องระบุ ID คอมมูนิตี้"
 
@@ -9451,7 +9451,7 @@ msgid "Confirm password"
 msgstr "ยืนยันรหัสผ่าน"
 
 #. Inline validation error on the details step of the DSA report flow when the good-faith statement checkbox is not ticked.
-#: src/features/moderation/components/pages/ReportPage.tsx:128
+#: src/features/moderation/components/pages/ReportPage.tsx:130
 msgid "Confirm the statement to send the report."
 msgstr "ยืนยันคำรับรองเพื่อส่งรายงาน"
 
@@ -10903,7 +10903,7 @@ msgid "Countdown timer"
 msgstr "ตัวจับเวลาถอยหลัง"
 
 #. Field label on the details step of the DSA report form. The country where the reporter resides, used for the legal declaration.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:70
+#: src/features/moderation/components/report/ReportStepDetails.tsx:85
 msgid "Country of residence"
 msgstr "ประเทศที่พำนัก"
 
@@ -14070,7 +14070,7 @@ msgid "Email address"
 msgstr "ที่อยู่อีเมล"
 
 #. Inline validation error on the email step of the DSA report flow when the email field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:75
+#: src/features/moderation/components/pages/ReportPage.tsx:77
 msgid "Email address required."
 msgstr "ต้องระบุที่อยู่อีเมล"
 
@@ -14085,6 +14085,10 @@ msgstr "เปลี่ยนอีเมลแล้ว"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1093
 msgid "Email delivery"
 msgstr "การส่งอีเมล"
+
+#: src/features/moderation/components/report/ReportStepUnavailable.tsx:11
+msgid "Email reports aren't available here"
+msgstr "ไม่สามารถรายงานทางอีเมลได้ที่นี่"
 
 #. Developer control label for the email-verification banner.
 #: src/features/devtools/components/NagbarControls.ts:37
@@ -14667,7 +14671,7 @@ msgid "Enter"
 msgstr "Enter"
 
 #. Inline validation error on the verification step of the DSA report flow when the code does not match the expected 4-letter-dash-4-digit format. "ABCD-1234" is a literal example pattern.
-#: src/features/moderation/components/pages/ReportPage.tsx:104
+#: src/features/moderation/components/pages/ReportPage.tsx:106
 msgid "Enter a code in the format ABCD-1234."
 msgstr "ป้อนรหัสในรูปแบบ ABCD-1234"
 
@@ -14712,12 +14716,12 @@ msgid "Enter a valid {theOtherPlatform} template URL or code."
 msgstr "ป้อน URL หรือรหัสเทมเพลต {theOtherPlatform} ที่ถูกต้อง"
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
-#: src/features/moderation/components/pages/ReportPage.tsx:79
+#: src/features/moderation/components/pages/ReportPage.tsx:81
 msgid "Enter a valid email address."
 msgstr "ป้อนที่อยู่อีเมลที่ถูกต้อง"
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is not a valid URL.
-#: src/features/moderation/components/pages/ReportPage.tsx:148
+#: src/features/moderation/components/pages/ReportPage.tsx:150
 msgid "Enter a valid message link."
 msgstr "ป้อนลิงก์ข้อความที่ถูกต้อง"
 
@@ -14791,7 +14795,7 @@ msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "ป้อนรหัส {digitCount} หลักจากแอปยืนยันตัวตนของคุณ"
 
 #. Inline validation error on the verification step of the DSA report flow when the code field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:100
+#: src/features/moderation/components/pages/ReportPage.tsx:102
 msgid "Enter the code before continuing."
 msgstr "ป้อนรหัสก่อนดำเนินการต่อ"
 
@@ -14868,7 +14872,7 @@ msgid "Enter your email address and we'll send you a link to reset your password
 msgstr "ป้อนอีเมลของคุณ แล้วเราจะส่งลิงก์สำหรับรีเซ็ตรหัสผ่านให้"
 
 #. Inline validation error on the Full legal name field of the DSA report form, shown when the server requires the name for the chosen reason. The name is required for every reason except child sexual abuse.
-#: src/features/moderation/components/pages/ReportPage.tsx:133
+#: src/features/moderation/components/pages/ReportPage.tsx:135
 msgid "Enter your full legal name to send the report."
 msgstr "กรุณากรอกชื่อจริงตามกฎหมายของคุณเพื่อส่งรายงาน"
 
@@ -15268,12 +15272,12 @@ msgid "Expires:"
 msgstr "หมดอายุ:"
 
 #. Field label on the details step of the DSA report form. Required free text where the reporter explains what is wrong with the reported content.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:52
+#: src/features/moderation/components/report/ReportStepDetails.tsx:67
 msgid "Explain the problem"
 msgstr "อธิบายปัญหา"
 
 #. Inline validation error on the details step of the DSA report flow when the Explain the problem field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:123
+#: src/features/moderation/components/pages/ReportPage.tsx:125
 msgid "Explain the problem to send the report."
 msgstr "อธิบายปัญหาเพื่อส่งรายงาน"
 
@@ -15589,7 +15593,7 @@ msgid "Failed to remove vanity URL. Try again."
 msgstr "ลบ URL ที่กำหนดเองไม่สำเร็จ ลองอีกครั้ง"
 
 #. Error toast when the resend-code request fails on the verification step of the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:91
+#: src/features/moderation/components/pages/ReportPage.tsx:93
 msgid "Failed to resend code. Try again."
 msgstr "ส่งรหัสอีกครั้งไม่สำเร็จ ลองอีกครั้ง"
 
@@ -15599,7 +15603,7 @@ msgid "Failed to reset premium state."
 msgstr "รีเซ็ตสถานะพรีเมียมไม่สำเร็จ"
 
 #. Error shown when the initial email verification code send fails on the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:87
+#: src/features/moderation/components/pages/ReportPage.tsx:89
 msgid "Failed to send code. Try again."
 msgstr "ส่งรหัสไม่สำเร็จ ลองอีกครั้ง"
 
@@ -15614,7 +15618,7 @@ msgid "Failed to send message. Hold for options."
 msgstr "ส่งข้อความไม่สำเร็จ แตะค้างไว้เพื่อดูตัวเลือก"
 
 #. Generic error shown on the DSA report submission page when the report could not be sent.
-#: src/features/moderation/components/pages/ReportPage.tsx:71
+#: src/features/moderation/components/pages/ReportPage.tsx:73
 msgid "Failed to send report. Try again."
 msgstr "ส่งรายงานไม่สำเร็จ ลองอีกครั้ง"
 
@@ -16027,7 +16031,7 @@ msgid "Finnish"
 msgstr "ฟินแลนด์"
 
 #. Placeholder in the Full legal name input on the DSA report form.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:66
+#: src/features/moderation/components/report/ReportStepDetails.tsx:81
 msgid "First and last name"
 msgstr "ชื่อ-นามสกุล"
 
@@ -16690,7 +16694,7 @@ msgid "Full dynamic range"
 msgstr "ช่วงไดนามิกเต็มรูปแบบ"
 
 #. Field label on the details step of the DSA report form. Legal name of the reporter for the formal declaration. The law lets people who report child sexual abuse material leave it empty. Keep the tone neutral.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:61
+#: src/features/moderation/components/report/ReportStepDetails.tsx:76
 msgid "Full legal name (optional for child sexual abuse reports)"
 msgstr "ชื่อ-นามสกุลจริง (ไม่บังคับสำหรับรายงานการล่วงละเมิดทางเพศเด็ก)"
 
@@ -17231,7 +17235,7 @@ msgid "Go back"
 msgstr "ย้อนกลับ"
 
 #. Inline error on the verification step of the DSA report flow when the stored email is missing or malformed and the user must return to the email step.
-#: src/features/moderation/components/pages/ReportPage.tsx:109
+#: src/features/moderation/components/pages/ReportPage.tsx:111
 msgid "Go back and enter a valid email."
 msgstr "กลับไปป้อนอีเมลที่ถูกต้อง"
 
@@ -18213,7 +18217,7 @@ msgid "I changed my mind"
 msgstr "เปลี่ยนใจแล้ว"
 
 #. Required checkbox on the details step of the DSA report form. A formal statement the law asks every reporter to make. Keep the tone formal.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:75
+#: src/features/moderation/components/report/ReportStepDetails.tsx:90
 msgid "I confirm in good faith that the information and allegations in this notice are accurate and complete."
 msgstr "ข้าพเจ้ายืนยันโดยสุจริตว่าข้อมูลและข้อกล่าวหาในรายงานนี้ถูกต้องและครบถ้วน"
 
@@ -18299,7 +18303,7 @@ msgid "If someone told you to paste something here, it is a scam that can hand t
 msgstr "หากมีใครบอกให้คุณวางอะไรลงในช่องนี้ แสดงว่าเป็นกลโกงที่อาจทำให้พวกเขาสามารถเข้าถึงบัญชี {productName} ของคุณได้"
 
 #. Helper text under the Explain the problem field on the details step of the DSA report form.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:57
+#: src/features/moderation/components/report/ReportStepDetails.tsx:72
 msgid "If you believe it is illegal, say which law and why."
 msgstr "หากคุณเชื่อว่าผิดกฎหมาย โปรดระบุว่ากฎหมายใดและเพราะเหตุใด"
 
@@ -18712,7 +18716,7 @@ msgid "Include my two-factor backup codes in the PDF and printout"
 msgstr "รวมรหัสสำรองการยืนยันสองขั้นตอนของฉันไว้ในไฟล์ PDF และเอกสารที่พิมพ์"
 
 #. Inline validation error on the details step of the DSA report flow (community report) when the community ID field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:158
+#: src/features/moderation/components/pages/ReportPage.tsx:160
 msgid "Include the community ID."
 msgstr "ระบุ ID คอมมูนิตี้"
 
@@ -19152,7 +19156,7 @@ msgid "Invite background"
 msgstr "ภาพพื้นหลังคำเชิญ"
 
 #. Field label on the details step of the DSA report form (community report). Optional invite code to the reported community.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:47
+#: src/features/moderation/components/report/ReportStepDetails.tsx:62
 msgid "Invite code (optional)"
 msgstr "รหัสเชิญ (ไม่บังคับ)"
 
@@ -21825,7 +21829,7 @@ msgid "message link"
 msgstr "ลิงก์ข้อความ"
 
 #. Field label on the details step of the DSA report form (message report). The reporter pastes a direct link to the offending message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:22
+#: src/features/moderation/components/report/ReportStepDetails.tsx:27
 msgid "Message link"
 msgstr "ลิงก์ข้อความ"
 
@@ -23120,7 +23124,7 @@ msgid "New"
 msgstr "ใหม่"
 
 #. Small badge on a new or recently added app navigation item.
-#: src/features/app/components/layout/GuildsLayout.tsx:134
+#: src/features/app/components/layout/GuildsLayout.tsx:135
 msgctxt "navigation-badge"
 msgid "New"
 msgstr "ใหม่"
@@ -25654,7 +25658,7 @@ msgid "Paste the JSON response here"
 msgstr "วางการตอบกลับ JSON ที่นี่"
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:143
+#: src/features/moderation/components/pages/ReportPage.tsx:145
 msgid "Paste the message link."
 msgstr "วางลิงก์ข้อความ"
 
@@ -26972,12 +26976,12 @@ msgstr "สรรพนาม: "
 msgid "Protect your Visionary account by enabling two-factor authentication. Thanks for supporting {productName}!"
 msgstr "ปกป้องบัญชี Visionary ของคุณด้วยการเปิดใช้งานการยืนยันตัวตนแบบสองชั้น ขอบคุณที่สนับสนุน {productName}!"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:261
+#: src/features/moderation/components/report/ReportStepDetails.tsx:280
 msgid "Provide at least a user ID or a user tag."
 msgstr "ระบุ ID ผู้ใช้ หรือแท็กผู้ใช้อย่างน้อยหนึ่งอย่าง"
 
 #. Inline validation error on the details step of the DSA report flow (user report) when both user ID and username fields are empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:153
+#: src/features/moderation/components/pages/ReportPage.tsx:155
 msgid "Provide either a user ID or a username for the person you are reporting."
 msgstr "ระบุ ID ผู้ใช้ หรือชื่อผู้ใช้ของบุคคลที่คุณต้องการรายงาน"
 
@@ -28552,12 +28556,12 @@ msgstr "รายงานข้อความ"
 msgid "Report a user profile"
 msgstr "รายงานโปรไฟล์ผู้ใช้"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:151
+#: src/features/moderation/components/report/ReportStepDetails.tsx:168
 msgid "Report details"
 msgstr "รายละเอียดการรายงาน"
 
 #. Document/page title for the public DSA illegal-content report page. Sensitive/legal flow; keep tone plain and factual.
-#: src/features/moderation/components/pages/ReportPage.tsx:66
+#: src/features/moderation/components/pages/ReportPage.tsx:68
 #: src/features/moderation/components/report/ReportStepSelection.tsx:33
 msgid "Report illegal content"
 msgstr "รายงานเนื้อหาผิดกฎหมาย"
@@ -28589,9 +28593,14 @@ msgid "Report type"
 msgstr "ประเภทการรายงาน"
 
 #. Field label on the details step of the DSA report form (message report). Optional FluxerTag of the user who sent the message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:27
+#: src/features/moderation/components/report/ReportStepDetails.tsx:32
 msgid "Reported user tag (optional)"
 msgstr "แท็กผู้ใช้ที่ถูกรายงาน (ไม่บังคับ)"
+
+#. Field label on the details step of the DSA report form (message report) on an instance without user tags. Optional username of the user who sent the message.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:42
+msgid "Reported user's username (optional)"
+msgstr "ชื่อผู้ใช้ของผู้ที่ถูกรายงาน (ไม่บังคับ)"
 
 #: src/features/channel/components/embeds/channel_embed/BlueskyEmbed.tsx:45
 msgid "Reposts: <0>{countLabel}</0>"
@@ -30582,7 +30591,7 @@ msgid "Select what you want to report."
 msgstr "เลือกสิ่งที่คุณต้องการรายงาน"
 
 #. Inline validation error on the details step of the DSA report flow when the country dropdown has no selection.
-#: src/features/moderation/components/pages/ReportPage.tsx:138
+#: src/features/moderation/components/pages/ReportPage.tsx:140
 msgid "Select your country of residence."
 msgstr "เลือกประเทศที่คุณอาศัยอยู่"
 
@@ -30736,7 +30745,7 @@ msgstr "ปุ่มส่งข้อความ"
 msgid "Send code"
 msgstr "ส่งรหัส"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:364
+#: src/features/moderation/components/report/ReportStepDetails.tsx:383
 msgid "Send DSA report"
 msgstr "ส่งรายงาน DSA"
 
@@ -31294,7 +31303,7 @@ msgstr "แชร์ธีม"
 msgid "Share voice activity with all friends?"
 msgstr "แชร์กิจกรรมเสียงกับเพื่อนทั้งหมดหรือไม่"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:154
+#: src/features/moderation/components/report/ReportStepDetails.tsx:171
 msgid "Share what our team needs to assess this."
 msgstr "แชร์ข้อมูลที่ทีมของเราต้องใช้ในการประเมิน"
 
@@ -33176,7 +33185,7 @@ msgstr "เริ่มแบบย่อ"
 
 #. Button on the browser page after cancelling that goes back to choosing an account.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:341
-#: src/features/moderation/components/report/ReportStepDetails.tsx:389
+#: src/features/moderation/components/report/ReportStepDetails.tsx:408
 #: src/features/moderation/components/report/ReportStepEmail.tsx:113
 #: src/features/moderation/components/report/ReportStepReason.tsx:149
 #: src/features/moderation/components/report/ReportStepReason.tsx:219
@@ -33318,7 +33327,7 @@ msgstr "ขั้นตอนที่ 3"
 msgid "Step 4"
 msgstr "ขั้นตอนที่ 4"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:148
+#: src/features/moderation/components/report/ReportStepDetails.tsx:165
 msgid "Step 5"
 msgstr "ขั้นตอนที่ 5"
 
@@ -34597,7 +34606,7 @@ msgstr "ไม่สำเร็จ ลองอีกครั้ง หรื�
 msgid "That doesn't look like a valid color. Try hex, rgb(), hsl(), or a CSS color name."
 msgstr "ดูเหมือนจะไม่ใช่สีที่ถูกต้อง ลองใช้โค้ดสีแบบ hex, rgb(), hsl() หรือชื่อสีของ CSS"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:217
+#: src/features/moderation/components/report/ReportStepDetails.tsx:234
 msgid "That doesn't look like a valid URL."
 msgstr "ดูเหมือนจะไม่ใช่ URL ที่ถูกต้อง"
 
@@ -34918,7 +34927,7 @@ msgid "The username tags on this instance are already set. They can no longer ch
 msgstr "แท็กชื่อผู้ใช้ในอินสแตนซ์นี้ถูกตั้งค่าไว้แล้ว จะไม่สามารถเปลี่ยนแปลงได้อีก"
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
-#: src/features/moderation/components/pages/ReportPage.tsx:114
+#: src/features/moderation/components/pages/ReportPage.tsx:116
 msgid "The verification code is invalid or expired."
 msgstr "รหัสยืนยันไม่ถูกต้องหรือหมดอายุแล้ว"
 
@@ -35494,6 +35503,10 @@ msgstr "อินสแตนซ์นี้ใช้ชื่อผู้ใช
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "ปัจจุบันอินสแตนซ์นี้อนุญาตให้แชร์หน้าจอได้สูงสุด 720p ที่ 30 FPS"
+
+#: src/features/moderation/components/report/ReportStepUnavailable.tsx:13
+msgid "This instance doesn't use email, so it can't take reports through this form. Report content from inside the app, or contact the administrators of this instance."
+msgstr "อินสแตนซ์นี้ไม่ได้ใช้อีเมล จึงรับรายงานผ่านแบบฟอร์มนี้ไม่ได้ โปรดรายงานเนื้อหาจากภายในแอป หรือติดต่อผู้ดูแลระบบของอินสแตนซ์นี้"
 
 #. Setup wizard body prompting the operator to register the first account.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:50
@@ -36338,7 +36351,7 @@ msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "ปรับโทนภาพ HDR เป็นช่วงมาตรฐาน ลดความสว่างสูงสุด"
 
 #. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
-#: src/features/moderation/components/pages/ReportPage.tsx:95
+#: src/features/moderation/components/pages/ReportPage.tsx:97
 msgid "Too many codes sent. Wait {duration} and try again."
 msgstr "ส่งรหัสหลายครั้งเกินไป รอ {duration} แล้วลองอีกครั้ง"
 
@@ -38546,7 +38559,7 @@ msgid "User debug"
 msgstr "แก้ไขข้อบกพร่องของผู้ใช้"
 
 #. Field label on the details step of the DSA report form (user report). Optional Fluxer user snowflake ID. "ID" is conventional.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:32
+#: src/features/moderation/components/report/ReportStepDetails.tsx:37
 msgid "User ID (optional)"
 msgstr "ID ผู้ใช้ (ไม่บังคับ)"
 
@@ -38606,7 +38619,7 @@ msgid "User settings"
 msgstr "การตั้งค่าผู้ใช้"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:37
+#: src/features/moderation/components/report/ReportStepDetails.tsx:52
 msgid "User tag (optional)"
 msgstr "แท็กผู้ใช้ (ไม่บังคับ)"
 
@@ -38626,8 +38639,10 @@ msgstr "ระดับเสียงของผู้ใช้"
 msgid "Username"
 msgstr "ชื่อผู้ใช้"
 
+#. Field label on the details step of the DSA report form (user report) on an instance without user tags. Optional username of the reported user.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:58
+#: src/features/moderation/components/report/ReportStepDetails.tsx:47
 msgid "Username (optional)"
 msgstr "ชื่อผู้ใช้ (ไม่บังคับ)"
 
@@ -41106,7 +41121,7 @@ msgid "You must agree to the terms of service to create an account"
 msgstr "คุณต้องยอมรับข้อกำหนดในการให้บริการเพื่อสร้างบัญชี"
 
 #. Inline error on the details step of the DSA report flow when the user has not completed email verification.
-#: src/features/moderation/components/pages/ReportPage.tsx:118
+#: src/features/moderation/components/pages/ReportPage.tsx:120
 msgid "You must verify your email before sending a report."
 msgstr "คุณต้องยืนยันอีเมลก่อนส่งรายงาน"
 

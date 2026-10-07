@@ -41,6 +41,7 @@ import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDns
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {usesUniqueUsernames} from '@app/api/instance/AccountIdentityModeCache';
 import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
 import {Logger} from '@app/api/Logger';
 import type {Attachment} from '@app/api/models/Attachment';
@@ -61,6 +62,7 @@ import {ReportStatus, ReportType} from '@app/api/report/IReportRepository';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {isUnderEnforcement} from '@app/api/user/ProfileVisibility';
+import {findPersonByLoginHandle, type ParsedLoginHandle, parseLoginHandle} from '@app/api/user/UniqueUsernames';
 import {isAccountClosed} from '@app/api/user/UserHelpers';
 import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {buildHashedAssetKey} from '@app/api/worker/utils/AssetArchiveHelpers';
@@ -1149,7 +1151,7 @@ export class ReportService {
 		if (!parsed) {
 			throw new InvalidDsaReportTargetError();
 		}
-		const user = await this.userRepository.findByUsernameDiscriminator(parsed.username, parsed.discriminator);
+		const user = await this.lookupTaggedUser(parsed);
 		if (!user) {
 			throw new UnknownUserError();
 		}
@@ -1161,8 +1163,15 @@ export class ReportService {
 		if (!parsed || !userId) {
 			return false;
 		}
-		const user = await this.userRepository.findByUsernameDiscriminator(parsed.username, parsed.discriminator);
+		const user = await this.lookupTaggedUser(parsed);
 		return user?.id === userId;
+	}
+
+	private async lookupTaggedUser(parsed: ParsedLoginHandle): Promise<User | null> {
+		if (parsed.discriminator === null) {
+			return findPersonByLoginHandle(this.userRepository, parsed);
+		}
+		return this.userRepository.findByUsernameDiscriminator(parsed.username, parsed.discriminator);
 	}
 
 	private async isChannelReadableByEveryone(channel: Channel): Promise<boolean> {
@@ -1211,17 +1220,18 @@ export class ReportService {
 		return email.trim().toLowerCase();
 	}
 
-	private parseFluxerTag(tag: string): {
-		username: string;
-		discriminator: number;
-	} | null {
+	private parseFluxerTag(tag: string): ParsedLoginHandle | null {
 		const trimmed = tag.trim();
 		const match = /^(.+)#(\d{4})$/.exec(trimmed);
-		if (!match) return null;
-		return {
-			username: match[1],
-			discriminator: Number.parseInt(match[2], 10),
-		};
+		if (match) {
+			return {
+				username: match[1],
+				discriminator: Number.parseInt(match[2], 10),
+			};
+		}
+		if (!usesUniqueUsernames()) return null;
+		const handle = parseLoginHandle(trimmed);
+		return handle?.discriminator === null ? handle : null;
 	}
 
 	private extractChannelAndMessageFromLink(link: string): {

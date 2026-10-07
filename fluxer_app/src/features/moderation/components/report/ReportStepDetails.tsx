@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import {EXAMPLE_INVITE_CODE, EXAMPLE_REPORT_USER_TAG} from '@app/features/app/config/I18nDisplayConstants';
+import {
+	EXAMPLE_INVITE_CODE,
+	EXAMPLE_REPORT_USER_TAG,
+	EXAMPLE_REPORT_USERNAME,
+} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
 import styles from '@app/features/moderation/components/pages/ReportPage.module.css';
 import type {FormValues, ReportField, ReportType} from '@app/features/moderation/components/report/ReportTypes';
@@ -33,6 +38,16 @@ const USER_ID_OPTIONAL_DESCRIPTOR = msg({
 	message: 'User ID (optional)',
 	comment:
 		'Field label on the details step of the DSA report form (user report). Optional Fluxer user snowflake ID. "ID" is conventional.',
+});
+const REPORTED_USERNAME_OPTIONAL_DESCRIPTOR = msg({
+	message: "Reported user's username (optional)",
+	comment:
+		'Field label on the details step of the DSA report form (message report) on an instance without user tags. Optional username of the user who sent the message.',
+});
+const USERNAME_OPTIONAL_DESCRIPTOR = msg({
+	message: 'Username (optional)',
+	comment:
+		'Field label on the details step of the DSA report form (user report) on an instance without user tags. Optional username of the reported user.',
 });
 const USER_TAG_OPTIONAL_DESCRIPTOR = msg({
 	message: 'User tag (optional)',
@@ -131,6 +146,8 @@ export const ReportStepDetails: React.FC<Props> = ({
 	guildTargetOk,
 }) => {
 	const {i18n} = useLingui();
+	const usernameOnly = RuntimeConfig.usesUniqueUsernames;
+	const userTagPlaceholder = usernameOnly ? EXAMPLE_REPORT_USERNAME : EXAMPLE_REPORT_USER_TAG;
 	const hasFieldErrors = Object.values(fieldErrors).some((value) => Boolean(value));
 	const showGeneralError = Boolean(errorMessage && (answersRejected || !hasFieldErrors));
 	const errorBoxRef = useRef<HTMLDivElement>(null);
@@ -221,12 +238,14 @@ export const ReportStepDetails: React.FC<Props> = ({
 								data-flx="moderation.report.report-step-details.input.field-change.url"
 							/>
 							<Input
-								label={i18n._(REPORTED_USER_TAG_OPTIONAL_DESCRIPTOR)}
+								label={i18n._(
+									usernameOnly ? REPORTED_USERNAME_OPTIONAL_DESCRIPTOR : REPORTED_USER_TAG_OPTIONAL_DESCRIPTOR,
+								)}
 								type="text"
 								dir="ltr"
 								value={formValues.messageUserTag}
 								onChange={(e) => onFieldChange('messageUserTag', e.target.value)}
-								placeholder={EXAMPLE_REPORT_USER_TAG}
+								placeholder={userTagPlaceholder}
 								autoComplete="off"
 								error={fieldErrors.messageUserTag}
 								data-flx="moderation.report.report-step-details.input.field-change.text"
@@ -247,12 +266,12 @@ export const ReportStepDetails: React.FC<Props> = ({
 								data-flx="moderation.report.report-step-details.input.field-change.text--2"
 							/>
 							<Input
-								label={i18n._(USER_TAG_OPTIONAL_DESCRIPTOR)}
+								label={i18n._(usernameOnly ? USERNAME_OPTIONAL_DESCRIPTOR : USER_TAG_OPTIONAL_DESCRIPTOR)}
 								type="text"
 								dir="ltr"
 								value={formValues.userTag}
 								onChange={(e) => onFieldChange('userTag', e.target.value)}
-								placeholder={EXAMPLE_REPORT_USER_TAG}
+								placeholder={userTagPlaceholder}
 								autoComplete="off"
 								error={fieldErrors.userTag}
 								footer={

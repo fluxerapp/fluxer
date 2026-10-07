@@ -84,13 +84,13 @@ export const TicketResponse = z.object({
 
 export type TicketResponse = z.infer<typeof TicketResponse>;
 
-const FLUXER_TAG_REGEX = /^([^#]{1,32})#([0-9]{4})$/;
+const FLUXER_TAG_REGEX = /^([^#]{1,32})(#[0-9]{4})?$/;
 const FLUXER_TAG_TYPE = z
 	.string()
-	.min(3)
+	.min(1)
 	.max(37)
-	.refine((value) => FLUXER_TAG_REGEX.test(value), 'Fluxer tag must be in the format username#1234')
-	.describe('A Fluxer username tag in the format username#1234');
+	.refine((value) => FLUXER_TAG_REGEX.test(value), 'Fluxer tag must be in the format username#1234 or username')
+	.describe('A Fluxer username tag in the format username#1234, or a bare username on an instance without user tags');
 const EuCountryCodeEnum = withOpenApiType(
 	createNamedStringLiteralUnion(
 		[

@@ -13,6 +13,11 @@ export const EmbedAuthorResponse = z.object({
 
 export type EmbedAuthorResponse = z.infer<typeof EmbedAuthorResponse>;
 
+export const EmbedProviderResponse = z.object({
+	name: z.string().describe('The name of the provider'),
+	url: z.url().nullish().describe('The URL of the provider'),
+});
+
 export const EmbedFooterResponse = z.object({
 	text: z.string().describe('The footer text'),
 	icon_url: z.url().nullish().describe('The URL of the footer icon'),
@@ -61,7 +66,7 @@ export const MessageEmbedChildResponse = z.object({
 	thumbnail: EmbedMediaResponse.nullish().describe('The thumbnail of the embed'),
 	footer: EmbedFooterResponse.nullish().describe('The footer of the embed'),
 	fields: z.array(EmbedFieldResponse).nullish().describe('The fields of the embed'),
-	provider: EmbedAuthorResponse.nullish().describe('The provider of the embed (e.g., YouTube, Twitter)'),
+	provider: EmbedProviderResponse.nullish().describe('The provider of the embed (e.g., YouTube, Twitter)'),
 	video: EmbedMediaResponse.nullish().describe('The video of the embed'),
 	audio: EmbedMediaResponse.nullish().describe('The audio of the embed'),
 	html: z.string().nullish().describe('Sanitized oEmbed HTML for trusted specialized embed renderers'),
@@ -87,6 +92,11 @@ export interface EmbedAuthor {
 	readonly url?: string;
 	readonly icon_url?: string;
 	readonly proxy_icon_url?: string;
+}
+
+export interface EmbedProvider {
+	readonly name: string;
+	readonly url?: string;
 }
 
 export interface EmbedFooter {
@@ -128,7 +138,7 @@ export interface MessageEmbedChild {
 	readonly thumbnail?: EmbedMedia;
 	readonly footer?: EmbedFooter;
 	readonly fields?: ReadonlyArray<EmbedField>;
-	readonly provider?: EmbedAuthor;
+	readonly provider?: EmbedProvider;
 	readonly video?: EmbedMedia;
 	readonly audio?: EmbedMedia;
 	readonly html?: string;

@@ -103,7 +103,7 @@ fn tenor_embed(
     let mut embed = MessageEmbed::new("gifv");
     embed.url = Some(source_url.to_string());
     embed.provider = Some(EmbedProvider {
-        name: Some("Tenor".to_owned()),
+        name: "Tenor".to_owned(),
         url: Some("https://tenor.com".to_owned()),
     });
     embed.thumbnail = thumbnail;
@@ -396,7 +396,7 @@ mod tests {
             embed
                 .provider
                 .as_ref()
-                .and_then(|provider| provider.name.as_deref()),
+                .map(|provider| provider.name.as_str()),
             Some("Tenor")
         );
     }

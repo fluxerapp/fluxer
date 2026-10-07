@@ -12287,10 +12287,7 @@
 							"icon": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 256},
 							"banner": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 256},
 							"member_count": {"$ref": "#/components/schemas/Int32Type"},
-							"nsfw_level": {"allOf": [{"$ref": "#/components/schemas/NSFWLevel"}]},
-							"nsfw": {"type": "boolean"},
-							"content_warning_level": {"allOf": [{"$ref": "#/components/schemas/ContentWarningLevel"}]},
-							"content_warning_text": {"nullable": true, "type": "string", "maxLength": 200}
+							"nsfw_level": {"allOf": [{"$ref": "#/components/schemas/NSFWLevel"}]}
 						},
 						"required": ["id", "name", "features", "owner_id", "icon", "banner", "member_count"],
 						"additionalProperties": false
@@ -14959,7 +14956,7 @@
 					"provider": {
 						"description": "The provider of the embed (e.g., YouTube, Twitter)",
 						"nullable": true,
-						"allOf": [{"$ref": "#/components/schemas/EmbedAuthorResponse"}]
+						"allOf": [{"$ref": "#/components/schemas/EmbedProviderResponse"}]
 					},
 					"video": {
 						"description": "The video of the embed",
@@ -15192,7 +15189,7 @@
 					"provider": {
 						"description": "The provider of the embed (e.g., YouTube, Twitter)",
 						"nullable": true,
-						"allOf": [{"$ref": "#/components/schemas/EmbedAuthorResponse"}]
+						"allOf": [{"$ref": "#/components/schemas/EmbedProviderResponse"}]
 					},
 					"video": {
 						"description": "The video of the embed",
@@ -15262,23 +15259,11 @@
 				"required": ["url", "flags"],
 				"additionalProperties": false
 			},
-			"EmbedAuthorResponse": {
+			"EmbedProviderResponse": {
 				"type": "object",
 				"properties": {
-					"name": {"type": "string", "description": "The name of the author"},
-					"url": {"description": "The URL of the author", "nullable": true, "type": "string", "format": "uri"},
-					"icon_url": {
-						"description": "The URL of the author icon",
-						"nullable": true,
-						"type": "string",
-						"format": "uri"
-					},
-					"proxy_icon_url": {
-						"description": "The proxied URL of the author icon",
-						"nullable": true,
-						"type": "string",
-						"format": "uri"
-					}
+					"name": {"type": "string", "description": "The name of the provider"},
+					"url": {"description": "The URL of the provider", "nullable": true, "type": "string", "format": "uri"}
 				},
 				"required": ["name"],
 				"additionalProperties": false
@@ -15311,6 +15296,27 @@
 					}
 				},
 				"required": ["text"],
+				"additionalProperties": false
+			},
+			"EmbedAuthorResponse": {
+				"type": "object",
+				"properties": {
+					"name": {"type": "string", "description": "The name of the author"},
+					"url": {"description": "The URL of the author", "nullable": true, "type": "string", "format": "uri"},
+					"icon_url": {
+						"description": "The URL of the author icon",
+						"nullable": true,
+						"type": "string",
+						"format": "uri"
+					},
+					"proxy_icon_url": {
+						"description": "The proxied URL of the author icon",
+						"nullable": true,
+						"type": "string",
+						"format": "uri"
+					}
+				},
+				"required": ["name"],
 				"additionalProperties": false
 			},
 			"EmbedMediaFlags": {

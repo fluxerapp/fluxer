@@ -1093,7 +1093,7 @@ msgstr "{count, plural, one {# 個頻道正在追蹤} other {# 個頻道正在�
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {找到 # 個社群} other {找到 # 個社群}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1952
+#: src/features/app/components/layout/GuildsLayout.tsx:1953
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# 個社群} other {# 個社群}}因時空電容器故障，暫時無法使用。"
 
@@ -5615,7 +5615,7 @@ msgstr "目前離開中"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:402
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
-#: src/features/moderation/components/report/ReportStepDetails.tsx:374
+#: src/features/moderation/components/report/ReportStepDetails.tsx:393
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
 msgid "Back"
 msgstr "返回"
@@ -8069,7 +8069,7 @@ msgid "Choose the premium model"
 msgstr "選擇進階方案模式"
 
 #. Button on the details step of the DSA report form, shown when the server no longer accepts the chosen reason. Reloads the questions and returns to the reason step.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:80
+#: src/features/moderation/components/report/ReportStepDetails.tsx:95
 msgid "Choose the reason again"
 msgstr "再選一次原因"
 
@@ -8804,7 +8804,7 @@ msgstr "來自 {productName} 應用程式的驗證碼"
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Success toast on the verification step of the DSA report flow after resending the email verification code.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
-#: src/features/moderation/components/pages/ReportPage.tsx:83
+#: src/features/moderation/components/pages/ReportPage.tsx:85
 msgid "Code resent"
 msgstr "已重新傳送驗證碼"
 
@@ -9095,11 +9095,11 @@ msgid "Community icon"
 msgstr "社群圖示"
 
 #. Field label on the details step of the DSA report form (community report). The reported community's snowflake ID.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:42
+#: src/features/moderation/components/report/ReportStepDetails.tsx:57
 msgid "Community ID"
 msgstr "社群 ID"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:283
+#: src/features/moderation/components/report/ReportStepDetails.tsx:302
 msgid "Community ID is required."
 msgstr "必須填寫社群 ID。"
 
@@ -9451,7 +9451,7 @@ msgid "Confirm password"
 msgstr "確認密碼"
 
 #. Inline validation error on the details step of the DSA report flow when the good-faith statement checkbox is not ticked.
-#: src/features/moderation/components/pages/ReportPage.tsx:128
+#: src/features/moderation/components/pages/ReportPage.tsx:130
 msgid "Confirm the statement to send the report."
 msgstr "請確認聲明以送出檢舉。"
 
@@ -10903,7 +10903,7 @@ msgid "Countdown timer"
 msgstr "倒數計時器"
 
 #. Field label on the details step of the DSA report form. The country where the reporter resides, used for the legal declaration.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:70
+#: src/features/moderation/components/report/ReportStepDetails.tsx:85
 msgid "Country of residence"
 msgstr "居住國家/地區"
 
@@ -14070,7 +14070,7 @@ msgid "Email address"
 msgstr "電子郵件地址"
 
 #. Inline validation error on the email step of the DSA report flow when the email field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:75
+#: src/features/moderation/components/pages/ReportPage.tsx:77
 msgid "Email address required."
 msgstr "必須填寫電子郵件地址。"
 
@@ -14085,6 +14085,10 @@ msgstr "電子郵件已變更"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1093
 msgid "Email delivery"
 msgstr "電子郵件遞送"
+
+#: src/features/moderation/components/report/ReportStepUnavailable.tsx:11
+msgid "Email reports aren't available here"
+msgstr "此處無法透過電子郵件檢舉"
 
 #. Developer control label for the email-verification banner.
 #: src/features/devtools/components/NagbarControls.ts:37
@@ -14667,7 +14671,7 @@ msgid "Enter"
 msgstr "Enter"
 
 #. Inline validation error on the verification step of the DSA report flow when the code does not match the expected 4-letter-dash-4-digit format. "ABCD-1234" is a literal example pattern.
-#: src/features/moderation/components/pages/ReportPage.tsx:104
+#: src/features/moderation/components/pages/ReportPage.tsx:106
 msgid "Enter a code in the format ABCD-1234."
 msgstr "請輸入 ABCD-1234 格式的代碼。"
 
@@ -14712,12 +14716,12 @@ msgid "Enter a valid {theOtherPlatform} template URL or code."
 msgstr "請輸入有效的 {theOtherPlatform} 範本網址或代碼。"
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
-#: src/features/moderation/components/pages/ReportPage.tsx:79
+#: src/features/moderation/components/pages/ReportPage.tsx:81
 msgid "Enter a valid email address."
 msgstr "請輸入有效的電子郵件地址。"
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is not a valid URL.
-#: src/features/moderation/components/pages/ReportPage.tsx:148
+#: src/features/moderation/components/pages/ReportPage.tsx:150
 msgid "Enter a valid message link."
 msgstr "請輸入有效的訊息連結。"
 
@@ -14791,7 +14795,7 @@ msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "請輸入驗證器應用程式中的 {digitCount} 位數驗證碼。"
 
 #. Inline validation error on the verification step of the DSA report flow when the code field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:100
+#: src/features/moderation/components/pages/ReportPage.tsx:102
 msgid "Enter the code before continuing."
 msgstr "請先輸入驗證碼再繼續。"
 
@@ -14868,7 +14872,7 @@ msgid "Enter your email address and we'll send you a link to reset your password
 msgstr "請輸入您的電子郵件地址，我們會傳送密碼重設連結給您。"
 
 #. Inline validation error on the Full legal name field of the DSA report form, shown when the server requires the name for the chosen reason. The name is required for every reason except child sexual abuse.
-#: src/features/moderation/components/pages/ReportPage.tsx:133
+#: src/features/moderation/components/pages/ReportPage.tsx:135
 msgid "Enter your full legal name to send the report."
 msgstr "請輸入您的法定全名以送出檢舉。"
 
@@ -15268,12 +15272,12 @@ msgid "Expires:"
 msgstr "到期時間："
 
 #. Field label on the details step of the DSA report form. Required free text where the reporter explains what is wrong with the reported content.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:52
+#: src/features/moderation/components/report/ReportStepDetails.tsx:67
 msgid "Explain the problem"
 msgstr "說明問題"
 
 #. Inline validation error on the details step of the DSA report flow when the Explain the problem field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:123
+#: src/features/moderation/components/pages/ReportPage.tsx:125
 msgid "Explain the problem to send the report."
 msgstr "請說明問題以送出檢舉。"
 
@@ -15589,7 +15593,7 @@ msgid "Failed to remove vanity URL. Try again."
 msgstr "無法移除自訂網址。請再試一次。"
 
 #. Error toast when the resend-code request fails on the verification step of the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:91
+#: src/features/moderation/components/pages/ReportPage.tsx:93
 msgid "Failed to resend code. Try again."
 msgstr "無法重新傳送驗證碼。請再試一次。"
 
@@ -15599,7 +15603,7 @@ msgid "Failed to reset premium state."
 msgstr "無法重設付費狀態。"
 
 #. Error shown when the initial email verification code send fails on the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:87
+#: src/features/moderation/components/pages/ReportPage.tsx:89
 msgid "Failed to send code. Try again."
 msgstr "傳送驗證碼失敗。請再試一次。"
 
@@ -15614,7 +15618,7 @@ msgid "Failed to send message. Hold for options."
 msgstr "訊息傳送失敗。長按可顯示選項。"
 
 #. Generic error shown on the DSA report submission page when the report could not be sent.
-#: src/features/moderation/components/pages/ReportPage.tsx:71
+#: src/features/moderation/components/pages/ReportPage.tsx:73
 msgid "Failed to send report. Try again."
 msgstr "無法傳送檢舉。請再試一次。"
 
@@ -16027,7 +16031,7 @@ msgid "Finnish"
 msgstr "芬蘭語"
 
 #. Placeholder in the Full legal name input on the DSA report form.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:66
+#: src/features/moderation/components/report/ReportStepDetails.tsx:81
 msgid "First and last name"
 msgstr "姓名"
 
@@ -16690,7 +16694,7 @@ msgid "Full dynamic range"
 msgstr "全動態範圍"
 
 #. Field label on the details step of the DSA report form. Legal name of the reporter for the formal declaration. The law lets people who report child sexual abuse material leave it empty. Keep the tone neutral.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:61
+#: src/features/moderation/components/report/ReportStepDetails.tsx:76
 msgid "Full legal name (optional for child sexual abuse reports)"
 msgstr "法定全名（檢舉兒童性虐待時可選填）"
 
@@ -17231,7 +17235,7 @@ msgid "Go back"
 msgstr "返回"
 
 #. Inline error on the verification step of the DSA report flow when the stored email is missing or malformed and the user must return to the email step.
-#: src/features/moderation/components/pages/ReportPage.tsx:109
+#: src/features/moderation/components/pages/ReportPage.tsx:111
 msgid "Go back and enter a valid email."
 msgstr "返回並輸入有效的電子郵件。"
 
@@ -18213,7 +18217,7 @@ msgid "I changed my mind"
 msgstr "我改變心意了"
 
 #. Required checkbox on the details step of the DSA report form. A formal statement the law asks every reporter to make. Keep the tone formal.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:75
+#: src/features/moderation/components/report/ReportStepDetails.tsx:90
 msgid "I confirm in good faith that the information and allegations in this notice are accurate and complete."
 msgstr "我本於善意確認，本通知中的資訊與指控均正確且完整。"
 
@@ -18299,7 +18303,7 @@ msgid "If someone told you to paste something here, it is a scam that can hand t
 msgstr "如果有人要求您將某些內容貼到這裡，那就是詐騙，可能會讓對方取得您的 {productName} 帳號。"
 
 #. Helper text under the Explain the problem field on the details step of the DSA report form.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:57
+#: src/features/moderation/components/report/ReportStepDetails.tsx:72
 msgid "If you believe it is illegal, say which law and why."
 msgstr "如果您認為這是違法內容，請說明涉及哪一項法律及原因。"
 
@@ -18712,7 +18716,7 @@ msgid "Include my two-factor backup codes in the PDF and printout"
 msgstr "在 PDF 和列印文件中包含我的雙重驗證備份代碼"
 
 #. Inline validation error on the details step of the DSA report flow (community report) when the community ID field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:158
+#: src/features/moderation/components/pages/ReportPage.tsx:160
 msgid "Include the community ID."
 msgstr "請提供社群 ID。"
 
@@ -19152,7 +19156,7 @@ msgid "Invite background"
 msgstr "邀請背景"
 
 #. Field label on the details step of the DSA report form (community report). Optional invite code to the reported community.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:47
+#: src/features/moderation/components/report/ReportStepDetails.tsx:62
 msgid "Invite code (optional)"
 msgstr "邀請碼（非必填）"
 
@@ -21825,7 +21829,7 @@ msgid "message link"
 msgstr "訊息連結"
 
 #. Field label on the details step of the DSA report form (message report). The reporter pastes a direct link to the offending message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:22
+#: src/features/moderation/components/report/ReportStepDetails.tsx:27
 msgid "Message link"
 msgstr "訊息連結"
 
@@ -23120,7 +23124,7 @@ msgid "New"
 msgstr "新訊息"
 
 #. Small badge on a new or recently added app navigation item.
-#: src/features/app/components/layout/GuildsLayout.tsx:134
+#: src/features/app/components/layout/GuildsLayout.tsx:135
 msgctxt "navigation-badge"
 msgid "New"
 msgstr "新"
@@ -25654,7 +25658,7 @@ msgid "Paste the JSON response here"
 msgstr "在此貼上 JSON 回應"
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:143
+#: src/features/moderation/components/pages/ReportPage.tsx:145
 msgid "Paste the message link."
 msgstr "請貼上訊息連結。"
 
@@ -26972,12 +26976,12 @@ msgstr "代名詞： "
 msgid "Protect your Visionary account by enabling two-factor authentication. Thanks for supporting {productName}!"
 msgstr "啟用雙重驗證，保護您的 Visionary 帳號。感謝您對 {productName} 的支持！"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:261
+#: src/features/moderation/components/report/ReportStepDetails.tsx:280
 msgid "Provide at least a user ID or a user tag."
 msgstr "請至少提供使用者 ID 或使用者標籤。"
 
 #. Inline validation error on the details step of the DSA report flow (user report) when both user ID and username fields are empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:153
+#: src/features/moderation/components/pages/ReportPage.tsx:155
 msgid "Provide either a user ID or a username for the person you are reporting."
 msgstr "請提供您要檢舉對象的使用者 ID 或使用者名稱。"
 
@@ -28552,12 +28556,12 @@ msgstr "檢舉訊息"
 msgid "Report a user profile"
 msgstr "檢舉使用者個人檔案"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:151
+#: src/features/moderation/components/report/ReportStepDetails.tsx:168
 msgid "Report details"
 msgstr "檢舉詳情"
 
 #. Document/page title for the public DSA illegal-content report page. Sensitive/legal flow; keep tone plain and factual.
-#: src/features/moderation/components/pages/ReportPage.tsx:66
+#: src/features/moderation/components/pages/ReportPage.tsx:68
 #: src/features/moderation/components/report/ReportStepSelection.tsx:33
 msgid "Report illegal content"
 msgstr "檢舉違法內容"
@@ -28589,9 +28593,14 @@ msgid "Report type"
 msgstr "檢舉類型"
 
 #. Field label on the details step of the DSA report form (message report). Optional FluxerTag of the user who sent the message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:27
+#: src/features/moderation/components/report/ReportStepDetails.tsx:32
 msgid "Reported user tag (optional)"
 msgstr "被檢舉使用者的標籤（選填）"
+
+#. Field label on the details step of the DSA report form (message report) on an instance without user tags. Optional username of the user who sent the message.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:42
+msgid "Reported user's username (optional)"
+msgstr "被檢舉使用者的使用者名稱（選填）"
 
 #: src/features/channel/components/embeds/channel_embed/BlueskyEmbed.tsx:45
 msgid "Reposts: <0>{countLabel}</0>"
@@ -30582,7 +30591,7 @@ msgid "Select what you want to report."
 msgstr "請選擇您要檢舉的項目。"
 
 #. Inline validation error on the details step of the DSA report flow when the country dropdown has no selection.
-#: src/features/moderation/components/pages/ReportPage.tsx:138
+#: src/features/moderation/components/pages/ReportPage.tsx:140
 msgid "Select your country of residence."
 msgstr "請選擇您的居住國家/地區。"
 
@@ -30736,7 +30745,7 @@ msgstr "傳送按鈕"
 msgid "Send code"
 msgstr "傳送驗證碼"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:364
+#: src/features/moderation/components/report/ReportStepDetails.tsx:383
 msgid "Send DSA report"
 msgstr "送出 DSA 檢舉"
 
@@ -31294,7 +31303,7 @@ msgstr "分享主題"
 msgid "Share voice activity with all friends?"
 msgstr "與所有好友分享語音活動嗎？"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:154
+#: src/features/moderation/components/report/ReportStepDetails.tsx:171
 msgid "Share what our team needs to assess this."
 msgstr "提供我們的團隊評估此事所需的資訊。"
 
@@ -33176,7 +33185,7 @@ msgstr "最小化啟動"
 
 #. Button on the browser page after cancelling that goes back to choosing an account.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:341
-#: src/features/moderation/components/report/ReportStepDetails.tsx:389
+#: src/features/moderation/components/report/ReportStepDetails.tsx:408
 #: src/features/moderation/components/report/ReportStepEmail.tsx:113
 #: src/features/moderation/components/report/ReportStepReason.tsx:149
 #: src/features/moderation/components/report/ReportStepReason.tsx:219
@@ -33318,7 +33327,7 @@ msgstr "步驟 3"
 msgid "Step 4"
 msgstr "步驟 4"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:148
+#: src/features/moderation/components/report/ReportStepDetails.tsx:165
 msgid "Step 5"
 msgstr "步驟 5"
 
@@ -34597,7 +34606,7 @@ msgstr "操作未成功。請再試一次或取消。"
 msgid "That doesn't look like a valid color. Try hex, rgb(), hsl(), or a CSS color name."
 msgstr "這看起來不是有效的顏色。請試試看十六進位、rgb()、hsl() 或 CSS 顏色名稱。"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:217
+#: src/features/moderation/components/report/ReportStepDetails.tsx:234
 msgid "That doesn't look like a valid URL."
 msgstr "這看起來不是有效的網址。"
 
@@ -34918,7 +34927,7 @@ msgid "The username tags on this instance are already set. They can no longer ch
 msgstr "此伺服器的使用者名稱標籤已設定完成，無法再變更。"
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
-#: src/features/moderation/components/pages/ReportPage.tsx:114
+#: src/features/moderation/components/pages/ReportPage.tsx:116
 msgid "The verification code is invalid or expired."
 msgstr "驗證碼無效或已過期。"
 
@@ -35494,6 +35503,10 @@ msgstr "此伺服器已改為使用使用者名稱登入，且無法再變更。
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
 msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "此實例目前支援最高 720p、30 FPS 的螢幕分享。"
+
+#: src/features/moderation/components/report/ReportStepUnavailable.tsx:13
+msgid "This instance doesn't use email, so it can't take reports through this form. Report content from inside the app, or contact the administrators of this instance."
+msgstr "此實例未使用電子郵件，因此無法透過此表單接收檢舉。請在應用程式內檢舉內容，或聯絡此實例的管理員。"
 
 #. Setup wizard body prompting the operator to register the first account.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:50
@@ -36338,7 +36351,7 @@ msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "將 HDR 影像色調對應至標準範圍，降低峰值亮度。"
 
 #. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
-#: src/features/moderation/components/pages/ReportPage.tsx:95
+#: src/features/moderation/components/pages/ReportPage.tsx:97
 msgid "Too many codes sent. Wait {duration} and try again."
 msgstr "傳送的驗證碼過多。請等待 {duration} 後再試一次。"
 
@@ -38546,7 +38559,7 @@ msgid "User debug"
 msgstr "使用者偵錯"
 
 #. Field label on the details step of the DSA report form (user report). Optional Fluxer user snowflake ID. "ID" is conventional.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:32
+#: src/features/moderation/components/report/ReportStepDetails.tsx:37
 msgid "User ID (optional)"
 msgstr "使用者 ID（選填）"
 
@@ -38606,7 +38619,7 @@ msgid "User settings"
 msgstr "使用者設定"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:37
+#: src/features/moderation/components/report/ReportStepDetails.tsx:52
 msgid "User tag (optional)"
 msgstr "使用者標籤（選填）"
 
@@ -38626,8 +38639,10 @@ msgstr "使用者音量"
 msgid "Username"
 msgstr "使用者名稱"
 
+#. Field label on the details step of the DSA report form (user report) on an instance without user tags. Optional username of the reported user.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:58
+#: src/features/moderation/components/report/ReportStepDetails.tsx:47
 msgid "Username (optional)"
 msgstr "使用者名稱（選填）"
 
@@ -41106,7 +41121,7 @@ msgid "You must agree to the terms of service to create an account"
 msgstr "您必須同意服務條款才能建立帳號"
 
 #. Inline error on the details step of the DSA report flow when the user has not completed email verification.
-#: src/features/moderation/components/pages/ReportPage.tsx:118
+#: src/features/moderation/components/pages/ReportPage.tsx:120
 msgid "You must verify your email before sending a report."
 msgstr "您必須先驗證電子郵件，才能傳送檢舉。"
 

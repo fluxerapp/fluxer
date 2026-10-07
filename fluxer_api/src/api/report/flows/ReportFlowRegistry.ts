@@ -18,7 +18,7 @@ import {
 	type ReportFlowScreenDef,
 } from '@app/api/report/flows/ReportFlowScreens';
 import {getLegacyCategory, isReportReasonKey, type ReportReasonKey} from '@app/api/report/flows/ReportReasonCatalog';
-import {type LocaleCode, Locales} from '@fluxer/constants/src/Locales';
+import type {LocaleCode} from '@fluxer/constants/src/Locales';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InvalidReportFlowAnswersError} from '@fluxer/errors/src/domains/moderation/InvalidReportFlowAnswersError';
@@ -113,7 +113,6 @@ const REPORT_FLOW_CHECKED_INSTANCES: ReadonlyArray<ReportFlowInstance> = [
 	{selfHosted: true, guidelinesLinked: true},
 ];
 const ADMIN_LOCALE = 'en-US';
-const NORWEGIAN_LANGUAGE_CODES: ReadonlySet<string> = new Set(['nb', 'nn']);
 
 export function getReportFlowScreenKind(screen: ReportFlowScreenDef): ReportFlowScreenKind {
 	if (screen.checklist) {
@@ -578,12 +577,7 @@ export function getReportFlowVariant(target: ReportFlowTargetType, surface: Repo
 }
 
 export function resolveReportFlowLocale(raw: string | null | undefined): LocaleCode {
-	if (!raw) {
-		return parseAcceptLanguage(null);
-	}
-	const tag = raw.trim().replaceAll('_', '-');
-	const language = tag.split(/[-,;]/)[0].toLowerCase();
-	return parseAcceptLanguage(NORWEGIAN_LANGUAGE_CODES.has(language) ? Locales.NO : tag);
+	return parseAcceptLanguage(raw);
 }
 
 function renderCopy(key: ReportFlowCopyKey, locale: string): string {

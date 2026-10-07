@@ -66,7 +66,7 @@ impl Resolver for KlipyResolver {
             let mut embed = MessageEmbed::new("gifv");
             embed.url = Some(ctx.original_url.to_string());
             embed.provider = Some(EmbedProvider {
-                name: Some("KLIPY".to_owned()),
+                name: "KLIPY".to_owned(),
                 url: Some("https://klipy.com".to_owned()),
             });
             if let Some(ref thumbnail) = formats.thumbnail {

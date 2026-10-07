@@ -833,7 +833,7 @@ A notice whose walk resolves to the `child_safety` [category](#report-categories
 | Field | Type | Description |
 | --- | --- | --- |
 | message_link<sup>1</sup> | string | The link to the reported message (1-2048 characters) |
-| reported_user_tag?<sup>2</sup> | string | The message author's tag in `username#1234` form (3-37 characters) |
+| reported_user_tag?<sup>2</sup> | string | The message author's tag in `username#1234` form, or the bare username on an instance without user tags (1-37 characters) |
 
 <sup>1</sup> Parsed as an absolute URL whose path is `/channels/&lt;guild_id&gt;/&lt;channel_id&gt;/&lt;message_id&gt;`, with `@me` in place of the guild ID for a direct message or group DM. Fluxer ignores the origin
 
@@ -846,7 +846,7 @@ The link must name a message that exists, in the channel it names, and in the gu
 | Field | Type | Description |
 | --- | --- | --- |
 | user_id?<sup>1</sup> | snowflake | The ID of the reported user |
-| user_tag?<sup>1</sup> | string | The reported user's tag in `username#1234` form (3-37 characters) |
+| user_tag?<sup>1</sup> | string | The reported user's tag in `username#1234` form, or the bare username on an instance without user tags (1-37 characters) |
 
 <sup>1</sup> Supply at least one of the two. A body that supplies neither returns 400 `INVALID_FORM_BODY`, and an ID or tag that resolves to no account returns 404 `UNKNOWN_USER`
 

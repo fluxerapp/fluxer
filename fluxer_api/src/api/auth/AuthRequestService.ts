@@ -197,7 +197,7 @@ export class AuthRequestService {
 		if ('registration_pending_approval' in result) {
 			return result;
 		}
-		return await this.toAuthLoginResponse(result);
+		return await this.toAuthTokenResponse(result);
 	}
 
 	async login({
@@ -257,13 +257,13 @@ export class AuthRequestService {
 		};
 	}
 
-	async revertEmailChange({data, request}: AuthRevertEmailChangeRequest): Promise<AuthLoginResponse> {
+	async revertEmailChange({data, request}: AuthRevertEmailChangeRequest): Promise<AuthTokenWithUserIdResponse> {
 		const result = await AuthEmailRevert.revertEmailChange(this.apiContext, {
 			token: data.token,
 			password: data.password,
 			request,
 		});
-		return await this.toAuthLoginResponse(result);
+		return await this.toAuthTokenResponse(result);
 	}
 
 	getAuthSessions(userId: UserID, currentSessionIdHash?: Uint8Array): Promise<AuthSessionsResponse> {

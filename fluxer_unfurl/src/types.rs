@@ -129,8 +129,7 @@ pub struct EmbedAuthor {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmbedProvider {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
 }
@@ -216,5 +215,17 @@ mod tests {
             }
             UnfurlRequest::Invalidate { .. } => panic!("expected unfurl request"),
         }
+    }
+
+    #[test]
+    fn provider_always_serializes_its_name() {
+        let provider = EmbedProvider {
+            name: "Tenor".to_owned(),
+            url: None,
+        };
+        assert_eq!(
+            serde_json::to_value(&provider).unwrap(),
+            serde_json::json!({"name": "Tenor"})
+        );
     }
 }

@@ -265,6 +265,22 @@ describe('EmailI18n locale files', () => {
 			expect(none.split('\n\n'), key).toHaveLength(both.split('\n\n').length - 1);
 		}
 	});
+	it.each(['en-US', ...LOCALES])('%s leaves no gap in enforcement notices without a reason', (locale) => {
+		for (const key of ['account_temp_banned', 'account_scheduled_deletion'] as const) {
+			for (const legalLinks of ['both', 'none'] as const) {
+				const withReason = renderBody(key, locale, {...FIXTURE[key], legalLinks, reason: 'Repeated spam'});
+				const withoutReason = renderBody(key, locale, {...FIXTURE[key], legalLinks, reason: null});
+				expect(withReason, key).toContain('Repeated spam\n\n');
+				expect(withoutReason, key).not.toContain('Repeated spam');
+				for (const body of [withReason, withoutReason]) {
+					expect(body, key).not.toContain('\n\n\n');
+					expect(body, key).not.toContain('{');
+				}
+				expect(withoutReason.split('\n\n'), key).toHaveLength(withReason.split('\n\n').length - 1);
+				expect(withoutReason.split('\n'), key).toHaveLength(withReason.split('\n').length - 2);
+			}
+		}
+	});
 	it.each(['en-US', ...LOCALES])('%s names no mailbox when the instance has none', (locale) => {
 		const english = (key: (typeof CONTACT_KEYS)[number], variables: object) =>
 			renderBody(key, 'en-US', {...FIXTURE[key], ...variables} as never);
@@ -305,6 +321,19 @@ describe('EmailI18n locale files', () => {
 				expect(englishNeutral, key).not.toContain(changed[0]);
 				expect(changed[0], key).not.toContain('the administrators of this instance');
 			}
+		}
+	});
+
+	it.each(['en-US', ...LOCALES])('%s leaves no gap in deletion and unban notices without a reason', (locale) => {
+		for (const key of ['scheduled_deletion_notification', 'unban_notification'] as const) {
+			const withReason = renderBody(key, locale, {...FIXTURE[key], reason: 'Repeated spam'});
+			const withoutReason = renderBody(key, locale, {...FIXTURE[key], reason: null});
+			expect(withReason, key).toContain('Repeated spam\n\n');
+			expect(withoutReason, key).not.toContain('Repeated spam');
+			for (const body of [withReason, withoutReason]) {
+				expect(body, key).not.toContain('\n\n\n');
+			}
+			expect(withoutReason.split('\n\n'), key).toHaveLength(withReason.split('\n\n').length - 1);
 		}
 	});
 

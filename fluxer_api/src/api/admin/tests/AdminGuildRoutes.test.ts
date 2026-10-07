@@ -78,6 +78,26 @@ describe('Admin guild routes', () => {
 		expect(result.guild.name).toBe(renamed);
 		expect(result.guild.features).toContain('VERIFIED');
 	});
+	test('PATCH /admin/guilds/{guild_id} returns the summary fields only when the body sets content warning fields', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:update:settings']);
+		const guild = await createGuild(harness, admin.token, `Warning Guild ${Date.now()}`);
+		const result = await createBuilder<AdminGuildUpdate>(harness, `${admin.token}`)
+			.patch(`/admin/guilds/${guild.id}`)
+			.body({nsfw: true, content_warning_level: 1, content_warning_text: 'Graphic content'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(Object.keys(result.guild).sort()).toEqual([
+			'banner',
+			'features',
+			'icon',
+			'id',
+			'member_count',
+			'name',
+			'nsfw_level',
+			'owner_id',
+		]);
+	});
 	test('PATCH /admin/guilds/{guild_id} requires the ACL selected by every supplied field', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:update:settings']);
