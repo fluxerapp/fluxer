@@ -495,8 +495,16 @@ fn workspace_dir() -> PathBuf {
 
 fn workdir() -> PathBuf {
     env::var("WORKDIR")
-        .map(PathBuf::from)
+        .map(|value| workdir_path(&value))
         .unwrap_or_else(|_| workspace_dir())
+}
+
+fn workdir_path(value: &str) -> PathBuf {
+    let bytes = value.as_bytes();
+    if bytes.len() == 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':' {
+        return PathBuf::from(format!("{value}\\"));
+    }
+    PathBuf::from(value)
 }
 
 fn desktop_dist_dir() -> PathBuf {
@@ -5582,6 +5590,17 @@ mod tests {
         Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
             .single()
             .unwrap()
+    }
+
+    #[test]
+    fn bare_drive_workdir_resolves_to_the_drive_root() {
+        assert_eq!(workdir_path("W:"), PathBuf::from("W:\\"));
+        assert_eq!(workdir_path("w:"), PathBuf::from("w:\\"));
+        assert_eq!(workdir_path("W:\\src"), PathBuf::from("W:\\src"));
+        assert_eq!(
+            workdir_path("/home/runner/work"),
+            PathBuf::from("/home/runner/work")
+        );
     }
 
     fn matrix_args() -> BuildDesktopArgs {
