@@ -270,7 +270,7 @@ export const PersonaEditorModal: React.FC<PersonaEditorModalProps> = observer(
 			control: form.control,
 			name: ['bio'],
 			compute: ([wireValue]) => {
-				if (wireValue === bioActualValue) return;
+				if ((wireValue || "") === bioActualValue) return;
 				//if (wireValue === null) return;
 				setBioValue(wireValue || "");
 				setBioSegments([]);

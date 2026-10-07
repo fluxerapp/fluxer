@@ -16,6 +16,7 @@ import { deriveDominantAvatarColor } from "@app/api/utils/AvatarColorUtils";
 import type { UserCacheService } from "@app/api/infrastructure/UserCacheService";
 import { getCachedUserPartialResponse } from "@app/api/user/UserCacheHelpers";
 import type { RequestCache } from "@app/api/middleware/RequestCacheMiddleware";
+import type { StorageService } from "@app/api/infrastructure/StorageService";
 
 export class PersonaService {
 	private readonly attachmentService: AttachmentProcessingService;
@@ -26,7 +27,7 @@ export class PersonaService {
 		private readonly entityAssetService: EntityAssetService,
 		private readonly userCacheService: UserCacheService,
 		private readonly requestCache: RequestCache,
-		storageService: IStorageService,
+		private readonly storageService: IStorageService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		mediaService: IMediaService,
 		virusScanService: VirusScanService,
@@ -247,8 +248,9 @@ export class PersonaService {
 		const oldPersona = await this.personaRepository.getPersona(userId, personaId);
 		if (!oldPersona) throw new Error("Persona not found");
 		await Promise.allSettled([
-			oldPersona?.avatarHash ? this.entityAssetService.queueAssetDeletion("avatar", "persona", personaId, oldPersona?.avatarHash, undefined, "Persona deletion") : Promise.resolve(),
-			oldPersona?.bannerHash ? this.entityAssetService.queueAssetDeletion("banner", "persona", personaId, oldPersona?.bannerHash, undefined, "Persona deletion") : Promise.resolve(),
+			oldPersona?.avatarHash ? this.storageService.deleteAvatar({prefix: `avatars/${personaId}`, key: oldPersona?.avatarHash?.replace(/^a_/,"") || ""}) : Promise.resolve(),
+			//oldPersona?.bannerHash ? this.entityAssetService.queueAssetDeletion("banner", "persona", personaId, oldPersona?.bannerHash, undefined, "Persona deletion") : Promise.resolve(),
+			oldPersona?.avatarHash ? this.storageService.deleteAvatar({prefix: `banners/${personaId}`, key: oldPersona?.bannerHash?.replace(/^a_/,"") || ""}) : Promise.resolve(),
 		]);
 		await this.personaRepository.deletePersona(userId, personaId);
 	}
