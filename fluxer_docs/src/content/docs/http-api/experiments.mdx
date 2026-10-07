@@ -106,7 +106,7 @@ The `ETag` changes when the response changes. Treat it as an opaque value.
 
 A client reads this route once per session and then again every `poll_interval_seconds`, offset by a random amount up to `poll_jitter_percent` of that interval in either direction. It sends the last `ETag` on every request after the first. A client MUST NOT poll faster than the lower end of that jitter range.
 
-Until the first successful response, use 300 seconds with 15 percent jitter.
+Until the first successful response, use 300 seconds with 15 per cent jitter.
 
 ### Rate limit
 

@@ -1614,7 +1614,7 @@ The response is 204 whether the message survives or is deleted, so the emitted G
 
 ### Side effects
 
-The operation permanently deletes the stored attachment object, purges it from media delivery, removes it from the message, and advances the message's edit timestamp. On a [published](#crosspost-message) message it counts toward the published message edit allowance described under [Modify message](#modify-message), and a denial returns 429 `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED`. It then emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. When the removed attachment was the message's only attachment and the message has no content, embeds, or stickers, Fluxer deletes the whole message instead, with the complete [Delete message](#delete-message) effect set, including its Dispatches and guild audit log entry.
+The operation permanently deletes the stored attachment object, purges it from media delivery, removes it from the message, and advances the message's edit timestamp. On a [published](#crosspost-message) message it counts towards the published message edit allowance described under [Modify message](#modify-message), and a denial returns 429 `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED`. It then emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. When the removed attachment was the message's only attachment and the message has no content, embeds, or stickers, Fluxer deletes the whole message instead, with the complete [Delete message](#delete-message) effect set, including its Dispatches and guild audit log entry.
 
 ### Rate limit
 

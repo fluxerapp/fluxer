@@ -1,7 +1,7 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Reports
-description: Report flows, safety report submission, the reason catalog, and the DSA notice flow.
+description: Report flows, safety report submission, the reason catalogue, and the DSA notice flow.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
@@ -247,7 +247,7 @@ Every member is always present. The members that do not apply to `type` are null
 | notice_id | ?string | The notice to show when `type` is `end`, or null for the thank-you screen |
 | url | ?string | The page to open when `type` is `link` |
 
-<sup>1</sup> A plain string, so a client MUST tolerate a reason the [catalog](#report-reasons) does not list yet
+<sup>1</sup> A plain string, so a client MUST tolerate a reason the [catalogue](#report-reasons) does not list yet
 
 ## Report flow checklist object
 
@@ -406,7 +406,7 @@ Only `pending` and `resolved` are ever stored. A client MUST still tolerate a st
 
 ## Report reasons
 
-A report filed through a flow stores a reason, together with the [category](#report-categories) that reason maps to for the report's target type. Moderators can filter on both. The catalog grows over time, so a client MUST tolerate a reason it does not list.
+A report filed through a flow stores a reason, together with the [category](#report-categories) that reason maps to for the report's target type. Moderators can filter on both. The catalogue grows over time, so a client MUST tolerate a reason it does not list.
 
 The second column gives the reason value, then the category it stores on a message report, a user report, and a guild report, in that order.
 
@@ -740,7 +740,7 @@ The code expires after 10 minutes. Codes use uppercase letters and digits in `XX
 
 A new code can go to the same address once a minute has passed since the last one, or once that code has expired. It replaces the previous code and restarts the 10 minute window. A request within the minute returns 429 with `retry_after` and leaves the code already sent usable.
 
-When the provider refuses the message, or the address is recorded as a hard bounce, Fluxer keeps no code for the address, so a code sent to it earlier stops working too, and returns 503 `SERVICE_UNAVAILABLE`. That attempt still counts toward the 3 sends an address gets each hour.
+When the provider refuses the message, or the address is recorded as a hard bounce, Fluxer keeps no code for the address, so a code sent to it earlier stops working too, and returns 503 `SERVICE_UNAVAILABLE`. That attempt still counts towards the 3 sends an address gets each hour.
 
 The operation creates no ticket and emits no Gateway Dispatch.
 
@@ -748,7 +748,7 @@ The operation creates no ticket and emits no Gateway Dispatch.
 
 5 requests per hour, on the `dsa:report:email:send` bucket.
 
-One address gets at most 3 sends each hour, and at most one each minute while its last code is unexpired. The minute check runs first, so a request it refuses does not count toward the hourly 3. Both return 429 `RATE_LIMITED` with `retry_after`.
+One address gets at most 3 sends each hour, and at most one each minute while its last code is unexpired. The minute check runs first, so a request it refuses does not count towards the hourly 3. Both return 429 `RATE_LIMITED` with `retry_after`.
 
 ## Verify DSA report email
 

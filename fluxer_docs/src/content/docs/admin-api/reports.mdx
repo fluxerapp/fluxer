@@ -407,7 +407,7 @@ The reported profile as it was when the report was filed. A user report keeps th
 
 ## Report flow answers object
 
-The answers a reporter gave in a [report flow](/http-api/reports/#report-flows), described in English whatever locale the reporter saw. Fluxer builds the description from the stored IDs when it produces the response, so the labels follow the current catalog.
+The answers a reporter gave in a [report flow](/http-api/reports/#report-flows), described in English whatever locale the reporter saw. Fluxer builds the description from the stored IDs when it produces the response, so the labels follow the current catalogue.
 
 ### Structure
 
@@ -430,7 +430,7 @@ The answers a reporter gave in a [report flow](/http-api/reports/#report-flows),
 | option_label<sup>1</sup> <sup>2</sup> | ?string | The English label of the chosen option |
 | items<sup>3</sup> | array[[report flow answer item](#report-flow-answer-item-object) object] | The ticked checklist items |
 
-<sup>1</sup> The raw ID when the current catalog no longer has the screen or option
+<sup>1</sup> The raw ID when the current catalogue no longer has the screen or option
 
 <sup>2</sup> Null on a checklist screen and an info screen
 
@@ -443,11 +443,11 @@ The answers a reporter gave in a [report flow](/http-api/reports/#report-flows),
 | Field | Type | Description |
 | --- | --- | --- |
 | id | string | The ID of the item |
-| label | string | The English label of the item, or its raw ID when the current catalog no longer has it |
+| label | string | The English label of the item, or its raw ID when the current catalogue no longer has it |
 
 ## Report reason object
 
-One entry of the [report reason](/http-api/reports/#report-reasons) catalog, as [List report reasons](#list-report-reasons) returns it.
+One entry of the [report reason](/http-api/reports/#report-reasons) catalogue, as [List report reasons](#list-report-reasons) returns it.
 
 ### Structure
 
@@ -600,19 +600,19 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 Returns every [report reason](/http-api/reports/#report-reasons) a report flow can file a report under, with the category each one stores for each report type. Requires `report:view`.
 
-The labels are English. The list is the catalog this API was built with, so an admin client can label and filter a reason without a copy of its own.
+The labels are English. The list is the catalogue this API was built with, so an admin client can label and filter a reason without a copy of its own.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| reasons | array[[report reason](#report-reason-object) object] | Every reason, in catalog order |
+| reasons | array[[report reason](#report-reason-object) object] | Every reason, in catalogue order |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The catalog was returned |
+| 200 | response body | The catalogue was returned |
 
 ### Side effects
 
