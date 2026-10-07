@@ -1,29 +1,44 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
-import {createChannelID, createGuildID, createMessageID, createReportID, createUserID} from '@app/api/BrandedTypes';
-import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {ReportID, UserID} from '@app/api/BrandedTypes';
+import {
+	createApplicationID,
+	createChannelID,
+	createGuildID,
+	createMessageID,
+	createReportID,
+	createUserID,
+	createWebhookID,
+} from '@app/api/BrandedTypes';
+import {executeConditional, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {
 	DSAReportEmailVerificationRow,
 	DSAReportTicketRow,
+	GuildReportSubmissionByReporterRow,
 	MessageReportSubmissionByReporterRow,
+	UserReportSubmissionByReporterRow,
 } from '@app/api/database/types/ReportTypes';
-import type {
-	IARMessageContext,
-	IARMessageContextRow,
-	IARSubmission,
-	IARSubmissionRow,
-	IReportRepository,
+import {parseReportFlowSteps} from '@app/api/report/flows/ReportFlowRegistry';
+import {
+	type IARMessageContext,
+	type IARMessageContextRow,
+	type IARSubmission,
+	type IARSubmissionRow,
+	type IReportRepository,
+	ReportStatus,
 } from '@app/api/report/IReportRepository';
 import {
 	DSAReportEmailVerifications,
 	DSAReportTickets,
+	GuildReportSubmissionsByReporter,
 	IARSubmissions,
 	MessageReportSubmissionsByReporter,
+	UserReportSubmissionsByReporter,
 } from '@app/api/Tables';
 import {ReportAlreadyResolvedError} from '@fluxer/errors/src/domains/moderation/ReportAlreadyResolvedError';
 import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
+import {parseReportProfileSnapshot} from '@fluxer/schema/src/domains/report/ReportProfileSnapshotSchemas';
 
 const GET_REPORT_QUERY = IARSubmissions.select({
 	where: IARSubmissions.where.eq('report_id'),
@@ -42,46 +57,60 @@ const GET_DSA_REPORT_TICKET_QUERY = DSAReportTickets.select({
 	where: DSAReportTickets.where.eq('ticket'),
 	limit: 1,
 });
-const GET_MESSAGE_REPORT_SUBMISSION_BY_REPORTER_QUERY = MessageReportSubmissionsByReporter.select({
-	where: [
-		MessageReportSubmissionsByReporter.where.eq('reporter_id'),
-		MessageReportSubmissionsByReporter.where.eq('channel_id'),
-		MessageReportSubmissionsByReporter.where.eq('message_id'),
-	],
-	limit: 1,
-});
-
+const DSA_EMAIL_VERIFICATION_WRITE_ATTEMPTS = 5;
 function createFetchAllReportsFirstPageQuery(limit: number) {
 	return IARSubmissions.select({limit});
 }
 
 export class ReportRepository implements IReportRepository {
 	async createReport(data: IARSubmissionRow): Promise<IARSubmission> {
-		await upsertOne(IARSubmissions.insert(data));
-		return this.mapRowToSubmission(data);
+		const row: IARSubmissionRow = {
+			...data,
+			reported_profile_snapshot: data.reported_profile_snapshot ?? null,
+			legal_hold_until: data.legal_hold_until ?? null,
+			legal_hold_reason: data.legal_hold_reason ?? null,
+		};
+		await upsertOne(IARSubmissions.insert(row));
+		return this.mapRowToSubmission(row);
 	}
 
 	async reserveMessageReportByReporter(data: MessageReportSubmissionByReporterRow): Promise<boolean> {
-		const existing = await fetchOne<MessageReportSubmissionByReporterRow>(
-			GET_MESSAGE_REPORT_SUBMISSION_BY_REPORTER_QUERY.bind({
-				reporter_id: data.reporter_id,
-				channel_id: data.channel_id,
-				message_id: data.message_id,
-			}),
-		);
-		if (existing) {
-			return false;
-		}
-		await upsertOne(MessageReportSubmissionsByReporter.insert(data));
-		return true;
+		return executeConditional(MessageReportSubmissionsByReporter.insertIfNotExists(data));
 	}
 
-	async deleteMessageReportByReporter(reporterId: UserID, channelId: ChannelID, messageId: MessageID): Promise<void> {
-		await MessageReportSubmissionsByReporter.deleteByPk({
-			reporter_id: reporterId,
-			channel_id: channelId,
-			message_id: messageId,
-		});
+	async releaseMessageReportByReporter(data: MessageReportSubmissionByReporterRow): Promise<void> {
+		await executeConditional(
+			MessageReportSubmissionsByReporter.conditionalDeleteByPk(
+				{reporter_id: data.reporter_id, channel_id: data.channel_id, message_id: data.message_id},
+				{report_id: data.report_id},
+			),
+		);
+	}
+
+	async reserveUserReportByReporter(data: UserReportSubmissionByReporterRow): Promise<boolean> {
+		return executeConditional(UserReportSubmissionsByReporter.insertIfNotExists(data));
+	}
+
+	async releaseUserReportByReporter(data: UserReportSubmissionByReporterRow): Promise<void> {
+		await executeConditional(
+			UserReportSubmissionsByReporter.conditionalDeleteByPk(
+				{reporter_id: data.reporter_id, reported_user_id: data.reported_user_id},
+				{report_id: data.report_id},
+			),
+		);
+	}
+
+	async reserveGuildReportByReporter(data: GuildReportSubmissionByReporterRow): Promise<boolean> {
+		return executeConditional(GuildReportSubmissionsByReporter.insertIfNotExists(data));
+	}
+
+	async releaseGuildReportByReporter(data: GuildReportSubmissionByReporterRow): Promise<void> {
+		await executeConditional(
+			GuildReportSubmissionsByReporter.conditionalDeleteByPk(
+				{reporter_id: data.reporter_id, reported_guild_id: data.reported_guild_id},
+				{report_id: data.report_id},
+			),
+		);
 	}
 
 	async getReport(reportId: ReportID): Promise<IARSubmission | null> {
@@ -99,13 +128,13 @@ export class ReportRepository implements IReportRepository {
 		if (!report) {
 			throw new UnknownReportError();
 		}
-		if (report.status !== 0) {
+		if (report.status !== ReportStatus.PENDING) {
 			throw new ReportAlreadyResolvedError();
 		}
 		const resolvedAt = new Date();
-		const newStatus = 1;
-		await upsertOne(
-			IARSubmissions.patchByPk(
+		const newStatus = ReportStatus.RESOLVED;
+		const resolved = await executeConditional(
+			IARSubmissions.conditionalPatchByPk(
 				{report_id: reportId},
 				{
 					resolved_at: Db.set(resolvedAt),
@@ -114,8 +143,12 @@ export class ReportRepository implements IReportRepository {
 					audit_log_reason: Db.set(auditLogReason),
 					status: Db.set(newStatus),
 				},
+				{status: ReportStatus.PENDING},
 			),
 		);
+		if (!resolved) {
+			throw new ReportAlreadyResolvedError();
+		}
 		return {
 			...report,
 			resolvedAt,
@@ -124,6 +157,48 @@ export class ReportRepository implements IReportRepository {
 			auditLogReason,
 			status: newStatus,
 		};
+	}
+
+	async setReportLegalHold(
+		reportId: ReportID,
+		legalHoldUntil: Date | null,
+		legalHoldReason: string | null,
+	): Promise<IARSubmission> {
+		const report = await this.getReport(reportId);
+		if (!report) {
+			throw new UnknownReportError();
+		}
+		const written = await executeConditional(
+			IARSubmissions.conditionalPatchByPk(
+				{report_id: reportId},
+				{legal_hold_until: Db.set(legalHoldUntil), legal_hold_reason: Db.set(legalHoldReason)},
+				{report_type: report.reportType},
+			),
+		);
+		if (!written) {
+			throw new UnknownReportError();
+		}
+		return {...report, legalHoldUntil, legalHoldReason};
+	}
+
+	async clearReporterEmail(reportId: ReportID, reporterId: UserID): Promise<boolean> {
+		return executeConditional(
+			IARSubmissions.conditionalPatchByPk(
+				{report_id: reportId},
+				{reporter_email: Db.set(null)},
+				{reporter_id: reporterId},
+			),
+		);
+	}
+
+	async deleteReport(reportId: ReportID): Promise<void> {
+		const report = await this.getReport(reportId);
+		if (!report) {
+			return;
+		}
+		await executeConditional(
+			IARSubmissions.conditionalDeleteByPk({report_id: reportId}, {report_type: report.reportType}),
+		);
 	}
 
 	private mapRowToSubmission(row: IARSubmissionRow): IARSubmission {
@@ -162,6 +237,34 @@ export class ReportRepository implements IReportRepository {
 			reportedChannelEffectiveNsfw: row.reported_channel_effective_nsfw ?? null,
 			reportedChannelEffectiveContentWarningLevel: row.reported_channel_effective_content_warning_level ?? null,
 			reportedChannelEffectiveContentWarningText: row.reported_channel_effective_content_warning_text ?? null,
+			reason: row.reason ?? null,
+			flowRevision: row.flow_revision ?? null,
+			flowSteps: parseReportFlowSteps(row.flow_steps),
+			flowLocale: row.flow_locale ?? null,
+			flowSurface: row.flow_surface ?? null,
+			reporterGoodFaithConfirmed: row.reporter_good_faith_confirmed ?? null,
+			reportedWebhookId: row.reported_webhook_id ? createWebhookID(row.reported_webhook_id) : null,
+			reportedWebhookName: row.reported_webhook_name ?? null,
+			reportedWebhookAvatarHash: row.reported_webhook_avatar_hash ?? null,
+			reportedWebhookDefaultName: row.reported_webhook_default_name ?? null,
+			reportedWebhookDefaultAvatarHash: row.reported_webhook_default_avatar_hash ?? null,
+			reportedWebhookType: row.reported_webhook_type ?? null,
+			reportedWebhookApplicationId: row.reported_webhook_application_id
+				? createApplicationID(row.reported_webhook_application_id)
+				: null,
+			reportedWebhookChannelId: row.reported_webhook_channel_id
+				? createChannelID(row.reported_webhook_channel_id)
+				: null,
+			reportedWebhookGuildId: row.reported_webhook_guild_id ? createGuildID(row.reported_webhook_guild_id) : null,
+			reportedWebhookCreatedAt: row.reported_webhook_created_at ?? null,
+			reportedWebhookCreatorId: row.reported_webhook_creator_id ? createUserID(row.reported_webhook_creator_id) : null,
+			reportedWebhookCreatorUsername: row.reported_webhook_creator_username ?? null,
+			reportedWebhookCreatorDiscriminator: row.reported_webhook_creator_discriminator ?? null,
+			reportedWebhookCreatorGlobalName: row.reported_webhook_creator_global_name ?? null,
+			reportedWebhookCreatorAvatarHash: row.reported_webhook_creator_avatar_hash ?? null,
+			reportedProfileSnapshot: parseReportProfileSnapshot(row.reported_profile_snapshot),
+			legalHoldUntil: row.legal_hold_until ?? null,
+			legalHoldReason: row.legal_hold_reason ?? null,
 		};
 	}
 
@@ -178,7 +281,24 @@ export class ReportRepository implements IReportRepository {
 	}
 
 	async upsertDsaEmailVerification(row: DSAReportEmailVerificationRow): Promise<void> {
-		await upsertOne(DSAReportEmailVerifications.insert(row));
+		for (let attempt = 0; attempt < DSA_EMAIL_VERIFICATION_WRITE_ATTEMPTS; attempt++) {
+			const current = await this.getDsaEmailVerification(row.email_lower);
+			const written = await executeConditional(
+				current
+					? DSAReportEmailVerifications.conditionalPatchByPk(
+							{email_lower: row.email_lower},
+							{
+								code_hash: Db.set(row.code_hash),
+								expires_at: Db.set(row.expires_at),
+								last_sent_at: Db.set(row.last_sent_at),
+							},
+							{code_hash: current.code_hash},
+						)
+					: DSAReportEmailVerifications.insertIfNotExists(row),
+			);
+			if (written) return;
+		}
+		throw new Error('DSA email verification kept changing during write');
 	}
 
 	async getDsaEmailVerification(emailLower: string): Promise<DSAReportEmailVerificationRow | null> {
@@ -188,12 +308,17 @@ export class ReportRepository implements IReportRepository {
 		return row ?? null;
 	}
 
-	async deleteDsaEmailVerification(emailLower: string): Promise<void> {
-		await DSAReportEmailVerifications.deleteByPk({email_lower: emailLower});
+	async consumeDsaEmailVerification(emailLower: string, codeHash: string): Promise<boolean> {
+		return executeConditional(
+			DSAReportEmailVerifications.conditionalDeleteByPk({email_lower: emailLower}, {code_hash: codeHash}),
+		);
 	}
 
 	async createDsaTicket(row: DSAReportTicketRow): Promise<void> {
-		await upsertOne(DSAReportTickets.insert(row));
+		const created = await executeConditional(DSAReportTickets.insertIfNotExists(row));
+		if (!created) {
+			throw new Error('DSA ticket already exists');
+		}
 	}
 
 	async getDsaTicket(ticket: string): Promise<DSAReportTicketRow | null> {
@@ -201,8 +326,8 @@ export class ReportRepository implements IReportRepository {
 		return row ?? null;
 	}
 
-	async deleteDsaTicket(ticket: string): Promise<void> {
-		await DSAReportTickets.deleteByPk({ticket});
+	async consumeDsaTicket(ticket: string, emailLower: string): Promise<boolean> {
+		return executeConditional(DSAReportTickets.conditionalDeleteByPk({ticket}, {email_lower: emailLower}));
 	}
 
 	private mapMessageContext(rawContext: Array<IARMessageContextRow>): Array<IARMessageContext> {
@@ -210,7 +335,8 @@ export class ReportRepository implements IReportRepository {
 			collection ? Array.from(collection) : [];
 		return rawContext.map((msg) => ({
 			messageId: createMessageID(msg.message_id),
-			authorId: createUserID(msg.author_id),
+			authorId: msg.author_id ? createUserID(msg.author_id) : null,
+			webhookId: msg.webhook_id ? createWebhookID(msg.webhook_id) : null,
 			channelId: msg.channel_id ? createChannelID(msg.channel_id) : null,
 			authorUsername: msg.author_username,
 			authorDiscriminator: msg.author_discriminator,
@@ -227,6 +353,7 @@ export class ReportRepository implements IReportRepository {
 			attachments: msg.attachments ?? [],
 			embeds: msg.embeds ?? [],
 			stickers: msg.sticker_items ?? [],
+			missingAttachments: msg.missing_attachments ?? [],
 		}));
 	}
 }

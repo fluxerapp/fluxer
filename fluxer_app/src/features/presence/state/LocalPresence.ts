@@ -51,6 +51,10 @@ class LocalPresence {
 				() => MobileLayout.isMobileLayout(),
 				() => this.updatePresence(),
 			);
+			reaction(
+				() => Idle.isIdle(),
+				() => this.updatePresence(),
+			);
 		});
 	}
 

@@ -31,6 +31,10 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Hallitse {product_name}-lahjoituksiasi",
 		"body": "Hei,\n\nNapsauta alla olevaa linkkiä päästäksesi lahjoittajaportaaliisi:\n\n{manageUrl}\n\nPortaalissa voit hallinnoida tilauksia, ladata laskuja ja tarkastella lahjoitushistoriaasi.\n\nTämä linkki vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä linkkiä, voit jättää tämän sähköpostin turvallisesti huomiotta.\n\n– {product_name}-tiimi"
 	},
+	"dsa_report_resolved": {
+		"subject": "Teimme päätöksen {product_name}-ilmoituksestasi",
+		"body": "Hei,\n\nTurvallisuustiimimme on käsitellyt digipalvelusäädöksen mukaisen ilmoituksesi (ID: {reportId}) ja tehnyt päätöksen.{hasComment, select, yes {\n\nTurvallisuustiimin vastaus:\n{publicComment}} other {}}\n\nEmme kerro toisen henkilön tiliin kohdistuneista toimista, koska ne ovat hänen henkilötietojaan.\n\nJos olet eri mieltä päätöksestä, voit valittaa siitä maksutta 60 päivän kuluessa. Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta, kerro ilmoituksesi tunnus ja selitä, miksi pidät päätöstä virheellisenä. Jos olet EU:ssa, voit myös viedä riidan sertifioidun tuomioistuimen ulkopuolisen riidanratkaisuelimen käsiteltäväksi. Mikään tästä ei vaikuta oikeuteesi viedä asia tuomioistuimeen.\n\n– {product_name}-turvallisuustiimi"
+	},
 	"dsa_report_verification": {
 		"subject": "Vahvista sähköpostiosoitteesi DSA-ilmoitusta varten",
 		"body": "Hei,\n\nKäytä alla olevaa vahvistuskoodia lähettääksesi digipalvelusäädöksen mukaisen ilmoituksen {product_name}-palveluun:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä, voit jättää tämän sähköpostin huomiotta.\n\n– {product_name}-turvallisuustiimi"
@@ -82,6 +86,10 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "{product_name}-rekisteröitymisesi on hyväksytty",
 		"body": "Hei {username},\n\nHyviä uutisia: {product_name}-rekisteröitymisesi on hyväksytty.\n\nVoit nyt kirjautua {product_name}-sovellukseen täältä:\n{channelsUrl}\n\nTervetuloa {product_name}-yhteisöön.\n\n– {product_name}-tiimi"
+	},
+	"report_received": {
+		"subject": "Vastaanotimme {product_name}-ilmoituksesi",
+		"body": "Hei,\n\nVastaanotimme digipalvelusäädöksen mukaisen ilmoituksesi, joka koskee {targetKind, select, message {viestiä} user {tiliä} guild {yhteisöä} other {sisältöä}} {product_name}-palvelussa.\n\nIlmoituksen tunnus: {reportId}\n\nTurvallisuustiimimme käsittelee ilmoituksesi, ja lähetämme sinulle sähköpostia tähän osoitteeseen, kun olemme tehneet päätöksen. Säilytä tämä sähköposti myöhempää tarvetta varten.\n\n– {product_name}-turvallisuustiimi"
 	},
 	"report_resolved": {
 		"subject": "{product_name}-ilmoituksesi on käsitelty",

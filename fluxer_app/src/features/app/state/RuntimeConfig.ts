@@ -162,6 +162,10 @@ export function describeAPIEndpoint(endpoint: string): string {
 	return withoutScheme;
 }
 
+const DISCOVERY_REVALIDATION_TIMEOUT_MS = 5000;
+
+let pendingDiscoveryRevalidation: Promise<void> | null = null;
+
 class RuntimeConfig {
 	private lifecycleGeneration = 0;
 	private activeRuntime: ActiveRuntime | null = null;
@@ -659,13 +663,29 @@ class RuntimeConfig {
 		});
 	}
 
-	async refreshDiscovery(): Promise<void> {
+	async refreshDiscovery(signal?: AbortSignal): Promise<void> {
 		const current = this.requireActiveSnapshot();
-		const resolution = await InstanceSnapshotStore.refresh({input: current.apiEndpoint, signal: null});
+		const resolution = await InstanceSnapshotStore.refresh({input: current.apiEndpoint, signal: signal ?? null});
 		if (runtimeInstanceKey(resolution.snapshot) !== runtimeInstanceKey(this.requireActiveSnapshot())) {
 			return;
 		}
-		this.replaceActiveFeatures(resolution.snapshot.features);
+		const runtime = this.requireActiveRuntime();
+		const usable = this.requireUsableSnapshot({
+			...runtime.snapshot,
+			features: resolution.snapshot.features,
+			appPublic: resolution.snapshot.appPublic,
+		});
+		this.activeRuntime = {...runtime, snapshot: usable};
+		this.lifecycleGeneration = nextLifecycleGeneration(this.lifecycleGeneration);
+	}
+
+	revalidateDiscovery(): Promise<void> {
+		if (pendingDiscoveryRevalidation !== null) return pendingDiscoveryRevalidation;
+		const request = this.refreshDiscovery(AbortSignal.timeout(DISCOVERY_REVALIDATION_TIMEOUT_MS)).finally(() => {
+			if (pendingDiscoveryRevalidation === request) pendingDiscoveryRevalidation = null;
+		});
+		pendingDiscoveryRevalidation = request;
+		return request;
 	}
 
 	private replaceActiveFeatures(features: InstanceFeatures): void {

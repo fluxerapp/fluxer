@@ -27,6 +27,10 @@
 		"subject": "Upravljanje donacijama za {product_name}",
 		"body": "Pozdrav,\n\nKlikni na poveznicu ispod za pristup svom portalu za donatore:\n\n{manageUrl}\n\nNa portalu možeš upravljati pretplatama, preuzimati račune i pregledavati povijest svojih donacija.\n\nOva poveznica istječe {expiresAt, date, full} u {expiresAt, time, short}.\n\nAko ovaj zahtjev ne dolazi od tebe, slobodno zanemari ovu e-poštu.\n\n– Tim {product_name}a"
 	},
+	"dsa_report_resolved": {
+		"subject": "Donijeli smo odluku o tvojoj prijavi na platformi {product_name}",
+		"body": "Pozdrav,\n\nNaš sigurnosni tim pregledao je tvoju prijavu prema Zakonu o digitalnim uslugama (ID: {reportId}) i donio odluku.{hasComment, select, yes {\n\nOdgovor sigurnosnog tima:\n{publicComment}} other {}}\n\nNe dijelimo pojedinosti o mjerama poduzetima protiv računa druge osobe jer su to njezini osobni podaci.\n\nAko se ne slažeš s ovom odlukom, možeš besplatno podnijeti žalbu u roku od 60 dana. Pošalji e-poštu na {appeals_email} s ove adrese e-pošte, navedi ID svoje prijave i objasni zašto smatraš da je odluka pogrešna. Ako se nalaziš u EU-u, spor možeš uputiti i certificiranom tijelu za izvansudsko rješavanje sporova. Ništa od navedenog ne utječe na tvoje pravo da se obratiš sudu.\n\n– Sigurnosni tim {product_name}a"
+	},
 	"dsa_report_verification": {
 		"subject": "Potvrdi svoju e-poštu za prijavu prema Zakonu o digitalnim uslugama",
 		"body": "Pozdrav,\n\nZa podnošenje prijave prema Zakonu o digitalnim uslugama na {product_name}u upotrijebi kod za potvrdu u nastavku:\n\n{code}\n\nOvaj kod istječe {expiresAt, date, full} u {expiresAt, time, short}.\n\nAko ovaj zahtjev ne dolazi od tebe, zanemari ovu e-poštu.\n\n– Sigurnosni tim {product_name}a"
@@ -78,6 +82,10 @@
 	"registration_approved": {
 		"subject": "Tvoja registracija za {product_name} je odobrena",
 		"body": "Pozdrav {username},\n\nDobre vijesti: tvoja registracija za {product_name} je odobrena.\n\nSada se možeš prijaviti u aplikaciju {product_name} ovdje:\n{channelsUrl}\n\nDobro došli u zajednicu {product_name}a.\n\n– Tim {product_name}a"
+	},
+	"report_received": {
+		"subject": "Primili smo tvoju prijavu na platformi {product_name}",
+		"body": "Pozdrav,\n\nPrimili smo tvoju prijavu prema Zakonu o digitalnim uslugama koja se odnosi na {targetKind, select, message {poruku} user {račun} guild {zajednicu} other {sadržaj}} na platformi {product_name}.\n\nID prijave: {reportId}\n\nNaš sigurnosni tim pregledat će tvoju prijavu, a mi ćemo ti poslati e-poštu na ovu adresu kada donesemo odluku. Sačuvaj ovu e-poštu za svoju evidenciju.\n\n– Sigurnosni tim {product_name}a"
 	},
 	"report_resolved": {
 		"subject": "Tvoja prijava na {product_name}u je pregledana",

@@ -11,7 +11,7 @@ import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useId, useRef, useState} from 'react';
+import {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
 
 const LINK_SELECTOR = 'a[href], [role="link"]';
 const isLinkTarget = (target: EventTarget | null): target is Element =>
@@ -29,6 +29,10 @@ interface CheckboxLinkShortcut {
 	hint: string;
 	action: () => void;
 }
+
+type CheckboxWrapperStyle = React.CSSProperties & {
+	'--checkbox-size': string;
+};
 
 interface CheckboxBaseProps {
 	checked?: boolean;
@@ -91,6 +95,10 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 		const checkIconSizeRem = remFromPx(checkIconSize);
 		const baseId = useId();
 		const checkboxId = `${baseId}-checkbox-input`;
+		const wrapperStyle = useMemo(
+			(): CheckboxWrapperStyle => ({minHeight: actualSizeRem, '--checkbox-size': actualSizeRem}),
+			[actualSizeRem],
+		);
 		const handleChange = useCallback(
 			(isSelected: boolean) => {
 				if (!disabled && !readOnly) {
@@ -177,7 +185,7 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 						disabled && (variant === 'menu' ? styles.menuDisabled : styles.disabled),
 						className,
 					)}
-					style={{height: actualSizeRem}}
+					style={wrapperStyle}
 					aria-hidden={true}
 					data-flx="ui.checkbox.checkbox.checkbox-wrapper"
 				>
@@ -224,7 +232,7 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 						className,
 					)}
 					htmlFor={checkboxId}
-					style={{height: actualSizeRem}}
+					style={wrapperStyle}
 					data-flx="ui.checkbox.checkbox.checkbox-wrapper--2"
 				>
 					<CheckboxPrimitive.Root

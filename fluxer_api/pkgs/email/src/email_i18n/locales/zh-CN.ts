@@ -31,6 +31,10 @@ const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "管理你的 {product_name} 捐赠",
 		"body": "你好，\n\n点击下方链接访问你的捐赠者门户：\n\n{manageUrl}\n\n在门户中，你可以管理订阅、下载发票和查看捐赠历史。\n\n此链接将于 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n如果你未请求此链接，可以放心忽略此邮件。\n\n– {product_name} 团队"
 	},
+	"dsa_report_resolved": {
+		"subject": "我们已对你的 {product_name} 举报做出决定",
+		"body": "你好，\n\n我们的安全团队已审核你根据《数字服务法》提交的举报（ID：{reportId}）并做出决定。{hasComment, select, yes {\n\n安全团队的回复：\n{publicComment}} other {}}\n\n我们不会透露对他人账号所采取措施的详情，因为这属于对方的个人数据。\n\n如果你不同意此决定，可以在 60 天内免费提交申诉。请使用此邮箱地址发送邮件至 {appeals_email}，注明你的举报 ID，并说明你认为该决定不正确的原因。如果你身在欧盟，还可以将争议提交给经认证的庭外争议解决机构。以上内容均不影响你向法院提起诉讼的权利。\n\n– {product_name} 安全团队"
+	},
 	"dsa_report_verification": {
 		"subject": "验证邮箱以提交 DSA 举报",
 		"body": "你好，\n\n请使用以下验证码在 {product_name} 上提交你的《数字服务法》举报：\n\n{code}\n\n此验证码将于 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n如果你未请求此操作，可以忽略此邮件。\n\n– {product_name} 安全团队"
@@ -82,6 +86,10 @@ const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "你的 {product_name} 注册已通过",
 		"body": "你好 {username}，\n\n好消息：你的 {product_name} 注册已通过。\n\n你现在可以登录 {product_name} 应用：\n{channelsUrl}\n\n欢迎加入 {product_name} 社区。\n\n– {product_name} 团队"
+	},
+	"report_received": {
+		"subject": "我们已收到你的 {product_name} 举报",
+		"body": "你好，\n\n我们已收到你根据《数字服务法》提交的关于 {product_name} 上{targetKind, select, message {一条消息} user {一个账号} guild {一个社区} other {内容}}的举报。\n\n举报 ID：{reportId}\n\n我们的安全团队会审核你的举报，并在做出决定后发送邮件至此邮箱地址。请保留此邮件以备查阅。\n\n– {product_name} 安全团队"
 	},
 	"report_resolved": {
 		"subject": "你的 {product_name} 举报已完成审核",

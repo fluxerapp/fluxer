@@ -391,7 +391,6 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 	const handleContextMenu = (event: React.MouseEvent) => {
 		const channelId = invite && (isGuildInvite(invite) || isGroupDmInvite(invite)) ? invite.channel.id : null;
 		const guildForMenu = guild ? {id: guild.id, name: guild.name} : null;
-		const inviteCodeForMenu = guildForMenu && invite ? invite.code : null;
 		if (!message && !guildForMenu && !channelId) return;
 		event.preventDefault();
 		event.stopPropagation();
@@ -402,7 +401,6 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 				linkUrl={`${RuntimeConfig.inviteEndpoint}/${code}`}
 				guild={guildForMenu}
 				channelId={channelId}
-				inviteCode={inviteCodeForMenu}
 				onDelete={onDelete}
 				onClose={props.onClose}
 				data-flx="channel.invite-embed.handle-context-menu.invite-embed-context-menu"

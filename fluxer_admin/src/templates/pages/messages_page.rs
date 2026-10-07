@@ -11,7 +11,7 @@ use crate::{
                 submit_button,
             },
             message_data::{Message, ordered_messages, value_id},
-            message_list::{message_deletion_script, message_list},
+            message_list::{MessageActions, message_deletion_script, message_list},
             page_container::{card, page_header},
         },
         layout::LayoutOptions,
@@ -193,6 +193,7 @@ pub struct MessagesPageParams<'a> {
     pub prefill_channel_id: Option<&'a str>,
     pub can_lookup: bool,
     pub can_delete: bool,
+    pub can_report_ncmec: bool,
     pub lookup_result: Option<&'a Value>,
     pub browse_result: Option<&'a Value>,
     pub search_result: Option<&'a Value>,
@@ -207,6 +208,11 @@ pub fn messages_page(
     auth: &AuthContext,
     params: &MessagesPageParams<'_>,
 ) -> Markup {
+    let actions = MessageActions {
+        delete: params.can_delete,
+        ncmec: params.can_report_ncmec,
+        source_report_id: None,
+    };
     let content = html! {
         (page_header("Message Tools", None))
 
@@ -217,19 +223,19 @@ pub fn messages_page(
             @if let (Some(result), Some(channel_id), Some(query)) = (
                 params.search_result, params.browse_channel_id, params.search_query_text,
             ) {
-                (search_result_card(config, result, channel_id, query, params.can_delete))
+                (search_result_card(config, result, channel_id, query, actions))
             }
             @if params.search_result.is_none()
                 && let (Some(result), Some(channel_id)) = (
                     params.browse_result, params.browse_channel_id,
                 ) {
                 (browse_result_card(
-                    config, result, channel_id, params.can_delete,
+                    config, result, channel_id, actions,
                     params.csrf_token, params.context_limit,
                 ))
             }
             @if let Some(result) = params.lookup_result {
-                (lookup_result_card(config, result, params.can_delete, params.context_limit))
+                (lookup_result_card(config, result, actions, params.context_limit))
             }
             @if params.can_lookup {
                 (browse_channel_form(config, params.csrf_token, params.prefill_channel_id))
@@ -260,7 +266,7 @@ pub fn messages_page(
 pub fn browse_messages_fragment(
     config: &AdminConfig,
     result: &Value,
-    show_delete: bool,
+    actions: MessageActions<'_>,
     highlight_message_id: Option<&str>,
 ) -> Markup {
     let messages = response_messages(result);
@@ -280,7 +286,7 @@ pub fn browse_messages_fragment(
                 config,
                 &config.base_path,
                 &messages,
-                show_delete,
+                actions,
                 highlight_message_id,
             ))
         }
@@ -291,7 +297,7 @@ fn browse_result_card(
     config: &AdminConfig,
     result: &Value,
     channel_id: &str,
-    show_delete: bool,
+    actions: MessageActions<'_>,
     csrf_token: &str,
     context_limit: u32,
 ) -> Markup {
@@ -328,7 +334,7 @@ fn browse_result_card(
                 config,
                 channel_id,
                 messages: &messages,
-                show_delete,
+                actions,
                 has_more,
                 has_newer: false,
                 focus_message_id: None,
@@ -343,7 +349,7 @@ fn search_result_card(
     result: &Value,
     channel_id: &str,
     query_text: &str,
-    show_delete: bool,
+    actions: MessageActions<'_>,
 ) -> Markup {
     let messages = response_messages(result);
     let total = result
@@ -369,7 +375,7 @@ fn search_result_card(
                 config,
                 &config.base_path,
                 &messages,
-                show_delete,
+                actions,
                 None,
             ))
         }
@@ -379,7 +385,7 @@ fn search_result_card(
 fn lookup_result_card(
     config: &AdminConfig,
     result: &Value,
-    show_delete: bool,
+    actions: MessageActions<'_>,
     context_limit: u32,
 ) -> Markup {
     let messages = response_messages(result);
@@ -401,7 +407,7 @@ fn lookup_result_card(
                 config,
                 channel_id,
                 messages: &messages,
-                show_delete,
+                actions,
                 has_more: true,
                 has_newer: true,
                 focus_message_id: message_id,
@@ -415,7 +421,7 @@ struct MessageScrollPane<'a> {
     config: &'a AdminConfig,
     channel_id: &'a str,
     messages: &'a [Message],
-    show_delete: bool,
+    actions: MessageActions<'a>,
     has_more: bool,
     has_newer: bool,
     focus_message_id: Option<&'a str>,
@@ -454,7 +460,7 @@ fn message_scroll_pane(pane: MessageScrollPane<'_>) -> Markup {
                             pane.config,
                             &pane.config.base_path,
                             pane.messages,
-                            pane.show_delete,
+                            pane.actions,
                             pane.focus_message_id,
                         ))
                     }

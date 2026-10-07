@@ -2,14 +2,13 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
+import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import {showModerationErrorModal} from '@app/features/moderation/components/alerts/ModerationErrorModalUtils';
 import styles from '@app/features/moderation/components/pages/ReportPage.module.css';
 import {
 	COUNTRY_OPTIONS,
-	GUILD_CATEGORY_OPTIONS,
-	MESSAGE_CATEGORY_OPTIONS,
 	REPORT_TYPE_OPTION_DESCRIPTORS,
-	USER_CATEGORY_OPTIONS,
 } from '@app/features/moderation/components/report/OptionDescriptors';
 import {ReportBreadcrumbs} from '@app/features/moderation/components/report/ReportBreadcrumbs';
 import {
@@ -20,9 +19,19 @@ import {
 import {ReportStepComplete} from '@app/features/moderation/components/report/ReportStepComplete';
 import {ReportStepDetails} from '@app/features/moderation/components/report/ReportStepDetails';
 import {ReportStepEmail} from '@app/features/moderation/components/report/ReportStepEmail';
+import {ReportStepReason} from '@app/features/moderation/components/report/ReportStepReason';
 import {ReportStepSelection} from '@app/features/moderation/components/report/ReportStepSelection';
-import {ReportStepVerification} from '@app/features/moderation/components/report/ReportStepVerification';
-import type {Action, FlowStep, FormValues, ReportType} from '@app/features/moderation/components/report/ReportTypes';
+import {
+	formatCooldownDuration,
+	ReportStepVerification,
+} from '@app/features/moderation/components/report/ReportStepVerification';
+import type {
+	Action,
+	FlowStep,
+	FormValues,
+	ReportField,
+	ReportType,
+} from '@app/features/moderation/components/report/ReportTypes';
 import {
 	EMAIL_REGEX,
 	formatVerificationCodeInput,
@@ -30,12 +39,24 @@ import {
 	normalizeLikelyUrl,
 	VERIFICATION_CODE_REGEX,
 } from '@app/features/moderation/components/report/Validators';
+import {
+	getReportFlowStepKey,
+	isReportFlowWalkUrgent,
+	type ReportFlowWalk,
+} from '@app/features/moderation/components/report_flow/ReportFlowWalk';
+import ReportFlows from '@app/features/moderation/state/ReportFlows';
+import {useLocation} from '@app/features/platform/components/router/RouterReact';
+import {getProtectedSessionStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {HttpError} from '@app/features/platform/types/EndpointError';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import type {RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -71,6 +92,11 @@ const FAILED_TO_RESEND_CODE_PLEASE_TRY_AGAIN_DESCRIPTOR = msg({
 	message: 'Failed to resend code. Try again.',
 	comment: 'Error toast when the resend-code request fails on the verification step of the DSA report flow.',
 });
+const TOO_MANY_CODES_SENT_DESCRIPTOR = msg({
+	message: 'Too many codes sent. Wait {duration} and try again.',
+	comment:
+		'Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".',
+});
 const ENTER_THE_CODE_BEFORE_CONTINUING_DESCRIPTOR = msg({
 	message: 'Enter the code before continuing.',
 	comment: 'Inline validation error on the verification step of the DSA report flow when the code field is empty.',
@@ -94,14 +120,20 @@ const YOU_MUST_VERIFY_YOUR_EMAIL_BEFORE_SENDING_A_DESCRIPTOR = msg({
 	comment:
 		'Inline error on the details step of the DSA report flow when the user has not completed email verification.',
 });
-const SELECT_A_VIOLATION_CATEGORY_DESCRIPTOR = msg({
-	message: 'Select a violation category.',
-	comment: 'Inline validation error on the details step of the DSA report flow when the category field is empty.',
-});
-const PROVIDE_YOUR_FULL_LEGAL_NAME_FOR_THE_DECLARATION_DESCRIPTOR = msg({
-	message: 'Provide your full legal name for the declaration.',
+const EXPLAIN_THE_PROBLEM_TO_SEND_DESCRIPTOR = msg({
+	message: 'Explain the problem to send the report.',
 	comment:
-		'Inline validation error on the details step of the DSA report flow. The reporter must give their legal name for the legal declaration; keep tone neutral and factual.',
+		'Inline validation error on the details step of the DSA report flow when the Explain the problem field is empty.',
+});
+const CONFIRM_THE_STATEMENT_TO_SEND_DESCRIPTOR = msg({
+	message: 'Confirm the statement to send the report.',
+	comment:
+		'Inline validation error on the details step of the DSA report flow when the good-faith statement checkbox is not ticked.',
+});
+const ENTER_YOUR_FULL_LEGAL_NAME_DESCRIPTOR = msg({
+	message: 'Enter your full legal name to send the report.',
+	comment:
+		'Inline validation error on the Full legal name field of the DSA report form, shown when the server requires the name for the chosen reason. The name is required for every reason except child sexual abuse.',
 });
 const SELECT_YOUR_COUNTRY_OF_RESIDENCE_DESCRIPTOR = msg({
 	message: 'Select your country of residence.',
@@ -132,53 +164,151 @@ const PLEASE_INCLUDE_THE_COMMUNITY_ID_YOU_ARE_REPORTING_DESCRIPTOR = msg({
 interface ValidationError {
 	path: string;
 	message: string;
+	code?: string;
+}
+
+interface ParsedSubmitError {
+	fieldErrors: Partial<Record<ReportField, string>>;
+	generalMessage: string | null;
+	answersRejected: boolean;
+}
+
+interface ReportPrefill {
+	reportType: ReportType;
+	values: Partial<FormValues>;
+	option: string | null;
+}
+
+const SURFACE = 'dsa';
+const REPORT_TYPES: ReadonlyArray<ReportType> = ['message', 'user', 'guild'];
+const SNOWFLAKE_REGEX = /^\d{1,20}$/;
+const PREFILL_OPTION_REGEX = /^[a-z0-9_]{1,48}$/;
+const RESEND_COOLDOWN_SECONDS = 60;
+const CODE_COOLDOWNS_STORAGE_KEY = 'dsa_report_code_cooldowns';
+const FIELD_BY_ERROR_PATH: Record<string, ReportField> = {
+	reporter_full_legal_name: 'reporterFullName',
+	reporter_country_of_residence: 'reporterCountry',
+	message_link: 'messageLink',
+	reported_user_tag: 'messageUserTag',
+	user_id: 'userId',
+	user_tag: 'userTag',
+	guild_id: 'guildId',
+	invite_code: 'inviteCode',
+	additional_info: 'additionalInfo',
+	good_faith_confirmed: 'goodFaithConfirmed',
+};
+const ANSWER_ERROR_CODES: ReadonlySet<string> = new Set([
+	APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS,
+	APIErrorCodes.REPORT_FLOW_OUTDATED,
+]);
+
+function isAnswerErrorPath(path: string): boolean {
+	return path === 'revision_hash' || path === 'steps' || path.startsWith('steps.') || path.startsWith('steps[');
+}
+
+function readReportPrefill(search: string): ReportPrefill | null {
+	const params = new URLSearchParams(search);
+	const reportType = REPORT_TYPES.find((type) => type === params.get('type'));
+	if (!reportType) return null;
+	const values: Partial<FormValues> = {};
+	const messageLink = normalizeLikelyUrl(params.get('message_link') ?? '');
+	if (reportType === 'message' && isValidHttpUrl(messageLink)) values.messageLink = messageLink;
+	const userId = params.get('user_id')?.trim() ?? '';
+	if (reportType === 'user' && SNOWFLAKE_REGEX.test(userId)) values.userId = userId;
+	const option = params.get('option') ?? '';
+	return {reportType, values, option: PREFILL_OPTION_REGEX.test(option) ? option : null};
+}
+
+function readCodeCooldowns(): Record<string, number> {
+	try {
+		const parsed: unknown = JSON.parse(getProtectedSessionStorage()?.getItem(CODE_COOLDOWNS_STORAGE_KEY) ?? '{}');
+		if (!parsed || typeof parsed !== 'object') return {};
+		const now = Date.now();
+		return Object.fromEntries(
+			Object.entries(parsed).filter(
+				(entry): entry is [string, number] => typeof entry[1] === 'number' && entry[1] > now,
+			),
+		);
+	} catch {
+		return {};
+	}
+}
+
+function writeCodeCooldowns(cooldowns: Record<string, number>): void {
+	try {
+		getProtectedSessionStorage()?.setItem(CODE_COOLDOWNS_STORAGE_KEY, JSON.stringify(cooldowns));
+	} catch {}
+}
+
+function readRateLimitSeconds(error: unknown): number | null {
+	if (!(error instanceof HttpError)) return null;
+	if (error.status !== HttpStatus.TOO_MANY_REQUESTS && failureCode(error) !== APIErrorCodes.RATE_LIMITED) return null;
+	return Math.max(1, Math.ceil((resolveRetryAfterMs(error) ?? RESEND_COOLDOWN_SECONDS * 1000) / 1000));
+}
+
+function walkIsComplete(walk: ReportFlowWalk | null): boolean {
+	return walk?.phase === 'summary';
 }
 
 export const ReportPage = observer(() => {
 	const {i18n} = useLingui();
 	useFluxerDocumentTitle(i18n._(REPORT_ILLEGAL_CONTENT_DESCRIPTOR));
-	const [reportSnapshot, setReportSnapshot] = useState(createReportSnapshot);
+	const location = useLocation();
+	const locale = i18n.locale;
+	const [reportSnapshot, setReportSnapshot] = useState(() => {
+		const snapshot = createReportSnapshot();
+		const prefill = readReportPrefill(location.search);
+		return prefill ? transitionReportSnapshot(snapshot, {type: 'PREFILL', ...prefill}) : snapshot;
+	});
 	const state = useMemo(() => selectReportState(reportSnapshot), [reportSnapshot]);
 	const dispatch = useCallback((event: Action) => {
 		setReportSnapshot((snapshot) => transitionReportSnapshot(snapshot, event));
 	}, []);
-	const parseValidationErrors = useCallback(
-		(
-			error: unknown,
-		): {fieldErrors: Partial<Record<keyof FormValues, string>>; generalMessage: string | null} | null => {
-			if (error && typeof error === 'object' && 'body' in error && (error as {body?: unknown}).body) {
-				const body = (error as {body?: Record<string, unknown>}).body;
-				const pathMap: Record<string, keyof FormValues> = {
-					category: 'category',
-					reporter_full_legal_name: 'reporterFullName',
-					reporter_country_of_residence: 'reporterCountry',
-					reporter_fluxer_tag: 'reporterFluxerTag',
-					message_link: 'messageLink',
-					reported_user_tag: 'messageUserTag',
-					user_id: 'userId',
-					user_tag: 'userTag',
-					guild_id: 'guildId',
-					invite_code: 'inviteCode',
-					additional_info: 'additionalInfo',
+	const [codeCooldowns, setCodeCooldowns] = useState(readCodeCooldowns);
+	const startCodeCooldown = useCallback((email: string, seconds: number) => {
+		setCodeCooldowns((current) => {
+			const next = {...current, [email.toLowerCase()]: Date.now() + seconds * 1000};
+			writeCodeCooldowns(next);
+			return next;
+		});
+	}, []);
+	const parseSubmitError = useCallback(
+		(error: unknown): ParsedSubmitError | null => {
+			if (!error || typeof error !== 'object' || !('body' in error)) return null;
+			const body = (error as {body?: Record<string, unknown>}).body;
+			if (!body) return null;
+			const fallback = i18n._(SOMETHING_WENT_WRONG_WHILE_SENDING_THE_REPORT_PLEASE_DESCRIPTOR);
+			if (typeof body.code === 'string' && ANSWER_ERROR_CODES.has(body.code)) {
+				return {
+					fieldErrors: {},
+					generalMessage: typeof body.message === 'string' ? body.message : fallback,
+					answersRejected: true,
 				};
-				if (body?.code === APIErrorCodes.INVALID_FORM_BODY && Array.isArray(body.errors)) {
-					const fieldErrors: Partial<Record<keyof FormValues, string>> = {};
-					const errors = body.errors as Array<ValidationError>;
-					for (const err of errors) {
-						const mapped = pathMap[err.path];
-						if (mapped) {
-							fieldErrors[mapped] = err.message;
-						}
+			}
+			if (body.code === APIErrorCodes.INVALID_FORM_BODY && Array.isArray(body.errors)) {
+				const fieldErrors: Partial<Record<ReportField, string>> = {};
+				const errors = body.errors as Array<ValidationError>;
+				const answerError = errors.find((err) => isAnswerErrorPath(err.path));
+				for (const err of errors) {
+					const mapped = FIELD_BY_ERROR_PATH[err.path];
+					if (mapped === 'reporterFullName' && err.code === ValidationErrorCodes.INVALID_FORMAT) {
+						fieldErrors[mapped] = i18n._(ENTER_YOUR_FULL_LEGAL_NAME_DESCRIPTOR);
+					} else if (mapped) {
+						fieldErrors[mapped] = err.message;
 					}
-					const hasFieldErrors = Object.keys(fieldErrors).length > 0;
-					const generalMessage = hasFieldErrors
-						? null
-						: (errors[0]?.message ?? i18n._(SOMETHING_WENT_WRONG_WHILE_SENDING_THE_REPORT_PLEASE_DESCRIPTOR));
-					return {fieldErrors, generalMessage};
 				}
-				if (typeof body?.message === 'string') {
-					return {fieldErrors: {}, generalMessage: body.message};
+				if (answerError) {
+					return {fieldErrors, generalMessage: answerError.message, answersRejected: true};
 				}
+				const hasFieldErrors = Object.keys(fieldErrors).length > 0;
+				return {
+					fieldErrors,
+					generalMessage: hasFieldErrors ? null : (errors[0]?.message ?? fallback),
+					answersRejected: false,
+				};
+			}
+			if (typeof body.message === 'string') {
+				return {fieldErrors: {}, generalMessage: body.message, answersRejected: false};
 			}
 			return null;
 		},
@@ -190,38 +320,37 @@ export const ReportPage = observer(() => {
 			name: i18n._(option.name),
 		}));
 	}, [i18n.locale]);
-	const messageCategoryOptions = useMemo<Array<ComboboxOption<string>>>(() => {
-		return MESSAGE_CATEGORY_OPTIONS.map((option: {value: string; label: MessageDescriptor}) => ({
-			value: option.value,
-			label: i18n._(option.label),
-		}));
-	}, [i18n.locale]);
-	const userCategoryOptions = useMemo<Array<ComboboxOption<string>>>(() => {
-		return USER_CATEGORY_OPTIONS.map((option: {value: string; label: MessageDescriptor}) => ({
-			value: option.value,
-			label: i18n._(option.label),
-		}));
-	}, [i18n.locale]);
-	const guildCategoryOptions = useMemo<Array<ComboboxOption<string>>>(() => {
-		return GUILD_CATEGORY_OPTIONS.map((option: {value: string; label: MessageDescriptor}) => ({
-			value: option.value,
-			label: i18n._(option.label),
-		}));
-	}, [i18n.locale]);
 	const countryOptions = useMemo<Array<ComboboxOption<string>>>(() => {
 		return COUNTRY_OPTIONS.map((option: {value: string; label: MessageDescriptor}) => ({
 			value: option.value,
 			label: i18n._(option.label),
 		}));
 	}, [i18n.locale]);
-	const categoryOptionsByType = useMemo(() => {
-		return {
-			message: messageCategoryOptions,
-			user: userCategoryOptions,
-			guild: guildCategoryOptions,
-		} satisfies Record<ReportType, Array<ComboboxOption<string>>>;
-	}, [messageCategoryOptions, userCategoryOptions, guildCategoryOptions]);
-	const categoryOptions = state.selectedType ? categoryOptionsByType[state.selectedType] : [];
+	const loadFlow = useCallback(
+		(reportType: ReportType, reload: boolean) => {
+			dispatch({type: 'FLOW_REQUESTED'});
+			const request = reload
+				? ReportFlows.reload(reportType, SURFACE, locale)
+				: ReportFlows.load(reportType, SURFACE, locale);
+			void request.then((flow) => {
+				if (flow) {
+					dispatch({type: 'FLOW_LOADED', flow});
+				} else if (ReportFlows.getState(reportType, SURFACE, locale)?.status === 'error') {
+					dispatch({type: 'FLOW_UNAVAILABLE', reportType});
+				}
+			});
+		},
+		[locale, dispatch],
+	);
+	useEffect(() => {
+		if (state.selectedType) loadFlow(state.selectedType, false);
+	}, [state.selectedType, loadFlow]);
+	useEffect(() => {
+		if (state.flowStep !== 'email' && state.flowStep !== 'verification') return;
+		const cooldownUntil = codeCooldowns[state.email.trim().toLowerCase()];
+		const remainingSeconds = cooldownUntil === undefined ? 0 : Math.ceil((cooldownUntil - Date.now()) / 1000);
+		dispatch({type: 'START_RESEND_COOLDOWN', seconds: Math.max(0, remainingSeconds)});
+	}, [state.flowStep, state.email, codeCooldowns, dispatch]);
 	useEffect(() => {
 		if (state.resendCooldownSeconds <= 0) return;
 		const timer = window.setInterval(() => dispatch({type: 'TICK_RESEND_COOLDOWN'}), 1000);
@@ -237,20 +366,28 @@ export const ReportPage = observer(() => {
 			dispatch({type: 'GO_TO_EMAIL'});
 			return;
 		}
-		if (state.flowStep === 'details' && !state.ticket) {
+		if ((state.flowStep === 'reason' || state.flowStep === 'details') && !state.ticket) {
 			dispatch({type: 'GO_TO_EMAIL'});
+			return;
+		}
+		if (state.flowStep === 'details' && !walkIsComplete(state.walk)) {
+			dispatch({type: 'GO_TO_REASON'});
 			return;
 		}
 		if (state.flowStep === 'complete' && !state.successReportId) {
 			dispatch({type: 'GO_TO_SELECTION'});
 		}
-	}, [state.flowStep, state.selectedType, state.email, state.ticket, state.successReportId]);
+	}, [state.flowStep, state.selectedType, state.email, state.ticket, state.successReportId, state.walk]);
+	const walkKey = state.walk ? getReportFlowStepKey(state.walk) : null;
 	useEffect(() => {
 		window.scrollTo({top: 0, behavior: Accessibility.useSmoothScrolling ? 'smooth' : 'auto'});
-	}, [state.flowStep]);
+	}, [state.flowStep, walkKey]);
 	const onSelectType = useCallback((type: ReportType) => {
 		dispatch({type: 'SELECT_TYPE', reportType: type});
 	}, []);
+	const continueVerified = useCallback(() => {
+		dispatch({type: walkIsComplete(state.walk) ? 'GO_TO_DETAILS' : 'GO_TO_REASON'});
+	}, [state.walk, dispatch]);
 	const sendVerificationCode = useCallback(async () => {
 		if (state.isSendingCode || state.isVerifying || state.isSubmitting) return;
 		const normalizedEmail = state.email.trim();
@@ -264,19 +401,24 @@ export const ReportPage = observer(() => {
 		}
 		dispatch({type: 'SET_ERROR', message: null});
 		dispatch({type: 'SENDING_CODE', value: true});
-		if (state.flowStep === 'verification') {
-			dispatch({type: 'START_RESEND_COOLDOWN', seconds: 30});
-		}
 		try {
 			await http.post(Endpoints.DSA_REPORT_EMAIL_SEND, {
 				body: {email: normalizedEmail},
 			});
 			dispatch({type: 'SET_EMAIL', email: normalizedEmail});
 			dispatch({type: 'GO_TO_VERIFICATION'});
+			startCodeCooldown(normalizedEmail, RESEND_COOLDOWN_SECONDS);
 			if (state.flowStep === 'verification') {
 				ToastCommands.createToast({type: 'success', children: i18n._(CODE_RESENT_DESCRIPTOR)});
 			}
-		} catch (_error) {
+		} catch (error) {
+			const waitSeconds = readRateLimitSeconds(error);
+			if (waitSeconds !== null) {
+				startCodeCooldown(normalizedEmail, waitSeconds);
+				const duration = formatCooldownDuration(i18n, waitSeconds);
+				dispatch({type: 'SET_ERROR', message: i18n._(TOO_MANY_CODES_SENT_DESCRIPTOR, {duration}), rateLimit: true});
+				return;
+			}
 			dispatch({type: 'SET_ERROR', message: i18n._(FAILED_TO_SEND_VERIFICATION_CODE_PLEASE_TRY_AGAIN_DESCRIPTOR)});
 			if (state.flowStep === 'verification') {
 				showModerationErrorModal(
@@ -288,9 +430,21 @@ export const ReportPage = observer(() => {
 		} finally {
 			dispatch({type: 'SENDING_CODE', value: false});
 		}
-	}, [state.email, state.isSendingCode, state.isVerifying, state.isSubmitting, state.flowStep, i18n]);
+	}, [
+		state.email,
+		state.isSendingCode,
+		state.isVerifying,
+		state.isSubmitting,
+		state.flowStep,
+		i18n,
+		startCodeCooldown,
+	]);
 	const verifyCode = useCallback(async () => {
 		if (state.isSendingCode || state.isVerifying || state.isSubmitting) return;
+		if (state.ticket) {
+			continueVerified();
+			return;
+		}
 		const code = state.verificationCode.trim().toUpperCase();
 		if (!code) {
 			dispatch({type: 'SET_ERROR', message: i18n._(ENTER_THE_CODE_BEFORE_CONTINUING_DESCRIPTOR)});
@@ -312,13 +466,22 @@ export const ReportPage = observer(() => {
 				body: {email: normalizedEmail, code},
 			});
 			dispatch({type: 'SET_TICKET', ticket: response.body.ticket});
-			dispatch({type: 'GO_TO_DETAILS'});
+			continueVerified();
 		} catch (_error) {
 			dispatch({type: 'SET_ERROR', message: i18n._(THE_VERIFICATION_CODE_IS_INVALID_OR_EXPIRED_DESCRIPTOR)});
 		} finally {
 			dispatch({type: 'VERIFYING', value: false});
 		}
-	}, [state.email, state.verificationCode, state.isSendingCode, state.isVerifying, state.isSubmitting, i18n]);
+	}, [
+		state.email,
+		state.ticket,
+		state.verificationCode,
+		state.isSendingCode,
+		state.isVerifying,
+		state.isSubmitting,
+		i18n,
+		continueVerified,
+	]);
 	const handleSubmit = useCallback(async () => {
 		if (!state.selectedType) return;
 		if (state.isSubmitting || state.isSendingCode || state.isVerifying) return;
@@ -326,17 +489,21 @@ export const ReportPage = observer(() => {
 			dispatch({type: 'SET_ERROR', message: i18n._(YOU_MUST_VERIFY_YOUR_EMAIL_BEFORE_SENDING_A_DESCRIPTOR)});
 			return;
 		}
+		const {flow, walk} = state;
+		if (!flow || !walk || !walkIsComplete(walk)) {
+			dispatch({type: 'GO_TO_REASON'});
+			return;
+		}
 		dispatch({type: 'CLEAR_FIELD_ERRORS'});
 		const reporterFullName = state.formValues.reporterFullName.trim();
 		const reporterCountry = state.formValues.reporterCountry;
-		const reporterFluxerTag = state.formValues.reporterFluxerTag.trim();
 		const additionalInfo = state.formValues.additionalInfo.trim();
-		if (!state.formValues.category) {
-			dispatch({type: 'SET_ERROR', message: i18n._(SELECT_A_VIOLATION_CATEGORY_DESCRIPTOR)});
+		if (!additionalInfo) {
+			dispatch({type: 'SET_ERROR', message: i18n._(EXPLAIN_THE_PROBLEM_TO_SEND_DESCRIPTOR)});
 			return;
 		}
-		if (!reporterFullName) {
-			dispatch({type: 'SET_ERROR', message: i18n._(PROVIDE_YOUR_FULL_LEGAL_NAME_FOR_THE_DECLARATION_DESCRIPTOR)});
+		if (!state.goodFaithConfirmed) {
+			dispatch({type: 'SET_ERROR', message: i18n._(CONFIRM_THE_STATEMENT_TO_SEND_DESCRIPTOR)});
 			return;
 		}
 		if (!reporterCountry) {
@@ -346,12 +513,14 @@ export const ReportPage = observer(() => {
 		const payload: Record<string, unknown> = {
 			ticket: state.ticket,
 			report_type: state.selectedType,
-			category: state.formValues.category,
-			reporter_full_legal_name: reporterFullName,
+			revision_hash: flow.revision_hash,
+			steps: walk.steps,
+			locale: flow.locale,
+			good_faith_confirmed: true,
+			additional_info: additionalInfo,
 			reporter_country_of_residence: reporterCountry,
 		};
-		if (reporterFluxerTag) payload.reporter_fluxer_tag = reporterFluxerTag;
-		if (additionalInfo) payload.additional_info = additionalInfo;
+		if (reporterFullName) payload.reporter_full_legal_name = reporterFullName;
 		switch (state.selectedType) {
 			case 'message': {
 				const raw = state.formValues.messageLink;
@@ -403,27 +572,36 @@ export const ReportPage = observer(() => {
 			});
 			dispatch({type: 'SUBMIT_SUCCESS', reportId: response.body.report_id});
 		} catch (_error) {
-			const parsed = parseValidationErrors(_error);
+			const parsed = parseSubmitError(_error);
 			if (parsed) {
 				dispatch({type: 'SET_FIELD_ERRORS', errors: parsed.fieldErrors});
-				dispatch({type: 'SET_ERROR', message: parsed.generalMessage});
+				if (parsed.answersRejected && parsed.generalMessage) {
+					dispatch({type: 'ANSWERS_REJECTED', message: parsed.generalMessage});
+				} else {
+					dispatch({type: 'SET_ERROR', message: parsed.generalMessage});
+				}
 			} else {
 				dispatch({type: 'SET_ERROR', message: i18n._(SOMETHING_WENT_WRONG_WHILE_SENDING_THE_REPORT_PLEASE_DESCRIPTOR)});
 			}
 			dispatch({type: 'SUBMITTING', value: false});
 		}
-	}, [state, i18n]);
-	const reporterFullName = state.formValues.reporterFullName.trim();
+	}, [state, i18n, parseSubmitError]);
+	const chooseReasonAgain = useCallback(() => {
+		if (!state.selectedType) return;
+		dispatch({type: 'GO_TO_REASON'});
+		loadFlow(state.selectedType, true);
+	}, [state.selectedType, loadFlow, dispatch]);
 	const reporterCountry = state.formValues.reporterCountry;
-	const category = state.formValues.category;
+	const additionalInfo = state.formValues.additionalInfo.trim();
 	const messageLinkNormalized = normalizeLikelyUrl(state.formValues.messageLink);
 	const messageLinkOk = state.selectedType !== 'message' ? true : isValidHttpUrl(messageLinkNormalized);
 	const userTargetOk =
 		state.selectedType !== 'user' ? true : Boolean(state.formValues.userId.trim() || state.formValues.userTag.trim());
 	const guildTargetOk = state.selectedType !== 'guild' ? true : Boolean(state.formValues.guildId.trim());
 	const canSubmit =
-		Boolean(category) &&
-		Boolean(reporterFullName) &&
+		walkIsComplete(state.walk) &&
+		Boolean(additionalInfo) &&
+		state.goodFaithConfirmed &&
 		Boolean(reporterCountry) &&
 		messageLinkOk &&
 		userTargetOk &&
@@ -438,6 +616,9 @@ export const ReportPage = observer(() => {
 				break;
 			case 'verification':
 				dispatch({type: 'GO_TO_VERIFICATION'});
+				break;
+			case 'reason':
+				dispatch({type: 'GO_TO_REASON'});
 				break;
 			case 'details':
 				dispatch({type: 'GO_TO_DETAILS'});
@@ -463,9 +644,11 @@ export const ReportPage = observer(() => {
 						email={state.email}
 						errorMessage={state.errorMessage}
 						isSending={state.isSendingCode}
+						verified={Boolean(state.ticket)}
+						resendCooldownSeconds={state.resendCooldownSeconds}
 						onEmailChange={(value) => dispatch({type: 'SET_EMAIL', email: value})}
-						onSubmit={() => void sendVerificationCode()}
-						onStartOver={() => dispatch({type: 'GO_TO_SELECTION'})}
+						onSubmit={() => (state.ticket ? continueVerified() : void sendVerificationCode())}
+						onStartOver={() => dispatch({type: 'RESET_ALL'})}
 						data-flx="moderation.report-page.render-step.report-step-email"
 					/>
 				);
@@ -473,6 +656,7 @@ export const ReportPage = observer(() => {
 				return (
 					<ReportStepVerification
 						email={state.email}
+						verified={Boolean(state.ticket)}
 						verificationCode={state.verificationCode}
 						errorMessage={state.errorMessage}
 						isVerifying={state.isVerifying}
@@ -484,31 +668,50 @@ export const ReportPage = observer(() => {
 						onCodeChange={(value) =>
 							dispatch({type: 'SET_VERIFICATION_CODE', code: formatVerificationCodeInput(value)})
 						}
-						onStartOver={() => dispatch({type: 'GO_TO_SELECTION'})}
+						onStartOver={() => dispatch({type: 'RESET_ALL'})}
 						data-flx="moderation.report-page.render-step.report-step-verification"
 					/>
 				);
-			case 'details':
+			case 'reason':
 				return (
+					<ReportStepReason
+						flow={state.flow}
+						flowStatus={state.flowStatus}
+						walk={state.walk}
+						onWalkChange={(walk) => dispatch({type: 'WALK_CHANGED', walk})}
+						onBack={() => dispatch({type: 'GO_TO_VERIFICATION'})}
+						onRetryLoad={() => state.selectedType && loadFlow(state.selectedType, true)}
+						onStartOver={() => dispatch({type: 'RESET_ALL'})}
+						data-flx="moderation.report-page.render-step.report-step-reason"
+					/>
+				);
+			case 'details':
+				return state.flow && state.walk ? (
 					<ReportStepDetails
 						selectedType={state.selectedType as ReportType}
 						formValues={state.formValues}
-						categoryOptions={categoryOptions}
+						flow={state.flow}
+						steps={state.walk.steps}
+						urgent={isReportFlowWalkUrgent(state.flow, state.walk)}
+						goodFaithConfirmed={state.goodFaithConfirmed}
 						countryOptions={countryOptions}
 						fieldErrors={state.fieldErrors}
 						errorMessage={state.errorMessage}
+						answersRejected={state.answersRejected}
 						canSubmit={canSubmit}
 						isSubmitting={state.isSubmitting}
 						onFieldChange={(field, value) => dispatch({type: 'SET_FORM_FIELD', field, value})}
+						onGoodFaithChange={(value) => dispatch({type: 'SET_GOOD_FAITH_CONFIRMED', value})}
+						onChooseReasonAgain={chooseReasonAgain}
 						onSubmit={() => void handleSubmit()}
 						onStartOver={() => dispatch({type: 'RESET_ALL'})}
-						onBack={() => dispatch({type: 'GO_TO_VERIFICATION'})}
+						onBack={() => dispatch({type: 'GO_TO_REASON'})}
 						messageLinkOk={messageLinkOk}
 						userTargetOk={userTargetOk}
 						guildTargetOk={guildTargetOk}
 						data-flx="moderation.report-page.render-step.report-step-details"
 					/>
-				);
+				) : null;
 			case 'complete':
 				return state.successReportId ? (
 					<ReportStepComplete
@@ -525,8 +728,9 @@ export const ReportPage = observer(() => {
 			<ReportBreadcrumbs
 				current={state.flowStep}
 				hasSelection={Boolean(state.selectedType)}
-				hasEmail={Boolean(state.email.trim())}
-				hasTicket={Boolean(state.ticket)}
+				hasEmail={Boolean(state.selectedType && state.email.trim())}
+				hasTicket={Boolean(state.selectedType && state.ticket)}
+				hasAnswers={walkIsComplete(state.walk)}
 				onSelect={handleBreadcrumbSelect}
 				data-flx="moderation.report-page.report-breadcrumbs.breadcrumb-select"
 			/>
@@ -544,7 +748,7 @@ export const ReportPage = observer(() => {
 			</div>
 		);
 	return (
-		<div className={styles.page} data-flx="moderation.report-page.page">
+		<div className={styles.page} dir={getLocaleDirection(locale)} data-flx="moderation.report-page.page">
 			{breadcrumbShell}
 			<div className={styles.mainColumn} data-flx="moderation.report-page.main-column">
 				{renderStep()}

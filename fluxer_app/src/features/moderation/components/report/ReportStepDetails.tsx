@@ -1,25 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	EXAMPLE_INVITE_CODE,
-	EXAMPLE_MESSAGE_LINK,
-	EXAMPLE_REPORT_USER_TAG,
-	EXAMPLE_USERNAME_TAG,
-} from '@app/features/app/config/I18nDisplayConstants';
+import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {EXAMPLE_INVITE_CODE, EXAMPLE_REPORT_USER_TAG} from '@app/features/app/config/I18nDisplayConstants';
+import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
 import styles from '@app/features/moderation/components/pages/ReportPage.module.css';
-import type {FormValues, ReportType} from '@app/features/moderation/components/report/ReportTypes';
+import type {FormValues, ReportField, ReportType} from '@app/features/moderation/components/report/ReportTypes';
+import {ReportFlowBanner} from '@app/features/moderation/components/report_flow/ReportFlowBanner';
+import {REPORT_CATEGORY_DESCRIPTOR} from '@app/features/moderation/components/report_flow/ReportFlowCopy';
+import {ReportFlowAnswerList} from '@app/features/moderation/components/report_flow/ReportFlowSummary';
 import {Button} from '@app/features/ui/button/Button';
+import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Input, Textarea} from '@app/features/ui/components/form/FormInput';
+import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import type {ReportFlowResponse, ReportFlowStep} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import type React from 'react';
+import {useEffect, useRef} from 'react';
 
-const VIOLATION_CATEGORY_DESCRIPTOR = msg({
-	message: 'Violation category',
-	comment:
-		'Field label on the details step of the DSA illegal-content report form. The category dropdown narrows the type of violation. Legal/sensitive flow; keep tone formal.',
-});
 const MESSAGE_LINK_DESCRIPTOR = msg({
 	message: 'Message link',
 	comment:
@@ -50,10 +49,19 @@ const INVITE_CODE_OPTIONAL_DESCRIPTOR = msg({
 	comment:
 		'Field label on the details step of the DSA report form (community report). Optional invite code to the reported community.',
 });
-const FULL_LEGAL_NAME_DESCRIPTOR = msg({
-	message: 'Full legal name',
+const EXPLAIN_THE_PROBLEM_DESCRIPTOR = msg({
+	message: 'Explain the problem',
 	comment:
-		'Field label on the details step of the DSA report form. Required legal name of the reporter for the formal declaration. Sensitive PII; keep tone neutral.',
+		'Field label on the details step of the DSA report form. Required free text where the reporter explains what is wrong with the reported content.',
+});
+const EXPLAIN_THE_PROBLEM_HELPER_DESCRIPTOR = msg({
+	message: 'If you believe it is illegal, say which law and why.',
+	comment: 'Helper text under the Explain the problem field on the details step of the DSA report form.',
+});
+const FULL_LEGAL_NAME_OPTIONAL_FOR_CSAM_DESCRIPTOR = msg({
+	message: 'Full legal name (optional for child sexual abuse reports)',
+	comment:
+		'Field label on the details step of the DSA report form. Legal name of the reporter for the formal declaration. The law lets people who report child sexual abuse material leave it empty. Keep the tone neutral.',
 });
 const FIRST_AND_LAST_NAME_DESCRIPTOR = msg({
 	message: 'First and last name',
@@ -64,32 +72,33 @@ const COUNTRY_OF_RESIDENCE_DESCRIPTOR = msg({
 	comment:
 		'Field label on the details step of the DSA report form. The country where the reporter resides, used for the legal declaration.',
 });
-const YOUR_USERNAME_OPTIONAL_DESCRIPTOR = msg({
-	message: 'Your username (optional)',
+const GOOD_FAITH_STATEMENT_DESCRIPTOR = msg({
+	message: 'I confirm in good faith that the information and allegations in this notice are accurate and complete.',
 	comment:
-		'Field label on the details step of the DSA report form. Optional Fluxer username of the reporter so staff can follow up.',
+		'Required checkbox on the details step of the DSA report form. A formal statement the law asks every reporter to make. Keep the tone formal.',
 });
-const ADDITIONAL_COMMENTS_OPTIONAL_DESCRIPTOR = msg({
-	message: 'Additional comments (optional)',
+const CHOOSE_THE_REASON_AGAIN_DESCRIPTOR = msg({
+	message: 'Choose the reason again',
 	comment:
-		'Field label on the details step of the DSA report form. Optional free-text context the reporter wants staff to see.',
-});
-const DESCRIBE_WHAT_MAKES_THE_CONTENT_ILLEGAL_DESCRIPTOR = msg({
-	message: 'Describe what makes the content illegal',
-	comment:
-		'Placeholder in the Additional comments textarea on the DSA report form. Prompts the reporter to explain why the content is illegal.',
+		'Button on the details step of the DSA report form, shown when the server no longer accepts the chosen reason. Reloads the questions and returns to the reason step.',
 });
 
 interface Props {
 	selectedType: ReportType;
 	formValues: FormValues;
-	categoryOptions: Array<ComboboxOption<string>>;
+	flow: ReportFlowResponse;
+	steps: ReadonlyArray<ReportFlowStep>;
+	urgent: boolean;
+	goodFaithConfirmed: boolean;
 	countryOptions: Array<ComboboxOption<string>>;
-	fieldErrors: Partial<Record<keyof FormValues, string>>;
+	fieldErrors: Partial<Record<ReportField, string>>;
 	errorMessage: string | null;
+	answersRejected: boolean;
 	canSubmit: boolean;
 	isSubmitting: boolean;
 	onFieldChange: (field: keyof FormValues, value: string) => void;
+	onGoodFaithChange: (value: boolean) => void;
+	onChooseReasonAgain: () => void;
 	onSubmit: () => void;
 	onStartOver: () => void;
 	onBack: () => void;
@@ -101,13 +110,19 @@ interface Props {
 export const ReportStepDetails: React.FC<Props> = ({
 	selectedType,
 	formValues,
-	categoryOptions,
+	flow,
+	steps,
+	urgent,
+	goodFaithConfirmed,
 	countryOptions,
 	fieldErrors,
 	errorMessage,
+	answersRejected,
 	canSubmit,
 	isSubmitting,
 	onFieldChange,
+	onGoodFaithChange,
+	onChooseReasonAgain,
 	onSubmit,
 	onStartOver,
 	onBack,
@@ -117,12 +132,20 @@ export const ReportStepDetails: React.FC<Props> = ({
 }) => {
 	const {i18n} = useLingui();
 	const hasFieldErrors = Object.values(fieldErrors).some((value) => Boolean(value));
-	const showGeneralError = Boolean(errorMessage && !hasFieldErrors);
+	const showGeneralError = Boolean(errorMessage && (answersRejected || !hasFieldErrors));
+	const errorBoxRef = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		if (!showGeneralError) return;
+		errorBoxRef.current?.scrollIntoView({
+			block: 'nearest',
+			behavior: Accessibility.useSmoothScrolling ? 'smooth' : 'auto',
+		});
+	}, [showGeneralError, errorMessage]);
 	return (
 		<div className={styles.card} data-flx="moderation.report.report-step-details.card">
 			<header className={styles.cardHeader} data-flx="moderation.report.report-step-details.card-header">
 				<p className={styles.eyebrow} data-flx="moderation.report.report-step-details.eyebrow">
-					<Trans>Step 4</Trans>
+					<Trans>Step 5</Trans>
 				</p>
 				<h1 className={styles.title} data-flx="moderation.report.report-step-details.title">
 					<Trans>Report details</Trans>
@@ -134,14 +157,41 @@ export const ReportStepDetails: React.FC<Props> = ({
 			<div className={styles.cardBody} data-flx="moderation.report.report-step-details.card-body">
 				{showGeneralError && (
 					<div
+						ref={errorBoxRef}
 						className={styles.errorBox}
 						role="alert"
 						aria-live="polite"
 						data-flx="moderation.report.report-step-details.error-box"
 					>
 						{errorMessage}
+						{answersRejected && (
+							<div className={styles.actionRow} data-flx="moderation.report.report-step-details.action-row--2">
+								<Button
+									variant="secondary"
+									small
+									fitContent
+									type="button"
+									onClick={onChooseReasonAgain}
+									disabled={isSubmitting}
+									data-flx="moderation.report.report-step-details.button.choose-reason-again"
+								>
+									{i18n._(CHOOSE_THE_REASON_AGAIN_DESCRIPTOR)}
+								</Button>
+							</div>
+						)}
 					</div>
 				)}
+				{urgent && <ReportFlowBanner data-flx="moderation.report.report-step-details.report-flow-banner" />}
+				<section className={styles.cardHeader} data-flx="moderation.report.report-step-details.answers">
+					<h2 className={styles.eyebrow} data-flx="moderation.report.report-step-details.answers-heading">
+						{i18n._(REPORT_CATEGORY_DESCRIPTOR)}
+					</h2>
+					<ReportFlowAnswerList
+						flow={flow}
+						steps={steps}
+						data-flx="moderation.report.report-step-details.report-flow-answer-list"
+					/>
+				</section>
 				<form
 					className={styles.form}
 					onSubmit={(e) => {
@@ -150,23 +200,15 @@ export const ReportStepDetails: React.FC<Props> = ({
 					}}
 					data-flx="moderation.report.report-step-details.form.prevent-default"
 				>
-					<Combobox<string>
-						label={i18n._(VIOLATION_CATEGORY_DESCRIPTOR)}
-						value={formValues.category}
-						options={categoryOptions}
-						error={fieldErrors.category}
-						onChange={(value) => onFieldChange('category', value)}
-						isSearchable={false}
-						data-flx="moderation.report.report-step-details.select.field-change"
-					/>
 					{selectedType === 'message' && (
 						<>
 							<Input
 								label={i18n._(MESSAGE_LINK_DESCRIPTOR)}
 								type="url"
+								dir="ltr"
 								value={formValues.messageLink}
 								onChange={(e) => onFieldChange('messageLink', e.target.value)}
-								placeholder={EXAMPLE_MESSAGE_LINK}
+								placeholder={`${window.location.origin}/channels/...`}
 								autoComplete="off"
 								error={fieldErrors.messageLink}
 								footer={
@@ -181,6 +223,7 @@ export const ReportStepDetails: React.FC<Props> = ({
 							<Input
 								label={i18n._(REPORTED_USER_TAG_OPTIONAL_DESCRIPTOR)}
 								type="text"
+								dir="ltr"
 								value={formValues.messageUserTag}
 								onChange={(e) => onFieldChange('messageUserTag', e.target.value)}
 								placeholder={EXAMPLE_REPORT_USER_TAG}
@@ -195,6 +238,7 @@ export const ReportStepDetails: React.FC<Props> = ({
 							<Input
 								label={i18n._(USER_ID_OPTIONAL_DESCRIPTOR)}
 								type="text"
+								dir="ltr"
 								value={formValues.userId}
 								onChange={(e) => onFieldChange('userId', e.target.value)}
 								placeholder="123456789012345678"
@@ -205,6 +249,7 @@ export const ReportStepDetails: React.FC<Props> = ({
 							<Input
 								label={i18n._(USER_TAG_OPTIONAL_DESCRIPTOR)}
 								type="text"
+								dir="ltr"
 								value={formValues.userTag}
 								onChange={(e) => onFieldChange('userTag', e.target.value)}
 								placeholder={EXAMPLE_REPORT_USER_TAG}
@@ -226,6 +271,7 @@ export const ReportStepDetails: React.FC<Props> = ({
 							<Input
 								label={i18n._(COMMUNITY_ID_DESCRIPTOR)}
 								type="text"
+								dir="ltr"
 								value={formValues.guildId}
 								onChange={(e) => onFieldChange('guildId', e.target.value)}
 								placeholder="123456789012345678"
@@ -243,6 +289,7 @@ export const ReportStepDetails: React.FC<Props> = ({
 							<Input
 								label={i18n._(INVITE_CODE_OPTIONAL_DESCRIPTOR)}
 								type="text"
+								dir="ltr"
 								value={formValues.inviteCode}
 								onChange={(e) => onFieldChange('inviteCode', e.target.value)}
 								placeholder={EXAMPLE_INVITE_CODE}
@@ -252,8 +299,24 @@ export const ReportStepDetails: React.FC<Props> = ({
 							/>
 						</>
 					)}
+					<Textarea
+						label={i18n._(EXPLAIN_THE_PROBLEM_DESCRIPTOR)}
+						value={formValues.additionalInfo}
+						onChange={(e) => onFieldChange('additionalInfo', e.target.value)}
+						maxLength={1000}
+						minRows={3}
+						maxRows={6}
+						required
+						error={fieldErrors.additionalInfo}
+						footer={
+							<span className={styles.helperText} data-flx="moderation.report.report-step-details.helper-text--4">
+								{i18n._(EXPLAIN_THE_PROBLEM_HELPER_DESCRIPTOR)}
+							</span>
+						}
+						data-flx="moderation.report.report-step-details.textarea.field-change"
+					/>
 					<Input
-						label={i18n._(FULL_LEGAL_NAME_DESCRIPTOR)}
+						label={i18n._(FULL_LEGAL_NAME_OPTIONAL_FOR_CSAM_DESCRIPTOR)}
 						type="text"
 						value={formValues.reporterFullName}
 						onChange={(e) => onFieldChange('reporterFullName', e.target.value)}
@@ -268,28 +331,27 @@ export const ReportStepDetails: React.FC<Props> = ({
 						options={countryOptions}
 						error={fieldErrors.reporterCountry}
 						onChange={(value) => onFieldChange('reporterCountry', value)}
+						dir={getLocaleDirection(i18n.locale)}
 						data-flx="moderation.report.report-step-details.select.field-change--2"
 					/>
-					<Input
-						label={i18n._(YOUR_USERNAME_OPTIONAL_DESCRIPTOR)}
-						type="text"
-						value={formValues.reporterFluxerTag}
-						onChange={(e) => onFieldChange('reporterFluxerTag', e.target.value)}
-						placeholder={EXAMPLE_USERNAME_TAG}
-						error={fieldErrors.reporterFluxerTag}
-						data-flx="moderation.report.report-step-details.input.field-change.text--7"
-					/>
-					<Textarea
-						label={i18n._(ADDITIONAL_COMMENTS_OPTIONAL_DESCRIPTOR)}
-						value={formValues.additionalInfo}
-						onChange={(e) => onFieldChange('additionalInfo', e.target.value)}
-						placeholder={i18n._(DESCRIBE_WHAT_MAKES_THE_CONTENT_ILLEGAL_DESCRIPTOR)}
-						maxLength={1000}
-						minRows={3}
-						maxRows={6}
-						error={fieldErrors.additionalInfo}
-						data-flx="moderation.report.report-step-details.textarea.field-change"
-					/>
+					<Checkbox
+						checked={goodFaithConfirmed}
+						onChange={onGoodFaithChange}
+						data-flx="moderation.report.report-step-details.checkbox.good-faith-change"
+					>
+						<span className={styles.description} data-flx="moderation.report.report-step-details.good-faith-label">
+							{i18n._(GOOD_FAITH_STATEMENT_DESCRIPTOR)}
+						</span>
+					</Checkbox>
+					{fieldErrors.goodFaithConfirmed && (
+						<div
+							className={styles.errorBox}
+							role="alert"
+							data-flx="moderation.report.report-step-details.good-faith-error"
+						>
+							{fieldErrors.goodFaithConfirmed}
+						</div>
+					)}
 					<div className={styles.actionRow} data-flx="moderation.report.report-step-details.action-row">
 						<Button
 							fitContent
@@ -316,15 +378,17 @@ export const ReportStepDetails: React.FC<Props> = ({
 			</div>
 			<footer className={styles.footerLinks} data-flx="moderation.report.report-step-details.footer-links">
 				<p className={styles.linkRow} data-flx="moderation.report.report-step-details.link-row">
-					<button
-						type="button"
-						className={styles.linkButton}
-						onClick={onStartOver}
-						disabled={isSubmitting}
-						data-flx="moderation.report.report-step-details.link-button.start-over"
-					>
-						<Trans>Start over</Trans>
-					</button>
+					<FocusRing offset={-2} data-flx="moderation.report.report-step-details.focus-ring.start-over">
+						<button
+							type="button"
+							className={styles.linkButton}
+							onClick={onStartOver}
+							disabled={isSubmitting}
+							data-flx="moderation.report.report-step-details.link-button.start-over"
+						>
+							<Trans>Start over</Trans>
+						</button>
+					</FocusRing>
 				</p>
 			</footer>
 		</div>

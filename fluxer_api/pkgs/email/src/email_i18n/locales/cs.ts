@@ -31,6 +31,10 @@ const EMAIL_I18N_CS_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Spravujte své dary pro {product_name}",
 		"body": "Dobrý den,\n\nKliknutím na odkaz níže otevřete portál pro dárce:\n\n{manageUrl}\n\nNa portálu můžete spravovat předplatná, stahovat faktury a prohlížet si historii svých darů.\n\nPlatnost tohoto odkazu vyprší dne {expiresAt, date, full} v {expiresAt, time, short}.\n\nPokud jste si tento odkaz nevyžádali, můžete tento e-mail bez obav ignorovat.\n\n– Tým {product_name}"
 	},
+	"dsa_report_resolved": {
+		"subject": "Rozhodli jsme o vašem nahlášení na {product_name}",
+		"body": "Dobrý den,\n\nNáš bezpečnostní tým přezkoumal vaše nahlášení podle nařízení o digitálních službách (ID: {reportId}) a rozhodl o něm.{hasComment, select, yes {\n\nOdpověď bezpečnostního týmu:\n{publicComment}} other {}}\n\nPodrobnosti o opatřeních přijatých vůči účtu jiné osoby nesdělujeme, protože jde o její osobní údaje.\n\nPokud s tímto rozhodnutím nesouhlasíte, můžete se do 60 dnů bezplatně odvolat. Pošlete e-mail na {appeals_email} z této e-mailové adresy, uveďte ID svého nahlášení a vysvětlete, proč považujete rozhodnutí za nesprávné. Pokud jste v EU, můžete spor také předložit certifikovanému subjektu pro mimosoudní řešení sporů. Nic z toho nemá vliv na vaše právo obrátit se na soud.\n\n– Bezpečnostní tým {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Ověřte svůj e-mail pro nahlášení podle DSA",
 		"body": "Dobrý den,\n\nPomocí ověřovacího kódu níže odešlete své nahlášení podle nařízení o digitálních službách na {product_name}:\n\n{code}\n\nPlatnost tohoto kódu vyprší dne {expiresAt, date, full} v {expiresAt, time, short}.\n\nPokud jste si tento kód nevyžádali, můžete tento e-mail ignorovat.\n\n– Bezpečnostní tým {product_name}"
@@ -82,6 +86,10 @@ const EMAIL_I18N_CS_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "Vaše registrace do {product_name} byla schválena",
 		"body": "Dobrý den, {username},\n\nDobrá zpráva: vaše registrace do {product_name} byla schválena.\n\nNyní se můžete přihlásit do aplikace {product_name} zde:\n{channelsUrl}\n\nVítejte v komunitě {product_name}.\n\n– Tým {product_name}"
+	},
+	"report_received": {
+		"subject": "Obdrželi jsme vaše nahlášení na {product_name}",
+		"body": "Dobrý den,\n\nObdrželi jsme vaše nahlášení podle nařízení o digitálních službách, které se týká {targetKind, select, message {zprávy} user {účtu} guild {komunity} other {obsahu}} na {product_name}.\n\nID nahlášení: {reportId}\n\nNáš bezpečnostní tým vaše nahlášení přezkoumá a jakmile rozhodneme, napíšeme vám na tuto adresu. Tento e-mail si uschovejte pro své záznamy.\n\n– Bezpečnostní tým {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Vaše nahlášení na {product_name} bylo přezkoumáno",

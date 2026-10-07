@@ -255,10 +255,14 @@ import {
 	DSA_REPORT_TICKET_COLUMNS,
 	type DSAReportEmailVerificationRow,
 	type DSAReportTicketRow,
+	GUILD_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	type GuildReportSubmissionByReporterRow,
 	IAR_SUBMISSION_COLUMNS,
 	type IARSubmissionRow,
 	MESSAGE_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
 	type MessageReportSubmissionByReporterRow,
+	USER_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	type UserReportSubmissionByReporterRow,
 } from '@app/api/database/types/ReportTypes';
 import {
 	STORE_ACCOUNT_TOKEN_BY_USER_COLUMNS,
@@ -925,16 +929,41 @@ export const MessageReportSubmissionsByReporter = defineTable<
 	columns: MESSAGE_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
 	primaryKey: ['reporter_id', 'channel_id', 'message_id'],
 	partitionKey: ['reporter_id'],
+	defaultTtlSeconds: seconds('365 days'),
+});
+export const UserReportSubmissionsByReporter = defineTable<
+	UserReportSubmissionByReporterRow,
+	'reporter_id' | 'reported_user_id',
+	'reporter_id'
+>({
+	name: 'user_report_submissions_by_reporter',
+	columns: USER_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	primaryKey: ['reporter_id', 'reported_user_id'],
+	partitionKey: ['reporter_id'],
+	defaultTtlSeconds: seconds('24 hours'),
+});
+export const GuildReportSubmissionsByReporter = defineTable<
+	GuildReportSubmissionByReporterRow,
+	'reporter_id' | 'reported_guild_id',
+	'reporter_id'
+>({
+	name: 'guild_report_submissions_by_reporter',
+	columns: GUILD_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	primaryKey: ['reporter_id', 'reported_guild_id'],
+	partitionKey: ['reporter_id'],
+	defaultTtlSeconds: seconds('24 hours'),
 });
 export const DSAReportEmailVerifications = defineTable<DSAReportEmailVerificationRow, 'email_lower'>({
 	name: 'dsa_report_email_verifications',
 	columns: DSA_REPORT_EMAIL_VERIFICATION_COLUMNS,
 	primaryKey: ['email_lower'],
+	defaultTtlSeconds: seconds('10 minutes'),
 });
 export const DSAReportTickets = defineTable<DSAReportTicketRow, 'ticket'>({
 	name: 'dsa_report_tickets',
 	columns: DSA_REPORT_TICKET_COLUMNS,
 	primaryKey: ['ticket'],
+	defaultTtlSeconds: seconds('1 hour'),
 });
 export const EmailVerificationTokens = defineTable<EmailVerificationTokenRow, 'token_' | 'user_id'>({
 	name: 'email_verification_tokens',

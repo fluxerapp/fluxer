@@ -5,13 +5,16 @@ import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
 import {
 	clearTestEmails,
 	createTestAccount,
+	createUniqueEmail,
+	findLastTestEmail,
 	listTestEmails,
 	setUserACLs,
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
 import {createReportID, createUserID} from '@app/api/BrandedTypes';
 import {sendChannelMessage, setupTestGuildWithMembers} from '@app/api/channel/tests/ChannelTestUtils';
-import {NcmecRepository} from '@app/api/csam/NcmecRepository';
+import {createTestChannelService} from '@app/api/channel/tests/CrosspostTestUtils';
+import {getReportServiceInstance} from '@app/api/middleware/ServiceMiddleware';
 import {getGatewayService, getSnowflakeService, setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {
 	createUserCacheService,
@@ -20,23 +23,27 @@ import {
 	getGuildRepository,
 	getKVAccountDeletionQueue,
 	getKVBulkMessageDeletionQueue,
+	getLimitConfigService,
+	getUserPermissionUtils,
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
 import {ReportStatus} from '@app/api/report/IReportRepository';
 import {ReportRepository} from '@app/api/report/ReportRepository';
+import {getReportSearchService} from '@app/api/SearchFactory';
 import {drainSearchTasks} from '@app/api/search/SearchTaskTracker';
 import {createTestStoreEntitlementService} from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
-import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import bulkScheduleUserDeletion from '@app/api/worker/tasks/admin_bulk/BulkScheduleUserDeletion';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
 import type {WorkerTaskHelpers, WorkerTaskResult} from '@pkgs/worker/src/contracts/WorkerTask';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
 interface ReportResponse {
 	report_id: string;
@@ -70,6 +77,9 @@ function installWorkerDependencies(): void {
 		guildRepository: getGuildRepository(),
 		channelRepository: getChannelRepository(),
 		gatewayService: getGatewayService(),
+		channelService: createTestChannelService(),
+		userPermissionUtils: getUserPermissionUtils(),
+		limitConfigService: getLimitConfigService(),
 		deletionQueueService: getKVAccountDeletionQueue(),
 		bulkMessageDeletionQueueService: getKVBulkMessageDeletionQueue(),
 		stripe: null,
@@ -141,6 +151,58 @@ async function listAuditLogs(action: string): Promise<Array<AdminAuditLog>> {
 	return logs.filter((log) => log.action === action);
 }
 
+async function autoResolveSummary(targetUserId: string): Promise<Record<string, string>> {
+	const logs = (await listAuditLogs('auto_resolve_reports_on_deletion')).filter(
+		(log) => log.targetId === BigInt(targetUserId),
+	);
+	expect(logs).toHaveLength(1);
+	return Object.fromEntries(logs[0]!.metadata);
+}
+
+async function reportResolvedEmails(harness: ApiTestHarness, reporter: TestAccount) {
+	return (await listTestEmails(harness, {recipient: reporter.email})).filter(
+		(email) => email.type === 'report_resolved',
+	);
+}
+
+async function systemDmMessages(harness: ApiTestHarness, account: TestAccount): Promise<Array<string>> {
+	const channels = await createBuilder<Array<{id: string; recipients?: Array<{id: string}>}>>(harness, account.token)
+		.get('/users/@me/channels')
+		.expect(HTTP_STATUS.OK)
+		.execute();
+	const systemChannels = channels.filter((channel) => channel.recipients?.some((recipient) => recipient.id === '0'));
+	const messages = await Promise.all(
+		systemChannels.map((channel) =>
+			createBuilder<Array<{content: string | null}>>(harness, account.token)
+				.get(`/channels/${channel.id}/messages?limit=50`)
+				.expect(HTTP_STATUS.OK)
+				.execute(),
+		),
+	);
+	return messages.flat().map((message) => message.content ?? '');
+}
+
+const DELETION_WORDING = /delet|\bban|suspend|terminat|remov|enforce/i;
+
+function renderGenericNotice(username: string, reportId: string): {subject: string; body: string} {
+	const rendered = getEmailTemplate('report_resolved', null, {username, reportId, publicComment: '', hasComment: 'no'});
+	if (!rendered.ok) {
+		throw new Error('report_resolved did not render');
+	}
+	return rendered.value;
+}
+
+async function scheduleDeletionThroughEndpoint(harness: ApiTestHarness, target: TestAccount): Promise<void> {
+	const admin = await createTestAccount(harness);
+	await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete']);
+	await createBuilder(harness, admin.token)
+		.put(`/admin/users/${target.userId}/deletion`)
+		.header('X-Audit-Log-Reason', AUDIT_LOG_REASON)
+		.body({reason_code: DeletionReasons.SPAM, days_until_deletion: 60})
+		.expect(HTTP_STATUS.OK)
+		.execute();
+}
+
 async function isSessionAlive(harness: ApiTestHarness, token: string): Promise<boolean> {
 	const response = await harness.requestJson({path: '/users/@me', headers: {Authorization: token}});
 	return response.status === HTTP_STATUS.OK;
@@ -175,8 +237,13 @@ describe('bulkScheduleUserDeletion', () => {
 		expect(targetLog!.metadata.get('days')).toBe('60');
 		expect(await isSessionAlive(harness, target.token)).toBe(false);
 		expect(await new AdminRepository().isEmailBanned(target.email)).toBe(true);
-		const resolutionLogs = await listAuditLogs('auto_resolve_reports_on_deletion');
-		expect(resolutionLogs.some((log) => log.targetId === BigInt(target.userId))).toBe(true);
+		expect(await autoResolveSummary(target.userId)).toEqual({
+			outcome: 'completed',
+			found_count: '1',
+			resolved_count: '1',
+			failed_count: '0',
+			notified_count: '1',
+		});
 		const summaryLogs = await listAuditLogs('bulk_schedule_deletion');
 		expect(summaryLogs).toHaveLength(1);
 		expect(summaryLogs[0]!.targetType).toBe('bulk_job');
@@ -208,6 +275,150 @@ describe('bulkScheduleUserDeletion', () => {
 		expect(targetLog!.metadata.get('reason_code')).toBe(DeletionReasons.SPAM.toString());
 		expect(await isSessionAlive(harness, target.token)).toBe(false);
 		expect(await new AdminRepository().isEmailBanned(target.email)).toBe(true);
+		expect((await autoResolveSummary(target.userId)).notified_count).toBe('1');
+	});
+	test('an auto-resolved report sends the reporter the generic notice through the bulk job', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const reporter = await createTestAccount(harness);
+		const target = await createTestAccount(harness);
+		const reportId = await reportUser(harness, reporter, target.userId);
+		await clearTestEmails(harness);
+		await runBulkJob([target.userId], admin.userId);
+		const sent = await reportResolvedEmails(harness, reporter);
+		expect(sent.map((email) => email.metadata)).toEqual([{report_id: reportId, public_comment: ''}]);
+		const notice = renderGenericNotice('reporter', reportId);
+		expect(notice.body).toContain(reportId);
+		expect(`${notice.subject}\n${notice.body}`).not.toMatch(DELETION_WORDING);
+		const me = await createBuilder<{username: string}>(harness, reporter.token)
+			.get('/users/@me')
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(await systemDmMessages(harness, reporter)).toEqual([renderGenericNotice(me.username, reportId).body]);
+	});
+	test('an auto-resolved report sends the reporter a DM and an email with no deletion wording', async () => {
+		const reporter = await createTestAccount(harness);
+		const target = await createTestAccount(harness);
+		const reportId = await reportUser(harness, reporter, target.userId);
+		await clearTestEmails(harness);
+		await scheduleDeletionThroughEndpoint(harness, target);
+		const sent = await reportResolvedEmails(harness, reporter);
+		expect(sent.map((email) => email.metadata)).toEqual([{report_id: reportId, public_comment: ''}]);
+		const me = await createBuilder<{username: string}>(harness, reporter.token)
+			.get('/users/@me')
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const dms = await systemDmMessages(harness, reporter);
+		expect(dms).toEqual([renderGenericNotice(me.username, reportId).body]);
+		expect(await listTestEmails(harness, {recipient: reporter.email})).toHaveLength(1);
+	});
+	test('an auto-resolved DSA notice sends the notifier the decision email', async () => {
+		const target = await createTestAccount(harness);
+		const email = createUniqueEmail('dsa-auto-resolve');
+		await createBuilderWithoutAuth(harness)
+			.post('/reports/dsa/email/send')
+			.body({email})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const code = findLastTestEmail(await listTestEmails(harness, {recipient: email}), 'dsa_report_verification')
+			?.metadata.code;
+		const {ticket} = await createBuilderWithoutAuth<{ticket: string}>(harness)
+			.post('/reports/dsa/email/verify')
+			.body({email, code})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const report = await createBuilderWithoutAuth<ReportResponse>(harness)
+			.post('/reports/dsa')
+			.body({
+				ticket,
+				report_type: 'user',
+				category: 'harassment',
+				user_id: target.userId,
+				reporter_full_legal_name: 'Jane Doe',
+				reporter_country_of_residence: 'NL',
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await drainSearchTasks();
+		await clearTestEmails(harness);
+		await scheduleDeletionThroughEndpoint(harness, target);
+		expect(await getReportStatus(report.report_id)).toBe(ReportStatus.RESOLVED);
+		const sent = (await listTestEmails(harness)).filter((entry) => entry.to === email);
+		expect(sent.map((entry) => [entry.type, entry.metadata])).toEqual([
+			['dsa_report_resolved', {report_id: report.report_id, public_comment: ''}],
+		]);
+		expect((await autoResolveSummary(target.userId)).notified_count).toBe('1');
+	});
+	test('a deletion with no pending reports records a completed run with zero counts', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const target = await createTestAccount(harness);
+		await runBulkJob([target.userId], admin.userId);
+		expect(await autoResolveSummary(target.userId)).toEqual({
+			outcome: 'completed',
+			found_count: '0',
+			resolved_count: '0',
+			failed_count: '0',
+			notified_count: '0',
+		});
+	});
+	test('a report search failure leaves reports pending and is recorded', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const reporter = await createTestAccount(harness);
+		const target = await createTestAccount(harness);
+		const reportId = await reportUser(harness, reporter, target.userId);
+		const search = getReportSearchService()!;
+		const spy = vi.spyOn(search, 'searchReports').mockRejectedValue(new Error('search cluster unreachable'));
+		try {
+			const result = await runBulkJob([target.userId], admin.userId);
+			expect(result.successful_count).toBe(1);
+		} finally {
+			spy.mockRestore();
+		}
+		expect(await getReportStatus(reportId)).toBe(ReportStatus.PENDING);
+		expect(await autoResolveSummary(target.userId)).toEqual({
+			outcome: 'enumeration_failed',
+			found_count: '0',
+			resolved_count: '0',
+			failed_count: '0',
+			notified_count: '0',
+		});
+	});
+	test('a report that fails to resolve is counted and the others still resolve', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const firstReporter = await createTestAccount(harness);
+		const secondReporter = await createTestAccount(harness);
+		const target = await createTestAccount(harness);
+		const firstReportId = await reportUser(harness, firstReporter, target.userId);
+		const secondReportId = await reportUser(harness, secondReporter, target.userId);
+		const reportService = getReportServiceInstance();
+		const resolveReport = reportService.resolveReport.bind(reportService);
+		const spy = vi.spyOn(reportService, 'resolveReport').mockImplementation(async (reportId, ...rest) => {
+			if (reportId.toString() === firstReportId) {
+				throw new Error('storage write timed out');
+			}
+			return resolveReport(reportId, ...rest);
+		});
+		await clearTestEmails(harness);
+		try {
+			const result = await runBulkJob([target.userId], admin.userId);
+			expect(result.successful_count).toBe(1);
+		} finally {
+			spy.mockRestore();
+		}
+		expect(await getReportStatus(firstReportId)).toBe(ReportStatus.PENDING);
+		expect(await getReportStatus(secondReportId)).toBe(ReportStatus.RESOLVED);
+		expect(await reportResolvedEmails(harness, firstReporter)).toEqual([]);
+		expect(await reportResolvedEmails(harness, secondReporter)).toHaveLength(1);
+		expect(await autoResolveSummary(target.userId)).toEqual({
+			outcome: 'completed',
+			found_count: '2',
+			resolved_count: '1',
+			failed_count: '1',
+			notified_count: '1',
+		});
 	});
 	test('keeps deleting the remaining users after one of them fails and reports the failure', async () => {
 		const admin = await createTestAccount(harness);
@@ -290,33 +501,6 @@ describe('bulkScheduleUserDeletion', () => {
 		const resolutionLogs = await listAuditLogs('auto_resolve_reports_on_deletion');
 		expect(resolutionLogs.some((log) => log.targetId === BigInt(target.userId))).toBe(false);
 	});
-	test('an abuse deletion leaves reports open for a user with an NCMEC workflow', async () => {
-		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
-		const reporter = await createTestAccount(harness);
-		const target = await createTestAccount(harness);
-		const reportId = await reportUser(harness, reporter, target.userId);
-		const now = new Date();
-		await new NcmecRepository().upsertUserWorkflow({
-			user_id: BigInt(target.userId),
-			deleted_at: null,
-			deleted_by_admin_id: null,
-			deletion_private_reason: null,
-			deletion_ncmec_report_id: null,
-			archive_id: null,
-			archive_requested_at: null,
-			archive_requested_by_admin_id: null,
-			archive_audit_log_reason: null,
-			archive_completed_at: null,
-			deletion_job_queued_at: null,
-			previous_report_ids: null,
-			created_at: now,
-			updated_at: now,
-		});
-		const result = await runBulkJob([target.userId], admin.userId, DeletionReasons.SPAM);
-		expect(result.successful_count).toBe(1);
-		expect(await getReportStatus(reportId)).toBe(ReportStatus.PENDING);
-	});
 	test('a payload with notify_user false emails nobody and records it in the summary', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
@@ -395,5 +579,36 @@ describe('bulkScheduleUserDeletion', () => {
 		const after = await getUserRepository().findUnique(createUserID(BigInt(scheduled.userId)));
 		expect(after?.pendingDeletionAt?.getTime()).toBe(before?.pendingDeletionAt?.getTime());
 		expect(after?.deletionScheduledBy?.toString()).toBe(scheduler.userId);
+	});
+});
+
+describe('auto-resolve on scheduled deletion without report search', () => {
+	let harness: ApiTestHarness;
+	beforeEach(async () => {
+		harness = await createApiTestHarness({search: 'disabled'});
+	});
+	afterEach(async () => {
+		await harness.shutdown();
+	});
+	test('leaves the report pending and records that search was unavailable', async () => {
+		const reporter = await createTestAccount(harness);
+		const target = await createTestAccount(harness);
+		const report = await createBuilder<ReportResponse>(harness, reporter.token)
+			.post('/reports/user')
+			.body({user_id: target.userId, category: 'spam_account'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(getReportSearchService()).toBeNull();
+		await clearTestEmails(harness);
+		await scheduleDeletionThroughEndpoint(harness, target);
+		expect(await getReportStatus(report.report_id)).toBe(ReportStatus.PENDING);
+		expect(await reportResolvedEmails(harness, reporter)).toEqual([]);
+		expect(await autoResolveSummary(target.userId)).toEqual({
+			outcome: 'search_unavailable',
+			found_count: '0',
+			resolved_count: '0',
+			failed_count: '0',
+			notified_count: '0',
+		});
 	});
 });

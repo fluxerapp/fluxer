@@ -2,9 +2,9 @@
 
 .checkboxWrapper {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	position: relative;
-	height: 1.5rem;
+	min-height: 1.5rem;
 	user-select: none;
 	-webkit-user-select: none;
 	flex: 0 0 auto;
@@ -25,6 +25,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	flex-shrink: 0;
 	width: 1.5rem;
 	height: 1.5rem;
 	--checkbox-default-border-color: color-mix(in srgb, var(--border-color) 70%, #fff 30%);
@@ -72,13 +73,14 @@
 }
 
 .label {
-	padding-left: 0.5rem;
+	padding-inline-start: 0.5rem;
 	color: var(--text-primary);
 	display: inline-flex;
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 0.25rem;
-	margin-top: -0.125rem;
+	min-width: 0;
+	margin-top: calc((var(--checkbox-size, 1.5rem) - 1.25rem) / 2 - 0.0625rem);
 }
 
 .labelInteractive {
@@ -90,7 +92,7 @@
 }
 
 .keyboardShortcutHints {
-	margin-left: 0.5rem;
+	margin-inline-start: 0.5rem;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.25rem;
@@ -144,7 +146,7 @@
 
 .keyboardShortcutPortal {
 	position: absolute;
-	left: 0;
+	inset-inline-start: 0;
 	top: calc(100% + 0.25rem);
 	display: flex;
 	flex-wrap: wrap;

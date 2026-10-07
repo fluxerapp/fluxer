@@ -7,7 +7,8 @@ type MentionCollection = ReadonlyArray<bigint> | Set<bigint> | null | undefined;
 export interface IARMessageContextRow {
 	message_id: bigint;
 	channel_id: bigint | null;
-	author_id: bigint;
+	author_id: bigint | null;
+	webhook_id?: bigint | null;
 	author_username: string;
 	author_discriminator: number;
 	author_avatar_hash: string | null;
@@ -23,6 +24,7 @@ export interface IARMessageContextRow {
 	attachments: Array<MessageAttachment> | null;
 	embeds: Array<MessageEmbed> | null;
 	sticker_items: Array<MessageStickerItem> | null;
+	missing_attachments?: Array<MessageAttachment> | null;
 }
 
 export interface IARSubmissionRow {
@@ -60,6 +62,30 @@ export interface IARSubmissionRow {
 	reported_channel_effective_nsfw?: boolean | null;
 	reported_channel_effective_content_warning_level?: number | null;
 	reported_channel_effective_content_warning_text?: string | null;
+	reason: string | null;
+	flow_revision: string | null;
+	flow_steps: string | null;
+	flow_locale: string | null;
+	flow_surface: string | null;
+	reporter_good_faith_confirmed: boolean | null;
+	reported_webhook_id: bigint | null;
+	reported_webhook_name: string | null;
+	reported_webhook_avatar_hash: string | null;
+	reported_webhook_default_name: string | null;
+	reported_webhook_default_avatar_hash: string | null;
+	reported_webhook_type: number | null;
+	reported_webhook_application_id: bigint | null;
+	reported_webhook_channel_id: bigint | null;
+	reported_webhook_guild_id: bigint | null;
+	reported_webhook_created_at: Date | null;
+	reported_webhook_creator_id: bigint | null;
+	reported_webhook_creator_username: string | null;
+	reported_webhook_creator_discriminator: number | null;
+	reported_webhook_creator_global_name: string | null;
+	reported_webhook_creator_avatar_hash: string | null;
+	reported_profile_snapshot?: string | null;
+	legal_hold_until?: Date | null;
+	legal_hold_reason?: string | null;
 }
 
 export interface DSAReportEmailVerificationRow {
@@ -80,6 +106,20 @@ export interface MessageReportSubmissionByReporterRow {
 	reporter_id: bigint;
 	channel_id: bigint;
 	message_id: bigint;
+	report_id: bigint;
+	reported_at: Date;
+}
+
+export interface UserReportSubmissionByReporterRow {
+	reporter_id: bigint;
+	reported_user_id: bigint;
+	report_id: bigint;
+	reported_at: Date;
+}
+
+export interface GuildReportSubmissionByReporterRow {
+	reporter_id: bigint;
+	reported_guild_id: bigint;
 	report_id: bigint;
 	reported_at: Date;
 }
@@ -119,6 +159,30 @@ export const IAR_SUBMISSION_COLUMNS = [
 	'reported_channel_effective_nsfw',
 	'reported_channel_effective_content_warning_level',
 	'reported_channel_effective_content_warning_text',
+	'reason',
+	'flow_revision',
+	'flow_steps',
+	'flow_locale',
+	'flow_surface',
+	'reporter_good_faith_confirmed',
+	'reported_webhook_id',
+	'reported_webhook_name',
+	'reported_webhook_avatar_hash',
+	'reported_webhook_default_name',
+	'reported_webhook_default_avatar_hash',
+	'reported_webhook_type',
+	'reported_webhook_application_id',
+	'reported_webhook_channel_id',
+	'reported_webhook_guild_id',
+	'reported_webhook_created_at',
+	'reported_webhook_creator_id',
+	'reported_webhook_creator_username',
+	'reported_webhook_creator_discriminator',
+	'reported_webhook_creator_global_name',
+	'reported_webhook_creator_avatar_hash',
+	'reported_profile_snapshot',
+	'legal_hold_until',
+	'legal_hold_reason',
 ] as const satisfies ReadonlyArray<keyof IARSubmissionRow>;
 export const DSA_REPORT_EMAIL_VERIFICATION_COLUMNS = [
 	'email_lower',
@@ -139,3 +203,15 @@ export const MESSAGE_REPORT_SUBMISSION_BY_REPORTER_COLUMNS = [
 	'report_id',
 	'reported_at',
 ] as const satisfies ReadonlyArray<keyof MessageReportSubmissionByReporterRow>;
+export const USER_REPORT_SUBMISSION_BY_REPORTER_COLUMNS = [
+	'reporter_id',
+	'reported_user_id',
+	'report_id',
+	'reported_at',
+] as const satisfies ReadonlyArray<keyof UserReportSubmissionByReporterRow>;
+export const GUILD_REPORT_SUBMISSION_BY_REPORTER_COLUMNS = [
+	'reporter_id',
+	'reported_guild_id',
+	'report_id',
+	'reported_at',
+] as const satisfies ReadonlyArray<keyof GuildReportSubmissionByReporterRow>;

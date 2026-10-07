@@ -2081,7 +2081,7 @@ msgstr "{remainingSlotCount} متبقية"
 #: src/features/channel/components/CrosspostCommunityCard.tsx:247
 #: src/features/channel/components/InviteEmbed.tsx:250
 #: src/features/channel/components/InviteEmbed.tsx:358
-#: src/features/channel/components/InviteEmbed.tsx:629
+#: src/features/channel/components/InviteEmbed.tsx:627
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, zero {عضو} one {عضو} two {أعضاء} few {أعضاء} many {عضوًا} other {عضو}}"
 
@@ -2134,7 +2134,7 @@ msgid "{seconds, plural, one {Your invite link expires in # second.} other {Your
 msgstr "{seconds, plural, zero {تنتهي صلاحية رابط الدعوة خلال # ثانية.} one {تنتهي صلاحية رابط الدعوة خلال ثانية واحدة.} two {تنتهي صلاحية رابط الدعوة خلال ثانيتين.} few {تنتهي صلاحية رابط الدعوة خلال # ثوانٍ.} many {تنتهي صلاحية رابط الدعوة خلال # ثانية.} other {تنتهي صلاحية رابط الدعوة خلال # ثانية.}}"
 
 #. Generic multi-select summary label. selectedCount is the number of selected options.
-#: src/features/ui/components/form/FormCombobox.tsx:80
+#: src/features/ui/components/form/FormCombobox.tsx:81
 msgid "{selectedCount} selected"
 msgstr "تم تحديد {selectedCount}"
 
@@ -2957,11 +2957,6 @@ msgstr "بيانات الحساب"
 msgid "Account details unavailable"
 msgstr "تفاصيل الحساب غير متوفرة"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:258
-msgid "Account exists to spam, scam, or abuse the platform."
-msgstr "الحساب موجود لإرسال الرسائل المزعجة أو الاحتيال أو إساءة استخدام المنصة."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:124
 msgid "Account removal"
@@ -3639,11 +3634,6 @@ msgstr "تاريخ الإضافة: {createdDate}"
 msgid "Added: {createdDate} • last used: {lastUsedDate}"
 msgstr "تاريخ الإضافة: {createdDate} • آخر استخدام: {lastUsedDate}"
 
-#. Field label on the details step of the DSA report form. Optional free-text context the reporter wants staff to see.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:72
-msgid "Additional comments (optional)"
-msgstr "تعليقات إضافية (اختياري)"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:26
@@ -4186,8 +4176,8 @@ msgstr "تم الاسترداد بالفعل"
 msgid "Already set to cancel"
 msgstr "الإلغاء مجدول بالفعل"
 
-#. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:94
+#. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
+#: src/features/messaging/commands/MessageCommands.tsx:98
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "الإبلاغ عن هذه الرسالة إلى فريق السلامة في {productName} أيضًا"
 
@@ -4575,11 +4565,6 @@ msgstr "سنوي"
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:274
 msgid "Another checkbox"
 msgstr "مربع اختيار آخر"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:362
-msgid "Another clear rule violation"
-msgstr "انتهاك آخر واضح للقواعد"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:301
 msgid "Another round checkbox"
@@ -5247,7 +5232,7 @@ msgid "Audio upload"
 msgstr "تحميل ملف صوتي"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:111
+#: src/features/moderation/components/report/OptionDescriptors.ts:24
 msgid "Austria"
 msgstr "النمسا"
 
@@ -5620,6 +5605,7 @@ msgstr "غير متواجد حاليًا"
 
 #. Accessible label of the back button on the Plutonium page in the mobile layout.
 #. Generic secondary button label that returns to the previous step or screen.
+#. Report flow: footer button that returns to the previous question.
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:164
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:167
@@ -5628,7 +5614,8 @@ msgstr "غير متواجد حاليًا"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:381
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:401
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
-#: src/features/moderation/components/report/ReportStepDetails.tsx:312
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
+#: src/features/moderation/components/report/ReportStepDetails.tsx:374
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
 msgid "Back"
 msgstr "رجوع"
@@ -5788,9 +5775,7 @@ msgstr "تم تجديد الرموز الاحتياطية"
 msgid "Badge"
 msgstr "شارة"
 
-#. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:134
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts:5
 msgid "Ban"
 msgstr "حظر"
@@ -5819,7 +5804,7 @@ msgstr "مدة الحظر"
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:274
-#: src/features/ui/action_menu/GuildMemberContextMenu.tsx:67
+#: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:124
 msgid "Ban member"
@@ -5840,20 +5825,10 @@ msgstr "حظر الأعضاء من المجتمع، مع خيار حذف رسا�
 msgid "Ban reason"
 msgstr "سبب الحظر"
 
-#. IAR modal: quick-action card title for banning the reported user (moderator-only).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:126
-msgid "Ban this user"
-msgstr "حظر هذا المستخدم"
-
 #. Section heading in the voice connection status popout for current media bitrate usage.
 #: src/features/voice/components/voice_connection_status/shared.ts:67
 msgid "Bandwidth"
 msgstr "النطاق الترددي"
-
-#. IAR modal: disabled-state label on the ban card after the user is banned from this community.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:138
-msgid "Banned"
-msgstr "محظور"
 
 #: src/features/moderation/components/modals/BanMemberModal.tsx:134
 msgid "Banned {targetUserTag} from the community"
@@ -5937,7 +5912,7 @@ msgid "Before date"
 msgstr "قبل التاريخ"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:115
+#: src/features/moderation/components/report/OptionDescriptors.ts:28
 msgid "Belgium"
 msgstr "بلجيكا"
 
@@ -6031,7 +6006,7 @@ msgstr "معدل البت"
 
 #. Generic destructive action label that blocks a user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:25
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts:22
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:14
 msgid "Block"
 msgstr "حظر"
@@ -6041,6 +6016,11 @@ msgstr "حظر"
 msgctxt "sensitive-media-filter-level"
 msgid "Block"
 msgstr "حجب"
+
+#. Report flow: title of the block action on the final screen. {name} is the display name of the reported user.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:71
+msgid "Block {name}"
+msgstr "حظر {name}"
 
 #. Body of the destructive confirmation modal for blocking a user. Explains the consequences. {userName} is the target user.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:90
@@ -6087,11 +6067,6 @@ msgstr "حظر لجميع المجتمعات"
 msgid "Block spoiler"
 msgstr "كتلة محتوى مخفي"
 
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:386
-msgid "Block this user"
-msgstr "حظر هذا المستخدم"
-
 #. Title of the destructive confirmation modal for blocking a user. Short command title.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:86
 msgid "Block user"
@@ -6099,6 +6074,12 @@ msgstr "حظر المستخدم"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:10
+msgid "Blocked"
+msgstr "محظور"
+
+#. Report flow: disabled button label shown after the reporter blocked the one reported user. A state of that single person, not a list of blocked users. Use the singular or an impersonal past participle.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:81
+msgctxt "report-flow-blocked-button"
 msgid "Blocked"
 msgstr "محظور"
 
@@ -6505,7 +6486,7 @@ msgid "Built-in translators"
 msgstr "أدوات الترجمة المضمّنة"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:119
+#: src/features/moderation/components/report/OptionDescriptors.ts:32
 msgid "Bulgaria"
 msgstr "بلغاريا"
 
@@ -6518,16 +6499,6 @@ msgstr "البلغارية"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:230
 msgid "Bulk delete"
 msgstr "حذف جماعي"
-
-#. IAR modal: rule description for a message report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:150
-msgid "Bullying, repeated unwanted contact, stalking, or targeted abuse."
-msgstr "التنمّر، أو التواصل المتكرر غير المرغوب فيه، أو المطاردة، أو الإساءة الموجهة."
-
-#. IAR modal: rule-category description for the targeted-harm group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:49
-msgid "Bullying, threats, hate, violence, raids, or content that pushes self-harm."
-msgstr "التنمّر أو التهديدات أو الكراهية أو العنف أو الهجمات المنظّمة أو المحتوى الذي يشجع على إيذاء النفس."
 
 #. Short label in the app constants.
 #: src/features/app/constants/AppConstants.ts:45
@@ -6639,11 +6610,6 @@ msgstr "كاليفورنيا"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
 msgid "Call"
 msgstr "مكالمة"
-
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:438
-msgid "Call & group chat settings"
-msgstr "إعدادات المكالمات والمحادثات الجماعية"
 
 #. Status label in the mobile direct-call lobby bottom sheet. Indicates an ongoing call you can join.
 #. Status text in the DM channel header pill when an ongoing call exists that the user can join.
@@ -7131,7 +7097,7 @@ msgstr "تغيير اللافتة"
 msgid "Change chat embed background"
 msgstr "تغيير خلفية تضمين الدردشة"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:119
+#: src/features/moderation/components/report/ReportStepVerification.tsx:150
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:97
 msgid "Change email"
 msgstr "تغيير البريد الإلكتروني"
@@ -7150,8 +7116,8 @@ msgstr "تغيير الاسم المستعار للصديق"
 
 #. Group DM action that opens the change-nickname modal for the selected user.
 #. Group DM action that opens the change-nickname modal for the selected user.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:97
-#: src/features/ui/action_menu/UserContextMenu.tsx:113
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:96
+#: src/features/ui/action_menu/UserContextMenu.tsx:112
 msgid "Change group nickname"
 msgstr "تغيير الاسم المستعار في المجموعة"
 
@@ -7193,7 +7159,7 @@ msgid "Change language"
 msgstr "تغيير اللغة"
 
 #. Group DM action that lets the current user change their own nickname in the group.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:89
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:88
 msgid "Change my group nickname"
 msgstr "تغيير اسمي المستعار في المجموعة"
 
@@ -7218,7 +7184,7 @@ msgid "Change own nickname"
 msgstr "تغيير الاسم المستعار الشخصي"
 
 #. Action that transfers ownership of the selected group or community.
-#: src/features/ui/action_menu/UserContextMenu.tsx:101
+#: src/features/ui/action_menu/UserContextMenu.tsx:100
 msgid "Change owner"
 msgstr "تغيير المالك"
 
@@ -7282,16 +7248,6 @@ msgstr "تغيير منطقة الصوت التي تستخدمها قناة صو
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:322
 msgid "Change which voice region this channel uses."
 msgstr "تغيير منطقة الصوت التي تستخدمها هذه القناة."
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:442
-msgid "Change who can call or add you."
-msgstr "غيّر من يمكنه الاتصال بك أو إضافتك."
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:430
-msgid "Change who can reach you."
-msgstr "غيّر من يمكنه الوصول إليك."
 
 #. Short label in the email change modal. Keep it concise.
 #: src/features/user/components/modals/EmailChangeModal.tsx:39
@@ -7860,6 +7816,11 @@ msgstr "تحقق من بريدك الوارد في {emailAddress} للعثور �
 msgid "Check your inbox for a verification email."
 msgstr "تحقق من بريدك الوارد بحثًا عن رسالة التحقق."
 
+#. Report flow: title of the summary screen shown before the report is sent.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:5
+msgid "Check your report"
+msgstr "راجع بلاغك"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:250
 msgid "Checkboxes"
 msgstr "مربعات الاختيار"
@@ -7901,21 +7862,6 @@ msgstr "عملية الدفع محظورة لهذا الحساب. تواصل م�
 msgid "Checkout unavailable"
 msgstr "الدفع غير متاح"
 
-#. Report category label for content endangering minors. Keep tone calm and serious; this is a safety surface.
-#: src/features/moderation/components/report/OptionDescriptors.ts:57
-msgid "Child safety concerns"
-msgstr "مخاوف تتعلق بسلامة الأطفال"
-
-#. IAR modal: child-safety rule label (message and guild reports).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:85
-msgid "Child safety or exploitation of minors"
-msgstr "سلامة الأطفال أو استغلال القُصّر"
-
-#. IAR modal: rule-category label grouping child-safety and mature-content reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:53
-msgid "Child safety or mature content"
-msgstr "سلامة الأطفال أو محتوى للبالغين"
-
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:140
 msgid "Chinese (simplified)"
@@ -7941,7 +7887,7 @@ msgstr "الخيارات"
 msgid "Choices: {choiceList}"
 msgstr "الاختيارات: {choiceList}"
 
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:27
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:36
 msgid "Choose"
 msgstr "اختيار"
 
@@ -8122,6 +8068,11 @@ msgstr "اختر الفئة التي تصف مجتمعك بشكل أفضل. يم
 msgid "Choose the premium model"
 msgstr "اختر نموذج Premium"
 
+#. Button on the details step of the DSA report form, shown when the server no longer accepts the chosen reason. Reloads the questions and returns to the reason step.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:80
+msgid "Choose the reason again"
+msgstr "اختر السبب مرة أخرى"
+
 #. Empty-state title in the screen-share picker displays tab when running in a web browser.
 #: src/features/voice/components/modals/screen_share_picker_modal/useNativePickerCopy.ts:20
 msgid "Choose the screen in your browser"
@@ -8271,8 +8222,8 @@ msgstr "استلام الهدية"
 msgid "Claim your account"
 msgstr "المطالبة بحسابك"
 
-#. IAR modal: body of the account-not-ready notice.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:28
+#. Report flow: body of the notice on the summary screen when the account cannot send reports yet.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:124
 msgid "Claim your account and verify your email to send reports."
 msgstr "طالب بحسابك وتحقق من بريدك الإلكتروني لإرسال البلاغات."
 
@@ -8352,12 +8303,12 @@ msgstr "طالب بحسابك لاسترداد هذه الهدية."
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:70
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:37
 #: src/features/ui/action_menu/items/RelationshipMenuItems.tsx:40
-#: src/features/user/components/modals/UserProfileModal.tsx:122
+#: src/features/user/components/modals/UserProfileModal.tsx:125
 msgid "Claim your account to send friend requests."
 msgstr "طالب بحسابك لإرسال طلبات الصداقة."
 
-#. IAR modal: body of the account-not-ready notice on an instance where people sign in with a username.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:32
+#. Report flow: body of the notice on the summary screen when the account cannot send reports yet, on an instance where people sign in with a username.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:128
 msgid "Claim your account to send reports."
 msgstr "طالب بحسابك لإرسال البلاغات."
 
@@ -8377,11 +8328,6 @@ msgstr "طالب بحسابك لبدء مكالمات فردية أو الانض
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:41
 msgid "Claim your gift to activate your {premiumProductName} subscription!"
 msgstr "استلم هديتك لتفعيل اشتراكك في {premiumProductName}!"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:318
-msgid "Claiming to be another person, brand, or organization."
-msgstr "انتحال شخصية شخص آخر أو علامة تجارية أو مؤسسة."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
@@ -8501,7 +8447,7 @@ msgstr "مسح حقل البحث"
 #. Accessible label for the combobox clear button.
 #. Button or menu action label in the authorized apps tab. Keep it concise.
 #. Button or menu action label in the devices tab. Keep it concise.
-#: src/features/ui/components/form/FormCombobox.tsx:92
+#: src/features/ui/components/form/FormCombobox.tsx:93
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:46
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:62
 msgid "Clear selection"
@@ -8733,11 +8679,6 @@ msgstr "إغلاق النافذة"
 msgid "Close popout"
 msgstr "إغلاق النافذة المنبثقة"
 
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:406
-msgid "Close this DM"
-msgstr "إغلاق هذه الرسالة المباشرة"
-
 #. Body of the close confirmation alert for a group DM. Reassures that the DM can be reopened.
 #: src/features/channel/components/direct_message/useDMListItemHandlers.tsx:54
 msgid "Close this group DM? You can reopen it anytime."
@@ -8765,13 +8706,8 @@ msgstr "الإغلاق إلى علبة النظام"
 msgid "Close window"
 msgstr "إغلاق النافذة"
 
-#. Confirmation copy in the IAR modal for the Close DM quick action. Reassures the user the action is not destructive.
-#: src/features/moderation/components/report_modal/IARModal.tsx:67
-msgid "Close your current DM with {dmDisplayName}. This does not block the user, and you can reopen the DM later."
-msgstr "أغلق رسالتك المباشرة الحالية مع {dmDisplayName}. لن يؤدي هذا إلى حظر المستخدم، ويمكنك إعادة فتح الرسالة المباشرة لاحقًا."
-
 #. Confirm dialog body before closing a DM channel.
-#: src/features/ui/action_menu/UserContextMenu.tsx:109
+#: src/features/ui/action_menu/UserContextMenu.tsx:108
 msgid "Close your DM with {displayName}? You can reopen it anytime."
 msgstr "هل تريد إغلاق رسالتك المباشرة مع {displayName}؟ يمكنك إعادة فتحها في أي وقت."
 
@@ -8837,7 +8773,7 @@ msgstr "سمة الفحم"
 #. Generic field label for a short verification or backup code the user types in.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:858
 #: src/features/invite/components/InviteListItem.tsx:77
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:29
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:38
 msgid "Code"
 msgstr "الرمز"
 
@@ -8868,7 +8804,7 @@ msgstr "رمز من تطبيق {productName}"
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Success toast on the verification step of the DSA report flow after resending the email verification code.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
-#: src/features/moderation/components/pages/ReportPage.tsx:62
+#: src/features/moderation/components/pages/ReportPage.tsx:83
 msgid "Code resent"
 msgstr "أُعيد إرسال الرمز"
 
@@ -9090,14 +9026,12 @@ msgid "Communities you can join"
 msgstr "المجتمعات التي يمكنك الانضمام إليها"
 
 #. Community settings sidebar category grouping discovery and the vanity URL.
-#. Developer / debug surface — keep terse and technical. Fallback label used in the IAR preview tool when no community context is supplied.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
 #. Generic label for a community. Used as a field label, filter label, or fallback community name.
 #. Tag shown next to messages copied from a followed announcement channel. Keep it one short word.
 #: src/features/channel/components/ChannelUserTag.tsx:27
 #: src/features/channel/components/modals/ChannelFollowModal.tsx:44
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:882
-#: src/features/moderation/components/report_modal/IARModalPreview.tsx:16
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:223
 msgid "Community"
 msgstr "المجتمع"
@@ -9131,7 +9065,7 @@ msgstr "تعطيل سمع العضو في المجتمع"
 #. Title of the developer-mode community debug modal.
 #. Title of the developer-mode community debug modal.
 #: src/features/ui/action_menu/items/DebugMenuItems.tsx:27
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:81
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:78
 msgid "Community debug"
 msgstr "تصحيح أخطاء المجتمع"
 
@@ -9150,16 +9084,6 @@ msgstr "تم حذف المجتمع"
 msgid "Community DM"
 msgstr "رسائل المجتمع المباشرة"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:262
-msgid "Community exists to spam, scam, or abuse the platform."
-msgstr "مجتمع أُنشئ لإرسال الرسائل المزعجة أو الاحتيال أو إساءة استخدام المنصة."
-
-#. IAR modal: rule description for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:166
-msgid "Community facilitates pile-ons or targeted abuse."
-msgstr "مجتمع يسهّل الهجمات الجماعية أو الإساءة الموجّهة."
-
 #. Form label for the dropdown that switches the community filter between exclude and include-only modes.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:165
 msgid "Community filter"
@@ -9171,11 +9095,11 @@ msgid "Community icon"
 msgstr "أيقونة المجتمع"
 
 #. Field label on the details step of the DSA report form (community report). The reported community's snowflake ID.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:43
+#: src/features/moderation/components/report/ReportStepDetails.tsx:42
 msgid "Community ID"
 msgstr "معرف المجتمع"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:237
+#: src/features/moderation/components/report/ReportStepDetails.tsx:283
 msgid "Community ID is required."
 msgstr "معرف المجتمع مطلوب."
 
@@ -9526,6 +9450,11 @@ msgstr "تأكيد كلمة المرور الجديدة"
 msgid "Confirm password"
 msgstr "تأكيد كلمة المرور"
 
+#. Inline validation error on the details step of the DSA report flow when the good-faith statement checkbox is not ticked.
+#: src/features/moderation/components/pages/ReportPage.tsx:128
+msgid "Confirm the statement to send the report."
+msgstr "أكّد البيان لإرسال البلاغ."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:30
@@ -9816,16 +9745,6 @@ msgstr "متابعة في متصفحك"
 msgid "Continue to checkout"
 msgstr "متابعة إلى الدفع"
 
-#. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:37
-msgid "Continue to report community"
-msgstr "متابعة الإبلاغ عن المجتمع"
-
-#. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:27
-msgid "Continue to report user"
-msgstr "متابعة الإبلاغ عن المستخدم"
-
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:343
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:356
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:379
@@ -9926,11 +9845,6 @@ msgstr "تحويل هذه القناة إلى قناة نصية سيؤدي إل�
 msgid "Converts incoming content to speech, regardless of whether it came from /tts."
 msgstr "يحوّل المحتوى الوارد إلى كلام، بغض النظر عما إذا كان قد أتى من /tts."
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:342
-msgid "Coordinates raids, brigading, or harassment against people or communities."
-msgstr "ينسّق الاقتحامات الجماعية أو الهجمات المنظمة أو المضايقات ضد أشخاص أو مجتمعات."
-
 #. Generic short status label confirming a value was copied to the clipboard.
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:395
@@ -9960,7 +9874,6 @@ msgstr "تم نسخ الرابط إلى الحافظة"
 #. Button or menu action label in the gift inventory tab. Keep it concise.
 #. Button that copies account backup codes to the clipboard.
 #. Button that copies the account recovery key to the clipboard.
-#. IAR modal: quick-action card button label.
 #. Native Edit menu item that copies the selection to the clipboard. Imperative verb, not the noun.
 #. Short label in the settings dialog copy link section.
 #. Textarea right-click context menu item that copies the selected text.
@@ -9968,7 +9881,6 @@ msgstr "تم نسخ الرابط إلى الحافظة"
 #: src/features/auth/components/modals/BackupCodesModal.tsx:96
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:417
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:402
 #: src/features/platform/utils/DesktopLocaleBridge.ts:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:73
@@ -10203,11 +10115,9 @@ msgid "Copy message ID"
 msgstr "نسخ معرف الرسالة"
 
 #. Generic action label that copies a permalink to the selected message.
-#. IAR modal: quick-action card title.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:532
 #: src/features/input/state/input_keybind/shared.ts:290
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:394
 msgid "Copy message link"
 msgstr "نسخ رابط الرسالة"
 
@@ -10643,6 +10553,11 @@ msgstr "تعذر تحميل المشاركات. حاول مرة أخرى لاح�
 msgid "Couldn't load settings"
 msgstr "تعذر تحميل الإعدادات"
 
+#. Report flow: error shown when the report questions could not be loaded. A Try again button follows.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:91
+msgid "Couldn't load the report form."
+msgstr "تعذّر تحميل نموذج البلاغ."
+
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:585
 msgid "Couldn't load this application"
 msgstr "تعذر تحميل هذا التطبيق"
@@ -10696,7 +10611,7 @@ msgid "Couldn't process image"
 msgstr "تعذر معالجة الصورة"
 
 #. Title of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:126
+#: src/features/messaging/commands/MessageCommands.tsx:130
 msgid "Couldn't publish this message"
 msgstr "تعذر نشر هذه الرسالة"
 
@@ -10824,11 +10739,6 @@ msgstr "تعذّر إرسال الدعوة"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:718
 msgid "Couldn't send invite. Try again."
 msgstr "تعذّر إرسال الدعوة. حاول مرة أخرى."
-
-#. Error toast in the IAR modal when the report submission fails. Keep tone plain and short.
-#: src/features/moderation/components/report_modal/IARModal.tsx:80
-msgid "Couldn't send it. Try again."
-msgstr "تعذر الإرسال. حاول مرة أخرى."
 
 #. Body of the generic fallback friend-request error modal.
 #. Generic error toast when sending a friend request fails with no recognized API error code.
@@ -10993,7 +10903,7 @@ msgid "Countdown timer"
 msgstr "مؤقت العد التنازلي"
 
 #. Field label on the details step of the DSA report form. The country where the reporter resides, used for the legal declaration.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:62
+#: src/features/moderation/components/report/ReportStepDetails.tsx:70
 msgid "Country of residence"
 msgstr "بلد الإقامة"
 
@@ -11301,13 +11211,8 @@ msgstr "تم الإنشاء:"
 msgid "Credentials"
 msgstr "بيانات الاعتماد"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:190
-msgid "Credible threats, graphic violence, or glorification of violence."
-msgstr "التهديدات الجدية أو مشاهد العنف الصادمة أو تمجيد العنف."
-
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:123
+#: src/features/moderation/components/report/OptionDescriptors.ts:36
 msgid "Croatia"
 msgstr "كرواتيا"
 
@@ -11735,7 +11640,7 @@ msgid "Cuts audio below a loudness threshold with minimal CPU usage."
 msgstr "يقطع الصوت الأخفض من عتبة شدة محددة بأقل استهلاك للمعالج."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:127
+#: src/features/moderation/components/report/OptionDescriptors.ts:40
 msgid "Cyprus"
 msgstr "قبرص"
 
@@ -11745,7 +11650,7 @@ msgid "Czech"
 msgstr "التشيكية"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:131
+#: src/features/moderation/components/report/OptionDescriptors.ts:44
 msgid "Czech Republic"
 msgstr "جمهورية التشيك"
 
@@ -11965,7 +11870,7 @@ msgstr "تصحيح أخطاء القناة"
 #. Developer-mode action that opens the community debug modal.
 #. Developer-mode action that opens the community debug modal.
 #: src/features/ui/action_menu/items/DebugMenuItems.tsx:31
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:93
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:90
 msgid "Debug community"
 msgstr "تصحيح أخطاء المجتمع"
 
@@ -12151,7 +12056,6 @@ msgstr "ديلاوير"
 #. Confirm button label on the destructive delete-saved-media alert.
 #. Danger button label that confirms deleting a custom emoji.
 #. Destructive action label. Surface varies, see surrounding code for the specific object being deleted.
-#. IAR modal: quick-action card button label for deleting the reported message.
 #. Native Edit menu item that deletes the current selection. Imperative verb.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -12163,8 +12067,7 @@ msgstr "ديلاوير"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:90
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:114
+#: src/features/messaging/commands/MessageCommands.tsx:94
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
@@ -12411,18 +12314,13 @@ msgstr "حذف السمة؟"
 msgid "Delete this invite? Can't be undone."
 msgstr "هل تريد حذف هذه الدعوة؟ لا يمكن التراجع عن هذا الإجراء."
 
-#. IAR modal: quick-action card title for deleting the reported message (moderator-only).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:106
-msgid "Delete this message"
-msgstr "حذف هذه الرسالة"
-
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:86
+#: src/features/messaging/commands/MessageCommands.tsx:90
 msgid "Delete this message? Can't be undone."
 msgstr "هل تريد حذف هذه الرسالة؟ لا يمكن التراجع عن هذا الإجراء."
 
 #. Body of the delete confirmation for a message that was published from an announcement channel to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:99
+#: src/features/messaging/commands/MessageCommands.tsx:103
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "حذف هذه الرسالة؟ لا يمكن التراجع عن هذا الإجراء. ستتم إزالة هذه الرسالة أيضًا من كل مجتمع يتابع هذه القناة."
 
@@ -12460,11 +12358,6 @@ msgstr "هل تريد حذف رسائلك في هذا المجتمع؟"
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx:21
 msgid "Delete your messages in this conversation?"
 msgstr "هل تريد حذف رسائلك في هذه المحادثة؟"
-
-#. IAR modal: disabled-state label on the delete card after the message has been deleted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:118
-msgid "Deleted"
-msgstr "تم الحذف"
 
 #. Activity log detail line under a ban, shown when the ban also deleted the messages the banned user sent shortly before it. This matches the "Delete message history" choice in the ban dialog. "The member" is the banned user, a single person. {duration} is how far back from the ban the messages were deleted, shown as a full duration phrase such as "1 hour" or "7 days". The number and unit change at runtime, so do not put an article, adjective or case ending next to {duration} that has to agree with it. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:25
@@ -12514,7 +12407,7 @@ msgid "Denied {permissions}"
 msgstr "تم رفض {permissions}"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:135
+#: src/features/moderation/components/report/OptionDescriptors.ts:48
 msgid "Denmark"
 msgstr "الدنمارك"
 
@@ -12553,11 +12446,6 @@ msgstr "صف الملصق"
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:40
 msgid "Describe this media for screen readers"
 msgstr "صف هذه الوسائط لقارئات الشاشة"
-
-#. Placeholder in the Additional comments textarea on the DSA report form. Prompts the reporter to explain why the content is illegal.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:77
-msgid "Describe what makes the content illegal"
-msgstr "صف ما يجعل المحتوى غير قانوني"
 
 #. Placeholder in the description textarea on the Discovery application form.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:128
@@ -12713,7 +12601,7 @@ msgstr "لافتة منفصلة"
 msgid "Detail"
 msgstr "التفاصيل"
 
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:30
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:44
 msgid "Details"
 msgstr "التفاصيل"
 
@@ -13315,11 +13203,6 @@ msgstr "اسم العرض (اختياري)"
 msgid "Display scaling"
 msgstr "حجم العرض"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:282
-msgid "Distributes malware, credential-stealing tools, or other harmful files."
-msgstr "يوزّع برامج ضارة أو أدوات لسرقة بيانات الاعتماد أو ملفات ضارة أخرى."
-
 #. US federal district name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:263
 msgctxt "us-state"
@@ -13336,11 +13219,6 @@ msgstr "رسالة مباشرة"
 msgctxt "channel-badge"
 msgid "DM"
 msgstr "ر.م"
-
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:426
-msgid "DM & friend request settings"
-msgstr "إعدادات الرسائل المباشرة وطلبات الصداقة"
 
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Generic success-toast label confirming that a DM channel was closed.
@@ -13468,11 +13346,6 @@ msgstr "الوثائق"
 msgid "Doesn't allow being added to group DMs"
 msgstr "لا يسمح بإضافته إلى المحادثات الجماعية"
 
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:410
-msgid "Doesn't block. You can reopen later."
-msgstr "لا يحظر المستخدم. يمكنك إعادة فتح المحادثة لاحقًا."
-
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:786
@@ -13545,11 +13418,13 @@ msgstr "تبرع بدلاً من ذلك"
 
 #. Button that closes the recovery kit modal once the kit is stored.
 #. Generic action or status label indicating that the current flow is complete.
+#. Report flow: footer button on the last screen. Closes the report window.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:447
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:44
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:838
 #: src/features/input/components/KeybindRecorder.tsx:510
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:31
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:38
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:45
 #: src/features/search/components/search/ChannelFilterSheet.tsx:165
 #: src/features/search/components/search/HasFilterSheet.tsx:206
 #: src/features/search/components/search/UserFilterSheet.tsx:186
@@ -13677,16 +13552,6 @@ msgstr "قم بتنزيل خرائط المصدر حتى تشير تتبعات �
 #: src/features/ui/action_menu/items/MediaMenuData.tsx:123
 msgid "Download video"
 msgstr "تنزيل الفيديو"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:290
-msgid "Doxxing, exposed private info, or stalking."
-msgstr "كشف هوية الأشخاص ونشر بياناتهم، أو كشف معلومات خاصة، أو الملاحقة."
-
-#. IAR modal: rule-category description for the privacy / impersonation group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:65
-msgid "Doxxing, stalking, pretending to be someone, or an inappropriate profile."
-msgstr "كشف هوية الأشخاص ونشر بياناتهم، أو الملاحقة، أو انتحال الشخصية، أو ملف شخصي غير لائق."
 
 #. Billing invoice status for an invoice not finalized yet.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:25
@@ -13970,7 +13835,7 @@ msgstr "تعديل لون {tokenLabel}"
 #. Action that opens the community profile editor for the current member.
 #. Button or menu action label in the guild header popout. Keep it concise.
 #: src/features/guild/components/popouts/GuildHeaderPopout.tsx:61
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:89
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:86
 #: src/features/ui/action_menu/items/GuildMenuItems.tsx:86
 msgid "Edit community profile"
 msgstr "تعديل الملف الشخصي في المجتمع"
@@ -14043,7 +13908,7 @@ msgstr "تعديل تجاوزات الأذونات للأدوار والأعضا
 #: src/features/app/components/floating/UserAreaPopout.tsx:645
 #: src/features/app/components/pages/YouPage.tsx:162
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:686
-#: src/features/user/components/modals/UserProfileModal.tsx:590
+#: src/features/user/components/modals/UserProfileModal.tsx:593
 #: src/features/user/components/popouts/UserProfilePopout.tsx:435
 msgid "Edit profile"
 msgstr "تعديل الملف الشخصي"
@@ -14054,7 +13919,7 @@ msgid "Edit profile local time"
 msgstr "تعديل التوقيت المحلي للملف الشخصي"
 
 #. Title of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:105
+#: src/features/messaging/commands/MessageCommands.tsx:109
 msgid "Edit published message?"
 msgstr "تعديل الرسالة المنشورة؟"
 
@@ -14191,13 +14056,13 @@ msgstr "مؤهل لاسترداد المبلغ حتى {windowEndsOn}. سيؤدي
 #. Setup wizard option where people sign in with an email address and password.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:87
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:28
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:37
 msgid "Email"
 msgstr "البريد الإلكتروني"
 
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the moderation report step email. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/components/report/ReportStepEmail.tsx:11
+#: src/features/moderation/components/report/ReportStepEmail.tsx:13
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:60
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:115
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:30
@@ -14205,7 +14070,7 @@ msgid "Email address"
 msgstr "عنوان البريد الإلكتروني"
 
 #. Inline validation error on the email step of the DSA report flow when the email field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:54
+#: src/features/moderation/components/pages/ReportPage.tsx:75
 msgid "Email address required."
 msgstr "عنوان البريد الإلكتروني مطلوب."
 
@@ -14721,16 +14586,6 @@ msgstr "تفضيل المُرمِّز لعمليات مشاركة الشاشة �
 msgid "Encoder, SVC, and bitrate presets"
 msgstr "المُرمّز، SVC، وإعدادات البت المسبقة"
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:354
-msgid "Encourages self-harm"
-msgstr "يشجع على إيذاء النفس"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:358
-msgid "Encourages suicide, self-harm, or eating disorders."
-msgstr "يشجع على الانتحار أو إيذاء النفس أو اضطرابات الأكل."
-
 #: src/features/input/utils/KeybindUtils.ts:86
 msgctxt "keyboard-key-name"
 msgid "End"
@@ -14770,11 +14625,6 @@ msgstr "التشفير التام بين الطرفين غير متاح لوجو
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:325
 msgid "End-to-end encryption is unavailable because an unsupported participant is in this voice channel."
 msgstr "التشفير التام بين الطرفين غير متاح لوجود مشارك غير مدعوم في هذه القناة الصوتية."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:234
-msgid "Endangers minors or hosts child-exploitation content."
-msgstr "يعرض القاصرين للخطر أو يستضيف محتوى استغلال الأطفال."
 
 #. Voice stats field label (mobile lobby). Shows the voice server endpoint hostname.
 #. Voice stats field label (mobile voice lobby). Shows the voice server endpoint hostname.
@@ -14817,7 +14667,7 @@ msgid "Enter"
 msgstr "Enter"
 
 #. Inline validation error on the verification step of the DSA report flow when the code does not match the expected 4-letter-dash-4-digit format. "ABCD-1234" is a literal example pattern.
-#: src/features/moderation/components/pages/ReportPage.tsx:78
+#: src/features/moderation/components/pages/ReportPage.tsx:104
 msgid "Enter a code in the format ABCD-1234."
 msgstr "أدخل رمزًا بالصيغة ABCD-1234."
 
@@ -14862,12 +14712,12 @@ msgid "Enter a valid {theOtherPlatform} template URL or code."
 msgstr "أدخل عنوان URL أو رمز قالب {theOtherPlatform} صالحًا."
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
-#: src/features/moderation/components/pages/ReportPage.tsx:58
+#: src/features/moderation/components/pages/ReportPage.tsx:79
 msgid "Enter a valid email address."
 msgstr "أدخل عنوان بريد إلكتروني صالحًا."
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is not a valid URL.
-#: src/features/moderation/components/pages/ReportPage.tsx:116
+#: src/features/moderation/components/pages/ReportPage.tsx:148
 msgid "Enter a valid message link."
 msgstr "أدخل رابط رسالة صالحًا."
 
@@ -14941,7 +14791,7 @@ msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "أدخل الرمز المكون من {digitCount} أرقام من تطبيق المصادقة الخاص بك."
 
 #. Inline validation error on the verification step of the DSA report flow when the code field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:74
+#: src/features/moderation/components/pages/ReportPage.tsx:100
 msgid "Enter the code before continuing."
 msgstr "أدخل الرمز قبل المتابعة."
 
@@ -15008,7 +14858,7 @@ msgstr "اضغط Enter <0><1>للحفظ</1></0>"
 msgid "Enter username"
 msgstr "أدخل اسم المستخدم"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:48
+#: src/features/moderation/components/report/ReportStepVerification.tsx:73
 msgid "Enter verification code"
 msgstr "أدخل رمز التحقق"
 
@@ -15016,6 +14866,11 @@ msgstr "أدخل رمز التحقق"
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "أدخل عنوان بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور."
+
+#. Inline validation error on the Full legal name field of the DSA report form, shown when the server requires the name for the chosen reason. The name is required for every reason except child sexual abuse.
+#: src/features/moderation/components/pages/ReportPage.tsx:133
+msgid "Enter your full legal name to send the report."
+msgstr "أدخل اسمك القانوني الكامل لإرسال البلاغ."
 
 #. Short label in the inputs tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:26
@@ -15160,7 +15015,7 @@ msgid "Escape to <0><1>cancel</1></0>"
 msgstr "اضغط Escape <0><1>للإلغاء</1></0>"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:139
+#: src/features/moderation/components/report/OptionDescriptors.ts:52
 msgid "Estonia"
 msgstr "إستونيا"
 
@@ -15412,6 +15267,16 @@ msgstr "تنتهي صلاحيته في {earliest}"
 msgid "Expires:"
 msgstr "تنتهي الصلاحية:"
 
+#. Field label on the details step of the DSA report form. Required free text where the reporter explains what is wrong with the reported content.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:52
+msgid "Explain the problem"
+msgstr "اشرح المشكلة"
+
+#. Inline validation error on the details step of the DSA report flow when the Explain the problem field is empty.
+#: src/features/moderation/components/pages/ReportPage.tsx:123
+msgid "Explain the problem to send the report."
+msgstr "اشرح المشكلة لإرسال البلاغ."
+
 #. Accessible label for the explicit content filter radio group in the community moderation settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:129
 msgid "Explicit content filter setting"
@@ -15506,11 +15371,6 @@ msgstr "قد تكون الروابط الخارجية خطيرة. كن حذرً�
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:57
 msgid "Extra large"
 msgstr "كبير جدًا"
-
-#. Report category label for a community organized around extremist content or ideology.
-#: src/features/moderation/components/report/OptionDescriptors.ts:90
-msgid "Extremist community"
-msgstr "مجتمع متطرف"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:126
@@ -15729,7 +15589,7 @@ msgid "Failed to remove vanity URL. Try again."
 msgstr "تعذّر إزالة عنوان URL المخصص. حاول مرة أخرى."
 
 #. Error toast when the resend-code request fails on the verification step of the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:70
+#: src/features/moderation/components/pages/ReportPage.tsx:91
 msgid "Failed to resend code. Try again."
 msgstr "تعذّر إعادة إرسال الرمز. حاول مرة أخرى."
 
@@ -15739,7 +15599,7 @@ msgid "Failed to reset premium state."
 msgstr "تعذّر إعادة تعيين حالة Premium."
 
 #. Error shown when the initial email verification code send fails on the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:66
+#: src/features/moderation/components/pages/ReportPage.tsx:87
 msgid "Failed to send code. Try again."
 msgstr "تعذّر إرسال الرمز. حاول مرة أخرى."
 
@@ -15754,7 +15614,7 @@ msgid "Failed to send message. Hold for options."
 msgstr "تعذّر إرسال الرسالة. اضغط مطولًا لعرض الخيارات."
 
 #. Generic error shown on the DSA report submission page when the report could not be sent.
-#: src/features/moderation/components/pages/ReportPage.tsx:50
+#: src/features/moderation/components/pages/ReportPage.tsx:71
 msgid "Failed to send report. Try again."
 msgstr "تعذّر إرسال البلاغ. حاول مرة أخرى."
 
@@ -15839,11 +15699,6 @@ msgstr "تعذّر تحميل الرموز التعبيرية بدءًا من {s
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:60
 msgid "Failed to upload emojis. Try again."
 msgstr "تعذّر تحميل الرموز التعبيرية. حاول مرة أخرى."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:242
-msgid "False claims likely to cause real-world harm."
-msgstr "ادعاءات كاذبة من المحتمل أن تسبب ضررًا في العالم الحقيقي."
 
 #. Label for the favicon branding asset.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:222
@@ -16127,13 +15982,13 @@ msgstr "ابحث عن الملصق المثالي"
 msgid "Fingerprint"
 msgstr "بصمة الإصبع"
 
-#. Button label in the IAR modal that opens the account-setup flow.
-#: src/features/moderation/components/report_modal/IARModal.tsx:84
+#. Report flow: button in the account notice that opens the account setup screen.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:133
 msgid "Finish account setup"
 msgstr "إنهاء إعداد الحساب"
 
-#. IAR modal: title of the account-not-ready notice.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:24
+#. Report flow: title of the notice on the summary screen when the account cannot send reports yet.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:120
 msgid "Finish account setup first"
 msgstr "أكمل إعداد الحساب أولاً"
 
@@ -16162,7 +16017,7 @@ msgid "Finish signing up to send friend requests."
 msgstr "أكمل التسجيل لإرسال طلبات الصداقة."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:143
+#: src/features/moderation/components/report/OptionDescriptors.ts:56
 msgid "Finland"
 msgstr "فنلندا"
 
@@ -16172,7 +16027,7 @@ msgid "Finnish"
 msgstr "الفنلندية"
 
 #. Placeholder in the Full legal name input on the DSA report form.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:58
+#: src/features/moderation/components/report/ReportStepDetails.tsx:66
 msgid "First and last name"
 msgstr "الاسم الأول واسم العائلة"
 
@@ -16617,7 +16472,7 @@ msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "تتطلب معدلات الإطارات التي تزيد عن 30 إطارًا في الثانية {premiumProductName}"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:147
+#: src/features/moderation/components/report/OptionDescriptors.ts:60
 msgid "France"
 msgstr "فرنسا"
 
@@ -16834,10 +16689,10 @@ msgstr "كامل"
 msgid "Full dynamic range"
 msgstr "نطاق ديناميكي كامل"
 
-#. Field label on the details step of the DSA report form. Required legal name of the reporter for the formal declaration. Sensitive PII; keep tone neutral.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:53
-msgid "Full legal name"
-msgstr "الاسم القانوني الكامل"
+#. Field label on the details step of the DSA report form. Legal name of the reporter for the formal declaration. The law lets people who report child sexual abuse material leave it empty. Keep the tone neutral.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:61
+msgid "Full legal name (optional for child sexual abuse reports)"
+msgstr "الاسم القانوني الكامل (اختياري في بلاغات الاعتداء الجنسي على الأطفال)"
 
 #. Screen-reader-only identity detail appended to a user mention in the message composer. Preserve {tag}; it contains the full user tag.
 #: src/features/lexical/composer/nodes/ComposerMentionPill.tsx:20
@@ -17021,7 +16876,7 @@ msgid "German"
 msgstr "الألمانية"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:151
+#: src/features/moderation/components/report/OptionDescriptors.ts:64
 msgid "Germany"
 msgstr "ألمانيا"
 
@@ -17376,7 +17231,7 @@ msgid "Go back"
 msgstr "رجوع"
 
 #. Inline error on the verification step of the DSA report flow when the stored email is missing or malformed and the user must return to the email step.
-#: src/features/moderation/components/pages/ReportPage.tsx:83
+#: src/features/moderation/components/pages/ReportPage.tsx:109
 msgid "Go back and enter a valid email."
 msgstr "ارجع وأدخل بريدًا إلكترونيًا صالحًا."
 
@@ -17557,7 +17412,7 @@ msgid "Great to see you, {username}! Welcome in."
 msgstr "سعداء برؤيتك يا {username}! أهلًا بك."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:155
+#: src/features/moderation/components/report/OptionDescriptors.ts:68
 msgid "Greece"
 msgstr "اليونان"
 
@@ -17571,11 +17426,6 @@ msgstr "اليونانية"
 #: src/features/voice/components/VoiceSettingsMenus.tsx:791
 msgid "Grid view"
 msgstr "عرض شبكي"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:226
-msgid "Grooming or child-exploitation content."
-msgstr "محتوى استدراج الأطفال أو استغلالهم."
 
 #. Short label in the channel source preview. Keep it concise.
 #: src/features/channel/components/ChannelSourcePreview.tsx:32
@@ -17716,36 +17566,6 @@ msgstr "اسم المستخدم"
 msgid "Hang out with voice, video and screen share"
 msgstr "استمتع بالصوت والفيديو ومشاركة الشاشة"
 
-#. Report category label, community variant. Keep tone plain.
-#: src/features/moderation/components/report/OptionDescriptors.ts:86
-msgid "Harassment"
-msgstr "مضايقة"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:210
-msgid "Harassment involving mature content"
-msgstr "مضايقة تتضمن محتوى للبالغين"
-
-#. Report category label for messages or users engaged in harassment or bullying. Keep tone plain.
-#: src/features/moderation/components/report/OptionDescriptors.ts:24
-msgid "Harassment or bullying"
-msgstr "مضايقة أو تنمر"
-
-#. IAR modal: rule label for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:154
-msgid "Harassment or stalking"
-msgstr "مضايقة أو مطاردة"
-
-#. IAR modal: rule label for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:162
-msgid "Harassment or targeted abuse"
-msgstr "مضايقة أو إساءة موجّهة"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:146
-msgid "Harassment or threats"
-msgstr "مضايقة أو تهديدات"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:43
 msgid "Hardware"
@@ -17775,11 +17595,6 @@ msgstr "مفتاح أمان مادي"
 msgid "Hardware-accelerated on most Windows and macOS systems. Reliable for older devices."
 msgstr "يعمل بتسريع الأجهزة على معظم أنظمة Windows وmacOS. خيار موثوق للأجهزة القديمة."
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:238
-msgid "Harmful misinformation"
-msgstr "معلومات مضللة ضارة"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:218
 msgid "Harvest"
@@ -17798,13 +17613,6 @@ msgstr "سبق له الشراء"
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx:163
 msgid "Has ever purchased override"
 msgstr "تجاوز الشراء السابق"
-
-#. IAR modal: rule label.
-#. Report category label for hate speech. Keep tone plain and neutral.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:170
-#: src/features/moderation/components/report/OptionDescriptors.ts:28
-msgid "Hate speech"
-msgstr "خطاب الكراهية"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
@@ -18162,6 +17970,11 @@ msgstr "إخفاء مشاركة شاشتك؟"
 msgid "Hides the download, open in browser and copy buttons on images and videos in this channel."
 msgstr "يخفي أزرار التنزيل، الفتح في المتصفح، والنسخ على الصور ومقاطع الفيديو في هذه القناة."
 
+#. Report flow: short description under the block action on the final screen. Blocking hides the reported person's messages and stops them sending you direct messages.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:76
+msgid "Hides their messages and stops them messaging you"
+msgstr "يخفي رسائلهم ويمنعهم من إرسال رسائل إليك"
+
 #. Activity log value naming the high member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:85
@@ -18318,7 +18131,7 @@ msgid "Hungarian"
 msgstr "المجرية"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:159
+#: src/features/moderation/components/report/OptionDescriptors.ts:72
 msgid "Hungary"
 msgstr "المجر"
 
@@ -18399,6 +18212,11 @@ msgstr "أنا تلميح"
 msgid "I changed my mind"
 msgstr "غيرت رأيي"
 
+#. Required checkbox on the details step of the DSA report form. A formal statement the law asks every reporter to make. Keep the tone formal.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:75
+msgid "I confirm in good faith that the information and allegations in this notice are accurate and complete."
+msgstr "أؤكد بحسن نية أن المعلومات والادعاءات الواردة في هذا الإشعار دقيقة وكاملة."
+
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
@@ -18460,11 +18278,6 @@ msgstr "إعدادات الخمول"
 msgid "Idle timeout"
 msgstr "مهلة الخمول"
 
-#. IAR modal: inline routing hint shown under reasons that overlap with child safety.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:93
-msgid "If a minor is involved, use \"{childSafetyReasonName}\" instead."
-msgstr "إذا كان هناك قاصر متورط، فاستخدم \"{childSafetyReasonName}\" بدلاً من ذلك."
-
 #: src/features/auth/components/accounts/account_switcher_modal/AccountSwitcherForgotPasswordStep.tsx:40
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 msgid "If an account uses that address, we've sent it password reset instructions. Check your inbox for the reset link."
@@ -18475,45 +18288,20 @@ msgstr "إذا كان حساب ما يستخدم هذا العنوان، فقد 
 msgid "If macOS asks to quit and reopen {productName}, choose Later."
 msgstr "إذا طلب نظام macOS إعادة تشغيل {productName}، فاختر لاحقًا."
 
-#. IAR modal: inline safety note for self-harm reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:374
-msgid "If someone may be in immediate danger, contact local emergency services if you can do so safely."
-msgstr "إذا كان شخص ما في خطر وشيك، فاتصل بخدمات الطوارئ المحلية إذا كان بإمكانك القيام بذلك بأمان."
+#. Report flow: safety banner shown on urgent questions and on the summary of an urgent report.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:87
+msgid "If someone is in immediate danger, contact local emergency services first."
+msgstr "إذا كان شخص ما في خطر وشيك، فاتصل بخدمات الطوارئ المحلية أولًا."
 
 #. Console warning about self-XSS scams. productName is the app name. Keep the warning plain and serious.
 #: src/features/devtools/utils/SelfXssNotice.ts:20
 msgid "If someone told you to paste something here, it is a scam that can hand them your {productName} account."
 msgstr "إذا طلب منك أحد لصق شيء ما هنا، فهذه عملية احتيال يمكن أن تمنحهم حق الوصول إلى حسابك في {productName}."
 
-#. IAR modal: inline safety note shown for child-safety reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:370
-msgid "If this involves CSAM or exploitation of a minor, send the report now and don't reshare the material."
-msgstr "إذا كان هذا يتضمن مواد اعتداء جنسي على الأطفال أو استغلال قاصر، فأرسل البلاغ الآن ولا تُعد مشاركة المحتوى."
-
-#. IAR modal: inline safety note for violence reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:378
-msgid "If this is a credible imminent threat, contact local emergency services too."
-msgstr "إذا كان هذا تهديدًا وشيكًا وذا مصداقية، فاتصل بخدمات الطوارئ المحلية أيضًا."
-
-#. IAR modal: inline safety note for terrorism reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:382
-msgid "If this is an imminent terrorist threat, contact local emergency services too."
-msgstr "إذا كان هذا تهديدًا إرهابيًا وشيكًا، فاتصل بخدمات الطوارئ المحلية أيضًا."
-
-#. Label in the report action utils helper. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:32
-msgid "If this report is about a specific message in this community, report that message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the community as a whole if reporting a message would not capture the broader issue."
-msgstr "إذا كان هذا البلاغ يتعلق برسالة معينة في هذا المجتمع، فبلّغ عن تلك الرسالة بدلاً من ذلك. بلاغات الرسائل تمنح فريق السلامة لدينا أوضح سياق، وإضافة التفاصيل في التعليقات يمكن أن تساعدنا في مراجعتها بشكل أسرع. لا تتابع الإبلاغ عن المجتمع ككل إلا إذا كان الإبلاغ عن رسالة لا يكفي لتوضيح المشكلة الأوسع."
-
-#. Label in the report action utils helper. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:17
-msgid "If this report is about a specific message, report that message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the user as a whole if that message does not capture the broader issue."
-msgstr "إذا كان هذا البلاغ يتعلق برسالة معينة، فبلّغ عن تلك الرسالة بدلاً من ذلك. بلاغات الرسائل تمنح فريق السلامة لدينا أوضح سياق، وإضافة التفاصيل في التعليقات يمكن أن تساعدنا في مراجعتها بشكل أسرع. لا تتابع الإبلاغ عن المستخدم ككل إلا إذا كانت تلك الرسالة لا تعبر عن المشكلة الأوسع."
-
-#. Label in the report action utils helper. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:22
-msgid "If this report is about specific messages, report the most relevant message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the user as a whole if reporting a message would not capture the broader issue."
-msgstr "إذا كان هذا البلاغ يتعلق برسائل محددة، فبلّغ عن الرسالة الأكثر صلة بدلاً من ذلك. بلاغات الرسائل تمنح فريق السلامة لدينا أوضح سياق، وإضافة التفاصيل في التعليقات يمكن أن تساعدنا في مراجعتها بشكل أسرع. لا تتابع الإبلاغ عن المستخدم ككل إلا إذا كان الإبلاغ عن رسالة لا يكفي لتوضيح المشكلة الأوسع."
+#. Helper text under the Explain the problem field on the details step of the DSA report form.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:57
+msgid "If you believe it is illegal, say which law and why."
+msgstr "إذا كنت تعتقد أنه غير قانوني، فاذكر القانون والسبب."
 
 #. Confirmation modal body shown before dismissing the desktop-notification nagbar. {notificationSettingsPath} is the localized settings path.
 #: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:39
@@ -18599,28 +18387,6 @@ msgstr "تجاهل فترة انتظار الوضع البطيء في هذه ا�
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:970
 msgid "Ignore virtual"
 msgstr "تجاهل الأجهزة الافتراضية"
-
-#. IAR modal: rule label.
-#. Report category label for content describing or coordinating illegal activity. Keep tone plain.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:330
-#: src/features/moderation/components/report/OptionDescriptors.ts:44
-msgid "Illegal activity"
-msgstr "نشاط غير قانوني"
-
-#. IAR modal: rule-category label grouping illegal activity and the catch-all "Other" option.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:77
-msgid "Illegal activity or something else"
-msgstr "نشاط غير قانوني أو شيء آخر"
-
-#. IAR modal: rule-category description for the illegal / other group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:81
-msgid "Illegal sales, criminal facilitation, or a clear rule violation that doesn't fit above."
-msgstr "مبيعات غير قانونية، أو تسهيل أعمال إجرامية، أو انتهاك واضح للقواعد لا يندرج تحت الفئات المذكورة أعلاه."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:334
-msgid "Illegal sales, criminal facilitation, or unlawful activity."
-msgstr "مبيعات غير قانونية، أو تسهيل أعمال إجرامية، أو نشاط غير مشروع."
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:73
@@ -18715,18 +18481,6 @@ msgstr "الصور"
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:38
 msgid "Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in this channel."
 msgstr "يتم إرسال الصور الملصقة من حافظتك كمرفقات، وليس لديك إذن بإرفاق ملفات في هذه القناة."
-
-#. IAR modal: rule label.
-#. Report category label for a user impersonating another person or brand.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:306
-#: src/features/moderation/components/report/OptionDescriptors.ts:66
-msgid "Impersonation"
-msgstr "انتحال شخصية"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:310
-msgid "Impersonation or deceptive media"
-msgstr "انتحال شخصية أو وسائط خادعة"
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:58
@@ -18910,11 +18664,6 @@ msgstr "غير نشط"
 msgid "Inactive timeout"
 msgstr "مهلة عدم النشاط"
 
-#. Report category label for an account whose profile (name, avatar, bio) violates policy.
-#: src/features/moderation/components/report/OptionDescriptors.ts:82
-msgid "Inappropriate profile"
-msgstr "ملف شخصي غير لائق"
-
 #. Generic header / tab label for the unread / mentions / bookmarks inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:500
@@ -18963,7 +18712,7 @@ msgid "Include my two-factor backup codes in the PDF and printout"
 msgstr "ضم رموز النسخ الاحتياطي للمصادقة الثنائية الخاصة بي في ملف PDF والطباعة"
 
 #. Inline validation error on the details step of the DSA report flow (community report) when the community ID field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:126
+#: src/features/moderation/components/pages/ReportPage.tsx:158
 msgid "Include the community ID."
 msgstr "أدخل معرف المجتمع."
 
@@ -19403,7 +19152,7 @@ msgid "Invite background"
 msgstr "خلفية الدعوة"
 
 #. Field label on the details step of the DSA report form (community report). Optional invite code to the reported community.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:48
+#: src/features/moderation/components/report/ReportStepDetails.tsx:47
 msgid "Invite code (optional)"
 msgstr "رمز الدعوة (اختياري)"
 
@@ -19471,7 +19220,7 @@ msgstr "إخفاء الدعوات"
 #. Tooltip and accessible label for the invite button shown beside a channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:125
 #: src/features/guild/components/popouts/GuildHeaderPopout.tsx:57
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:85
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:82
 msgid "Invite members"
 msgstr "دعوة أعضاء"
 
@@ -19650,7 +19399,7 @@ msgid "IP address authorized"
 msgstr "تم التصريح بعنوان IP"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:163
+#: src/features/moderation/components/report/OptionDescriptors.ts:76
 msgid "Ireland"
 msgstr "أيرلندا"
 
@@ -19690,7 +19439,7 @@ msgid "Italic"
 msgstr "مائل"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:167
+#: src/features/moderation/components/report/OptionDescriptors.ts:80
 msgid "Italy"
 msgstr "إيطاليا"
 
@@ -20120,7 +19869,7 @@ msgstr "المفاتيح"
 #. Button or menu action label in the kick member modal. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the user profile actions sheet. Keep it concise. Keep the tone plain and specific.
 #. Member actions sheet menu item. Opens the kick-member confirmation (moderation action). Short verb used as a menu label.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:97
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:96
 #: src/features/moderation/components/modals/KickMemberModal.tsx:16
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:77
 msgid "Kick"
@@ -20230,7 +19979,7 @@ msgid "Later"
 msgstr "لاحقًا"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:171
+#: src/features/moderation/components/report/OptionDescriptors.ts:84
 msgid "Latvia"
 msgstr "لاتفيا"
 
@@ -20291,11 +20040,6 @@ msgstr "معرفة المزيد"
 msgid "Learn more about Visionary"
 msgstr "اعرف المزيد عن Visionary"
 
-#. IAR modal: quick-action card button label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:422
-msgid "Leave"
-msgstr "مغادرة"
-
 #. Confirmation text before leaving a private thread. threadName is the thread name.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:65
 msgid "Leave {threadName}? It's private, so you can only come back if someone adds you again."
@@ -20335,11 +20079,6 @@ msgstr "مغادرة المحادثة الخاصة"
 #: src/features/guild/hooks/useLeaveGroup.tsx:34
 msgid "Leave silently"
 msgstr "المغادرة بصمت"
-
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:414
-msgid "Leave the community"
-msgstr "مغادرة المجتمع"
 
 #. Body text in the leave-community confirmation modal.
 #: src/features/guild/hooks/useLeaveGuild.tsx:22
@@ -20799,7 +20538,7 @@ msgid "Lists members with this role in their own section in the member list."
 msgstr "يعرض الأعضاء الذين لديهم هذا الدور في قسم خاص بهم ضمن قائمة الأعضاء."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:175
+#: src/features/moderation/components/report/OptionDescriptors.ts:88
 msgid "Lithuania"
 msgstr "ليتوانيا"
 
@@ -20893,7 +20632,7 @@ msgid "Loading..."
 msgstr "جارٍ التحميل..."
 
 #. Combobox popup status shown while options are loading.
-#: src/features/ui/components/form/FormCombobox.tsx:88
+#: src/features/ui/components/form/FormCombobox.tsx:89
 #: src/features/ui/components/Spinner.tsx:30
 msgid "Loading…"
 msgstr "جارٍ التحميل…"
@@ -21023,7 +20762,7 @@ msgid "Low"
 msgstr "منخفض"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:179
+#: src/features/moderation/components/report/OptionDescriptors.ts:92
 msgid "Luxembourg"
 msgstr "لوكسمبورغ"
 
@@ -21075,14 +20814,14 @@ msgid "Maintenance is scheduled for {localizedTime}. Expected duration: {duratio
 msgstr "الصيانة مجدولة في {localizedTime}. المدة المتوقعة: {duration}."
 
 #. Confirm dialog body before transferring ownership of a group DM.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:81
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:80
 msgid "Make {userName} the group owner? You'll lose owner privileges."
 msgstr "هل تريد جعل {userName} مالك المجموعة؟ ستفقد امتيازات المالك."
 
 #. Group DM action that transfers ownership of the group to the selected member.
 #. Group DM action that transfers ownership of the group to the selected member.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:93
-#: src/features/ui/action_menu/UserContextMenu.tsx:117
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:92
+#: src/features/ui/action_menu/UserContextMenu.tsx:116
 msgid "Make group owner"
 msgstr "نقل ملكية المجموعة"
 
@@ -21091,37 +20830,20 @@ msgstr "نقل ملكية المجموعة"
 msgid "Make sure this code matches the one in the {PRODUCT_NAME} app."
 msgstr "تأكد من تطابق هذا الرمز مع الرمز الموجود في تطبيق {PRODUCT_NAME}."
 
+#. Report flow: subtitle of the summary screen. Asks the reporter to check their answers.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:9
+msgid "Make sure this looks right before you send it."
+msgstr "تأكد من أن هذا يبدو صحيحًا قبل إرساله."
+
 #. Setup wizard branding step title.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:166
 msgid "Make the instance yours"
 msgstr "خصّص المثيل على طريقتك"
 
-#. Report category label for messages containing phishing or malware links.
-#: src/features/moderation/components/report/OptionDescriptors.ts:62
-msgid "Malicious links"
-msgstr "روابط ضارة"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:183
+#: src/features/moderation/components/report/OptionDescriptors.ts:96
 msgid "Malta"
 msgstr "مالطا"
-
-#. IAR modal: rule label.
-#. Report category label for a community distributing malware or malicious software.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:278
-#: src/features/moderation/components/report/OptionDescriptors.ts:103
-msgid "Malware distribution"
-msgstr "توزيع البرامج الضارة"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:266
-msgid "Malware or dangerous links"
-msgstr "برامج ضارة أو روابط خطيرة"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:270
-msgid "Malware, credential theft, or harmful files."
-msgstr "برامج ضارة، أو سرقة بيانات اعتماد، أو ملفات مؤذية."
 
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
@@ -21408,11 +21130,6 @@ msgstr "إخفاء التفاصيل الخاصة قبل مشاركة شاشتك 
 msgid "Mask Visionary as subscription"
 msgstr "إظهار Visionary كاشتراك"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:250
-msgid "Mass spam, fraud, fake giveaways, or account abuse."
-msgstr "رسائل مزعجة جماعية أو احتيال أو سحوبات جوائز مزيفة أو إساءة استخدام الحسابات."
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:113
 msgctxt "us-state"
@@ -21491,30 +21208,10 @@ msgstr "بوابة وسائط المحتوى للبالغين"
 msgid "Mature content not allowed"
 msgstr "المحتوى للبالغين غير مسموح به"
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:202
-msgid "Mature content or harassment"
-msgstr "محتوى للبالغين أو مضايقة"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:218
-msgid "Mature content or unsafe gating"
-msgstr "محتوى للبالغين أو تقييد وصول غير آمن"
-
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:35
 msgid "Mature content override"
 msgstr "تجاوز المحتوى للبالغين"
-
-#. Report category label for mature-content policy violations. Keep tone plain and neutral.
-#: src/features/moderation/components/report/OptionDescriptors.ts:40
-msgid "Mature content policy violation"
-msgstr "انتهاك سياسة المحتوى للبالغين"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:222
-msgid "Mature content without proper gating."
-msgstr "محتوى للبالغين بدون تقييد وصول مناسب."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the mature media gate details modal. Keep it concise.
@@ -21959,13 +21656,13 @@ msgstr "رسالة"
 #. Action that opens a DM conversation with the selected user.
 #. Member actions sheet menu item. Sends a direct message to the target user. Standalone verb used as a menu label.
 #. Voice participant menu action that opens a DM conversation with the selected user.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:87
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:86
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:78
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:719
-#: src/features/user/components/modals/UserProfileModal.tsx:565
-#: src/features/user/components/modals/UserProfileModal.tsx:773
+#: src/features/user/components/modals/UserProfileModal.tsx:568
+#: src/features/user/components/modals/UserProfileModal.tsx:776
 #: src/features/user/components/popouts/UserProfilePopout.tsx:421
 #: src/features/user/components/popouts/UserProfilePopout.tsx:451
 #: src/features/user/components/profile/ProfilePreview.tsx:321
@@ -22128,7 +21825,7 @@ msgid "message link"
 msgstr "رابط الرسالة"
 
 #. Field label on the details step of the DSA report form (message report). The reporter pastes a direct link to the offending message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:23
+#: src/features/moderation/components/report/ReportStepDetails.tsx:22
 msgid "Message link"
 msgstr "رابط الرسالة"
 
@@ -22167,7 +21864,7 @@ msgid "Message previews in the DM list"
 msgstr "معاينات الرسائل في قائمة الرسائل المباشرة"
 
 #. Toast shown after a message in an announcement channel was published to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:118
+#: src/features/messaging/commands/MessageCommands.tsx:122
 msgid "Message published"
 msgstr "تم نشر الرسالة"
 
@@ -22210,6 +21907,11 @@ msgstr "وقت الرسالة"
 #: src/features/app/config/AuditLogConstants.ts:140
 msgid "Message unpinned"
 msgstr "تم إلغاء تثبيت الرسالة"
+
+#. Report flow: section heading above the preview of the message being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:18
+msgid "Message you're reporting"
+msgstr "الرسالة التي تبلغ عنها"
 
 #. Collapsible group heading in the Theme Studio tokens list, for chat message tokens.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -22422,11 +22124,6 @@ msgctxt "us-state"
 msgid "Minnesota"
 msgstr "مينيسوتا"
 
-#. IAR modal: rule-category description for the child-safety / mature-content group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:57
-msgid "Minors at risk, mature content in the wrong place, or unwanted conduct."
-msgstr "قُصَّر معرضون للخطر، أو محتوى للبالغين في غير مكانه، أو سلوك غير مرغوب فيه."
-
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
@@ -22633,7 +22330,7 @@ msgstr "المزيد"
 #. Short label in the index. Keep it concise.
 #. Short label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:47
-#: src/features/user/components/modals/UserProfileModal.tsx:114
+#: src/features/user/components/modals/UserProfileModal.tsx:117
 msgid "More actions"
 msgstr "المزيد من الإجراءات"
 
@@ -23359,7 +23056,7 @@ msgid "Nested"
 msgstr "متداخل"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:187
+#: src/features/moderation/components/report/OptionDescriptors.ts:100
 msgid "Netherlands"
 msgstr "هولندا"
 
@@ -24099,7 +23796,7 @@ msgstr "لا توجد نتائج"
 #. Empty state shown when a combobox search returns no matches.
 #. Empty state shown when a combobox search returns no matches.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentLanguageCombobox.tsx:30
-#: src/features/ui/components/form/FormCombobox.tsx:84
+#: src/features/ui/components/form/FormCombobox.tsx:85
 msgid "No results found"
 msgstr "لم يتم العثور على نتائج"
 
@@ -24858,6 +24555,16 @@ msgstr "يمكن فقط للأشخاص الذين تدعوهم والمشرفي�
 msgid "Only places I can't access anymore"
 msgstr "الأماكن التي لم يعد بإمكاني الوصول إليها فقط"
 
+#. Report flow: good-faith statement on the summary screen, used when the instance has no community guidelines page.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:13
+msgid "Only report what you honestly believe breaks the rules, and please don't send the same report twice."
+msgstr "لا تُبلغ إلا عما تعتقد بصدق أنه يخالف القواعد، ويرجى عدم إرسال البلاغ نفسه مرتين."
+
+#. Report flow: good-faith statement on the summary screen. The linked text opens the community guidelines.
+#: src/features/moderation/components/report_flow/ReportFlowSummary.tsx:52
+msgid "Only report what you honestly believe breaks the rules. Misusing reports goes against our <0>Community Guidelines</0>."
+msgstr "لا تُبلغ إلا عما تعتقد بصدق أنه يخالف القواعد. إساءة استخدام البلاغات تتعارض مع <0>إرشادات المجتمع</0>."
+
 #. Console warning line advising users not to run unknown code.
 #: src/features/devtools/utils/SelfXssNotice.ts:24
 msgid "Only run code here if you understand exactly what it does."
@@ -24927,11 +24634,9 @@ msgstr "العتامة"
 #. Action button on a Linux desktop notification. Imperative verb: opens the message the notification is about.
 #. Billing invoice status for an invoice awaiting payment.
 #. Button label that opens the source settings section for an advanced setting.
-#. IAR modal: quick-action card button label.
 #. Short button that opens a billing invoice or receipt.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:21
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:159
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:434
 #: src/features/platform/utils/DesktopLocaleBridge.ts:254
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:22
 msgid "Open"
@@ -25306,7 +25011,7 @@ msgid "Open on {instanceName}"
 msgstr "افتح على {instanceName}"
 
 #. Accessible label for the combobox popup trigger button.
-#: src/features/ui/components/form/FormCombobox.tsx:96
+#: src/features/ui/components/form/FormCombobox.tsx:97
 msgid "Open popup"
 msgstr "فتح القائمة المنسدلة"
 
@@ -25378,11 +25083,6 @@ msgstr "افتح \"إعدادات النظام\" ← \"الخصوصية والأ
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:535
 msgid "Open template JSON"
 msgstr "فتح قالب JSON"
-
-#. IAR modal: quick-action card description for banning the reported user.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:130
-msgid "Open the ban dialog for this community."
-msgstr "افتح مربع حوار الحظر لهذا المجتمع."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:249
@@ -25484,6 +25184,11 @@ msgstr "فتح إعداداتك"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:44
 msgid "Opened the thread again"
 msgstr "تمت إعادة فتح المحادثة"
+
+#. Report flow: screen reader hint on answers that open an external page.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:116
+msgid "Opens in a new tab"
+msgstr "يُفتح في علامة تبويب جديدة"
 
 #. Screen-reader-only hint for the Members entry in community settings. The entry receives keyboard focus without automatically opening.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:67
@@ -25621,9 +25326,7 @@ msgstr "تم حظر العضو أصلاً في {date}"
 
 #. Catch-all Discovery category dropdown option in the community Discovery settings tab.
 #. Collapsible group heading in the Theme Studio tokens list, for tokens that fit no other group.
-#. Report category label for a reason that does not match any predefined category.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:110
-#: src/features/moderation/components/report/OptionDescriptors.ts:70
 #: src/features/theme_studio/sections/TokenGroups.ts:118
 msgid "Other"
 msgstr "أخرى"
@@ -25653,11 +25356,6 @@ msgstr "تفاعل آخر…"
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:64
 msgid "OTP"
 msgstr "OTP"
-
-#. IAR modal: body copy on the success step shown after a platform report is submitted. Reassures the user about follow-up.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:101
-msgid "Our safety team is reviewing it. We'll send you a DM and email once we've reached a verdict."
-msgstr "يراجع فريق السلامة لدينا بلاغك. سنرسل لك رسالة مباشرة وبريدًا إلكترونيًا فور التوصل إلى قرار."
 
 #. Field label in the voice connection status popout. Shows WebRTC estimated available outgoing bandwidth.
 #: src/features/voice/components/voice_connection_status/shared.ts:120
@@ -25755,7 +25453,7 @@ msgid "Ownership could not be transferred to <0>{username}</0> at this time."
 msgstr "تعذر نقل الملكية إلى <0>{username}</0> في هذا الوقت."
 
 #. Toast confirming group DM ownership was transferred.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:85
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:84
 msgid "Ownership transferred"
 msgstr "تم نقل الملكية"
 
@@ -25956,7 +25654,7 @@ msgid "Paste the JSON response here"
 msgstr "الصق استجابة JSON هنا"
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:111
+#: src/features/moderation/components/pages/ReportPage.tsx:143
 msgid "Paste the message link."
 msgstr "الصق رابط الرسالة."
 
@@ -26260,11 +25958,6 @@ msgstr "PgDn"
 msgid "PgUp"
 msgstr "PgUp"
 
-#. IAR modal: rule-category description for the scams / malware / misinformation group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:73
-msgid "Phishing, fraud, malicious links, or false claims likely to cause real-world harm."
-msgstr "التصيّد الاحتيالي أو الاحتيال أو الروابط الضارة أو الادعاءات الكاذبة التي يُحتمل أن تسبب ضررًا في العالم الحقيقي."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:21
 msgid "Photo"
@@ -26300,11 +25993,6 @@ msgstr "اختر مزود البحث على الويب"
 msgid "Pick an emoji"
 msgstr "اختر رمز تعبيري"
 
-#. Validation hint in the IAR modal when the user tries to advance without picking a radio option.
-#: src/features/moderation/components/report_modal/IARModal.tsx:72
-msgid "Pick an option to continue."
-msgstr "اختر خيارًا للمتابعة."
-
 #. Validation error when the user advances with all inclusion toggles off in the custom scope.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:205
 msgid "Pick at least one kind of conversation to include."
@@ -26329,11 +26017,6 @@ msgstr "اختر الرقم المكون من 4 أرقام بعد اسم الم�
 #: src/features/app/components/setup/SetupWizardSteps.tsx:62
 msgid "Pick the appearance this administrator account should start with."
 msgstr "اختر المظهر الذي يجب أن يبدأ به حساب المسؤول هذا."
-
-#. Validation hint in the IAR modal on the rule selection step.
-#: src/features/moderation/components/report_modal/IARModal.tsx:76
-msgid "Pick the rule to review."
-msgstr "اختر القاعدة المراد مراجعتها."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
@@ -26607,7 +26290,7 @@ msgid "Please wait a moment and try renaming again."
 msgstr "الرجاء الانتظار لحظة ثم حاول إعادة التسمية مرة أخرى."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:191
+#: src/features/moderation/components/report/OptionDescriptors.ts:104
 msgid "Poland"
 msgstr "بولندا"
 
@@ -26659,7 +26342,7 @@ msgid "Port"
 msgstr "المنفذ"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:195
+#: src/features/moderation/components/report/OptionDescriptors.ts:108
 msgid "Portugal"
 msgstr "البرتغال"
 
@@ -26872,11 +26555,6 @@ msgstr "اضغط لإضافة رد فعل"
 msgid "press to remove reaction"
 msgstr "اضغط لإزالة رد الفعل"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:314
-msgid "Pretending to be someone else, including deceptive AI-generated content."
-msgstr "انتحال شخصية شخص آخر، بما في ذلك المحتوى الخادع الذي تم إنشاؤه بواسطة الذكاء الاصطناعي."
-
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx:135
 msgid "Prevent <0>{targetUserTag}</0> from sending messages, reacting, and connecting to voice channels for the specified duration."
 msgstr "منع <0>{targetUserTag}</0> من إرسال الرسائل وإضافة ردود الفعل والاتصال بالقنوات الصوتية طوال المدة المحددة."
@@ -27078,11 +26756,6 @@ msgstr "متحدث ذو أولوية"
 msgid "Privacy"
 msgstr "الخصوصية"
 
-#. IAR modal: rule-category label grouping privacy violations and impersonation.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:61
-msgid "Privacy or impersonation"
-msgstr "الخصوصية أو انتحال الشخصية"
-
 #: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:444
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:24
 msgid "Privacy policy"
@@ -27102,21 +26775,6 @@ msgstr "إعدادات الخصوصية"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1157
 msgid "Privacy URL"
 msgstr "رابط سياسة الخصوصية"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:286
-msgid "Privacy violation"
-msgstr "انتهاك الخصوصية"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:298
-msgid "Privacy violation or doxxing"
-msgstr "انتهاك الخصوصية أو نشر المعلومات الشخصية"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:294
-msgid "Privacy violation or stalking"
-msgstr "انتهاك الخصوصية أو الملاحقة"
 
 #. Switch in the channel create modal that limits who can view the new channel.
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:55
@@ -27280,25 +26938,10 @@ msgstr "نوع الملف الشخصي"
 msgid "Profile updated"
 msgstr "تم تحديث الملف الشخصي"
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:322
-msgid "Profile, username, or avatar violation"
-msgstr "مخالفة في الملف الشخصي أو اسم المستخدم أو الصورة الرمزية"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:182
-msgid "Promotes hatred against protected groups."
-msgstr "يروج للكراهية ضد الفئات المحمية."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:198
-msgid "Promotes, recruits for, or coordinates violent extremist activity."
-msgstr "يروج للنشاط المتطرف العنيف أو يجند له أو ينسقه."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:350
-msgid "Promotion or instructions encouraging self-harm or eating disorders."
-msgstr "الترويج لإيذاء النفس أو اضطرابات الأكل أو التعليمات التي تشجع عليهما."
+#. Report flow: section heading above the card of the user whose profile is being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:22
+msgid "Profile you're reporting"
+msgstr "الملف الشخصي الذي تبلّغ عنه"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
@@ -27329,19 +26972,14 @@ msgstr "الضمائر: "
 msgid "Protect your Visionary account by enabling two-factor authentication. Thanks for supporting {productName}!"
 msgstr "احمِ حساب Visionary الخاص بك بتفعيل المصادقة الثنائية. شكرًا لدعمك {productName}!"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:216
+#: src/features/moderation/components/report/ReportStepDetails.tsx:261
 msgid "Provide at least a user ID or a user tag."
 msgstr "يُرجى إدخال معرف مستخدم أو علامة مستخدم على الأقل."
 
 #. Inline validation error on the details step of the DSA report flow (user report) when both user ID and username fields are empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:121
+#: src/features/moderation/components/pages/ReportPage.tsx:153
 msgid "Provide either a user ID or a username for the person you are reporting."
 msgstr "أدخل معرف المستخدم أو اسم المستخدم للشخص الذي تبلّغ عنه."
-
-#. Inline validation error on the details step of the DSA report flow. The reporter must give their legal name for the legal declaration; keep tone neutral and factual.
-#: src/features/moderation/components/pages/ReportPage.tsx:101
-msgid "Provide your full legal name for the declaration."
-msgstr "يرجى تقديم اسمك القانوني الكامل للإقرار."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:90
@@ -27701,13 +27339,6 @@ msgstr "تتيح أزرار الاختيار تحديد خيار واحد من �
 msgid "Radio group"
 msgstr "مجموعة أزرار اختيار"
 
-#. IAR modal: rule label.
-#. Report category label for a community coordinating raids (mass harassment of other communities or users). "Raid" is product jargon.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:338
-#: src/features/moderation/components/report/OptionDescriptors.ts:94
-msgid "Raid coordination"
-msgstr "تنسيق الهجمات الجماعية"
-
 #. Setup wizard finish summary value when every username gets a random four digit tag.
 #. Setup wizard option where every username gets a random four digit tag.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:104
@@ -27831,8 +27462,10 @@ msgstr "هل أنت مستعد لشراء هدية؟"
 msgid "Ready to upgrade?"
 msgstr "هل أنت مستعد للترقية؟"
 
+#. DSA report page: step indicator label for the step where the reporter picks why they are reporting.
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:611
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:75
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:40
 msgid "Reason"
 msgstr "السبب"
 
@@ -28291,8 +27924,8 @@ msgstr "تذكر حجم النافذة وموضعها"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:140
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:143
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:271
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:73
-#: src/features/ui/action_menu/UserContextMenu.tsx:97
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:72
+#: src/features/ui/action_menu/UserContextMenu.tsx:96
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:198
@@ -28328,8 +27961,8 @@ msgstr "إزالة {engineName}"
 
 #. Confirm dialog body before removing a member from a group DM.
 #. Confirm dialog body before removing a member from a group DM.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:69
-#: src/features/ui/action_menu/UserContextMenu.tsx:93
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:68
+#: src/features/ui/action_menu/UserContextMenu.tsx:92
 msgid "Remove {userName} from the group?"
 msgstr "هل تريد إزالة {userName} من المجموعة؟"
 
@@ -28419,8 +28052,8 @@ msgstr "إزالة من المفضلة"
 
 #. Group DM action that removes the selected member from the group.
 #. Group DM action that removes the selected member from the group.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:65
-#: src/features/ui/action_menu/UserContextMenu.tsx:89
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:64
+#: src/features/ui/action_menu/UserContextMenu.tsx:88
 msgid "Remove from group"
 msgstr "إزالة من المجموعة"
 
@@ -28457,11 +28090,6 @@ msgstr "إزالة من صور GIF المفضلة (بالرابط فقط)"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:643
 msgid "Remove icon"
 msgstr "إزالة الأيقونة"
-
-#. IAR modal: quick-action card description for deleting the reported message.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:110
-msgid "Remove it from the channel for everyone."
-msgstr "إزالة الرسالة من القناة لدى الجميع."
 
 #. Permission description in the role/permission editor for the Kick Members permission. Note that a kick is not permanent, unlike a ban.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:119
@@ -28578,7 +28206,7 @@ msgid "Removed from favorites"
 msgstr "أُزيل من المفضلة"
 
 #. Toast confirming the selected member was removed from the group DM.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:77
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:76
 msgid "Removed from group"
 msgstr "تمت إزالته من المجموعة"
 
@@ -28919,28 +28547,18 @@ msgstr "الإبلاغ عن مجتمع"
 msgid "Report a message"
 msgstr "الإبلاغ عن رسالة"
 
-#. IAR modal: screen-reader description for the whole modal.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:446
-msgid "Report a rule violation, or find tools to manage contact and preferences."
-msgstr "أبلغ عن مخالفة للقواعد، أو اعثر على أدوات للتحكم في التواصل والتفضيلات."
-
 #. Report flow target option. Selects reporting another user account or profile. Keep tone plain and neutral.
 #: src/features/moderation/components/report/OptionDescriptors.ts:11
 msgid "Report a user profile"
 msgstr "الإبلاغ عن ملف شخصي لمستخدم"
 
-#. Action label that opens the report flow targeting a community.
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:17
-msgid "Report community"
-msgstr "الإبلاغ عن المجتمع"
-
-#: src/features/moderation/components/report/ReportStepDetails.tsx:128
+#: src/features/moderation/components/report/ReportStepDetails.tsx:151
 msgid "Report details"
 msgstr "تفاصيل البلاغ"
 
 #. Document/page title for the public DSA illegal-content report page. Sensitive/legal flow; keep tone plain and factual.
-#: src/features/moderation/components/pages/ReportPage.tsx:45
-#: src/features/moderation/components/report/ReportStepSelection.tsx:32
+#: src/features/moderation/components/pages/ReportPage.tsx:66
+#: src/features/moderation/components/report/ReportStepSelection.tsx:33
 msgid "Report illegal content"
 msgstr "الإبلاغ عن محتوى غير قانوني"
 
@@ -28950,30 +28568,28 @@ msgid "Report issue"
 msgstr "الإبلاغ عن مشكلة"
 
 #. Generic action label that opens the report flow targeting a specific message.
-#. Modal title for the IAR flow when reporting a specific message.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:544
-#: src/features/moderation/components/report_modal/IARModalContext.ts:22
 msgid "Report message"
 msgstr "الإبلاغ عن الرسالة"
 
-#. IAR modal: title on the success step shown after a platform report is submitted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:97
-#: src/features/moderation/components/report/ReportStepComplete.tsx:31
+#. Action label in the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts:13
+msgid "Report profile"
+msgstr "الإبلاغ عن الملف الشخصي"
+
+#. Report flow: title of the final screen after a report was sent to the safety team.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:42
+#: src/features/moderation/components/report/ReportStepComplete.tsx:32
 msgid "Report sent"
 msgstr "تم إرسال البلاغ"
 
 #. Button or menu action label in the moderation report step selection. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/components/report/ReportStepSelection.tsx:11
+#: src/features/moderation/components/report/ReportStepSelection.tsx:12
 msgid "Report type"
 msgstr "نوع البلاغ"
 
-#. Action label that opens the report flow targeting a user.
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:13
-msgid "Report user"
-msgstr "الإبلاغ عن المستخدم"
-
 #. Field label on the details step of the DSA report form (message report). Optional FluxerTag of the user who sent the message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:28
+#: src/features/moderation/components/report/ReportStepDetails.tsx:27
 msgid "Reported user tag (optional)"
 msgstr "علامة المستخدم المُبلّغ عنه (اختياري)"
 
@@ -29100,6 +28716,10 @@ msgstr "يتطلب كل ما في المستوى المتوسط، بالإضاف
 msgid "Resend"
 msgstr "إعادة الإرسال"
 
+#: src/features/moderation/components/report/ReportStepVerification.tsx:31
+msgid "Resend ({duration})"
+msgstr "إعادة الإرسال ({duration})"
+
 #: src/features/user/components/modals/EmailChangeModal.tsx:333
 msgid "Resend ({newSecondsRemaining}s)"
 msgstr "إعادة الإرسال ({newSecondsRemaining}ث)"
@@ -29108,7 +28728,7 @@ msgstr "إعادة الإرسال ({newSecondsRemaining}ث)"
 msgid "Resend ({originalSecondsRemaining}s)"
 msgstr "إعادة الإرسال ({originalSecondsRemaining}ث)"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:103
+#: src/features/moderation/components/report/ReportStepVerification.tsx:29
 msgid "Resend ({resendCooldownSeconds}s)"
 msgstr "إعادة الإرسال ({resendCooldownSeconds}ث)"
 
@@ -29122,7 +28742,7 @@ msgstr "إعادة الإرسال ({resendSecondsRemaining}ث)"
 msgid "Resend ({secondsRemaining}s)"
 msgstr "إعادة الإرسال ({secondsRemaining}ث)"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:105
+#: src/features/moderation/components/report/ReportStepVerification.tsx:134
 msgid "Resend code"
 msgstr "إعادة إرسال الرمز"
 
@@ -29841,7 +29461,7 @@ msgid "Roles updated successfully"
 msgstr "تم تحديث الأدوار بنجاح"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:199
+#: src/features/moderation/components/report/OptionDescriptors.ts:112
 msgid "Romania"
 msgstr "رومانيا"
 
@@ -29947,7 +29567,7 @@ msgstr "التشبع"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
-#: src/features/messaging/commands/MessageCommands.tsx:114
+#: src/features/messaging/commands/MessageCommands.tsx:118
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
@@ -30092,11 +29712,6 @@ msgstr "ألقِ التحية على <0>{displayName}</0>. تبدأ رسائلك
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:186
 msgid "Scale"
 msgstr "مقياس"
-
-#. IAR modal: rule-category label grouping spam/scams, malware, and harmful misinformation.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:69
-msgid "Scams, malware, or misinformation"
-msgstr "عمليات الاحتيال أو البرامج الضارة أو المعلومات المضللة"
 
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:97
 msgid "Scan the QR code with your authenticator app."
@@ -30855,11 +30470,6 @@ msgstr "تحديد"
 msgid "Select {accessibleName}"
 msgstr "تحديد {accessibleName}"
 
-#. Placeholder option label for the report category dropdown when no category has been chosen yet.
-#: src/features/moderation/components/report/OptionDescriptors.ts:20
-msgid "Select a category"
-msgstr "اختر فئة"
-
 #. Button or menu action label in the idle settings section. Keep it concise.
 #. Button or menu action label in the system welcome section. Keep it concise.
 #. Placeholder of the channel picker in the follow announcement channel dialog.
@@ -30892,7 +30502,7 @@ msgid "Select a community where you have {permissionName} permission, or a group
 msgstr "اختر مجتمعًا لديك فيه إذن {permissionName}، أو محادثة جماعية أنت عضو فيها."
 
 #. Placeholder option label for the country dropdown in the EU illegal-content report flow.
-#: src/features/moderation/components/report/OptionDescriptors.ts:107
+#: src/features/moderation/components/report/OptionDescriptors.ts:20
 msgid "Select a country"
 msgstr "اختر بلدًا"
 
@@ -30910,11 +30520,6 @@ msgstr "اختر عنوان URI لإعادة التوجيه"
 #: src/features/devtools/components/PremiumScenarioOptions.ts:16
 msgid "Select a scenario to apply..."
 msgstr "حدد سيناريو لتطبيقه..."
-
-#. Inline validation error on the details step of the DSA report flow when the category field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:97
-msgid "Select a violation category."
-msgstr "اختر فئة انتهاك."
 
 #. Native Edit menu item that selects everything in the focused field. Imperative verb.
 #. Textarea right-click context menu item that selects all text in the textarea.
@@ -30972,17 +30577,17 @@ msgstr "اختر الحساب الذي تريد تسجيل الدخول به ع�
 msgid "Select voice processing mode"
 msgstr "تحديد وضع معالجة الصوت"
 
-#: src/features/moderation/components/report/ReportStepSelection.tsx:35
+#: src/features/moderation/components/report/ReportStepSelection.tsx:36
 msgid "Select what you want to report."
 msgstr "اختر ما تريد الإبلاغ عنه."
 
 #. Inline validation error on the details step of the DSA report flow when the country dropdown has no selection.
-#: src/features/moderation/components/pages/ReportPage.tsx:106
+#: src/features/moderation/components/pages/ReportPage.tsx:138
 msgid "Select your country of residence."
 msgstr "اختر بلد إقامتك."
 
 #. Generic combobox control placeholder.
-#: src/features/ui/components/form/FormCombobox.tsx:76
+#: src/features/ui/components/form/FormCombobox.tsx:77
 msgid "Select…"
 msgstr "اختر…"
 
@@ -31036,13 +30641,6 @@ msgstr "التحديد: {0} (الحد الأقصى {1})"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:292
 msgid "Selections"
 msgstr "عناصر الاختيار"
-
-#. IAR modal: rule label.
-#. Report category label for content that promotes or depicts self-harm or suicide. Keep tone calm and respectful; this is a safety surface.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:346
-#: src/features/moderation/components/report/OptionDescriptors.ts:52
-msgid "Self-harm or suicide"
-msgstr "إيذاء النفس أو الانتحار"
 
 #. Accessible label for the self-host setup wizard carousel.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:97
@@ -31121,7 +30719,7 @@ msgstr "إرسال رسالة إجراء (تظهر بخط مائل)."
 msgid "Send animation"
 msgstr "إرسال رسوم متحركة"
 
-#: src/features/moderation/components/report/ReportStepComplete.tsx:36
+#: src/features/moderation/components/report/ReportStepComplete.tsx:37
 msgid "Send another report"
 msgstr "إرسال بلاغ آخر"
 
@@ -31138,7 +30736,7 @@ msgstr "زر الإرسال"
 msgid "Send code"
 msgstr "إرسال الرمز"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:302
+#: src/features/moderation/components/report/ReportStepDetails.tsx:364
 msgid "Send DSA report"
 msgstr "إرسال بلاغ DSA"
 
@@ -31158,9 +30756,9 @@ msgstr "إرسال ملفات بحجم يصل إلى {size}"
 #. Button or menu action label in the user profile modal. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:93
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:92
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:111
-#: src/features/user/components/modals/UserProfileModal.tsx:126
+#: src/features/user/components/modals/UserProfileModal.tsx:129
 msgid "Send friend request"
 msgstr "إرسال طلب صداقة"
 
@@ -31220,8 +30818,8 @@ msgstr "إرسال الرسائل في المواضيع"
 msgid "Send messages, images, GIFs and emoji"
 msgstr "إرسال الرسائل والصور وصور GIF والرموز التعبيرية"
 
-#. Footer submit button in the IAR modal. Sends the report to the safety team.
-#: src/features/moderation/components/report_modal/IARModal.tsx:88
+#. Report flow: footer button on the summary screen that sends the report to the safety team.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:30
 msgid "Send report"
 msgstr "إرسال البلاغ"
 
@@ -31255,7 +30853,7 @@ msgstr "هل تريد إعادة هذه الرسالة المثبتة إلى ا�
 msgid "Send TTS messages"
 msgstr "إرسال رسائل تحويل النص إلى كلام"
 
-#: src/features/moderation/components/report/ReportStepEmail.tsx:86
+#: src/features/moderation/components/report/ReportStepEmail.tsx:101
 msgid "Send verification code"
 msgstr "إرسال رمز التحقق"
 
@@ -31272,11 +30870,6 @@ msgstr "إرسال رسالة صوتية"
 #: src/features/voice/components/voice_connection_status/shared.ts:84
 msgid "Send:"
 msgstr "الإرسال:"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:274
-msgid "Sending malware or dangerous links"
-msgstr "إرسال برامج ضارة أو روابط خطيرة"
 
 #. Short label under a destination row in the forward modal, shown when the community has messaging disabled.
 #: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:55
@@ -31701,18 +31294,13 @@ msgstr "مشاركة السمة"
 msgid "Share voice activity with all friends?"
 msgstr "مشاركة النشاط الصوتي مع جميع الأصدقاء؟"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:131
+#: src/features/moderation/components/report/ReportStepDetails.tsx:154
 msgid "Share what our team needs to assess this."
 msgstr "شارك ما يحتاجه فريقنا لتقييم هذا الأمر."
 
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:283
 msgid "Share with a friend"
 msgstr "مشاركة مع صديق"
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:398
-msgid "Share with community mods."
-msgstr "مشاركة مع مشرفي المجتمع."
 
 #. Voice control button or tooltip label for starting screen sharing.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:223
@@ -31756,16 +31344,6 @@ msgstr "النافذة المشتركة"
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:42
 msgid "Shared window audio"
 msgstr "صوت النافذة المشتركة"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:302
-msgid "Shares personal info, stalks users, or coordinates privacy abuse."
-msgstr "يشارك معلومات شخصية، أو يلاحق المستخدمين، أو ينسّق انتهاكات الخصوصية."
-
-#. Report category label for doxxing or sharing private personal information without consent.
-#: src/features/moderation/components/report/OptionDescriptors.ts:48
-msgid "Sharing personal information"
-msgstr "مشاركة معلومات شخصية"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:98
@@ -32758,12 +32336,12 @@ msgid "Sliders"
 msgstr "أشرطة التمرير"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:203
+#: src/features/moderation/components/report/OptionDescriptors.ts:116
 msgid "Slovakia"
 msgstr "سلوفاكيا"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:207
+#: src/features/moderation/components/report/OptionDescriptors.ts:120
 msgid "Slovenia"
 msgstr "سلوفينيا"
 
@@ -32888,11 +32466,6 @@ msgstr "محاكاة الوضع البطيء"
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:50
 msgid "Slowmode time remaining"
 msgstr "الوقت المتبقي للوضع البطيء"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:174
-msgid "Slurs, dehumanizing language, or attacks on protected groups."
-msgstr "الألفاظ المسيئة أو اللغة المجرِّدة من الإنسانية أو الهجمات على الفئات المحمية."
 
 #. Short label in the selections tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:45
@@ -33094,7 +32667,7 @@ msgid "Something went wrong while preparing this sticker. Try another file or tr
 msgstr "حدث خطأ أثناء إعداد هذا الملصق. جرّب ملفًا آخر أو أعد المحاولة بعد قليل."
 
 #. Fallback body of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:130
+#: src/features/messaging/commands/MessageCommands.tsx:134
 msgid "Something went wrong while publishing. Try again in a moment."
 msgstr "حدث خطأ أثناء النشر. حاول مرة أخرى بعد لحظة."
 
@@ -33302,39 +32875,14 @@ msgid "Spacious layout with clear visual separation between messages."
 msgstr "تخطيط واسع مع فصل بصري واضح بين الرسائل."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:211
+#: src/features/moderation/components/report/OptionDescriptors.ts:124
 msgid "Spain"
 msgstr "إسبانيا"
-
-#. Report category label for a user profile used primarily to send spam.
-#: src/features/moderation/components/report/OptionDescriptors.ts:74
-msgid "Spam account"
-msgstr "حساب رسائل مزعجة"
 
 #. Section label for spam classification debug controls.
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:21
 msgid "Spam classification"
 msgstr "تصنيف الرسائل المزعجة"
-
-#. Report category label for spam or scam messages. Keep tone plain and neutral.
-#: src/features/moderation/components/report/OptionDescriptors.ts:36
-msgid "Spam or scam"
-msgstr "رسائل مزعجة أو احتيال"
-
-#. Report category label for a community whose purpose is spam or scams.
-#: src/features/moderation/components/report/OptionDescriptors.ts:99
-msgid "Spam or scam community"
-msgstr "مجتمع رسائل مزعجة أو احتيال"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:254
-msgid "Spam, scam, or phishing account"
-msgstr "حساب رسائل مزعجة أو احتيال أو تصيّد"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:246
-msgid "Spam, scams, or phishing"
-msgstr "رسائل مزعجة أو احتيال أو تصيّد"
 
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:48
@@ -33628,9 +33176,11 @@ msgstr "بدء مصغر"
 
 #. Button on the browser page after cancelling that goes back to choosing an account.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:337
-#: src/features/moderation/components/report/ReportStepDetails.tsx:326
-#: src/features/moderation/components/report/ReportStepEmail.tsx:97
-#: src/features/moderation/components/report/ReportStepVerification.tsx:134
+#: src/features/moderation/components/report/ReportStepDetails.tsx:389
+#: src/features/moderation/components/report/ReportStepEmail.tsx:113
+#: src/features/moderation/components/report/ReportStepReason.tsx:149
+#: src/features/moderation/components/report/ReportStepReason.tsx:219
+#: src/features/moderation/components/report/ReportStepVerification.tsx:167
 msgid "Start over"
 msgstr "البدء من جديد"
 
@@ -33752,21 +33302,25 @@ msgstr "البقاء مسجّلًا للدخول"
 msgid "Step {current} of {total}"
 msgstr "خطوة {current} من {total}"
 
-#: src/features/moderation/components/report/ReportStepSelection.tsx:29
+#: src/features/moderation/components/report/ReportStepSelection.tsx:30
 msgid "Step 1"
 msgstr "الخطوة 1"
 
-#: src/features/moderation/components/report/ReportStepEmail.tsx:40
+#: src/features/moderation/components/report/ReportStepEmail.tsx:46
 msgid "Step 2"
 msgstr "الخطوة 2"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:45
+#: src/features/moderation/components/report/ReportStepVerification.tsx:70
 msgid "Step 3"
 msgstr "الخطوة 3"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:125
+#: src/features/moderation/components/report/ReportStepReason.tsx:195
 msgid "Step 4"
 msgstr "الخطوة 4"
+
+#: src/features/moderation/components/report/ReportStepDetails.tsx:148
+msgid "Step 5"
+msgstr "الخطوة 5"
 
 #. Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:50
@@ -33935,11 +33489,6 @@ msgstr "إيقاف القناة كقناة إعلانات؟"
 msgid "Stop hiding muted channels by default?"
 msgstr "إيقاف إخفاء القنوات المكتومة افتراضيًا؟"
 
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:390
-msgid "Stop messages and friend requests."
-msgstr "إيقاف الرسائل وطلبات الصداقة."
-
 #: src/features/user/components/modals/tabs/components/MicTestSection.tsx:16
 msgid "Stop mic test"
 msgstr "إيقاف اختبار الميكروفون"
@@ -33958,11 +33507,6 @@ msgstr "إيقاف تعديل insertBefore وremoveChild في Node.prototype. س
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:29
 msgid "Stop ringing"
 msgstr "إيقاف الرنين"
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:418
-msgid "Stop seeing its content and members."
-msgstr "إيقاف عرض محتواه وأعضائه."
 
 #. Privacy > Active now: confirmation modal title when turning sharing off.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:37
@@ -34344,7 +33888,7 @@ msgid "Swap common text faces such as :) and <3 for emoji when sending messages"
 msgstr "استبدال الوجوه النصية الشائعة مثل :) و <3 برموز تعبيرية عند إرسال الرسائل"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:215
+#: src/features/moderation/components/report/OptionDescriptors.ts:128
 msgid "Sweden"
 msgstr "السويد"
 
@@ -34804,11 +34348,6 @@ msgstr "اضغط لإضافة ملاحظة"
 msgid "tar.gz archive"
 msgstr "أرشيف tar.gz"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:178
-msgid "Targets people by protected characteristics."
-msgstr "يستهدف الأشخاص بناءً على خصائص محمية."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:34
@@ -34884,11 +34423,6 @@ msgstr "شروط الخدمة"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1153
 msgid "Terms URL"
 msgstr "رابط الشروط"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:194
-msgid "Terrorism or violent extremism"
-msgstr "الإرهاب أو التطرف العنيف"
 
 #. Button that validates SMTP credentials.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1125
@@ -35030,9 +34564,24 @@ msgid "Thai"
 msgstr "التايلاندية"
 
 #. Confirmation text shown after a user submits a moderation report.
-#: src/features/moderation/components/report/ReportStepComplete.tsx:22
+#: src/features/moderation/components/report/ReportStepComplete.tsx:23
 msgid "Thank you for helping keep {productName} safe. We'll review your report as soon as possible."
 msgstr "شكرًا لمساعدتك في الحفاظ على أمان {productName}. سنراجع بلاغك في أقرب وقت ممكن."
+
+#. Report flow: title of the final screen when the chosen answer does not lead to a report, so nothing was sent. Thanks the person for raising it.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:46
+msgid "Thanks for flagging this"
+msgstr "شكرًا لك على الإبلاغ عن هذا"
+
+#. Report flow: body of the final screen when the chosen answer does not lead to a report, so nothing was sent. Used when the reporter already picked a category.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:62
+msgid "Thanks for telling us. This doesn't break our rules on its own, so we didn't send a report."
+msgstr "شكرًا لإخبارنا. هذا لا يخالف قواعدنا بمفرده، لذلك لم نرسل بلاغًا."
+
+#. Report flow: body of the final screen when the chosen answer does not lead to a report, so nothing was sent. "Abusive or harmful content" is the name of an answer in the same flow.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:56
+msgid "Thanks for telling us. This doesn't break our rules on its own, so we didn't send a report. If it targets someone or uses slurs, report it again and choose Abusive or harmful content."
+msgstr "شكرًا لإخبارنا. هذا لا يخالف قواعدنا بمفرده، لذلك لم نرسل بلاغًا. إذا كان يستهدف شخصًا ما أو يستخدم ألفاظًا مهينة، فأبلغ عنه مرة أخرى واختر «محتوى مسيء أو ضار»."
 
 #. Error in the browser when a code typed from the app is not found. instanceHost is the server the browser checked, such as api.fluxer.app. productName is the app name, such as Fluxer.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:25
@@ -35048,7 +34597,7 @@ msgstr "لم ينجح ذلك. حاول مرة أخرى أو ألغِ."
 msgid "That doesn't look like a valid color. Try hex, rgb(), hsl(), or a CSS color name."
 msgstr "لا يبدو هذا لونًا صالحًا. جرّب hex أو rgb() أو hsl() أو اسم لون CSS."
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:175
+#: src/features/moderation/components/report/ReportStepDetails.tsx:217
 msgid "That doesn't look like a valid URL."
 msgstr "لا يبدو هذا رابطًا صالحًا."
 
@@ -35103,6 +34652,11 @@ msgstr "يُظهر تطبيق {PRODUCT_NAME} على جهازك الآخر ذلك
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:327
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
 msgstr "لم يتم تسجيل الدخول إلى تطبيق {PRODUCT_NAME}. يمكنك إغلاق هذه النافذة."
+
+#. Report flow: body of the final screen after a report was sent. {productName} is the name of the app. The second sentence promises the reported person is not told who reported them.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:51
+msgid "The {productName} safety team will review your report. We won't reveal that it came from you."
+msgstr "سيراجع فريق السلامة في {productName} بلاغك. لن نكشف أن البلاغ جاء منك."
 
 #. Description text in the FluxerTag change modal.
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:70
@@ -35308,6 +34862,11 @@ msgstr "عنوان redirect_uri المقدّم غير مسجّل لهذا الت
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "يجب أن يستخدم عنوان redirect_uri المقدّم بروتوكول HTTP أو HTTPS."
 
+#. Report flow: toast shown when the report questions changed while the reporter was answering them.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:95
+msgid "The report form changed. Please start again."
+msgstr "تغير نموذج البلاغ. يرجى البدء من جديد."
+
 #. Activity log detail line under a deleted role, listing the permissions the role gave its members before it was deleted. The role is the subject. {permissions} is a list of permission names that the app joins with commas and the word for "and" in your language. When the list is long it ends with a count of the permissions not named, such as "3 more permissions". Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:170
 msgid "The role granted {permissions}"
@@ -35359,7 +34918,7 @@ msgid "The username tags on this instance are already set. They can no longer ch
 msgstr "تم تعيين علامات اسم المستخدم على هذه النسخة بالفعل. لا يمكن تغييرها بعد الآن."
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
-#: src/features/moderation/components/pages/ReportPage.tsx:88
+#: src/features/moderation/components/pages/ReportPage.tsx:114
 msgid "The verification code is invalid or expired."
 msgstr "رمز التحقق غير صالح أو انتهت صلاحيته."
 
@@ -36115,13 +35674,8 @@ msgstr "لم يعد هذا العضو متصلًا بالقناة الصوتية
 msgid "This message can only be forwarded to age-restricted channels"
 msgstr "لا يمكن إعادة توجيه هذه الرسالة إلا إلى القنوات المخصصة للبالغين"
 
-#. IAR modal: tooltip on the delete card when the reported message is already deleted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:122
-msgid "This message has already been deleted."
-msgstr "تم حذف هذه الرسالة بالفعل."
-
 #. Toast shown when someone tries to publish an announcement message that was already published.
-#: src/features/messaging/commands/MessageCommands.tsx:122
+#: src/features/messaging/commands/MessageCommands.tsx:126
 msgid "This message has already been published"
 msgstr "تم نشر هذه الرسالة بالفعل"
 
@@ -36279,11 +35833,6 @@ msgstr "هذا الموضوع مغلق. إرسال رسالة سيفتح الم�
 msgid "This thread is locked. Only moderators can send messages."
 msgstr "تم قفل هذا الموضوع. يمكن للمشرفين فقط إرسال الرسائل."
 
-#. Lowercase phrase used mid-sentence in IAR copy when referring to the reported user without a name.
-#: src/features/moderation/components/report_modal/IARModalContext.ts:26
-msgid "this user"
-msgstr "هذا المستخدم"
-
 #: src/features/user/components/popouts/LimitedProfileNotice.tsx:10
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "قام هذا المستخدم بتقييد ملفه الشخصي. بعض التفاصيل مخفية عن الأشخاص الذين ليسوا أصدقاءه."
@@ -36291,11 +35840,6 @@ msgstr "قام هذا المستخدم بتقييد ملفه الشخصي. بع�
 #: src/features/user/components/popouts/UserProfileShared.tsx:395
 msgid "This user has no roles in this community."
 msgstr "ليس لدى هذا المستخدم أي أدوار في هذا المجتمع."
-
-#. IAR modal: tooltip on the ban card when the reported user is already banned.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:142
-msgid "This user is already banned from the community."
-msgstr "هذا المستخدم محظور بالفعل من المجتمع."
 
 #: src/features/channel/components/channel_view/DMChannelView.tsx:282
 msgid "This user is no longer available."
@@ -36465,16 +36009,6 @@ msgstr "تم تحديث الموضوع"
 msgid "Threads"
 msgstr "المواضيع"
 
-#. IAR modal: rule description for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:158
-msgid "Threats, following across spaces, or unwanted contact."
-msgstr "التهديدات أو الملاحقة عبر المساحات أو التواصل غير المرغوب فيه."
-
-#. IAR modal: rule-category label grouping harassment, hate, violence, terrorism, raids, and self-harm content.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:44
-msgid "Threats, harassment, or harm"
-msgstr "التهديدات أو المضايقات أو الأذى"
-
 #. Short label in the message history threshold content. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:41
 msgid "Threshold date"
@@ -36570,7 +36104,7 @@ msgstr "تم فرض مهلة على {targetUserTag}"
 
 #. Moderation action label that times a member out (temporary mute) in a community.
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:134
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:21
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts:18
 msgid "Timeout"
 msgstr "مهلة"
 
@@ -36787,6 +36321,11 @@ msgstr "درجات اللون"
 msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "تحويل درجات ألوان صور HDR إلى النطاق القياسي لتقليل ذروة السطوع."
 
+#. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
+#: src/features/moderation/components/pages/ReportPage.tsx:95
+msgid "Too many codes sent. Wait {duration} and try again."
+msgstr "تم إرسال عدد كبير جدًا من الرموز. انتظر {duration} ثم حاول مرة أخرى."
+
 #. Error message in the max guilds modal.
 #: src/features/guild/components/alerts/MaxGuildsModal.tsx:9
 msgid "Too many communities"
@@ -36860,7 +36399,7 @@ msgid "Transfer community ownership"
 msgstr "نقل ملكية المجتمع"
 
 #. Confirm dialog body before transferring ownership of a group DM.
-#: src/features/ui/action_menu/UserContextMenu.tsx:105
+#: src/features/ui/action_menu/UserContextMenu.tsx:104
 msgid "Transfer group ownership to {userName}?"
 msgstr "هل تريد نقل ملكية المجموعة إلى {userName}؟"
 
@@ -37561,7 +37100,7 @@ msgstr "ألغِ حظر هذا المستخدم أولًا لإرسال طلب �
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:106
-#: src/features/user/components/modals/UserProfileModal.tsx:118
+#: src/features/user/components/modals/UserProfileModal.tsx:121
 msgid "Unblock user"
 msgstr "إلغاء حظر المستخدم"
 
@@ -37606,16 +37145,6 @@ msgstr "إلغاء تعطيل السمع على جميع الأجهزة"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:132
 msgid "Undeafen yourself"
 msgstr "إلغاء تعطيل سمعك"
-
-#. IAR modal: child-safety rule label (user reports).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:89
-msgid "Underage or child-safety concern"
-msgstr "مخاوف تتعلق بسلامة القاصرين أو الأطفال"
-
-#. Report category label for an account that appears to belong to someone under the minimum age.
-#: src/features/moderation/components/report/OptionDescriptors.ts:78
-msgid "Underage user"
-msgstr "مستخدم قاصر"
 
 #. Selection formatting toolbar button.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -38268,16 +37797,6 @@ msgstr "حتى أُلغي الكتم"
 msgid "Unverified email"
 msgstr "بريد إلكتروني غير مُتحقَّق منه"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:206
-msgid "Unwanted conduct or mature content in the wrong place."
-msgstr "سلوك غير مرغوب فيه أو محتوى للبالغين في المكان الخطأ."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:214
-msgid "Unwanted mature conduct, comments, or requests."
-msgstr "سلوك أو تعليقات أو طلبات للبالغين غير مرغوب فيها."
-
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:608
 msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up in Discovery search."
 msgstr "تساعد الوسوم الناس في العثور على مجتمعك، ويمكنك إضافة ما يصل إلى {DISCOVERY_MAX_TAGS}. تظهر الوسوم في بحث الاكتشاف."
@@ -38840,11 +38359,6 @@ msgstr "استخدام السمة الفاتحة"
 msgid "Use native title bar"
 msgstr "استخدام شريط العنوان الأصلي"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:366
-msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above."
-msgstr "استخدم هذا الخيار فقط إذا كان يخالف قواعد {productName} بوضوح ولا يندرج تحت الفئات المذكورة أعلاه."
-
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
 msgid "Use passkeys for two-factor authentication?"
@@ -39000,11 +38514,6 @@ msgstr "يُستخدم في هذا المجتمع فقط."
 msgid "User"
 msgstr "المستخدم"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:230
-msgid "User appears underage, or is involved in grooming or child exploitation."
-msgstr "يبدو أن المستخدم قاصر، أو متورط في استدراج الأطفال أو استغلالهم."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:306
 msgid "User avatars"
@@ -39021,7 +38530,7 @@ msgid "User debug"
 msgstr "تصحيح أخطاء المستخدم"
 
 #. Field label on the details step of the DSA report form (user report). Optional Fluxer user snowflake ID. "ID" is conventional.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:33
+#: src/features/moderation/components/report/ReportStepDetails.tsx:32
 msgid "User ID (optional)"
 msgstr "معرف المستخدم (اختياري)"
 
@@ -39061,12 +38570,12 @@ msgstr "المستخدم غير موجود"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:46
-#: src/features/user/components/modals/UserProfileModal.tsx:90
+#: src/features/user/components/modals/UserProfileModal.tsx:93
 msgid "User profile"
 msgstr "الملف الشخصي للمستخدم"
 
 #. Short label in the user profile modal. Keep it concise. Preserve {tag}; it is inserted by code.
-#: src/features/user/components/modals/UserProfileModal.tsx:94
+#: src/features/user/components/modals/UserProfileModal.tsx:97
 msgid "User profile: {tag}"
 msgstr "الملف الشخصي للمستخدم: {tag}"
 
@@ -39081,7 +38590,7 @@ msgid "User settings"
 msgstr "إعدادات المستخدم"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:38
+#: src/features/moderation/components/report/ReportStepDetails.tsx:37
 msgid "User tag (optional)"
 msgstr "علامة المستخدم (اختياري)"
 
@@ -39339,7 +38848,7 @@ msgstr "مجتمع موثّق"
 msgid "Verify"
 msgstr "تحقق"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:91
+#: src/features/moderation/components/report/ReportStepVerification.tsx:116
 msgid "Verify code"
 msgstr "التحقق من الرمز"
 
@@ -39368,7 +38877,7 @@ msgstr "تأكيد هويتك"
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:44
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:86
 #: src/features/channel/utils/CreateDMModalUtils.tsx:52
-#: src/features/moderation/components/report/ReportStepEmail.tsx:43
+#: src/features/moderation/components/report/ReportStepEmail.tsx:49
 msgid "Verify your email"
 msgstr "تحقق من بريدك الإلكتروني"
 
@@ -39718,7 +39227,7 @@ msgstr "عرض الرموز"
 #. Button or menu action label in the user profile actions sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:69
-#: src/features/user/components/modals/UserProfileModal.tsx:98
+#: src/features/user/components/modals/UserProfileModal.tsx:101
 msgid "View community profile"
 msgstr "عرض الملف الشخصي في المجتمع"
 
@@ -39751,7 +39260,7 @@ msgstr "عرض الهدايا"
 #. Button or menu action label in the user profile actions sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:73
-#: src/features/user/components/modals/UserProfileModal.tsx:102
+#: src/features/user/components/modals/UserProfileModal.tsx:105
 msgid "View global profile"
 msgstr "عرض الملف الشخصي العام"
 
@@ -39846,26 +39355,6 @@ msgstr "انضمام مشاهد إلى البث"
 #: src/features/notification/utils/SoundLabels.ts:40
 msgid "Viewer leaves stream"
 msgstr "مغادرة مشاهد للبث"
-
-#. Field label on the details step of the DSA illegal-content report form. The category dropdown narrows the type of violation. Legal/sensitive flow; keep tone formal.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:18
-msgid "Violation category"
-msgstr "فئة الانتهاك"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:326
-msgid "Violation is in the user's profile, not a specific message."
-msgstr "المخالفة في ملف المستخدم الشخصي، وليست في رسالة محددة."
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:186
-msgid "Violence or violent threats"
-msgstr "العنف أو التهديدات العنيفة"
-
-#. Report category label for violent or graphic content. Keep tone plain and neutral.
-#: src/features/moderation/components/report/OptionDescriptors.ts:32
-msgid "Violent or graphic content"
-msgstr "محتوى عنيف أو صادم"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:238
@@ -40421,7 +39910,7 @@ msgstr "لقد غيّرنا حجم هذا الرمز التعبيري وضغطن
 msgid "We resized and compressed this sticker to 320x320 pixels, but it is still {fileSize}. The limit is {maxSize}. Try a simpler image, fewer colors, or a smaller source file."
 msgstr "لقد غيّرنا حجم هذا الملصق وضغطناه إلى 320x320 بكسل، لكنه لا يزال {fileSize}. الحد الأقصى هو {maxSize}. جرّب صورة أبسط أو ألوانًا أقل أو ملف مصدر أصغر."
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:51
+#: src/features/moderation/components/report/ReportStepVerification.tsx:76
 msgid "We sent a code to {email}."
 msgstr "أرسلنا رمزًا إلى {email}."
 
@@ -40472,7 +39961,7 @@ msgstr "سنعالج هذا في أقرب وقت ممكن. ستتلقى رسال
 msgid "We'll restore your previous email, sign out old sessions, disable MFA, and secure your account with a new password."
 msgstr "سنستعيد بريدك الإلكتروني السابق، وسجّل الخروج من الجلسات القديمة، ونعطّل المصادقة متعددة العوامل، ونؤمّن حسابك بكلمة مرور جديدة."
 
-#: src/features/moderation/components/report/ReportStepEmail.tsx:46
+#: src/features/moderation/components/report/ReportStepEmail.tsx:52
 msgid "We'll send a short code to confirm you can receive updates about this report."
 msgstr "سنرسل رمزًا قصيرًا لتأكيد إمكانية تلقيك تحديثات حول هذا البلاغ."
 
@@ -40714,11 +40203,6 @@ msgctxt "us-state"
 msgid "West Virginia"
 msgstr "فرجينيا الغربية"
 
-#. IAR modal: category-step title for the platform-report path. User picks a broad area before drilling in.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:36
-msgid "What kind of rule was broken?"
-msgstr "ما نوع القاعدة التي تم خرقها؟"
-
 #. Display-name field placeholder in account registration forms.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:878
 msgid "What should people call you?"
@@ -40754,6 +40238,11 @@ msgstr "ماذا يحدث؟"
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:25
 msgid "What's new"
 msgstr "ما الجديد"
+
+#. DSA report page: title of the reason step while its questions load or when they could not be loaded.
+#: src/features/moderation/components/report/ReportStepReason.tsx:33
+msgid "What's the reason for your report?"
+msgstr "ما سبب بلاغك؟"
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:66
 msgid "When a custom threshold date is not set, members without the <0>{readMessageHistoryPermissionLabel}</0> permission cannot view any historical messages. They'll only see messages in real time as they arrive, and they'll disappear when they restart their clients."
@@ -40831,11 +40320,6 @@ msgstr "أي المجتمعات"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:97
 msgid "Which conversations"
 msgstr "أي المحادثات"
-
-#. IAR modal: reason-step title for the platform-report path after a category has been picked.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:40
-msgid "Which rule was broken?"
-msgstr "ما القاعدة التي تم خرقها؟"
 
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
@@ -41277,7 +40761,7 @@ msgid "You can't attach files in this channel."
 msgstr "لا يمكنك إرفاق ملفات في هذه القناة."
 
 #. Error message in the user profile modal.
-#: src/features/user/components/modals/UserProfileModal.tsx:106
+#: src/features/user/components/modals/UserProfileModal.tsx:109
 msgid "You can't befriend yourself"
 msgstr "لا يمكنك إضافة نفسك كصديق"
 
@@ -41341,7 +40825,7 @@ msgstr "لا يمكنك مراسلة هذا المستخدم"
 #. Error message in the user profile modal.
 #. Error message in the user profile popout.
 #. Error message in the user settings profile preview.
-#: src/features/user/components/modals/UserProfileModal.tsx:110
+#: src/features/user/components/modals/UserProfileModal.tsx:113
 #: src/features/user/components/popouts/UserProfilePopout.tsx:73
 #: src/features/user/components/profile/ProfilePreview.tsx:44
 msgid "You can't message yourself"
@@ -41606,7 +41090,7 @@ msgid "You must agree to the terms of service to create an account"
 msgstr "يجب الموافقة على شروط الخدمة لإنشاء حساب"
 
 #. Inline error on the details step of the DSA report flow when the user has not completed email verification.
-#: src/features/moderation/components/pages/ReportPage.tsx:92
+#: src/features/moderation/components/pages/ReportPage.tsx:118
 msgid "You must verify your email before sending a report."
 msgstr "يجب عليك التحقق من بريدك الإلكتروني قبل إرسال بلاغ."
 
@@ -41891,6 +41375,11 @@ msgstr "أنت مشترك بسعر قديم. السعر الحالي لهذه ا
 msgid "You're sending messages too quickly"
 msgstr "أنت ترسل الرسائل بسرعة كبيرة"
 
+#. Report flow: note on the summary screen when the reporter hit the report rate limit.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:108
+msgid "You're sending reports too quickly. Try again later."
+msgstr "ترسل البلاغات بسرعة كبيرة. حاول مرة أخرى لاحقًا."
+
 #. Title of the browser page after the user approved signing in to the app.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:282
 msgid "You're signed in"
@@ -41914,6 +41403,16 @@ msgstr "أنت تشاهد رسائل أقدم"
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:56
 msgid "You've added more people than a group DM allows. Remove a few and try again."
 msgstr "لقد أضفت أشخاصًا أكثر مما تسمح به المحادثة الجماعية. أزل بعضهم وحاول مرة أخرى."
+
+#. Report flow: note on the summary screen when the reporter already reported this message.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:99
+msgid "You've already reported this message."
+msgstr "لقد أبلغت عن هذه الرسالة بالفعل."
+
+#. Report flow: note on the summary screen when the reporter already reported this user profile in the last day.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:103
+msgid "You've already reported this profile today."
+msgstr "لقد أبلغت عن هذا الملف الشخصي بالفعل اليوم."
 
 #. Body of the error modal shown when a self-serve refund is blocked by the cooldown period.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:51
@@ -42079,6 +41578,11 @@ msgstr "لم يتم تغيير أو حذف حساباتك وإعداداتك."
 msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "تعذّر إكمال الإجراء الذي طلبته لأن أنظمة الأمان لدينا وضعت عليه علامة. إذا كنت تعتقد أن هذا خطأ، فيُرجى التواصل مع الدعم."
 
+#. Report flow: section heading above the list of answers the reporter picked, on the summary screen.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:26
+msgid "Your answers"
+msgstr "إجاباتك"
+
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:409
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "طلبك قيد المراجعة. لا يزال بإمكانك تحديث تفاصيل الإدراج أو سحب الطلب."
@@ -42089,7 +41593,7 @@ msgid "Your browser requires user interaction before audio can be played. Click 
 msgstr "يتطلب متصفحك تفاعلًا من المستخدم قبل تشغيل الصوت. انقر على الزر أدناه لتمكين الدردشة الصوتية."
 
 #. Body of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:109
+#: src/features/messaging/commands/MessageCommands.tsx:113
 msgid "Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes."
 msgstr "تصل تغييراتك إلى كل مجتمع يتابع هذه القناة، وقد يستغرق ذلك دقيقة. تسمح كل رسالة منشورة بإجراء 3 تعديلات سريعة، ثم تعديل واحد كل 20 دقيقة."
 
@@ -42311,6 +41815,11 @@ msgstr "اسمك المستعار الجديد، أو اتركه فارغًا ل
 msgid "Your old recovery kit no longer works. Store this new one somewhere safe."
 msgstr "لم تعد مجموعة الاسترداد القديمة الخاصة بك تعمل. قم بتخزين هذه المجموعة الجديدة في مكان آمن."
 
+#. Report flow: heading above the box of follow-up actions on the final screen.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:67
+msgid "Your options"
+msgstr "خياراتك"
+
 #. Recovery kit modal description shown after someone recovers their account with a recovery key.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:55
 msgid "Your password is reset. Your old recovery kit no longer works. Store this new one somewhere safe."
@@ -42369,6 +41878,11 @@ msgstr "منطقتك"
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:494
 msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
 msgstr "فشل دفع تجديد اشتراكك، لكن <0/> ستظل نشطة حتى <1>{graceDate}</1>. حدّث طريقة الدفع قبل ذلك التاريخ للاحتفاظ باشتراكك."
+
+#. Report flow: note on the summary screen when sending the report failed for an unknown reason.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:112
+msgid "Your report didn't go through. Try again."
+msgstr "لم يتم إرسال بلاغك. حاول مرة أخرى."
 
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
@@ -42463,11 +41977,6 @@ msgstr "سيتحول اشتراكك إلى الفوترة السنوية عند 
 #: src/features/theme/components/modals/ShareThemeModal.tsx:60
 msgid "Your theme CSS is too large to share. Trim it down and try again."
 msgstr "ملف CSS الخاص بالمظهر كبير جدًا بحيث لا يمكن مشاركته. قلّل حجمه وحاول مرة أخرى."
-
-#. Field label on the details step of the DSA report form. Optional Fluxer username of the reporter so staff can follow up.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:67
-msgid "Your username (optional)"
-msgstr "اسم المستخدم الخاص بك (اختياري)"
 
 #. Success toast after removing a community vanity invite URL.
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:54

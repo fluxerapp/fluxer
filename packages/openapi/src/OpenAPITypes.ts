@@ -34,6 +34,7 @@ export interface ExtractedRoute {
 	explicitOperationId: string | null;
 	explicitDescription: string | null;
 	explicitStatusCodes: Array<number> | null;
+	errorStatusCodes: Array<number>;
 	explicitSecurity: Array<string> | null;
 	oauth2RequiredScopes: Array<string> | null;
 	oauth2ScopeMode: 'all' | 'any' | null;

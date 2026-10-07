@@ -31,6 +31,10 @@ const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "ניהול התרומות שלכם ל-{product_name}",
 		"body": "שלום,\n\nלחצו על הקישור למטה כדי לגשת לפורטל התורמים שלכם:\n\n{manageUrl}\n\nבפורטל, אתם יכולים לנהל מנויים, להוריד חשבוניות ולצפות בהיסטוריית התרומות שלכם.\n\nקישור זה יפוג בתאריך {expiresAt, date, full} בשעה {expiresAt, time, short}.\n\nאם לא ביקשתם קישור זה, אתם יכולים להתעלם בבטחה מאימייל זה.\n\nצוות {product_name}"
 	},
+	"dsa_report_resolved": {
+		"subject": "קיבלנו החלטה בנוגע לדיווח שלכם ב-{product_name}",
+		"body": "שלום,\n\nצוות הבטיחות שלנו בדק את הדיווח שלכם לפי חוק השירותים הדיגיטליים (מזהה: {reportId}) וקיבל החלטה.{hasComment, select, yes {\n\nתגובה מצוות הבטיחות:\n{publicComment}} other {}}\n\nאיננו משתפים פרטים על פעולות שננקטו נגד חשבון של אדם אחר, מכיוון שאלה נתונים אישיים שלו.\n\nאם אינכם מסכימים עם ההחלטה, תוכלו להגיש ערעור ללא תשלום בתוך 60 יום. שלחו אימייל לכתובת {appeals_email} מכתובת האימייל הזו, ציינו את מזהה הדיווח והסבירו מדוע לדעתכם ההחלטה שגויה. אם אתם נמצאים באיחוד האירופי, תוכלו גם להפנות את המחלוקת לגוף מוסמך ליישוב סכסוכים מחוץ לבית המשפט. אין בכך כדי לפגוע בזכותכם לפנות לבית המשפט.\n\nצוות הבטיחות של {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "אימות האימייל שלכם לדיווח DSA",
 		"body": "שלום,\n\nהשתמשו בקוד האימות למטה כדי להגיש את הדיווח שלכם לפי חוק השירותים הדיגיטליים ב-{product_name}:\n\n{code}\n\nקוד זה יפוג בתאריך {expiresAt, date, full} בשעה {expiresAt, time, short}.\n\nאם לא ביקשתם זאת, אתם יכולים להתעלם מאימייל זה.\n\nצוות הבטיחות של {product_name}"
@@ -82,6 +86,10 @@ const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "ההרשמה שלכם ל-{product_name} אושרה",
 		"body": "שלום {username},\n\nחדשות טובות: ההרשמה שלכם ל-{product_name} אושרה.\n\nכעת אתם יכולים להתחבר לאפליקציית {product_name} כאן:\n{channelsUrl}\n\nברוכים הבאים לקהילת {product_name}.\n\nצוות {product_name}"
+	},
+	"report_received": {
+		"subject": "קיבלנו את הדיווח שלכם ב-{product_name}",
+		"body": "שלום,\n\nקיבלנו את הדיווח שלכם לפי חוק השירותים הדיגיטליים על {targetKind, select, message {הודעה} user {חשבון} guild {קהילה} other {תוכן}} ב-{product_name}.\n\nמזהה הדיווח: {reportId}\n\nצוות הבטיחות שלנו יבדוק את הדיווח, ונשלח לכם אימייל לכתובת זו כשנקבל החלטה. שמרו את האימייל הזה לתיעוד.\n\nצוות הבטיחות של {product_name}"
 	},
 	"report_resolved": {
 		"subject": "הדיווח שלכם ב-{product_name} נבדק",

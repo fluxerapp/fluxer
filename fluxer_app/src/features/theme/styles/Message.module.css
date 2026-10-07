@@ -404,6 +404,31 @@
 	-webkit-user-select: text;
 }
 
+.messagePreview .messageAuthorRow {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	column-gap: 0.35rem;
+	white-space: normal;
+}
+
+.messagePreview .messageAuthorPart {
+	display: contents;
+}
+
+.messagePreview .messageAuthorPart > :last-child {
+	margin-inline-end: 0.1rem;
+}
+
+.messagePreview .userTagOffset,
+.messagePreview .messageTimestamp {
+	margin-inline-start: 0;
+}
+
+.messagePreview .authorDashSeparator {
+	margin: 0;
+}
+
 .messageNoText {
 	grid-template-areas: '. . . reply' '. . . .' 'gutter-left avatar gutter-right container';
 }

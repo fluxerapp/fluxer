@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {IS_DEV} from '@app/features/platform/types/Env';
-import LocalPresence from '@app/features/presence/state/LocalPresence';
 import {makeAutoObservable} from 'mobx';
 
 const IDLE_DURATION_MS = 1000 * (IS_DEV ? 10 : 60 * 10);
@@ -120,10 +119,7 @@ class Idle {
 	}
 
 	private applyIdleState(idle: boolean): void {
-		if (idle !== this.idle) {
-			this.idle = idle;
-			LocalPresence.updatePresence();
-		}
+		this.idle = idle;
 	}
 }
 

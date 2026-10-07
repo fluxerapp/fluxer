@@ -97,7 +97,7 @@ pub fn guilds_list_page(
             } @else if let Some(count) = result_state.total {
                 (page_header_with_actions("Guilds", None, html! {
                     p class="text-sm font-normal text-neutral-500" {
-                        "Found " (count) " results (showing "
+                        "Found " (count) (if count == 1 { " result" } else { " results" }) " (showing "
                         (result_state.guilds.map(|guilds| guilds.len()).unwrap_or_default())
                         ")"
                     }

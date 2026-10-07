@@ -3,8 +3,12 @@
 use crate::{
     api::types::{GuildInfo, ReportEntry},
     config::AdminConfig,
-    templates::components::{page_container::card_with_header, table::data_table},
-    utils::user_tag::user_tag,
+    templates::{
+        components::{page_container::card_with_header, table::data_table},
+        pages::user_detail_tabs::reports::{
+            format_status, reported_at_cell, reporter_label, type_and_category_cell,
+        },
+    },
 };
 use maud::{Markup, html};
 
@@ -40,8 +44,7 @@ pub fn reports_tab(
                 }))
             } @else {
                 (data_table(
-                    &["Reported At", "Report ID", "Type", "Category",
-                      "Reporter", "Status", "Actions"],
+                    &["Reported At", "Type / Category", "Reporter", "Status", "Actions"],
                     html! {
                         @for report in reports {
                             (report_row(base, report))
@@ -74,75 +77,19 @@ pub fn reports_tab(
     }
 }
 
-fn format_report_type(report_type: i32) -> &'static str {
-    match report_type {
-        0 => "Message",
-        1 => "User",
-        2 => "Guild",
-        _ => "Unknown",
-    }
-}
-
-fn format_status(status: i32) -> &'static str {
-    match status {
-        0 => "Pending",
-        1 => "Resolved",
-        _ => "Unknown",
-    }
-}
-
-fn format_reporter(report: &ReportEntry) -> String {
-    if let Some(ref username) = report.reporter_username {
-        let disc = report.reporter_discriminator.as_deref().unwrap_or("0000");
-        let tag = user_tag(username, disc, false);
-        if let Some(ref gn) = report.reporter_global_name {
-            let trimmed = gn.trim();
-            if !trimmed.is_empty() {
-                return format!("{trimmed} ({tag})");
-            }
-        }
-        return tag;
-    }
-    if let Some(ref tag) = report.reporter_tag {
-        return tag.clone();
-    }
-    if let Some(ref email) = report.reporter_email {
-        return email.clone();
-    }
-    report
-        .reporter_id
-        .as_deref()
-        .unwrap_or("Unknown reporter")
-        .to_string()
-}
-
 fn report_row(base: &str, report: &ReportEntry) -> Markup {
-    let reporter_display = format_reporter(report);
     html! {
         tr class="hover:bg-neutral-50 transition-colors" {
-            td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900" {
-                (report.reported_at)
-            }
-            td class="whitespace-nowrap px-4 py-3 text-sm" {
-                a href={(base) "/reports/" (report.report_id)}
-                    class="hover:underline" {
-                    (report.report_id)
-                }
-            }
-            td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900" {
-                (format_report_type(report.report_type))
-            }
-            td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900" {
-                (report.category.as_deref().unwrap_or(""))
-            }
-            td class="whitespace-nowrap px-4 py-3 text-sm" {
+            (reported_at_cell(base, report))
+            (type_and_category_cell(report))
+            td class="px-4 py-3 text-sm [overflow-wrap:anywhere]" {
                 @if let Some(ref rid) = report.reporter_id {
                     a href={(base) "/users/" (rid)}
                         class="hover:underline" {
-                        (reporter_display)
+                        (reporter_label(report))
                     }
                 } @else {
-                    span { (reporter_display) }
+                    span { (reporter_label(report)) }
                 }
             }
             td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900" {
@@ -157,5 +104,48 @@ fn report_row(base: &str, report: &ReportEntry) -> Markup {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn guild_report_rows_format_the_date_and_wrap_long_cells() {
+        let report: ReportEntry = serde_json::from_value(json!({
+            "report_id": "1800000000000000006",
+            "reporter_id": "1500000000000000000",
+            "reporter_username": "reporter_0423a7212d56",
+            "reporter_discriminator": "8650",
+            "reporter_global_name": "Avery Reporter",
+            "reported_at": "2026-10-05T23:23:28.067Z",
+            "status": 0,
+            "report_type": 0,
+            "category": "spam",
+            "reason": "spam",
+            "reason_label": "Spam",
+            "reported_guild_id": "1700000000000000800"
+        }))
+        .expect("valid report");
+        let markup = report_row("/admin", &report).into_string();
+        assert!(markup.contains("Oct 5, 2026, 11:23 PM UTC"), "{markup}");
+        assert!(!markup.contains("2026-10-05T23:23:28.067Z"), "{markup}");
+        assert!(
+            markup
+                .contains(r#"<span class="whitespace-nowrap text-neutral-500 text-xs">(reporter_0423a7212d56#8650)</span>"#),
+            "{markup}"
+        );
+        assert!(markup.contains("Avery Reporter "), "{markup}");
+        assert_eq!(
+            markup.matches("whitespace-nowrap px-4").count(),
+            2,
+            "{markup}"
+        );
+        assert!(markup.contains(">Pending<"), "{markup}");
+        assert!(markup.contains(">View<"), "{markup}");
+        assert_eq!(markup.matches(">Spam<").count(), 1, "{markup}");
+        assert!(markup.contains(r#"data-report-reason="spam""#), "{markup}");
     }
 }

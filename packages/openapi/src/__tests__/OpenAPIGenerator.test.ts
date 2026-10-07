@@ -1,6 +1,11 @@
+import assert from 'node:assert/strict';
 import {fileURLToPath} from 'node:url';
+import {type APIErrorCode, APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {ErrorCodeToI18nKey} from '@fluxer/errors/src/i18n/ErrorCodeMappings';
+import {ERROR_I18N_MESSAGES} from '@fluxer/errors/src/i18n/ErrorI18nMessages';
 import {OpenAPIGenerator} from '@fluxer/openapi/src/OpenAPIGenerator';
-import type {OpenAPIDocument} from '@fluxer/openapi/src/OpenAPITypes';
+import {visitOpenAPISchemaObjects} from '@fluxer/openapi/src/OpenAPISchemaVisitor';
+import type {OpenAPIDocument, OpenAPISchema} from '@fluxer/openapi/src/OpenAPITypes';
 import {beforeAll, describe, expect, it} from 'vitest';
 
 const REPOSITORY_PATH = fileURLToPath(new URL('../../../../', import.meta.url));
@@ -173,5 +178,122 @@ describe('OpenAPI generation from API controllers', () => {
 		const responses = document.paths[path][method].responses;
 		expect(responses[status]).toEqual({description: 'Success'});
 		expect(responses).not.toHaveProperty('204');
+	});
+});
+
+const EU_COUNTRY_CODES = [
+	'AT',
+	'BE',
+	'BG',
+	'HR',
+	'CY',
+	'CZ',
+	'DK',
+	'EE',
+	'FI',
+	'FR',
+	'DE',
+	'GR',
+	'HU',
+	'IE',
+	'IT',
+	'LV',
+	'LT',
+	'LU',
+	'MT',
+	'NL',
+	'PL',
+	'PT',
+	'RO',
+	'SK',
+	'SI',
+	'ES',
+	'SE',
+];
+
+function errorCodeMessage(code: APIErrorCode): string {
+	return ERROR_I18N_MESSAGES[ErrorCodeToI18nKey[code]];
+}
+
+function resolveRef(document: OpenAPIDocument, schema: OpenAPISchema | undefined): OpenAPISchema {
+	const name = schema?.$ref?.replace('#/components/schemas/', '');
+	expect(name).toBeDefined();
+	return document.components.schemas[name ?? ''];
+}
+
+function schemasWithEnum(document: OpenAPIDocument, values: ReadonlyArray<string>): Array<OpenAPISchema> {
+	const found: Array<OpenAPISchema> = [];
+	visitOpenAPISchemaObjects(document, (schema) => {
+		if (Array.isArray(schema.enum) && schema.enum.join(',') === values.join(',')) found.push(schema);
+	});
+	return found;
+}
+
+describe('published public and admin documents', () => {
+	const documents = new Map<'public' | 'admin', OpenAPIDocument>();
+	function documentFor(scope: 'public' | 'admin'): OpenAPIDocument {
+		const document = documents.get(scope);
+		assert(document, `the ${scope} document was not generated`);
+		return document;
+	}
+	beforeAll(async () => {
+		documents.set(
+			'public',
+			await new OpenAPIGenerator({
+				basePath: REPOSITORY_PATH,
+				routeScope: 'public',
+				schemaTarget: 'draft-2020-12',
+			}).generate(),
+		);
+		documents.set(
+			'admin',
+			await new OpenAPIGenerator({
+				basePath: REPOSITORY_PATH,
+				routeScope: 'admin',
+				schemaTarget: 'openapi-3.0',
+			}).generate(),
+		);
+	});
+
+	it.each(['public', 'admin'] as const)(
+		'publishes every API error code with its message in the %s document',
+		(scope) => {
+			const {schemas} = documentFor(scope).components;
+			const codes = Object.values(APIErrorCodes);
+			expect(schemas.APIErrorCode.type).toBe('string');
+			expect(schemas.APIErrorCode.enum).toEqual(codes);
+			expect(schemas.APIErrorCode['x-enumDescriptions']).toEqual(codes.map(errorCodeMessage));
+			for (const name of ['Error', 'ThrottledError']) {
+				const code = schemas[name].properties?.code;
+				expect(code).toMatchObject({type: 'string', description: expect.stringContaining('APIErrorCode')});
+				expect(code).not.toHaveProperty('enum');
+			}
+		},
+	);
+
+	it('publishes the EU country codes once and references them from every DSA report body', () => {
+		const document = documentFor('public');
+		const euCountryCode = document.components.schemas.EuCountryCode;
+		expect(euCountryCode.enum).toEqual(EU_COUNTRY_CODES);
+		expect(euCountryCode.type).toBe('string');
+		expect(schemasWithEnum(document, EU_COUNTRY_CODES)).toEqual([euCountryCode]);
+		const body = resolveRef(
+			document,
+			document.paths['/reports/dsa'].post.requestBody?.content['application/json']?.schema,
+		);
+		expect(body.oneOf).toHaveLength(3);
+		for (const branch of body.oneOf ?? []) {
+			const properties = resolveRef(document, branch).properties;
+			expect(properties?.reporter_country_of_residence).toEqual({
+				$ref: '#/components/schemas/EuCountryCode',
+				description: 'EU country code of the reporter residence',
+			});
+			expect(properties).not.toHaveProperty('reporter_fluxer_tag');
+		}
+	});
+
+	it('describes only the report statuses that exist', () => {
+		const status = documentFor('public').components.schemas.ReportResponse.properties?.status;
+		expect(status).toEqual({type: 'string', description: 'Current status of the report (pending, resolved)'});
 	});
 });

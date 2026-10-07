@@ -31,6 +31,10 @@ const EMAIL_I18N_KO_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "{product_name} 후원 내역 관리",
 		"body": "안녕하세요,\n\n아래 링크를 클릭하여 후원자 포털에 접속해 주세요:\n\n{manageUrl}\n\n포털에서 구독을 관리하고, 인보이스를 다운로드하고, 후원 내역을 확인할 수 있어요.\n\n이 링크는 {expiresAt, date, full} {expiresAt, time, short}에 만료돼요.\n\n이 링크를 요청하지 않았다면 이 이메일을 무시해도 괜찮아요.\n\n– {product_name} 팀"
 	},
+	"dsa_report_resolved": {
+		"subject": "{product_name} 신고에 대한 결정이 내려졌어요",
+		"body": "안녕하세요,\n\n안전팀에서 디지털 서비스법 신고(ID: {reportId})를 검토하고 결정을 내렸어요.{hasComment, select, yes {\n\n안전팀의 답변:\n{publicComment}} other {}}\n\n다른 사람의 계정에 취한 조치의 세부 내용은 그 사람의 개인 정보이므로 공유하지 않아요.\n\n이 결정에 동의하지 않는다면 60일 이내에 무료로 이의를 제기할 수 있어요. 이 이메일 주소에서 {appeals_email}으로 이메일을 보내 신고 ID를 적고 결정이 잘못되었다고 생각하는 이유를 설명해 주세요. EU에 거주하고 있다면 인증된 법원 외 분쟁 해결 기관에 분쟁을 회부할 수도 있어요. 이 내용은 법원에 소송을 제기할 권리에 영향을 주지 않아요.\n\n– {product_name} 안전팀"
+	},
 	"dsa_report_verification": {
 		"subject": "DSA 신고를 위한 이메일 인증",
 		"body": "안녕하세요,\n\n{product_name}에서 디지털 서비스법 신고를 제출하려면 아래 인증 코드를 사용해 주세요:\n\n{code}\n\n이 코드는 {expiresAt, date, full} {expiresAt, time, short}에 만료돼요.\n\n요청하지 않으셨다면 이 이메일을 무시해도 괜찮아요.\n\n– {product_name} 안전팀"
@@ -82,6 +86,10 @@ const EMAIL_I18N_KO_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "{product_name} 가입이 승인되었어요",
 		"body": "안녕하세요, {username}님.\n\n좋은 소식이에요: {product_name} 가입이 승인되었어요.\n\n이제 여기에서 {product_name} 앱에 로그인할 수 있어요:\n{channelsUrl}\n\n{product_name} 커뮤니티에 오신 것을 환영해요.\n\n– {product_name} 팀"
+	},
+	"report_received": {
+		"subject": "{product_name} 신고가 접수되었어요",
+		"body": "안녕하세요,\n\n{product_name}의 {targetKind, select, message {메시지} user {계정} guild {커뮤니티} other {콘텐츠}}에 대한 디지털 서비스법 신고가 접수되었어요.\n\n신고 ID: {reportId}\n\n안전팀에서 신고를 검토한 뒤 결정이 내려지면 이 이메일 주소로 알려 드릴게요. 이 이메일은 기록용으로 보관해 주세요.\n\n– {product_name} 안전팀"
 	},
 	"report_resolved": {
 		"subject": "{product_name} 신고 검토가 완료되었어요",

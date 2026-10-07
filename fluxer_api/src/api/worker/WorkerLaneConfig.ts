@@ -71,6 +71,8 @@ const LANE_CONFIG = {
 		consumerName: 'workers_batch',
 		tasks: [
 			'expireAttachments',
+			'expireReportSnapshots',
+			'clearAuthenticatedReporterEmails',
 			'expireStaleJobs',
 			'indexChannelMessages',
 			'indexGuildMembers',

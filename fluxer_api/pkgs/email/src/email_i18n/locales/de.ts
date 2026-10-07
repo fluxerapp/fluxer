@@ -31,6 +31,10 @@ const EMAIL_I18N_DE_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Verwalte deine {product_name}-Spenden",
 		"body": "Hallo,\n\nklicke auf den Link unten, um auf dein Spendenportal zuzugreifen:\n\n{manageUrl}\n\nIm Portal kannst du Abonnements verwalten, Rechnungen herunterladen und deine Spendenübersicht einsehen.\n\nDieser Link läuft am {expiresAt, date, full} um {expiresAt, time, short} ab.\n\nWenn du diesen Link nicht angefordert hast, kannst du diese E-Mail ignorieren.\n\n– {product_name}-Team"
 	},
+	"dsa_report_resolved": {
+		"subject": "Wir haben über deine {product_name}-Meldung entschieden",
+		"body": "Hallo,\n\nunser Sicherheitsteam hat deine Meldung nach dem Digital Services Act (ID: {reportId}) geprüft und eine Entscheidung getroffen.{hasComment, select, yes {\n\nAntwort vom Sicherheitsteam:\n{publicComment}} other {}}\n\nWir geben keine Einzelheiten zu Maßnahmen gegen den Account einer anderen Person weiter, da es sich um deren personenbezogene Daten handelt.\n\nWenn du mit dieser Entscheidung nicht einverstanden bist, kannst du innerhalb von 60 Tagen kostenlos Einspruch einlegen. Sende eine E-Mail von dieser E-Mail-Adresse an {appeals_email}, gib deine Meldungs-ID an und erkläre, warum du die Entscheidung für falsch hältst. Wenn du dich in der EU befindest, kannst du die Streitigkeit außerdem einer zertifizierten außergerichtlichen Streitbeilegungsstelle vorlegen. Dein Recht, vor Gericht zu gehen, bleibt davon unberührt.\n\n– {product_name}-Sicherheitsteam"
+	},
 	"dsa_report_verification": {
 		"subject": "Bestätige deine E-Mail-Adresse für eine DSA-Meldung",
 		"body": "Hallo,\n\nverwende den untenstehenden Bestätigungscode, um deine Meldung nach dem Digital Services Act (DSA) auf {product_name} einzureichen:\n\n{code}\n\nDieser Code läuft am {expiresAt, date, full} um {expiresAt, time, short} ab.\n\nWenn du dies nicht angefordert hast, kannst du diese E-Mail ignorieren.\n\n– {product_name}-Sicherheitsteam"
@@ -82,6 +86,10 @@ const EMAIL_I18N_DE_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "Deine {product_name}-Registrierung wurde genehmigt",
 		"body": "Hallo {username},\n\ngute Nachrichten: Deine {product_name}-Registrierung wurde genehmigt.\n\nDu kannst dich jetzt hier in die {product_name}-App einloggen:\n{channelsUrl}\n\nWillkommen in der {product_name}-Community.\n\n– {product_name}-Team"
+	},
+	"report_received": {
+		"subject": "Wir haben deine {product_name}-Meldung erhalten",
+		"body": "Hallo,\n\nwir haben deine Meldung nach dem Digital Services Act (DSA) über {targetKind, select, message {eine Nachricht} user {einen Account} guild {eine Community} other {Inhalte}} auf {product_name} erhalten.\n\nMeldungs-ID: {reportId}\n\nUnser Sicherheitsteam prüft deine Meldung. Sobald wir eine Entscheidung getroffen haben, schreiben wir dir an diese E-Mail-Adresse. Bitte bewahre diese E-Mail für deine Unterlagen auf.\n\n– {product_name}-Sicherheitsteam"
 	},
 	"report_resolved": {
 		"subject": "Deine {product_name}-Meldung wurde geprüft",

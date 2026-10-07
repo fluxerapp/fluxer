@@ -20,7 +20,7 @@ An OAuth2 protocol failure raised by the [OAuth2 resource](/http-api/oauth2/) an
 
 ## Supplementary members
 
-The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted. `global` is `true` on a global rate limit denial and `false` on a route one. `required_scope` is the OAuth2 scope the request is missing. `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply. `captcha_provider` and `altcha_challenge` are the challenge described in [CAPTCHA handling](/topics/captcha/).
+The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted. `global` is `true` on a global rate limit denial and `false` on a route one. `required_scope` is the OAuth2 scope the request is missing. `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply. `captcha_provider` and `altcha_challenge` are the challenge described in [CAPTCHA handling](/topics/captcha/). `step_index` is the zero-based index of the first [report flow step](/http-api/reports/#report-flow-step-object) that does not fit the current flow, on `INVALID_REPORT_FLOW_ANSWERS`.
 
 `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED` have their own members:
 
@@ -119,6 +119,8 @@ A temporary ban lasts 24 hours by default. Requests from the banned address retu
 ## API error code registry
 
 These codes appear in the top-level `code` field of an error response, sent as the exact JSON string shown. The registry is closed. Each entry states the leading sentence of the English source message, without its final full stop. Those messages call a [guild](/http-api/guilds/) a community.
+
+The [OpenAPI document](/http-api/instance/#get-openapi-document) and the Admin API specification publish the same list as the `APIErrorCode` schema. The `code` member of their error schemas stays a plain string that refers to it.
 
 :::note[The rendered `message` fills in the braced values]
 A description containing a value in braces is an ICU MessageFormat template. `You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}` renders as a complete sentence with the applicable limit.
@@ -596,6 +598,10 @@ Permissions must be a valid integer
 
 Permissions must be non-negative
 
+### `INVALID_REPORT_FLOW_ANSWERS`
+
+These answers don't match the report form
+
 ### `INVALID_REQUEST`
 
 Invalid request
@@ -879,6 +885,10 @@ You've been banned from submitting reports
 ### `REPORT_EMAIL_VERIFICATION_REQUIRED`
 
 Email verification is required for this action
+
+### `REPORT_FLOW_OUTDATED`
+
+The report form changed while you were filling it in
 
 ### `RESOURCE_LOCKED`
 

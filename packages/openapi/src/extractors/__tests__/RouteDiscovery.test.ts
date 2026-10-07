@@ -9,6 +9,7 @@ import {OpenAPIOperationBuilder} from '@fluxer/openapi/src/generator/OpenAPIOper
 import type {ExtractedRoute} from '@fluxer/openapi/src/OpenAPITypes';
 import {SchemaRegistry} from '@fluxer/openapi/src/registry/SchemaRegistry';
 import {DonationManageQuery} from '@fluxer/schema/src/domains/donation/DonationSchemas';
+import {DsaReportEmailSendRequest, OkResponse} from '@fluxer/schema/src/domains/report/ReportSchemas';
 import {beforeAll, describe, expect, it} from 'vitest';
 
 const API_PACKAGE_PATH = path.join(fileURLToPath(new URL('../../../../../', import.meta.url)), 'fluxer_api');
@@ -68,6 +69,29 @@ describe('discoverControllerFiles', () => {
 		expect(() => builder.buildOperation({...route, bodylessStatusCodes: [299]})).toThrow(
 			'Bodyless status 299 is not declared for GET /donations/manage',
 		);
+	});
+	it('documents the extra error statuses a route declares', () => {
+		const route = routes.find((route) => route.explicitOperationId === 'send_dsa_report_email');
+		assert(route);
+		expect(route.errorStatusCodes).toEqual([503]);
+		const schemaRegistry = new SchemaRegistry();
+		schemaRegistry.registerZod('DsaReportEmailSendRequest', DsaReportEmailSendRequest);
+		schemaRegistry.registerZod('OkResponse', OkResponse);
+		const builder = new OpenAPIOperationBuilder({schemaRegistry, usedOperationIds: new Set()});
+		const {responses} = builder.buildOperation(route);
+		expect(Object.keys(responses).sort()).toEqual(['200', '400', '429', '500', '503']);
+		expect(responses['503']).toEqual({
+			description: 'Service Unavailable - The request could not be completed right now',
+			content: {'application/json': {schema: {$ref: '#/components/schemas/Error'}}},
+		});
+		expect(() => builder.buildOperation({...route, explicitOperationId: 'other', errorStatusCodes: [418]})).toThrow(
+			'No documented error response for status 418',
+		);
+	});
+	it('adds no extra error status to a route that declares none', () => {
+		const route = routes.find((route) => route.explicitOperationId === 'verify_dsa_report_email');
+		assert(route);
+		expect(route.errorStatusCodes).toEqual([]);
 	});
 	it('resolves paths and metadata from shared admin route registrations', () => {
 		const route = routes.find((route) => route.explicitOperationId === 'create_admin_blocklist_entry');

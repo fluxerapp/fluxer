@@ -31,6 +31,10 @@ const EMAIL_I18N_HI_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "अपने {product_name} डोनेशन मैनेज करें",
 		"body": "नमस्ते,\n\nअपना डोनर पोर्टल एक्सेस करने के लिए नीचे दिए गए लिंक पर क्लिक करें:\n\n{manageUrl}\n\nपोर्टल में, आप सब्सक्रिप्शन मैनेज कर सकते हैं, इनवॉइस डाउनलोड कर सकते हैं और अपने डोनेशन का इतिहास देख सकते हैं।\n\nयह लिंक {expiresAt, date, full} को {expiresAt, time, short} पर एक्सपायर हो जाएगा।\n\nअगर आपने इस लिंक का अनुरोध नहीं किया था, तो आप इस ईमेल को बेझिझक अनदेखा कर सकते हैं।\n\n– {product_name} टीम"
 	},
+	"dsa_report_resolved": {
+		"subject": "हमने आपकी {product_name} रिपोर्ट पर फैसला ले लिया है",
+		"body": "नमस्ते,\n\nहमारी सेफ्टी टीम ने आपकी Digital Services Act रिपोर्ट (ID: {reportId}) का रिव्यू करके फैसला ले लिया है।{hasComment, select, yes {\n\nसेफ्टी टीम का जवाब:\n{publicComment}} other {}}\n\nहम किसी दूसरे व्यक्ति के अकाउंट पर की गई कार्रवाई की जानकारी शेयर नहीं करते, क्योंकि वह उनका निजी डेटा है।\n\nअगर आप इस फैसले से सहमत नहीं हैं, तो आप 60 दिनों के अंदर मुफ़्त में अपील कर सकते हैं। इस ईमेल पते से {appeals_email} पर ईमेल करें, अपनी रिपोर्ट ID शामिल करें और बताएं कि आपको फैसला गलत क्यों लगता है। अगर आप EU में हैं, तो आप इस विवाद को अदालत के बाहर विवाद निपटाने वाली किसी प्रमाणित संस्था के पास भी ले जा सकते हैं। इनमें से किसी भी बात का आपके अदालत जाने के अधिकार पर कोई असर नहीं पड़ता।\n\n– {product_name} सेफ्टी टीम"
+	},
 	"dsa_report_verification": {
 		"subject": "DSA रिपोर्ट के लिए अपना ईमेल वेरिफ़ाई करें",
 		"body": "नमस्ते,\n\n{product_name} पर अपनी Digital Services Act रिपोर्ट सबमिट करने के लिए नीचे दिए गए वेरिफ़िकेशन कोड का इस्तेमाल करें:\n\n{code}\n\nयह कोड {expiresAt, date, full} को {expiresAt, time, short} पर एक्सपायर हो जाएगा।\n\nअगर आपने इसका अनुरोध नहीं किया था, तो आप इस ईमेल को अनदेखा कर सकते हैं।\n\n– {product_name} सेफ्टी टीम"
@@ -82,6 +86,10 @@ const EMAIL_I18N_HI_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "आपका {product_name} रजिस्ट्रेशन अप्रूव हो गया है",
 		"body": "नमस्ते {username},\n\nअच्छी खबर: आपका {product_name} रजिस्ट्रेशन अप्रूव हो गया है।\n\nअब आप {product_name} ऐप में यहाँ लॉगिन कर सकते हैं:\n{channelsUrl}\n\n{product_name} कम्युनिटी में आपका स्वागत है।\n\n– {product_name} टीम"
+	},
+	"report_received": {
+		"subject": "हमें आपकी {product_name} रिपोर्ट मिल गई है",
+		"body": "नमस्ते,\n\nहमें {product_name} पर {targetKind, select, message {एक मैसेज} user {एक अकाउंट} guild {एक कम्युनिटी} other {सामग्री}} के बारे में आपकी Digital Services Act रिपोर्ट मिल गई है।\n\nरिपोर्ट ID: {reportId}\n\nहमारी सेफ्टी टीम आपकी रिपोर्ट का रिव्यू करेगी और फैसला लेने के बाद हम आपको इसी पते पर ईमेल करेंगे। इस ईमेल को अपने रिकॉर्ड के लिए संभालकर रखें।\n\n– {product_name} सेफ्टी टीम"
 	},
 	"report_resolved": {
 		"subject": "आपकी {product_name} रिपोर्ट का रिव्यू कर लिया गया है",

@@ -27,6 +27,10 @@
 		"subject": "Tvarkyk savo {product_name} paramą",
 		"body": "Sveiki,\n\nSpustelėk žemiau esančią nuorodą, kad pasiektum savo rėmėjo portalą:\n\n{manageUrl}\n\nPortale gali valdyti prenumeratas, atsisiųsti sąskaitas faktūras ir peržiūrėti savo paramos istoriją.\n\nŠi nuoroda galioja iki {expiresAt, date, full} {expiresAt, time, short}.\n\nJei neprašei šios nuorodos, gali saugiai ignoruoti šį el. laišką.\n\n– {product_name} komanda"
 	},
+	"dsa_report_resolved": {
+		"subject": "Priėmėme sprendimą dėl tavo {product_name} pranešimo",
+		"body": "Sveiki,\n\nMūsų saugos komanda peržiūrėjo tavo pranešimą pagal Skaitmeninių paslaugų aktą (ID: {reportId}) ir priėmė sprendimą.{hasComment, select, yes {\n\nSaugos komandos atsakymas:\n{publicComment}} other {}}\n\nNesidalijame informacija apie veiksmus, kurių imtasi dėl kito asmens paskyros, nes tai yra jo asmens duomenys.\n\nJei nesutinki su šiuo sprendimu, per 60 dienų gali nemokamai pateikti apeliaciją. Iš šio el. pašto adreso siųsk el. laišką adresu {appeals_email}, nurodyk savo pranešimo ID ir paaiškink, kodėl manai, kad sprendimas neteisingas. Jei esi ES, ginčą taip pat gali perduoti sertifikuotai neteisminio ginčų sprendimo įstaigai. Visa tai neturi įtakos tavo teisei kreiptis į teismą.\n\n– {product_name} saugos komanda"
+	},
 	"dsa_report_verification": {
 		"subject": "Patvirtink savo el. paštą DSA pranešimui pateikti",
 		"body": "Sveiki,\n\nNaudok žemiau esantį patvirtinimo kodą, kad {product_name} platformoje pateiktum pranešimą pagal Skaitmeninių paslaugų aktą:\n\n{code}\n\nŠis kodas galioja iki {expiresAt, date, full} {expiresAt, time, short}.\n\nJei to neprašei, gali ignoruoti šį el. laišką.\n\n– {product_name} saugos komanda"
@@ -78,6 +82,10 @@
 	"registration_approved": {
 		"subject": "Tavo {product_name} registracija patvirtinta",
 		"body": "Sveiki, {username},\n\nGeros naujienos: tavo {product_name} registracija patvirtinta.\n\nDabar gali prisijungti prie {product_name} programėlės čia:\n{channelsUrl}\n\nSveiki atvykę į {product_name} bendruomenę.\n\n– {product_name} komanda"
+	},
+	"report_received": {
+		"subject": "Gavome tavo {product_name} pranešimą",
+		"body": "Sveiki,\n\nGavome tavo pranešimą pagal Skaitmeninių paslaugų aktą apie {targetKind, select, message {žinutę} user {paskyrą} guild {bendruomenę} other {turinį}} {product_name} platformoje.\n\nPranešimo ID: {reportId}\n\nMūsų saugos komanda peržiūrės tavo pranešimą, o priėmę sprendimą parašysime tau šiuo adresu. Išsaugok šį el. laišką, kad turėtum jį ateičiai.\n\n– {product_name} saugos komanda"
 	},
 	"report_resolved": {
 		"subject": "Tavo {product_name} pranešimas peržiūrėtas",

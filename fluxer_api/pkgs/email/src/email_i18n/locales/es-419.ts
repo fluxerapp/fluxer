@@ -31,6 +31,10 @@ const EMAIL_I18N_ES_419_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Administra tus donaciones a {product_name}",
 		"body": "Hola:\n\nHaz clic en el siguiente enlace para acceder a tu portal de donantes:\n\n{manageUrl}\n\nEn el portal, puedes administrar suscripciones, descargar facturas y ver tu historial de donaciones.\n\nEste enlace vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste este enlace, puedes ignorar este correo electrónico de forma segura.\n\n– Equipo de {product_name}"
 	},
+	"dsa_report_resolved": {
+		"subject": "Tomamos una decisión sobre tu reporte en {product_name}",
+		"body": "Hola:\n\nNuestro equipo de seguridad revisó tu reporte conforme a la Ley de Servicios Digitales (ID: {reportId}) y tomó una decisión.{hasComment, select, yes {\n\nRespuesta del equipo de seguridad:\n{publicComment}} other {}}\n\nNo compartimos detalles sobre las medidas tomadas contra la cuenta de otra persona, porque son sus datos personales.\n\nSi no estás de acuerdo con esta decisión, puedes apelar sin costo dentro de un plazo de 60 días. Envía un correo electrónico a {appeals_email} desde esta dirección de correo electrónico, incluye el ID de tu reporte y explica por qué crees que la decisión es incorrecta. Si te encuentras en la UE, también puedes remitir la disputa a un órgano certificado de resolución extrajudicial de litigios. Nada de esto afecta tu derecho a acudir a los tribunales.\n\n– Equipo de seguridad de {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Verifica tu correo electrónico para enviar un reporte conforme a la Ley de Servicios Digitales",
 		"body": "Hola:\n\nUsa el código de verificación a continuación para enviar tu reporte conforme a la Ley de Servicios Digitales en {product_name}:\n\n{code}\n\nEste código vence el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esto, puedes ignorar este correo electrónico.\n\n– Equipo de seguridad de {product_name}"
@@ -82,6 +86,10 @@ const EMAIL_I18N_ES_419_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "Tu registro en {product_name} ha sido aprobado",
 		"body": "Hola {username}:\n\nBuenas noticias: tu registro en {product_name} ha sido aprobado.\n\nAhora puedes iniciar sesión en la aplicación de {product_name} aquí:\n{channelsUrl}\n\nBienvenido a la comunidad de {product_name}.\n\n– Equipo de {product_name}"
+	},
+	"report_received": {
+		"subject": "Recibimos tu reporte en {product_name}",
+		"body": "Hola:\n\nRecibimos tu reporte conforme a la Ley de Servicios Digitales sobre {targetKind, select, message {un mensaje} user {una cuenta} guild {una comunidad} other {contenido}} en {product_name}.\n\nID del reporte: {reportId}\n\nNuestro equipo de seguridad revisará tu reporte y te escribiremos a esta dirección cuando hayamos tomado una decisión. Guarda este correo electrónico para tus registros.\n\n– Equipo de seguridad de {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Se revisó tu reporte en {product_name}",

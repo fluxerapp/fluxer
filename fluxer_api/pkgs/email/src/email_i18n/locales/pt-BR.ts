@@ -31,6 +31,10 @@ const EMAIL_I18N_PT_BR_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Gerencie suas doações ao {product_name}",
 		"body": "Olá,\n\nClique no link abaixo para acessar seu portal de doadores:\n\n{manageUrl}\n\nNo portal, você pode gerenciar assinaturas, baixar faturas e visualizar seu histórico de doações.\n\nEste link expira em {expiresAt, date, full} às {expiresAt, time, short}.\n\nSe você não solicitou este link, pode ignorar este e-mail com segurança.\n\n– Equipe do {product_name}"
 	},
+	"dsa_report_resolved": {
+		"subject": "Tomamos uma decisão sobre sua denúncia no {product_name}",
+		"body": "Olá,\n\nNossa equipe de segurança analisou sua denúncia nos termos da Lei dos Serviços Digitais (ID: {reportId}) e tomou uma decisão.{hasComment, select, yes {\n\nResposta da equipe de segurança:\n{publicComment}} other {}}\n\nNão compartilhamos detalhes de medidas tomadas contra a conta de outra pessoa, pois são dados pessoais dela.\n\nSe você não concordar com esta decisão, pode enviar um recurso gratuitamente em até 60 dias. Envie um e-mail para {appeals_email} a partir deste endereço de e-mail, inclua o ID da sua denúncia e explique por que você acredita que a decisão está incorreta. Se você estiver na UE, também pode encaminhar a disputa a um órgão certificado de resolução extrajudicial de litígios. Nada disso afeta seu direito de recorrer à Justiça.\n\n– equipe de segurança do {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Verifique seu e-mail para enviar uma denúncia nos termos do DSA",
 		"body": "Olá,\n\nUse o código de verificação abaixo para enviar sua denúncia ao {product_name} nos termos da Lei dos Serviços Digitais (DSA):\n\n{code}\n\nEste código expira em {expiresAt, date, full} às {expiresAt, time, short}.\n\nSe você não solicitou isso, pode ignorar este e-mail.\n\n– equipe de segurança do {product_name}"
@@ -82,6 +86,10 @@ const EMAIL_I18N_PT_BR_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "Seu cadastro no {product_name} foi aprovado",
 		"body": "Olá, {username},\n\nBoas notícias: seu cadastro no {product_name} foi aprovado.\n\nAgora você pode entrar no aplicativo do {product_name} aqui:\n{channelsUrl}\n\nBem-vindo à comunidade do {product_name}.\n\n– Equipe do {product_name}"
+	},
+	"report_received": {
+		"subject": "Recebemos sua denúncia no {product_name}",
+		"body": "Olá,\n\nRecebemos sua denúncia nos termos da Lei dos Serviços Digitais (DSA) sobre {targetKind, select, message {uma mensagem} user {uma conta} guild {uma comunidade} other {conteúdo}} no {product_name}.\n\nID da denúncia: {reportId}\n\nNossa equipe de segurança analisará sua denúncia e enviaremos um e-mail para este endereço quando tomarmos uma decisão. Guarde este e-mail para seus registros.\n\n– equipe de segurança do {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Sua denúncia no {product_name} foi analisada",

@@ -121,6 +121,9 @@ export function canReportMessage(message: Message): boolean {
 	if (message.author.system) {
 		return false;
 	}
+	if (message.isCrosspostSourceDeleted) {
+		return false;
+	}
 	return message.type === MessageTypes.DEFAULT || message.type === MessageTypes.REPLY;
 }
 

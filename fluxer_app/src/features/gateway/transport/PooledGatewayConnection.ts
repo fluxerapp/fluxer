@@ -47,6 +47,7 @@ import {selectGuildActivationTarget} from '@app/features/gateway/transport/Guild
 import MemberSearch from '@app/features/member/state/MemberSearch';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import ReportFlows from '@app/features/moderation/state/ReportFlows';
 import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import SessionManager from '@app/features/platform/state/AuthSession';
@@ -958,6 +959,7 @@ export class PooledGatewayConnection {
 		AttachmentUrlRefresher.reset();
 		ChannelFrecency.handleLogout();
 		MemberSearch.handleLogout();
+		ReportFlows.reset();
 		ThreadPanel.closeCreate();
 		ThreadGuilds.reset();
 		ChannelThreads.handleGatewayReady([]);

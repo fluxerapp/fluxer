@@ -19,10 +19,19 @@
 	margin-bottom: 0.25rem;
 }
 
+.breadcrumbGroup {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	white-space: nowrap;
+}
+
 .breadcrumbShell {
 	position: sticky;
 	top: 0;
 	z-index: 5;
+	background-color: var(--background-secondary);
+	box-shadow: 0 -2rem 0 var(--background-secondary);
 	padding-top: 0.3rem;
 	padding-bottom: 0.5rem;
 	margin-bottom: 0.25rem;
@@ -96,6 +105,10 @@
 .breadcrumbSeparator {
 	color: var(--text-tertiary);
 	font-size: 0.9rem;
+}
+
+[dir='rtl'] .breadcrumbSeparator {
+	transform: scaleX(-1);
 }
 
 .card {

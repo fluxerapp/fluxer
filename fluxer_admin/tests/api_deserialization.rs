@@ -752,6 +752,631 @@ fn deserialize_search_reports_response() {
     assert!(resp.reports[0].reported_guild_icon_hash.is_none());
 }
 
+fn report_json(extra: serde_json::Value) -> serde_json::Value {
+    let mut report = serde_json::json!({
+        "report_id": "1556008115701286089",
+        "reporter_id": "1556008115617399989",
+        "reporter_tag": "reporter#0896",
+        "reporter_username": "reporter",
+        "reporter_global_name": "Avery Reporter",
+        "reporter_discriminator": "0896",
+        "reporter_email": null,
+        "reporter_full_legal_name": null,
+        "reporter_country_of_residence": "FR",
+        "reported_at": "2026-10-03T18:30:33.848Z",
+        "status": 0,
+        "report_type": 0,
+        "category": "child_safety",
+        "additional_info": null,
+        "reported_user_id": "1556008115625788599",
+        "reported_user_tag": "target#6741",
+        "reported_user_username": "target",
+        "reported_user_global_name": "Jordan Target",
+        "reported_user_discriminator": "6741",
+        "reported_user_avatar_hash": null,
+        "reported_guild_id": null,
+        "reported_guild_name": null,
+        "reported_guild_icon_hash": null,
+        "reported_message_id": "1556008115697091784",
+        "reported_channel_id": "1556008115692897479",
+        "reported_channel_name": null,
+        "reported_guild_invite_code": null,
+        "resolved_at": null,
+        "resolved_by_admin_id": null,
+        "public_comment": null
+    });
+    for (key, value) in extra.as_object().expect("object").clone() {
+        report[key] = value;
+    }
+    report
+}
+
+fn v2_dsa_report_json() -> serde_json::Value {
+    report_json(serde_json::json!({
+        "reason": "csam",
+        "reason_label": "Child sexual abuse material",
+        "reason_highest_priority": true,
+        "reporter_good_faith_confirmed": true,
+        "flow": {
+            "revision_hash": "b7667e8b32c98c40",
+            "surface": "dsa",
+            "locale": "fr",
+            "steps": [
+                {"screen_id": "root_message", "screen_title": "Report message", "option_id": "abuse", "option_label": "Abusive or harmful content", "items": []},
+                {"screen_id": "abuse", "screen_title": "What does it involve?", "option_id": "sexual", "option_label": "Sexual content", "items": []},
+                {"screen_id": "private_info", "screen_title": "What private information is shared?", "option_id": null, "option_label": null, "items": [{"id": "email", "label": "Email address"}, {"id": "phone", "label": "Phone number"}]},
+                {"screen_id": "profile_intro", "screen_title": "Report profile", "option_id": null, "option_label": null, "items": []}
+            ]
+        }
+    }))
+}
+
+fn decode_report_both_ways(json: serde_json::Value) -> types::ReportEntry {
+    let generated: generated_types::ReportAdminResponseSchema =
+        serde_json::from_value(json.clone()).expect("generated report type");
+    let via_generated: types::ReportEntry =
+        serde_json::from_value(serde_json::to_value(generated).expect("serialize generated"))
+            .expect("hand-written report type from generated");
+    let direct: types::ReportEntry =
+        serde_json::from_value(json).expect("hand-written report type");
+    assert_eq!(
+        serde_json::to_value(&via_generated).unwrap(),
+        serde_json::to_value(&direct).unwrap()
+    );
+    direct
+}
+
+#[test]
+fn deserialize_v2_report_with_reason_and_answers() {
+    let report = decode_report_both_ways(v2_dsa_report_json());
+    assert_eq!(report.reason.as_deref(), Some("csam"));
+    assert_eq!(
+        report.reason_label.as_deref(),
+        Some("Child sexual abuse material")
+    );
+    assert_eq!(report.reason_highest_priority, Some(true));
+    assert_eq!(report.reporter_good_faith_confirmed, Some(true));
+    let flow = report.flow.expect("flow answers");
+    assert_eq!(flow.revision_hash, "b7667e8b32c98c40");
+    assert_eq!(flow.surface, "dsa");
+    assert_eq!(flow.locale.as_deref(), Some("fr"));
+    assert_eq!(flow.steps.len(), 4);
+    assert_eq!(flow.steps[0].option_id.as_deref(), Some("abuse"));
+    assert_eq!(flow.steps[2].option_id, None);
+    assert_eq!(flow.steps[2].items[1].label, "Phone number");
+    assert_eq!(flow.steps[3].option_label, None);
+    assert!(flow.steps[3].items.is_empty());
+}
+
+#[test]
+fn deserialize_legacy_report_without_reason_fields() {
+    let nulls = report_json(serde_json::json!({
+        "reason": null,
+        "reason_label": null,
+        "reason_highest_priority": null,
+        "flow": null,
+        "reporter_good_faith_confirmed": null
+    }));
+    for json in [report_json(serde_json::json!({})), nulls] {
+        let report = decode_report_both_ways(json);
+        assert!(report.reason.is_none());
+        assert!(report.reason_label.is_none());
+        assert!(report.reason_highest_priority.is_none());
+        assert!(report.flow.is_none());
+        assert!(report.reporter_good_faith_confirmed.is_none());
+    }
+}
+
+#[test]
+fn deserialize_report_with_unknown_reason_and_ids() {
+    let report = decode_report_both_ways(report_json(serde_json::json!({
+        "reason": "future_reason",
+        "reason_label": "future_reason",
+        "reason_highest_priority": null,
+        "flow": {
+            "revision_hash": "0000000000000000",
+            "surface": "future_surface",
+            "locale": null,
+            "steps": [
+                {"screen_id": "future_screen", "screen_title": "future_screen", "option_id": "future_option", "option_label": "future_option", "items": [{"id": "future_item", "label": "future_item"}]}
+            ]
+        }
+    })));
+    assert_eq!(report.reason.as_deref(), Some("future_reason"));
+    assert_eq!(report.reason_label.as_deref(), Some("future_reason"));
+    assert_eq!(report.reason_highest_priority, None);
+    let flow = report.flow.expect("flow answers");
+    assert_eq!(flow.surface, "future_surface");
+    assert_eq!(flow.locale, None);
+    assert_eq!(flow.steps[0].items[0].id, "future_item");
+}
+
+#[test]
+fn deserialize_report_with_unknown_status_and_type() {
+    let report = decode_report_both_ways(report_json(serde_json::json!({
+        "status": 7,
+        "report_type": 9
+    })));
+    assert_eq!(report.status, 7);
+    assert_eq!(report.report_type, 9);
+    let generated: generated_types::ReportAdminResponseSchema = serde_json::from_value(
+        report_json(serde_json::json!({"status": 7, "report_type": 9})),
+    )
+    .expect("generated report type");
+    assert_eq!(*generated.status, 7);
+    assert_eq!(*generated.report_type, 9);
+}
+
+#[test]
+fn deserialize_resolve_report_response_with_unknown_status() {
+    let json = serde_json::json!({
+        "report_id": "1556008115701286089",
+        "status": 7,
+        "resolved_at": "2026-10-03T18:40:00.000Z",
+        "public_comment": null
+    });
+    let generated: generated_types::ResolveReportResponse =
+        serde_json::from_value(json.clone()).expect("generated resolve response");
+    assert_eq!(*generated.status, 7);
+    let via_generated: types::ResolveReportResponse =
+        serde_json::from_value(serde_json::to_value(generated).expect("serialize generated"))
+            .expect("hand-written resolve response from generated");
+    let direct: types::ResolveReportResponse =
+        serde_json::from_value(json).expect("hand-written resolve response");
+    assert_eq!(via_generated.status, 7);
+    assert_eq!(direct.status, 7);
+    assert_eq!(direct.report_id, "1556008115701286089");
+}
+
+#[test]
+fn deserialize_webhook_message_report() {
+    let json = report_json(serde_json::json!({
+        "category": "spam",
+        "reported_user_id": null,
+        "reported_user_tag": null,
+        "reported_user_username": null,
+        "reported_user_global_name": null,
+        "reported_user_discriminator": null,
+        "reported_webhook_id": "1556008115710000001",
+        "reported_webhook_name": "Harbor Bulletin",
+        "reported_webhook_avatar_hash": "a_1f2e3d",
+        "reported_guild_id": "1556008115710000002",
+        "reported_guild_name": "Harbor",
+        "message_context": [
+            {
+                "id": "1556008115697091784",
+                "channel_id": "1556008115692897479",
+                "channel_nsfw": false,
+                "guild_id": "1556008115710000002",
+                "guild_nsfw_level": 0,
+                "content": "Free stuff here",
+                "timestamp": "2026-10-04T10:00:00.000Z",
+                "attachments": [],
+                "author_id": "1556008115710000001",
+                "author_username": "Harbor Bulletin",
+                "author_global_name": null,
+                "author_discriminator": "0000",
+                "author_avatar": "a_1f2e3d",
+                "webhook_id": "1556008115710000001",
+                "user_prior_ncmec_report_ids": []
+            },
+            {
+                "id": "1556008115697091780",
+                "channel_id": "1556008115692897479",
+                "channel_nsfw": false,
+                "guild_id": "1556008115710000002",
+                "guild_nsfw_level": 0,
+                "content": "hello",
+                "timestamp": "2026-10-04T09:59:00.000Z",
+                "attachments": [],
+                "author_id": "1556008115625788599",
+                "author_username": "target",
+                "author_global_name": null,
+                "author_discriminator": "6741",
+                "author_avatar": null,
+                "webhook_id": null,
+                "user_prior_ncmec_report_ids": []
+            }
+        ]
+    }));
+    let mut json = json;
+    let webhook_details = serde_json::json!({
+        "reported_webhook_default_name": "Harbor Hook",
+        "reported_webhook_default_avatar_hash": "b_4c5d6e",
+        "reported_webhook_type": 1,
+        "reported_webhook_application_id": null,
+        "reported_webhook_channel_id": "1556008115692897479",
+        "reported_webhook_guild_id": "1556008115710000002",
+        "reported_webhook_created_at": "2026-10-04T09:00:00.000Z",
+        "reported_webhook_creator_id": "1556008115625788600",
+        "reported_webhook_creator_tag": "keeper#0042",
+        "reported_webhook_creator_username": "keeper",
+        "reported_webhook_creator_global_name": "Harbor Keeper",
+        "reported_webhook_creator_discriminator": "0042",
+        "reported_webhook_creator_avatar_hash": "c_7f8a9b",
+    });
+    for (key, value) in webhook_details.as_object().expect("object") {
+        json[key] = value.clone();
+    }
+    let generated: generated_types::ReportAdminResponseSchema =
+        serde_json::from_value(json.clone()).expect("generated report type");
+    let via_generated: types::ReportEntry =
+        serde_json::from_value(serde_json::to_value(generated).expect("serialize generated"))
+            .expect("hand-written report type from generated");
+    let direct: types::ReportEntry =
+        serde_json::from_value(json).expect("hand-written report type");
+    for report in [&via_generated, &direct] {
+        assert!(report.reported_user_id.is_none());
+        assert_eq!(
+            report.reported_webhook_id.as_deref(),
+            Some("1556008115710000001")
+        );
+        assert_eq!(
+            report.reported_webhook_name.as_deref(),
+            Some("Harbor Bulletin")
+        );
+        assert_eq!(
+            report.reported_webhook_avatar_hash.as_deref(),
+            Some("a_1f2e3d")
+        );
+        assert_eq!(
+            report.reported_webhook_default_name.as_deref(),
+            Some("Harbor Hook")
+        );
+        assert_eq!(
+            report.reported_webhook_creator_id.as_deref(),
+            Some("1556008115625788600")
+        );
+        assert_eq!(
+            report.reported_webhook_creator_tag.as_deref(),
+            Some("keeper#0042")
+        );
+        assert_eq!(
+            report.reported_webhook_creator_username.as_deref(),
+            Some("keeper")
+        );
+        assert_eq!(
+            report.reported_webhook_creator_global_name.as_deref(),
+            Some("Harbor Keeper")
+        );
+        assert_eq!(
+            report.reported_webhook_creator_discriminator.as_deref(),
+            Some("0042")
+        );
+        assert_eq!(
+            report.reported_webhook_creator_avatar_hash.as_deref(),
+            Some("c_7f8a9b")
+        );
+        assert_eq!(
+            report.reported_webhook_default_avatar_hash.as_deref(),
+            Some("b_4c5d6e")
+        );
+        assert_eq!(report.reported_webhook_type, Some(1));
+        assert!(report.reported_webhook_application_id.is_none());
+        assert_eq!(
+            report.reported_webhook_channel_id.as_deref(),
+            Some("1556008115692897479")
+        );
+        assert_eq!(
+            report.reported_webhook_guild_id.as_deref(),
+            Some("1556008115710000002")
+        );
+        assert_eq!(
+            report.reported_webhook_created_at.as_deref(),
+            Some("2026-10-04T09:00:00.000Z")
+        );
+        let context = report.message_context.as_ref().expect("message context");
+        assert_eq!(context[0]["webhook_id"], "1556008115710000001");
+        assert_eq!(context[0]["author_id"], "1556008115710000001");
+        assert!(context[1]["webhook_id"].is_null());
+    }
+}
+
+#[test]
+fn deserialize_report_without_webhook_fields() {
+    let nulls = report_json(serde_json::json!({
+        "reported_webhook_id": null,
+        "reported_webhook_name": null,
+        "reported_webhook_avatar_hash": null,
+        "reported_webhook_default_name": null,
+        "reported_webhook_default_avatar_hash": null,
+        "reported_webhook_type": null,
+        "reported_webhook_application_id": null,
+        "reported_webhook_channel_id": null,
+        "reported_webhook_guild_id": null,
+        "reported_webhook_created_at": null,
+        "reported_webhook_creator_id": null,
+        "reported_webhook_creator_tag": null
+    }));
+    for json in [report_json(serde_json::json!({})), nulls] {
+        let report = decode_report_both_ways(json);
+        assert_eq!(
+            report.reported_user_id.as_deref(),
+            Some("1556008115625788599")
+        );
+        assert!(report.reported_webhook_id.is_none());
+        assert!(report.reported_webhook_name.is_none());
+        assert!(report.reported_webhook_avatar_hash.is_none());
+        assert!(report.reported_webhook_default_name.is_none());
+        assert!(report.reported_webhook_creator_id.is_none());
+        assert!(report.reported_webhook_creator_tag.is_none());
+        assert!(report.reported_webhook_default_avatar_hash.is_none());
+        assert!(report.reported_webhook_type.is_none());
+        assert!(report.reported_webhook_application_id.is_none());
+        assert!(report.reported_webhook_channel_id.is_none());
+        assert!(report.reported_webhook_guild_id.is_none());
+        assert!(report.reported_webhook_created_at.is_none());
+    }
+}
+
+fn snapshot_asset(hash: &str, url: Option<&str>) -> serde_json::Value {
+    serde_json::json!({"hash": hash, "url": url})
+}
+
+fn evidence_report_json() -> serde_json::Value {
+    report_json(serde_json::json!({
+        "reported_user_bot": true,
+        "reported_profile_snapshot": {
+            "captured_at": "2026-10-04T10:00:00.000Z",
+            "user": {
+                "id": "1556008115625788599",
+                "username": "target",
+                "discriminator": "6741",
+                "global_name": "Jordan Target",
+                "bio": "Original bio",
+                "pronouns": null,
+                "avatar": snapshot_asset("avatar1", Some("https://reports.example.test/a?sig=1")),
+                "banner": snapshot_asset("banner1", None)
+            },
+            "member": {
+                "guild_id": "1556008115710000002",
+                "nick": "Harbor Nick",
+                "bio": null,
+                "pronouns": null,
+                "joined_at": "2026-10-01T08:00:00.000Z",
+                "avatar": null,
+                "banner": null
+            },
+            "guild": null
+        },
+        "message_context": [
+            {
+                "id": "1556008115697091784",
+                "channel_id": "1556008115692897479",
+                "channel_nsfw": false,
+                "guild_id": null,
+                "guild_nsfw_level": null,
+                "content": "",
+                "timestamp": "2026-10-04T10:00:00.000Z",
+                "attachments": [],
+                "author_id": "1556008115625788599",
+                "author_username": "target",
+                "author_global_name": null,
+                "author_discriminator": "6741",
+                "author_avatar": null,
+                "webhook_id": null,
+                "author_bot": true,
+                "missing_attachments": [{
+                    "id": "1556008115697091790",
+                    "filename": "evidence.png",
+                    "nsfw": null,
+                    "content_type": "image/png",
+                    "width": 640,
+                    "height": 480,
+                    "size": 4096
+                }],
+                "user_prior_ncmec_report_ids": []
+            },
+            {
+                "id": "1556008115697091780",
+                "channel_id": "1556008115692897479",
+                "channel_nsfw": false,
+                "guild_id": null,
+                "guild_nsfw_level": null,
+                "content": "hello",
+                "timestamp": "2026-10-04T09:59:00.000Z",
+                "attachments": [],
+                "author_id": "1556008115617399989",
+                "author_username": "reporter",
+                "author_global_name": null,
+                "author_discriminator": "0896",
+                "author_avatar": null,
+                "webhook_id": null,
+                "author_bot": false,
+                "missing_attachments": [],
+                "user_prior_ncmec_report_ids": []
+            }
+        ]
+    }))
+}
+
+#[test]
+fn deserialize_report_with_bot_flags_profile_snapshot_and_missing_attachments() {
+    let json = evidence_report_json();
+    let generated: generated_types::ReportAdminResponseSchema =
+        serde_json::from_value(json.clone()).expect("generated report type");
+    let via_generated: types::ReportEntry =
+        serde_json::from_value(serde_json::to_value(generated).expect("serialize generated"))
+            .expect("hand-written report type from generated");
+    let direct: types::ReportEntry =
+        serde_json::from_value(json).expect("hand-written report type");
+    for report in [&via_generated, &direct] {
+        assert_eq!(report.reported_user_bot, Some(true));
+        let snapshot = report
+            .reported_profile_snapshot
+            .as_ref()
+            .expect("profile snapshot");
+        assert_eq!(
+            snapshot.captured_at.as_deref(),
+            Some("2026-10-04T10:00:00.000Z")
+        );
+        let user = snapshot.user.as_ref().expect("user snapshot");
+        assert_eq!(user.id, "1556008115625788599");
+        assert_eq!(user.bio.as_deref(), Some("Original bio"));
+        let avatar = user.avatar.as_ref().expect("avatar");
+        assert_eq!(avatar.hash, "avatar1");
+        assert_eq!(
+            avatar.url.as_deref(),
+            Some("https://reports.example.test/a?sig=1")
+        );
+        let banner = user.banner.as_ref().expect("banner");
+        assert_eq!(banner.hash, "banner1");
+        assert!(banner.url.is_none());
+        let member = snapshot.member.as_ref().expect("member snapshot");
+        assert_eq!(member.nick.as_deref(), Some("Harbor Nick"));
+        assert!(snapshot.guild.is_none());
+        let context = report.message_context.as_ref().expect("message context");
+        assert_eq!(context[0]["author_bot"], true);
+        assert_eq!(context[1]["author_bot"], false);
+        let missing = context[0]["missing_attachments"]
+            .as_array()
+            .expect("missing attachments");
+        assert_eq!(missing.len(), 1);
+        assert_eq!(missing[0]["filename"], "evidence.png");
+        assert_eq!(missing[0]["size"], 4096);
+        assert!(
+            context[1]["missing_attachments"]
+                .as_array()
+                .is_none_or(Vec::is_empty)
+        );
+    }
+}
+
+#[test]
+fn deserialize_report_without_bot_flags_snapshot_or_hold() {
+    let nulls = report_json(serde_json::json!({
+        "reported_user_bot": null,
+        "reported_profile_snapshot": null,
+        "legal_hold_until": null,
+        "legal_hold_reason": null
+    }));
+    for json in [report_json(serde_json::json!({})), nulls] {
+        let report = decode_report_both_ways(json);
+        assert!(report.reported_user_bot.is_none());
+        assert!(report.reported_profile_snapshot.is_none());
+        assert!(report.legal_hold_until.is_none());
+        assert!(report.legal_hold_reason.is_none());
+    }
+}
+
+#[test]
+fn deserialize_report_legal_hold_fields_and_hold_response() {
+    let report = decode_report_both_ways(report_json(serde_json::json!({
+        "legal_hold_until": "2027-01-31T23:59:59.999Z",
+        "legal_hold_reason": "Court order 42"
+    })));
+    assert_eq!(
+        report.legal_hold_until.as_deref(),
+        Some("2027-01-31T23:59:59.999Z")
+    );
+    assert_eq!(report.legal_hold_reason.as_deref(), Some("Court order 42"));
+
+    for json in [
+        serde_json::json!({
+            "report_id": "1556008115701286089",
+            "legal_hold_until": "2027-01-31T23:59:59.999Z",
+            "legal_hold_reason": "Court order 42"
+        }),
+        serde_json::json!({
+            "report_id": "1556008115701286089",
+            "legal_hold_until": null,
+            "legal_hold_reason": null
+        }),
+    ] {
+        let generated: generated_types::ReportLegalHoldResponse =
+            serde_json::from_value(json.clone()).expect("generated hold response");
+        let via_generated: types::ReportLegalHoldResponse =
+            serde_json::from_value(serde_json::to_value(generated).expect("serialize generated"))
+                .expect("hand-written hold response from generated");
+        let direct: types::ReportLegalHoldResponse =
+            serde_json::from_value(json.clone()).expect("hand-written hold response");
+        assert_eq!(
+            serde_json::to_value(&via_generated).unwrap(),
+            serde_json::to_value(&direct).unwrap()
+        );
+        assert_eq!(direct.report_id, "1556008115701286089");
+        assert_eq!(
+            direct.legal_hold_until.as_deref(),
+            json["legal_hold_until"].as_str()
+        );
+    }
+}
+
+#[test]
+fn deserialize_webhook_report_with_a_bot_creator_and_a_deleted_creator() {
+    let bot = decode_report_both_ways(report_json(serde_json::json!({
+        "reported_user_id": null,
+        "reported_webhook_id": "1556008115710000001",
+        "reported_webhook_name": "Relay",
+        "reported_webhook_type": 2,
+        "reported_webhook_application_id": "1556008115625788601",
+        "reported_webhook_created_at": "2026-10-04T09:00:00.000Z",
+        "reported_webhook_creator_id": "1556008115625788601",
+        "reported_webhook_creator_tag": "relaybot#0000",
+        "reported_webhook_creator_username": "relaybot",
+        "reported_webhook_creator_discriminator": "0000"
+    })));
+    assert_eq!(bot.reported_webhook_type, Some(2));
+    assert_eq!(
+        bot.reported_webhook_application_id.as_deref(),
+        Some("1556008115625788601")
+    );
+    assert_eq!(
+        bot.reported_webhook_application_id,
+        bot.reported_webhook_creator_id
+    );
+
+    let gone = decode_report_both_ways(report_json(serde_json::json!({
+        "reported_user_id": null,
+        "reported_webhook_id": "1556008115710000001",
+        "reported_webhook_name": "Night Relay",
+        "reported_webhook_type": 1,
+        "reported_webhook_created_at": "2026-10-04T09:00:00.000Z",
+        "reported_webhook_creator_id": "1556008115625788602",
+        "reported_webhook_creator_tag": null,
+        "reported_webhook_creator_username": null,
+        "reported_webhook_creator_global_name": null,
+        "reported_webhook_creator_discriminator": null,
+        "reported_webhook_creator_avatar_hash": null
+    })));
+    assert_eq!(
+        gone.reported_webhook_creator_id.as_deref(),
+        Some("1556008115625788602")
+    );
+    assert!(gone.reported_webhook_creator_tag.is_none());
+    assert!(gone.reported_webhook_creator_username.is_none());
+    assert!(gone.reported_webhook_application_id.is_none());
+}
+
+#[test]
+fn deserialize_report_reason_list() {
+    let json = r#"{
+        "reasons": [
+            {"key": "csam", "label": "Child sexual abuse material", "highest_priority": true, "legacy_category_message": "child_safety", "legacy_category_user": "child_safety", "legacy_category_guild": "child_safety"},
+            {"key": "raid", "label": "Raid or brigading", "highest_priority": false, "legacy_category_message": "harassment", "legacy_category_user": "harassment", "legacy_category_guild": "raid_coordination"}
+        ]
+    }"#;
+    let generated: generated_types::AdminReportReasonsResponse =
+        serde_json::from_str(json).expect("generated reason list type");
+    assert_eq!(generated.reasons.len(), 2);
+    let response: types::ReportReasonListResponse =
+        serde_json::from_str(json).expect("hand-written reason list type");
+    assert_eq!(response.reasons[0].key, "csam");
+    assert!(response.reasons[0].highest_priority);
+    assert_eq!(
+        response.reasons[1].legacy_category_guild.as_deref(),
+        Some("raid_coordination")
+    );
+
+    let lenient: types::ReportReasonListResponse = serde_json::from_str(
+        r#"{"reasons": [{"key": "future_reason", "label": "Future reason", "future_field": 1}], "future_field": []}"#,
+    )
+    .expect("the reason list tolerates missing and unknown fields");
+    assert_eq!(lenient.reasons[0].key, "future_reason");
+    assert!(!lenient.reasons[0].highest_priority);
+    assert!(lenient.reasons[0].legacy_category_message.is_none());
+}
+
 #[test]
 fn deserialize_lookup_guild_response() {
     let json = r#"{

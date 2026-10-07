@@ -152,10 +152,10 @@ The 400 shape has no `retry_after` member, no `X-RateLimit-*` header, and no `Re
 | [Start password change](/http-api/users/email-and-password/#start-password-change) | 3 sends per 15 minutes, keyed by the authenticated account | `RATE_LIMITED` |
 | [Resend password change code](/http-api/users/email-and-password/#resend-password-change-code) | 3 sends per 15 minutes, keyed by the authenticated account | `RATE_LIMITED` |
 | Every code resend and every new-address request on an email or password change ticket | 1 send per 30 seconds, keyed by the ticket and counted from its previous send | `RATE_LIMITED` |
-| [Report message](/http-api/reports/#report-message), [Report user](/http-api/reports/#report-user), [Report guild](/http-api/reports/#report-guild), and [Create DSA report](/http-api/reports/#create-dsa-report) | 5 per hour, keyed by the reporter, an account or a verified email address | `RATE_LIMITED` |
-| [Report message](/http-api/reports/#report-message) | 3 per hour, keyed by the reporter and the channel together | `RATE_LIMITED` |
-| [Report message](/http-api/reports/#report-message) | 20 per hour, keyed by the reported message, across all reporters | `RATE_LIMITED` |
-| [Report message](/http-api/reports/#report-message) | 4 per hour, keyed by the reporter and the guild together, for a guild message | `RATE_LIMITED` |
+| [Submit message report flow](/http-api/reports/#submit-message-report-flow), [Submit user report flow](/http-api/reports/#submit-user-report-flow), and [Create DSA report](/http-api/reports/#create-dsa-report) | 5 per hour, keyed by the reporter, an account or a verified email address | `RATE_LIMITED` |
+| [Submit message report flow](/http-api/reports/#submit-message-report-flow) | 3 per hour, keyed by the reporter and the channel together | `RATE_LIMITED` |
+| [Submit message report flow](/http-api/reports/#submit-message-report-flow) | 20 per hour, keyed by the reported message, across all reporters | `RATE_LIMITED` |
+| [Submit message report flow](/http-api/reports/#submit-message-report-flow) | 4 per hour, keyed by the reporter and the guild together, for a guild message | `RATE_LIMITED` |
 | [Resend IP authorisation](/http-api/authentication/#resend-ip-authorisation) | Nothing in the first 30 seconds after the ticket was issued, keyed by the authorisation ticket | `IP_AUTHORIZATION_RESEND_COOLDOWN` |
 
 The Resend IP authorisation cooldown has no `X-RateLimit-*` header. It has a `Retry-After` header in whole seconds, and the body reports that delay again as a top-level `resend_available_in` and `retry_after`. A second resend on one ticket returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED`. The allowance never refills, and the ticket expires 15 minutes after it was issued.

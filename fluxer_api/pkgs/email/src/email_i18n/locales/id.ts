@@ -31,6 +31,10 @@ const EMAIL_I18N_ID_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Kelola donasimu untuk {product_name}",
 		"body": "Halo,\n\nKlik tautan di bawah untuk mengakses portal donaturmu:\n\n{manageUrl}\n\nDi portal itu, kamu bisa mengelola langganan, mengunduh faktur, dan melihat riwayat donasimu.\n\nTautan ini kedaluwarsa pada {expiresAt, date, full} pukul {expiresAt, time, short}.\n\nJika kamu tidak meminta tautan ini, kamu bisa mengabaikan email ini dengan aman.\n\n– Tim {product_name}"
 	},
+	"dsa_report_resolved": {
+		"subject": "Kami telah mengambil keputusan atas laporanmu di {product_name}",
+		"body": "Halo,\n\nTim Keamanan kami telah meninjau laporan Digital Services Act kamu (ID: {reportId}) dan mengambil keputusan.{hasComment, select, yes {\n\nTanggapan dari Tim Keamanan:\n{publicComment}} other {}}\n\nKami tidak membagikan detail tindakan yang diambil terhadap akun orang lain, karena itu adalah data pribadi mereka.\n\nJika kamu tidak setuju dengan keputusan ini, kamu bisa mengajukan banding secara gratis dalam waktu 60 hari. Kirim email ke {appeals_email} dari alamat email ini, sertakan ID laporanmu, dan jelaskan kenapa menurutmu keputusan ini keliru. Jika kamu berada di Uni Eropa, kamu juga bisa membawa sengketa ini ke badan penyelesaian sengketa di luar pengadilan yang bersertifikat. Semua ini tidak memengaruhi hakmu untuk menempuh jalur pengadilan.\n\n– Tim Keamanan {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Verifikasi emailmu untuk laporan DSA",
 		"body": "Halo,\n\nGunakan kode verifikasi di bawah ini untuk mengirimkan laporan Digital Services Act kamu di {product_name}:\n\n{code}\n\nKode ini kedaluwarsa pada {expiresAt, date, full} pukul {expiresAt, time, short}.\n\nJika kamu tidak meminta ini, kamu bisa mengabaikan email ini.\n\n– Tim Keamanan {product_name}"
@@ -82,6 +86,10 @@ const EMAIL_I18N_ID_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "Pendaftaranmu di {product_name} telah disetujui",
 		"body": "Halo {username},\n\nKabar baik: pendaftaranmu di {product_name} telah disetujui.\n\nKamu sekarang bisa masuk ke aplikasi {product_name} di sini:\n{channelsUrl}\n\nSelamat datang di komunitas {product_name}.\n\n– Tim {product_name}"
+	},
+	"report_received": {
+		"subject": "Kami telah menerima laporanmu di {product_name}",
+		"body": "Halo,\n\nKami telah menerima laporan Digital Services Act kamu tentang {targetKind, select, message {sebuah pesan} user {sebuah akun} guild {sebuah komunitas} other {konten}} di {product_name}.\n\nID laporan: {reportId}\n\nTim Keamanan kami akan meninjau laporanmu dan kami akan mengirim email ke alamat ini setelah mengambil keputusan. Simpan email ini sebagai arsip.\n\n– Tim Keamanan {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Laporanmu di {product_name} telah ditinjau",

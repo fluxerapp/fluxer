@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ReportReceivedTargetKind} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
+
 export interface IEmailService {
 	sendPasswordResetEmail(email: string, username: string, resetToken: string, locale?: string | null): Promise<boolean>;
 	sendEmailVerification(
@@ -87,6 +89,18 @@ export interface IEmailService {
 		username: string,
 		reportId: string,
 		publicComment: string,
+		locale?: string | null,
+	): Promise<boolean>;
+	sendDsaReportResolvedEmail(
+		email: string,
+		reportId: string,
+		publicComment: string,
+		locale?: string | null,
+	): Promise<boolean>;
+	sendReportReceivedEmail(
+		email: string,
+		reportId: string,
+		targetKind: ReportReceivedTargetKind,
 		locale?: string | null,
 	): Promise<boolean>;
 	sendDsaReportVerificationCode(email: string, code: string, expiresAt: Date, locale?: string | null): Promise<boolean>;

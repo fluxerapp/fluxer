@@ -31,6 +31,10 @@ const EMAIL_I18N_FR_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Gérer vos dons à {product_name}",
 		"body": "Bonjour,\n\nCliquez sur le lien ci-dessous pour accéder à votre portail de donateur :\n\n{manageUrl}\n\nVous pouvez y gérer vos abonnements, télécharger des factures et consulter l’historique de vos dons.\n\nCe lien expire le {expiresAt, date, full} à {expiresAt, time, short}.\n\nSi vous n’avez pas demandé ce lien, vous pouvez ignorer cet e-mail.\n\n– L’équipe {product_name}"
 	},
+	"dsa_report_resolved": {
+		"subject": "Nous avons pris une décision concernant votre signalement sur {product_name}",
+		"body": "Bonjour,\n\nNotre équipe de sécurité a examiné votre signalement au titre du règlement sur les services numériques (ID : {reportId}) et a pris une décision.{hasComment, select, yes {\n\nRéponse de l’équipe de sécurité :\n{publicComment}} other {}}\n\nNous ne communiquons pas le détail des mesures prises à l’encontre du compte d’une autre personne, car il s’agit de ses données personnelles.\n\nSi vous n’êtes pas d’accord avec cette décision, vous pouvez déposer un recours gratuitement dans un délai de 60 jours. Écrivez à {appeals_email} depuis cette adresse e-mail, indiquez l’ID de votre signalement et expliquez pourquoi vous estimez que la décision est incorrecte. Si vous êtes dans l’UE, vous pouvez également soumettre le litige à un organe certifié de règlement extrajudiciaire des litiges. Rien de tout cela n’affecte votre droit de saisir un tribunal.\n\n– L’équipe de sécurité de {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Vérifiez votre e-mail pour un signalement DSA",
 		"body": "Bonjour,\n\nUtilisez le code ci-dessous pour envoyer votre signalement au titre du règlement sur les services numériques (DSA) sur {product_name} :\n\n{code}\n\nCe code expire le {expiresAt, date, full} à {expiresAt, time, short}.\n\nSi vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet e-mail.\n\n– L’équipe de sécurité de {product_name}"
@@ -82,6 +86,10 @@ const EMAIL_I18N_FR_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "Votre inscription à {product_name} a été approuvée",
 		"body": "Bonjour {username},\n\nBonne nouvelle : votre inscription à {product_name} a été approuvée.\n\nVous pouvez maintenant vous connecter à l’application {product_name} ici :\n{channelsUrl}\n\nBienvenue dans la communauté {product_name}.\n\n– L’équipe {product_name}"
+	},
+	"report_received": {
+		"subject": "Nous avons bien reçu votre signalement sur {product_name}",
+		"body": "Bonjour,\n\nNous avons bien reçu votre signalement au titre du règlement sur les services numériques (DSA) concernant {targetKind, select, message {un message} user {un compte} guild {une communauté} other {du contenu}} sur {product_name}.\n\nID du signalement : {reportId}\n\nNotre équipe de sécurité examinera votre signalement et nous vous écrirons à cette adresse dès qu’une décision aura été prise. Conservez cet e-mail pour vos archives.\n\n– L’équipe de sécurité de {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Votre signalement sur {product_name} a été examiné",

@@ -23,6 +23,7 @@ interface RadioGroupProps<T> {
 	onChange: (value: T) => void;
 	renderContent?: (option: RadioOption<T>, checked: boolean) => React.ReactNode;
 	optionAlign?: 'start' | 'center';
+	dir?: 'ltr' | 'rtl';
 	'aria-label'?: string;
 }
 
@@ -128,6 +129,7 @@ export const RadioGroup = observer(
 		onChange,
 		renderContent,
 		optionAlign = 'start',
+		dir,
 		'aria-label': ariaLabel,
 	}: RadioGroupProps<T>) => {
 		const valueToString = (val: T): string => {
@@ -153,6 +155,7 @@ export const RadioGroup = observer(
 				onValueChange={handleChange}
 				disabled={disabled}
 				orientation="vertical"
+				dir={dir}
 				aria-label={ariaLabel}
 				data-flx="ui.radio-group.radio-group.group"
 			>

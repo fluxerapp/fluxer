@@ -20,9 +20,12 @@ function buildReportFilters(filters: ReportSearchFilters): Array<ElasticsearchFi
 	if (filters.status !== undefined) clauses.push(esTermFilter('status', filters.status));
 	if (filters.reportType !== undefined) clauses.push(esTermFilter('reportType', filters.reportType));
 	if (filters.category) clauses.push(esTermFilter('category', filters.category));
+	if (filters.reason) clauses.push(esTermFilter('reason', filters.reason));
 	if (filters.reportedUserId) clauses.push(esTermFilter('reportedUserId', filters.reportedUserId));
+	if (filters.reportedWebhookId) clauses.push(esTermFilter('reportedWebhookId', filters.reportedWebhookId));
 	if (filters.reportedGuildId) clauses.push(esTermFilter('reportedGuildId', filters.reportedGuildId));
 	if (filters.reportedMessageId) clauses.push(esTermFilter('reportedMessageId', filters.reportedMessageId));
+	if (filters.reportedChannelId) clauses.push(esTermFilter('reportedChannelId', filters.reportedChannelId));
 	if (filters.guildContextId) clauses.push(esTermFilter('guildContextId', filters.guildContextId));
 	if (filters.resolvedByAdminId) clauses.push(esTermFilter('resolvedByAdminId', filters.resolvedByAdminId));
 	if (filters.isResolved !== undefined) {

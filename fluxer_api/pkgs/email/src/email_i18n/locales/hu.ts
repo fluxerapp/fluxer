@@ -31,6 +31,10 @@ const EMAIL_I18N_HU_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "A {product_name} működését támogató adományaid kezelése",
 		"body": "Szia!\n\nKattints az alábbi linkre az adományozói portálod eléréséhez:\n\n{manageUrl}\n\nA portálon kezelheted az előfizetéseket, letöltheted a számlákat, és megtekintheted az adománytörténetedet.\n\nEz a link {expiresAt, date, full} {expiresAt, time, short} időpontban jár le.\n\nHa nem kérted ezt a linket, nyugodtan figyelmen kívül hagyhatod ezt az e-mailt.\n\n– {product_name} csapata"
 	},
+	"dsa_report_resolved": {
+		"subject": "Döntést hoztunk a {product_name} felületén tett bejelentésedről",
+		"body": "Szia!\n\nBiztonsági csapatunk elbírálta a digitális szolgáltatásokról szóló rendelet szerinti bejelentésedet (azonosító: {reportId}), és döntést hozott.{hasComment, select, yes {\n\nA biztonsági csapat válasza:\n{publicComment}} other {}}\n\nMás személy fiókjával szemben tett intézkedések részleteit nem osztjuk meg, mert azok az ő személyes adatai.\n\nHa nem értesz egyet a döntéssel, 60 napon belül díjmentesen fellebbezhetsz. Erről az e-mail-címről írj a következő címre: {appeals_email}, add meg a bejelentésed azonosítóját, és fejtsd ki, miért tartod hibásnak a döntést. Ha az EU-ban tartózkodsz, a vitát tanúsított peren kívüli vitarendezési testület elé is viheted. Mindez nem érinti azt a jogodat, hogy bírósághoz fordulj.\n\n– {product_name} biztonsági csapata"
+	},
 	"dsa_report_verification": {
 		"subject": "Erősítsd meg e-mail-címedet a DSA-bejelentéshez",
 		"body": "Szia!\n\nAz alábbi ellenőrző kóddal küldheted el a digitális szolgáltatásokról szóló rendelet (DSA) szerinti bejelentésedet a {product_name} felületén:\n\n{code}\n\nA kód lejárati időpontja: {expiresAt, date, full} {expiresAt, time, short}.\n\nHa nem te kérted ezt a kódot, figyelmen kívül hagyhatod ezt az e-mailt.\n\n– {product_name} biztonsági csapata"
@@ -82,6 +86,10 @@ const EMAIL_I18N_HU_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "Jóváhagytuk a regisztrációdat a {product_name} felületén",
 		"body": "Szia, {username}!\n\nJó hír: jóváhagytuk a regisztrációdat a {product_name} felületén.\n\nMost már bejelentkezhetsz az alkalmazásba:\n{channelsUrl}\n\nÜdvözlünk a {product_name} közösségében!\n\n– {product_name} csapata"
+	},
+	"report_received": {
+		"subject": "Megkaptuk a {product_name} felületén tett bejelentésedet",
+		"body": "Szia!\n\nMegkaptuk a digitális szolgáltatásokról szóló rendelet (DSA) szerinti bejelentésedet a {product_name} felületén. A bejelentés tárgya: {targetKind, select, message {egy üzenet} user {egy fiók} guild {egy közösség} other {tartalom}}.\n\nBejelentés azonosítója: {reportId}\n\nBiztonsági csapatunk elbírálja a bejelentésedet, és erre a címre írunk neked, amint döntést hoztunk. Őrizd meg ezt az e-mailt, hogy később is meglegyen.\n\n– {product_name} biztonsági csapata"
 	},
 	"report_resolved": {
 		"subject": "Elbíráltuk a {product_name} felületén tett bejelentésedet",

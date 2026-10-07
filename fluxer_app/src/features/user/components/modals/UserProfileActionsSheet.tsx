@@ -27,10 +27,10 @@ import {
 	BAN_ACTION_DESCRIPTOR,
 	BLOCK_DESCRIPTOR,
 	REMOVE_TIMEOUT_DESCRIPTOR,
-	REPORT_USER_DESCRIPTOR,
+	REPORT_USER_PROFILE_DESCRIPTOR,
 	TIMEOUT_DESCRIPTOR,
 } from '@app/features/moderation/utils/ModerationMessageDescriptors';
-import {openReportMessageModal, openReportUserModal} from '@app/features/moderation/utils/ReportActionUtils';
+import {openReportMessageModal, openReportUserProfileModal} from '@app/features/moderation/utils/ReportActionUtils';
 import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
 import Permission from '@app/features/permissions/state/Permission';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
@@ -91,6 +91,7 @@ interface UserProfileActionsSheetProps {
 	guildId?: string;
 	guildMember?: GuildMember | null;
 	message?: Message;
+	showReportUserProfile?: boolean;
 }
 
 export const UserProfileActionsSheet: React.FC<UserProfileActionsSheetProps> = observer(
@@ -105,6 +106,7 @@ export const UserProfileActionsSheet: React.FC<UserProfileActionsSheetProps> = o
 		guildId,
 		guildMember,
 		message,
+		showReportUserProfile = false,
 	}) => {
 		const {i18n} = useLingui();
 		const relationshipType = Relationships.getRelationship(user.id)?.type;
@@ -241,8 +243,8 @@ export const UserProfileActionsSheet: React.FC<UserProfileActionsSheetProps> = o
 				)),
 			);
 		};
-		const handleReportUser = () => {
-			ModalCommands.runAfterBottomSheetClose(onClose, () => openReportUserModal({i18n, user, guildId, message}));
+		const handleReportUserProfile = () => {
+			ModalCommands.runAfterBottomSheetClose(onClose, () => openReportUserProfileModal({user, guildId}));
 		};
 		const handleReportMessage = () => {
 			if (!message || !canReportMessage(message)) {
@@ -377,12 +379,16 @@ export const UserProfileActionsSheet: React.FC<UserProfileActionsSheetProps> = o
 							},
 						]
 					: []),
-				{
-					icon: <FlagIcon className={styles.icon} data-flx="user.user-profile-actions-sheet.icon--12" />,
-					label: i18n._(REPORT_USER_DESCRIPTOR),
-					onClick: handleReportUser,
-					danger: true,
-				},
+				...(showReportUserProfile
+					? [
+							{
+								icon: <FlagIcon className={styles.icon} data-flx="user.user-profile-actions-sheet.icon--12" />,
+								label: i18n._(REPORT_USER_PROFILE_DESCRIPTOR),
+								onClick: handleReportUserProfile,
+								danger: true,
+							},
+						]
+					: []),
 			];
 			if (!user.system) {
 				if (relationshipType !== RelationshipTypes.BLOCKED) {

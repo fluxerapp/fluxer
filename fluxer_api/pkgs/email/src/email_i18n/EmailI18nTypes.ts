@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+export type ReportReceivedTargetKind = 'message' | 'user' | 'guild';
+
 export interface EmailTemplateVariables {
 	account_deletion_cancelled: {
 		username: string;
@@ -38,6 +40,11 @@ export interface EmailTemplateVariables {
 	donation_magic_link: {
 		manageUrl: string;
 		expiresAt: Date;
+	};
+	dsa_report_resolved: {
+		reportId: string;
+		publicComment: string;
+		hasComment: 'yes' | 'no';
 	};
 	dsa_report_verification: {
 		code: string;
@@ -101,6 +108,10 @@ export interface EmailTemplateVariables {
 	registration_approved: {
 		username: string;
 		channelsUrl: string;
+	};
+	report_received: {
+		reportId: string;
+		targetKind: ReportReceivedTargetKind;
 	};
 	report_resolved: {
 		username: string;

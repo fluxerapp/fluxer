@@ -27,6 +27,10 @@
 		"subject": "Zarządzaj darowiznami dla {product_name}",
 		"body": "Witaj,\n\nKliknij poniższy link, aby przejść do portalu darczyńcy:\n\n{manageUrl}\n\nW portalu możesz zarządzać subskrypcjami, pobierać faktury i przeglądać historię swoich darowizn.\n\nTen link wygasa {expiresAt, date, full} o {expiresAt, time, short}.\n\nJeśli nie prosiłeś o ten link, możesz bezpiecznie zignorować tę wiadomość e-mail.\n\n– Zespół {product_name}"
 	},
+	"dsa_report_resolved": {
+		"subject": "Podjęliśmy decyzję w sprawie Twojego zgłoszenia w {product_name}",
+		"body": "Witaj,\n\nNasz zespół ds. bezpieczeństwa rozpatrzył Twoje zgłoszenie w ramach aktu o usługach cyfrowych (ID: {reportId}) i podjął decyzję.{hasComment, select, yes {\n\nOdpowiedź od zespołu ds. bezpieczeństwa:\n{publicComment}} other {}}\n\nNie udostępniamy szczegółów działań podjętych wobec konta innej osoby, ponieważ są to jej dane osobowe.\n\nJeśli nie zgadzasz się z tą decyzją, możesz bezpłatnie złożyć odwołanie w ciągu 60 dni. Wyślij e-mail na adres {appeals_email} z tego adresu e-mail, podaj ID zgłoszenia i wyjaśnij, dlaczego uważasz, że decyzja jest błędna. Jeśli przebywasz w UE, możesz też skierować spór do certyfikowanego organu pozasądowego rozstrzygania sporów. Nic z tego nie wpływa na Twoje prawo do skierowania sprawy do sądu.\n\n– Zespół ds. bezpieczeństwa {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Zweryfikuj adres e-mail na potrzeby zgłoszenia DSA",
 		"body": "Witaj,\n\nUżyj poniższego kodu weryfikacyjnego, aby przesłać zgłoszenie w ramach aktu o usługach cyfrowych (DSA) w {product_name}:\n\n{code}\n\nTen kod wygasa {expiresAt, date, full} o {expiresAt, time, short}.\n\nJeśli nie prosiłeś o ten kod, możesz zignorować tę wiadomość e-mail.\n\n– Zespół ds. bezpieczeństwa {product_name}"
@@ -78,6 +82,10 @@
 	"registration_approved": {
 		"subject": "Twoja rejestracja w {product_name} została zatwierdzona",
 		"body": "Witaj {username},\n\nDobre wieści: Twoja rejestracja w {product_name} została zatwierdzona.\n\nMożesz teraz zalogować się do aplikacji {product_name} tutaj:\n{channelsUrl}\n\nWitaj w społeczności {product_name}.\n\n– Zespół {product_name}"
+	},
+	"report_received": {
+		"subject": "Otrzymaliśmy Twoje zgłoszenie w {product_name}",
+		"body": "Witaj,\n\nOtrzymaliśmy Twoje zgłoszenie w ramach aktu o usługach cyfrowych (DSA) dotyczące {targetKind, select, message {wiadomości} user {konta} guild {społeczności} other {treści}} w {product_name}.\n\nID zgłoszenia: {reportId}\n\nNasz zespół ds. bezpieczeństwa rozpatrzy Twoje zgłoszenie, a gdy podejmiemy decyzję, napiszemy do Ciebie na ten adres. Zachowaj tę wiadomość e-mail na przyszłość.\n\n– Zespół ds. bezpieczeństwa {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Twoje zgłoszenie w {product_name} zostało rozpatrzone",

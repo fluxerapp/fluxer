@@ -31,6 +31,10 @@ const EMAIL_I18N_EN_GB_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Manage your {product_name} donations",
 		"body": "Hello,\n\nClick the link below to access your donor portal:\n\n{manageUrl}\n\nIn the portal, you can manage subscriptions, download invoices, and view your donation history.\n\nThis link expires on {expiresAt, date, full} at {expiresAt, time, short}.\n\nIf you did not request this link, you can safely ignore this email.\n\n– {product_name} Team"
 	},
+	"dsa_report_resolved": {
+		"subject": "We made a decision on your {product_name} report",
+		"body": "Hello,\n\nOur Safety Team has reviewed your Digital Services Act report (ID: {reportId}) and made a decision.{hasComment, select, yes {\n\nResponse from the Safety Team:\n{publicComment}} other {}}\n\nWe don't share details of any action taken against another person's account, because that is their personal data.\n\nIf you disagree with this decision, you can appeal free of charge within 60 days. Email {appeals_email} from this email address, include your report ID, and explain why you think the decision is wrong. If you are in the EU, you can also refer the dispute to a certified out-of-court dispute settlement body. None of this affects your right to go to court.\n\n– {product_name} Safety Team"
+	},
 	"dsa_report_verification": {
 		"subject": "Verify your email for a DSA report",
 		"body": "Hello,\n\nUse the verification code below to submit your Digital Services Act report on {product_name}:\n\n{code}\n\nThis code expires on {expiresAt, date, full} at {expiresAt, time, short}.\n\nIf you didn't request this, you can ignore this email.\n\n– {product_name} Safety Team"
@@ -82,6 +86,10 @@ const EMAIL_I18N_EN_GB_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "Your {product_name} registration has been approved",
 		"body": "Hello {username},\n\nGood news: your {product_name} registration has been approved.\n\nYou can now log in to the {product_name} app here:\n{channelsUrl}\n\nWelcome to the {product_name} community.\n\n– {product_name} Team"
+	},
+	"report_received": {
+		"subject": "We received your {product_name} report",
+		"body": "Hello,\n\nWe received your Digital Services Act report about {targetKind, select, message {a message} user {an account} guild {a community} other {content}} on {product_name}.\n\nReport ID: {reportId}\n\nOur Safety Team will review your report and email you at this address once we have made a decision. Keep this email for your records.\n\n– {product_name} Safety Team"
 	},
 	"report_resolved": {
 		"subject": "Your {product_name} report has been reviewed",

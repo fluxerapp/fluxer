@@ -31,6 +31,10 @@ const EMAIL_I18N_NL_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Beheer je {product_name}-donaties",
 		"body": "Hallo,\n\nKlik op de onderstaande link om toegang te krijgen tot je donateursportaal:\n\n{manageUrl}\n\nIn het portaal kun je abonnementen beheren, facturen downloaden en je donatiegeschiedenis bekijken.\n\nDeze link verloopt op {expiresAt, date, full} om {expiresAt, time, short}.\n\nAls je deze link niet hebt aangevraagd, kun je deze e-mail veilig negeren.\n\n– Het team van {product_name}"
 	},
+	"dsa_report_resolved": {
+		"subject": "We hebben een beslissing genomen over je melding op {product_name}",
+		"body": "Hallo,\n\nOns veiligheidsteam heeft je melding op grond van de Digital Services Act (ID: {reportId}) beoordeeld en een beslissing genomen.{hasComment, select, yes {\n\nReactie van het veiligheidsteam:\n{publicComment}} other {}}\n\nWe delen geen details over maatregelen tegen het account van iemand anders, omdat dat persoonsgegevens van die persoon zijn.\n\nAls je het niet eens bent met deze beslissing, kun je binnen 60 dagen kosteloos bezwaar maken. Stuur een e-mail naar {appeals_email} vanaf dit e-mailadres, vermeld je meldings-ID en leg uit waarom je vindt dat de beslissing onjuist is. Als je in de EU bent, kun je het geschil ook voorleggen aan een gecertificeerd orgaan voor buitengerechtelijke geschillenbeslechting. Dit alles doet niets af aan je recht om naar de rechter te stappen.\n\n– Het veiligheidsteam van {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Verifieer je e-mailadres voor een DSA-melding",
 		"body": "Hallo,\n\nGebruik de onderstaande verificatiecode om je melding op grond van de Digital Services Act op {product_name} in te dienen:\n\n{code}\n\nDeze code verloopt op {expiresAt, date, full} om {expiresAt, time, short}.\n\nAls je dit niet hebt aangevraagd, kun je deze e-mail negeren.\n\n– Het veiligheidsteam van {product_name}"
@@ -82,6 +86,10 @@ const EMAIL_I18N_NL_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "Je {product_name}-registratie is goedgekeurd",
 		"body": "Hallo {username},\n\nGoed nieuws: je {product_name}-registratie is goedgekeurd.\n\nJe kunt nu inloggen op de {product_name}-app via:\n{channelsUrl}\n\nWelkom bij de {product_name}-community.\n\n– Het team van {product_name}"
+	},
+	"report_received": {
+		"subject": "We hebben je melding op {product_name} ontvangen",
+		"body": "Hallo,\n\nWe hebben je melding op grond van de Digital Services Act over {targetKind, select, message {een bericht} user {een account} guild {een community} other {inhoud}} op {product_name} ontvangen.\n\nMeldings-ID: {reportId}\n\nOns veiligheidsteam beoordeelt je melding en we mailen je op dit adres zodra we een beslissing hebben genomen. Bewaar deze e-mail voor je eigen administratie.\n\n– Het veiligheidsteam van {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Je melding op {product_name} is beoordeeld",

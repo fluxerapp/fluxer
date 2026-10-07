@@ -7,7 +7,9 @@ import {showGenericErrorModal} from '@app/features/app/components/alerts/Generic
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
+import {canReportMessage} from '@app/features/channel/components/MessageActionUtils';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
@@ -46,7 +48,7 @@ import {
 	normalizeMessageContent,
 } from '@app/features/messaging/utils/MessageRequestUtils';
 import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
-import * as IARCommands from '@app/features/moderation/commands/IARCommands';
+import {openReportMessageModal} from '@app/features/moderation/utils/ReportActionUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Permission from '@app/features/permissions/state/Permission';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
@@ -82,6 +84,8 @@ import type {
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
+import {useLingui} from '@lingui/react/macro';
+import {observer} from 'mobx-react-lite';
 
 const ARE_YOU_SURE_YOU_WANT_TO_DELETE_THIS_DESCRIPTOR = msg({
 	message: "Delete this message? Can't be undone.",
@@ -94,7 +98,7 @@ const DELETE_DESCRIPTOR = msg({
 const ALSO_REPORT_TO_SAFETY_TEAM_DESCRIPTOR = msg({
 	message: 'Also report this message to the {productName} Safety Team',
 	comment:
-		'Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).',
+		'Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).',
 });
 const DELETE_PUBLISHED_MESSAGE_BODY_DESCRIPTOR = msg({
 	message:
@@ -797,6 +801,24 @@ export async function remove(channelId: string, messageId: string): Promise<void
 	return deletePromise;
 }
 
+interface SafetyTeamReportSwitchProps {
+	value?: boolean;
+	onChange?: (checked: boolean) => void;
+}
+
+const SafetyTeamReportSwitch = observer(({value = false, onChange}: SafetyTeamReportSwitchProps) => {
+	const {i18n} = useLingui();
+	return (
+		<Switch
+			value={value}
+			onChange={(checked) => onChange?.(checked)}
+			label={i18n._(ALSO_REPORT_TO_SAFETY_TEAM_DESCRIPTOR, {productName: getActiveInstanceProductName()})}
+			compact
+			data-flx="messaging.message-commands.safety-team-report-switch.switch"
+		/>
+	);
+});
+
 interface ShowDeleteConfirmationOptions {
 	message: MessageModel;
 	onDelete?: () => void;
@@ -815,8 +837,13 @@ export function showDeleteConfirmation(
 ): void {
 	const showSafetyTeamReportToggle =
 		!suppressSafetyTeamReportToggle &&
-		message.author.id !== Authentication.currentUserId &&
+		canReportMessage(message) &&
 		Permission.can(Permissions.MANAGE_MESSAGES, {channelId: message.channelId});
+	if (showSafetyTeamReportToggle) {
+		RuntimeConfig.revalidateDiscovery().catch((error: unknown) => {
+			logger.warn('Failed to refresh discovery for the delete confirmation:', error);
+		});
+	}
 	ModalCommands.push(
 		modal(() => (
 			<ConfirmModal
@@ -831,25 +858,19 @@ export function showDeleteConfirmation(
 				primaryVariant="danger"
 				toggleSwitchContent={
 					showSafetyTeamReportToggle ? (
-						<Switch
-							value={false}
-							onChange={() => {}}
-							label={i18n._(ALSO_REPORT_TO_SAFETY_TEAM_DESCRIPTOR, {productName: getActiveInstanceProductName()})}
-							compact
-							data-flx="messaging.message-commands.show-delete-confirmation.switch"
-						/>
+						<SafetyTeamReportSwitch data-flx="messaging.message-commands.show-delete-confirmation.safety-team-report-switch" />
 					) : undefined
 				}
-				onPrimary={async (alsoReportToSafetyTeam) => {
+				onPrimary={(alsoReportToSafetyTeam) => {
+					const deleteMessage = () => {
+						remove(message.channelId, message.id);
+						onDelete?.();
+					};
 					if (alsoReportToSafetyTeam) {
-						try {
-							await IARCommands.reportMessage(message.channelId, message.id, 'other');
-						} catch (error) {
-							logger.error('Failed to also-report message before deletion:', error);
-						}
+						openReportMessageModal(message, {onFinish: deleteMessage});
+						return;
 					}
-					remove(message.channelId, message.id);
-					onDelete?.();
+					deleteMessage();
 				}}
 				showShiftBypassConfirmationTip={showShiftBypassConfirmationTip}
 				data-flx="messaging.message-commands.show-delete-confirmation.confirm-modal"

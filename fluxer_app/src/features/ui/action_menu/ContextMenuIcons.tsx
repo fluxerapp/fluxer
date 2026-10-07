@@ -371,13 +371,6 @@ export const BlockUserIcon: React.FC<IconProps> = observer(({size = 16, weight =
 		data-flx="ui.action-menu.context-menu-icons.block-user-icon.prohibit-icon"
 	/>
 ));
-export const ReportUserIcon: React.FC<IconProps> = observer(({size = 16, weight = 'fill'}) => (
-	<FlagIcon
-		size={remFromPx(size)}
-		weight={weight}
-		data-flx="ui.action-menu.context-menu-icons.report-user-icon.flag-icon"
-	/>
-));
 export const AddNoteIcon: React.FC<IconProps> = observer(({size = 16}) => (
 	<NotePencilIcon
 		size={remFromPx(size)}

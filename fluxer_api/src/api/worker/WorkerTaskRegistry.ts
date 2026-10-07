@@ -11,11 +11,13 @@ import batchGuildAuditLogMessageDeletes from '@app/api/worker/tasks/BatchGuildAu
 import bulkDeleteSelfMessagesImmediate from '@app/api/worker/tasks/BulkDeleteSelfMessagesImmediate';
 import bulkDeleteUserMessages from '@app/api/worker/tasks/BulkDeleteUserMessages';
 import bulkDeleteUserMessagesScoped from '@app/api/worker/tasks/BulkDeleteUserMessagesScoped';
+import clearAuthenticatedReporterEmails from '@app/api/worker/tasks/ClearAuthenticatedReporterEmails';
 import crosspostMessage from '@app/api/worker/tasks/CrosspostMessage';
 import crosspostMessageChunk from '@app/api/worker/tasks/CrosspostMessageChunk';
 import deleteUserMessagesInGuildByTime from '@app/api/worker/tasks/DeleteUserMessagesInGuildByTime';
 import drainActivitySpool from '@app/api/worker/tasks/DrainActivitySpool';
 import expireAttachments from '@app/api/worker/tasks/ExpireAttachments';
+import expireReportSnapshots from '@app/api/worker/tasks/ExpireReportSnapshots';
 import expireStaleJobs from '@app/api/worker/tasks/ExpireStaleJobs';
 import extractEmbeds from '@app/api/worker/tasks/ExtractEmbeds';
 import finalizeNcmecAttachmentReport from '@app/api/worker/tasks/FinalizeNcmecAttachmentReport';
@@ -82,11 +84,13 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	bulkScheduleUserDeletion: bulkScheduleUserDeletion,
 	bulkUpdateGuildFeatures: bulkUpdateGuildFeatures,
 	bulkUpdateUserFlags: bulkUpdateUserFlags,
+	clearAuthenticatedReporterEmails,
 	crosspostMessage,
 	crosspostMessageChunk,
 	deleteUserMessagesInGuildByTime,
 	drainActivitySpool,
 	expireAttachments,
+	expireReportSnapshots,
 	expireStaleJobs,
 	extractEmbeds,
 	finalizeNcmecAttachmentReport,

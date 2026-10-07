@@ -163,6 +163,7 @@ export function getReportServiceInstance(): ReportService {
 			getStorageService(),
 			getGatewayService(),
 			getRateLimitService(),
+			getWebhookRepository(),
 			getReportSearchService(),
 		);
 	}

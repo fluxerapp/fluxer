@@ -221,6 +221,8 @@ const CHANNEL_THREADS_UNTIL_GA = {
 	]),
 };
 
+const LEGACY_REPORT_ROUTES = new Set(['POST /reports/message', 'POST /reports/user', 'POST /reports/guild']);
+
 interface ExemptionRule {
 	readonly name: string;
 	readonly justification: string;
@@ -275,6 +277,13 @@ const EXEMPTION_RULES: ReadonlyArray<ExemptionRule> = [
 			'no ordinary client holds the credential. Each entry states its guard, and five are covered in prose',
 		anchors: [{file: 'fluxer_api/src/api/app/ControllerRegistry.ts', anchor: 'InternalRpcController(routes);'}],
 		covers: (shape) => OUT_OF_BAND_CREDENTIAL.has(shape),
+	},
+	{
+		name: 'legacy report routes',
+		justification:
+			'still served for clients released before report flows, which new callers must use instead. The generator drops them at OpenAPIGeneratorCatalog excluded.paths',
+		anchors: [{file: 'packages/openapi/src/generator/OpenAPIGeneratorCatalog.ts', anchor: "'/reports/message'"}],
+		covers: (shape) => LEGACY_REPORT_ROUTES.has(shape),
 	},
 	{
 		name: 'channel_threads',

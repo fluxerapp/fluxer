@@ -104,6 +104,7 @@ const ARE_YOU_SURE_YOU_WANT_TO_UNBLOCK_DESCRIPTOR = msg({
 export interface RelationshipConfirmationOptions {
 	bypassConfirm?: boolean;
 	showShiftBypassConfirmationTip?: boolean;
+	userName?: string;
 }
 
 export interface RelationshipConfirmationEvent {
@@ -307,7 +308,7 @@ export function showBlockUserConfirmation(i18n: I18n, user: User, options: Relat
 			<ConfirmModal
 				title={i18n._(BLOCK_USER_DESCRIPTOR)}
 				description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_BLOCK_THEY_DESCRIPTOR, {
-					userName: NicknameUtils.getNickname(user, null),
+					userName: options.userName ?? NicknameUtils.getNickname(user, null),
 				})}
 				primaryText={i18n._(BLOCK_DESCRIPTOR)}
 				primaryVariant="danger"

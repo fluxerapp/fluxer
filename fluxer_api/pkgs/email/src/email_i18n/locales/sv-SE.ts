@@ -31,6 +31,10 @@ const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Hantera dina donationer till {product_name}",
 		"body": "Hej,\n\nKlicka på länken nedan för att komma åt din donationsportal:\n\n{manageUrl}\n\nI portalen kan du hantera prenumerationer, ladda ner fakturor och se din donationshistorik.\n\nDen här länken upphör att gälla {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nOm du inte begärde denna länk kan du tryggt ignorera det här mejlet.\n\n– {product_name}-teamet"
 	},
+	"dsa_report_resolved": {
+		"subject": "Vi har fattat ett beslut om din anmälan på {product_name}",
+		"body": "Hej,\n\nVårt säkerhetsteam har granskat din anmälan enligt förordningen om digitala tjänster (ID: {reportId}) och fattat ett beslut.{hasComment, select, yes {\n\nSvar från säkerhetsteamet:\n{publicComment}} other {}}\n\nVi delar inte uppgifter om åtgärder mot någon annans konto, eftersom det är den personens personuppgifter.\n\nOm du inte håller med om beslutet kan du överklaga kostnadsfritt inom 60 dagar. Mejla {appeals_email} från den här e-postadressen, ange ditt anmälnings-ID och förklara varför du anser att beslutet är felaktigt. Om du befinner dig i EU kan du också hänskjuta tvisten till ett certifierat organ för tvistlösning utanför domstol. Inget av detta påverkar din rätt att vända dig till domstol.\n\n– Säkerhetsteamet på {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Verifiera din e-postadress för en DSA-anmälan",
 		"body": "Hej,\n\nAnvänd verifieringskoden nedan för att skicka in din anmälan enligt förordningen om digitala tjänster på {product_name}:\n\n{code}\n\nDen här koden upphör att gälla {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nOm du inte begärde detta kan du ignorera det här mejlet.\n\n– Säkerhetsteamet på {product_name}"
@@ -82,6 +86,10 @@ const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "Din registrering på {product_name} har godkänts",
 		"body": "Hej {username},\n\nGoda nyheter: din registrering på {product_name} har godkänts.\n\nDu kan nu logga in i {product_name}-appen här:\n{channelsUrl}\n\nVälkommen till {product_name}-communityn.\n\n– {product_name}-teamet"
+	},
+	"report_received": {
+		"subject": "Vi har tagit emot din anmälan på {product_name}",
+		"body": "Hej,\n\nVi har tagit emot din anmälan enligt förordningen om digitala tjänster om {targetKind, select, message {ett meddelande} user {ett konto} guild {en community} other {innehåll}} på {product_name}.\n\nAnmälnings-ID: {reportId}\n\nVårt säkerhetsteam granskar din anmälan och vi mejlar dig på den här adressen när vi har fattat ett beslut. Spara det här mejlet så att du har det kvar.\n\n– Säkerhetsteamet på {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Din anmälan på {product_name} har granskats",

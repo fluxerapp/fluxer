@@ -288,6 +288,7 @@ An entry with one of these actions has `access` set to `read`.
 | list_guild_members | The members of a guild were listed |
 | list_guild_memory_stats | Guild memory statistics were listed |
 | list_guild_stickers | The stickers of a guild were listed |
+| list_report_reasons | The report reason catalog was listed |
 | list_user_applications | The applications an account owns were read |
 | list_user_change_log | The contact change log of an account was read |
 | list_user_dm_channels | The direct message channels of an account were read |
@@ -313,7 +314,7 @@ An entry with any other action has `access` set to `write`.
 | NCMEC Report | An attachment was submitted through the NCMEC reporting integration |
 | approve_discovery_application | A discovery application was approved |
 | approve_registration | A pending registration was approved |
-| auto_resolve_reports_on_deletion | Reports against an account were resolved automatically as part of its deletion |
+| auto_resolve_reports_on_deletion | The pending reports against an account were processed as part of its deletion |
 | ban_avatar_hash | An avatar hash was added to the avatar blocklist |
 | ban_email | An address was added to the email blocklist |
 | ban_file_sha | A file hash was added to the attachment blocklist |
@@ -337,6 +338,7 @@ An entry with any other action has `access` set to `write`.
 | change_email | An email address was changed |
 | change_username | A username or discriminator was changed |
 | clear_fields<sup>1</sup> | Profile fields of an account, or fields of a guild, were cleared |
+| clear_report_legal_hold | The legal hold on a report was cleared |
 | create_admin_api_key | An Admin API key was created |
 | create_password_reset_link | A password reset link was created for an account |
 | create_registration_url | A registration URL was issued |
@@ -376,6 +378,7 @@ An entry with any other action has `access` set to `write`.
 | send_password_reset | A password reset message was requested for an account |
 | set_acls | The Admin ACL set of an account was replaced |
 | set_bot_status | The bot flag of an account was changed |
+| set_report_legal_hold | A legal hold was placed on a report |
 | set_system_status | The system flag of an account was changed |
 | set_traits | Account traits were replaced |
 | shutdown_guild | One guild was stopped on the main Gateway |
@@ -574,7 +577,7 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | message:delete | Deletes one message |
 | message:lookup | Reads, browses, and searches [messages](/admin-api/messages/) through the Admin API |
 | message:shred | Queues an explicit message shred job and reads its state |
-| report:resolve | Updates and resolves [reports](/admin-api/reports/) |
+| report:resolve | Updates and resolves [reports](/admin-api/reports/), and places legal holds on them |
 | report:view | Reads and searches reports |
 | report:view:reporter_pii<sup>6</sup> | Unredacts the contact fields a reporter supplied |
 | system_dm:send | Sends an official direct message from the instance to one or many accounts |

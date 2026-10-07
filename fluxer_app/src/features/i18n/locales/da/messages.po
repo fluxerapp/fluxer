@@ -2081,7 +2081,7 @@ msgstr "{remainingSlotCount} tilbage"
 #: src/features/channel/components/CrosspostCommunityCard.tsx:247
 #: src/features/channel/components/InviteEmbed.tsx:250
 #: src/features/channel/components/InviteEmbed.tsx:358
-#: src/features/channel/components/InviteEmbed.tsx:629
+#: src/features/channel/components/InviteEmbed.tsx:627
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, one {medlem} other {medlemmer}}"
 
@@ -2134,7 +2134,7 @@ msgid "{seconds, plural, one {Your invite link expires in # second.} other {Your
 msgstr "{seconds, plural, one {Dit invitationslink udløber om # sekund.} other {Dit invitationslink udløber om # sekunder.}}"
 
 #. Generic multi-select summary label. selectedCount is the number of selected options.
-#: src/features/ui/components/form/FormCombobox.tsx:80
+#: src/features/ui/components/form/FormCombobox.tsx:81
 msgid "{selectedCount} selected"
 msgstr "{selectedCount} valgt"
 
@@ -2957,11 +2957,6 @@ msgstr "Kontodata"
 msgid "Account details unavailable"
 msgstr "Kontooplysninger utilgængelige"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:258
-msgid "Account exists to spam, scam, or abuse the platform."
-msgstr "Kontoen eksisterer for at spamme, svindle eller misbruge platformen."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:124
 msgid "Account removal"
@@ -3639,11 +3634,6 @@ msgstr "Tilføjet: {createdDate}"
 msgid "Added: {createdDate} • last used: {lastUsedDate}"
 msgstr "Tilføjet: {createdDate} • sidst brugt: {lastUsedDate}"
 
-#. Field label on the details step of the DSA report form. Optional free-text context the reporter wants staff to see.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:72
-msgid "Additional comments (optional)"
-msgstr "Yderligere kommentarer (valgfrit)"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:26
@@ -4186,8 +4176,8 @@ msgstr "Allerede indløst"
 msgid "Already set to cancel"
 msgstr "Allerede opsagt"
 
-#. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:94
+#. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
+#: src/features/messaging/commands/MessageCommands.tsx:98
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Anmeld også denne besked til sikkerhedsteamet hos {productName}"
 
@@ -4575,11 +4565,6 @@ msgstr "Årlig"
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:274
 msgid "Another checkbox"
 msgstr "Endnu et afkrydsningsfelt"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:362
-msgid "Another clear rule violation"
-msgstr "En anden klar overtrædelse af reglerne"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:301
 msgid "Another round checkbox"
@@ -5247,7 +5232,7 @@ msgid "Audio upload"
 msgstr "Upload af lydfil"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:111
+#: src/features/moderation/components/report/OptionDescriptors.ts:24
 msgid "Austria"
 msgstr "Østrig"
 
@@ -5620,6 +5605,7 @@ msgstr "Ikke til stede lige nu"
 
 #. Accessible label of the back button on the Plutonium page in the mobile layout.
 #. Generic secondary button label that returns to the previous step or screen.
+#. Report flow: footer button that returns to the previous question.
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:164
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:167
@@ -5628,7 +5614,8 @@ msgstr "Ikke til stede lige nu"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:381
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:401
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
-#: src/features/moderation/components/report/ReportStepDetails.tsx:312
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
+#: src/features/moderation/components/report/ReportStepDetails.tsx:374
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
 msgid "Back"
 msgstr "Tilbage"
@@ -5788,9 +5775,7 @@ msgstr "Backupkoder er fornyet"
 msgid "Badge"
 msgstr "Badge"
 
-#. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:134
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts:5
 msgid "Ban"
 msgstr "Udeluk"
@@ -5819,7 +5804,7 @@ msgstr "Varighed af udelukkelse"
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:274
-#: src/features/ui/action_menu/GuildMemberContextMenu.tsx:67
+#: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:124
 msgid "Ban member"
@@ -5840,20 +5825,10 @@ msgstr "Udeluk medlemmer fra fællesskabet med mulighed for at slette deres sene
 msgid "Ban reason"
 msgstr "Årsag til udelukkelse"
 
-#. IAR modal: quick-action card title for banning the reported user (moderator-only).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:126
-msgid "Ban this user"
-msgstr "Udeluk denne bruger"
-
 #. Section heading in the voice connection status popout for current media bitrate usage.
 #: src/features/voice/components/voice_connection_status/shared.ts:67
 msgid "Bandwidth"
 msgstr "Båndbredde"
-
-#. IAR modal: disabled-state label on the ban card after the user is banned from this community.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:138
-msgid "Banned"
-msgstr "Udelukket"
 
 #: src/features/moderation/components/modals/BanMemberModal.tsx:134
 msgid "Banned {targetUserTag} from the community"
@@ -5937,7 +5912,7 @@ msgid "Before date"
 msgstr "Før dato"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:115
+#: src/features/moderation/components/report/OptionDescriptors.ts:28
 msgid "Belgium"
 msgstr "Belgien"
 
@@ -6031,7 +6006,7 @@ msgstr "Bitrate"
 
 #. Generic destructive action label that blocks a user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:25
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts:22
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:14
 msgid "Block"
 msgstr "Bloker"
@@ -6041,6 +6016,11 @@ msgstr "Bloker"
 msgctxt "sensitive-media-filter-level"
 msgid "Block"
 msgstr "Bloker"
+
+#. Report flow: title of the block action on the final screen. {name} is the display name of the reported user.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:71
+msgid "Block {name}"
+msgstr "Bloker {name}"
 
 #. Body of the destructive confirmation modal for blocking a user. Explains the consequences. {userName} is the target user.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:90
@@ -6087,11 +6067,6 @@ msgstr "Bloker for alle fællesskaber"
 msgid "Block spoiler"
 msgstr "Spoilerblok"
 
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:386
-msgid "Block this user"
-msgstr "Bloker denne bruger"
-
 #. Title of the destructive confirmation modal for blocking a user. Short command title.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:86
 msgid "Block user"
@@ -6099,6 +6074,12 @@ msgstr "Bloker bruger"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:10
+msgid "Blocked"
+msgstr "Blokeret"
+
+#. Report flow: disabled button label shown after the reporter blocked the one reported user. A state of that single person, not a list of blocked users. Use the singular or an impersonal past participle.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:81
+msgctxt "report-flow-blocked-button"
 msgid "Blocked"
 msgstr "Blokeret"
 
@@ -6505,7 +6486,7 @@ msgid "Built-in translators"
 msgstr "Indbyggede oversættere"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:119
+#: src/features/moderation/components/report/OptionDescriptors.ts:32
 msgid "Bulgaria"
 msgstr "Bulgarien"
 
@@ -6518,16 +6499,6 @@ msgstr "Bulgarsk"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:230
 msgid "Bulk delete"
 msgstr "Masseslet"
-
-#. IAR modal: rule description for a message report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:150
-msgid "Bullying, repeated unwanted contact, stalking, or targeted abuse."
-msgstr "Mobning, gentagen uønsket kontakt, stalking eller målrettet chikane."
-
-#. IAR modal: rule-category description for the targeted-harm group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:49
-msgid "Bullying, threats, hate, violence, raids, or content that pushes self-harm."
-msgstr "Mobning, trusler, had, vold, raids eller indhold, der opfordrer til selvskade."
 
 #. Short label in the app constants.
 #: src/features/app/constants/AppConstants.ts:45
@@ -6639,11 +6610,6 @@ msgstr "Californien"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
 msgid "Call"
 msgstr "Opkald"
-
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:438
-msgid "Call & group chat settings"
-msgstr "Indstillinger for opkald og gruppechat"
 
 #. Status label in the mobile direct-call lobby bottom sheet. Indicates an ongoing call you can join.
 #. Status text in the DM channel header pill when an ongoing call exists that the user can join.
@@ -7131,7 +7097,7 @@ msgstr "Skift banner"
 msgid "Change chat embed background"
 msgstr "Skift baggrund for chatindlejring"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:119
+#: src/features/moderation/components/report/ReportStepVerification.tsx:150
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:97
 msgid "Change email"
 msgstr "Skift e-mailadresse"
@@ -7150,8 +7116,8 @@ msgstr "Skift vens kaldenavn"
 
 #. Group DM action that opens the change-nickname modal for the selected user.
 #. Group DM action that opens the change-nickname modal for the selected user.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:97
-#: src/features/ui/action_menu/UserContextMenu.tsx:113
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:96
+#: src/features/ui/action_menu/UserContextMenu.tsx:112
 msgid "Change group nickname"
 msgstr "Skift kaldenavn i gruppen"
 
@@ -7193,7 +7159,7 @@ msgid "Change language"
 msgstr "Skift sprog"
 
 #. Group DM action that lets the current user change their own nickname in the group.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:89
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:88
 msgid "Change my group nickname"
 msgstr "Skift mit kaldenavn i gruppen"
 
@@ -7218,7 +7184,7 @@ msgid "Change own nickname"
 msgstr "Skift eget kaldenavn"
 
 #. Action that transfers ownership of the selected group or community.
-#: src/features/ui/action_menu/UserContextMenu.tsx:101
+#: src/features/ui/action_menu/UserContextMenu.tsx:100
 msgid "Change owner"
 msgstr "Skift ejer"
 
@@ -7282,16 +7248,6 @@ msgstr "Skift, hvilken taleregion en talekanal bruger."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:322
 msgid "Change which voice region this channel uses."
 msgstr "Skift, hvilken taleregion denne kanal bruger."
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:442
-msgid "Change who can call or add you."
-msgstr "Skift, hvem der kan ringe eller tilføje dig."
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:430
-msgid "Change who can reach you."
-msgstr "Skift, hvem der kan kontakte dig."
 
 #. Short label in the email change modal. Keep it concise.
 #: src/features/user/components/modals/EmailChangeModal.tsx:39
@@ -7860,6 +7816,11 @@ msgstr "Tjek din indbakke på {emailAddress} for autorisationslinket."
 msgid "Check your inbox for a verification email."
 msgstr "Tjek din indbakke for en bekræftelsesmail."
 
+#. Report flow: title of the summary screen shown before the report is sent.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:5
+msgid "Check your report"
+msgstr "Tjek din anmeldelse"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:250
 msgid "Checkboxes"
 msgstr "Afkrydsningsfelter"
@@ -7901,21 +7862,6 @@ msgstr "Betaling er blokeret for denne konto. Kontakt {supportEmail}, hvis du ha
 msgid "Checkout unavailable"
 msgstr "Betaling ikke tilgængelig"
 
-#. Report category label for content endangering minors. Keep tone calm and serious; this is a safety surface.
-#: src/features/moderation/components/report/OptionDescriptors.ts:57
-msgid "Child safety concerns"
-msgstr "Bekymringer om børns sikkerhed"
-
-#. IAR modal: child-safety rule label (message and guild reports).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:85
-msgid "Child safety or exploitation of minors"
-msgstr "Børnesikkerhed eller udnyttelse af mindreårige"
-
-#. IAR modal: rule-category label grouping child-safety and mature-content reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:53
-msgid "Child safety or mature content"
-msgstr "Børnesikkerhed eller indhold for voksne"
-
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:140
 msgid "Chinese (simplified)"
@@ -7941,7 +7887,7 @@ msgstr "Valg"
 msgid "Choices: {choiceList}"
 msgstr "Valgmuligheder: {choiceList}"
 
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:27
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:36
 msgid "Choose"
 msgstr "Vælg"
 
@@ -8122,6 +8068,11 @@ msgstr "Vælg den kategori, der bedst beskriver dit fællesskab. Du kan ændre d
 msgid "Choose the premium model"
 msgstr "Vælg premium-modellen"
 
+#. Button on the details step of the DSA report form, shown when the server no longer accepts the chosen reason. Reloads the questions and returns to the reason step.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:80
+msgid "Choose the reason again"
+msgstr "Vælg årsagen igen"
+
 #. Empty-state title in the screen-share picker displays tab when running in a web browser.
 #: src/features/voice/components/modals/screen_share_picker_modal/useNativePickerCopy.ts:20
 msgid "Choose the screen in your browser"
@@ -8271,8 +8222,8 @@ msgstr "Indløs gave"
 msgid "Claim your account"
 msgstr "Fuldfør oprettelsen af din konto"
 
-#. IAR modal: body of the account-not-ready notice.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:28
+#. Report flow: body of the notice on the summary screen when the account cannot send reports yet.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:124
 msgid "Claim your account and verify your email to send reports."
 msgstr "Fuldfør oprettelsen af din konto, og bekræft din e-mailadresse for at sende anmeldelser."
 
@@ -8352,12 +8303,12 @@ msgstr "Fuldfør oprettelsen af din konto for at indløse denne gave."
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:70
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:37
 #: src/features/ui/action_menu/items/RelationshipMenuItems.tsx:40
-#: src/features/user/components/modals/UserProfileModal.tsx:122
+#: src/features/user/components/modals/UserProfileModal.tsx:125
 msgid "Claim your account to send friend requests."
 msgstr "Fuldfør oprettelsen af din konto for at sende venneanmodninger."
 
-#. IAR modal: body of the account-not-ready notice on an instance where people sign in with a username.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:32
+#. Report flow: body of the notice on the summary screen when the account cannot send reports yet, on an instance where people sign in with a username.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:128
 msgid "Claim your account to send reports."
 msgstr "Gør krav på din konto for at sende rapporter."
 
@@ -8377,11 +8328,6 @@ msgstr "Fuldfør oprettelsen af din konto for at starte eller deltage i 1:1-opka
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:41
 msgid "Claim your gift to activate your {premiumProductName} subscription!"
 msgstr "Indløs din gave for at aktivere dit {premiumProductName}-abonnement!"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:318
-msgid "Claiming to be another person, brand, or organization."
-msgstr "Udgiver sig for at være en anden person, et brand eller en organisation."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
@@ -8501,7 +8447,7 @@ msgstr "Ryd søgefelt"
 #. Accessible label for the combobox clear button.
 #. Button or menu action label in the authorized apps tab. Keep it concise.
 #. Button or menu action label in the devices tab. Keep it concise.
-#: src/features/ui/components/form/FormCombobox.tsx:92
+#: src/features/ui/components/form/FormCombobox.tsx:93
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:46
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:62
 msgid "Clear selection"
@@ -8733,11 +8679,6 @@ msgstr "Luk dialog"
 msgid "Close popout"
 msgstr "Luk separat vindue"
 
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:406
-msgid "Close this DM"
-msgstr "Luk denne DM"
-
 #. Body of the close confirmation alert for a group DM. Reassures that the DM can be reopened.
 #: src/features/channel/components/direct_message/useDMListItemHandlers.tsx:54
 msgid "Close this group DM? You can reopen it anytime."
@@ -8765,13 +8706,8 @@ msgstr "Luk til systembakken"
 msgid "Close window"
 msgstr "Luk vindue"
 
-#. Confirmation copy in the IAR modal for the Close DM quick action. Reassures the user the action is not destructive.
-#: src/features/moderation/components/report_modal/IARModal.tsx:67
-msgid "Close your current DM with {dmDisplayName}. This does not block the user, and you can reopen the DM later."
-msgstr "Luk din nuværende DM med {dmDisplayName}. Dette blokerer ikke brugeren, og du kan genåbne DM'en senere."
-
 #. Confirm dialog body before closing a DM channel.
-#: src/features/ui/action_menu/UserContextMenu.tsx:109
+#: src/features/ui/action_menu/UserContextMenu.tsx:108
 msgid "Close your DM with {displayName}? You can reopen it anytime."
 msgstr "Vil du lukke din direkte samtale med {displayName}? Du kan åbne den igen når som helst."
 
@@ -8837,7 +8773,7 @@ msgstr "Kulsort tema"
 #. Generic field label for a short verification or backup code the user types in.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:858
 #: src/features/invite/components/InviteListItem.tsx:77
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:29
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:38
 msgid "Code"
 msgstr "Kode"
 
@@ -8868,7 +8804,7 @@ msgstr "Kode fra {productName}-appen"
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Success toast on the verification step of the DSA report flow after resending the email verification code.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
-#: src/features/moderation/components/pages/ReportPage.tsx:62
+#: src/features/moderation/components/pages/ReportPage.tsx:83
 msgid "Code resent"
 msgstr "Kode sendt igen"
 
@@ -9090,14 +9026,12 @@ msgid "Communities you can join"
 msgstr "Fællesskaber du kan deltage i"
 
 #. Community settings sidebar category grouping discovery and the vanity URL.
-#. Developer / debug surface — keep terse and technical. Fallback label used in the IAR preview tool when no community context is supplied.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
 #. Generic label for a community. Used as a field label, filter label, or fallback community name.
 #. Tag shown next to messages copied from a followed announcement channel. Keep it one short word.
 #: src/features/channel/components/ChannelUserTag.tsx:27
 #: src/features/channel/components/modals/ChannelFollowModal.tsx:44
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:882
-#: src/features/moderation/components/report_modal/IARModalPreview.tsx:16
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:223
 msgid "Community"
 msgstr "Fællesskab"
@@ -9131,7 +9065,7 @@ msgstr "Slå lyden fra for medlemmet i fællesskabet"
 #. Title of the developer-mode community debug modal.
 #. Title of the developer-mode community debug modal.
 #: src/features/ui/action_menu/items/DebugMenuItems.tsx:27
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:81
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:78
 msgid "Community debug"
 msgstr "Fejlfinding for fællesskab"
 
@@ -9150,16 +9084,6 @@ msgstr "Fællesskab slettet"
 msgid "Community DM"
 msgstr "Fællesskabs-DM"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:262
-msgid "Community exists to spam, scam, or abuse the platform."
-msgstr "Fællesskabet eksisterer for at spamme, svindle eller misbruge platformen."
-
-#. IAR modal: rule description for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:166
-msgid "Community facilitates pile-ons or targeted abuse."
-msgstr "Fællesskabet fremmer koordinerede angreb eller målrettet chikane."
-
 #. Form label for the dropdown that switches the community filter between exclude and include-only modes.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:165
 msgid "Community filter"
@@ -9171,11 +9095,11 @@ msgid "Community icon"
 msgstr "Fællesskabsikon"
 
 #. Field label on the details step of the DSA report form (community report). The reported community's snowflake ID.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:43
+#: src/features/moderation/components/report/ReportStepDetails.tsx:42
 msgid "Community ID"
 msgstr "Fællesskabs-ID"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:237
+#: src/features/moderation/components/report/ReportStepDetails.tsx:283
 msgid "Community ID is required."
 msgstr "Fællesskabs-ID er påkrævet."
 
@@ -9526,6 +9450,11 @@ msgstr "Bekræft ny adgangskode"
 msgid "Confirm password"
 msgstr "Bekræft adgangskode"
 
+#. Inline validation error on the details step of the DSA report flow when the good-faith statement checkbox is not ticked.
+#: src/features/moderation/components/pages/ReportPage.tsx:128
+msgid "Confirm the statement to send the report."
+msgstr "Bekræft erklæringen for at sende anmeldelsen."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:30
@@ -9816,16 +9745,6 @@ msgstr "Fortsæt i din browser"
 msgid "Continue to checkout"
 msgstr "Fortsæt til betaling"
 
-#. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:37
-msgid "Continue to report community"
-msgstr "Fortsæt med at anmelde fællesskab"
-
-#. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:27
-msgid "Continue to report user"
-msgstr "Fortsæt med at anmelde bruger"
-
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:343
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:356
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:379
@@ -9926,11 +9845,6 @@ msgstr "Konvertering af denne kanal til en tekstkanal fjerner alle kanaler, der 
 msgid "Converts incoming content to speech, regardless of whether it came from /tts."
 msgstr "Konverterer indgående indhold til tale, uanset om det kom fra /tts."
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:342
-msgid "Coordinates raids, brigading, or harassment against people or communities."
-msgstr "Koordinerer raids, organiserede angreb eller chikane mod personer eller fællesskaber."
-
 #. Generic short status label confirming a value was copied to the clipboard.
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:395
@@ -9960,7 +9874,6 @@ msgstr "URL kopieret til udklipsholder"
 #. Button or menu action label in the gift inventory tab. Keep it concise.
 #. Button that copies account backup codes to the clipboard.
 #. Button that copies the account recovery key to the clipboard.
-#. IAR modal: quick-action card button label.
 #. Native Edit menu item that copies the selection to the clipboard. Imperative verb, not the noun.
 #. Short label in the settings dialog copy link section.
 #. Textarea right-click context menu item that copies the selected text.
@@ -9968,7 +9881,6 @@ msgstr "URL kopieret til udklipsholder"
 #: src/features/auth/components/modals/BackupCodesModal.tsx:96
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:417
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:402
 #: src/features/platform/utils/DesktopLocaleBridge.ts:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:73
@@ -10203,11 +10115,9 @@ msgid "Copy message ID"
 msgstr "Kopiér besked-ID"
 
 #. Generic action label that copies a permalink to the selected message.
-#. IAR modal: quick-action card title.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:532
 #: src/features/input/state/input_keybind/shared.ts:290
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:394
 msgid "Copy message link"
 msgstr "Kopiér link til besked"
 
@@ -10643,6 +10553,11 @@ msgstr "Kunne ikke indlæse opslag. Prøv igen senere."
 msgid "Couldn't load settings"
 msgstr "Kunne ikke indlæse indstillinger"
 
+#. Report flow: error shown when the report questions could not be loaded. A Try again button follows.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:91
+msgid "Couldn't load the report form."
+msgstr "Kunne ikke indlæse anmeldelsesformularen."
+
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:585
 msgid "Couldn't load this application"
 msgstr "Kunne ikke indlæse denne app"
@@ -10696,7 +10611,7 @@ msgid "Couldn't process image"
 msgstr "Kunne ikke behandle billede"
 
 #. Title of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:126
+#: src/features/messaging/commands/MessageCommands.tsx:130
 msgid "Couldn't publish this message"
 msgstr "Kunne ikke udgive denne besked"
 
@@ -10824,11 +10739,6 @@ msgstr "Kunne ikke sende invitation"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:718
 msgid "Couldn't send invite. Try again."
 msgstr "Kunne ikke sende invitation. Prøv igen."
-
-#. Error toast in the IAR modal when the report submission fails. Keep tone plain and short.
-#: src/features/moderation/components/report_modal/IARModal.tsx:80
-msgid "Couldn't send it. Try again."
-msgstr "Kunne ikke sende. Prøv igen."
 
 #. Body of the generic fallback friend-request error modal.
 #. Generic error toast when sending a friend request fails with no recognized API error code.
@@ -10993,7 +10903,7 @@ msgid "Countdown timer"
 msgstr "Nedtællingstimer"
 
 #. Field label on the details step of the DSA report form. The country where the reporter resides, used for the legal declaration.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:62
+#: src/features/moderation/components/report/ReportStepDetails.tsx:70
 msgid "Country of residence"
 msgstr "Bopælsland"
 
@@ -11301,13 +11211,8 @@ msgstr "Oprettet:"
 msgid "Credentials"
 msgstr "Loginoplysninger"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:190
-msgid "Credible threats, graphic violence, or glorification of violence."
-msgstr "Troværdige trusler, udpenslet vold eller forherligelse af vold."
-
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:123
+#: src/features/moderation/components/report/OptionDescriptors.ts:36
 msgid "Croatia"
 msgstr "Kroatien"
 
@@ -11735,7 +11640,7 @@ msgid "Cuts audio below a loudness threshold with minimal CPU usage."
 msgstr "Fjerner lyd under en lydstyrketærskel med minimalt CPU-forbrug."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:127
+#: src/features/moderation/components/report/OptionDescriptors.ts:40
 msgid "Cyprus"
 msgstr "Cypern"
 
@@ -11745,7 +11650,7 @@ msgid "Czech"
 msgstr "Tjekkisk"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:131
+#: src/features/moderation/components/report/OptionDescriptors.ts:44
 msgid "Czech Republic"
 msgstr "Tjekkiet"
 
@@ -11965,7 +11870,7 @@ msgstr "Fejlfind kanal"
 #. Developer-mode action that opens the community debug modal.
 #. Developer-mode action that opens the community debug modal.
 #: src/features/ui/action_menu/items/DebugMenuItems.tsx:31
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:93
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:90
 msgid "Debug community"
 msgstr "Fejlfind fællesskab"
 
@@ -12151,7 +12056,6 @@ msgstr "Delaware"
 #. Confirm button label on the destructive delete-saved-media alert.
 #. Danger button label that confirms deleting a custom emoji.
 #. Destructive action label. Surface varies, see surrounding code for the specific object being deleted.
-#. IAR modal: quick-action card button label for deleting the reported message.
 #. Native Edit menu item that deletes the current selection. Imperative verb.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -12163,8 +12067,7 @@ msgstr "Delaware"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:90
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:114
+#: src/features/messaging/commands/MessageCommands.tsx:94
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
@@ -12411,18 +12314,13 @@ msgstr "Slet tema?"
 msgid "Delete this invite? Can't be undone."
 msgstr "Slet denne invitation? Kan ikke fortrydes."
 
-#. IAR modal: quick-action card title for deleting the reported message (moderator-only).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:106
-msgid "Delete this message"
-msgstr "Slet denne besked"
-
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:86
+#: src/features/messaging/commands/MessageCommands.tsx:90
 msgid "Delete this message? Can't be undone."
 msgstr "Slet denne besked? Kan ikke fortrydes."
 
 #. Body of the delete confirmation for a message that was published from an announcement channel to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:99
+#: src/features/messaging/commands/MessageCommands.tsx:103
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "Slet denne besked? Kan ikke fortrydes. Denne besked fjernes også fra alle communities, der følger denne kanal."
 
@@ -12460,11 +12358,6 @@ msgstr "Slet dine beskeder i dette fællesskab?"
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx:21
 msgid "Delete your messages in this conversation?"
 msgstr "Slet dine beskeder i denne samtale?"
-
-#. IAR modal: disabled-state label on the delete card after the message has been deleted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:118
-msgid "Deleted"
-msgstr "Slettet"
 
 #. Activity log detail line under a ban, shown when the ban also deleted the messages the banned user sent shortly before it. This matches the "Delete message history" choice in the ban dialog. "The member" is the banned user, a single person. {duration} is how far back from the ban the messages were deleted, shown as a full duration phrase such as "1 hour" or "7 days". The number and unit change at runtime, so do not put an article, adjective or case ending next to {duration} that has to agree with it. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:25
@@ -12514,7 +12407,7 @@ msgid "Denied {permissions}"
 msgstr "Nægtede {permissions}"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:135
+#: src/features/moderation/components/report/OptionDescriptors.ts:48
 msgid "Denmark"
 msgstr "Danmark"
 
@@ -12553,11 +12446,6 @@ msgstr "Beskriv klistermærket"
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:40
 msgid "Describe this media for screen readers"
 msgstr "Beskriv dette medie for skærmlæsere"
-
-#. Placeholder in the Additional comments textarea on the DSA report form. Prompts the reporter to explain why the content is illegal.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:77
-msgid "Describe what makes the content illegal"
-msgstr "Beskriv, hvad der gør indholdet ulovligt"
 
 #. Placeholder in the description textarea on the Discovery application form.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:128
@@ -12713,7 +12601,7 @@ msgstr "Frakoblet banner"
 msgid "Detail"
 msgstr "Detalje"
 
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:30
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:44
 msgid "Details"
 msgstr "Detaljer"
 
@@ -13315,11 +13203,6 @@ msgstr "Visningsnavn (valgfrit)"
 msgid "Display scaling"
 msgstr "Skalering af visning"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:282
-msgid "Distributes malware, credential-stealing tools, or other harmful files."
-msgstr "Distribuerer malware, værktøjer til at stjæle loginoplysninger eller andre skadelige filer."
-
 #. US federal district name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:263
 msgctxt "us-state"
@@ -13336,11 +13219,6 @@ msgstr "DM"
 msgctxt "channel-badge"
 msgid "DM"
 msgstr "DM"
-
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:426
-msgid "DM & friend request settings"
-msgstr "Indstillinger for DM og venneanmodninger"
 
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Generic success-toast label confirming that a DM channel was closed.
@@ -13468,11 +13346,6 @@ msgstr "Dokumentation"
 msgid "Doesn't allow being added to group DMs"
 msgstr "Kan ikke føjes til gruppe-DM'er"
 
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:410
-msgid "Doesn't block. You can reopen later."
-msgstr "Blokerer ikke. Du kan genåbne senere."
-
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:786
@@ -13545,11 +13418,13 @@ msgstr "Donér i stedet"
 
 #. Button that closes the recovery kit modal once the kit is stored.
 #. Generic action or status label indicating that the current flow is complete.
+#. Report flow: footer button on the last screen. Closes the report window.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:447
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:44
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:838
 #: src/features/input/components/KeybindRecorder.tsx:510
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:31
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:38
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:45
 #: src/features/search/components/search/ChannelFilterSheet.tsx:165
 #: src/features/search/components/search/HasFilterSheet.tsx:206
 #: src/features/search/components/search/UserFilterSheet.tsx:186
@@ -13677,16 +13552,6 @@ msgstr "Download kildekort, så stack traces og udviklerværktøjer peger på de
 #: src/features/ui/action_menu/items/MediaMenuData.tsx:123
 msgid "Download video"
 msgstr "Hent video"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:290
-msgid "Doxxing, exposed private info, or stalking."
-msgstr "Doxxing, offentliggørelse af private oplysninger eller stalking."
-
-#. IAR modal: rule-category description for the privacy / impersonation group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:65
-msgid "Doxxing, stalking, pretending to be someone, or an inappropriate profile."
-msgstr "Doxxing, stalking, at udgive sig for at være en anden eller en upassende profil."
 
 #. Billing invoice status for an invoice not finalized yet.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:25
@@ -13970,7 +13835,7 @@ msgstr "Rediger farve for {tokenLabel}"
 #. Action that opens the community profile editor for the current member.
 #. Button or menu action label in the guild header popout. Keep it concise.
 #: src/features/guild/components/popouts/GuildHeaderPopout.tsx:61
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:89
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:86
 #: src/features/ui/action_menu/items/GuildMenuItems.tsx:86
 msgid "Edit community profile"
 msgstr "Rediger fællesskabsprofil"
@@ -14043,7 +13908,7 @@ msgstr "Rediger tilpassede tilladelser for roller og medlemmer i denne kanal."
 #: src/features/app/components/floating/UserAreaPopout.tsx:645
 #: src/features/app/components/pages/YouPage.tsx:162
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:686
-#: src/features/user/components/modals/UserProfileModal.tsx:590
+#: src/features/user/components/modals/UserProfileModal.tsx:593
 #: src/features/user/components/popouts/UserProfilePopout.tsx:435
 msgid "Edit profile"
 msgstr "Rediger profil"
@@ -14054,7 +13919,7 @@ msgid "Edit profile local time"
 msgstr "Rediger lokal tid for profil"
 
 #. Title of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:105
+#: src/features/messaging/commands/MessageCommands.tsx:109
 msgid "Edit published message?"
 msgstr "Rediger opslået besked?"
 
@@ -14191,13 +14056,13 @@ msgstr "Kan refunderes indtil {windowEndsOn}. Dette afslutter også dit abonneme
 #. Setup wizard option where people sign in with an email address and password.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:87
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:28
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:37
 msgid "Email"
 msgstr "E-mail"
 
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the moderation report step email. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/components/report/ReportStepEmail.tsx:11
+#: src/features/moderation/components/report/ReportStepEmail.tsx:13
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:60
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:115
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:30
@@ -14205,7 +14070,7 @@ msgid "Email address"
 msgstr "E-mailadresse"
 
 #. Inline validation error on the email step of the DSA report flow when the email field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:54
+#: src/features/moderation/components/pages/ReportPage.tsx:75
 msgid "Email address required."
 msgstr "E-mailadresse er påkrævet."
 
@@ -14721,16 +14586,6 @@ msgstr "Encoderpræference for nye skærmdelinger."
 msgid "Encoder, SVC, and bitrate presets"
 msgstr "Encoder, SVC og bitrate-forudindstillinger"
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:354
-msgid "Encourages self-harm"
-msgstr "Opmuntrer til selvskade"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:358
-msgid "Encourages suicide, self-harm, or eating disorders."
-msgstr "Opmuntrer til selvmord, selvskade eller spiseforstyrrelser."
-
 #: src/features/input/utils/KeybindUtils.ts:86
 msgctxt "keyboard-key-name"
 msgid "End"
@@ -14770,11 +14625,6 @@ msgstr "End-to-end-kryptering er ikke tilgængelig, fordi en deltager i dette op
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:325
 msgid "End-to-end encryption is unavailable because an unsupported participant is in this voice channel."
 msgstr "End-to-end-kryptering er ikke tilgængelig, fordi en deltager i denne talekanal ikke understøtter funktionen."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:234
-msgid "Endangers minors or hosts child-exploitation content."
-msgstr "Bringer mindreårige i fare eller indeholder materiale med udnyttelse af børn."
 
 #. Voice stats field label (mobile lobby). Shows the voice server endpoint hostname.
 #. Voice stats field label (mobile voice lobby). Shows the voice server endpoint hostname.
@@ -14817,7 +14667,7 @@ msgid "Enter"
 msgstr "Enter"
 
 #. Inline validation error on the verification step of the DSA report flow when the code does not match the expected 4-letter-dash-4-digit format. "ABCD-1234" is a literal example pattern.
-#: src/features/moderation/components/pages/ReportPage.tsx:78
+#: src/features/moderation/components/pages/ReportPage.tsx:104
 msgid "Enter a code in the format ABCD-1234."
 msgstr "Indtast en kode i formatet ABCD-1234."
 
@@ -14862,12 +14712,12 @@ msgid "Enter a valid {theOtherPlatform} template URL or code."
 msgstr "Indtast en gyldig skabelon-URL eller kode fra {theOtherPlatform}."
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
-#: src/features/moderation/components/pages/ReportPage.tsx:58
+#: src/features/moderation/components/pages/ReportPage.tsx:79
 msgid "Enter a valid email address."
 msgstr "Indtast en gyldig e-mailadresse."
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is not a valid URL.
-#: src/features/moderation/components/pages/ReportPage.tsx:116
+#: src/features/moderation/components/pages/ReportPage.tsx:148
 msgid "Enter a valid message link."
 msgstr "Angiv et gyldigt beskedslink."
 
@@ -14941,7 +14791,7 @@ msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "Indtast den {digitCount}-cifrede kode fra din godkendelsesapp."
 
 #. Inline validation error on the verification step of the DSA report flow when the code field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:74
+#: src/features/moderation/components/pages/ReportPage.tsx:100
 msgid "Enter the code before continuing."
 msgstr "Indtast koden, før du fortsætter."
 
@@ -15008,7 +14858,7 @@ msgstr "Tryk på Enter for at <0><1>gemme</1></0>"
 msgid "Enter username"
 msgstr "Indtast brugernavn"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:48
+#: src/features/moderation/components/report/ReportStepVerification.tsx:73
 msgid "Enter verification code"
 msgstr "Indtast bekræftelseskode"
 
@@ -15016,6 +14866,11 @@ msgstr "Indtast bekræftelseskode"
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "Indtast din e-mailadresse, så sender vi dig et link til at nulstille din adgangskode."
+
+#. Inline validation error on the Full legal name field of the DSA report form, shown when the server requires the name for the chosen reason. The name is required for every reason except child sexual abuse.
+#: src/features/moderation/components/pages/ReportPage.tsx:133
+msgid "Enter your full legal name to send the report."
+msgstr "Indtast dit fulde officielle navn for at sende anmeldelsen."
 
 #. Short label in the inputs tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:26
@@ -15160,7 +15015,7 @@ msgid "Escape to <0><1>cancel</1></0>"
 msgstr "Tryk på Escape for at <0><1>annullere</1></0>"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:139
+#: src/features/moderation/components/report/OptionDescriptors.ts:52
 msgid "Estonia"
 msgstr "Estland"
 
@@ -15412,6 +15267,16 @@ msgstr "Udløber den {earliest}"
 msgid "Expires:"
 msgstr "Udløber:"
 
+#. Field label on the details step of the DSA report form. Required free text where the reporter explains what is wrong with the reported content.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:52
+msgid "Explain the problem"
+msgstr "Forklar problemet"
+
+#. Inline validation error on the details step of the DSA report flow when the Explain the problem field is empty.
+#: src/features/moderation/components/pages/ReportPage.tsx:123
+msgid "Explain the problem to send the report."
+msgstr "Forklar problemet for at sende anmeldelsen."
+
 #. Accessible label for the explicit content filter radio group in the community moderation settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:129
 msgid "Explicit content filter setting"
@@ -15506,11 +15371,6 @@ msgstr "Eksterne links kan være farlige. Vær forsigtig."
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:57
 msgid "Extra large"
 msgstr "Ekstra stor"
-
-#. Report category label for a community organized around extremist content or ideology.
-#: src/features/moderation/components/report/OptionDescriptors.ts:90
-msgid "Extremist community"
-msgstr "Ekstremistisk fællesskab"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:126
@@ -15729,7 +15589,7 @@ msgid "Failed to remove vanity URL. Try again."
 msgstr "Kunne ikke fjerne det brugerdefinerede invitationslink. Prøv igen."
 
 #. Error toast when the resend-code request fails on the verification step of the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:70
+#: src/features/moderation/components/pages/ReportPage.tsx:91
 msgid "Failed to resend code. Try again."
 msgstr "Kunne ikke sende kode igen. Prøv igen."
 
@@ -15739,7 +15599,7 @@ msgid "Failed to reset premium state."
 msgstr "Kunne ikke nulstille premium-status."
 
 #. Error shown when the initial email verification code send fails on the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:66
+#: src/features/moderation/components/pages/ReportPage.tsx:87
 msgid "Failed to send code. Try again."
 msgstr "Kunne ikke sende kode. Prøv igen."
 
@@ -15754,7 +15614,7 @@ msgid "Failed to send message. Hold for options."
 msgstr "Kunne ikke sende besked. Hold nede for muligheder."
 
 #. Generic error shown on the DSA report submission page when the report could not be sent.
-#: src/features/moderation/components/pages/ReportPage.tsx:50
+#: src/features/moderation/components/pages/ReportPage.tsx:71
 msgid "Failed to send report. Try again."
 msgstr "Kunne ikke sende anmeldelsen. Prøv igen."
 
@@ -15839,11 +15699,6 @@ msgstr "Kunne ikke uploade emojis fra {startLabel}: {errorMsg}"
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:60
 msgid "Failed to upload emojis. Try again."
 msgstr "Kunne ikke uploade emojis. Prøv igen."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:242
-msgid "False claims likely to cause real-world harm."
-msgstr "Falske påstande, der sandsynligvis vil forårsage skade i den virkelige verden."
 
 #. Label for the favicon branding asset.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:222
@@ -16127,13 +15982,13 @@ msgstr "Find det perfekte klistermærke"
 msgid "Fingerprint"
 msgstr "Fingeraftryk"
 
-#. Button label in the IAR modal that opens the account-setup flow.
-#: src/features/moderation/components/report_modal/IARModal.tsx:84
+#. Report flow: button in the account notice that opens the account setup screen.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:133
 msgid "Finish account setup"
 msgstr "Fuldfør kontooprettelsen"
 
-#. IAR modal: title of the account-not-ready notice.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:24
+#. Report flow: title of the notice on the summary screen when the account cannot send reports yet.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:120
 msgid "Finish account setup first"
 msgstr "Fuldfør først kontooprettelsen"
 
@@ -16162,7 +16017,7 @@ msgid "Finish signing up to send friend requests."
 msgstr "Fuldfør oprettelsen af din konto for at sende venneanmodninger."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:143
+#: src/features/moderation/components/report/OptionDescriptors.ts:56
 msgid "Finland"
 msgstr "Finland"
 
@@ -16172,7 +16027,7 @@ msgid "Finnish"
 msgstr "Finsk"
 
 #. Placeholder in the Full legal name input on the DSA report form.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:58
+#: src/features/moderation/components/report/ReportStepDetails.tsx:66
 msgid "First and last name"
 msgstr "For- og efternavn"
 
@@ -16617,7 +16472,7 @@ msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Billedhastigheder over 30 FPS kræver {premiumProductName}"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:147
+#: src/features/moderation/components/report/OptionDescriptors.ts:60
 msgid "France"
 msgstr "Frankrig"
 
@@ -16834,10 +16689,10 @@ msgstr "Fuld"
 msgid "Full dynamic range"
 msgstr "Fuldt dynamikområde"
 
-#. Field label on the details step of the DSA report form. Required legal name of the reporter for the formal declaration. Sensitive PII; keep tone neutral.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:53
-msgid "Full legal name"
-msgstr "Fulde officielle navn"
+#. Field label on the details step of the DSA report form. Legal name of the reporter for the formal declaration. The law lets people who report child sexual abuse material leave it empty. Keep the tone neutral.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:61
+msgid "Full legal name (optional for child sexual abuse reports)"
+msgstr "Fulde officielle navn (valgfrit ved anmeldelser af seksuelle overgreb mod børn)"
 
 #. Screen-reader-only identity detail appended to a user mention in the message composer. Preserve {tag}; it contains the full user tag.
 #: src/features/lexical/composer/nodes/ComposerMentionPill.tsx:20
@@ -17021,7 +16876,7 @@ msgid "German"
 msgstr "Tysk"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:151
+#: src/features/moderation/components/report/OptionDescriptors.ts:64
 msgid "Germany"
 msgstr "Tyskland"
 
@@ -17376,7 +17231,7 @@ msgid "Go back"
 msgstr "Gå tilbage"
 
 #. Inline error on the verification step of the DSA report flow when the stored email is missing or malformed and the user must return to the email step.
-#: src/features/moderation/components/pages/ReportPage.tsx:83
+#: src/features/moderation/components/pages/ReportPage.tsx:109
 msgid "Go back and enter a valid email."
 msgstr "Gå tilbage, og indtast en gyldig e-mailadresse."
 
@@ -17557,7 +17412,7 @@ msgid "Great to see you, {username}! Welcome in."
 msgstr "Dejligt at se dig, {username}! Velkommen til."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:155
+#: src/features/moderation/components/report/OptionDescriptors.ts:68
 msgid "Greece"
 msgstr "Grækenland"
 
@@ -17571,11 +17426,6 @@ msgstr "Græsk"
 #: src/features/voice/components/VoiceSettingsMenus.tsx:791
 msgid "Grid view"
 msgstr "Gittervisning"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:226
-msgid "Grooming or child-exploitation content."
-msgstr "Indhold med grooming eller udnyttelse af børn."
 
 #. Short label in the channel source preview. Keep it concise.
 #: src/features/channel/components/ChannelSourcePreview.tsx:32
@@ -17716,36 +17566,6 @@ msgstr "Brugernavn"
 msgid "Hang out with voice, video and screen share"
 msgstr "Deltag med stemme, video og skærmdeling"
 
-#. Report category label, community variant. Keep tone plain.
-#: src/features/moderation/components/report/OptionDescriptors.ts:86
-msgid "Harassment"
-msgstr "Chikane"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:210
-msgid "Harassment involving mature content"
-msgstr "Chikane med indhold for voksne"
-
-#. Report category label for messages or users engaged in harassment or bullying. Keep tone plain.
-#: src/features/moderation/components/report/OptionDescriptors.ts:24
-msgid "Harassment or bullying"
-msgstr "Chikane eller mobning"
-
-#. IAR modal: rule label for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:154
-msgid "Harassment or stalking"
-msgstr "Chikane eller stalking"
-
-#. IAR modal: rule label for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:162
-msgid "Harassment or targeted abuse"
-msgstr "Chikane eller målrettede overgreb"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:146
-msgid "Harassment or threats"
-msgstr "Chikane eller trusler"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:43
 msgid "Hardware"
@@ -17775,11 +17595,6 @@ msgstr "Hardwarenøgle"
 msgid "Hardware-accelerated on most Windows and macOS systems. Reliable for older devices."
 msgstr "Hardwareaccelereret på de fleste Windows- og macOS-systemer. Pålidelig for ældre enheder."
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:238
-msgid "Harmful misinformation"
-msgstr "Skadelig misinformation"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:218
 msgid "Harvest"
@@ -17798,13 +17613,6 @@ msgstr "Har købt tidligere"
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx:163
 msgid "Has ever purchased override"
 msgstr "Gennemtving tidligere køb"
-
-#. IAR modal: rule label.
-#. Report category label for hate speech. Keep tone plain and neutral.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:170
-#: src/features/moderation/components/report/OptionDescriptors.ts:28
-msgid "Hate speech"
-msgstr "Hadefuld tale"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
@@ -18162,6 +17970,11 @@ msgstr "Skjul din egen skærmdeling?"
 msgid "Hides the download, open in browser and copy buttons on images and videos in this channel."
 msgstr "Skjuler knapperne for download, åbn i browser og kopiér på billeder og videoer i denne kanal."
 
+#. Report flow: short description under the block action on the final screen. Blocking hides the reported person's messages and stops them sending you direct messages.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:76
+msgid "Hides their messages and stops them messaging you"
+msgstr "Skjuler vedkommendes beskeder og forhindrer vedkommende i at sende dig direkte beskeder"
+
 #. Activity log value naming the high member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:85
@@ -18318,7 +18131,7 @@ msgid "Hungarian"
 msgstr "Ungarsk"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:159
+#: src/features/moderation/components/report/OptionDescriptors.ts:72
 msgid "Hungary"
 msgstr "Ungarn"
 
@@ -18399,6 +18212,11 @@ msgstr "Jeg er et værktøjstip"
 msgid "I changed my mind"
 msgstr "Jeg har ombestemt mig"
 
+#. Required checkbox on the details step of the DSA report form. A formal statement the law asks every reporter to make. Keep the tone formal.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:75
+msgid "I confirm in good faith that the information and allegations in this notice are accurate and complete."
+msgstr "Jeg bekræfter i god tro, at oplysningerne og påstandene i denne anmeldelse er nøjagtige og fuldstændige."
+
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
@@ -18460,11 +18278,6 @@ msgstr "Indstillinger for inaktivitet"
 msgid "Idle timeout"
 msgstr "Inaktivitetstimeout"
 
-#. IAR modal: inline routing hint shown under reasons that overlap with child safety.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:93
-msgid "If a minor is involved, use \"{childSafetyReasonName}\" instead."
-msgstr "Hvis en mindreårig er involveret, skal du i stedet bruge \"{childSafetyReasonName}\"."
-
 #: src/features/auth/components/accounts/account_switcher_modal/AccountSwitcherForgotPasswordStep.tsx:40
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 msgid "If an account uses that address, we've sent it password reset instructions. Check your inbox for the reset link."
@@ -18475,45 +18288,20 @@ msgstr "Hvis en konto bruger den adresse, har vi sendt den instruktioner til nul
 msgid "If macOS asks to quit and reopen {productName}, choose Later."
 msgstr "Hvis macOS beder om at genstarte {productName}, skal du vælge Senere."
 
-#. IAR modal: inline safety note for self-harm reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:374
-msgid "If someone may be in immediate danger, contact local emergency services if you can do so safely."
-msgstr "Hvis nogen kan være i overhængende fare, skal du kontakte de lokale beredskabstjenester, hvis du kan gøre det sikkert."
+#. Report flow: safety banner shown on urgent questions and on the summary of an urgent report.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:87
+msgid "If someone is in immediate danger, contact local emergency services first."
+msgstr "Hvis nogen er i umiddelbar fare, skal du først kontakte de lokale nødtjenester."
 
 #. Console warning about self-XSS scams. productName is the app name. Keep the warning plain and serious.
 #: src/features/devtools/utils/SelfXssNotice.ts:20
 msgid "If someone told you to paste something here, it is a scam that can hand them your {productName} account."
 msgstr "Hvis nogen bad dig om at indsætte noget her, er det et svindelnummer, der kan give dem adgang til din {productName}-konto."
 
-#. IAR modal: inline safety note shown for child-safety reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:370
-msgid "If this involves CSAM or exploitation of a minor, send the report now and don't reshare the material."
-msgstr "Hvis det handler om materiale med seksuelle overgreb mod børn eller udnyttelse af en mindreårig, så send anmeldelsen nu, og del ikke materialet igen."
-
-#. IAR modal: inline safety note for violence reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:378
-msgid "If this is a credible imminent threat, contact local emergency services too."
-msgstr "Hvis der er tale om en troværdig, overhængende trussel, skal du også kontakte de lokale beredskabstjenester."
-
-#. IAR modal: inline safety note for terrorism reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:382
-msgid "If this is an imminent terrorist threat, contact local emergency services too."
-msgstr "Hvis der er tale om en overhængende terrortrussel, skal du også kontakte de lokale beredskabstjenester."
-
-#. Label in the report action utils helper. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:32
-msgid "If this report is about a specific message in this community, report that message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the community as a whole if reporting a message would not capture the broader issue."
-msgstr "Hvis denne anmeldelse handler om en specifik besked i dette fællesskab, skal du anmelde den besked i stedet. Beskedanmeldelser giver vores sikkerhedsteam den tydeligste kontekst, og hvis du tilføjer detaljer i kommentarerne, kan det hjælpe os med at gennemgå den hurtigere. Fortsæt kun med at anmelde fællesskabet som helhed, hvis en beskedanmeldelse ikke ville dække det bredere problem."
-
-#. Label in the report action utils helper. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:17
-msgid "If this report is about a specific message, report that message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the user as a whole if that message does not capture the broader issue."
-msgstr "Hvis denne anmeldelse handler om en specifik besked, skal du anmelde den besked i stedet. Beskedanmeldelser giver vores sikkerhedsteam den tydeligste kontekst, og hvis du tilføjer detaljer i kommentarerne, kan det hjælpe os med at gennemgå den hurtigere. Fortsæt kun med at anmelde brugeren som helhed, hvis den besked ikke dækker det bredere problem."
-
-#. Label in the report action utils helper. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:22
-msgid "If this report is about specific messages, report the most relevant message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the user as a whole if reporting a message would not capture the broader issue."
-msgstr "Hvis denne anmeldelse handler om specifikke beskeder, skal du i stedet anmelde den mest relevante besked. Beskedanmeldelser giver vores sikkerhedsteam den tydeligste kontekst, og hvis du tilføjer detaljer i kommentarerne, kan det hjælpe os med at gennemgå den hurtigere. Fortsæt kun med at anmelde brugeren som helhed, hvis en beskedanmeldelse ikke ville dække det bredere problem."
+#. Helper text under the Explain the problem field on the details step of the DSA report form.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:57
+msgid "If you believe it is illegal, say which law and why."
+msgstr "Hvis du mener, at det er ulovligt, skal du angive, hvilken lov og hvorfor."
 
 #. Confirmation modal body shown before dismissing the desktop-notification nagbar. {notificationSettingsPath} is the localized settings path.
 #: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:39
@@ -18599,28 +18387,6 @@ msgstr "Ignorer ventetiden i langsom tilstand i denne kanal."
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:970
 msgid "Ignore virtual"
 msgstr "Ignorer virtuelle enheder"
-
-#. IAR modal: rule label.
-#. Report category label for content describing or coordinating illegal activity. Keep tone plain.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:330
-#: src/features/moderation/components/report/OptionDescriptors.ts:44
-msgid "Illegal activity"
-msgstr "Ulovlig aktivitet"
-
-#. IAR modal: rule-category label grouping illegal activity and the catch-all "Other" option.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:77
-msgid "Illegal activity or something else"
-msgstr "Ulovlig aktivitet eller andet"
-
-#. IAR modal: rule-category description for the illegal / other group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:81
-msgid "Illegal sales, criminal facilitation, or a clear rule violation that doesn't fit above."
-msgstr "Ulovligt salg, medvirken til kriminalitet eller en klar overtrædelse af reglerne, der ikke passer ind ovenfor."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:334
-msgid "Illegal sales, criminal facilitation, or unlawful activity."
-msgstr "Ulovligt salg, kriminel medvirken eller ulovlig aktivitet."
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:73
@@ -18715,18 +18481,6 @@ msgstr "Billeder"
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:38
 msgid "Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in this channel."
 msgstr "Billeder, der er indsat fra din udklipsholder, sendes som vedhæftede filer, og du har ikke tilladelse til at vedhæfte filer i denne kanal."
-
-#. IAR modal: rule label.
-#. Report category label for a user impersonating another person or brand.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:306
-#: src/features/moderation/components/report/OptionDescriptors.ts:66
-msgid "Impersonation"
-msgstr "Udgiver sig for en anden"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:310
-msgid "Impersonation or deceptive media"
-msgstr "Udgiver sig for en anden eller bruger vildledende medier"
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:58
@@ -18910,11 +18664,6 @@ msgstr "Inaktiv"
 msgid "Inactive timeout"
 msgstr "Inaktivitetstimeout"
 
-#. Report category label for an account whose profile (name, avatar, bio) violates policy.
-#: src/features/moderation/components/report/OptionDescriptors.ts:82
-msgid "Inappropriate profile"
-msgstr "Upassende profil"
-
 #. Generic header / tab label for the unread / mentions / bookmarks inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:500
@@ -18963,7 +18712,7 @@ msgid "Include my two-factor backup codes in the PDF and printout"
 msgstr "Inkluder mine to-faktor backup-koder i PDF'en og udskriften"
 
 #. Inline validation error on the details step of the DSA report flow (community report) when the community ID field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:126
+#: src/features/moderation/components/pages/ReportPage.tsx:158
 msgid "Include the community ID."
 msgstr "Inkluder fællesskabs-id'et."
 
@@ -19403,7 +19152,7 @@ msgid "Invite background"
 msgstr "Invitationsbaggrund"
 
 #. Field label on the details step of the DSA report form (community report). Optional invite code to the reported community.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:48
+#: src/features/moderation/components/report/ReportStepDetails.tsx:47
 msgid "Invite code (optional)"
 msgstr "Invitationskode (valgfrit)"
 
@@ -19471,7 +19220,7 @@ msgstr "Maskering af invitationer"
 #. Tooltip and accessible label for the invite button shown beside a channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:125
 #: src/features/guild/components/popouts/GuildHeaderPopout.tsx:57
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:85
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:82
 msgid "Invite members"
 msgstr "Inviter medlemmer"
 
@@ -19650,7 +19399,7 @@ msgid "IP address authorized"
 msgstr "IP-adresse godkendt"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:163
+#: src/features/moderation/components/report/OptionDescriptors.ts:76
 msgid "Ireland"
 msgstr "Irland"
 
@@ -19690,7 +19439,7 @@ msgid "Italic"
 msgstr "Kursiv"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:167
+#: src/features/moderation/components/report/OptionDescriptors.ts:80
 msgid "Italy"
 msgstr "Italien"
 
@@ -20120,7 +19869,7 @@ msgstr "Taster"
 #. Button or menu action label in the kick member modal. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the user profile actions sheet. Keep it concise. Keep the tone plain and specific.
 #. Member actions sheet menu item. Opens the kick-member confirmation (moderation action). Short verb used as a menu label.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:97
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:96
 #: src/features/moderation/components/modals/KickMemberModal.tsx:16
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:77
 msgid "Kick"
@@ -20230,7 +19979,7 @@ msgid "Later"
 msgstr "Senere"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:171
+#: src/features/moderation/components/report/OptionDescriptors.ts:84
 msgid "Latvia"
 msgstr "Letland"
 
@@ -20291,11 +20040,6 @@ msgstr "Læs mere"
 msgid "Learn more about Visionary"
 msgstr "Lær mere om Visionary"
 
-#. IAR modal: quick-action card button label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:422
-msgid "Leave"
-msgstr "Forlad"
-
 #. Confirmation text before leaving a private thread. threadName is the thread name.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:65
 msgid "Leave {threadName}? It's private, so you can only come back if someone adds you again."
@@ -20335,11 +20079,6 @@ msgstr "Forlad privat tråd"
 #: src/features/guild/hooks/useLeaveGroup.tsx:34
 msgid "Leave silently"
 msgstr "Forlad uden besked"
-
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:414
-msgid "Leave the community"
-msgstr "Forlad fællesskabet"
 
 #. Body text in the leave-community confirmation modal.
 #: src/features/guild/hooks/useLeaveGuild.tsx:22
@@ -20799,7 +20538,7 @@ msgid "Lists members with this role in their own section in the member list."
 msgstr "Viser medlemmer med denne rolle i deres egen sektion på medlemslisten."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:175
+#: src/features/moderation/components/report/OptionDescriptors.ts:88
 msgid "Lithuania"
 msgstr "Litauen"
 
@@ -20893,7 +20632,7 @@ msgid "Loading..."
 msgstr "Indlæser..."
 
 #. Combobox popup status shown while options are loading.
-#: src/features/ui/components/form/FormCombobox.tsx:88
+#: src/features/ui/components/form/FormCombobox.tsx:89
 #: src/features/ui/components/Spinner.tsx:30
 msgid "Loading…"
 msgstr "Indlæser…"
@@ -21023,7 +20762,7 @@ msgid "Low"
 msgstr "Lavt"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:179
+#: src/features/moderation/components/report/OptionDescriptors.ts:92
 msgid "Luxembourg"
 msgstr "Luxembourg"
 
@@ -21075,14 +20814,14 @@ msgid "Maintenance is scheduled for {localizedTime}. Expected duration: {duratio
 msgstr "Vedligeholdelse er planlagt til {localizedTime}. Forventet varighed: {duration}."
 
 #. Confirm dialog body before transferring ownership of a group DM.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:81
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:80
 msgid "Make {userName} the group owner? You'll lose owner privileges."
 msgstr "Gør {userName} til gruppeejer? Du mister dine ejerskabsrettigheder."
 
 #. Group DM action that transfers ownership of the group to the selected member.
 #. Group DM action that transfers ownership of the group to the selected member.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:93
-#: src/features/ui/action_menu/UserContextMenu.tsx:117
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:92
+#: src/features/ui/action_menu/UserContextMenu.tsx:116
 msgid "Make group owner"
 msgstr "Gør til gruppeejer"
 
@@ -21091,37 +20830,20 @@ msgstr "Gør til gruppeejer"
 msgid "Make sure this code matches the one in the {PRODUCT_NAME} app."
 msgstr "Sørg for, at denne kode matcher den i {PRODUCT_NAME}-appen."
 
+#. Report flow: subtitle of the summary screen. Asks the reporter to check their answers.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:9
+msgid "Make sure this looks right before you send it."
+msgstr "Sørg for, at det ser rigtigt ud, før du sender det."
+
 #. Setup wizard branding step title.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:166
 msgid "Make the instance yours"
 msgstr "Gør din instans personlig"
 
-#. Report category label for messages containing phishing or malware links.
-#: src/features/moderation/components/report/OptionDescriptors.ts:62
-msgid "Malicious links"
-msgstr "Skadelige links"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:183
+#: src/features/moderation/components/report/OptionDescriptors.ts:96
 msgid "Malta"
 msgstr "Malta"
-
-#. IAR modal: rule label.
-#. Report category label for a community distributing malware or malicious software.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:278
-#: src/features/moderation/components/report/OptionDescriptors.ts:103
-msgid "Malware distribution"
-msgstr "Distribution af malware"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:266
-msgid "Malware or dangerous links"
-msgstr "Malware eller farlige links"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:270
-msgid "Malware, credential theft, or harmful files."
-msgstr "Malware, tyveri af loginoplysninger eller skadelige filer."
 
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
@@ -21408,11 +21130,6 @@ msgstr "Maskér private detaljer, før du deler din skærm eller stream."
 msgid "Mask Visionary as subscription"
 msgstr "Vis Visionary som et abonnement"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:250
-msgid "Mass spam, fraud, fake giveaways, or account abuse."
-msgstr "Massespam, svindel, falske konkurrencer eller misbrug af konti."
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:113
 msgctxt "us-state"
@@ -21491,30 +21208,10 @@ msgstr "Adgangskontrol for medier med indhold for voksne"
 msgid "Mature content not allowed"
 msgstr "Indhold for voksne er ikke tilladt"
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:202
-msgid "Mature content or harassment"
-msgstr "Indhold for voksne eller chikane"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:218
-msgid "Mature content or unsafe gating"
-msgstr "Indhold for voksne eller mangelfuld afskærmning"
-
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:35
 msgid "Mature content override"
 msgstr "Tilpasset mærkning som indhold for voksne"
-
-#. Report category label for mature-content policy violations. Keep tone plain and neutral.
-#: src/features/moderation/components/report/OptionDescriptors.ts:40
-msgid "Mature content policy violation"
-msgstr "Overtrædelse af politikken for indhold for voksne"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:222
-msgid "Mature content without proper gating."
-msgstr "Indhold for voksne uden korrekt afskærmning."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the mature media gate details modal. Keep it concise.
@@ -21959,13 +21656,13 @@ msgstr "Besked"
 #. Action that opens a DM conversation with the selected user.
 #. Member actions sheet menu item. Sends a direct message to the target user. Standalone verb used as a menu label.
 #. Voice participant menu action that opens a DM conversation with the selected user.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:87
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:86
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:78
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:719
-#: src/features/user/components/modals/UserProfileModal.tsx:565
-#: src/features/user/components/modals/UserProfileModal.tsx:773
+#: src/features/user/components/modals/UserProfileModal.tsx:568
+#: src/features/user/components/modals/UserProfileModal.tsx:776
 #: src/features/user/components/popouts/UserProfilePopout.tsx:421
 #: src/features/user/components/popouts/UserProfilePopout.tsx:451
 #: src/features/user/components/profile/ProfilePreview.tsx:321
@@ -22128,7 +21825,7 @@ msgid "message link"
 msgstr "beskedlink"
 
 #. Field label on the details step of the DSA report form (message report). The reporter pastes a direct link to the offending message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:23
+#: src/features/moderation/components/report/ReportStepDetails.tsx:22
 msgid "Message link"
 msgstr "Beskedlink"
 
@@ -22167,7 +21864,7 @@ msgid "Message previews in the DM list"
 msgstr "Beskedforhåndsvisninger i DM-listen"
 
 #. Toast shown after a message in an announcement channel was published to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:118
+#: src/features/messaging/commands/MessageCommands.tsx:122
 msgid "Message published"
 msgstr "Besked publiceret"
 
@@ -22210,6 +21907,11 @@ msgstr "Tidspunkt for besked"
 #: src/features/app/config/AuditLogConstants.ts:140
 msgid "Message unpinned"
 msgstr "Beskedens fastgørelse fjernet"
+
+#. Report flow: section heading above the preview of the message being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:18
+msgid "Message you're reporting"
+msgstr "Besked, du anmelder"
 
 #. Collapsible group heading in the Theme Studio tokens list, for chat message tokens.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -22422,11 +22124,6 @@ msgctxt "us-state"
 msgid "Minnesota"
 msgstr "Minnesota"
 
-#. IAR modal: rule-category description for the child-safety / mature-content group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:57
-msgid "Minors at risk, mature content in the wrong place, or unwanted conduct."
-msgstr "Mindreårige i fare, indhold for voksne det forkerte sted eller uønsket adfærd."
-
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
@@ -22633,7 +22330,7 @@ msgstr "Mere"
 #. Short label in the index. Keep it concise.
 #. Short label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:47
-#: src/features/user/components/modals/UserProfileModal.tsx:114
+#: src/features/user/components/modals/UserProfileModal.tsx:117
 msgid "More actions"
 msgstr "Flere handlinger"
 
@@ -23359,7 +23056,7 @@ msgid "Nested"
 msgstr "Indlejret"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:187
+#: src/features/moderation/components/report/OptionDescriptors.ts:100
 msgid "Netherlands"
 msgstr "Holland"
 
@@ -24099,7 +23796,7 @@ msgstr "Ingen resultater"
 #. Empty state shown when a combobox search returns no matches.
 #. Empty state shown when a combobox search returns no matches.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentLanguageCombobox.tsx:30
-#: src/features/ui/components/form/FormCombobox.tsx:84
+#: src/features/ui/components/form/FormCombobox.tsx:85
 msgid "No results found"
 msgstr "Ingen resultater fundet"
 
@@ -24858,6 +24555,16 @@ msgstr "Kun personer, du inviterer, og moderatorer kan se denne tråd."
 msgid "Only places I can't access anymore"
 msgstr "Kun steder, jeg ikke længere har adgang til"
 
+#. Report flow: good-faith statement on the summary screen, used when the instance has no community guidelines page.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:13
+msgid "Only report what you honestly believe breaks the rules, and please don't send the same report twice."
+msgstr "Anmeld kun det, du ærligt mener bryder reglerne, og send helst ikke den samme anmeldelse to gange."
+
+#. Report flow: good-faith statement on the summary screen. The linked text opens the community guidelines.
+#: src/features/moderation/components/report_flow/ReportFlowSummary.tsx:52
+msgid "Only report what you honestly believe breaks the rules. Misusing reports goes against our <0>Community Guidelines</0>."
+msgstr "Anmeld kun det, du ærligt mener bryder reglerne. Misbrug af anmeldelser går imod vores <0>retningslinjer for fællesskabet</0>."
+
 #. Console warning line advising users not to run unknown code.
 #: src/features/devtools/utils/SelfXssNotice.ts:24
 msgid "Only run code here if you understand exactly what it does."
@@ -24927,11 +24634,9 @@ msgstr "Uigennemsigtighed"
 #. Action button on a Linux desktop notification. Imperative verb: opens the message the notification is about.
 #. Billing invoice status for an invoice awaiting payment.
 #. Button label that opens the source settings section for an advanced setting.
-#. IAR modal: quick-action card button label.
 #. Short button that opens a billing invoice or receipt.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:21
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:159
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:434
 #: src/features/platform/utils/DesktopLocaleBridge.ts:254
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:22
 msgid "Open"
@@ -25306,7 +25011,7 @@ msgid "Open on {instanceName}"
 msgstr "Åbn på {instanceName}"
 
 #. Accessible label for the combobox popup trigger button.
-#: src/features/ui/components/form/FormCombobox.tsx:96
+#: src/features/ui/components/form/FormCombobox.tsx:97
 msgid "Open popup"
 msgstr "Åbn valgliste"
 
@@ -25378,11 +25083,6 @@ msgstr "Åbn Systemindstillinger → Anonymitet og sikkerhed → Skærmoptagelse
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:535
 msgid "Open template JSON"
 msgstr "Åbn skabelon-JSON"
-
-#. IAR modal: quick-action card description for banning the reported user.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:130
-msgid "Open the ban dialog for this community."
-msgstr "Åbn dialogboksen for udelukkelse for dette fællesskab."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:249
@@ -25484,6 +25184,11 @@ msgstr "Åbn dine indstillinger"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:44
 msgid "Opened the thread again"
 msgstr "Genåbnede tråden"
+
+#. Report flow: screen reader hint on answers that open an external page.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:116
+msgid "Opens in a new tab"
+msgstr "Åbner i en ny fane"
 
 #. Screen-reader-only hint for the Members entry in community settings. The entry receives keyboard focus without automatically opening.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:67
@@ -25621,9 +25326,7 @@ msgstr "Oprindeligt udelukket den {date}"
 
 #. Catch-all Discovery category dropdown option in the community Discovery settings tab.
 #. Collapsible group heading in the Theme Studio tokens list, for tokens that fit no other group.
-#. Report category label for a reason that does not match any predefined category.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:110
-#: src/features/moderation/components/report/OptionDescriptors.ts:70
 #: src/features/theme_studio/sections/TokenGroups.ts:118
 msgid "Other"
 msgstr "Andet"
@@ -25653,11 +25356,6 @@ msgstr "Anden reaktion …"
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:64
 msgid "OTP"
 msgstr "OTP"
-
-#. IAR modal: body copy on the success step shown after a platform report is submitted. Reassures the user about follow-up.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:101
-msgid "Our safety team is reviewing it. We'll send you a DM and email once we've reached a verdict."
-msgstr "Vores sikkerhedsteam gennemgår den. Vi sender dig en direkte besked og en e-mail, når vi har truffet en afgørelse."
 
 #. Field label in the voice connection status popout. Shows WebRTC estimated available outgoing bandwidth.
 #: src/features/voice/components/voice_connection_status/shared.ts:120
@@ -25755,7 +25453,7 @@ msgid "Ownership could not be transferred to <0>{username}</0> at this time."
 msgstr "Ejerskabet kunne ikke overføres til <0>{username}</0> på nuværende tidspunkt."
 
 #. Toast confirming group DM ownership was transferred.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:85
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:84
 msgid "Ownership transferred"
 msgstr "Ejerskab overført"
 
@@ -25956,7 +25654,7 @@ msgid "Paste the JSON response here"
 msgstr "Indsæt JSON-svaret her"
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:111
+#: src/features/moderation/components/pages/ReportPage.tsx:143
 msgid "Paste the message link."
 msgstr "Indsæt linket til beskeden."
 
@@ -26260,11 +25958,6 @@ msgstr "PgDn"
 msgid "PgUp"
 msgstr "PgUp"
 
-#. IAR modal: rule-category description for the scams / malware / misinformation group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:73
-msgid "Phishing, fraud, malicious links, or false claims likely to cause real-world harm."
-msgstr "Phishing, svindel, ondsindede links eller falske påstande, der sandsynligvis vil forårsage skade i den virkelige verden."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:21
 msgid "Photo"
@@ -26300,11 +25993,6 @@ msgstr "Vælg en søgemaskine"
 msgid "Pick an emoji"
 msgstr "Vælg en emoji"
 
-#. Validation hint in the IAR modal when the user tries to advance without picking a radio option.
-#: src/features/moderation/components/report_modal/IARModal.tsx:72
-msgid "Pick an option to continue."
-msgstr "Vælg en mulighed for at fortsætte."
-
 #. Validation error when the user advances with all inclusion toggles off in the custom scope.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:205
 msgid "Pick at least one kind of conversation to include."
@@ -26329,11 +26017,6 @@ msgstr "Vælg det 4-cifrede nummer efter dit brugernavn"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:62
 msgid "Pick the appearance this administrator account should start with."
 msgstr "Vælg det udseende, denne administratorkonto skal starte med."
-
-#. Validation hint in the IAR modal on the rule selection step.
-#: src/features/moderation/components/report_modal/IARModal.tsx:76
-msgid "Pick the rule to review."
-msgstr "Vælg den regel, du vil gennemgå."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
@@ -26607,7 +26290,7 @@ msgid "Please wait a moment and try renaming again."
 msgstr "Vent venligst et øjeblik, og prøv at omdøbe igen."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:191
+#: src/features/moderation/components/report/OptionDescriptors.ts:104
 msgid "Poland"
 msgstr "Polen"
 
@@ -26659,7 +26342,7 @@ msgid "Port"
 msgstr "Port"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:195
+#: src/features/moderation/components/report/OptionDescriptors.ts:108
 msgid "Portugal"
 msgstr "Portugal"
 
@@ -26872,11 +26555,6 @@ msgstr "tryk for at tilføje reaktion"
 msgid "press to remove reaction"
 msgstr "tryk for at fjerne reaktion"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:314
-msgid "Pretending to be someone else, including deceptive AI-generated content."
-msgstr "At udgive sig for at være en anden, herunder med vildledende AI-genereret indhold."
-
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx:135
 msgid "Prevent <0>{targetUserTag}</0> from sending messages, reacting, and connecting to voice channels for the specified duration."
 msgstr "Forhindr <0>{targetUserTag}</0> i at sende beskeder, reagere og oprette forbindelse til talekanaler i den angivne periode."
@@ -27078,11 +26756,6 @@ msgstr "Prioritetstaler"
 msgid "Privacy"
 msgstr "Privatliv"
 
-#. IAR modal: rule-category label grouping privacy violations and impersonation.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:61
-msgid "Privacy or impersonation"
-msgstr "Privatliv eller at udgive sig for en anden"
-
 #: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:444
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:24
 msgid "Privacy policy"
@@ -27102,21 +26775,6 @@ msgstr "Privatlivsopsætningsbjælke"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1157
 msgid "Privacy URL"
 msgstr "URL til fortrolighedspolitik"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:286
-msgid "Privacy violation"
-msgstr "Overtrædelse af privatlivets fred"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:298
-msgid "Privacy violation or doxxing"
-msgstr "Krænkelse af privatlivets fred eller doxxing"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:294
-msgid "Privacy violation or stalking"
-msgstr "Krænkelse af privatlivets fred eller stalking"
 
 #. Switch in the channel create modal that limits who can view the new channel.
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:55
@@ -27280,25 +26938,10 @@ msgstr "Profiltype"
 msgid "Profile updated"
 msgstr "Profil opdateret"
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:322
-msgid "Profile, username, or avatar violation"
-msgstr "Regelbrud i profil, brugernavn eller avatar"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:182
-msgid "Promotes hatred against protected groups."
-msgstr "Fremmer had mod beskyttede grupper."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:198
-msgid "Promotes, recruits for, or coordinates violent extremist activity."
-msgstr "Fremmer, rekrutterer til eller koordinerer voldelig ekstremistisk aktivitet."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:350
-msgid "Promotion or instructions encouraging self-harm or eating disorders."
-msgstr "Promovering eller instruktioner, der opfordrer til selvskade eller spiseforstyrrelser."
+#. Report flow: section heading above the card of the user whose profile is being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:22
+msgid "Profile you're reporting"
+msgstr "Profil, du anmelder"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
@@ -27329,19 +26972,14 @@ msgstr "Pronominer: "
 msgid "Protect your Visionary account by enabling two-factor authentication. Thanks for supporting {productName}!"
 msgstr "Beskyt din Visionary-konto ved at aktivere tofaktorgodkendelse. Tak for din støtte til {productName}!"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:216
+#: src/features/moderation/components/report/ReportStepDetails.tsx:261
 msgid "Provide at least a user ID or a user tag."
 msgstr "Angiv mindst et bruger-id eller et brugertag."
 
 #. Inline validation error on the details step of the DSA report flow (user report) when both user ID and username fields are empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:121
+#: src/features/moderation/components/pages/ReportPage.tsx:153
 msgid "Provide either a user ID or a username for the person you are reporting."
 msgstr "Angiv enten et bruger-id eller et brugernavn for den person, du anmelder."
-
-#. Inline validation error on the details step of the DSA report flow. The reporter must give their legal name for the legal declaration; keep tone neutral and factual.
-#: src/features/moderation/components/pages/ReportPage.tsx:101
-msgid "Provide your full legal name for the declaration."
-msgstr "Angiv dit fulde officielle navn til erklæringen."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:90
@@ -27701,13 +27339,6 @@ msgstr "Med radioknapper kan du vælge én mulighed fra en gruppe."
 msgid "Radio group"
 msgstr "Radiogruppe"
 
-#. IAR modal: rule label.
-#. Report category label for a community coordinating raids (mass harassment of other communities or users). "Raid" is product jargon.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:338
-#: src/features/moderation/components/report/OptionDescriptors.ts:94
-msgid "Raid coordination"
-msgstr "Koordinering af raid"
-
 #. Setup wizard finish summary value when every username gets a random four digit tag.
 #. Setup wizard option where every username gets a random four digit tag.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:104
@@ -27831,8 +27462,10 @@ msgstr "Klar til at købe en gave?"
 msgid "Ready to upgrade?"
 msgstr "Klar til at opgradere?"
 
+#. DSA report page: step indicator label for the step where the reporter picks why they are reporting.
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:611
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:75
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:40
 msgid "Reason"
 msgstr "Årsag"
 
@@ -28291,8 +27924,8 @@ msgstr "Husk vinduesstørrelse og -placering"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:140
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:143
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:271
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:73
-#: src/features/ui/action_menu/UserContextMenu.tsx:97
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:72
+#: src/features/ui/action_menu/UserContextMenu.tsx:96
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:198
@@ -28328,8 +27961,8 @@ msgstr "Fjern {engineName}"
 
 #. Confirm dialog body before removing a member from a group DM.
 #. Confirm dialog body before removing a member from a group DM.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:69
-#: src/features/ui/action_menu/UserContextMenu.tsx:93
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:68
+#: src/features/ui/action_menu/UserContextMenu.tsx:92
 msgid "Remove {userName} from the group?"
 msgstr "Fjern {userName} fra gruppen?"
 
@@ -28419,8 +28052,8 @@ msgstr "Fjern fra favoritter"
 
 #. Group DM action that removes the selected member from the group.
 #. Group DM action that removes the selected member from the group.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:65
-#: src/features/ui/action_menu/UserContextMenu.tsx:89
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:64
+#: src/features/ui/action_menu/UserContextMenu.tsx:88
 msgid "Remove from group"
 msgstr "Fjern fra gruppe"
 
@@ -28457,11 +28090,6 @@ msgstr "Fjern fra URL-baserede GIF-favoritter"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:643
 msgid "Remove icon"
 msgstr "Fjern ikon"
-
-#. IAR modal: quick-action card description for deleting the reported message.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:110
-msgid "Remove it from the channel for everyone."
-msgstr "Fjern den fra kanalen for alle."
 
 #. Permission description in the role/permission editor for the Kick Members permission. Note that a kick is not permanent, unlike a ban.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:119
@@ -28578,7 +28206,7 @@ msgid "Removed from favorites"
 msgstr "Fjernet fra favoritter"
 
 #. Toast confirming the selected member was removed from the group DM.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:77
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:76
 msgid "Removed from group"
 msgstr "Fjernet fra gruppe"
 
@@ -28919,28 +28547,18 @@ msgstr "Anmeld et fællesskab"
 msgid "Report a message"
 msgstr "Anmeld en besked"
 
-#. IAR modal: screen-reader description for the whole modal.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:446
-msgid "Report a rule violation, or find tools to manage contact and preferences."
-msgstr "Anmeld en regelovertrædelse, eller find værktøjer til at administrere kontakt og præferencer."
-
 #. Report flow target option. Selects reporting another user account or profile. Keep tone plain and neutral.
 #: src/features/moderation/components/report/OptionDescriptors.ts:11
 msgid "Report a user profile"
 msgstr "Anmeld en brugerprofil"
 
-#. Action label that opens the report flow targeting a community.
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:17
-msgid "Report community"
-msgstr "Anmeld fællesskab"
-
-#: src/features/moderation/components/report/ReportStepDetails.tsx:128
+#: src/features/moderation/components/report/ReportStepDetails.tsx:151
 msgid "Report details"
 msgstr "Oplysninger om anmeldelsen"
 
 #. Document/page title for the public DSA illegal-content report page. Sensitive/legal flow; keep tone plain and factual.
-#: src/features/moderation/components/pages/ReportPage.tsx:45
-#: src/features/moderation/components/report/ReportStepSelection.tsx:32
+#: src/features/moderation/components/pages/ReportPage.tsx:66
+#: src/features/moderation/components/report/ReportStepSelection.tsx:33
 msgid "Report illegal content"
 msgstr "Anmeld ulovligt indhold"
 
@@ -28950,30 +28568,28 @@ msgid "Report issue"
 msgstr "Rapportér problem"
 
 #. Generic action label that opens the report flow targeting a specific message.
-#. Modal title for the IAR flow when reporting a specific message.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:544
-#: src/features/moderation/components/report_modal/IARModalContext.ts:22
 msgid "Report message"
 msgstr "Anmeld besked"
 
-#. IAR modal: title on the success step shown after a platform report is submitted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:97
-#: src/features/moderation/components/report/ReportStepComplete.tsx:31
+#. Action label in the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts:13
+msgid "Report profile"
+msgstr "Anmeld profil"
+
+#. Report flow: title of the final screen after a report was sent to the safety team.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:42
+#: src/features/moderation/components/report/ReportStepComplete.tsx:32
 msgid "Report sent"
 msgstr "Anmeldelse sendt"
 
 #. Button or menu action label in the moderation report step selection. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/components/report/ReportStepSelection.tsx:11
+#: src/features/moderation/components/report/ReportStepSelection.tsx:12
 msgid "Report type"
 msgstr "Anmeldelsestype"
 
-#. Action label that opens the report flow targeting a user.
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:13
-msgid "Report user"
-msgstr "Anmeld bruger"
-
 #. Field label on the details step of the DSA report form (message report). Optional FluxerTag of the user who sent the message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:28
+#: src/features/moderation/components/report/ReportStepDetails.tsx:27
 msgid "Reported user tag (optional)"
 msgstr "Den anmeldte brugers tag (valgfrit)"
 
@@ -29100,6 +28716,10 @@ msgstr "Kræver alt fra niveauet Mellem samt medlemskab af fællesskabet i minds
 msgid "Resend"
 msgstr "Send igen"
 
+#: src/features/moderation/components/report/ReportStepVerification.tsx:31
+msgid "Resend ({duration})"
+msgstr "Send igen ({duration})"
+
 #: src/features/user/components/modals/EmailChangeModal.tsx:333
 msgid "Resend ({newSecondsRemaining}s)"
 msgstr "Send igen ({newSecondsRemaining} sek.)"
@@ -29108,7 +28728,7 @@ msgstr "Send igen ({newSecondsRemaining} sek.)"
 msgid "Resend ({originalSecondsRemaining}s)"
 msgstr "Send igen ({originalSecondsRemaining} sek.)"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:103
+#: src/features/moderation/components/report/ReportStepVerification.tsx:29
 msgid "Resend ({resendCooldownSeconds}s)"
 msgstr "Send igen ({resendCooldownSeconds} sek.)"
 
@@ -29122,7 +28742,7 @@ msgstr "Send igen ({resendSecondsRemaining} sek.)"
 msgid "Resend ({secondsRemaining}s)"
 msgstr "Send igen ({secondsRemaining} sek.)"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:105
+#: src/features/moderation/components/report/ReportStepVerification.tsx:134
 msgid "Resend code"
 msgstr "Send kode igen"
 
@@ -29841,7 +29461,7 @@ msgid "Roles updated successfully"
 msgstr "Roller opdateret"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:199
+#: src/features/moderation/components/report/OptionDescriptors.ts:112
 msgid "Romania"
 msgstr "Rumænien"
 
@@ -29947,7 +29567,7 @@ msgstr "Mætning"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
-#: src/features/messaging/commands/MessageCommands.tsx:114
+#: src/features/messaging/commands/MessageCommands.tsx:118
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
@@ -30092,11 +29712,6 @@ msgstr "Sig hej til <0>{displayName}</0>. Jeres private samtale starter her."
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:186
 msgid "Scale"
 msgstr "Skalering"
-
-#. IAR modal: rule-category label grouping spam/scams, malware, and harmful misinformation.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:69
-msgid "Scams, malware, or misinformation"
-msgstr "Svindel, malware eller misinformation"
 
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:97
 msgid "Scan the QR code with your authenticator app."
@@ -30855,11 +30470,6 @@ msgstr "Vælg"
 msgid "Select {accessibleName}"
 msgstr "Vælg {accessibleName}"
 
-#. Placeholder option label for the report category dropdown when no category has been chosen yet.
-#: src/features/moderation/components/report/OptionDescriptors.ts:20
-msgid "Select a category"
-msgstr "Vælg en kategori"
-
 #. Button or menu action label in the idle settings section. Keep it concise.
 #. Button or menu action label in the system welcome section. Keep it concise.
 #. Placeholder of the channel picker in the follow announcement channel dialog.
@@ -30892,7 +30502,7 @@ msgid "Select a community where you have {permissionName} permission, or a group
 msgstr "Vælg et fællesskab, hvor du har tilladelsen {permissionName}, eller en gruppe-DM, du er medlem af."
 
 #. Placeholder option label for the country dropdown in the EU illegal-content report flow.
-#: src/features/moderation/components/report/OptionDescriptors.ts:107
+#: src/features/moderation/components/report/OptionDescriptors.ts:20
 msgid "Select a country"
 msgstr "Vælg et land"
 
@@ -30910,11 +30520,6 @@ msgstr "Vælg en omdirigerings-URI"
 #: src/features/devtools/components/PremiumScenarioOptions.ts:16
 msgid "Select a scenario to apply..."
 msgstr "Vælg et scenarie, der skal anvendes ..."
-
-#. Inline validation error on the details step of the DSA report flow when the category field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:97
-msgid "Select a violation category."
-msgstr "Vælg en kategori for overtrædelsen."
 
 #. Native Edit menu item that selects everything in the focused field. Imperative verb.
 #. Textarea right-click context menu item that selects all text in the textarea.
@@ -30972,17 +30577,17 @@ msgstr "Vælg den konto, du vil logge ind med på din nye enhed."
 msgid "Select voice processing mode"
 msgstr "Vælg tilstand for talebehandling"
 
-#: src/features/moderation/components/report/ReportStepSelection.tsx:35
+#: src/features/moderation/components/report/ReportStepSelection.tsx:36
 msgid "Select what you want to report."
 msgstr "Vælg, hvad du vil anmelde."
 
 #. Inline validation error on the details step of the DSA report flow when the country dropdown has no selection.
-#: src/features/moderation/components/pages/ReportPage.tsx:106
+#: src/features/moderation/components/pages/ReportPage.tsx:138
 msgid "Select your country of residence."
 msgstr "Vælg dit bopælsland."
 
 #. Generic combobox control placeholder.
-#: src/features/ui/components/form/FormCombobox.tsx:76
+#: src/features/ui/components/form/FormCombobox.tsx:77
 msgid "Select…"
 msgstr "Vælg…"
 
@@ -31036,13 +30641,6 @@ msgstr "Valg: {0} (maks. {1})"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:292
 msgid "Selections"
 msgstr "Valg"
-
-#. IAR modal: rule label.
-#. Report category label for content that promotes or depicts self-harm or suicide. Keep tone calm and respectful; this is a safety surface.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:346
-#: src/features/moderation/components/report/OptionDescriptors.ts:52
-msgid "Self-harm or suicide"
-msgstr "Selvskade eller selvmord"
 
 #. Accessible label for the self-host setup wizard carousel.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:97
@@ -31121,7 +30719,7 @@ msgstr "Send en handlingsbesked (vises med kursiv)."
 msgid "Send animation"
 msgstr "Send animation"
 
-#: src/features/moderation/components/report/ReportStepComplete.tsx:36
+#: src/features/moderation/components/report/ReportStepComplete.tsx:37
 msgid "Send another report"
 msgstr "Send endnu en anmeldelse"
 
@@ -31138,7 +30736,7 @@ msgstr "Send-knap"
 msgid "Send code"
 msgstr "Send kode"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:302
+#: src/features/moderation/components/report/ReportStepDetails.tsx:364
 msgid "Send DSA report"
 msgstr "Send DSA-anmeldelse"
 
@@ -31158,9 +30756,9 @@ msgstr "Send filer op til {size}"
 #. Button or menu action label in the user profile modal. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:93
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:92
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:111
-#: src/features/user/components/modals/UserProfileModal.tsx:126
+#: src/features/user/components/modals/UserProfileModal.tsx:129
 msgid "Send friend request"
 msgstr "Send venneanmodning"
 
@@ -31220,8 +30818,8 @@ msgstr "Send beskeder i tråde"
 msgid "Send messages, images, GIFs and emoji"
 msgstr "Send beskeder, billeder, GIF'er og emoji"
 
-#. Footer submit button in the IAR modal. Sends the report to the safety team.
-#: src/features/moderation/components/report_modal/IARModal.tsx:88
+#. Report flow: footer button on the summary screen that sends the report to the safety team.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:30
 msgid "Send report"
 msgstr "Send anmeldelse"
 
@@ -31255,7 +30853,7 @@ msgstr "Send denne fastgjorte besked tilbage i tiden?"
 msgid "Send TTS messages"
 msgstr "Send TTS-beskeder"
 
-#: src/features/moderation/components/report/ReportStepEmail.tsx:86
+#: src/features/moderation/components/report/ReportStepEmail.tsx:101
 msgid "Send verification code"
 msgstr "Send bekræftelseskode"
 
@@ -31272,11 +30870,6 @@ msgstr "Send talebesked"
 #: src/features/voice/components/voice_connection_status/shared.ts:84
 msgid "Send:"
 msgstr "Send:"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:274
-msgid "Sending malware or dangerous links"
-msgstr "Sender malware eller farlige links"
 
 #. Short label under a destination row in the forward modal, shown when the community has messaging disabled.
 #: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:55
@@ -31701,18 +31294,13 @@ msgstr "Del tema"
 msgid "Share voice activity with all friends?"
 msgstr "Del taleaktivitet med alle venner?"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:131
+#: src/features/moderation/components/report/ReportStepDetails.tsx:154
 msgid "Share what our team needs to assess this."
 msgstr "Del, hvad vores team skal bruge for at vurdere dette."
 
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:283
 msgid "Share with a friend"
 msgstr "Del med en ven"
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:398
-msgid "Share with community mods."
-msgstr "Del med fællesskabsmoderatorer."
 
 #. Voice control button or tooltip label for starting screen sharing.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:223
@@ -31756,16 +31344,6 @@ msgstr "Delt vindue"
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:42
 msgid "Shared window audio"
 msgstr "Lyd fra delt vindue"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:302
-msgid "Shares personal info, stalks users, or coordinates privacy abuse."
-msgstr "Deler personlige oplysninger, stalker brugere eller koordinerer krænkelser af privatlivets fred."
-
-#. Report category label for doxxing or sharing private personal information without consent.
-#: src/features/moderation/components/report/OptionDescriptors.ts:48
-msgid "Sharing personal information"
-msgstr "Deler personlige oplysninger"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:98
@@ -32758,12 +32336,12 @@ msgid "Sliders"
 msgstr "Skydere"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:203
+#: src/features/moderation/components/report/OptionDescriptors.ts:116
 msgid "Slovakia"
 msgstr "Slovakiet"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:207
+#: src/features/moderation/components/report/OptionDescriptors.ts:120
 msgid "Slovenia"
 msgstr "Slovenien"
 
@@ -32888,11 +32466,6 @@ msgstr "Simulering af langsom tilstand"
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:50
 msgid "Slowmode time remaining"
 msgstr "Tid tilbage i langsom tilstand"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:174
-msgid "Slurs, dehumanizing language, or attacks on protected groups."
-msgstr "Nedsættende sprog, dehumaniserende sprog eller angreb på beskyttede grupper."
 
 #. Short label in the selections tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:45
@@ -33094,7 +32667,7 @@ msgid "Something went wrong while preparing this sticker. Try another file or tr
 msgstr "Der opstod en fejl under forberedelsen af dette klistermærke. Prøv en anden fil, eller prøv igen om et øjeblik."
 
 #. Fallback body of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:130
+#: src/features/messaging/commands/MessageCommands.tsx:134
 msgid "Something went wrong while publishing. Try again in a moment."
 msgstr "Der gik noget galt under publicering. Prøv igen om et øjeblik."
 
@@ -33302,39 +32875,14 @@ msgid "Spacious layout with clear visual separation between messages."
 msgstr "Rummeligt layout med tydelig visuel adskillelse mellem beskeder."
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:211
+#: src/features/moderation/components/report/OptionDescriptors.ts:124
 msgid "Spain"
 msgstr "Spanien"
-
-#. Report category label for a user profile used primarily to send spam.
-#: src/features/moderation/components/report/OptionDescriptors.ts:74
-msgid "Spam account"
-msgstr "Spamkonto"
 
 #. Section label for spam classification debug controls.
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:21
 msgid "Spam classification"
 msgstr "Spamklassificering"
-
-#. Report category label for spam or scam messages. Keep tone plain and neutral.
-#: src/features/moderation/components/report/OptionDescriptors.ts:36
-msgid "Spam or scam"
-msgstr "Spam eller fup"
-
-#. Report category label for a community whose purpose is spam or scams.
-#: src/features/moderation/components/report/OptionDescriptors.ts:99
-msgid "Spam or scam community"
-msgstr "Fællesskab med spam eller svindel"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:254
-msgid "Spam, scam, or phishing account"
-msgstr "Spam-, svindel- eller phishingkonto"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:246
-msgid "Spam, scams, or phishing"
-msgstr "Spam, svindel eller phishing"
 
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:48
@@ -33628,9 +33176,11 @@ msgstr "Start minimeret"
 
 #. Button on the browser page after cancelling that goes back to choosing an account.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:337
-#: src/features/moderation/components/report/ReportStepDetails.tsx:326
-#: src/features/moderation/components/report/ReportStepEmail.tsx:97
-#: src/features/moderation/components/report/ReportStepVerification.tsx:134
+#: src/features/moderation/components/report/ReportStepDetails.tsx:389
+#: src/features/moderation/components/report/ReportStepEmail.tsx:113
+#: src/features/moderation/components/report/ReportStepReason.tsx:149
+#: src/features/moderation/components/report/ReportStepReason.tsx:219
+#: src/features/moderation/components/report/ReportStepVerification.tsx:167
 msgid "Start over"
 msgstr "Start forfra"
 
@@ -33752,21 +33302,25 @@ msgstr "Forbliv logget på"
 msgid "Step {current} of {total}"
 msgstr "Trin {current} af {total}"
 
-#: src/features/moderation/components/report/ReportStepSelection.tsx:29
+#: src/features/moderation/components/report/ReportStepSelection.tsx:30
 msgid "Step 1"
 msgstr "Trin 1"
 
-#: src/features/moderation/components/report/ReportStepEmail.tsx:40
+#: src/features/moderation/components/report/ReportStepEmail.tsx:46
 msgid "Step 2"
 msgstr "Trin 2"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:45
+#: src/features/moderation/components/report/ReportStepVerification.tsx:70
 msgid "Step 3"
 msgstr "Trin 3"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:125
+#: src/features/moderation/components/report/ReportStepReason.tsx:195
 msgid "Step 4"
 msgstr "Trin 4"
+
+#: src/features/moderation/components/report/ReportStepDetails.tsx:148
+msgid "Step 5"
+msgstr "Trin 5"
 
 #. Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:50
@@ -33935,11 +33489,6 @@ msgstr "Stop med at være en annonceringskanal?"
 msgid "Stop hiding muted channels by default?"
 msgstr "Stop med at skjule kanaler sat på lydløs som standard?"
 
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:390
-msgid "Stop messages and friend requests."
-msgstr "Stop beskeder og venneanmodninger."
-
 #: src/features/user/components/modals/tabs/components/MicTestSection.tsx:16
 msgid "Stop mic test"
 msgstr "Stop mikrofontest"
@@ -33958,11 +33507,6 @@ msgstr "Stop ændringerne af insertBefore og removeChild på Node.prototype. App
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:29
 msgid "Stop ringing"
 msgstr "Stop med at ringe"
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:418
-msgid "Stop seeing its content and members."
-msgstr "Stop med at se indhold og medlemmer."
 
 #. Privacy > Active now: confirmation modal title when turning sharing off.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:37
@@ -34344,7 +33888,7 @@ msgid "Swap common text faces such as :) and <3 for emoji when sending messages"
 msgstr "Erstat almindelige tekstsmileyer som :) og <3 med emojis, når du sender beskeder"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:215
+#: src/features/moderation/components/report/OptionDescriptors.ts:128
 msgid "Sweden"
 msgstr "Sverige"
 
@@ -34804,11 +34348,6 @@ msgstr "Tryk for at tilføje en note"
 msgid "tar.gz archive"
 msgstr "tar.gz-arkiv"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:178
-msgid "Targets people by protected characteristics."
-msgstr "Målretter personer baseret på beskyttede karakteristika."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:34
@@ -34884,11 +34423,6 @@ msgstr "Servicevilkår"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1153
 msgid "Terms URL"
 msgstr "URL til servicevilkår"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:194
-msgid "Terrorism or violent extremism"
-msgstr "Terrorisme eller voldelig ekstremisme"
 
 #. Button that validates SMTP credentials.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1125
@@ -35030,9 +34564,24 @@ msgid "Thai"
 msgstr "Thai"
 
 #. Confirmation text shown after a user submits a moderation report.
-#: src/features/moderation/components/report/ReportStepComplete.tsx:22
+#: src/features/moderation/components/report/ReportStepComplete.tsx:23
 msgid "Thank you for helping keep {productName} safe. We'll review your report as soon as possible."
 msgstr "Tak, fordi du hjælper med at holde {productName} sikkert. Vi gennemgår din anmeldelse hurtigst muligt."
+
+#. Report flow: title of the final screen when the chosen answer does not lead to a report, so nothing was sent. Thanks the person for raising it.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:46
+msgid "Thanks for flagging this"
+msgstr "Tak, fordi du gjorde os opmærksom på det"
+
+#. Report flow: body of the final screen when the chosen answer does not lead to a report, so nothing was sent. Used when the reporter already picked a category.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:62
+msgid "Thanks for telling us. This doesn't break our rules on its own, so we didn't send a report."
+msgstr "Tak, fordi du fortalte os det. Dette overtræder ikke i sig selv vores regler, så vi har ikke sendt en anmeldelse."
+
+#. Report flow: body of the final screen when the chosen answer does not lead to a report, so nothing was sent. "Abusive or harmful content" is the name of an answer in the same flow.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:56
+msgid "Thanks for telling us. This doesn't break our rules on its own, so we didn't send a report. If it targets someone or uses slurs, report it again and choose Abusive or harmful content."
+msgstr "Tak, fordi du fortalte os det. Dette overtræder ikke i sig selv vores regler, så vi har ikke sendt en anmeldelse. Hvis det er rettet mod nogen eller indeholder nedsættende udtryk, så anmeld det igen, og vælg »Krænkende eller skadeligt indhold«."
 
 #. Error in the browser when a code typed from the app is not found. instanceHost is the server the browser checked, such as api.fluxer.app. productName is the app name, such as Fluxer.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:25
@@ -35048,7 +34597,7 @@ msgstr "Det virkede ikke. Prøv igen eller annuller."
 msgid "That doesn't look like a valid color. Try hex, rgb(), hsl(), or a CSS color name."
 msgstr "Det ligner ikke en gyldig farve. Prøv hex, rgb(), hsl() eller et CSS-farvenavn."
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:175
+#: src/features/moderation/components/report/ReportStepDetails.tsx:217
 msgid "That doesn't look like a valid URL."
 msgstr "Det ligner ikke en gyldig URL."
 
@@ -35103,6 +34652,11 @@ msgstr "Appen {PRODUCT_NAME} på din anden enhed vises under \"Logger ind på en
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:327
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
 msgstr "Appen {PRODUCT_NAME} blev ikke logget ind. Du kan lukke denne fane."
+
+#. Report flow: body of the final screen after a report was sent. {productName} is the name of the app. The second sentence promises the reported person is not told who reported them.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:51
+msgid "The {productName} safety team will review your report. We won't reveal that it came from you."
+msgstr "Sikkerhedsteamet hos {productName} vil gennemgå din anmeldelse. Vi afslører ikke, at den kom fra dig."
 
 #. Description text in the FluxerTag change modal.
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:70
@@ -35308,6 +34862,11 @@ msgstr "Den angivne redirect_uri er ikke registreret for denne applikation."
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Den angivne redirect_uri skal bruge HTTP eller HTTPS."
 
+#. Report flow: toast shown when the report questions changed while the reporter was answering them.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:95
+msgid "The report form changed. Please start again."
+msgstr "Anmeldelsesformularen er ændret. Start venligst forfra."
+
 #. Activity log detail line under a deleted role, listing the permissions the role gave its members before it was deleted. The role is the subject. {permissions} is a list of permission names that the app joins with commas and the word for "and" in your language. When the list is long it ends with a count of the permissions not named, such as "3 more permissions". Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:170
 msgid "The role granted {permissions}"
@@ -35359,7 +34918,7 @@ msgid "The username tags on this instance are already set. They can no longer ch
 msgstr "Brugernavnetags på denne instans er allerede indstillet. De kan ikke længere ændres."
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
-#: src/features/moderation/components/pages/ReportPage.tsx:88
+#: src/features/moderation/components/pages/ReportPage.tsx:114
 msgid "The verification code is invalid or expired."
 msgstr "Bekræftelseskoden er ugyldig eller udløbet."
 
@@ -36115,13 +35674,8 @@ msgstr "Dette medlem er ikke længere i taleopkaldet."
 msgid "This message can only be forwarded to age-restricted channels"
 msgstr "Denne besked kan kun videresendes til kanaler med aldersbegrænsning"
 
-#. IAR modal: tooltip on the delete card when the reported message is already deleted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:122
-msgid "This message has already been deleted."
-msgstr "Denne besked er allerede blevet slettet."
-
 #. Toast shown when someone tries to publish an announcement message that was already published.
-#: src/features/messaging/commands/MessageCommands.tsx:122
+#: src/features/messaging/commands/MessageCommands.tsx:126
 msgid "This message has already been published"
 msgstr "Denne besked er allerede blevet udgivet"
 
@@ -36279,11 +35833,6 @@ msgstr "Denne tråd er lukket. Hvis du sender en besked, åbnes den igen."
 msgid "This thread is locked. Only moderators can send messages."
 msgstr "Denne tråd er låst. Kun moderatorer kan sende beskeder."
 
-#. Lowercase phrase used mid-sentence in IAR copy when referring to the reported user without a name.
-#: src/features/moderation/components/report_modal/IARModalContext.ts:26
-msgid "this user"
-msgstr "denne bruger"
-
 #: src/features/user/components/popouts/LimitedProfileNotice.tsx:10
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Denne bruger har begrænset sin profil. Nogle detaljer er skjult for personer, der ikke er deres venner."
@@ -36291,11 +35840,6 @@ msgstr "Denne bruger har begrænset sin profil. Nogle detaljer er skjult for per
 #: src/features/user/components/popouts/UserProfileShared.tsx:395
 msgid "This user has no roles in this community."
 msgstr "Denne bruger har ingen roller i dette fællesskab."
-
-#. IAR modal: tooltip on the ban card when the reported user is already banned.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:142
-msgid "This user is already banned from the community."
-msgstr "Denne bruger er allerede udelukket fra fællesskabet."
 
 #: src/features/channel/components/channel_view/DMChannelView.tsx:282
 msgid "This user is no longer available."
@@ -36465,16 +36009,6 @@ msgstr "Tråd opdateret"
 msgid "Threads"
 msgstr "Tråde"
 
-#. IAR modal: rule description for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:158
-msgid "Threats, following across spaces, or unwanted contact."
-msgstr "Trusler, forfølgelse på tværs af platforme eller uønsket kontakt."
-
-#. IAR modal: rule-category label grouping harassment, hate, violence, terrorism, raids, and self-harm content.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:44
-msgid "Threats, harassment, or harm"
-msgstr "Trusler, chikane eller skade"
-
 #. Short label in the message history threshold content. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:41
 msgid "Threshold date"
@@ -36570,7 +36104,7 @@ msgstr "Gav {targetUserTag} timeout"
 
 #. Moderation action label that times a member out (temporary mute) in a community.
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:134
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:21
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts:18
 msgid "Timeout"
 msgstr "Giv timeout"
 
@@ -36787,6 +36321,11 @@ msgstr "Tone"
 msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "Tone-map HDR-billeder til standardområde, hvilket reducerer den maksimale lysstyrke."
 
+#. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
+#: src/features/moderation/components/pages/ReportPage.tsx:95
+msgid "Too many codes sent. Wait {duration} and try again."
+msgstr "Der er sendt for mange koder. Vent {duration}, og prøv igen."
+
 #. Error message in the max guilds modal.
 #: src/features/guild/components/alerts/MaxGuildsModal.tsx:9
 msgid "Too many communities"
@@ -36860,7 +36399,7 @@ msgid "Transfer community ownership"
 msgstr "Overfør ejerskab af fællesskab"
 
 #. Confirm dialog body before transferring ownership of a group DM.
-#: src/features/ui/action_menu/UserContextMenu.tsx:105
+#: src/features/ui/action_menu/UserContextMenu.tsx:104
 msgid "Transfer group ownership to {userName}?"
 msgstr "Overfør gruppeejerskab til {userName}?"
 
@@ -37561,7 +37100,7 @@ msgstr "Fjern blokeringen først for at sende en venneanmodning."
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:106
-#: src/features/user/components/modals/UserProfileModal.tsx:118
+#: src/features/user/components/modals/UserProfileModal.tsx:121
 msgid "Unblock user"
 msgstr "Fjern blokering af bruger"
 
@@ -37606,16 +37145,6 @@ msgstr "Slå lyden til på alle enheder"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:132
 msgid "Undeafen yourself"
 msgstr "Slå lyden til igen"
-
-#. IAR modal: child-safety rule label (user reports).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:89
-msgid "Underage or child-safety concern"
-msgstr "Bruger under aldersgrænsen eller bekymring for børns sikkerhed"
-
-#. Report category label for an account that appears to belong to someone under the minimum age.
-#: src/features/moderation/components/report/OptionDescriptors.ts:78
-msgid "Underage user"
-msgstr "Bruger under aldersgrænsen"
 
 #. Selection formatting toolbar button.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -38268,16 +37797,6 @@ msgstr "Indtil jeg slår den til igen"
 msgid "Unverified email"
 msgstr "Ikke-bekræftet e-mail"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:206
-msgid "Unwanted conduct or mature content in the wrong place."
-msgstr "Uønsket adfærd eller indhold for voksne det forkerte sted."
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:214
-msgid "Unwanted mature conduct, comments, or requests."
-msgstr "Uønsket adfærd, kommentarer eller anmodninger af seksuel karakter."
-
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:608
 msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up in Discovery search."
 msgstr "Op til {DISCOVERY_MAX_TAGS} tags hjælper folk med at finde dit fællesskab. De vises i søgningen under Opdag."
@@ -38840,11 +38359,6 @@ msgstr "Brug lyst tema"
 msgid "Use native title bar"
 msgstr "Brug systemets titellinje"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:366
-msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above."
-msgstr "Brug kun, hvis det tydeligt overtræder {productName}s regler og ikke passer til ovenstående."
-
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
 msgid "Use passkeys for two-factor authentication?"
@@ -39000,11 +38514,6 @@ msgstr "Bruges kun i dette fællesskab."
 msgid "User"
 msgstr "Bruger"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:230
-msgid "User appears underage, or is involved in grooming or child exploitation."
-msgstr "Brugeren ser ud til at være under aldersgrænsen eller er involveret i grooming eller udnyttelse af børn."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:306
 msgid "User avatars"
@@ -39021,7 +38530,7 @@ msgid "User debug"
 msgstr "Fejlfinding for bruger"
 
 #. Field label on the details step of the DSA report form (user report). Optional Fluxer user snowflake ID. "ID" is conventional.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:33
+#: src/features/moderation/components/report/ReportStepDetails.tsx:32
 msgid "User ID (optional)"
 msgstr "Bruger-ID (valgfrit)"
 
@@ -39061,12 +38570,12 @@ msgstr "Brugeren blev ikke fundet"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:46
-#: src/features/user/components/modals/UserProfileModal.tsx:90
+#: src/features/user/components/modals/UserProfileModal.tsx:93
 msgid "User profile"
 msgstr "Brugerprofil"
 
 #. Short label in the user profile modal. Keep it concise. Preserve {tag}; it is inserted by code.
-#: src/features/user/components/modals/UserProfileModal.tsx:94
+#: src/features/user/components/modals/UserProfileModal.tsx:97
 msgid "User profile: {tag}"
 msgstr "Brugerprofil: {tag}"
 
@@ -39081,7 +38590,7 @@ msgid "User settings"
 msgstr "Brugerindstillinger"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:38
+#: src/features/moderation/components/report/ReportStepDetails.tsx:37
 msgid "User tag (optional)"
 msgstr "Brugertag (valgfrit)"
 
@@ -39339,7 +38848,7 @@ msgstr "Verificeret fællesskab"
 msgid "Verify"
 msgstr "Bekræft"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:91
+#: src/features/moderation/components/report/ReportStepVerification.tsx:116
 msgid "Verify code"
 msgstr "Bekræft kode"
 
@@ -39368,7 +38877,7 @@ msgstr "Bekræft, at det er dig"
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:44
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:86
 #: src/features/channel/utils/CreateDMModalUtils.tsx:52
-#: src/features/moderation/components/report/ReportStepEmail.tsx:43
+#: src/features/moderation/components/report/ReportStepEmail.tsx:49
 msgid "Verify your email"
 msgstr "Bekræft din e-mail"
 
@@ -39718,7 +39227,7 @@ msgstr "Se koder"
 #. Button or menu action label in the user profile actions sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:69
-#: src/features/user/components/modals/UserProfileModal.tsx:98
+#: src/features/user/components/modals/UserProfileModal.tsx:101
 msgid "View community profile"
 msgstr "Se fællesskabsprofil"
 
@@ -39751,7 +39260,7 @@ msgstr "Se gaver"
 #. Button or menu action label in the user profile actions sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:73
-#: src/features/user/components/modals/UserProfileModal.tsx:102
+#: src/features/user/components/modals/UserProfileModal.tsx:105
 msgid "View global profile"
 msgstr "Se global profil"
 
@@ -39846,26 +39355,6 @@ msgstr "Seer tilslutter sig stream"
 #: src/features/notification/utils/SoundLabels.ts:40
 msgid "Viewer leaves stream"
 msgstr "Seer forlader stream"
-
-#. Field label on the details step of the DSA illegal-content report form. The category dropdown narrows the type of violation. Legal/sensitive flow; keep tone formal.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:18
-msgid "Violation category"
-msgstr "Overtrædelseskategori"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:326
-msgid "Violation is in the user's profile, not a specific message."
-msgstr "Overtrædelsen er i brugerens profil, ikke en specifik besked."
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:186
-msgid "Violence or violent threats"
-msgstr "Vold eller voldelige trusler"
-
-#. Report category label for violent or graphic content. Keep tone plain and neutral.
-#: src/features/moderation/components/report/OptionDescriptors.ts:32
-msgid "Violent or graphic content"
-msgstr "Voldeligt eller stødende indhold"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:238
@@ -40421,7 +39910,7 @@ msgstr "Vi har ændret størrelsen på og komprimeret denne emoji til 128x128 pi
 msgid "We resized and compressed this sticker to 320x320 pixels, but it is still {fileSize}. The limit is {maxSize}. Try a simpler image, fewer colors, or a smaller source file."
 msgstr "Vi har ændret størrelsen på og komprimeret dette klistermærke til 320x320 pixels, men det er stadig {fileSize}. Grænsen er {maxSize}. Prøv et enklere billede, færre farver eller en mindre kildefil."
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:51
+#: src/features/moderation/components/report/ReportStepVerification.tsx:76
 msgid "We sent a code to {email}."
 msgstr "Vi har sendt en kode til {email}."
 
@@ -40472,7 +39961,7 @@ msgstr "Vi behandler dette hurtigst muligt. Du får en e-mail, når dit arkiv er
 msgid "We'll restore your previous email, sign out old sessions, disable MFA, and secure your account with a new password."
 msgstr "Vi gendanner din tidligere e-mail, logger ud af gamle sessioner, deaktiverer MFA og sikrer din konto med en ny adgangskode."
 
-#: src/features/moderation/components/report/ReportStepEmail.tsx:46
+#: src/features/moderation/components/report/ReportStepEmail.tsx:52
 msgid "We'll send a short code to confirm you can receive updates about this report."
 msgstr "Vi sender en kort kode for at bekræfte, at du kan modtage opdateringer om denne anmeldelse."
 
@@ -40714,11 +40203,6 @@ msgctxt "us-state"
 msgid "West Virginia"
 msgstr "West Virginia"
 
-#. IAR modal: category-step title for the platform-report path. User picks a broad area before drilling in.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:36
-msgid "What kind of rule was broken?"
-msgstr "Hvilken type regel blev brudt?"
-
 #. Display-name field placeholder in account registration forms.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:878
 msgid "What should people call you?"
@@ -40754,6 +40238,11 @@ msgstr "Hvad sker der?"
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:25
 msgid "What's new"
 msgstr "Nyheder"
+
+#. DSA report page: title of the reason step while its questions load or when they could not be loaded.
+#: src/features/moderation/components/report/ReportStepReason.tsx:33
+msgid "What's the reason for your report?"
+msgstr "Hvad er årsagen til din anmeldelse?"
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:66
 msgid "When a custom threshold date is not set, members without the <0>{readMessageHistoryPermissionLabel}</0> permission cannot view any historical messages. They'll only see messages in real time as they arrive, and they'll disappear when they restart their clients."
@@ -40831,11 +40320,6 @@ msgstr "Hvilke fællesskaber"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:97
 msgid "Which conversations"
 msgstr "Hvilke samtaler"
-
-#. IAR modal: reason-step title for the platform-report path after a category has been picked.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:40
-msgid "Which rule was broken?"
-msgstr "Hvilken regel blev brudt?"
 
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
@@ -41277,7 +40761,7 @@ msgid "You can't attach files in this channel."
 msgstr "Du kan ikke vedhæfte filer i denne kanal."
 
 #. Error message in the user profile modal.
-#: src/features/user/components/modals/UserProfileModal.tsx:106
+#: src/features/user/components/modals/UserProfileModal.tsx:109
 msgid "You can't befriend yourself"
 msgstr "Du kan ikke blive venner med dig selv"
 
@@ -41341,7 +40825,7 @@ msgstr "Du kan ikke sende beskeder til denne bruger"
 #. Error message in the user profile modal.
 #. Error message in the user profile popout.
 #. Error message in the user settings profile preview.
-#: src/features/user/components/modals/UserProfileModal.tsx:110
+#: src/features/user/components/modals/UserProfileModal.tsx:113
 #: src/features/user/components/popouts/UserProfilePopout.tsx:73
 #: src/features/user/components/profile/ProfilePreview.tsx:44
 msgid "You can't message yourself"
@@ -41606,7 +41090,7 @@ msgid "You must agree to the terms of service to create an account"
 msgstr "Du skal acceptere servicevilkårene for at oprette en konto"
 
 #. Inline error on the details step of the DSA report flow when the user has not completed email verification.
-#: src/features/moderation/components/pages/ReportPage.tsx:92
+#: src/features/moderation/components/pages/ReportPage.tsx:118
 msgid "You must verify your email before sending a report."
 msgstr "Du skal bekræfte din e-mail, før du kan sende en anmeldelse."
 
@@ -41891,6 +41375,11 @@ msgstr "Du har en ældre pris. Den nuværende pris for denne plan er {currentSub
 msgid "You're sending messages too quickly"
 msgstr "Du sender beskeder for hurtigt"
 
+#. Report flow: note on the summary screen when the reporter hit the report rate limit.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:108
+msgid "You're sending reports too quickly. Try again later."
+msgstr "Du sender anmeldelser for hurtigt. Prøv igen senere."
+
 #. Title of the browser page after the user approved signing in to the app.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:282
 msgid "You're signed in"
@@ -41914,6 +41403,16 @@ msgstr "Du ser ældre beskeder"
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:56
 msgid "You've added more people than a group DM allows. Remove a few and try again."
 msgstr "Du har tilføjet flere personer, end en gruppe-DM tillader. Fjern et par stykker, og prøv igen."
+
+#. Report flow: note on the summary screen when the reporter already reported this message.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:99
+msgid "You've already reported this message."
+msgstr "Du har allerede anmeldt denne besked."
+
+#. Report flow: note on the summary screen when the reporter already reported this user profile in the last day.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:103
+msgid "You've already reported this profile today."
+msgstr "Du har allerede anmeldt denne profil i dag."
 
 #. Body of the error modal shown when a self-serve refund is blocked by the cooldown period.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:51
@@ -42079,6 +41578,11 @@ msgstr "Dine konti og indstillinger er ikke blevet ændret eller slettet."
 msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Din handling kunne ikke gennemføres, da den blev markeret af vores sikkerhedssystemer. Hvis du mener, at dette er en fejl, bedes du kontakte support."
 
+#. Report flow: section heading above the list of answers the reporter picked, on the summary screen.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:26
+msgid "Your answers"
+msgstr "Dine svar"
+
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:409
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "Din ansøgning afventer gennemgang. Du kan stadig opdatere oplysningerne om dit fællesskab eller trække ansøgningen tilbage."
@@ -42089,7 +41593,7 @@ msgid "Your browser requires user interaction before audio can be played. Click 
 msgstr "Din browser kræver brugerinteraktion, før lyd kan afspilles. Klik på knappen herunder for at aktivere talechat."
 
 #. Body of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:109
+#: src/features/messaging/commands/MessageCommands.tsx:113
 msgid "Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes."
 msgstr "Dine ændringer når alle communities, der følger denne kanal, hvilket kan tage et minut. Hvert offentliggjort opslag tillader 3 hurtige redigeringer, derefter 1 hver 20. minut."
 
@@ -42311,6 +41815,11 @@ msgstr "Dit nye kaldenavn, eller lad stå tomt for at nulstille det."
 msgid "Your old recovery kit no longer works. Store this new one somewhere safe."
 msgstr "Dit gamle gendannelsessæt virker ikke længere. Opbevar dette nye et sikkert sted."
 
+#. Report flow: heading above the box of follow-up actions on the final screen.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:67
+msgid "Your options"
+msgstr "Dine muligheder"
+
 #. Recovery kit modal description shown after someone recovers their account with a recovery key.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:55
 msgid "Your password is reset. Your old recovery kit no longer works. Store this new one somewhere safe."
@@ -42369,6 +41878,11 @@ msgstr "din region"
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:494
 msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
 msgstr "Din fornyelsesbetaling mislykkedes, men <0/> forbliver aktive indtil <1>{graceDate}</1>. Opdater din betalingsmetode inden da for at beholde dit abonnement."
+
+#. Report flow: note on the summary screen when sending the report failed for an unknown reason.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:112
+msgid "Your report didn't go through. Try again."
+msgstr "Din anmeldelse blev ikke sendt. Prøv igen."
 
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
@@ -42463,11 +41977,6 @@ msgstr "Dit abonnement skifter til årlig fakturering ved næste fornyelse."
 #: src/features/theme/components/modals/ShareThemeModal.tsx:60
 msgid "Your theme CSS is too large to share. Trim it down and try again."
 msgstr "Dit temas CSS er for stor til at dele. Gør den mindre, og prøv igen."
-
-#. Field label on the details step of the DSA report form. Optional Fluxer username of the reporter so staff can follow up.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:67
-msgid "Your username (optional)"
-msgstr "Dit brugernavn (valgfrit)"
 
 #. Success toast after removing a community vanity invite URL.
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:54

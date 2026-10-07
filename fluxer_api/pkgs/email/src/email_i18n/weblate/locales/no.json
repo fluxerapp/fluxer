@@ -27,6 +27,10 @@
 		"subject": "Administrer {product_name}-bidragene dine",
 		"body": "Hei,\n\nKlikk på lenken nedenfor for å få tilgang til giverportalen din:\n\n{manageUrl}\n\nI portalen kan du administrere abonnementer, laste ned fakturaer og se bidragshistorikken din.\n\nDenne lenken utløper {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nHvis du ikke ba om denne lenken, kan du trygt ignorere denne e-posten.\n\n– {product_name}-teamet"
 	},
+	"dsa_report_resolved": {
+		"subject": "Vi har tatt en avgjørelse om {product_name}-rapporten din",
+		"body": "Hei,\n\nSikkerhetsteamet vårt har gjennomgått rapporten din i henhold til Digital Services Act (ID: {reportId}) og tatt en avgjørelse.{hasComment, select, yes {\n\nSvar fra sikkerhetsteamet:\n{publicComment}} other {}}\n\nVi deler ikke detaljer om tiltak mot en annen persons konto, fordi det er personopplysningene til den personen.\n\nHvis du er uenig i avgjørelsen, kan du klage gratis innen 60 dager. Send en e-post til {appeals_email} fra denne e-postadressen, oppgi rapport-ID-en din, og forklar hvorfor du mener avgjørelsen er feil. Hvis du befinner deg i EU, kan du også bringe tvisten inn for et sertifisert organ for utenrettslig tvisteløsning. Ingenting av dette påvirker retten din til å gå til domstolene.\n\n– Sikkerhetsteamet hos {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Bekreft e-postadressen din for en DSA-rapport",
 		"body": "Hei,\n\nBruk bekreftelseskoden nedenfor for å sende inn rapporten din i henhold til Digital Services Act på {product_name}:\n\n{code}\n\nDenne koden utløper {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nHvis du ikke ba om dette, kan du se bort fra denne e-posten.\n\n– Sikkerhetsteamet hos {product_name}"
@@ -78,6 +82,10 @@
 	"registration_approved": {
 		"subject": "{product_name}-registreringen din er godkjent",
 		"body": "Hei {username},\n\nGode nyheter! Registreringen din hos {product_name} er godkjent.\n\nDu kan nå logge inn på {product_name}-appen her:\n{channelsUrl}\n\nVelkommen til {product_name}-fellesskapet.\n\n– {product_name}-teamet"
+	},
+	"report_received": {
+		"subject": "Vi har mottatt {product_name}-rapporten din",
+		"body": "Hei,\n\nVi har mottatt rapporten din i henhold til Digital Services Act om {targetKind, select, message {en melding} user {en konto} guild {et fellesskap} other {innhold}} på {product_name}.\n\nRapport-ID: {reportId}\n\nSikkerhetsteamet vårt går gjennom rapporten din, og vi sender deg en e-post på denne adressen når vi har tatt en avgjørelse. Ta vare på denne e-posten.\n\n– Sikkerhetsteamet hos {product_name}"
 	},
 	"report_resolved": {
 		"subject": "{product_name}-rapporten din er gjennomgått",

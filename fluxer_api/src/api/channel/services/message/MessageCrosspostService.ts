@@ -8,7 +8,6 @@ import {
 	type CrosspostPropagation,
 	createCrosspostRateLimitError,
 	isCrosspostedMessage,
-	withPeekRetryAfter,
 } from '@app/api/channel/services/message/CrosspostPropagation';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
 import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
@@ -189,11 +188,8 @@ export class MessageCrosspostService {
 	private async assertBudgetAvailable(channelId: ChannelID): Promise<void> {
 		const config = this.channelBudgetConfig(channelId);
 		const peek = await this.deps.rateLimitService.peekLimit(config);
-		if (peek.remaining < 1) {
-			throw createCrosspostRateLimitError(
-				APIErrorCodes.MESSAGE_CROSSPOST_RATE_LIMITED,
-				withPeekRetryAfter(peek, config),
-			);
+		if (!peek.allowed) {
+			throw createCrosspostRateLimitError(APIErrorCodes.MESSAGE_CROSSPOST_RATE_LIMITED, peek);
 		}
 	}
 

@@ -10,9 +10,9 @@ import {AdminUserLookupService} from '@app/api/admin/services/AdminUserLookupSer
 import {AdminUserProfileService} from '@app/api/admin/services/AdminUserProfileService';
 import {AdminUserSecurityService} from '@app/api/admin/services/AdminUserSecurityService';
 import {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import {ReporterResolutionNotifier} from '@app/api/admin/services/ReporterResolutionNotifier';
 import {createChannelID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
-import {NcmecRepository} from '@app/api/csam/NcmecRepository';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
@@ -50,6 +50,7 @@ interface AdminUserServiceDeps {
 	stripe: Stripe | null;
 	reportService: ReportService;
 	storeEntitlementService: StoreEntitlementService;
+	reporterResolutionNotifier?: ReporterResolutionNotifier;
 }
 
 export class AdminUserService {
@@ -113,7 +114,9 @@ export class AdminUserService {
 			billingRepository: getBillingRepository(),
 			oauth2Tokens: new OAuth2TokenRepository(),
 			storeEntitlementService: deps.storeEntitlementService,
-			ncmecRepository: new NcmecRepository(),
+			reporterResolutionNotifier:
+				deps.reporterResolutionNotifier ??
+				new ReporterResolutionNotifier({apiContext: deps.apiContext, systemDm: null}),
 		});
 		this.contactChangeLogService = contactChangeLog;
 	}

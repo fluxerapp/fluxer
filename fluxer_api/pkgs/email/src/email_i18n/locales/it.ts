@@ -31,6 +31,10 @@ const EMAIL_I18N_IT_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Gestisci le tue donazioni a {product_name}",
 		"body": "Ciao,\n\nClicca sul link qui sotto per accedere al tuo portale donatori:\n\n{manageUrl}\n\nNel portale, puoi gestire gli abbonamenti, scaricare le fatture e visualizzare la cronologia delle tue donazioni.\n\nQuesto link scade il {expiresAt, date, full} alle {expiresAt, time, short}.\n\nSe non hai richiesto questo link, puoi ignorare tranquillamente questa email.\n\n– Il team di {product_name}"
 	},
+	"dsa_report_resolved": {
+		"subject": "Abbiamo preso una decisione sulla tua segnalazione su {product_name}",
+		"body": "Ciao,\n\nIl nostro team per la sicurezza ha esaminato la tua segnalazione ai sensi del Digital Services Act (ID: {reportId}) e ha preso una decisione.{hasComment, select, yes {\n\nRisposta dal team per la sicurezza:\n{publicComment}} other {}}\n\nNon condividiamo i dettagli delle misure adottate nei confronti dell'account di un'altra persona, perché si tratta dei suoi dati personali.\n\nSe non sei d'accordo con questa decisione, puoi presentare un ricorso gratuitamente entro 60 giorni. Invia un'email a {appeals_email} da questo indirizzo email, indica l'ID della tua segnalazione e spiega perché ritieni che la decisione sia scorretta. Se ti trovi nell'UE, puoi anche sottoporre la controversia a un organismo certificato di risoluzione extragiudiziale delle controversie. Tutto questo non pregiudica il tuo diritto di rivolgerti a un tribunale.\n\n– Il team per la sicurezza di {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Verifica la tua email per una segnalazione DSA",
 		"body": "Ciao,\n\nUsa il codice di verifica qui sotto per inviare la tua segnalazione ai sensi del Digital Services Act su {product_name}:\n\n{code}\n\nQuesto codice scade il {expiresAt, date, full} alle {expiresAt, time, short}.\n\nSe non hai richiesto questa operazione, puoi ignorare questa email.\n\n– Il team per la sicurezza di {product_name}"
@@ -82,6 +86,10 @@ const EMAIL_I18N_IT_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "La tua registrazione a {product_name} è stata approvata",
 		"body": "Ciao {username},\n\nBuone notizie: la tua registrazione a {product_name} è stata approvata.\n\nOra puoi accedere all'app {product_name} qui:\n{channelsUrl}\n\nBenvenuto nella community di {product_name}.\n\n– Il team di {product_name}"
+	},
+	"report_received": {
+		"subject": "Abbiamo ricevuto la tua segnalazione su {product_name}",
+		"body": "Ciao,\n\nAbbiamo ricevuto la tua segnalazione ai sensi del Digital Services Act relativa a {targetKind, select, message {un messaggio} user {un account} guild {una community} other {un contenuto}} su {product_name}.\n\nID segnalazione: {reportId}\n\nIl nostro team per la sicurezza esaminerà la tua segnalazione e ti scriveremo a questo indirizzo quando avremo preso una decisione. Conserva questa email per riferimento futuro.\n\n– Il team per la sicurezza di {product_name}"
 	},
 	"report_resolved": {
 		"subject": "La tua segnalazione {product_name} è stata esaminata",

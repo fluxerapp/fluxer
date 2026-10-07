@@ -8,6 +8,7 @@ use crate::{
         flash::{self, FlashData},
     },
     state::AppState,
+    templates::components::message_list::MessageActions,
     utils::forms::MultiValueForm,
 };
 use axum::{
@@ -321,7 +322,11 @@ pub(crate) async fn messages_browse_fragment(
         .as_ref()
         .map(|user| user.acls.as_slice())
         .unwrap_or(&[]);
-    let can_delete = acl::has_permission(admin_acls, acl::MESSAGE_DELETE);
+    let actions = MessageActions {
+        delete: acl::has_permission(admin_acls, acl::MESSAGE_DELETE),
+        ncmec: acl::has_all_permissions(admin_acls, acl::NCMEC_ATTACHMENT_REPORT),
+        source_report_id: None,
+    };
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let result = client
         .browse_channel(
@@ -334,7 +339,7 @@ pub(crate) async fn messages_browse_fragment(
     match result {
         Ok(resp) => {
             let markup = crate::templates::pages::messages_page::browse_messages_fragment(
-                config, &resp.data, can_delete, None,
+                config, &resp.data, actions, None,
             );
             Html(markup.into_string()).into_response()
         }

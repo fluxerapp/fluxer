@@ -1,0 +1,23 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.banner {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.625rem;
+	padding: 0.75rem 0.875rem;
+	border: 0.0625rem solid color-mix(in srgb, var(--alert-note-color) 50%, transparent);
+	border-radius: var(--radius-lg);
+	background-color: color-mix(in srgb, var(--alert-note-color) 10%, transparent);
+}
+
+.icon {
+	flex-shrink: 0;
+	color: var(--alert-note-color);
+}
+
+.text {
+	margin: 0;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}

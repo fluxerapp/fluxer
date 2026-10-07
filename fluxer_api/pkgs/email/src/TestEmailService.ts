@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ReportReceivedTargetKind} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {ITestEmailService, SentEmailRecord} from '@pkgs/email/src/ITestEmailService';
 
 function maskToken(token: string): string {
@@ -226,6 +227,26 @@ export class TestEmailService implements ITestEmailService {
 	): Promise<boolean> {
 		this.logger.info(`Report resolved email sent to ${email} for user ${username}, report: ${reportId}`);
 		return this.record(email, 'report_resolved', {report_id: reportId, public_comment: publicComment});
+	}
+
+	async sendDsaReportResolvedEmail(
+		email: string,
+		reportId: string,
+		publicComment: string,
+		_locale?: string | null,
+	): Promise<boolean> {
+		this.logger.info(`DSA report resolved email sent to ${email}, report: ${reportId}`);
+		return this.record(email, 'dsa_report_resolved', {report_id: reportId, public_comment: publicComment});
+	}
+
+	async sendReportReceivedEmail(
+		email: string,
+		reportId: string,
+		targetKind: ReportReceivedTargetKind,
+		_locale?: string | null,
+	): Promise<boolean> {
+		this.logger.info(`Report received email sent to ${email}, report: ${reportId}`);
+		return this.record(email, 'report_received', {report_id: reportId, target_kind: targetKind});
 	}
 
 	async sendDsaReportVerificationCode(

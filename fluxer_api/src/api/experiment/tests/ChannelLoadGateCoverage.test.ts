@@ -16,7 +16,7 @@ const EXPECTED_LOADS: Readonly<Record<string, readonly [number, Coverage]>> = {
 	'admin/controllers/ThreadAdminController.ts': [1, 'admin_or_system'],
 	'admin/services/AdminAuditService.ts': [1, 'admin_or_system'],
 	'admin/services/AdminMessageService.ts': [4, 'admin_or_system'],
-	'admin/services/AdminReportService.ts': [4, 'gated'],
+	'admin/services/AdminReportService.ts': [4, 'admin_or_system'],
 	'channel/ChannelRepository.ts': [1, 'admin_or_system'],
 	'channel/services/AttachmentUploadService.ts': [1, 'gated'],
 	'channel/services/BaseChannelAuthService.ts': [4, 'gated'],

@@ -14,7 +14,7 @@ import {
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes, MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
-import type {IRateLimitService, RateLimitConfig, RateLimitResult} from '@pkgs/rate_limit/src/IRateLimitService';
+import type {IRateLimitService, RateLimitResult} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {z} from 'zod';
 
@@ -114,18 +114,6 @@ function crosspostPurgeMarkerKey(messageId: MessageID | string): string {
 
 export async function isCrosspostSourcePurged(messageId: MessageID): Promise<boolean> {
 	return (await getKVClient().exists(crosspostPurgeMarkerKey(messageId))) > 0;
-}
-
-export function withPeekRetryAfter(result: RateLimitResult, config: RateLimitConfig): RateLimitResult {
-	const leakPerMs = config.maxAttempts / config.windowMs;
-	const retryAfterMs = Math.max(1, Math.ceil(result.resetAfterDecimal * 1000 - (config.maxAttempts - 1) / leakPerMs));
-	return {
-		...result,
-		allowed: false,
-		remaining: 0,
-		retryAfter: Math.max(1, Math.ceil(retryAfterMs / 1000)),
-		retryAfterDecimal: retryAfterMs / 1000,
-	};
 }
 
 export function createCrosspostRateLimitError(code: string, result: RateLimitResult): RateLimitError {
@@ -251,11 +239,8 @@ export class CrosspostPropagation {
 		}
 		const config = {identifier: publishedEditRateLimitIdentifier(fresh.id), ...PUBLISHED_MESSAGE_EDIT_RATE_LIMIT};
 		const peek = await this.deps.rateLimitService.peekLimit(config);
-		if (peek.remaining < 1) {
-			throw createCrosspostRateLimitError(
-				APIErrorCodes.PUBLISHED_MESSAGE_EDIT_RATE_LIMITED,
-				withPeekRetryAfter(peek, config),
-			);
+		if (!peek.allowed) {
+			throw createCrosspostRateLimitError(APIErrorCodes.PUBLISHED_MESSAGE_EDIT_RATE_LIMITED, peek);
 		}
 		const result = await write();
 		await this.deps.rateLimitService.checkLimit(config);

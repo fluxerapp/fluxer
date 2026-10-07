@@ -189,9 +189,12 @@ function buildReportFilters(filters: ReportSearchFilters): Array<MeilisearchFilt
 	if (filters.status !== undefined) clauses.push(meiliTermFilter('status', filters.status));
 	if (filters.reportType !== undefined) clauses.push(meiliTermFilter('reportType', filters.reportType));
 	if (filters.category) clauses.push(meiliTermFilter('category', filters.category));
+	if (filters.reason) clauses.push(meiliTermFilter('reason', filters.reason));
 	if (filters.reportedUserId) clauses.push(meiliTermFilter('reportedUserId', filters.reportedUserId));
+	if (filters.reportedWebhookId) clauses.push(meiliTermFilter('reportedWebhookId', filters.reportedWebhookId));
 	if (filters.reportedGuildId) clauses.push(meiliTermFilter('reportedGuildId', filters.reportedGuildId));
 	if (filters.reportedMessageId) clauses.push(meiliTermFilter('reportedMessageId', filters.reportedMessageId));
+	if (filters.reportedChannelId) clauses.push(meiliTermFilter('reportedChannelId', filters.reportedChannelId));
 	if (filters.guildContextId) clauses.push(meiliTermFilter('guildContextId', filters.guildContextId));
 	if (filters.resolvedByAdminId) clauses.push(meiliTermFilter('resolvedByAdminId', filters.resolvedByAdminId));
 	if (filters.isResolved !== undefined)

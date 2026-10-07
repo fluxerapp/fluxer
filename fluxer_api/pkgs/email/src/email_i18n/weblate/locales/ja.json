@@ -27,6 +27,10 @@
 		"subject": "{product_name}への寄付を管理",
 		"body": "こんにちは。\n\n以下のリンクをクリックして、寄付者ポータルにアクセスしてください。\n\n{manageUrl}\n\nポータルでは、サブスクリプションの管理、請求書のダウンロード、寄付履歴の表示ができます。\n\nこのリンクの有効期限は{expiresAt, date, full} {expiresAt, time, short}です。\n\nこのリンクをリクエストしていない場合は、このメールを無視して問題ありません。\n\n– {product_name}チーム"
 	},
+	"dsa_report_resolved": {
+		"subject": "{product_name}への報告について決定しました",
+		"body": "こんにちは。\n\nデジタルサービス法に基づくご報告（ID: {reportId}）を安全チームが審査し、決定を行いました。{hasComment, select, yes {\n\n安全チームからの回答:\n{publicComment}} other {}}\n\n他の方のアカウントに対して行った措置の詳細は、その方の個人データにあたるため、お伝えしていません。\n\nこの決定に同意できない場合は、60日以内に無料で異議申し立てを行えます。このメールアドレスから{appeals_email}までメールを送信し、報告IDを記載のうえ、決定が誤っていると考える理由を説明してください。EU域内にお住まいの場合は、認定を受けた裁判外紛争解決機関に紛争を付託することもできます。これらはいずれも、裁判所に訴える権利に影響しません。\n\n– {product_name}安全チーム"
+	},
 	"dsa_report_verification": {
 		"subject": "DSA報告のためのメールアドレスを確認",
 		"body": "こんにちは。\n\n以下の確認コードを使用して、{product_name}でデジタルサービス法に基づく報告を提出してください。\n\n{code}\n\nこのコードの有効期限は{expiresAt, date, full} {expiresAt, time, short}です。\n\nご自身でリクエストしていない場合は、このメールを無視して問題ありません。\n\n– {product_name}安全チーム"
@@ -78,6 +82,10 @@
 	"registration_approved": {
 		"subject": "{product_name}の登録が承認されました",
 		"body": "こんにちは、{username}さん\n\n良いお知らせです。{product_name}の登録が承認されました。\n\nこちらから{product_name}アプリにログインできます。\n{channelsUrl}\n\n{product_name}コミュニティへようこそ。\n\n– {product_name}チーム"
+	},
+	"report_received": {
+		"subject": "{product_name}への報告を受け付けました",
+		"body": "こんにちは。\n\n{product_name}上の{targetKind, select, message {メッセージ} user {アカウント} guild {コミュニティ} other {コンテンツ}}に関する、デジタルサービス法に基づく報告を受け付けました。\n\n報告ID: {reportId}\n\n安全チームが報告を審査し、決定が出ましたらこのメールアドレス宛にご連絡します。このメールは記録として保管してください。\n\n– {product_name}安全チーム"
 	},
 	"report_resolved": {
 		"subject": "{product_name}への報告の審査が完了しました",

@@ -2081,7 +2081,7 @@ msgstr "還剩 {remainingSlotCount} 個"
 #: src/features/channel/components/CrosspostCommunityCard.tsx:247
 #: src/features/channel/components/InviteEmbed.tsx:250
 #: src/features/channel/components/InviteEmbed.tsx:358
-#: src/features/channel/components/InviteEmbed.tsx:629
+#: src/features/channel/components/InviteEmbed.tsx:627
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, one {位成員} other {位成員}}"
 
@@ -2134,7 +2134,7 @@ msgid "{seconds, plural, one {Your invite link expires in # second.} other {Your
 msgstr "{seconds, plural, one {您的邀請連結將於 # 秒後過期。} other {您的邀請連結將於 # 秒後過期。}}"
 
 #. Generic multi-select summary label. selectedCount is the number of selected options.
-#: src/features/ui/components/form/FormCombobox.tsx:80
+#: src/features/ui/components/form/FormCombobox.tsx:81
 msgid "{selectedCount} selected"
 msgstr "已選取 {selectedCount} 個"
 
@@ -2957,11 +2957,6 @@ msgstr "帳號資料"
 msgid "Account details unavailable"
 msgstr "帳號詳細資料無法取得"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:258
-msgid "Account exists to spam, scam, or abuse the platform."
-msgstr "此帳號用於發送垃圾訊息、詐騙或濫用平台。"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:124
 msgid "Account removal"
@@ -3639,11 +3634,6 @@ msgstr "新增日期：{createdDate}"
 msgid "Added: {createdDate} • last used: {lastUsedDate}"
 msgstr "新增日期：{createdDate} • 上次使用：{lastUsedDate}"
 
-#. Field label on the details step of the DSA report form. Optional free-text context the reporter wants staff to see.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:72
-msgid "Additional comments (optional)"
-msgstr "其他意見（選填）"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:26
@@ -4186,8 +4176,8 @@ msgstr "已兌換"
 msgid "Already set to cancel"
 msgstr "已排定取消"
 
-#. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:94
+#. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
+#: src/features/messaging/commands/MessageCommands.tsx:98
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "同時將此訊息檢舉給 {productName} 安全團隊"
 
@@ -4575,11 +4565,6 @@ msgstr "每年"
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:274
 msgid "Another checkbox"
 msgstr "另一個核取方塊"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:362
-msgid "Another clear rule violation"
-msgstr "另一個明顯違反規定的行為"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:301
 msgid "Another round checkbox"
@@ -5247,7 +5232,7 @@ msgid "Audio upload"
 msgstr "上傳音訊"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:111
+#: src/features/moderation/components/report/OptionDescriptors.ts:24
 msgid "Austria"
 msgstr "奧地利"
 
@@ -5620,6 +5605,7 @@ msgstr "目前離開中"
 
 #. Accessible label of the back button on the Plutonium page in the mobile layout.
 #. Generic secondary button label that returns to the previous step or screen.
+#. Report flow: footer button that returns to the previous question.
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:164
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:167
@@ -5628,7 +5614,8 @@ msgstr "目前離開中"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:381
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:401
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
-#: src/features/moderation/components/report/ReportStepDetails.tsx:312
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:34
+#: src/features/moderation/components/report/ReportStepDetails.tsx:374
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
 msgid "Back"
 msgstr "返回"
@@ -5788,9 +5775,7 @@ msgstr "備用碼已重新產生"
 msgid "Badge"
 msgstr "徽章"
 
-#. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:134
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts:5
 msgid "Ban"
 msgstr "停權"
@@ -5819,7 +5804,7 @@ msgstr "停權期間"
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:274
-#: src/features/ui/action_menu/GuildMemberContextMenu.tsx:67
+#: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:124
 msgid "Ban member"
@@ -5840,20 +5825,10 @@ msgstr "將成員從社群停權，並可選擇刪除他們近期的訊息。"
 msgid "Ban reason"
 msgstr "停權原因"
 
-#. IAR modal: quick-action card title for banning the reported user (moderator-only).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:126
-msgid "Ban this user"
-msgstr "將此使用者停權"
-
 #. Section heading in the voice connection status popout for current media bitrate usage.
 #: src/features/voice/components/voice_connection_status/shared.ts:67
 msgid "Bandwidth"
 msgstr "頻寬"
-
-#. IAR modal: disabled-state label on the ban card after the user is banned from this community.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:138
-msgid "Banned"
-msgstr "已停權"
 
 #: src/features/moderation/components/modals/BanMemberModal.tsx:134
 msgid "Banned {targetUserTag} from the community"
@@ -5937,7 +5912,7 @@ msgid "Before date"
 msgstr "此日期之前"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:115
+#: src/features/moderation/components/report/OptionDescriptors.ts:28
 msgid "Belgium"
 msgstr "比利時"
 
@@ -6031,7 +6006,7 @@ msgstr "位元率"
 
 #. Generic destructive action label that blocks a user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:25
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts:22
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:14
 msgid "Block"
 msgstr "封鎖"
@@ -6041,6 +6016,11 @@ msgstr "封鎖"
 msgctxt "sensitive-media-filter-level"
 msgid "Block"
 msgstr "隱藏"
+
+#. Report flow: title of the block action on the final screen. {name} is the display name of the reported user.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:71
+msgid "Block {name}"
+msgstr "封鎖 {name}"
 
 #. Body of the destructive confirmation modal for blocking a user. Explains the consequences. {userName} is the target user.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:90
@@ -6087,11 +6067,6 @@ msgstr "在所有社群中封鎖"
 msgid "Block spoiler"
 msgstr "區塊劇透"
 
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:386
-msgid "Block this user"
-msgstr "封鎖此使用者"
-
 #. Title of the destructive confirmation modal for blocking a user. Short command title.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:86
 msgid "Block user"
@@ -6099,6 +6074,12 @@ msgstr "封鎖使用者"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:10
+msgid "Blocked"
+msgstr "已封鎖"
+
+#. Report flow: disabled button label shown after the reporter blocked the one reported user. A state of that single person, not a list of blocked users. Use the singular or an impersonal past participle.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:81
+msgctxt "report-flow-blocked-button"
 msgid "Blocked"
 msgstr "已封鎖"
 
@@ -6505,7 +6486,7 @@ msgid "Built-in translators"
 msgstr "內建翻譯工具"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:119
+#: src/features/moderation/components/report/OptionDescriptors.ts:32
 msgid "Bulgaria"
 msgstr "保加利亞"
 
@@ -6518,16 +6499,6 @@ msgstr "保加利亞文"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:230
 msgid "Bulk delete"
 msgstr "批次刪除"
-
-#. IAR modal: rule description for a message report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:150
-msgid "Bullying, repeated unwanted contact, stalking, or targeted abuse."
-msgstr "霸凌、反覆的不受歡迎聯繫、跟蹤騷擾或針對性攻擊。"
-
-#. IAR modal: rule-category description for the targeted-harm group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:49
-msgid "Bullying, threats, hate, violence, raids, or content that pushes self-harm."
-msgstr "霸凌、威脅、仇恨、暴力、突襲，或助長自殘的內容。"
 
 #. Short label in the app constants.
 #: src/features/app/constants/AppConstants.ts:45
@@ -6639,11 +6610,6 @@ msgstr "加利福尼亞州"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
 msgid "Call"
 msgstr "通話"
-
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:438
-msgid "Call & group chat settings"
-msgstr "通話與群組聊天設定"
 
 #. Status label in the mobile direct-call lobby bottom sheet. Indicates an ongoing call you can join.
 #. Status text in the DM channel header pill when an ongoing call exists that the user can join.
@@ -7131,7 +7097,7 @@ msgstr "更換封面"
 msgid "Change chat embed background"
 msgstr "變更聊天嵌入背景圖片"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:119
+#: src/features/moderation/components/report/ReportStepVerification.tsx:150
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:97
 msgid "Change email"
 msgstr "變更電子郵件"
@@ -7150,8 +7116,8 @@ msgstr "更改好友的暱稱"
 
 #. Group DM action that opens the change-nickname modal for the selected user.
 #. Group DM action that opens the change-nickname modal for the selected user.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:97
-#: src/features/ui/action_menu/UserContextMenu.tsx:113
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:96
+#: src/features/ui/action_menu/UserContextMenu.tsx:112
 msgid "Change group nickname"
 msgstr "變更群組暱稱"
 
@@ -7193,7 +7159,7 @@ msgid "Change language"
 msgstr "變更語言"
 
 #. Group DM action that lets the current user change their own nickname in the group.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:89
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:88
 msgid "Change my group nickname"
 msgstr "變更我的群組暱稱"
 
@@ -7218,7 +7184,7 @@ msgid "Change own nickname"
 msgstr "變更自己的暱稱"
 
 #. Action that transfers ownership of the selected group or community.
-#: src/features/ui/action_menu/UserContextMenu.tsx:101
+#: src/features/ui/action_menu/UserContextMenu.tsx:100
 msgid "Change owner"
 msgstr "變更擁有者"
 
@@ -7282,16 +7248,6 @@ msgstr "更改語音頻道使用的語音區域。"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:322
 msgid "Change which voice region this channel uses."
 msgstr "更改此頻道使用的語音區域。"
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:442
-msgid "Change who can call or add you."
-msgstr "變更誰可以與您通話或加您為好友。"
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:430
-msgid "Change who can reach you."
-msgstr "變更誰可以聯絡您。"
 
 #. Short label in the email change modal. Keep it concise.
 #: src/features/user/components/modals/EmailChangeModal.tsx:39
@@ -7860,6 +7816,11 @@ msgstr "請查看 {emailAddress} 收件匣中的授權連結。"
 msgid "Check your inbox for a verification email."
 msgstr "請查看收件匣中的驗證電子郵件。"
 
+#. Report flow: title of the summary screen shown before the report is sent.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:5
+msgid "Check your report"
+msgstr "檢查您的檢舉"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:250
 msgid "Checkboxes"
 msgstr "核取方塊"
@@ -7901,21 +7862,6 @@ msgstr "此帳號無法使用結帳功能。如需協助，請聯絡 {supportEma
 msgid "Checkout unavailable"
 msgstr "無法結帳"
 
-#. Report category label for content endangering minors. Keep tone calm and serious; this is a safety surface.
-#: src/features/moderation/components/report/OptionDescriptors.ts:57
-msgid "Child safety concerns"
-msgstr "兒童安全疑慮"
-
-#. IAR modal: child-safety rule label (message and guild reports).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:85
-msgid "Child safety or exploitation of minors"
-msgstr "兒童安全或未成年人剝削"
-
-#. IAR modal: rule-category label grouping child-safety and mature-content reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:53
-msgid "Child safety or mature content"
-msgstr "兒童安全或成人內容"
-
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:140
 msgid "Chinese (simplified)"
@@ -7941,7 +7887,7 @@ msgstr "選項"
 msgid "Choices: {choiceList}"
 msgstr "選項：{choiceList}"
 
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:27
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:36
 msgid "Choose"
 msgstr "選擇"
 
@@ -8122,6 +8068,11 @@ msgstr "選擇最符合您社群的類別。您可以隨時變更。"
 msgid "Choose the premium model"
 msgstr "選擇進階方案模式"
 
+#. Button on the details step of the DSA report form, shown when the server no longer accepts the chosen reason. Reloads the questions and returns to the reason step.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:80
+msgid "Choose the reason again"
+msgstr "再選一次原因"
+
 #. Empty-state title in the screen-share picker displays tab when running in a web browser.
 #: src/features/voice/components/modals/screen_share_picker_modal/useNativePickerCopy.ts:20
 msgid "Choose the screen in your browser"
@@ -8271,8 +8222,8 @@ msgstr "領取禮物"
 msgid "Claim your account"
 msgstr "認領您的帳號"
 
-#. IAR modal: body of the account-not-ready notice.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:28
+#. Report flow: body of the notice on the summary screen when the account cannot send reports yet.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:124
 msgid "Claim your account and verify your email to send reports."
 msgstr "請先認領帳號並驗證電子郵件，才能傳送檢舉。"
 
@@ -8352,12 +8303,12 @@ msgstr "認領您的帳號即可兌換此禮物。"
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:70
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:37
 #: src/features/ui/action_menu/items/RelationshipMenuItems.tsx:40
-#: src/features/user/components/modals/UserProfileModal.tsx:122
+#: src/features/user/components/modals/UserProfileModal.tsx:125
 msgid "Claim your account to send friend requests."
 msgstr "請先認領帳號，才能傳送好友邀請。"
 
-#. IAR modal: body of the account-not-ready notice on an instance where people sign in with a username.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:32
+#. Report flow: body of the notice on the summary screen when the account cannot send reports yet, on an instance where people sign in with a username.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:128
 msgid "Claim your account to send reports."
 msgstr "領取你的帳號即可傳送檢舉。"
 
@@ -8377,11 +8328,6 @@ msgstr "請先認領帳號，才能開始或加入一對一通話。"
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:41
 msgid "Claim your gift to activate your {premiumProductName} subscription!"
 msgstr "領取您的禮物，啟用您的 {premiumProductName} 訂閱！"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:318
-msgid "Claiming to be another person, brand, or organization."
-msgstr "假冒他人、品牌或組織。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
@@ -8501,7 +8447,7 @@ msgstr "清除搜尋輸入"
 #. Accessible label for the combobox clear button.
 #. Button or menu action label in the authorized apps tab. Keep it concise.
 #. Button or menu action label in the devices tab. Keep it concise.
-#: src/features/ui/components/form/FormCombobox.tsx:92
+#: src/features/ui/components/form/FormCombobox.tsx:93
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:46
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:62
 msgid "Clear selection"
@@ -8733,11 +8679,6 @@ msgstr "關閉視窗"
 msgid "Close popout"
 msgstr "關閉子母畫面"
 
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:406
-msgid "Close this DM"
-msgstr "關閉此私訊"
-
 #. Body of the close confirmation alert for a group DM. Reassures that the DM can be reopened.
 #: src/features/channel/components/direct_message/useDMListItemHandlers.tsx:54
 msgid "Close this group DM? You can reopen it anytime."
@@ -8765,13 +8706,8 @@ msgstr "關閉至系統匣"
 msgid "Close window"
 msgstr "關閉視窗"
 
-#. Confirmation copy in the IAR modal for the Close DM quick action. Reassures the user the action is not destructive.
-#: src/features/moderation/components/report_modal/IARModal.tsx:67
-msgid "Close your current DM with {dmDisplayName}. This does not block the user, and you can reopen the DM later."
-msgstr "關閉您與 {dmDisplayName} 目前的私訊。這不會封鎖該使用者，您之後也可以重新開啟私訊。"
-
 #. Confirm dialog body before closing a DM channel.
-#: src/features/ui/action_menu/UserContextMenu.tsx:109
+#: src/features/ui/action_menu/UserContextMenu.tsx:108
 msgid "Close your DM with {displayName}? You can reopen it anytime."
 msgstr "要關閉您與 {displayName} 的私訊嗎？您可以隨時重新開啟。"
 
@@ -8837,7 +8773,7 @@ msgstr "煤炭主題"
 #. Generic field label for a short verification or backup code the user types in.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:858
 #: src/features/invite/components/InviteListItem.tsx:77
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:29
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:38
 msgid "Code"
 msgstr "驗證碼"
 
@@ -8868,7 +8804,7 @@ msgstr "來自 {productName} 應用程式的驗證碼"
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Success toast on the verification step of the DSA report flow after resending the email verification code.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
-#: src/features/moderation/components/pages/ReportPage.tsx:62
+#: src/features/moderation/components/pages/ReportPage.tsx:83
 msgid "Code resent"
 msgstr "已重新傳送驗證碼"
 
@@ -9090,14 +9026,12 @@ msgid "Communities you can join"
 msgstr "你可以加入的社群"
 
 #. Community settings sidebar category grouping discovery and the vanity URL.
-#. Developer / debug surface — keep terse and technical. Fallback label used in the IAR preview tool when no community context is supplied.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
 #. Generic label for a community. Used as a field label, filter label, or fallback community name.
 #. Tag shown next to messages copied from a followed announcement channel. Keep it one short word.
 #: src/features/channel/components/ChannelUserTag.tsx:27
 #: src/features/channel/components/modals/ChannelFollowModal.tsx:44
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:882
-#: src/features/moderation/components/report_modal/IARModalPreview.tsx:16
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:223
 msgid "Community"
 msgstr "社群"
@@ -9131,7 +9065,7 @@ msgstr "社群耳機靜音"
 #. Title of the developer-mode community debug modal.
 #. Title of the developer-mode community debug modal.
 #: src/features/ui/action_menu/items/DebugMenuItems.tsx:27
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:81
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:78
 msgid "Community debug"
 msgstr "社群偵錯"
 
@@ -9150,16 +9084,6 @@ msgstr "社群已刪除"
 msgid "Community DM"
 msgstr "社群私訊"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:262
-msgid "Community exists to spam, scam, or abuse the platform."
-msgstr "社群的存在是為了濫發訊息、詐騙或濫用平台。"
-
-#. IAR modal: rule description for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:166
-msgid "Community facilitates pile-ons or targeted abuse."
-msgstr "社群助長群體圍攻或針對性騷擾。"
-
 #. Form label for the dropdown that switches the community filter between exclude and include-only modes.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:165
 msgid "Community filter"
@@ -9171,11 +9095,11 @@ msgid "Community icon"
 msgstr "社群圖示"
 
 #. Field label on the details step of the DSA report form (community report). The reported community's snowflake ID.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:43
+#: src/features/moderation/components/report/ReportStepDetails.tsx:42
 msgid "Community ID"
 msgstr "社群 ID"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:237
+#: src/features/moderation/components/report/ReportStepDetails.tsx:283
 msgid "Community ID is required."
 msgstr "必須填寫社群 ID。"
 
@@ -9526,6 +9450,11 @@ msgstr "確認新密碼"
 msgid "Confirm password"
 msgstr "確認密碼"
 
+#. Inline validation error on the details step of the DSA report flow when the good-faith statement checkbox is not ticked.
+#: src/features/moderation/components/pages/ReportPage.tsx:128
+msgid "Confirm the statement to send the report."
+msgstr "請確認聲明以送出檢舉。"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:30
@@ -9816,16 +9745,6 @@ msgstr "在瀏覽器中繼續"
 msgid "Continue to checkout"
 msgstr "繼續結帳"
 
-#. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:37
-msgid "Continue to report community"
-msgstr "繼續檢舉社群"
-
-#. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:27
-msgid "Continue to report user"
-msgstr "繼續檢舉使用者"
-
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:343
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:356
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:379
@@ -9926,11 +9845,6 @@ msgstr "將此頻道轉換為文字頻道將會移除所有追蹤它的頻道。
 msgid "Converts incoming content to speech, regardless of whether it came from /tts."
 msgstr "將收到的內容轉換為語音，無論是否來自 /tts。"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:342
-msgid "Coordinates raids, brigading, or harassment against people or communities."
-msgstr "協調對個人或社群發動突襲、集體圍攻或騷擾。"
-
 #. Generic short status label confirming a value was copied to the clipboard.
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:395
@@ -9960,7 +9874,6 @@ msgstr "已將網址複製到剪貼簿"
 #. Button or menu action label in the gift inventory tab. Keep it concise.
 #. Button that copies account backup codes to the clipboard.
 #. Button that copies the account recovery key to the clipboard.
-#. IAR modal: quick-action card button label.
 #. Native Edit menu item that copies the selection to the clipboard. Imperative verb, not the noun.
 #. Short label in the settings dialog copy link section.
 #. Textarea right-click context menu item that copies the selected text.
@@ -9968,7 +9881,6 @@ msgstr "已將網址複製到剪貼簿"
 #: src/features/auth/components/modals/BackupCodesModal.tsx:96
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:417
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:402
 #: src/features/platform/utils/DesktopLocaleBridge.ts:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:73
@@ -10203,11 +10115,9 @@ msgid "Copy message ID"
 msgstr "複製訊息 ID"
 
 #. Generic action label that copies a permalink to the selected message.
-#. IAR modal: quick-action card title.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:532
 #: src/features/input/state/input_keybind/shared.ts:290
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:394
 msgid "Copy message link"
 msgstr "複製訊息連結"
 
@@ -10643,6 +10553,11 @@ msgstr "無法載入貼文。請稍後再試。"
 msgid "Couldn't load settings"
 msgstr "無法載入設定"
 
+#. Report flow: error shown when the report questions could not be loaded. A Try again button follows.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:91
+msgid "Couldn't load the report form."
+msgstr "無法載入檢舉表單。"
+
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:585
 msgid "Couldn't load this application"
 msgstr "無法載入此應用程式"
@@ -10696,7 +10611,7 @@ msgid "Couldn't process image"
 msgstr "無法處理圖片"
 
 #. Title of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:126
+#: src/features/messaging/commands/MessageCommands.tsx:130
 msgid "Couldn't publish this message"
 msgstr "無法發布此訊息"
 
@@ -10824,11 +10739,6 @@ msgstr "無法傳送邀請"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:718
 msgid "Couldn't send invite. Try again."
 msgstr "無法傳送邀請。請再試一次。"
-
-#. Error toast in the IAR modal when the report submission fails. Keep tone plain and short.
-#: src/features/moderation/components/report_modal/IARModal.tsx:80
-msgid "Couldn't send it. Try again."
-msgstr "傳送失敗。請再試一次。"
 
 #. Body of the generic fallback friend-request error modal.
 #. Generic error toast when sending a friend request fails with no recognized API error code.
@@ -10993,7 +10903,7 @@ msgid "Countdown timer"
 msgstr "倒數計時器"
 
 #. Field label on the details step of the DSA report form. The country where the reporter resides, used for the legal declaration.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:62
+#: src/features/moderation/components/report/ReportStepDetails.tsx:70
 msgid "Country of residence"
 msgstr "居住國家/地區"
 
@@ -11301,13 +11211,8 @@ msgstr "建立時間："
 msgid "Credentials"
 msgstr "登入憑證"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:190
-msgid "Credible threats, graphic violence, or glorification of violence."
-msgstr "可信的威脅、露骨的暴力內容或美化暴力。"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:123
+#: src/features/moderation/components/report/OptionDescriptors.ts:36
 msgid "Croatia"
 msgstr "克羅埃西亞"
 
@@ -11735,7 +11640,7 @@ msgid "Cuts audio below a loudness threshold with minimal CPU usage."
 msgstr "切除低於響度閾值的音訊，CPU 用量極低。"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:127
+#: src/features/moderation/components/report/OptionDescriptors.ts:40
 msgid "Cyprus"
 msgstr "賽普勒斯"
 
@@ -11745,7 +11650,7 @@ msgid "Czech"
 msgstr "捷克文"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:131
+#: src/features/moderation/components/report/OptionDescriptors.ts:44
 msgid "Czech Republic"
 msgstr "捷克"
 
@@ -11965,7 +11870,7 @@ msgstr "偵錯頻道"
 #. Developer-mode action that opens the community debug modal.
 #. Developer-mode action that opens the community debug modal.
 #: src/features/ui/action_menu/items/DebugMenuItems.tsx:31
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:93
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:90
 msgid "Debug community"
 msgstr "偵錯社群"
 
@@ -12151,7 +12056,6 @@ msgstr "德拉瓦州"
 #. Confirm button label on the destructive delete-saved-media alert.
 #. Danger button label that confirms deleting a custom emoji.
 #. Destructive action label. Surface varies, see surrounding code for the specific object being deleted.
-#. IAR modal: quick-action card button label for deleting the reported message.
 #. Native Edit menu item that deletes the current selection. Imperative verb.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -12163,8 +12067,7 @@ msgstr "德拉瓦州"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:90
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:114
+#: src/features/messaging/commands/MessageCommands.tsx:94
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
@@ -12411,18 +12314,13 @@ msgstr "刪除主題？"
 msgid "Delete this invite? Can't be undone."
 msgstr "要刪除此邀請嗎？此動作無法復原。"
 
-#. IAR modal: quick-action card title for deleting the reported message (moderator-only).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:106
-msgid "Delete this message"
-msgstr "刪除此訊息"
-
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:86
+#: src/features/messaging/commands/MessageCommands.tsx:90
 msgid "Delete this message? Can't be undone."
 msgstr "要刪除這則訊息嗎？此動作無法復原。"
 
 #. Body of the delete confirmation for a message that was published from an announcement channel to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:99
+#: src/features/messaging/commands/MessageCommands.tsx:103
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "刪除此訊息？無法復原。此訊息也會從所有追蹤此頻道的社群中移除。"
 
@@ -12460,11 +12358,6 @@ msgstr "要刪除您在此社群中的訊息嗎？"
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx:21
 msgid "Delete your messages in this conversation?"
 msgstr "要刪除您在此對話中的所有訊息嗎？"
-
-#. IAR modal: disabled-state label on the delete card after the message has been deleted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:118
-msgid "Deleted"
-msgstr "已刪除"
 
 #. Activity log detail line under a ban, shown when the ban also deleted the messages the banned user sent shortly before it. This matches the "Delete message history" choice in the ban dialog. "The member" is the banned user, a single person. {duration} is how far back from the ban the messages were deleted, shown as a full duration phrase such as "1 hour" or "7 days". The number and unit change at runtime, so do not put an article, adjective or case ending next to {duration} that has to agree with it. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:25
@@ -12514,7 +12407,7 @@ msgid "Denied {permissions}"
 msgstr "拒絕了 {permissions}"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:135
+#: src/features/moderation/components/report/OptionDescriptors.ts:48
 msgid "Denmark"
 msgstr "丹麥"
 
@@ -12553,11 +12446,6 @@ msgstr "描述貼圖"
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:40
 msgid "Describe this media for screen readers"
 msgstr "為螢幕閱讀器描述此媒體內容"
-
-#. Placeholder in the Additional comments textarea on the DSA report form. Prompts the reporter to explain why the content is illegal.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:77
-msgid "Describe what makes the content illegal"
-msgstr "請說明此內容為何違法"
 
 #. Placeholder in the description textarea on the Discovery application form.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:128
@@ -12713,7 +12601,7 @@ msgstr "分離式橫幅"
 msgid "Detail"
 msgstr "細節"
 
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:30
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:44
 msgid "Details"
 msgstr "詳細資訊"
 
@@ -13315,11 +13203,6 @@ msgstr "顯示名稱（選填）"
 msgid "Display scaling"
 msgstr "顯示比例"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:282
-msgid "Distributes malware, credential-stealing tools, or other harmful files."
-msgstr "散佈惡意軟體、竊取帳號密碼的工具或其他有害檔案。"
-
 #. US federal district name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:263
 msgctxt "us-state"
@@ -13336,11 +13219,6 @@ msgstr "DM"
 msgctxt "channel-badge"
 msgid "DM"
 msgstr "私訊"
-
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:426
-msgid "DM & friend request settings"
-msgstr "私訊和好友邀請設定"
 
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Generic success-toast label confirming that a DM channel was closed.
@@ -13468,11 +13346,6 @@ msgstr "說明文件"
 msgid "Doesn't allow being added to group DMs"
 msgstr "不允許被加入群組私訊"
 
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:410
-msgid "Doesn't block. You can reopen later."
-msgstr "不會封鎖。您可以稍後再重新開啟。"
-
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:786
@@ -13545,11 +13418,13 @@ msgstr "捐款支持"
 
 #. Button that closes the recovery kit modal once the kit is stored.
 #. Generic action or status label indicating that the current flow is complete.
+#. Report flow: footer button on the last screen. Closes the report window.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:447
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:44
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:838
 #: src/features/input/components/KeybindRecorder.tsx:510
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:31
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:38
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:45
 #: src/features/search/components/search/ChannelFilterSheet.tsx:165
 #: src/features/search/components/search/HasFilterSheet.tsx:206
 #: src/features/search/components/search/UserFilterSheet.tsx:186
@@ -13677,16 +13552,6 @@ msgstr "下載原始碼地圖，以便堆疊追蹤和開發人員工具能指向
 #: src/features/ui/action_menu/items/MediaMenuData.tsx:123
 msgid "Download video"
 msgstr "下載影片"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:290
-msgid "Doxxing, exposed private info, or stalking."
-msgstr "人肉搜索、洩漏個人資訊或跟蹤騷擾。"
-
-#. IAR modal: rule-category description for the privacy / impersonation group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:65
-msgid "Doxxing, stalking, pretending to be someone, or an inappropriate profile."
-msgstr "人肉搜索、跟蹤、冒充他人或不當的個人檔案。"
 
 #. Billing invoice status for an invoice not finalized yet.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:25
@@ -13970,7 +13835,7 @@ msgstr "編輯「{tokenLabel}」的顏色"
 #. Action that opens the community profile editor for the current member.
 #. Button or menu action label in the guild header popout. Keep it concise.
 #: src/features/guild/components/popouts/GuildHeaderPopout.tsx:61
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:89
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:86
 #: src/features/ui/action_menu/items/GuildMenuItems.tsx:86
 msgid "Edit community profile"
 msgstr "編輯社群個人檔案"
@@ -14043,7 +13908,7 @@ msgstr "編輯此頻道中身分組和成員的覆寫權限。"
 #: src/features/app/components/floating/UserAreaPopout.tsx:645
 #: src/features/app/components/pages/YouPage.tsx:162
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:686
-#: src/features/user/components/modals/UserProfileModal.tsx:590
+#: src/features/user/components/modals/UserProfileModal.tsx:593
 #: src/features/user/components/popouts/UserProfilePopout.tsx:435
 msgid "Edit profile"
 msgstr "編輯個人檔案"
@@ -14054,7 +13919,7 @@ msgid "Edit profile local time"
 msgstr "編輯個人檔案當地時間"
 
 #. Title of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:105
+#: src/features/messaging/commands/MessageCommands.tsx:109
 msgid "Edit published message?"
 msgstr "編輯已發布的訊息？"
 
@@ -14191,13 +14056,13 @@ msgstr "在 {windowEndsOn} 前可申請退款。這也會立即取消您的訂�
 #. Setup wizard option where people sign in with an email address and password.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:87
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
-#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:28
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:37
 msgid "Email"
 msgstr "電子郵件"
 
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the moderation report step email. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/components/report/ReportStepEmail.tsx:11
+#: src/features/moderation/components/report/ReportStepEmail.tsx:13
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:60
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:115
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:30
@@ -14205,7 +14070,7 @@ msgid "Email address"
 msgstr "電子郵件地址"
 
 #. Inline validation error on the email step of the DSA report flow when the email field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:54
+#: src/features/moderation/components/pages/ReportPage.tsx:75
 msgid "Email address required."
 msgstr "必須填寫電子郵件地址。"
 
@@ -14721,16 +14586,6 @@ msgstr "新螢幕分享的編碼器偏好設定。"
 msgid "Encoder, SVC, and bitrate presets"
 msgstr "編碼器、SVC 和位元率預設"
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:354
-msgid "Encourages self-harm"
-msgstr "鼓勵自殘"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:358
-msgid "Encourages suicide, self-harm, or eating disorders."
-msgstr "鼓勵自殺、自殘或飲食失調。"
-
 #: src/features/input/utils/KeybindUtils.ts:86
 msgctxt "keyboard-key-name"
 msgid "End"
@@ -14770,11 +14625,6 @@ msgstr "由於通話中有不支援的參與者，因此無法使用端對端加
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:325
 msgid "End-to-end encryption is unavailable because an unsupported participant is in this voice channel."
 msgstr "由於語音頻道中有不支援的參與者，因此無法使用端對端加密。"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:234
-msgid "Endangers minors or hosts child-exploitation content."
-msgstr "危害未成年人或含有兒童剝削內容。"
 
 #. Voice stats field label (mobile lobby). Shows the voice server endpoint hostname.
 #. Voice stats field label (mobile voice lobby). Shows the voice server endpoint hostname.
@@ -14817,7 +14667,7 @@ msgid "Enter"
 msgstr "Enter"
 
 #. Inline validation error on the verification step of the DSA report flow when the code does not match the expected 4-letter-dash-4-digit format. "ABCD-1234" is a literal example pattern.
-#: src/features/moderation/components/pages/ReportPage.tsx:78
+#: src/features/moderation/components/pages/ReportPage.tsx:104
 msgid "Enter a code in the format ABCD-1234."
 msgstr "請輸入 ABCD-1234 格式的代碼。"
 
@@ -14862,12 +14712,12 @@ msgid "Enter a valid {theOtherPlatform} template URL or code."
 msgstr "請輸入有效的 {theOtherPlatform} 範本網址或代碼。"
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
-#: src/features/moderation/components/pages/ReportPage.tsx:58
+#: src/features/moderation/components/pages/ReportPage.tsx:79
 msgid "Enter a valid email address."
 msgstr "請輸入有效的電子郵件地址。"
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is not a valid URL.
-#: src/features/moderation/components/pages/ReportPage.tsx:116
+#: src/features/moderation/components/pages/ReportPage.tsx:148
 msgid "Enter a valid message link."
 msgstr "請輸入有效的訊息連結。"
 
@@ -14941,7 +14791,7 @@ msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "請輸入驗證器應用程式中的 {digitCount} 位數驗證碼。"
 
 #. Inline validation error on the verification step of the DSA report flow when the code field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:74
+#: src/features/moderation/components/pages/ReportPage.tsx:100
 msgid "Enter the code before continuing."
 msgstr "請先輸入驗證碼再繼續。"
 
@@ -15008,7 +14858,7 @@ msgstr "按 Enter 鍵<0><1>儲存</1></0>"
 msgid "Enter username"
 msgstr "輸入使用者名稱"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:48
+#: src/features/moderation/components/report/ReportStepVerification.tsx:73
 msgid "Enter verification code"
 msgstr "輸入驗證碼"
 
@@ -15016,6 +14866,11 @@ msgstr "輸入驗證碼"
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:74
 msgid "Enter your email address and we'll send you a link to reset your password."
 msgstr "請輸入您的電子郵件地址，我們會傳送密碼重設連結給您。"
+
+#. Inline validation error on the Full legal name field of the DSA report form, shown when the server requires the name for the chosen reason. The name is required for every reason except child sexual abuse.
+#: src/features/moderation/components/pages/ReportPage.tsx:133
+msgid "Enter your full legal name to send the report."
+msgstr "請輸入您的法定全名以送出檢舉。"
 
 #. Short label in the inputs tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:26
@@ -15160,7 +15015,7 @@ msgid "Escape to <0><1>cancel</1></0>"
 msgstr "按 Esc 鍵<0><1>取消</1></0>"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:139
+#: src/features/moderation/components/report/OptionDescriptors.ts:52
 msgid "Estonia"
 msgstr "愛沙尼亞"
 
@@ -15412,6 +15267,16 @@ msgstr "將於 {earliest} 到期"
 msgid "Expires:"
 msgstr "到期時間："
 
+#. Field label on the details step of the DSA report form. Required free text where the reporter explains what is wrong with the reported content.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:52
+msgid "Explain the problem"
+msgstr "說明問題"
+
+#. Inline validation error on the details step of the DSA report flow when the Explain the problem field is empty.
+#: src/features/moderation/components/pages/ReportPage.tsx:123
+msgid "Explain the problem to send the report."
+msgstr "請說明問題以送出檢舉。"
+
 #. Accessible label for the explicit content filter radio group in the community moderation settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:129
 msgid "Explicit content filter setting"
@@ -15506,11 +15371,6 @@ msgstr "外部連結可能會有危險，請小心。"
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:57
 msgid "Extra large"
 msgstr "特大"
-
-#. Report category label for a community organized around extremist content or ideology.
-#: src/features/moderation/components/report/OptionDescriptors.ts:90
-msgid "Extremist community"
-msgstr "極端主義社群"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:126
@@ -15729,7 +15589,7 @@ msgid "Failed to remove vanity URL. Try again."
 msgstr "無法移除自訂網址。請再試一次。"
 
 #. Error toast when the resend-code request fails on the verification step of the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:70
+#: src/features/moderation/components/pages/ReportPage.tsx:91
 msgid "Failed to resend code. Try again."
 msgstr "無法重新傳送驗證碼。請再試一次。"
 
@@ -15739,7 +15599,7 @@ msgid "Failed to reset premium state."
 msgstr "無法重設付費狀態。"
 
 #. Error shown when the initial email verification code send fails on the DSA report flow.
-#: src/features/moderation/components/pages/ReportPage.tsx:66
+#: src/features/moderation/components/pages/ReportPage.tsx:87
 msgid "Failed to send code. Try again."
 msgstr "傳送驗證碼失敗。請再試一次。"
 
@@ -15754,7 +15614,7 @@ msgid "Failed to send message. Hold for options."
 msgstr "訊息傳送失敗。長按可顯示選項。"
 
 #. Generic error shown on the DSA report submission page when the report could not be sent.
-#: src/features/moderation/components/pages/ReportPage.tsx:50
+#: src/features/moderation/components/pages/ReportPage.tsx:71
 msgid "Failed to send report. Try again."
 msgstr "無法傳送檢舉。請再試一次。"
 
@@ -15839,11 +15699,6 @@ msgstr "無法上傳表情符號（從 {startLabel} 開始）：{errorMsg}"
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:60
 msgid "Failed to upload emojis. Try again."
 msgstr "表情符號上傳失敗。請再試一次。"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:242
-msgid "False claims likely to cause real-world harm."
-msgstr "可能對現實世界造成傷害的不實說法。"
 
 #. Label for the favicon branding asset.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:222
@@ -16127,13 +15982,13 @@ msgstr "尋找最適合的貼圖"
 msgid "Fingerprint"
 msgstr "指紋"
 
-#. Button label in the IAR modal that opens the account-setup flow.
-#: src/features/moderation/components/report_modal/IARModal.tsx:84
+#. Report flow: button in the account notice that opens the account setup screen.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:133
 msgid "Finish account setup"
 msgstr "完成帳號設定"
 
-#. IAR modal: title of the account-not-ready notice.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:24
+#. Report flow: title of the notice on the summary screen when the account cannot send reports yet.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:120
 msgid "Finish account setup first"
 msgstr "請先完成帳號設定"
 
@@ -16162,7 +16017,7 @@ msgid "Finish signing up to send friend requests."
 msgstr "完成註冊以傳送好友邀請。"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:143
+#: src/features/moderation/components/report/OptionDescriptors.ts:56
 msgid "Finland"
 msgstr "芬蘭"
 
@@ -16172,7 +16027,7 @@ msgid "Finnish"
 msgstr "芬蘭語"
 
 #. Placeholder in the Full legal name input on the DSA report form.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:58
+#: src/features/moderation/components/report/ReportStepDetails.tsx:66
 msgid "First and last name"
 msgstr "姓名"
 
@@ -16617,7 +16472,7 @@ msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "高於 30 FPS 的影格速率需要 {premiumProductName}"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:147
+#: src/features/moderation/components/report/OptionDescriptors.ts:60
 msgid "France"
 msgstr "法國"
 
@@ -16834,10 +16689,10 @@ msgstr "完整"
 msgid "Full dynamic range"
 msgstr "全動態範圍"
 
-#. Field label on the details step of the DSA report form. Required legal name of the reporter for the formal declaration. Sensitive PII; keep tone neutral.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:53
-msgid "Full legal name"
-msgstr "法定全名"
+#. Field label on the details step of the DSA report form. Legal name of the reporter for the formal declaration. The law lets people who report child sexual abuse material leave it empty. Keep the tone neutral.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:61
+msgid "Full legal name (optional for child sexual abuse reports)"
+msgstr "法定全名（檢舉兒童性虐待時可選填）"
 
 #. Screen-reader-only identity detail appended to a user mention in the message composer. Preserve {tag}; it contains the full user tag.
 #: src/features/lexical/composer/nodes/ComposerMentionPill.tsx:20
@@ -17021,7 +16876,7 @@ msgid "German"
 msgstr "德文"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:151
+#: src/features/moderation/components/report/OptionDescriptors.ts:64
 msgid "Germany"
 msgstr "德國"
 
@@ -17376,7 +17231,7 @@ msgid "Go back"
 msgstr "返回"
 
 #. Inline error on the verification step of the DSA report flow when the stored email is missing or malformed and the user must return to the email step.
-#: src/features/moderation/components/pages/ReportPage.tsx:83
+#: src/features/moderation/components/pages/ReportPage.tsx:109
 msgid "Go back and enter a valid email."
 msgstr "返回並輸入有效的電子郵件。"
 
@@ -17557,7 +17412,7 @@ msgid "Great to see you, {username}! Welcome in."
 msgstr "很高興見到您，{username}！歡迎加入。"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:155
+#: src/features/moderation/components/report/OptionDescriptors.ts:68
 msgid "Greece"
 msgstr "希臘"
 
@@ -17571,11 +17426,6 @@ msgstr "希臘文"
 #: src/features/voice/components/VoiceSettingsMenus.tsx:791
 msgid "Grid view"
 msgstr "格狀顯示"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:226
-msgid "Grooming or child-exploitation content."
-msgstr "誘騙或兒童剝削內容。"
 
 #. Short label in the channel source preview. Keep it concise.
 #: src/features/channel/components/ChannelSourcePreview.tsx:32
@@ -17716,36 +17566,6 @@ msgstr "帳號"
 msgid "Hang out with voice, video and screen share"
 msgstr "與好友語音、視訊和螢幕共享"
 
-#. Report category label, community variant. Keep tone plain.
-#: src/features/moderation/components/report/OptionDescriptors.ts:86
-msgid "Harassment"
-msgstr "騷擾"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:210
-msgid "Harassment involving mature content"
-msgstr "涉及成人內容的騷擾"
-
-#. Report category label for messages or users engaged in harassment or bullying. Keep tone plain.
-#: src/features/moderation/components/report/OptionDescriptors.ts:24
-msgid "Harassment or bullying"
-msgstr "騷擾或霸凌"
-
-#. IAR modal: rule label for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:154
-msgid "Harassment or stalking"
-msgstr "騷擾或跟蹤"
-
-#. IAR modal: rule label for a community report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:162
-msgid "Harassment or targeted abuse"
-msgstr "騷擾或針對性攻擊"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:146
-msgid "Harassment or threats"
-msgstr "騷擾或威脅"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:43
 msgid "Hardware"
@@ -17775,11 +17595,6 @@ msgstr "硬體金鑰"
 msgid "Hardware-accelerated on most Windows and macOS systems. Reliable for older devices."
 msgstr "在多數 Windows 和 macOS 系統上支援硬體加速。在舊裝置上也能穩定運作。"
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:238
-msgid "Harmful misinformation"
-msgstr "有害不實資訊"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:218
 msgid "Harvest"
@@ -17798,13 +17613,6 @@ msgstr "曾購買過"
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx:163
 msgid "Has ever purchased override"
 msgstr "「曾購買過」覆寫"
-
-#. IAR modal: rule label.
-#. Report category label for hate speech. Keep tone plain and neutral.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:170
-#: src/features/moderation/components/report/OptionDescriptors.ts:28
-msgid "Hate speech"
-msgstr "仇恨言論"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
@@ -18162,6 +17970,11 @@ msgstr "要隱藏自己的螢幕分享嗎？"
 msgid "Hides the download, open in browser and copy buttons on images and videos in this channel."
 msgstr "隱藏此頻道中圖片和影片的下載、在瀏覽器中開啟及複製按鈕。"
 
+#. Report flow: short description under the block action on the final screen. Blocking hides the reported person's messages and stops them sending you direct messages.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:76
+msgid "Hides their messages and stops them messaging you"
+msgstr "隱藏對方的訊息，並使對方無法傳送私訊給您"
+
 #. Activity log value naming the high member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:85
@@ -18318,7 +18131,7 @@ msgid "Hungarian"
 msgstr "匈牙利文"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:159
+#: src/features/moderation/components/report/OptionDescriptors.ts:72
 msgid "Hungary"
 msgstr "匈牙利"
 
@@ -18399,6 +18212,11 @@ msgstr "這是一個工具提示"
 msgid "I changed my mind"
 msgstr "我改變心意了"
 
+#. Required checkbox on the details step of the DSA report form. A formal statement the law asks every reporter to make. Keep the tone formal.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:75
+msgid "I confirm in good faith that the information and allegations in this notice are accurate and complete."
+msgstr "我本於善意確認，本通知中的資訊與指控均正確且完整。"
+
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
@@ -18460,11 +18278,6 @@ msgstr "閒置設定"
 msgid "Idle timeout"
 msgstr "閒置逾時"
 
-#. IAR modal: inline routing hint shown under reasons that overlap with child safety.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:93
-msgid "If a minor is involved, use \"{childSafetyReasonName}\" instead."
-msgstr "如果涉及未成年人，請改用「{childSafetyReasonName}」。"
-
 #: src/features/auth/components/accounts/account_switcher_modal/AccountSwitcherForgotPasswordStep.tsx:40
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 msgid "If an account uses that address, we've sent it password reset instructions. Check your inbox for the reset link."
@@ -18475,45 +18288,20 @@ msgstr "如果該地址已註冊帳戶，我們已寄送密碼重設說明。請
 msgid "If macOS asks to quit and reopen {productName}, choose Later."
 msgstr "如果 macOS 要求結束並重新啟動 {productName}，請選擇稍後再說。"
 
-#. IAR modal: inline safety note for self-harm reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:374
-msgid "If someone may be in immediate danger, contact local emergency services if you can do so safely."
-msgstr "如果有人可能處於立即危險中，請在安全的情況下聯絡當地緊急服務。"
+#. Report flow: safety banner shown on urgent questions and on the summary of an urgent report.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:87
+msgid "If someone is in immediate danger, contact local emergency services first."
+msgstr "如果有人面臨立即危險，請先聯絡當地緊急救援單位。"
 
 #. Console warning about self-XSS scams. productName is the app name. Keep the warning plain and serious.
 #: src/features/devtools/utils/SelfXssNotice.ts:20
 msgid "If someone told you to paste something here, it is a scam that can hand them your {productName} account."
 msgstr "如果有人要求您將某些內容貼到這裡，那就是詐騙，可能會讓對方取得您的 {productName} 帳號。"
 
-#. IAR modal: inline safety note shown for child-safety reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:370
-msgid "If this involves CSAM or exploitation of a minor, send the report now and don't reshare the material."
-msgstr "如果這涉及兒童性虐待材料 (CSAM) 或剝削未成年人，請立即送出檢舉，且不要再次分享該材料。"
-
-#. IAR modal: inline safety note for violence reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:378
-msgid "If this is a credible imminent threat, contact local emergency services too."
-msgstr "如果這是可信的緊急威脅，請同時聯絡當地緊急服務單位。"
-
-#. IAR modal: inline safety note for terrorism reports.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:382
-msgid "If this is an imminent terrorist threat, contact local emergency services too."
-msgstr "如果這是迫在眉睫的恐怖威脅，請同時聯絡當地緊急服務單位。"
-
-#. Label in the report action utils helper. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:32
-msgid "If this report is about a specific message in this community, report that message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the community as a whole if reporting a message would not capture the broader issue."
-msgstr "如果這份檢舉是關於此社群中的特定訊息，請改為檢舉該訊息。訊息檢舉能讓我們的安全團隊掌握最清楚的脈絡，在意見中新增詳細資訊也能幫助我們更快審查。只有在檢舉訊息無法涵蓋更廣泛的問題時，才繼續檢舉整個社群。"
-
-#. Label in the report action utils helper. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:17
-msgid "If this report is about a specific message, report that message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the user as a whole if that message does not capture the broader issue."
-msgstr "如果這則檢舉是關於特定訊息，請改為檢舉該訊息。訊息檢舉能讓我們的安全團隊掌握最清楚的脈絡，在意見中新增詳細資訊也能幫助我們更快審查。只有在該訊息無法涵蓋更廣泛的問題時，才繼續檢舉這位使用者整體。"
-
-#. Label in the report action utils helper. Keep the tone plain and specific.
-#: src/features/moderation/utils/ReportActionUtils.tsx:22
-msgid "If this report is about specific messages, report the most relevant message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the user as a whole if reporting a message would not capture the broader issue."
-msgstr "如果此檢舉是關於多則特定訊息，請改為檢舉最相關的那一則。訊息檢舉能讓我們的安全團隊掌握最清楚的脈絡，在意見中新增詳細資訊也能幫助我們更快審查。只有在檢舉訊息無法涵蓋更廣泛的問題時，才繼續檢舉這位使用者整體。"
+#. Helper text under the Explain the problem field on the details step of the DSA report form.
+#: src/features/moderation/components/report/ReportStepDetails.tsx:57
+msgid "If you believe it is illegal, say which law and why."
+msgstr "如果您認為這是違法內容，請說明涉及哪一項法律及原因。"
 
 #. Confirmation modal body shown before dismissing the desktop-notification nagbar. {notificationSettingsPath} is the localized settings path.
 #: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:39
@@ -18599,28 +18387,6 @@ msgstr "忽略此頻道的慢速模式冷卻時間。"
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:970
 msgid "Ignore virtual"
 msgstr "忽略虛擬裝置"
-
-#. IAR modal: rule label.
-#. Report category label for content describing or coordinating illegal activity. Keep tone plain.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:330
-#: src/features/moderation/components/report/OptionDescriptors.ts:44
-msgid "Illegal activity"
-msgstr "非法活動"
-
-#. IAR modal: rule-category label grouping illegal activity and the catch-all "Other" option.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:77
-msgid "Illegal activity or something else"
-msgstr "非法活動或其他"
-
-#. IAR modal: rule-category description for the illegal / other group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:81
-msgid "Illegal sales, criminal facilitation, or a clear rule violation that doesn't fit above."
-msgstr "非法銷售、協助犯罪，或上述未涵蓋的明顯違規行為。"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:334
-msgid "Illegal sales, criminal facilitation, or unlawful activity."
-msgstr "非法銷售、協助犯罪或非法活動。"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:73
@@ -18715,18 +18481,6 @@ msgstr "圖片"
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:38
 msgid "Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in this channel."
 msgstr "從剪貼簿貼上的圖片會以附件形式傳送，但您沒有權限在此頻道中附加檔案。"
-
-#. IAR modal: rule label.
-#. Report category label for a user impersonating another person or brand.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:306
-#: src/features/moderation/components/report/OptionDescriptors.ts:66
-msgid "Impersonation"
-msgstr "冒充"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:310
-msgid "Impersonation or deceptive media"
-msgstr "冒充或欺騙性媒體內容"
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:58
@@ -18910,11 +18664,6 @@ msgstr "閒置"
 msgid "Inactive timeout"
 msgstr "閒置逾時"
 
-#. Report category label for an account whose profile (name, avatar, bio) violates policy.
-#: src/features/moderation/components/report/OptionDescriptors.ts:82
-msgid "Inappropriate profile"
-msgstr "不當的個人檔案"
-
 #. Generic header / tab label for the unread / mentions / bookmarks inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:500
@@ -18963,7 +18712,7 @@ msgid "Include my two-factor backup codes in the PDF and printout"
 msgstr "在 PDF 和列印文件中包含我的雙重驗證備份代碼"
 
 #. Inline validation error on the details step of the DSA report flow (community report) when the community ID field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:126
+#: src/features/moderation/components/pages/ReportPage.tsx:158
 msgid "Include the community ID."
 msgstr "請提供社群 ID。"
 
@@ -19403,7 +19152,7 @@ msgid "Invite background"
 msgstr "邀請背景"
 
 #. Field label on the details step of the DSA report form (community report). Optional invite code to the reported community.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:48
+#: src/features/moderation/components/report/ReportStepDetails.tsx:47
 msgid "Invite code (optional)"
 msgstr "邀請碼（非必填）"
 
@@ -19471,7 +19220,7 @@ msgstr "邀請遮蔽"
 #. Tooltip and accessible label for the invite button shown beside a channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:125
 #: src/features/guild/components/popouts/GuildHeaderPopout.tsx:57
-#: src/features/ui/action_menu/items/GuildMenuData.tsx:85
+#: src/features/ui/action_menu/items/GuildMenuData.tsx:82
 msgid "Invite members"
 msgstr "邀請成員"
 
@@ -19650,7 +19399,7 @@ msgid "IP address authorized"
 msgstr "IP 位址已授權"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:163
+#: src/features/moderation/components/report/OptionDescriptors.ts:76
 msgid "Ireland"
 msgstr "愛爾蘭"
 
@@ -19690,7 +19439,7 @@ msgid "Italic"
 msgstr "斜體"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:167
+#: src/features/moderation/components/report/OptionDescriptors.ts:80
 msgid "Italy"
 msgstr "義大利"
 
@@ -20120,7 +19869,7 @@ msgstr "按鍵"
 #. Button or menu action label in the kick member modal. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the user profile actions sheet. Keep it concise. Keep the tone plain and specific.
 #. Member actions sheet menu item. Opens the kick-member confirmation (moderation action). Short verb used as a menu label.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:97
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:96
 #: src/features/moderation/components/modals/KickMemberModal.tsx:16
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:77
 msgid "Kick"
@@ -20230,7 +19979,7 @@ msgid "Later"
 msgstr "稍後"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:171
+#: src/features/moderation/components/report/OptionDescriptors.ts:84
 msgid "Latvia"
 msgstr "拉脫維亞"
 
@@ -20291,11 +20040,6 @@ msgstr "瞭解詳情"
 msgid "Learn more about Visionary"
 msgstr "進一步了解 Visionary"
 
-#. IAR modal: quick-action card button label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:422
-msgid "Leave"
-msgstr "離開"
-
 #. Confirmation text before leaving a private thread. threadName is the thread name.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:65
 msgid "Leave {threadName}? It's private, so you can only come back if someone adds you again."
@@ -20335,11 +20079,6 @@ msgstr "離開私人討論串"
 #: src/features/guild/hooks/useLeaveGroup.tsx:34
 msgid "Leave silently"
 msgstr "安靜離開"
-
-#. IAR modal: quick-action card title.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:414
-msgid "Leave the community"
-msgstr "離開社群"
 
 #. Body text in the leave-community confirmation modal.
 #: src/features/guild/hooks/useLeaveGuild.tsx:22
@@ -20799,7 +20538,7 @@ msgid "Lists members with this role in their own section in the member list."
 msgstr "在成員列表中，將擁有此身分組的成員顯示在獨立區塊。"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:175
+#: src/features/moderation/components/report/OptionDescriptors.ts:88
 msgid "Lithuania"
 msgstr "立陶宛"
 
@@ -20893,7 +20632,7 @@ msgid "Loading..."
 msgstr "正在載入…"
 
 #. Combobox popup status shown while options are loading.
-#: src/features/ui/components/form/FormCombobox.tsx:88
+#: src/features/ui/components/form/FormCombobox.tsx:89
 #: src/features/ui/components/Spinner.tsx:30
 msgid "Loading…"
 msgstr "載入中…"
@@ -21023,7 +20762,7 @@ msgid "Low"
 msgstr "低"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:179
+#: src/features/moderation/components/report/OptionDescriptors.ts:92
 msgid "Luxembourg"
 msgstr "盧森堡"
 
@@ -21075,14 +20814,14 @@ msgid "Maintenance is scheduled for {localizedTime}. Expected duration: {duratio
 msgstr "預計於 {localizedTime} 進行維護。預計持續時間：{duration}。"
 
 #. Confirm dialog body before transferring ownership of a group DM.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:81
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:80
 msgid "Make {userName} the group owner? You'll lose owner privileges."
 msgstr "要將 {userName} 設為群組擁有者嗎？您將會失去擁有者權限。"
 
 #. Group DM action that transfers ownership of the group to the selected member.
 #. Group DM action that transfers ownership of the group to the selected member.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:93
-#: src/features/ui/action_menu/UserContextMenu.tsx:117
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:92
+#: src/features/ui/action_menu/UserContextMenu.tsx:116
 msgid "Make group owner"
 msgstr "設為群組擁有者"
 
@@ -21091,37 +20830,20 @@ msgstr "設為群組擁有者"
 msgid "Make sure this code matches the one in the {PRODUCT_NAME} app."
 msgstr "請確認此代碼與 {PRODUCT_NAME} 應用程式中的代碼相符。"
 
+#. Report flow: subtitle of the summary screen. Asks the reporter to check their answers.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:9
+msgid "Make sure this looks right before you send it."
+msgstr "送出前請再次確認內容是否正確。"
+
 #. Setup wizard branding step title.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:166
 msgid "Make the instance yours"
 msgstr "打造專屬於您的實例"
 
-#. Report category label for messages containing phishing or malware links.
-#: src/features/moderation/components/report/OptionDescriptors.ts:62
-msgid "Malicious links"
-msgstr "惡意連結"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:183
+#: src/features/moderation/components/report/OptionDescriptors.ts:96
 msgid "Malta"
 msgstr "馬爾他"
-
-#. IAR modal: rule label.
-#. Report category label for a community distributing malware or malicious software.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:278
-#: src/features/moderation/components/report/OptionDescriptors.ts:103
-msgid "Malware distribution"
-msgstr "散佈惡意軟體"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:266
-msgid "Malware or dangerous links"
-msgstr "惡意軟體或危險連結"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:270
-msgid "Malware, credential theft, or harmful files."
-msgstr "惡意軟體、竊取帳號密碼或有害檔案。"
 
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
@@ -21408,11 +21130,6 @@ msgstr "分享螢幕或直播前，遮蓋私人詳細資訊。"
 msgid "Mask Visionary as subscription"
 msgstr "將 Visionary 顯示為訂閱"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:250
-msgid "Mass spam, fraud, fake giveaways, or account abuse."
-msgstr "大量垃圾訊息、詐騙、假贈品或濫用帳號。"
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:113
 msgctxt "us-state"
@@ -21491,30 +21208,10 @@ msgstr "成人內容媒體閘門"
 msgid "Mature content not allowed"
 msgstr "不允許成人內容"
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:202
-msgid "Mature content or harassment"
-msgstr "成人內容或騷擾"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:218
-msgid "Mature content or unsafe gating"
-msgstr "成人內容或把關不當"
-
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:35
 msgid "Mature content override"
 msgstr "覆寫成人內容設定"
-
-#. Report category label for mature-content policy violations. Keep tone plain and neutral.
-#: src/features/moderation/components/report/OptionDescriptors.ts:40
-msgid "Mature content policy violation"
-msgstr "違反成人內容政策"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:222
-msgid "Mature content without proper gating."
-msgstr "未經適當把關的成人內容。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the mature media gate details modal. Keep it concise.
@@ -21959,13 +21656,13 @@ msgstr "訊息"
 #. Action that opens a DM conversation with the selected user.
 #. Member actions sheet menu item. Sends a direct message to the target user. Standalone verb used as a menu label.
 #. Voice participant menu action that opens a DM conversation with the selected user.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:87
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:86
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:78
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:719
-#: src/features/user/components/modals/UserProfileModal.tsx:565
-#: src/features/user/components/modals/UserProfileModal.tsx:773
+#: src/features/user/components/modals/UserProfileModal.tsx:568
+#: src/features/user/components/modals/UserProfileModal.tsx:776
 #: src/features/user/components/popouts/UserProfilePopout.tsx:421
 #: src/features/user/components/popouts/UserProfilePopout.tsx:451
 #: src/features/user/components/profile/ProfilePreview.tsx:321
@@ -22128,7 +21825,7 @@ msgid "message link"
 msgstr "訊息連結"
 
 #. Field label on the details step of the DSA report form (message report). The reporter pastes a direct link to the offending message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:23
+#: src/features/moderation/components/report/ReportStepDetails.tsx:22
 msgid "Message link"
 msgstr "訊息連結"
 
@@ -22167,7 +21864,7 @@ msgid "Message previews in the DM list"
 msgstr "私訊列表中的訊息預覽"
 
 #. Toast shown after a message in an announcement channel was published to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:118
+#: src/features/messaging/commands/MessageCommands.tsx:122
 msgid "Message published"
 msgstr "訊息已發布"
 
@@ -22210,6 +21907,11 @@ msgstr "訊息時間"
 #: src/features/app/config/AuditLogConstants.ts:140
 msgid "Message unpinned"
 msgstr "訊息已解除釘選"
+
+#. Report flow: section heading above the preview of the message being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:18
+msgid "Message you're reporting"
+msgstr "您要檢舉的訊息"
 
 #. Collapsible group heading in the Theme Studio tokens list, for chat message tokens.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -22422,11 +22124,6 @@ msgctxt "us-state"
 msgid "Minnesota"
 msgstr "明尼蘇達州"
 
-#. IAR modal: rule-category description for the child-safety / mature-content group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:57
-msgid "Minors at risk, mature content in the wrong place, or unwanted conduct."
-msgstr "未成年人面臨風險、成人內容出現在不當的地方，或不受歡迎的行為。"
-
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
@@ -22633,7 +22330,7 @@ msgstr "更多"
 #. Short label in the index. Keep it concise.
 #. Short label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:47
-#: src/features/user/components/modals/UserProfileModal.tsx:114
+#: src/features/user/components/modals/UserProfileModal.tsx:117
 msgid "More actions"
 msgstr "更多操作"
 
@@ -23359,7 +23056,7 @@ msgid "Nested"
 msgstr "巢狀"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:187
+#: src/features/moderation/components/report/OptionDescriptors.ts:100
 msgid "Netherlands"
 msgstr "荷蘭"
 
@@ -24099,7 +23796,7 @@ msgstr "沒有結果"
 #. Empty state shown when a combobox search returns no matches.
 #. Empty state shown when a combobox search returns no matches.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentLanguageCombobox.tsx:30
-#: src/features/ui/components/form/FormCombobox.tsx:84
+#: src/features/ui/components/form/FormCombobox.tsx:85
 msgid "No results found"
 msgstr "沒有結果"
 
@@ -24858,6 +24555,16 @@ msgstr "只有你邀請的使用者和管理員才能看到這個討論串。"
 msgid "Only places I can't access anymore"
 msgstr "僅限我無法再存取的地方"
 
+#. Report flow: good-faith statement on the summary screen, used when the instance has no community guidelines page.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:13
+msgid "Only report what you honestly believe breaks the rules, and please don't send the same report twice."
+msgstr "請僅檢舉您真心認為違反規則的內容，且請勿重複送出相同的檢舉。"
+
+#. Report flow: good-faith statement on the summary screen. The linked text opens the community guidelines.
+#: src/features/moderation/components/report_flow/ReportFlowSummary.tsx:52
+msgid "Only report what you honestly believe breaks the rules. Misusing reports goes against our <0>Community Guidelines</0>."
+msgstr "僅檢舉您真心認為違反規則的內容。濫用檢舉功能將違反我們的<0>社群準則</0>。"
+
 #. Console warning line advising users not to run unknown code.
 #: src/features/devtools/utils/SelfXssNotice.ts:24
 msgid "Only run code here if you understand exactly what it does."
@@ -24927,11 +24634,9 @@ msgstr "不透明度"
 #. Action button on a Linux desktop notification. Imperative verb: opens the message the notification is about.
 #. Billing invoice status for an invoice awaiting payment.
 #. Button label that opens the source settings section for an advanced setting.
-#. IAR modal: quick-action card button label.
 #. Short button that opens a billing invoice or receipt.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:21
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:159
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:434
 #: src/features/platform/utils/DesktopLocaleBridge.ts:254
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:22
 msgid "Open"
@@ -25306,7 +25011,7 @@ msgid "Open on {instanceName}"
 msgstr "在 {instanceName} 上開啟"
 
 #. Accessible label for the combobox popup trigger button.
-#: src/features/ui/components/form/FormCombobox.tsx:96
+#: src/features/ui/components/form/FormCombobox.tsx:97
 msgid "Open popup"
 msgstr "開啟彈出式視窗"
 
@@ -25378,11 +25083,6 @@ msgstr "開啟「系統設定」>「隱私權與安全性」>「螢幕錄影」�
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:535
 msgid "Open template JSON"
 msgstr "開啟範本 JSON"
-
-#. IAR modal: quick-action card description for banning the reported user.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:130
-msgid "Open the ban dialog for this community."
-msgstr "開啟此社群的停權對話框。"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:249
@@ -25484,6 +25184,11 @@ msgstr "開啟設定"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:44
 msgid "Opened the thread again"
 msgstr "重新開啟了討論串"
+
+#. Report flow: screen reader hint on answers that open an external page.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:116
+msgid "Opens in a new tab"
+msgstr "在新分頁中開啟"
 
 #. Screen-reader-only hint for the Members entry in community settings. The entry receives keyboard focus without automatically opening.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:67
@@ -25621,9 +25326,7 @@ msgstr "原始停權日期為 {date}"
 
 #. Catch-all Discovery category dropdown option in the community Discovery settings tab.
 #. Collapsible group heading in the Theme Studio tokens list, for tokens that fit no other group.
-#. Report category label for a reason that does not match any predefined category.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:110
-#: src/features/moderation/components/report/OptionDescriptors.ts:70
 #: src/features/theme_studio/sections/TokenGroups.ts:118
 msgid "Other"
 msgstr "其他"
@@ -25653,11 +25356,6 @@ msgstr "其他反應…"
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:64
 msgid "OTP"
 msgstr "OTP"
-
-#. IAR modal: body copy on the success step shown after a platform report is submitted. Reassures the user about follow-up.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:101
-msgid "Our safety team is reviewing it. We'll send you a DM and email once we've reached a verdict."
-msgstr "我們的安全團隊正在審核。一旦有結果，我們會透過私訊和電子郵件通知您。"
 
 #. Field label in the voice connection status popout. Shows WebRTC estimated available outgoing bandwidth.
 #: src/features/voice/components/voice_connection_status/shared.ts:120
@@ -25755,7 +25453,7 @@ msgid "Ownership could not be transferred to <0>{username}</0> at this time."
 msgstr "目前無法將擁有權轉移給 <0>{username}</0>。"
 
 #. Toast confirming group DM ownership was transferred.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:85
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:84
 msgid "Ownership transferred"
 msgstr "已轉移擁有權"
 
@@ -25956,7 +25654,7 @@ msgid "Paste the JSON response here"
 msgstr "在此貼上 JSON 回應"
 
 #. Inline validation error on the details step of the DSA report flow (message report) when the message link is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:111
+#: src/features/moderation/components/pages/ReportPage.tsx:143
 msgid "Paste the message link."
 msgstr "請貼上訊息連結。"
 
@@ -26260,11 +25958,6 @@ msgstr "PgDn"
 msgid "PgUp"
 msgstr "PgUp"
 
-#. IAR modal: rule-category description for the scams / malware / misinformation group.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:73
-msgid "Phishing, fraud, malicious links, or false claims likely to cause real-world harm."
-msgstr "網路釣魚、詐騙、惡意連結或可能造成實際危害的虛假聲明。"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:21
 msgid "Photo"
@@ -26300,11 +25993,6 @@ msgstr "選擇網路搜尋服務供應商"
 msgid "Pick an emoji"
 msgstr "選擇表情符號"
 
-#. Validation hint in the IAR modal when the user tries to advance without picking a radio option.
-#: src/features/moderation/components/report_modal/IARModal.tsx:72
-msgid "Pick an option to continue."
-msgstr "請選擇一個選項以繼續。"
-
 #. Validation error when the user advances with all inclusion toggles off in the custom scope.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:205
 msgid "Pick at least one kind of conversation to include."
@@ -26329,11 +26017,6 @@ msgstr "選擇您名稱後面的 4 位數字"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:62
 msgid "Pick the appearance this administrator account should start with."
 msgstr "選擇此管理員帳號的初始外觀。"
-
-#. Validation hint in the IAR modal on the rule selection step.
-#: src/features/moderation/components/report_modal/IARModal.tsx:76
-msgid "Pick the rule to review."
-msgstr "選擇要審查的規則。"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
@@ -26607,7 +26290,7 @@ msgid "Please wait a moment and try renaming again."
 msgstr "請稍候片刻，然後再試著重新命名。"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:191
+#: src/features/moderation/components/report/OptionDescriptors.ts:104
 msgid "Poland"
 msgstr "波蘭"
 
@@ -26659,7 +26342,7 @@ msgid "Port"
 msgstr "埠號"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:195
+#: src/features/moderation/components/report/OptionDescriptors.ts:108
 msgid "Portugal"
 msgstr "葡萄牙"
 
@@ -26872,11 +26555,6 @@ msgstr "按一下以新增反應"
 msgid "press to remove reaction"
 msgstr "按一下以移除反應"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:314
-msgid "Pretending to be someone else, including deceptive AI-generated content."
-msgstr "假冒他人，包括欺騙性 AI 生成內容。"
-
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx:135
 msgid "Prevent <0>{targetUserTag}</0> from sending messages, reacting, and connecting to voice channels for the specified duration."
 msgstr "禁止 <0>{targetUserTag}</0> 在指定期間內傳送訊息、新增反應和連線至語音頻道。"
@@ -27078,11 +26756,6 @@ msgstr "優先發言者"
 msgid "Privacy"
 msgstr "隱私"
 
-#. IAR modal: rule-category label grouping privacy violations and impersonation.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:61
-msgid "Privacy or impersonation"
-msgstr "隱私或冒充"
-
 #: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:444
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:24
 msgid "Privacy policy"
@@ -27102,21 +26775,6 @@ msgstr "隱私設定通知列"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1157
 msgid "Privacy URL"
 msgstr "隱私權政策網址"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:286
-msgid "Privacy violation"
-msgstr "侵犯隱私"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:298
-msgid "Privacy violation or doxxing"
-msgstr "侵犯隱私或人肉搜索"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:294
-msgid "Privacy violation or stalking"
-msgstr "侵犯隱私或跟蹤騷擾"
 
 #. Switch in the channel create modal that limits who can view the new channel.
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:55
@@ -27280,25 +26938,10 @@ msgstr "個人檔案類型"
 msgid "Profile updated"
 msgstr "個人檔案已更新"
 
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:322
-msgid "Profile, username, or avatar violation"
-msgstr "個人檔案、使用者名稱或大頭貼違規"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:182
-msgid "Promotes hatred against protected groups."
-msgstr "宣揚對受保護族群的仇恨。"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:198
-msgid "Promotes, recruits for, or coordinates violent extremist activity."
-msgstr "宣傳、招募或協調暴力極端主義活動。"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:350
-msgid "Promotion or instructions encouraging self-harm or eating disorders."
-msgstr "鼓勵自殘或飲食失調的宣傳或教學內容。"
+#. Report flow: section heading above the card of the user whose profile is being reported.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:22
+msgid "Profile you're reporting"
+msgstr "您要檢舉的個人檔案"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
@@ -27329,19 +26972,14 @@ msgstr "代名詞： "
 msgid "Protect your Visionary account by enabling two-factor authentication. Thanks for supporting {productName}!"
 msgstr "啟用雙重驗證，保護您的 Visionary 帳號。感謝您對 {productName} 的支持！"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:216
+#: src/features/moderation/components/report/ReportStepDetails.tsx:261
 msgid "Provide at least a user ID or a user tag."
 msgstr "請至少提供使用者 ID 或使用者標籤。"
 
 #. Inline validation error on the details step of the DSA report flow (user report) when both user ID and username fields are empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:121
+#: src/features/moderation/components/pages/ReportPage.tsx:153
 msgid "Provide either a user ID or a username for the person you are reporting."
 msgstr "請提供您要檢舉對象的使用者 ID 或使用者名稱。"
-
-#. Inline validation error on the details step of the DSA report flow. The reporter must give their legal name for the legal declaration; keep tone neutral and factual.
-#: src/features/moderation/components/pages/ReportPage.tsx:101
-msgid "Provide your full legal name for the declaration."
-msgstr "請提供您的完整法定姓名以進行聲明。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:90
@@ -27701,13 +27339,6 @@ msgstr "單選按鈕可讓您從一組選項中選取一個。"
 msgid "Radio group"
 msgstr "單選按鈕群組"
 
-#. IAR modal: rule label.
-#. Report category label for a community coordinating raids (mass harassment of other communities or users). "Raid" is product jargon.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:338
-#: src/features/moderation/components/report/OptionDescriptors.ts:94
-msgid "Raid coordination"
-msgstr "協調突襲"
-
 #. Setup wizard finish summary value when every username gets a random four digit tag.
 #. Setup wizard option where every username gets a random four digit tag.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:104
@@ -27831,8 +27462,10 @@ msgstr "準備好購買禮物了嗎？"
 msgid "Ready to upgrade?"
 msgstr "準備好升級了嗎？"
 
+#. DSA report page: step indicator label for the step where the reporter picks why they are reporting.
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:611
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:75
+#: src/features/moderation/components/report/ReportBreadcrumbs.tsx:40
 msgid "Reason"
 msgstr "原因"
 
@@ -28291,8 +27924,8 @@ msgstr "記住視窗大小和位置"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:140
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:143
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:271
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:73
-#: src/features/ui/action_menu/UserContextMenu.tsx:97
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:72
+#: src/features/ui/action_menu/UserContextMenu.tsx:96
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:198
@@ -28328,8 +27961,8 @@ msgstr "移除 {engineName}"
 
 #. Confirm dialog body before removing a member from a group DM.
 #. Confirm dialog body before removing a member from a group DM.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:69
-#: src/features/ui/action_menu/UserContextMenu.tsx:93
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:68
+#: src/features/ui/action_menu/UserContextMenu.tsx:92
 msgid "Remove {userName} from the group?"
 msgstr "要將 {userName} 從群組中移除嗎？"
 
@@ -28419,8 +28052,8 @@ msgstr "從我的最愛移除"
 
 #. Group DM action that removes the selected member from the group.
 #. Group DM action that removes the selected member from the group.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:65
-#: src/features/ui/action_menu/UserContextMenu.tsx:89
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:64
+#: src/features/ui/action_menu/UserContextMenu.tsx:88
 msgid "Remove from group"
 msgstr "從群組中移除"
 
@@ -28457,11 +28090,6 @@ msgstr "從僅限網址的 GIF 最愛中移除"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:643
 msgid "Remove icon"
 msgstr "移除圖示"
-
-#. IAR modal: quick-action card description for deleting the reported message.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:110
-msgid "Remove it from the channel for everyone."
-msgstr "為所有人從頻道中移除這則訊息。"
 
 #. Permission description in the role/permission editor for the Kick Members permission. Note that a kick is not permanent, unlike a ban.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:119
@@ -28578,7 +28206,7 @@ msgid "Removed from favorites"
 msgstr "已從我的最愛移除"
 
 #. Toast confirming the selected member was removed from the group DM.
-#: src/features/ui/action_menu/GroupDMContextMenu.tsx:77
+#: src/features/ui/action_menu/GroupDMContextMenu.tsx:76
 msgid "Removed from group"
 msgstr "已從群組中移除"
 
@@ -28919,28 +28547,18 @@ msgstr "檢舉社群"
 msgid "Report a message"
 msgstr "檢舉訊息"
 
-#. IAR modal: screen-reader description for the whole modal.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:446
-msgid "Report a rule violation, or find tools to manage contact and preferences."
-msgstr "檢舉違規行為，或尋找工具來管理聯絡人和偏好設定。"
-
 #. Report flow target option. Selects reporting another user account or profile. Keep tone plain and neutral.
 #: src/features/moderation/components/report/OptionDescriptors.ts:11
 msgid "Report a user profile"
 msgstr "檢舉使用者個人檔案"
 
-#. Action label that opens the report flow targeting a community.
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:17
-msgid "Report community"
-msgstr "檢舉社群"
-
-#: src/features/moderation/components/report/ReportStepDetails.tsx:128
+#: src/features/moderation/components/report/ReportStepDetails.tsx:151
 msgid "Report details"
 msgstr "檢舉詳情"
 
 #. Document/page title for the public DSA illegal-content report page. Sensitive/legal flow; keep tone plain and factual.
-#: src/features/moderation/components/pages/ReportPage.tsx:45
-#: src/features/moderation/components/report/ReportStepSelection.tsx:32
+#: src/features/moderation/components/pages/ReportPage.tsx:66
+#: src/features/moderation/components/report/ReportStepSelection.tsx:33
 msgid "Report illegal content"
 msgstr "檢舉違法內容"
 
@@ -28950,30 +28568,28 @@ msgid "Report issue"
 msgstr "回報問題"
 
 #. Generic action label that opens the report flow targeting a specific message.
-#. Modal title for the IAR flow when reporting a specific message.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:544
-#: src/features/moderation/components/report_modal/IARModalContext.ts:22
 msgid "Report message"
 msgstr "檢舉訊息"
 
-#. IAR modal: title on the success step shown after a platform report is submitted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:97
-#: src/features/moderation/components/report/ReportStepComplete.tsx:31
+#. Action label in the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts:13
+msgid "Report profile"
+msgstr "檢舉個人檔案"
+
+#. Report flow: title of the final screen after a report was sent to the safety team.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:42
+#: src/features/moderation/components/report/ReportStepComplete.tsx:32
 msgid "Report sent"
 msgstr "已送出檢舉"
 
 #. Button or menu action label in the moderation report step selection. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/components/report/ReportStepSelection.tsx:11
+#: src/features/moderation/components/report/ReportStepSelection.tsx:12
 msgid "Report type"
 msgstr "檢舉類型"
 
-#. Action label that opens the report flow targeting a user.
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:13
-msgid "Report user"
-msgstr "檢舉使用者"
-
 #. Field label on the details step of the DSA report form (message report). Optional FluxerTag of the user who sent the message.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:28
+#: src/features/moderation/components/report/ReportStepDetails.tsx:27
 msgid "Reported user tag (optional)"
 msgstr "被檢舉使用者的標籤（選填）"
 
@@ -29100,6 +28716,10 @@ msgstr "除了中等安全等級的所有要求外，還必須成為社群成員
 msgid "Resend"
 msgstr "重新傳送"
 
+#: src/features/moderation/components/report/ReportStepVerification.tsx:31
+msgid "Resend ({duration})"
+msgstr "重新傳送（{duration}）"
+
 #: src/features/user/components/modals/EmailChangeModal.tsx:333
 msgid "Resend ({newSecondsRemaining}s)"
 msgstr "重新傳送（{newSecondsRemaining} 秒）"
@@ -29108,7 +28728,7 @@ msgstr "重新傳送（{newSecondsRemaining} 秒）"
 msgid "Resend ({originalSecondsRemaining}s)"
 msgstr "重新傳送（{originalSecondsRemaining} 秒）"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:103
+#: src/features/moderation/components/report/ReportStepVerification.tsx:29
 msgid "Resend ({resendCooldownSeconds}s)"
 msgstr "重新傳送（{resendCooldownSeconds} 秒）"
 
@@ -29122,7 +28742,7 @@ msgstr "重新傳送（{resendSecondsRemaining} 秒）"
 msgid "Resend ({secondsRemaining}s)"
 msgstr "重新傳送（{secondsRemaining} 秒）"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:105
+#: src/features/moderation/components/report/ReportStepVerification.tsx:134
 msgid "Resend code"
 msgstr "重新傳送驗證碼"
 
@@ -29841,7 +29461,7 @@ msgid "Roles updated successfully"
 msgstr "身分組已成功更新"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:199
+#: src/features/moderation/components/report/OptionDescriptors.ts:112
 msgid "Romania"
 msgstr "羅馬尼亞"
 
@@ -29947,7 +29567,7 @@ msgstr "飽和度"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
-#: src/features/messaging/commands/MessageCommands.tsx:114
+#: src/features/messaging/commands/MessageCommands.tsx:118
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
@@ -30092,11 +29712,6 @@ msgstr "向 <0>{displayName}</0> 打聲招呼。私訊對話從這裡開始。"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:186
 msgid "Scale"
 msgstr "縮放"
-
-#. IAR modal: rule-category label grouping spam/scams, malware, and harmful misinformation.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:69
-msgid "Scams, malware, or misinformation"
-msgstr "詐騙、惡意軟體或不實資訊"
 
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:97
 msgid "Scan the QR code with your authenticator app."
@@ -30855,11 +30470,6 @@ msgstr "選擇"
 msgid "Select {accessibleName}"
 msgstr "選取「{accessibleName}」"
 
-#. Placeholder option label for the report category dropdown when no category has been chosen yet.
-#: src/features/moderation/components/report/OptionDescriptors.ts:20
-msgid "Select a category"
-msgstr "選擇類別"
-
 #. Button or menu action label in the idle settings section. Keep it concise.
 #. Button or menu action label in the system welcome section. Keep it concise.
 #. Placeholder of the channel picker in the follow announcement channel dialog.
@@ -30892,7 +30502,7 @@ msgid "Select a community where you have {permissionName} permission, or a group
 msgstr "選擇您擁有「{permissionName}」權限的社群，或您所屬的群組私訊。"
 
 #. Placeholder option label for the country dropdown in the EU illegal-content report flow.
-#: src/features/moderation/components/report/OptionDescriptors.ts:107
+#: src/features/moderation/components/report/OptionDescriptors.ts:20
 msgid "Select a country"
 msgstr "選取國家/地區"
 
@@ -30910,11 +30520,6 @@ msgstr "選取重新導向 URI"
 #: src/features/devtools/components/PremiumScenarioOptions.ts:16
 msgid "Select a scenario to apply..."
 msgstr "選擇要套用的情境…"
-
-#. Inline validation error on the details step of the DSA report flow when the category field is empty.
-#: src/features/moderation/components/pages/ReportPage.tsx:97
-msgid "Select a violation category."
-msgstr "請選擇違規類別。"
 
 #. Native Edit menu item that selects everything in the focused field. Imperative verb.
 #. Textarea right-click context menu item that selects all text in the textarea.
@@ -30972,17 +30577,17 @@ msgstr "選擇您想在新裝置上登入的帳號。"
 msgid "Select voice processing mode"
 msgstr "選取語音處理模式"
 
-#: src/features/moderation/components/report/ReportStepSelection.tsx:35
+#: src/features/moderation/components/report/ReportStepSelection.tsx:36
 msgid "Select what you want to report."
 msgstr "請選擇您要檢舉的項目。"
 
 #. Inline validation error on the details step of the DSA report flow when the country dropdown has no selection.
-#: src/features/moderation/components/pages/ReportPage.tsx:106
+#: src/features/moderation/components/pages/ReportPage.tsx:138
 msgid "Select your country of residence."
 msgstr "請選擇您的居住國家/地區。"
 
 #. Generic combobox control placeholder.
-#: src/features/ui/components/form/FormCombobox.tsx:76
+#: src/features/ui/components/form/FormCombobox.tsx:77
 msgid "Select…"
 msgstr "選擇…"
 
@@ -31036,13 +30641,6 @@ msgstr "選取範圍：{0}（上限 {1}）"
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:292
 msgid "Selections"
 msgstr "選擇"
-
-#. IAR modal: rule label.
-#. Report category label for content that promotes or depicts self-harm or suicide. Keep tone calm and respectful; this is a safety surface.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:346
-#: src/features/moderation/components/report/OptionDescriptors.ts:52
-msgid "Self-harm or suicide"
-msgstr "自殘或自殺"
 
 #. Accessible label for the self-host setup wizard carousel.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:97
@@ -31121,7 +30719,7 @@ msgstr "傳送動作訊息（會以斜體顯示）。"
 msgid "Send animation"
 msgstr "傳送動畫"
 
-#: src/features/moderation/components/report/ReportStepComplete.tsx:36
+#: src/features/moderation/components/report/ReportStepComplete.tsx:37
 msgid "Send another report"
 msgstr "再送出一則檢舉"
 
@@ -31138,7 +30736,7 @@ msgstr "傳送按鈕"
 msgid "Send code"
 msgstr "傳送驗證碼"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:302
+#: src/features/moderation/components/report/ReportStepDetails.tsx:364
 msgid "Send DSA report"
 msgstr "送出 DSA 檢舉"
 
@@ -31158,9 +30756,9 @@ msgstr "傳送檔案上限為 {size}"
 #. Button or menu action label in the user profile modal. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:93
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:92
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:111
-#: src/features/user/components/modals/UserProfileModal.tsx:126
+#: src/features/user/components/modals/UserProfileModal.tsx:129
 msgid "Send friend request"
 msgstr "傳送好友邀請"
 
@@ -31220,8 +30818,8 @@ msgstr "在討論串中傳送訊息"
 msgid "Send messages, images, GIFs and emoji"
 msgstr "傳送訊息、圖片、GIF 和表情符號"
 
-#. Footer submit button in the IAR modal. Sends the report to the safety team.
-#: src/features/moderation/components/report_modal/IARModal.tsx:88
+#. Report flow: footer button on the summary screen that sends the report to the safety team.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:30
 msgid "Send report"
 msgstr "送出檢舉"
 
@@ -31255,7 +30853,7 @@ msgstr "將此釘選訊息送回過去？"
 msgid "Send TTS messages"
 msgstr "傳送 TTS 訊息"
 
-#: src/features/moderation/components/report/ReportStepEmail.tsx:86
+#: src/features/moderation/components/report/ReportStepEmail.tsx:101
 msgid "Send verification code"
 msgstr "傳送驗證碼"
 
@@ -31272,11 +30870,6 @@ msgstr "傳送語音訊息"
 #: src/features/voice/components/voice_connection_status/shared.ts:84
 msgid "Send:"
 msgstr "傳送："
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:274
-msgid "Sending malware or dangerous links"
-msgstr "傳送惡意軟體或危險連結"
 
 #. Short label under a destination row in the forward modal, shown when the community has messaging disabled.
 #: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:55
@@ -31701,18 +31294,13 @@ msgstr "分享主題"
 msgid "Share voice activity with all friends?"
 msgstr "與所有好友分享語音活動嗎？"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:131
+#: src/features/moderation/components/report/ReportStepDetails.tsx:154
 msgid "Share what our team needs to assess this."
 msgstr "提供我們的團隊評估此事所需的資訊。"
 
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:283
 msgid "Share with a friend"
 msgstr "分享給好友"
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:398
-msgid "Share with community mods."
-msgstr "分享給社群管理員。"
 
 #. Voice control button or tooltip label for starting screen sharing.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:223
@@ -31756,16 +31344,6 @@ msgstr "分享的視窗"
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:42
 msgid "Shared window audio"
 msgstr "分享的視窗音訊"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:302
-msgid "Shares personal info, stalks users, or coordinates privacy abuse."
-msgstr "分享個人資訊、跟蹤騷擾使用者或串連侵犯隱私的行為。"
-
-#. Report category label for doxxing or sharing private personal information without consent.
-#: src/features/moderation/components/report/OptionDescriptors.ts:48
-msgid "Sharing personal information"
-msgstr "分享個人資訊"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:98
@@ -32758,12 +32336,12 @@ msgid "Sliders"
 msgstr "滑桿"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:203
+#: src/features/moderation/components/report/OptionDescriptors.ts:116
 msgid "Slovakia"
 msgstr "斯洛伐克"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:207
+#: src/features/moderation/components/report/OptionDescriptors.ts:120
 msgid "Slovenia"
 msgstr "斯洛維尼亞"
 
@@ -32888,11 +32466,6 @@ msgstr "慢速模式模擬"
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:50
 msgid "Slowmode time remaining"
 msgstr "慢速模式剩餘時間"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:174
-msgid "Slurs, dehumanizing language, or attacks on protected groups."
-msgstr "歧視性字眼、貶低人格的言論或針對受保護群體的攻擊。"
 
 #. Short label in the selections tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:45
@@ -33094,7 +32667,7 @@ msgid "Something went wrong while preparing this sticker. Try another file or tr
 msgstr "準備貼圖時發生錯誤。請嘗試其他檔案，或稍後再試一次。"
 
 #. Fallback body of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:130
+#: src/features/messaging/commands/MessageCommands.tsx:134
 msgid "Something went wrong while publishing. Try again in a moment."
 msgstr "發布時發生了問題。請稍後再試。"
 
@@ -33302,39 +32875,14 @@ msgid "Spacious layout with clear visual separation between messages."
 msgstr "寬敞的版面配置，訊息之間有清晰的視覺區隔。"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:211
+#: src/features/moderation/components/report/OptionDescriptors.ts:124
 msgid "Spain"
 msgstr "西班牙"
-
-#. Report category label for a user profile used primarily to send spam.
-#: src/features/moderation/components/report/OptionDescriptors.ts:74
-msgid "Spam account"
-msgstr "垃圾帳號"
 
 #. Section label for spam classification debug controls.
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:21
 msgid "Spam classification"
 msgstr "垃圾訊息分類"
-
-#. Report category label for spam or scam messages. Keep tone plain and neutral.
-#: src/features/moderation/components/report/OptionDescriptors.ts:36
-msgid "Spam or scam"
-msgstr "垃圾訊息或詐騙"
-
-#. Report category label for a community whose purpose is spam or scams.
-#: src/features/moderation/components/report/OptionDescriptors.ts:99
-msgid "Spam or scam community"
-msgstr "垃圾訊息或詐騙社群"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:254
-msgid "Spam, scam, or phishing account"
-msgstr "垃圾訊息、詐騙或網路釣魚帳號"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:246
-msgid "Spam, scams, or phishing"
-msgstr "垃圾訊息、詐騙或網路釣魚"
 
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:48
@@ -33628,9 +33176,11 @@ msgstr "最小化啟動"
 
 #. Button on the browser page after cancelling that goes back to choosing an account.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:337
-#: src/features/moderation/components/report/ReportStepDetails.tsx:326
-#: src/features/moderation/components/report/ReportStepEmail.tsx:97
-#: src/features/moderation/components/report/ReportStepVerification.tsx:134
+#: src/features/moderation/components/report/ReportStepDetails.tsx:389
+#: src/features/moderation/components/report/ReportStepEmail.tsx:113
+#: src/features/moderation/components/report/ReportStepReason.tsx:149
+#: src/features/moderation/components/report/ReportStepReason.tsx:219
+#: src/features/moderation/components/report/ReportStepVerification.tsx:167
 msgid "Start over"
 msgstr "重新開始"
 
@@ -33752,21 +33302,25 @@ msgstr "保持登入"
 msgid "Step {current} of {total}"
 msgstr "步驟 {current} / {total}"
 
-#: src/features/moderation/components/report/ReportStepSelection.tsx:29
+#: src/features/moderation/components/report/ReportStepSelection.tsx:30
 msgid "Step 1"
 msgstr "步驟 1"
 
-#: src/features/moderation/components/report/ReportStepEmail.tsx:40
+#: src/features/moderation/components/report/ReportStepEmail.tsx:46
 msgid "Step 2"
 msgstr "步驟 2"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:45
+#: src/features/moderation/components/report/ReportStepVerification.tsx:70
 msgid "Step 3"
 msgstr "步驟 3"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:125
+#: src/features/moderation/components/report/ReportStepReason.tsx:195
 msgid "Step 4"
 msgstr "步驟 4"
+
+#: src/features/moderation/components/report/ReportStepDetails.tsx:148
+msgid "Step 5"
+msgstr "步驟 5"
 
 #. Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:50
@@ -33935,11 +33489,6 @@ msgstr "停止將其設為公告頻道？"
 msgid "Stop hiding muted channels by default?"
 msgstr "要停止預設隱藏已設為靜音的頻道嗎？"
 
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:390
-msgid "Stop messages and friend requests."
-msgstr "不再收到訊息和好友邀請。"
-
 #: src/features/user/components/modals/tabs/components/MicTestSection.tsx:16
 msgid "Stop mic test"
 msgstr "停止麥克風測試"
@@ -33958,11 +33507,6 @@ msgstr "停止修補 Node.prototype 的 insertBefore 和 removeChild。當頁面
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:29
 msgid "Stop ringing"
 msgstr "停止響鈴"
-
-#. IAR modal: quick-action card description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:418
-msgid "Stop seeing its content and members."
-msgstr "不再看到社群的內容和成員。"
 
 #. Privacy > Active now: confirmation modal title when turning sharing off.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:37
@@ -34344,7 +33888,7 @@ msgid "Swap common text faces such as :) and <3 for emoji when sending messages"
 msgstr "傳送訊息時，將 :) 和 <3 等常見文字表情替換成表情符號"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
-#: src/features/moderation/components/report/OptionDescriptors.ts:215
+#: src/features/moderation/components/report/OptionDescriptors.ts:128
 msgid "Sweden"
 msgstr "瑞典"
 
@@ -34804,11 +34348,6 @@ msgstr "輕觸以新增記事"
 msgid "tar.gz archive"
 msgstr "tar.gz 封存檔"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:178
-msgid "Targets people by protected characteristics."
-msgstr "針對具有受保護特徵的人。"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:34
@@ -34884,11 +34423,6 @@ msgstr "服務條款"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1153
 msgid "Terms URL"
 msgstr "條款網址"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:194
-msgid "Terrorism or violent extremism"
-msgstr "恐怖主義或暴力極端主義"
 
 #. Button that validates SMTP credentials.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1125
@@ -35030,9 +34564,24 @@ msgid "Thai"
 msgstr "泰文"
 
 #. Confirmation text shown after a user submits a moderation report.
-#: src/features/moderation/components/report/ReportStepComplete.tsx:22
+#: src/features/moderation/components/report/ReportStepComplete.tsx:23
 msgid "Thank you for helping keep {productName} safe. We'll review your report as soon as possible."
 msgstr "感謝您協助維護 {productName} 的安全。我們會盡快審核您的檢舉。"
+
+#. Report flow: title of the final screen when the chosen answer does not lead to a report, so nothing was sent. Thanks the person for raising it.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:46
+msgid "Thanks for flagging this"
+msgstr "感謝您告知我們"
+
+#. Report flow: body of the final screen when the chosen answer does not lead to a report, so nothing was sent. Used when the reporter already picked a category.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:62
+msgid "Thanks for telling us. This doesn't break our rules on its own, so we didn't send a report."
+msgstr "感謝您告訴我們。這本身並未違反我們的規定，因此我們沒有送出檢舉。"
+
+#. Report flow: body of the final screen when the chosen answer does not lead to a report, so nothing was sent. "Abusive or harmful content" is the name of an answer in the same flow.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:56
+msgid "Thanks for telling us. This doesn't break our rules on its own, so we didn't send a report. If it targets someone or uses slurs, report it again and choose Abusive or harmful content."
+msgstr "感謝您告訴我們。這本身並不違反我們的規定，所以我們沒有送出檢舉。如果內容針對特定對象或使用侮辱性字眼，請再次檢舉並選擇「辱罵性或有害的內容」。"
 
 #. Error in the browser when a code typed from the app is not found. instanceHost is the server the browser checked, such as api.fluxer.app. productName is the app name, such as Fluxer.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:25
@@ -35048,7 +34597,7 @@ msgstr "操作未成功。請再試一次或取消。"
 msgid "That doesn't look like a valid color. Try hex, rgb(), hsl(), or a CSS color name."
 msgstr "這看起來不是有效的顏色。請試試看十六進位、rgb()、hsl() 或 CSS 顏色名稱。"
 
-#: src/features/moderation/components/report/ReportStepDetails.tsx:175
+#: src/features/moderation/components/report/ReportStepDetails.tsx:217
 msgid "That doesn't look like a valid URL."
 msgstr "這看起來不是有效的網址。"
 
@@ -35103,6 +34652,11 @@ msgstr "您在其他裝置上的 {PRODUCT_NAME} App 中，可以在「在其他�
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:327
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
 msgstr "{PRODUCT_NAME} 應用程式未登入。您可以關閉此分頁。"
+
+#. Report flow: body of the final screen after a report was sent. {productName} is the name of the app. The second sentence promises the reported person is not told who reported them.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:51
+msgid "The {productName} safety team will review your report. We won't reveal that it came from you."
+msgstr "{productName} 安全團隊會審核您的檢舉。我們不會透露是您檢舉的。"
 
 #. Description text in the FluxerTag change modal.
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:70
@@ -35308,6 +34862,11 @@ msgstr "提供的 redirect_uri 未在此應用程式中註冊。"
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "提供的 redirect_uri 必須使用 HTTP 或 HTTPS。"
 
+#. Report flow: toast shown when the report questions changed while the reporter was answering them.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:95
+msgid "The report form changed. Please start again."
+msgstr "檢舉表單已變更。請重新開始。"
+
 #. Activity log detail line under a deleted role, listing the permissions the role gave its members before it was deleted. The role is the subject. {permissions} is a list of permission names that the app joins with commas and the word for "and" in your language. When the list is long it ends with a count of the permissions not named, such as "3 more permissions". Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:170
 msgid "The role granted {permissions}"
@@ -35359,7 +34918,7 @@ msgid "The username tags on this instance are already set. They can no longer ch
 msgstr "此伺服器的使用者名稱標籤已設定完成，無法再變更。"
 
 #. Inline error on the verification step of the DSA report flow when the entered code is rejected.
-#: src/features/moderation/components/pages/ReportPage.tsx:88
+#: src/features/moderation/components/pages/ReportPage.tsx:114
 msgid "The verification code is invalid or expired."
 msgstr "驗證碼無效或已過期。"
 
@@ -36115,13 +35674,8 @@ msgstr "此成員已不在語音連線中。"
 msgid "This message can only be forwarded to age-restricted channels"
 msgstr "此訊息只能轉發至設有年齡限制的頻道"
 
-#. IAR modal: tooltip on the delete card when the reported message is already deleted.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:122
-msgid "This message has already been deleted."
-msgstr "此訊息已被刪除。"
-
 #. Toast shown when someone tries to publish an announcement message that was already published.
-#: src/features/messaging/commands/MessageCommands.tsx:122
+#: src/features/messaging/commands/MessageCommands.tsx:126
 msgid "This message has already been published"
 msgstr "此訊息已發佈過"
 
@@ -36279,11 +35833,6 @@ msgstr "這個討論串已關閉。傳送訊息將會重新開啟它。"
 msgid "This thread is locked. Only moderators can send messages."
 msgstr "此討論串已鎖定。只有管理員可以傳送訊息。"
 
-#. Lowercase phrase used mid-sentence in IAR copy when referring to the reported user without a name.
-#: src/features/moderation/components/report_modal/IARModalContext.ts:26
-msgid "this user"
-msgstr "這位使用者"
-
 #: src/features/user/components/popouts/LimitedProfileNotice.tsx:10
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "此使用者已限制個人檔案。部分詳細資訊不會顯示給非好友的使用者。"
@@ -36291,11 +35840,6 @@ msgstr "此使用者已限制個人檔案。部分詳細資訊不會顯示給非
 #: src/features/user/components/popouts/UserProfileShared.tsx:395
 msgid "This user has no roles in this community."
 msgstr "此使用者在此社群中沒有任何身分組。"
-
-#. IAR modal: tooltip on the ban card when the reported user is already banned.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:142
-msgid "This user is already banned from the community."
-msgstr "此使用者已被社群停權。"
 
 #: src/features/channel/components/channel_view/DMChannelView.tsx:282
 msgid "This user is no longer available."
@@ -36465,16 +36009,6 @@ msgstr "執行緒已更新"
 msgid "Threads"
 msgstr "討論串"
 
-#. IAR modal: rule description for a user report.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:158
-msgid "Threats, following across spaces, or unwanted contact."
-msgstr "威脅、到處跟蹤或不受歡迎的接觸。"
-
-#. IAR modal: rule-category label grouping harassment, hate, violence, terrorism, raids, and self-harm content.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:44
-msgid "Threats, harassment, or harm"
-msgstr "威脅、騷擾或傷害"
-
 #. Short label in the message history threshold content. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:41
 msgid "Threshold date"
@@ -36570,7 +36104,7 @@ msgstr "已將 {targetUserTag} 暫時禁言"
 
 #. Moderation action label that times a member out (temporary mute) in a community.
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:134
-#: src/features/moderation/utils/ModerationMessageDescriptors.ts:21
+#: src/features/moderation/utils/ModerationMessageDescriptors.ts:18
 msgid "Timeout"
 msgstr "暫時禁言"
 
@@ -36787,6 +36321,11 @@ msgstr "色調"
 msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "將 HDR 影像色調對應至標準範圍，降低峰值亮度。"
 
+#. Inline error on the email or code step of the DSA report flow when the verification code send was rate limited. {duration} is a localized duration such as "45 seconds" or "12 minutes".
+#: src/features/moderation/components/pages/ReportPage.tsx:95
+msgid "Too many codes sent. Wait {duration} and try again."
+msgstr "傳送的驗證碼過多。請等待 {duration} 後再試一次。"
+
 #. Error message in the max guilds modal.
 #: src/features/guild/components/alerts/MaxGuildsModal.tsx:9
 msgid "Too many communities"
@@ -36860,7 +36399,7 @@ msgid "Transfer community ownership"
 msgstr "轉移社群擁有權"
 
 #. Confirm dialog body before transferring ownership of a group DM.
-#: src/features/ui/action_menu/UserContextMenu.tsx:105
+#: src/features/ui/action_menu/UserContextMenu.tsx:104
 msgid "Transfer group ownership to {userName}?"
 msgstr "要將群組擁有權轉移給 {userName} 嗎？"
 
@@ -37561,7 +37100,7 @@ msgstr "請先解除封鎖，才能傳送好友邀請。"
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:106
-#: src/features/user/components/modals/UserProfileModal.tsx:118
+#: src/features/user/components/modals/UserProfileModal.tsx:121
 msgid "Unblock user"
 msgstr "解除封鎖"
 
@@ -37606,16 +37145,6 @@ msgstr "解除所有裝置的耳機靜音"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:132
 msgid "Undeafen yourself"
 msgstr "解除自己的耳機靜音"
-
-#. IAR modal: child-safety rule label (user reports).
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:89
-msgid "Underage or child-safety concern"
-msgstr "未成年或兒童安全疑慮"
-
-#. Report category label for an account that appears to belong to someone under the minimum age.
-#: src/features/moderation/components/report/OptionDescriptors.ts:78
-msgid "Underage user"
-msgstr "未成年使用者"
 
 #. Selection formatting toolbar button.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -38268,16 +37797,6 @@ msgstr "直到我再次開啟"
 msgid "Unverified email"
 msgstr "未驗證的電子郵件"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:206
-msgid "Unwanted conduct or mature content in the wrong place."
-msgstr "不受歡迎的行為，或出現在不當場合的成人內容。"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:214
-msgid "Unwanted mature conduct, comments, or requests."
-msgstr "不受歡迎的成人行為、言論或要求。"
-
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:608
 msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up in Discovery search."
 msgstr "最多可設定 {DISCOVERY_MAX_TAGS} 個標籤，讓大家更容易找到您的社群。這些標籤會顯示在探索搜尋結果中。"
@@ -38840,11 +38359,6 @@ msgstr "使用淺色主題"
 msgid "Use native title bar"
 msgstr "使用原生標題列"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:366
-msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above."
-msgstr "僅在內容明確違反 {productName} 規則且不符合上述任何選項時使用。"
-
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
 msgid "Use passkeys for two-factor authentication?"
@@ -39000,11 +38514,6 @@ msgstr "僅在此社群中使用。"
 msgid "User"
 msgstr "使用者"
 
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:230
-msgid "User appears underage, or is involved in grooming or child exploitation."
-msgstr "使用者疑似未成年，或涉及誘騙、剝削兒童。"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:306
 msgid "User avatars"
@@ -39021,7 +38530,7 @@ msgid "User debug"
 msgstr "使用者偵錯"
 
 #. Field label on the details step of the DSA report form (user report). Optional Fluxer user snowflake ID. "ID" is conventional.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:33
+#: src/features/moderation/components/report/ReportStepDetails.tsx:32
 msgid "User ID (optional)"
 msgstr "使用者 ID（選填）"
 
@@ -39061,12 +38570,12 @@ msgstr "找不到使用者"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:46
-#: src/features/user/components/modals/UserProfileModal.tsx:90
+#: src/features/user/components/modals/UserProfileModal.tsx:93
 msgid "User profile"
 msgstr "使用者個人檔案"
 
 #. Short label in the user profile modal. Keep it concise. Preserve {tag}; it is inserted by code.
-#: src/features/user/components/modals/UserProfileModal.tsx:94
+#: src/features/user/components/modals/UserProfileModal.tsx:97
 msgid "User profile: {tag}"
 msgstr "使用者個人檔案：{tag}"
 
@@ -39081,7 +38590,7 @@ msgid "User settings"
 msgstr "使用者設定"
 
 #. Field label on the details step of the DSA report form (user report). Optional FluxerTag of the reported user.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:38
+#: src/features/moderation/components/report/ReportStepDetails.tsx:37
 msgid "User tag (optional)"
 msgstr "使用者標籤（選填）"
 
@@ -39339,7 +38848,7 @@ msgstr "已驗證社群"
 msgid "Verify"
 msgstr "驗證"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:91
+#: src/features/moderation/components/report/ReportStepVerification.tsx:116
 msgid "Verify code"
 msgstr "驗證代碼"
 
@@ -39368,7 +38877,7 @@ msgstr "驗證是您本人操作"
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:44
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:86
 #: src/features/channel/utils/CreateDMModalUtils.tsx:52
-#: src/features/moderation/components/report/ReportStepEmail.tsx:43
+#: src/features/moderation/components/report/ReportStepEmail.tsx:49
 msgid "Verify your email"
 msgstr "驗證您的電子郵件"
 
@@ -39718,7 +39227,7 @@ msgstr "檢視備用碼"
 #. Button or menu action label in the user profile actions sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:69
-#: src/features/user/components/modals/UserProfileModal.tsx:98
+#: src/features/user/components/modals/UserProfileModal.tsx:101
 msgid "View community profile"
 msgstr "查看社群個人檔案"
 
@@ -39751,7 +39260,7 @@ msgstr "檢視禮物"
 #. Button or menu action label in the user profile actions sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:73
-#: src/features/user/components/modals/UserProfileModal.tsx:102
+#: src/features/user/components/modals/UserProfileModal.tsx:105
 msgid "View global profile"
 msgstr "查看全域個人檔案"
 
@@ -39846,26 +39355,6 @@ msgstr "觀眾加入直播"
 #: src/features/notification/utils/SoundLabels.ts:40
 msgid "Viewer leaves stream"
 msgstr "觀眾離開直播"
-
-#. Field label on the details step of the DSA illegal-content report form. The category dropdown narrows the type of violation. Legal/sensitive flow; keep tone formal.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:18
-msgid "Violation category"
-msgstr "違規類別"
-
-#. IAR modal: rule description.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:326
-msgid "Violation is in the user's profile, not a specific message."
-msgstr "違規內容在使用者的個人檔案中，而非特定訊息。"
-
-#. IAR modal: rule label.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:186
-msgid "Violence or violent threats"
-msgstr "暴力或暴力威脅"
-
-#. Report category label for violent or graphic content. Keep tone plain and neutral.
-#: src/features/moderation/components/report/OptionDescriptors.ts:32
-msgid "Violent or graphic content"
-msgstr "暴力或血腥內容"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:238
@@ -40421,7 +39910,7 @@ msgstr "我們已將此表情符號調整大小並壓縮為 128x128 像素，但
 msgid "We resized and compressed this sticker to 320x320 pixels, but it is still {fileSize}. The limit is {maxSize}. Try a simpler image, fewer colors, or a smaller source file."
 msgstr "我們已將此貼圖調整大小並壓縮至 320x320 像素，但它仍為 {fileSize}。限制為 {maxSize}。請嘗試使用更簡單的圖片、更少的顏色或更小的原始檔案。"
 
-#: src/features/moderation/components/report/ReportStepVerification.tsx:51
+#: src/features/moderation/components/report/ReportStepVerification.tsx:76
 msgid "We sent a code to {email}."
 msgstr "我們已將驗證碼傳送至 {email}。"
 
@@ -40472,7 +39961,7 @@ msgstr "我們會盡快處理。當您的封存檔準備好時，您會收到一
 msgid "We'll restore your previous email, sign out old sessions, disable MFA, and secure your account with a new password."
 msgstr "我們將會復原您先前的電子郵件、登出舊的裝置，停用多重要素驗證，並以新密碼保護您的帳號。"
 
-#: src/features/moderation/components/report/ReportStepEmail.tsx:46
+#: src/features/moderation/components/report/ReportStepEmail.tsx:52
 msgid "We'll send a short code to confirm you can receive updates about this report."
 msgstr "我們會傳送一組驗證碼，確認您可接收此檢舉的最新消息。"
 
@@ -40714,11 +40203,6 @@ msgctxt "us-state"
 msgid "West Virginia"
 msgstr "西維吉尼亞州"
 
-#. IAR modal: category-step title for the platform-report path. User picks a broad area before drilling in.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:36
-msgid "What kind of rule was broken?"
-msgstr "違反了哪一類規則？"
-
 #. Display-name field placeholder in account registration forms.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:878
 msgid "What should people call you?"
@@ -40754,6 +40238,11 @@ msgstr "近況如何？"
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:25
 msgid "What's new"
 msgstr "最新功能"
+
+#. DSA report page: title of the reason step while its questions load or when they could not be loaded.
+#: src/features/moderation/components/report/ReportStepReason.tsx:33
+msgid "What's the reason for your report?"
+msgstr "您檢舉的原因是什麼？"
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:66
 msgid "When a custom threshold date is not set, members without the <0>{readMessageHistoryPermissionLabel}</0> permission cannot view any historical messages. They'll only see messages in real time as they arrive, and they'll disappear when they restart their clients."
@@ -40831,11 +40320,6 @@ msgstr "哪些社群"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:97
 msgid "Which conversations"
 msgstr "哪些對話"
-
-#. IAR modal: reason-step title for the platform-report path after a category has been picked.
-#: src/features/moderation/components/report_modal/IARModalCopy.ts:40
-msgid "Which rule was broken?"
-msgstr "違反了哪一條規則？"
 
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:362
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
@@ -41277,7 +40761,7 @@ msgid "You can't attach files in this channel."
 msgstr "您無法在此頻道中附加檔案。"
 
 #. Error message in the user profile modal.
-#: src/features/user/components/modals/UserProfileModal.tsx:106
+#: src/features/user/components/modals/UserProfileModal.tsx:109
 msgid "You can't befriend yourself"
 msgstr "您無法將自己新增為朋友"
 
@@ -41341,7 +40825,7 @@ msgstr "您無法傳送訊息給這位使用者"
 #. Error message in the user profile modal.
 #. Error message in the user profile popout.
 #. Error message in the user settings profile preview.
-#: src/features/user/components/modals/UserProfileModal.tsx:110
+#: src/features/user/components/modals/UserProfileModal.tsx:113
 #: src/features/user/components/popouts/UserProfilePopout.tsx:73
 #: src/features/user/components/profile/ProfilePreview.tsx:44
 msgid "You can't message yourself"
@@ -41606,7 +41090,7 @@ msgid "You must agree to the terms of service to create an account"
 msgstr "您必須同意服務條款才能建立帳號"
 
 #. Inline error on the details step of the DSA report flow when the user has not completed email verification.
-#: src/features/moderation/components/pages/ReportPage.tsx:92
+#: src/features/moderation/components/pages/ReportPage.tsx:118
 msgid "You must verify your email before sending a report."
 msgstr "您必須先驗證電子郵件，才能傳送檢舉。"
 
@@ -41891,6 +41375,11 @@ msgstr "您目前享有舊版費率。此方案目前的價格為 {currentSubscr
 msgid "You're sending messages too quickly"
 msgstr "您傳送訊息的速度太快了"
 
+#. Report flow: note on the summary screen when the reporter hit the report rate limit.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:108
+msgid "You're sending reports too quickly. Try again later."
+msgstr "您傳送檢舉的速度太快了。請稍後再試。"
+
 #. Title of the browser page after the user approved signing in to the app.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:282
 msgid "You're signed in"
@@ -41914,6 +41403,16 @@ msgstr "您正在檢視較舊的訊息"
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:56
 msgid "You've added more people than a group DM allows. Remove a few and try again."
 msgstr "您新增的人數已超出群組私訊的上限。請移除幾位成員，然後再試一次。"
+
+#. Report flow: note on the summary screen when the reporter already reported this message.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:99
+msgid "You've already reported this message."
+msgstr "您已經檢舉過這則訊息了。"
+
+#. Report flow: note on the summary screen when the reporter already reported this user profile in the last day.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:103
+msgid "You've already reported this profile today."
+msgstr "您今天已經檢舉過這個個人檔案了。"
 
 #. Body of the error modal shown when a self-serve refund is blocked by the cooldown period.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:51
@@ -42079,6 +41578,11 @@ msgstr "你的帳號和設定並未變更或刪除。"
 msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "您的操作未能完成，因為系統偵測到有安全疑慮。如果您認為這是錯誤，請聯絡客服。"
 
+#. Report flow: section heading above the list of answers the reporter picked, on the summary screen.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:26
+msgid "Your answers"
+msgstr "您的回答"
+
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:409
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "您的申請正在審核中。您仍然可以更新刊登資訊或撤回申請。"
@@ -42089,7 +41593,7 @@ msgid "Your browser requires user interaction before audio can be played. Click 
 msgstr "您的瀏覽器需要使用者互動才能播放音訊。請點擊下方按鈕以啟用語音聊天。"
 
 #. Body of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:109
+#: src/features/messaging/commands/MessageCommands.tsx:113
 msgid "Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes."
 msgstr "你的變更會傳送給所有追蹤此頻道的社群，這可能需要一分鐘。每則已發布的訊息可快速編輯 3 次，之後每 20 分鐘可編輯 1 次。"
 
@@ -42311,6 +41815,11 @@ msgstr "您的新暱稱，留空則重設。"
 msgid "Your old recovery kit no longer works. Store this new one somewhere safe."
 msgstr "你舊的復原工具組已失效。請將這個新的工具組存放在安全的地方。"
 
+#. Report flow: heading above the box of follow-up actions on the final screen.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:67
+msgid "Your options"
+msgstr "您的選項"
+
 #. Recovery kit modal description shown after someone recovers their account with a recovery key.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:55
 msgid "Your password is reset. Your old recovery kit no longer works. Store this new one somewhere safe."
@@ -42369,6 +41878,11 @@ msgstr "您的地區"
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:494
 msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
 msgstr "您的續訂付款失敗，但 <0/> 會保持啟用狀態直到 <1>{graceDate}</1>。請在此之前更新付款方式，以保留您的訂閱。"
+
+#. Report flow: note on the summary screen when sending the report failed for an unknown reason.
+#: src/features/moderation/components/report_flow/ReportFlowCopy.ts:112
+msgid "Your report didn't go through. Try again."
+msgstr "您的檢舉未成功送出。請再試一次。"
 
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:86
@@ -42463,11 +41977,6 @@ msgstr "您的訂閱將在下次續訂時切換為按年計費。"
 #: src/features/theme/components/modals/ShareThemeModal.tsx:60
 msgid "Your theme CSS is too large to share. Trim it down and try again."
 msgstr "您的主題 CSS 檔案過大，無法分享。請縮減檔案大小後再試一次。"
-
-#. Field label on the details step of the DSA report form. Optional Fluxer username of the reporter so staff can follow up.
-#: src/features/moderation/components/report/ReportStepDetails.tsx:67
-msgid "Your username (optional)"
-msgstr "您的使用者名稱（選填）"
 
 #. Success toast after removing a community vanity invite URL.
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:54

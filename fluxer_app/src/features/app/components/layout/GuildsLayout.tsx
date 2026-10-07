@@ -212,7 +212,7 @@ function useGuildNavigationVisibility(): GuildNavigationVisibility {
 	const fluxerVisible = !RuntimeConfig.directMessagesDisabled;
 	const favoritesVisible = Accessibility.showFavorites;
 	const downloadVisible = !Platform.isElectron && !Platform.isPWA && !HiddenGuildListButtons.downloadButtonHidden;
-	const helpVisible = !HiddenGuildListButtons.helpButtonHidden;
+	const helpVisible = !HiddenGuildListButtons.helpButtonHidden && Routes.help() != null;
 	return useMemo(
 		() =>
 			Object.freeze({

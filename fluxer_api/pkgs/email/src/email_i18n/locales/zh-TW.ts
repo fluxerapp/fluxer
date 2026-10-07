@@ -31,6 +31,10 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "管理您的 {product_name} 捐款",
 		"body": "哈囉，\n\n點擊下方連結以存取您的捐款者入口網站：\n\n{manageUrl}\n\n在入口網站中，您可以管理訂閱、下載發票並查看您的捐款紀錄。\n\n此連結將於 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n如果您沒有要求此連結，可以直接忽略這封電子郵件。\n\n– {product_name} 團隊"
 	},
+	"dsa_report_resolved": {
+		"subject": "我們已對您的 {product_name} 檢舉做出決定",
+		"body": "哈囉，\n\n我們的安全團隊已審核您依據數位服務法提出的檢舉（ID：{reportId}）並做出決定。{hasComment, select, yes {\n\n安全團隊的回覆：\n{publicComment}} other {}}\n\n我們不會透露對他人帳號所採取措施的細節，因為這屬於對方的個人資料。\n\n如果您不同意此決定，可以在 60 天內免費提交申訴。請使用此電子郵件地址寄信至 {appeals_email}，註明您的檢舉 ID，並說明您認為此決定不正確的原因。如果您身在歐盟，也可以將爭議提交給經認證的訴訟外爭議解決機構。以上內容均不影響您向法院提起訴訟的權利。\n\n– {product_name} 安全團隊"
+	},
 	"dsa_report_verification": {
 		"subject": "驗證您的電子郵件以送出 DSA 檢舉",
 		"body": "哈囉，\n\n請使用以下驗證碼，在 {product_name} 上送出您的數位服務法檢舉：\n\n{code}\n\n此驗證碼將於 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n如果您沒有要求此驗證碼，可以忽略這封電子郵件。\n\n– {product_name} 安全團隊"
@@ -82,6 +86,10 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "您的 {product_name} 註冊已獲核准",
 		"body": "哈囉 {username}，\n\n好消息：您的 {product_name} 註冊已獲核准。\n\n您現在可以從這裡登入 {product_name} 應用程式：\n{channelsUrl}\n\n歡迎加入 {product_name} 社群。\n\n– {product_name} 團隊"
+	},
+	"report_received": {
+		"subject": "我們已收到您的 {product_name} 檢舉",
+		"body": "哈囉，\n\n我們已收到您依據數位服務法提出、關於 {product_name} 上{targetKind, select, message {一則訊息} user {一個帳號} guild {一個社群} other {內容}}的檢舉。\n\n檢舉 ID：{reportId}\n\n我們的安全團隊會審核您的檢舉，並在做出決定後寄信至此電子郵件地址。請保留這封電子郵件以供日後查閱。\n\n– {product_name} 安全團隊"
 	},
 	"report_resolved": {
 		"subject": "您的 {product_name} 檢舉已審核完成",

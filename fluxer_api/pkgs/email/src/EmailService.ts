@@ -3,7 +3,7 @@
 import {createLogger} from '@fluxer/logger/src/Logger';
 import type {IEmailI18nService} from '@pkgs/email/src/EmailI18nService';
 import type {EmailConfig, IEmailProvider, UserBouncedEmailChecker} from '@pkgs/email/src/EmailProviderTypes';
-import type {EmailTemplateVariables} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
+import type {EmailTemplateVariables, ReportReceivedTargetKind} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {EmailTemplateKey} from '@pkgs/email/src/email_i18n/EmailI18nTypes.generated';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import {ms} from 'itty-time';
@@ -236,6 +236,28 @@ export class EmailService implements IEmailService {
 			publicComment,
 			hasComment: publicComment ? 'yes' : 'no',
 		});
+	}
+
+	async sendDsaReportResolvedEmail(
+		email: string,
+		reportId: string,
+		publicComment: string,
+		locale: string | null = null,
+	): Promise<boolean> {
+		return this.sendTemplatedEmail(email, 'dsa_report_resolved', locale, {
+			reportId,
+			publicComment,
+			hasComment: publicComment ? 'yes' : 'no',
+		});
+	}
+
+	async sendReportReceivedEmail(
+		email: string,
+		reportId: string,
+		targetKind: ReportReceivedTargetKind,
+		locale: string | null = null,
+	): Promise<boolean> {
+		return this.sendTemplatedEmail(email, 'report_received', locale, {reportId, targetKind});
 	}
 
 	async sendDsaReportVerificationCode(

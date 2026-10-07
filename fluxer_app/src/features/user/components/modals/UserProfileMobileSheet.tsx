@@ -952,6 +952,7 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 					onToggleProfileView={() => setShowGlobalProfile(!showGlobalProfile)}
 					guildId={guildId}
 					guildMember={guildMember}
+					showReportUserProfile
 					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.user-profile-actions-sheet"
 				/>
 				<ExpressionInfoBottomSheet

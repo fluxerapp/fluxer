@@ -27,6 +27,10 @@
 		"subject": "Gestionează-ți donațiile către {product_name}",
 		"body": "Salut,\n\nApasă pe linkul de mai jos pentru a accesa portalul tău de donator:\n\n{manageUrl}\n\nÎn portal, poți gestiona abonamentele, descărca facturi și vizualiza istoricul donațiilor tale.\n\nAcest link expiră la data de {expiresAt, date, full} la ora {expiresAt, time, short}.\n\nDacă nu ai solicitat acest link, poți ignora în siguranță acest e-mail.\n\n– Echipa {product_name}"
 	},
+	"dsa_report_resolved": {
+		"subject": "Am luat o decizie cu privire la raportul tău de pe {product_name}",
+		"body": "Salut,\n\nEchipa noastră de siguranță a analizat raportul tău conform Digital Services Act (ID: {reportId}) și a luat o decizie.{hasComment, select, yes {\n\nRăspuns de la echipa de siguranță:\n{publicComment}} other {}}\n\nNu oferim detalii despre măsurile luate împotriva contului altei persoane, deoarece acestea sunt datele sale personale.\n\nDacă nu ești de acord cu această decizie, poți depune gratuit o contestație în termen de 60 de zile. Trimite un e-mail la {appeals_email} de la această adresă, include ID-ul raportului tău și explică de ce crezi că decizia este incorectă. Dacă te afli în UE, poți, de asemenea, să înaintezi litigiul unui organism certificat de soluționare extrajudiciară a litigiilor. Nimic din toate acestea nu îți afectează dreptul de a te adresa instanței.\n\n– Echipa de siguranță {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Verifică-ți e-mailul pentru un raport DSA",
 		"body": "Salut,\n\nFolosește codul de verificare de mai jos pentru a trimite raportul tău conform Digital Services Act pe {product_name}:\n\n{code}\n\nAcest cod expiră la data de {expiresAt, date, full} la ora {expiresAt, time, short}.\n\nDacă nu ai solicitat acest lucru, poți ignora acest e-mail.\n\n– Echipa de siguranță {product_name}"
@@ -78,6 +82,10 @@
 	"registration_approved": {
 		"subject": "Înregistrarea ta pentru {product_name} a fost aprobată",
 		"body": "Salut {username},\n\nVești bune: înregistrarea ta pentru {product_name} a fost aprobată.\n\nAcum te poți conecta la aplicația {product_name} aici:\n{channelsUrl}\n\nBun venit în comunitatea {product_name}.\n\n– Echipa {product_name}"
+	},
+	"report_received": {
+		"subject": "Am primit raportul tău de pe {product_name}",
+		"body": "Salut,\n\nAm primit raportul tău conform Digital Services Act despre {targetKind, select, message {un mesaj} user {un cont} guild {o comunitate} other {conținut}} de pe {product_name}.\n\nID raport: {reportId}\n\nEchipa noastră de siguranță va analiza raportul tău și îți vom scrie la această adresă după ce luăm o decizie. Păstrează acest e-mail pentru evidența ta.\n\n– Echipa de siguranță {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Raportul tău de pe {product_name} a fost analizat",

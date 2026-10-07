@@ -1,0 +1,83 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.list {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border: 0.0625rem solid var(--background-header-secondary);
+	border-radius: var(--radius-xl);
+	background-color: var(--background-secondary-alt);
+	overflow: hidden;
+}
+
+.item {
+	display: flex;
+	flex-direction: column;
+}
+
+.item:not(:last-child) {
+	border-bottom: 0.0625rem solid var(--background-header-secondary);
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	min-height: 3.25rem;
+	padding-block: 0.875rem;
+	padding-inline-start: 1rem;
+	padding-inline-end: 0.875rem;
+	border: none;
+	background: none;
+	color: var(--text-primary);
+	text-align: start;
+	cursor: pointer;
+}
+
+.row:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.row:not(:disabled):hover {
+		background-color: var(--background-modifier-hover);
+	}
+}
+
+.row:not(:disabled):active {
+	background-color: var(--background-modifier-selected);
+}
+
+.label {
+	flex: 1;
+	min-width: 0;
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.25rem;
+	overflow-wrap: anywhere;
+}
+
+.icon {
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+[dir='rtl'] .chevron {
+	transform: scaleX(-1);
+}
+
+.srOnly {
+	position: absolute;
+	width: 0.0625rem;
+	height: 0.0625rem;
+	padding: 0;
+	margin: -0.0625rem;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

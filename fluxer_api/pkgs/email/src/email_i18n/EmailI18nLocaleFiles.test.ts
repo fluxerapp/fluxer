@@ -36,6 +36,7 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 	},
 	donation_confirmation: {amount: '$5.00', currency: 'USD', interval: 'month', manageUrl: 'https://example.com/m'},
 	donation_magic_link: {manageUrl: 'https://example.com/m', expiresAt: DATE},
+	dsa_report_resolved: {reportId: '1', publicComment: 'Thanks', hasComment: 'yes'},
 	dsa_report_verification: {code: '123456', expiresAt: DATE},
 	email_change_new: {username: 'testuser', code: '123456', expiresAt: DATE},
 	email_change_original: {username: 'testuser', code: '123456', expiresAt: DATE},
@@ -65,6 +66,7 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 	password_change_verification: {username: 'testuser', code: '123456', expiresAt: DATE},
 	password_reset: {username: 'testuser', resetUrl: 'https://example.com/reset'},
 	registration_approved: {username: 'testuser', channelsUrl: 'https://example.com/channels'},
+	report_received: {reportId: '1', targetKind: 'message'},
 	report_resolved: {username: 'testuser', reportId: '1', publicComment: 'Thanks', hasComment: 'yes'},
 	scheduled_deletion_notification: {username: 'testuser', deletionDate: DATE, reason: 'Payment fraud'},
 	self_deletion_scheduled: {username: 'testuser', deletionDate: DATE},
@@ -142,6 +144,56 @@ describe('EmailI18n locale files', () => {
 			expect(body).not.toContain('\n\n\n');
 		},
 	);
+	it.each(['en-US', ...LOCALES])('%s names each reported target kind in the receipt', (locale) => {
+		const bodies = (['message', 'user', 'guild'] as const).map((targetKind) =>
+			renderBody('report_received', locale, {reportId: '1234567890', targetKind}),
+		);
+		expect(new Set(bodies).size).toBe(3);
+		for (const body of bodies) {
+			expect(body).toContain('1234567890');
+			expect(body).not.toContain('targetKind');
+		}
+	});
+	it('renders the receipt for each target kind', () => {
+		expect(renderBody('report_received', 'en-US', {reportId: '1', targetKind: 'message'})).toContain(
+			'report about a message on Fluxer.',
+		);
+		expect(renderBody('report_received', 'en-US', {reportId: '1', targetKind: 'user'})).toContain(
+			'report about an account on Fluxer.',
+		);
+		expect(renderBody('report_received', 'en-US', {reportId: '1', targetKind: 'guild'})).toContain(
+			'report about a community on Fluxer.',
+		);
+	});
+	it.each(['en-US', ...LOCALES])('%s tells a DSA reporter how to challenge the decision', (locale) => {
+		const withComment = renderBody('dsa_report_resolved', locale, {
+			reportId: '1234567890',
+			publicComment: 'We removed the content.',
+			hasComment: 'yes',
+		});
+		const withoutComment = renderBody('dsa_report_resolved', locale, {
+			reportId: '1234567890',
+			publicComment: '',
+			hasComment: 'no',
+		});
+		for (const body of [withComment, withoutComment]) {
+			expect(body).toContain('1234567890');
+			expect(body).toContain('appeals@fluxer.app');
+			expect(body).toContain('60');
+			expect(body).not.toContain('\n\n\n');
+		}
+		expect(withComment).toContain('We removed the content.');
+		expect(withComment.split('\n\n')).toHaveLength(withoutComment.split('\n\n').length + 1);
+	});
+	it('greets a DSA reporter without a username', () => {
+		for (const key of ['report_received', 'dsa_report_resolved'] as const) {
+			const result = getEmailTemplate(key, 'en-US', FIXTURE[key]);
+			expect(result.ok).toBe(true);
+			if (!result.ok) continue;
+			expect(result.value.body.startsWith('Hello,\n\n')).toBe(true);
+			expect(result.value.body).not.toContain('{');
+		}
+	});
 	it('renders a blank reason the same as no reason', async () => {
 		const sent: Array<EmailMessage> = [];
 		const provider: IEmailProvider = {

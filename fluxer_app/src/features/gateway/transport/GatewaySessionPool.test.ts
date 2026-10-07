@@ -133,6 +133,8 @@ vi.mock('@app/features/expressions/state/FavoriteMemes', () => ({default: {reset
 
 vi.mock('@app/features/member/state/MemberSearch', () => ({default: {handleLogout: vi.fn()}}));
 
+vi.mock('@app/features/moderation/state/ReportFlows', () => ({default: {reset: vi.fn()}}));
+
 vi.mock('@app/features/messaging/state/MessagingMessages', () => ({
 	default: {handleSessionInvalidated: vi.fn(), handleConnectionClosed: vi.fn()},
 }));

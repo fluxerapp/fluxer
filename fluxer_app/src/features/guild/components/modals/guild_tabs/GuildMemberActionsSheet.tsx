@@ -32,10 +32,9 @@ import {
 	BAN_ACTION_DESCRIPTOR,
 	BLOCK_DESCRIPTOR,
 	REMOVE_TIMEOUT_DESCRIPTOR,
-	REPORT_USER_DESCRIPTOR,
 	TIMEOUT_DESCRIPTOR,
 } from '@app/features/moderation/utils/ModerationMessageDescriptors';
-import {openReportMessageModal, openReportUserModal} from '@app/features/moderation/utils/ReportActionUtils';
+import {openReportMessageModal} from '@app/features/moderation/utils/ReportActionUtils';
 import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
 import Permission from '@app/features/permissions/state/Permission';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
@@ -270,9 +269,6 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 				)),
 			);
 		};
-		const handleReportUser = () => {
-			ModalCommands.runAfterBottomSheetClose(onClose, () => openReportUserModal({i18n, user, guildId, message}));
-		};
 		const handleReportMessage = () => {
 			if (!message || !canReportMessage(message)) {
 				return;
@@ -468,12 +464,6 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 							},
 						]
 					: []),
-				{
-					icon: <FlagIcon className={styles.icon} data-flx="guild.guild-tabs.guild-member-actions-sheet.icon--15" />,
-					label: i18n._(REPORT_USER_DESCRIPTOR),
-					onClick: handleReportUser,
-					danger: true,
-				},
 			];
 			if (relationshipType === RelationshipTypes.BLOCKED) {
 				reportBlockItems.push({

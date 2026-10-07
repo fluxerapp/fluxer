@@ -31,6 +31,10 @@ const EMAIL_I18N_VI_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Quản lý các khoản ủng hộ {product_name} của bạn",
 		"body": "Xin chào,\n\nNhấp vào liên kết bên dưới để truy cập cổng thông tin người ủng hộ của bạn:\n\n{manageUrl}\n\nTrong cổng thông tin, bạn có thể quản lý gói đăng ký, tải xuống hóa đơn và xem lịch sử ủng hộ của mình.\n\nLiên kết này hết hạn vào {expiresAt, date, full} lúc {expiresAt, time, short}.\n\nNếu bạn không yêu cầu liên kết này, bạn có thể bỏ qua email này.\n\n– Đội ngũ {product_name}"
 	},
+	"dsa_report_resolved": {
+		"subject": "Chúng tôi đã có quyết định về báo cáo của bạn trên {product_name}",
+		"body": "Xin chào,\n\nĐội ngũ An toàn của chúng tôi đã xem xét báo cáo theo Đạo luật Dịch vụ kỹ thuật số của bạn (ID: {reportId}) và đã đưa ra quyết định.{hasComment, select, yes {\n\nPhản hồi từ Đội ngũ An toàn:\n{publicComment}} other {}}\n\nChúng tôi không chia sẻ chi tiết về biện pháp áp dụng với tài khoản của người khác, vì đó là dữ liệu cá nhân của họ.\n\nNếu không đồng ý với quyết định này, bạn có thể gửi khiếu nại miễn phí trong vòng 60 ngày. Gửi email đến {appeals_email} từ địa chỉ email này, ghi rõ ID báo cáo của bạn và giải thích lý do bạn cho rằng quyết định đó không chính xác. Nếu bạn ở EU, bạn cũng có thể đưa tranh chấp đến một cơ quan giải quyết tranh chấp ngoài tòa án đã được chứng nhận. Những điều này không ảnh hưởng đến quyền khởi kiện ra tòa của bạn.\n\n– Đội ngũ An toàn {product_name}"
+	},
 	"dsa_report_verification": {
 		"subject": "Xác minh email của bạn cho báo cáo DSA",
 		"body": "Xin chào,\n\nSử dụng mã xác minh bên dưới để gửi báo cáo Đạo luật Dịch vụ kỹ thuật số của bạn trên {product_name}:\n\n{code}\n\nMã này hết hạn vào {expiresAt, date, full} lúc {expiresAt, time, short}.\n\nNếu bạn không yêu cầu mã này, bạn có thể bỏ qua email này.\n\n– Đội ngũ An toàn {product_name}"
@@ -82,6 +86,10 @@ const EMAIL_I18N_VI_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "Đăng ký {product_name} của bạn đã được chấp thuận",
 		"body": "Xin chào {username},\n\nTin tốt: đăng ký {product_name} của bạn đã được chấp thuận.\n\nBây giờ bạn có thể đăng nhập vào ứng dụng {product_name} tại đây:\n{channelsUrl}\n\nChào mừng bạn đến với cộng đồng {product_name}.\n\n– Đội ngũ {product_name}"
+	},
+	"report_received": {
+		"subject": "Chúng tôi đã nhận được báo cáo của bạn trên {product_name}",
+		"body": "Xin chào,\n\nChúng tôi đã nhận được báo cáo theo Đạo luật Dịch vụ kỹ thuật số của bạn về {targetKind, select, message {một tin nhắn} user {một tài khoản} guild {một cộng đồng} other {nội dung}} trên {product_name}.\n\nID báo cáo: {reportId}\n\nĐội ngũ An toàn của chúng tôi sẽ xem xét báo cáo của bạn và chúng tôi sẽ gửi email đến địa chỉ này khi có quyết định. Hãy giữ lại email này để tiện tra cứu.\n\n– Đội ngũ An toàn {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Báo cáo {product_name} của bạn đã được xem xét",

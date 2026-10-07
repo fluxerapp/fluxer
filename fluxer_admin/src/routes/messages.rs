@@ -73,6 +73,7 @@ async fn messages_page(
         .unwrap_or(&[]);
     let can_lookup = acl::has_permission(admin_acls, acl::MESSAGE_LOOKUP);
     let can_delete = acl::has_permission(admin_acls, acl::MESSAGE_DELETE);
+    let can_report_ncmec = acl::has_all_permissions(admin_acls, acl::NCMEC_ATTACHMENT_REPORT);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let channel_id = query.channel_id.as_deref().filter(|s| !s.is_empty());
     let message_id = query.message_id.as_deref().filter(|s| !s.is_empty());
@@ -137,6 +138,7 @@ async fn messages_page(
             prefill_channel_id: channel_id,
             can_lookup,
             can_delete,
+            can_report_ncmec,
             lookup_result: lookup_result.as_ref(),
             browse_result: browse_result.as_ref(),
             search_result: search_result.as_ref(),

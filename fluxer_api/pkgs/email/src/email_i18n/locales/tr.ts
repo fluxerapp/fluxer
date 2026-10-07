@@ -31,6 +31,10 @@ const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "{product_name} bağışlarını yönet",
 		"body": "Merhaba,\n\nBağışçı portalına erişmek için aşağıdaki bağlantıya tıkla:\n\n{manageUrl}\n\nPortalda aboneliklerini yönetebilir, faturaları indirebilir ve bağış geçmişini görüntüleyebilirsin.\n\nBu bağlantı {expiresAt, date, full} {expiresAt, time, short} tarihinde sona erecektir.\n\nBu bağlantıyı sen talep etmediysen, bu e-postayı güvenle yok sayabilirsin.\n\n– {product_name} Ekibi"
 	},
+	"dsa_report_resolved": {
+		"subject": "{product_name} raporun hakkında karar verdik",
+		"body": "Merhaba,\n\nGüvenlik Ekibimiz Dijital Hizmetler Yasası raporunu (Kimlik: {reportId}) inceledi ve bir karar verdi.{hasComment, select, yes {\n\nGüvenlik Ekibinin yanıtı:\n{publicComment}} other {}}\n\nBaşka bir kişinin hesabına uygulanan işlemlerin ayrıntılarını paylaşmıyoruz çünkü bunlar o kişinin kişisel verileridir.\n\nBu karara katılmıyorsan 60 gün içinde ücretsiz olarak itiraz edebilirsin. Bu e-posta adresinden {appeals_email} adresine e-posta gönder, rapor kimliğini ekle ve kararın neden yanlış olduğunu düşündüğünü açıkla. AB'deysen anlaşmazlığı sertifikalı bir mahkeme dışı uyuşmazlık çözüm kuruluşuna da götürebilirsin. Bunların hiçbiri mahkemeye başvurma hakkını etkilemez.\n\n– {product_name} Güvenlik Ekibi"
+	},
 	"dsa_report_verification": {
 		"subject": "DSA raporu için e-postanı doğrula",
 		"body": "Merhaba,\n\n{product_name}'daki Dijital Hizmetler Yasası raporunu göndermek için aşağıdaki doğrulama kodunu kullan:\n\n{code}\n\nBu kod {expiresAt, date, full} {expiresAt, time, short} tarihinde sona erecektir.\n\nBunu sen talep etmediysen, bu e-postayı güvenle yok sayabilirsin.\n\n– {product_name} Güvenlik Ekibi"
@@ -82,6 +86,10 @@ const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 	"registration_approved": {
 		"subject": "{product_name} kaydın onaylandı",
 		"body": "Merhaba {username},\n\nİyi haber: {product_name} kaydın onaylandı.\n\nArtık {product_name} uygulamasına buradan giriş yapabilirsin:\n{channelsUrl}\n\n{product_name} topluluğuna hoş geldin.\n\n– {product_name} Ekibi"
+	},
+	"report_received": {
+		"subject": "{product_name} raporunu aldık",
+		"body": "Merhaba,\n\n{product_name} üzerindeki {targetKind, select, message {bir mesaj} user {bir hesap} guild {bir topluluk} other {içerik}} hakkındaki Dijital Hizmetler Yasası raporunu aldık.\n\nRapor Kimliği: {reportId}\n\nGüvenlik Ekibimiz raporunu inceleyecek ve bir karar verdiğimizde sana bu adrese e-posta göndereceğiz. Bu e-postayı kayıtların için sakla.\n\n– {product_name} Güvenlik Ekibi"
 	},
 	"report_resolved": {
 		"subject": "{product_name} raporun incelendi",
