@@ -13,9 +13,12 @@ import {
 	SkeletonGuildRailItemIndicator,
 	SkeletonGuildRailItemKind,
 } from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import {
+	skeletonDirectMessagesDisabled,
+	skeletonSingleCommunityEnabled,
+} from '@app/features/app/components/skeleton/SkeletonRuntimeConfig';
 import {SkeletonEmphasis, SkeletonRadius} from '@app/features/app/components/skeleton/SkeletonStyle';
 import {skeletonSurfaceVar} from '@app/features/app/components/skeleton/SkeletonSurfaceContract';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Platform} from '@app/features/platform/types/Platform';
 import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
 import Dimension from '@app/features/ui/state/Dimension';
@@ -454,7 +457,7 @@ export const GuildRailSkeleton: React.FC<GuildRailSkeletonProps> = ({
 		});
 	});
 	const {rememberedLayout} = mountState;
-	const communityActionsAvailable = !RuntimeConfig.singleCommunityEnabled;
+	const communityActionsAvailable = !skeletonSingleCommunityEnabled();
 	const inlineDmRowCount = rememberedLayout?.inlineDmRowCount ?? 0;
 	const inlineDmUnreadFlags = rememberedLayout?.inlineDmUnreadFlags ?? EMPTY_INLINE_DM_UNREAD_FLAGS;
 	const selectedInlineDmRowIndex = rememberedLayout?.selectedInlineDmRowIndex ?? SKELETON_NO_SELECTED_RAIL_ITEM_INDEX;
@@ -462,7 +465,7 @@ export const GuildRailSkeleton: React.FC<GuildRailSkeletonProps> = ({
 	const outageVisible = rememberedLayout?.outageVisible ?? false;
 	const organizedItems = rememberedLayout?.organizedItems ?? SKELETON_GUILD_RAIL_FALLBACK_ITEMS;
 	const selectedItemIndex = rememberedLayout?.selectedItemIndex ?? SKELETON_NO_SELECTED_RAIL_ITEM_INDEX;
-	const fluxerVisible = rememberedLayout?.fluxerVisible ?? !RuntimeConfig.directMessagesDisabled;
+	const fluxerVisible = rememberedLayout?.fluxerVisible ?? !skeletonDirectMessagesDisabled();
 	const favoritesVisible = rememberedLayout?.favoritesVisible ?? true;
 	const discoveryVisible = rememberedLayout?.discoveryVisible ?? communityActionsAvailable;
 	const addGuildVisible = rememberedLayout?.addGuildVisible ?? communityActionsAvailable;
