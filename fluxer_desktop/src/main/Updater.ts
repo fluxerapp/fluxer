@@ -218,12 +218,27 @@ async function checkVelopackForUpdates(
 			send(getMainWindow(), {type: 'checking', context});
 			const updateManager = createVelopackUpdateManager();
 			const failedApply = resolveFailedVelopackApply(updateManager);
-			if (failedApply) {
+			let update: Awaited<ReturnType<VelopackUpdateManager['checkForUpdatesAsync']>>;
+			try {
+				update = await updateManager.checkForUpdatesAsync();
+			} catch (error) {
+				if (!failedApply) throw error;
 				await sendVelopackApplyFailure(context, getMainWindow, failedApply);
 				return;
 			}
-			const pendingUpdate = updateManager.getUpdatePendingRestart();
-			const update = await updateManager.checkForUpdatesAsync();
+			if (failedApply) {
+				const updateVersion = update ? getVelopackUpdateVersion(update) : null;
+				if (!updateVersion || compareVersions(updateVersion, failedApply.version) <= 0) {
+					await sendVelopackApplyFailure(context, getMainWindow, failedApply);
+					return;
+				}
+				log.info('A release newer than the update that failed to apply is out, retrying the in-app update', {
+					failedVersion: failedApply.version,
+					updateVersion,
+				});
+				clearVelopackApplyAttempt();
+			}
+			const pendingUpdate = failedApply ? null : updateManager.getUpdatePendingRestart();
 			if (!update) {
 				if (pendingUpdate) {
 					pendingVelopackUpdate = pendingUpdate;
