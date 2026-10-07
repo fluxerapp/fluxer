@@ -140,8 +140,10 @@ handle_cast(_Msg, State) ->
 handle_info({cluster_peers_changed, Peers}, State) ->
     {noreply, apply_discovered(normalize_nodes(Peers), State)};
 handle_info({nodeup, Node}, State) when is_atom(Node) ->
+    ok = presence_cache:handle_nodeup(Node),
     {noreply, maybe_add_member(Node, State)};
 handle_info({nodedown, Node}, State) when is_atom(Node) ->
+    ok = maybe_start_presence_grace(Node, State),
     {noreply, maybe_remove_member(Node, State)};
 handle_info(refresh_roles, State) ->
     State1 = reconcile_against_connected_nodes(State),
@@ -209,6 +211,13 @@ force_discovery_refresh_safely() ->
         throw:_ -> ok;
         error:_ -> ok;
         exit:_ -> ok
+    end.
+
+-spec maybe_start_presence_grace(node(), state()) -> ok.
+maybe_start_presence_grace(Node, #{members := Members}) ->
+    case lists:member(Node, Members) andalso Node =/= node() of
+        true -> presence_cache:handle_nodedown(Node);
+        false -> ok
     end.
 
 -spec maybe_remove_member(node(), state()) -> state().

@@ -48,7 +48,7 @@ Presence Update accepts five commands per WebSocket in a rolling 20-second windo
 
 Voice State Update processes the first two commands per session in a rolling one-second window immediately. Later updates enter a per-session queue that holds at most 64 commands and drains one command every 500 ms. A newer update replaces an older queued update for the same `guild_id` and `connection_id` pair, and a full queue discards its oldest entry before accepting the new one.
 
-Request Guild Members has one command-specific budget. A bot requesting a complete member list is limited to one accepted request per guild every 30 seconds, and a request inside that window produces [Rate Limited](/gateway/events/#rate-limited). The budget is keyed by the account and the guild together, so reconnecting does not reset it.
+Request Guild Members has three command-specific budgets. Each account may send 12 requests in a rolling 10-second window, and each guild accepts 40 requests in a rolling 10-second window across all accounts. A request over either of these budgets is discarded without a result and without a close. A bot requesting a complete member list is limited to one accepted request per guild every 30 seconds, and a request inside that window produces [Rate Limited](/gateway/events/#rate-limited). The budget is keyed by the account and the guild together, so reconnecting does not reset it.
 
 ## Bounded commands
 

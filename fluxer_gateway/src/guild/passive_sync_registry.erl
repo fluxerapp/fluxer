@@ -7,8 +7,7 @@
     init/0,
     store/3,
     lookup/2,
-    delete/2,
-    delete_all_for_session/1
+    delete/2
 ]).
 
 -ifdef(TEST).
@@ -70,12 +69,6 @@ delete(SessionId, GuildId) ->
     ensure_table(),
     Key = {SessionId, GuildId},
     ets:delete(?TABLE, Key),
-    ok.
-
--spec delete_all_for_session(session_id()) -> ok.
-delete_all_for_session(SessionId) ->
-    ensure_table(),
-    ets:match_delete(?TABLE, {{SessionId, '_'}, '_'}),
     ok.
 
 -spec ensure_table() -> ok.
@@ -151,38 +144,6 @@ delete_removes_entry_test() ->
         Result
     ),
     cleanup_table().
-
-delete_all_for_session_removes_all_guilds_test() ->
-    cleanup_table(),
-    ok = init(),
-    SessionId = <<"session_1">>,
-    OtherSessionId = <<"session_2">>,
-    State1 = make_passive_state(<<"ch1">>, <<"msg1">>),
-    State2 = make_passive_state(<<"ch2">>, <<"msg2">>),
-    OtherState = make_passive_state(<<"ch3">>, <<"msg3">>),
-    ok = store(SessionId, 100, State1),
-    ok = store(SessionId, 200, State2),
-    ok = store(OtherSessionId, 100, OtherState),
-    ok = delete_all_for_session(SessionId),
-    Empty = empty_passive_state(),
-    ?assertEqual(Empty, lookup(SessionId, 100)),
-    ?assertEqual(Empty, lookup(SessionId, 200)),
-    ?assertEqual(OtherState, lookup(OtherSessionId, 100)),
-    cleanup_table().
-
-make_passive_state(Ch, Msg) ->
-    #{
-        previous_passive_updates => #{Ch => Msg},
-        previous_passive_channel_versions => #{},
-        previous_passive_voice_states => #{}
-    }.
-
-empty_passive_state() ->
-    #{
-        previous_passive_updates => #{},
-        previous_passive_channel_versions => #{},
-        previous_passive_voice_states => #{}
-    }.
 
 store_overwrites_existing_test() ->
     cleanup_table(),

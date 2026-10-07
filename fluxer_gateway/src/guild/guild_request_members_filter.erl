@@ -16,6 +16,10 @@
 
 -export_type([session_state/0]).
 
+-ifdef(TEST).
+-export([prune_expired_entries/2]).
+-endif.
+
 -define(REQUEST_MEMBERS_RATE_LIMIT_TABLE, guild_request_members_rate_limit).
 -define(REQUEST_MEMBERS_RATE_LIMIT_WINDOW_MS, 10000).
 -define(REQUEST_MEMBERS_RATE_LIMIT_MAX_EVENTS, 12).
@@ -24,6 +28,7 @@
 -define(REQUEST_MEMBERS_GUILD_RATE_LIMIT_MAX_EVENTS, 40).
 -define(FULL_LIST_BOT_RATE_LIMIT_TABLE, guild_request_members_bot_full_list_rate_limit).
 -define(FULL_LIST_BOT_RATE_LIMIT_WINDOW_MS, 30000).
+-define(RATE_LIMIT_CLEANUP_INTERVAL_MS, 60000).
 
 -type session_state() :: map().
 
@@ -106,7 +111,7 @@ check_full_list_bot_rate_limit(true, true, _UserId, _GuildId) ->
 -spec check_bot_rate_limit_window(integer(), integer()) ->
     ok | {rate_limited, non_neg_integer()}.
 check_bot_rate_limit_window(UserId, GuildId) ->
-    ensure_ets_table(?FULL_LIST_BOT_RATE_LIMIT_TABLE),
+    ensure_ets_table(?FULL_LIST_BOT_RATE_LIMIT_TABLE, ?FULL_LIST_BOT_RATE_LIMIT_WINDOW_MS),
     Now = erlang:system_time(millisecond),
     Key = {UserId, GuildId},
     Window = ?FULL_LIST_BOT_RATE_LIMIT_WINDOW_MS,
@@ -120,25 +125,40 @@ check_bot_rate_limit_window(UserId, GuildId) ->
 
 -spec check_request_rate_limit(integer() | undefined) -> ok | {error, atom()}.
 check_request_rate_limit(UserId) when is_integer(UserId), UserId > 0 ->
-    ensure_ets_table(?REQUEST_MEMBERS_RATE_LIMIT_TABLE),
-    check_sliding_window(
-        ?REQUEST_MEMBERS_RATE_LIMIT_TABLE,
-        UserId,
-        ?REQUEST_MEMBERS_RATE_LIMIT_WINDOW_MS,
-        ?REQUEST_MEMBERS_RATE_LIMIT_MAX_EVENTS
-    );
+    case gateway_handler_rate_limit:rate_limits_disabled() of
+        true ->
+            ok;
+        false ->
+            ensure_ets_table(
+                ?REQUEST_MEMBERS_RATE_LIMIT_TABLE, ?REQUEST_MEMBERS_RATE_LIMIT_WINDOW_MS
+            ),
+            check_sliding_window(
+                ?REQUEST_MEMBERS_RATE_LIMIT_TABLE,
+                UserId,
+                ?REQUEST_MEMBERS_RATE_LIMIT_WINDOW_MS,
+                ?REQUEST_MEMBERS_RATE_LIMIT_MAX_EVENTS
+            )
+    end;
 check_request_rate_limit(_) ->
     {error, invalid_session}.
 
 -spec check_guild_request_rate_limit(integer()) -> ok | {error, atom()}.
 check_guild_request_rate_limit(GuildId) when is_integer(GuildId), GuildId > 0 ->
-    ensure_ets_table(?REQUEST_MEMBERS_GUILD_RATE_LIMIT_TABLE),
-    check_sliding_window(
-        ?REQUEST_MEMBERS_GUILD_RATE_LIMIT_TABLE,
-        GuildId,
-        ?REQUEST_MEMBERS_GUILD_RATE_LIMIT_WINDOW_MS,
-        ?REQUEST_MEMBERS_GUILD_RATE_LIMIT_MAX_EVENTS
-    );
+    case gateway_handler_rate_limit:rate_limits_disabled() of
+        true ->
+            ok;
+        false ->
+            ensure_ets_table(
+                ?REQUEST_MEMBERS_GUILD_RATE_LIMIT_TABLE,
+                ?REQUEST_MEMBERS_GUILD_RATE_LIMIT_WINDOW_MS
+            ),
+            check_sliding_window(
+                ?REQUEST_MEMBERS_GUILD_RATE_LIMIT_TABLE,
+                GuildId,
+                ?REQUEST_MEMBERS_GUILD_RATE_LIMIT_WINDOW_MS,
+                ?REQUEST_MEMBERS_GUILD_RATE_LIMIT_MAX_EVENTS
+            )
+    end;
 check_guild_request_rate_limit(_) ->
     {error, invalid_guild_id}.
 
@@ -166,28 +186,54 @@ check_window_count(Table, Key, Now, Recent, _MaxEvents) ->
     ets:insert(Table, {Key, [Now | Recent]}),
     ok.
 
--spec ensure_ets_table(atom()) -> ok.
-ensure_ets_table(Name) ->
+-spec ensure_ets_table(atom(), pos_integer()) -> ok.
+ensure_ets_table(Name, WindowMs) ->
     case ets:whereis(Name) of
         undefined ->
-            create_ets_table(Name);
+            create_ets_table(Name, WindowMs);
         _ ->
             ok
     end.
 
--spec create_ets_table(atom()) -> ok.
-create_ets_table(Name) ->
+-spec create_ets_table(atom(), pos_integer()) -> ok.
+create_ets_table(Name, WindowMs) ->
     try
-        _ = ets:new(Name, [
-            named_table,
-            public,
-            set,
-            {read_concurrency, true},
-            {write_concurrency, true}
-        ]),
+        Tid = ets:new(
+            Name,
+            [
+                named_table,
+                public,
+                set,
+                {read_concurrency, true},
+                {write_concurrency, true}
+            ] ++ guild_ets_utils:heir_options()
+        ),
+        _ = spawn(fun() -> cleanup_loop(Tid, WindowMs) end),
         ok
     catch
         error:badarg -> ok
+    end.
+
+-spec cleanup_loop(ets:table(), pos_integer()) -> ok.
+cleanup_loop(Table, WindowMs) ->
+    ok = gateway_retry_timer:wait(?RATE_LIMIT_CLEANUP_INTERVAL_MS),
+    case prune_expired_entries(Table, WindowMs) of
+        ok -> cleanup_loop(Table, WindowMs);
+        gone -> ok
+    end.
+
+-spec prune_expired_entries(ets:table(), pos_integer()) -> ok | gone.
+prune_expired_entries(Table, WindowMs) ->
+    Cutoff = erlang:system_time(millisecond) - WindowMs,
+    try
+        _ = ets:select_delete(Table, [
+            {{'_', []}, [], [true]},
+            {{'_', '$1'}, [{is_list, '$1'}, {'=<', {hd, '$1'}, Cutoff}], [true]},
+            {{'_', '$1'}, [{is_integer, '$1'}, {'=<', '$1', Cutoff}], [true]}
+        ]),
+        ok
+    catch
+        error:badarg -> gone
     end.
 
 -spec dispatch_full_list_rate_limited(

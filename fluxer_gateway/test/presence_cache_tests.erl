@@ -90,6 +90,14 @@ nodeup_cancels_grace_period_test() ->
     timer:sleep(50),
     ?assertEqual(ok, gen_server:stop(Pid)).
 
+nodedown_grace_expiry_clears_pending_cleanup_test() ->
+    {ok, Pid} = maybe_start_for_test(),
+    ok = presence_cache:handle_nodedown('lost@node'),
+    ?assertMatch(#{'lost@node' := _}, maps:get(pending_nodedown_cleanups, sys:get_state(Pid))),
+    Pid ! {nodedown_grace_expired, 'lost@node'},
+    ?assertEqual(#{}, maps:get(pending_nodedown_cleanups, sys:get_state(Pid))),
+    ?assertEqual(ok, gen_server:stop(Pid)).
+
 anti_entropy_no_op_when_in_sync_test() ->
     {ok, Pid} = maybe_start_for_test(),
     State = cache_state(sys:get_state(Pid)),

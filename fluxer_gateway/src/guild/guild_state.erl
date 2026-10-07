@@ -155,10 +155,7 @@ post_update_role(guild_role_delete, EventData, OldState, NewState) ->
     guild_state().
 resync_roles_after_permission_change(RoleIds, OldState, NewState) ->
     Recomputed = guild_state_roles:recompute_visibility_for_roles(RoleIds, OldState, NewState),
-    lists:foreach(
-        fun(RoleId) -> guild_voice_permission_sync:sync_users_with_role(RoleId, Recomputed) end,
-        RoleIds
-    ),
+    ok = guild_voice_permission_sync:sync_roles_after_change(RoleIds, OldState, Recomputed),
     Recomputed.
 
 -spec post_update_channel(event(), event_data(), guild_state(), guild_state()) -> guild_state().

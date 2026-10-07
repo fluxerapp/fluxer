@@ -291,6 +291,51 @@ update_members_role_lookups_run_concurrently_test() ->
         ?assertEqual(lists:usort(Nodes), maps:get(sessions, maps:get(members_by_role, State1)))
     end).
 
+member_nodedown_starts_presence_grace_and_nodeup_cancels_it_test() ->
+    with_clean_cluster_terms(fun() ->
+        with_presence_cache(fun(CachePid) ->
+            Peer = 'peer@a',
+            State0 = (base_state(#{members => lists:usort([node(), Peer])}))#{
+                discovered => [Peer]
+            },
+            {noreply, State1} = gateway_cluster_membership:handle_info(
+                {nodedown, Peer}, State0
+            ),
+            ?assertNot(lists:member(Peer, maps:get(members, State1))),
+            ?assert(maps:is_key(Peer, pending_nodedown_cleanups(CachePid))),
+            {noreply, State2} = gateway_cluster_membership:handle_info({nodeup, Peer}, State1),
+            ?assert(lists:member(Peer, maps:get(members, State2))),
+            ?assertEqual(#{}, pending_nodedown_cleanups(CachePid))
+        end)
+    end).
+
+non_member_nodedown_does_not_start_presence_grace_test() ->
+    with_clean_cluster_terms(fun() ->
+        with_presence_cache(fun(CachePid) ->
+            State0 = base_state(#{}),
+            {noreply, _State1} = gateway_cluster_membership:handle_info(
+                {nodedown, 'remsh@host'}, State0
+            ),
+            ?assertEqual(#{}, pending_nodedown_cleanups(CachePid))
+        end)
+    end).
+
+with_presence_cache(Fun) ->
+    {ok, Pid} =
+        case whereis(presence_cache) of
+            undefined -> presence_cache:start_link();
+            Existing -> {ok, Existing}
+        end,
+    try
+        Fun(Pid)
+    after
+        unlink(Pid),
+        gen_server:stop(Pid)
+    end.
+
+pending_nodedown_cleanups(CachePid) ->
+    maps:get(pending_nodedown_cleanups, sys:get_state(CachePid)).
+
 base_state(Overrides) ->
     Defaults = #{
         members => [node()],
