@@ -85,7 +85,9 @@ export function whenAuthenticated(handler: AuthRouteEnterHandler): AuthRouteEnte
 }
 
 export const requireAuthentication: AuthRouteEnterHandler = afterSessionInitialization((context) =>
-	Authentication.isAuthenticated
+	Authentication.isAuthenticated ||
+	RuntimeConfig.getSnapshotOrNull() === null ||
+	RuntimeConfig.requiresSelfHostedSetup()
 		? undefined
 		: new Redirect(setPathQueryParams(Routes.LOGIN, {redirect_to: context.url.pathname + context.url.search})),
 );
