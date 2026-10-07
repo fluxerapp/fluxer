@@ -26,5 +26,5 @@ export function handleTypingStart(data: TypingStartPayload, _context: GatewayHan
 			Personas.cachePersonas([persona]);
 		});
 	}
-	TypingIndicator.startRemoteTyping(data.channel_id, data.user_id, data.persona_id);
+	TypingIndicator.startRemoteTyping(data.channel_id, data.user_id, data.persona_id || null);
 }

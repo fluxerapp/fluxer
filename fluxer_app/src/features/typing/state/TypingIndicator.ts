@@ -4,8 +4,8 @@ import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore'
 import type {Message} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 
 class TypingIndicator {
-	startRemoteTyping(channelId: string, userId: string): void {
-		RollingTypingStore.start(channelId, userId, 'gateway');
+	startRemoteTyping(channelId: string, userId: string, personaId: string | null): void {
+		RollingTypingStore.start(channelId, userId, personaId, 'gateway');
 	}
 
 	stopTypingOnMessageCreate(message: Message): void {
@@ -21,8 +21,7 @@ class TypingIndicator {
 		// || this.remoteTypingUsersByChannel[channelId]?.[userId]?.personaId?.toString()
 		// || null;
 		//throw new Error("Unimplemented");
-		console.warn("Unimplemented: TypingIndicator.getPersonaId", channelId, userId);
-		return null;
+		return RollingTypingStore.getPersona(channelId, userId);
 	}
 
 	isTyping(channelId: string, userId: string): boolean {

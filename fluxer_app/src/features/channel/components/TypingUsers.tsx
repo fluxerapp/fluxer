@@ -24,6 +24,9 @@ import {type ReactNode, type RefObject, useLayoutEffect, useRef, useState} from 
 const AVATAR_THRESHOLD = 5;
 const EMPTY_TYPING_USER_RECORDS: ReadonlyArray<User> = Object.freeze([]);
 
+/** This trait should only be used to detect that the typing-user passed is actually a Persona. */
+export const TYPING_USER_PERSONA_MARKER_TRAIT = "f9a39d34-eb5d-4771-a988-c0e6094e6404_INTERNAL_TYPING_USERS_PERSONA_MARKER_TRAIT";
+
 export const getTypingText = (i18n: I18n, typingUsers: ReadonlyArray<User>, channel: Channel): ReactNode =>
 	getRollingTypingText(i18n, typingUsers, channel, false);
 
@@ -36,7 +39,20 @@ export const usePresentableTypingUsers = (channel: Channel): ReadonlyArray<User>
 	for (const userId of typingUserIds) {
 		const user = Users.getUser(userId);
 		if (user) {
-			typingUsers.push(user);
+			// const personaId = RollingTypingStore.getPersona(channel.id, user.id);
+			// const persona = personaId ? Personas.getPersona(personaId) : null;
+			// if (persona) {
+			// 	const clonedUser = Object.assign({}, user);
+			// 	typingUsers.push(Object.assign(clonedUser, {
+			// 		//id: persona.id,
+			// 		traits: [...user.traits, TYPING_USER_PERSONA_MARKER_TRAIT],
+			// 		//avatar: persona.avatar || null,
+			// 		//displayName: persona.display_name || persona.internal_name || "",
+			// 		//username: persona.display_name || persona.internal_name || "",
+			// 	} as Partial<User>));
+			// } else {
+				typingUsers.push(user);
+			// }
 		}
 	}
 	return typingUsers;
@@ -115,9 +131,10 @@ export const TypingUsers = observer(
 									users={typingUsers}
 									guildId={channel.guildId}
 									channelId={channel.id}
+									personasFromTypingIndicators
 									renderAvatar={(user, size, _index) => {
-										const personaId = TypingIndicator.getPersonaId(channel.id, user.id);
-										const persona = channel.id && personaId ? Personas.getPersona(personaId) : undefined;
+										const personaId = RollingTypingStore.getPersona(channel.id, user.id);
+										const persona = personaId ? Personas.getPersona(personaId) : undefined;
 										return <Avatar
 											user={user}
 											size={size}

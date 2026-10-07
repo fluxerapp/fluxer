@@ -130,6 +130,7 @@ import type { Persona } from '@app/features/personas/models/Persona';
 import { PersonaBar } from './ChannelPersonaBar';
 import { value } from 'valibot';
 import { PersonaSettings_LatchMode } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js';
+import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSender';
 
 const PLUS_MENU_DOUBLE_CLICK_MS = 500;
 const MESSAGE_SCROLLER_SELECTOR = '[data-flx="channel.messages.scroller"][data-fluxer-scroll-container="true"]';
@@ -217,6 +218,7 @@ export const LexicalChannelTextareaContent = observer(
 			if (!personasWithTriggers) return;
 			if (Personas.latchMode === PersonaSettings_LatchMode.OFF) {
 				setTriggeredPersona(null);
+				RollingTypingSender.updatePersona(null);
 				setUseTriggeredPersona(false);
 				return;
 			}
@@ -226,10 +228,12 @@ export const LexicalChannelTextareaContent = observer(
 			if (matches.length > 1) return;
 			if (matches.length < 1) {
 				setTriggeredPersona(null);
+				RollingTypingSender.updatePersona(null);
 				if (!value) setUseTriggeredPersona(true);
 				return;
 			}
 			setTriggeredPersona(matches[0]);
+			RollingTypingSender.updatePersona(matches[0].id);
 		}, [setTriggeredPersona, setUseTriggeredPersona, personasWithTriggers, value]);
 		useChannelComposerDraftFocusRestore({
 			handleRef,

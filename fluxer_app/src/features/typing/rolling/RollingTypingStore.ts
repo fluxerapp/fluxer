@@ -9,7 +9,7 @@ import {action, computed, type IComputedValue, makeObservable, type ObservableMa
 
 type RollingTypingOrigin = 'local' | 'gateway';
 
-type RollingTypingEntry = Readonly<{confirmed: boolean}>;
+type RollingTypingEntry = Readonly<{confirmed: boolean, personaId?: string}>;
 
 const LOCAL_ENTRY: RollingTypingEntry = Object.freeze({confirmed: false});
 const CONFIRMED_ENTRY: RollingTypingEntry = Object.freeze({confirmed: true});
@@ -38,7 +38,7 @@ class RollingTypingStore {
 		makeObservable<this, 'expire'>(this, {start: action, remove: action, reset: action, expire: action});
 	}
 
-	start(channelId: string, userId: string, origin: RollingTypingOrigin): void {
+	start(channelId: string, userId: string, personaId: string | null, origin: RollingTypingOrigin): void {
 		const key = timerKey(channelId, userId);
 		const previousTimer = this.timers.get(key);
 		if (previousTimer !== undefined) {
@@ -49,14 +49,14 @@ class RollingTypingStore {
 		const confirmed = origin === 'gateway';
 		const existingEntries = this.entries.get(channelId);
 		const existing = existingEntries?.get(userId);
-		if (existing !== undefined && (existing.confirmed || !confirmed)) {
+		if (existing !== undefined && (existing.confirmed || !confirmed) && (existing.personaId === personaId)) {
 			return;
 		}
 		const channelEntries = existingEntries ?? observable.map<string, RollingTypingEntry>(undefined, {deep: false});
 		if (existingEntries === undefined) {
 			this.entries.set(channelId, channelEntries);
 		}
-		channelEntries.set(userId, confirmed ? CONFIRMED_ENTRY : LOCAL_ENTRY);
+		channelEntries.set(userId, Object.freeze({...(confirmed ? CONFIRMED_ENTRY : LOCAL_ENTRY), personaId: personaId || undefined}));
 	}
 
 	remove(channelId: string, userId: string): void {
@@ -97,6 +97,10 @@ class RollingTypingStore {
 
 	isConfirmedTyping(channelId: string, userId: string): boolean {
 		return this.entries.get(channelId)?.get(userId)?.confirmed ?? false;
+	}
+
+	getPersona(channelId: string, userId: string): string | null {
+		return this.entries.get(channelId)?.get(userId)?.personaId || null;
 	}
 
 	private expire(channelId: string, userId: string, timer: NodeJS.Timeout): void {

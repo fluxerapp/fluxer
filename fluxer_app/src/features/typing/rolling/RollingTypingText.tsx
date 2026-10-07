@@ -11,6 +11,8 @@ import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans} from '@lingui/react/macro';
 import type {ReactNode} from 'react';
+import RollingTypingStore from './RollingTypingStore';
+import Personas from '@app/features/user/state/Personas';
 
 const ONE_TYPIST_DESCRIPTOR = msg({
 	message: '{a} is typing...',
@@ -32,6 +34,11 @@ const MULTIPLE_PEOPLE_ARE_TYPING_DESCRIPTOR = msg({
 });
 
 function getTypistName(user: User, channel: Channel): string {
+	const personaId = RollingTypingStore.getPersona(channel.id, user.id);
+	if (personaId) {
+		const persona = Personas.getPersona(personaId);
+		if (persona) return persona.display_name || persona.internal_name || "";
+	}
 	return NicknameUtils.getNickname(user, channel.guildId ?? null);
 }
 

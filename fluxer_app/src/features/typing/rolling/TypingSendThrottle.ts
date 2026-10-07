@@ -11,6 +11,7 @@ export const TYPING_ROLLING_OVERFLOW_SLACK_PX = 48;
 export type TypingSendSlot = {
 	channelId: string;
 	userId: string;
+	personaId: string | null;
 	timeout: NodeJS.Timeout | null;
 	prevSend: number;
 };
@@ -21,12 +22,13 @@ export function planTypingSend(
 	slot: TypingSendSlot | null,
 	channelId: string,
 	userId: string,
+	personaId: string | null,
 	now: number,
 ): TypingSendPlan {
 	if (slot === null) {
 		return {dropSlot: false, action: 'schedule', delayMs: TYPING_ROLLING_SEND_DELAY_MS};
 	}
-	if (slot.channelId !== channelId || slot.userId !== userId) {
+	if (slot.channelId !== channelId || slot.userId !== userId || slot.personaId !== personaId) {
 		return {dropSlot: true, action: 'schedule', delayMs: TYPING_ROLLING_SEND_DELAY_MS};
 	}
 	if (slot.timeout !== null || slot.prevSend + TYPING_ROLLING_THROTTLE_MS > now) {

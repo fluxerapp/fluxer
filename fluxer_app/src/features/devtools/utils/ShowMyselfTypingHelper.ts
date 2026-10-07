@@ -4,6 +4,7 @@ import Authentication from '@app/features/auth/state/Authentication';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import Personas from '@app/features/user/state/Personas';
 import {autorun, type IReactionDisposer} from 'mobx';
 
 const SELF_TYPING_REFRESH_MS = 5000;
@@ -21,6 +22,7 @@ class ShowMyselfTypingHelper {
 			const enabled = DeveloperOptions.showMyselfTyping;
 			const channelId = SelectedChannel.currentChannelId;
 			const userId = Authentication.currentUserId;
+			const personaId = Personas.getGlobalActivePersona()?.id || null;
 			const shouldMirror = Boolean(enabled && channelId && userId);
 			if (!shouldMirror) {
 				this.reset();
@@ -28,12 +30,12 @@ class ShowMyselfTypingHelper {
 			}
 			if (channelId !== this.activeChannelId) {
 				this.activeChannelId = channelId!;
-				this.trigger(channelId!, userId!);
-				this.restartInterval(channelId!, userId!);
+				this.trigger(channelId!, userId!, personaId);
+				this.restartInterval(channelId!, userId!, personaId);
 				return;
 			}
 			if (!this.intervalId) {
-				this.restartInterval(channelId!, userId!);
+				this.restartInterval(channelId!, userId!, personaId);
 			}
 		});
 	}
@@ -46,15 +48,15 @@ class ShowMyselfTypingHelper {
 		}
 	}
 
-	private trigger(channelId: string, userId: string): void {
-		TypingIndicator.startRemoteTyping(channelId, userId);
+	private trigger(channelId: string, userId: string, personaId: string | null): void {
+		TypingIndicator.startRemoteTyping(channelId, userId, personaId);
 	}
 
-	private restartInterval(channelId: string, userId: string): void {
+	private restartInterval(channelId: string, userId: string, personaId: string | null): void {
 		if (this.intervalId) {
 			clearInterval(this.intervalId);
 		}
-		this.intervalId = setInterval(() => this.trigger(channelId, userId), SELF_TYPING_REFRESH_MS);
+		this.intervalId = setInterval(() => this.trigger(channelId, userId, personaId), SELF_TYPING_REFRESH_MS);
 	}
 
 	private reset(): void {

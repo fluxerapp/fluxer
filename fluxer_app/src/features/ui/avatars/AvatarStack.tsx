@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
+import { TYPING_USER_PERSONA_MARKER_TRAIT } from '@app/features/channel/components/TypingUsers';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import TypingIndicator from '@app/features/typing/state/TypingIndicator';
 import styles from '@app/features/ui/avatars/AvatarStack.module.css';
 import {
@@ -88,12 +90,16 @@ export const AvatarStack: React.FC<AvatarStackProps> = observer(
 		const userEntries: Array<AvatarStackEntry> = [];
 		const userKeyCounts = new Map<string, number>();
 		users?.forEach((user, index) => {
-			const displayName = NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined);
+			const personaId = channelId && personasFromTypingIndicators ? RollingTypingStore.getPersona(channelId, user.id) ?? undefined : undefined;
+			const persona = (personaId && Personas.getPersona(personaId)) || undefined;
+			const displayName = persona?.display_name || NicknameUtils.getNickname(user, guildId ?? null, channelId ?? undefined);
 			const avatarNode = renderAvatar?.(user, size, index) ?? (
 				<Avatar
 					user={user}
 					size={size}
 					guildId={guildId ?? undefined}
+					personaId={persona?.id}
+					personaAvatar={persona?.avatar}
 					data-flx="ui.avatars.avatar-stack.avatar"
 				/>
 			);
@@ -103,6 +109,7 @@ export const AvatarStack: React.FC<AvatarStackProps> = observer(
 				node = (
 					<PreloadableUserPopout
 						user={user}
+						persona={persona}
 						isWebhook={false}
 						guildId={guildId ?? undefined}
 						channelId={channelId ?? undefined}
