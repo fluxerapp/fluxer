@@ -35,7 +35,7 @@ import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {flip, offset, shift, useClick, useDismiss, useFloating, useInteractions, useRole} from '@floating-ui/react';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {THREAD_PERMISSIONS} from '@fluxer/constants/src/ThreadPermissionUtils';
+import {THREAD_PERMISSIONS, withImplicitThreadBits} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {matchSorter} from 'match-sorter';
@@ -117,7 +117,7 @@ const ChannelPermissionsTab: React.FC<{channelId: string}> = observer(({channelI
 	}, [isAddOverrideOpen, channelId]);
 	const currentUserPermissions = useMemo(() => {
 		if (!guild || !currentUser || !channel) return 0n;
-		return PermissionUtils.computePermissions(currentUser.id, channel.toJSON());
+		return withImplicitThreadBits(PermissionUtils.computePermissions(currentUser.id, channel.toJSON()));
 	}, [guild, currentUser, channel]);
 	const currentUserMember = useMemo(() => {
 		if (!guild || !currentUser) return null;

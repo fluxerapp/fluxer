@@ -38,7 +38,7 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import SettingsSidebar from '@app/features/ui/state/SettingsSidebar';
 import Users from '@app/features/user/state/Users';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {THREAD_PERMISSIONS} from '@fluxer/constants/src/ThreadPermissionUtils';
+import {THREAD_PERMISSIONS, withImplicitThreadBits} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {matchSorter} from 'match-sorter';
@@ -168,7 +168,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	}, [guild, currentUserMember]);
 	const currentUserPermissions = useMemo(() => {
 		if (!guild || !currentUser) return 0n;
-		return PermissionUtils.computePermissions(currentUser.id, guild.toJSON());
+		return withImplicitThreadBits(PermissionUtils.computePermissions(currentUser.id, guild.toJSON()));
 	}, [guild, currentUser]);
 	const wouldRemoveOwnPermission = useCallback(
 		(permission: bigint, roleId: string): boolean => {
