@@ -226,9 +226,10 @@ export function shouldApplyGatewayVoiceStateEcho(
 ): boolean {
 	assert.ok(snapshot != null, 'shouldApplyGatewayVoiceStateEcho snapshot must not be null');
 	assert.ok(echo != null, 'shouldApplyGatewayVoiceStateEcho echo must not be null');
-	const pending = snapshot.gateway.desiredVoiceStateWrite;
-	if (pending == null) return true;
-	return gatewayVoiceStateWriteMatchesReported(pending, echo);
+	if (snapshot.gateway.desiredVoiceStateWrite == null) return true;
+	const desired = deriveVoiceEngineV2DesiredGatewayVoiceState(snapshot);
+	if (desired == null) return false;
+	return gatewayVoiceStateWriteMatchesReported(desired, echo);
 }
 
 export function gatewayVoiceStateWriteMatchesReported(
