@@ -296,4 +296,10 @@ describe('published public and admin documents', () => {
 		const status = documentFor('public').components.schemas.ReportResponse.properties?.status;
 		expect(status).toEqual({type: 'string', description: 'Current status of the report (pending, resolved)'});
 	});
+
+	it('keeps the report status and type enums in the admin document', () => {
+		const {schemas} = documentFor('admin').components;
+		expect(schemas.ReportStatus).toMatchObject({type: 'integer', format: 'int32', enum: [0, 1]});
+		expect(schemas.ReportType).toMatchObject({type: 'integer', format: 'int32', enum: [0, 1, 2]});
+	});
 });

@@ -89,7 +89,14 @@ async function loadClient(): Promise<Client> {
 
 async function render(client: Client, owner: string, handle: React.RefObject<ComposerHandle | null>): Promise<void> {
 	await act(async () => {
-		root?.render(<client.Composer key={owner} owner={owner} handle={handle} />);
+		root?.render(
+			<client.Composer
+				key={owner}
+				owner={owner}
+				handle={handle}
+				data-flx="messaging.use-textarea-draft-and-typing-test.client-composer"
+			/>,
+		);
 	});
 }
 

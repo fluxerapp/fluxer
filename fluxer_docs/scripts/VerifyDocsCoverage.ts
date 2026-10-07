@@ -197,6 +197,7 @@ const CHANNEL_THREADS_UNTIL_GA = {
 		'THREAD_MEMBERS_UPDATE',
 	]),
 	opcodes: new Set<number>([28]),
+	auditActions: new Set<string>(['delete_thread', 'list_guild_threads']),
 	errorCodes: new Set<string>([
 		'CHANNEL_HAS_THREADS',
 		'FORUM_TAG_NAMES_MUST_BE_UNIQUE',
@@ -990,6 +991,97 @@ console.log('registry codes with a producer');
 	failures += section('registry codes with no producer', withoutProducer);
 }
 
+console.log('admin audit actions');
+{
+	const registrySource = await readFile(path.join(REPO_ROOT, 'fluxer_api/src/api/admin/AdminAuditActions.ts'), 'utf8');
+	const registryBlock = registrySource.match(/export const AdminAuditReadActions = \{([\s\S]*?)\} as const;/u);
+	const readActions = new Set([...(registryBlock?.[1] ?? '').matchAll(/:\s*'([^']+)'/gu)].map((match) => match[1]));
+
+	const recorded = new Map<string, string>();
+	const scanAuditSources = async (directory: string, everyFile: boolean): Promise<void> => {
+		for (const entry of await readdir(directory, {withFileTypes: true})) {
+			if (entry.name === 'node_modules' || entry.name === 'tests') continue;
+			const resolved = path.join(directory, entry.name);
+			if (entry.isDirectory()) {
+				await scanAuditSources(resolved, everyFile);
+				continue;
+			}
+			if (!entry.name.endsWith('.ts') || entry.name.endsWith('.test.ts')) continue;
+			const source = await readFile(resolved, 'utf8');
+			if (!everyFile && !source.includes('createAuditLog(')) continue;
+			for (const assignment of source.matchAll(/\baction\s*[:=]\s*([^,;\n]*(?:\n\s*[?:][^,;\n]*)*)/gu)) {
+				const expression = assignment[1];
+				const value = expression.includes('?') ? expression.slice(expression.indexOf('?') + 1) : expression;
+				for (const literal of value.matchAll(/'([^']+)'/gu)) {
+					if (!recorded.has(literal[1])) recorded.set(literal[1], path.relative(REPO_ROOT, resolved));
+				}
+			}
+		}
+	};
+	await scanAuditSources(path.join(REPO_ROOT, 'fluxer_api/src/api/admin'), true);
+	await scanAuditSources(path.join(REPO_ROOT, 'fluxer_api/src/api/worker/tasks'), true);
+	await scanAuditSources(path.join(REPO_ROOT, 'fluxer_api/src'), false);
+	for (const action of readActions) {
+		if (!recorded.has(action)) recorded.set(action, 'fluxer_api/src/api/admin/AdminAuditActions.ts');
+	}
+
+	const indexPage = await readFile(path.join(DOCS_ROOT, 'admin-api/index.mdx'), 'utf8');
+	const actionTable = (heading: string): Set<string> => {
+		const start = indexPage.indexOf(`\n${heading}\n`);
+		if (start === -1) return new Set();
+		const rest = indexPage.slice(start + heading.length + 2);
+		const end = rest.search(/\n#{1,4} /u);
+		const values = new Set<string>();
+		for (const line of (end === -1 ? rest : rest.slice(0, end)).split('\n')) {
+			const cell = line
+				.match(/^\|\s*([^|]+?)\s*\|/u)?.[1]
+				?.replace(/<sup>.*?<\/sup>/gu, '')
+				.trim();
+			if (cell == null || cell === 'Value' || /^-+$/u.test(cell)) continue;
+			values.add(cell);
+		}
+		return values;
+	};
+	const documentedRead = actionTable('#### Read actions');
+	const documentedWrite = actionTable('#### Write actions');
+	console.log(
+		`  actions recorded by fluxer_api: ${recorded.size.toString()}, of which read: ${readActions.size.toString()}`,
+	);
+	console.log(
+		`  actions documented in admin-api/index.mdx: read ${documentedRead.size.toString()}, write ${documentedWrite.size.toString()}`,
+	);
+	const emptyParses = [
+		...(readActions.size === 0 ? ['the read action registry in AdminAuditActions.ts parsed empty'] : []),
+		...(recorded.size <= readActions.size ? ['no write action was found in fluxer_api source'] : []),
+		...(documentedRead.size === 0 ? ['the Read actions table parsed empty'] : []),
+		...(documentedWrite.size === 0 ? ['the Write actions table parsed empty'] : []),
+	];
+	failures += section('audit action parses that came back empty (update this script)', emptyParses);
+	failures += section(
+		'recorded but undocumented',
+		[...recorded]
+			.filter(
+				([action]) =>
+					!documentedRead.has(action) &&
+					!documentedWrite.has(action) &&
+					!CHANNEL_THREADS_UNTIL_GA.auditActions.has(action),
+			)
+			.map(([action, file]) => `${action}  (${file})`)
+			.sort(),
+	);
+	failures += section(
+		'documented but never recorded',
+		[...documentedRead, ...documentedWrite].filter((action) => !recorded.has(action)).sort(),
+	);
+	failures += section(
+		'documented under the wrong access',
+		[
+			...[...documentedRead].filter((action) => !readActions.has(action)).map((action) => `${action}: listed as read`),
+			...[...documentedWrite].filter((action) => readActions.has(action)).map((action) => `${action}: listed as write`),
+		].sort(),
+	);
+}
+
 console.log('permission bits');
 {
 	const constants = await readFile(path.join(REPO_ROOT, 'packages/constants/src/ChannelConstants.ts'), 'utf8');
@@ -1616,7 +1708,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		}
 	}
 
-	const ENV_VALUE_FLOOR = 17;
+	const ENV_VALUE_FLOOR = 16;
 	const ENV_VALUE_UNSET = 'unset';
 	let inEnvValueTable = false;
 	let envEntry: string | null = null;

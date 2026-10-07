@@ -57,6 +57,7 @@ const sharedTestConfig = {
 	testTimeout: 40000,
 	hookTimeout: 20000,
 	maxConcurrency: configuredMaxConcurrency,
+	execArgv: ['--no-experimental-webstorage', '--disable-warning=ExperimentalWarning'],
 };
 
 export default defineConfig({

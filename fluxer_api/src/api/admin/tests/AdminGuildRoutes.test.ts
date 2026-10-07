@@ -25,6 +25,13 @@ interface AdminGuildUpdate {
 	};
 }
 
+interface AdminGuildMemberList {
+	members: Array<{user: {id: string}}>;
+	total: number;
+	limit: number;
+	offset: number;
+}
+
 describe('Admin guild routes', () => {
 	let harness: ApiTestHarness;
 	beforeEach(async () => {
@@ -123,19 +130,33 @@ describe('Admin guild routes', () => {
 	});
 	test('GET /admin/guilds/{guild_id}/members lists members', async () => {
 		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:list:members']);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:list:members', 'guild:force_add_member']);
 		const guild = await createGuild(harness, admin.token, `Member List Guild ${Date.now()}`);
-		const result = await createBuilder<{
-			members: Array<unknown>;
-			total: number;
-			limit: number;
-			offset: number;
-		}>(harness, `${admin.token}`)
+		const joined = [await createTestAccount(harness), await createTestAccount(harness)];
+		for (const account of joined) {
+			await createBuilder(harness, `${admin.token}`)
+				.put(`/admin/guilds/${guild.id}/members/${account.userId}`)
+				.body(null)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+		}
+		const expectedIds = [admin.userId, ...joined.map((account) => account.userId)].sort((a, b) =>
+			BigInt(a) < BigInt(b) ? -1 : BigInt(a) > BigInt(b) ? 1 : 0,
+		);
+		const result = await createBuilder<AdminGuildMemberList>(harness, `${admin.token}`)
 			.get(`/admin/guilds/${guild.id}/members?limit=10&offset=0`)
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(result.limit).toBe(10);
 		expect(result.offset).toBe(0);
+		expect(result.total).toBe(3);
+		expect(result.members.map((member) => member.user.id)).toEqual(expectedIds);
+		const page = await createBuilder<AdminGuildMemberList>(harness, `${admin.token}`)
+			.get(`/admin/guilds/${guild.id}/members?limit=1&offset=1`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(page.total).toBe(3);
+		expect(page.members.map((member) => member.user.id)).toEqual([expectedIds[1]]);
 	});
 	test('GET /admin/guilds/{guild_id}/members requires guild:list:members', async () => {
 		const admin = await createTestAccount(harness);

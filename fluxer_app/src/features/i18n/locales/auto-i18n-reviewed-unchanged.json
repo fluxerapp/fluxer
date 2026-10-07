@@ -66,15 +66,6 @@
         "msgid": "Win"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "{context} · {accountName}"
       },
       {
@@ -152,19 +143,7 @@
         "msgid": "Win"
       },
       {
-        "msgid": "Wordmark"
-      },
-      {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "{context} · {accountName}"
@@ -374,15 +353,6 @@
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "emoji {emojiName}"
@@ -661,9 +631,6 @@
         "msgid": "Banner"
       },
       {
-        "msgid": "Bind"
-      },
-      {
         "msgid": "Bio"
       },
       {
@@ -758,9 +725,6 @@
       },
       {
         "msgid": "Hyperlink"
-      },
-      {
-        "msgid": "Inviter"
       },
       {
         "msgid": "Jitter"
@@ -877,9 +841,6 @@
         "msgid": "Status"
       },
       {
-        "msgid": "Sticker"
-      },
-      {
         "msgid": "Stop"
       },
       {
@@ -922,13 +883,7 @@
         "msgid": "Token"
       },
       {
-        "msgid": "Tokens"
-      },
-      {
         "msgid": "Tone"
-      },
-      {
-        "msgid": "Top"
       },
       {
         "msgid": "Upload"
@@ -979,15 +934,6 @@
         "msgid": "Zoom"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -997,13 +943,7 @@
         "msgid": "online"
       },
       {
-        "msgid": "slash {commandName}"
-      },
-      {
         "msgid": "spoiler"
-      },
-      {
-        "msgid": "sticker"
       },
       {
         "msgid": "{actor} stopped following an announcement channel in {channel}"
@@ -1049,9 +989,6 @@
       },
       {
         "msgid": "{resolution} {fps} FPS"
-      },
-      {
-        "msgid": "{tokenCount, plural, one {# token} other {# tokens}}"
       },
       {
         "msgid": "{zoomPercent}%"
@@ -1329,9 +1266,6 @@
         "msgid": "Apps"
       },
       {
-        "msgid": "Assets"
-      },
-      {
         "msgid": "Audio"
       },
       {
@@ -1375,9 +1309,6 @@
       },
       {
         "msgid": "Codes"
-      },
-      {
-        "msgid": "Communities"
       },
       {
         "msgid": "Community"
@@ -1641,15 +1572,6 @@
         "msgid": "YubiKey"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "online"
       },
       {
@@ -1678,9 +1600,6 @@
       },
       {
         "msgid": "{presenceCount} online"
-      },
-      {
-        "msgid": "{productName} Bug Hunter"
       },
       {
         "msgid": "{productName} Visionary"
@@ -1949,9 +1868,6 @@
         "msgid": "Alt"
       },
       {
-        "msgid": "Anime & manga"
-      },
-      {
         "msgid": "Backspace"
       },
       {
@@ -2048,22 +1964,10 @@
         "msgid": "Webhook {currentName}"
       },
       {
-        "msgid": "Webhooks"
-      },
-      {
         "msgid": "Win"
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "{context} · {accountName}"
@@ -2095,10 +1999,6 @@
       {
         "msgctxt": "community-settings-tab",
         "msgid": "Emoji"
-      },
-      {
-        "msgctxt": "community-settings-tab",
-        "msgid": "Webhooks"
       },
       {
         "msgctxt": "keyboard-key-name",
@@ -4494,9 +4394,6 @@
         "msgid": "Tap Share, then Add to Home Screen."
       },
       {
-        "msgid": "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
-      },
-      {
         "msgid": "Thanks for flagging this"
       },
       {
@@ -5549,9 +5446,6 @@
         "msgid": "Token"
       },
       {
-        "msgid": "Tokens"
-      },
-      {
         "msgid": "Video"
       },
       {
@@ -5591,15 +5485,6 @@
         "msgid": "Zoom"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -5631,9 +5516,6 @@
       },
       {
         "msgid": "{resolution} {fps} FPS"
-      },
-      {
-        "msgid": "{tokenCount, plural, one {# token} other {# tokens}}"
       },
       {
         "msgid": "{zoomPercent}%"
@@ -5944,9 +5826,6 @@
         "msgid": "Token"
       },
       {
-        "msgid": "Tokens"
-      },
-      {
         "msgid": "Visionary"
       },
       {
@@ -5980,15 +5859,6 @@
         "msgid": "Zoom"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -6017,9 +5887,6 @@
       },
       {
         "msgid": "{resolution} {fps} FPS"
-      },
-      {
-        "msgid": "{tokenCount, plural, one {# token} other {# tokens}}"
       },
       {
         "msgid": "{zoomPercent}%"
@@ -6315,15 +6182,6 @@
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "emoji {emojiName}"
@@ -6645,9 +6503,6 @@
         "msgid": "Compact"
       },
       {
-        "msgid": "Composer"
-      },
-      {
         "msgid": "Confirmation"
       },
       {
@@ -6712,9 +6567,6 @@
       },
       {
         "msgid": "Invisible"
-      },
-      {
-        "msgid": "Inviter"
       },
       {
         "msgid": "Logo"
@@ -6837,9 +6689,6 @@
         "msgid": "Suggestions"
       },
       {
-        "msgid": "Suppression"
-      },
-      {
         "msgid": "Surfaces"
       },
       {
@@ -6853,9 +6702,6 @@
       },
       {
         "msgid": "Tags ({tagCount}/{tagLimit})"
-      },
-      {
-        "msgid": "Toast"
       },
       {
         "msgid": "Version"
@@ -6897,15 +6743,6 @@
         "msgid": "Zoom"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "message"
       },
       {
@@ -6943,9 +6780,6 @@
       },
       {
         "msgid": "{messageGroupSpacing}px"
-      },
-      {
-        "msgid": "{minutes, plural, one {# minute} other {# minutes}}"
       },
       {
         "msgid": "{oneMinute} minute"
@@ -7237,15 +7071,6 @@
         "msgid": "YubiKey"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "{context} · {accountName}"
       },
       {
@@ -7302,9 +7127,6 @@
         "msgid": "Alt"
       },
       {
-        "msgid": "Bluesky OAuth"
-      },
-      {
         "msgid": "Ctrl"
       },
       {
@@ -7345,15 +7167,6 @@
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "{context} · {accountName}"
@@ -7439,9 +7252,6 @@
         "msgid": "Host"
       },
       {
-        "msgid": "Logo"
-      },
-      {
         "msgid": "Malta"
       },
       {
@@ -7458,9 +7268,6 @@
       },
       {
         "msgid": "OP"
-      },
-      {
-        "msgid": "Online"
       },
       {
         "msgid": "PgDn"
@@ -7533,15 +7340,6 @@
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "emoji {emojiName}"
@@ -7788,9 +7586,6 @@
         "msgid": "Bot"
       },
       {
-        "msgid": "Bot DM"
-      },
-      {
         "msgid": "Ctrl"
       },
       {
@@ -7894,15 +7689,6 @@
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "link"
@@ -8451,15 +8237,6 @@
         "msgid": "Zoom"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -8774,9 +8551,6 @@
         "msgid": "Austria"
       },
       {
-        "msgid": "Automatic ({codec})"
-      },
-      {
         "msgid": "Avatar"
       },
       {
@@ -8912,9 +8686,6 @@
         "msgid": "Neko"
       },
       {
-        "msgid": "Nickname"
-      },
-      {
         "msgid": "No"
       },
       {
@@ -8961,9 +8732,6 @@
       },
       {
         "msgid": "Spoiler"
-      },
-      {
-        "msgid": "Static Neko"
       },
       {
         "msgid": "Sticker"
@@ -9024,15 +8792,6 @@
       },
       {
         "msgid": "Zoom"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "emoji {emojiName}"
@@ -9376,22 +9135,10 @@
         "msgid": "Webhook"
       },
       {
-        "msgid": "Webhook URL"
-      },
-      {
         "msgid": "Win"
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "{context} · {accountName}"
@@ -9495,15 +9242,6 @@
       },
       {
         "msgid": "Win"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "{context} · {accountName}"
@@ -9649,15 +9387,6 @@
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "{context} · {accountName}"
@@ -9974,12 +9703,6 @@
         "msgid": "Open @{displayName}"
       },
       {
-        "msgid": "Open community"
-      },
-      {
-        "msgid": "Open event sink"
-      },
-      {
         "msgid": "Open thread"
       },
       {
@@ -10035,9 +9758,6 @@
       },
       {
         "msgid": "Premium"
-      },
-      {
-        "msgid": "Premium model"
       },
       {
         "msgid": "Privacy"
@@ -10164,15 +9884,6 @@
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "emoji {emojiName}"
@@ -10500,9 +10211,6 @@
         "msgid": "Avatar"
       },
       {
-        "msgid": "Ban reason"
-      },
-      {
         "msgid": "Banner"
       },
       {
@@ -10516,9 +10224,6 @@
       },
       {
         "msgid": "Bluesky OAuth"
-      },
-      {
-        "msgid": "Boost"
       },
       {
         "msgid": "Bot"
@@ -10570,9 +10275,6 @@
       },
       {
         "msgid": "Hindi"
-      },
-      {
-        "msgid": "Inviter"
       },
       {
         "msgid": "Jitter"
@@ -10677,9 +10379,6 @@
         "msgid": "Token"
       },
       {
-        "msgid": "Tokens"
-      },
-      {
         "msgid": "Tone"
       },
       {
@@ -10708,15 +10407,6 @@
       },
       {
         "msgid": "Zoom"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "emoji {emojiName}"
@@ -11109,9 +10799,6 @@
         "msgid": "Visionary ({visionaryLifetimeBadgeLabel})"
       },
       {
-        "msgid": "Web {buildVersion}"
-      },
-      {
         "msgid": "WebAuthn"
       },
       {
@@ -11124,19 +10811,7 @@
         "msgid": "Win"
       },
       {
-        "msgid": "Wordmark"
-      },
-      {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "link"
@@ -11149,9 +10824,6 @@
       },
       {
         "msgid": "{context} · {accountName}"
-      },
-      {
-        "msgid": "{desktopChannel} Desktop {desktopVersion}"
       },
       {
         "msgid": "{formattedPresenceCount} online"
@@ -11416,9 +11088,6 @@
         "msgid": "Hardware"
       },
       {
-        "msgid": "Hindi"
-      },
-      {
         "msgid": "Host"
       },
       {
@@ -11435,9 +11104,6 @@
       },
       {
         "msgid": "Login"
-      },
-      {
-        "msgid": "Logo"
       },
       {
         "msgid": "Malta"
@@ -11468,12 +11134,6 @@
       },
       {
         "msgid": "Ping"
-      },
-      {
-        "msgid": "Ping: {currentLatency}ms"
-      },
-      {
-        "msgid": "Ping: {latency}ms"
       },
       {
         "msgid": "Portugal"
@@ -11569,15 +11229,6 @@
         "msgid": "Zoom"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -11627,9 +11278,6 @@
       },
       {
         "msgid": "{resolution} {fps} FPS"
-      },
-      {
-        "msgid": "{tokenCount, plural, one {# token} other {# tokens}}"
       },
       {
         "msgid": "{zoomPercent}%"
@@ -12075,15 +11723,6 @@
         "msgid": "Zoom"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -12438,15 +12077,6 @@
         "msgid": "YubiKey"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "{context} · {accountName}"
       },
       {
@@ -12502,9 +12132,6 @@
         "msgid": "Banner"
       },
       {
-        "msgid": "Bio"
-      },
-      {
         "msgid": "Bluesky"
       },
       {
@@ -12530,9 +12157,6 @@
       },
       {
         "msgid": "Emoji"
-      },
-      {
-        "msgid": "Emojis"
       },
       {
         "msgid": "Esc"
@@ -12578,9 +12202,6 @@
       },
       {
         "msgid": "Max {maxSize}."
-      },
-      {
-        "msgid": "Media"
       },
       {
         "msgid": "Moderator"
@@ -12697,19 +12318,7 @@
         "msgid": "Win"
       },
       {
-        "msgid": "Wordmark"
-      },
-      {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "emoji {emojiName}"
@@ -12725,9 +12334,6 @@
       },
       {
         "msgid": "{context} · {accountName}"
-      },
-      {
-        "msgid": "{desktopChannel} Desktop {desktopVersion}"
       },
       {
         "msgid": "{formattedPresenceCount} online"
@@ -12768,10 +12374,6 @@
       {
         "msgctxt": "channel-settings-tab",
         "msgid": "Webhooks"
-      },
-      {
-        "msgctxt": "chat-settings-section",
-        "msgid": "Media"
       },
       {
         "msgctxt": "community-settings-tab",
@@ -13088,15 +12690,6 @@
         "msgid": "YubiKey"
       },
       {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
-      },
-      {
         "msgid": "{context} · {accountName}"
       },
       {
@@ -13282,15 +12875,6 @@
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "spoiler"
@@ -13590,19 +13174,7 @@
         "msgid": "Win"
       },
       {
-        "msgid": "Wordmark"
-      },
-      {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "{context} · {accountName}"
@@ -13729,9 +13301,6 @@
         "msgid": "Mic"
       },
       {
-        "msgid": "Microphone ({deviceLabel})"
-      },
-      {
         "msgid": "Mod"
       },
       {
@@ -13799,15 +13368,6 @@
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "{context} · {accountName}"
@@ -14078,9 +13638,6 @@
         "msgid": "Logo"
       },
       {
-        "msgid": "Logo URL"
-      },
-      {
         "msgid": "Markdown"
       },
       {
@@ -14118,15 +13675,6 @@
       },
       {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "{context} · {accountName}"
@@ -14240,19 +13788,7 @@
         "msgid": "Win"
       },
       {
-        "msgid": "Wordmark"
-      },
-      {
         "msgid": "YubiKey"
-      },
-      {
-        "msgid": "deleted-category"
-      },
-      {
-        "msgid": "deleted-channel"
-      },
-      {
-        "msgid": "deleted-role"
       },
       {
         "msgid": "{context} · {accountName}"

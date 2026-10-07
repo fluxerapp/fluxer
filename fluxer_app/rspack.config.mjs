@@ -66,6 +66,29 @@ function resolveMode() {
 	return 'production';
 }
 
+const ACCEPTED_CSS_ORDER_CONFLICTS = [
+	['app/components/dialogs/ConfirmModal', 'ui/button/Button'],
+	['app/components/dialogs/Modal', 'ui/button/Button'],
+	['app/components/dialogs/components/SettingsModalHeader', 'ui/button/Button'],
+	['app/components/dialogs/shared/SettingsHeadingLinkButton', 'ui/button/Button'],
+	['ui/tooltip/Tooltip', 'ui/button/Button'],
+];
+
+function isAcceptedCssOrderConflict(warning) {
+	const message = warning.message ?? '';
+	if (!message.includes('Conflicting order between')) {
+		return false;
+	}
+	return ACCEPTED_CSS_ORDER_CONFLICTS.some(([first, second]) => {
+		const firstPath = `./src/features/${first}.module.css`;
+		const secondPath = `./src/features/${second}.module.css`;
+		return (
+			message.includes(`between ${firstPath} and ${secondPath}`) ||
+			message.includes(`between ${secondPath} and ${firstPath}`)
+		);
+	});
+}
+
 function isMainRuntimeChunk(chunk) {
 	const runtime = chunk.runtime;
 	if (runtime == null) {
@@ -401,6 +424,7 @@ export default () => {
 		target: ['web', 'browserslist'],
 		lazyCompilation: false,
 		performance: false,
+		ignoreWarnings: [isAcceptedCssOrderConflict],
 		resolve: {
 			alias: {
 				...resolveArboriumWasmAliases(),

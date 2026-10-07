@@ -3194,7 +3194,7 @@ msgid "Add a friend to get started."
 msgstr "添加好友以开始聊天。"
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1076
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1081
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "添加 Klipy API 密钥，以在运行时启用 GIF 搜索。"
 
@@ -3238,7 +3238,7 @@ msgid "Add a working email"
 msgstr "添加有效的邮箱地址"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1084
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1089
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "添加 YouTube Data API 密钥，以丰富 YouTube 链接的信息。"
 
@@ -3291,7 +3291,7 @@ msgid "Add another reaction"
 msgstr "添加其他反应"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1100
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1105
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "添加 Bluesky OAuth 客户端元数据和签名密钥。"
 
@@ -3456,7 +3456,7 @@ msgid "Add shortcut"
 msgstr "添加快捷键"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1092
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1097
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "添加 SMTP 凭据，以便实例可以发送验证和通知电子邮件。"
 
@@ -3493,7 +3493,7 @@ msgid "Add tags"
 msgstr "添加标签"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1068
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1073
 msgid "Add the credentials during setup."
 msgstr "在设置过程中添加凭据。"
 
@@ -4635,7 +4635,7 @@ msgid "Anyone with this key can reset your password. Never share it."
 msgstr "拥有此密钥的任何人都可以重置您的密码。切勿分享。"
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1104
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1109
 msgid "API key"
 msgstr "API 密钥"
 
@@ -6122,7 +6122,7 @@ msgid "Bluesky connections"
 msgstr "Bluesky 连接"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1096
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1101
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -6812,7 +6812,7 @@ msgstr "无法在此上传文件"
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:418
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:170
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
-#: src/features/channel/components/MentionEveryonePopout.tsx:177
+#: src/features/channel/components/MentionEveryonePopout.tsx:197
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
 #: src/features/channel/components/modals/CreateDMModal.tsx:92
 #: src/features/connection/components/modals/AddConnectionModal.tsx:374
@@ -6896,13 +6896,13 @@ msgstr "取消已安排的切换"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:980
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "取消订阅"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:257
 msgid "Cancel subscription?"
 msgstr "取消订阅？"
 
@@ -8572,7 +8572,7 @@ msgid "Client"
 msgstr "客户端"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1141
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1146
 msgid "Client name"
 msgstr "客户端名称"
 
@@ -8589,7 +8589,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "客户端密钥已重新生成。请更新所有使用旧密钥的代码。"
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1145
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1150
 msgid "Client URL"
 msgstr "客户端网址"
 
@@ -9346,7 +9346,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "配置键盘快捷键"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1064
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1069
 msgid "Configure now"
 msgstr "立即配置"
 
@@ -9399,7 +9399,7 @@ msgstr "配置你的个人资料徽章"
 
 #. Action label for confirming a mass mention that may notify many people.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/MentionEveryonePopout.tsx:185
+#: src/features/channel/components/MentionEveryonePopout.tsx:205
 #: src/features/user/components/modals/BouncedEmailChangeModal.tsx:212
 #: src/features/user/components/modals/EmailChangeModal.tsx:340
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
@@ -14082,7 +14082,7 @@ msgid "Email changed"
 msgstr "邮箱已更改"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1088
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1093
 msgid "Email delivery"
 msgstr "邮件发送"
 
@@ -14352,7 +14352,7 @@ msgid "Enable beta feature"
 msgstr "启用测试功能"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1137
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1142
 msgid "Enable Bluesky OAuth"
 msgstr "启用 Bluesky OAuth"
 
@@ -14385,7 +14385,7 @@ msgid "Enable developer mode"
 msgstr "启用开发者模式"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1105
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1110
 msgid "Enable email delivery"
 msgstr "启用邮件发送"
 
@@ -14602,12 +14602,12 @@ msgid "End grace now"
 msgstr "立即结束宽限期"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:285
 msgid "End grace period"
 msgstr "结束宽限期"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:278
 msgid "End grace period now?"
 msgstr "立即结束宽限期？"
 
@@ -16665,12 +16665,12 @@ msgid "from <0>{0}</0>"
 msgstr "来自 <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1109
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1114
 msgid "From email"
 msgstr "发件人邮箱"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1113
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1118
 msgid "From name"
 msgstr "发件人名称"
 
@@ -16978,7 +16978,7 @@ msgid "GIF preview"
 msgstr "GIF 预览"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1072
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1077
 msgid "GIF search"
 msgstr "GIF 搜索"
 
@@ -19756,7 +19756,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "保留免费和高级套餐。您可以自定义套餐，通过 Stripe 出售高级服务，或稍后从管理面板发放礼品码。"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:169
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:287
 msgid "Keep grace period"
 msgstr "保留宽限期"
 
@@ -19771,7 +19771,7 @@ msgid "Keep running"
 msgstr "继续运行"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:147
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
 msgid "Keep subscription"
 msgstr "保留订阅"
 
@@ -20700,7 +20700,7 @@ msgid "Logo"
 msgstr "Logo"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1149
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1154
 msgid "Logo URL"
 msgstr "Logo 网址"
 
@@ -23775,7 +23775,7 @@ msgstr "暂无最近提及"
 msgid "No recovery kit? Ask an admin of this instance for a password reset link."
 msgstr "没有恢复工具？请向此实例的管理员请求重置密码链接。"
 
-#: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:101
+#: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:107
 msgid "No remaining recipients to create a group DM with."
 msgstr "没有可用于创建群聊的其他收件人。"
 
@@ -25560,7 +25560,7 @@ msgstr "通行密钥需要带有有效应用标识符的已签名 macOS 软件�
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1120
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1125
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:219
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
@@ -26337,7 +26337,7 @@ msgid "Popup"
 msgstr "弹窗"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1118
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1123
 msgid "Port"
 msgstr "端口"
 
@@ -26772,7 +26772,7 @@ msgid "Privacy setup nagbar"
 msgstr "隐私设置提醒"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1157
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1162
 msgid "Privacy URL"
 msgstr "隐私网址"
 
@@ -26787,7 +26787,7 @@ msgid "Private details"
 msgstr "个人信息"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1165
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1170
 msgid "Private key"
 msgstr "私钥"
 
@@ -27199,7 +27199,7 @@ msgstr "按住说话尚未设置全局按键。如需设置，请前往“系统
 msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
 msgstr "按住说话尚未设置全局按键。如需设置，请打开桌面环境的键盘快捷键设置。"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:701
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:706
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "直接输入模式下会忽略按住说话。请切换到人声优化或自定义模式后使用。"
 
@@ -31165,7 +31165,7 @@ msgid "Set up authenticator app"
 msgstr "设置身份验证器应用"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1056
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1061
 msgid "Set up later"
 msgstr "稍后设置"
 
@@ -32154,7 +32154,7 @@ msgid "Signing in…"
 msgstr "正在登录…"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1161
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1166
 msgid "Signing key ID"
 msgstr "签名密钥 ID"
 
@@ -32295,7 +32295,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "不发送系统退群通知，也不会有人收到提醒。"
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1060
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1065
 msgid "Skip this now and configure it from the admin panel."
 msgstr "现在跳过，稍后从管理面板配置。"
 
@@ -32538,17 +32538,17 @@ msgid "Smoother video"
 msgstr "更流畅的视频"
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1129
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1134
 msgid "SMTP connection verified."
 msgstr "SMTP 连接已验证。"
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1117
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1122
 msgid "SMTP host"
 msgstr "SMTP 主机"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1133
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1138
 msgid "SMTP validation failed."
 msgstr "SMTP 验证失败。"
 
@@ -34420,12 +34420,12 @@ msgid "Terms of service"
 msgstr "服务条款"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1153
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1158
 msgid "Terms URL"
 msgstr "条款网址"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1125
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1130
 msgid "Test SMTP"
 msgstr "测试 SMTP"
 
@@ -35904,12 +35904,12 @@ msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "这会使你现有的备用码失效，并生成新的备用码。"
 
 #. Warning text before notifying every member in the current channel.
-#: src/features/channel/components/MentionEveryonePopout.tsx:98
+#: src/features/channel/components/MentionEveryonePopout.tsx:108
 msgid "This will notify <0>{memberCount, plural, one {# member} other {# members}}</0> in this channel. Are you sure you want to do this?"
 msgstr "这会通知此频道中的 <0>{memberCount, plural, other {# 位成员}}</0>。确定要这样做吗？"
 
 #. Warning text before notifying every member with a role in the current channel.
-#: src/features/channel/components/MentionEveryonePopout.tsx:83
+#: src/features/channel/components/MentionEveryonePopout.tsx:88
 msgid "This will notify <0>{memberCount, plural, one {# member} other {# members}}</0> with the <1>{roleLabel}</1> role in this channel. Are you sure you want to do this?"
 msgstr "这会通知此频道中拥有 <1>{roleLabel}</1> 身份组的 <0>{memberCount, plural, other {# 位成员}}</0>。确定要这样做吗？"
 
@@ -35918,7 +35918,7 @@ msgid "This will notify <0>{memberCount, plural, one {# member} other {# members
 msgstr "这会通知此频道中拥有此身份组的 <0>{memberCount, plural, other {# 位成员}}</0>。确定要这样做吗？"
 
 #. Warning text before notifying online members in the current channel with @here.
-#: src/features/channel/components/MentionEveryonePopout.tsx:108
+#: src/features/channel/components/MentionEveryonePopout.tsx:123
 msgid "This will notify up to <0>{memberCount, plural, one {# online member} other {# online members}}</0> in this channel. Are you sure you want to do this?"
 msgstr "这会通知此频道中最多 <0>{memberCount, plural, other {# 位在线成员}}</0>。确定要这样做吗？"
 
@@ -38442,7 +38442,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "在排查客户端问题或收集日志时使用此选项。它可能会在当前客户端的浏览器控制台中输出详细消息。"
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1121
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1126
 msgid "Use TLS"
 msgstr "使用 TLS"
 
@@ -38602,7 +38602,7 @@ msgstr "用户音量"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1119
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1124
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:581
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:227
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -41052,12 +41052,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "你刚刚按下了 Tab 键。键盘模式已开启，现在你无需鼠标即可在 {productName} 中导航。"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:259
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "你可以保留福利直到下一个续订日期。请在此之前重新激活订阅，以保留你的订阅历史记录。"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:280
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "你将立即失去所有 {PREMIUM_PRODUCT_NAME} 福利，并且你的订阅历史记录将被重置。此操作无法撤销。"
 
@@ -42000,7 +42000,7 @@ msgid "YouTube enrichment"
 msgstr "YouTube 增强功能"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1080
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1085
 msgid "YouTube previews"
 msgstr "YouTube 预览"
 

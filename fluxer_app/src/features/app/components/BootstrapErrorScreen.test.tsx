@@ -33,7 +33,9 @@ test('an unreachable instance offers a retry and never a reset of app data', () 
 		"Error invoking remote method 'desktop-runtime-config:resolve': DesktopRuntimeDiscoveryUnreachableError: No usable instance discovery document was served",
 	);
 
-	const markup = renderToStaticMarkup(<BootstrapErrorScreen error={error} />);
+	const markup = renderToStaticMarkup(
+		<BootstrapErrorScreen error={error} data-flx="app.bootstrap-error-screen-test.bootstrap-error-screen" />,
+	);
 
 	expect(markup).toContain(RETRY_BUTTON);
 	expect(markup).not.toContain(RESET_BUTTON);
@@ -45,7 +47,9 @@ test('an unreachable instance keeps the raw error out of the page and offers it 
 		"Error invoking remote method 'desktop-runtime-config:resolve': DesktopRuntimeDiscoveryUnreachableError: connect ECONNREFUSED 127.0.0.1:9",
 	);
 
-	const markup = renderToStaticMarkup(<BootstrapErrorScreen error={error} />);
+	const markup = renderToStaticMarkup(
+		<BootstrapErrorScreen error={error} data-flx="app.bootstrap-error-screen-test.bootstrap-error-screen--2" />,
+	);
 
 	expect(markup).not.toContain('DesktopRuntimeDiscoveryUnreachableError');
 	expect(markup).not.toContain('ECONNREFUSED');
@@ -55,13 +59,23 @@ test('an unreachable instance keeps the raw error out of the page and offers it 
 test('a failure while the device is offline never offers a reset of app data', () => {
 	vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
 
-	const markup = renderToStaticMarkup(<BootstrapErrorScreen error={new Error('Stored account record is malformed')} />);
+	const markup = renderToStaticMarkup(
+		<BootstrapErrorScreen
+			error={new Error('Stored account record is malformed')}
+			data-flx="app.bootstrap-error-screen-test.bootstrap-error-screen--3"
+		/>,
+	);
 
 	expect(markup).not.toContain(RESET_BUTTON);
 });
 
 test('a local startup failure still offers the reset of app data', () => {
-	const markup = renderToStaticMarkup(<BootstrapErrorScreen error={new Error('Stored account record is malformed')} />);
+	const markup = renderToStaticMarkup(
+		<BootstrapErrorScreen
+			error={new Error('Stored account record is malformed')}
+			data-flx="app.bootstrap-error-screen-test.bootstrap-error-screen--4"
+		/>,
+	);
 
 	expect(markup).toContain(RETRY_BUTTON);
 	expect(markup).toContain(RESET_BUTTON);

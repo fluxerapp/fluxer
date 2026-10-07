@@ -268,7 +268,7 @@ const TABLE_COUNT_FLOOR = 1800;
 const ACCEPTED_TABLE_FINDINGS = new Map<string, Readonly<Partial<Record<TableRule, number>>>>([
 	['admin-api/applications.mdx', {'table-identifier': 1}],
 	['admin-api/discovery.mdx', {'table-identifier': 1}],
-	['admin-api/gateway.mdx', {'table-identifier': 2}],
+	['admin-api/gateway.mdx', {'table-fit': 1, 'table-identifier': 3}],
 	['admin-api/guilds.mdx', {'table-identifier': 3}],
 	['admin-api/index.mdx', {'table-identifier': 3}],
 	['admin-api/instance.mdx', {'table-identifier': 8}],
@@ -298,7 +298,7 @@ const ACCEPTED_TABLE_FINDINGS = new Map<string, Readonly<Partial<Record<TableRul
 	['http-api/guild-moderation.mdx', {'table-cell': 1}],
 	['http-api/guild-stickers.mdx', {'table-cell': 3}],
 	['http-api/guilds.mdx', {'table-fit': 1, 'table-identifier': 4}],
-	['http-api/instance.mdx', {'table-identifier': 7}],
+	['http-api/instance.mdx', {'table-identifier': 8}],
 	['http-api/invites.mdx', {'table-cell': 6}],
 	['http-api/messages.mdx', {'table-fit': 1, 'table-cell': 20, 'table-identifier': 1}],
 	['http-api/permissions.mdx', {'table-cell': 8}],

@@ -182,7 +182,7 @@ fn rebuild_block_allow_replacing(
         .iter()
         .find(|(candidate, _)| *candidate == key)
     else {
-        return Ok(lines.join("\n"));
+        return Ok(block.to_string());
     };
 
     let mut next_lines = Vec::new();
@@ -389,6 +389,49 @@ mod tests {
                 .unwrap()
                 .comments
                 .contains(&AUTO_I18N_UNCHANGED_COMMENT.to_string())
+        );
+    }
+
+    #[test]
+    fn untouched_blocks_keep_reviewed_unchanged_markers() {
+        let content = format!(
+            "{}\n{AUTO_I18N_UNCHANGED_COMMENT}\n#: src/example.tsx:5\nmsgid \"Audio\"\nmsgstr \"Audio\"\n",
+            sample_po()
+        );
+        let rebuilt = rebuild_po_allow_replacing(
+            &content,
+            &[Translation::new(
+                Some("keyboard key".to_string()),
+                "Delete",
+                "Supprimer",
+            )],
+        )
+        .unwrap();
+        let entries = parse_po(&rebuilt).unwrap();
+        let verb = entries
+            .iter()
+            .find(|entry| entry.msgctxt.as_deref() == Some("verb"))
+            .unwrap();
+        assert_eq!(
+            verb.comments,
+            vec![crate::config::AUTO_I18N_LEGACY_UNCHANGED_COMMENT.to_string()]
+        );
+        let audio = entries.iter().find(|entry| entry.msgid == "Audio").unwrap();
+        assert_eq!(
+            audio.comments,
+            vec![AUTO_I18N_UNCHANGED_COMMENT.to_string()]
+        );
+        assert_eq!(
+            entries
+                .iter()
+                .find(|entry| entry.msgctxt.as_deref() == Some("keyboard key"))
+                .unwrap()
+                .msgstr,
+            "Supprimer"
+        );
+        assert_eq!(
+            rebuild_po_allow_replacing(&content, &[]).unwrap(),
+            format!("{}\n", content.trim_end())
         );
     }
 

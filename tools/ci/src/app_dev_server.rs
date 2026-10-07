@@ -74,7 +74,7 @@ struct StepMetadata {
 type Metadata = BTreeMap<String, StepMetadata>;
 
 pub async fn run(args: AppDevServerArgs) -> Result<()> {
-    let project_root = args.app_dir.unwrap_or(resolve_app_dir()?);
+    let project_root = resolve_app_dir(args.app_dir)?;
     let mut server = AppDevServer::new(project_root);
     server.run().await
 }

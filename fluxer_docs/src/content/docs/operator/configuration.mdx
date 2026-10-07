@@ -1046,7 +1046,7 @@ With feeds off, Fluxer checks none of this data. The first worker start with fee
 
 #### `FLUXER_REPORT_RETENTION_DRY_RUN`
 
-Default dry run. Read by `worker`. The daily [report retention](/admin-api/reports/#report-retention) job deletes reports 365 days after they were filed, with their evidence copies and search entries, unless a legal hold is in place. Until this is `false` or `0`, the job only logs what it would delete. Any other value, or no value, keeps the dry run. Check the counts in the `Processed report retention` log line before you turn deletion on, because deleted evidence cannot be restored. Compose does not forward it, so add it to `worker` through an override file.
+Default unset, which keeps the dry run. Read by `worker`. The daily [report retention](/admin-api/reports/#report-retention) job deletes reports 365 days after they were filed, with their evidence copies and search entries, unless a legal hold is in place. Until this is `false` or `0`, the job only logs what it would delete. Any other value, or no value, keeps the dry run. Check the counts in the `Processed report retention` log line before you turn deletion on, because deleted evidence cannot be restored. Compose does not forward it, so add it to `worker` through an override file.
 
 #### `FLUXER_BREACHED_PASSWORD_CHECK_ENABLED`
 

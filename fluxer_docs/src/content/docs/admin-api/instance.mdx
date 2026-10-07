@@ -411,7 +411,7 @@ Stripe billing for the premium tier. Each stored field is nullable, and null fal
 | effective_tax_id_collection | boolean | Whether checkout collects a buyer tax ID |
 | effective_terms_consent_required | boolean | Whether checkout requires terms of service consent |
 | default_currency | ?string | Currency used when no country mapping applies, or null |
-| prices<sup>1</sup> | ?object | Stored [billing price sets](#billing-price-set-object) keyed by currency, or null to use the deployment configuration |
+| prices<sup>1</sup> | ?map[string, [billing price set](#billing-price-set-object) object] | Stored price sets keyed by currency, or null to use the deployment configuration |
 | country_currencies | ?object | Stored map of two-letter country codes to currencies, or null |
 | legacy_prices<sup>2</sup> | ?object | Stored map of legacy price slots to arrays of Stripe price IDs, or null to use the deployment configuration |
 | billing_active<sup>3</sup> | boolean | Whether premium purchases are available |

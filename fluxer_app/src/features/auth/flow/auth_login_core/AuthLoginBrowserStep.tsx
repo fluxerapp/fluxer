@@ -202,7 +202,12 @@ function WaitingContent({handoff, instanceName, onOtherDevice}: WaitingContentPr
 					</Trans>
 				)}
 			</flx-auth-login-browser-step-status-text>
-			{showCode && !handoff.hasStoppedWaiting ? <HandoffCode code={handoff.displayCode} /> : null}
+			{showCode && !handoff.hasStoppedWaiting ? (
+				<HandoffCode
+					code={handoff.displayCode}
+					data-flx="auth.flow.auth-login-core.auth-login-browser-step.waiting-content.handoff-code"
+				/>
+			) : null}
 			<FocusRing offset={-2} data-flx="auth.flow.auth-login-core.auth-login-browser-step.focus-ring.other-device">
 				<button
 					type="button"
@@ -245,7 +250,10 @@ function OtherDeviceContent({handoff, signInAddress}: {handoff: BrowserLoginHand
 				</Trans>
 			</flx-auth-login-browser-step-status-text>
 			{handoff.hasCode ? (
-				<HandoffCode code={handoff.displayCode} />
+				<HandoffCode
+					code={handoff.displayCode}
+					data-flx="auth.flow.auth-login-core.auth-login-browser-step.other-device-content.handoff-code"
+				/>
 			) : (
 				<Spinner size={SpinnerSize.MEDIUM} data-flx="auth.flow.auth-login-core.auth-login-browser-step.code-spinner" />
 			)}
@@ -440,7 +448,9 @@ export const AuthLoginBrowserStep = observer(function AuthLoginBrowserStep({
 				{showBackButton ? (
 					<Button
 						variant={ButtonVariant.SECONDARY}
-						leftIcon={<ButtonIcon icon="back" />}
+						leftIcon={
+							<ButtonIcon icon="back" data-flx="auth.flow.auth-login-core.auth-login-browser-step.button-icon" />
+						}
 						onClick={handleBackToWaiting}
 						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.back-to-waiting"
 					>
@@ -449,7 +459,9 @@ export const AuthLoginBrowserStep = observer(function AuthLoginBrowserStep({
 				) : null}
 				{handoff.hasStoppedWaiting ? (
 					<Button
-						leftIcon={<ButtonIcon icon="retry" />}
+						leftIcon={
+							<ButtonIcon icon="retry" data-flx="auth.flow.auth-login-core.auth-login-browser-step.button-icon--2" />
+						}
 						onClick={handoff.resumeWaiting}
 						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.resume-waiting"
 					>
@@ -457,7 +469,12 @@ export const AuthLoginBrowserStep = observer(function AuthLoginBrowserStep({
 					</Button>
 				) : (
 					<Button
-						leftIcon={<ButtonIcon icon={handoff.copied ? 'copied' : 'copy'} />}
+						leftIcon={
+							<ButtonIcon
+								icon={handoff.copied ? 'copied' : 'copy'}
+								data-flx="auth.flow.auth-login-core.auth-login-browser-step.button-icon--3"
+							/>
+						}
 						onClick={handoff.copyCode}
 						disabled={!handoff.hasCode}
 						submitting={isMakingCode}
@@ -480,7 +497,9 @@ export const AuthLoginBrowserStep = observer(function AuthLoginBrowserStep({
 				{showBackButton ? (
 					<Button
 						variant={ButtonVariant.SECONDARY}
-						leftIcon={<ButtonIcon icon="back" />}
+						leftIcon={
+							<ButtonIcon icon="back" data-flx="auth.flow.auth-login-core.auth-login-browser-step.button-icon--4" />
+						}
 						onClick={handleCancel}
 						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.back"
 					>
@@ -489,7 +508,9 @@ export const AuthLoginBrowserStep = observer(function AuthLoginBrowserStep({
 				) : null}
 				{canStart ? (
 					<Button
-						leftIcon={<ButtonIcon icon="retry" />}
+						leftIcon={
+							<ButtonIcon icon="retry" data-flx="auth.flow.auth-login-core.auth-login-browser-step.button-icon--5" />
+						}
 						onClick={handleRetry}
 						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.retry"
 					>
@@ -518,7 +539,9 @@ export const AuthLoginBrowserStep = observer(function AuthLoginBrowserStep({
 				</Button>
 				{handoff.hasStoppedWaiting ? (
 					<Button
-						leftIcon={<ButtonIcon icon="retry" />}
+						leftIcon={
+							<ButtonIcon icon="retry" data-flx="auth.flow.auth-login-core.auth-login-browser-step.button-icon--6" />
+						}
 						onClick={handoff.resumeWaiting}
 						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.resume-waiting"
 					>
@@ -526,7 +549,9 @@ export const AuthLoginBrowserStep = observer(function AuthLoginBrowserStep({
 					</Button>
 				) : (
 					<Button
-						leftIcon={<ButtonIcon icon="open" />}
+						leftIcon={
+							<ButtonIcon icon="open" data-flx="auth.flow.auth-login-core.auth-login-browser-step.button-icon--7" />
+						}
 						onClick={handleOpenBrowser}
 						submitting={isOpening}
 						disabled={!canStart}

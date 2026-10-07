@@ -22,10 +22,19 @@ export function PlutoniumPageLinkCard() {
 	const {i18n} = useLingui();
 	return (
 		<div className={styles.card} data-flx="premium.plutonium-page-link-card.card">
-			<CrownIcon weight="fill" className={styles.icon} aria-hidden="true" />
-			<div className={styles.text}>
-				<p className={styles.title}>{getPremiumProductFullName()}</p>
-				<p className={styles.body}>{i18n._(LINK_CARD_BODY_DESCRIPTOR)}</p>
+			<CrownIcon
+				weight="fill"
+				className={styles.icon}
+				aria-hidden="true"
+				data-flx="premium.plutonium-page.plutonium-page-link-card.icon"
+			/>
+			<div className={styles.text} data-flx="premium.plutonium-page.plutonium-page-link-card.text">
+				<p className={styles.title} data-flx="premium.plutonium-page.plutonium-page-link-card.title">
+					{getPremiumProductFullName()}
+				</p>
+				<p className={styles.body} data-flx="premium.plutonium-page.plutonium-page-link-card.body">
+					{i18n._(LINK_CARD_BODY_DESCRIPTOR)}
+				</p>
 			</div>
 			<Button
 				variant="primary"

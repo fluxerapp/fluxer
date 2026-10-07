@@ -262,7 +262,7 @@ Each field is a string, except `hashes` and `substrings`, which are `array[strin
 
 | Field | Type | Description |
 | --- | --- | --- |
-| scope<sup>3</sup> | string | The [profile substring scope](#profile-substring-scopes) to store the rows under |
+| scope?<sup>3</sup> | string | The [profile substring scope](#profile-substring-scopes) to store the rows under |
 | category?<sup>4</sup> | string | The [content blocklist category](#content-blocklist-categories) (1-64 characters, default `manual`) |
 | severity?<sup>4</sup> | integer | The [content blocklist severity](#content-blocklist-severities) (0-3, default 2) |
 | match_subdomains?<sup>5</sup> | boolean | Whether the row also covers subdomains (default true) |
@@ -481,13 +481,17 @@ The body is selected by `list_type`.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| hashes<sup>1</sup> | array[string] | Avatar hashes to remove (1-1000 items of 8 through 10 characters matching `^(a_)?[0-9a-fA-F]{8}$`) |
-| scope<sup>2</sup> | string | The [profile substring scope](#profile-substring-scopes) the substrings are stored under |
-| substrings<sup>2</sup> | array[string] | Substrings to remove (1-1000 items of 1 through 500 characters) |
+| hashes?<sup>1</sup> | array[string] | Avatar hashes to remove (1-1000 items of 8 through 10 characters matching `^(a_)?[0-9a-fA-F]{8}$`) |
+| scope?<sup>2</sup> | string | The [profile substring scope](#profile-substring-scopes) the substrings are stored under |
+| substrings?<sup>2</sup> | array[string] | Substrings to remove (1-1000 items of 1 through 500 characters) |
+| reason?<sup>3</sup> | string | Accepted and ignored |
+| notes?<sup>3</sup> | string | Accepted and ignored |
 
-<sup>1</sup> `avatar-hash` only, where it is the whole body
+<sup>1</sup> `avatar-hash` only, where it is required and is the whole body
 
-<sup>2</sup> `profile-substring` only, where both are required. `reason` and `notes` are accepted but ignored
+<sup>2</sup> `profile-substring` only, where both are required
+
+<sup>3</sup> `profile-substring` only. Fluxer records neither in the audit entry
 
 ### Response
 
@@ -594,7 +598,7 @@ The body is the creation shape of the selected blocklist with the value field re
 
 | Field | Type | Description |
 | --- | --- | --- |
-| scope<sup>1</sup> | string | The [profile substring scope](#profile-substring-scopes) to write the row under |
+| scope?<sup>1</sup> | string | The [profile substring scope](#profile-substring-scopes) to write the row under |
 | category?<sup>2</sup> | string | The [content blocklist category](#content-blocklist-categories) (1-64 characters, default `manual`) |
 | severity?<sup>2</sup> | integer | The [content blocklist severity](#content-blocklist-severities) (0-3, default 2) |
 | match_subdomains?<sup>3</sup> | boolean | Whether the row also covers subdomains (default true) |

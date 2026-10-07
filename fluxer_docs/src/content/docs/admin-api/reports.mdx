@@ -195,6 +195,8 @@ The detail object extends the [Admin report object](#admin-report-object) with t
 | message_context<sup>2</sup> | array[[report message context](#report-message-context-object) object] | The messages captured around the reported content |
 | message_responses<sup>3</sup> | array[[message](/http-api/messages/#message-object) object] | The current state of the same messages, read live |
 | reported_profile_snapshot?<sup>4</sup> | ?[report profile snapshot](#report-profile-snapshot-object) object | The reported profile as it was when the report was filed |
+| legal_hold_until?<sup>5</sup> | ?ISO8601 timestamp | When the legal hold on the report ends |
+| legal_hold_reason?<sup>5</sup> | ?string | Why the report is held |
 
 <sup>1</sup> Set only for a USER report that has both a reporter and a reported account, and null when the two share no direct message channel
 
@@ -203,6 +205,8 @@ The detail object extends the [Admin report object](#admin-report-object) with t
 <sup>3</sup> Resolved when the response is produced, so an edited message differs from its captured entry
 
 <sup>4</sup> Always emitted. Null for a report filed before profile snapshots were stored, for a report about a message a webhook sent, and when the stored snapshot cannot be read
+
+<sup>5</sup> Always emitted. Null when the report has no hold. [Set report legal hold](#set-report-legal-hold) places and clears the hold, and [Report retention](#report-retention) describes its effect
 
 :::note[The live array can be shorter than the capture]
 Fluxer skips an entry when neither the capture nor the report records its channel. It also omits a message that no longer exists, or whose channel can no longer be read.

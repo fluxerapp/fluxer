@@ -3,11 +3,13 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
+import {parseArgs} from 'node:util';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const GENERATED_HEADER = '// SPDX-License-Identifier: AGPL-3.0-or-later\n\n';
+const USAGE = 'usage: SyncStaticI18nCatalogs.ts --extract [--compile] [--catalog <name>]...';
 
 const STATIC_I18N_LOCALES = [
 	'ar',
@@ -231,13 +233,13 @@ async function extractCatalog(config: StaticCatalogConfig): Promise<void> {
 		await importExport(config.sourceModulePath, config.sourceExportName),
 		`${config.name} source catalog`,
 	);
-	writeJson(jsonPath(config), sortKeys(source));
+	writeJson(jsonPath(config), sortKeys<Catalog[string]>(source));
 
 	for (const locale of STATIC_I18N_LOCALES) {
 		const existingJson = readJson<unknown>(jsonPath(config, locale));
 		const existingTs = existingJson === null ? await importDefault<Catalog>(localeTsPath(config, locale)) : null;
 		const next = normalizeCatalog(config, source, existingJson ?? existingTs);
-		writeJson(jsonPath(config, locale), sortKeys(next));
+		writeJson(jsonPath(config, locale), sortKeys<Catalog[string]>(next));
 	}
 	console.log(`extracted static ${config.name} catalogs`);
 }
@@ -267,18 +269,46 @@ async function compileCatalog(config: StaticCatalogConfig): Promise<void> {
 	console.log(`compiled static ${config.name} locale modules`);
 }
 
-async function main(): Promise<void> {
-	const args = new Set(process.argv.slice(2));
-	const shouldExtract = args.has('--extract');
-	const shouldCompile = args.has('--compile');
-	if (!shouldExtract && !shouldCompile) {
-		throw new Error('usage: SyncStaticI18nCatalogs.ts --extract [--compile]');
+interface SyncOptions {
+	extract: boolean;
+	compile: boolean;
+	catalogs: Array<StaticCatalogConfig>;
+}
+
+function parseSyncOptions(argv: Array<string>): SyncOptions {
+	const {values} = parseArgs({
+		args: argv,
+		options: {
+			extract: {type: 'boolean', default: false},
+			compile: {type: 'boolean', default: false},
+			catalog: {type: 'string', multiple: true, default: []},
+		},
+		strict: true,
+		allowPositionals: false,
+	});
+	if (!values.extract && !values.compile) {
+		throw new Error(USAGE);
 	}
-	for (const config of CATALOGS) {
-		if (shouldExtract) {
+	const known = CATALOGS.map((config) => config.name);
+	const unknown = values.catalog.filter((name) => !known.includes(name));
+	if (unknown.length > 0) {
+		throw new Error(`unknown catalog ${unknown.join(', ')}, expected one of ${known.join(', ')}`);
+	}
+	return {
+		extract: values.extract,
+		compile: values.compile,
+		catalogs:
+			values.catalog.length === 0 ? CATALOGS : CATALOGS.filter((config) => values.catalog.includes(config.name)),
+	};
+}
+
+async function main(): Promise<void> {
+	const options = parseSyncOptions(process.argv.slice(2));
+	for (const config of options.catalogs) {
+		if (options.extract) {
 			await extractCatalog(config);
 		}
-		if (shouldCompile) {
+		if (options.compile) {
 			await compileCatalog(config);
 		}
 	}

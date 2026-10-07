@@ -2175,6 +2175,9 @@ importers:
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.5.14
+      '@fluxer/constants':
+        specifier: workspace:*
+        version: link:../constants
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.1

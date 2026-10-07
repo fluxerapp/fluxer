@@ -3194,7 +3194,7 @@ msgid "Add a friend to get started."
 msgstr "Přidejte si přítele a začněte."
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1076
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1081
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "Přidejte klíč API Klipy, aby bylo možné za běhu aplikace vyhledávat GIFy."
 
@@ -3238,7 +3238,7 @@ msgid "Add a working email"
 msgstr "Přidat funkční e-mailovou adresu"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1084
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1089
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "Přidejte klíč YouTube Data API pro doplnění informací k odkazům na YouTube."
 
@@ -3291,7 +3291,7 @@ msgid "Add another reaction"
 msgstr "Přidat další reakci"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1100
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1105
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "Přidejte metadata klienta OAuth pro Bluesky a podepisovací klíč."
 
@@ -3456,7 +3456,7 @@ msgid "Add shortcut"
 msgstr "Přidat zkratku"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1092
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1097
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "Přidejte přihlašovací údaje SMTP, aby instance mohla odesílat ověřovací e-maily a e-mailová oznámení."
 
@@ -3493,7 +3493,7 @@ msgid "Add tags"
 msgstr "Přidat značky"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1068
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1073
 msgid "Add the credentials during setup."
 msgstr "Při nastavení přidejte přihlašovací údaje."
 
@@ -4635,7 +4635,7 @@ msgid "Anyone with this key can reset your password. Never share it."
 msgstr "Kdokoli s tímto klíčem může resetovat vaše heslo. Nikdy ho nesdílejte."
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1104
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1109
 msgid "API key"
 msgstr "Klíč API"
 
@@ -6122,7 +6122,7 @@ msgid "Bluesky connections"
 msgstr "Propojení s Bluesky"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1096
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1101
 msgid "Bluesky OAuth"
 msgstr "OAuth pro Bluesky"
 
@@ -6812,7 +6812,7 @@ msgstr "Sem nelze nahrávat soubory"
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:418
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:170
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
-#: src/features/channel/components/MentionEveryonePopout.tsx:177
+#: src/features/channel/components/MentionEveryonePopout.tsx:197
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
 #: src/features/channel/components/modals/CreateDMModal.tsx:92
 #: src/features/connection/components/modals/AddConnectionModal.tsx:374
@@ -6896,13 +6896,13 @@ msgstr "Zrušit plánovanou změnu"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:980
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Zrušit předplatné"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:257
 msgid "Cancel subscription?"
 msgstr "Zrušit předplatné?"
 
@@ -8572,7 +8572,7 @@ msgid "Client"
 msgstr "Klient"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1141
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1146
 msgid "Client name"
 msgstr "Název klienta"
 
@@ -8589,7 +8589,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "Klientský tajný klíč byl vygenerován znovu. Aktualizujte veškerý kód, který používá starý klíč."
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1145
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1150
 msgid "Client URL"
 msgstr "URL klienta"
 
@@ -9346,7 +9346,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "Nastavit klávesové zkratky"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1064
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1069
 msgid "Configure now"
 msgstr "Nastavit nyní"
 
@@ -9399,7 +9399,7 @@ msgstr "Nastavit odznak profilu"
 
 #. Action label for confirming a mass mention that may notify many people.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/MentionEveryonePopout.tsx:185
+#: src/features/channel/components/MentionEveryonePopout.tsx:205
 #: src/features/user/components/modals/BouncedEmailChangeModal.tsx:212
 #: src/features/user/components/modals/EmailChangeModal.tsx:340
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
@@ -14082,7 +14082,7 @@ msgid "Email changed"
 msgstr "E-mail změněn"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1088
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1093
 msgid "Email delivery"
 msgstr "Doručování e-mailů"
 
@@ -14352,7 +14352,7 @@ msgid "Enable beta feature"
 msgstr "Zapnout beta funkci"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1137
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1142
 msgid "Enable Bluesky OAuth"
 msgstr "Povolit OAuth pro Bluesky"
 
@@ -14385,7 +14385,7 @@ msgid "Enable developer mode"
 msgstr "Zapnout režim pro vývojáře"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1105
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1110
 msgid "Enable email delivery"
 msgstr "Povolit doručování e-mailů"
 
@@ -14602,12 +14602,12 @@ msgid "End grace now"
 msgstr "Ukončit dodatečnou lhůtu hned"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:285
 msgid "End grace period"
 msgstr "Ukončit dodatečnou lhůtu"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:278
 msgid "End grace period now?"
 msgstr "Ukončit dodatečnou lhůtu hned?"
 
@@ -16665,12 +16665,12 @@ msgid "from <0>{0}</0>"
 msgstr "z <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1109
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1114
 msgid "From email"
 msgstr "Odesílatel (e-mail)"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1113
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1118
 msgid "From name"
 msgstr "Odesílatel (jméno)"
 
@@ -16978,7 +16978,7 @@ msgid "GIF preview"
 msgstr "Náhled GIFu"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1072
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1077
 msgid "GIF search"
 msgstr "Vyhledávání GIFů"
 
@@ -19756,7 +19756,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "Ponechte bezplatnou i prémiovou úroveň. Úrovně můžete přizpůsobit, prodávat prémiové členství přes Stripe nebo později rozdávat dárkové kódy z administračního panelu."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:169
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:287
 msgid "Keep grace period"
 msgstr "Ponechat dodatečnou lhůtu"
 
@@ -19771,7 +19771,7 @@ msgid "Keep running"
 msgstr "Pokračovat v běhu"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:147
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
 msgid "Keep subscription"
 msgstr "Ponechat předplatné"
 
@@ -20700,7 +20700,7 @@ msgid "Logo"
 msgstr "Logo"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1149
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1154
 msgid "Logo URL"
 msgstr "URL loga"
 
@@ -23775,7 +23775,7 @@ msgstr "Žádné nedávné zmínky"
 msgid "No recovery kit? Ask an admin of this instance for a password reset link."
 msgstr "Žádný záchranný balíček? Požádejte administrátora této instance o odkaz na obnovení hesla."
 
-#: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:101
+#: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:107
 msgid "No remaining recipients to create a group DM with."
 msgstr "Nezůstali žádní příjemci, se kterými by bylo možné vytvořit skupinovou konverzaci."
 
@@ -25560,7 +25560,7 @@ msgstr "Přístupové klíče vyžadují podepsaný balíček macOS s platným i
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1120
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1125
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:219
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
@@ -26337,7 +26337,7 @@ msgid "Popup"
 msgstr "Vyskakovací okno"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1118
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1123
 msgid "Port"
 msgstr "Port"
 
@@ -26772,7 +26772,7 @@ msgid "Privacy setup nagbar"
 msgstr "Nastavení soukromí"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1157
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1162
 msgid "Privacy URL"
 msgstr "URL zásad ochrany osobních údajů"
 
@@ -26787,7 +26787,7 @@ msgid "Private details"
 msgstr "Soukromé údaje"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1165
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1170
 msgid "Private key"
 msgstr "Soukromý klíč"
 
@@ -27199,7 +27199,7 @@ msgstr "Režim Stisknutím mluvit zatím nemá klávesu pro celý systém. Nasta
 msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
 msgstr "Režim Stisknutím mluvit zatím nemá klávesu pro celý systém. Nastavíte ji v nastavení klávesových zkratek vašeho desktopového prostředí."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:701
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:706
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "V režimu Přímý vstup se nastavení Stisknutím mluvit ignoruje. Chcete-li ho použít, přepněte na režim Hlas v popředí nebo Vlastní."
 
@@ -31165,7 +31165,7 @@ msgid "Set up authenticator app"
 msgstr "Nastavit ověřovací aplikaci"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1056
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1061
 msgid "Set up later"
 msgstr "Nastavit později"
 
@@ -32154,7 +32154,7 @@ msgid "Signing in…"
 msgstr "Přihlašování…"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1161
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1166
 msgid "Signing key ID"
 msgstr "ID podepisovacího klíče"
 
@@ -32295,7 +32295,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "Přeskočit systémové oznámení o odchodu – nikdo nedostane upozornění."
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1060
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1065
 msgid "Skip this now and configure it from the admin panel."
 msgstr "Přeskočit teď a nakonfigurovat z administračního panelu."
 
@@ -32538,17 +32538,17 @@ msgid "Smoother video"
 msgstr "Plynulejší video"
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1129
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1134
 msgid "SMTP connection verified."
 msgstr "Spojení SMTP ověřeno."
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1117
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1122
 msgid "SMTP host"
 msgstr "Hostitel SMTP"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1133
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1138
 msgid "SMTP validation failed."
 msgstr "Ověření SMTP se nezdařilo."
 
@@ -34420,12 +34420,12 @@ msgid "Terms of service"
 msgstr "Podmínky služby"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1153
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1158
 msgid "Terms URL"
 msgstr "URL podmínek"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1125
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1130
 msgid "Test SMTP"
 msgstr "Otestovat SMTP"
 
@@ -35904,12 +35904,12 @@ msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "Tímto zneplatníte stávající záložní kódy a vygenerujete nové."
 
 #. Warning text before notifying every member in the current channel.
-#: src/features/channel/components/MentionEveryonePopout.tsx:98
+#: src/features/channel/components/MentionEveryonePopout.tsx:108
 msgid "This will notify <0>{memberCount, plural, one {# member} other {# members}}</0> in this channel. Are you sure you want to do this?"
 msgstr "Upozorníte tak <0>{memberCount, plural, one {# člena} few {# členy} many {# člena} other {# členů}}</0> v tomto kanálu. Opravdu to chcete udělat?"
 
 #. Warning text before notifying every member with a role in the current channel.
-#: src/features/channel/components/MentionEveryonePopout.tsx:83
+#: src/features/channel/components/MentionEveryonePopout.tsx:88
 msgid "This will notify <0>{memberCount, plural, one {# member} other {# members}}</0> with the <1>{roleLabel}</1> role in this channel. Are you sure you want to do this?"
 msgstr "Upozorníte tak <0>{memberCount, plural, one {# člena} few {# členy} many {# člena} other {# členů}}</0> s rolí <1>{roleLabel}</1> v tomto kanálu. Opravdu to chcete udělat?"
 
@@ -35918,7 +35918,7 @@ msgid "This will notify <0>{memberCount, plural, one {# member} other {# members
 msgstr "Upozorníte tak <0>{memberCount, plural, one {# člena} few {# členy} many {# člena} other {# členů}}</0> s touto rolí v tomto kanálu. Opravdu to chcete udělat?"
 
 #. Warning text before notifying online members in the current channel with @here.
-#: src/features/channel/components/MentionEveryonePopout.tsx:108
+#: src/features/channel/components/MentionEveryonePopout.tsx:123
 msgid "This will notify up to <0>{memberCount, plural, one {# online member} other {# online members}}</0> in this channel. Are you sure you want to do this?"
 msgstr "Upozorníte tak až <0>{memberCount, plural, one {# online člena} few {# online členy} many {# online člena} other {# online členů}}</0> v tomto kanálu. Opravdu to chcete udělat?"
 
@@ -38442,7 +38442,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "Použijte to při řešení problémů s klientem nebo sběru protokolů. Může to přidat podrobné zprávy do konzole prohlížeče pro aktuálního klienta."
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1121
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1126
 msgid "Use TLS"
 msgstr "Použít TLS"
 
@@ -38602,7 +38602,7 @@ msgstr "Hlasitost uživatele"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1119
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1124
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:581
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:227
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -41052,12 +41052,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Právě jste stiskli klávesu Tab. Režim klávesnice je nyní zapnutý, takže můžete procházet aplikaci {productName} bez myši."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:259
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Výhody si ponecháte do data příštího obnovení. Pokud předplatné do té doby znovu aktivujete, zachováte si jeho historii."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:280
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Okamžitě ztratíte všechny výhody {PREMIUM_PRODUCT_NAME} a historie vašeho předplatného se resetuje. Tuto akci nelze vrátit zpět."
 
@@ -42000,7 +42000,7 @@ msgid "YouTube enrichment"
 msgstr "Rozšířené náhledy YouTube"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1080
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1085
 msgid "YouTube previews"
 msgstr "Náhledy YouTube"
 

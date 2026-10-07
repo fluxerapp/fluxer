@@ -683,7 +683,12 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 							data-flx="user.voice-tab.radio-group.voice-processing-mode-change"
 						/>
 						{voiceProcessingMode === 'voice' && noiseSuppressionFallbackMessage && (
-							<p className={styles.pttSettingDescription}>{noiseSuppressionFallbackMessage}</p>
+							<p
+								className={styles.pttSettingDescription}
+								data-flx="user.user-voice-tab.voice-tab.ptt-setting-description"
+							>
+								{noiseSuppressionFallbackMessage}
+							</p>
 						)}
 						{voiceProcessingMode === 'voice' && (
 							<div className={styles.profileSubSection} data-flx="user.voice-tab.profile-sub-section">

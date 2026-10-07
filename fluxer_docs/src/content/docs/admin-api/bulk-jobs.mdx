@@ -112,6 +112,7 @@ The `task` discriminator selects one of these structures. Every ID array has an 
 | reason_code | integer | [Deletion reason](/admin-api/users/#deletion-reasons) recorded against every targeted account |
 | public_reason? | string | The reason shown to each account holder in the deletion notice (0-512 characters after normalisation) |
 | days_until_deletion?<sup>1</sup> | integer | The delay before deletion in whole days (1-365, default 60) |
+| notify_user? | boolean | Whether to email each account holder about the scheduled deletion (default true) |
 
 <sup>1</sup> Fluxer raises the value to the reason-specific minimum, 14 days for `USER_REQUESTED` and 60 days for every other code
 

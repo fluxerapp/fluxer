@@ -60,6 +60,7 @@ Each value is an absolute URL supplied by the operator. A value can be a bare or
 | invite | string | Invite link base URL |
 | gift | string | Gift link base URL |
 | webapp | string | Web application base URL |
+| docs? | string | Documentation website base URL |
 
 <sup>1</sup> Both fields are the same configured client API endpoint, which the first-party web application reads. `api_public` is the separately configured public API endpoint, which a bot, a library, or any other third-party client reads. A deployment can point the two at one origin, and the instance Fluxer hosts does not
 
@@ -144,6 +145,9 @@ Deployment-wide switches a client reads before it offers a feature, plus whether
 | phone_verification_enabled | boolean | Deprecated. Always false |
 | account_identity<sup>5</sup> | string | How members sign in, one of the [account identity modes](#account-identity-modes) |
 | tag_style<sup>6</sup> | string | How usernames are tagged, one of the [tag styles](#tag-styles) |
+| desktop_modules_enabled? | boolean | Whether desktop clients may load downloadable modules |
+| account_deletion_grace_period_hours? | integer | Hours between a deletion request and the permanent deletion of the account (1-8,760) |
+| max_background_gateway_connections? | integer | Maximum Gateway connections a client may keep open for background accounts (0-64) |
 
 <sup>1</sup> The value is true only when email is switched on and the transport is completely configured. It is always false on a `username` deployment
 
@@ -248,6 +252,10 @@ This deployment's public Web Push identity.
 | Field | Type | Description |
 | --- | --- | --- |
 | public_vapid_key<sup>1</sup> | ?string | The deployment's Web Push VAPID public key, or null |
+| delivery_mode? | string | How push notifications reach devices, one of `direct`, `external_relay`, or `hybrid` |
+| event_resolution_path? | string | API path a client calls to resolve the payload of a push event |
+| external_relay_url? | ?string | URL of the external push relay, or null when there is none |
+| relay_signing_key_hashes? | ?array[string] | Hashes of the keys the external push relay signs with, or null |
 
 <sup>1</sup> Null when the deployment has configured no Web Push identity
 

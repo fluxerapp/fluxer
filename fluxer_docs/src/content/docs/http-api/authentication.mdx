@@ -70,6 +70,7 @@ The public single sign-on state. The same object is embedded by the [instance di
 | enforced<sup>2</sup> | boolean | Whether SSO is required for every user |
 | display_name | ?string | The configured provider display name, or null when none is set |
 | redirect_uri | string | The default OAuth2 redirect URI used for the provider callback |
+| available? | boolean | Whether an SSO provider is configured for this instance |
 
 <sup>1</sup> The value is true only when the operator has enabled SSO and the provider has an authorisation URL, a token URL, a client ID, and a JWKS URL or user info URL. Each URL is configured or discovered from the issuer. A provider that lacks any of them reports false
 
@@ -230,7 +231,7 @@ The result of checking a password reset token without consuming it.
 
 ## Account recovery response object
 
-The result of [recover an account](#recover-an-account). It is an [authentication token response](#authentication-token-response) or an [MFA challenge response](#mfa-challenge-response), with the two fields below added to either shape.
+The result of [recover an account](#recover-an-account). It extends an [authentication token response](#authentication-token-response) or an [MFA challenge response](#mfa-challenge-response) with the two fields below, which are added to either shape.
 
 ### Structure
 
@@ -607,6 +608,8 @@ There is no retry key. A repeated request with the same values creates a second 
 | 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, email, IP, or subnet bucket denies the request |
 | 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
 | 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+The response schema also declares the [MFA challenge response](#mfa-challenge-response), which registration never returns, because a new account has no second factor.
 
 ### Side effects
 
@@ -1204,6 +1207,8 @@ Fluxer checks the replacement password against the same breached-password corpus
 | 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
 | 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
 | 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+The response schema also declares the [MFA challenge response](#mfa-challenge-response), which this operation never returns, because the reversion clears every second factor.
 
 ### Side effects
 

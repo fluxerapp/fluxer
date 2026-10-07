@@ -56,7 +56,13 @@ function ThemedApp({
 		messageGroupSpacing: groupSpacing,
 		hdrDisplayMode: HdrDisplayMode.FULL,
 	});
-	return <MeasuringChild revision={`${theme}:${groupSpacing}:${saturation}`} samples={samples} />;
+	return (
+		<MeasuringChild
+			revision={`${theme}:${groupSpacing}:${saturation}`}
+			samples={samples}
+			data-flx="theme.use-theme-css-variables-test.themed-app.measuring-child"
+		/>
+	);
 }
 
 beforeEach(() => {
@@ -75,11 +81,51 @@ afterEach(() => {
 
 test('a settings change never exposes a frame without the theme class or layout variables', () => {
 	const samples: Array<RootStyleSample> = [];
-	act(() => root?.render(<ThemedApp theme="dark" groupSpacing={16} saturation={1} samples={samples} />));
+	act(() =>
+		root?.render(
+			<ThemedApp
+				theme="dark"
+				groupSpacing={16}
+				saturation={1}
+				samples={samples}
+				data-flx="theme.use-theme-css-variables-test.themed-app"
+			/>,
+		),
+	);
 	samples.length = 0;
-	act(() => root?.render(<ThemedApp theme="dark" groupSpacing={16} saturation={0.5} samples={samples} />));
-	act(() => root?.render(<ThemedApp theme="dark" groupSpacing={8} saturation={0.5} samples={samples} />));
-	act(() => root?.render(<ThemedApp theme="coal" groupSpacing={8} saturation={0.5} samples={samples} />));
+	act(() =>
+		root?.render(
+			<ThemedApp
+				theme="dark"
+				groupSpacing={16}
+				saturation={0.5}
+				samples={samples}
+				data-flx="theme.use-theme-css-variables-test.themed-app--2"
+			/>,
+		),
+	);
+	act(() =>
+		root?.render(
+			<ThemedApp
+				theme="dark"
+				groupSpacing={8}
+				saturation={0.5}
+				samples={samples}
+				data-flx="theme.use-theme-css-variables-test.themed-app--3"
+			/>,
+		),
+	);
+	act(() =>
+		root?.render(
+			<ThemedApp
+				theme="coal"
+				groupSpacing={8}
+				saturation={0.5}
+				samples={samples}
+				data-flx="theme.use-theme-css-variables-test.themed-app--4"
+			/>,
+		),
+	);
 	expect(samples).toHaveLength(3);
 	expect(samples.map((sample) => sample.themeClasses)).toEqual([['theme-dark'], ['theme-dark'], ['theme-dark']]);
 	expect(samples.map((sample) => sample.chatPadding)).toEqual(['1rem', '1rem', '1rem']);
@@ -94,7 +140,17 @@ test('a settings change never exposes a frame without the theme class or layout 
 });
 
 test('unmounting removes the theme class and every variable it set', () => {
-	act(() => root?.render(<ThemedApp theme="dark" groupSpacing={16} saturation={1} samples={[]} />));
+	act(() =>
+		root?.render(
+			<ThemedApp
+				theme="dark"
+				groupSpacing={16}
+				saturation={1}
+				samples={[]}
+				data-flx="theme.use-theme-css-variables-test.themed-app--5"
+			/>,
+		),
+	);
 	act(() => root?.unmount());
 	root = createRoot(container as HTMLElement);
 	expect(sampleRootStyle()).toEqual({themeClasses: [], fontSize: '', chatPadding: '', groupSpacing: ''});

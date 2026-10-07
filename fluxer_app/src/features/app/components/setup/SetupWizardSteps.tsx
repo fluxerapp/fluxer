@@ -650,7 +650,12 @@ export const SignInMethodStep = observer(
 				)}
 				{!usernameSignIn && (
 					<div className={styles.usernameStyle} data-flx="app.self-hosted-setup-wizard-gate.username-style">
-						<h3 className={styles.usernameStyleTitle}>{i18n._(TAG_STYLE_TITLE_DESCRIPTOR)}</h3>
+						<h3
+							className={styles.usernameStyleTitle}
+							data-flx="app.setup.setup-wizard-steps.sign-in-method-step.username-style-title"
+						>
+							{i18n._(TAG_STYLE_TITLE_DESCRIPTOR)}
+						</h3>
 						<RadioGroup
 							options={tagStyleOptions}
 							value={tagStyle}

@@ -113,15 +113,20 @@ export const GiftPlutoniumModal = observer(() => {
 								aria-label={i18n._(GIFT_PLAN_LABEL_DESCRIPTOR)}
 								renderContent={(option) => (
 									<div className={styles.option} data-flx="premium.gift-plutonium-modal.option">
-										<span className={styles.optionName}>
-											<span>{option.name}</span>
+										<span className={styles.optionName} data-flx="premium.gift-plutonium-modal.option-name">
+											<span data-flx="premium.gift-plutonium-modal.span">{option.name}</span>
 											{option.value === 'gift_1_year' && percent != null && (
-												<span className={styles.badge}>{i18n._(SAVE_PERCENT_DESCRIPTOR, {percent})}</span>
+												<span className={styles.badge} data-flx="premium.gift-plutonium-modal.badge">
+													{i18n._(SAVE_PERCENT_DESCRIPTOR, {percent})}
+												</span>
 											)}
 										</span>
-										<span className={styles.optionPrice}>{option.desc}</span>
+										<span className={styles.optionPrice} data-flx="premium.gift-plutonium-modal.option-price">
+											{option.desc}
+										</span>
 									</div>
 								)}
+								data-flx="premium.gift-plutonium-modal.radio-group.set-plan"
 							/>
 							{blockedNote && (
 								<p className={styles.note} role="note" data-flx="premium.gift-plutonium-modal.blocked-note">
