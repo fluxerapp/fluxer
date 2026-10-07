@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	resolveDesktopDisplayResourceURL,
+	resolveDesktopDisplayResourceURLForInstance,
 	unwrapDesktopLocalResourceURL,
-	wrapDesktopLocalResourceURL,
-	wrapDesktopLocalResourceURLForInstance,
 } from '@app/features/messaging/utils/DesktopResourceUrl';
 import {MEDIA_PROXY_IMAGE_SIZES, type MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 
@@ -99,7 +99,7 @@ export function buildMediaProxyURL(originalUrl: string, options: MediaProxyOptio
 	if (!originalUrl) return originalUrl;
 	const url = new URL(unwrapDesktopLocalResourceURL(originalUrl));
 	appendMediaProxyParams(url, options);
-	return wrapDesktopLocalResourceURL(url.toString());
+	return resolveDesktopDisplayResourceURL(url.toString());
 }
 
 export function buildMediaProxyURLForInstance(
@@ -110,14 +110,14 @@ export function buildMediaProxyURLForInstance(
 	if (!originalUrl) return originalUrl;
 	const url = new URL(unwrapDesktopLocalResourceURL(originalUrl));
 	appendMediaProxyParams(url, options);
-	return wrapDesktopLocalResourceURLForInstance(url.toString(), instanceKey);
+	return resolveDesktopDisplayResourceURLForInstance(url.toString(), instanceKey);
 }
 
 export function buildFitInsideMediaProxyURL(originalUrl: string, options: FitInsideMediaProxyOptions = {}): string {
 	if (!originalUrl) return originalUrl;
 	const url = new URL(unwrapDesktopLocalResourceURL(originalUrl));
 	appendMediaProxyParams(url, getFitInsideProxyOptions(options));
-	return wrapDesktopLocalResourceURL(url.toString());
+	return resolveDesktopDisplayResourceURL(url.toString());
 }
 
 function readProxyDimensionParam(url: URL, key: 'width' | 'height'): number | undefined {
@@ -150,7 +150,7 @@ export function stripMediaProxyParams(proxyURL: string): string {
 	url.searchParams.delete('format');
 	url.searchParams.delete('quality');
 	url.searchParams.delete('animated');
-	return wrapDesktopLocalResourceURL(url.toString());
+	return resolveDesktopDisplayResourceURL(url.toString());
 }
 
 export function buildAnimatedImageProxyURL(proxyURL: string, width?: number, height?: number): string {

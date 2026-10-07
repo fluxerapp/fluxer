@@ -7,6 +7,7 @@ import type {AnimatedCropSourceFormat, CropParams} from '@app/features/expressio
 import {CropPipelineError, cropAnimatedImage} from '@app/features/expressions/workers/AnimatedImageCropWorkerManager';
 import {showMessagingErrorModal} from '@app/features/messaging/components/alerts/MessagingErrorModalUtils';
 import styles from '@app/features/messaging/components/modals/ImageCropModal.module.css';
+import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
@@ -720,7 +721,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 					width: displayDimensions.width * zoomRatio,
 					height: displayDimensions.height * zoomRatio,
 				};
-				const response = await fetch(imageUrl);
+				const response = await fetch(resolveDesktopCrossOriginMediaURL(imageUrl) ?? imageUrl);
 				if (controller.signal.aborted) return;
 				if (!response.ok) {
 					throw new Error('Failed to fetch image data');
@@ -869,7 +870,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 					>
 						<img
 							ref={imageRef}
-							src={imageUrl}
+							src={resolveDesktopCrossOriginMediaURL(imageUrl)}
 							alt={i18n._(CROP_PREVIEW_DESCRIPTOR)}
 							className={styles.image}
 							style={{

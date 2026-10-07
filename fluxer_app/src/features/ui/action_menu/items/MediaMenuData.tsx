@@ -257,7 +257,7 @@ async function fetchFirstPngBlob(urls: Array<string>): Promise<Blob> {
 	let lastError: unknown = null;
 	for (const url of urls) {
 		try {
-			const response = await fetch(url);
+			const response = await fetch(wrapDesktopLocalResourceURL(url));
 			if (!response.ok) {
 				throw new Error(`Unexpected response status ${response.status} for ${url}`);
 			}

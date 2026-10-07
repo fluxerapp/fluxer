@@ -21,6 +21,7 @@ const UPLOAD_RELAY_MULTIPART_PARAMETERS: ReadonlySet<string> = new Set(['uploadI
 const UPLOAD_RELAY_BASE_PATH_PATTERN = /(?:^|\/)relay(?:\/|$)/u;
 const UPLOAD_RELAY_BASE_SUFFIX_PATTERN = /\/v1\/relay$/u;
 const TRAILING_SLASHES_PATTERN = /\/+$/u;
+const LOOPBACK_IPV4_PATTERN = /^127(?:\.\d{1,3}){3}$/u;
 
 class DesktopUploadRelayUrlError extends Error {
 	constructor(message: string) {
@@ -54,6 +55,44 @@ export function wrapDesktopLocalResourceURLForInstance(value: string, instanceKe
 	}
 	if (target.protocol !== 'http:' && target.protocol !== 'https:') return target.toString();
 	return buildDesktopLocalResourceProxyURL(target, instanceKey);
+}
+
+export function resolveDesktopDisplayResourceURL(value: string): string {
+	if (!isDesktopLocalAppDocument()) return value;
+	const target = parseDisplayTarget(value);
+	if (target == null) return value;
+	if (isDirectlyDisplayableTarget(target)) return target.toString();
+	return wrapResolvedDesktopLocalResourceURL(target.toString(), false);
+}
+
+export function resolveDesktopDisplayResourceURLForInstance(value: string, instanceKey: string): string {
+	if (!isDesktopLocalAppDocument()) return value;
+	const target = parseDisplayTarget(value);
+	if (target != null && isDirectlyDisplayableTarget(target)) return target.toString();
+	return wrapDesktopLocalResourceURLForInstance(value, instanceKey);
+}
+
+export function resolveDesktopCrossOriginMediaURL(value: string | undefined): string | undefined {
+	if (value == null || value.length === 0) return value;
+	return wrapDesktopLocalResourceURL(value);
+}
+
+function parseDisplayTarget(value: string): URL | null {
+	try {
+		return new URL(parseDesktopLocalResourceProxyTarget(value));
+	} catch {
+		return null;
+	}
+}
+
+function isDirectlyDisplayableTarget(target: URL): boolean {
+	if (target.protocol === 'https:') return true;
+	return target.protocol === 'http:' && isLoopbackHostname(target.hostname);
+}
+
+function isLoopbackHostname(hostname: string): boolean {
+	if (hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '[::1]') return true;
+	return LOOPBACK_IPV4_PATTERN.test(hostname);
 }
 
 export function updateDesktopLocalResourceURLTarget(value: string, updateTarget: (target: URL) => boolean): string {

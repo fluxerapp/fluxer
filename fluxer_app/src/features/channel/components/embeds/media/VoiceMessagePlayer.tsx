@@ -7,6 +7,7 @@ import {useMaybeMessageViewContext} from '@app/features/channel/components/Messa
 import {PAUSE_DESCRIPTOR, PLAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
+import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -324,7 +325,7 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 			>
 				<audio
 					ref={mediaRef as React.RefObject<HTMLAudioElement>}
-					src={hasStarted || wantsMetadata ? effectiveSrc : undefined}
+					src={hasStarted || wantsMetadata ? resolveDesktopCrossOriginMediaURL(effectiveSrc) : undefined}
 					preload={wantsMetadata ? 'metadata' : 'none'}
 					onError={handleMediaError}
 					data-flx="channel.embeds.media.voice-message-player.audio"

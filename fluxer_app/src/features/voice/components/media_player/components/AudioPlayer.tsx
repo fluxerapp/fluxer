@@ -2,6 +2,7 @@
 
 import {PAUSE_DESCRIPTOR, PLAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
+import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/voice/components/media_player/AudioPlayer.module.css';
@@ -210,7 +211,7 @@ export function AudioPlayer({
 			{/* biome-ignore lint/a11y/useMediaCaption: voice/audio attachments have no caption track source */}
 			<audio
 				ref={mediaRef as React.RefObject<HTMLAudioElement>}
-				src={sourceAttribute}
+				src={resolveDesktopCrossOriginMediaURL(sourceAttribute)}
 				preload={preloadAttribute}
 				onError={handleMediaError}
 				data-flx="voice.media-player.audio-player.audio"
