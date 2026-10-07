@@ -383,13 +383,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			port: master.integrations.clamav.port,
 			failOpen: master.integrations.clamav.fail_open,
 		},
-		ncmec: {
-			enabled: master.integrations.ncmec.enabled,
-			baseUrl: master.integrations.ncmec.base_url,
-			username: master.integrations.ncmec.username,
-			password: master.integrations.ncmec.password,
-			reporterEmail: master.integrations.ncmec.reporter_email ?? '',
-		},
 		admin: {
 			oauthClientSecret: master.services.admin.oauth_client_secret,
 		},

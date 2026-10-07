@@ -353,7 +353,7 @@ mod tests {
         ));
         assert!(should_keep_unchanged("{start} – {end}", "de"));
         assert!(should_keep_unchanged("C++", "de"));
-        assert!(!should_keep_unchanged("NCMEC {ncmecReportId}", "de"));
+        assert!(!should_keep_unchanged("DSA {reportId}", "de"));
         assert!(!should_keep_unchanged("Hello", "de"));
         assert!(!should_keep_unchanged("{productName}", "en-US"));
     }

@@ -12,9 +12,6 @@ pub struct Attachment {
     pub width: Option<u32>,
     pub height: Option<u32>,
     pub size: Option<u64>,
-    pub ncmec_status: String,
-    pub ncmec_report_id: Option<String>,
-    pub ncmec_failure_reason: Option<String>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -113,14 +110,6 @@ fn attachment_from_value(value: &Value) -> Attachment {
         width: value["width"].as_u64().map(|n| n as u32),
         height: value["height"].as_u64().map(|n| n as u32),
         size: value["size"].as_u64(),
-        ncmec_status: value["ncmec_status"]
-            .as_str()
-            .unwrap_or("not_submitted")
-            .to_owned(),
-        ncmec_report_id: value["ncmec_report_id"].as_str().map(ToOwned::to_owned),
-        ncmec_failure_reason: value["ncmec_failure_reason"]
-            .as_str()
-            .map(ToOwned::to_owned),
     }
 }
 
@@ -168,10 +157,7 @@ mod tests {
                 "content_type": "image/png",
                 "width": 640,
                 "height": 480,
-                "size": 4096,
-                "ncmec_status": "submitted",
-                "ncmec_report_id": "report-id",
-                "ncmec_failure_reason": "previous failure"
+                "size": 4096
             }]
         });
 
@@ -202,9 +188,6 @@ mod tests {
                     width: Some(640),
                     height: Some(480),
                     size: Some(4096),
-                    ncmec_status: "submitted".into(),
-                    ncmec_report_id: Some("report-id".into()),
-                    ncmec_failure_reason: Some("previous failure".into()),
                 }],
                 missing_attachments: vec![],
             }
@@ -290,9 +273,6 @@ mod tests {
                 width: None,
                 height: None,
                 size: None,
-                ncmec_status: "not_submitted".into(),
-                ncmec_report_id: None,
-                ncmec_failure_reason: None,
             }]
         );
     }

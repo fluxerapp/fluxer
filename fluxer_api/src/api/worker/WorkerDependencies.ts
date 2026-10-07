@@ -9,7 +9,6 @@ import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
 import {ConnectionService} from '@app/api/connection/ConnectionService';
-import type {NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
 import {DonationRepository} from '@app/api/donation/DonationRepository';
 import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
@@ -75,7 +74,6 @@ import {
 	getKVActivityTracker,
 	getKVBulkMessageDeletionQueue,
 	getLimitConfigService,
-	getNcmecSubmissionService,
 	getOAuth2TokenRepository,
 	getPremiumStateReconciliationQueueService,
 	getPurgeQueue,
@@ -167,7 +165,6 @@ export interface WorkerDependencies {
 	channelService: ChannelService;
 	guildAuditLogService: GuildAuditLogService;
 	contactChangeLogService: UserContactChangeLogService;
-	ncmecSubmissionService: NcmecSubmissionService;
 	donationRepository: IDonationRepository;
 	guildService: GuildService;
 	billingRepository: BillingRepository;
@@ -207,7 +204,6 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 	const connectionService = new ConnectionService(connectionRepository, gatewayService);
 	const mediaService = getMediaService();
 	const discriminatorService = getDiscriminatorService();
-	const ncmecSubmissionService = getNcmecSubmissionService();
 	const avatarService = getAvatarService();
 	const entityAssetService = getEntityAssetService();
 	await ensureVirusScanInitialized();
@@ -329,7 +325,6 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		storeEntitlementService,
 		guildAuditLogService,
 		contactChangeLogService,
-		ncmecSubmissionService,
 		get stripe() {
 			return getStripeClient();
 		},

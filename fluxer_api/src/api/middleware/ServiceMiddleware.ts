@@ -92,7 +92,6 @@ import {
 	getKVBulkMessageDeletionQueue,
 	getKVThreadAutoArchiveQueue,
 	getLimitConfigService,
-	getNcmecSubmissionService,
 	getOAuth2TokenRepository,
 	getPasswordChangeRepository,
 	getPremiumStateReconciliationQueueService,
@@ -426,10 +425,6 @@ class RequestServices implements RequestScopedServices {
 
 	get limitConfigService() {
 		return getLimitConfigService();
-	}
-
-	get ncmecSubmissionService() {
-		return getNcmecSubmissionService();
 	}
 
 	get oauth2TokenRepository() {

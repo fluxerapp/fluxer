@@ -13,47 +13,13 @@ use crate::utils::timestamps::format_admin_timestamp;
 
 use super::message_data::{Attachment, Message};
 
-#[derive(Clone, Copy, Debug, Default)]
-pub struct MessageActions<'a> {
-    pub delete: bool,
-    pub ncmec: bool,
-    pub source_report_id: Option<&'a str>,
-}
-
 fn is_image(att: &Attachment) -> bool {
     att.content_type
         .as_deref()
         .is_some_and(|ct| ct.starts_with("image/"))
 }
 
-fn ncmec_badge(att: &Attachment) -> Markup {
-    match att.ncmec_status.as_str() {
-        "submitted" => {
-            let label = att
-                .ncmec_report_id
-                .as_deref()
-                .map(|id| format!("NCMEC {id}"))
-                .unwrap_or_else(|| "Reported to NCMEC".into());
-            html! {
-                span class="rounded bg-green-100 px-2 py-0.5 text-[11px] text-green-800"
-                     title=(label) { (label) }
-            }
-        }
-        "failed" => {
-            let title = att
-                .ncmec_failure_reason
-                .as_deref()
-                .unwrap_or("NCMEC report failed");
-            html! {
-                span class="rounded bg-red-100 px-2 py-0.5 text-[11px] text-red-800"
-                     title=(title) { "NCMEC Failed" }
-            }
-        }
-        _ => html! {},
-    }
-}
-
-fn render_image_attachments(msg: &Message, actions: MessageActions<'_>) -> Markup {
+fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
     let mut images = msg.attachments.iter().filter(|a| is_image(a)).peekable();
     if images.peek().is_none() {
         return html! {};
@@ -79,47 +45,15 @@ fn render_image_attachments(msg: &Message, actions: MessageActions<'_>) -> Marku
                             a href=(att.url) target="_blank" rel="noopener noreferrer"
                               class="font-medium text-blue-600 hover:underline" { (att.filename) }
                             (attachment_nsfw_badge(att.nsfw.unwrap_or(false)))
-                            (ncmec_badge(att))
                         }
-                        @if actions.delete || actions.ncmec {
+                        @if include_delete {
                             div class="flex flex-wrap gap-2" {
-                                @if actions.delete {
-                                    button type="button"
-                                        class="delete-message-btn rounded bg-white px-2.5 py-1 \
-                                               text-red-600 text-xs shadow-sm ring-1 ring-neutral-200 \
-                                               transition-colors hover:bg-red-50 hover:text-red-700"
-                                        data-channel-id=(msg.channel_id)
-                                        data-message-id=(msg.id) { "Delete" }
-                                }
-                                @if actions.ncmec {
-                                    button type="button"
-                                        class="ncmec-report-btn rounded bg-white px-2.5 py-1 text-xs \
-                                               shadow-sm ring-1 ring-neutral-200 transition-colors \
-                                               hover:bg-neutral-100 disabled:cursor-not-allowed \
-                                               disabled:opacity-70"
-                                        data-channel-id=(msg.channel_id)
-                                        data-message-id=(msg.id)
-                                        data-attachment-id=(att.id)
-                                        data-filename=(att.filename)
-                                        data-content-type=(att.content_type.as_deref().unwrap_or(""))
-                                        data-size=(att.size.map(|s| s.to_string()).unwrap_or_default())
-                                        data-author-id=(msg.author_id)
-                                        data-ncmec-status=(att.ncmec_status)
-                                        data-ncmec-report-id=(att.ncmec_report_id.as_deref().unwrap_or(""))
-                                        data-source-report-id=[actions.source_report_id]
-                                        disabled[att.ncmec_status == "submitted"]
-                                        title=(if att.ncmec_status == "submitted" {
-                                            "Already reported to NCMEC"
-                                        } else {
-                                            "Report this image to NCMEC"
-                                        }) {
-                                        @if att.ncmec_status == "submitted" {
-                                            "Reported to NCMEC"
-                                        } @else {
-                                            "Report to NCMEC"
-                                        }
-                                    }
-                                }
+                                button type="button"
+                                    class="delete-message-btn rounded bg-white px-2.5 py-1 \
+                                           text-red-600 text-xs shadow-sm ring-1 ring-neutral-200 \
+                                           transition-colors hover:bg-red-50 hover:text-red-700"
+                                    data-channel-id=(msg.channel_id)
+                                    data-message-id=(msg.id) { "Delete" }
                             }
                         }
                     }
@@ -147,7 +81,6 @@ fn render_other_attachments(msg: &Message, has_content_or_images: bool) -> Marku
                     a href=(att.url) target="_blank" rel="noopener noreferrer"
                       class="text-blue-600 hover:underline" { (att.filename) }
                     (attachment_nsfw_badge(att.nsfw.unwrap_or(false)))
-                    (ncmec_badge(att))
                 }
             }
         }
@@ -181,7 +114,7 @@ fn message_row(
     base_path: &str,
     avatar_url: &str,
     msg: &Message,
-    actions: MessageActions<'_>,
+    include_delete: bool,
     is_highlighted: bool,
     is_grouped: bool,
 ) -> Markup {
@@ -213,14 +146,14 @@ fn message_row(
                                    text-sm leading-snug" { (msg.content) }
                     }
                     @if !msg.attachments.is_empty() {
-                        (render_image_attachments(msg, actions))
+                        (render_image_attachments(msg, include_delete))
                         (render_other_attachments(msg, has_content_or_images))
                     }
                     (render_missing_attachments(msg))
                     div class="mt-1 text-neutral-400 text-xs" {
                         span class="" { (msg.id) }
                     }
-                    @if actions.delete && !has_images {
+                    @if include_delete && !has_images {
                         div class="absolute top-0 right-2 hidden group-hover:block" {
                             button type="button"
                                 class="delete-message-btn rounded bg-white px-2 py-0.5 \
@@ -296,7 +229,7 @@ fn message_row(
                                text-sm leading-snug" { (msg.content) }
                 }
                 @if !msg.attachments.is_empty() {
-                    (render_image_attachments(msg, actions))
+                    (render_image_attachments(msg, include_delete))
                     (render_other_attachments(msg, has_content_or_images))
                 }
                 (render_missing_attachments(msg))
@@ -304,7 +237,7 @@ fn message_row(
                     span class="" { (msg.id) }
                 }
             }
-            @if actions.delete && !has_images {
+            @if include_delete && !has_images {
                 div class="absolute top-1 right-2 hidden group-hover:block" {
                     button type="button"
                         class="delete-message-btn rounded bg-white px-2 py-0.5 \
@@ -322,7 +255,7 @@ pub fn message_list(
     config: &AdminConfig,
     base_path: &str,
     messages: &[Message],
-    actions: MessageActions<'_>,
+    include_delete: bool,
     highlight_message_id: Option<&str>,
 ) -> Markup {
     html! {
@@ -337,7 +270,7 @@ pub fn message_list(
                 );
                 (message_row(
                     base_path, &avatar_url, msg,
-                    actions, is_highlighted, is_grouped,
+                    include_delete, is_highlighted, is_grouped,
                 ))
             }
         }
@@ -385,38 +318,6 @@ pub fn message_deletion_script(csrf_token: &str) -> Markup {
             toast('error', 'Failed to delete message.');
         });
     }
-    function reportNcmec(b) {
-        var name = prompt('Type your full name to confirm you personally viewed this image and want to submit it to NCMEC.');
-        if (!name || !name.trim()) return;
-        var fields = new URLSearchParams();
-        fields.append('channel_id', b.dataset.channelId || '');
-        fields.append('message_id', b.dataset.messageId || '');
-        fields.append('attachment_id', b.dataset.attachmentId || '');
-        fields.append('filename', b.dataset.filename || '');
-        if (b.dataset.sourceReportId) fields.append('source_report_id', b.dataset.sourceReportId);
-        fields.append('reporter_full_name', name.trim());
-        fields.append('confirmed_viewed', 'true');
-        b.disabled = true;
-        b.textContent = 'Reporting...';
-        toast('info', 'Submitting NCMEC report...');
-        post('report-to-ncmec', fields).then(function(r) {
-            return r.json().catch(function() {
-                return null;
-            }).then(function(data) {
-                if (!r.ok || !data || data.success !== true) throw new Error(data && (data.error || data.message) || 'Failed to report attachment to NCMEC');
-                return data;
-            });
-        }).then(function(data) {
-            b.textContent = 'Reported to NCMEC';
-            b.dataset.ncmecStatus = 'submitted';
-            if (data.ncmec_report_id) b.dataset.ncmecReportId = data.ncmec_report_id;
-            toast('success', 'NCMEC report submitted.');
-        }).catch(function(err) {
-            b.disabled = false;
-            b.textContent = 'Report to NCMEC';
-            toast('error', err && err.message ? err.message : 'Failed to report attachment to NCMEC.');
-        });
-    }
     document.addEventListener('click', function(e) {
         var t = e.target;
         if (!(t instanceof HTMLElement)) return;
@@ -424,12 +325,6 @@ pub fn message_deletion_script(csrf_token: &str) -> Markup {
         if (d instanceof HTMLButtonElement) {
             e.preventDefault();
             deleteMessage(d);
-            return;
-        }
-        var n = t.closest('.ncmec-report-btn');
-        if (n instanceof HTMLButtonElement && !n.disabled) {
-            e.preventDefault();
-            reportNcmec(n);
         }
     });
 })();"#

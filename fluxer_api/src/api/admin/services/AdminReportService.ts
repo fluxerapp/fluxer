@@ -24,7 +24,6 @@ import {
 	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
-import type {NcmecAttachmentStatusResponse, NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
@@ -63,7 +62,6 @@ interface AdminReportServiceDeps {
 	storageService: IStorageService;
 	auditService: AdminAuditService;
 	userCacheService: UserCacheService;
-	ncmecSubmissionService: NcmecSubmissionService;
 	reporterResolutionNotifier: ReporterResolutionNotifier;
 }
 
@@ -378,8 +376,6 @@ export class AdminReportService {
 		if (!includeContext) {
 			return baseResponse;
 		}
-		const attachmentStatusesById = await this.getAttachmentStatusesById(report);
-		const priorReportsByAuthor = await this.getPriorReportsForContext(report);
 		const authorBotFlags = await this.getContextAuthorBotFlags(report, requestCache);
 		const messageContext = (
 			await Promise.all(
@@ -389,8 +385,6 @@ export class AdminReportService {
 						report.reportedChannelId ?? null,
 						report.reportedGuildId ?? report.guildContextId ?? null,
 						reportLookupCache,
-						attachmentStatusesById,
-						priorReportsByAuthor,
 						authorBotFlags,
 					),
 				),
@@ -566,8 +560,6 @@ export class AdminReportService {
 		fallbackChannelId: ChannelID | null,
 		fallbackGuildId: GuildID | null,
 		reportLookupCache: ReportLookupCache,
-		attachmentStatusesById: Map<string, NcmecAttachmentStatusResponse>,
-		priorReportsByAuthor: Map<string, Array<string>>,
 		authorBotFlags: Map<string, boolean | null>,
 	) {
 		const channelId = message.channelId ?? fallbackChannelId;
@@ -581,9 +573,7 @@ export class AdminReportService {
 			message.attachments && message.attachments.length > 0
 				? (
 						await Promise.all(
-							message.attachments.map((attachment) =>
-								this.mapReportAttachmentToResponse(attachment, channelId, attachmentStatusesById),
-							),
+							message.attachments.map((attachment) => this.mapReportAttachmentToResponse(attachment, channelId)),
 						)
 					).filter(
 						(
@@ -597,9 +587,6 @@ export class AdminReportService {
 							width: number | null;
 							height: number | null;
 							size: number | null;
-							ncmec_status: string;
-							ncmec_report_id: string | null;
-							ncmec_failure_reason: string | null;
 						} => attachment !== null,
 					)
 				: [];
@@ -627,19 +614,7 @@ export class AdminReportService {
 			missing_attachments: message.missingAttachments
 				.filter((attachment) => attachment.attachment_id != null && attachment.filename)
 				.map(mapMissingAttachmentToResponse),
-			user_prior_ncmec_report_ids: message.authorId ? (priorReportsByAuthor.get(authorId) ?? []) : [],
 		};
-	}
-
-	private async getPriorReportsForContext(report: IARSubmission): Promise<Map<string, Array<string>>> {
-		const authorIds = new Set<string>();
-		for (const message of report.messageContext ?? []) {
-			if (message.authorId) authorIds.add(message.authorId.toString());
-		}
-		if (report.reportedUserId) authorIds.add(report.reportedUserId.toString());
-		if (authorIds.size === 0) return new Map();
-		const userIds = [...authorIds].map((value) => createUserID(BigInt(value)));
-		return this.deps.ncmecSubmissionService.getUserPriorReportIds(userIds);
 	}
 
 	private async getChannelNsfwState(
@@ -700,7 +675,6 @@ export class AdminReportService {
 	private async mapReportAttachmentToResponse(
 		attachment: MessageAttachment,
 		channelId: ChannelID | null,
-		attachmentStatusesById: Map<string, NcmecAttachmentStatusResponse>,
 	): Promise<{
 		id: string;
 		filename: string;
@@ -710,9 +684,6 @@ export class AdminReportService {
 		width: number | null;
 		height: number | null;
 		size: number | null;
-		ncmec_status: string;
-		ncmec_report_id: string | null;
-		ncmec_failure_reason: string | null;
 	} | null> {
 		if (!attachment || attachment.attachment_id == null || !attachment.filename || !channelId) {
 			return null;
@@ -736,9 +707,6 @@ export class AdminReportService {
 				width: attachment.width ?? null,
 				height: attachment.height ?? null,
 				size: attachment.size != null ? assertSafeByteSize(attachment.size, 'admin report attachment size') : null,
-				ncmec_status: attachmentStatusesById.get(attachment.attachment_id.toString())?.status ?? 'not_submitted',
-				ncmec_report_id: attachmentStatusesById.get(attachment.attachment_id.toString())?.ncmec_report_id ?? null,
-				ncmec_failure_reason: attachmentStatusesById.get(attachment.attachment_id.toString())?.failure_reason ?? null,
 			};
 		} catch (error) {
 			Logger.error(
@@ -747,13 +715,6 @@ export class AdminReportService {
 			);
 		}
 		return null;
-	}
-
-	private async getAttachmentStatusesById(report: IARSubmission) {
-		const attachmentIds = (report.messageContext ?? []).flatMap((message) =>
-			message.attachments.map((attachment) => attachment.attachment_id),
-		);
-		return this.deps.ncmecSubmissionService.getAttachmentStatuses(attachmentIds);
 	}
 
 	private async buildUserTag(userId: UserID | null, requestCache: RequestCache): Promise<UserTagInfo | null> {

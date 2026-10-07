@@ -37,7 +37,6 @@ const EXPECTED_LOADS: Readonly<Record<string, readonly [number, Coverage]>> = {
 	'channel/services/message/UserMessageDeletionService.ts': [2, 'admin_or_system'],
 	'channel/services/thread/ThreadCreationService.ts': [4, 'gated'],
 	'channel/services/thread/ThreadDeletionService.ts': [1, 'admin_or_system'],
-	'csam/NcmecSubmissionService.ts': [1, 'admin_or_system'],
 	'guild/services/channel/ChannelOperationsService.ts': [2, 'gated'],
 	'guild/services/GuildDiscoveryService.ts': [1, 'gated'],
 	'guild/services/data/GuildOperationsService.ts': [2, 'gated'],

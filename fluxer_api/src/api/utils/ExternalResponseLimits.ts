@@ -20,7 +20,6 @@ export const EXTERNAL_RESPONSE_LIMITS = {
 	oEmbedBytes: 256 * 1024,
 	pwnedPasswordsBytes: 1024 * 1024,
 	externalTemplateBytes: 512 * 1024,
-	ncmecResponseBytes: 64 * 1024,
 	fileBlocklistBytes: 25 * 1024 * 1024,
 	urlBlocklistBytes: 25 * 1024 * 1024,
 } as const;

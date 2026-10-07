@@ -80,8 +80,7 @@
 			"author_avatar": null,
 			"webhook_id": null,
 			"author_bot": false,
-			"missing_attachments": [],
-			"user_prior_ncmec_report_ids": []
+			"missing_attachments": []
 		},
 		{
 			"id": "1556352159119835293",
@@ -104,8 +103,7 @@
 			"author_avatar": null,
 			"webhook_id": null,
 			"author_bot": false,
-			"missing_attachments": [],
-			"user_prior_ncmec_report_ids": []
+			"missing_attachments": []
 		},
 		{
 			"id": "1556352159124029598",
@@ -128,8 +126,7 @@
 			"author_avatar": "f829b914",
 			"webhook_id": null,
 			"author_bot": false,
-			"missing_attachments": [],
-			"user_prior_ncmec_report_ids": []
+			"missing_attachments": []
 		},
 		{
 			"id": "1556352159128223903",
@@ -152,8 +149,7 @@
 			"author_avatar": "f829b914",
 			"webhook_id": null,
 			"author_bot": false,
-			"missing_attachments": [],
-			"user_prior_ncmec_report_ids": []
+			"missing_attachments": []
 		},
 		{
 			"id": "1556352159140806818",
@@ -176,8 +172,7 @@
 			"author_avatar": null,
 			"webhook_id": "1556352159132418208",
 			"author_bot": null,
-			"missing_attachments": [],
-			"user_prior_ncmec_report_ids": []
+			"missing_attachments": []
 		},
 		{
 			"id": "1556352159153389733",
@@ -200,8 +195,7 @@
 			"author_avatar": null,
 			"webhook_id": null,
 			"author_bot": true,
-			"missing_attachments": [],
-			"user_prior_ncmec_report_ids": []
+			"missing_attachments": []
 		},
 		{
 			"id": "1556352159161778343",
@@ -224,8 +218,7 @@
 			"author_avatar": null,
 			"webhook_id": null,
 			"author_bot": true,
-			"missing_attachments": [],
-			"user_prior_ncmec_report_ids": []
+			"missing_attachments": []
 		},
 		{
 			"id": "1556352159212110003",
@@ -248,8 +241,7 @@
 			"author_avatar": null,
 			"webhook_id": "1556352159203721393",
 			"author_bot": null,
-			"missing_attachments": [],
-			"user_prior_ncmec_report_ids": []
+			"missing_attachments": []
 		},
 		{
 			"id": "1556352159186944173",
@@ -272,8 +264,7 @@
 			"author_avatar": null,
 			"webhook_id": null,
 			"author_bot": null,
-			"missing_attachments": [],
-			"user_prior_ncmec_report_ids": []
+			"missing_attachments": []
 		}
 	],
 	"message_responses": [

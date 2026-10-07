@@ -2,7 +2,6 @@
 
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
-import {createAttachmentID, createChannelID, createMessageID, createReportID} from '@app/api/BrandedTypes';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -25,13 +24,11 @@ import {
 	DeleteAllUserMessagesResponse,
 	MessageShredJobIdParam,
 	MessageShredResponse,
-	ReportAttachmentToNcmecRequest,
 } from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
 import {
 	DeleteMessageResponse,
 	LookupMessageResponse,
 	MessageShredStatusResponse,
-	NcmecAttachmentSubmitResultResponse,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {
 	ChannelIdMessageIdParam,
@@ -122,40 +119,6 @@ export function MessageAdminController(app: HonoApp) {
 				},
 			});
 			return ctx.json(response);
-		},
-	);
-	app.post(
-		'/admin/messages/ncmec-reports',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
-		requireAdminACL(AdminACLs.CSAM_SUBMIT_NCMEC),
-		requireAdminACL(AdminACLs.MESSAGE_DELETE),
-		requireAdminACL(AdminACLs.USER_DELETE),
-		requireAdminACL(AdminACLs.ARCHIVE_TRIGGER_USER),
-		Validator('json', ReportAttachmentToNcmecRequest),
-		OpenAPI({
-			operationId: 'create_admin_ncmec_report',
-			summary: 'Report an attachment to NCMEC',
-			description:
-				'Submits a specific image attachment to NCMEC, creates an audit log entry, silently disables the user, triggers one archive for the user, and schedules content deletion after the archive completes.',
-			responseSchema: NcmecAttachmentSubmitResultResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-		}),
-		async (ctx) => {
-			const service = ctx.get('ncmecSubmissionService');
-			const adminUserId = ctx.get('adminUserId');
-			const body = ctx.req.valid('json');
-			const result = await service.submitAttachmentToNcmec({
-				channelId: createChannelID(body.channel_id),
-				messageId: createMessageID(body.message_id),
-				attachmentId: createAttachmentID(body.attachment_id),
-				filename: body.filename,
-				reporterFullName: body.reporter_full_name,
-				adminUserId,
-				sourceReportId: body.source_report_id ? createReportID(body.source_report_id) : null,
-			});
-			return ctx.json(result);
 		},
 	);
 	app.get(

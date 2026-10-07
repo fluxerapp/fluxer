@@ -150,12 +150,6 @@ import {
 } from '@app/api/database/types/ChannelTypes';
 import {USER_CONNECTION_STORAGE_COLUMNS, type UserConnectionStorageRow} from '@app/api/database/types/ConnectionTypes';
 import {
-	NCMEC_ATTACHMENT_SUBMISSION_COLUMNS,
-	NCMEC_USER_WORKFLOW_COLUMNS,
-	type NcmecAttachmentSubmissionRow,
-	type NcmecUserWorkflowRow,
-} from '@app/api/database/types/CsamTypes';
-import {
 	GUILD_DISCOVERY_BY_STATUS_COLUMNS,
 	GUILD_DISCOVERY_COLUMNS,
 	type GuildDiscoveryByStatusRow,
@@ -1293,16 +1287,6 @@ export const AttachmentUploadTracesByAttachment = defineTable<AttachmentUploadTr
 	columns: ATTACHMENT_UPLOAD_TRACE_BY_ATTACHMENT_COLUMNS,
 	primaryKey: ['attachment_id'],
 	defaultTtlSeconds: seconds('30 days'),
-});
-export const NcmecAttachmentSubmissions = defineTable<NcmecAttachmentSubmissionRow, 'attachment_id'>({
-	name: 'ncmec_attachment_submissions',
-	columns: NCMEC_ATTACHMENT_SUBMISSION_COLUMNS,
-	primaryKey: ['attachment_id'],
-});
-export const NcmecUserWorkflows = defineTable<NcmecUserWorkflowRow, 'user_id'>({
-	name: 'ncmec_user_workflows',
-	columns: NCMEC_USER_WORKFLOW_COLUMNS,
-	primaryKey: ['user_id'],
 });
 export const BillingCustomers = defineTable<BillingCustomerRow, 'provider_id'>({
 	name: 'billing_customers',

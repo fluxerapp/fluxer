@@ -22,7 +22,7 @@ Fluxer reads the tag, username, display name, and discriminator of both accounts
 
 ## Admin report object
 
-A report is written once, when the reporter files it. [Update report](#update-report) moves it from PENDING to RESOLVED with an optional comment. [Schedule user deletion](/admin-api/users/#schedule-user-deletion) for any reason other than a user request also resolves every pending report against the deleted account, with no public comment, and sends each reporter the generic notice [Update report](#update-report) describes. A report is deleted at the end of its [retention period](#report-retention).
+A report is written once, when the reporter files it. [Update report](#update-report) moves it from PENDING to RESOLVED with an optional comment. [Schedule user deletion](/admin-api/users/#schedule-user-deletion) for one of the abuse reasons listed there also resolves the pending reports against the deleted account, with no public comment, and sends each reporter the generic notice [Update report](#update-report) describes. A report in the `child_safety`, `underage_user`, or `self_harm` category is never resolved this way and stays PENDING. A report is deleted at the end of its [retention period](#report-retention).
 
 [List reports](#list-reports) returns this object without message context. [Get report](#get-report) returns the [Admin report detail object](#admin-report-detail-object), which extends it.
 
@@ -32,7 +32,7 @@ A report is written once, when the reporter files it. [Update report](#update-re
 | --- | --- | --- |
 | report_id | snowflake | The ID of the report |
 | reporter_id<sup>1</sup> | ?snowflake | The account that filed the report |
-| reporter_tag<sup>1</sup> <sup>2</sup> | ?string | The reporter username and four-digit discriminator joined by `#` |
+| reporter_tag<sup>1</sup> <sup>2</sup> <sup>18</sup> | ?string | The reporter username and four-digit discriminator joined by `#` |
 | reporter_username<sup>1</sup> <sup>2</sup> | ?string | The username of the reporter |
 | reporter_global_name<sup>1</sup> <sup>2</sup> | ?string | The display name of the reporter, or null when unset |
 | reporter_discriminator<sup>1</sup> <sup>2</sup> | ?string | The zero-padded four-digit reporter discriminator |
@@ -50,7 +50,7 @@ A report is written once, when the reporter files it. [Update report](#update-re
 | reporter_good_faith_confirmed?<sup>7</sup> <sup>13</sup> | ?boolean | Whether the reporter confirmed the notice in good faith |
 | additional_info | ?string | The free-text detail the reporter supplied |
 | reported_user_id<sup>14</sup> | ?snowflake | The reported account, or null for a guild report |
-| reported_user_tag<sup>2</sup> | ?string | The reported username and four-digit discriminator joined by `#` |
+| reported_user_tag<sup>2</sup> <sup>18</sup> | ?string | The reported username and four-digit discriminator joined by `#` |
 | reported_user_username<sup>2</sup> | ?string | The username of the reported account |
 | reported_user_global_name<sup>2</sup> | ?string | The display name of the reported account, or null when unset |
 | reported_user_discriminator<sup>2</sup> | ?string | The zero-padded four-digit reported account discriminator |
@@ -67,7 +67,7 @@ A report is written once, when the reporter files it. [Update report](#update-re
 | reported_webhook_guild_id?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> | ?snowflake | The guild the webhook belonged to |
 | reported_webhook_created_at?<sup>7</sup> <sup>14</sup> | ?ISO8601 timestamp | When the webhook was created, derived from its ID |
 | reported_webhook_creator_id?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> | ?snowflake | The account that created the webhook |
-| reported_webhook_creator_tag?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> <sup>16</sup> | ?string | The creator username and four-digit discriminator joined by `#` |
+| reported_webhook_creator_tag?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> <sup>16</sup> <sup>18</sup> | ?string | The creator username and four-digit discriminator joined by `#` |
 | reported_webhook_creator_username?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> <sup>16</sup> | ?string | The username of the creator |
 | reported_webhook_creator_global_name?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> <sup>16</sup> | ?string | The display name of the creator, or null when unset |
 | reported_webhook_creator_discriminator?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> <sup>16</sup> | ?string | The zero-padded four-digit creator discriminator |
@@ -127,6 +127,8 @@ A report is written once, when the reporter files it. [Update report](#update-re
 <sup>16</sup> Captured from the account that created the webhook. Null when that account had been deleted by the time the report was filed, while `reported_webhook_creator_id` still names it. The creator is context for moderators and is not the reported account, so `reported_user_id` stays null
 
 <sup>17</sup> Null when the report names no reported account, which includes a report about a message a webhook sent
+
+<sup>18</sup> On an instance with the `none` tag style the tag of an account that is not a bot is the bare username, with no `#0000`
 
 ### Example
 
@@ -235,15 +237,14 @@ A message report captures the reported message together with at most 25 messages
 | content | string | The captured message content, empty when the message had none |
 | timestamp<sup>6</sup> | ISO8601 timestamp | When the message was sent |
 | attachments<sup>7</sup> | array[[report message attachment](#report-message-attachment-object) object] | The captured attachment copies |
-| author_id<sup>9</sup> | snowflake | The author of the message |
-| author_username<sup>9</sup> | string | The captured author username |
+| author_id<sup>8</sup> | snowflake | The author of the message |
+| author_username<sup>8</sup> | string | The captured author username |
 | author_global_name<sup>4</sup> | ?string | The display name of the author |
-| author_discriminator<sup>9</sup> | string | The captured zero-padded four-digit author discriminator |
-| author_avatar<sup>9</sup> | ?string | The captured author avatar hash, or null when unset |
-| webhook_id?<sup>3</sup> <sup>10</sup> | ?snowflake | The [webhook](/http-api/webhooks/) that sent the message |
-| author_bot?<sup>3</sup> <sup>11</sup> | ?boolean | Whether the author account is a bot |
-| missing_attachments?<sup>3</sup> <sup>12</sup> | array[[report missing attachment](#report-missing-attachment-object) object] | Attachments that could not be copied into the report |
-| user_prior_ncmec_report_ids?<sup>3</sup> <sup>8</sup> | array[string] | The NCMEC report IDs previously filed against the author |
+| author_discriminator<sup>8</sup> | string | The captured zero-padded four-digit author discriminator |
+| author_avatar<sup>8</sup> | ?string | The captured author avatar hash, or null when unset |
+| webhook_id?<sup>3</sup> <sup>9</sup> | ?snowflake | The [webhook](/http-api/webhooks/) that sent the message |
+| author_bot?<sup>3</sup> <sup>10</sup> | ?boolean | Whether the author account is a bot |
+| missing_attachments?<sup>3</sup> <sup>11</sup> | array[[report missing attachment](#report-missing-attachment-object) object] | Attachments that could not be copied into the report |
 
 <sup>1</sup> The channel of the captured entry, otherwise the reported channel. An entry for which neither records a channel is left out of `message_context`
 
@@ -259,15 +260,13 @@ A message report captures the reported message together with at most 25 messages
 
 <sup>7</sup> Fluxer drops an evidence copy that records no file name, resolves to no channel, or receives no download URL, so this array can be shorter than the original
 
-<sup>8</sup> Sorted ascending, with at most 100 entries, and empty when no NCMEC report has been filed against the author or a webhook sent the message
+<sup>8</sup> For a message a webhook sent, the webhook ID, the name and avatar hash the message was sent with, and the discriminator `0000`, as the [message object](/http-api/messages/#message-object) shows the author of a webhook message
 
-<sup>9</sup> For a message a webhook sent, the webhook ID, the name and avatar hash the message was sent with, and the discriminator `0000`, as the [message object](/http-api/messages/#message-object) shows the author of a webhook message
+<sup>9</sup> Null for a message an account sent
 
-<sup>10</sup> Null for a message an account sent
+<sup>10</sup> Read from the author account when the response is produced. Null for a message a webhook sent and for an author account that no longer resolves
 
-<sup>11</sup> Read from the author account when the response is produced. Null for a message a webhook sent and for an author account that no longer resolves
-
-<sup>12</sup> Empty when every attachment was copied, and on a report filed before missing attachments were recorded. An attachment is listed here when its copy failed or, for a file embedded in the message, when the file was no longer stored
+<sup>11</sup> Empty when every attachment was copied, and on a report filed before missing attachments were recorded. An attachment is listed here when its copy failed or, for a file embedded in the message, when the file was no longer stored
 
 ### Report message attachment object
 
@@ -277,27 +276,14 @@ A message report captures the reported message together with at most 25 messages
 | --- | --- | --- |
 | id | snowflake | The ID of the attachment |
 | filename | string | The captured file name |
-| url<sup>13</sup> | string | The download URL for the evidence copy |
+| url<sup>12</sup> | string | The download URL for the evidence copy |
 | nsfw | ?boolean | Whether the attachment was marked NSFW |
 | content_type | ?string | The captured MIME type, or null when unknown |
 | width | ?integer | The pixel width, or null for a non-image attachment |
 | height | ?integer | The pixel height, or null for a non-image attachment |
 | size?<sup>3</sup> | ?integer | The size in bytes, or null when unknown |
-| ncmec_status<sup>14</sup> | string | The [NCMEC submission status](#ncmec-submission-statuses) |
-| ncmec_report_id | ?string | The NCMEC report ID, or null when the attachment was never submitted |
-| ncmec_failure_reason | ?string | The failure detail, or null unless `ncmec_status` is failed |
 
-<sup>13</sup> The URL expires after five minutes. Fetch the report again for fresh attachment links
-
-<sup>14</sup> An in-flight submission is stored as `submitting`, a value the registry below does not list
-
-#### NCMEC submission statuses
-
-| Value | Description |
-| --- | --- |
-| not_submitted | The attachment has never been submitted to NCMEC |
-| submitted | The attachment has been submitted to NCMEC |
-| failed | Submission to NCMEC was attempted and failed |
+<sup>12</sup> The URL expires after five minutes. Fetch the report again for fresh attachment links
 
 ### Report missing attachment object
 
@@ -313,9 +299,9 @@ An attachment of a captured message that Fluxer could not copy into the report. 
 | content_type | ?string | The captured MIME type, or null when unknown |
 | width | ?integer | The pixel width, or null for a non-image attachment |
 | height | ?integer | The pixel height, or null for a non-image attachment |
-| size<sup>15</sup> | ?integer | The size in bytes, or null when unknown |
+| size<sup>13</sup> | ?integer | The size in bytes, or null when unknown |
 
-<sup>15</sup> `0` for a file embedded in the message that was no longer stored when the report was filed
+<sup>13</sup> `0` for a file embedded in the message that was no longer stored when the report was filed
 
 ## Report profile snapshot object
 
@@ -710,7 +696,7 @@ Resolving a report notifies the reporter whatever `notify_reporter` says, as the
 
 The report moves to RESOLVED and records `resolved_at`, `resolved_by_admin_id`, and the public comment.
 
-Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report`, target ID equal to the report ID, and action `resolve_report`. The metadata is `report_id`, `report_type`, `notify_reporter`, `reporter_dm_sent`, `reporter_email_sent`, and `reporter_dsa_email_sent`. When Fluxer does not attempt a notice, `reporter_notice_skipped` names the reason: `reporter_account_deleted`, `reporter_report_banned`, `reporter_lookup_failed`, or `no_reporter_email`.
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report`, target ID equal to the report ID, and action `resolve_report`. The metadata is `report_id`, `report_type`, `notify_reporter`, `reporter_dm_sent`, `reporter_email_sent`, and `reporter_dsa_email_sent`, plus `resolution` when the request sets one. When Fluxer does not attempt a notice, `reporter_notice_skipped` names the reason: `reporter_account_deleted`, `reporter_report_banned`, `reporter_lookup_failed`, or `no_reporter_email`.
 
 Fluxer notifies the reporter of every resolution. A reporter with an account receives a system direct message, and an email when the account has an address. A Digital Services Act notice has no reporter account, so its verified address receives a decision email with the report ID, the comment when one is shared, and how to appeal. Nothing is sent when the reporter account is deleted or barred from reporting.
 

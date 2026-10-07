@@ -429,79 +429,13 @@ async fn report_detail_renders_unknown_status_and_type_values() {
 }
 
 #[tokio::test]
-async fn ncmec_submissions_forward_the_source_report_id() {
-    let received = Arc::new(Mutex::new(Vec::<Value>::new()));
-    let sink = received.clone();
-    let api = Router::new()
-        .route(
-            "/admin/messages/ncmec-reports",
-            routing::post(move |Json(body): Json<Value>| {
-                let sink = sink.clone();
-                async move {
-                    sink.lock().unwrap().push(body);
-                    json_response(json!({
-                        "success": true,
-                        "ncmec_report_id": "ncmec-1",
-                        "audit_log_reason": "Submitted"
-                    }))
-                }
-            }),
-        )
-        .fallback(mock_api);
-    let app = setup_with_api(api).await;
-    let (headers, body) = get_with_headers(&app, "/messages", &[]).await;
-    let csrf_token = csrf_cookie(&headers)
-        .unwrap_or_else(|| panic!("messages page did not set csrf_token cookie\n{body}"));
-    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
-    let fields = "channel_id=1600000000000000101&message_id=1800000000000001001\
-        &attachment_id=1800000000000001002&filename=image.png\
-        &reporter_full_name=Casey%20Admin&confirmed_viewed=true";
-    for form in [
-        format!("_csrf={csrf_token}&{fields}&source_report_id=1800000000000000009"),
-        format!("_csrf={csrf_token}&{fields}"),
-    ] {
-        let (status, _, response) = post_form_with_headers(
-            &app,
-            "/messages?action=report-to-ncmec",
-            &[("Cookie", &cookie), ("x-csrf-token", &csrf_token)],
-            &form,
-        )
-        .await;
-        assert_eq!(status, StatusCode::OK, "{response}");
-        assert!(response.contains("ncmec-1"), "{response}");
-    }
-    let received = received.lock().unwrap();
-    assert_eq!(received.len(), 2, "{received:?}");
-    assert_eq!(received[0]["source_report_id"], "1800000000000000009");
-    assert_eq!(received[0]["attachment_id"], "1800000000000001002");
-    assert_eq!(received[0]["confirmed_viewed"], true);
-    assert!(
-        received[1]
-            .get("source_report_id")
-            .is_none_or(Value::is_null),
-        "{received:?}"
-    );
-}
-
-#[tokio::test]
-async fn message_tools_offer_ncmec_only_with_every_required_acl() {
-    let full = fluxer_admin::acl::NCMEC_ATTACHMENT_REPORT;
-    let cases: [(&[&str], bool, bool); 4] = [
-        (full, true, true),
-        (&["*"], true, true),
-        (&["csam:submit_ncmec", "message:lookup"], false, false),
-        (
-            &[
-                "csam:submit_ncmec",
-                "message:delete",
-                "message:lookup",
-                "user:delete",
-            ],
-            false,
-            true,
-        ),
+async fn message_tools_offer_delete_only_with_the_acl() {
+    let cases: [(&[&str], bool); 3] = [
+        (&["*"], true),
+        (&["message:lookup"], false),
+        (&["message:delete", "message:lookup"], true),
     ];
-    for (acls, ncmec, delete) in cases {
+    for (acls, delete) in cases {
         let app = setup_with_api(message_tools_api(acls)).await;
         for path in [
             "/messages?channel_id=1600000000000000101&message_id=1800000000000001001",
@@ -510,17 +444,8 @@ async fn message_tools_offer_ncmec_only_with_every_required_acl() {
             let body = get(&app, path, &[]).await;
             assert!(body.contains("tools-image.png"), "{acls:?} {path}\n{body}");
             assert_eq!(
-                body.contains(r#"class="ncmec-report-btn"#),
-                ncmec,
-                "{acls:?} {path}\n{body}"
-            );
-            assert_eq!(
                 body.contains(r#"class="delete-message-btn"#),
                 delete,
-                "{acls:?} {path}\n{body}"
-            );
-            assert!(
-                !body.contains("data-source-report-id"),
                 "{acls:?} {path}\n{body}"
             );
         }
@@ -682,8 +607,7 @@ fn evidence_report() -> Value {
                     "width": 640,
                     "height": 480,
                     "size": 4096
-                }],
-                "user_prior_ncmec_report_ids": []
+                }]
             },
             {
                 "id": "1800000000000000999",
@@ -701,8 +625,7 @@ fn evidence_report() -> Value {
                 "author_avatar": null,
                 "webhook_id": null,
                 "author_bot": false,
-                "missing_attachments": [],
-                "user_prior_ncmec_report_ids": []
+                "missing_attachments": []
             }
         ]
     })
@@ -1890,10 +1813,7 @@ fn message_tools_api(acls: &[&str]) -> Router {
             "content_type": "image/png",
             "width": 64,
             "height": 64,
-            "size": 4096,
-            "ncmec_status": "not_submitted",
-            "ncmec_report_id": null,
-            "ncmec_failure_reason": null
+            "size": 4096
         }]
     });
     let lookup = json!({"messages": [message.clone()], "message_id": "1800000000000001001"});

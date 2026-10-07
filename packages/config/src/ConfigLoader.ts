@@ -197,12 +197,6 @@ function defaultConfig(): MasterConfig {
 				prices: {},
 				legacy_prices: {},
 			},
-			ncmec: {
-				enabled: false,
-				base_url: '',
-				username: '',
-				password: '',
-			},
 			clamav: {
 				enabled: false,
 				host: '127.0.0.1',

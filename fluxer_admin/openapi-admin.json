@@ -4883,65 +4883,6 @@
 				]
 			}
 		},
-		"/admin/messages/ncmec-reports": {
-			"post": {
-				"operationId": "create_admin_ncmec_report",
-				"summary": "Report an attachment to NCMEC",
-				"tags": ["Admin"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/NcmecAttachmentSubmitResultResponse"}}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Submits a specific image attachment to NCMEC, creates an audit log entry, silently disables the user, triggers one archive for the user, and schedules content deletion after the archive completes.",
-				"security": [{"adminApiKey": []}],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportAttachmentToNcmecRequest"}}}
-				}
-			}
-		},
 		"/admin/messages/shreds/{job_id}": {
 			"get": {
 				"operationId": "get_admin_message_shred",
@@ -10280,7 +10221,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 106,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions to assign"
@@ -10591,37 +10532,9 @@
 											"content_type": {"nullable": true, "type": "string"},
 											"width": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 											"height": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
-											"size": {
-												"nullable": true,
-												"allOf": [{"$ref": "#/components/schemas/NonNegativeSafeIntegerType"}]
-											},
-											"ncmec_status": {
-												"description": "NCMEC submission status",
-												"x-enumNames": ["not_submitted", "submitting", "submitted", "failed"],
-												"x-enumDescriptions": [
-													"Report has not been submitted to NCMEC",
-													"Report submission to NCMEC is in progress",
-													"Report has been submitted to NCMEC",
-													"Report submission to NCMEC failed"
-												],
-												"enum": ["not_submitted", "submitting", "submitted", "failed"],
-												"type": "string"
-											},
-											"ncmec_report_id": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 256},
-											"ncmec_failure_reason": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 4000}
+											"size": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/NonNegativeSafeIntegerType"}]}
 										},
-										"required": [
-											"id",
-											"filename",
-											"url",
-											"nsfw",
-											"content_type",
-											"width",
-											"height",
-											"ncmec_status",
-											"ncmec_report_id",
-											"ncmec_failure_reason"
-										],
+										"required": ["id", "filename", "url", "nsfw", "content_type", "width", "height"],
 										"additionalProperties": false
 									}
 								},
@@ -10653,11 +10566,6 @@
 										"required": ["id", "filename", "nsfw", "content_type", "width", "height", "size"],
 										"additionalProperties": false
 									}
-								},
-								"user_prior_ncmec_report_ids": {
-									"maxItems": 100,
-									"type": "array",
-									"items": {"type": "string", "minLength": 1, "maxLength": 256}
 								}
 							},
 							"required": [
@@ -11003,29 +10911,6 @@
 						"additionalProperties": false
 					}
 				]
-			},
-			"ReportAttachmentToNcmecRequest": {
-				"type": "object",
-				"properties": {
-					"channel_id": {"$ref": "#/components/schemas/SnowflakeType"},
-					"message_id": {"$ref": "#/components/schemas/SnowflakeType"},
-					"attachment_id": {"$ref": "#/components/schemas/SnowflakeType"},
-					"filename": {"type": "string", "minLength": 1, "maxLength": 255},
-					"source_report_id": {"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
-					"reporter_full_name": {"type": "string", "minLength": 1, "maxLength": 200},
-					"confirmed_viewed": {"type": "boolean", "enum": [true]}
-				},
-				"required": ["channel_id", "message_id", "attachment_id", "filename", "reporter_full_name", "confirmed_viewed"]
-			},
-			"NcmecAttachmentSubmitResultResponse": {
-				"type": "object",
-				"properties": {
-					"success": {"type": "boolean", "enum": [true]},
-					"ncmec_report_id": {"type": "string", "minLength": 1, "maxLength": 256},
-					"audit_log_reason": {"type": "string", "minLength": 1, "maxLength": 4000}
-				},
-				"required": ["success", "ncmec_report_id", "audit_log_reason"],
-				"additionalProperties": false
 			},
 			"AdminMessageSearchResponse": {
 				"anyOf": [
@@ -13514,7 +13399,7 @@
 					},
 					"acls": {
 						"description": "Replacement list of access control permissions for the key",
-						"maxItems": 106,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"}
 					}
@@ -13532,7 +13417,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 106,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -13562,7 +13447,7 @@
 						"maximum": 365
 					},
 					"acls": {
-						"maxItems": 106,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions for the key"
@@ -13583,7 +13468,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 106,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -13596,7 +13481,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 106,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"type": "string", "minLength": 1, "maxLength": 64},
 						"description": "Every admin access control permission the admin API recognises"
@@ -13651,7 +13536,6 @@
 					"bulk:delete:user_messages",
 					"bulk:update:guild_features",
 					"bulk:update:user_flags",
-					"csam:submit_ncmec",
 					"discovery:remove",
 					"discovery:review",
 					"gateway:memory_stats",
@@ -14599,41 +14483,11 @@
 								"content_type": {"nullable": true, "type": "string"},
 								"width": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 								"height": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
-								"size": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/NonNegativeSafeIntegerType"}]},
-								"ncmec_status": {
-									"description": "NCMEC submission status",
-									"x-enumNames": ["not_submitted", "submitting", "submitted", "failed"],
-									"x-enumDescriptions": [
-										"Report has not been submitted to NCMEC",
-										"Report submission to NCMEC is in progress",
-										"Report has been submitted to NCMEC",
-										"Report submission to NCMEC failed"
-									],
-									"enum": ["not_submitted", "submitting", "submitted", "failed"],
-									"type": "string"
-								},
-								"ncmec_report_id": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 256},
-								"ncmec_failure_reason": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 4000}
+								"size": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/NonNegativeSafeIntegerType"}]}
 							},
-							"required": [
-								"id",
-								"filename",
-								"url",
-								"nsfw",
-								"content_type",
-								"width",
-								"height",
-								"ncmec_status",
-								"ncmec_report_id",
-								"ncmec_failure_reason"
-							],
+							"required": ["id", "filename", "url", "nsfw", "content_type", "width", "height"],
 							"additionalProperties": false
 						}
-					},
-					"user_prior_ncmec_report_ids": {
-						"maxItems": 100,
-						"type": "array",
-						"items": {"type": "string", "minLength": 1, "maxLength": 256}
 					}
 				},
 				"required": [
@@ -16766,7 +16620,7 @@
 						"description": "ISO 8601 timestamp when the pending deletion was scheduled",
 						"type": "string"
 					},
-					"acls": {"maxItems": 106, "type": "array", "items": {"type": "string"}},
+					"acls": {"maxItems": 105, "type": "array", "items": {"type": "string"}},
 					"traits": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"maxItems": 10, "type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}},
@@ -17350,8 +17204,6 @@
 					"MAX_THREAD_MEMBERS",
 					"MAX_WEBHOOKS_PER_CHANNEL",
 					"MAX_WEBHOOKS_PER_GUILD",
-					"NCMEC_ALREADY_SUBMITTED",
-					"NCMEC_SUBMISSION_FAILED",
 					"MEDIA_METADATA_ERROR",
 					"METHOD_NOT_ALLOWED",
 					"MISSING_ACCESS",
@@ -17647,8 +17499,6 @@
 					"This thread has reached its member limit of {count}.",
 					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per channel.",
 					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per community.",
-					"This content has already been submitted to NCMEC.",
-					"We couldn't submit the report to NCMEC. Please try again later.",
 					"Media metadata error.",
 					"Method not allowed.",
 					"You don't have access to this resource or feature.",

@@ -44,7 +44,6 @@ export const AdminACLs = {
 	BULK_DELETE_USER_MESSAGES: 'bulk:delete:user_messages',
 	BULK_UPDATE_GUILD_FEATURES: 'bulk:update:guild_features',
 	BULK_UPDATE_USER_FLAGS: 'bulk:update:user_flags',
-	CSAM_SUBMIT_NCMEC: 'csam:submit_ncmec',
 	DISCOVERY_REMOVE: 'discovery:remove',
 	DISCOVERY_REVIEW: 'discovery:review',
 	GATEWAY_MEMORY_STATS: 'gateway:memory_stats',

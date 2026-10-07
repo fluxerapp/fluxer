@@ -221,13 +221,6 @@ export interface MasterConfig {
 			prices?: Record<string, string | undefined>;
 			legacy_prices?: Record<string, Array<string> | undefined>;
 		};
-		ncmec: {
-			enabled: boolean;
-			base_url: string;
-			username: string;
-			password: string;
-			reporter_email?: string;
-		};
 		clamav: {
 			enabled: boolean;
 			host: string;

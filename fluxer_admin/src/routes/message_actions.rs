@@ -8,7 +8,6 @@ use crate::{
         flash::{self, FlashData},
     },
     state::AppState,
-    templates::components::message_list::MessageActions,
     utils::forms::MultiValueForm,
 };
 use axum::{
@@ -103,45 +102,6 @@ pub(crate) async fn messages_post(
                 .await
             {
                 Ok(()) => Json(serde_json::json!({"success": true})).into_response(),
-                Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
-            }
-        }
-        "report-to-ncmec" => {
-            let attachment_id = form.clean("attachment_id");
-            let filename = form.clean("filename");
-            let reporter_full_name = form.clean("reporter_full_name");
-            let source_report_id = form.clean("source_report_id");
-            let confirmed_viewed = form.bool_value("confirmed_viewed");
-            let (Some(cid), Some(mid), Some(aid), Some(name), Some(reporter)) = (
-                &channel_id,
-                &message_id,
-                &attachment_id,
-                &filename,
-                &reporter_full_name,
-            ) else {
-                return json_error(
-                    StatusCode::BAD_REQUEST,
-                    "Missing required NCMEC report fields",
-                );
-            };
-            if !confirmed_viewed {
-                return json_error(
-                    StatusCode::BAD_REQUEST,
-                    "Missing required NCMEC report fields",
-                );
-            }
-            match client
-                .report_attachment_to_ncmec(
-                    cid,
-                    mid,
-                    aid,
-                    name,
-                    reporter,
-                    source_report_id.as_deref(),
-                )
-                .await
-            {
-                Ok(resp) => Json(resp.data).into_response(),
                 Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
             }
         }
@@ -322,11 +282,7 @@ pub(crate) async fn messages_browse_fragment(
         .as_ref()
         .map(|user| user.acls.as_slice())
         .unwrap_or(&[]);
-    let actions = MessageActions {
-        delete: acl::has_permission(admin_acls, acl::MESSAGE_DELETE),
-        ncmec: acl::has_all_permissions(admin_acls, acl::NCMEC_ATTACHMENT_REPORT),
-        source_report_id: None,
-    };
+    let can_delete = acl::has_permission(admin_acls, acl::MESSAGE_DELETE);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let result = client
         .browse_channel(
@@ -339,7 +295,7 @@ pub(crate) async fn messages_browse_fragment(
     match result {
         Ok(resp) => {
             let markup = crate::templates::pages::messages_page::browse_messages_fragment(
-                config, &resp.data, actions, None,
+                config, &resp.data, can_delete, None,
             );
             Html(markup.into_string()).into_response()
         }

@@ -59,7 +59,7 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 | deletion_audit_log_reason | ?string | The private reason stored with the pending deletion, and null without `audit_log:view` |
 | deletion_scheduled_by | ?snowflake | The ID of the account that scheduled the pending deletion, or null when it was not recorded |
 | deletion_scheduled_at | ?ISO8601 timestamp | The time the pending deletion was scheduled, or null when it was not recorded |
-| acls<sup>7</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 106 entries |
+| acls<sup>7</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 105 entries |
 | traits<sup>8</sup> | array[string] | The free-form operator labels set on the account, with at most 100 entries |
 | has_totp<sup>9</sup> | boolean | Whether a TOTP authenticator is registered |
 | authenticator_types<sup>9</sup> <sup>12</sup> | array[integer] | Registered [authenticator types](/http-api/users/#authenticator-types), with at most 10 entries |
@@ -135,6 +135,7 @@ The `flags` field of the [Admin user object](#admin-user-object) is a 64-bit bit
 | 1 &lt;&lt; 4 | FRIENDLY_BOT | Bot accepts friend requests from users |
 | 1 &lt;&lt; 5 | FRIENDLY_BOT_MANUAL_APPROVAL | Bot requires manual approval for friend requests |
 | 1 &lt;&lt; 6 | SPAMMER | Account is flagged as a spammer |
+| 1 &lt;&lt; 7 | PROFILE_HIDDEN | Profile details are hidden from other users |
 | 1 &lt;&lt; 33 | HIGH_GLOBAL_RATE_LIMIT | Account has elevated global rate limits |
 | 1 &lt;&lt; 34 | DELETED | Account has been deleted |
 | 1 &lt;&lt; 36 | SELF_DELETED | Account was self-deleted |
@@ -1147,7 +1148,7 @@ A path naming the acting account fails with 403 `ACCESS_DENIED` before the accou
 
 | Field | Type | Description |
 | --- | --- | --- |
-| acls<sup>1</sup> | array[string] | Replacement [Admin ACLs](/admin-api/#acl-registry), with at most 106 values |
+| acls<sup>1</sup> | array[string] | Replacement [Admin ACLs](/admin-api/#acl-registry), with at most 105 values |
 
 <sup>1</sup> Required. A value outside the [ACL registry](/admin-api/#acl-registry) fails body validation, and a repeated value is collapsed
 
@@ -1595,9 +1596,9 @@ Fluxer cancels a Stripe subscription on the account without proration and refund
 
 The account holder is emailed the deadline and the supplied `public_reason` when `notify_user` is true and the account has an email address. The wording depends on `reason_code`: `USER_REQUESTED` and `INACTIVITY` get a neutral notice, and every other code gets an enforcement notice. A failed email is logged and the schedule is still stored.
 
-For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's email address and resolves the pending reports against the account. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
+For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's email address. For the reasons `SPAM`, `CHEATING_OR_EXPLOITATION`, `COORDINATED_RAIDING`, `AUTOMATION_OR_SELFBOT`, `SCAM_OR_SOCIAL_ENGINEERING`, `HARASSMENT_OR_BULLYING`, `BAN_EVASION`, `TOKEN_OR_CREDENTIAL_SCAM`, `HATE_SPEECH_OR_EXTREMIST_CONTENT`, `MALICIOUS_LINKS_OR_MALWARE`, and `IMPERSONATION_OR_FAKE_IDENTITY`, Fluxer also resolves the pending reports against the account. A pending report in the `child_safety`, `underage_user`, or `self_harm` category is left for a moderator and stays pending. Every other reason leaves all reports pending. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
 
-[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days`, `reason_code`, `pending_deletion_at`, `notify_user`, and `notification_sent`. An attempted email adds `notification_template`. A replacement adds `replaced_pending_deletion_at`, `replaced_scheduled_by`, `replaced_scheduled_at`, and `replaced_reason_code` for the schedule it replaced. The identifier bans record their own blocklist entries. For every reason other than `USER_REQUESTED`, Fluxer also records a second entry with action `auto_resolve_reports_on_deletion`, target type `user`, and the metadata keys `outcome`, `found_count`, `resolved_count`, `failed_count`, and `notified_count`. `outcome` is `completed`, `search_unavailable` when the instance has no report search backend and every report stays pending, or `enumeration_failed` when listing the pending reports failed part way and only those already found were resolved. Each resolved report sends its reporter the generic notice [Update report](/admin-api/reports/#update-report) describes, with no public comment.
+[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days`, `reason_code`, `pending_deletion_at`, `notify_user`, and `notification_sent`. An attempted email adds `notification_template`. A replacement adds `replaced_pending_deletion_at`, `replaced_scheduled_by`, `replaced_scheduled_at`, and `replaced_reason_code` for the schedule it replaced. The identifier bans record their own blocklist entries. For each reason that resolves reports, Fluxer also records a second entry with action `auto_resolve_reports_on_deletion`, target type `user`, and the metadata keys `outcome`, `found_count`, `resolved_count`, `failed_count`, and `notified_count`. `found_count` leaves out the reports in the three categories that stay pending. No such entry is written for any other reason. `outcome` is `completed`, `search_unavailable` when the instance has no report search backend and every report stays pending, or `enumeration_failed` when listing the pending reports failed part way and only those already found were resolved. Each resolved report sends its reporter the generic notice [Update report](/admin-api/reports/#update-report) describes, with no public comment.
 
 ### Rate limit
 

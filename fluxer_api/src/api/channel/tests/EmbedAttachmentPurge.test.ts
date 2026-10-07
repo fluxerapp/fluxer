@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {
-	type ChannelID,
-	createChannelID,
-	createMessageID,
-	createReportID,
-	createUserID,
-	type MessageID,
-	type UserID,
-} from '@app/api/BrandedTypes';
+import {createReportID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {
 	createChannel,
@@ -18,7 +10,6 @@ import {
 	sendMessageWithAttachments,
 } from '@app/api/channel/tests/AttachmentTestUtils';
 import {acceptInvite, createChannelInvite} from '@app/api/channel/tests/ChannelTestUtils';
-import {getNcmecSubmissionService} from '@app/api/middleware/ServiceSingletons';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -210,13 +201,7 @@ describe('Embed attachment purge', () => {
 	}
 
 	async function createAdmin(): Promise<TestAccount> {
-		return setUserACLs(harness, await createTestAccount(harness), [
-			AdminACLs.AUTHENTICATE,
-			AdminACLs.MESSAGE_DELETE,
-			AdminACLs.CSAM_SUBMIT_NCMEC,
-			AdminACLs.USER_DELETE,
-			AdminACLs.ARCHIVE_TRIGGER_USER,
-		]);
+		return setUserACLs(harness, await createTestAccount(harness), [AdminACLs.AUTHENTICATE, AdminACLs.MESSAGE_DELETE]);
 	}
 
 	function embedKeys(message: MessageResponse): Array<string> {
@@ -274,24 +259,9 @@ describe('Embed attachment purge', () => {
 		expect(deletedKeys()).toEqual(expect.arrayContaining(keys));
 	});
 
-	it('removes files shown only through an embed on a silent NCMEC delete', async () => {
-		const message = await sendEmbedOnly();
-		const keys = embedKeys(message);
-		const service = getNcmecSubmissionService() as unknown as {
-			deleteMessageSilently(channelId: ChannelID, messageId: MessageID, fallbackUserId: UserID): Promise<void>;
-		};
-		await service.deleteMessageSilently(
-			createChannelID(BigInt(channelId)),
-			createMessageID(BigInt(message.id)),
-			createUserID(BigInt(account.userId)),
-		);
-		expect(deletedKeys()).toEqual(expect.arrayContaining(keys));
-	});
-
 	it('keeps reported embed files as report evidence after the author deletes the message', async () => {
 		const message = await sendEmbedOnly();
 		const [imageKey] = embedKeys(message);
-		const [, , attachmentId, filename] = imageKey!.split('/');
 		const reporter = await createTestAccount(harness);
 		const invite = await createChannelInvite(harness, account.token, channelId);
 		await acceptInvite(harness, reporter.token, invite.code);
@@ -306,20 +276,6 @@ describe('Embed attachment purge', () => {
 		const row = await new ReportRepository().getReport(createReportID(BigInt(report.report_id)));
 		const context = row!.messageContext!.find((entry) => entry.messageId.toString() === message.id);
 		expect(context?.attachments.map((attachment) => attachment.filename).sort()).toEqual(['image.png', 'thumb.png']);
-		const admin = await createAdmin();
-		await createBuilder(harness, admin.token)
-			.post('/admin/messages/ncmec-reports')
-			.body({
-				channel_id: channelId,
-				message_id: message.id,
-				attachment_id: attachmentId,
-				filename,
-				reporter_full_name: 'Embed Reporter',
-				confirmed_viewed: true,
-				source_report_id: report.report_id,
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
 	});
 
 	it('does not expose the ownership marker on embed media flags', async () => {

@@ -774,14 +774,6 @@ The requested scope isn't supported or you don't have permission to request it
 
 You don't have the permissions required to perform this action
 
-### `NCMEC_ALREADY_SUBMITTED`
-
-This content has already been submitted to NCMEC
-
-### `NCMEC_SUBMISSION_FAILED`
-
-We couldn't submit the report to NCMEC
-
 ### `NOT_A_BOT_APPLICATION`
 
 This application isn't a bot
@@ -1842,10 +1834,6 @@ You must start a session before sending messages
 ### `NAME_EMPTY_AFTER_NORMALIZATION`
 
 Name can't be empty after normalization
-
-### `NCMEC_ATTACHMENT_MUST_BE_IMAGE_OR_VIDEO`
-
-Only image or video attachments can be reported to NCMEC
 
 ### `NEW_EMAIL_MUST_BE_DIFFERENT`
 

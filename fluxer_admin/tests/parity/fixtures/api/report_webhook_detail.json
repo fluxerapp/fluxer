@@ -77,8 +77,7 @@
 			"author_global_name": null,
 			"author_discriminator": "7915",
 			"author_avatar": null,
-			"webhook_id": null,
-			"user_prior_ncmec_report_ids": []
+			"webhook_id": null
 		},
 		{
 			"id": "1556114449163617486",
@@ -99,8 +98,7 @@
 			"author_global_name": null,
 			"author_discriminator": "0943",
 			"author_avatar": null,
-			"webhook_id": null,
-			"user_prior_ncmec_report_ids": []
+			"webhook_id": null
 		},
 		{
 			"id": "1556114449167811791",
@@ -121,8 +119,7 @@
 			"author_global_name": null,
 			"author_discriminator": "9014",
 			"author_avatar": "f829b914",
-			"webhook_id": null,
-			"user_prior_ncmec_report_ids": []
+			"webhook_id": null
 		},
 		{
 			"id": "1556114449172006096",
@@ -143,8 +140,7 @@
 			"author_global_name": null,
 			"author_discriminator": "9014",
 			"author_avatar": "f829b914",
-			"webhook_id": null,
-			"user_prior_ncmec_report_ids": []
+			"webhook_id": null
 		},
 		{
 			"id": "1556114449184589011",
@@ -165,8 +161,7 @@
 			"author_global_name": null,
 			"author_discriminator": "0000",
 			"author_avatar": null,
-			"webhook_id": "1556114449176200401",
-			"user_prior_ncmec_report_ids": []
+			"webhook_id": "1556114449176200401"
 		},
 		{
 			"id": "1556114449255892196",
@@ -187,8 +182,7 @@
 			"author_global_name": null,
 			"author_discriminator": "0000",
 			"author_avatar": null,
-			"webhook_id": "1556114449247503586",
-			"user_prior_ncmec_report_ids": []
+			"webhook_id": "1556114449247503586"
 		},
 		{
 			"id": "1556114449230726366",
@@ -209,8 +203,7 @@
 			"author_global_name": null,
 			"author_discriminator": "0000",
 			"author_avatar": null,
-			"webhook_id": null,
-			"user_prior_ncmec_report_ids": []
+			"webhook_id": null
 		},
 		{
 			"id": "1556114449205560536",
@@ -231,8 +224,7 @@
 			"author_global_name": null,
 			"author_discriminator": "1238",
 			"author_avatar": null,
-			"webhook_id": null,
-			"user_prior_ncmec_report_ids": []
+			"webhook_id": null
 		},
 		{
 			"id": "1556114449197171926",
@@ -253,8 +245,7 @@
 			"author_global_name": null,
 			"author_discriminator": "1238",
 			"author_avatar": null,
-			"webhook_id": null,
-			"user_prior_ncmec_report_ids": []
+			"webhook_id": null
 		}
 	],
 	"message_responses": [

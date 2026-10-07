@@ -5,16 +5,12 @@ import {AdminApiKeyRepository} from '@app/api/admin/repositories/AdminApiKeyRepo
 import {AdminArchiveRepository} from '@app/api/admin/repositories/AdminArchiveRepository';
 import {AdminApiKeyService} from '@app/api/admin/services/AdminApiKeyService';
 import {AdminArchiveService} from '@app/api/admin/services/AdminArchiveService';
-import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {Config} from '@app/api/Config';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import {StreamPreviewService} from '@app/api/channel/services/StreamPreviewService';
 import type {APIConfig} from '@app/api/config/APIConfig';
 import {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
-import {createNcmecApiConfig, NcmecReporter} from '@app/api/csam/NcmecReporter';
-import {NcmecRepository} from '@app/api/csam/NcmecRepository';
-import {NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
 import {DonationRepository} from '@app/api/donation/DonationRepository';
 import {createEmailProvider} from '@app/api/email/EmailProviderFactory';
 import {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
@@ -321,40 +317,7 @@ export function getKVAccountDeletionQueue(): KVAccountDeletionQueueService {
 }
 
 export const getThemeService = singleton(() => new ThemeService(getStorageService()));
-const getNcmecReporter = singleton(() => new NcmecReporter({config: createNcmecApiConfig(), fetch}));
-const getNcmecRepository = singleton(() => new NcmecRepository());
 export const getAttachmentUploadTraceRepository = singleton(() => new AttachmentUploadTraceRepository());
-export const getNcmecSubmissionService = singleton(
-	() =>
-		new NcmecSubmissionService({
-			reportRepository: getReportRepository(),
-			ncmecApi: getNcmecReporter(),
-			ncmecRepository: getNcmecRepository(),
-			attachmentUploadTraceRepository: getAttachmentUploadTraceRepository(),
-			storageService: getStorageService(),
-			channelRepository: getChannelRepository(),
-			userRepository: getUserRepository(),
-			guildRepository: getGuildRepository(),
-			gatewayService: getGatewayService(),
-			userCacheService: createUserCacheService(),
-			adminArchiveService: new AdminArchiveService(
-				getAdminArchiveRepository(),
-				getUserRepository(),
-				getGuildRepository(),
-				getStorageService(),
-				getSnowflakeService(),
-				getWorkerService(),
-			),
-			adminAuditService: new AdminAuditService(getAdminRepository(), getSnowflakeService(), {
-				userRepository: getUserRepository(),
-				guildRepository: getGuildRepository(),
-				channelRepository: getChannelRepository(),
-			}),
-			purgeQueue: getPurgeQueue(),
-			workerService: getWorkerService(),
-			deletionQueue: getKVAccountDeletionQueue(),
-		}),
-);
 
 let _virusScanInitPromise: Promise<void> | null = null;
 

@@ -363,13 +363,6 @@ export interface APIConfig {
 			crosspost?: number;
 		};
 	};
-	ncmec: {
-		enabled: boolean;
-		baseUrl?: string;
-		username?: string;
-		password?: string;
-		reporterEmail?: string;
-	};
 }
 
 export interface BlueskyOAuthKeyConfig {

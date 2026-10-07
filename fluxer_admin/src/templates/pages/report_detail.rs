@@ -18,7 +18,7 @@ use crate::{
             form::{FORM_CONTROL_CLASS, FORM_LABEL_CLASS, csrf_input, opt_out_checkbox},
             media::{guild_icon_url, initials, user_avatar_url},
             message_data::ordered_messages,
-            message_list::{MessageActions, message_deletion_script, message_list},
+            message_list::{message_deletion_script, message_list},
             nsfw_indicators::{
                 adult_content_badge, channel_nsfw_state_badge, content_warning_badge,
             },
@@ -634,10 +634,14 @@ fn padded_discriminator(value: Option<&str>) -> Option<String> {
     non_empty(value).map(|value| format!("{value:0>4}"))
 }
 
-fn snapshot_tag(username: Option<&str>, discriminator: Option<&str>) -> Option<String> {
+fn snapshot_tag(
+    username: Option<&str>,
+    discriminator: Option<&str>,
+    is_bot: bool,
+) -> Option<String> {
     let username = non_empty(username)?;
     Some(match padded_discriminator(discriminator) {
-        Some(discriminator) => format!("{username}#{discriminator}"),
+        Some(discriminator) => user_tag(username, &discriminator, is_bot),
         None => username.to_owned(),
     })
 }
@@ -759,11 +763,16 @@ fn snapshot_user_group(
     } else {
         None
     };
-    let tag = snapshot_tag(user.username.as_deref(), user.discriminator.as_deref());
+    let is_bot = live_user.is_some_and(|live| live.bot);
+    let tag = snapshot_tag(
+        user.username.as_deref(),
+        user.discriminator.as_deref(),
+        is_bot,
+    );
     let tag_change = match live_user {
         None => SnapshotChange::Unknown,
         Some(live) => {
-            let live_tag = snapshot_tag(Some(&live.username), Some(&live.discriminator));
+            let live_tag = snapshot_tag(Some(&live.username), Some(&live.discriminator), is_bot);
             if live_tag == tag {
                 SnapshotChange::Same
             } else {
@@ -997,7 +1006,7 @@ fn nav_link(href: &str, label: &str) -> Markup {
 fn message_context_section(
     config: &AdminConfig,
     report: &ReportEntry,
-    actions: MessageActions<'_>,
+    include_delete: bool,
     csrf_token: Option<&str>,
 ) -> Markup {
     let Some(values) = &report.message_context else {
@@ -1020,7 +1029,7 @@ fn message_context_section(
                     config,
                     &config.base_path,
                     &messages,
-                    actions,
+                    include_delete,
                     report.reported_message_id.as_deref(),
                 ))
             }
@@ -1028,16 +1037,6 @@ fn message_context_section(
         @if let Some(csrf_token) = csrf_token {
             (message_deletion_script(csrf_token))
         }
-    }
-}
-
-fn report_message_actions<'a>(auth: &AuthContext, report: &'a ReportEntry) -> MessageActions<'a> {
-    MessageActions {
-        delete: has_acl(auth, acl::MESSAGE_DELETE),
-        ncmec: auth.admin_user.as_ref().is_some_and(|admin| {
-            acl::has_all_permissions(&admin.acls, acl::NCMEC_ATTACHMENT_REPORT)
-        }),
-        source_report_id: Some(&report.report_id),
     }
 }
 
@@ -1064,7 +1063,7 @@ pub fn report_detail_page(
                 (report_answers_section(report))
                 (reported_entity_section(config, report))
                 (profile_snapshot_section(config, report, live))
-                (message_context_section(config, report, report_message_actions(auth, report), Some(csrf_token)))
+                (message_context_section(config, report, has_acl(auth, acl::MESSAGE_DELETE), Some(csrf_token)))
                 (additional_info_section(report))
             }
             div class="space-y-6" {
@@ -1089,7 +1088,7 @@ pub fn report_detail_fragment(config: &AdminConfig, report: &ReportEntry) -> Mar
             (basic_info_section_fragment(config, report))
             (report_answers_section(report))
             (reported_entity_section(config, report))
-            (message_context_section(config, report, MessageActions::default(), None))
+            (message_context_section(config, report, false, None))
             (additional_info_section(report))
             a href={(base) "/reports/" (&report.report_id)}
                 class="inline-flex min-h-[44px] w-full items-center justify-center \
@@ -1608,9 +1607,7 @@ mod tests {
     #[test]
     fn message_context_shows_webhook_authors_without_user_links() {
         let config = test_config();
-        let markup =
-            message_context_section(&config, &webhook_report(), MessageActions::default(), None)
-                .into_string();
+        let markup = message_context_section(&config, &webhook_report(), false, None).into_string();
         assert!(
             markup.contains(r#"data-message-webhook="1700000000000000500""#),
             "{markup}"
@@ -1668,7 +1665,6 @@ mod tests {
         }))
     }
 
-    const NCMEC_BUTTON: &str = r#"class="ncmec-report-btn"#;
     const DELETE_BUTTON: &str = r#"class="delete-message-btn"#;
 
     fn render_page(auth: &AuthContext, report: &ReportEntry) -> String {
@@ -1684,65 +1680,21 @@ mod tests {
     }
 
     #[test]
-    fn ncmec_button_sends_the_report_id_when_the_admin_has_the_acls() {
-        let auth = auth_with_acls(acl::NCMEC_ATTACHMENT_REPORT);
-        let markup = render_page(&auth, &image_report("child_safety"));
-        assert!(markup.contains(NCMEC_BUTTON), "{markup}");
-        assert!(
-            markup.contains(r#"data-source-report-id="1800000000000000009""#),
-            "{markup}"
-        );
-        assert!(
-            markup.contains("fields.append('source_report_id', b.dataset.sourceReportId)"),
-            "{markup}"
-        );
-        assert!(markup.contains(DELETE_BUTTON), "{markup}");
-    }
-
-    #[test]
-    fn ncmec_button_is_hidden_without_the_acls() {
+    fn message_delete_button_follows_the_acl() {
         let auth = auth_with_acls(&[acl::REPORT_VIEW, acl::MESSAGE_DELETE]);
         let markup = render_page(&auth, &image_report("child_safety"));
         assert!(markup.contains("image.png"), "{markup}");
-        assert!(!markup.contains(NCMEC_BUTTON), "{markup}");
-        assert!(!markup.contains("data-source-report-id"), "{markup}");
         assert!(markup.contains(DELETE_BUTTON), "{markup}");
 
-        for missing in acl::NCMEC_ATTACHMENT_REPORT {
-            let held = acl::NCMEC_ATTACHMENT_REPORT
-                .iter()
-                .copied()
-                .filter(|acl| acl != missing)
-                .collect::<Vec<_>>();
-            let markup = render_page(&auth_with_acls(&held), &image_report("child_safety"));
-            assert!(!markup.contains(NCMEC_BUTTON), "{missing}\n{markup}");
-            assert_eq!(
-                markup.contains(DELETE_BUTTON),
-                *missing != acl::MESSAGE_DELETE,
-                "{missing}\n{markup}"
-            );
-        }
+        let markup = render_page(&auth_with_acls(&[acl::WILDCARD]), &image_report("spam"));
+        assert!(markup.contains(DELETE_BUTTON), "{markup}");
 
         let markup = render_page(&auth_with_acls(&[acl::REPORT_VIEW]), &image_report("spam"));
-        assert!(!markup.contains(NCMEC_BUTTON), "{markup}");
+        assert!(markup.contains("image.png"), "{markup}");
         assert!(!markup.contains(DELETE_BUTTON), "{markup}");
 
         let markup = render_page(&test_auth(), &image_report("child_safety"));
-        assert!(!markup.contains(NCMEC_BUTTON), "{markup}");
-    }
-
-    #[test]
-    fn ncmec_button_follows_the_acls_not_the_report_category() {
-        let auth = auth_with_acls(acl::NCMEC_ATTACHMENT_REPORT);
-        let markup = render_page(&auth, &image_report("spam"));
-        assert!(markup.contains(NCMEC_BUTTON), "{markup}");
-        assert!(
-            markup.contains(r#"data-source-report-id="1800000000000000009""#),
-            "{markup}"
-        );
-
-        let markup = render_page(&auth_with_acls(&[acl::WILDCARD]), &image_report("spam"));
-        assert!(markup.contains(NCMEC_BUTTON), "{markup}");
+        assert!(!markup.contains(DELETE_BUTTON), "{markup}");
     }
 
     #[test]
@@ -1750,7 +1702,6 @@ mod tests {
         let markup =
             report_detail_fragment(&test_config(), &image_report("child_safety")).into_string();
         assert!(markup.contains("image.png"), "{markup}");
-        assert!(!markup.contains(NCMEC_BUTTON), "{markup}");
         assert!(!markup.contains(DELETE_BUTTON), "{markup}");
     }
 
@@ -1903,13 +1854,8 @@ mod tests {
 
     #[test]
     fn message_context_marks_bot_authors_only() {
-        let markup = message_context_section(
-            &test_config(),
-            &context_report(),
-            MessageActions::default(),
-            None,
-        )
-        .into_string();
+        let markup =
+            message_context_section(&test_config(), &context_report(), false, None).into_string();
         assert!(
             markup.contains(r#"data-message-author-bot="1700000000000000900""#),
             "{markup}"
@@ -1952,9 +1898,7 @@ mod tests {
                 message("1700000000000000590", "Joined", "2026-10-05T16:45:00.000Z")
             ]
         }));
-        let markup =
-            message_context_section(&test_config(), &grouped, MessageActions::default(), None)
-                .into_string();
+        let markup = message_context_section(&test_config(), &grouped, false, None).into_string();
         assert!(markup.contains("Oct 5, 2026, 4:45 PM UTC"), "{markup}");
         assert!(!markup.contains("2026-10-05T16:4"), "{markup}");
         assert!(
@@ -1973,13 +1917,8 @@ mod tests {
 
     #[test]
     fn message_context_names_attachments_that_were_not_preserved() {
-        let markup = message_context_section(
-            &test_config(),
-            &context_report(),
-            MessageActions::default(),
-            None,
-        )
-        .into_string();
+        let markup =
+            message_context_section(&test_config(), &context_report(), false, None).into_string();
         assert!(
             markup.contains(r#"data-missing-attachment="1700000000000000610""#),
             "{markup}"
@@ -1998,13 +1937,8 @@ mod tests {
             fragment.contains("harbor-notes.pdf was not preserved in the report snapshot"),
             "{fragment}"
         );
-        let markup = message_context_section(
-            &test_config(),
-            &image_report("spam"),
-            MessageActions::default(),
-            None,
-        )
-        .into_string();
+        let markup = message_context_section(&test_config(), &image_report("spam"), false, None)
+            .into_string();
         assert!(!markup.contains("data-missing-attachment"), "{markup}");
         assert!(!markup.contains("data-message-author-bot"), "{markup}");
     }

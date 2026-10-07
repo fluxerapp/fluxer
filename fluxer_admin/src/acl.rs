@@ -43,7 +43,6 @@ pub const BULK_DELETE_USERS: &str = "bulk:delete:users";
 pub const BULK_DELETE_USER_MESSAGES: &str = "bulk:delete:user_messages";
 pub const BULK_UPDATE_GUILD_FEATURES: &str = "bulk:update:guild_features";
 pub const BULK_UPDATE_USER_FLAGS: &str = "bulk:update:user_flags";
-pub const CSAM_SUBMIT_NCMEC: &str = "csam:submit_ncmec";
 pub const DISCOVERY_REMOVE: &str = "discovery:remove";
 pub const DISCOVERY_REVIEW: &str = "discovery:review";
 pub const GATEWAY_MEMORY_STATS: &str = "gateway:memory_stats";
@@ -150,7 +149,6 @@ pub const ALL_ACLS: &[&str] = &[
     BULK_DELETE_USER_MESSAGES,
     BULK_UPDATE_GUILD_FEATURES,
     BULK_UPDATE_USER_FLAGS,
-    CSAM_SUBMIT_NCMEC,
     DISCOVERY_REMOVE,
     DISCOVERY_REVIEW,
     GATEWAY_MEMORY_STATS,
@@ -215,13 +213,6 @@ pub const ALL_ACLS: &[&str] = &[
     VOICE_SERVER_UPDATE,
 ];
 
-pub const NCMEC_ATTACHMENT_REPORT: &[&str] = &[
-    CSAM_SUBMIT_NCMEC,
-    MESSAGE_DELETE,
-    USER_DELETE,
-    ARCHIVE_TRIGGER_USER,
-];
-
 pub fn has_permission(admin_acls: &[String], required: &str) -> bool {
     let required_alias = acl_key_alias(required);
     admin_acls.iter().any(|acl| {
@@ -234,10 +225,6 @@ pub fn has_any_permission(admin_acls: &[String], required: &[&str]) -> bool {
         return true;
     }
     required.iter().any(|acl| has_permission(admin_acls, acl))
-}
-
-pub fn has_all_permissions(admin_acls: &[String], required: &[&str]) -> bool {
-    required.iter().all(|acl| has_permission(admin_acls, acl))
 }
 
 fn acl_key_alias(acl: &str) -> String {
@@ -291,34 +278,6 @@ mod tests {
     fn has_any_permission_empty_required() {
         assert!(has_any_permission(&acls(&[USER_LOOKUP]), &[]));
         assert!(has_any_permission(&acls(&[]), &[]));
-    }
-
-    #[test]
-    fn has_all_permissions_needs_every_acl() {
-        assert!(has_all_permissions(&acls(&[USER_LOOKUP]), &[]));
-        assert!(has_all_permissions(
-            &acls(&[USER_LOOKUP, GUILD_LOOKUP]),
-            &[GUILD_LOOKUP, USER_LOOKUP]
-        ));
-        assert!(!has_all_permissions(
-            &acls(&[USER_LOOKUP]),
-            &[GUILD_LOOKUP, USER_LOOKUP]
-        ));
-        assert!(has_all_permissions(
-            &acls(&[WILDCARD]),
-            NCMEC_ATTACHMENT_REPORT
-        ));
-        for missing in NCMEC_ATTACHMENT_REPORT {
-            let held = NCMEC_ATTACHMENT_REPORT
-                .iter()
-                .copied()
-                .filter(|acl| acl != missing)
-                .collect::<Vec<_>>();
-            assert!(
-                !has_all_permissions(&acls(&held), NCMEC_ATTACHMENT_REPORT),
-                "{missing}"
-            );
-        }
     }
 
     #[test]

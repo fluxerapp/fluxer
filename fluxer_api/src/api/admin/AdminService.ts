@@ -31,11 +31,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
 import {JobAdminService} from '@app/api/jobs/JobAdminService';
-import {
-	getGuildDiscoveryRepository,
-	getKVAccountDeletionQueue,
-	getNcmecSubmissionService,
-} from '@app/api/middleware/ServiceSingletons';
+import {getGuildDiscoveryRepository, getKVAccountDeletionQueue} from '@app/api/middleware/ServiceSingletons';
 import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import type {ReportService} from '@app/api/report/ReportService';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
@@ -140,7 +136,6 @@ export class AdminService {
 			channelRepository: this.channelRepository,
 			guildRepository: this.guildRepository,
 			auditService: this.auditService,
-			ncmecSubmissionService: getNcmecSubmissionService(),
 		});
 		this.messageShredService = new AdminMessageShredService({
 			apiContext: this.apiContext,
@@ -159,7 +154,6 @@ export class AdminService {
 			storageService: this.storageService,
 			auditService: this.auditService,
 			userCacheService: this.userCacheService,
-			ncmecSubmissionService: getNcmecSubmissionService(),
 			reporterResolutionNotifier,
 		});
 		this.voiceService = new AdminVoiceService({

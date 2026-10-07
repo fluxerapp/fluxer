@@ -208,8 +208,6 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.MAX_STICKERS]: 'stickers_and_emojis.max_stickers_reached',
 	[APIErrorCodes.MAX_WEBHOOKS_PER_CHANNEL]: 'webhooks.max_webhooks_per_channel_reached',
 	[APIErrorCodes.MAX_WEBHOOKS_PER_GUILD]: 'webhooks.max_webhooks_per_guild_reached',
-	[APIErrorCodes.NCMEC_ALREADY_SUBMITTED]: 'content_and_safety.ncmec_already_submitted',
-	[APIErrorCodes.NCMEC_SUBMISSION_FAILED]: 'content_and_safety.ncmec_submission_failed',
 	[APIErrorCodes.MEDIA_METADATA_ERROR]: 'media_and_memes.media_metadata_error',
 	[APIErrorCodes.METHOD_NOT_ALLOWED]: 'http.method_not_allowed',
 	[ValidationErrorCodes.MEDIA_ALREADY_IN_FAVORITE_MEMES]: 'media_and_memes.media_already_in_favorites',
@@ -437,8 +435,6 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.USER_MUST_BE_A_BOT_TO_BE_MARKED_AS_A_SYSTEM_USER]:
 		'admin_and_system.user_must_be_bot_for_system_user',
 	[ValidationErrorCodes.USER_IS_NOT_BANNED]: 'moderation_and_reports.user_is_not_banned',
-	[ValidationErrorCodes.NCMEC_ATTACHMENT_MUST_BE_IMAGE_OR_VIDEO]:
-		'moderation_and_reports.ncmec_attachment_must_be_image_or_video',
 	[ValidationErrorCodes.EMAIL_ALREADY_IN_USE]: 'email.email_already_in_use',
 	[ValidationErrorCodes.EMAIL_IS_REQUIRED]: 'email.email_required',
 	[ValidationErrorCodes.EMAIL_LENGTH_INVALID]: 'email.length_invalid',

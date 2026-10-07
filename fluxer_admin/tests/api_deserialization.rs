@@ -957,8 +957,7 @@ fn deserialize_webhook_message_report() {
                 "author_global_name": null,
                 "author_discriminator": "0000",
                 "author_avatar": "a_1f2e3d",
-                "webhook_id": "1556008115710000001",
-                "user_prior_ncmec_report_ids": []
+                "webhook_id": "1556008115710000001"
             },
             {
                 "id": "1556008115697091780",
@@ -974,8 +973,7 @@ fn deserialize_webhook_message_report() {
                 "author_global_name": null,
                 "author_discriminator": "6741",
                 "author_avatar": null,
-                "webhook_id": null,
-                "user_prior_ncmec_report_ids": []
+                "webhook_id": null
             }
         ]
     }));
@@ -1164,8 +1162,7 @@ fn evidence_report_json() -> serde_json::Value {
                     "width": 640,
                     "height": 480,
                     "size": 4096
-                }],
-                "user_prior_ncmec_report_ids": []
+                }]
             },
             {
                 "id": "1556008115697091780",
@@ -1183,8 +1180,7 @@ fn evidence_report_json() -> serde_json::Value {
                 "author_avatar": null,
                 "webhook_id": null,
                 "author_bot": false,
-                "missing_attachments": [],
-                "user_prior_ncmec_report_ids": []
+                "missing_attachments": []
             }
         ]
     }))
@@ -1240,6 +1236,35 @@ fn deserialize_report_with_bot_flags_profile_snapshot_and_missing_attachments() 
                 .is_none_or(Vec::is_empty)
         );
     }
+}
+
+#[test]
+fn deserialize_report_context_with_unknown_message_and_attachment_keys() {
+    let mut json = evidence_report_json();
+    json["message_context"][1]["retired_list"] = serde_json::json!([]);
+    json["message_context"][1]["attachments"] = serde_json::json!([{
+        "id": "1556008115697091791",
+        "url": "https://reports.example.test/attachments/image.png?sig=1",
+        "filename": "image.png",
+        "nsfw": false,
+        "content_type": "image/png",
+        "width": 64,
+        "height": 64,
+        "size": 4096,
+        "retired_status": "not_submitted",
+        "retired_id": null
+    }]);
+    let generated: generated_types::ReportAdminResponseSchema =
+        serde_json::from_value(json).expect("generated report type");
+    let report: types::ReportEntry =
+        serde_json::from_value(serde_json::to_value(generated).expect("serialize generated"))
+            .expect("hand-written report type from generated");
+    let context = report.message_context.as_ref().expect("message context");
+    assert_eq!(context[1]["attachments"][0]["filename"], "image.png");
+    assert_eq!(
+        context[1]["attachments"][0]["url"],
+        "https://reports.example.test/attachments/image.png?sig=1"
+    );
 }
 
 #[test]

@@ -76,7 +76,7 @@ An edit of a published message reaches every copy that still exists, including c
 
 Deleting a published message keeps each copy and edits it: the content becomes `[Original message deleted]`, attachments, embeds, and stickers are removed, `edited_timestamp` is set, and the `SOURCE_MESSAGE_DELETED` flag is added. The files of the published message are deleted with it. Deleting a copy removes that copy alone, and the files it showed stay with the published message.
 
-When an instance administrator or a CSAM report removes a published message, every copy is deleted outright. When one of them removes a copy, the published message and every other copy are deleted too, so identical content leaves every guild at once. A published message that link preview moderation deletes takes its copies with it the same way.
+When an instance administrator removes a published message, every copy is deleted outright. When an instance administrator removes a copy, the published message and every other copy are deleted too, so identical content leaves every guild at once. A published message that link preview moderation deletes takes its copies with it the same way.
 
 ## Cleanup
 

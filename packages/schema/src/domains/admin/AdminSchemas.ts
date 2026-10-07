@@ -1141,21 +1141,6 @@ export const BulkBanFileShasRequest = z.object({
 
 export type BulkBanFileShasRequest = z.infer<typeof BulkBanFileShasRequest>;
 
-const NcmecSubmissionStatusEnum = createNamedStringLiteralUnion(
-	[
-		['not_submitted', 'not_submitted', 'Report has not been submitted to NCMEC'],
-		['submitting', 'submitting', 'Report submission to NCMEC is in progress'],
-		['submitted', 'submitted', 'Report has been submitted to NCMEC'],
-		['failed', 'failed', 'Report submission to NCMEC failed'],
-	],
-	'NCMEC submission status',
-);
-export type NcmecSubmissionStatus = z.infer<typeof NcmecSubmissionStatusEnum>;
-export const NcmecAttachmentSubmitResultResponse = z.object({
-	success: z.literal(true),
-	ncmec_report_id: createStringType(1, 256),
-	audit_log_reason: createStringType(1, 4000),
-});
 export const CodesResponse = z.object({
 	codes: z.array(z.string()),
 });
@@ -1385,9 +1370,6 @@ const AdminMessageAttachmentSchema = z.object({
 	width: Int32Type.nullable(),
 	height: Int32Type.nullable(),
 	size: NonNegativeSafeIntegerType.nullable().optional(),
-	ncmec_status: NcmecSubmissionStatusEnum,
-	ncmec_report_id: createStringType(1, 256).nullable(),
-	ncmec_failure_reason: createStringType(1, 4000).nullable(),
 });
 export const AdminMessageSchema = z.object({
 	id: SnowflakeStringType,
@@ -1410,7 +1392,6 @@ export const AdminMessageSchema = z.object({
 	content: createStringType(0, 4000),
 	timestamp: z.string(),
 	attachments: z.array(AdminMessageAttachmentSchema).max(10),
-	user_prior_ncmec_report_ids: z.array(createStringType(1, 256)).max(100).optional(),
 });
 export const LookupMessageResponse = z.object({
 	messages: z.array(AdminMessageSchema).max(100),
@@ -1483,7 +1464,6 @@ const ReportMessageContextSchema = z.object({
 		.array(ReportMissingAttachmentSchema)
 		.optional()
 		.describe('Attachments of the message that could not be copied into the report when it was filed'),
-	user_prior_ncmec_report_ids: z.array(createStringType(1, 256)).max(100).optional(),
 });
 const ReportProfileSnapshotAssetSchema = z.object({
 	hash: z.string().describe('The asset hash at the time the report was filed'),

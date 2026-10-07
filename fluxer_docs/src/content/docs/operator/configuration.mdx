@@ -516,7 +516,7 @@ Default `http://localhost:3900`. The S3 API address. `media-proxy` defaults to e
 
 #### `FLUXER_S3_PUBLIC_ENDPOINT`
 
-No default. The host substituted into presigned URLs, which are the only place it appears. Compose forwards it from `.env`, and uses `FLUXER_S3_ENDPOINT` when it is unset, except on `app-proxy`, which gets only a value `.env` sets and adds it to its Content Security Policy.
+No default. The host substituted into presigned URLs, which are the only place it appears. Compose forwards it from `.env`, and uses `FLUXER_S3_ENDPOINT` when it is unset, except on `app-proxy`, which gets only a value `.env` sets and adds it to its Content Security Policy. `admin` reads it to find the origin that report downloads are presigned against. See `FLUXER_S3_BUCKET_REPORTS`.
 
 #### `FLUXER_S3_FORCE_PATH_STYLE`
 
@@ -548,7 +548,7 @@ Default `fluxer-uploads`. Raw uploads. `media-proxy` defaults to `uploads`, `app
 
 #### `FLUXER_S3_BUCKET_REPORTS`
 
-Default `fluxer-reports`. Abuse report evidence. Read by `api` and `worker`. Compose forwards it from `.env` with a default of `fluxer-reports`, so every service and `seaweedfs-init` name the same bucket.
+Default `fluxer-reports`. Abuse report evidence. Read by `api`, `worker`, and `admin`. Compose forwards it from `.env` with a default of `fluxer-reports`, so every service and `seaweedfs-init` name the same bucket. `admin` allows one image origin for report attachments and profile snapshots in its Content Security Policy, the origin `api` presigns report downloads against. It works that origin out from this name, `FLUXER_S3_PUBLIC_ENDPOINT` or else `FLUXER_S3_ENDPOINT`, `FLUXER_S3_FORCE_PATH_STYLE` and `FLUXER_S3_BUCKET_UPLOADS`, so give `admin` the same values as `api`. The images load only when that origin is an address browsers can reach.
 
 #### `FLUXER_S3_BUCKET_HARVESTS`
 
@@ -1002,26 +1002,6 @@ With prices saved in the dashboard, add the retired ID to its legacy prices befo
 
 All are optional.
 
-#### `FLUXER_NCMEC_ENABLED`
-
-Default `false`. NCMEC reporting. Compose forwards it from `.env`.
-
-#### `FLUXER_NCMEC_BASE_URL`
-
-Default empty. The reporting endpoint, `https://report.cybertip.org/ispws` in production. Required when reporting is on. Compose forwards it from `.env`.
-
-#### `FLUXER_NCMEC_USERNAME`
-
-Default empty. The reporting login. Required when reporting is on. Compose forwards it from `.env`.
-
-#### `FLUXER_NCMEC_PASSWORD`
-
-Default empty. The reporting password. Required when reporting is on. Compose forwards it from `.env`.
-
-#### `FLUXER_NCMEC_REPORTER_EMAIL`
-
-Default empty. The contact address on reports. Required when reporting is on. Compose forwards it from `.env`.
-
 #### `FLUXER_CLAMAV_ENABLED`
 
 Default `false`. Upload virus scanning. Compose forwards it from `.env`, and no ClamAV container ships.
@@ -1046,7 +1026,7 @@ With feeds off, Fluxer checks none of this data. The first worker start with fee
 
 #### `FLUXER_REPORT_RETENTION_DRY_RUN`
 
-Default unset, which keeps the dry run. Read by `worker`. The daily [report retention](/admin-api/reports/#report-retention) job deletes reports 365 days after they were filed, with their evidence copies and search entries, unless a legal hold is in place. Until this is `false` or `0`, the job only logs what it would delete. Any other value, or no value, keeps the dry run. Check the counts in the `Processed report retention` log line before you turn deletion on, because deleted evidence cannot be restored. Compose does not forward it, so add it to `worker` through an override file.
+Default unset, which keeps the dry run. Read by `worker`. The daily [report retention](/admin-api/reports/#report-retention) job deletes reports 365 days after they were filed, with their evidence copies and search entries, unless a legal hold is in place. Until this is `false` or `0`, the job only logs what it would delete. Any other value, or no value, keeps the dry run. Check the counts in the `Processed report retention` log line before you turn deletion on, because deleted evidence cannot be restored. Compose forwards it from `.env`.
 
 #### `FLUXER_BREACHED_PASSWORD_CHECK_ENABLED`
 
@@ -1735,10 +1715,6 @@ Compose writes each of these from the `.env` name given, so setting the name its
 
 `BUILD_VERSION`, `FLUXER_BUILD_VERSION` and `RELEASE_CHANNEL` describe the shipped build. `POD_NAME` and `HOSTNAME` come from the platform.
 
-#### Report retention
-
-`FLUXER_REPORT_RETENTION_DRY_RUN`, so the [report retention](/admin-api/reports/#report-retention) job stays in dry run until an override sets it on `worker`.
-
 #### Test and development switches
 
 `FLUXER_TEST_MODE_ENABLED`, `FLUXER_TEST_HARNESS_TOKEN`, `FLUXER_DISABLE_RATE_LIMITS`, `FLUXER_VALIDATE_RESPONSES` and `FLUXER_RELAX_REGISTRATION_RATE_LIMITS`. None of them belongs on a production instance.
@@ -2197,7 +2173,7 @@ Volume names are prefixed with the Compose project name, so `postgres-data` is `
 | --- | --- | --- |
 | fluxer | `FLUXER_S3_BUCKET_CDN` | Avatars, guild and entity assets, themes, entrance sounds, memes, and processed attachments |
 | fluxer-uploads | `FLUXER_S3_BUCKET_UPLOADS` | Raw attachment uploads, before processing |
-| fluxer-reports | `FLUXER_S3_BUCKET_REPORTS` | Abuse report evidence, and NCMEC payloads where that integration is on |
+| fluxer-reports | `FLUXER_S3_BUCKET_REPORTS` | Abuse report evidence |
 | fluxer-harvests | `FLUXER_S3_BUCKET_HARVESTS` | User and guild data archives |
 
 `FLUXER_S3_BUCKET_STATIC` names an optional bucket. The shipped stack does not use or create it.

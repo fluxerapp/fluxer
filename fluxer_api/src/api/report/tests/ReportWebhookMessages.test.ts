@@ -11,7 +11,7 @@ import {
 } from '@app/api/auth/tests/AuthTestUtils';
 import {createGuildID, createReportID, createUserID} from '@app/api/BrandedTypes';
 import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
-import {Config} from '@app/api/Config';
+import {Config, getConfig} from '@app/api/Config';
 import {loadFixture} from '@app/api/channel/tests/AttachmentTestUtils';
 import {
 	acceptInvite,
@@ -27,7 +27,7 @@ import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
 import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
 import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
-import {getRateLimitService} from '@app/api/middleware/ServiceSingletons';
+import {getInstanceConfigRepository, getRateLimitService} from '@app/api/middleware/ServiceSingletons';
 import {getReportFlowVariant, type ReportFlowStepInput} from '@app/api/report/flows/ReportFlowRegistry';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -46,6 +46,7 @@ import {
 	executeWebhook,
 	executeWebhookWithAttachments,
 } from '@app/api/webhook/tests/WebhookTestUtils';
+import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -336,14 +337,7 @@ async function expectStoredAuthor(reportId: string, world: World, kind: AuthorKi
 }
 
 async function createAdmin(harness: ApiTestHarness): Promise<TestAccount> {
-	return setUserACLs(harness, await createTestAccount(harness), [
-		AdminACLs.AUTHENTICATE,
-		AdminACLs.REPORT_VIEW,
-		AdminACLs.CSAM_SUBMIT_NCMEC,
-		AdminACLs.MESSAGE_DELETE,
-		AdminACLs.USER_DELETE,
-		AdminACLs.ARCHIVE_TRIGGER_USER,
-	]);
+	return setUserACLs(harness, await createTestAccount(harness), [AdminACLs.AUTHENTICATE, AdminACLs.REPORT_VIEW]);
 }
 
 describe('Reports of webhook and bot messages', () => {
@@ -577,6 +571,33 @@ describe('Reports of webhook and bot messages', () => {
 		});
 	});
 
+	test('the webhook creator tag follows the tag style of the instance', async () => {
+		const config = getConfig();
+		const originalSelfHosted = config.instance.selfHosted;
+		config.instance.selfHosted = true;
+		try {
+			await getInstanceConfigRepository().setAccountIdentityMode(AccountIdentityModes.EMAIL, 'setup', TagStyles.NONE);
+			const world = await setupWorld(harness);
+			const report = await submitFlow(harness, world.reporter.token, world.channelId, world.messages.webhook)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const admin = await createAdmin(harness);
+			const detail = await createBuilder<AdminReport>(harness, admin.token)
+				.get(`/admin/reports/${report.report_id}`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(detail).toMatchObject({
+				reported_webhook_creator_id: world.owner.userId,
+				reported_webhook_creator_tag: world.creator.username,
+				reported_webhook_creator_username: world.creator.username,
+				reported_webhook_creator_discriminator: '0000',
+			});
+		} finally {
+			config.instance.selfHosted = originalSelfHosted;
+			getInstanceConfigRepository().clearCacheForTesting();
+		}
+	});
+
 	test('the admin API shows webhook fields and search filters by webhook', async () => {
 		const world = await setupWorld(harness);
 		const webhookReport = await submitFlow(harness, world.reporter.token, world.channelId, world.messages.webhook)
@@ -624,7 +645,6 @@ describe('Reports of webhook and bot messages', () => {
 			author_id: world.webhook.id,
 			author_username: WEBHOOK_USERNAME,
 			webhook_id: world.webhook.id,
-			user_prior_ncmec_report_ids: [],
 		});
 		const neighbor = detail.message_context!.find((entry) => entry.id === world.messages.user)!;
 		expect(neighbor).toMatchObject({author_id: world.author.userId, webhook_id: null});
@@ -751,7 +771,7 @@ describe('Reports of webhook and bot messages', () => {
 		});
 	});
 
-	test('webhook attachments are kept as evidence and can go to NCMEC through the report', async () => {
+	test('webhook attachments are kept as evidence after the message is deleted', async () => {
 		const world = await setupWorld(harness);
 		const {json: message} = await executeWebhookWithAttachments(harness, {
 			webhookId: world.webhook.id,
@@ -770,25 +790,15 @@ describe('Reports of webhook and bot messages', () => {
 		const key = `attachments/${world.channelId}/${attachment.id}/evidence.png`;
 		expect(harness.storageService.hasObject(Config.s3.buckets.reports, key)).toBe(true);
 		await deleteWebhookMessageByToken(harness, world.webhook.id, world.webhook.token, message!.id);
+		expect(harness.storageService.hasObject(Config.s3.buckets.reports, key)).toBe(true);
 		const admin = await createAdmin(harness);
-		await createBuilder(harness, admin.token)
-			.post('/admin/messages/ncmec-reports')
-			.body({
-				channel_id: world.channelId,
-				message_id: message!.id,
-				attachment_id: attachment.id,
-				filename: 'evidence.png',
-				reporter_full_name: 'Webhook Reporter',
-				confirmed_viewed: true,
-				source_report_id: result.report_id,
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
 		const detail = await createBuilder<AdminReport>(harness, admin.token)
 			.get(`/admin/reports/${result.report_id}`)
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		const evidence = detail.message_context!.find((entry) => entry.id === message!.id)!;
-		expect(evidence.attachments[0]?.ncmec_status).not.toBe('not_submitted');
+		expect(evidence.attachments.map((entry) => ({id: entry.id, filename: entry.filename}))).toEqual([
+			{id: attachment.id, filename: 'evidence.png'},
+		]);
 	});
 });

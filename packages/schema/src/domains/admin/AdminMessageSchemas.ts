@@ -31,18 +31,6 @@ export const DeleteMessageRequest = z.object({
 
 export type DeleteMessageRequest = z.infer<typeof DeleteMessageRequest>;
 
-export const ReportAttachmentToNcmecRequest = z.object({
-	channel_id: SnowflakeType,
-	message_id: SnowflakeType,
-	attachment_id: SnowflakeType,
-	filename: FilenameType,
-	source_report_id: SnowflakeType.optional(),
-	reporter_full_name: z.string().trim().min(1).max(200),
-	confirmed_viewed: z.literal(true),
-});
-
-export type ReportAttachmentToNcmecRequest = z.infer<typeof ReportAttachmentToNcmecRequest>;
-
 const MessageShredEntryType = z.object({
 	channel_id: SnowflakeType,
 	message_id: SnowflakeType,

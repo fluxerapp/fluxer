@@ -262,8 +262,6 @@ export const ERROR_I18N_MESSAGES = {
 		'Connection verification failed. Make sure the verification token is correctly placed.',
 	'content_and_safety.content_blocked': 'This content was blocked by safety systems.',
 	'content_and_safety.explicit_content_cannot_be_sent': "Explicit content can't be sent.",
-	'content_and_safety.ncmec_already_submitted': 'This content has already been submitted to NCMEC.',
-	'content_and_safety.ncmec_submission_failed': "We couldn't submit the report to NCMEC. Please try again later.",
 	'content_and_safety.nsfw_age_restricted': 'NSFW content is age restricted.',
 	'discovery.already_applied': 'This community has already applied for Discovery.',
 	'discovery.application_already_reviewed': 'This Discovery application has already been reviewed.',
@@ -445,8 +443,6 @@ export const ERROR_I18N_MESSAGES = {
 	'moderation_and_reports.invalid_dsa_verification_code': 'Invalid DSA verification code.',
 	'moderation_and_reports.invalid_report_flow_answers':
 		"These answers don't match the report form. Start the report again.",
-	'moderation_and_reports.ncmec_attachment_must_be_image_or_video':
-		'Only image or video attachments can be reported to NCMEC.',
 	'moderation_and_reports.report_already_resolved': 'Report already resolved.',
 	'moderation_and_reports.report_banned': "You've been banned from submitting reports.",
 	'moderation_and_reports.report_flow_outdated':
