@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID} from '@app/api/BrandedTypes';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -37,6 +38,7 @@ export function ChannelFollowController(app: HonoApp) {
 			assertAccountNotLimited(ctx.get('user'));
 			const followed = await ctx.get('channelFollowService').followChannel({
 				userId: ctx.get('user').id,
+				viewer: viewerFromCtx(ctx),
 				channelId: createChannelID(ctx.req.valid('param').channel_id),
 				webhookChannelId: createChannelID(ctx.req.valid('json').webhook_channel_id),
 				requestCache: ctx.get('requestCache'),
@@ -66,6 +68,7 @@ export function ChannelFollowController(app: HonoApp) {
 		async (ctx) => {
 			const stats = await ctx.get('channelFollowService').getFollowerStats({
 				userId: ctx.get('user').id,
+				viewer: viewerFromCtx(ctx),
 				channelId: createChannelID(ctx.req.valid('param').channel_id),
 			});
 			return ctx.json(stats);

@@ -4,6 +4,7 @@ import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {enqueueRebuildThreadAutoArchiveQueue, enqueueThreadSearchBackfill} from '@app/api/channel/threads/ThreadJobs';
 import {
 	type InstancePolicyConfig,
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
@@ -14,6 +15,7 @@ import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {
+	getChannelThreadsConfigPublisher,
 	getGatewayRolloutConfigPublisher,
 	getInstanceConfigRepository,
 	getPushRelayConfigPublisher,
@@ -21,6 +23,11 @@ import {
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
+import {
+	enabledThreadGuildIds,
+	enqueueThreadPermissionSeeds,
+	newlyEnabledThreadGuildIds,
+} from '@app/api/worker/tasks/SeedThreadPermissions';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InstancePolicyTransitionNotAllowedError} from '@fluxer/errors/src/domains/core/InstancePolicyTransitionNotAllowedError';
@@ -35,6 +42,10 @@ import {
 	PendingRegistrationActionRequest,
 	RegistrationUrlIdParam,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import {
+	applyChannelThreadsConfigUpdate,
+	type ChannelThreadsConfig,
+} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {DomainMigrationConfigSchema} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {PlutoniumPageConfigSchema} from '@fluxer/schema/src/domains/admin/PlutoniumPageSchemas';
@@ -69,6 +80,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		domainMigration,
 		plutoniumPage,
 		captcha,
+		channelThreads,
 		experimentDelivery,
 		registrationConfig,
 		registrationUrls,
@@ -80,6 +92,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getDomainMigrationConfig(),
 		instanceConfigRepository.getPlutoniumPageConfig(),
 		instanceConfigRepository.getCaptchaConfig(),
+		instanceConfigRepository.getChannelThreadsConfig(),
 		instanceConfigRepository.getExperimentDeliveryConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
@@ -118,6 +131,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		domain_migration: domainMigration,
 		plutonium_page: plutoniumPage,
 		captcha,
+		channel_threads: channelThreads,
 		experiment_delivery: experimentDelivery,
 		registration: {
 			...registrationConfig,
@@ -418,6 +432,25 @@ export function InstanceConfigAdminController(app: HonoApp) {
 					await instanceConfigRepository.updateCaptchaConfig(patch);
 				}
 			}
+			let channelThreadsConfigVersion: number | undefined;
+			if (data.channel_threads) {
+				const patch = omitUndefinedFields(data.channel_threads);
+				if (Object.keys(patch).length > 0) {
+					let previous: ChannelThreadsConfig | undefined;
+					const landed = await instanceConfigRepository.updateChannelThreadsConfig((current) => {
+						previous = current;
+						return applyChannelThreadsConfigUpdate(current, patch);
+					});
+					channelThreadsConfigVersion = landed.config_version;
+					await enqueueThreadPermissionSeeds(ctx.get('channelRepository').threads, landed);
+					const newlyEnabled = previous ? newlyEnabledThreadGuildIds(previous, landed) : enabledThreadGuildIds(landed);
+					for (const guildId of newlyEnabled) {
+						await enqueueRebuildThreadAutoArchiveQueue(guildId);
+						await enqueueThreadSearchBackfill(guildId);
+					}
+					await getChannelThreadsConfigPublisher().publish(landed);
+				}
+			}
 			if (data.experiment_delivery) {
 				const patch = data.experiment_delivery;
 				await instanceConfigRepository.updateExperimentDeliveryConfig((current) =>
@@ -613,6 +646,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				action: 'update_instance_config',
 				metadata: {
 					sections: listSuppliedSections(data),
+					channel_threads_config_version: channelThreadsConfigVersion?.toString(),
 					granted_acls: grantedSetupCompleterAdmin ? AdminACLs.WILDCARD : undefined,
 				},
 			});

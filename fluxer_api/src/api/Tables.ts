@@ -141,6 +141,8 @@ import {
 	type InviteRow,
 	PRIVATE_CHANNEL_COLUMNS,
 	type PrivateChannelRow,
+	READ_STATE_COLUMNS,
+	type ReadStateRow,
 	WEBHOOK_COLUMNS,
 	WEBHOOKS_BY_SOURCE_CHANNEL_COLUMNS,
 	type WebhookRow,
@@ -268,6 +270,30 @@ import {
 	type StorePurchaseByUserRow,
 	type StorePurchaseRow,
 } from '@app/api/database/types/StoreBillingTypes';
+import {
+	ACTIVE_THREADS_BY_GUILD_COLUMNS,
+	type ActiveThreadsByGuildRow,
+	ARCHIVED_THREADS_BY_PARENT_COLUMNS,
+	type ArchivedThreadsByParentRow,
+	FORUM_PINNED_THREAD_COLUMNS,
+	type ForumPinnedThreadRow,
+	GUILD_THREAD_STATE_COLUMNS,
+	type GuildThreadStateRow,
+	THREAD_MEMBER_COLUMNS,
+	THREAD_MEMBERS_BY_USER_COLUMNS,
+	THREAD_ONLY_CHANNELS_BY_GUILD_COLUMNS,
+	THREAD_PARENT_CONFIG_COLUMNS,
+	THREAD_STATE_COLUMNS,
+	THREAD_STATS_COLUMNS,
+	THREADS_BY_PARENT_COLUMNS,
+	type ThreadMemberRow,
+	type ThreadMembersByUserRow,
+	type ThreadOnlyChannelsByGuildRow,
+	type ThreadParentConfigRow,
+	type ThreadStateRow,
+	type ThreadStatsRow,
+	type ThreadsByParentRow,
+} from '@app/api/database/types/ThreadTypes';
 import {
 	FAVORITE_MEME_COLUMNS,
 	type FavoriteMemeRow,
@@ -579,6 +605,84 @@ export const DmStates = defineTable<DmStateRow, 'hi_user_id' | 'lo_user_id' | 'c
 	columns: DM_STATE_COLUMNS,
 	primaryKey: ['hi_user_id', 'lo_user_id', 'channel_id'],
 });
+export const ThreadState = defineTable<ThreadStateRow, 'thread_id'>({
+	name: 'thread_state',
+	columns: THREAD_STATE_COLUMNS,
+	primaryKey: ['thread_id'],
+	partitionKey: ['thread_id'],
+});
+export const ThreadStats = defineTable<ThreadStatsRow, 'thread_id'>({
+	name: 'thread_stats',
+	columns: THREAD_STATS_COLUMNS,
+	primaryKey: ['thread_id'],
+	partitionKey: ['thread_id'],
+});
+export const ThreadsByParent = defineTable<ThreadsByParentRow, 'parent_id' | 'thread_id', 'parent_id'>({
+	name: 'threads_by_parent',
+	columns: THREADS_BY_PARENT_COLUMNS,
+	primaryKey: ['parent_id', 'thread_id'],
+	partitionKey: ['parent_id'],
+});
+export const ActiveThreadsByGuild = defineTable<ActiveThreadsByGuildRow, 'guild_id' | 'thread_id', 'guild_id'>({
+	name: 'active_threads_by_guild',
+	columns: ACTIVE_THREADS_BY_GUILD_COLUMNS,
+	primaryKey: ['guild_id', 'thread_id'],
+	partitionKey: ['guild_id'],
+});
+export const ArchivedThreadsByParent = defineTable<
+	ArchivedThreadsByParentRow,
+	'parent_id' | 'is_private' | 'archive_timestamp' | 'thread_id',
+	'parent_id' | 'is_private'
+>({
+	name: 'archived_threads_by_parent',
+	columns: ARCHIVED_THREADS_BY_PARENT_COLUMNS,
+	primaryKey: ['parent_id', 'is_private', 'archive_timestamp', 'thread_id'],
+	partitionKey: ['parent_id', 'is_private'],
+});
+export const ThreadMembers = defineTable<ThreadMemberRow, 'thread_id' | 'user_id', 'thread_id'>({
+	name: 'thread_members',
+	columns: THREAD_MEMBER_COLUMNS,
+	primaryKey: ['thread_id', 'user_id'],
+	partitionKey: ['thread_id'],
+});
+export const ThreadMembersByUser = defineTable<
+	ThreadMembersByUserRow,
+	'user_id' | 'guild_id' | 'parent_id' | 'is_private' | 'thread_id',
+	'user_id'
+>({
+	name: 'thread_members_by_user',
+	columns: THREAD_MEMBERS_BY_USER_COLUMNS,
+	primaryKey: ['user_id', 'guild_id', 'parent_id', 'is_private', 'thread_id'],
+	partitionKey: ['user_id'],
+});
+export const ThreadParentConfig = defineTable<ThreadParentConfigRow, 'guild_id' | 'channel_id', 'guild_id'>({
+	name: 'thread_parent_config',
+	columns: THREAD_PARENT_CONFIG_COLUMNS,
+	primaryKey: ['guild_id', 'channel_id'],
+	partitionKey: ['guild_id'],
+});
+export const ForumPinnedThread = defineTable<ForumPinnedThreadRow, 'parent_id'>({
+	name: 'forum_pinned_thread',
+	columns: FORUM_PINNED_THREAD_COLUMNS,
+	primaryKey: ['parent_id'],
+	partitionKey: ['parent_id'],
+});
+export const ThreadOnlyChannelsByGuild = defineTable<
+	ThreadOnlyChannelsByGuildRow,
+	'guild_id' | 'channel_id',
+	'guild_id'
+>({
+	name: 'thread_only_channels_by_guild',
+	columns: THREAD_ONLY_CHANNELS_BY_GUILD_COLUMNS,
+	primaryKey: ['guild_id', 'channel_id'],
+	partitionKey: ['guild_id'],
+});
+export const GuildThreadState = defineTable<GuildThreadStateRow, 'guild_id'>({
+	name: 'guild_thread_state',
+	columns: GUILD_THREAD_STATE_COLUMNS,
+	primaryKey: ['guild_id'],
+	partitionKey: ['guild_id'],
+});
 
 interface PinnedDmRow {
 	user_id: bigint;
@@ -593,12 +697,6 @@ export const PinnedDms = defineTable<PinnedDmRow, 'user_id' | 'channel_id'>({
 	primaryKey: ['user_id', 'channel_id'],
 });
 
-interface ReadStateRow {
-	user_id: bigint;
-	channel_id: bigint;
-}
-
-const READ_STATE_COLUMNS = ['user_id', 'channel_id'] as const satisfies ReadonlyArray<keyof ReadStateRow>;
 export const ReadStates = defineTable<ReadStateRow, 'user_id' | 'channel_id'>({
 	name: 'read_states',
 	columns: READ_STATE_COLUMNS,

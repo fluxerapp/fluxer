@@ -3,6 +3,7 @@
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {Channel} from '@app/api/models/Channel';
 import {TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
+import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {CannotSendMessageToNonTextChannelError} from '@fluxer/errors/src/domains/channel/CannotSendMessageToNonTextChannelError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 
@@ -21,7 +22,7 @@ export abstract class MessageInteractionBase {
 	}
 
 	protected ensureTextChannel(channel: Channel): void {
-		if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type)) {
+		if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_CHANNEL_TYPES.has(channel.type)) {
 			throw new CannotSendMessageToNonTextChannelError();
 		}
 	}

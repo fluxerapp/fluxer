@@ -3,19 +3,13 @@
 import {type ChannelID, createChannelID, createMessageID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import {getKvMeta} from '@app/api/database/CassandraMetaRegistry';
 import {fetchOne, setCassandraQueryExecutorForTesting, upsertOne} from '@app/api/database/CassandraQueryExecution';
-import {defineTable} from '@app/api/database/CassandraTableDsl';
 import type {CassandraParams, KvQueryMeta, PreparedQuery} from '@app/api/database/CassandraTypes';
 import type {ReadStateRow} from '@app/api/database/types/ChannelTypes';
-import {READ_STATE_COLUMNS} from '@app/api/database/types/ChannelTypes';
 import {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
+import {ReadStates} from '@app/api/Tables';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-const ReadStates = defineTable<ReadStateRow, 'user_id' | 'channel_id'>({
-	name: 'read_states',
-	columns: READ_STATE_COLUMNS,
-	primaryKey: ['user_id', 'channel_id'],
-});
 const FETCH_READ_STATE = ReadStates.selectCql({
 	where: [ReadStates.where.eq('user_id'), ReadStates.where.eq('channel_id')],
 	limit: 1,

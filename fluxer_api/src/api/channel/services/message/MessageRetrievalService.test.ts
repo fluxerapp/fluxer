@@ -9,6 +9,7 @@ import type {MessageChannelAuthService} from '@app/api/channel/services/message/
 import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
 import {MessageRetrievalService} from '@app/api/channel/services/message/MessageRetrievalService';
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
+import {SYSTEM_THREAD_VIEWER} from '@app/api/experiment/ChannelThreadsGate';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Message} from '@app/api/models/Message';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
@@ -121,6 +122,7 @@ describe('MessageRetrievalService.getMessagesByIds', () => {
 		});
 
 		const result = await service.getMessagesByIds({
+			viewer: SYSTEM_THREAD_VIEWER,
 			userId: VIEWER_ID,
 			channelId: CHANNEL_ID,
 			messageIds: messages.map((message) => message.id),
@@ -141,6 +143,7 @@ describe('MessageRetrievalService.getMessagesByIds', () => {
 		});
 
 		const result = await service.getMessagesByIds({
+			viewer: SYSTEM_THREAD_VIEWER,
 			userId: VIEWER_ID,
 			channelId: CHANNEL_ID,
 			messageIds: [beforeCutoff.id, afterCutoff.id],
@@ -160,6 +163,7 @@ describe('MessageRetrievalService.getMessagesByIds', () => {
 		});
 
 		const result = await service.getMessagesByIds({
+			viewer: SYSTEM_THREAD_VIEWER,
 			userId: VIEWER_ID,
 			channelId: CHANNEL_ID,
 			messageIds: [message.id],
@@ -177,6 +181,7 @@ describe('MessageRetrievalService.getMessagesByIds', () => {
 		});
 
 		const result = await service.getMessagesByIds({
+			viewer: SYSTEM_THREAD_VIEWER,
 			userId: VIEWER_ID,
 			channelId: CHANNEL_ID,
 			messageIds: [message.id],
@@ -196,6 +201,7 @@ describe('MessageRetrievalService.getMessagesByIds', () => {
 		});
 
 		const result = await service.getMessagesByIds({
+			viewer: SYSTEM_THREAD_VIEWER,
 			userId: VIEWER_ID,
 			channelId: CHANNEL_ID,
 			messageIds: [present.id, deleted.id],

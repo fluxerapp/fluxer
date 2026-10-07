@@ -26,6 +26,7 @@ pub const GUILD_TABS: &[(&str, &str)] = &[
     ("archives", "Archives"),
     ("emojis", "Emojis"),
     ("stickers", "Stickers"),
+    ("threads", "Threads"),
     ("audit_logs", "Admin Audit Logs"),
     ("audit_log", "Guild Audit Log"),
     ("reports", "Reports"),
@@ -208,6 +209,7 @@ fn guild_tab_visible(_config: &AdminConfig, tab_id: &str, admin_acls: &[String])
         "overview" | "members" | "settings" | "features" | "moderation" => true,
         "reports" => acl::has_permission(admin_acls, acl::REPORT_VIEW),
         "emojis" | "stickers" => acl::has_permission(admin_acls, acl::ASSET_PURGE),
+        "threads" => acl::has_permission(admin_acls, acl::GUILD_LOOKUP),
         "audit_logs" => acl::has_permission(admin_acls, acl::AUDIT_LOG_VIEW),
         "audit_log" => acl::has_permission(admin_acls, acl::GUILD_AUDIT_LOG_VIEW),
         "archives" => acl::has_any_permission(

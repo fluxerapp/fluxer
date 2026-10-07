@@ -19,6 +19,7 @@ type ExternallySetVariable =
 	| 'authUserId'
 	| 'authViaCookie'
 	| 'channelUpdateType'
+	| 'clientFeatures'
 	| 'oauthBearerAllowed'
 	| 'oauthBearerApplicationId'
 	| 'oauthBearerScopes'

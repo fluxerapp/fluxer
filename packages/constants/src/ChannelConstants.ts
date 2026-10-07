@@ -9,6 +9,11 @@ export const ChannelTypes = {
 	GROUP_DM: 3,
 	GUILD_CATEGORY: 4,
 	GUILD_ANNOUNCEMENT: 5,
+	ANNOUNCEMENT_THREAD: 10,
+	PUBLIC_THREAD: 11,
+	PRIVATE_THREAD: 12,
+	GUILD_FORUM: 15,
+	GUILD_MEDIA: 16,
 	GUILD_LINK: 998,
 	DM_PERSONAL_NOTES: 999,
 } as const;
@@ -59,7 +64,9 @@ export const MessageTypes = {
 	CHANNEL_PINNED_MESSAGE: 6,
 	USER_JOIN: 7,
 	CHANNEL_FOLLOW_ADD: 12,
+	THREAD_CREATED: 18,
 	REPLY: 19,
+	THREAD_STARTER_MESSAGE: 21,
 	CLIENT_SYSTEM: 99,
 } as const;
 
@@ -71,6 +78,8 @@ const MESSAGE_TYPE_DELETABLE = {
 	[MessageTypes.CHANNEL_PINNED_MESSAGE]: true,
 	[MessageTypes.USER_JOIN]: true,
 	[MessageTypes.CHANNEL_FOLLOW_ADD]: true,
+	[MessageTypes.THREAD_CREATED]: true,
+	[MessageTypes.THREAD_STARTER_MESSAGE]: false,
 	[MessageTypes.RECIPIENT_ADD]: false,
 	[MessageTypes.RECIPIENT_REMOVE]: false,
 	[MessageTypes.CALL]: false,

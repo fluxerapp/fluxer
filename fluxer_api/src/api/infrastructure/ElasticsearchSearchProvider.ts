@@ -13,8 +13,11 @@ import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {ISearchProvider} from '@app/api/search/ISearchProvider';
+import type {IThreadSearchService} from '@app/api/search/IThreadSearchService';
 import type {IUserSearchService} from '@app/api/search/IUserSearchService';
+import {ThreadSearchIndex} from '@app/api/search/thread/ThreadSearchIndex';
 import type {ElasticsearchDistributedLock} from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchIndexAdapter';
+import {ElasticsearchThreadAdapter} from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchThreadAdapter';
 import {
 	createElasticsearchClient,
 	type ElasticsearchClientConfig,
@@ -36,6 +39,7 @@ export class ElasticsearchSearchProvider implements ISearchProvider {
 	private reportService: ElasticsearchReportSearchService | null = null;
 	private auditLogService: ElasticsearchAuditLogSearchService | null = null;
 	private guildMemberService: ElasticsearchGuildMemberSearchService | null = null;
+	private threadService: ThreadSearchIndex | null = null;
 
 	constructor(options: ElasticsearchSearchProviderOptions) {
 		this.logger = options.logger;
@@ -57,6 +61,7 @@ export class ElasticsearchSearchProvider implements ISearchProvider {
 		this.reportService = new ElasticsearchReportSearchService({client, lock});
 		this.auditLogService = new ElasticsearchAuditLogSearchService({client, lock});
 		this.guildMemberService = new ElasticsearchGuildMemberSearchService({client, lock});
+		this.threadService = new ThreadSearchIndex(new ElasticsearchThreadAdapter({client, lock}));
 		await Promise.all([
 			this.messageService.initialize(),
 			this.guildService.initialize(),
@@ -76,6 +81,7 @@ export class ElasticsearchSearchProvider implements ISearchProvider {
 			this.reportService,
 			this.auditLogService,
 			this.guildMemberService,
+			this.threadService,
 		];
 		await Promise.all(services.filter((s) => s != null).map((s) => s.shutdown()));
 		this.messageService = null;
@@ -84,6 +90,7 @@ export class ElasticsearchSearchProvider implements ISearchProvider {
 		this.reportService = null;
 		this.auditLogService = null;
 		this.guildMemberService = null;
+		this.threadService = null;
 	}
 
 	getMessageSearchService(): IMessageSearchService | null {
@@ -108,5 +115,9 @@ export class ElasticsearchSearchProvider implements ISearchProvider {
 
 	getGuildMemberSearchService(): IGuildMemberSearchService | null {
 		return this.guildMemberService;
+	}
+
+	getThreadSearchService(): IThreadSearchService | null {
+		return this.threadService;
 	}
 }

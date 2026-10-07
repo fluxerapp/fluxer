@@ -13,17 +13,19 @@ import {
 	type UserID,
 } from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {withThreadContext} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {
 	enqueueCrosspostFamilyPurgeFromCopies,
 	enqueueCrosspostSourceRemoval,
 } from '@app/api/channel/services/message/CrosspostPropagation';
-import {purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import {decrementThreadMessageCount, purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
 import {
 	createMessageResponseDataService,
 	type MessageResponseAccessContext,
 	messageResponseAccessForChannel,
 	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
+import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import type {NcmecAttachmentStatusResponse, NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {getPurgeQueue, getStorageService} from '@app/api/middleware/ServiceSingletons';
@@ -144,15 +146,16 @@ export class AdminMessageService {
 				message.authorId || createUserID(0n),
 				message.pinnedTimestamp || undefined,
 			);
+			await decrementThreadMessageCount(channelRepository, channel, [messageId]);
 			if (channel) {
 				if (channel.guildId) {
 					await gatewayService.dispatchGuild({
 						guildId: channel.guildId,
 						event: 'MESSAGE_DELETE',
-						data: {
+						data: withThreadContext(channel, {
 							channel_id: channelId.toString(),
 							id: messageId.toString(),
-						},
+						}),
 					});
 				} else {
 					for (const recipientId of channel.recipientIds) {
@@ -349,9 +352,12 @@ export class AdminMessageService {
 				guildName: null,
 			};
 		}
-		const guild = await guildRepository.findUnique(channel.guildId);
+		const [guild, scope] = await Promise.all([
+			guildRepository.findUnique(channel.guildId),
+			resolveNsfwScopeChannel(channel, (id) => channelRepository.findUnique(id)),
+		]);
 		return {
-			channelNsfw: channel.isNsfw,
+			channelNsfw: scope.isNsfw,
 			guildNsfwLevel: guild?.nsfwLevel ?? null,
 			channelName: channel.name ?? null,
 			guildId: channel.guildId.toString(),

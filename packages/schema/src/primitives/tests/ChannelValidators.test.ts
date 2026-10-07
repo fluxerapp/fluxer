@@ -1,14 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
 	AuditLogReasonType,
 	ChannelNameType,
+	ChannelTypeSchema,
 	GeneralChannelNameType,
 	VanityURLCodeType,
 } from '@fluxer/schema/src/primitives/ChannelValidators';
 import {MAX_STRING_PROCESSING_LENGTH} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {describe, expect, it} from 'vitest';
+
+describe('ChannelTypeSchema', () => {
+	it.each(Object.values(ChannelTypes))('accepts channel type %i', (value) => {
+		expect(ChannelTypeSchema.parse(value)).toBe(value);
+	});
+
+	it.each([9, 13, 14, 17, -1, '0', null])('rejects unknown channel type %j', (value) => {
+		expect(ChannelTypeSchema.safeParse(value).success).toBe(false);
+	});
+});
 
 describe('ChannelNameType', () => {
 	it.each([

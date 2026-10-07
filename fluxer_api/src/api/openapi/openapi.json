@@ -4678,6 +4678,80 @@
 				]
 			}
 		},
+		"/channels/{channel_id}/messages/{message_id}/threads": {
+			"post": {
+				"operationId": "start_thread_from_message",
+				"summary": "Start a thread from a message",
+				"tags": ["Channels"],
+				"responses": {
+					"201": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThreadChannelResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Creates a public thread from an existing message in a text channel. The thread shares the ID of the message, so a message can start one thread.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the message", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/StartThreadFromMessageRequest"}}}
+				}
+			}
+		},
 		"/channels/{channel_id}/permissions/{overwrite_id}": {
 			"put": {
 				"operationId": "set_channel_permission_overwrite",
@@ -5007,6 +5081,73 @@
 				]
 			}
 		},
+		"/channels/{channel_id}/post-data": {
+			"post": {
+				"operationId": "get_channel_post_data",
+				"summary": "Get forum post data",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThreadPostDataResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the owner and first message of each requested post in a forum or media channel. Requires the read message history permission.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThreadPostDataRequest"}}}
+				}
+			}
+		},
 		"/channels/{channel_id}/recipients/{user_id}": {
 			"put": {
 				"operationId": "add_group_dm_recipient",
@@ -5287,11 +5428,315 @@
 				]
 			}
 		},
-		"/channels/{channel_id}/typing": {
+		"/channels/{channel_id}/tags": {
 			"post": {
-				"operationId": "indicate_typing",
-				"summary": "Indicate typing activity",
-				"tags": ["Channels", "Messages"],
+				"operationId": "create_forum_tag",
+				"summary": "Create a forum tag",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ChannelResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Adds a tag to a forum or media channel. Requires the manage channels permission. Returns the updated channel.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ForumTagRequest"}}}
+				}
+			}
+		},
+		"/channels/{channel_id}/tags/{tag_id}": {
+			"put": {
+				"operationId": "update_forum_tag",
+				"summary": "Update a forum tag",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ChannelResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Replaces a tag of a forum or media channel. Requires the manage channels permission. Returns the updated channel.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "tag_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the forum tag", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the forum tag"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ForumTagRequest"}}}
+				}
+			},
+			"delete": {
+				"operationId": "delete_forum_tag",
+				"summary": "Delete a forum tag",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ChannelResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Removes a tag from a forum or media channel. Requires the manage channels permission. Returns the updated channel.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "tag_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the forum tag", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the forum tag"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/thread-members": {
+			"get": {
+				"operationId": "list_thread_members",
+				"summary": "List thread members",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThreadMemberListResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns thread members ordered by user ID. Paginate with after and limit. Set with_member to include the guild member object of each thread member.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "with_member",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Whether to include a guild member object for each thread member",
+							"default": "false",
+							"type": "string"
+						},
+						"description": "Whether to include a guild member object for each thread member"
+					},
+					{
+						"name": "after",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Get thread members after this user ID",
+							"$ref": "#/components/schemas/SnowflakeType"
+						},
+						"description": "Get thread members after this user ID"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Max number of thread members to return (1-100, default 100)",
+							"default": "100",
+							"type": "string"
+						},
+						"description": "Max number of thread members to return (1-100, default 100)"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/thread-members/@me": {
+			"put": {
+				"operationId": "join_thread",
+				"summary": "Join a thread",
+				"tags": ["Channels"],
 				"responses": {
 					"204": {"description": "No Content"},
 					"400": {
@@ -5333,7 +5778,8 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Notifies other users in the channel that you are actively typing. Typing indicators typically expire after a short period (usually 10 seconds). Returns 204 No Content. Commonly called repeatedly while the user is composing a message.",
+				"description": "Adds the current user to the thread. The thread must not be archived.",
+				"x-fluxer-experiment": "channel_threads",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"parameters": [
 					{
@@ -5342,6 +5788,926 @@
 						"required": true,
 						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the channel"
+					},
+					{
+						"name": "location",
+						"in": "query",
+						"required": false,
+						"schema": {"description": "Accepted and ignored", "type": "string", "maxLength": 100},
+						"description": "Accepted and ignored"
+					}
+				]
+			},
+			"delete": {
+				"operationId": "leave_thread",
+				"summary": "Leave a thread",
+				"tags": ["Channels"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Removes the current user from the thread. The thread must not be archived.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "location",
+						"in": "query",
+						"required": false,
+						"schema": {"description": "Accepted and ignored", "type": "string", "maxLength": 100},
+						"description": "Accepted and ignored"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/thread-members/@me/settings": {
+			"patch": {
+				"operationId": "update_thread_member_settings",
+				"summary": "Update thread settings",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {"anyOf": [{"$ref": "#/components/schemas/ThreadMemberResponse"}, {"type": "null"}]}
+							}
+						}
+					},
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Updates the current user's notification settings for a thread they are a member of. Returns the thread member, or 204 when nothing changed.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					}
+				],
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThreadMemberSettingsRequest"}}}
+				}
+			}
+		},
+		"/channels/{channel_id}/thread-members/{user_id}": {
+			"get": {
+				"operationId": "get_thread_member",
+				"summary": "Get a thread member",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThreadMemberResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the thread member object of the user when the user is a member of the thread.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the user"
+					},
+					{
+						"name": "with_member",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Whether to include a guild member object for the thread member",
+							"default": "false",
+							"type": "string"
+						},
+						"description": "Whether to include a guild member object for the thread member"
+					}
+				]
+			},
+			"put": {
+				"operationId": "add_thread_member",
+				"summary": "Add a thread member",
+				"tags": ["Channels"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Adds another guild member to the thread. Requires permission to send messages in threads, and the thread must not be archived.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the user"
+					},
+					{
+						"name": "location",
+						"in": "query",
+						"required": false,
+						"schema": {"description": "Accepted and ignored", "type": "string", "maxLength": 100},
+						"description": "Accepted and ignored"
+					}
+				]
+			},
+			"delete": {
+				"operationId": "remove_thread_member",
+				"summary": "Remove a thread member",
+				"tags": ["Channels"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Removes a member from the thread. Requires the manage threads permission, or being the creator of a private thread. The thread must not be archived.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the user"
+					},
+					{
+						"name": "location",
+						"in": "query",
+						"required": false,
+						"schema": {"description": "Accepted and ignored", "type": "string", "maxLength": 100},
+						"description": "Accepted and ignored"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/threads": {
+			"post": {
+				"operationId": "start_thread",
+				"summary": "Start a thread",
+				"tags": ["Channels"],
+				"responses": {
+					"201": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/StartForumThreadResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Creates a thread that is not attached to an existing message. In a text channel the thread type is required. In a forum or media channel this creates a post, and the body carries the first message. The body can also be sent as multipart form data with the JSON in a payload_json field, and a post can attach files as files[n] parts.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/StartThreadRequestBody"}},
+						"multipart/form-data": {"schema": {"$ref": "#/components/schemas/StartThreadMultipartRequest"}}
+					}
+				}
+			}
+		},
+		"/channels/{channel_id}/threads/archived/private": {
+			"get": {
+				"operationId": "list_private_archived_threads",
+				"summary": "List private archived threads",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ArchivedThreadsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns archived private threads of the text channel, most recently archived first. Requires the read message history and manage threads permissions.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "before",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Get threads archived before this timestamp",
+							"type": "string",
+							"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
+						},
+						"description": "Get threads archived before this timestamp"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Max number of threads to return (2-100, default 50)",
+							"default": "50",
+							"type": "string"
+						},
+						"description": "Max number of threads to return (2-100, default 50)"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/threads/archived/public": {
+			"get": {
+				"operationId": "list_public_archived_threads",
+				"summary": "List public archived threads",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ArchivedThreadsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns archived public threads of the channel, most recently archived first. Requires the read message history permission.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "before",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Get threads archived before this timestamp",
+							"type": "string",
+							"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
+						},
+						"description": "Get threads archived before this timestamp"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Max number of threads to return (2-100, default 50)",
+							"default": "50",
+							"type": "string"
+						},
+						"description": "Max number of threads to return (2-100, default 50)"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/threads/search": {
+			"get": {
+				"operationId": "search_threads",
+				"summary": "Search threads",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThreadSearchResult"}}}
+					},
+					"202": {
+						"description": "Accepted",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SearchIndexNotReadyResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns threads of the channel that match the search. Requires the read message history permission. While the search index of the guild is being built, responds with 202 and a body that says when to retry.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "name",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Text to look for in thread names (max 100 characters)",
+							"type": "string",
+							"maxLength": 100
+						},
+						"description": "Text to look for in thread names (max 100 characters)"
+					},
+					{
+						"name": "slop",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Accepted for compatibility and ignored (max 100, default 2)",
+							"default": "2",
+							"type": "string"
+						},
+						"description": "Accepted for compatibility and ignored (max 100, default 2)"
+					},
+					{
+						"name": "tag",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Tag IDs to filter by (max 20)",
+							"maxItems": 20,
+							"type": "array",
+							"items": {"$ref": "#/components/schemas/SnowflakeType"}
+						},
+						"description": "Tag IDs to filter by (max 20)"
+					},
+					{
+						"name": "tag_setting",
+						"in": "query",
+						"required": false,
+						"schema": {"$ref": "#/components/schemas/ForumTagSettingSchema"},
+						"description": "How posts are filtered when searching by several tags"
+					},
+					{
+						"name": "archived",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Whether to return only archived or only active threads (default both)",
+							"type": "string"
+						},
+						"description": "Whether to return only archived or only active threads (default both)"
+					},
+					{
+						"name": "sort_by",
+						"in": "query",
+						"required": false,
+						"schema": {"default": "last_message_time", "$ref": "#/components/schemas/ThreadSearchSortBySchema"},
+						"description": "The sorting algorithm to use"
+					},
+					{
+						"name": "sort_order",
+						"in": "query",
+						"required": false,
+						"schema": {"default": "desc", "$ref": "#/components/schemas/ThreadSearchSortOrderSchema"},
+						"description": "The direction to sort"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Max number of threads to return (1-25, default 25)",
+							"default": "25",
+							"type": "string"
+						},
+						"description": "Max number of threads to return (1-25, default 25)"
+					},
+					{
+						"name": "offset",
+						"in": "query",
+						"required": false,
+						"schema": {"description": "Number of threads to skip (max 9975)", "default": "0", "type": "string"},
+						"description": "Number of threads to skip (max 9975)"
+					},
+					{
+						"name": "max_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Get threads before this thread ID",
+							"$ref": "#/components/schemas/SnowflakeType"
+						},
+						"description": "Get threads before this thread ID"
+					},
+					{
+						"name": "min_id",
+						"in": "query",
+						"required": false,
+						"schema": {"description": "Get threads after this thread ID", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "Get threads after this thread ID"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/typing": {
+			"post": {
+				"operationId": "indicate_typing",
+				"summary": "Indicate typing activity",
+				"tags": ["Channels", "Messages"],
+				"responses": {
+					"200": {"description": "Success"},
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Notifies other users in the channel that you are actively typing. Typing indicators typically expire after a short period (usually 10 seconds). Returns 204 No Content, or 200 with a JSON body holding the remaining slowmode cooldowns in message_send_cooldown_ms and thread_create_cooldown_ms when the user is rate limited. Commonly called repeatedly while the user is composing a message.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/users/@me/threads/archived/private": {
+			"get": {
+				"operationId": "list_joined_private_archived_threads",
+				"summary": "List joined private archived threads",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ArchivedThreadsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns archived private threads of the text channel that the current user joined, newest first. Requires the read message history permission.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "before",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Get threads before this thread ID",
+							"$ref": "#/components/schemas/SnowflakeType"
+						},
+						"description": "Get threads before this thread ID"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Max number of threads to return (2-100, default 50)",
+							"default": "50",
+							"type": "string"
+						},
+						"description": "Max number of threads to return (2-100, default 50)"
 					}
 				]
 			}
@@ -9558,6 +10924,69 @@
 							"type": "string"
 						},
 						"description": "Whether to also purge the asset from storage"
+					}
+				]
+			}
+		},
+		"/guilds/{guild_id}/threads/active": {
+			"get": {
+				"operationId": "list_guild_active_threads",
+				"summary": "List active guild threads",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ActiveThreadsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns every active thread in the guild that the bot can view, newest first, with a thread member object for each thread the bot joined.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"botToken": []}],
+				"parameters": [
+					{
+						"name": "guild_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the guild", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the guild"
 					}
 				]
 			}
@@ -21151,6 +22580,21 @@
 						"required": false,
 						"schema": {"description": "Whether to wait for the webhook response", "default": "false", "type": "string"},
 						"description": "Whether to wait for the webhook response"
+					},
+					{
+						"name": "thread_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"anyOf": [
+								{
+									"type": "string",
+									"description": "ID of a thread in the webhook channel to target instead of the channel itself",
+									"x-fluxer-experiment": "channel_threads"
+								},
+								{"type": "null"}
+							]
+						}
 					}
 				],
 				"requestBody": {
@@ -21215,6 +22659,21 @@
 						"required": true,
 						"schema": {"description": "The webhook token", "type": "string"},
 						"description": "The webhook token"
+					},
+					{
+						"name": "thread_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"anyOf": [
+								{
+									"type": "string",
+									"description": "ID of a thread in the webhook channel to target instead of the channel itself",
+									"x-fluxer-experiment": "channel_threads"
+								},
+								{"type": "null"}
+							]
+						}
 					}
 				],
 				"requestBody": {
@@ -21347,6 +22806,21 @@
 						"required": true,
 						"schema": {"description": "The ID of the message", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the message"
+					},
+					{
+						"name": "thread_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"anyOf": [
+								{
+									"type": "string",
+									"description": "ID of a thread in the webhook channel to target instead of the channel itself",
+									"x-fluxer-experiment": "channel_threads"
+								},
+								{"type": "null"}
+							]
+						}
 					}
 				]
 			},
@@ -21412,6 +22886,21 @@
 						"required": true,
 						"schema": {"description": "The ID of the message", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the message"
+					},
+					{
+						"name": "thread_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"anyOf": [
+								{
+									"type": "string",
+									"description": "ID of a thread in the webhook channel to target instead of the channel itself",
+									"x-fluxer-experiment": "channel_threads"
+								},
+								{"type": "null"}
+							]
+						}
 					}
 				],
 				"requestBody": {
@@ -21478,6 +22967,21 @@
 						"required": true,
 						"schema": {"description": "The ID of the message", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the message"
+					},
+					{
+						"name": "thread_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"anyOf": [
+								{
+									"type": "string",
+									"description": "ID of a thread in the webhook channel to target instead of the channel itself",
+									"x-fluxer-experiment": "channel_threads"
+								},
+								{"type": "null"}
+							]
+						}
 					}
 				]
 			}
@@ -21538,6 +23042,21 @@
 						"required": true,
 						"schema": {"description": "The webhook token", "type": "string"},
 						"description": "The webhook token"
+					},
+					{
+						"name": "thread_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"anyOf": [
+								{
+									"type": "string",
+									"description": "ID of a thread in the webhook channel to target instead of the channel itself",
+									"x-fluxer-experiment": "channel_threads"
+								},
+								{"type": "null"}
+							]
+						}
 					}
 				],
 				"requestBody": {
@@ -21773,7 +23292,7 @@
 										"$ref": "#/components/schemas/SnowflakeStringType"
 									},
 									"message_id": {
-										"description": "The ID of the referenced message, absent on a channel follow system message",
+										"description": "The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread",
 										"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 									},
 									"guild_id": {
@@ -21824,6 +23343,10 @@
 							},
 							{"type": "null"}
 						]
+					},
+					"thread": {
+						"description": "The thread started from this message, when the viewer can see threads",
+						"$ref": "#/components/schemas/ThreadChannelResponse"
 					},
 					"referenced_message": {
 						"description": "The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message has no default reference. Clients must tell null apart from absent by key presence.",
@@ -21936,7 +23459,7 @@
 														"$ref": "#/components/schemas/SnowflakeStringType"
 													},
 													"message_id": {
-														"description": "The ID of the referenced message, absent on a channel follow system message",
+														"description": "The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread",
 														"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 													},
 													"guild_id": {
@@ -21990,6 +23513,10 @@
 											},
 											{"type": "null"}
 										]
+									},
+									"thread": {
+										"description": "The thread started from this message, when the viewer can see threads",
+										"$ref": "#/components/schemas/ThreadChannelResponse"
 									}
 								},
 								"required": [
@@ -22637,6 +24164,18 @@
 								}
 							}
 						}
+					},
+					"thread_name": {
+						"description": "Name of the post to create when the webhook belongs to a forum or media channel (1-100 characters)",
+						"type": "string",
+						"x-fluxer-experiment": "channel_threads"
+					},
+					"applied_tags": {
+						"maxItems": 5,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "IDs of the tags to apply to the new post (max 5)",
+						"x-fluxer-experiment": "channel_threads"
 					}
 				}
 			},
@@ -22683,6 +24222,18 @@
 						"description": "Array of attachments uploaded through the presigned upload endpoint",
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/ClientUploadedAttachmentRequest"}
+					},
+					"thread_name": {
+						"description": "Name of the post to create when the webhook belongs to a forum or media channel (1-100 characters)",
+						"type": "string",
+						"x-fluxer-experiment": "channel_threads"
+					},
+					"applied_tags": {
+						"maxItems": 5,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "IDs of the tags to apply to the new post (max 5)",
+						"x-fluxer-experiment": "channel_threads"
 					}
 				}
 			},
@@ -24944,6 +26495,10 @@
 												},
 												{"type": "null"}
 											]
+										},
+										"flags": {
+											"description": "Channel override flags (NEW_FORUM_THREADS_OFF 1<<13, NEW_FORUM_THREADS_ON 1<<14)",
+											"$ref": "#/components/schemas/Int32Type"
 										}
 									},
 									"required": ["collapsed", "message_notifications", "muted"]
@@ -25046,6 +26601,10 @@
 												},
 												{"type": "null"}
 											]
+										},
+										"flags": {
+											"description": "Channel override flags (NEW_FORUM_THREADS_OFF 1<<13, NEW_FORUM_THREADS_ON 1<<14)",
+											"$ref": "#/components/schemas/Int32Type"
 										}
 									},
 									"required": ["collapsed", "message_notifications", "muted", "mute_config"],
@@ -25572,6 +27131,70 @@
 						"type": "object",
 						"propertyNames": {"type": "string"},
 						"additionalProperties": {"type": "string", "minLength": 1, "maxLength": 32}
+					},
+					"flags": {"description": "Channel flags", "$ref": "#/components/schemas/Int32Type"},
+					"thread_metadata": {
+						"description": "Thread-specific fields",
+						"$ref": "#/components/schemas/ThreadMetadataResponse"
+					},
+					"applied_tags": {
+						"description": "IDs of the tags applied to a forum or media post",
+						"maxItems": 5,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
+					},
+					"message_count": {
+						"description": "Messages in the thread, excluding the starter and deleted messages",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"total_message_sent": {
+						"description": "Messages ever sent in the thread, never decremented",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"member_count": {
+						"description": "Approximate number of thread members, capped at 50",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"member_ids_preview": {
+						"description": "IDs of the most recently joined members of a forum or media post, newest first",
+						"maxItems": 8,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
+					},
+					"member": {
+						"description": "The thread member object for the current user",
+						"$ref": "#/components/schemas/ThreadMemberResponse"
+					},
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration for new threads",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode copied onto new threads",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"available_tags": {
+						"description": "Tags that can be applied to posts",
+						"maxItems": 20,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ForumTagResponse"}
+					},
+					"default_reaction_emoji": {
+						"description": "Default reaction for posts",
+						"anyOf": [{"$ref": "#/components/schemas/DefaultReactionEmojiResponse"}, {"type": "null"}]
+					},
+					"default_sort_order": {
+						"description": "Default sort order for posts",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"default_forum_layout": {
+						"description": "Default layout for forum posts",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"default_tag_setting": {
+						"description": "Default tag search setting",
+						"type": "string",
+						"enum": ["match_some", "match_all"]
 					}
 				},
 				"required": ["id", "type"],
@@ -27776,6 +29399,12 @@
 					"approximate_presence_count": {
 						"description": "Approximate online member count (only when with_counts is true)",
 						"$ref": "#/components/schemas/Int32Type"
+					},
+					"threads_active": {
+						"type": "boolean",
+						"const": true,
+						"description": "Present and true when threads, forum and media channels are active in this guild for the requesting client. Only set on the current user guild list",
+						"x-fluxer-experiment": "channel_threads"
 					}
 				},
 				"required": [
@@ -27795,6 +29424,23 @@
 					"default_message_notifications",
 					"disabled_operations"
 				],
+				"additionalProperties": false
+			},
+			"ActiveThreadsResponse": {
+				"type": "object",
+				"properties": {
+					"threads": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ThreadChannelResponse"},
+						"description": "The active threads"
+					},
+					"members": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ThreadMemberResponse"},
+						"description": "A thread member object for each returned thread the user joined"
+					}
+				},
+				"required": ["threads", "members"],
 				"additionalProperties": false
 			},
 			"GuildStickerUpdateRequest": {
@@ -28531,7 +30177,9 @@
 					{"$ref": "#/components/schemas/GuildAnnouncementChannelCreateRequest"},
 					{"$ref": "#/components/schemas/GuildVoiceChannelCreateRequest"},
 					{"$ref": "#/components/schemas/GuildCategoryChannelCreateRequest"},
-					{"$ref": "#/components/schemas/GuildLinkChannelCreateRequest"}
+					{"$ref": "#/components/schemas/GuildLinkChannelCreateRequest"},
+					{"$ref": "#/components/schemas/GuildForumChannelCreateRequest"},
+					{"$ref": "#/components/schemas/GuildMediaChannelCreateRequest"}
 				]
 			},
 			"GuildBanCreateRequest": {
@@ -28601,7 +30249,10 @@
 					"MESSAGE_DELETE",
 					"MESSAGE_BULK_DELETE",
 					"MESSAGE_PIN",
-					"MESSAGE_UNPIN"
+					"MESSAGE_UNPIN",
+					"THREAD_CREATE",
+					"THREAD_UPDATE",
+					"THREAD_DELETE"
 				],
 				"x-enumDescriptions": [
 					"Guild settings were updated",
@@ -28638,11 +30289,14 @@
 					"Message was deleted",
 					"Messages were bulk deleted",
 					"Message was pinned",
-					"Message was unpinned"
+					"Message was unpinned",
+					"Thread was created",
+					"Thread was updated",
+					"Thread was deleted"
 				],
 				"enum": [
 					1, 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 40, 41, 42, 50, 51, 52, 60, 61, 62,
-					90, 91, 92, 72, 73, 74, 75
+					90, 91, 92, 72, 73, 74, 75, 110, 111, 112
 				]
 			},
 			"Int32Type": {"type": "integer", "minimum": 0, "maximum": 2147483647, "format": "int32"},
@@ -28663,6 +30317,11 @@
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AuditLogWebhookResponse"},
 						"description": "Webhooks referenced in the audit log entries"
+					},
+					"threads": {
+						"description": "Threads referenced in the audit log entries, when the viewer can see threads",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ThreadChannelResponse"}
 					}
 				},
 				"required": ["audit_log_entries", "users", "webhooks"],
@@ -28870,6 +30529,7 @@
 						"type": "object",
 						"properties": {
 							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"},
+							"channel_threads": {"$ref": "#/components/schemas/ChannelThreadsAssignmentResponse"},
 							"plutonium_page": {"$ref": "#/components/schemas/PlutoniumPageAssignmentResponse"}
 						},
 						"additionalProperties": false
@@ -29072,6 +30732,348 @@
 				"required": ["id", "guild_id", "channel_id", "name", "type", "token", "user"],
 				"additionalProperties": false
 			},
+			"ArchivedThreadsResponse": {
+				"type": "object",
+				"properties": {
+					"threads": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ThreadChannelResponse"},
+						"description": "The archived threads"
+					},
+					"members": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ThreadMemberResponse"},
+						"description": "A thread member object for each returned thread the user joined"
+					},
+					"has_more": {"type": "boolean", "description": "Whether there are potentially more threads to fetch"}
+				},
+				"required": ["threads", "members", "has_more"],
+				"additionalProperties": false
+			},
+			"ThreadSearchSortOrderSchema": {
+				"type": "string",
+				"enum": ["asc", "desc"],
+				"description": "The direction to sort"
+			},
+			"ThreadSearchSortBySchema": {
+				"type": "string",
+				"enum": ["last_message_time", "archive_time", "relevance", "creation_time"],
+				"description": "The sorting algorithm to use"
+			},
+			"ForumTagSettingSchema": {
+				"type": "string",
+				"enum": ["match_some", "match_all"],
+				"description": "How posts are filtered when searching by several tags"
+			},
+			"SearchIndexNotReadyResponse": {
+				"type": "object",
+				"properties": {
+					"code": {
+						"type": "string",
+						"const": "SEARCH_INDEX_NOT_READY",
+						"description": "Machine-readable code of the response"
+					},
+					"message": {"type": "string", "description": "Human-readable description of the response"},
+					"documents_indexed": {
+						"description": "Always 0 while the index is being built",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"retry_after": {"type": "number", "description": "Seconds to wait before retrying the search"}
+				},
+				"required": ["code", "message", "documents_indexed", "retry_after"],
+				"additionalProperties": false,
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"ThreadSearchResult": {
+				"anyOf": [
+					{"$ref": "#/components/schemas/ThreadSearchResponse"},
+					{"$ref": "#/components/schemas/SearchIndexNotReadyResponse"}
+				],
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"StartThreadMultipartRequest": {
+				"type": "object",
+				"properties": {
+					"payload_json": {"type": "string", "description": "The JSON-encoded request body"},
+					"files[0]": {
+						"description": "A file for the first message of a post, referenced by attachment id 0. Further files go in files[1], files[2] and so on",
+						"type": "string",
+						"format": "binary",
+						"contentEncoding": "binary"
+					}
+				},
+				"required": ["payload_json"],
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"StartThreadRequestBody": {
+				"anyOf": [
+					{"$ref": "#/components/schemas/StartThreadRequest"},
+					{"$ref": "#/components/schemas/StartForumThreadRequest"}
+				]
+			},
+			"StartForumThreadResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for this channel",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"guild_id": {
+						"description": "The ID of the guild this channel belongs to",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"name": {"description": "The name of the channel", "type": ["string", "null"]},
+					"topic": {"description": "The topic of the channel", "type": ["string", "null"]},
+					"url": {
+						"description": "The URL associated with the channel",
+						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
+					},
+					"icon": {"description": "The icon hash of the channel (for group DMs)", "type": ["string", "null"]},
+					"owner_id": {
+						"description": "The ID of the owner of the channel (for group DMs)",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
+					},
+					"type": {"$ref": "#/components/schemas/ChannelType"},
+					"position": {"description": "The sorting position of the channel", "$ref": "#/components/schemas/Int32Type"},
+					"parent_id": {
+						"description": "The ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "The bitrate of the voice channel in bits per second",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "The maximum number of users allowed in the voice channel",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "The maximum active voice connections allowed per user in the voice channel",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"rtc_region": {"description": "The voice region ID for the voice channel", "type": ["string", "null"]},
+					"last_message_id": {
+						"description": "The ID of the last message sent in this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
+					},
+					"last_pin_timestamp": {
+						"description": "The ISO 8601 timestamp of when the last pinned message was pinned",
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						]
+					},
+					"permission_overwrites": {
+						"description": "The permission overwrites for this channel",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ChannelOverwriteResponse"}
+					},
+					"recipients": {
+						"description": "The recipients of the DM channel",
+						"maxItems": 49,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/UserPartialResponse"}
+					},
+					"nsfw": {
+						"description": "Whether the channel is marked as NSFW (effective value, walking channel → category → guild)",
+						"type": "boolean"
+					},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override; null means inherit from parent category and then guild. Categories use this same field as their own override.",
+						"type": ["boolean", "null"]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevel"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"rate_limit_per_user": {
+						"description": "The slowmode rate limit in seconds",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"nicks": {
+						"description": "Custom nicknames for users in this channel (for group DMs)",
+						"type": "object",
+						"propertyNames": {"type": "string"},
+						"additionalProperties": {"type": "string", "minLength": 1, "maxLength": 32}
+					},
+					"flags": {"description": "Channel flags", "$ref": "#/components/schemas/Int32Type"},
+					"thread_metadata": {
+						"description": "Thread-specific fields",
+						"$ref": "#/components/schemas/ThreadMetadataResponse"
+					},
+					"applied_tags": {
+						"description": "IDs of the tags applied to a forum or media post",
+						"maxItems": 5,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
+					},
+					"message_count": {
+						"description": "Messages in the thread, excluding the starter and deleted messages",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"total_message_sent": {
+						"description": "Messages ever sent in the thread, never decremented",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"member_count": {
+						"description": "Approximate number of thread members, capped at 50",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"member_ids_preview": {
+						"description": "IDs of the most recently joined members of a forum or media post, newest first",
+						"maxItems": 8,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
+					},
+					"member": {
+						"description": "The thread member object for the current user",
+						"$ref": "#/components/schemas/ThreadMemberResponse"
+					},
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration for new threads",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode copied onto new threads",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"available_tags": {
+						"description": "Tags that can be applied to posts",
+						"maxItems": 20,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ForumTagResponse"}
+					},
+					"default_reaction_emoji": {
+						"description": "Default reaction for posts",
+						"anyOf": [{"$ref": "#/components/schemas/DefaultReactionEmojiResponse"}, {"type": "null"}]
+					},
+					"default_sort_order": {
+						"description": "Default sort order for posts",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"default_forum_layout": {
+						"description": "Default layout for forum posts",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"default_tag_setting": {
+						"description": "Default tag search setting",
+						"type": "string",
+						"enum": ["match_some", "match_all"]
+					},
+					"message": {
+						"description": "The first message of the post",
+						"$ref": "#/components/schemas/MessageResponseSchema"
+					}
+				},
+				"required": ["id", "type"],
+				"additionalProperties": false,
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"ThreadMemberResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"description": "The ID of the thread", "$ref": "#/components/schemas/SnowflakeStringType"},
+					"user_id": {"description": "The ID of the user", "$ref": "#/components/schemas/SnowflakeStringType"},
+					"join_timestamp": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the user last joined the thread"
+					},
+					"flags": {"description": "Thread member flags", "$ref": "#/components/schemas/Int32Type"},
+					"muted": {"description": "Whether the user has muted the thread (current user only)", "type": "boolean"},
+					"mute_config": {
+						"description": "The mute configuration for the thread (current user only)",
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"end_time": {"description": "ISO8601 timestamp of when the mute expires", "type": ["string", "null"]},
+									"selected_time_window": {
+										"description": "The selected mute duration in seconds",
+										"$ref": "#/components/schemas/Int32Type"
+									}
+								},
+								"required": ["end_time", "selected_time_window"],
+								"additionalProperties": false
+							},
+							{"type": "null"}
+						]
+					},
+					"member": {
+						"description": "The guild member object for the user",
+						"$ref": "#/components/schemas/GuildMemberResponse"
+					}
+				},
+				"required": ["join_timestamp", "flags"],
+				"additionalProperties": false
+			},
+			"ThreadMemberSettingsRequest": {
+				"type": "object",
+				"properties": {
+					"flags": {
+						"description": "Thread member notification flags (ALL_MESSAGES 1<<1, ONLY_MENTIONS 1<<2, NO_MESSAGES 1<<3)",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"muted": {"description": "Whether the thread is muted", "type": "boolean"},
+					"mute_config": {
+						"description": "Thread mute configuration",
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"end_time": {
+										"description": "When the mute expires",
+										"anyOf": [
+											{
+												"anyOf": [
+													{
+														"type": "string",
+														"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
+													},
+													{"type": "integer", "minimum": 0, "maximum": 8640000000000000}
+												]
+											},
+											{"type": "null"}
+										]
+									},
+									"selected_time_window": {
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991,
+										"description": "Selected mute duration"
+									}
+								},
+								"required": ["selected_time_window"]
+							},
+							{"type": "null"}
+						]
+					}
+				}
+			},
+			"ThreadMemberListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/ThreadMemberResponse"}},
+			"ForumTagRequest": {
+				"type": "object",
+				"properties": {
+					"name": {"description": "The name of the tag (1-50 characters)", "type": "string"},
+					"moderated": {"description": "Whether only moderators can add or remove this tag", "type": "boolean"},
+					"emoji_id": {
+						"description": "The ID of a custom guild emoji",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"emoji_name": {"description": "The unicode character of the emoji", "type": ["string", "null"]}
+				},
+				"required": ["name"],
+				"x-fluxer-experiment": "channel_threads"
+			},
 			"ChannelSlowmodeStateResponse": {
 				"type": "object",
 				"properties": {
@@ -29100,6 +31102,34 @@
 				"additionalProperties": false
 			},
 			"RtcRegionListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/RtcRegionResponse"}},
+			"ThreadPostDataRequest": {
+				"type": "object",
+				"properties": {
+					"thread_ids": {
+						"minItems": 1,
+						"maxItems": 100,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The IDs of the posts to get data for (max 100)"
+					}
+				},
+				"required": ["thread_ids"],
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"ThreadPostDataResponse": {
+				"type": "object",
+				"properties": {
+					"threads": {
+						"type": "object",
+						"propertyNames": {"$ref": "#/components/schemas/SnowflakeStringType"},
+						"additionalProperties": {"$ref": "#/components/schemas/ThreadPostDataEntryResponse"},
+						"description": "A mapping of post IDs to their post data"
+					}
+				},
+				"required": ["threads"],
+				"additionalProperties": false,
+				"x-fluxer-experiment": "channel_threads"
+			},
 			"PermissionOverwriteCreateRequest": {
 				"type": "object",
 				"properties": {
@@ -29117,6 +31147,181 @@
 					}
 				},
 				"required": ["type"]
+			},
+			"StartThreadFromMessageRequest": {
+				"type": "object",
+				"properties": {
+					"name": {"description": "The name of the thread (1-100 characters)", "type": "string"},
+					"auto_archive_duration": {"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"},
+					"rate_limit_per_user": {
+						"maximum": 21600,
+						"description": "Seconds a user has to wait before sending another message (0-21600)",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"location": {"description": "Accepted and ignored", "type": "string", "maxLength": 100}
+				},
+				"required": ["name"]
+			},
+			"ThreadChannelResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for this channel",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"guild_id": {
+						"description": "The ID of the guild this channel belongs to",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"name": {"description": "The name of the channel", "type": ["string", "null"]},
+					"topic": {"description": "The topic of the channel", "type": ["string", "null"]},
+					"url": {
+						"description": "The URL associated with the channel",
+						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
+					},
+					"icon": {"description": "The icon hash of the channel (for group DMs)", "type": ["string", "null"]},
+					"owner_id": {
+						"description": "The ID of the owner of the channel (for group DMs)",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
+					},
+					"type": {"$ref": "#/components/schemas/ChannelType"},
+					"position": {"description": "The sorting position of the channel", "$ref": "#/components/schemas/Int32Type"},
+					"parent_id": {
+						"description": "The ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "The bitrate of the voice channel in bits per second",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "The maximum number of users allowed in the voice channel",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "The maximum active voice connections allowed per user in the voice channel",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"rtc_region": {"description": "The voice region ID for the voice channel", "type": ["string", "null"]},
+					"last_message_id": {
+						"description": "The ID of the last message sent in this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
+					},
+					"last_pin_timestamp": {
+						"description": "The ISO 8601 timestamp of when the last pinned message was pinned",
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						]
+					},
+					"permission_overwrites": {
+						"description": "The permission overwrites for this channel",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ChannelOverwriteResponse"}
+					},
+					"recipients": {
+						"description": "The recipients of the DM channel",
+						"maxItems": 49,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/UserPartialResponse"}
+					},
+					"nsfw": {
+						"description": "Whether the channel is marked as NSFW (effective value, walking channel → category → guild)",
+						"type": "boolean"
+					},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override; null means inherit from parent category and then guild. Categories use this same field as their own override.",
+						"type": ["boolean", "null"]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevel"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"rate_limit_per_user": {
+						"description": "The slowmode rate limit in seconds",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"nicks": {
+						"description": "Custom nicknames for users in this channel (for group DMs)",
+						"type": "object",
+						"propertyNames": {"type": "string"},
+						"additionalProperties": {"type": "string", "minLength": 1, "maxLength": 32}
+					},
+					"flags": {"description": "Channel flags", "$ref": "#/components/schemas/Int32Type"},
+					"thread_metadata": {
+						"description": "Thread-specific fields",
+						"$ref": "#/components/schemas/ThreadMetadataResponse"
+					},
+					"applied_tags": {
+						"description": "IDs of the tags applied to a forum or media post",
+						"maxItems": 5,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
+					},
+					"message_count": {
+						"description": "Messages in the thread, excluding the starter and deleted messages",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"total_message_sent": {
+						"description": "Messages ever sent in the thread, never decremented",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"member_count": {
+						"description": "Approximate number of thread members, capped at 50",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"member_ids_preview": {
+						"description": "IDs of the most recently joined members of a forum or media post, newest first",
+						"maxItems": 8,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
+					},
+					"member": {
+						"description": "The thread member object for the current user",
+						"$ref": "#/components/schemas/ThreadMemberResponse"
+					},
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration for new threads",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode copied onto new threads",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"available_tags": {
+						"description": "Tags that can be applied to posts",
+						"maxItems": 20,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ForumTagResponse"}
+					},
+					"default_reaction_emoji": {
+						"description": "Default reaction for posts",
+						"anyOf": [{"$ref": "#/components/schemas/DefaultReactionEmojiResponse"}, {"type": "null"}]
+					},
+					"default_sort_order": {
+						"description": "Default sort order for posts",
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"default_forum_layout": {
+						"description": "Default layout for forum posts",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"default_tag_setting": {
+						"description": "Default tag search setting",
+						"type": "string",
+						"enum": ["match_some", "match_all"]
+					}
+				},
+				"required": ["id", "type"],
+				"additionalProperties": false
 			},
 			"ReactionUsersPageResponse": {
 				"type": "object",
@@ -29968,7 +32173,12 @@
 								"anyOf": [{"$ref": "#/components/schemas/ChannelNicknameOverrides"}, {"type": "null"}]
 							}
 						}
-					}
+					},
+					{"$ref": "#/components/schemas/ChannelUpdatePublicThreadRequestBody"},
+					{"$ref": "#/components/schemas/ChannelUpdatePrivateThreadRequestBody"},
+					{"$ref": "#/components/schemas/ChannelUpdateThreadParentRequestBody"},
+					{"$ref": "#/components/schemas/ChannelUpdateForumRequestBody"},
+					{"$ref": "#/components/schemas/ChannelUpdateMediaRequestBody"}
 				]
 			},
 			"BulkMessageFetchRequest": {
@@ -31459,6 +33669,279 @@
 				"required": ["id_hash", "masked_ip", "current"],
 				"additionalProperties": false
 			},
+			"ChannelUpdateMediaRequestBody": {
+				"type": "object",
+				"properties": {
+					"topic": {"description": "The guidelines of the channel (1-4096 characters)", "type": ["string", "null"]},
+					"url": {"description": "External URL for link channels", "type": ["string", "null"]},
+					"parent_id": {
+						"description": "ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+					},
+					"permission_overwrites": {
+						"description": "Permission overwrites for roles and members",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of the role or user to overwrite permissions for",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"type": {
+									"description": "The type of overwrite (0 = role, 1 = member)",
+									"x-enumNames": ["ROLE", "MEMBER"],
+									"enum": [0, 1],
+									"type": "integer"
+								},
+								"allow": {
+									"description": "Bitwise value of allowed permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								},
+								"deny": {
+									"description": "Bitwise value of denied permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								}
+							},
+							"required": ["id", "type"]
+						}
+					},
+					"rate_limit_per_user": {
+						"description": "Slowmode delay in seconds (0-21600)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+					},
+					"nsfw": {
+						"description": "Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.",
+						"type": ["boolean", "null"]
+					},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+						"type": ["boolean", "null"]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevelInput"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"icon": {
+						"description": "Base64-encoded icon image for group DM channels",
+						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
+					},
+					"owner_id": {
+						"description": "ID of the new owner for group DM channels",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"nicks": {
+						"description": "Custom nicknames for users in this channel",
+						"$ref": "#/components/schemas/ChannelNicknameOverrides"
+					},
+					"rtc_region": {
+						"description": "Voice region ID for the voice channel (1-64 characters)",
+						"type": ["string", "null"]
+					},
+					"name": {"description": "The name of the channel", "type": ["string", "null"]},
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration in minutes for new threads",
+						"anyOf": [{"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"}, {"type": "null"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode in seconds copied onto new threads (0-21600)",
+						"anyOf": [{"maximum": 21600, "$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"available_tags": {
+						"description": "Tags that can be applied to posts (max 20)",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ForumTagUpdateRequest"}
+					},
+					"default_reaction_emoji": {
+						"description": "Default reaction shown on posts",
+						"anyOf": [{"$ref": "#/components/schemas/DefaultReactionEmojiRequest"}, {"type": "null"}]
+					},
+					"default_sort_order": {"anyOf": [{"$ref": "#/components/schemas/ForumSortOrderSchema"}, {"type": "null"}]},
+					"default_tag_setting": {"anyOf": [{"$ref": "#/components/schemas/ForumTagSettingSchema"}, {"type": "null"}]},
+					"flags": {"description": "Channel flags", "$ref": "#/components/schemas/Int32Type"}
+				},
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"ChannelUpdateForumRequestBody": {
+				"type": "object",
+				"properties": {
+					"topic": {"description": "The guidelines of the channel (1-4096 characters)", "type": ["string", "null"]},
+					"url": {"description": "External URL for link channels", "type": ["string", "null"]},
+					"parent_id": {
+						"description": "ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+					},
+					"permission_overwrites": {
+						"description": "Permission overwrites for roles and members",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of the role or user to overwrite permissions for",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"type": {
+									"description": "The type of overwrite (0 = role, 1 = member)",
+									"x-enumNames": ["ROLE", "MEMBER"],
+									"enum": [0, 1],
+									"type": "integer"
+								},
+								"allow": {
+									"description": "Bitwise value of allowed permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								},
+								"deny": {
+									"description": "Bitwise value of denied permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								}
+							},
+							"required": ["id", "type"]
+						}
+					},
+					"rate_limit_per_user": {
+						"description": "Slowmode delay in seconds (0-21600)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+					},
+					"nsfw": {
+						"description": "Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.",
+						"type": ["boolean", "null"]
+					},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+						"type": ["boolean", "null"]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevelInput"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"icon": {
+						"description": "Base64-encoded icon image for group DM channels",
+						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
+					},
+					"owner_id": {
+						"description": "ID of the new owner for group DM channels",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"nicks": {
+						"description": "Custom nicknames for users in this channel",
+						"$ref": "#/components/schemas/ChannelNicknameOverrides"
+					},
+					"rtc_region": {
+						"description": "Voice region ID for the voice channel (1-64 characters)",
+						"type": ["string", "null"]
+					},
+					"name": {"description": "The name of the channel", "type": ["string", "null"]},
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration in minutes for new threads",
+						"anyOf": [{"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"}, {"type": "null"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode in seconds copied onto new threads (0-21600)",
+						"anyOf": [{"maximum": 21600, "$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"available_tags": {
+						"description": "Tags that can be applied to posts (max 20)",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ForumTagUpdateRequest"}
+					},
+					"default_reaction_emoji": {
+						"description": "Default reaction shown on posts",
+						"anyOf": [{"$ref": "#/components/schemas/DefaultReactionEmojiRequest"}, {"type": "null"}]
+					},
+					"default_sort_order": {"anyOf": [{"$ref": "#/components/schemas/ForumSortOrderSchema"}, {"type": "null"}]},
+					"default_tag_setting": {"anyOf": [{"$ref": "#/components/schemas/ForumTagSettingSchema"}, {"type": "null"}]},
+					"flags": {"description": "Channel flags", "$ref": "#/components/schemas/Int32Type"},
+					"default_forum_layout": {"anyOf": [{"$ref": "#/components/schemas/ForumLayoutSchema"}, {"type": "null"}]}
+				},
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"ChannelUpdateThreadParentRequestBody": {
+				"type": "object",
+				"properties": {
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration in minutes for new threads",
+						"anyOf": [{"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"}, {"type": "null"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode in seconds copied onto new threads (0-21600)",
+						"anyOf": [{"maximum": 21600, "$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					}
+				},
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"ChannelUpdatePrivateThreadRequestBody": {
+				"type": "object",
+				"properties": {
+					"name": {"description": "The name of the thread (1-100 characters)", "type": "string"},
+					"archived": {"description": "Whether the thread is archived", "type": ["boolean", "null"]},
+					"auto_archive_duration": {"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"},
+					"locked": {"description": "Whether only moderators can unarchive the thread", "type": ["boolean", "null"]},
+					"rate_limit_per_user": {
+						"description": "Seconds a user has to wait before sending another message (0-21600)",
+						"anyOf": [{"maximum": 21600, "$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"flags": {"description": "Channel flags", "$ref": "#/components/schemas/Int32Type"},
+					"invitable": {
+						"description": "Whether non-moderators can add other non-moderators",
+						"type": ["boolean", "null"]
+					}
+				},
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"ChannelUpdatePublicThreadRequestBody": {
+				"type": "object",
+				"properties": {
+					"name": {"description": "The name of the thread (1-100 characters)", "type": "string"},
+					"archived": {"description": "Whether the thread is archived", "type": ["boolean", "null"]},
+					"auto_archive_duration": {"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"},
+					"locked": {"description": "Whether only moderators can unarchive the thread", "type": ["boolean", "null"]},
+					"rate_limit_per_user": {
+						"description": "Seconds a user has to wait before sending another message (0-21600)",
+						"anyOf": [{"maximum": 21600, "$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"flags": {"description": "Channel flags", "$ref": "#/components/schemas/Int32Type"},
+					"applied_tags": {
+						"maxItems": 5,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "IDs of the tags applied to the post (max 5)"
+					}
+				},
+				"x-fluxer-experiment": "channel_threads"
+			},
 			"ChannelNicknameOverrides": {
 				"type": "object",
 				"propertyNames": {"type": "string", "description": "User ID"},
@@ -31482,6 +33965,66 @@
 			"UnsignedInt64Type": {
 				"anyOf": [{"type": "string"}, {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}],
 				"format": "int64"
+			},
+			"ThreadAutoArchiveDurationSchema": {
+				"description": "Minutes of inactivity before the thread stops showing in the channel list",
+				"type": "integer",
+				"minimum": 0,
+				"maximum": 2147483647,
+				"format": "int32",
+				"x-enumNames": ["ONE_HOUR", "ONE_DAY", "THREE_DAYS", "ONE_WEEK"],
+				"x-enumDescriptions": ["One hour", "One day", "Three days", "One week"],
+				"enum": [60, 1440, 4320, 10080]
+			},
+			"ForumLayoutSchema": {
+				"description": "The default layout of a forum channel",
+				"type": "integer",
+				"minimum": 0,
+				"maximum": 2147483647,
+				"format": "int32",
+				"x-enumNames": ["DEFAULT", "LIST", "GRID"],
+				"x-enumDescriptions": [
+					"No default layout",
+					"Display posts as a list",
+					"Display posts as a collection of tiles"
+				],
+				"enum": [0, 1, 2]
+			},
+			"ForumSortOrderSchema": {
+				"description": "The default sort order of posts",
+				"type": "integer",
+				"minimum": 0,
+				"maximum": 2147483647,
+				"format": "int32",
+				"x-enumNames": ["LATEST_ACTIVITY", "CREATION_TIME"],
+				"x-enumDescriptions": ["Sort posts by latest activity", "Sort posts by creation time"],
+				"enum": [0, 1]
+			},
+			"DefaultReactionEmojiRequest": {
+				"type": "object",
+				"properties": {
+					"emoji_id": {
+						"description": "The ID of a custom guild emoji",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"emoji_name": {"description": "The unicode character of the emoji", "type": ["string", "null"]}
+				},
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"ForumTagUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"name": {"description": "The name of the tag (1-50 characters)", "type": "string"},
+					"moderated": {"description": "Whether only moderators can add or remove this tag", "type": "boolean"},
+					"emoji_id": {
+						"description": "The ID of a custom guild emoji",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"emoji_name": {"description": "The unicode character of the emoji", "type": ["string", "null"]},
+					"id": {"description": "The ID of an existing tag to keep", "$ref": "#/components/schemas/SnowflakeType"}
+				},
+				"required": ["name"],
+				"x-fluxer-experiment": "channel_threads"
 			},
 			"PresignedAttachmentUploadResponseItem": {
 				"oneOf": [
@@ -31970,7 +34513,7 @@
 			"ChannelType": {
 				"description": "The type of the channel",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4, 5, 998, 999],
+				"enum": [0, 1, 2, 3, 4, 5, 10, 11, 12, 15, 16, 998, 999],
 				"format": "int32",
 				"x-enumNames": [
 					"GUILD_TEXT",
@@ -31979,6 +34522,11 @@
 					"GROUP_DM",
 					"GUILD_CATEGORY",
 					"GUILD_ANNOUNCEMENT",
+					"ANNOUNCEMENT_THREAD",
+					"PUBLIC_THREAD",
+					"PRIVATE_THREAD",
+					"GUILD_FORUM",
+					"GUILD_MEDIA",
 					"GUILD_LINK",
 					"DM_PERSONAL_NOTES"
 				],
@@ -31989,6 +34537,11 @@
 					"A group direct message between users",
 					"A category that contains channels",
 					"A guild channel whose messages can be published to channels that follow it",
+					"A public thread within an announcement channel",
+					"A public thread within a text, forum or media channel",
+					"A private thread within a text channel",
+					"A channel that can only contain threads",
+					"A channel that can only contain threads in a gallery view",
 					"A link channel for external resources",
 					"Personal notes DM channel"
 				]
@@ -32404,7 +34957,7 @@
 												"$ref": "#/components/schemas/SnowflakeStringType"
 											},
 											"message_id": {
-												"description": "The ID of the referenced message, absent on a channel follow system message",
+												"description": "The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread",
 												"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 											},
 											"guild_id": {
@@ -32455,6 +35008,10 @@
 									},
 									{"type": "null"}
 								]
+							},
+							"thread": {
+								"description": "The thread started from this message, when the viewer can see threads",
+								"$ref": "#/components/schemas/ThreadChannelResponse"
 							}
 						},
 						"required": [
@@ -32711,7 +35268,7 @@
 			"MessageType": {
 				"description": "The type of message",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 12, 19],
+				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 12, 18, 19, 21],
 				"format": "int32",
 				"x-enumNames": [
 					"DEFAULT",
@@ -32723,7 +35280,9 @@
 					"CHANNEL_PINNED_MESSAGE",
 					"USER_JOIN",
 					"CHANNEL_FOLLOW_ADD",
-					"REPLY"
+					"THREAD_CREATED",
+					"REPLY",
+					"THREAD_STARTER_MESSAGE"
 				],
 				"x-enumDescriptions": [
 					"A regular message",
@@ -32735,7 +35294,9 @@
 					"A system message indicating a message was pinned",
 					"A system message indicating a user joined",
 					"System message posted when a channel starts following an announcement channel",
-					"A reply message"
+					"A system message indicating a thread was created",
+					"A reply message",
+					"The first message of a thread, pointing at its source"
 				]
 			},
 			"MessageEmbedChildResponse": {
@@ -32970,12 +35531,180 @@
 				],
 				"additionalProperties": false
 			},
+			"DefaultReactionEmojiResponse": {
+				"type": "object",
+				"properties": {
+					"emoji_id": {
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}],
+						"description": "The ID of a custom guild emoji"
+					},
+					"emoji_name": {"description": "The unicode character of the emoji", "type": ["string", "null"]}
+				},
+				"required": ["emoji_id", "emoji_name"],
+				"additionalProperties": false
+			},
+			"ForumTagResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"description": "The ID of the tag", "$ref": "#/components/schemas/SnowflakeStringType"},
+					"name": {"type": "string", "maxLength": 50, "description": "The name of the tag"},
+					"moderated": {"type": "boolean", "description": "Whether only moderators can add or remove this tag"},
+					"emoji_id": {
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}],
+						"description": "The ID of a custom guild emoji"
+					},
+					"emoji_name": {"description": "The unicode character of the emoji", "type": ["string", "null"]}
+				},
+				"required": ["id", "name", "moderated", "emoji_id", "emoji_name"],
+				"additionalProperties": false
+			},
+			"ThreadMetadataResponse": {
+				"type": "object",
+				"properties": {
+					"archived": {"type": "boolean", "description": "Whether the thread is archived"},
+					"auto_archive_duration": {
+						"description": "Minutes of inactivity before the thread stops showing in the channel list",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"archive_timestamp": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the archive status of the thread last changed"
+					},
+					"locked": {"type": "boolean", "description": "Whether only moderators can interact with the thread"},
+					"invitable": {
+						"description": "Whether non-moderators can add other non-moderators (private threads)",
+						"type": "boolean"
+					},
+					"create_timestamp": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the thread was created"
+					}
+				},
+				"required": ["archived", "auto_archive_duration", "archive_timestamp", "locked", "create_timestamp"],
+				"additionalProperties": false
+			},
+			"ContentWarningLevel": {
+				"description": "The content warning level for a guild, category, or channel",
+				"type": "integer",
+				"enum": [0, 1],
+				"format": "int32",
+				"x-enumNames": ["INHERIT", "CONTENT_WARNING"],
+				"x-enumDescriptions": [
+					"No level set on this scope; channels and categories inherit from parent",
+					"Show a content warning before entering"
+				]
+			},
+			"ChannelOverwriteResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier for the role or user this overwrite applies to",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"type": {"$ref": "#/components/schemas/ChannelOverwriteType"},
+					"allow": {
+						"description": "The bitwise value of allowed permissions",
+						"$ref": "#/components/schemas/Permissions"
+					},
+					"deny": {"description": "The bitwise value of denied permissions", "$ref": "#/components/schemas/Permissions"}
+				},
+				"required": ["id", "type", "allow", "deny"],
+				"additionalProperties": false
+			},
+			"Permissions": {
+				"type": "string",
+				"pattern": "^\\d+$",
+				"description": "Permission bitfield as string",
+				"format": "int64",
+				"x-bitflagValues": [
+					{"name": "CREATE_INSTANT_INVITE", "value": "1", "description": "Allows creation of instant invites"},
+					{"name": "KICK_MEMBERS", "value": "2", "description": "Allows kicking members from the guild"},
+					{"name": "BAN_MEMBERS", "value": "4", "description": "Allows banning members from the guild"},
+					{
+						"name": "ADMINISTRATOR",
+						"value": "8",
+						"description": "Grants all permissions and bypasses channel permission overwrites"
+					},
+					{
+						"name": "MANAGE_CHANNELS",
+						"value": "16",
+						"description": "Allows management, editing, and deletion of channels"
+					},
+					{"name": "MANAGE_GUILD", "value": "32", "description": "Allows management and editing of the guild"},
+					{"name": "ADD_REACTIONS", "value": "64", "description": "Allows adding reactions to messages"},
+					{"name": "VIEW_AUDIT_LOG", "value": "128", "description": "Allows viewing of the audit log"},
+					{
+						"name": "PRIORITY_SPEAKER",
+						"value": "256",
+						"description": "Allows using priority speaker in a voice channel"
+					},
+					{"name": "STREAM", "value": "512", "description": "Allows the user to go live"},
+					{"name": "VIEW_CHANNEL", "value": "1024", "description": "Allows viewing a channel"},
+					{"name": "SEND_MESSAGES", "value": "2048", "description": "Allows sending messages in a channel"},
+					{"name": "SEND_TTS_MESSAGES", "value": "4096", "description": "Allows sending text-to-speech messages"},
+					{"name": "MANAGE_MESSAGES", "value": "8192", "description": "Allows for deleting and pinning messages"},
+					{"name": "EMBED_LINKS", "value": "16384", "description": "Links sent will have an embed automatically"},
+					{"name": "ATTACH_FILES", "value": "32768", "description": "Allows uploading files"},
+					{"name": "READ_MESSAGE_HISTORY", "value": "65536", "description": "Allows reading message history"},
+					{"name": "MENTION_EVERYONE", "value": "131072", "description": "Allows using @everyone and @here mentions"},
+					{"name": "USE_EXTERNAL_EMOJIS", "value": "262144", "description": "Allows using emojis from other guilds"},
+					{"name": "CONNECT", "value": "1048576", "description": "Allows connecting to a voice channel"},
+					{"name": "SPEAK", "value": "2097152", "description": "Allows speaking in a voice channel"},
+					{"name": "MUTE_MEMBERS", "value": "4194304", "description": "Allows muting members in voice channels"},
+					{"name": "DEAFEN_MEMBERS", "value": "8388608", "description": "Allows deafening members in voice channels"},
+					{"name": "MOVE_MEMBERS", "value": "16777216", "description": "Allows moving members between voice channels"},
+					{"name": "USE_VAD", "value": "33554432", "description": "Allows using voice activity detection"},
+					{"name": "CHANGE_NICKNAME", "value": "67108864", "description": "Allows changing own nickname"},
+					{"name": "MANAGE_NICKNAMES", "value": "134217728", "description": "Allows changing other members nicknames"},
+					{"name": "MANAGE_ROLES", "value": "268435456", "description": "Allows management and editing of roles"},
+					{"name": "MANAGE_WEBHOOKS", "value": "536870912", "description": "Allows management and editing of webhooks"},
+					{
+						"name": "MANAGE_EXPRESSIONS",
+						"value": "1073741824",
+						"description": "Allows management of guild expressions"
+					},
+					{
+						"name": "USE_EXTERNAL_STICKERS",
+						"value": "137438953472",
+						"description": "Allows using stickers from other guilds"
+					},
+					{"name": "MODERATE_MEMBERS", "value": "1099511627776", "description": "Allows timing out users"},
+					{"name": "CREATE_EXPRESSIONS", "value": "8796093022208", "description": "Allows creating guild expressions"},
+					{"name": "PIN_MESSAGES", "value": "2251799813685248", "description": "Allows pinning messages"},
+					{"name": "BYPASS_SLOWMODE", "value": "4503599627370496", "description": "Allows bypassing slowmode"},
+					{"name": "UPDATE_RTC_REGION", "value": "9007199254740992", "description": "Allows updating the voice region"},
+					{
+						"name": "VIEW_CHANNEL_MEMBERS",
+						"value": "18014398509481984",
+						"description": "Allows viewing the member list in a channel"
+					}
+				]
+			},
 			"ChannelOverwriteType": {
 				"description": "The type of entity the overwrite applies to",
 				"x-enumNames": ["ROLE", "MEMBER"],
 				"x-enumDescriptions": ["Overwrite applies to a role", "Overwrite applies to a member"],
 				"enum": [0, 1],
 				"type": "integer"
+			},
+			"ThreadPostDataEntryResponse": {
+				"type": "object",
+				"properties": {
+					"owner": {
+						"anyOf": [{"$ref": "#/components/schemas/GuildMemberResponse"}, {"type": "null"}],
+						"description": "The guild member who created the post"
+					},
+					"first_message": {
+						"anyOf": [{"$ref": "#/components/schemas/MessageResponseSchema"}, {"type": "null"}],
+						"description": "The first message of the post"
+					}
+				},
+				"required": ["owner", "first_message"],
+				"additionalProperties": false
 			},
 			"RtcRegionResponse": {
 				"type": "object",
@@ -32986,6 +35715,160 @@
 				},
 				"required": ["id", "name", "emoji"],
 				"additionalProperties": false
+			},
+			"StartForumThreadRequest": {
+				"type": "object",
+				"properties": {
+					"name": {"description": "The name of the post (1-100 characters)", "type": "string"},
+					"type": {
+						"description": "The type of thread, which is always a public thread in a forum",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"auto_archive_duration": {"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"},
+					"rate_limit_per_user": {
+						"description": "Seconds a user has to wait before sending another message (0-21600)",
+						"maximum": 21600,
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"applied_tags": {
+						"maxItems": 5,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "IDs of the tags applied to the post (max 5)"
+					},
+					"message": {
+						"properties": {
+							"content": {"anyOf": [{"$ref": "#/components/schemas/MessageContentRequest"}, {"type": "null"}]},
+							"embeds": {
+								"type": "array",
+								"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
+								"description": "Array of embed objects to include in the message"
+							},
+							"attachments": {
+								"type": "array",
+								"items": {
+									"anyOf": [
+										{"$ref": "#/components/schemas/ClientUploadedAttachmentRequest"},
+										{"$ref": "#/components/schemas/ClientAttachmentRequest"}
+									]
+								},
+								"description": "Array of attachment objects"
+							},
+							"allowed_mentions": {
+								"description": "Controls which mentions trigger notifications",
+								"anyOf": [{"$ref": "#/components/schemas/AllowedMentionsRequest"}, {"type": "null"}]
+							},
+							"flags": {
+								"default": 0,
+								"$ref": "#/components/schemas/MessageFlags",
+								"description": "Message flags bitfield"
+							},
+							"sticker_ids": {
+								"description": "Array of sticker IDs to include (max 3)",
+								"anyOf": [
+									{"maxItems": 3, "type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}},
+									{"type": "null"}
+								]
+							}
+						},
+						"description": "The first message of the post",
+						"$ref": "#/components/schemas/ForumThreadMessageRequest"
+					},
+					"location": {"description": "Accepted and ignored", "type": "string", "maxLength": 100}
+				},
+				"required": ["name", "message"],
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"StartThreadRequest": {
+				"type": "object",
+				"properties": {
+					"name": {"description": "The name of the thread (1-100 characters)", "type": "string"},
+					"type": {"$ref": "#/components/schemas/ThreadChannelType"},
+					"auto_archive_duration": {"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"},
+					"rate_limit_per_user": {
+						"maximum": 21600,
+						"description": "Seconds a user has to wait before sending another message (0-21600)",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"invitable": {
+						"description": "Whether non-moderators can add other non-moderators (private threads)",
+						"type": "boolean"
+					},
+					"location": {"description": "Accepted and ignored", "type": "string", "maxLength": 100}
+				},
+				"required": ["name", "type"]
+			},
+			"ThreadChannelType": {
+				"description": "The type of thread to create",
+				"type": "integer",
+				"minimum": 0,
+				"maximum": 2147483647,
+				"format": "int32",
+				"x-enumNames": ["ANNOUNCEMENT_THREAD", "PUBLIC_THREAD", "PRIVATE_THREAD"],
+				"x-enumDescriptions": ["A thread in an announcement channel", "A public thread", "A private thread"],
+				"enum": [10, 11, 12]
+			},
+			"ForumThreadMessageRequest": {
+				"type": "object",
+				"properties": {
+					"content": {"anyOf": [{"$ref": "#/components/schemas/MessageContentRequest"}, {"type": "null"}]},
+					"embeds": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/RichEmbedRequest"},
+						"description": "Array of embed objects to include in the message"
+					},
+					"attachments": {
+						"type": "array",
+						"items": {
+							"anyOf": [
+								{"$ref": "#/components/schemas/ClientUploadedAttachmentRequest"},
+								{"$ref": "#/components/schemas/ClientAttachmentRequest"}
+							]
+						},
+						"description": "Array of attachment objects"
+					},
+					"allowed_mentions": {
+						"description": "Controls which mentions trigger notifications",
+						"anyOf": [{"$ref": "#/components/schemas/AllowedMentionsRequest"}, {"type": "null"}]
+					},
+					"flags": {"default": 0, "$ref": "#/components/schemas/MessageFlags", "description": "Message flags bitfield"},
+					"sticker_ids": {
+						"description": "Array of sticker IDs to include (max 3)",
+						"anyOf": [
+							{"maxItems": 3, "type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}},
+							{"type": "null"}
+						]
+					}
+				},
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"ThreadSearchResponse": {
+				"type": "object",
+				"properties": {
+					"threads": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ThreadChannelResponse"},
+						"description": "The threads that match the search"
+					},
+					"members": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ThreadMemberResponse"},
+						"description": "A thread member object for each returned thread the user joined"
+					},
+					"has_more": {"type": "boolean", "description": "Whether more threads could be returned by a later request"},
+					"total_results": {
+						"description": "The total number of threads that match the search",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"first_messages": {
+						"description": "The first message of each returned post, in forum and media channels only",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/MessageResponseSchema"}
+					}
+				},
+				"required": ["threads", "members", "has_more", "total_results"],
+				"additionalProperties": false,
+				"x-fluxer-experiment": "channel_threads"
 			},
 			"WebhookType": {
 				"description": "The type of webhook",
@@ -33009,6 +35892,15 @@
 				"type": "object",
 				"properties": {"enabled": {"type": "boolean"}},
 				"required": ["enabled"],
+				"additionalProperties": false
+			},
+			"ChannelThreadsAssignmentResponse": {
+				"type": "object",
+				"properties": {
+					"active": {"type": "boolean", "const": true},
+					"config_version": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+				},
+				"required": ["active", "config_version"],
 				"additionalProperties": false
 			},
 			"DomainMigrationAssignmentResponse": {
@@ -33371,7 +36263,7 @@
 				"type": "integer",
 				"enum": [
 					1, 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 40, 41, 42, 50, 51, 52, 60, 61, 62,
-					90, 91, 92, 72, 73, 74, 75
+					90, 91, 92, 72, 73, 74, 75, 110, 111, 112
 				],
 				"format": "int32",
 				"x-enumNames": [
@@ -33409,7 +36301,10 @@
 					"MESSAGE_DELETE",
 					"MESSAGE_BULK_DELETE",
 					"MESSAGE_PIN",
-					"MESSAGE_UNPIN"
+					"MESSAGE_UNPIN",
+					"THREAD_CREATE",
+					"THREAD_UPDATE",
+					"THREAD_DELETE"
 				],
 				"x-enumDescriptions": [
 					"Guild settings were updated",
@@ -33446,7 +36341,10 @@
 					"Message was deleted",
 					"Messages were bulk deleted",
 					"Message was pinned",
-					"Message was unpinned"
+					"Message was unpinned",
+					"Thread was created",
+					"Thread was updated",
+					"Thread was deleted"
 				]
 			},
 			"GuildBanResponse": {
@@ -33478,6 +36376,201 @@
 				},
 				"required": ["user", "moderator_id", "banned_at"],
 				"additionalProperties": false
+			},
+			"GuildMediaChannelCreateRequest": {
+				"type": "object",
+				"properties": {
+					"topic": {"description": "The guidelines of the channel (1-4096 characters)", "type": ["string", "null"]},
+					"url": {"description": "External URL for link channels", "type": ["string", "null"]},
+					"parent_id": {
+						"description": "ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+					},
+					"permission_overwrites": {
+						"description": "Permission overwrites for roles and members",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of the role or user to overwrite permissions for",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"type": {
+									"description": "The type of overwrite (0 = role, 1 = member)",
+									"x-enumNames": ["ROLE", "MEMBER"],
+									"enum": [0, 1],
+									"type": "integer"
+								},
+								"allow": {
+									"description": "Bitwise value of allowed permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								},
+								"deny": {
+									"description": "Bitwise value of denied permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								}
+							},
+							"required": ["id", "type"]
+						}
+					},
+					"rate_limit_per_user": {
+						"description": "Slowmode delay in seconds (0-21600)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+					},
+					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+						"type": ["boolean", "null"]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevelInput"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"type": {
+						"type": "integer",
+						"x-enumNames": ["GUILD_MEDIA"],
+						"x-enumDescriptions": ["Channel type (media channel)"],
+						"enum": [16]
+					},
+					"name": {"description": "The name of the channel", "type": "string"},
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration in minutes for new threads",
+						"anyOf": [{"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"}, {"type": "null"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode in seconds copied onto new threads (0-21600)",
+						"anyOf": [{"maximum": 21600, "$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"available_tags": {
+						"description": "Tags that can be applied to posts (max 20)",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ForumTagUpdateRequest"}
+					},
+					"default_reaction_emoji": {
+						"description": "Default reaction shown on posts",
+						"anyOf": [{"$ref": "#/components/schemas/DefaultReactionEmojiRequest"}, {"type": "null"}]
+					},
+					"default_sort_order": {"anyOf": [{"$ref": "#/components/schemas/ForumSortOrderSchema"}, {"type": "null"}]},
+					"default_tag_setting": {"anyOf": [{"$ref": "#/components/schemas/ForumTagSettingSchema"}, {"type": "null"}]},
+					"flags": {"description": "Channel flags", "$ref": "#/components/schemas/Int32Type"}
+				},
+				"required": ["type", "name"],
+				"x-fluxer-experiment": "channel_threads"
+			},
+			"GuildForumChannelCreateRequest": {
+				"type": "object",
+				"properties": {
+					"topic": {"description": "The guidelines of the channel (1-4096 characters)", "type": ["string", "null"]},
+					"url": {"description": "External URL for link channels", "type": ["string", "null"]},
+					"parent_id": {
+						"description": "ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+					},
+					"permission_overwrites": {
+						"description": "Permission overwrites for roles and members",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of the role or user to overwrite permissions for",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"type": {
+									"description": "The type of overwrite (0 = role, 1 = member)",
+									"x-enumNames": ["ROLE", "MEMBER"],
+									"enum": [0, 1],
+									"type": "integer"
+								},
+								"allow": {
+									"description": "Bitwise value of allowed permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								},
+								"deny": {
+									"description": "Bitwise value of denied permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								}
+							},
+							"required": ["id", "type"]
+						}
+					},
+					"rate_limit_per_user": {
+						"description": "Slowmode delay in seconds (0-21600)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+					},
+					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+						"type": ["boolean", "null"]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevelInput"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"type": {
+						"type": "integer",
+						"x-enumNames": ["GUILD_FORUM"],
+						"x-enumDescriptions": ["Channel type (forum channel)"],
+						"enum": [15]
+					},
+					"name": {"description": "The name of the channel", "type": "string"},
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration in minutes for new threads",
+						"anyOf": [{"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"}, {"type": "null"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode in seconds copied onto new threads (0-21600)",
+						"anyOf": [{"maximum": 21600, "$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					},
+					"available_tags": {
+						"description": "Tags that can be applied to posts (max 20)",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ForumTagUpdateRequest"}
+					},
+					"default_reaction_emoji": {
+						"description": "Default reaction shown on posts",
+						"anyOf": [{"$ref": "#/components/schemas/DefaultReactionEmojiRequest"}, {"type": "null"}]
+					},
+					"default_sort_order": {"anyOf": [{"$ref": "#/components/schemas/ForumSortOrderSchema"}, {"type": "null"}]},
+					"default_tag_setting": {"anyOf": [{"$ref": "#/components/schemas/ForumTagSettingSchema"}, {"type": "null"}]},
+					"flags": {"description": "Channel flags", "$ref": "#/components/schemas/Int32Type"},
+					"default_forum_layout": {"anyOf": [{"$ref": "#/components/schemas/ForumLayoutSchema"}, {"type": "null"}]}
+				},
+				"required": ["type", "name"],
+				"x-fluxer-experiment": "channel_threads"
 			},
 			"GuildLinkChannelCreateRequest": {
 				"type": "object",
@@ -33779,7 +36872,15 @@
 						"x-enumDescriptions": ["Channel type (announcement channel)"],
 						"enum": [5]
 					},
-					"name": {"description": "The name of the channel", "type": "string"}
+					"name": {"description": "The name of the channel", "type": "string"},
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration in minutes for new threads",
+						"anyOf": [{"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"}, {"type": "null"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode in seconds copied onto new threads (0-21600)",
+						"anyOf": [{"maximum": 21600, "$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					}
 				},
 				"required": ["type", "name"]
 			},
@@ -33855,7 +36956,15 @@
 						"x-enumDescriptions": ["Channel type (text channel)"],
 						"enum": [0]
 					},
-					"name": {"description": "The name of the channel", "type": "string"}
+					"name": {"description": "The name of the channel", "type": "string"},
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration in minutes for new threads",
+						"anyOf": [{"$ref": "#/components/schemas/ThreadAutoArchiveDurationSchema"}, {"type": "null"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode in seconds copied onto new threads (0-21600)",
+						"anyOf": [{"maximum": 21600, "$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
+					}
 				},
 				"required": ["type", "name"]
 			},
@@ -33988,75 +37097,6 @@
 					{"name": "BANNER_UNSET", "value": "2", "description": "Guild member banner is unset"}
 				]
 			},
-			"Permissions": {
-				"type": "string",
-				"pattern": "^\\d+$",
-				"description": "Permission bitfield as string",
-				"format": "int64",
-				"x-bitflagValues": [
-					{"name": "CREATE_INSTANT_INVITE", "value": "1", "description": "Allows creation of instant invites"},
-					{"name": "KICK_MEMBERS", "value": "2", "description": "Allows kicking members from the guild"},
-					{"name": "BAN_MEMBERS", "value": "4", "description": "Allows banning members from the guild"},
-					{
-						"name": "ADMINISTRATOR",
-						"value": "8",
-						"description": "Grants all permissions and bypasses channel permission overwrites"
-					},
-					{
-						"name": "MANAGE_CHANNELS",
-						"value": "16",
-						"description": "Allows management, editing, and deletion of channels"
-					},
-					{"name": "MANAGE_GUILD", "value": "32", "description": "Allows management and editing of the guild"},
-					{"name": "ADD_REACTIONS", "value": "64", "description": "Allows adding reactions to messages"},
-					{"name": "VIEW_AUDIT_LOG", "value": "128", "description": "Allows viewing of the audit log"},
-					{
-						"name": "PRIORITY_SPEAKER",
-						"value": "256",
-						"description": "Allows using priority speaker in a voice channel"
-					},
-					{"name": "STREAM", "value": "512", "description": "Allows the user to go live"},
-					{"name": "VIEW_CHANNEL", "value": "1024", "description": "Allows viewing a channel"},
-					{"name": "SEND_MESSAGES", "value": "2048", "description": "Allows sending messages in a channel"},
-					{"name": "SEND_TTS_MESSAGES", "value": "4096", "description": "Allows sending text-to-speech messages"},
-					{"name": "MANAGE_MESSAGES", "value": "8192", "description": "Allows for deleting and pinning messages"},
-					{"name": "EMBED_LINKS", "value": "16384", "description": "Links sent will have an embed automatically"},
-					{"name": "ATTACH_FILES", "value": "32768", "description": "Allows uploading files"},
-					{"name": "READ_MESSAGE_HISTORY", "value": "65536", "description": "Allows reading message history"},
-					{"name": "MENTION_EVERYONE", "value": "131072", "description": "Allows using @everyone and @here mentions"},
-					{"name": "USE_EXTERNAL_EMOJIS", "value": "262144", "description": "Allows using emojis from other guilds"},
-					{"name": "CONNECT", "value": "1048576", "description": "Allows connecting to a voice channel"},
-					{"name": "SPEAK", "value": "2097152", "description": "Allows speaking in a voice channel"},
-					{"name": "MUTE_MEMBERS", "value": "4194304", "description": "Allows muting members in voice channels"},
-					{"name": "DEAFEN_MEMBERS", "value": "8388608", "description": "Allows deafening members in voice channels"},
-					{"name": "MOVE_MEMBERS", "value": "16777216", "description": "Allows moving members between voice channels"},
-					{"name": "USE_VAD", "value": "33554432", "description": "Allows using voice activity detection"},
-					{"name": "CHANGE_NICKNAME", "value": "67108864", "description": "Allows changing own nickname"},
-					{"name": "MANAGE_NICKNAMES", "value": "134217728", "description": "Allows changing other members nicknames"},
-					{"name": "MANAGE_ROLES", "value": "268435456", "description": "Allows management and editing of roles"},
-					{"name": "MANAGE_WEBHOOKS", "value": "536870912", "description": "Allows management and editing of webhooks"},
-					{
-						"name": "MANAGE_EXPRESSIONS",
-						"value": "1073741824",
-						"description": "Allows management of guild expressions"
-					},
-					{
-						"name": "USE_EXTERNAL_STICKERS",
-						"value": "137438953472",
-						"description": "Allows using stickers from other guilds"
-					},
-					{"name": "MODERATE_MEMBERS", "value": "1099511627776", "description": "Allows timing out users"},
-					{"name": "CREATE_EXPRESSIONS", "value": "8796093022208", "description": "Allows creating guild expressions"},
-					{"name": "PIN_MESSAGES", "value": "2251799813685248", "description": "Allows pinning messages"},
-					{"name": "BYPASS_SLOWMODE", "value": "4503599627370496", "description": "Allows bypassing slowmode"},
-					{"name": "UPDATE_RTC_REGION", "value": "9007199254740992", "description": "Allows updating the voice region"},
-					{
-						"name": "VIEW_CHANNEL_MEMBERS",
-						"value": "18014398509481984",
-						"description": "Allows viewing the member list in a channel"
-					}
-				]
-			},
 			"GuildStickerWithUserResponse": {
 				"type": "object",
 				"properties": {
@@ -34119,17 +37159,6 @@
 					"Media content will not be scanned",
 					"Media content from members without roles will be scanned",
 					"Media content from all members will be scanned"
-				]
-			},
-			"ContentWarningLevel": {
-				"description": "The content warning level for a guild, category, or channel",
-				"type": "integer",
-				"enum": [0, 1],
-				"format": "int32",
-				"x-enumNames": ["INHERIT", "CONTENT_WARNING"],
-				"x-enumDescriptions": [
-					"No level set on this scope; channels and categories inherit from parent",
-					"Show a content warning before entering"
 				]
 			},
 			"GuildMFALevel": {
@@ -34887,6 +37916,10 @@
 					"version": {
 						"description": "Read-state version for ordering updates as a decimal uint64",
 						"$ref": "#/components/schemas/UnsignedInt64StringType"
+					},
+					"flags": {
+						"description": "Server-stamped read state flags, present only on thread and forum read states",
+						"$ref": "#/components/schemas/Int32Type"
 					}
 				},
 				"required": ["id", "mention_count", "last_message_id", "last_pin_timestamp"],
@@ -35483,7 +38516,7 @@
 													"$ref": "#/components/schemas/SnowflakeStringType"
 												},
 												"message_id": {
-													"description": "The ID of the referenced message, absent on a channel follow system message",
+													"description": "The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread",
 													"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 												},
 												"guild_id": {
@@ -35537,6 +38570,10 @@
 										},
 										{"type": "null"}
 									]
+								},
+								"thread": {
+									"description": "The thread started from this message, when the viewer can see threads",
+									"$ref": "#/components/schemas/ThreadChannelResponse"
 								}
 							},
 							"required": [
@@ -35575,6 +38612,16 @@
 						"description": "Opaque cursor for fetching the next page of results",
 						"type": "array",
 						"items": {"type": "string"}
+					},
+					"threads": {
+						"description": "The threads that contain the returned messages, when the viewer can see threads",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ThreadChannelResponse"}
+					},
+					"members": {
+						"description": "A thread member object for each returned thread the current user has joined",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ThreadMemberResponse"}
 					}
 				},
 				"required": ["messages", "channels", "total", "hits_per_page", "page"],
@@ -35784,23 +38831,6 @@
 						"description": "Allow members from mutual guilds to see this profile field"
 					}
 				]
-			},
-			"ChannelOverwriteResponse": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"description": "The unique identifier for the role or user this overwrite applies to",
-						"$ref": "#/components/schemas/SnowflakeStringType"
-					},
-					"type": {"$ref": "#/components/schemas/ChannelOverwriteType"},
-					"allow": {
-						"description": "The bitwise value of allowed permissions",
-						"$ref": "#/components/schemas/Permissions"
-					},
-					"deny": {"description": "The bitwise value of denied permissions", "$ref": "#/components/schemas/Permissions"}
-				},
-				"required": ["id", "type", "allow", "deny"],
-				"additionalProperties": false
 			},
 			"ConnectionVisibilityFlags": {
 				"type": "integer",

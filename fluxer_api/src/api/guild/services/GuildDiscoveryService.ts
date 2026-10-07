@@ -4,6 +4,7 @@ import {type ChannelID, type GuildID, guildIdToRoleId, type UserID} from '@app/a
 import {Config} from '@app/api/Config';
 import type {IChannelDataRepository} from '@app/api/channel/repositories/IChannelDataRepository';
 import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
+import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
 import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
@@ -22,6 +23,7 @@ import {
 	normalizeDiscoveryTag,
 } from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures, getEffectiveGuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
+import {THREAD_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {DiscoveryAlreadyAppliedError} from '@fluxer/errors/src/domains/discovery/DiscoveryAlreadyAppliedError';
 import {DiscoveryApplicationAlreadyReviewedError} from '@fluxer/errors/src/domains/discovery/DiscoveryApplicationAlreadyReviewedError';
@@ -85,7 +87,11 @@ export abstract class IGuildDiscoveryService {
 
 	abstract listByStatus(params: {status: string}): Promise<Array<GuildDiscoveryRow>>;
 
-	abstract getChannelPreview(guildId: GuildID, channelId: ChannelID): Promise<DiscoveryChannelPreview>;
+	abstract getChannelPreview(
+		guildId: GuildID,
+		channelId: ChannelID,
+		viewer: ThreadViewer,
+	): Promise<DiscoveryChannelPreview>;
 
 	abstract searchDiscoverable(params: {
 		query?: string;
@@ -393,7 +399,11 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		return this.discoveryRepository.listFullByStatus(params.status);
 	}
 
-	async getChannelPreview(guildId: GuildID, channelId: ChannelID): Promise<DiscoveryChannelPreview> {
+	async getChannelPreview(
+		guildId: GuildID,
+		channelId: ChannelID,
+		viewer: ThreadViewer,
+	): Promise<DiscoveryChannelPreview> {
 		const [status, guild, channel, everyoneRole] = await Promise.all([
 			this.discoveryRepository.findByGuildId(guildId),
 			this.guildRepository.findUnique(guildId),
@@ -406,7 +416,9 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			guild.features.has(GuildFeatures.INVITES_DISABLED) ||
 			!channel ||
 			channel.guildId !== guildId ||
-			!everyoneRole
+			!everyoneRole ||
+			THREAD_CHANNEL_TYPES.has(channel.type) ||
+			(THREAD_ONLY_CHANNEL_TYPES.has(channel.type) && !viewerActive(viewer, guildId))
 		) {
 			throw new DiscoveryNotDiscoverableError();
 		}

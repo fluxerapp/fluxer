@@ -10,6 +10,7 @@ import {
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {normalizeMessageRequestPayload} from '@app/api/channel/services/message/MessageRequestCompatibility';
+import {SYSTEM_THREAD_VIEWER, viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
@@ -159,6 +160,7 @@ export async function parseMultipartMessageData(
 			.get('channelService')
 			.attachments.uploadFormDataAttachments({
 				userId: user.id,
+				viewer: options?.actor === 'webhook' ? SYSTEM_THREAD_VIEWER : viewerFromCtx(ctx),
 				channelId,
 				clientIp,
 				files: filesWithIndices,

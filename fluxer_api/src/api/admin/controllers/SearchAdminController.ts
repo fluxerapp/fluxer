@@ -26,7 +26,7 @@ export function SearchAdminController(app: HonoApp) {
 			operationId: 'create_admin_search_index_refresh',
 			summary: 'Refresh a search index',
 			description:
-				'Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages and guild_members indexes are rebuilt one guild at a time and require guild_id, and favorite_memes requires user_id. Requires GUILD_LOOKUP permission.',
+				'Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages, guild_members and threads indexes are rebuilt one guild at a time and require guild_id, and favorite_memes requires user_id. Requires GUILD_LOOKUP permission.',
 			responseSchema: RefreshSearchIndexResponse,
 			statusCode: 200,
 			security: 'adminApiKey',

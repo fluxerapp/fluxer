@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ChannelThreadsAssignmentResponse} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {
 	DomainMigrationAssignmentResponse,
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
@@ -46,6 +47,7 @@ export type ExperimentDeliveryConfigResponse = z.infer<typeof ExperimentDelivery
 
 const ExperimentAssignmentsSchema = z.object({
 	domain_migration: DomainMigrationAssignmentResponse.optional(),
+	channel_threads: ChannelThreadsAssignmentResponse.optional(),
 	plutonium_page: PlutoniumPageAssignmentResponse.optional(),
 });
 
@@ -67,6 +69,12 @@ export function readDomainMigrationAssignment(
 	response: ExperimentAssignmentsResponse,
 ): DomainMigrationAssignmentResponse {
 	return response.assignments.domain_migration ?? INERT_DOMAIN_MIGRATION_ASSIGNMENT;
+}
+
+export function readChannelThreadsAssignment(
+	response: ExperimentAssignmentsResponse,
+): ChannelThreadsAssignmentResponse | null {
+	return response.assignments.channel_threads ?? null;
 }
 
 export function readPlutoniumPageAssignment(response: ExperimentAssignmentsResponse): PlutoniumPageAssignmentResponse {

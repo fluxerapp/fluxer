@@ -390,7 +390,10 @@ const mapMuteConfigToResponse = (
 			}
 		: null;
 
-function mapChannelOverrideToResponse(override: GuildChannelOverride): {
+function mapChannelOverrideToResponse(
+	override: GuildChannelOverride,
+	withFlags: boolean,
+): {
 	collapsed: boolean;
 	message_notifications: ChannelMessageNotifications;
 	muted: boolean;
@@ -399,6 +402,7 @@ function mapChannelOverrideToResponse(override: GuildChannelOverride): {
 		selected_time_window: number;
 	} | null;
 	unread_badges: ChannelMessageNotifications | null;
+	flags?: number;
 } {
 	return {
 		collapsed: override.collapsed,
@@ -406,10 +410,23 @@ function mapChannelOverrideToResponse(override: GuildChannelOverride): {
 		muted: override.muted,
 		mute_config: mapMuteConfigToResponse(override.muteConfig),
 		unread_badges: override.unreadBadges ?? null,
+		...(withFlags && override.flags ? {flags: override.flags} : {}),
 	};
 }
 
-export function mapUserGuildSettingsToResponse(settings: UserGuildSettings): UserGuildSettingsResponse {
+export interface UserGuildSettingsThreadView {
+	flags: boolean;
+	hiddenChannelIds?: ReadonlySet<string>;
+}
+
+export function mapUserGuildSettingsToResponse(
+	settings: UserGuildSettings,
+	threadView?: UserGuildSettingsThreadView,
+): UserGuildSettingsResponse {
+	const hidden = threadView?.hiddenChannelIds;
+	const overrides = hidden?.size
+		? Array.from(settings.channelOverrides.entries()).filter(([channelId]) => !hidden.has(channelId.toString()))
+		: Array.from(settings.channelOverrides.entries());
 	return {
 		guild_id: settings.guildId === createGuildID(0n) ? null : settings.guildId.toString(),
 		message_notifications: settings.messageNotifications ?? 0,
@@ -419,11 +436,11 @@ export function mapUserGuildSettingsToResponse(settings: UserGuildSettings): Use
 		suppress_everyone: settings.suppressEveryone,
 		suppress_roles: settings.suppressRoles,
 		hide_muted_channels: settings.hideMutedChannels,
-		channel_overrides: settings.channelOverrides.size
+		channel_overrides: overrides.length
 			? Object.fromEntries(
-					Array.from(settings.channelOverrides.entries()).map(([channelId, override]) => [
+					overrides.map(([channelId, override]) => [
 						channelId.toString(),
-						mapChannelOverrideToResponse(override),
+						mapChannelOverrideToResponse(override, threadView?.flags === true),
 					]),
 				)
 			: null,

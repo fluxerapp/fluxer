@@ -2,6 +2,7 @@
 
 import type {GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {createRoleID, guildIdToRoleId} from '@app/api/BrandedTypes';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
 import {mapGuildRoleToResponse} from '@app/api/guild/GuildModel';
@@ -9,6 +10,12 @@ import type {IGuildMemberRepository} from '@app/api/guild/repositories/IGuildMem
 import type {IGuildRoleRepository} from '@app/api/guild/repositories/IGuildRoleRepository';
 import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
 import {computeMovedIds, getMemberListRoleOrderIds} from '@app/api/guild/services/role/RoleOrderAuditUtils';
+import {
+	resolveProtectedBitActor,
+	resolveThreadPermissionMode,
+	shouldMaskThreadPermissionBits,
+	stripThreadPermissionBits,
+} from '@app/api/guild/services/ThreadPermissionBits';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {Logger} from '@app/api/Logger';
@@ -17,12 +24,13 @@ import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import {GuildRole} from '@app/api/models/GuildRole';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {applyProtectedRolePermissions} from '@app/api/utils/featureUtils';
+import {applyProtectedRolePermissions, permissionWriteMask, protectedThreadBits} from '@app/api/utils/featureUtils';
 import {computePermissionsDiff} from '@app/api/utils/PermissionUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ALL_PERMISSIONS, DEFAULT_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_GUILD_ROLES} from '@fluxer/constants/src/LimitConstants';
+import {THREAD_AWARE_ALL_PERMISSIONS, withImplicitThreadBits} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
@@ -78,7 +86,9 @@ export class GuildRoleService {
 		const currentRoleCount = await this.guildRepository.countRoles(guildId);
 		const roleLimit = this.resolveGuildLimit(guildData.features, 'max_guild_roles', MAX_GUILD_ROLES);
 		if (currentRoleCount >= roleLimit) throw new MaxGuildRolesError(roleLimit);
-		const permissions = data.permissions !== undefined ? data.permissions & ALL_PERMISSIONS : DEFAULT_PERMISSIONS;
+		const permissionMask =
+			(await resolveThreadPermissionMode(guildId)) === 'active' ? THREAD_AWARE_ALL_PERMISSIONS : ALL_PERMISSIONS;
+		const permissions = data.permissions !== undefined ? data.permissions & permissionMask : DEFAULT_PERMISSIONS;
 		const roleId = createRoleID(await this.snowflakeService.generate());
 		const position = 1;
 		const role = await this.guildRepository.upsertRole({
@@ -113,10 +123,11 @@ export class GuildRoleService {
 			guildId: GuildID;
 			data: GuildRoleCreateRequest;
 			clientFeatures: ReadonlySet<string>;
+			viewer?: ThreadViewer;
 		},
 		auditLogReason?: string | null,
 	): Promise<GuildRoleResponse> {
-		const {userId, guildId, data, clientFeatures} = params;
+		const {userId, guildId, data, clientFeatures, viewer} = params;
 		const {checkPermission, getMyPermissions, guildData} = await this.getGuildAuthenticated({userId, guildId});
 		await checkPermission(Permissions.MANAGE_ROLES);
 		const currentRoleCount = await this.guildRepository.countRoles(guildId);
@@ -128,8 +139,10 @@ export class GuildRoleService {
 						requestedPermissions: data.permissions,
 						existingPermissions: 0n,
 						clientFeatures,
+						guildId,
 						guildData,
 						userId,
+						viewer,
 						getMyPermissions,
 					})
 				: ((await this.guildRepository.getRole(guildIdToRoleId(guildId), guildId))?.permissions ?? DEFAULT_PERMISSIONS);
@@ -158,33 +171,55 @@ export class GuildRoleService {
 			auditLogReason: auditLogReason ?? null,
 			changes: this.guildAuditLogService.computeChanges(null, this.serializeRoleForAudit(role)),
 		});
-		return mapGuildRoleToResponse(role);
+		return this.mapRoleForViewer(guildId, role, viewer);
 	}
 
 	private async resolveRequestedPermissions(params: {
 		requestedPermissions: bigint;
 		existingPermissions: bigint;
 		clientFeatures: ReadonlySet<string>;
+		guildId: GuildID;
 		guildData: {
 			owner_id: string;
 		};
 		userId: UserID;
+		viewer?: ThreadViewer;
 		getMyPermissions: () => Promise<bigint>;
 	}): Promise<bigint> {
 		const {requestedPermissions, existingPermissions, clientFeatures, guildData, userId, getMyPermissions} = params;
-		const sanitizedPermissions = applyProtectedRolePermissions(
-			requestedPermissions & ALL_PERMISSIONS,
-			existingPermissions,
+		const actor = await resolveProtectedBitActor({
+			guildId: params.guildId,
+			userId,
 			clientFeatures,
+			viewer: params.viewer,
+			isBot: async () =>
+				params.viewer?.kind === 'user'
+					? params.viewer.bot
+					: ((await this.userRepository.findUnique(userId))?.isBot ?? false),
+		});
+		const sanitizedPermissions = applyProtectedRolePermissions(
+			requestedPermissions & permissionWriteMask(actor),
+			existingPermissions,
+			actor,
 		);
 		const isOwner = guildData && guildData.owner_id === userId.toString();
 		if (!isOwner) {
-			const myPermissions = await getMyPermissions();
-			if ((sanitizedPermissions & ~myPermissions) !== 0n) {
+			const myPermissions = withImplicitThreadBits(await getMyPermissions());
+			if ((sanitizedPermissions & ~protectedThreadBits(actor) & ~myPermissions) !== 0n) {
 				throw new MissingPermissionsError();
 			}
 		}
 		return sanitizedPermissions;
+	}
+
+	private async mapRoleForViewer(
+		guildId: GuildID,
+		role: GuildRole,
+		viewer: ThreadViewer | undefined,
+	): Promise<GuildRoleResponse> {
+		const response = mapGuildRoleToResponse(role);
+		if (!(await shouldMaskThreadPermissionBits(guildId, viewer, [role.permissions]))) return response;
+		return {...response, permissions: stripThreadPermissionBits(role.permissions).toString()};
 	}
 
 	async updateRole(
@@ -194,10 +229,11 @@ export class GuildRoleService {
 			roleId: RoleID;
 			data: GuildRoleUpdateRequest;
 			clientFeatures: ReadonlySet<string>;
+			viewer?: ThreadViewer;
 		},
 		auditLogReason?: string | null,
 	): Promise<GuildRoleResponse> {
-		const {userId, guildId, roleId, data, clientFeatures} = params;
+		const {userId, guildId, roleId, data, clientFeatures, viewer} = params;
 		const {guildData, checkPermission, getMyPermissions} = await this.getGuildAuthenticated({userId, guildId});
 		await checkPermission(Permissions.MANAGE_ROLES);
 		const role = await this.guildRepository.getRole(roleId, guildId);
@@ -219,6 +255,7 @@ export class GuildRoleService {
 			userId,
 			data,
 			clientFeatures,
+			viewer,
 			getMyPermissions,
 		});
 		const updatedRoleData = {
@@ -237,7 +274,9 @@ export class GuildRoleService {
 		await this.dispatchGuildRoleUpdate({guildId, role: updatedRole});
 		const changes = this.guildAuditLogService.computeChanges(previousSnapshot, this.serializeRoleForAudit(updatedRole));
 		if (role.permissions !== updatedRole.permissions) {
-			const permissionsDiff = computePermissionsDiff(role.permissions, updatedRole.permissions);
+			const permissionsDiff = computePermissionsDiff(role.permissions, updatedRole.permissions, {
+				threads: (await resolveThreadPermissionMode(guildId)) !== 'control',
+			});
 			changes.push({key: 'permissions_diff', new_value: permissionsDiff});
 		}
 		await this.recordAuditLog({
@@ -249,7 +288,7 @@ export class GuildRoleService {
 			metadata: {role_name: updatedRole.name},
 			changes,
 		});
-		return mapGuildRoleToResponse(updatedRole);
+		return this.mapRoleForViewer(guildId, updatedRole, viewer);
 	}
 
 	async deleteRole(
@@ -327,15 +366,32 @@ export class GuildRoleService {
 		}
 	}
 
-	async listRoles(params: {userId: UserID; guildId: GuildID}): Promise<Array<GuildRoleResponse>> {
-		const {userId, guildId} = params;
+	async listRoles(params: {
+		userId: UserID;
+		guildId: GuildID;
+		viewer?: ThreadViewer;
+	}): Promise<Array<GuildRoleResponse>> {
+		const {userId, guildId, viewer} = params;
 		await this.getGuildAuthenticated({userId, guildId});
 		const roles = await this.guildRepository.listRoles(guildId);
 		const sortedRoles = [...roles].sort((a, b) => {
 			if (b.position !== a.position) return b.position - a.position;
 			return this.compareRoleIds(a, b);
 		});
-		return sortedRoles.map(mapGuildRoleToResponse);
+		const responses = sortedRoles.map(mapGuildRoleToResponse);
+		if (
+			!(await shouldMaskThreadPermissionBits(
+				guildId,
+				viewer,
+				sortedRoles.map((role) => role.permissions),
+			))
+		) {
+			return responses;
+		}
+		return responses.map((response, index) => ({
+			...response,
+			permissions: stripThreadPermissionBits(sortedRoles[index]!.permissions).toString(),
+		}));
 	}
 
 	async updateHoistPositions(
@@ -544,9 +600,10 @@ export class GuildRoleService {
 		userId: UserID;
 		data: GuildRoleUpdateRequest;
 		clientFeatures: ReadonlySet<string>;
+		viewer?: ThreadViewer;
 		getMyPermissions: () => Promise<bigint>;
 	}): Promise<RoleUpdateData> {
-		const {role, guildId, guildData, userId, data, clientFeatures, getMyPermissions} = params;
+		const {role, guildId, guildData, userId, data, clientFeatures, viewer, getMyPermissions} = params;
 		const updateData: RoleUpdateData = {};
 		const isEveryoneRole = role.id === guildIdToRoleId(guildId);
 		if (data.name !== undefined && !isEveryoneRole) {
@@ -569,8 +626,10 @@ export class GuildRoleService {
 				requestedPermissions: data.permissions,
 				existingPermissions: role.permissions,
 				clientFeatures,
+				guildId,
 				guildData,
 				userId,
+				viewer,
 				getMyPermissions,
 			});
 		}

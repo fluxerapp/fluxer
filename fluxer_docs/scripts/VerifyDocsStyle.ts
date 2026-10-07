@@ -66,7 +66,7 @@ function frontmatterOf(source: string): string | null {
 	return source.slice(4, end);
 }
 
-const pages = await readMarkdownPages(DOCS_ROOT);
+const pages = await readMarkdownPages(DOCS_ROOT, {includeDrafts: true});
 const findings: Array<Finding> = [];
 
 for (const {file, relativePath: relative, source, lines} of pages) {
@@ -288,6 +288,7 @@ const ACCEPTED_TABLE_FINDINGS = new Map<string, Readonly<Partial<Record<TableRul
 	['http-api/discovery.mdx', {'table-cell': 2}],
 	['http-api/donations.mdx', {'table-cell': 1}],
 	['http-api/entrance-sounds.mdx', {'table-cell': 3, 'table-parallel': 1}],
+	['http-api/forums.mdx', {'table-identifier': 2}],
 	['http-api/gifs.mdx', {'table-cell': 5}],
 	['http-api/gifts.mdx', {'table-cell': 1}],
 	['http-api/guild-audit-logs.mdx', {'table-identifier': 3}],

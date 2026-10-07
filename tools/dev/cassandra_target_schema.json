@@ -22,6 +22,10 @@
 				{
 					"name": "unread_badges",
 					"type": "int"
+				},
+				{
+					"name": "flags",
+					"type": "int"
 				}
 			]
 		},
@@ -47,6 +51,31 @@
 				{
 					"name": "expires_at",
 					"type": "timestamp"
+				}
+			]
+		},
+		{
+			"name": "forum_tag",
+			"fields": [
+				{
+					"name": "id",
+					"type": "bigint"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				},
+				{
+					"name": "moderated",
+					"type": "boolean"
+				},
+				{
+					"name": "emoji_id",
+					"type": "bigint"
+				},
+				{
+					"name": "emoji_name",
+					"type": "text"
 				}
 			]
 		},
@@ -617,6 +646,29 @@
 	],
 	"tables": [
 		{
+			"name": "active_threads_by_guild",
+			"columns": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "int"
+				}
+			],
+			"primary_key": "((guild_id), thread_id)",
+			"options": ""
+		},
+		{
 			"name": "admin_api_keys",
 			"columns": [
 				{
@@ -1019,6 +1071,33 @@
 			],
 			"primary_key": "((owner_user_id), application_id)",
 			"options": "CLUSTERING ORDER BY (application_id DESC)"
+		},
+		{
+			"name": "archived_threads_by_parent",
+			"columns": [
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "is_private",
+					"type": "boolean"
+				},
+				{
+					"name": "archive_timestamp",
+					"type": "timestamp"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((parent_id, is_private), archive_timestamp, thread_id)",
+			"options": "CLUSTERING ORDER BY (archive_timestamp DESC, thread_id DESC)"
 		},
 		{
 			"name": "attachment_decay_by_expiry",
@@ -4867,6 +4946,21 @@
 			"options": "CLUSTERING ORDER BY (created_at DESC, request_id ASC, exposure_index ASC) AND default_time_to_live = 7776000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '3'}"
 		},
 		{
+			"name": "forum_pinned_thread",
+			"columns": [
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((parent_id))",
+			"options": ""
+		},
+		{
 			"name": "gift_codes",
 			"columns": [
 				{
@@ -5603,6 +5697,29 @@
 				}
 			],
 			"primary_key": "((sticker_id))",
+			"options": ""
+		},
+		{
+			"name": "guild_thread_state",
+			"columns": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "first_active_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "perms_seeded_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "search_backfilled_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((guild_id))",
 			"options": ""
 		},
 		{
@@ -7046,6 +7163,10 @@
 				{
 					"name": "provider_environment",
 					"type": "text"
+				},
+				{
+					"name": "thread_channels",
+					"type": "boolean"
 				}
 			],
 			"primary_key": "((user_id), subscription_id)",
@@ -7073,6 +7194,14 @@
 				{
 					"name": "last_pin_timestamp",
 					"type": "timestamp"
+				},
+				{
+					"name": "flags",
+					"type": "int"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
 				}
 			],
 			"primary_key": "((user_id), channel_id)",
@@ -7447,6 +7576,255 @@
 				}
 			],
 			"primary_key": "((user_id), store_key)",
+			"options": ""
+		},
+		{
+			"name": "thread_members",
+			"columns": [
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "join_timestamp",
+					"type": "timestamp"
+				},
+				{
+					"name": "flags",
+					"type": "int"
+				},
+				{
+					"name": "muted",
+					"type": "boolean"
+				},
+				{
+					"name": "mute_config",
+					"type": "frozen<mute_config>"
+				}
+			],
+			"primary_key": "((thread_id), user_id)",
+			"options": ""
+		},
+		{
+			"name": "thread_members_by_user",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "is_private",
+					"type": "boolean"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((user_id), guild_id, parent_id, is_private, thread_id)",
+			"options": "CLUSTERING ORDER BY (guild_id ASC, parent_id ASC, is_private ASC, thread_id DESC)"
+		},
+		{
+			"name": "thread_only_channels_by_guild",
+			"columns": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((guild_id), channel_id)",
+			"options": ""
+		},
+		{
+			"name": "thread_parent_config",
+			"columns": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "flags",
+					"type": "int"
+				},
+				{
+					"name": "default_auto_archive_duration",
+					"type": "int"
+				},
+				{
+					"name": "default_thread_rate_limit_per_user",
+					"type": "int"
+				},
+				{
+					"name": "available_tags",
+					"type": "frozen<list<forum_tag>>"
+				},
+				{
+					"name": "default_reaction_emoji_id",
+					"type": "bigint"
+				},
+				{
+					"name": "default_reaction_emoji_name",
+					"type": "text"
+				},
+				{
+					"name": "default_sort_order",
+					"type": "int"
+				},
+				{
+					"name": "default_forum_layout",
+					"type": "int"
+				},
+				{
+					"name": "default_tag_setting",
+					"type": "text"
+				},
+				{
+					"name": "has_threads",
+					"type": "boolean"
+				}
+			],
+			"primary_key": "((guild_id), channel_id)",
+			"options": ""
+		},
+		{
+			"name": "thread_state",
+			"columns": [
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "int"
+				},
+				{
+					"name": "archived",
+					"type": "boolean"
+				},
+				{
+					"name": "locked",
+					"type": "boolean"
+				},
+				{
+					"name": "invitable",
+					"type": "boolean"
+				},
+				{
+					"name": "auto_archive_duration",
+					"type": "int"
+				},
+				{
+					"name": "archive_timestamp",
+					"type": "timestamp"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "flags",
+					"type": "int"
+				},
+				{
+					"name": "applied_tags",
+					"type": "frozen<list<bigint>>"
+				},
+				{
+					"name": "member_count",
+					"type": "int"
+				},
+				{
+					"name": "member_ids_preview",
+					"type": "frozen<list<bigint>>"
+				},
+				{
+					"name": "has_starter",
+					"type": "boolean"
+				},
+				{
+					"name": "state_version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((thread_id))",
+			"options": ""
+		},
+		{
+			"name": "thread_stats",
+			"columns": [
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "message_count",
+					"type": "int"
+				},
+				{
+					"name": "total_message_sent",
+					"type": "int"
+				}
+			],
+			"primary_key": "((thread_id))",
+			"options": ""
+		},
+		{
+			"name": "threads_by_parent",
+			"columns": [
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "int"
+				}
+			],
+			"primary_key": "((parent_id), thread_id)",
 			"options": ""
 		},
 		{

@@ -6,6 +6,7 @@ import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IC
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {MessageInteractionBase, type ParsedEmoji} from '@app/api/channel/services/interaction/MessageInteractionBase';
+import {assertThreadInteractionAllowed} from '@app/api/channel/services/thread/ThreadInteractionGuards';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -162,6 +163,7 @@ export class MessageReactionService extends MessageInteractionBase {
 		const channel = authChannel.channel;
 		const {guild, hasPermission, checkPermission} = authChannel;
 		this.ensureTextChannel(channel);
+		assertThreadInteractionAllowed(authChannel, 'react');
 		assertGuildMemberCanCommunicate(authChannel.member);
 		await this.assertMessageHistoryAccess({authChannel, messageId});
 		if (this.isOperationDisabled(guild, GuildOperations.REACTIONS)) {
@@ -266,6 +268,7 @@ export class MessageReactionService extends MessageInteractionBase {
 		const channel = authChannel.channel;
 		const {guild, hasPermission} = authChannel;
 		this.ensureTextChannel(channel);
+		assertThreadInteractionAllowed(authChannel, 'react', {ignoreTimeout: true});
 		await this.assertMessageHistoryAccess({authChannel, messageId});
 		if (this.isOperationDisabled(guild, GuildOperations.REACTIONS)) {
 			throw new FeatureTemporarilyDisabledError();
@@ -306,6 +309,7 @@ export class MessageReactionService extends MessageInteractionBase {
 		const channel = authChannel.channel;
 		const {guild, hasPermission} = authChannel;
 		this.ensureTextChannel(channel);
+		assertThreadInteractionAllowed(authChannel, 'react', {ignoreTimeout: true});
 		await this.assertMessageHistoryAccess({authChannel, messageId});
 		if (this.isOperationDisabled(guild, GuildOperations.REACTIONS)) {
 			throw new FeatureTemporarilyDisabledError();
@@ -338,6 +342,7 @@ export class MessageReactionService extends MessageInteractionBase {
 		const channel = authChannel.channel;
 		const {guild, hasPermission} = authChannel;
 		this.ensureTextChannel(channel);
+		assertThreadInteractionAllowed(authChannel, 'react', {ignoreTimeout: true});
 		await this.assertMessageHistoryAccess({authChannel, messageId});
 		if (this.isOperationDisabled(guild, GuildOperations.REACTIONS)) {
 			throw new FeatureTemporarilyDisabledError();

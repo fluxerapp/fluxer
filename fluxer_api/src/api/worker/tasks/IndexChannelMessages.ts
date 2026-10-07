@@ -2,6 +2,7 @@
 
 import type {MessageID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID} from '@app/api/BrandedTypes';
+import {isMessageSearchIndexable} from '@app/api/channel/services/message/MessageSearchService';
 import {Logger} from '@app/api/Logger';
 import {getMessageSearchService} from '@app/api/SearchFactory';
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
@@ -54,7 +55,8 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 					authorBotCache.set(user.id, user.isBot);
 				}
 			}
-			await Promise.all(searchServices.map((s) => s.bulkIndexMessages(messages, authorBotCache)));
+			const indexable = messages.filter(isMessageSearchIndexable);
+			await Promise.all(searchServices.map((s) => s.bulkIndexMessages(indexable, authorBotCache)));
 			totalIndexed += messages.length;
 			cursor = messages[messages.length - 1]!.id;
 			Logger.debug(
@@ -80,7 +82,9 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 			}
 		}
 		const channel = await channelRepository.findUnique(channelId);
-		if (channel) {
+		if (channel?.isThread()) {
+			await channelRepository.channelData.patchIndexedAt(channelId, new Date());
+		} else if (channel) {
 			await channelRepository.upsert({...channel.toRow(), indexed_at: new Date()});
 		}
 		Logger.info({channelId: channelId.toString(), totalIndexed}, 'Bulk channel indexing complete');

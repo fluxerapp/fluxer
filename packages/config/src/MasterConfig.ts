@@ -105,6 +105,7 @@ export interface MasterConfig {
 				lane?: 'realtime' | 'unfurl' | 'lifecycle' | 'batch' | 'crosspost';
 				task?: string;
 				enable_cron_scheduler?: boolean;
+				metrics_port?: number;
 				lane_concurrency_overrides?: {
 					realtime?: number;
 					unfurl?: number;

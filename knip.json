@@ -33,7 +33,6 @@
 		"fluxer_api": {
 			"ignoreDependencies": [
 				"@elastic/elasticsearch",
-				"@hono/node-server",
 				"@messageformat/core",
 				"@messageformat/parser",
 				"@vvo/tzdb",

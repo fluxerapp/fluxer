@@ -2,18 +2,27 @@
 
 import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
-import {createChannelID, createGuildID, createWebhookID, createWebhookToken} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createUserID, createWebhookID, createWebhookToken} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {withChannelFollowLock} from '@app/api/channel/services/ChannelFollowers';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {ThreadService} from '@app/api/channel/services/thread/ThreadService';
+import {webhookThreadIdRefusedTotal} from '@app/api/channel/threads/ThreadMetrics';
 import {assertCrosspostContentRules} from '@app/api/channel/utils/CrosspostContentRules';
 import {
 	type ContentWarningChannelLike,
 	channelToContentWarningView,
 	guildResponseToContentWarningView,
 } from '@app/api/channel/utils/EffectiveContentWarning';
+import {
+	everEnabled,
+	guildActive,
+	isTainted,
+	type ThreadViewer,
+	viewerActive,
+} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
@@ -30,6 +39,7 @@ import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {Webhook} from '@app/api/models/Webhook';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
+import {inputValidationErrorFromZodIssues} from '@app/api/Validator';
 import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {transform as GitHubTransform} from '@app/api/webhook/transformers/GitHubTransformer';
 import {instatusDeliveryKey, transformInstatusWebhook} from '@app/api/webhook/transformers/InstatusTransformer';
@@ -53,28 +63,46 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {MaxWebhooksPerGuildError} from '@fluxer/errors/src/domains/guild/MaxWebhooksPerGuildError';
 import {UnknownWebhookError} from '@fluxer/errors/src/domains/webhook/UnknownWebhookError';
+import {WebhookForumTargetConflictError} from '@fluxer/errors/src/domains/webhook/WebhookForumTargetConflictError';
+import {WebhookForumTargetRequiredError} from '@fluxer/errors/src/domains/webhook/WebhookForumTargetRequiredError';
+import {WebhookServiceForumUnsupportedError} from '@fluxer/errors/src/domains/webhook/WebhookServiceForumUnsupportedError';
+import {WebhookThreadNameRequiresForumError} from '@fluxer/errors/src/domains/webhook/WebhookThreadNameRequiresForumError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
 import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 import type {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
-import type {
-	WebhookCreateRequest,
-	WebhookMessageRequest,
-	WebhookTokenUpdateRequest,
-	WebhookUpdateRequest,
+import {
+	type WebhookCreateRequest,
+	WebhookForumPostRequestFields,
+	type WebhookMessageRequest,
+	type WebhookTokenUpdateRequest,
+	type WebhookUpdateRequest,
 } from '@fluxer/schema/src/domains/webhook/WebhookRequestSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
+import {z} from 'zod';
 
-export interface WebhookExecuteMessageData extends Omit<WebhookMessageRequest, 'attachments'> {
+export interface WebhookExecuteMessageData
+	extends Omit<WebhookMessageRequest, 'attachments' | 'thread_name' | 'applied_tags'> {
 	attachments?: WebhookMessageRequest['attachments'] | MessageRequest['attachments'];
 	username?: string | null;
 	avatar_url?: string | null;
+	thread_name?: unknown;
+	applied_tags?: unknown;
 }
+
+const WebhookForumPostFields = z.object(WebhookForumPostRequestFields);
+
+type WebhookForumPost = z.infer<typeof WebhookForumPostFields>;
 
 interface WebhookUserParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	webhookId: WebhookID;
+}
+
+interface WebhookThreadParams {
+	threadId?: string;
 }
 
 interface WebhookTokenParams {
@@ -86,12 +114,13 @@ interface WebhookTokenUpdateParams extends WebhookTokenParams {
 	data: WebhookTokenUpdateRequest;
 }
 
-interface WebhookExecuteParams extends WebhookTokenParams {
+interface WebhookExecuteParams extends WebhookTokenParams, WebhookThreadParams {
 	data: WebhookExecuteMessageData;
 	requestCache: RequestCache;
+	service?: boolean;
 }
 
-interface WebhookMessageLookupParams extends WebhookTokenParams {
+interface WebhookMessageLookupParams extends WebhookTokenParams, WebhookThreadParams {
 	messageId: MessageID;
 }
 
@@ -103,7 +132,7 @@ interface WebhookMessageUpdateParams extends WebhookMessageParams {
 	data: MessageUpdateRequest;
 }
 
-interface WebhookExecuteGitHubParams extends WebhookTokenParams {
+interface WebhookExecuteGitHubParams extends WebhookTokenParams, WebhookThreadParams {
 	event: string;
 	delivery: string;
 	data: GitHubWebhook;
@@ -152,17 +181,26 @@ export class WebhookService {
 		private snowflakeService: ISnowflakeService,
 		private readonly guildAuditLogService: GuildAuditLogService,
 		private readonly limitConfigService: LimitConfigService,
+		private readonly threadService?: () => ThreadService,
 	) {}
 
-	async getWebhook({userId, webhookId}: WebhookUserParams): Promise<Webhook> {
-		return this.getAuthenticatedWebhook({userId, webhookId});
+	async getWebhook(params: WebhookUserParams): Promise<Webhook> {
+		return this.getAuthenticatedWebhook(params);
 	}
 
 	async getWebhookByToken(params: WebhookTokenParams): Promise<Webhook> {
 		return this.getTokenAuthenticatedWebhook(params);
 	}
 
-	async getGuildWebhooks({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<Array<Webhook>> {
+	async getGuildWebhooks({
+		userId,
+		guildId,
+		viewer,
+	}: {
+		userId: UserID;
+		guildId: GuildID;
+		viewer: ThreadViewer;
+	}): Promise<Array<Webhook>> {
 		const {checkPermission} = await this.guildService.getGuildAuthenticated({userId, guildId});
 		await checkPermission(Permissions.MANAGE_WEBHOOKS);
 		const webhooks = await this.repository.listByGuild(guildId);
@@ -173,11 +211,23 @@ export class WebhookService {
 					: Promise.resolve(false),
 			),
 		);
-		return webhooks.filter((_webhook, index) => visibility[index]);
+		return this.withoutHiddenForumWebhooks(
+			guildId,
+			viewer,
+			webhooks.filter((_webhook, index) => visibility[index]),
+		);
 	}
 
-	async getChannelWebhooks({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<Array<Webhook>> {
-		const channel = await this.channelService.channelData.operations.getChannel({userId, channelId});
+	async getChannelWebhooks({
+		userId,
+		channelId,
+		viewer,
+	}: {
+		userId: UserID;
+		viewer: ThreadViewer;
+		channelId: ChannelID;
+	}): Promise<Array<Webhook>> {
+		const channel = await this.channelService.channelData.operations.getChannel({userId, viewer, channelId});
 		this.assertWebhookTargetChannel(channel);
 		const {checkPermission} = await this.guildService.getGuildAuthenticated({
 			userId,
@@ -191,13 +241,14 @@ export class WebhookService {
 	async createWebhook(
 		params: {
 			userId: UserID;
+			viewer: ThreadViewer;
 			channelId: ChannelID;
 			data: WebhookCreateRequest;
 		},
 		auditLogReason?: string | null,
 	): Promise<Webhook> {
-		const {userId, channelId, data} = params;
-		const channel = await this.channelService.channelData.operations.getChannel({userId, channelId});
+		const {userId, viewer, channelId, data} = params;
+		const channel = await this.channelService.channelData.operations.getChannel({userId, viewer, channelId});
 		this.assertWebhookTargetChannel(channel);
 		const {checkPermission, guildData} = await this.guildService.getGuildAuthenticated({
 			userId,
@@ -238,13 +289,14 @@ export class WebhookService {
 	async updateWebhook(
 		params: {
 			userId: UserID;
+			viewer: ThreadViewer;
 			webhookId: WebhookID;
 			data: WebhookUpdateRequest;
 		},
 		auditLogReason?: string | null,
 	): Promise<Webhook> {
-		const {userId, webhookId, data} = params;
-		const webhook = await this.getAuthenticatedWebhook({userId, webhookId});
+		const {userId, viewer, webhookId, data} = params;
+		const webhook = await this.getAuthenticatedWebhook({userId, viewer, webhookId});
 		const {checkPermission, guildData} = await this.guildService.getGuildAuthenticated({
 			userId,
 			guildId: webhook.guildId ? webhook.guildId : createGuildID(0n),
@@ -258,6 +310,7 @@ export class WebhookService {
 		if (data.channel_id && data.channel_id !== webhook.channelId) {
 			const targetChannel = await this.channelService.channelData.operations.getChannel({
 				userId,
+				viewer,
 				channelId: createChannelID(data.channel_id),
 			});
 			if (isFollower && !CHANNEL_FOLLOW_TARGET_TYPES.has(targetChannel.type)) {
@@ -353,17 +406,8 @@ export class WebhookService {
 		return updatedWebhook;
 	}
 
-	async deleteWebhook(
-		{
-			userId,
-			webhookId,
-		}: {
-			userId: UserID;
-			webhookId: WebhookID;
-		},
-		auditLogReason?: string | null,
-	): Promise<void> {
-		const webhook = await this.getAuthenticatedWebhook({userId, webhookId});
+	async deleteWebhook({userId, viewer, webhookId}: WebhookUserParams, auditLogReason?: string | null): Promise<void> {
+		const webhook = await this.getAuthenticatedWebhook({userId, viewer, webhookId});
 		const {checkPermission} = await this.guildService.getGuildAuthenticated({userId, guildId: webhook.guildId!});
 		await checkPermission(Permissions.MANAGE_WEBHOOKS);
 		await this.repository.delete(webhookId);
@@ -391,12 +435,61 @@ export class WebhookService {
 		});
 	}
 
-	async executeWebhook({webhookId, token, data, requestCache}: WebhookExecuteParams): Promise<Message> {
-		const webhook = await this.getTokenAuthenticatedWebhook({webhookId, token});
-		await this.assertWebhookGuildChannel(webhook);
+	async executeWebhook({
+		webhookId,
+		token,
+		threadId,
+		data,
+		requestCache,
+		service,
+	}: WebhookExecuteParams): Promise<Message> {
+		const {webhook, channel} = await this.getTokenAuthenticatedWebhookChannel({webhookId, token});
+		const forumPost = this.resolveForumPost(channel, data);
+		if (channel.isThreadOnly()) {
+			if (service && threadId === undefined) throw new WebhookServiceForumUnsupportedError();
+			if (threadId !== undefined && forumPost?.thread_name !== undefined) throw new WebhookForumTargetConflictError();
+			if (threadId === undefined && forumPost?.thread_name === undefined) throw new WebhookForumTargetRequiredError();
+		}
+		const thread = await this.resolveWebhookThread(webhook, threadId);
 		const attachments = data.attachments?.filter((attachment) => this.isUploadedAttachmentData(attachment));
+		const avatar = data.avatar_url
+			? await this.getWebhookAvatar({webhookId: webhook.id, avatarUrl: data.avatar_url})
+			: null;
+		const messageData: MessageRequest = {
+			content: data.content,
+			embeds: data.embeds,
+			attachments,
+			message_reference: data.message_reference,
+			allowed_mentions: data.allowed_mentions ?? WebhookService.NO_ALLOWED_MENTIONS,
+			flags: data.flags,
+			nonce: data.nonce,
+			favorite_meme_id: data.favorite_meme_id,
+			sticker_ids: data.sticker_ids,
+			tts: data.tts,
+		};
+		const threadName = forumPost?.thread_name;
+		if (threadName !== undefined && !thread) {
+			await this.channelService.messages.send.validateWebhookForumStarter({parent: channel, data: messageData});
+			return this.createThreadService().creation.createWebhookForumPost({
+				webhookId: createUserID(BigInt(webhook.id)),
+				parent: channel,
+				name: threadName,
+				appliedTags: (forumPost?.applied_tags ?? []).map((id) => BigInt(id)),
+				sendStarter: (created) =>
+					this.channelService.messages.send.sendWebhookMessage({
+						webhook,
+						thread: created,
+						data: messageData,
+						username: data.username,
+						avatar,
+						requestCache,
+						forumStarter: true,
+					}),
+			});
+		}
 		return this.channelService.messages.send.sendWebhookMessage({
 			webhook,
+			thread,
 			data: {
 				content: data.content,
 				embeds: data.embeds,
@@ -410,49 +503,71 @@ export class WebhookService {
 				tts: data.tts,
 			},
 			username: data.username,
-			avatar: data.avatar_url ? await this.getWebhookAvatar({webhookId: webhook.id, avatarUrl: data.avatar_url}) : null,
+			avatar,
 			requestCache,
 		});
+	}
+
+	private resolveForumPost(channel: Channel, data: WebhookExecuteMessageData): WebhookForumPost | null {
+		if (data.thread_name === undefined && data.applied_tags === undefined) return null;
+		if (!guildActive(channel.guildId!)) return null;
+		if (!channel.isThreadOnly()) throw new WebhookThreadNameRequiresForumError();
+		const parsed = WebhookForumPostFields.safeParse({thread_name: data.thread_name, applied_tags: data.applied_tags});
+		if (!parsed.success) throw inputValidationErrorFromZodIssues(parsed.error.issues);
+		return parsed.data;
 	}
 
 	async editWebhookMessage({
 		webhookId,
 		token,
+		threadId,
 		messageId,
 		data,
 		requestCache,
 	}: WebhookMessageUpdateParams): Promise<Message> {
 		const webhook = await this.getTokenAuthenticatedWebhook({webhookId, token});
+		const thread = await this.resolveWebhookThread(webhook, threadId);
 		return this.channelService.messages.send.editWebhookMessage({
 			webhook,
+			thread,
 			messageId,
 			data,
 			requestCache,
 		});
 	}
 
-	async deleteWebhookMessage({webhookId, token, messageId, requestCache}: WebhookMessageParams): Promise<void> {
+	async deleteWebhookMessage({
+		webhookId,
+		token,
+		threadId,
+		messageId,
+		requestCache,
+	}: WebhookMessageParams): Promise<void> {
 		const webhook = await this.getTokenAuthenticatedWebhook({webhookId, token});
+		const thread = await this.resolveWebhookThread(webhook, threadId);
 		await this.channelService.messages.deletion.deleteWebhookMessage({
 			webhook,
+			thread,
 			messageId,
 			requestCache,
 		});
 	}
 
-	async getWebhookMessage({webhookId, token, messageId}: WebhookMessageLookupParams): Promise<Message> {
+	async getWebhookMessage({webhookId, token, threadId, messageId}: WebhookMessageLookupParams): Promise<Message> {
 		const webhook = await this.getTokenAuthenticatedWebhook({webhookId, token});
 		if (!webhook.channelId) throw new UnknownChannelError();
-		const message = await this.channelRepository.getMessage(webhook.channelId, messageId);
+		const thread = await this.resolveWebhookThread(webhook, threadId);
+		const message = await this.channelRepository.getMessage(thread?.id ?? webhook.channelId, messageId);
 		if (!message) throw new UnknownMessageError();
 		if (message.webhookId !== webhook.id) throw new MissingPermissionsError();
 		return message;
 	}
 
 	async executeGitHubWebhook(params: WebhookExecuteGitHubParams): Promise<void> {
-		const {webhookId, token, event, delivery, data, requestCache} = params;
-		const webhook = await this.getTokenAuthenticatedWebhook({webhookId, token});
-		await this.assertWebhookGuildChannel(webhook);
+		const {webhookId, token, threadId, event, delivery, data, requestCache} = params;
+		const {webhook, channel} = await this.getTokenAuthenticatedWebhookChannel({webhookId, token});
+		if (channel.isThreadOnly() && threadId === undefined) throw new WebhookServiceForumUnsupportedError();
+		const thread = await this.resolveWebhookThread(webhook, threadId);
 		if (delivery) {
 			const isCached = await this.cacheService.get<number>(`github:${webhookId}:${delivery}`);
 			if (isCached) return;
@@ -461,6 +576,7 @@ export class WebhookService {
 		if (!embed) return;
 		await this.channelService.messages.send.sendWebhookMessage({
 			webhook,
+			thread,
 			data: {embeds: [embed], allowed_mentions: WebhookService.NO_ALLOWED_MENTIONS},
 			username: 'GitHub',
 			avatar: await this.getGitHubWebhookAvatar(webhook.id),
@@ -471,8 +587,8 @@ export class WebhookService {
 
 	async executeInstatusWebhook(params: WebhookExecuteInstatusParams): Promise<void> {
 		const {webhookId, token, data, requestCache} = params;
-		const webhook = await this.getTokenAuthenticatedWebhook({webhookId, token});
-		await this.assertWebhookGuildChannel(webhook);
+		const {webhook, channel} = await this.getTokenAuthenticatedWebhookChannel({webhookId, token});
+		if (channel.isThreadOnly()) throw new WebhookServiceForumUnsupportedError();
 		const delivery = instatusDeliveryKey(data);
 		if (delivery) {
 			const isCached = await this.cacheService.get<number>(`instatus:${webhookId}:${delivery}`);
@@ -506,11 +622,14 @@ export class WebhookService {
 		}
 	}
 
-	private async getAuthenticatedWebhook({userId, webhookId}: WebhookUserParams): Promise<Webhook> {
+	private async getAuthenticatedWebhook({userId, viewer, webhookId}: WebhookUserParams): Promise<Webhook> {
 		const webhook = await this.repository.findUnique(webhookId);
 		if (!webhook) throw new UnknownWebhookError();
 		const {checkPermission} = await this.guildService.getGuildAuthenticated({userId, guildId: webhook.guildId!});
 		await checkPermission(Permissions.MANAGE_WEBHOOKS);
+		if (webhook.guildId && (await this.withoutHiddenForumWebhooks(webhook.guildId, viewer, [webhook])).length === 0) {
+			throw new UnknownWebhookError();
+		}
 		if (webhook.guildId && webhook.channelId) {
 			await this.assertChannelWebhookPermission({
 				userId,
@@ -642,20 +761,73 @@ export class WebhookService {
 	private async getTokenAuthenticatedWebhook({webhookId, token}: WebhookTokenParams): Promise<Webhook> {
 		const webhook = await this.repository.findByToken(webhookId, token);
 		if (!webhook || webhook.type !== WebhookTypes.INCOMING) throw new UnknownWebhookError();
+		if (await this.isDormantForumWebhook(webhook)) throw new UnknownWebhookError();
 		return webhook;
 	}
 
-	private async assertWebhookGuildChannel(webhook: Webhook): Promise<void> {
+	private async isDormantForumWebhook(webhook: Webhook): Promise<boolean> {
+		if (!everEnabled() || !webhook.guildId || !webhook.channelId || guildActive(webhook.guildId)) return false;
+		if (!(await isTainted(webhook.guildId))) return false;
+		const channel = await this.channelRepository.findUnique(webhook.channelId);
+		return channel?.isThreadOnly() ?? false;
+	}
+
+	private async withoutHiddenForumWebhooks(
+		guildId: GuildID,
+		viewer: ThreadViewer,
+		webhooks: Array<Webhook>,
+	): Promise<Array<Webhook>> {
+		if (!everEnabled() || viewerActive(viewer, guildId) || !(await isTainted(guildId))) return webhooks;
+		const channelIds = [...new Set(webhooks.flatMap((webhook) => (webhook.channelId ? [webhook.channelId] : [])))];
+		if (channelIds.length === 0) return webhooks;
+		const forumIds = new Set(
+			(await this.channelRepository.listChannels(channelIds))
+				.filter((channel) => channel.isThreadOnly())
+				.map((channel) => channel.id),
+		);
+		if (forumIds.size === 0) return webhooks;
+		return webhooks.filter((webhook) => !webhook.channelId || !forumIds.has(webhook.channelId));
+	}
+
+	private createThreadService(): ThreadService {
+		if (!this.threadService) throw new UnknownChannelError();
+		return this.threadService();
+	}
+
+	private async resolveWebhookThread(webhook: Webhook, threadId: string | undefined): Promise<Channel | null> {
+		if (threadId === undefined || !everEnabled() || !webhook.guildId || !webhook.channelId) return null;
+		if (!guildActive(webhook.guildId)) {
+			if (!(await isTainted(webhook.guildId))) return null;
+			webhookThreadIdRefusedTotal.inc();
+			throw new UnknownChannelError();
+		}
+		if (!/^\d{1,20}$/.test(threadId)) throw new UnknownChannelError();
+		const thread = await this.channelRepository.findUnique(createChannelID(BigInt(threadId)));
+		if (!thread?.isThread() || thread.parentId !== webhook.channelId || thread.guildId !== webhook.guildId) {
+			throw new UnknownChannelError();
+		}
+		return thread;
+	}
+
+	private async getTokenAuthenticatedWebhookChannel({
+		webhookId,
+		token,
+	}: WebhookTokenParams): Promise<{webhook: Webhook; channel: Channel & {guildId: GuildID}}> {
+		const webhook = await this.repository.findByToken(webhookId, token);
+		if (!webhook || webhook.type !== WebhookTypes.INCOMING) throw new UnknownWebhookError();
 		if (!webhook.channelId) throw new UnknownChannelError();
 		const channel = await this.channelRepository.findUnique(webhook.channelId);
 		if (!channel) throw new UnknownChannelError();
+		if (channel.isThreadOnly() && webhook.guildId && !guildActive(webhook.guildId)) throw new UnknownWebhookError();
 		this.assertWebhookTargetChannel(channel);
+		return {webhook, channel};
 	}
 
 	private assertWebhookTargetChannel(channel: Channel): asserts channel is Channel & {guildId: GuildID} {
-		if (!channel.guildId || !GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type)) {
-			throw new UnknownChannelError();
-		}
+		if (!channel.guildId) throw new UnknownChannelError();
+		if (GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type)) return;
+		if (channel.isThreadOnly() && guildActive(channel.guildId)) return;
+		throw new UnknownChannelError();
 	}
 
 	private async updateWebhookData({webhook, data}: {webhook: Webhook; data: WebhookUpdateRequest}): Promise<{

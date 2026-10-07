@@ -6,6 +6,7 @@ import {
 	GUILD_AUDIT_INTERNAL_CHANGE_KEYS,
 	isNoopGuildAuditLog,
 	mapGuildAuditLogEntry,
+	maskThreadAuditLog,
 } from '@app/api/guild/GuildAuditLogEntryMapper';
 import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
 import {GuildAuditLog} from '@app/api/models/GuildAuditLog';
@@ -464,5 +465,54 @@ describe('isNoopGuildAuditLog', () => {
 	it.each(RECORDED_ACTIONS)('never treats action %i as a no-op', (actionType) => {
 		expect(isNoopGuildAuditLog(actionType, [])).toBe(false);
 		expect(isNoopGuildAuditLog(actionType, null)).toBe(false);
+	});
+});
+
+describe('maskThreadAuditLog', () => {
+	const MANAGE_THREADS = 1n << 34n;
+	const SEND = 1n << 11n;
+
+	it('strips thread bits from overwrite allow and deny', () => {
+		const log = makeLog({
+			actionType: AuditLogActionType.CHANNEL_OVERWRITE_UPDATE,
+			targetId: TARGET_ID,
+			changes: [
+				{key: 'allow', old_value: '0', new_value: (SEND | MANAGE_THREADS).toString()},
+				{key: 'deny', old_value: '0', new_value: MANAGE_THREADS.toString()},
+			],
+		});
+		expect(maskThreadAuditLog(log).changes).toEqual([{key: 'allow', old_value: '0', new_value: SEND.toString()}]);
+	});
+
+	it('drops thread-only role changes and thread names from the permissions diff', () => {
+		const log = makeLog({
+			actionType: AuditLogActionType.ROLE_UPDATE,
+			targetId: TARGET_ID,
+			changes: [
+				{key: 'permissions', old_value: (SEND | MANAGE_THREADS).toString(), new_value: SEND.toString()},
+				{key: 'permissions_diff', new_value: {added: [], removed: ['MANAGE_THREADS']}},
+			],
+		});
+		const masked = maskThreadAuditLog(log);
+		expect(masked.changes).toBeNull();
+		expect(isNoopGuildAuditLog(masked.actionType, masked.changes)).toBe(true);
+	});
+
+	it('drops thread surface keys from channel changes and leaves other entries untouched', () => {
+		const channelLog = makeLog({
+			actionType: AuditLogActionType.CHANNEL_UPDATE,
+			targetId: TARGET_ID,
+			changes: [
+				{key: 'name', old_value: 'a', new_value: 'b'},
+				{key: 'default_auto_archive_duration', old_value: 60, new_value: 1440},
+			],
+		});
+		expect(maskThreadAuditLog(channelLog).changes).toEqual([{key: 'name', old_value: 'a', new_value: 'b'}]);
+		const memberLog = makeLog({
+			actionType: AuditLogActionType.MEMBER_UPDATE,
+			targetId: TARGET_ID,
+			changes: [{key: 'flags', old_value: 0, new_value: 1}],
+		});
+		expect(maskThreadAuditLog(memberLog)).toBe(memberLog);
 	});
 });

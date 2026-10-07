@@ -7,19 +7,20 @@ use crate::{
             AppBrandingConfigUpdateRequest, AppLegalConfigUpdateRequest,
             AppPublicConfigUpdateRequest, AppRegistrationConfigUpdateRequest,
             AppSetupConfigUpdateRequest, CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE,
-            CaptchaConfigUpdateRequest, CreateRegistrationUrlRequest,
-            DomainMigrationConfigUpdateRequest, EXPERIMENT_MAX_TARGETED_USERS,
-            ExperimentDeliveryConfigUpdateRequest, GatewayRolloutConfigUpdateRequest,
-            GatewayRolloutMode, InstanceAttachmentDecayUpdateRequest,
-            InstanceBlueskyIntegrationUpdateRequest, InstanceBlueskyKeyIntegrationUpdateRequest,
-            InstanceConfigUpdateRequest, InstanceEmailIntegrationUpdateRequest,
-            InstanceEmailSmtpIntegrationUpdateRequest, InstanceEmailSmtpTestRequest,
-            InstanceGifIntegrationUpdateRequest, InstanceIntegrationsUpdateRequest,
-            InstanceMediaUpdateRequest, InstancePolicyUpdateRequest,
-            InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
-            InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
-            LimitRuleFilters, PlutoniumPageConfigUpdateRequest, PremiumMode,
-            PushRelayConfigUpdateRequest, RegistrationMode, SsoConfigUpdateRequest, VoiceE2eeScope,
+            CaptchaConfigUpdateRequest, ChannelThreadsConfigUpdateRequest,
+            CreateRegistrationUrlRequest, DomainMigrationConfigUpdateRequest,
+            EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigUpdateRequest,
+            GatewayRolloutConfigUpdateRequest, GatewayRolloutMode,
+            InstanceAttachmentDecayUpdateRequest, InstanceBlueskyIntegrationUpdateRequest,
+            InstanceBlueskyKeyIntegrationUpdateRequest, InstanceConfigUpdateRequest,
+            InstanceEmailIntegrationUpdateRequest, InstanceEmailSmtpIntegrationUpdateRequest,
+            InstanceEmailSmtpTestRequest, InstanceGifIntegrationUpdateRequest,
+            InstanceIntegrationsUpdateRequest, InstanceMediaUpdateRequest,
+            InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
+            InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
+            LimitConfigUpdateRequest, LimitRule, LimitRuleFilters,
+            PlutoniumPageConfigUpdateRequest, PremiumMode, PushRelayConfigUpdateRequest,
+            RegistrationMode, SsoConfigUpdateRequest, VoiceE2eeScope,
         },
     },
     config::AdminConfig,
@@ -225,6 +226,10 @@ pub async fn instance_config_post(
             Err(message) => FlashData::error(message),
         },
         "update_captcha" => match build_captcha_update(&form) {
+            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
+            Err(message) => FlashData::error(message),
+        },
+        "update_channel_threads" => match build_channel_threads_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -666,6 +671,53 @@ fn build_captcha_update(form: &MultiValueForm) -> Result<InstanceConfigUpdateReq
                 *CAPTCHA_MAX_COUNTER_RANGE.start(),
                 *CAPTCHA_MAX_COUNTER_RANGE.end(),
             )?,
+        }),
+        ..Default::default()
+    })
+}
+
+fn build_channel_threads_update(
+    form: &MultiValueForm,
+) -> Result<InstanceConfigUpdateRequest, String> {
+    Ok(InstanceConfigUpdateRequest {
+        channel_threads: Some(ChannelThreadsConfigUpdateRequest {
+            enabled: Some(form.bool_value("channel_threads_enabled")),
+            guild_basis_points: parse_form_number(
+                form,
+                "channel_threads_guild_basis_points",
+                "Guild rollout basis points",
+                0,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+            )?,
+            guild_salt: parse_experiment_rollout_salt(form, "channel_threads_guild_salt")?,
+            enabled_guild_ids: Some(parse_experiment_user_ids(
+                form.first("channel_threads_enabled_guild_ids")
+                    .unwrap_or_default(),
+                "Enabled guild IDs",
+            )?),
+            disabled_guild_ids: Some(parse_experiment_user_ids(
+                form.first("channel_threads_disabled_guild_ids")
+                    .unwrap_or_default(),
+                "Disabled guild IDs",
+            )?),
+            user_basis_points: parse_form_number(
+                form,
+                "channel_threads_user_basis_points",
+                "User rollout basis points",
+                0,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+            )?,
+            user_salt: parse_experiment_rollout_salt(form, "channel_threads_user_salt")?,
+            included_user_ids: Some(parse_experiment_user_ids(
+                form.first("channel_threads_included_user_ids")
+                    .unwrap_or_default(),
+                "Included user IDs",
+            )?),
+            excluded_user_ids: Some(parse_experiment_user_ids(
+                form.first("channel_threads_excluded_user_ids")
+                    .unwrap_or_default(),
+                "Excluded user IDs",
+            )?),
         }),
         ..Default::default()
     })
@@ -1431,6 +1483,111 @@ mod tests {
             let form = MultiValueForm::parse(form.as_bytes());
             assert_eq!(
                 build_domain_migration_update(&form).expect_err("invalid rollout field"),
+                message
+            );
+        }
+    }
+
+    #[test]
+    fn build_channel_threads_update_reads_both_rollout_dimensions() {
+        let form = MultiValueForm::parse(
+            b"channel_threads_enabled=true&channel_threads_guild_basis_points=%2010%20&channel_threads_guild_salt=%20channel-threads-guild-v2%20&channel_threads_enabled_guild_ids=1600000000000000001%0A1600000000000000002%0A1600000000000000001&channel_threads_disabled_guild_ids=1600000000000000003&channel_threads_user_basis_points=10000&channel_threads_user_salt=channel-threads-user-v2&channel_threads_included_user_ids=1500000000000000001&channel_threads_excluded_user_ids=1500000000000000003%2C%201500000000000000004",
+        );
+        let update = build_channel_threads_update(&form)
+            .expect("valid form")
+            .channel_threads
+            .expect("channel threads update");
+        assert_eq!(update.enabled, Some(true));
+        assert_eq!(update.guild_basis_points, Some(10));
+        assert_eq!(
+            update.guild_salt,
+            Some("channel-threads-guild-v2".to_owned())
+        );
+        assert_eq!(
+            update.enabled_guild_ids,
+            Some(vec![
+                "1600000000000000001".to_owned(),
+                "1600000000000000002".to_owned()
+            ])
+        );
+        assert_eq!(
+            update.disabled_guild_ids,
+            Some(vec!["1600000000000000003".to_owned()])
+        );
+        assert_eq!(update.user_basis_points, Some(10000));
+        assert_eq!(update.user_salt, Some("channel-threads-user-v2".to_owned()));
+        assert_eq!(
+            update.included_user_ids,
+            Some(vec!["1500000000000000001".to_owned()])
+        );
+        assert_eq!(
+            update.excluded_user_ids,
+            Some(vec![
+                "1500000000000000003".to_owned(),
+                "1500000000000000004".to_owned()
+            ])
+        );
+    }
+
+    #[test]
+    fn build_channel_threads_update_leaves_the_experiment_off_when_nothing_is_submitted() {
+        let form = MultiValueForm::parse(b"_csrf=token");
+        let request = build_channel_threads_update(&form).expect("valid form");
+        assert_eq!(
+            serde_json::to_value(request).expect("serializable update"),
+            serde_json::json!({"channel_threads": {
+                "enabled": false,
+                "enabled_guild_ids": [],
+                "disabled_guild_ids": [],
+                "included_user_ids": [],
+                "excluded_user_ids": [],
+            }})
+        );
+    }
+
+    #[test]
+    fn build_channel_threads_update_rejects_invalid_targeting() {
+        let too_many_guilds = (0..=EXPERIMENT_MAX_TARGETED_USERS)
+            .map(|index| index.to_string())
+            .collect::<Vec<_>>()
+            .join("%2C");
+        for (form, message) in [
+            (
+                "channel_threads_guild_basis_points=10001".to_owned(),
+                "Guild rollout basis points must be a whole number between 0 and 10000",
+            ),
+            (
+                "channel_threads_user_basis_points=-1".to_owned(),
+                "User rollout basis points must be a whole number between 0 and 10000",
+            ),
+            (
+                "channel_threads_guild_salt=%20%20".to_owned(),
+                "Rollout salt must be between 1 and 64 characters",
+            ),
+            (
+                "channel_threads_user_salt=caf%C3%A9".to_owned(),
+                "Rollout salt must use printable ASCII",
+            ),
+            (
+                "channel_threads_enabled_guild_ids=123%2Cinvalid".to_owned(),
+                "Enabled guild IDs entry 2 must contain 1 to 20 decimal digits",
+            ),
+            (
+                "channel_threads_disabled_guild_ids=123456789012345678901".to_owned(),
+                "Disabled guild IDs entry 1 must contain 1 to 20 decimal digits",
+            ),
+            (
+                "channel_threads_excluded_user_ids=abc".to_owned(),
+                "Excluded user IDs entry 1 must contain 1 to 20 decimal digits",
+            ),
+            (
+                format!("channel_threads_enabled_guild_ids={too_many_guilds}"),
+                "Enabled guild IDs must contain at most 1000 unique IDs",
+            ),
+        ] {
+            let form = MultiValueForm::parse(form.as_bytes());
+            assert_eq!(
+                build_channel_threads_update(&form).expect_err("invalid targeting"),
                 message
             );
         }

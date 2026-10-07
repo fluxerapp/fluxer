@@ -44,6 +44,7 @@ import reconcileUserPayments from '@app/api/worker/tasks/ReconcileUserPayments';
 import refreshSearchIndex from '@app/api/worker/tasks/RefreshSearchIndex';
 import refreshStorePurchase from '@app/api/worker/tasks/RefreshStorePurchase';
 import removeChannelFollowers from '@app/api/worker/tasks/RemoveChannelFollowers';
+import seedThreadPermissions from '@app/api/worker/tasks/SeedThreadPermissions';
 import {sendSystemDm} from '@app/api/worker/tasks/SendSystemDm';
 import syncCrosspostCopies from '@app/api/worker/tasks/SyncCrosspostCopies';
 import syncCrosspostedMessage from '@app/api/worker/tasks/SyncCrosspostedMessage';
@@ -51,6 +52,14 @@ import syncDiscoveryIndex from '@app/api/worker/tasks/SyncDiscoveryIndex';
 import syncFileShaBlocklists from '@app/api/worker/tasks/SyncFileShaBlocklists';
 import syncStripeCustomerEmail from '@app/api/worker/tasks/SyncStripeCustomerEmail';
 import syncUrlBlocklists from '@app/api/worker/tasks/SyncUrlBlocklists';
+import {
+	archiveInactiveThreads,
+	deleteChannelThreads,
+	rebuildThreadAutoArchiveQueue,
+	removeThreadMembershipsForGuildMember,
+	repairThreadIndexes,
+} from '@app/api/worker/tasks/ThreadMaintenanceTasks';
+import {backfillThreadSearch, syncThreadSearchDocument} from '@app/api/worker/tasks/ThreadSearchTasks';
 import userProcessPendingDeletion from '@app/api/worker/tasks/UserProcessPendingDeletion';
 import userProcessPendingDeletions from '@app/api/worker/tasks/UserProcessPendingDeletions';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -58,6 +67,13 @@ import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 
 export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	applicationProcessDeletion,
+	archiveInactiveThreads,
+	deleteChannelThreads,
+	rebuildThreadAutoArchiveQueue,
+	removeThreadMembershipsForGuildMember,
+	repairThreadIndexes,
+	syncThreadSearchDocument,
+	backfillThreadSearch,
 	batchGuildAuditLogMessageDeletes,
 	bulkAddGuildMembers: bulkAddGuildMembers,
 	bulkBanFileShas: bulkBanFileShas,
@@ -99,6 +115,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	pollAppStoreNotificationHistory,
 	prunePostgresKvTtl,
 	refreshSearchIndex,
+	seedThreadPermissions,
 	removeChannelFollowers,
 	sendSystemDm,
 	syncStripeCustomerEmail,

@@ -12,6 +12,7 @@ import {
 } from '@app/api/channel/services/message/MessageGatewayDispatch';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import {assertThreadInteractionAllowed} from '@app/api/channel/services/thread/ThreadInteractionGuards';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
@@ -21,7 +22,9 @@ import type {Message} from '@app/api/models/Message';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {MessageTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {CannotEditSystemMessageError} from '@fluxer/errors/src/domains/channel/CannotEditSystemMessageError';
+import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import type {ChannelPinResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -75,6 +78,7 @@ export class MessagePinService extends MessageInteractionBase {
 		has_more: boolean;
 	}> {
 		const {channel} = authChannel;
+		if (THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) throw new InvalidChannelTypeError();
 		this.ensureTextChannel(channel);
 		const hasReadHistory = !authChannel.guild || (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY));
 		if (!hasReadHistory) {
@@ -158,6 +162,7 @@ export class MessagePinService extends MessageInteractionBase {
 			}
 		}
 		this.ensureTextChannel(channel);
+		assertThreadInteractionAllowed(authChannel, 'pin');
 		await this.assertMessageHistoryAccess({authChannel, messageId});
 		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
 		if (!message) throw new UnknownMessageError();
@@ -168,7 +173,7 @@ export class MessagePinService extends MessageInteractionBase {
 		const updatedMessage = await this.channelRepository.messages.upsertMessage(updatedMessageData, message.toRow());
 		await this.channelRepository.messageInteractions.addChannelPin(channel.id, messageId, now);
 		const updatedChannelData = {...channel.toRow(), last_pin_timestamp: now};
-		const updatedChannel = await this.channelRepository.channelData.upsert(updatedChannelData);
+		const updatedChannel = await this.channelRepository.channelData.upsert(updatedChannelData, channel.toRow());
 		await this.dispatchChannelPinsUpdate(updatedChannel);
 		await this.sendPinSystemMessage({channel, message, userId});
 		await dispatchMessageUpdateBroadcast({
@@ -184,6 +189,7 @@ export class MessagePinService extends MessageInteractionBase {
 					channel_id: channel.id.toString(),
 					message_id: messageId.toString(),
 				})
+				.withThreadScope(channel.isThread())
 				.withReason(auditLogReason ?? null)
 				.commit();
 		}
@@ -209,6 +215,7 @@ export class MessagePinService extends MessageInteractionBase {
 			}
 		}
 		this.ensureTextChannel(channel);
+		assertThreadInteractionAllowed(authChannel, 'pin');
 		await this.assertMessageHistoryAccess({authChannel, messageId});
 		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
 		if (!message) throw new UnknownMessageError();
@@ -231,6 +238,7 @@ export class MessagePinService extends MessageInteractionBase {
 					channel_id: channel.id.toString(),
 					message_id: messageId.toString(),
 				})
+				.withThreadScope(channel.isThread())
 				.withReason(auditLogReason ?? null)
 				.commit();
 		}

@@ -30,6 +30,7 @@ import {
 	MAX_MESSAGE_LENGTH_PREMIUM,
 	MAX_VOICE_MESSAGE_DURATION,
 } from '@fluxer/constants/src/LimitConstants';
+import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {CannotEditSystemMessageError} from '@fluxer/errors/src/domains/channel/CannotEditSystemMessageError';
 import {CannotSendEmptyMessageError} from '@fluxer/errors/src/domains/channel/CannotSendEmptyMessageError';
@@ -46,7 +47,7 @@ export class MessageValidationService {
 	) {}
 
 	ensureTextChannel(channel: Channel): void {
-		if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type)) {
+		if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_CHANNEL_TYPES.has(channel.type)) {
 			throw new CannotSendMessageToNonTextChannelError();
 		}
 	}

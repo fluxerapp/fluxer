@@ -32,6 +32,12 @@ import {
 	workerHelpers,
 	writeRow,
 } from '@app/api/channel/tests/CrosspostWorkerTestUtils';
+import {
+	ALL_THREADS_ACTIVE,
+	resetChannelThreadsConfig,
+	setChannelThreadsConfig,
+	threadsRequest,
+} from '@app/api/channel/tests/ThreadTestUtils';
 import type {EmbedService} from '@app/api/infrastructure/EmbedService';
 import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
 import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
@@ -58,6 +64,7 @@ import {
 	MessageReferenceTypes,
 } from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {ServerMessageFlags} from '@fluxer/constants/src/ThreadConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 
@@ -86,6 +93,7 @@ describe('Crosspost propagation', () => {
 
 	afterEach(() => {
 		disableCrosspostWorker();
+		resetChannelThreadsConfig();
 		vi.restoreAllMocks();
 	});
 
@@ -381,6 +389,27 @@ describe('Crosspost propagation', () => {
 		expect(deleted.some((key) => key.startsWith(`attachments/${world.b.t2.id}/`))).toBe(false);
 		expect(await mappingRows(source.id)).toHaveLength(0);
 		expect(await sourceIndex(world.a.ann.id)).not.toContain(source.id);
+	});
+
+	test('deleting the source keeps the thread a follower started from its copy', async () => {
+		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
+		await followInto(harness, world, world.b.t1.id);
+		const source = await postAndPublish(harness, world, {content: 'thread me'});
+		const copy = await onlyCopy(world.b.t1.id, source.id);
+		await threadsRequest(harness, world.b.owner.token)
+			.post(`/channels/${world.b.t1.id}/messages/${copy.id}/threads`)
+			.body({name: 'discussion'})
+			.expect(201)
+			.execute();
+		await deleteMessageRequest(harness, world.a.owner.token, world.a.ann.id, source.id);
+		await world.worker.drain();
+		const row = (await readRow(world.b.t1.id, copy.id))!;
+		expect(row.flags).toBe(DELETED_COPY_FLAGS | ServerMessageFlags.HAS_THREAD);
+		expect(row.content).toBe(CROSSPOST_SOURCE_DELETED_CONTENT);
+		const rendered = await threadsRequest<MessageResponse & {thread?: {id: string}}>(harness, world.b.owner.token)
+			.get(`/channels/${world.b.t1.id}/messages/${copy.id}`)
+			.execute();
+		expect(rendered.thread?.id).toBe(copy.id);
 	});
 
 	describe('other delete paths mark copies too', () => {

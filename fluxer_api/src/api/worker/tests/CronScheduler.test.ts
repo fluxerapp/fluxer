@@ -91,4 +91,27 @@ describe('CronScheduler', () => {
 
 		expect(addJob).not.toHaveBeenCalled();
 	});
+
+	it('skips the lease and the enqueue while the enabled predicate is false', async () => {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+		const {scheduler, addJob, setnx} = createScheduler();
+		let enabled = false;
+		scheduler.upsert('expireAttachments', 'expireAttachments', {}, '* * * * * *', {
+			ledger: false,
+			enabled: () => enabled,
+		});
+
+		scheduler.start();
+		await vi.advanceTimersByTimeAsync(3000);
+		expect(setnx).not.toHaveBeenCalled();
+		expect(addJob).not.toHaveBeenCalled();
+
+		enabled = true;
+		await vi.advanceTimersByTimeAsync(1000);
+		scheduler.stop();
+
+		expect(setnx).toHaveBeenCalledTimes(1);
+		expect(addJob).toHaveBeenCalledTimes(1);
+	});
 });

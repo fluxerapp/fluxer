@@ -2,8 +2,8 @@
 
 import {ALL_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
 
-export function normalizeBotInvitePermissions(requestedPermissions: bigint): bigint {
-	return requestedPermissions & ALL_PERMISSIONS;
+export function normalizeBotInvitePermissions(requestedPermissions: bigint, mask: bigint = ALL_PERMISSIONS): bigint {
+	return requestedPermissions & mask;
 }
 
 function hasAdministratorPermission(permissions: bigint): boolean {
@@ -17,11 +17,13 @@ function hasManageGuildPermission(permissions: bigint): boolean {
 export function canAuthorizeBotInvite({
 	userPermissions,
 	requestedPermissions,
+	mask = ALL_PERMISSIONS,
 }: {
 	userPermissions: bigint;
 	requestedPermissions?: bigint | null;
+	mask?: bigint;
 }): boolean {
-	const normalizedRequestedPermissions = normalizeBotInvitePermissions(requestedPermissions ?? 0n);
+	const normalizedRequestedPermissions = normalizeBotInvitePermissions(requestedPermissions ?? 0n, mask);
 	if (!hasAdministratorPermission(userPermissions) && !hasManageGuildPermission(userPermissions)) {
 		return false;
 	}

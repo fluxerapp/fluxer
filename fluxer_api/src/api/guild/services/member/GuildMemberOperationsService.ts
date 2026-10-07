@@ -33,8 +33,9 @@ import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {dispatchUserGuildSettingsUpdate} from '@app/api/user/UserGuildSettingsThreadView';
 import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
-import {mapUserGuildSettingsToResponse, mapUserSettingsToResponse} from '@app/api/user/UserMappers';
+import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
 import {addGuildToUncategorizedFolder, removeGuildFromUserFolders} from '@app/api/user/utils/GuildFolderUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -973,19 +974,7 @@ export class GuildMemberOperationsService {
 		userId: UserID;
 		settings: UserGuildSettings;
 	}): Promise<void> {
-		const payload = mapUserGuildSettingsToResponse(settings);
-		await this.gatewayService.dispatchPresence({
-			userId,
-			event: 'USER_GUILD_SETTINGS_UPDATE',
-			data: payload,
-		});
-		if (payload.guild_id !== null) {
-			await this.gatewayService.syncPushUserGuildSettings({
-				userId,
-				guildId: settings.guildId,
-				settings: payload,
-			});
-		}
+		await dispatchUserGuildSettingsUpdate(this.gatewayService, userId, settings);
 	}
 
 	private async rollbackPreparedAssets(preparedAssets: PreparedMemberAssets): Promise<void> {

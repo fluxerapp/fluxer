@@ -53,6 +53,11 @@ import {
 	presentRoleUpdate,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogRolePresentation';
 import {UNKNOWN_ACTION_SUMMARY} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages';
+import {
+	presentThreadCreate,
+	presentThreadDelete,
+	presentThreadUpdate,
+} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation';
 import {actorPlaceholder, decodeAuditReason} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import type {GuildAuditLogEntryResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
@@ -93,6 +98,9 @@ const PRESENTERS = {
 	[AuditLogActionType.MESSAGE_BULK_DELETE]: presentMessageBulkDelete,
 	[AuditLogActionType.MESSAGE_PIN]: presentMessagePin,
 	[AuditLogActionType.MESSAGE_UNPIN]: presentMessageUnpin,
+	[AuditLogActionType.THREAD_CREATE]: presentThreadCreate,
+	[AuditLogActionType.THREAD_UPDATE]: presentThreadUpdate,
+	[AuditLogActionType.THREAD_DELETE]: presentThreadDelete,
 } satisfies Record<AuditLogActionType, AuditLogPresenter>;
 
 function presentUnknownAction(entry: GuildAuditLogEntryResponse): AuditLogDomainResult {

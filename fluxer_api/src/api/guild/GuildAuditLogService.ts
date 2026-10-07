@@ -2,7 +2,12 @@
 
 import {type ChannelID, createRoleID, type GuildID, type RoleID, type UserID} from '@app/api/BrandedTypes';
 import type {GuildAuditLogRow} from '@app/api/database/types/GuildTypes';
-import {isNoopGuildAuditLog, mapGuildAuditLogEntry} from '@app/api/guild/GuildAuditLogEntryMapper';
+import {
+	isNoopGuildAuditLog,
+	mapGuildAuditLogEntry,
+	THREAD_AUDIT_LOG_ACTION_TYPES,
+	THREAD_SCOPED_AUDIT_OPTION,
+} from '@app/api/guild/GuildAuditLogEntryMapper';
 import type {AuditLogChange, GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -38,6 +43,7 @@ interface CreateGuildAuditLogParams {
 	metadata?: Map<string, string> | Record<string, string> | Array<[string, string]>;
 	changes?: GuildAuditLogChange | null;
 	createdAt?: Date;
+	threadScoped?: boolean;
 }
 
 function normalizeAuditLogMetadata(metadata?: CreateGuildAuditLogParams['metadata']): Map<string, string> {
@@ -64,6 +70,9 @@ export class GuildAuditLogService {
 	async createLog(params: CreateGuildAuditLogParams): Promise<GuildAuditLog> {
 		const logId = await this.snowflakeService.generate();
 		const metadataMap = normalizeAuditLogMetadata(params.metadata);
+		if (params.threadScoped) {
+			metadataMap.set(THREAD_SCOPED_AUDIT_OPTION, '1');
+		}
 		const row: GuildAuditLogRow = {
 			guild_id: params.guildId,
 			log_id: logId,
@@ -75,7 +84,7 @@ export class GuildAuditLogService {
 			changes: params.changes ? JSON.stringify(params.changes) : null,
 		};
 		const log = await this.guildRepository.createAuditLog(row);
-		await this.dispatchAuditLogEntryCreate(log);
+		await this.dispatchAuditLogEntryCreate(log, params.threadScoped === true);
 		if (params.actionType === AuditLogActionType.MESSAGE_DELETE) {
 			await this.scheduleMessageDeleteBatchJob(params.guildId);
 		}
@@ -181,6 +190,7 @@ export class GuildAuditLogService {
 		// primary key in one batch, and Cassandra resolves that tie in favour of the tombstone, so the entry
 		// would silently vanish from every table whose key does not include action_type.
 		const logId = await this.snowflakeService.generate();
+		const threadScoped = group.logs.some((log) => log.options.has(THREAD_SCOPED_AUDIT_OPTION));
 		const row: GuildAuditLogRow = {
 			guild_id: guildId,
 			log_id: logId,
@@ -191,11 +201,12 @@ export class GuildAuditLogService {
 			options: new Map([
 				['channel_id', group.channelId],
 				['count', group.logs.length.toString()],
+				...(threadScoped ? [[THREAD_SCOPED_AUDIT_OPTION, '1'] as [string, string]] : []),
 			]),
 			changes: null,
 		};
 		const log = await this.guildRepository.batchDeleteAndCreateAuditLogs(guildId, group.logs, row);
-		await this.dispatchAuditLogEntryCreate(log);
+		await this.dispatchAuditLogEntryCreate(log, threadScoped);
 		return log;
 	}
 
@@ -370,12 +381,17 @@ export class GuildAuditLogService {
 		return JSON.stringify(a) === JSON.stringify(b);
 	}
 
-	private async dispatchAuditLogEntryCreate(log: GuildAuditLog): Promise<void> {
+	private async dispatchAuditLogEntryCreate(log: GuildAuditLog, threadScoped = false): Promise<void> {
+		const scoped = threadScoped || THREAD_AUDIT_LOG_ACTION_TYPES.has(log.actionType);
 		try {
 			await this.gatewayService.dispatchGuild({
 				guildId: log.guildId,
 				event: 'GUILD_AUDIT_LOG_ENTRY_CREATE',
-				data: {...mapGuildAuditLogEntry(log), guild_id: log.guildId.toString()},
+				data: {
+					...mapGuildAuditLogEntry(log),
+					guild_id: log.guildId.toString(),
+					...(scoped ? {__thread_scoped: log.guildId.toString()} : {}),
+				},
 			});
 		} catch (error) {
 			Logger.error(
@@ -439,6 +455,11 @@ class GuildAuditLogBuilder {
 		return this;
 	}
 
+	withThreadScope(scoped = true): this {
+		this.params.threadScoped = scoped;
+		return this;
+	}
+
 	withCreatedAt(createdAt?: Date): this {
 		this.params.createdAt = createdAt;
 		return this;
@@ -460,6 +481,7 @@ class GuildAuditLogBuilder {
 			metadata: this.metadataMap ?? undefined,
 			changes: this.params.changes ?? null,
 			createdAt: this.params.createdAt,
+			threadScoped: this.params.threadScoped,
 		});
 	}
 }

@@ -57,6 +57,7 @@ export interface ApiTestHarness {
 
 interface CreateApiTestHarnessOptions {
 	search?: 'disabled' | 'enabled';
+	registerRoutes?: (routes: HonoApp) => void;
 }
 
 export async function createApiTestHarness(options: CreateApiTestHarnessOptions = {}): Promise<ApiTestHarness> {
@@ -92,6 +93,7 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 	} = await createAPIApp({
 		config: Config,
 		logger: harnessLogger,
+		registerRoutes: options.registerRoutes,
 	});
 	try {
 		await initializeApp();

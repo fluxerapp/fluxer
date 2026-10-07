@@ -228,3 +228,38 @@ export interface GuildMemberSearchFilters {
 	sortBy?: 'joinedAt' | 'relevance';
 	sortOrder?: 'asc' | 'desc';
 }
+
+export interface SearchableThread {
+	id: string;
+	guildId: string;
+	parentId: string;
+	type: number;
+	name: string;
+	ownerId: string | null;
+	archived: boolean;
+	locked: boolean;
+	appliedTagIds: Array<string>;
+	createdAt: number;
+	idSequence: number;
+	lastMessageAt: number;
+	archivedAt: number;
+}
+
+export interface ThreadSearchCursor {
+	createdAt: number;
+	idSequence: number;
+}
+
+export interface ThreadSearchFilters {
+	guildId: string;
+	parentId: string;
+	publicOnly?: boolean;
+	privateThreadIds?: Array<string>;
+	archived?: boolean;
+	tagIds?: Array<string>;
+	tagSetting?: 'match_some' | 'match_all';
+	after?: ThreadSearchCursor;
+	before?: ThreadSearchCursor;
+	sortBy?: 'last_message_time' | 'archive_time' | 'relevance' | 'creation_time';
+	sortOrder?: 'asc' | 'desc';
+}

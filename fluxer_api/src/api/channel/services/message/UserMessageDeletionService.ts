@@ -7,7 +7,7 @@ import {
 	type CrosspostWorkerService,
 	enqueueCrosspostSourceRemoval,
 } from '@app/api/channel/services/message/CrosspostPropagation';
-import {purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import {decrementThreadMessageCount, purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
 import {
 	isChannelEligible,
 	isTimestampInWindow,
@@ -169,9 +169,15 @@ export class UserMessageDeletionService {
 			}
 		}
 		if (scope.guildId) {
-			const channels = await this.deps.channelRepository.channelData.listGuildChannels(scope.guildId);
+			const channels = await this.deps.channelRepository.channelData.listGuildChannels(scope.guildId, 'complete');
 			for (const channel of channels) {
 				allowlist.add(channel.id.toString());
+			}
+			const threadIds = await this.deps.channelRepository.threads.listGuildThreadIds(scope.guildId, {
+				parents: channels,
+			});
+			for (const threadId of threadIds) {
+				allowlist.add(threadId.toString());
 			}
 		}
 		return allowlist;
@@ -236,6 +242,7 @@ export class UserMessageDeletionService {
 				),
 			);
 			await this.deps.channelRepository.bulkDeleteMessages(channelId, messageIds);
+			await decrementThreadMessageCount(this.deps.channelRepository, channel, messageIds);
 			await this.eventDispatcher.dispatchBulkDelete(channel, messageIds);
 			await enqueueCrosspostSourceRemoval(this.deps.workerService, {
 				messages: messageObjects,

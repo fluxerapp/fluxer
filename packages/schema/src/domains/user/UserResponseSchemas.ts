@@ -396,6 +396,9 @@ const UserGuildChannelOverride = z.object({
 	unread_badges: withFieldDescription(UserNotificationSettingsSchema, 'Unread badges level override for this channel')
 		.nullish()
 		.describe('Unread badges level override for this channel (null = inherit)'),
+	flags: Int32Type.optional().describe(
+		'Channel override flags (NEW_FORUM_THREADS_OFF 1<<13, NEW_FORUM_THREADS_ON 1<<14)',
+	),
 });
 export const UserGuildSettingsResponse = z.object({
 	guild_id: SnowflakeStringType.nullable().describe('The ID of the guild these settings apply to'),

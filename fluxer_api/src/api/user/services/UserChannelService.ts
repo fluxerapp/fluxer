@@ -12,6 +12,7 @@ import {
 	createMessageResponseDataService,
 	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
@@ -232,8 +233,16 @@ export class UserChannelService {
 		}
 	}
 
-	async pinDmChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<void> {
-		const channel = await this.channelService.channelData.operations.getChannel({userId, channelId});
+	async pinDmChannel({
+		userId,
+		channelId,
+		viewer,
+	}: {
+		userId: UserID;
+		viewer: ThreadViewer;
+		channelId: ChannelID;
+	}): Promise<void> {
+		const channel = await this.channelService.channelData.operations.getChannel({userId, viewer, channelId});
 		if (channel.type !== ChannelTypes.DM && channel.type !== ChannelTypes.GROUP_DM) {
 			throw InputValidationError.fromCode('channel_id', ValidationErrorCodes.CHANNEL_MUST_BE_DM_OR_GROUP_DM);
 		}
@@ -248,8 +257,16 @@ export class UserChannelService {
 		});
 	}
 
-	async unpinDmChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<void> {
-		const channel = await this.channelService.channelData.operations.getChannel({userId, channelId});
+	async unpinDmChannel({
+		userId,
+		channelId,
+		viewer,
+	}: {
+		userId: UserID;
+		viewer: ThreadViewer;
+		channelId: ChannelID;
+	}): Promise<void> {
+		const channel = await this.channelService.channelData.operations.getChannel({userId, viewer, channelId});
 		if (channel.type !== ChannelTypes.DM && channel.type !== ChannelTypes.GROUP_DM) {
 			throw InputValidationError.fromCode('channel_id', ValidationErrorCodes.CHANNEL_MUST_BE_DM_OR_GROUP_DM);
 		}
@@ -266,9 +283,10 @@ export class UserChannelService {
 
 	async preloadDMMessages(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelIds: Array<ChannelID>;
 	}): Promise<Record<string, MessageResponse | null>> {
-		const {userId, channelIds} = params;
+		const {userId, viewer, channelIds} = params;
 		if (channelIds.length > 100) {
 			throw InputValidationError.fromCode('channels', ValidationErrorCodes.CANNOT_PRELOAD_MORE_THAN_100_CHANNELS);
 		}
@@ -276,7 +294,7 @@ export class UserChannelService {
 		const results: Record<string, MessageResponse | null> = {};
 		const fetchPromises = channelIds.map(async (channelId) => {
 			try {
-				const channel = await this.channelService.channelData.operations.getChannel({userId, channelId});
+				const channel = await this.channelService.channelData.operations.getChannel({userId, viewer, channelId});
 				if (channel.type !== ChannelTypes.DM && channel.type !== ChannelTypes.GROUP_DM) {
 					return;
 				}

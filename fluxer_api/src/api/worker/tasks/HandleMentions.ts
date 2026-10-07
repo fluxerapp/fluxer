@@ -15,6 +15,7 @@ import {
 } from '@app/api/BrandedTypes';
 import type {GatewayMentionSourceEntry, IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
+import {ThreadMentionScope} from '@app/api/worker/tasks/ThreadMentionScope';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler, WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
@@ -118,6 +119,7 @@ async function enqueueMentionChunks({
 	addJob,
 	firstChunkIndex = 0,
 	chunkCount,
+	thread = false,
 }: {
 	chunks: Array<Array<MentionChunkEntry>>;
 	channelId: string;
@@ -126,6 +128,7 @@ async function enqueueMentionChunks({
 	addJob: WorkerTaskHelpers['addJob'];
 	firstChunkIndex?: number;
 	chunkCount?: number;
+	thread?: boolean;
 }): Promise<number> {
 	for (let offset = 0; offset < chunks.length; offset += MENTION_CHUNK_ENQUEUE_CONCURRENCY) {
 		const chunkSlice = chunks.slice(offset, offset + MENTION_CHUNK_ENQUEUE_CONCURRENCY);
@@ -140,6 +143,7 @@ async function enqueueMentionChunks({
 						guildId,
 						chunkIndex: index,
 						...(chunkCount !== undefined && {chunkCount}),
+						...(thread && {thread: true}),
 						mentions: chunk,
 					},
 					{
@@ -164,6 +168,7 @@ async function enqueueGuildMentionSourcePages({
 	roleIds,
 	userIds,
 	addJob,
+	threadScope,
 }: {
 	gatewayService: IGatewayService;
 	guildId: GuildID;
@@ -175,6 +180,7 @@ async function enqueueGuildMentionSourcePages({
 	roleIds: Array<RoleID>;
 	userIds: Array<UserID>;
 	addJob: WorkerTaskHelpers['addJob'];
+	threadScope: ThreadMentionScope | null;
 }): Promise<{totalMentioned: number; chunkCount: number; pageCount: number}> {
 	let cursor: string | undefined;
 	let chunkIndex = 0;
@@ -193,8 +199,9 @@ async function enqueueGuildMentionSourcePages({
 			...(cursor !== undefined && {cursor}),
 		});
 		pageCount++;
-		totalMentioned += page.mentions.length;
-		const chunks = chunkEntries(page.mentions.map(toMentionChunkEntry), MENTION_CHUNK_SIZE);
+		const mentions = threadScope ? await threadScope.filter(page.mentions) : page.mentions;
+		totalMentioned += mentions.length;
+		const chunks = chunkEntries(mentions.map(toMentionChunkEntry), MENTION_CHUNK_SIZE);
 		chunkIndex = await enqueueMentionChunks({
 			chunks,
 			channelId: channelId.toString(),
@@ -202,6 +209,7 @@ async function enqueueGuildMentionSourcePages({
 			guildId: guildId.toString(),
 			addJob,
 			firstChunkIndex: chunkIndex,
+			thread: threadScope !== null,
 		});
 		const nextCursor = page.nextCursor ?? undefined;
 		if (nextCursor !== undefined && nextCursor === cursor) {
@@ -219,7 +227,7 @@ async function enqueueGuildMentionSourcePages({
 const handleMentions: WorkerTaskHandler = async (payload, helpers) => {
 	const validated = PayloadSchema.parse(payload);
 	helpers.logger.debug({payload: validated}, 'Processing handleMentions task');
-	const {channelRepository, gatewayService} = getWorkerDependencies();
+	const {channelRepository, gatewayService, userRepository} = getWorkerDependencies();
 	const authorId = createUserID(BigInt(validated.authorId));
 	const channelId = createChannelID(BigInt(validated.channelId));
 	const messageId = createMessageID(BigInt(validated.messageId));
@@ -241,6 +249,11 @@ const handleMentions: WorkerTaskHandler = async (payload, helpers) => {
 	const userIds =
 		validated.mentionUserIds?.map((userId) => createUserID(BigInt(userId))) ?? Array.from(message.mentionedUserIds);
 	if (channel.guildId) {
+		const threadScope = await ThreadMentionScope.load(
+			{channelRepository, gatewayService, userRepository},
+			channel,
+			messageId,
+		);
 		const result = await enqueueGuildMentionSourcePages({
 			gatewayService,
 			guildId: channel.guildId,
@@ -252,7 +265,9 @@ const handleMentions: WorkerTaskHandler = async (payload, helpers) => {
 			userIds,
 			messageId,
 			addJob: helpers.addJob,
+			threadScope,
 		});
+		await threadScope?.finish();
 		if (result.totalMentioned === 0) {
 			Logger.debug({channelId, guildId: channel.guildId}, 'No users to mention, skipping read state updates');
 			return;

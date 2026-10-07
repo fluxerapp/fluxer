@@ -5,6 +5,7 @@ import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {AnnouncementChannelRequiredError} from '@fluxer/errors/src/domains/channel/AnnouncementChannelRequiredError';
 import {ChannelAlreadyFollowedError} from '@fluxer/errors/src/domains/channel/ChannelAlreadyFollowedError';
 import {ChannelHasFollowedChannelsError} from '@fluxer/errors/src/domains/channel/ChannelHasFollowedChannelsError';
+import {ChannelHasThreadsError} from '@fluxer/errors/src/domains/channel/ChannelHasThreadsError';
 import {ChannelTypeConversionNotSupportedError} from '@fluxer/errors/src/domains/channel/ChannelTypeConversionNotSupportedError';
 import {FollowTargetContentWarningRequiredError} from '@fluxer/errors/src/domains/channel/FollowTargetContentWarningRequiredError';
 import {FollowTargetNotAgeRestrictedError} from '@fluxer/errors/src/domains/channel/FollowTargetNotAgeRestrictedError';
@@ -19,6 +20,7 @@ describe.each([
 	[APIErrorCodes.ANNOUNCEMENT_CHANNEL_REQUIRED, AnnouncementChannelRequiredError],
 	[APIErrorCodes.CHANNEL_ALREADY_FOLLOWED, ChannelAlreadyFollowedError],
 	[APIErrorCodes.CHANNEL_HAS_FOLLOWED_CHANNELS, ChannelHasFollowedChannelsError],
+	[APIErrorCodes.CHANNEL_HAS_THREADS, ChannelHasThreadsError],
 	[APIErrorCodes.CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED, ChannelTypeConversionNotSupportedError],
 	[APIErrorCodes.FOLLOW_TARGET_CONTENT_WARNING_REQUIRED, FollowTargetContentWarningRequiredError],
 	[APIErrorCodes.FOLLOW_TARGET_NOT_AGE_RESTRICTED, FollowTargetNotAgeRestrictedError],

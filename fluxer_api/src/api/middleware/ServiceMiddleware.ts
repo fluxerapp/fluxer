@@ -14,7 +14,9 @@ import {ChannelRequestService} from '@app/api/channel/services/ChannelRequestSer
 import {CrosspostSourceService} from '@app/api/channel/services/message/CrosspostSourceService';
 import {MessageRequestService} from '@app/api/channel/services/message/MessageRequestService';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import {ThreadMessageResponses} from '@app/api/channel/services/message/ThreadMessageResponses';
 import {StreamService} from '@app/api/channel/services/StreamService';
+import {ThreadService} from '@app/api/channel/services/thread/ThreadService';
 import {ConnectionRequestService} from '@app/api/connection/ConnectionRequestService';
 import {ConnectionService} from '@app/api/connection/ConnectionService';
 import {DonationService} from '@app/api/donation/DonationService';
@@ -88,6 +90,7 @@ import {
 	getKVAccountDeletionQueue,
 	getKVActivityTracker,
 	getKVBulkMessageDeletionQueue,
+	getKVThreadAutoArchiveQueue,
 	getLimitConfigService,
 	getNcmecSubmissionService,
 	getOAuth2TokenRepository,
@@ -213,6 +216,7 @@ class RequestServices implements RequestScopedServices {
 	private cachedSsoService: SsoService | undefined;
 	private cachedDesktopHandoffService: DesktopHandoffService | undefined;
 	private cachedChannelRequestService: ChannelRequestService | undefined;
+	private cachedThreadService: ThreadService | undefined;
 	private cachedMessageRequestService: MessageRequestService | undefined;
 	private cachedConnectionService: ConnectionService | undefined;
 	private cachedConnectionRequestService: ConnectionRequestService | undefined;
@@ -583,8 +587,39 @@ class RequestServices implements RequestScopedServices {
 	}
 
 	get channelRequestService(): ChannelRequestService {
-		this.cachedChannelRequestService ??= new ChannelRequestService(this.channelService, getUserCacheService());
+		this.cachedChannelRequestService ??= new ChannelRequestService(
+			this.channelService,
+			getUserCacheService(),
+			getCacheService(),
+		);
 		return this.cachedChannelRequestService;
+	}
+
+	get threadService(): ThreadService {
+		this.cachedThreadService ??= new ThreadService({
+			channelRepository: this.channelRepository,
+			guildRepository: this.requestGuildRepository,
+			userRepository: getUserRepository(),
+			channelAuth: this.channelService.channelData.auth,
+			gatewayService: this.gatewayService,
+			snowflakeService: getSnowflakeService(),
+			rateLimitService: getRateLimitService(),
+			cacheService: getCacheService(),
+			guildAuditLogService: getGuildAuditLogService(),
+			userCacheService: getUserCacheService(),
+			archiveQueue: getKVThreadAutoArchiveQueue(),
+			messagePersistence: this.channelService.messages.persistence,
+			threadMessageResponses: new ThreadMessageResponses(
+				this.channelRepository,
+				createMessageResponseDataService(),
+				getUserCacheService(),
+			),
+			purgeChannelAttachments: (channel) => this.channelService.attachments.purgeChannelAttachments(channel),
+			readStateService: getReadStateService(),
+			sendForumStarter: (params) => this.messageRequestService.sendForumStarter(params),
+			validateForumStarter: (params) => this.messageRequestService.validateForumStarter(params),
+		});
+		return this.cachedThreadService;
 	}
 
 	get messageRequestService(): MessageRequestService {
@@ -874,6 +909,7 @@ class RequestServices implements RequestScopedServices {
 			getSnowflakeService(),
 			getGuildAuditLogService(),
 			getLimitConfigService(),
+			() => this.threadService,
 		);
 		return this.cachedWebhookService;
 	}

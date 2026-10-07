@@ -433,6 +433,16 @@ async fn dispatch_guild_action(
                 "Failed to delete sticker",
             )
         }
+        "delete_thread" => {
+            let Some(thread_id) = get("thread_id") else {
+                return FlashData::error("Thread ID is required");
+            };
+            action_result(
+                client.delete_thread_channel(&thread_id).await,
+                "Thread deleted",
+                "Failed to delete thread",
+            )
+        }
         "trigger_archive" => {
             let inc = form.bool_value("include_attachments");
             action_result(

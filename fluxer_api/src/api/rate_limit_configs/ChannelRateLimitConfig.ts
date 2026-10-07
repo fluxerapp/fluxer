@@ -136,6 +136,46 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'channel:follower_stats::channel_id',
 		config: {limit: 10, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_CREATE: {
+		bucket: 'channel:thread:create::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_MEMBER_PUT: {
+		bucket: 'channel:thread:member:put::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_MEMBER_DELETE: {
+		bucket: 'channel:thread:member:delete::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_MEMBER_SETTINGS: {
+		bucket: 'channel:thread:member:settings::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_MEMBERS_LIST: {
+		bucket: 'channel:thread:members:list::channel_id',
+		config: {limit: 20, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREAD_MEMBER_GET: {
+		bucket: 'channel:thread:member:get::channel_id',
+		config: {limit: 40, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREADS_ARCHIVED_LIST: {
+		bucket: 'channel:threads:archived:list::channel_id',
+		config: {limit: 20, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_THREADS_SEARCH: {
+		bucket: 'channel:threads:search::channel_id',
+		config: {limit: 20, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_POST_DATA: {
+		bucket: 'channel:post_data::channel_id',
+		config: {limit: 20, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_FORUM_TAGS: {
+		bucket: 'channel:forum_tags::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	VOICE_ENTRANCE_SOUND_PLAY: {
 		bucket: 'voice:entrance_sound:play::user_id::channel_id',
 		config: {limit: 3, windowMs: ms('30 seconds')},

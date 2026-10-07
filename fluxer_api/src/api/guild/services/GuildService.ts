@@ -2,15 +2,21 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import type {EmojiID, GuildID, RoleID, StickerID, UserID} from '@app/api/BrandedTypes';
-import {createWebhookID} from '@app/api/BrandedTypes';
+import {createChannelID, createWebhookID} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {mapThreadToResponse} from '@app/api/channel/services/thread/ThreadMappers';
+import {everEnabled, isTainted, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import {resolveExpressionSourceGuild} from '@app/api/guild/ExpressionSourceGuild';
 import {
+	collectAuditLogChannelIds,
 	collectGuildAuditLogUserIds,
 	isNoopGuildAuditLog,
+	isThreadScopedAuditLog,
 	mapGuildAuditLogEntry,
+	maskThreadAuditLog,
 	type StoredGuildAuditLogEntryResponse,
+	THREAD_AUDIT_LOG_ACTION_TYPES,
 } from '@app/api/guild/GuildAuditLogEntryMapper';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
@@ -38,6 +44,7 @@ import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {THREAD_FEATURE_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
@@ -46,6 +53,7 @@ import {ResourceLockedError} from '@fluxer/errors/src/domains/core/ResourceLocke
 import {UnknownGuildEmojiError} from '@fluxer/errors/src/domains/guild/UnknownGuildEmojiError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildStickerError} from '@fluxer/errors/src/domains/guild/UnknownGuildStickerError';
+import type {ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
 import type {
 	AuditLogWebhookResponse,
 	GuildAuditLogListResponse,
@@ -102,7 +110,7 @@ export class GuildService {
 	constructor(
 		apiContext: ApiContext,
 		guildRepository: IGuildRepositoryAggregate,
-		channelRepository: IChannelRepository,
+		private readonly channelRepository: IChannelRepository,
 		inviteRepository: InviteRepository,
 		channelService: ChannelService,
 		userCacheService: UserCacheService,
@@ -294,6 +302,7 @@ export class GuildService {
 
 	async listGuildAuditLogs(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		guildId: GuildID;
 		requestCache: RequestCache;
 		limit?: number;
@@ -328,8 +337,11 @@ export class GuildService {
 		afterLogId?: bigint;
 		filterUserId?: UserID;
 		actionType?: AuditLogActionType;
+		viewer?: ThreadViewer;
 	}): Promise<StoredGuildAuditLogListResponse> {
 		const {guildId, requestCache, limit = 50, beforeLogId, afterLogId, filterUserId, actionType} = params;
+		const threadsVisible = params.viewer === undefined || viewerActive(params.viewer, guildId);
+		const hideThreadEntries = !threadsVisible && everEnabled() && (await isTainted(guildId));
 		if (beforeLogId !== undefined && afterLogId !== undefined) {
 			throw InputValidationError.fromCode('before', ValidationErrorCodes.CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER);
 		}
@@ -351,18 +363,15 @@ export class GuildService {
 			if (logs.length === 0) {
 				break;
 			}
-			if (shouldBatch) {
-				const batchResult = await this.guildAuditLogService.batchConsecutiveMessageDeleteLogs(guildId, logs);
-				for (const log of batchResult.processedLogs) {
-					if (processedLogs.length < effectiveLimit && !isNoopGuildAuditLog(log.actionType, log.changes)) {
-						processedLogs.push(log);
-					}
-				}
-			} else {
-				for (const log of logs) {
-					if (processedLogs.length < effectiveLimit && !isNoopGuildAuditLog(log.actionType, log.changes)) {
-						processedLogs.push(log);
-					}
+			const batchedLogs = shouldBatch
+				? (await this.guildAuditLogService.batchConsecutiveMessageDeleteLogs(guildId, logs)).processedLogs
+				: logs;
+			const visibleLogs = hideThreadEntries
+				? (await this.dropThreadScopedAuditLogs(batchedLogs)).map(maskThreadAuditLog)
+				: batchedLogs;
+			for (const log of visibleLogs) {
+				if (processedLogs.length < effectiveLimit && !isNoopGuildAuditLog(log.actionType, log.changes)) {
+					processedLogs.push(log);
 				}
 			}
 			if (logs.length < fetchLimit) {
@@ -392,12 +401,79 @@ export class GuildService {
 		]);
 		const entries = processedLogs.map((log) => mapGuildAuditLogEntry(log));
 		const users = Array.from(userPartials.values());
-		const webhooks = this.buildAuditLogWebhookResponses(webhookRecords.webhooks);
-		return {
+		const webhooks = this.buildAuditLogWebhookResponses(
+			hideThreadEntries ? await this.dropForumWebhooks(webhookRecords.webhooks) : webhookRecords.webhooks,
+		);
+		const response: StoredGuildAuditLogListResponse = {
 			audit_log_entries: entries,
 			users,
 			webhooks,
 		};
+		if (params.viewer !== undefined && threadsVisible) {
+			response.threads = await this.loadAuditLogThreads(processedLogs);
+		}
+		return response;
+	}
+
+	private async dropThreadScopedAuditLogs(logs: Array<GuildAuditLog>): Promise<Array<GuildAuditLog>> {
+		const candidateIds = [...new Set(logs.flatMap((log) => collectAuditLogChannelIds(log)))].filter((id) =>
+			/^\d{1,20}$/.test(id),
+		);
+		const channels =
+			candidateIds.length > 0
+				? await this.channelRepository.listChannels(candidateIds.map((id) => createChannelID(BigInt(id))))
+				: [];
+		const gatedIds = new Set(
+			channels
+				.filter((channel) => THREAD_FEATURE_CHANNEL_TYPES.has(channel.type))
+				.map((channel) => channel.id.toString()),
+		);
+		return logs.filter((log) => !isThreadScopedAuditLog(log, gatedIds));
+	}
+
+	private async dropForumWebhooks(webhooks: Array<Webhook>): Promise<Array<Webhook>> {
+		const channelIds = [...new Set(webhooks.flatMap((webhook) => (webhook.channelId ? [webhook.channelId] : [])))];
+		if (channelIds.length === 0) return webhooks;
+		const forumIds = new Set(
+			(await this.channelRepository.listChannels(channelIds))
+				.filter((channel) => channel.isThreadOnly())
+				.map((channel) => channel.id),
+		);
+		return webhooks.filter((webhook) => !webhook.channelId || !forumIds.has(webhook.channelId));
+	}
+
+	private async loadAuditLogThreads(logs: Array<GuildAuditLog>): Promise<Array<ThreadChannelResponse>> {
+		const threadIds = [
+			...new Set(
+				logs
+					.filter((log) => THREAD_AUDIT_LOG_ACTION_TYPES.has(log.actionType) && log.targetId)
+					.map((log) => log.targetId!),
+			),
+		]
+			.filter((id) => /^\d{1,20}$/.test(id))
+			.map((id) => createChannelID(BigInt(id)));
+		if (threadIds.length === 0) return [];
+		const [channels, states, stats] = await Promise.all([
+			this.channelRepository.listChannels(threadIds),
+			this.channelRepository.threads.getStates(threadIds),
+			this.channelRepository.threads.getStatsMany(threadIds),
+		]);
+		const stateById = new Map(states.map((state) => [state.threadId.toString(), state]));
+		const parents = await this.channelRepository.listChannels([...new Set(states.map((state) => state.parentId))]);
+		const parentTypeById = new Map(parents.map((parent) => [parent.id.toString(), parent.type]));
+		return channels.flatMap((channel) => {
+			const state = stateById.get(channel.id.toString());
+			const threadStats = stats.get(channel.id);
+			if (!state || !threadStats || !channel.isThread()) return [];
+			return [
+				mapThreadToResponse({
+					channel,
+					state,
+					stats: threadStats,
+					parentType: parentTypeById.get(state.parentId.toString()) ?? null,
+				}),
+			];
+		});
 	}
 
 	private async loadAuditLogWebhooks(logs: Array<GuildAuditLog>): Promise<{

@@ -11,6 +11,7 @@ pub mod overview;
 pub mod reports;
 pub mod settings;
 pub mod stickers;
+pub mod threads;
 
 use crate::{api::types::GuildDetailInfo, utils::user_tag::user_tag};
 

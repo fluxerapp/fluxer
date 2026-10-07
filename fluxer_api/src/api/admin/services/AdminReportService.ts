@@ -21,9 +21,11 @@ import {
 	messageResponseAccessForChannel,
 	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
+import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {NcmecAttachmentStatusResponse, NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
+import {SYSTEM_THREAD_VIEWER} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
@@ -205,6 +207,7 @@ export class AdminReportService {
 			});
 			await this.deps.channelService.messages.send.sendMessage({
 				user: systemUser,
+				viewer: SYSTEM_THREAD_VIEWER,
 				channelId: dmChannel.id,
 				data: {
 					content: template.value.body,
@@ -523,7 +526,10 @@ export class AdminReportService {
 			return reportNsfwLookupCache.channelNsfwByChannelId.get(channelIdString) ?? null;
 		}
 		const channel = await this.deps.channelRepository.findUnique(channelId);
-		const channelNsfw = channel?.isNsfw ?? null;
+		const scope = channel
+			? await resolveNsfwScopeChannel(channel, (id) => this.deps.channelRepository.findUnique(id))
+			: null;
+		const channelNsfw = scope?.isNsfw ?? null;
 		reportNsfwLookupCache.channelNsfwByChannelId.set(channelIdString, channelNsfw);
 		return channelNsfw;
 	}

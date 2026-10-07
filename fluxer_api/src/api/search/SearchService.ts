@@ -3,6 +3,7 @@
 import {createChannelID, createGuildID, type UserID} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -55,10 +56,11 @@ export class SearchService {
 
 	async searchMessages(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		requestCache: RequestCache;
 		data: GlobalSearchMessagesRequest;
 	}): Promise<MessageSearchResponse> {
-		const {userId, requestCache, data} = params;
+		const {userId, viewer, requestCache, data} = params;
 		const {channel_id, channel_ids, context_channel_id, context_guild_id, ...rawSearchParams} = data;
 		const searchParams = normalizeQuotedPhrases(rawSearchParams);
 		const contextChannelId = context_channel_id ? createChannelID(context_channel_id) : null;
@@ -70,6 +72,7 @@ export class SearchService {
 			case 'all_guilds':
 				result = await this.guildService.search.searchAllGuilds({
 					userId,
+					viewer,
 					channelIds,
 					searchParams,
 					requestCache,
@@ -79,6 +82,7 @@ export class SearchService {
 			case 'open_dms':
 				result = await this.globalSearch.searchAcrossDms({
 					userId,
+					viewer,
 					scope,
 					searchParams,
 					requestCache,
@@ -89,6 +93,7 @@ export class SearchService {
 			case 'all':
 				result = await this.globalSearch.searchAcrossGuildsAndDms({
 					userId,
+					viewer,
 					dmScope: 'all_dms',
 					searchParams,
 					requestCache,
@@ -99,6 +104,7 @@ export class SearchService {
 			case 'open_dms_and_all_guilds':
 				result = await this.globalSearch.searchAcrossGuildsAndDms({
 					userId,
+					viewer,
 					dmScope: 'open_dms',
 					searchParams,
 					requestCache,
@@ -110,6 +116,7 @@ export class SearchService {
 				if (contextGuildId) {
 					result = await this.guildService.search.searchMessages({
 						userId,
+						viewer,
 						guildId: contextGuildId,
 						channelIds,
 						searchParams,
@@ -118,6 +125,7 @@ export class SearchService {
 				} else if (contextChannelId) {
 					result = await this.channelService.messages.retrieval.searchMessages({
 						userId,
+						viewer,
 						channelId: contextChannelId,
 						searchParams,
 						requestCache,

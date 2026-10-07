@@ -30,6 +30,7 @@ import {
 	withFieldDescription,
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {withSchemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
 function normalizeGuildFeatures(features: Array<string>): Array<string> {
@@ -199,6 +200,14 @@ export const GuildResponse = z.object({
 	approximate_presence_count: Int32Type.optional().describe(
 		'Approximate online member count (only when with_counts is true)',
 	),
+	threads_active: withSchemaMetadata(
+		z
+			.literal(true)
+			.describe(
+				'Present and true when threads, forum and media channels are active in this guild for the requesting client. Only set on the current user guild list',
+			),
+		{experiment: 'channel_threads'},
+	).optional(),
 });
 
 export type GuildResponse = z.infer<typeof GuildResponse>;

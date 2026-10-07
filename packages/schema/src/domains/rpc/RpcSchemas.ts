@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {RTC_REGION_ID_MAX_LENGTH, RTC_REGION_ID_MIN_LENGTH} from '@fluxer/constants/src/LimitConstants';
+import {FORUM_UNREAD_COUNT_CAP, FORUM_UNREADS_MAX_THREADS} from '@fluxer/constants/src/ThreadConstants';
+import {ChannelThreadsConfigResponse} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {GatewayRolloutConfigResponse} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {LegacyPushServiceDeliveryWire} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
 import {WebAuthnCredentialResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ChannelResponse, RtcRegionResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import {
+	ThreadMemberRpcResponse,
+	ThreadParentSettingsRpcResponse,
+} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
 import {VoiceStateResponse} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
 import {GuildEmojiResponse, GuildStickerResponse} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
@@ -47,6 +53,15 @@ const ReadStateResponse = z.object({
 	last_message_id: SnowflakeStringType.nullish().describe('ID of the last read message'),
 	last_pin_timestamp: z.string().nullish().describe('Timestamp of the last pinned message'),
 	version: UnsignedInt64StringType.optional().describe('Read-state version for ordering updates as a decimal uint64'),
+	flags: z.number().int().min(0).optional().describe('Server-stamped read state flags'),
+});
+
+const RPC_THREAD_MEMBERS_PAGE_MAX = 1000;
+const RPC_THREAD_MEMBERS_THREADS_MAX = 100;
+
+const ThreadGateRpcResponse = z.object({
+	active: z.boolean().describe('Whether the channel threads experiment is active for the guild'),
+	config_version: z.number().int().min(0).describe('Channel threads config version this decision was made on'),
 });
 
 export const RpcRequest = z.discriminatedUnion('type', [
@@ -57,6 +72,7 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		ip: createStringType(1, 45).optional().describe('Client IP address'),
 		latitude: createStringType(1, 32).optional().describe('Client latitude for region selection'),
 		longitude: createStringType(1, 32).optional().describe('Client longitude for region selection'),
+		thread_channels_capable: z.boolean().optional().describe('Whether the session can handle thread channels'),
 	}),
 	z.object({
 		type: z.literal('guild_collection').describe('Request type for fetching a single guild collection chunk'),
@@ -223,6 +239,50 @@ export const RpcRequest = z.discriminatedUnion('type', [
 			.literal('get_push_service_delivery_config')
 			.describe('Request type for fetching push service delivery configuration'),
 	}),
+	z.object({
+		type: z.literal('get_channel_threads_config').describe('Request type for fetching channel threads configuration'),
+	}),
+	z.object({
+		type: z.literal('get_thread_memberships').describe('Request type for fetching the thread memberships of a user'),
+		guild_id: SnowflakeType.describe('ID of the guild'),
+		user_id: SnowflakeType.describe('ID of the user'),
+	}),
+	z.object({
+		type: z.literal('list_thread_members').describe('Request type for listing the members of a thread'),
+		guild_id: SnowflakeType.describe('ID of the guild'),
+		thread_ids: z
+			.array(SnowflakeType)
+			.min(1)
+			.max(RPC_THREAD_MEMBERS_THREADS_MAX)
+			.describe('IDs of the threads, walked in order'),
+		limit: z.number().int().min(1).max(RPC_THREAD_MEMBERS_PAGE_MAX).optional().describe('Maximum members to return'),
+		after_user_id: SnowflakeType.optional().describe('Member cursor within the first thread'),
+	}),
+	z.object({
+		type: z.literal('forum_unreads').describe('Request type for counting unread messages in forum posts'),
+		guild_id: SnowflakeType.describe('ID of the guild'),
+		channel_id: SnowflakeType.describe('ID of the forum or media channel'),
+		user_id: SnowflakeType.describe('ID of the requesting user'),
+		threads: z
+			.array(
+				z.object({
+					thread_id: SnowflakeType.describe('ID of the post'),
+					ack_message_id: SnowflakeType.optional().describe('Last message the user has read in the post'),
+				}),
+			)
+			.min(1)
+			.max(FORUM_UNREADS_MAX_THREADS)
+			.describe('Posts to count'),
+	}),
+	z.object({
+		type: z.literal('guild_thread_flip_data').describe('Request type for re-evaluating the thread gate of a guild'),
+		guild_id: SnowflakeType.describe('ID of the guild'),
+		config_version: z.number().int().min(0).describe('Channel threads config version known to the gateway'),
+		paged_members: z
+			.boolean()
+			.optional()
+			.describe('Omit thread members so the gateway pages them through list_thread_members'),
+	}),
 ]);
 
 export type RpcRequest = z.infer<typeof RpcRequest>;
@@ -325,6 +385,12 @@ export const RpcResponseGuildCollectionData = z.object({
 	stickers: z.array(GuildStickerResponse).nullish().describe('List of custom stickers in the guild'),
 	members: z.array(GuildMemberResponse).nullish().describe('List of guild members in this chunk'),
 	voice_states: z.array(VoiceStateResponse).nullish().describe('List of guild voice states in this chunk'),
+	thread_gate: ThreadGateRpcResponse.optional().describe('Channel threads gate decision for the guild'),
+	thread_tainted: z.boolean().optional().describe('Whether the guild has ever held thread data'),
+	thread_only_channels: z
+		.array(ChannelResponse)
+		.optional()
+		.describe('Forum and media channels of the guild, merged into channels when active'),
 	has_more: z.boolean().describe('Whether more data is available for this collection'),
 	next_after_user_id: SnowflakeStringType.nullish().describe('Cursor for the next member chunk'),
 });
@@ -384,6 +450,10 @@ export const RpcResponse = z.discriminatedUnion('type', [
 						platform: z.string().describe('Push provider platform for this subscription'),
 						app_id: z.string().nullable().describe('Client app channel or bundle mapping identifier'),
 						provider_environment: z.string().nullable().describe('Push provider environment'),
+						thread_channels: z
+							.literal(true)
+							.optional()
+							.describe('Present when the subscribing client can open thread channels from a push'),
 					}),
 				),
 			)
@@ -545,6 +615,73 @@ export const RpcResponse = z.discriminatedUnion('type', [
 				config: LegacyPushServiceDeliveryWire.describe('Push service delivery configuration'),
 			})
 			.describe('Push service delivery config result'),
+	}),
+	z.object({
+		type: z.literal('get_channel_threads_config').describe('Response type for channel threads configuration'),
+		data: z
+			.object({
+				config: ChannelThreadsConfigResponse.describe('Channel threads configuration'),
+			})
+			.describe('Channel threads config result'),
+	}),
+	z.object({
+		type: z.literal('get_thread_memberships').describe('Response type for the thread memberships of a user'),
+		data: z
+			.object({
+				members: z.array(ThreadMemberRpcResponse).describe('Thread memberships of the user in the guild'),
+			})
+			.describe('Thread memberships result'),
+	}),
+	z.object({
+		type: z.literal('list_thread_members').describe('Response type for a page of thread members'),
+		data: z
+			.object({
+				members: z.array(ThreadMemberRpcResponse).describe('Thread members in this page'),
+				has_more: z.boolean().describe('Whether more members are available'),
+				next_thread_id: SnowflakeStringType.nullish().describe('Thread the next page starts in'),
+				next_after_user_id: SnowflakeStringType.nullish().describe('Member cursor within that thread'),
+			})
+			.describe('Thread members result'),
+	}),
+	z.object({
+		type: z.literal('forum_unreads').describe('Response type for forum post unread counts'),
+		data: z
+			.object({
+				threads: z
+					.array(
+						z.object({
+							thread_id: SnowflakeStringType.describe('ID of the post'),
+							count: z
+								.number()
+								.int()
+								.min(0)
+								.max(FORUM_UNREAD_COUNT_CAP)
+								.optional()
+								.describe('Unread messages after the acknowledged message, capped'),
+							missing: z.boolean().optional().describe('Whether the post has no acknowledged message'),
+						}),
+					)
+					.describe('Unread counts of the posts that belong to the channel'),
+			})
+			.describe('Forum unreads result'),
+	}),
+	z.object({
+		type: z.literal('guild_thread_flip_data').describe('Response type for a thread gate re-evaluation'),
+		data: z
+			.object({
+				config_version: z.number().int().min(0).describe('Channel threads config version the api evaluated'),
+				thread_gate: ThreadGateRpcResponse.describe('Channel threads gate decision for the guild'),
+				thread_tainted: z.boolean().describe('Whether the guild has ever held thread data'),
+				channels: z.array(ChannelResponse).describe('Guild channels, including forums when active'),
+				roles: z.array(GuildRoleResponse).describe('Guild roles'),
+				threads: z.array(ChannelResponse).optional().describe('Active threads when active'),
+				thread_members: z.array(ThreadMemberRpcResponse).optional().describe('Active thread members when active'),
+				thread_parent_settings: z
+					.array(ThreadParentSettingsRpcResponse)
+					.optional()
+					.describe('Thread settings of parents when active'),
+			})
+			.describe('Thread gate re-evaluation result'),
 	}),
 ]);
 

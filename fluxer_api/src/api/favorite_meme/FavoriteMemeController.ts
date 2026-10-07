@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID, createMemeID, createMessageID} from '@app/api/BrandedTypes';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -81,12 +82,9 @@ export function FavoriteMemeController(app: HonoApp) {
 			const user = ctx.get('user');
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const messageId = createMessageID(ctx.req.valid('param').message_id);
-			const meme = await ctx.get('favoriteMemeRequestService').createFromMessage({
-				user,
-				channelId,
-				messageId,
-				data: ctx.req.valid('json'),
-			});
+			const meme = await ctx
+				.get('favoriteMemeRequestService')
+				.createFromMessage({viewer: viewerFromCtx(ctx), user, channelId, messageId, data: ctx.req.valid('json')});
 			return ctx.json(meme, 201);
 		},
 	);

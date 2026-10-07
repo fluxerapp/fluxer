@@ -19,6 +19,7 @@ import {
 	keepOwnedEmbedAttachments,
 } from '@app/api/channel/services/message/MessageHelpers';
 import {MessageStickerService} from '@app/api/channel/services/message/MessageStickerService';
+import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import type {
 	MessageAttachment,
@@ -93,6 +94,7 @@ interface CreateMessageParams {
 	embeds?: Array<RichEmbedRequest>;
 	attachments?: Array<AttachmentToProcess>;
 	attachmentUploadUserId?: UserID;
+	uploadChannelId?: ChannelID;
 	processedAttachments?: Array<MessageAttachment>;
 	stickerIds?: Array<StickerID>;
 	messageReference?: MessageReference;
@@ -116,6 +118,7 @@ interface CreateMessageParams {
 	processedEmbeds?: Array<MessageEmbed>;
 	processedStickerItems?: Array<MessageStickerItem>;
 	skipDeferredEmbeds?: boolean;
+	threadInsert?: boolean;
 }
 
 export class MessagePersistenceService {
@@ -151,6 +154,10 @@ export class MessagePersistenceService {
 		this.attachmentDecayService = new AttachmentDecayService();
 	}
 
+	private nsfwScopeChannel(channel: Channel): Promise<Channel> {
+		return resolveNsfwScopeChannel(channel, (channelId) => this.channelRepository.channelData.findUnique(channelId));
+	}
+
 	getEmbedAttachmentResolver(): MessageEmbedAttachmentResolver {
 		return this.embedAttachmentResolver;
 	}
@@ -169,7 +176,7 @@ export class MessagePersistenceService {
 		const isBot = params.user?.isBot ?? false;
 		const isBugHunterBot = isBot && ((params.user?.flags ?? 0n) & UserFlags.BUG_HUNTER) !== 0n;
 		const isNSFWAllowed = this.contentService.isNSFWContentAllowed({
-			channel: params.channel,
+			channel: params.channel ? await this.nsfwScopeChannel(params.channel) : undefined,
 			guild: params.guild,
 			member: params.member,
 			isBot,
@@ -248,7 +255,11 @@ export class MessagePersistenceService {
 			has_reaction: false,
 			version: 1,
 		};
-		const message = await this.channelRepository.messages.upsertMessage(messageRowData, null);
+		const message = await this.channelRepository.messages.upsertMessage(
+			messageRowData,
+			null,
+			params.threadInsert ? {isInsert: true} : undefined,
+		);
 		const enqueueDeferredEmbeds = await this.runPostPersistenceOperations({
 			message,
 			params,
@@ -297,6 +308,7 @@ export class MessagePersistenceService {
 			} as Message,
 			attachments: params.attachments,
 			uploadUserId,
+			uploadChannelId: params.uploadChannelId,
 			channel: params.channel,
 			guild: params.guild,
 			member: params.member,
@@ -367,6 +379,7 @@ export class MessagePersistenceService {
 						mentionCount: 0,
 						implicit: {unreadThrough: params.user ? (params.channel?.lastMessageId ?? null) : null},
 						emitGateway: false,
+						...(params.threadInsert ? {capable: true, channel: params.channel ?? null} : {}),
 					}),
 				);
 			}
@@ -395,7 +408,7 @@ export class MessagePersistenceService {
 			throw InputValidationError.fromCode('message', ValidationErrorCodes.MESSAGES_WITH_SNAPSHOTS_CANNOT_BE_EDITED);
 		}
 		const isNSFWAllowed = this.contentService.isNSFWContentAllowed({
-			channel,
+			channel: await this.nsfwScopeChannel(channel),
 			guild,
 			member,
 			isBot: params.isBot,
@@ -715,6 +728,7 @@ export class MessagePersistenceService {
 			guildId: params.guildId ?? null,
 			allowEmbeds: false,
 			messageReference: params.messageReference,
+			threadInsert: true,
 			mentionData: {
 				flags: 0,
 				mentionUserIds: params.mentionUserIds ?? [],

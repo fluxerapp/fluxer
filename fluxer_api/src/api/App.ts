@@ -19,6 +19,7 @@ import {Hono} from 'hono';
 interface CreateAPIAppOptions {
 	config: APIConfig;
 	logger: ILogger;
+	registerRoutes?: (routes: HonoApp) => void;
 }
 
 interface APIAppResult {
@@ -53,6 +54,7 @@ export async function createAPIApp(options: CreateAPIAppOptions): Promise<APIApp
 	routes.onError(TelemetryAwareAppErrorHandler);
 	routes.notFound(AppNotFoundHandler);
 	registerControllers(routes, config);
+	options.registerRoutes?.(routes);
 	const app = new Hono<HonoEnv>({strict: true});
 	const {middleware: metricsMiddleware, metricsHandler} = createMetricsMiddleware('api');
 	app.use('*', metricsMiddleware);

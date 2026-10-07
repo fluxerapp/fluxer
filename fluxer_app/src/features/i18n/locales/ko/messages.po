@@ -369,6 +369,11 @@ msgstr "{actor}님이 스티커 {name}을(를) 삭제했습니다"
 msgid "{actor} deleted the text channel {channel}"
 msgstr "{actor}님이 텍스트 채널 {channel}을(를) 삭제했습니다"
 
+#. Activity log summary when a thread was deleted. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the thread, shown as a channel chip with its recorded name.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:29
+msgid "{actor} deleted the thread {channel}"
+msgstr "{actor}님이 스레드 {channel}을(를) 삭제했습니다."
+
 #. Activity log summary when a voice channel was deleted. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the deleted channel, shown as a channel chip with the name it had.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:336
 msgid "{actor} deleted the voice channel {channel}"
@@ -674,6 +679,11 @@ msgstr "{actor}님이 커뮤니티 프로필의 대명사를 {text}(으)로 설�
 msgid "{actor} set their nickname to {nick}"
 msgstr "{actor}님이 닉네임을 {nick}(으)로 설정했습니다"
 
+#. Activity log summary when a thread was created. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the thread, shown as a channel chip with its name.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:19
+msgid "{actor} started the thread {channel}"
+msgstr "{actor}님이 {channel} 스레드를 시작했습니다."
+
 #. Activity log summary for a moderator who stopped a member from hearing anyone in the voice channels of this community until it is undone. This is about what the member hears and not about the microphone of the member, so it must read clearly differently from the row where a moderator turns the microphone off. Describe the effect the way the English does. Do not name the action with a noun such as a community deafen. This is a past tense record of an action that already happened, never an instruction to the reader. {actor} is the member who stopped it, shown as a clickable user chip, or the word System. {target} is the member who can no longer hear others, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:115
 msgid "{actor} stopped {target} from hearing others in this community"
@@ -808,6 +818,11 @@ msgstr "{actor}님이 스티커 {name}을(를) 업데이트했습니다"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:189
 msgid "{actor} updated the text channel {channel}"
 msgstr "{actor}님이 텍스트 채널 {channel}을(를) 업데이트했습니다"
+
+#. Activity log summary when a thread was changed. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the thread, shown as a channel chip with its name.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:24
+msgid "{actor} updated the thread {channel}"
+msgstr "{actor}님이 스레드 {channel}을(를) 업데이트했습니다."
 
 #. Activity log summary when settings of a voice channel were changed. The changes are listed as detail rows below it. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:199
@@ -7060,6 +7075,11 @@ msgstr "사용자 이름 변경"
 msgid "Changed slowmode from {oldDuration} to {newDuration}"
 msgstr "{oldDuration}에서 {newDuration}(으)로 슬로우 모드를 변경했습니다"
 
+#. Activity log detail row under an updated thread whose slowmode changed. {duration} is a formatted duration such as "30 seconds". Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:63
+msgid "Changed slowmode to {duration}"
+msgstr "슬로우 모드를 {duration}으로 변경했습니다."
+
 #. Activity log detail line under a community settings update, shown when the AFK channel, the voice channel idle members are moved to, was changed to another channel. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldChannel} is the previous AFK channel and {newChannel} is the new AFK channel, both shown as channel chips.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:161
 msgid "Changed the AFK channel from {oldChannel} to {newChannel}"
@@ -7135,6 +7155,11 @@ msgstr "설명을 {oldText}에서 {newText}(으)로 변경했습니다"
 msgid "Changed the explicit content filter from {oldFilter} to {newFilter}"
 msgstr "음란물 필터를 {oldFilter}에서 {newFilter}(으)로 변경했습니다"
 
+#. Activity log detail row under an updated thread whose auto archive duration changed. {duration} is a formatted duration such as "1 hour". Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:58
+msgid "Changed the hide after inactivity time to {duration}"
+msgstr "비활성 후 숨김 시간을 {duration}(으)로 변경했습니다."
+
 #. Activity log detail line under a community settings update, shown when the invite background, the image behind the invite page of the community, was replaced with a different image. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:96
 msgid "Changed the invite background"
@@ -7174,11 +7199,13 @@ msgstr "메시지 기록 공개 시점을 {oldDate}에서 {newDate}(으)로 변�
 #. Activity log detail line under an edited role that got a new name along with other changes. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the role name before the change and {newName} is the role name after it. Do not swap them. The app shows both in bold, so do not add ** or <b> around them.
 #. Activity log detail line under an edited sticker, for a sticker that got a new name. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Keep the word name so the line says what changed. {oldName} is the previous sticker name and {newName} is the new one, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #. Activity log detail row under an updated channel whose name changed along with other settings. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the name before the change and {newName} the name after, both shown in bold. The app adds the bold, so do not add ** or <b>.
+#. Activity log detail row under an updated thread whose name changed. It is a past tense record, never an instruction. {oldName} and {newName} are shown in bold by the app.
 #. Activity log detail under a changed webhook. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous name of the webhook and {newName} is its new name, both shown in bold by the app. Do not add ** or <b> around them.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:220
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:75
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:120
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:55
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:34
 msgid "Changed the name from {oldName} to {newName}"
 msgstr "이름을 {oldName}에서 {newName}(으)로 변경했습니다"
 
@@ -8440,6 +8467,11 @@ msgstr "닫은 DM"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:152
 msgid "Closed DMs"
 msgstr "닫은 DM"
+
+#. Activity log detail row under an updated thread that was archived. Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:39
+msgid "Closed the thread"
+msgstr "스레드를 닫았습니다"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:128
@@ -20251,6 +20283,11 @@ msgstr "언어 및 지역"
 msgid "Location"
 msgstr "위치"
 
+#. Activity log detail row under an updated thread that was locked. Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:49
+msgid "Locked the thread"
+msgstr "스레드를 잠갔습니다"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:55
 msgid "Log out"
@@ -24622,6 +24659,11 @@ msgstr "기존 {PRODUCT_NAME} 앱을 열고 새 기기 연결을 선택한 다�
 #: src/features/input/state/input_keybind/shared.ts:253
 msgid "Open your settings"
 msgstr "설정 열기"
+
+#. Activity log detail row under an updated thread that was unarchived. Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:44
+msgid "Opened the thread again"
+msgstr "스레드를 다시 열었습니다"
 
 #. Screen-reader-only hint for the Members entry in community settings. The entry receives keyboard focus without automatically opening.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:66
@@ -36532,6 +36574,11 @@ msgstr "{premiumProductName}으로 더 많은 배경 잠금 해제"
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:28
 msgid "Unlock stickers in DMs with {premiumProductName}"
 msgstr "{premiumProductName}으로 DM에서 스티커를 잠금 해제하세요"
+
+#. Activity log detail row under an updated thread that was unlocked. Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:53
+msgid "Unlocked the thread"
+msgstr "스레드를 잠금 해제했습니다."
 
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/app/components/bottomsheets/MuteDurationSheet.tsx:72

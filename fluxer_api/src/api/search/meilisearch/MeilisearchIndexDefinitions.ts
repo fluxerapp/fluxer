@@ -94,6 +94,13 @@ export const MEILISEARCH_INDEX_DEFINITIONS: Record<FluxerSearchIndexName, Meilis
 		],
 		sortableAttributes: ['createdAt', 'reportedAt', 'resolvedAt', 'id'],
 	},
+	threads: {
+		uid: 'threads',
+		primaryKey: 'id',
+		searchableAttributes: ['name'],
+		filterableAttributes: ['id', 'guildId', 'parentId', 'type', 'archived', 'appliedTagIds', 'createdAt', 'idSequence'],
+		sortableAttributes: ['lastMessageAt', 'archivedAt', 'createdAt', 'idSequence', 'id'],
+	},
 	audit_logs: {
 		uid: 'audit_logs',
 		primaryKey: 'id',

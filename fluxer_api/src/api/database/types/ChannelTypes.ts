@@ -132,6 +132,8 @@ export interface ReadStateRow {
 	message_id: Nullish<MessageID>;
 	mention_count: number;
 	last_pin_timestamp: Nullish<Date>;
+	flags?: Nullish<number>;
+	guild_id?: Nullish<GuildID>;
 }
 
 export const CHANNEL_COLUMNS = [
@@ -224,6 +226,8 @@ export const READ_STATE_COLUMNS = [
 	'message_id',
 	'mention_count',
 	'last_pin_timestamp',
+	'flags',
+	'guild_id',
 ] as const satisfies ReadonlyArray<keyof ReadStateRow>;
 export const PRIVATE_CHANNEL_COLUMNS = [
 	'user_id',

@@ -51,9 +51,12 @@ function channelLayoutRank(channel: {type: number}): number {
 	if (
 		channel.type === ChannelTypes.GUILD_TEXT ||
 		channel.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
-		channel.type === ChannelTypes.GUILD_LINK
-	)
+		channel.type === ChannelTypes.GUILD_LINK ||
+		channel.type === ChannelTypes.GUILD_FORUM ||
+		channel.type === ChannelTypes.GUILD_MEDIA
+	) {
 		return 0;
+	}
 	if (channel.type === ChannelTypes.GUILD_VOICE) return 1;
 	return 2;
 }

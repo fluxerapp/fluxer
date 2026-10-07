@@ -8,6 +8,7 @@ import {Logger} from '@app/api/Logger';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
@@ -92,8 +93,10 @@ export class MessageResponseDataService {
 		after?: MessageID;
 		around?: MessageID;
 		access: MessageResponseAccessContext;
+		threadsMask?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		const response = await this.request({
+			...(params.threadsMask ? {threads_mask: true, exclude_types: [MessageTypes.THREAD_CREATED]} : {}),
 			op: 'ListResponses',
 			channel_id: params.channelId.toString(),
 			viewer_user_id: params.userId.toString(),
@@ -137,8 +140,10 @@ export class MessageResponseDataService {
 		access: MessageResponseAccessContext;
 		nonce?: string;
 		tts?: boolean;
+		threadsMask?: boolean;
 	}): Promise<MessageResponse | null> {
 		const response = await this.request({
+			...(params.threadsMask ? {threads_mask: true} : {}),
 			op: 'GetResponseById',
 			channel_id: params.channelId.toString(),
 			message_id: params.messageId.toString(),

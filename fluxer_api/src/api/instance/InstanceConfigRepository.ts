@@ -6,6 +6,7 @@ import type {APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '@app/ap
 import {executeConditional, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db, type PreparedQuery} from '@app/api/database/CassandraTypes';
 import type {InstanceConfigurationRow} from '@app/api/database/types/InstanceConfigTypes';
+import {syncChannelThreadsConfig} from '@app/api/experiment/ChannelThreadsGate';
 import {
 	type AccountIdentity,
 	resolveAccountIdentity,
@@ -50,6 +51,11 @@ import {
 	CaptchaConfigSchema,
 	type CaptchaConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/CaptchaSchemas';
+import {
+	type ChannelThreadsConfig,
+	ChannelThreadsConfigSchema,
+	type CompiledChannelThreadsConfig,
+} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {
 	type DomainMigrationConfig,
 	DomainMigrationConfigSchema,
@@ -96,6 +102,7 @@ const PUSH_RELAY_CONFIG_KEY = 'push_service_delivery_config';
 const DOMAIN_MIGRATION_CONFIG_KEY = 'domain_migration_config';
 const PLUTONIUM_PAGE_CONFIG_KEY = 'plutonium_page_config';
 const CAPTCHA_CONFIG_KEY = 'captcha_config';
+const CHANNEL_THREADS_CONFIG_KEY = 'channel_threads_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
@@ -428,6 +435,7 @@ type StoredConfigSection =
 	| 'domain migration'
 	| 'plutonium page'
 	| 'captcha'
+	| 'channel threads'
 	| 'experiment delivery'
 	| 'instance policy'
 	| 'integrations'
@@ -651,6 +659,10 @@ function parseStoredPlutoniumPageConfig(raw: string | null): PlutoniumPageConfig
 
 function parseStoredCaptchaConfig(raw: string | null): CaptchaConfig {
 	return parseStoredConfigOrDefault(CaptchaConfigSchema, raw, 'captcha');
+}
+
+function parseStoredChannelThreadsConfig(raw: string | null): ChannelThreadsConfig {
+	return parseStoredConfigOrDefault(ChannelThreadsConfigSchema, raw, 'channel threads');
 }
 
 function parseStoredExperimentDeliveryConfig(raw: string | null): ExperimentDeliveryConfig {
@@ -1317,6 +1329,7 @@ export class InstanceConfigRepository {
 		parseStoredDomainMigrationConfig(snapshot.get(DOMAIN_MIGRATION_CONFIG_KEY) ?? null);
 		parseStoredPlutoniumPageConfig(snapshot.get(PLUTONIUM_PAGE_CONFIG_KEY) ?? null);
 		parseStoredCaptchaConfig(snapshot.get(CAPTCHA_CONFIG_KEY) ?? null);
+		syncChannelThreadsConfig(snapshot.get(CHANNEL_THREADS_CONFIG_KEY) ?? null, parseStoredChannelThreadsConfig);
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
 		parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
 		checkStoredConfig('registration', () =>
@@ -1366,6 +1379,7 @@ export class InstanceConfigRepository {
 
 	clearCacheForTesting(): void {
 		setCachedAccountIdentity(null);
+		syncChannelThreadsConfig(null, parseStoredChannelThreadsConfig);
 		const shutdown = this.shutdown();
 		this.configCache = this.createConfigCache(shutdown);
 		void shutdown.catch((error) => {
@@ -1583,6 +1597,30 @@ export class InstanceConfigRepository {
 		return this.updateStoredConfig(CAPTCHA_CONFIG_KEY, (raw) =>
 			validateStoredConfig(CaptchaConfigSchema, {...parseStoredCaptchaConfig(raw), ...patch}, 'captcha'),
 		);
+	}
+
+	async getChannelThreadsConfig(): Promise<ChannelThreadsConfig> {
+		return (await this.getCompiledChannelThreadsConfig()).config;
+	}
+
+	async getCompiledChannelThreadsConfig(): Promise<CompiledChannelThreadsConfig> {
+		const raw = await this.getConfig(CHANNEL_THREADS_CONFIG_KEY);
+		return syncChannelThreadsConfig(raw, parseStoredChannelThreadsConfig);
+	}
+
+	async refreshChannelThreadsConfig(): Promise<CompiledChannelThreadsConfig> {
+		const raw = await this.fetchConfigFromDatabase(CHANNEL_THREADS_CONFIG_KEY);
+		return syncChannelThreadsConfig(raw, parseStoredChannelThreadsConfig);
+	}
+
+	async updateChannelThreadsConfig(
+		update: (current: ChannelThreadsConfig) => ChannelThreadsConfig,
+	): Promise<ChannelThreadsConfig> {
+		const landed = await this.updateStoredConfig(CHANNEL_THREADS_CONFIG_KEY, (raw) =>
+			validateStoredConfig(ChannelThreadsConfigSchema, update(parseStoredChannelThreadsConfig(raw)), 'channel threads'),
+		);
+		syncChannelThreadsConfig(JSON.stringify(landed), parseStoredChannelThreadsConfig);
+		return landed;
 	}
 
 	async getExperimentDeliveryConfig(): Promise<ExperimentDeliveryConfig> {

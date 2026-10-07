@@ -165,9 +165,66 @@ const OUT_OF_BAND_CREDENTIAL = new Map<string, OutOfBandRoute>([
 
 const HEALTH_AND_METRICS_PATHS = new Set(['/_health', '/_health/ready', '/_health/drain', '/_healthz', '/_metrics']);
 
+const CHANNEL_THREADS_UNTIL_GA = {
+	routes: new Set<string>([
+		'POST /channels/{}/messages/{}/threads',
+		'POST /channels/{}/threads',
+		'GET /guilds/{}/threads/active',
+		'GET /channels/{}/threads/archived/public',
+		'GET /channels/{}/threads/archived/private',
+		'GET /channels/{}/users/@me/threads/archived/private',
+		'GET /channels/{}/thread-members',
+		'GET /channels/{}/thread-members/{}',
+		'PUT /channels/{}/thread-members/@me',
+		'PUT /channels/{}/thread-members/{}',
+		'DELETE /channels/{}/thread-members/@me',
+		'DELETE /channels/{}/thread-members/{}',
+		'PATCH /channels/{}/thread-members/@me/settings',
+		'GET /channels/{}/threads/search',
+		'POST /channels/{}/post-data',
+		'POST /channels/{}/tags',
+		'PUT /channels/{}/tags/{}',
+		'DELETE /channels/{}/tags/{}',
+		'GET /admin/guilds/{}/threads',
+		'DELETE /admin/channels/{}',
+	]),
+	events: new Set<string>([
+		'THREAD_CREATE',
+		'THREAD_UPDATE',
+		'THREAD_DELETE',
+		'THREAD_LIST_SYNC',
+		'THREAD_MEMBER_UPDATE',
+		'THREAD_MEMBERS_UPDATE',
+	]),
+	opcodes: new Set<number>([28]),
+	errorCodes: new Set<string>([
+		'CHANNEL_HAS_THREADS',
+		'FORUM_TAG_NAMES_MUST_BE_UNIQUE',
+		'FORUM_TAG_REQUIRED',
+		'HIDE_MEDIA_DOWNLOAD_OPTION_MEDIA_ONLY',
+		'INVALID_THREAD_NOTIFICATION_SETTINGS',
+		'MAX_ACTIVE_THREADS',
+		'MAX_FORUM_TAGS',
+		'MAX_PINNED_THREADS_IN_FORUM',
+		'MAX_THREAD_MEMBERS',
+		'NO_TAGS_AVAILABLE_TO_NON_MODERATORS',
+		'SEARCH_INDEX_NOT_READY',
+		'THREAD_ALREADY_CREATED_FOR_MESSAGE',
+		'THREAD_ARCHIVED',
+		'THREAD_LOCKED',
+		'UNKNOWN_FORUM_TAG',
+		'UNKNOWN_THREAD_MEMBER',
+		'WEBHOOK_FORUM_TARGET_CONFLICT',
+		'WEBHOOK_FORUM_TARGET_REQUIRED',
+		'WEBHOOK_SERVICE_FORUM_UNSUPPORTED',
+		'WEBHOOK_THREAD_NAME_REQUIRES_FORUM',
+	]),
+};
+
 interface ExemptionRule {
 	readonly name: string;
 	readonly justification: string;
+	readonly mayCoverNothing?: boolean;
 
 	readonly anchors: ReadonlyArray<{readonly file: string; readonly anchor: string}>;
 	readonly covers: (shape: string, routePath: string) => boolean;
@@ -218,6 +275,19 @@ const EXEMPTION_RULES: ReadonlyArray<ExemptionRule> = [
 			'no ordinary client holds the credential. Each entry states its guard, and five are covered in prose',
 		anchors: [{file: 'fluxer_api/src/api/app/ControllerRegistry.ts', anchor: 'InternalRpcController(routes);'}],
 		covers: (shape) => OUT_OF_BAND_CREDENTIAL.has(shape),
+	},
+	{
+		name: 'channel_threads',
+		justification:
+			'threads, forum and media channels are behind the channel_threads experiment and ChannelThreadsRouteGuard answers 404 outside it. Their pages are withheld until general availability, which removes this rule',
+		mayCoverNothing: true,
+		anchors: [
+			{
+				file: 'fluxer_api/src/api/channel/threads/ChannelThreadsRouteGuard.ts',
+				anchor: 'export function ChannelThreadsRouteGuard',
+			},
+		],
+		covers: (shape) => CHANNEL_THREADS_UNTIL_GA.routes.has(shape),
 	},
 ];
 
@@ -540,9 +610,9 @@ console.log('main API and admin API (from route registration)');
 		.filter(([shape]) => !registered.has(shape))
 		.map(([shape, route]) => `${shape}  (${route.file}) is documented but fluxer_api registers no such route`)
 		.sort();
-	const deadRules = EXEMPTION_RULES.filter((rule) => (ruleCounts.get(rule.name) ?? 0) === 0).map(
-		(rule) => `the "${rule.name}" rule covers no registered route, so it is either stale or too narrow to matter`,
-	);
+	const deadRules = EXEMPTION_RULES.filter(
+		(rule) => rule.mayCoverNothing !== true && (ruleCounts.get(rule.name) ?? 0) === 0,
+	).map((rule) => `the "${rule.name}" rule covers no registered route, so it is either stale or too narrow to matter`);
 	const staleEntries = [
 		...[...DELIBERATELY_UNDOCUMENTED.keys()].map((shape) => [shape, 'DELIBERATELY_UNDOCUMENTED'] as const),
 		...[...OUT_OF_BAND_CREDENTIAL.keys()].map((shape) => [shape, 'OUT_OF_BAND_CREDENTIAL'] as const),
@@ -592,7 +662,7 @@ failures += section(
 			if (aliasShapes.has(shape)) {
 				return false;
 			}
-			return !DELIBERATELY_UNDOCUMENTED.has(shape);
+			return !DELIBERATELY_UNDOCUMENTED.has(shape) && !CHANNEL_THREADS_UNTIL_GA.routes.has(shape);
 		})
 		.map((operation) => `${operation.method} ${operation.path}  [${operation.tags.join(', ')}]`)
 		.sort(),
@@ -616,6 +686,12 @@ const wronglyDocumented = [...DELIBERATELY_UNDOCUMENTED.entries()]
 	.filter(([shape]) => documentedMain.has(shape))
 	.map(([shape, reason]) => `${shape}  must not be documented: ${reason}`);
 failures += section('documented despite belonging to an unshipped system', wronglyDocumented);
+failures += section(
+	'published despite being withheld until channel_threads general availability',
+	[...CHANNEL_THREADS_UNTIL_GA.routes]
+		.filter((shape) => documentedMain.has(shape) || documentedAdmin.has(shape))
+		.sort(),
+);
 console.log(
 	`  deliberately undocumented and correctly absent: ${(DELIBERATELY_UNDOCUMENTED.size - wronglyDocumented.length).toString()}/${DELIBERATELY_UNDOCUMENTED.size.toString()}`,
 );
@@ -688,13 +764,19 @@ console.log('gateway dispatch events');
 	};
 
 	const fabricated = [...documentedEvents].filter((event) => !isReal(event)).sort();
-	const undocumented = [...apiEvents].filter((event) => !documentedEvents.has(event)).sort();
+	const undocumented = [...apiEvents]
+		.filter((event) => !documentedEvents.has(event) && !CHANNEL_THREADS_UNTIL_GA.events.has(event))
+		.sort();
 	console.log(`  events in the GatewayDispatchEvent union: ${apiEvents.size.toString()}`);
 	console.log(`  events documented in gateway/events.md: ${documentedEvents.size.toString()}`);
 	console.log('  a documented event counts as real if it is in the union, or appears in fluxer_gateway');
 	console.log('  as an uppercase binary or a lowercase atom');
 	failures += section('documented but not emitted by any service', fabricated);
 	failures += section('in the dispatch union but undocumented', undocumented);
+	failures += section(
+		'published despite being withheld until channel_threads general availability',
+		[...CHANNEL_THREADS_UNTIL_GA.events].filter((event) => documentedEvents.has(event)).sort(),
+	);
 }
 
 console.log('gateway opcodes and close codes');
@@ -734,9 +816,13 @@ console.log('gateway opcodes and close codes');
 	failures += section(
 		'opcodes in constants.erl but undocumented',
 		[...realOpcodes]
-			.filter((code) => !docOpcodes.has(code))
+			.filter((code) => !docOpcodes.has(code) && !CHANNEL_THREADS_UNTIL_GA.opcodes.has(code))
 			.sort((a, b) => a - b)
 			.map(String),
+	);
+	failures += section(
+		'opcodes published despite being withheld until channel_threads general availability',
+		[...CHANNEL_THREADS_UNTIL_GA.opcodes].filter((code) => docOpcodes.has(code)).map(String),
 	);
 	failures += section(
 		'close codes documented but absent from constants.erl',
@@ -1735,17 +1821,19 @@ console.log('error registry');
 	}
 	const problems: Array<string> = [];
 	for (const code of registryCodes) {
-		if (!documentedCodes.has(code)) {
+		if (!documentedCodes.has(code) && !CHANNEL_THREADS_UNTIL_GA.errorCodes.has(code)) {
 			problems.push(`APIErrorCodes.${code} is not listed in the errors page registry`);
 		}
 	}
 
 	const documentedRegistryCodes = [...registryCodes].filter((c) => documentedCodes.has(c)).length;
+	const withheldRegistryCodes = [...registryCodes].filter((c) => CHANNEL_THREADS_UNTIL_GA.errorCodes.has(c)).length;
 	const UNDOCUMENTED_VALIDATION_CODES = new Set(['EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL']);
-	const expectedEntries = registryCodes.size + validationCodes.size - UNDOCUMENTED_VALIDATION_CODES.size;
+	const expectedEntries =
+		registryCodes.size + validationCodes.size - UNDOCUMENTED_VALIDATION_CODES.size - withheldRegistryCodes;
 	if (documentedEntries < expectedEntries) {
 		problems.push(
-			`errors.md code entries parsed fell to ${documentedEntries.toString()}, expected ${expectedEntries.toString()}, the ${registryCodes.size.toString()} API codes plus the ${validationCodes.size.toString()} validation codes less the ${UNDOCUMENTED_VALIDATION_CODES.size.toString()} named as undocumented. Either a code lost its entry, or the registry parser stopped matching one of the \`| CODE |\` table row and \`### \`CODE\`\` or \`#### \`CODE\`\` heading shapes it reads`,
+			`errors.md code entries parsed fell to ${documentedEntries.toString()}, expected ${expectedEntries.toString()}, the ${registryCodes.size.toString()} API codes plus the ${validationCodes.size.toString()} validation codes less the ${UNDOCUMENTED_VALIDATION_CODES.size.toString()} named as undocumented and the ${withheldRegistryCodes.toString()} withheld until channel_threads general availability. Either a code lost its entry, or the registry parser stopped matching one of the \`| CODE |\` table row and \`### \`CODE\`\` or \`#### \`CODE\`\` heading shapes it reads`,
 		);
 	}
 	for (const code of documentedCodes) {
@@ -1753,10 +1841,18 @@ console.log('error registry');
 			problems.push(`errors.md documents ${code}, which is in neither code registry`);
 		}
 	}
-	if (documentedRegistryCodes < registryCodes.size) {
+	if (documentedRegistryCodes < registryCodes.size - withheldRegistryCodes) {
 		problems.push(
-			`errors.md documents ${documentedRegistryCodes.toString()} of the ${registryCodes.size.toString()} registry codes, floor is every one of them`,
+			`errors.md documents ${documentedRegistryCodes.toString()} of the ${registryCodes.size.toString()} registry codes, floor is every one of them less the ${withheldRegistryCodes.toString()} withheld until channel_threads general availability`,
 		);
+	}
+	for (const code of CHANNEL_THREADS_UNTIL_GA.errorCodes) {
+		if (!registryCodes.has(code)) {
+			problems.push(`CHANNEL_THREADS_UNTIL_GA withholds ${code}, which is not in the API code registry`);
+		}
+		if (documentedCodes.has(code)) {
+			problems.push(`errors.md publishes ${code}, which is withheld until channel_threads general availability`);
+		}
 	}
 	console.log(`  registry codes: ${registryCodes.size.toString()}, documented: ${documentedRegistryCodes.toString()}`);
 	failures += section('error registry disagreements', problems);
@@ -1966,7 +2062,7 @@ console.log('bot capability flag (from the middleware chain)');
 			continue;
 		}
 		const anyLogin = route.hasLoginRequired;
-		const sourceAcceptsBot = anyLogin && !route.hasDefaultUserOnly;
+		const sourceAcceptsBot = (anyLogin || route.hasBotOnly) && !route.hasDefaultUserOnly;
 		const exemption = BOT_EXEMPT.get(key);
 		if (exemption != null) {
 			if (documented.bot !== exemption.docs) {
@@ -2082,10 +2178,11 @@ console.log('spec security field against the middleware chain');
 		const declaredSchemes = declaredSecurity.schemes;
 		compared += 1;
 		const anyLogin = route.hasLoginRequired;
-		const acceptsBot = anyLogin && !route.hasDefaultUserOnly;
+		const acceptsBot = (anyLogin || route.hasBotOnly) && !route.hasDefaultUserOnly;
 		const requiresAuthentication =
 			anyLogin ||
 			route.hasDefaultUserOnly ||
+			route.hasBotOnly ||
 			route.oauth2BearerTokenRequired ||
 			route.middlewares.includes('requireOAuth2Scope');
 		if (requiresAuthentication && declaredSecurity.allowsAnonymous) {
@@ -2104,7 +2201,15 @@ console.log('spec security field against the middleware chain');
 		if (!declaredSchemes.has('botToken') && acceptsBot && declaredSchemes.size > 0) {
 			specBugs.push(`${key} omits botToken, but the middleware chain admits a bot token`);
 		}
-		if (declaredSchemes.size > 0 && !anyLogin && !route.middlewares.some((name) => /Admin|OAuth2Scope/iu.test(name))) {
+		if (route.hasBotOnly && [...declaredSchemes].some((scheme) => scheme !== 'botToken')) {
+			specBugs.push(`${key} declares [${[...declaredSchemes].join(', ')}], but BotOnly admits only a bot token`);
+		}
+		if (
+			declaredSchemes.size > 0 &&
+			!anyLogin &&
+			!route.hasBotOnly &&
+			!route.middlewares.some((name) => /Admin|OAuth2Scope/iu.test(name))
+		) {
 			specBugs.push(`${key} declares [${[...declaredSchemes].join(', ')}], but the chain has no login policy`);
 		}
 	}
@@ -2124,7 +2229,10 @@ const adminTargetOnly = [...documentedAdmin.entries()]
 	.map(([, route]) => `${route.method} ${route.path}  (${route.file})`)
 	.sort();
 const adminLiveOnly = admin
-	.filter((operation) => !documentedAdmin.has(routeShape(operation.method, operation.path)))
+	.filter((operation) => {
+		const shape = routeShape(operation.method, operation.path);
+		return !documentedAdmin.has(shape) && !CHANNEL_THREADS_UNTIL_GA.routes.has(shape);
+	})
 	.map((operation) => `${operation.method} ${operation.path}`)
 	.sort();
 console.log(`  live admin operations: ${admin.length.toString()}`);

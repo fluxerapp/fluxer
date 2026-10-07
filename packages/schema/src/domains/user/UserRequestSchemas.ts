@@ -31,6 +31,7 @@ import {
 	createBitflagInt32Type,
 	createNamedStringLiteralUnion,
 	createStringType,
+	Int32Type,
 	SnowflakeStringType,
 	SnowflakeType,
 	withFieldDescription,
@@ -414,6 +415,16 @@ const MuteConfigSchema = z
 		selected_time_window: z.number().int().describe('Selected mute duration'),
 	})
 	.nullish();
+export const ThreadMemberSettingsRequest = z.object({
+	flags: Int32Type.optional().describe(
+		'Thread member notification flags (ALL_MESSAGES 1<<1, ONLY_MENTIONS 1<<2, NO_MESSAGES 1<<3)',
+	),
+	muted: z.boolean().optional().describe('Whether the thread is muted'),
+	mute_config: MuteConfigSchema.describe('Thread mute configuration'),
+});
+
+export type ThreadMemberSettingsRequest = z.infer<typeof ThreadMemberSettingsRequest>;
+
 const ChannelOverrideSchema = z.object({
 	collapsed: z.boolean().describe('Channel category collapsed'),
 	message_notifications: withFieldDescription(UserNotificationSettingsSchema, 'Channel notification level'),
@@ -422,6 +433,9 @@ const ChannelOverrideSchema = z.object({
 	unread_badges: withFieldDescription(UserNotificationSettingsSchema, 'Unread badges level override for this channel')
 		.nullish()
 		.describe('Unread badges level override for this channel (null = inherit)'),
+	flags: Int32Type.optional().describe(
+		'Channel override flags (NEW_FORUM_THREADS_OFF 1<<13, NEW_FORUM_THREADS_ON 1<<14)',
+	),
 });
 export const UserGuildSettingsUpdateRequest = z
 	.object({

@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
-import {deleteOneOrMany, fetchMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {PushSubscriptionRow} from '@app/api/database/types/UserTypes';
+import {everEnabled} from '@app/api/experiment/ChannelThreadsGate';
 import {PushSubscription} from '@app/api/models/PushSubscription';
 import {PushSubscriptions} from '@app/api/Tables';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 
 const FETCH_PUSH_SUBSCRIPTIONS_CQL = PushSubscriptions.selectCql({
 	where: PushSubscriptions.where.eq('user_id'),
+});
+const FETCH_PUSH_SUBSCRIPTION_THREAD_CHANNELS_CQL = PushSubscriptions.selectCql({
+	columns: ['thread_channels'],
+	where: [PushSubscriptions.where.eq('user_id'), PushSubscriptions.where.eq('subscription_id')],
+	limit: 1,
 });
 const FETCH_BULK_PUSH_SUBSCRIPTIONS_CQL = PushSubscriptions.selectCql({
 	where: PushSubscriptions.where.in('user_id', 'user_ids'),
@@ -21,8 +27,20 @@ export class PushSubscriptionRepository {
 	}
 
 	async createPushSubscription(data: PushSubscriptionRow): Promise<PushSubscription> {
-		await upsertOne(PushSubscriptions.upsertAll(data));
-		return new PushSubscription(data);
+		const row =
+			data.thread_channels === undefined && everEnabled() && (await this.hasThreadChannels(data))
+				? {...data, thread_channels: null}
+				: data;
+		await upsertOne(PushSubscriptions.upsertAll(row));
+		return new PushSubscription(row);
+	}
+
+	private async hasThreadChannels(data: PushSubscriptionRow): Promise<boolean> {
+		const existing = await fetchOne<Pick<PushSubscriptionRow, 'thread_channels'>>(
+			FETCH_PUSH_SUBSCRIPTION_THREAD_CHANNELS_CQL,
+			{user_id: data.user_id, subscription_id: data.subscription_id},
+		);
+		return existing?.thread_channels === true;
 	}
 
 	async deletePushSubscription(userId: UserID, subscriptionId: string): Promise<void> {

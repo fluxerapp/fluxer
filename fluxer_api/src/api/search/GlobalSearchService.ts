@@ -8,6 +8,7 @@ import {
 	getDmChannelIdsForScope,
 	isDmScopeChannelForUser,
 } from '@app/api/channel/services/message/DmScopeUtils';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -58,6 +59,7 @@ export class GlobalSearchService {
 
 	async searchAcrossDms(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		scope: DmSearchScope;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
@@ -87,11 +89,12 @@ export class GlobalSearchService {
 		if (needsIndexing) {
 			return {indexing: true};
 		}
-		return this.runSearch(finalChannelIds, params.userId, params.searchParams, params.requestCache);
+		return this.runSearch(finalChannelIds, params.userId, params.viewer, params.searchParams, params.requestCache);
 	}
 
 	async searchAcrossGuildsAndDms(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		dmScope: DmSearchScope;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
@@ -99,15 +102,15 @@ export class GlobalSearchService {
 		requestedChannelIds?: Array<ChannelID>;
 	}): Promise<MessageSearchResponse> {
 		const [guildAccess, includeChannel] = await Promise.all([
-			this.guildService.search.collectAccessibleGuildChannels(params.userId),
+			this.guildService.search.collectAccessibleGuildChannels(params.userId, params.viewer, params.requestedChannelIds),
 			this.findDmScopeContextChannel(params.userId, params.includeChannelId),
 		]);
-		const {accessibleChannels, unindexedChannelIds, guildNsfwLevels, parentCategories} = guildAccess;
+		const {accessibleChannels, unindexedChannelIds, guildNsfwLevels, parentCategories, threadParents} = guildAccess;
 		if (unindexedChannelIds.size > 0) {
 			await this.queueIndexingChannels(unindexedChannelIds);
 			return {indexing: true};
 		}
-		const guildChannelIds = Array.from(accessibleChannels.keys());
+		const guildChannelIds = [...accessibleChannels.keys(), ...threadParents.keys()];
 		const dmChannelIds = await getDmChannelIdsForScope({
 			scope: params.dmScope,
 			userId: params.userId,
@@ -125,7 +128,7 @@ export class GlobalSearchService {
 			canIncludeNsfw = await this.getCanUserAccessNsfw(params.userId);
 		}
 		const finalChannelIds = validatedChannelIds.filter((channelIdStr) => {
-			const channel = accessibleChannels.get(channelIdStr);
+			const channel = accessibleChannels.get(channelIdStr) ?? threadParents.get(channelIdStr);
 			if (!channel) {
 				return true;
 			}
@@ -150,11 +153,13 @@ export class GlobalSearchService {
 				page,
 			};
 		}
-		const needsIndexing = await this.ensureChannelsIndexed(finalChannelIds);
+		const needsIndexing = await this.ensureChannelsIndexed(
+			threadParents.size > 0 ? finalChannelIds.filter((id) => !threadParents.has(id)) : finalChannelIds,
+		);
 		if (needsIndexing) {
 			return {indexing: true};
 		}
-		return this.runSearch(finalChannelIds, params.userId, params.searchParams, params.requestCache);
+		return this.runSearch(finalChannelIds, params.userId, params.viewer, params.searchParams, params.requestCache);
 	}
 
 	private filterRequestedChannelIds(available: Array<string>, requested?: Array<ChannelID>): Array<string> {
@@ -235,6 +240,7 @@ export class GlobalSearchService {
 	private async runSearch(
 		channelIds: Array<string>,
 		userId: UserID,
+		viewer: ThreadViewer,
 		searchParams: MessageSearchRequest,
 		requestCache: RequestCache,
 	): Promise<MessageSearchResponse> {
@@ -253,7 +259,12 @@ export class GlobalSearchService {
 			page,
 			cursor,
 		});
-		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result.messages, userId, requestCache);
+		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(
+			result.messages,
+			userId,
+			viewer,
+			requestCache,
+		);
 		return {
 			messages: mappedResponses.messages,
 			channels: mappedResponses.channels,
@@ -261,6 +272,7 @@ export class GlobalSearchService {
 			hits_per_page: hitsPerPage,
 			page,
 			cursor: result.cursor,
+			...(mappedResponses.threads ? {threads: mappedResponses.threads, members: mappedResponses.members} : {}),
 		};
 	}
 

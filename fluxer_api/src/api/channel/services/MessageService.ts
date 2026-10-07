@@ -20,6 +20,7 @@ import {MessageSendService} from '@app/api/channel/services/message/MessageSendS
 import {MessageSystemService} from '@app/api/channel/services/message/MessageSystemService';
 import {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
 import {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
+import {ThreadMessageActivity} from '@app/api/channel/services/message/ThreadMessageActivity';
 import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
@@ -54,6 +55,7 @@ export class MessageService {
 	public readonly writeLock: MessageWriteLock;
 	public readonly crosspostPropagation: CrosspostPropagation;
 	public readonly crosspost: MessageCrosspostService;
+	public readonly threadActivity: ThreadMessageActivity;
 
 	constructor(
 		channelRepository: IChannelRepositoryAggregate,
@@ -117,7 +119,9 @@ export class MessageService {
 			snowflakeService,
 			favoriteMemeRepository,
 		});
+		this.threadActivity = new ThreadMessageActivity(channelRepository, gatewayService, userRepository);
 		this.send = new MessageSendService({
+			threadActivity: this.threadActivity,
 			channelRepository,
 			userRepository,
 			storageService,

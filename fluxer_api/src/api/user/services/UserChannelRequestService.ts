@@ -2,6 +2,7 @@
 
 import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
@@ -24,6 +25,7 @@ interface UserChannelCreateParams {
 
 interface UserChannelPinParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 }
 
@@ -83,10 +85,18 @@ export class UserChannelRequestService {
 	}
 
 	async pinChannel(params: UserChannelPinParams): Promise<void> {
-		await this.userChannelService.pinDmChannel({userId: params.userId, channelId: params.channelId});
+		await this.userChannelService.pinDmChannel({
+			userId: params.userId,
+			viewer: params.viewer,
+			channelId: params.channelId,
+		});
 	}
 
 	async unpinChannel(params: UserChannelPinParams): Promise<void> {
-		await this.userChannelService.unpinDmChannel({userId: params.userId, channelId: params.channelId});
+		await this.userChannelService.unpinDmChannel({
+			userId: params.userId,
+			viewer: params.viewer,
+			channelId: params.channelId,
+		});
 	}
 }

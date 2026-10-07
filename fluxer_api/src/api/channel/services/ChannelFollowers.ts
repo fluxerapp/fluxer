@@ -21,11 +21,13 @@ export async function withChannelFollowLock<T>(
 	cacheService: ICacheService,
 	channelId: ChannelID,
 	fn: () => Promise<T>,
+	keepAliveTtlSeconds?: number,
 ): Promise<T> {
+	const ttlSeconds = keepAliveTtlSeconds ?? CHANNEL_FOLLOW_LOCK_TTL_SECONDS;
 	const lockKey = `channel-follow:${channelId}`;
 	let lockToken: string | null = null;
 	for (let attempt = 0; attempt < CHANNEL_FOLLOW_LOCK_ACQUIRE_ATTEMPTS; attempt++) {
-		lockToken = await cacheService.acquireLock(lockKey, CHANNEL_FOLLOW_LOCK_TTL_SECONDS);
+		lockToken = await cacheService.acquireLock(lockKey, ttlSeconds);
 		if (lockToken) break;
 		await new Promise((resolve) => setTimeout(resolve, CHANNEL_FOLLOW_LOCK_RETRY_DELAY_MS * (attempt + 1)));
 	}
@@ -36,10 +38,21 @@ export async function withChannelFollowLock<T>(
 			data: {retry_after: 1},
 		});
 	}
+	const token = lockToken;
+	const keepAlive =
+		keepAliveTtlSeconds === undefined
+			? null
+			: setInterval(
+					() => {
+						cacheService.extendLock(lockKey, token, keepAliveTtlSeconds).catch(() => {});
+					},
+					(keepAliveTtlSeconds * 1000) / 3,
+				);
 	try {
 		return await fn();
 	} finally {
-		await cacheService.releaseLock(lockKey, lockToken).catch(() => {});
+		if (keepAlive) clearInterval(keepAlive);
+		await cacheService.releaseLock(lockKey, token).catch(() => {});
 	}
 }
 

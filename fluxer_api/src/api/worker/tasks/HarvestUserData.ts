@@ -23,6 +23,7 @@ import {
 	type UserID,
 } from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import type {IThreadRepository} from '@app/api/channel/repositories/IThreadRepository';
 import {
 	isChannelEligible,
 	isTimestampInWindow,
@@ -31,6 +32,7 @@ import {
 } from '@app/api/channel/services/message/SelfMessageFilter';
 import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
 import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
+import {everEnabled, isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import type {Application} from '@app/api/models/Application';
@@ -46,6 +48,7 @@ import type {Payment} from '@app/api/models/Payment';
 import type {PushSubscription} from '@app/api/models/PushSubscription';
 import type {Relationship} from '@app/api/models/Relationship';
 import type {SavedMessage} from '@app/api/models/SavedMessage';
+import type {ThreadMember} from '@app/api/models/ThreadMember';
 import type {User} from '@app/api/models/User';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
@@ -127,6 +130,7 @@ interface UserDataJsonParams {
 	userSettings: UserSettings | null;
 	guildMemberships: Array<GuildMembershipEntry>;
 	guildSettings: Array<UserGuildSettings | null>;
+	threadMemberships: Array<ThreadMember>;
 	savedMessages: Array<SavedMessage>;
 	privateChannels: Array<Channel>;
 	favoriteMemes: Array<FavoriteMeme>;
@@ -412,6 +416,21 @@ export async function harvestMessages(
 	return {channelMessagesMap, totalMessages};
 }
 
+export async function collectThreadMemberships(
+	threads: Pick<IThreadRepository, 'listJoinedThreadIds' | 'getMember'>,
+	userId: UserID,
+	guildIds: ReadonlyArray<GuildID>,
+): Promise<Array<ThreadMember>> {
+	if (!everEnabled()) return [];
+	const perGuild = await mapWithConcurrency(guildIds, HARVEST_READ_CONCURRENCY, async (guildId) => {
+		if (!(await isTainted(guildId, {fresh: true}))) return [];
+		const threadIds = await threads.listJoinedThreadIds(userId, guildId);
+		const members = await Promise.all(threadIds.map((threadId) => threads.getMember(threadId, userId)));
+		return members.filter((member): member is ThreadMember => member !== null);
+	});
+	return perGuild.flat();
+}
+
 export function buildUserDataJson(params: UserDataJsonParams) {
 	const {
 		user,
@@ -423,6 +442,7 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 		userSettings,
 		guildMemberships,
 		guildSettings,
+		threadMemberships,
 		savedMessages,
 		privateChannels,
 		favoriteMemes,
@@ -579,6 +599,18 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 				suppress_roles: settings!.suppressRoles,
 				hide_muted_channels: settings!.hideMutedChannels,
 			})),
+		...(threadMemberships.length > 0
+			? {
+					thread_memberships: threadMemberships.map((member) => ({
+						thread_id: member.threadId.toString(),
+						guild_id: member.guildId.toString(),
+						parent_id: member.parentId.toString(),
+						join_timestamp: member.joinTimestamp.toISOString(),
+						flags: member.flags,
+						muted: member.muted,
+					})),
+				}
+			: {}),
 		saved_messages: savedMessages.map((msg) => ({
 			channel_id: msg.channelId.toString(),
 			message_id: msg.messageId.toString(),
@@ -894,6 +926,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 		const guildSettings = await mapWithConcurrency(guildIds, HARVEST_READ_CONCURRENCY, (guildId) =>
 			userRepository.findGuildSettings(userId, guildId),
 		);
+		const threadMemberships = await collectThreadMemberships(channelRepository.threads, userId, guildIds);
 		const {branding} = await instanceConfigRepository.getAppPublicConfig();
 		const userData = buildUserDataJson({
 			user,
@@ -905,6 +938,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			userSettings,
 			guildMemberships,
 			guildSettings,
+			threadMemberships,
 			savedMessages,
 			privateChannels,
 			favoriteMemes,

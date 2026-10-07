@@ -39,7 +39,7 @@ export class AdminGuildLookupService {
 			return {guild: null};
 		}
 		const [channels, roles, ownerUser] = await Promise.all([
-			channelRepository.listGuildChannels(guildId),
+			channelRepository.listGuildChannels(guildId, 'maintenance'),
 			guildRepository.listRoles(guildId),
 			userRepository.findUnique(guild.ownerId),
 		]);

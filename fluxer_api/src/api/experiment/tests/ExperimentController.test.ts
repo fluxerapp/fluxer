@@ -2,6 +2,7 @@
 
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/guild/tests/GuildTestUtils';
+import {ChannelThreadsConfigPublisher} from '@app/api/instance/ChannelThreadsConfigPublisher';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -9,6 +10,10 @@ import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequest
 import {grantPremium} from '@app/api/user/tests/UserTestUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {
+	applyChannelThreadsConfigUpdate,
+	type ChannelThreadsConfig,
+} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {
 	DEFAULT_DOMAIN_MIGRATION_CONFIG,
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
@@ -22,10 +27,11 @@ import {
 	DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT,
 	type ExperimentAssignmentsResponse,
 	type ExperimentDeliveryConfigResponse,
+	readChannelThreadsAssignment,
 	readDomainMigrationAssignment,
 	readPlutoniumPageAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const NOT_MODIFIED = 304;
 const ENDPOINT = '/experiments';
@@ -39,6 +45,10 @@ describe('GET /experiments', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 
 	afterAll(async () => {
@@ -454,5 +464,69 @@ describe('GET /experiments', () => {
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
 		expect(body.poll_interval_seconds).toBe(3600);
 		expect(body.poll_jitter_percent).toBe(DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT);
+	});
+
+	it('keeps the control body and etag for a user outside the channel threads experiment', async () => {
+		const account = await createTestAccount(harness);
+		const before = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token)
+			.get(ENDPOINT)
+			.executeWithResponse();
+
+		await getInstanceConfigRepository().updateChannelThreadsConfig((current) =>
+			applyChannelThreadsConfigUpdate(current, {enabled: true, included_user_ids: ['1']}),
+		);
+		const after = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token)
+			.get(ENDPOINT)
+			.executeWithResponse();
+
+		expect(Object.hasOwn(after.json.assignments, 'channel_threads')).toBe(false);
+		expect(readChannelThreadsAssignment(after.json)).toBeNull();
+		expect(after.response.headers.get('etag')).toBe(before.response.headers.get('etag'));
+	});
+
+	it('assigns channel threads to an included user with the config version', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().updateChannelThreadsConfig((current) =>
+			applyChannelThreadsConfigUpdate(current, {enabled: true, included_user_ids: [account.userId]}),
+		);
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readChannelThreadsAssignment(body)).toEqual({active: true, config_version: 1});
+	});
+
+	it('bumps the channel threads version, keeps ever_enabled sticky and publishes every admin update', async () => {
+		const publish = vi.spyOn(ChannelThreadsConfigPublisher.prototype, 'publish').mockResolvedValue(undefined);
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.INSTANCE_CONFIG_VIEW,
+			AdminACLs.INSTANCE_CONFIG_UPDATE,
+		]);
+		const patch = (body: Record<string, unknown>) =>
+			createBuilder<{channel_threads: ChannelThreadsConfig}>(harness, admin.token)
+				.patch('/admin/instance/config')
+				.body({channel_threads: body})
+				.execute();
+
+		const initial = await createBuilder<{channel_threads: ChannelThreadsConfig}>(harness, admin.token)
+			.get('/admin/instance/config')
+			.execute();
+		expect(initial.channel_threads).toMatchObject({enabled: false, config_version: 0, ever_enabled: false});
+
+		const enabled = await patch({enabled: true, included_user_ids: [admin.userId], ever_enabled: false});
+		expect(enabled.channel_threads).toMatchObject({enabled: true, config_version: 1, ever_enabled: true});
+
+		const disabled = await patch({enabled: false, config_version: 99});
+		expect(disabled.channel_threads).toMatchObject({enabled: false, config_version: 2, ever_enabled: true});
+
+		const unchanged = await patch({});
+		expect(unchanged.channel_threads.config_version).toBe(2);
+
+		expect(publish.mock.calls.map(([config]) => [config.config_version, config.enabled])).toEqual([
+			[1, true],
+			[2, false],
+		]);
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
+		expect(readChannelThreadsAssignment(body)).toBeNull();
 	});
 });

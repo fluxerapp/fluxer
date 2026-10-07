@@ -4,6 +4,12 @@ import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils'
 import type {GuildID} from '@app/api/BrandedTypes';
 import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {createPermissionOverwrite} from '@app/api/channel/tests/ChannelTestUtils';
+import {
+	ALL_THREADS_ACTIVE,
+	resetChannelThreadsConfig,
+	setChannelThreadsConfig,
+	threadsRequest,
+} from '@app/api/channel/tests/ThreadTestUtils';
 import {createChannel, createGuild, getUserGuilds} from '@app/api/guild/tests/GuildTestUtils';
 import {setInjectedGatewayService} from '@app/api/middleware/ServiceRegistry';
 import {getGuildRepository} from '@app/api/middleware/ServiceSingletons';
@@ -16,7 +22,7 @@ import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequest
 import syncDiscoveryIndex from '@app/api/worker/tasks/SyncDiscoveryIndex';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryCategories, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
 import type {
@@ -112,6 +118,7 @@ describe('Discovery Search and Join', () => {
 	});
 	afterEach(async () => {
 		clearWorkerDependencies();
+		resetChannelThreadsConfig();
 		await harness?.shutdown();
 	});
 	describe('categories', () => {
@@ -560,6 +567,40 @@ describe('Discovery Search and Join', () => {
 				.get(`/discovery/guilds/${guildId}/channels/${other.channelId}`)
 				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE)
 				.execute();
+		});
+		test('should only preview a forum for viewers in the threads experiment', async () => {
+			await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
+			const {ownerToken, guildId} = await createListedGuild('Forum Guild');
+			const forum = await threadsRequest<{id: string}>(harness, ownerToken)
+				.post(`/guilds/${guildId}/channels`)
+				.body({name: 'forum', type: ChannelTypes.GUILD_FORUM})
+				.execute();
+			const viewer = await createTestAccount(harness);
+			const preview = await threadsRequest<DiscoveryChannelPreviewResponse>(harness, viewer.token)
+				.get(`/discovery/guilds/${guildId}/channels/${forum.id}`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(preview.channel.type).toBe(ChannelTypes.GUILD_FORUM);
+			await createBuilder(harness, viewer.token)
+				.get(`/discovery/guilds/${guildId}/channels/${forum.id}`)
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE)
+				.execute();
+		});
+		test('should never preview a thread', async () => {
+			await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
+			const {ownerToken, guildId, channelId} = await createListedGuild('Thread Guild');
+			const viewer = await createTestAccount(harness);
+			for (const type of [ChannelTypes.PUBLIC_THREAD, ChannelTypes.PRIVATE_THREAD]) {
+				const thread = await threadsRequest<{id: string}>(harness, ownerToken)
+					.post(`/channels/${channelId}/threads`)
+					.body({name: 'secret plans', type})
+					.expect(201)
+					.execute();
+				await threadsRequest(harness, viewer.token)
+					.get(`/discovery/guilds/${guildId}/channels/${thread.id}`)
+					.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE)
+					.execute();
+			}
 		});
 		test('should not preview a guild that is not listed', async () => {
 			const owner = await createTestAccount(harness);

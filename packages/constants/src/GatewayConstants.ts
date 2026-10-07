@@ -19,6 +19,7 @@ export const GatewayOpcodes = {
 	LAZY_REQUEST: 14,
 	REQUEST_GUILD_COUNTS: 15,
 	REQUEST_CHANNEL_MEMBER_COUNTS: 16,
+	REQUEST_FORUM_UNREADS: 28,
 } as const;
 export const LARGE_GUILD_THRESHOLD = 250;
 export const MEMBER_LIST_RANGE_MAX_END = 100000;
@@ -27,6 +28,7 @@ export const MEMBER_LIST_RANGE_PAGE_SIZE = MEMBER_LIST_RANGE_MAX_SPAN + 1;
 export const MEMBER_LIST_RANGE_WINDOW_OVERSCAN_PAGES = 1;
 export const GatewayIdentifyFlags = {
 	DEBOUNCE_MESSAGE_REACTIONS: 1 << 1,
+	CHANNEL_THREADS: 1 << 2,
 } as const;
 export const GatewayCloseCodes = {
 	UNKNOWN_ERROR: 4000,

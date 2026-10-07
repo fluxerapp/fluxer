@@ -6,7 +6,8 @@ import {
 	MessageFlags,
 	MessageFlagsDescriptions,
 } from '@fluxer/constants/src/ChannelConstants';
-import {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import {ChannelResponse, ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import {ThreadMemberResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {type MessageEmbed, MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
@@ -50,7 +51,7 @@ export type MessageAttachmentResponse = z.infer<typeof MessageAttachmentResponse
 const MessageReferenceResponse = z.object({
 	channel_id: SnowflakeStringType.describe('The ID of the channel containing the referenced message'),
 	message_id: SnowflakeStringType.nullish().describe(
-		'The ID of the referenced message, absent on a channel follow system message',
+		'The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread',
 	),
 	guild_id: SnowflakeStringType.nullish().describe('The ID of the guild containing the referenced message'),
 	type: MessageReferenceTypeSchema,
@@ -156,6 +157,10 @@ const MessageBaseResponseSchema = z.object({
 	message_snapshots: z.array(MessageSnapshotResponse).nullish().describe('Snapshots of forwarded messages'),
 	nonce: z.string().nullish().describe('A client-provided value for message deduplication'),
 	call: MessageCallResponse.nullish().describe('Call information if this message represents a call'),
+	thread: z
+		.lazy(() => ThreadChannelResponse)
+		.optional()
+		.describe('The thread started from this message, when the viewer can see threads'),
 });
 
 type MessageBaseResponse = z.infer<typeof MessageBaseResponseSchema>;
@@ -209,6 +214,14 @@ export const MessageSearchResultsResponse = z.object({
 	hits_per_page: Int32Type.describe('The maximum number of messages returned per page'),
 	page: Int32Type.describe('The current page number'),
 	cursor: z.array(z.string()).optional().describe('Opaque cursor for fetching the next page of results'),
+	threads: z
+		.array(z.lazy(() => ThreadChannelResponse))
+		.optional()
+		.describe('The threads that contain the returned messages, when the viewer can see threads'),
+	members: z
+		.array(z.lazy(() => ThreadMemberResponse))
+		.optional()
+		.describe('A thread member object for each returned thread the current user has joined'),
 });
 
 export type MessageSearchResultsResponse = z.infer<typeof MessageSearchResultsResponse>;
@@ -345,6 +358,7 @@ export interface Message {
 	readonly referenced_message?: Message | null;
 	readonly message_snapshots?: ReadonlyArray<MessageSnapshot>;
 	readonly call?: MessageCall | null;
+	readonly thread?: ThreadChannelResponse;
 	readonly state?: string;
 	readonly nonce?: string;
 	readonly blocked?: boolean;

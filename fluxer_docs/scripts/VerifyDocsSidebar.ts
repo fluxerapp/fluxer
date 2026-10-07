@@ -3,7 +3,7 @@
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {DOCS_ROOT, listMarkdownFiles, slugifyHeading} from './DocsSource.ts';
+import {DOCS_ROOT, listDraftMarkdownFiles, listMarkdownFiles, slugifyHeading} from './DocsSource.ts';
 
 const ASTRO_CONFIG = fileURLToPath(new URL('../astro.config.ts', import.meta.url));
 
@@ -77,6 +77,7 @@ const orphanPages = [...actual].filter((slug) => !referenced.has(slug)).sort();
 
 console.log(`sidebar entries: ${referenced.size.toString()}`);
 console.log(`content pages: ${actual.size.toString()}`);
+console.log(`draft pages withheld from the build: ${(await listDraftMarkdownFiles(DOCS_ROOT)).length.toString()}`);
 
 let failures = 0;
 if (missingPages.length > 0) {

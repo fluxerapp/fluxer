@@ -350,6 +350,7 @@ export interface APIConfig {
 		laneName?: APIWorkerLaneName;
 		taskName?: WorkerTaskName;
 		enableCronScheduler?: boolean;
+		metricsPort?: number;
 		laneConcurrencyOverrides: {
 			realtime?: number;
 			unfurl?: number;

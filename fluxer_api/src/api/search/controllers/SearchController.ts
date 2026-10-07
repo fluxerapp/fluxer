@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -35,7 +36,9 @@ export function SearchController(app: HonoApp) {
 			}
 			const userId = user.id;
 			const requestCache = ctx.get('requestCache');
-			const result = await ctx.get('searchService').searchMessages({userId, requestCache, data: params});
+			const result = await ctx
+				.get('searchService')
+				.searchMessages({viewer: viewerFromCtx(ctx), userId, requestCache, data: params});
 			return ctx.json(result);
 		},
 	);

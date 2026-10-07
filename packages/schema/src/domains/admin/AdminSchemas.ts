@@ -13,6 +13,10 @@ import {GuildAdminResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSch
 import {UserAdminResponseSchema} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {CaptchaConfigResponse, CaptchaConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/CaptchaSchemas';
 import {
+	ChannelThreadsConfigResponse,
+	ChannelThreadsConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
+import {
 	DomainMigrationConfigResponse,
 	DomainMigrationConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
@@ -139,6 +143,7 @@ const SearchIndexTypeEnum = createNamedStringLiteralUnion(
 		['guild_members', 'guild_members', 'Guild member search index'],
 		['favorite_memes', 'favorite_memes', 'Favourite meme search index'],
 		['discovery', 'discovery', 'Discovery guild search index'],
+		['threads', 'threads', 'Thread search index (channel_threads experiment)'],
 	],
 	'Type of search index to refresh',
 );
@@ -673,6 +678,7 @@ export const InstanceConfigResponse = z.object({
 	domain_migration: DomainMigrationConfigResponse,
 	plutonium_page: PlutoniumPageConfigResponse,
 	captcha: CaptchaConfigResponse,
+	channel_threads: ChannelThreadsConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
@@ -708,6 +714,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	domain_migration: DomainMigrationConfigUpdateRequest.nullish(),
 	plutonium_page: PlutoniumPageConfigUpdateRequest.nullish(),
 	captcha: CaptchaConfigUpdateRequest.nullish(),
+	channel_threads: ChannelThreadsConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
 		.object({

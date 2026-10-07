@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {SYSTEM_THREAD_VIEWER} from '@app/api/experiment/ChannelThreadsGate';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
 import {UserChannelService} from '@app/api/user/services/UserChannelService';
@@ -90,6 +91,7 @@ export async function sendSystemDm(payload: unknown, helpers: WorkerTaskHelpers)
 			});
 			await deps.channelService.messages.send.sendMessage({
 				user: systemUser,
+				viewer: SYSTEM_THREAD_VIEWER,
 				channelId: channel.id,
 				data: {content},
 				requestCache,

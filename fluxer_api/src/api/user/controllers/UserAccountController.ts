@@ -5,6 +5,7 @@ import * as AuthSession from '@app/api/auth/AuthSession';
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {
 	RequireEmailAccountIdentity,
 	RequireUsernameAccountIdentity,
@@ -19,12 +20,10 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {classifyWebPushOrigin} from '@app/api/user/services/WebPushOriginReplacement';
 import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+import {gateChannelOverrideFlags, mapUserGuildSettingsForViewer} from '@app/api/user/UserGuildSettingsThreadView';
 import {isSsoUserWithoutPassword} from '@app/api/user/UserHelpers';
-import {
-	mapUserGuildSettingsToResponse,
-	mapUserSettingsToResponse,
-	mapUserToPrivateResponse,
-} from '@app/api/user/UserMappers';
+import {mapUserSettingsToResponse, mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {CHANNEL_THREADS_CLIENT_FEATURE} from '@app/api/utils/featureUtils';
 import {Validator} from '@app/api/Validator';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -802,7 +801,7 @@ export function UserAccountController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.USER_GUILD_SETTINGS_UPDATE),
 		LoginRequired,
 		DefaultUserOnly,
-		Validator('json', UserGuildSettingsUpdateRequest),
+		Validator('json', UserGuildSettingsUpdateRequest, {pre: gateChannelOverrideFlags}),
 		OpenAPI({
 			operationId: 'update_dm_notification_settings',
 			summary: 'Update DM notification settings',
@@ -819,7 +818,7 @@ export function UserAccountController(app: HonoApp) {
 				guildId: null,
 				data: ctx.req.valid('json'),
 			});
-			return ctx.json(mapUserGuildSettingsToResponse(settings));
+			return ctx.json(await mapUserGuildSettingsForViewer(settings, viewerFromCtx(ctx)));
 		},
 	);
 	app.patch(
@@ -828,7 +827,7 @@ export function UserAccountController(app: HonoApp) {
 		LoginRequired,
 		DefaultUserOnly,
 		Validator('param', GuildIdParam),
-		Validator('json', UserGuildSettingsUpdateRequest),
+		Validator('json', UserGuildSettingsUpdateRequest, {pre: gateChannelOverrideFlags}),
 		OpenAPI({
 			operationId: 'update_guild_settings_for_user',
 			summary: 'Update guild settings for user',
@@ -841,12 +840,14 @@ export function UserAccountController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const {guild_id} = ctx.req.valid('param');
+			const viewer = viewerFromCtx(ctx);
 			const settings = await ctx.get('userService').accountService.settingsService.updateGuildSettings({
 				userId: ctx.get('user').id,
 				guildId: createGuildID(guild_id),
 				data: ctx.req.valid('json'),
+				viewer,
 			});
-			return ctx.json(mapUserGuildSettingsToResponse(settings));
+			return ctx.json(await mapUserGuildSettingsForViewer(settings, viewer));
 		},
 	);
 	app.post(
@@ -930,6 +931,7 @@ export function UserAccountController(app: HonoApp) {
 				userAgent: user_agent,
 				originKind: classifyWebPushOrigin(ctx.req.header('origin'), Config.instance.selfHosted),
 				installedApp: installed_app,
+				threadChannels: ctx.get('clientFeatures').has(CHANNEL_THREADS_CLIENT_FEATURE),
 			});
 			return ctx.json({subscription_id: subscription.subscriptionId});
 		},
@@ -962,6 +964,7 @@ export function UserAccountController(app: HonoApp) {
 				userAgent: user_agent,
 				originKind: classifyWebPushOrigin(ctx.req.header('origin'), Config.instance.selfHosted),
 				installedApp: installed_app,
+				threadChannels: ctx.get('clientFeatures').has(CHANNEL_THREADS_CLIENT_FEATURE),
 			});
 			return ctx.json({subscription_id: subscription.subscriptionId});
 		},
@@ -1036,6 +1039,7 @@ export function UserAccountController(app: HonoApp) {
 				userId: ctx.get('user').id,
 				authSessionIdHash: authSession ? uint8ArrayToBase64(authSession.sessionIdHash, {urlSafe: true}) : null,
 				device,
+				threadChannels: ctx.get('clientFeatures').has(CHANNEL_THREADS_CLIENT_FEATURE),
 			});
 			return ctx.json({device_id: subscription.subscriptionId});
 		},
@@ -1130,6 +1134,7 @@ export function UserAccountController(app: HonoApp) {
 			const userAccountRequestService = ctx.get('userAccountRequestService');
 			return ctx.json(
 				await userAccountRequestService.preloadMessages({
+					viewer: viewerFromCtx(ctx),
 					userId: ctx.get('user').id,
 					channels: ctx.req.valid('json').channels,
 					requestCache: ctx.get('requestCache'),
@@ -1156,6 +1161,7 @@ export function UserAccountController(app: HonoApp) {
 			const userAccountRequestService = ctx.get('userAccountRequestService');
 			return ctx.json(
 				await userAccountRequestService.preloadMessages({
+					viewer: viewerFromCtx(ctx),
 					userId: ctx.get('user').id,
 					channels: ctx.req.valid('json').channels,
 					requestCache: ctx.get('requestCache'),

@@ -785,6 +785,9 @@
         "msgid": "{actor} banned {target}."
       },
       {
+        "msgid": "{actor} started the thread {channel}"
+      },
+      {
         "msgid": "{actor} stopped following an announcement channel in {channel}"
       },
       {
@@ -1663,6 +1666,9 @@
         "msgid": "Changed slowmode from {oldDuration} to {newDuration}."
       },
       {
+        "msgid": "Changed slowmode to {duration}"
+      },
+      {
         "msgid": "Changed the AFK channel from {oldChannel} to {newChannel}."
       },
       {
@@ -1718,6 +1724,9 @@
       },
       {
         "msgid": "Changed the explicit content filter from {oldFilter} to {newFilter}."
+      },
+      {
+        "msgid": "Changed the hide after inactivity time to {duration}"
       },
       {
         "msgid": "Changed the invite background alignment from {oldAlignment} to {newAlignment}."
@@ -1838,6 +1847,9 @@
       },
       {
         "msgid": "Closed"
+      },
+      {
+        "msgid": "Closed the thread"
       },
       {
         "msgid": "Codec negotiation testing"
@@ -2492,6 +2504,9 @@
       },
       {
         "msgid": "Loading instance configuration"
+      },
+      {
+        "msgid": "Locked the thread"
       },
       {
         "msgid": "Logo"
@@ -3862,6 +3877,9 @@
         "msgid": "Unlink"
       },
       {
+        "msgid": "Unlocked the thread"
+      },
+      {
         "msgid": "Unread channels"
       },
       {
@@ -4402,6 +4420,9 @@
         "msgid": "{actor} deleted the text channel {channel}."
       },
       {
+        "msgid": "{actor} deleted the thread {channel}"
+      },
+      {
         "msgid": "{actor} deleted the voice channel {channel}."
       },
       {
@@ -4609,6 +4630,9 @@
         "msgid": "{actor} set their community pronouns to {text}."
       },
       {
+        "msgid": "{actor} started the thread {channel}"
+      },
+      {
         "msgid": "{actor} stopped following an announcement channel in {channel}"
       },
       {
@@ -4682,6 +4706,9 @@
       },
       {
         "msgid": "{actor} updated the text channel {channel}."
+      },
+      {
+        "msgid": "{actor} updated the thread {channel}"
       },
       {
         "msgid": "{actor} updated the voice channel {channel}."

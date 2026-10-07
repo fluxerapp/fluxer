@@ -19,8 +19,10 @@ export interface ExtractedRoute {
 	middlewares: Array<string>;
 	hasLoginRequired: boolean;
 	hasDefaultUserOnly: boolean;
+	hasBotOnly: boolean;
 	rateLimitConfig: string | null;
 	responseSchemaName: string | null;
+	acceptedResponseSchemaName?: string | null;
 	responseContentType: string;
 	hasNoContent: boolean;
 	bodylessStatusCodes: Array<number>;
@@ -39,6 +41,7 @@ export interface ExtractedRoute {
 	explicitTags: Array<string> | null;
 	explicitDeprecated: boolean;
 	explicitExternalDocs: OpenAPIExternalDocs | null;
+	explicitExperiment: string | null;
 }
 export interface OpenAPIPathItem {
 	[method: string]: OpenAPIOperation;
@@ -54,6 +57,7 @@ export interface OpenAPIOperation {
 	responses: Record<string, OpenAPIResponse>;
 	deprecated?: boolean;
 	externalDocs?: OpenAPIExternalDocs;
+	'x-fluxer-experiment'?: string;
 }
 export interface OpenAPIParameter {
 	name: string;

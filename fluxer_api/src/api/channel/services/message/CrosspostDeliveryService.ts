@@ -66,6 +66,7 @@ import {
 	WebhookTypes,
 } from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures, GuildOperations} from '@fluxer/constants/src/GuildConstants';
+import {THREAD_MESSAGE_FLAG_MASK} from '@fluxer/constants/src/ThreadConstants';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -644,7 +645,10 @@ export class CrosspostDeliveryService {
 						attachments: null,
 						embeds: null,
 						sticker_items: null,
-						flags: MessageFlags.IS_CROSSPOST | MessageFlags.SOURCE_MESSAGE_DELETED,
+						flags:
+							MessageFlags.IS_CROSSPOST |
+							MessageFlags.SOURCE_MESSAGE_DELETED |
+							(fresh.flags & THREAD_MESSAGE_FLAG_MASK),
 						edited_timestamp: new Date(),
 					},
 					fresh.toRow(),

@@ -3,6 +3,7 @@
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 
 interface PermissionsDiff {
@@ -10,10 +11,17 @@ interface PermissionsDiff {
 	removed: Array<string>;
 }
 
-export function computePermissionsDiff(oldPermissions: bigint, newPermissions: bigint): PermissionsDiff {
+export function computePermissionsDiff(
+	oldPermissions: bigint,
+	newPermissions: bigint,
+	opts?: {threads?: boolean},
+): PermissionsDiff {
 	const added: Array<string> = [];
 	const removed: Array<string> = [];
-	for (const [name, value] of Object.entries(Permissions)) {
+	const entries = opts?.threads
+		? [...Object.entries(Permissions), ...Object.entries(ThreadPermissionFlags)]
+		: Object.entries(Permissions);
+	for (const [name, value] of entries) {
 		const hadPermission = (oldPermissions & value) !== 0n;
 		const hasPermission = (newPermissions & value) !== 0n;
 		if (!hadPermission && hasPermission) {

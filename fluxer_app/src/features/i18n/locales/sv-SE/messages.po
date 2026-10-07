@@ -369,6 +369,11 @@ msgstr "{actor} tog bort klistermärket {name}"
 msgid "{actor} deleted the text channel {channel}"
 msgstr "{actor} raderade textkanalen {channel}"
 
+#. Activity log summary when a thread was deleted. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the thread, shown as a channel chip with its recorded name.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:29
+msgid "{actor} deleted the thread {channel}"
+msgstr "{actor} raderade tråden {channel}"
+
 #. Activity log summary when a voice channel was deleted. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the deleted channel, shown as a channel chip with the name it had.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:336
 msgid "{actor} deleted the voice channel {channel}"
@@ -674,6 +679,11 @@ msgstr "{actor} ändrade pronomenen för sin communityprofil till {text}"
 msgid "{actor} set their nickname to {nick}"
 msgstr "{actor} ändrade sitt smeknamn till {nick}"
 
+#. Activity log summary when a thread was created. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the thread, shown as a channel chip with its name.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:19
+msgid "{actor} started the thread {channel}"
+msgstr "{actor} startade tråden {channel}"
+
 #. Activity log summary for a moderator who stopped a member from hearing anyone in the voice channels of this community until it is undone. This is about what the member hears and not about the microphone of the member, so it must read clearly differently from the row where a moderator turns the microphone off. Describe the effect the way the English does. Do not name the action with a noun such as a community deafen. This is a past tense record of an action that already happened, never an instruction to the reader. {actor} is the member who stopped it, shown as a clickable user chip, or the word System. {target} is the member who can no longer hear others, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:115
 msgid "{actor} stopped {target} from hearing others in this community"
@@ -808,6 +818,11 @@ msgstr "{actor} uppdaterade klistermärket {name}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:189
 msgid "{actor} updated the text channel {channel}"
 msgstr "{actor} uppdaterade textkanalen {channel}"
+
+#. Activity log summary when a thread was changed. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the thread, shown as a channel chip with its name.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:24
+msgid "{actor} updated the thread {channel}"
+msgstr "{actor} uppdaterade tråden {channel}"
 
 #. Activity log summary when settings of a voice channel were changed. The changes are listed as detail rows below it. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:199
@@ -7060,6 +7075,11 @@ msgstr "Ändra ditt användarnamn"
 msgid "Changed slowmode from {oldDuration} to {newDuration}"
 msgstr "Ändrade långsamt läge från {oldDuration} till {newDuration}"
 
+#. Activity log detail row under an updated thread whose slowmode changed. {duration} is a formatted duration such as "30 seconds". Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:63
+msgid "Changed slowmode to {duration}"
+msgstr "Ändrade långsamt läge till {duration}"
+
 #. Activity log detail line under a community settings update, shown when the AFK channel, the voice channel idle members are moved to, was changed to another channel. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldChannel} is the previous AFK channel and {newChannel} is the new AFK channel, both shown as channel chips.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:161
 msgid "Changed the AFK channel from {oldChannel} to {newChannel}"
@@ -7135,6 +7155,11 @@ msgstr "Ändrade beskrivningen från {oldText} till {newText}"
 msgid "Changed the explicit content filter from {oldFilter} to {newFilter}"
 msgstr "Ändrade filtret för explicit innehåll från {oldFilter} till {newFilter}"
 
+#. Activity log detail row under an updated thread whose auto archive duration changed. {duration} is a formatted duration such as "1 hour". Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:58
+msgid "Changed the hide after inactivity time to {duration}"
+msgstr "Ändrade tiden för automatisk arkivering till {duration}"
+
 #. Activity log detail line under a community settings update, shown when the invite background, the image behind the invite page of the community, was replaced with a different image. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:96
 msgid "Changed the invite background"
@@ -7174,11 +7199,13 @@ msgstr "Ändrade gränsdatumet för meddelandehistorik från {oldDate} till {new
 #. Activity log detail line under an edited role that got a new name along with other changes. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the role name before the change and {newName} is the role name after it. Do not swap them. The app shows both in bold, so do not add ** or <b> around them.
 #. Activity log detail line under an edited sticker, for a sticker that got a new name. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Keep the word name so the line says what changed. {oldName} is the previous sticker name and {newName} is the new one, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #. Activity log detail row under an updated channel whose name changed along with other settings. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the name before the change and {newName} the name after, both shown in bold. The app adds the bold, so do not add ** or <b>.
+#. Activity log detail row under an updated thread whose name changed. It is a past tense record, never an instruction. {oldName} and {newName} are shown in bold by the app.
 #. Activity log detail under a changed webhook. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous name of the webhook and {newName} is its new name, both shown in bold by the app. Do not add ** or <b> around them.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:220
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:75
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:120
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:55
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:34
 msgid "Changed the name from {oldName} to {newName}"
 msgstr "Ändrade namnet från {oldName} till {newName}"
 
@@ -8440,6 +8467,11 @@ msgstr "Stängda DM-konversationer"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:152
 msgid "Closed DMs"
 msgstr "Stängda DM-konversationer"
+
+#. Activity log detail row under an updated thread that was archived. Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:39
+msgid "Closed the thread"
+msgstr "Tråden stängdes"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:128
@@ -20251,6 +20283,11 @@ msgstr "Språk och region"
 msgid "Location"
 msgstr "Plats"
 
+#. Activity log detail row under an updated thread that was locked. Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:49
+msgid "Locked the thread"
+msgstr "Tråden låstes"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:55
 msgid "Log out"
@@ -24622,6 +24659,11 @@ msgstr "Öppna din gamla {PRODUCT_NAME}-app, välj Länka en ny enhet och ange s
 #: src/features/input/state/input_keybind/shared.ts:253
 msgid "Open your settings"
 msgstr "Öppna dina inställningar"
+
+#. Activity log detail row under an updated thread that was unarchived. Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:44
+msgid "Opened the thread again"
+msgstr "Öppnade tråden igen"
 
 #. Screen-reader-only hint for the Members entry in community settings. The entry receives keyboard focus without automatically opening.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:66
@@ -36532,6 +36574,11 @@ msgstr "Lås upp fler bakgrunder med {premiumProductName}"
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:28
 msgid "Unlock stickers in DMs with {premiumProductName}"
 msgstr "Lås upp klistermärken i DM med {premiumProductName}"
+
+#. Activity log detail row under an updated thread that was unlocked. Past tense record, never an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogThreadPresentation.ts:53
+msgid "Unlocked the thread"
+msgstr "Tråden låstes upp"
 
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/app/components/bottomsheets/MuteDurationSheet.tsx:72

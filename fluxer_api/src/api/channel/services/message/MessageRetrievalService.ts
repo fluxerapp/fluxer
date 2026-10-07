@@ -18,6 +18,9 @@ import {
 	type MessageResponseAccessContext,
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
+import {maskThreadArtifactsFor, ThreadMessageResponses} from '@app/api/channel/services/message/ThreadMessageResponses';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import {maskChannelResponseThreadBits} from '@app/api/guild/services/ThreadPermissionBits';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
@@ -65,17 +68,40 @@ export class MessageRetrievalService {
 		return this.isMessageAfterCutoff(messageId, cutoff);
 	}
 
+	private threadResponsesInstance: ThreadMessageResponses | undefined;
+
+	get threadResponses(): ThreadMessageResponses {
+		this.threadResponsesInstance ??= new ThreadMessageResponses(
+			this.channelRepository,
+			createMessageResponseDataService(),
+			this.userCacheService,
+		);
+		return this.threadResponsesInstance;
+	}
+
 	async getResponseAccessContext(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId?: MessageID;
 		authChannel?: AuthenticatedChannel;
 	}): Promise<MessageResponseAccessContext> {
+		return (await this.getResponseAccess(params)).access;
+	}
+
+	async getResponseAccess(params: {
+		userId: UserID;
+		viewer: ThreadViewer;
+		channelId: ChannelID;
+		messageId?: MessageID;
+		authChannel?: AuthenticatedChannel;
+	}): Promise<{access: MessageResponseAccessContext; authChannel: AuthenticatedChannel}> {
 		const authChannel =
 			params.authChannel ??
 			(await this.channelAuthService.getChannelAuthenticated({
 				userId: params.userId,
 				channelId: params.channelId,
+				viewer: params.viewer,
 			}));
 		if (params.messageId && !(await this.canAccessMessage(authChannel, params.messageId))) {
 			throw new UnknownMessageError();
@@ -83,22 +109,27 @@ export class MessageRetrievalService {
 		const canReadMessageHistory =
 			!authChannel.guild || (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY));
 		return {
-			sourceGuildId: authChannel.channel.guildId,
-			messageHistoryCutoff: canReadMessageHistory ? null : (authChannel.guild?.message_history_cutoff ?? null),
-			canReadMessageHistory,
+			authChannel,
+			access: {
+				sourceGuildId: authChannel.channel.guildId,
+				messageHistoryCutoff: canReadMessageHistory ? null : (authChannel.guild?.message_history_cutoff ?? null),
+				canReadMessageHistory,
+			},
 		};
 	}
 
 	async getMessage({
 		userId,
+		viewer,
 		channelId,
 		messageId,
 	}: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
 	}): Promise<Message> {
-		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId});
+		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId, viewer});
 		if (!(await this.canAccessMessage(authChannel, messageId))) {
 			throw new UnknownMessageError();
 		}
@@ -113,14 +144,16 @@ export class MessageRetrievalService {
 
 	async getMessagesByIds({
 		userId,
+		viewer,
 		channelId,
 		messageIds,
 	}: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageIds: Array<MessageID>;
 	}): Promise<Map<string, Message>> {
-		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId});
+		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId, viewer});
 		const canReadMessageHistory =
 			!authChannel.guild || (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY));
 		const cutoff = authChannel.guild?.message_history_cutoff ?? null;
@@ -141,16 +174,18 @@ export class MessageRetrievalService {
 
 	async searchMessages({
 		userId,
+		viewer,
 		channelId,
 		searchParams,
 		requestCache,
 	}: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
 	}): Promise<MessageSearchResponse> {
-		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId});
+		const authChannel = await this.channelAuthService.getChannelAuthenticated({userId, channelId, viewer});
 		const {channel} = authChannel;
 		const hasReadHistory = !authChannel.guild || (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY));
 		if (!hasReadHistory) {
@@ -208,11 +243,12 @@ export class MessageRetrievalService {
 			messages: result.messages,
 			access,
 		});
-		const messageResponses = builtMessages.map(
+		const messageResponses = maskThreadArtifactsFor(viewer, channel.guildId, builtMessages).map(
 			({referenced_message: _referencedMessage, ...searchMessage}) => searchMessage,
 		);
 		return {
-			channels: messageResponses.length > 0 ? [await this.mapSearchChannelResponse(channel, userId, requestCache)] : [],
+			channels:
+				messageResponses.length > 0 ? await this.mapSearchChannelResponse(channel, userId, viewer, requestCache) : [],
 			messages: messageResponses,
 			total: hasReadHistory ? result.total : messageResponses.length,
 			hits_per_page: hitsPerPage,
@@ -220,13 +256,19 @@ export class MessageRetrievalService {
 		};
 	}
 
-	private async mapSearchChannelResponse(channel: Channel, userId: UserID, requestCache: RequestCache) {
-		return mapChannelToResponse({
+	private async mapSearchChannelResponse(
+		channel: Channel,
+		userId: UserID,
+		viewer: ThreadViewer,
+		requestCache: RequestCache,
+	) {
+		const response = await mapChannelToResponse({
 			channel,
 			currentUserId: userId,
 			userCacheService: this.userCacheService,
 			requestCache,
 		});
+		return maskChannelResponseThreadBits(channel.guildId, viewer, [response]);
 	}
 
 	private async channelNeedsIndexing(channel: Channel, channelId: ChannelID): Promise<boolean> {

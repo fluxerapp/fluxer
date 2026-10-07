@@ -38,6 +38,7 @@ export const AdminAuditReadActions = {
 	LIST_GUILD_MEMBERS: 'list_guild_members',
 	LIST_GUILD_MEMORY_STATS: 'list_guild_memory_stats',
 	LIST_GUILD_STICKERS: 'list_guild_stickers',
+	LIST_GUILD_THREADS: 'list_guild_threads',
 	LIST_USER_APPLICATIONS: 'list_user_applications',
 	LIST_USER_CHANGE_LOG: 'list_user_change_log',
 	LIST_USER_DM_CHANNELS: 'list_user_dm_channels',

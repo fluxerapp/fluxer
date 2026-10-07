@@ -4,6 +4,7 @@ import {Config} from '@app/api/Config';
 import {createApiContext} from '@app/api/CreateApiContext';
 import {setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
+import {channelThreadsEnabled, everEnabled} from '@app/api/experiment/ChannelThreadsGate';
 import {
 	jetStreamActivityPublisher,
 	shutdownActivityEvents,
@@ -51,12 +52,21 @@ import {createWorkerProcessErrorHandler} from '@app/api/worker/WorkerProcessErro
 import {WorkerRunner} from '@app/api/worker/WorkerRunner';
 import {WorkerService} from '@app/api/worker/WorkerService';
 import {workerTasks} from '@app/api/worker/WorkerTaskRegistry';
-import {setupGracefulShutdown} from '@fluxer/hono/src/Server';
+import {createRegisteredMetricsHandler} from '@fluxer/hono/src/middleware/Metrics';
+import {createServer, setupGracefulShutdown} from '@fluxer/hono/src/Server';
+import type {ServerType} from '@hono/node-server';
 import {BACKGROUND_READ_TIMEOUT_MS, initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import {Hono} from 'hono';
 import {ms} from 'itty-time';
+
+function startWorkerMetricsServer(port: number): ServerType {
+	const app = new Hono();
+	app.get('/_metrics', createRegisteredMetricsHandler());
+	return createServer(app, {port, onListen: (info) => Logger.info({port: info.port}, 'Worker metrics listening')});
+}
 
 function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number): void {
 	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *', {ledger: false});
@@ -98,6 +108,10 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number): void
 	}
 	cron.upsert('flushUserActivityBuffer', 'flushUserActivityBuffer', {}, '*/10 * * * * *', {ledger: false});
 	cron.upsert('drainActivitySpool', 'drainActivitySpool', {}, '*/5 * * * * *', {ledger: false});
+	cron.upsert('archiveInactiveThreads', 'archiveInactiveThreads', {}, '0 * * * * *', {
+		ledger: false,
+		enabled: () => everEnabled() || channelThreadsEnabled(),
+	});
 	Logger.info(
 		{
 			blocklistFeeds: Config.blocklistFeeds.enabled,
@@ -118,6 +132,7 @@ export async function startWorkerMain(): Promise<void> {
 	let instanceConfigRepository: InstanceConfigRepository | null = null;
 	let dependencies: WorkerDependencies | null = null;
 	let cron: CronScheduler | null = null;
+	let metricsServer: ServerType | null = null;
 	const heartbeat = new WorkerHeartbeat({logger: Logger});
 	const runners: Array<WorkerRunner> = [];
 	let searchInitialized = false;
@@ -135,6 +150,10 @@ export async function startWorkerMain(): Promise<void> {
 		Logger.info('Shutting down worker backend...');
 		const voiceShutdown = cleanupStep('voice resources', shutdownVoiceResources);
 		await cleanupStep('heartbeat', () => heartbeat.stop());
+		await cleanupStep('metrics server', () => {
+			metricsServer?.close();
+			metricsServer = null;
+		});
 		await cleanupStep('cron', () => cron?.stop());
 		await cleanupStep('account actions', stopAccountActionConsumer);
 		await cleanupStep('runners', async () => {
@@ -340,6 +359,9 @@ export async function startWorkerMain(): Promise<void> {
 			'Worker runners started',
 		);
 		heartbeat.start();
+		if (Config.worker.metricsPort !== undefined) {
+			metricsServer = startWorkerMetricsServer(Config.worker.metricsPort);
+		}
 		setupGracefulShutdown(shutdown, {logger: Logger, timeoutMs: 30000});
 		const handleProcessError = createWorkerProcessErrorHandler({
 			logger: Logger,

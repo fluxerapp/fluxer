@@ -1,0 +1,280 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Forums
+description: Forum and media channels, forum tags, post data, and webhooks that post into a forum.
+draft: true
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A forum channel holds posts, and every post is a public [thread](/http-api/threads/) with its own first message. A media channel is a forum channel whose posts center on attachments. Neither accepts a message of its own.
+
+:::note[Every route needs the `channel_threads` experiment]
+A route on this page answers 404 `NOT_FOUND` unless the experiment is active for the guild and the caller. A user session also declares `channel_threads` in the `X-Fluxer-Features` header, and a bot needs no declaration.
+:::
+
+## Forum channel fields
+
+A forum or media channel is a [channel object](/http-api/channels/#channel-object) of type `15` or `16` with the fields below.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| topic | ?string | The guidelines of the channel (1-4,096 characters) |
+| last_message_id<sup>1</sup> | ?snowflake | The ID of the newest post |
+| flags | integer | The [channel flags](#channel-flags) of the channel |
+| available_tags | array[[forum tag](#forum-tag-object) object] | The tags a post can apply (max 20) |
+| default_reaction_emoji | ?[default reaction](#default-reaction-object) object | The reaction a client shows on each post, or null when none is set |
+| default_sort_order | ?integer | The [sort order](#forum-sort-orders) a client uses, or null when none is set |
+| default_forum_layout?<sup>2</sup> | integer | The [layout](#forum-layouts) a client uses |
+| default_tag_setting | string | The [tag matching](#forum-tag-settings) search uses by default |
+| default_auto_archive_duration | ?integer | The [auto archive duration](/http-api/threads/#auto-archive-durations) new posts inherit, or null when none is set |
+| default_thread_rate_limit_per_user | integer | The slowmode interval in seconds new posts inherit |
+
+<sup>1</sup> [Channel Update](/gateway/events/#channel-update) is not emitted when this changes. A client advances it on [Thread Create](/gateway/events/#thread-create)
+
+<sup>2</sup> Present only on a forum channel
+
+`rate_limit_per_user` on the channel limits how often one member creates a post. Sending [Create message](/http-api/messages/#create-message) to the channel itself returns 400 `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL`, and so do reactions and pins.
+
+### Example
+
+```json
+{
+  "id": "1501314428688998300",
+  "type": 15,
+  "guild_id": "1501314428688990000",
+  "name": "help",
+  "topic": "One question per post",
+  "position": 4,
+  "parent_id": null,
+  "permission_overwrites": [],
+  "last_message_id": "1501320000000000000",
+  "rate_limit_per_user": 0,
+  "flags": 16,
+  "available_tags": [
+    {"id": "1501314428688998301", "name": "Solved", "moderated": true, "emoji_id": null, "emoji_name": "✅"}
+  ],
+  "default_reaction_emoji": null,
+  "default_sort_order": null,
+  "default_forum_layout": 0,
+  "default_tag_setting": "match_some",
+  "default_auto_archive_duration": null,
+  "default_thread_rate_limit_per_user": 0
+}
+```
+
+## Forum post object
+
+[Start thread](/http-api/threads/#start-thread) returns a forum post, which is a [thread object](/http-api/threads/#thread-object) with its first message.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| message | [message](/http-api/messages/#message-object) object | The first message of the post, which has the ID of the post |
+
+## Channel types
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 15 | GUILD_FORUM | A guild channel whose messages live in posts |
+| 16 | GUILD_MEDIA | A forum channel whose posts center on attachments |
+
+## Channel flags
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 1 | PINNED | The post is pinned to the top of its forum |
+| 1 &lt;&lt; 4 | REQUIRE_TAG | A new post must apply at least one tag |
+| 1 &lt;&lt; 15 | HIDE_MEDIA_DOWNLOAD_OPTIONS | Clients hide download, open, and copy actions on images and videos in a media channel |
+
+`PINNED` is set on a post, and a forum holds at most one pinned post. `REQUIRE_TAG` and `HIDE_MEDIA_DOWNLOAD_OPTIONS` are set on the channel. `HIDE_MEDIA_DOWNLOAD_OPTIONS` on a forum channel returns 400 `HIDE_MEDIA_DOWNLOAD_OPTION_MEDIA_ONLY`, and any other bit returns 400 `INVALID_FORM_BODY`.
+
+## Forum tag object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the tag |
+| name | string | The name of the tag (1-50 characters) |
+| moderated | boolean | Whether only thread moderators can apply or remove the tag |
+| emoji_id | ?snowflake | The ID of a custom emoji of this guild, or null |
+| emoji_name | ?string | A single Unicode emoji, or null |
+
+At most one of `emoji_id` and `emoji_name` is set. A tag name is unique within its channel, and the comparison is case-sensitive.
+
+## Default reaction object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| emoji_id | ?snowflake | The ID of a custom emoji of this guild, or null |
+| emoji_name | ?string | A single Unicode emoji, or null |
+
+## Forum sort orders
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | LATEST_ACTIVITY | Sort posts by their newest message |
+| 1 | CREATION_TIME | Sort posts by creation time |
+
+## Forum layouts
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | DEFAULT | No layout is set |
+| 1 | LIST | Show posts as a list |
+| 2 | GRID | Show posts as a grid of tiles |
+
+## Forum tag settings
+
+| Value | Description |
+| --- | --- |
+| match_some | A post matches when it applies any of the searched tags |
+| match_all | A post matches when it applies every searched tag |
+
+## Creating and modifying a forum
+
+[Create guild channel](/http-api/guild-channels/#create-guild-channel) with `type` `15` or `16`, and [Modify channel](/http-api/channels/#modify-channel) on a forum or media channel, accept these fields beside the common guild channel fields.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| topic? | ?string | The guidelines of the channel (1-4,096 characters) |
+| available_tags?<sup>1</sup> | array[[forum tag](#forum-tag-object) object] | The complete tag set (max 20) |
+| default_reaction_emoji? | ?[default reaction](#default-reaction-object) object | The default reaction, or null to clear it |
+| default_sort_order? | ?integer | The [sort order](#forum-sort-orders), or null to clear it |
+| default_forum_layout?<sup>2</sup> | integer | The [layout](#forum-layouts) |
+| default_tag_setting? | ?string | The [tag matching](#forum-tag-settings) default |
+| default_auto_archive_duration? | ?integer | The [auto archive duration](/http-api/threads/#auto-archive-durations) new posts inherit, or null to clear it |
+| default_thread_rate_limit_per_user? | integer | The slowmode interval in seconds new posts inherit (0-21,600) |
+| flags? | integer | The [channel flags](#channel-flags) of the channel |
+
+<sup>1</sup> An entry with `id` keeps that tag, and an entry without one creates a tag. A stored tag missing from the array is deleted
+
+<sup>2</sup> Read only for a forum channel
+
+A guild text channel accepts `default_auto_archive_duration` and `default_thread_rate_limit_per_user` as well.
+
+A tag set over 20 returns 400 `MAX_FORUM_TAGS`, and a repeated name returns 400 `FORUM_TAG_NAMES_MUST_BE_UNIQUE`. An `id` the channel does not hold returns 404 `UNKNOWN_FORUM_TAG`. An `emoji_id` from another guild returns 404 `UNKNOWN_EMOJI`.
+
+`REQUIRE_TAG` on a channel whose every tag is moderated returns 400 `NO_TAGS_AVAILABLE_TO_NON_MODERATORS`.
+
+An invite to a forum or media channel returns 400 `INVALID_CHANNEL_TYPE`.
+
+## Create forum tag
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/tags" bot auditReason />
+
+Adds a tag to a forum or media channel and returns the updated [channel object](/http-api/channels/#channel-object). Requires `MANAGE_CHANNELS`. Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the forum or media channel |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The name of the tag (1-50 characters) |
+| moderated? | boolean | Whether only thread moderators can apply or remove the tag (default false) |
+| emoji_id? | ?snowflake | The ID of a custom emoji of this guild |
+| emoji_name? | ?string | A single Unicode emoji (max 64 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [channel](/http-api/channels/#channel-object) object | Tag was added |
+| 400 | [error response](/http-api/#error-response) | Channel is not a forum or media channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 400 | [error response](/http-api/#error-response) | Channel has 20 tags and the request returns `MAX_FORUM_TAGS` |
+| 400 | [error response](/http-api/#error-response) | Channel has a tag with the name and the request returns `FORUM_TAG_NAMES_MUST_BE_UNIQUE` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `MANAGE_CHANNELS` and the request returns `MISSING_PERMISSIONS` |
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:forum_tags::channel_id` bucket.
+
+## Modify forum tag
+
+<RouteHeader method="PUT" path="/v1/channels/{channel_id}/tags/{tag_id}" bot auditReason />
+
+Replaces a tag of a forum or media channel and returns the updated [channel object](/http-api/channels/#channel-object). Requires `MANAGE_CHANNELS`. Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
+
+The body matches [Create forum tag](#create-forum-tag). A `tag_id` the channel does not hold returns 404 `UNKNOWN_FORUM_TAG`.
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:forum_tags::channel_id` bucket.
+
+## Delete forum tag
+
+<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/tags/{tag_id}" bot auditReason />
+
+Removes a tag from a forum or media channel and returns the updated [channel object](/http-api/channels/#channel-object). Requires `MANAGE_CHANNELS`. Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
+
+A post that applied the tag keeps the ID until its tags next change, and a client ignores an ID absent from `available_tags`.
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:forum_tags::channel_id` bucket.
+
+## Get forum post data
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/post-data" bot />
+
+Returns the owner and first message of each requested post in a forum or media channel. Requires `READ_MESSAGE_HISTORY`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| thread_ids | array[snowflake] | The IDs of the posts (1-100) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| threads<sup>1</sup> | map[snowflake, [post data](#post-data-object) object] | The post data keyed by post ID |
+
+<sup>1</sup> An ID that is not a post of this channel is left out
+
+#### Post data object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| owner | ?[guild member](/http-api/guild-members/#guild-member-object) object | The guild member who created the post, or null when they left the guild |
+| first_message | ?[message](/http-api/messages/#message-object) object | The first message of the post, or null when it was deleted |
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:post_data::channel_id` bucket.
+
+## Webhooks in forums
+
+A webhook whose channel is a forum or media channel creates a post, or posts into an existing one. [Execute webhook](/http-api/webhooks/#execute-webhook) takes the fields below.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| thread_id?<sup>1</sup> | snowflake | The query parameter naming the thread to post into |
+| thread_name? | string | The name of a new post (1-100 characters) |
+| applied_tags?<sup>2</sup> | array[snowflake] | The IDs of the tags a new post applies (max 5) |
+
+<sup>1</sup> The thread must belong to the channel of the webhook. Any other thread returns 404 `UNKNOWN_CHANNEL`
+
+<sup>2</sup> A moderated tag returns 403 `MISSING_PERMISSIONS`
+
+`thread_id` also works on a webhook whose channel is a guild text channel, and on the webhook message routes. A forum execution without `thread_id` or `thread_name` returns 400 `WEBHOOK_FORUM_TARGET_REQUIRED`, and one with both returns 400 `WEBHOOK_FORUM_TARGET_CONFLICT`.
+
+`thread_name` or `applied_tags` on any other channel returns 400 `WEBHOOK_THREAD_NAME_REQUIRES_FORUM`. The Slack and GitHub formats need `thread_id` on a forum, and 400 `WEBHOOK_SERVICE_FORUM_UNSUPPORTED` answers without one.
+
+A locked thread refuses a webhook message with 400 `THREAD_LOCKED`. An archived thread that is not locked is unarchived by it.
+
+## New post notifications
+
+A [channel notification override](/http-api/users/settings/#channel-notification-override-object) on a forum or media channel has `flags`. `NEW_FORUM_THREADS_OFF` (1 &lt;&lt; 13) and `NEW_FORUM_THREADS_ON` (1 &lt;&lt; 14) turn notifications for new posts off or on for the caller.

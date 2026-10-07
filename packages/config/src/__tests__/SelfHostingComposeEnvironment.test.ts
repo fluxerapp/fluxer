@@ -15,6 +15,7 @@ const API_SETTINGS_NOT_FORWARDED: Record<string, string> = {
 	FLUXER_API_WORKER_LANE: 'the one worker container runs every lane',
 	FLUXER_API_WORKER_TASK: 'the one worker container runs every lane',
 	FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER: 'the one worker container hosts cron',
+	FLUXER_API_WORKER_METRICS_PORT: 'the stack scrapes no worker metrics',
 	FLUXER_RELAX_REGISTRATION_RATE_LIMITS: 'test and development only',
 	FLUXER_DISABLE_RATE_LIMITS: 'test and development only',
 	FLUXER_TEST_MODE_ENABLED: 'test and development only',

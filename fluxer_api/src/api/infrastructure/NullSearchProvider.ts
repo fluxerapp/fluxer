@@ -6,6 +6,7 @@ import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {ISearchProvider} from '@app/api/search/ISearchProvider';
+import type {IThreadSearchService} from '@app/api/search/IThreadSearchService';
 import type {IUserSearchService} from '@app/api/search/IUserSearchService';
 
 export class NullSearchProvider implements ISearchProvider {
@@ -34,6 +35,10 @@ export class NullSearchProvider implements ISearchProvider {
 	}
 
 	getGuildMemberSearchService(): IGuildMemberSearchService | null {
+		return null;
+	}
+
+	getThreadSearchService(): IThreadSearchService | null {
 		return null;
 	}
 }

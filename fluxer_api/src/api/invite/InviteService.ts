@@ -4,6 +4,7 @@ import type {ApiContext} from '@app/api/ApiContext';
 import type {ChannelID, GuildID, InviteCode, UserID} from '@app/api/BrandedTypes';
 import {createInviteCode, vanityCodeToInviteCode} from '@app/api/BrandedTypes';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {THREAD_FEATURE_CHANNEL_TYPES, type ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
@@ -20,6 +21,7 @@ import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ChannelTypes, InviteTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures, GuildOperations, JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
 import {MAX_GUILD_INVITES} from '@fluxer/constants/src/LimitConstants';
+import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {UnclaimedAccountCannotJoinGroupDmsError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotJoinGroupDmsError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
@@ -37,6 +39,7 @@ const INVITE_USE_RESERVATION_EXTRA_ATTEMPTS = 8;
 
 interface GetChannelInvitesParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 }
 
@@ -47,6 +50,7 @@ interface GetGuildInvitesParams {
 
 interface CreateInviteParams {
 	inviterId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 	maxUses: number;
 	maxAge: number;
@@ -62,11 +66,13 @@ interface AcceptInviteParams {
 
 interface DeleteInviteParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	inviteCode: InviteCode;
 }
 
 interface GetChannelInvitesSortedParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 }
 
@@ -115,8 +121,8 @@ export class InviteService {
 		throw new UnknownInviteError();
 	}
 
-	async getChannelInvites({userId, channelId}: GetChannelInvitesParams): Promise<Array<Invite>> {
-		const channel = await this.channelService.channelData.operations.getChannel({userId, channelId});
+	async getChannelInvites({userId, viewer, channelId}: GetChannelInvitesParams): Promise<Array<Invite>> {
+		const channel = await this.channelService.channelData.operations.getChannel({userId, viewer, channelId});
 		if (!channel.guildId) {
 			if (channel.type !== ChannelTypes.GROUP_DM) throw new UnknownChannelError();
 			if (channel.ownerId !== userId) {
@@ -144,7 +150,7 @@ export class InviteService {
 	}
 
 	async createInvite(
-		{inviterId, channelId, maxUses, maxAge, unique, temporary = false}: CreateInviteParams,
+		{inviterId, viewer, channelId, maxUses, maxAge, unique, temporary = false}: CreateInviteParams,
 		auditLogReason?: string | null,
 	): Promise<{
 		invite: Invite;
@@ -152,8 +158,12 @@ export class InviteService {
 	}> {
 		const channel = await this.channelService.channelData.operations.getChannel({
 			userId: inviterId,
+			viewer,
 			channelId,
 		});
+		if (THREAD_FEATURE_CHANNEL_TYPES.has(channel.type)) {
+			throw new InvalidChannelTypeError();
+		}
 		if (!channel.guildId) {
 			if (!unique) {
 				const channelInvites = await this.inviteRepository.listChannelInvites(channelId);
@@ -411,13 +421,14 @@ export class InviteService {
 		return resolveLimitSafe(this.limitConfigService.getConfigSnapshot(), ctx, 'max_guild_invites', limit);
 	}
 
-	async deleteInvite({userId, inviteCode}: DeleteInviteParams, auditLogReason?: string | null): Promise<void> {
+	async deleteInvite({userId, viewer, inviteCode}: DeleteInviteParams, auditLogReason?: string | null): Promise<void> {
 		const invite = await this.findInviteWithLowercaseFallback(inviteCode);
 		if (!invite) throw new UnknownInviteError();
 		if (invite.type === InviteTypes.GROUP_DM) {
 			if (!invite.channelId) throw new UnknownInviteError();
 			const channel = await this.channelService.channelData.operations.getChannel({
 				userId,
+				viewer,
 				channelId: invite.channelId,
 			});
 			if (!channel.recipientIds.has(userId)) {
@@ -456,8 +467,8 @@ export class InviteService {
 		return await this.channelService.channelData.operations.getChannelSystem(channelId);
 	}
 
-	async getChannelInvitesSorted({userId, channelId}: GetChannelInvitesSortedParams): Promise<Array<Invite>> {
-		const invites = await this.getChannelInvites({userId, channelId});
+	async getChannelInvitesSorted({userId, viewer, channelId}: GetChannelInvitesSortedParams): Promise<Array<Invite>> {
+		const invites = await this.getChannelInvites({userId, viewer, channelId});
 		return invites.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 	}
 

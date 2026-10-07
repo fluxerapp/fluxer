@@ -9,6 +9,7 @@ import {
 	isCrosspostedMessage,
 } from '@app/api/channel/services/message/CrosspostPropagation';
 import {buildBroadcastMessageData} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {decrementThreadMessageCount} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageEmbed, MessageEmbedChild} from '@app/api/database/types/MessageTypes';
 import type {ModerationContext} from '@app/api/infrastructure/ContentModerationService';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
@@ -499,6 +500,7 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 						latestExpectedMessage.authorId || createUserID(0n),
 						latestExpectedMessage.pinnedTimestamp || undefined,
 					);
+					await decrementThreadMessageCount(channelRepository, channel, [messageId]);
 					await deleteMessageSearchDocuments([messageId], {context: {source: 'blocked_embed_unfurl'}});
 					const eventDispatcher = new ChannelEventDispatcher({gatewayService});
 					await eventDispatcher.dispatchMessageDelete(channel, messageId);

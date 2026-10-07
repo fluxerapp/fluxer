@@ -1,0 +1,104 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Admin threads
+description: The channel_threads rollout configuration, guild thread lookup, and thread deletion.
+draft: true
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+The Admin API reads and deletes [threads](/http-api/threads/) whether or not the `channel_threads` experiment is active for their guild. The rollout itself is part of the [instance configuration](/admin-api/instance/#instance-configuration-object) under `channel_threads`.
+
+## Channel threads configuration object
+
+The instance rollout of threads, forum channels, and media channels. A guild is enabled by the guild fields, and a user within it by the user fields.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout runs at all (default false) |
+| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
+| ever_enabled<sup>1</sup> | boolean | Whether `enabled` was ever true |
+| guild_basis_points | integer | Share of guilds the rollout selects, in basis points (0-10000, default 0) |
+| guild_salt | string | Salt of the guild sampling hash (1-64 printable ASCII characters, default `channel-threads-guild-v1`) |
+| enabled_guild_ids | array[snowflake] | Guilds the rollout always selects, up to 1000 entries (default empty) |
+| disabled_guild_ids | array[snowflake] | Guilds the rollout never selects, up to 1000 entries (default empty) |
+| user_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
+| user_salt | string | Salt of the account sampling hash (1-64 printable ASCII characters, default `channel-threads-user-v1`) |
+| included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
+| excluded_user_ids<sup>2</sup> | array[snowflake] | Accounts and bots the rollout never selects, up to 1000 entries (default empty) |
+
+<sup>1</sup> Set by Fluxer on the first write with `enabled` true, never cleared, and never accepted from a request
+
+<sup>2</sup> An excluded moderation bot sees no thread and cannot act on one
+
+Every field is present on read. An absent document or missing field uses the defaults above.
+
+`disabled_guild_ids` wins over `enabled_guild_ids`, and `enabled_guild_ids` wins over `guild_basis_points`. The user fields follow the same order. A bot follows the guild fields and `excluded_user_ids` alone. A user also needs a client that declares `channel_threads`.
+
+A user outside the rollout in an enabled guild sees no thread, forum, or media channel while other members do. Set `user_basis_points` to 10000 before enabling a guild outside staff.
+
+:::caution[Disabling keeps the stored threads]
+Setting `enabled` to false hides every thread, forum, and media channel and stops automatic archiving. Re-enabling shows the stored data again.
+:::
+
+## List guild threads
+
+<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/threads" auditReason />
+
+Returns every thread of a guild, active and archived, newest first. Requires `guild:lookup`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| threads | array[[thread](/http-api/threads/#thread-object) object] | The threads of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Threads were listed |
+
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_guild_threads`, the target type `guild`, and the guild ID as the target. Its metadata key `result_count` is the number of threads returned.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Delete thread
+
+<RouteHeader method="DELETE" path="/v1/admin/channels/{channel_id}" auditReason />
+
+Deletes a thread with its messages and memberships. Requires `message:delete_all`. Returns 204 with no body. Emits a [Thread Delete](/gateway/events/#thread-delete) Gateway event.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the thread |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | None | Thread was deleted |
+| 400 | [error response](/http-api/#error-response) | Channel is not a thread and the request returns `INVALID_CHANNEL_TYPE` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist and the request returns `UNKNOWN_CHANNEL` |
+
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `delete_thread`, the target type `channel`, and the thread ID as the target. Its metadata is `guild_id`, `parent_id`, and `type`. The guild audit log records nothing.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:message:operation` bucket.

@@ -99,6 +99,17 @@ function serializeGuildTextChannel(channel: Channel, ctx: ContentWarningCtx): Ch
 	};
 }
 
+function serializeThreadOnlyChannel(channel: Channel, ctx: ContentWarningCtx): ChannelResponse {
+	return {
+		...serializeBaseChannelFields(channel),
+		...serializeMessageableFields(channel),
+		...serializePositionableGuildChannelFields(channel),
+		topic: channel.topic,
+		...serializeContentWarningFields(channel, ctx),
+		rate_limit_per_user: channel.rateLimitPerUser,
+	};
+}
+
 function serializeGuildVoiceChannel(channel: Channel, ctx: ContentWarningCtx): ChannelResponse {
 	return {
 		...serializeBaseChannelFields(channel),
@@ -201,6 +212,10 @@ export async function mapChannelToResponse(params: MapChannelToResponseParams): 
 			break;
 		case ChannelTypes.GUILD_VOICE:
 			response = serializeGuildVoiceChannel(channel, ctx);
+			break;
+		case ChannelTypes.GUILD_FORUM:
+		case ChannelTypes.GUILD_MEDIA:
+			response = serializeThreadOnlyChannel(channel, ctx);
 			break;
 		case ChannelTypes.GUILD_CATEGORY:
 			response = serializeGuildCategoryChannel(channel, ctx);

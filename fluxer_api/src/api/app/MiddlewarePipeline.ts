@@ -3,6 +3,7 @@
 import type {ILogger} from '@app/api/ILogger';
 import {ActivityContextMiddleware} from '@app/api/infrastructure/activity/ActivityMeta';
 import {AuditLogMiddleware} from '@app/api/middleware/AuditLogMiddleware';
+import {ClientFeaturesMiddleware} from '@app/api/middleware/ClientFeaturesMiddleware';
 import {ConcurrencyLimitMiddleware} from '@app/api/middleware/ConcurrencyLimitMiddleware';
 import ContentFilterMiddleware from '@app/api/middleware/ContentFilterMiddleware';
 import {GuildAvailabilityMiddleware} from '@app/api/middleware/GuildAvailabilityMiddleware';
@@ -78,6 +79,7 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 	);
 	routes.use(RequestErrorTelemetry);
 	routes.use(RequestCacheMiddleware);
+	routes.use(ClientFeaturesMiddleware);
 	if (nodeEnv === 'production') {
 		routes.use('*', async (ctx, next) => {
 			const host = ctx.req.header('host');

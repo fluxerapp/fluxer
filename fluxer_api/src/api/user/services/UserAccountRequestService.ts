@@ -5,6 +5,7 @@ import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import {requireSudoMode, type SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
 import {createChannelID, createGuildID, type UserID} from '@app/api/BrandedTypes';
 import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import {isBlockedEmailDomain} from '@app/api/infrastructure/activity/SharedLists';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
@@ -263,12 +264,14 @@ export class UserAccountRequestService {
 
 	async preloadMessages(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channels: ReadonlyArray<bigint>;
 		requestCache: RequestCache;
 	}): Promise<Record<string, unknown>> {
 		const channelIds = params.channels.map((channelId) => createChannelID(channelId));
 		return this.userChannelService.preloadDMMessages({
 			userId: params.userId,
+			viewer: params.viewer,
 			channelIds,
 		});
 	}

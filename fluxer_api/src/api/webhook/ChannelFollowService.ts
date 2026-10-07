@@ -5,6 +5,7 @@ import {createMessageID, createWebhookID, createWebhookToken} from '@app/api/Bra
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import {withChannelFollowLock} from '@app/api/channel/services/ChannelFollowers';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
@@ -38,6 +39,7 @@ import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
 interface FollowChannelParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 	webhookChannelId: ChannelID;
 	requestCache: RequestCache;
@@ -73,8 +75,8 @@ export class ChannelFollowService {
 	) {}
 
 	async followChannel(params: FollowChannelParams): Promise<FollowedChannel> {
-		const {userId, channelId, webhookChannelId, requestCache, auditLogReason} = params;
-		const sourceAuth = await this.channelService.channelData.auth.getChannelAuthenticated({userId, channelId});
+		const {userId, viewer, channelId, webhookChannelId, requestCache, auditLogReason} = params;
+		const sourceAuth = await this.channelService.channelData.auth.getChannelAuthenticated({userId, channelId, viewer});
 		const source = sourceAuth.channel;
 		const sourceGuild = sourceAuth.guild;
 		if (source.type !== ChannelTypes.GUILD_ANNOUNCEMENT || !source.guildId || !sourceGuild) {
@@ -86,6 +88,7 @@ export class ChannelFollowService {
 		const targetAuth = await this.channelService.channelData.auth.getChannelAuthenticated({
 			userId,
 			channelId: webhookChannelId,
+			viewer,
 		});
 		const target = targetAuth.channel;
 		if (!target.guildId || !CHANNEL_FOLLOW_TARGET_TYPES.has(target.type)) {
@@ -173,12 +176,14 @@ export class ChannelFollowService {
 
 	async getFollowerStats({
 		userId,
+		viewer,
 		channelId,
 	}: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 	}): Promise<ChannelFollowerStatsResponse> {
-		const channel = await this.channelService.channelData.operations.getChannel({userId, channelId});
+		const channel = await this.channelService.channelData.operations.getChannel({userId, viewer, channelId});
 		if (channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT) {
 			throw new AnnouncementChannelRequiredError();
 		}

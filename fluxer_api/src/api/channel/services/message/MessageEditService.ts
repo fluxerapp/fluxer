@@ -16,6 +16,8 @@ import type {MessageProcessingService} from '@app/api/channel/services/message/M
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
 import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
 import type {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
+import {assertThreadInteractionAllowed} from '@app/api/channel/services/thread/ThreadInteractionGuards';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
@@ -57,12 +59,14 @@ export class MessageEditService {
 
 	async editMessage({
 		userId,
+		viewer,
 		channelId,
 		messageId,
 		data,
 		requestCache,
 	}: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
 		data: MessageUpdateRequest;
@@ -71,6 +75,7 @@ export class MessageEditService {
 		const authChannel = await this.deps.channelAuthService.getChannelAuthenticated({
 			userId,
 			channelId,
+			viewer,
 		});
 		const {channel, guild, hasPermission, member} = authChannel;
 		const hasNewAttachments =
@@ -99,6 +104,7 @@ export class MessageEditService {
 		if (message.authorId === userId) {
 			assertGuildMemberCanCommunicate(member);
 		}
+		assertThreadInteractionAllowed(authChannel, 'edit', {ignoreTimeout: message.authorId !== userId});
 		if (data.message_snapshots !== undefined) {
 			throw new MissingPermissionsError();
 		}

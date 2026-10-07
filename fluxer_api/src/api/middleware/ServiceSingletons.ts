@@ -40,12 +40,14 @@ import type {IUnfurlerService} from '@app/api/infrastructure/IUnfurlerService';
 import {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
 import {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
+import {KVThreadAutoArchiveQueueService} from '@app/api/infrastructure/KVThreadAutoArchiveQueueService';
 import {NatsUnfurlerService} from '@app/api/infrastructure/NatsUnfurlerService';
 import {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import {createStorageService} from '@app/api/infrastructure/StorageServiceFactory';
 import {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {createUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
 import {VirusScanService} from '@app/api/infrastructure/VirusScanService';
+import {ChannelThreadsConfigPublisher} from '@app/api/instance/ChannelThreadsConfigPublisher';
 import {GatewayRolloutConfigPublisher} from '@app/api/instance/GatewayRolloutConfigPublisher';
 import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {PushRelayConfigPublisher} from '@app/api/instance/PushRelayConfigPublisher';
@@ -173,6 +175,17 @@ export const getPushRelayConfigPublisher = singleton(
 		),
 );
 
+export const getChannelThreadsConfigPublisher = singleton(
+	() =>
+		new ChannelThreadsConfigPublisher(
+			new NatsConnectionManager({
+				url: Config.nats.coreUrl,
+				token: Config.nats.authToken || undefined,
+				name: 'fluxer-api-channel-threads-config',
+			}),
+		),
+);
+
 export const getVisionarySlotRepository = singleton(() => new VisionarySlotRepository());
 export const getCacheService: () => ICacheService = singleton(() => new KVCacheProvider({client: getKVClient()}));
 export const getRateLimitService = singleton(() => new RateLimitService(getKVClient()));
@@ -257,6 +270,19 @@ export function getKVBulkMessageDeletionQueue(): KVBulkMessageDeletionQueueServi
 		bulkMessageDeletionQueueClient = kvClient;
 	}
 	return bulkMessageDeletionQueue;
+}
+
+let threadAutoArchiveQueueClient: IKVProvider | null = null;
+let threadAutoArchiveQueue: KVThreadAutoArchiveQueueService | null = null;
+
+export function getKVThreadAutoArchiveQueue(): KVThreadAutoArchiveQueueService {
+	const kvClient = getKVClient();
+	if (!threadAutoArchiveQueue || threadAutoArchiveQueueClient !== kvClient) {
+		const channels = getChannelRepository();
+		threadAutoArchiveQueue = new KVThreadAutoArchiveQueueService(kvClient, channels.threads, channels.channelData);
+		threadAutoArchiveQueueClient = kvClient;
+	}
+	return threadAutoArchiveQueue;
 }
 
 let premiumStateQueueClient: IKVProvider | null = null;

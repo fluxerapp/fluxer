@@ -42,33 +42,33 @@ describe('applyProtectedRolePermissions', () => {
 	it('preserves protected bits when client lacks the feature', () => {
 		const existing = VCM | OTHER_BIT;
 		const requested = OTHER_BIT;
-		const result = applyProtectedRolePermissions(requested, existing, new Set());
+		const result = applyProtectedRolePermissions(requested, existing, {clientFeatures: new Set()});
 		expect((result & VCM) === VCM).toBe(true);
 		expect((result & OTHER_BIT) === OTHER_BIT).toBe(true);
 	});
 	it('respects client-driven clears when feature is opted in', () => {
 		const existing = VCM | OTHER_BIT;
 		const requested = OTHER_BIT;
-		const result = applyProtectedRolePermissions(requested, existing, new Set([FEATURE]));
+		const result = applyProtectedRolePermissions(requested, existing, {clientFeatures: new Set([FEATURE])});
 		expect((result & VCM) === 0n).toBe(true);
 		expect((result & OTHER_BIT) === OTHER_BIT).toBe(true);
 	});
 	it('does not invent bits the existing value did not have', () => {
 		const existing = OTHER_BIT;
 		const requested = OTHER_BIT;
-		const result = applyProtectedRolePermissions(requested, existing, new Set());
+		const result = applyProtectedRolePermissions(requested, existing, {clientFeatures: new Set()});
 		expect((result & VCM) === 0n).toBe(true);
 	});
 	it('also blocks an old client from setting the bit (the bit is fully invisible without the feature)', () => {
 		const existing = 0n;
 		const requested = VCM;
-		const result = applyProtectedRolePermissions(requested, existing, new Set());
+		const result = applyProtectedRolePermissions(requested, existing, {clientFeatures: new Set()});
 		expect((result & VCM) === 0n).toBe(true);
 	});
 	it('lets a feature-aware client set the bit', () => {
 		const existing = 0n;
 		const requested = VCM;
-		const result = applyProtectedRolePermissions(requested, existing, new Set([FEATURE]));
+		const result = applyProtectedRolePermissions(requested, existing, {clientFeatures: new Set([FEATURE])});
 		expect((result & VCM) === VCM).toBe(true);
 	});
 });
@@ -77,51 +77,51 @@ describe('applyProtectedOverwriteBits', () => {
 	it('preserves bit on allow when feature absent', () => {
 		const existing = {allow: VCM, deny: 0n};
 		const requested = {allow: 0n, deny: 0n};
-		const result = applyProtectedOverwriteBits(requested, existing, new Set());
+		const result = applyProtectedOverwriteBits(requested, existing, {clientFeatures: new Set()});
 		expect((result.allow & VCM) === VCM).toBe(true);
 		expect((result.deny & VCM) === 0n).toBe(true);
 	});
 	it('preserves bit on deny when feature absent (the security-relevant case)', () => {
 		const existing = {allow: 0n, deny: VCM};
 		const requested = {allow: 0n, deny: 0n};
-		const result = applyProtectedOverwriteBits(requested, existing, new Set());
+		const result = applyProtectedOverwriteBits(requested, existing, {clientFeatures: new Set()});
 		expect((result.deny & VCM) === VCM).toBe(true);
 	});
 	it('preserves the bit on whichever side it was set', () => {
 		const existing = {allow: VCM | OTHER_BIT, deny: 0n};
 		const requested = {allow: OTHER_BIT, deny: 0n};
-		const result = applyProtectedOverwriteBits(requested, existing, new Set());
+		const result = applyProtectedOverwriteBits(requested, existing, {clientFeatures: new Set()});
 		expect((result.allow & VCM) === VCM).toBe(true);
 		expect((result.allow & OTHER_BIT) === OTHER_BIT).toBe(true);
 	});
 	it('respects client-driven clears when feature is opted in (allow)', () => {
 		const existing = {allow: VCM, deny: 0n};
 		const requested = {allow: 0n, deny: 0n};
-		const result = applyProtectedOverwriteBits(requested, existing, new Set([FEATURE]));
+		const result = applyProtectedOverwriteBits(requested, existing, {clientFeatures: new Set([FEATURE])});
 		expect((result.allow & VCM) === 0n).toBe(true);
 	});
 	it('respects client-driven clears when feature is opted in (deny)', () => {
 		const existing = {allow: 0n, deny: VCM};
 		const requested = {allow: 0n, deny: 0n};
-		const result = applyProtectedOverwriteBits(requested, existing, new Set([FEATURE]));
+		const result = applyProtectedOverwriteBits(requested, existing, {clientFeatures: new Set([FEATURE])});
 		expect((result.deny & VCM) === 0n).toBe(true);
 	});
 	it('handles missing existing overwrite (treat as 0n) and blocks set without feature', () => {
 		const existing = {allow: 0n, deny: 0n};
 		const requested = {allow: VCM, deny: 0n};
-		const result = applyProtectedOverwriteBits(requested, existing, new Set());
+		const result = applyProtectedOverwriteBits(requested, existing, {clientFeatures: new Set()});
 		expect((result.allow & VCM) === 0n).toBe(true);
 	});
 	it('lets a feature-aware client set the bit on a fresh overwrite', () => {
 		const existing = {allow: 0n, deny: 0n};
 		const requested = {allow: VCM, deny: 0n};
-		const result = applyProtectedOverwriteBits(requested, existing, new Set([FEATURE]));
+		const result = applyProtectedOverwriteBits(requested, existing, {clientFeatures: new Set([FEATURE])});
 		expect((result.allow & VCM) === VCM).toBe(true);
 	});
 	it('does not flip bits between allow and deny', () => {
 		const existing = {allow: 0n, deny: VCM};
 		const requested = {allow: 0n, deny: 0n};
-		const result = applyProtectedOverwriteBits(requested, existing, new Set());
+		const result = applyProtectedOverwriteBits(requested, existing, {clientFeatures: new Set()});
 		expect((result.allow & VCM) === 0n).toBe(true);
 		expect((result.deny & VCM) === VCM).toBe(true);
 	});

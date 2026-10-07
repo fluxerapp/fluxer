@@ -17,6 +17,7 @@ import {
 import {Config} from '@app/api/Config';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import {withThreadContext} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {
 	enqueueCrosspostFamilyPurgeFromCopies,
 	enqueueCrosspostSourceRemoval,
@@ -24,6 +25,7 @@ import {
 import {
 	attachmentStorageChannelId,
 	collectMessageAttachments,
+	decrementThreadMessageCount,
 	makeAttachmentCdnKey,
 	makeAttachmentCdnUrl,
 	purgeMessageAttachments,
@@ -785,6 +787,7 @@ export class NcmecSubmissionService {
 			message.authorId ?? fallbackUserId,
 			message.pinnedTimestamp || undefined,
 		);
+		await decrementThreadMessageCount(this.deps.channelRepository, channel, [messageId]);
 		await deleteMessageSearchDocuments([messageId], {context: {source: 'ncmec_submission_delete'}});
 		await enqueueCrosspostSourceRemoval(this.deps.workerService, {messages: [message], mode: 'purge'});
 		await enqueueCrosspostFamilyPurgeFromCopies(this.deps.workerService, {messages: [message]});
@@ -793,7 +796,7 @@ export class NcmecSubmissionService {
 			await this.deps.gatewayService.dispatchGuild({
 				guildId: channel.guildId,
 				event: 'MESSAGE_DELETE',
-				data: {channel_id: channelId.toString(), id: messageId.toString()},
+				data: withThreadContext(channel, {channel_id: channelId.toString(), id: messageId.toString()}),
 			});
 			return;
 		}

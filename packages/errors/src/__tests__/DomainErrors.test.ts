@@ -6,8 +6,13 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {AccountIdentityLockedError} from '@fluxer/errors/src/domains/auth/AccountIdentityLockedError';
 import {EmailUnavailableOnInstanceError} from '@fluxer/errors/src/domains/auth/EmailUnavailableOnInstanceError';
 import {UsernameSignInOnlyError} from '@fluxer/errors/src/domains/auth/UsernameSignInOnlyError';
+import {MaxActiveThreadsError} from '@fluxer/errors/src/domains/channel/MaxActiveThreadsError';
+import {SearchIndexNotReadyError} from '@fluxer/errors/src/domains/channel/SearchIndexNotReadyError';
+import {ThreadArchivedError} from '@fluxer/errors/src/domains/channel/ThreadArchivedError';
+import {ThreadLockedError} from '@fluxer/errors/src/domains/channel/ThreadLockedError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
+import {UnknownThreadMemberError} from '@fluxer/errors/src/domains/channel/UnknownThreadMemberError';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
@@ -106,6 +111,9 @@ describe.each([
 		FluxerError,
 		HttpStatus.UNAUTHORIZED,
 	],
+	[APIErrorCodes.THREAD_ARCHIVED, ThreadArchivedError, BadRequestError, HttpStatus.BAD_REQUEST],
+	[APIErrorCodes.THREAD_LOCKED, ThreadLockedError, BadRequestError, HttpStatus.BAD_REQUEST],
+	[APIErrorCodes.UNKNOWN_THREAD_MEMBER, UnknownThreadMemberError, NotFoundError, HttpStatus.NOT_FOUND],
 ] as const)('%s', (code, ErrorClass, BaseClass, status) => {
 	it('preserves the domain inheritance and response contract', async () => {
 		const error = new ErrorClass();
@@ -119,6 +127,30 @@ describe.each([
 		expect(error.toJSON()).toEqual({code, message: code});
 		expect(response.status).toBe(status);
 		expect(await response.json()).toEqual({code, message: code});
+	});
+});
+
+describe('thread limit and index errors', () => {
+	it('reports the thread limit in data and message variables', async () => {
+		const error = new MaxActiveThreadsError(1000);
+		expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+		expect(error.messageVariables).toEqual({count: 1000});
+		expect(await error.getResponse().json()).toEqual({
+			code: APIErrorCodes.MAX_ACTIVE_THREADS,
+			message: APIErrorCodes.MAX_ACTIVE_THREADS,
+			max_active_threads: 1000,
+		});
+	});
+
+	it('answers an unready search index with 202 and a retry hint', async () => {
+		const response = new SearchIndexNotReadyError(2).getResponse();
+		expect(response.status).toBe(202);
+		expect(await response.json()).toEqual({
+			code: APIErrorCodes.SEARCH_INDEX_NOT_READY,
+			message: APIErrorCodes.SEARCH_INDEX_NOT_READY,
+			documents_indexed: 0,
+			retry_after: 2,
+		});
 	});
 });
 

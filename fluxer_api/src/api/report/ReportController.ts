@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {RequireEmailAccountIdentity} from '@app/api/middleware/AccountIdentityMiddleware';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -40,6 +41,7 @@ export function ReportController(app: HonoApp) {
 			return ctx.json(
 				await ctx.get('reportRequestService').reportMessage({
 					user: ctx.get('user'),
+					viewer: viewerFromCtx(ctx),
 					data: ctx.req.valid('json'),
 				}),
 			);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {requireOAuth2BearerToken, requireOAuth2Scope} from '@app/api/middleware/OAuth2ScopeMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -124,6 +125,8 @@ export function OAuth2Controller(app: HonoApp) {
 				await ctx.get('oauth2RequestService').authorizeConsent({
 					body,
 					userId: user.id,
+					clientFeatures: ctx.get('clientFeatures'),
+					viewer: viewerFromCtx(ctx),
 					requestCache: ctx.get('requestCache'),
 				}),
 			);

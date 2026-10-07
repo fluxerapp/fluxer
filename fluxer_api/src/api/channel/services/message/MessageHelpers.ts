@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, UserID} from '@app/api/BrandedTypes';
+import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createAttachmentID, userIdToChannelId} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import {forEachEmbedMedia} from '@app/api/channel/services/message/CrosspostEmbedObjects';
 import type {
 	MessageSnapshot as CassandraMessageSnapshot,
@@ -18,6 +19,7 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import {Attachment} from '@app/api/models/Attachment';
+import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import {MessageSnapshot as MessageSnapshotModel} from '@app/api/models/MessageSnapshot';
 import type {User} from '@app/api/models/User';
@@ -468,4 +470,20 @@ export function isMessageEmpty(message: Message, excludingAttachments = false): 
 
 export function collectMessageAttachments(message: Message): Array<Attachment> {
 	return [...message.attachments, ...message.messageSnapshots.flatMap((snapshot) => snapshot.attachments)];
+}
+
+export function countedThreadMessages(channel: Channel, messageIds: Array<MessageID>): number {
+	if (!channel.isThread()) return 0;
+	const starterId = channel.id.toString();
+	return messageIds.filter((messageId) => messageId.toString() !== starterId).length;
+}
+
+export async function decrementThreadMessageCount(
+	channelRepository: IChannelRepositoryAggregate,
+	channel: Channel | null,
+	messageIds: Array<MessageID>,
+): Promise<void> {
+	if (!channel) return;
+	const count = countedThreadMessages(channel, messageIds);
+	if (count > 0) await channelRepository.threads.adjustMessageCount(channel.id, -count);
 }

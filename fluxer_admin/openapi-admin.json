@@ -1691,6 +1691,69 @@
 				}
 			}
 		},
+		"/admin/channels/{channel_id}": {
+			"delete": {
+				"operationId": "delete_admin_thread_channel",
+				"summary": "Delete a thread",
+				"tags": ["Admin"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Deletes a thread channel with its messages and memberships. Only public and private threads can be deleted here. Requires MESSAGE_DELETE_ALL permission.",
+				"x-fluxer-experiment": "channel_threads",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"description": "The ID of the channel",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "The ID of the channel"
+					}
+				]
+			}
+		},
 		"/admin/channels/{channel_id}/messages": {
 			"get": {
 				"operationId": "list_admin_channel_messages",
@@ -3262,7 +3325,7 @@
 						"required": false,
 						"schema": {
 							"description": "Filter entries by the type of action",
-							"allOf": [{"$ref": "#/components/schemas/AuditLogActionTypeInput"}]
+							"allOf": [{"$ref": "#/components/schemas/AuditLogActionTypeFilter"}]
 						},
 						"description": "Filter entries by the type of action"
 					}
@@ -3792,6 +3855,69 @@
 					}
 				},
 				"description": "Lists all stickers in a guild. Returns ID, name, and asset information. Used for asset inventory and purge operations. Requires ASSET_PURGE permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "guild_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the guild", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the guild"
+					}
+				]
+			}
+		},
+		"/admin/guilds/{guild_id}/threads": {
+			"get": {
+				"operationId": "list_admin_guild_threads",
+				"summary": "List guild threads",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ListGuildThreadsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists every thread of a guild, active and archived, whether or not the channel threads experiment is active for it. Requires GUILD_LOOKUP permission.",
+				"x-fluxer-experiment": "channel_threads",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -5336,7 +5462,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages and guild_members indexes are rebuilt one guild at a time and require guild_id, and favorite_memes requires user_id. Requires GUILD_LOOKUP permission.",
+				"description": "Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages, guild_members and threads indexes are rebuilt one guild at a time and require guild_id, and favorite_memes requires user_id. Requires GUILD_LOOKUP permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -5353,7 +5479,8 @@
 								"channel_messages",
 								"guild_members",
 								"favorite_memes",
-								"discovery"
+								"discovery",
+								"threads"
 							],
 							"x-enumDescriptions": [
 								"Guild search index",
@@ -5363,7 +5490,8 @@
 								"Channel message search index",
 								"Guild member search index",
 								"Favourite meme search index",
-								"Discovery guild search index"
+								"Discovery guild search index",
+								"Thread search index (channel_threads experiment)"
 							],
 							"enum": [
 								"guilds",
@@ -5373,7 +5501,8 @@
 								"channel_messages",
 								"guild_members",
 								"favorite_memes",
-								"discovery"
+								"discovery",
+								"threads"
 							],
 							"type": "string"
 						},
@@ -10574,6 +10703,7 @@
 					"domain_migration": {"$ref": "#/components/schemas/DomainMigrationConfigResponse"},
 					"plutonium_page": {"$ref": "#/components/schemas/PlutoniumPageConfigResponse"},
 					"captcha": {"$ref": "#/components/schemas/CaptchaConfigResponse"},
+					"channel_threads": {"$ref": "#/components/schemas/ChannelThreadsConfigResponse"},
 					"experiment_delivery": {"$ref": "#/components/schemas/ExperimentDeliveryConfigResponse"},
 					"registration": {
 						"type": "object",
@@ -10988,6 +11118,7 @@
 					"domain_migration",
 					"plutonium_page",
 					"captcha",
+					"channel_threads",
 					"experiment_delivery",
 					"registration",
 					"self_hosted",
@@ -11130,6 +11261,10 @@
 						"allOf": [{"$ref": "#/components/schemas/PlutoniumPageConfigUpdateRequest"}]
 					},
 					"captcha": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/CaptchaConfigUpdateRequest"}]},
+					"channel_threads": {
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/ChannelThreadsConfigUpdateRequest"}]
+					},
 					"experiment_delivery": {
 						"nullable": true,
 						"allOf": [{"$ref": "#/components/schemas/ExperimentDeliveryConfigUpdateRequest"}]
@@ -11329,6 +11464,18 @@
 					"billing": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/InstanceBillingUpdateRequest"}]}
 				}
 			},
+			"ListGuildThreadsResponse": {
+				"type": "object",
+				"properties": {
+					"threads": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ThreadChannelResponse"},
+						"description": "Every thread of the guild, active and archived, newest first"
+					}
+				},
+				"required": ["threads"],
+				"additionalProperties": false
+			},
 			"ListGuildStickersResponse": {
 				"type": "object",
 				"properties": {
@@ -11419,7 +11566,7 @@
 					}
 				}
 			},
-			"AuditLogActionTypeInput": {
+			"AuditLogActionTypeFilter": {
 				"description": "The type of action that occurred",
 				"type": "integer",
 				"minimum": 0,
@@ -11522,6 +11669,11 @@
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AuditLogWebhookResponse"},
 						"description": "Webhooks referenced in the audit log entries"
+					},
+					"threads": {
+						"description": "Threads referenced in the audit log entries, when the viewer can see threads",
+						"type": "array",
+						"items": {"allOf": [{"$ref": "#/components/schemas/ThreadChannelResponse"}]}
 					}
 				},
 				"required": ["audit_log_entries", "users", "webhooks"],
@@ -13070,7 +13222,7 @@
 			"ChannelType": {
 				"description": "The type of the channel",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4, 5, 998, 999],
+				"enum": [0, 1, 2, 3, 4, 5, 10, 11, 12, 15, 16, 998, 999],
 				"format": "int32",
 				"x-enumNames": [
 					"GUILD_TEXT",
@@ -13079,6 +13231,11 @@
 					"GROUP_DM",
 					"GUILD_CATEGORY",
 					"GUILD_ANNOUNCEMENT",
+					"ANNOUNCEMENT_THREAD",
+					"PUBLIC_THREAD",
+					"PRIVATE_THREAD",
+					"GUILD_FORUM",
+					"GUILD_MEDIA",
 					"GUILD_LINK",
 					"DM_PERSONAL_NOTES"
 				],
@@ -13089,6 +13246,11 @@
 					"A group direct message between users",
 					"A category that contains channels",
 					"A guild channel whose messages can be published to channels that follow it",
+					"A public thread within an announcement channel",
+					"A public thread within a text, forum or media channel",
+					"A private thread within a text channel",
+					"A channel that can only contain threads",
+					"A channel that can only contain threads in a gallery view",
 					"A link channel for external resources",
 					"Personal notes DM channel"
 				]
@@ -13531,7 +13693,7 @@
 								"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
 							},
 							"message_id": {
-								"description": "The ID of the referenced message, absent on a channel follow system message",
+								"description": "The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread",
 								"nullable": true,
 								"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
 							},
@@ -13576,6 +13738,10 @@
 						},
 						"required": ["participants"],
 						"additionalProperties": false
+					},
+					"thread": {
+						"description": "The thread started from this message, when the viewer can see threads",
+						"allOf": [{"$ref": "#/components/schemas/ThreadChannelResponse"}]
 					},
 					"referenced_message": {
 						"description": "The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message has no default reference. Clients must tell null apart from absent by key presence.",
@@ -13677,7 +13843,7 @@
 										"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
 									},
 									"message_id": {
-										"description": "The ID of the referenced message, absent on a channel follow system message",
+										"description": "The ID of the referenced message, absent on a channel follow system message and on thread created messages that reference only a thread",
 										"nullable": true,
 										"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
 									},
@@ -13722,6 +13888,10 @@
 								},
 								"required": ["participants"],
 								"additionalProperties": false
+							},
+							"thread": {
+								"description": "The thread started from this message, when the viewer can see threads",
+								"allOf": [{"$ref": "#/components/schemas/ThreadChannelResponse"}]
 							}
 						},
 						"required": [
@@ -13873,6 +14043,218 @@
 				"format": "int32",
 				"x-enumNames": ["SAFE", "AGE_RESTRICTED"],
 				"x-enumDescriptions": ["Guild is safe for all ages", "Guild is age-restricted"]
+			},
+			"ThreadChannelResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for this channel",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"guild_id": {
+						"description": "The ID of the guild this channel belongs to",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"name": {"description": "The name of the channel", "nullable": true, "type": "string"},
+					"topic": {"description": "The topic of the channel", "nullable": true, "type": "string"},
+					"url": {
+						"description": "The URL associated with the channel",
+						"nullable": true,
+						"type": "string",
+						"format": "uri"
+					},
+					"icon": {"description": "The icon hash of the channel (for group DMs)", "nullable": true, "type": "string"},
+					"owner_id": {
+						"description": "The ID of the owner of the channel (for group DMs)",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"type": {
+						"description": "The type of the channel",
+						"type": "integer",
+						"enum": [0, 1, 2, 3, 4, 5, 10, 11, 12, 15, 16, 998, 999],
+						"format": "int32",
+						"x-enumNames": [
+							"GUILD_TEXT",
+							"DM",
+							"GUILD_VOICE",
+							"GROUP_DM",
+							"GUILD_CATEGORY",
+							"GUILD_ANNOUNCEMENT",
+							"ANNOUNCEMENT_THREAD",
+							"PUBLIC_THREAD",
+							"PRIVATE_THREAD",
+							"GUILD_FORUM",
+							"GUILD_MEDIA",
+							"GUILD_LINK",
+							"DM_PERSONAL_NOTES"
+						],
+						"x-enumDescriptions": [
+							"A text channel within a guild",
+							"A direct message between users",
+							"A voice channel within a guild",
+							"A group direct message between users",
+							"A category that contains channels",
+							"A guild channel whose messages can be published to channels that follow it",
+							"A public thread within an announcement channel",
+							"A public thread within a text, forum or media channel",
+							"A private thread within a text channel",
+							"A channel that can only contain threads",
+							"A channel that can only contain threads in a gallery view",
+							"A link channel for external resources",
+							"Personal notes DM channel"
+						]
+					},
+					"position": {
+						"description": "The sorting position of the channel",
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"parent_id": {
+						"description": "The ID of the parent category for this channel",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"bitrate": {
+						"description": "The bitrate of the voice channel in bits per second",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"user_limit": {
+						"description": "The maximum number of users allowed in the voice channel",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"voice_connection_limit": {
+						"description": "The maximum active voice connections allowed per user in the voice channel",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"rtc_region": {
+						"description": "The voice region ID for the voice channel",
+						"nullable": true,
+						"type": "string"
+					},
+					"last_message_id": {
+						"description": "The ID of the last message sent in this channel",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"last_pin_timestamp": {
+						"description": "The ISO 8601 timestamp of when the last pinned message was pinned",
+						"nullable": true,
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"permission_overwrites": {
+						"description": "The permission overwrites for this channel",
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ChannelOverwriteResponse"}
+					},
+					"recipients": {
+						"description": "The recipients of the DM channel",
+						"maxItems": 49,
+						"type": "array",
+						"items": {"allOf": [{"$ref": "#/components/schemas/UserPartialResponse"}]}
+					},
+					"nsfw": {
+						"description": "Whether the channel is marked as NSFW (effective value, walking channel → category → guild)",
+						"type": "boolean"
+					},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override; null means inherit from parent category and then guild. Categories use this same field as their own override.",
+						"nullable": true,
+						"type": "boolean"
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"allOf": [{"$ref": "#/components/schemas/ContentWarningLevel"}]
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"nullable": true,
+						"type": "string",
+						"maxLength": 200
+					},
+					"rate_limit_per_user": {
+						"description": "The slowmode rate limit in seconds",
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"nicks": {
+						"description": "Custom nicknames for users in this channel (for group DMs)",
+						"type": "object",
+						"additionalProperties": {"type": "string", "minLength": 1, "maxLength": 32}
+					},
+					"flags": {"description": "Channel flags", "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
+					"thread_metadata": {
+						"description": "Thread-specific fields",
+						"allOf": [{"$ref": "#/components/schemas/ThreadMetadataResponse"}]
+					},
+					"applied_tags": {
+						"description": "IDs of the tags applied to a forum or media post",
+						"maxItems": 5,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
+					},
+					"message_count": {
+						"description": "Messages in the thread, excluding the starter and deleted messages",
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"total_message_sent": {
+						"description": "Messages ever sent in the thread, never decremented",
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"member_count": {
+						"description": "Approximate number of thread members, capped at 50",
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"member_ids_preview": {
+						"description": "IDs of the most recently joined members of a forum or media post, newest first",
+						"maxItems": 8,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
+					},
+					"member": {
+						"description": "The thread member object for the current user",
+						"allOf": [{"$ref": "#/components/schemas/ThreadMemberResponse"}]
+					},
+					"default_auto_archive_duration": {
+						"description": "Default auto archive duration for new threads",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"default_thread_rate_limit_per_user": {
+						"description": "Slowmode copied onto new threads",
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"available_tags": {
+						"description": "Tags that can be applied to posts",
+						"maxItems": 20,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ForumTagResponse"}
+					},
+					"default_reaction_emoji": {
+						"description": "Default reaction for posts",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/DefaultReactionEmojiResponse"}]
+					},
+					"default_sort_order": {
+						"description": "Default sort order for posts",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"default_forum_layout": {
+						"description": "Default layout for forum posts",
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"default_tag_setting": {
+						"description": "Default tag search setting",
+						"type": "string",
+						"enum": ["match_some", "match_all"]
+					}
+				},
+				"required": ["id", "type"],
+				"additionalProperties": false
 			},
 			"MessageSnapshotResponse": {
 				"type": "object",
@@ -14210,7 +14592,7 @@
 			"MessageType": {
 				"description": "The type of message",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 12, 19],
+				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 12, 18, 19, 21],
 				"format": "int32",
 				"x-enumNames": [
 					"DEFAULT",
@@ -14222,7 +14604,9 @@
 					"CHANNEL_PINNED_MESSAGE",
 					"USER_JOIN",
 					"CHANNEL_FOLLOW_ADD",
-					"REPLY"
+					"THREAD_CREATED",
+					"REPLY",
+					"THREAD_STARTER_MESSAGE"
 				],
 				"x-enumDescriptions": [
 					"A regular message",
@@ -14234,7 +14618,9 @@
 					"A system message indicating a message was pinned",
 					"A system message indicating a user joined",
 					"System message posted when a channel starts following an announcement channel",
-					"A reply message"
+					"A system message indicating a thread was created",
+					"A reply message",
+					"The first message of a thread, pointing at its source"
 				]
 			},
 			"MentionReplyPreferences": {
@@ -14467,6 +14853,262 @@
 					{"name": "IS_ANIMATED", "value": "32", "description": "Attachment is animated"}
 				]
 			},
+			"DefaultReactionEmojiResponse": {
+				"type": "object",
+				"properties": {
+					"emoji_id": {
+						"nullable": true,
+						"description": "The ID of a custom guild emoji",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"emoji_name": {"nullable": true, "description": "The unicode character of the emoji", "type": "string"}
+				},
+				"required": ["emoji_id", "emoji_name"],
+				"additionalProperties": false
+			},
+			"ForumTagResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"description": "The ID of the tag", "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
+					"name": {"type": "string", "maxLength": 50, "description": "The name of the tag"},
+					"moderated": {"type": "boolean", "description": "Whether only moderators can add or remove this tag"},
+					"emoji_id": {
+						"nullable": true,
+						"description": "The ID of a custom guild emoji",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"emoji_name": {"nullable": true, "description": "The unicode character of the emoji", "type": "string"}
+				},
+				"required": ["id", "name", "moderated", "emoji_id", "emoji_name"],
+				"additionalProperties": false
+			},
+			"ThreadMemberResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The ID of the thread",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"user_id": {
+						"description": "The ID of the user",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"join_timestamp": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the user last joined the thread"
+					},
+					"flags": {"description": "Thread member flags", "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
+					"muted": {"description": "Whether the user has muted the thread (current user only)", "type": "boolean"},
+					"mute_config": {
+						"description": "The mute configuration for the thread (current user only)",
+						"nullable": true,
+						"type": "object",
+						"properties": {
+							"end_time": {
+								"nullable": true,
+								"description": "ISO8601 timestamp of when the mute expires",
+								"type": "string"
+							},
+							"selected_time_window": {
+								"description": "The selected mute duration in seconds",
+								"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+							}
+						},
+						"required": ["end_time", "selected_time_window"],
+						"additionalProperties": false
+					},
+					"member": {
+						"description": "The guild member object for the user",
+						"allOf": [{"$ref": "#/components/schemas/GuildMemberResponse"}]
+					}
+				},
+				"required": ["join_timestamp", "flags"],
+				"additionalProperties": false
+			},
+			"ThreadMetadataResponse": {
+				"type": "object",
+				"properties": {
+					"archived": {"type": "boolean", "description": "Whether the thread is archived"},
+					"auto_archive_duration": {
+						"description": "Minutes of inactivity before the thread stops showing in the channel list",
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"archive_timestamp": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the archive status of the thread last changed"
+					},
+					"locked": {"type": "boolean", "description": "Whether only moderators can interact with the thread"},
+					"invitable": {
+						"description": "Whether non-moderators can add other non-moderators (private threads)",
+						"type": "boolean"
+					},
+					"create_timestamp": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the thread was created"
+					}
+				},
+				"required": ["archived", "auto_archive_duration", "archive_timestamp", "locked", "create_timestamp"],
+				"additionalProperties": false
+			},
+			"ChannelOverwriteResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier for the role or user this overwrite applies to",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"type": {"allOf": [{"$ref": "#/components/schemas/ChannelOverwriteType"}]},
+					"allow": {
+						"description": "The bitwise value of allowed permissions",
+						"allOf": [{"$ref": "#/components/schemas/Permissions"}]
+					},
+					"deny": {
+						"description": "The bitwise value of denied permissions",
+						"allOf": [{"$ref": "#/components/schemas/Permissions"}]
+					}
+				},
+				"required": ["id", "type", "allow", "deny"],
+				"additionalProperties": false
+			},
+			"Permissions": {
+				"type": "string",
+				"pattern": "^\\d+$",
+				"description": "Permission bitfield as string",
+				"format": "int64",
+				"x-bitflagValues": [
+					{"name": "CREATE_INSTANT_INVITE", "value": "1", "description": "Allows creation of instant invites"},
+					{"name": "KICK_MEMBERS", "value": "2", "description": "Allows kicking members from the guild"},
+					{"name": "BAN_MEMBERS", "value": "4", "description": "Allows banning members from the guild"},
+					{
+						"name": "ADMINISTRATOR",
+						"value": "8",
+						"description": "Grants all permissions and bypasses channel permission overwrites"
+					},
+					{
+						"name": "MANAGE_CHANNELS",
+						"value": "16",
+						"description": "Allows management, editing, and deletion of channels"
+					},
+					{"name": "MANAGE_GUILD", "value": "32", "description": "Allows management and editing of the guild"},
+					{"name": "ADD_REACTIONS", "value": "64", "description": "Allows adding reactions to messages"},
+					{"name": "VIEW_AUDIT_LOG", "value": "128", "description": "Allows viewing of the audit log"},
+					{
+						"name": "PRIORITY_SPEAKER",
+						"value": "256",
+						"description": "Allows using priority speaker in a voice channel"
+					},
+					{"name": "STREAM", "value": "512", "description": "Allows the user to go live"},
+					{"name": "VIEW_CHANNEL", "value": "1024", "description": "Allows viewing a channel"},
+					{"name": "SEND_MESSAGES", "value": "2048", "description": "Allows sending messages in a channel"},
+					{"name": "SEND_TTS_MESSAGES", "value": "4096", "description": "Allows sending text-to-speech messages"},
+					{"name": "MANAGE_MESSAGES", "value": "8192", "description": "Allows for deleting and pinning messages"},
+					{"name": "EMBED_LINKS", "value": "16384", "description": "Links sent will have an embed automatically"},
+					{"name": "ATTACH_FILES", "value": "32768", "description": "Allows uploading files"},
+					{"name": "READ_MESSAGE_HISTORY", "value": "65536", "description": "Allows reading message history"},
+					{"name": "MENTION_EVERYONE", "value": "131072", "description": "Allows using @everyone and @here mentions"},
+					{"name": "USE_EXTERNAL_EMOJIS", "value": "262144", "description": "Allows using emojis from other guilds"},
+					{"name": "CONNECT", "value": "1048576", "description": "Allows connecting to a voice channel"},
+					{"name": "SPEAK", "value": "2097152", "description": "Allows speaking in a voice channel"},
+					{"name": "MUTE_MEMBERS", "value": "4194304", "description": "Allows muting members in voice channels"},
+					{"name": "DEAFEN_MEMBERS", "value": "8388608", "description": "Allows deafening members in voice channels"},
+					{"name": "MOVE_MEMBERS", "value": "16777216", "description": "Allows moving members between voice channels"},
+					{"name": "USE_VAD", "value": "33554432", "description": "Allows using voice activity detection"},
+					{"name": "CHANGE_NICKNAME", "value": "67108864", "description": "Allows changing own nickname"},
+					{"name": "MANAGE_NICKNAMES", "value": "134217728", "description": "Allows changing other members nicknames"},
+					{"name": "MANAGE_ROLES", "value": "268435456", "description": "Allows management and editing of roles"},
+					{"name": "MANAGE_WEBHOOKS", "value": "536870912", "description": "Allows management and editing of webhooks"},
+					{
+						"name": "MANAGE_EXPRESSIONS",
+						"value": "1073741824",
+						"description": "Allows management of guild expressions"
+					},
+					{
+						"name": "USE_EXTERNAL_STICKERS",
+						"value": "137438953472",
+						"description": "Allows using stickers from other guilds"
+					},
+					{"name": "MODERATE_MEMBERS", "value": "1099511627776", "description": "Allows timing out users"},
+					{"name": "CREATE_EXPRESSIONS", "value": "8796093022208", "description": "Allows creating guild expressions"},
+					{"name": "PIN_MESSAGES", "value": "2251799813685248", "description": "Allows pinning messages"},
+					{"name": "BYPASS_SLOWMODE", "value": "4503599627370496", "description": "Allows bypassing slowmode"},
+					{"name": "UPDATE_RTC_REGION", "value": "9007199254740992", "description": "Allows updating the voice region"},
+					{
+						"name": "VIEW_CHANNEL_MEMBERS",
+						"value": "18014398509481984",
+						"description": "Allows viewing the member list in a channel"
+					}
+				]
+			},
+			"ChannelOverwriteType": {
+				"description": "The type of entity the overwrite applies to",
+				"x-enumNames": ["ROLE", "MEMBER"],
+				"x-enumDescriptions": ["Overwrite applies to a role", "Overwrite applies to a member"],
+				"enum": [0, 1],
+				"type": "integer"
+			},
+			"GuildMemberResponse": {
+				"type": "object",
+				"properties": {
+					"user": {
+						"description": "The user this guild member represents",
+						"allOf": [{"$ref": "#/components/schemas/UserPartialResponse"}]
+					},
+					"nick": {"description": "The nickname of the member in this guild", "nullable": true, "type": "string"},
+					"avatar": {"description": "The hash of the member guild-specific avatar", "nullable": true, "type": "string"},
+					"banner": {"description": "The hash of the member guild-specific banner", "nullable": true, "type": "string"},
+					"accent_color": {
+						"description": "The accent colour of the member guild profile as an integer",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"roles": {
+						"maxItems": 250,
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Array of role IDs the member has"
+					},
+					"joined_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "ISO8601 timestamp of when the user joined the guild"
+					},
+					"mute": {"type": "boolean", "description": "Whether the member is muted in voice channels"},
+					"deaf": {"type": "boolean", "description": "Whether the member is deafened in voice channels"},
+					"communication_disabled_until": {
+						"description": "ISO8601 timestamp until which the member is timed out",
+						"nullable": true,
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"profile_flags": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/GuildMemberProfileFlags"}]},
+					"mention_flags": {
+						"nullable": true,
+						"description": "Per-guild reply mention preference override; NO_PREFERENCE means inherit the user-level mention_flags.",
+						"allOf": [{"$ref": "#/components/schemas/MentionReplyPreferences"}]
+					}
+				},
+				"required": ["user", "roles", "joined_at", "mute", "deaf"],
+				"additionalProperties": false
+			},
+			"GuildMemberProfileFlags": {
+				"type": "integer",
+				"minimum": 0,
+				"maximum": 2147483647,
+				"description": "Member profile flags",
+				"format": "int32",
+				"x-bitflagValues": [
+					{"name": "AVATAR_UNSET", "value": "1", "description": "Guild member avatar is unset"},
+					{"name": "BANNER_UNSET", "value": "2", "description": "Guild member banner is unset"}
+				]
+			},
 			"DiscoveryAdminPendingApplicationResponse": {
 				"type": "object",
 				"properties": {
@@ -14657,75 +15299,6 @@
 					"member_count"
 				],
 				"additionalProperties": false
-			},
-			"Permissions": {
-				"type": "string",
-				"pattern": "^\\d+$",
-				"description": "Permission bitfield as string",
-				"format": "int64",
-				"x-bitflagValues": [
-					{"name": "CREATE_INSTANT_INVITE", "value": "1", "description": "Allows creation of instant invites"},
-					{"name": "KICK_MEMBERS", "value": "2", "description": "Allows kicking members from the guild"},
-					{"name": "BAN_MEMBERS", "value": "4", "description": "Allows banning members from the guild"},
-					{
-						"name": "ADMINISTRATOR",
-						"value": "8",
-						"description": "Grants all permissions and bypasses channel permission overwrites"
-					},
-					{
-						"name": "MANAGE_CHANNELS",
-						"value": "16",
-						"description": "Allows management, editing, and deletion of channels"
-					},
-					{"name": "MANAGE_GUILD", "value": "32", "description": "Allows management and editing of the guild"},
-					{"name": "ADD_REACTIONS", "value": "64", "description": "Allows adding reactions to messages"},
-					{"name": "VIEW_AUDIT_LOG", "value": "128", "description": "Allows viewing of the audit log"},
-					{
-						"name": "PRIORITY_SPEAKER",
-						"value": "256",
-						"description": "Allows using priority speaker in a voice channel"
-					},
-					{"name": "STREAM", "value": "512", "description": "Allows the user to go live"},
-					{"name": "VIEW_CHANNEL", "value": "1024", "description": "Allows viewing a channel"},
-					{"name": "SEND_MESSAGES", "value": "2048", "description": "Allows sending messages in a channel"},
-					{"name": "SEND_TTS_MESSAGES", "value": "4096", "description": "Allows sending text-to-speech messages"},
-					{"name": "MANAGE_MESSAGES", "value": "8192", "description": "Allows for deleting and pinning messages"},
-					{"name": "EMBED_LINKS", "value": "16384", "description": "Links sent will have an embed automatically"},
-					{"name": "ATTACH_FILES", "value": "32768", "description": "Allows uploading files"},
-					{"name": "READ_MESSAGE_HISTORY", "value": "65536", "description": "Allows reading message history"},
-					{"name": "MENTION_EVERYONE", "value": "131072", "description": "Allows using @everyone and @here mentions"},
-					{"name": "USE_EXTERNAL_EMOJIS", "value": "262144", "description": "Allows using emojis from other guilds"},
-					{"name": "CONNECT", "value": "1048576", "description": "Allows connecting to a voice channel"},
-					{"name": "SPEAK", "value": "2097152", "description": "Allows speaking in a voice channel"},
-					{"name": "MUTE_MEMBERS", "value": "4194304", "description": "Allows muting members in voice channels"},
-					{"name": "DEAFEN_MEMBERS", "value": "8388608", "description": "Allows deafening members in voice channels"},
-					{"name": "MOVE_MEMBERS", "value": "16777216", "description": "Allows moving members between voice channels"},
-					{"name": "USE_VAD", "value": "33554432", "description": "Allows using voice activity detection"},
-					{"name": "CHANGE_NICKNAME", "value": "67108864", "description": "Allows changing own nickname"},
-					{"name": "MANAGE_NICKNAMES", "value": "134217728", "description": "Allows changing other members nicknames"},
-					{"name": "MANAGE_ROLES", "value": "268435456", "description": "Allows management and editing of roles"},
-					{"name": "MANAGE_WEBHOOKS", "value": "536870912", "description": "Allows management and editing of webhooks"},
-					{
-						"name": "MANAGE_EXPRESSIONS",
-						"value": "1073741824",
-						"description": "Allows management of guild expressions"
-					},
-					{
-						"name": "USE_EXTERNAL_STICKERS",
-						"value": "137438953472",
-						"description": "Allows using stickers from other guilds"
-					},
-					{"name": "MODERATE_MEMBERS", "value": "1099511627776", "description": "Allows timing out users"},
-					{"name": "CREATE_EXPRESSIONS", "value": "8796093022208", "description": "Allows creating guild expressions"},
-					{"name": "PIN_MESSAGES", "value": "2251799813685248", "description": "Allows pinning messages"},
-					{"name": "BYPASS_SLOWMODE", "value": "4503599627370496", "description": "Allows bypassing slowmode"},
-					{"name": "UPDATE_RTC_REGION", "value": "9007199254740992", "description": "Allows updating the voice region"},
-					{
-						"name": "VIEW_CHANNEL_MEMBERS",
-						"value": "18014398509481984",
-						"description": "Allows viewing the member list in a channel"
-					}
-				]
 			},
 			"SystemChannelFlags": {
 				"type": "integer",
@@ -15047,7 +15620,7 @@
 				"type": "integer",
 				"enum": [
 					1, 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 40, 41, 42, 50, 51, 52, 60, 61, 62,
-					90, 91, 92, 72, 73, 74, 75
+					90, 91, 92, 72, 73, 74, 75, 110, 111, 112
 				],
 				"format": "int32",
 				"x-enumNames": [
@@ -15085,7 +15658,10 @@
 					"MESSAGE_DELETE",
 					"MESSAGE_BULK_DELETE",
 					"MESSAGE_PIN",
-					"MESSAGE_UNPIN"
+					"MESSAGE_UNPIN",
+					"THREAD_CREATE",
+					"THREAD_UPDATE",
+					"THREAD_DELETE"
 				],
 				"x-enumDescriptions": [
 					"Guild settings were updated",
@@ -15122,7 +15698,10 @@
 					"Message was deleted",
 					"Messages were bulk deleted",
 					"Message was pinned",
-					"Message was unpinned"
+					"Message was unpinned",
+					"Thread was created",
+					"Thread was updated",
+					"Thread was deleted"
 				]
 			},
 			"WebhookType": {
@@ -15132,63 +15711,6 @@
 				"format": "int32",
 				"x-enumNames": ["INCOMING", "CHANNEL_FOLLOWER"],
 				"x-enumDescriptions": ["Incoming webhook", "Channel follower webhook"]
-			},
-			"GuildMemberResponse": {
-				"type": "object",
-				"properties": {
-					"user": {
-						"description": "The user this guild member represents",
-						"allOf": [{"$ref": "#/components/schemas/UserPartialResponse"}]
-					},
-					"nick": {"description": "The nickname of the member in this guild", "nullable": true, "type": "string"},
-					"avatar": {"description": "The hash of the member guild-specific avatar", "nullable": true, "type": "string"},
-					"banner": {"description": "The hash of the member guild-specific banner", "nullable": true, "type": "string"},
-					"accent_color": {
-						"description": "The accent colour of the member guild profile as an integer",
-						"nullable": true,
-						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
-					},
-					"roles": {
-						"maxItems": 250,
-						"type": "array",
-						"items": {"type": "string"},
-						"description": "Array of role IDs the member has"
-					},
-					"joined_at": {
-						"type": "string",
-						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-						"description": "ISO8601 timestamp of when the user joined the guild"
-					},
-					"mute": {"type": "boolean", "description": "Whether the member is muted in voice channels"},
-					"deaf": {"type": "boolean", "description": "Whether the member is deafened in voice channels"},
-					"communication_disabled_until": {
-						"description": "ISO8601 timestamp until which the member is timed out",
-						"nullable": true,
-						"type": "string",
-						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-					},
-					"profile_flags": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/GuildMemberProfileFlags"}]},
-					"mention_flags": {
-						"nullable": true,
-						"description": "Per-guild reply mention preference override; NO_PREFERENCE means inherit the user-level mention_flags.",
-						"allOf": [{"$ref": "#/components/schemas/MentionReplyPreferences"}]
-					}
-				},
-				"required": ["user", "roles", "joined_at", "mute", "deaf"],
-				"additionalProperties": false
-			},
-			"GuildMemberProfileFlags": {
-				"type": "integer",
-				"minimum": 0,
-				"maximum": 2147483647,
-				"description": "Member profile flags",
-				"format": "int32",
-				"x-bitflagValues": [
-					{"name": "AVATAR_UNSET", "value": "1", "description": "Guild member avatar is unset"},
-					{"name": "BANNER_UNSET", "value": "2", "description": "Guild member banner is unset"}
-				]
 			},
 			"InstanceBillingUpdateRequest": {
 				"type": "object",
@@ -15228,6 +15750,36 @@
 				"properties": {
 					"poll_interval_seconds": {"type": "integer", "minimum": 60, "maximum": 86400},
 					"poll_jitter_percent": {"type": "integer", "minimum": 0, "maximum": 50}
+				}
+			},
+			"ChannelThreadsConfigUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean"},
+					"guild_basis_points": {"type": "integer", "minimum": 0, "maximum": 10000},
+					"guild_salt": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[\\x20-\\x7e]+$"},
+					"enabled_guild_ids": {
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					},
+					"disabled_guild_ids": {
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					},
+					"user_basis_points": {"type": "integer", "minimum": 0, "maximum": 10000},
+					"user_salt": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[\\x20-\\x7e]+$"},
+					"included_user_ids": {
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					},
+					"excluded_user_ids": {
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					}
 				}
 			},
 			"CaptchaConfigUpdateRequest": {
@@ -15406,6 +15958,68 @@
 					"poll_jitter_percent": {"default": 15, "type": "integer", "minimum": 0, "maximum": 50}
 				},
 				"required": ["poll_interval_seconds", "poll_jitter_percent"],
+				"additionalProperties": false
+			},
+			"ChannelThreadsConfigResponse": {
+				"type": "object",
+				"properties": {
+					"enabled": {"default": false, "type": "boolean"},
+					"config_version": {"default": 0, "type": "integer", "minimum": 0, "maximum": 9007199254740991},
+					"ever_enabled": {"default": false, "type": "boolean"},
+					"guild_basis_points": {"default": 0, "type": "integer", "minimum": 0, "maximum": 10000},
+					"guild_salt": {
+						"default": "channel-threads-guild-v1",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 64,
+						"pattern": "^[\\x20-\\x7e]+$"
+					},
+					"enabled_guild_ids": {
+						"default": [],
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					},
+					"disabled_guild_ids": {
+						"default": [],
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					},
+					"user_basis_points": {"default": 0, "type": "integer", "minimum": 0, "maximum": 10000},
+					"user_salt": {
+						"default": "channel-threads-user-v1",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 64,
+						"pattern": "^[\\x20-\\x7e]+$"
+					},
+					"included_user_ids": {
+						"default": [],
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					},
+					"excluded_user_ids": {
+						"default": [],
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					}
+				},
+				"required": [
+					"enabled",
+					"config_version",
+					"ever_enabled",
+					"guild_basis_points",
+					"guild_salt",
+					"enabled_guild_ids",
+					"disabled_guild_ids",
+					"user_basis_points",
+					"user_salt",
+					"included_user_ids",
+					"excluded_user_ids"
+				],
 				"additionalProperties": false
 			},
 			"CaptchaConfigResponse": {

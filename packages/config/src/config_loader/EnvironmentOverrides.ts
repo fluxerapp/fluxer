@@ -94,6 +94,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		path: ['services', 'api', 'worker', 'enable_cron_scheduler'],
 		parse: parseBoolean,
 	},
+	FLUXER_API_WORKER_METRICS_PORT: {path: ['services', 'api', 'worker', 'metrics_port'], parse: parseInteger},
 	FLUXER_API_WORKER_LANE_CONCURRENCY_OVERRIDES: {
 		path: ['services', 'api', 'worker', 'lane_concurrency_overrides'],
 		parse: parseJsonObject,

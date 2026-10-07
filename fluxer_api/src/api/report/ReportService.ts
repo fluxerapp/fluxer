@@ -23,8 +23,10 @@ import {
 	computeEffectiveContentWarning,
 	guildToContentWarningView,
 } from '@app/api/channel/utils/EffectiveContentWarning';
+import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 import type {DSAReportTicketRow} from '@app/api/database/types/ReportTypes';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ReportOutcome, ReportTarget, ResolvedBy} from '@app/api/infrastructure/activity/Contract.generated';
@@ -148,6 +150,7 @@ export class ReportService {
 
 	async reportMessage(
 		reporter: ReporterMetadata,
+		viewer: ThreadViewer,
 		channelId: ChannelID,
 		messageId: MessageID,
 		category: string,
@@ -157,6 +160,7 @@ export class ReportService {
 		await this.ensureReportRateLimit(this.createReportRateLimitIdentifier(reporterKey), REPORT_RATE_LIMIT_MAX, false);
 		const {authChannel, channel, message} = await this.getReportableMessageForReporter({
 			reporterId: reporter.id,
+			viewer,
 			channelId,
 			messageId,
 		});
@@ -628,10 +632,12 @@ export class ReportService {
 
 	private async getReportableMessageForReporter({
 		reporterId,
+		viewer,
 		channelId,
 		messageId,
 	}: {
 		reporterId: UserID | null;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
 	}): Promise<{
@@ -642,7 +648,11 @@ export class ReportService {
 		if (!reporterId) {
 			throw new UnknownChannelError();
 		}
-		const authChannel = await this.messageChannelAuthService.getChannelAuthenticated({userId: reporterId, channelId});
+		const authChannel = await this.messageChannelAuthService.getChannelAuthenticated({
+			userId: reporterId,
+			channelId,
+			viewer,
+		});
 		if (!(await this.canAccessMessage(authChannel, messageId))) {
 			throw new UnknownMessageError();
 		}
@@ -720,9 +730,12 @@ export class ReportService {
 			};
 		}
 		const guildView = guildToContentWarningView(guild);
+		const scope = channel
+			? await resolveNsfwScopeChannel(channel, (channelId) => this.channelRepository.findUnique(channelId))
+			: null;
 		let parentCategoryView: ContentWarningChannelLike | null = null;
-		if (channel?.parentId) {
-			const parent = await this.channelRepository.findUnique(channel.parentId);
+		if (scope?.parentId) {
+			const parent = await this.channelRepository.findUnique(scope.parentId);
 			if (parent) {
 				parentCategoryView = channelToContentWarningView(parent);
 			}
@@ -730,8 +743,8 @@ export class ReportService {
 		let effectiveNsfw: boolean | null = null;
 		let effectiveLevel: number | null = null;
 		let effectiveText: string | null = null;
-		if (channel) {
-			const channelView = channelToContentWarningView(channel);
+		if (scope) {
+			const channelView = channelToContentWarningView(scope);
 			effectiveNsfw = computeEffectiveChannelNsfw(channelView, parentCategoryView, guildView);
 			const effective = computeEffectiveContentWarning(channelView, parentCategoryView, guildView);
 			effectiveLevel = effective.level;

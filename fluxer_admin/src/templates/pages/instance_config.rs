@@ -3,7 +3,8 @@
 use crate::{
     api::types::{
         AccountIdentityConfigResponse, AccountIdentityMode, AppPublicConfigResponse,
-        CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE, CaptchaConfigResponse,
+        CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE, CHANNEL_THREADS_DEFAULT_GUILD_SALT,
+        CHANNEL_THREADS_DEFAULT_USER_SALT, CaptchaConfigResponse, ChannelThreadsConfigResponse,
         DOMAIN_MIGRATION_DEFAULT_SALT, DomainMigrationConfigResponse,
         EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigResponse,
         GatewayRolloutConfigResponse, InstanceConfigResponse, InstanceIntegrationsResponse,
@@ -16,6 +17,7 @@ use crate::{
     middleware::auth::AuthContext,
     templates::{
         components::{
+            alert::alert_warning,
             badge::{BadgeVariant, badge},
             form::{
                 FORM_INPUT_CLASS, checkbox, csrf_input, danger_button, form_actions,
@@ -191,6 +193,7 @@ pub fn instance_config_page(
                     html! {
                         (gateway_rollout_section(base, csrf_token, &instance_config.gateway_rollout))
                         (domain_migration_section(base, csrf_token, &instance_config.domain_migration))
+                        (channel_threads_section(base, csrf_token, &instance_config.channel_threads))
                         (plutonium_page_section(base, csrf_token, &instance_config.plutonium_page))
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
@@ -1484,6 +1487,189 @@ fn captcha_section(base: &str, csrf_token: &str, captcha: &CaptchaConfigResponse
     )
 }
 
+fn channel_threads_section(
+    base: &str,
+    csrf_token: &str,
+    channel_threads: &ChannelThreadsConfigResponse,
+) -> Markup {
+    let status = if channel_threads.enabled {
+        ("Live", BadgeVariant::Success)
+    } else {
+        ("Inert", BadgeVariant::Default)
+    };
+    let enabled_guild_ids = channel_threads.enabled_guild_ids.join("\n");
+    let disabled_guild_ids = channel_threads.disabled_guild_ids.join("\n");
+    let included_user_ids = channel_threads.included_user_ids.join("\n");
+    let excluded_user_ids = channel_threads.excluded_user_ids.join("\n");
+    section_card_with_description(
+        "Channel threads",
+        "Threads, forum channels and media channels. A guild gets the feature only when the guild \
+         is selected, and a member sees it only when they are also selected and use a client \
+         that supports threads. Bots follow the guild selection.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_channel_threads"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    (alert_warning("Before enabling", html! {
+                        p class="text-sm" {
+                            "Enable only after every gateway role, the api, the workers and the \
+                             messages service run the gate build and the bit 34-38 overwrite audit \
+                             is clean."
+                        }
+                    }))
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        (badge(status.0, status.1))
+                        @if channel_threads.ever_enabled {
+                            (badge("Ever enabled", BadgeVariant::Warning))
+                        }
+                        span class="text-xs text-neutral-500" {
+                            "Config version " (channel_threads.config_version)
+                        }
+                    }
+                    (checkbox(
+                        "channel_threads_enabled",
+                        "true",
+                        "Turn on threads for the selected guilds and users",
+                        channel_threads.enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Off is the safe state and the kill switch. With this unchecked no guild \
+                         has threads, and existing threads and forums stay stored but hidden \
+                         until it is turned back on."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Guilds" }
+                    (number_field(
+                        "channel_threads_guild_basis_points",
+                        "Guild rollout (basis points)",
+                        &channel_threads.guild_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of guilds bucketed into the experiment, in basis points: 0 is nobody, 100 is 1%, 10000 is every guild."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "channel_threads_guild_salt",
+                            "Guild rollout salt",
+                            &channel_threads.guild_salt,
+                            CHANNEL_THREADS_DEFAULT_GUILD_SALT,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the guild bucketing hash. Printable ASCII only. Changing it \
+                             reshuffles which guilds fall inside the percentage above."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "channel_threads_enabled_guild_ids",
+                            "Always-on Guild IDs",
+                            "1600000000000000001\n1600000000000000002",
+                            &enabled_guild_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            channel_threads.enabled_guild_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These guilds are targeted \
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save. Blank entries and duplicate \
+                             IDs are ignored."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "channel_threads_disabled_guild_ids",
+                            "Never-on Guild IDs",
+                            "1600000000000000003\n1600000000000000004",
+                            &disabled_guild_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            channel_threads.disabled_guild_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage. This is the per-guild kill switch."
+                        }
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Users" }
+                    (number_field(
+                        "channel_threads_user_basis_points",
+                        "User rollout (basis points)",
+                        &channel_threads.user_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of users bucketed into the experiment, in basis points. Set 10000 before enrolling any guild outside staff, so every member of that guild, moderators included, sees its threads."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "channel_threads_user_salt",
+                            "User rollout salt",
+                            &channel_threads.user_salt,
+                            CHANNEL_THREADS_DEFAULT_USER_SALT,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the user bucketing hash. Printable ASCII only. Changing it \
+                             reshuffles which users fall inside the percentage above."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "channel_threads_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            channel_threads.included_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format as the guild lists. These users are targeted regardless \
+                             of the percentage above."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "channel_threads_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            channel_threads.excluded_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage, and it also applies to bots."
+                        }
+                    }
+                    (alert_warning("Excluded bots", html! {
+                        p class="text-sm" {
+                            "Excluded bots are blind to threads, including moderation bots."
+                        }
+                    }))
+
+                    (form_actions(html! {
+                        (submit_button("Save channel threads configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
 fn experiment_delivery_section(
     base: &str,
     csrf_token: &str,
@@ -2225,6 +2411,52 @@ mod tests {
         assert!(markup.contains("1 of 1000 stored"));
         assert!(markup.contains("2 of 1000 stored"));
         assert!(!markup.contains("at the cap"));
+    }
+
+    #[test]
+    fn channel_threads_section_shows_both_dimensions_and_the_warnings() {
+        let channel_threads = ChannelThreadsConfigResponse {
+            enabled: true,
+            config_version: 7,
+            ever_enabled: true,
+            guild_basis_points: 25,
+            enabled_guild_ids: vec!["1600000000000000001".to_owned()],
+            excluded_user_ids: vec![
+                "1500000000000000002".to_owned(),
+                "1500000000000000003".to_owned(),
+            ],
+            ..ChannelThreadsConfigResponse::default()
+        };
+        let markup = channel_threads_section("/admin", "csrf", &channel_threads).into_string();
+        assert!(markup.contains("action=update_channel_threads"));
+        for name in [
+            "channel_threads_enabled",
+            "channel_threads_guild_basis_points",
+            "channel_threads_guild_salt",
+            "channel_threads_enabled_guild_ids",
+            "channel_threads_disabled_guild_ids",
+            "channel_threads_user_basis_points",
+            "channel_threads_user_salt",
+            "channel_threads_included_user_ids",
+            "channel_threads_excluded_user_ids",
+        ] {
+            assert!(markup.contains(&format!("name=\"{name}\"")), "{name}");
+        }
+        assert!(markup.contains("value=\"25\""));
+        assert!(markup.contains("Config version 7"));
+        assert!(markup.contains("Ever enabled"));
+        assert!(markup.contains("bit 34-38 overwrite audit is clean"));
+        assert!(markup.contains("Excluded bots are blind to threads, including moderation bots."));
+        assert!(markup.contains("1 of 1000 stored"));
+        assert!(markup.contains("2 of 1000 stored"));
+
+        let off =
+            channel_threads_section("/admin", "csrf", &ChannelThreadsConfigResponse::default())
+                .into_string();
+        assert!(off.contains("Inert"));
+        assert!(!off.contains("Ever enabled"));
+        assert!(off.contains(CHANNEL_THREADS_DEFAULT_GUILD_SALT));
+        assert!(off.contains(CHANNEL_THREADS_DEFAULT_USER_SALT));
     }
 
     #[test]

@@ -9,6 +9,11 @@ export interface ListMessagesOptions {
 	immediateAfter?: boolean;
 }
 
+export interface UpsertMessageOptions {
+	isInsert?: boolean;
+	skipParentLastMessageId?: boolean;
+}
+
 export abstract class IMessageRepository {
 	abstract listMessages(
 		channelId: ChannelID,
@@ -20,7 +25,7 @@ export abstract class IMessageRepository {
 
 	abstract getMessage(channelId: ChannelID, messageId: MessageID): Promise<Message | null>;
 
-	abstract upsertMessage(data: MessageRow, oldData?: MessageRow | null): Promise<Message>;
+	abstract upsertMessage(data: MessageRow, oldData?: MessageRow | null, opts?: UpsertMessageOptions): Promise<Message>;
 
 	abstract updateEmbeds(message: Message): Promise<void>;
 

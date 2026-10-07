@@ -28,6 +28,11 @@ const MODULE_REGISTRY_TEST_FILES = [
 	'src/api/stripe/tests/StripeCheckoutCountryEnforcement.test.ts',
 	'src/api/stripe/tests/StripeNordicCurrencies.test.ts',
 	'src/api/worker/tests/CrosspostTasks.test.ts',
+	'src/api/search/tests/ThreadSearchScopeCap.test.ts',
+	'src/api/search/ThreadSearchScope.test.ts',
+	'src/api/worker/tests/HandleMentionsThread.test.ts',
+	'src/api/search/tests/GuildSearchThreadScope.test.ts',
+	'src/api/worker/tasks/HarvestUserData.test.ts',
 ];
 
 const INSTANCE_POLICY_TEST_FILES = [

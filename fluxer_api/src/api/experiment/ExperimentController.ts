@@ -9,6 +9,7 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {entityTagMatches} from '@app/api/utils/EntityTag';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
+import {resolveChannelThreadsAssignment} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {resolveDomainMigrationAssignment} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {resolvePlutoniumPageAssignment} from '@fluxer/schema/src/domains/admin/PlutoniumPageSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
@@ -30,9 +31,10 @@ export function ExperimentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [delivery, domainMigrationConfig, plutoniumPageConfig] = await Promise.all([
+			const [delivery, domainMigrationConfig, channelThreadsConfig, plutoniumPageConfig] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getDomainMigrationConfig(),
+				instanceConfigRepository.getCompiledChannelThreadsConfig(),
 				instanceConfigRepository.getPlutoniumPageConfig(),
 			]);
 			const user = ctx.get('user');
@@ -46,6 +48,10 @@ export function ExperimentController(app: HonoApp) {
 					plutonium_page: resolvePlutoniumPageAssignment(plutoniumPageConfig, userId, targeting),
 				},
 			};
+			const channelThreads = resolveChannelThreadsAssignment(channelThreadsConfig, userId);
+			if (channelThreads !== undefined) {
+				body.assignments.channel_threads = channelThreads;
+			}
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;
 			ctx.header(HttpHeaders.ETAG, etag);
 			ctx.header(HttpHeaders.CACHE_CONTROL, 'private, no-cache');

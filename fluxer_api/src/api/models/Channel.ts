@@ -5,6 +5,11 @@ import type {ChannelRow, PermissionOverwrite} from '@app/api/database/types/Chan
 import {ChannelPermissionOverwrite} from '@app/api/models/ChannelPermissionOverwrite';
 import {type ChannelType, ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT} from '@fluxer/constants/src/LimitConstants';
+import {
+	THREAD_CHANNEL_TYPES,
+	THREAD_ONLY_CHANNEL_TYPES,
+	THREAD_PARENT_CHANNEL_TYPES,
+} from '@fluxer/constants/src/ThreadConstants';
 
 export class Channel {
 	readonly id: ChannelID;
@@ -70,6 +75,22 @@ export class Channel {
 		this.isSoftDeleted = row.soft_deleted;
 		this.indexedAt = row.indexed_at ?? null;
 		this.version = row.version;
+	}
+
+	isThread(): boolean {
+		return THREAD_CHANNEL_TYPES.has(this.type);
+	}
+
+	isPrivateThread(): boolean {
+		return this.type === ChannelTypes.PRIVATE_THREAD;
+	}
+
+	isThreadOnly(): boolean {
+		return THREAD_ONLY_CHANNEL_TYPES.has(this.type);
+	}
+
+	isThreadParent(): boolean {
+		return THREAD_PARENT_CHANNEL_TYPES.has(this.type);
 	}
 
 	toRow(): ChannelRow {

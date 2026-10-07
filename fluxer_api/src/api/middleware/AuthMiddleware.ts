@@ -32,3 +32,13 @@ export const DefaultUserOnly = createMiddleware<HonoEnv>(async (ctx, next) => {
 	}
 	await next();
 });
+export const BotOnly = createMiddleware<HonoEnv>(async (ctx, next) => {
+	const user = ctx.get('user');
+	if (!user) {
+		throw new UnauthorizedError();
+	}
+	if (!user.isBot) {
+		throw new AccessDeniedError();
+	}
+	await next();
+});

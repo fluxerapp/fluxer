@@ -7,6 +7,7 @@ import {createAttachmentID, createMemeID, userIdToChannelId} from '@app/api/Bran
 import {Config} from '@app/api/Config';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {attachmentStorageChannelId, makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import {mapFavoriteMemeToResponse} from '@app/api/favorite_meme/FavoriteMemeModel';
 import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
 import {
@@ -105,6 +106,7 @@ export class FavoriteMemeService {
 
 	async createFromMessage({
 		user,
+		viewer,
 		channelId,
 		messageId,
 		attachmentId,
@@ -114,6 +116,7 @@ export class FavoriteMemeService {
 		tags,
 	}: {
 		user: User;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
 		attachmentId?: string;
@@ -128,8 +131,13 @@ export class FavoriteMemeService {
 		if (count >= maxMemes) {
 			throw new MaxFavoriteMemesError(maxMemes);
 		}
-		await this.channelService.channelData.auth.getChannelAuthenticated({userId: user.id, channelId});
-		const message = await this.channelService.messages.retrieval.getMessage({userId: user.id, channelId, messageId});
+		await this.channelService.channelData.auth.getChannelAuthenticated({userId: user.id, channelId, viewer});
+		const message = await this.channelService.messages.retrieval.getMessage({
+			userId: user.id,
+			viewer,
+			channelId,
+			messageId,
+		});
 		if (!message) {
 			throw new UnknownMessageError();
 		}

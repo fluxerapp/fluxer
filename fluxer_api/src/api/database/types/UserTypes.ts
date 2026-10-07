@@ -305,6 +305,7 @@ export interface ChannelOverride {
 	muted: boolean;
 	mute_config: Nullish<MuteConfig>;
 	unread_badges: Nullish<number>;
+	flags?: Nullish<number>;
 }
 
 export interface UserGuildSettingsRow {
@@ -443,6 +444,7 @@ export interface PushSubscriptionRow {
 	platform?: Nullish<PushSubscriptionPlatform>;
 	app_id?: Nullish<string>;
 	provider_environment?: Nullish<string>;
+	thread_channels?: Nullish<boolean>;
 }
 
 export const PUSH_SUBSCRIPTION_COLUMNS = [
@@ -456,6 +458,7 @@ export const PUSH_SUBSCRIPTION_COLUMNS = [
 	'platform',
 	'app_id',
 	'provider_environment',
+	'thread_channels',
 ] as const satisfies ReadonlyArray<keyof PushSubscriptionRow>;
 
 export interface UserContactChangeLogRow {
