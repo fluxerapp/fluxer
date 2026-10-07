@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {normalizeHTTPNetworkOrigin} from '@fluxer/instance_bootstrap/src/NetworkOrigin';
+import {
+	type CanonicalNetworkEndpointRule,
+	HTTP_NETWORK_PROTOCOLS,
+	normalizeCanonicalNetworkEndpoint,
+} from '@fluxer/instance_bootstrap/src/NetworkOrigin';
 
 export const OFFICIAL_INSTANCE_NAME = 'Fluxer';
 
@@ -70,11 +74,19 @@ export const OFFICIAL_INSTANCE_HOSTS: ReadonlyArray<string> = Object.freeze([
 	'canary.fluxer.com',
 ]);
 
+const OFFICIAL_HOST_LOOKUP_RULE: CanonicalNetworkEndpointRule = Object.freeze({
+	protocols: HTTP_NETWORK_PROTOCOLS,
+	allowPath: true,
+	allowRelative: false,
+});
+
 export function isOfficialInstanceHost(value: string): boolean {
-	const origin = normalizeHTTPNetworkOrigin(value);
-	if (origin == null) {
+	const endpoint = normalizeCanonicalNetworkEndpoint(value, OFFICIAL_HOST_LOOKUP_RULE);
+	if (endpoint == null) {
 		return false;
 	}
-	const host = origin.slice(origin.indexOf('//') + 2).toLowerCase();
+	const authority = endpoint.slice(endpoint.indexOf('//') + 2);
+	const pathStart = authority.indexOf('/');
+	const host = (pathStart === -1 ? authority : authority.slice(0, pathStart)).toLowerCase();
 	return OFFICIAL_INSTANCE_HOSTS.some((officialHost) => officialHost === host);
 }

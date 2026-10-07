@@ -231,16 +231,17 @@
 	justify-content: center;
 	box-sizing: border-box;
 	padding: 0;
-	border: 0;
+	border: 0.0625rem solid color-mix(in srgb, var(--account-profile-name-color) 45%, transparent);
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--account-profile-name-color) 14%, transparent);
-	color: color-mix(in srgb, var(--account-profile-name-color) 78%, transparent);
+	background: var(--background-tertiary);
+	color: var(--text-primary);
+	box-shadow: 0 0.125rem 0.5rem rgb(0 0 0 / 0.28);
 	cursor: pointer;
 	outline: none;
 	pointer-events: auto;
 	transition:
 		background-color 40ms ease,
-		color 40ms ease;
+		border-color 40ms ease;
 }
 
 .moreButton:disabled {
@@ -250,8 +251,8 @@
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.moreButton:not(:disabled):hover {
-	background: color-mix(in srgb, var(--account-profile-name-color) 26%, transparent);
-	color: var(--account-profile-name-color);
+	border-color: color-mix(in srgb, var(--account-profile-name-color) 70%, transparent);
+	background: color-mix(in srgb, var(--text-primary) 14%, var(--background-tertiary));
 }
 
 .nameText {
