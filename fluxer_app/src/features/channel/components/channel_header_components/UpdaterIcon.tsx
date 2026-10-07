@@ -159,7 +159,7 @@ export const UpdaterIcon = observer(() => {
 				: i18n._(DOWNLOADING_UPDATE_2_DESCRIPTOR, {percent});
 		}
 		if (Platform.isElectron && (store.nativeAwaitingDownload || store.nativeManualUpdateAvailable)) {
-			if (store.nativeManualUpdateAvailable) {
+			if (store.nativeManualUpdateAvailable && store.nativeManualDownloadOptions.length > 0) {
 				return version ? i18n._(CHOOSE_LINUX_PACKAGE_DESCRIPTOR, {version}) : i18n._(CHOOSE_LINUX_PACKAGE_2_DESCRIPTOR);
 			}
 			const size = store.updateInfo.native.downloadSize;
@@ -188,6 +188,7 @@ export const UpdaterIcon = observer(() => {
 		store.nativeAwaitingDownload,
 		store.nativeDownloadInFlight,
 		store.nativeDownloadProgressSupported,
+		store.nativeManualDownloadOptions,
 		store.nativeManualUpdateAvailable,
 		store.nativeUpdateReady,
 		store.updateInfo.native.downloadSize,
