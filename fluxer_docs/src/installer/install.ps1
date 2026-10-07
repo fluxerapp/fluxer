@@ -2267,10 +2267,14 @@ function Invoke-FluxerInstall {
 			exit 0
 		}
 
+		Write-FluxerLine 'Pulling images. The first start pulls eighteen of them, which takes several minutes.'
+		if ((Invoke-FluxerDocker @('compose', 'pull')) -ne 0) {
+			Stop-Fluxer 'docker compose pull failed. Nothing was started.' $FluxerExitDownload
+		}
 		if ((Invoke-FluxerDocker @('compose', 'up', '-d')) -ne 0) {
 			Stop-Fluxer 'docker compose up -d failed.' $FluxerExitUnhealthy
 		}
-		Wait-FluxerStack 'Waiting for the stack to report healthy. The first start pulls images and takes several minutes.'
+		Wait-FluxerStack 'Waiting for the stack to report healthy.'
 		$readyOrigin = Get-FluxerPublicOrigin $envPath
 		if ($readyOrigin.Length -eq 0) {
 			$readyOrigin = "https://$domainValue"

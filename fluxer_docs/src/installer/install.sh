@@ -2245,11 +2245,15 @@ if [ "$opt_no_start" -eq 1 ]; then
 	exit 0
 fi
 
+fluxer_say 'Pulling images. The first start pulls eighteen of them, which takes several minutes.'
+if ! $fluxer_engine compose pull; then
+	fluxer_fail 4 "$fluxer_engine compose pull failed in $opt_dir. Nothing was started."
+fi
 fluxer_say 'Starting the stack.'
 if ! $fluxer_engine compose up -d; then
 	fluxer_fail 6 "$fluxer_engine compose up -d failed in $opt_dir. Read $fluxer_engine compose logs there."
 fi
-fluxer_say 'Waiting for every service to report ready. This takes several minutes on the first start, which pulls eighteen images.'
+fluxer_say 'Waiting for every service to report ready.'
 if ! fluxer_wait_ready; then
 	fluxer_fail 6 "The stack is not ready after $FLUXER_READY_TIMEOUT seconds. $(fluxer_not_ready_detail)
 Read $fluxer_engine compose logs in $opt_dir."
