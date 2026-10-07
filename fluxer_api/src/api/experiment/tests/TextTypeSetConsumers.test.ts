@@ -67,6 +67,10 @@ const EXPECTED_SITES: Readonly<Record<string, {count: number; decision: string}>
 		count: 2,
 		decision: UNCHANGED,
 	},
+	'fluxer_app/src/features/gateway/snapshot/SnapshotChannelReducer.ts TEXT_BASED_CHANNEL_TYPES': {
+		count: 1,
+		decision: THREAD_TYPES_SEPARATE,
+	},
 	'fluxer_app/src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx GUILD_TEXT_BASED_CHANNEL_TYPES': {
 		count: 1,
 		decision: WEBHOOK_TARGETS,
