@@ -594,17 +594,12 @@ async function lookupAllAddresses(hostname: string): Promise<ReadonlyArray<strin
 	return records.map((record) => record.address);
 }
 
-function selectPinnedAddress(
-	candidates: ReadonlyArray<PinnedAddress>,
-	scope: DesktopOriginAddressScope | null,
-): PinnedAddress | null {
-	if (candidates.length === 0) {
-		return null;
+function selectPinnedAddress(candidates: ReadonlyArray<PinnedAddress>): PinnedAddress | null {
+	const nonPublic = candidates.filter((candidate) => !isPublicPinnedAddress(candidate));
+	if (nonPublic.length === 0) {
+		return candidates[0] ?? null;
 	}
-	if (scope === DesktopOriginAddressScope.NON_PUBLIC) {
-		return candidates.find((candidate) => candidate.family === 4) ?? candidates[0];
-	}
-	return candidates[0];
+	return nonPublic.find((candidate) => candidate.family === 4) ?? nonPublic[0];
 }
 
 function addressScope(address: PinnedAddress): DesktopOriginAddressScope {
@@ -1038,16 +1033,14 @@ export class DesktopOutboundHTTP {
 			throw blocked(reason, context, hostname);
 		}
 		const candidates = addresses.map((address) => parseIPAddress(address)).filter((value) => value != null);
-		if (candidates.length === 0) {
+		const pinned = selectPinnedAddress(candidates);
+		if (pinned == null) {
 			throw blocked(DesktopOutboundBlockReason.NO_USABLE_ADDRESS, context, hostname);
 		}
-		if (
-			requirement === DesktopAddressRequirement.PUBLIC &&
-			candidates.some((candidate) => !isPublicPinnedAddress(candidate))
-		) {
+		if (requirement === DesktopAddressRequirement.PUBLIC && !isPublicPinnedAddress(pinned)) {
 			throw blocked(DesktopOutboundBlockReason.NON_PUBLIC_ADDRESS, context, hostname);
 		}
-		return candidates[0];
+		return pinned;
 	}
 
 	private async resolveHost(hostname: string): Promise<ReadonlyArray<string>> {
@@ -1177,25 +1170,12 @@ export class DesktopOutboundHTTP {
 			return {address: literal, origin, scope: addressScope(literal), unreachable: false};
 		}
 		const rawAddresses = await this.resolveOriginHost(absoluteLookupHostname(hostname), origin);
-		const candidates: Array<PinnedAddress> = [];
-		let scope: DesktopOriginAddressScope | null = null;
-		for (const rawAddress of rawAddresses) {
-			const address = parseIPAddress(rawAddress);
-			if (address == null) {
-				continue;
-			}
-			const currentScope = addressScope(address);
-			if (scope != null && scope !== currentScope) {
-				throw new DesktopOutboundHTTPMixedAddressScopeError(origin);
-			}
-			scope = currentScope;
-			candidates.push(address);
-		}
-		const pinned = selectPinnedAddress(candidates, scope);
-		if (pinned == null || scope == null) {
+		const candidates = rawAddresses.map((address) => parseIPAddress(address)).filter((value) => value != null);
+		const pinned = selectPinnedAddress(candidates);
+		if (pinned == null) {
 			throw new DesktopOutboundHTTPEmptyResolutionError(origin);
 		}
-		return {address: pinned, origin, scope, unreachable: false};
+		return {address: pinned, origin, scope: addressScope(pinned), unreachable: false};
 	}
 
 	private markBindingUnreachable(binding: DesktopOriginAddressBinding): void {

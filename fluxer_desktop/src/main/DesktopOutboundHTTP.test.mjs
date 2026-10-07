@@ -115,19 +115,59 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 		outboundHTTP.cleanup();
 	});
 
-	test('an anchor that resolves to a refused scope never falls back to the remembered requirement', async () => {
+	test('an anchor that resolves to no usable address never falls back to the remembered requirement', async () => {
 		const outboundHTTP = new DesktopOutboundHTTP({
-			resolveHostAddresses: stubResolver({'mixed.example': ['10.0.0.1', '93.184.216.34']}),
+			resolveHostAddresses: stubResolver({'unusable.example': ['not-an-address']}),
 		});
 		await assert.rejects(
 			outboundHTTP.registerAnchoredOrigins({
-				anchorOrigin: 'https://mixed.example',
+				anchorOrigin: 'https://unusable.example',
 				origins: [],
 				unresolvedAnchorRequirement: 'any',
 			}),
-			{name: 'DesktopOutboundHTTPMixedAddressScopeError'},
+			{name: 'DesktopOutboundHTTPEmptyResolutionError'},
 		);
-		assert.equal(outboundHTTP.isRegisteredOrigin('https://mixed.example'), false);
+		assert.equal(outboundHTTP.isRegisteredOrigin('https://unusable.example'), false);
+		outboundHTTP.cleanup();
+	});
+
+	test('a split-horizon anchor resolving to private and public addresses is anchored on its private address', async () => {
+		const outboundHTTP = new DesktopOutboundHTTP({
+			resolveHostAddresses: stubResolver({'chat.home.example': ['2606:4700:4700::1111', '192.168.1.20']}),
+		});
+		assert.equal(
+			await outboundHTTP.registerAnchoredOrigins({anchorOrigin: 'http://chat.home.example', origins: []}),
+			'any',
+		);
+		assert.equal(await outboundHTTP.requireCleartextTransportAddress('http://chat.home.example'), '192.168.1.20');
+		outboundHTTP.cleanup();
+	});
+
+	test('a publicly reachable anchor refuses an advertised origin that also resolves privately', async () => {
+		const outboundHTTP = new DesktopOutboundHTTP({
+			resolveHostAddresses: stubResolver({
+				'public.example': ['93.184.216.34'],
+				'media.mixed.example': ['93.184.216.35', '10.0.0.1'],
+			}),
+		});
+		await outboundHTTP.registerAnchoredOrigins({
+			anchorOrigin: 'https://public.example',
+			origins: ['https://media.mixed.example'],
+		});
+		await assert.rejects(
+			outboundHTTP.request({
+				body: null,
+				expectedOrigin: 'https://media.mixed.example',
+				headers: null,
+				method: 'GET',
+				originTrust: DesktopOriginTrust.REGISTERED,
+				serviceName: 'test',
+				signal: null,
+				timeoutMs: 500,
+				url: 'https://media.mixed.example/avatars/1.webp',
+			}),
+			/cannot authorize the privately resolving origin/,
+		);
 		outboundHTTP.cleanup();
 	});
 
@@ -440,29 +480,28 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 		outboundHTTP.cleanup();
 	});
 
-	test('an origin resolving to both public and non-public addresses is refused outright', async () => {
+	test('a chosen origin resolving to both public and non-public addresses is reached on its non-public address', async () => {
 		const {port, requested, server} = await startServer({
 			'/ping': (_request, response) => sendImage(response, 'text/plain', 'ok'),
 		});
 		try {
 			const outboundHTTP = new DesktopOutboundHTTP({
-				resolveHostAddresses: stubResolver({'mixed.example': ['127.0.0.1', '93.184.216.34']}),
+				resolveHostAddresses: stubResolver({'mixed.example': ['93.184.216.34', '127.0.0.1']}),
 			});
-			await assert.rejects(
-				outboundHTTP.request({
-					body: null,
-					expectedOrigin: `http://mixed.example:${port}`,
-					headers: null,
-					method: 'GET',
-					originTrust: DesktopOriginTrust.BOUND,
-					serviceName: 'test',
-					signal: null,
-					timeoutMs: 2000,
-					url: `http://mixed.example:${port}/ping`,
-				}),
-				/resolved to both public and non-public addresses/,
-			);
-			assert.deepEqual(requested, [], 'a mixed-scope origin must never be contacted');
+			const response = await outboundHTTP.request({
+				body: null,
+				expectedOrigin: `http://mixed.example:${port}`,
+				headers: null,
+				method: 'GET',
+				originTrust: DesktopOriginTrust.BOUND,
+				serviceName: 'test',
+				signal: null,
+				timeoutMs: 2000,
+				url: `http://mixed.example:${port}/ping`,
+			});
+			response.message.resume();
+			assert.equal(response.status, 200);
+			assert.deepEqual(requested, ['/ping']);
 			outboundHTTP.cleanup();
 		} finally {
 			server.close();
