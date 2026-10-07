@@ -5,9 +5,11 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import {buildMessageNotificationBody} from '@app/features/notification/utils/MessageNotificationPreview';
 import {openThread} from '@app/features/threads/commands/ThreadNavigation';
 import styles from '@app/features/threads/components/MessageThreadChip.module.css';
+import {ThreadContextMenu} from '@app/features/threads/components/ThreadContextMenu';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import * as D from '@app/features/threads/utils/ThreadMessageDescriptors';
+import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {useLingui} from '@lingui/react/macro';
@@ -31,6 +33,15 @@ export const MessageThreadChip = observer(({message}: {message: Message}) => {
 				type="button"
 				className={styles.chip}
 				onClick={() => openThread(thread)}
+				onContextMenu={(event) =>
+					ContextMenuCommands.openFromEvent(event, ({onClose}) => (
+						<ThreadContextMenu
+							thread={thread}
+							onClose={onClose}
+							data-flx="threads.message-thread-chip.thread-context-menu"
+						/>
+					))
+				}
 				data-flx="threads.message-thread-chip.chip.open"
 			>
 				<span className={styles.row} data-flx="threads.message-thread-chip.row">
