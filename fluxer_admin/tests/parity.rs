@@ -88,6 +88,7 @@ fn guild_search_fixture_matches_the_generated_response_contract() {
     assert_eq!(response.guilds.len(), 1);
     let guild = &response.guilds[0];
     assert_eq!(guild.name, "Parity Guild");
+    assert_eq!(guild.nsfw, Some(false));
     assert_eq!(guild.content_warning_level.as_deref(), Some(&0));
 }
 
@@ -100,6 +101,7 @@ fn guild_lookup_fixture_matches_the_generated_response_contract() {
         .guild
         .expect("guild lookup fixture must contain a guild");
     assert_eq!(String::from(guild.name), "Parity Guild");
+    assert_eq!(guild.nsfw, Some(false));
     assert_eq!(guild.content_warning_level.as_deref(), Some(&0));
     assert_eq!(guild.channels.len(), 1);
     assert_eq!(guild.channels[0].content_warning_level.as_deref(), Some(&0));

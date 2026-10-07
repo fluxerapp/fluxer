@@ -4,6 +4,7 @@ use crate::api::client::{AdminApiClient, ApiResult};
 use crate::api::types::{FlashLevel, FlashMessage};
 use crate::middleware::auth::AuthContext;
 use crate::templates;
+use crate::utils::timestamps::format_admin_timestamp;
 use axum::response::{Html, IntoResponse, Response};
 use serde::Deserialize;
 
@@ -201,7 +202,13 @@ async fn execute_check(
     };
     match result {
         Ok(r) if r.banned => match r.expires_at {
-            Some(expires_at) => ("info", format!("{value} is banned until {expires_at}")),
+            Some(expires_at) => (
+                "info",
+                format!(
+                    "{value} is banned until {}",
+                    format_admin_timestamp(&expires_at)
+                ),
+            ),
             None => ("info", format!("{value} is banned")),
         },
         Ok(_) => ("info", format!("{value} is NOT banned")),

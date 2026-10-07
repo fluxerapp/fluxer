@@ -216,11 +216,11 @@ fn session_entry(base: &str, s: &UserSession, is_tombstone: bool) -> Markup {
                         span class="ml-2 inline-flex items-center rounded-full bg-neutral-200 px-2 py-0.5 text-xs font-medium text-neutral-600" { "Terminated" }
                     }
                 }))
-                (meta_cell("Created", html! { (s.created_at) }))
+                (meta_cell("Created", html! { (format_admin_timestamp(&s.created_at)) }))
                 @if let Some(ref d) = s.deleted_at {
-                    (meta_cell("Terminated", html! { (d) }))
+                    (meta_cell("Terminated", html! { (format_admin_timestamp(d)) }))
                 } @else {
-                    (meta_cell("Last Used", html! { (s.approx_last_used_at) }))
+                    (meta_cell("Last Used", html! { (format_admin_timestamp(&s.approx_last_used_at)) }))
                 }
                 div class="md:col-span-3" {
                     (meta_cell("IP Address", html! {
@@ -388,11 +388,11 @@ fn webauthn_credential_row(
                 p class="text-sm text-neutral-900" { (credential.name) }
             }
             td class="py-2 pr-4" {
-                p class="text-sm text-neutral-900" { (credential.created_at) }
+                p class="text-sm text-neutral-900" { (format_admin_timestamp(&credential.created_at)) }
             }
             td class="py-2 pr-4" {
                 p class="text-sm text-neutral-900" {
-                    (credential.last_used_at.as_deref().unwrap_or("Never"))
+                    (credential.last_used_at.as_deref().map_or_else(|| "Never".to_string(), format_admin_timestamp))
                 }
             }
             td class="py-2" {

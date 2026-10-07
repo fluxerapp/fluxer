@@ -131,15 +131,20 @@ async fn report_resolve_sends_notify_reporter_from_the_checkbox() {
     let uri = format!("/reports/{REPORT_ID}/resolve");
     let checked = submit(
         &uri,
-        "resolution=Handled&notify_reporter_present=1&notify_reporter=true",
+        "resolution=actioned&public_comment=Handled&notify_reporter_present=1&notify_reporter=true",
     )
     .await;
     assert_eq!(checked.route, format!("PATCH /admin/reports/{REPORT_ID}"));
     assert_eq!(checked.body["public_comment"], json!("Handled"));
+    assert_eq!(checked.body["resolution"], json!("actioned"));
     assert_eq!(checked.body["notify_reporter"], json!(true));
-    let unchecked = submit(&uri, "resolution=Handled&notify_reporter_present=1").await;
+    let unchecked = submit(
+        &uri,
+        "resolution=no_violation&public_comment=Handled&notify_reporter_present=1",
+    )
+    .await;
     assert_eq!(unchecked.body["notify_reporter"], json!(false));
-    let stale_form = submit(&uri, "resolution=Handled").await;
+    let stale_form = submit(&uri, "resolution=duplicate&public_comment=Handled").await;
     assert_eq!(stale_form.body["notify_reporter"], json!(true));
 }
 
@@ -349,6 +354,7 @@ fn test_config(api_endpoint: String) -> AdminConfig {
         api_endpoint,
         media_endpoint: "https://media.example.test".to_owned(),
         static_cdn_endpoint: "https://static.example.test".to_owned(),
+        reports_bucket_origin: "https://reports.example.test".to_owned(),
         admin_endpoint: "https://admin.example.test".to_owned(),
         web_app_endpoint: "https://app.example.test".to_owned(),
         oauth_client_id: "admin-client".to_owned(),

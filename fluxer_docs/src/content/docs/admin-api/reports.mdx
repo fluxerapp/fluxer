@@ -680,6 +680,8 @@ Resolves one report and returns a [report resolution](#report-resolution-object)
 
 <sup>3</sup> Optional, so older admin clients that send none still work. It is not stored on the report, not returned by any report route, and not shown to the reporter. It is recorded in the audit entry
 
+The admin panel always sends `resolution`. Its resolve form has a required Resolution select with three choices: Action taken (`actioned`), No violation (`no_violation`), and Duplicate (`duplicate`). The browser refuses to submit the form without a choice, and the panel checks again on the server: a submission with no choice, or with any other value, is refused with the error "Choose a resolution" and the report stays pending. After a resolve, the panel confirms the choice in its message, such as "Report resolved: No violation". The report page itself does not show the choice, because no report route returns it. Staff find it in the `resolution` metadata of the `resolve_report` entry in the audit log.
+
 :::caution[Resolution is terminal]
 Resolving a report notifies the reporter whatever `notify_reporter` says, as the side effects below describe. A resolved report never returns to PENDING, and a second update against it returns 400 `REPORT_ALREADY_RESOLVED` without changing the stored public comment.
 :::

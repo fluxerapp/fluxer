@@ -654,7 +654,7 @@ fn integrations_config_section(
                                 (password_input("integration_smtp_password", "SMTP password", Some("Leave blank to keep the current password.")))
                             }
                             (checkbox("integration_smtp_secure", "true", "Use TLS", integrations.email.smtp.secure.unwrap_or(true), true))
-                            (checkbox("integration_email_disable_new_ip_authorization", "true", "Disable new IP login authorisation", integrations.email.disable_new_ip_authorization, true))
+                            (checkbox("integration_email_disable_new_ip_authorization", "true", "Disable new IP login authorization", integrations.email.disable_new_ip_authorization, true))
                             div class="flex flex-wrap gap-2" {
                                 button type="submit"
                                     formaction={(base) "/instance-config?action=test_smtp"}
@@ -1364,7 +1364,7 @@ fn experiment_delivery_section(
         "How often every client revalidates its experiment assignments. This is instance-wide \
          and covers every experiment, not just the ones above. Raising the interval sheds \
          request volume and makes a change take longer to reach a client. Raising the jitter \
-         spreads a fleet that has synchronised on one tick back out across the interval.",
+         spreads a fleet that has synchronized on one tick back out across the interval.",
         html! {
             form method="post" action={(base) "/instance-config?action=update_experiment_delivery"} {
                 (csrf_input(csrf_token))

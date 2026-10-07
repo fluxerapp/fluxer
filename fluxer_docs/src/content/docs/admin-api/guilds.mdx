@@ -35,19 +35,17 @@ The compact guild representation returned by [List guilds](#list-guilds) and by 
 | banner | ?string | The banner hash, or null when unset |
 | member_count<sup>2</sup> | integer | The recorded member count |
 | nsfw_level? | integer | The [NSFW level](/http-api/guilds/#nsfw-levels) |
-| nsfw?<sup>3</sup> | boolean | Whether the guild is flagged as adult content |
-| content_warning_level?<sup>3</sup> | integer | The [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
-| content_warning_text?<sup>3</sup> | ?string | The custom content warning text |
-| approximate_member_count?<sup>4</sup> | integer | The member count the main Gateway reports |
-| approximate_presence_count?<sup>4</sup> | integer | The connected member count the main Gateway reports |
+| nsfw | boolean | Whether the guild is flagged as adult content |
+| content_warning_level | integer | The [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
+| content_warning_text | ?string | The custom content warning text, or null when unset |
+| approximate_member_count?<sup>3</sup> | integer | The member count the main Gateway reports |
+| approximate_presence_count?<sup>3</sup> | integer | The connected member count the main Gateway reports |
 
 <sup>1</sup> All are null whenever the owner account is not resolved. [List guilds](#list-guilds) never resolves it, so all are always null there
 
 <sup>2</sup> A member connecting or disconnecting does not change it
 
-<sup>3</sup> No operation populates these, so they are absent from every current response
-
-<sup>4</sup> Present only on [List user guilds](/admin-api/users/#list-user-guilds) when the request sets `with_counts` to true
+<sup>3</sup> Present only on [List user guilds](/admin-api/users/#list-user-guilds) when the request sets `with_counts` to true
 
 ### Example
 
@@ -63,7 +61,10 @@ The compact guild representation returned by [List guilds](#list-guilds) and by 
   "icon": "b7f1c2d3e4a5968778695a4b3c2d1e0f",
   "banner": null,
   "member_count": 4182,
-  "nsfw_level": 0
+  "nsfw_level": 0,
+  "nsfw": false,
+  "content_warning_level": 0,
+  "content_warning_text": null
 }
 ```
 
@@ -90,9 +91,9 @@ The full guild representation returned by [Get guild](#get-guild). It embeds eve
 | verification_level | integer | The [verification level](/http-api/guilds/#verification-levels) |
 | mfa_level | integer | The [MFA level](/http-api/guilds/#mfa-levels) required of moderators |
 | nsfw_level | integer | The [NSFW level](/http-api/guilds/#nsfw-levels) |
-| nsfw?<sup>2</sup> | boolean | Whether the guild is flagged as adult content |
-| content_warning_level?<sup>2</sup> | integer | The [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
-| content_warning_text?<sup>2</sup> | ?string | The custom content warning text |
+| nsfw | boolean | Whether the guild is flagged as adult content |
+| content_warning_level | integer | The [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
+| content_warning_text | ?string | The custom content warning text, or null when unset |
 | explicit_content_filter | integer | The [explicit content filter level](/http-api/guilds/#guild-explicit-content-filter-levels) |
 | default_message_notifications | integer | The [default message notification level](/http-api/guilds/#default-message-notification-levels) |
 | afk_channel_id | ?snowflake | The voice channel idle members are moved to, or null when unset |
@@ -107,8 +108,6 @@ The full guild representation returned by [Get guild](#get-guild). It embeds eve
 
 <sup>1</sup> All are null when the owner account cannot be resolved
 
-<sup>2</sup> The operation does not populate these, so they are absent from every current response
-
 ### Admin guild channel object
 
 #### Structure
@@ -121,14 +120,12 @@ The full guild representation returned by [Get guild](#get-guild). It embeds eve
 | position | integer | The sort position within the guild |
 | parent_id | ?snowflake | The parent category ID, or null when the channel is top-level |
 | nsfw | ?boolean | Whether the channel is marked age restricted |
-| nsfw_override?<sup>3</sup> | ?boolean | The age restriction set on the channel itself |
-| content_warning_level?<sup>3</sup> | integer | The [content warning level](/http-api/guilds/#guild-content-warning-levels) set on the channel |
-| content_warning_text?<sup>3</sup> | ?string | The content warning text set on the channel |
-| url<sup>4</sup> | ?string | The external channel URL (1-2048 characters) |
+| nsfw_override | ?boolean | The age restriction set on the channel itself, or null when the channel sets none |
+| content_warning_level | integer | The [content warning level](/http-api/guilds/#guild-content-warning-levels) set on the channel |
+| content_warning_text | ?string | The content warning text set on the channel, or null when unset |
+| url<sup>2</sup> | ?string | The external channel URL (1-2048 characters) |
 
-<sup>3</sup> The operation does not populate these, so they are absent from every current response
-
-<sup>4</sup> Null for every channel type that is not an external link channel
+<sup>2</sup> Null for every channel type that is not an external link channel
 
 ### Admin guild role object
 
@@ -343,12 +340,12 @@ A body with no field at all selects nothing, so an empty patch applies no change
 | verification_level? | integer | The replacement [verification level](/http-api/guilds/#verification-levels) |
 | mfa_level? | integer | The replacement [MFA level](/http-api/guilds/#mfa-levels) |
 | nsfw_level? | integer | The replacement [NSFW level](/http-api/guilds/#nsfw-levels) |
-| nsfw?<sup>5</sup> | boolean | Accepted and ignored |
-| content_warning_level?<sup>5</sup> | integer | Accepted and ignored |
-| content_warning_text?<sup>5</sup> | ?string | Accepted and ignored (at most 200 characters) |
+| nsfw? | boolean | Whether the guild is flagged as adult content |
+| content_warning_level? | integer | The replacement [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
+| content_warning_text? | ?string | The replacement custom content warning text (at most 200 characters), or null to clear it |
 | explicit_content_filter? | integer | The replacement [explicit content filter level](/http-api/guilds/#guild-explicit-content-filter-levels) |
 | default_message_notifications? | integer | The replacement [default message notification level](/http-api/guilds/#default-message-notification-levels) |
-| disabled_operations?<sup>6</sup> | integer | The replacement [disabled guild operations](/http-api/guilds/#disabled-guild-operations) bitfield |
+| disabled_operations?<sup>5</sup> | integer | The replacement [disabled guild operations](/http-api/guilds/#disabled-guild-operations) bitfield |
 
 <sup>1</sup> Normalised to lowercase with whitespace folded to hyphens and consecutive hyphens collapsed. The normalised result is 2 to 32 characters, and a shorter or longer one is rejected with 400
 
@@ -358,9 +355,7 @@ A body with no field at all selects nothing, so an empty patch applies no change
 
 <sup>4</sup> The array only clears an image, and no Admin operation uploads one
 
-<sup>5</sup> Validated, selects `guild:update:settings`, and records an `update_settings` audit entry. The guild record is left unchanged
-
-<sup>6</sup> Any integer from 0 to 2147483647, stored as supplied, including bits outside the documented registry
+<sup>5</sup> Any integer from 0 to 2147483647, stored as supplied, including bits outside the documented registry
 
 A code already claimed by any invite is rejected with 400 `INVALID_FORM_BODY` and the validation code `THIS_VANITY_URL_IS_ALREADY_TAKEN` against `vanity_url_code`.
 

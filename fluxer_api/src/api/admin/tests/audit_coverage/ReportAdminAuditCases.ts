@@ -223,6 +223,36 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 			};
 		},
 	},
+	...(['actioned', 'no_violation', 'duplicate'] as const).map(
+		(resolution): AdminAuditCoverageCase => ({
+			method: 'PATCH',
+			route: '/admin/reports/:report_id',
+			name: `resolution ${resolution}`,
+			async prepare(context) {
+				const {reportId} = await fileUserReport(context);
+				return {
+					request: {
+						path: `/admin/reports/${reportId}`,
+						body: {status: 'resolved', resolution, notify_reporter: false},
+					},
+					expected: {
+						action: 'resolve_report',
+						targetType: 'report',
+						targetId: reportId,
+						metadata: {
+							report_id: reportId,
+							report_type: '1',
+							notify_reporter: 'false',
+							reporter_dm_sent: 'true',
+							reporter_email_sent: 'true',
+							reporter_dsa_email_sent: 'false',
+							resolution,
+						},
+					},
+				};
+			},
+		}),
+	),
 	{
 		method: 'POST',
 		route: '/admin/reports/:report_id/legal-hold',

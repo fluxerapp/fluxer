@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::timestamps::format_admin_timestamp;
 use crate::{
     api::types::{ListUserRelationshipsResponse, RelationshipEntry},
     config::AdminConfig,
@@ -176,7 +177,7 @@ fn relationship_row(
                     }
                     @if let Some(ref since) = entry.since {
                         p class="text-xs text-neutral-500" {
-                            "Since: " (since)
+                            "Since: " (format_admin_timestamp(since))
                         }
                     }
                 }

@@ -222,7 +222,7 @@ pub fn checkbox(name: &str, value: &str, label: &str, checked: bool, enabled: bo
             div class="checkbox-custom" {
                 (PreEscaped(CHECKMARK_SVG))
             }
-            span class="min-w-0 break-all text-sm leading-5 text-neutral-900" { (label) }
+            span class="min-w-0 [overflow-wrap:anywhere] text-sm leading-5 text-neutral-900" { (label) }
         }
     }
 }

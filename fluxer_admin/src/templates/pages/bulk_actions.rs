@@ -73,6 +73,10 @@ const PATCHABLE_USER_FLAGS: &[UserFlag] = &[
         value: 1 << 6,
     },
     UserFlag {
+        name: "PROFILE_HIDDEN",
+        value: 1 << 7,
+    },
+    UserFlag {
         name: "HIGH_GLOBAL_RATE_LIMIT",
         value: 1 << 33,
     },

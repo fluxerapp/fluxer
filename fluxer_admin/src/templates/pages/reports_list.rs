@@ -20,7 +20,7 @@ use crate::{
         layout::admin_layout,
         pages::user_detail_tabs::reports::tagged_user,
     },
-    utils::{timestamps::format_admin_timestamp, user_tag::user_tag},
+    utils::{plural::count_noun, timestamps::format_admin_timestamp, user_tag::user_tag},
 };
 use maud::{Markup, PreEscaped, html};
 
@@ -80,7 +80,7 @@ fn report_count_summary(result: Option<&SearchReportsResponse>) -> Markup {
     html! {
         @if let Some(result) = result {
             p class="text-neutral-500 text-sm" {
-                "Found " (result.total) (if result.total == 1 { " result" } else { " results" })
+                "Found " (count_noun(result.total, "result", "results"))
                 " (showing " (result.reports.len()) ")"
             }
         }
@@ -405,7 +405,7 @@ fn reported_webhook_author(webhook: &ReportedWebhook<'_>) -> Markup {
         div class="flex flex-col items-start gap-0.5" {
             (webhook_identity(webhook))
             a href=(webhook.reports_href) title="Reports about this webhook"
-                class="font-mono text-blue-600 text-xs hover:underline" {
+                class="font-mono text-blue-600 text-xs [overflow-wrap:normal] hover:underline" {
                 "Webhook ID: " (webhook.id)
             }
             @if let Some(ref creator) = webhook.creator {
@@ -452,11 +452,14 @@ fn render_reports_table(config: &AdminConfig, reports: &[ReportEntry]) -> Markup
     let rows = html! {
         @for report in reports {
             tr class="hover:bg-neutral-50 transition-colors" {
-                td class="whitespace-nowrap px-3 py-3 text-neutral-600 text-sm" {
+                td class="hidden whitespace-nowrap px-3 py-3 text-neutral-600 text-sm xl:table-cell" {
                     (format_admin_timestamp(&report.reported_at))
                 }
                 td class="px-3 py-3 text-sm" {
                     div class="flex flex-col items-start gap-1" {
+                        span class="text-neutral-600 text-xs xl:hidden" data-report-reported-at-compact=(report.report_id) {
+                            (format_admin_timestamp(&report.reported_at))
+                        }
                         @let (type_label, type_variant) = format_report_type(report.report_type);
                         (badge(type_label, type_variant))
                         @let reason_label = report.reason.as_deref().map(|reason| report.reason_label.as_deref().unwrap_or(reason));
@@ -486,20 +489,23 @@ fn render_reports_table(config: &AdminConfig, reports: &[ReportEntry]) -> Markup
                         }
                     }
                 }
-                td class="px-3 py-3 text-sm" {
+                td class="px-3 py-3 text-sm [overflow-wrap:anywhere] [&_.whitespace-nowrap]:whitespace-normal" {
                     (reporter_cell(config, report))
                 }
-                td class="px-3 py-3 text-sm" {
+                td class="px-3 py-3 text-sm [overflow-wrap:anywhere] [&_.whitespace-nowrap]:whitespace-normal" {
                     (reported_cell(config, report))
                 }
-                td class="whitespace-nowrap px-3 py-3 text-sm" {
-                    @let (label, variant) = format_status(report.status);
+                @let (status_label, status_variant) = format_status(report.status);
+                td class="hidden whitespace-nowrap px-3 py-3 text-sm xl:table-cell" {
                     span data-status-pill=(report.report_id) {
-                        (badge(label, variant))
+                        (badge(status_label, status_variant))
                     }
                 }
                 td class="whitespace-nowrap px-3 py-3 text-sm" {
                     div class="flex flex-col items-start gap-1" {
+                        span class="xl:hidden" data-status-pill-compact=(report.report_id) {
+                            (badge(status_label, status_variant))
+                        }
                         button type="button"
                             data-drawer-open="report-peek"
                             data-drawer-href={(base) "/reports/" (report.report_id) "/fragment"}
@@ -530,8 +536,15 @@ fn render_reports_table(config: &AdminConfig, reports: &[ReportEntry]) -> Markup
             (table_container(table(html! {
                 (table_head(html! {
                     tr {
-                        @for header in headers {
-                            th class="whitespace-nowrap px-3 py-3 text-left text-neutral-600 text-xs uppercase tracking-wider" {
+                        @for (index, header) in headers.iter().enumerate() {
+                            th class={"px-3 py-3 text-left text-neutral-600 text-xs uppercase tracking-wider" (match index {
+                                0 | 4 => " hidden whitespace-nowrap xl:table-cell",
+                                5 => " xl:whitespace-nowrap",
+                                _ => " whitespace-nowrap",
+                            })} {
+                                @if index == 5 {
+                                    span class="xl:hidden" { "Status / " }
+                                }
                                 (header)
                             }
                         }
@@ -626,4 +639,127 @@ fn reports_url(config: &AdminConfig, filters: &ReportFilters<'_>, page: u32, lim
         .collect::<Vec<_>>()
         .join("&");
     format!("{}/reports?{}", config.base_path, query)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::{ProxyConfig, RuntimeEnv};
+    use serde_json::json;
+
+    fn test_config() -> AdminConfig {
+        AdminConfig {
+            env: RuntimeEnv::Test,
+            host: String::new(),
+            port: 0,
+            secret_key_base: "test-secret".to_owned(),
+            base_path: "/admin".to_owned(),
+            api_endpoint: String::new(),
+            media_endpoint: "https://media.example.test".to_owned(),
+            static_cdn_endpoint: String::new(),
+            reports_bucket_origin: String::new(),
+            admin_endpoint: String::new(),
+            web_app_endpoint: String::new(),
+            oauth_client_id: String::new(),
+            oauth_client_secret: String::new(),
+            oauth_redirect_uri: String::new(),
+            build_version: "test".to_owned(),
+            self_hosted: false,
+            proxy: ProxyConfig {
+                trust_client_ip_header: false,
+                client_ip_header_name: String::new(),
+            },
+        }
+    }
+
+    fn report() -> ReportEntry {
+        let mut value = json!({
+            "report_id": "1556709309709027556",
+            "reporter_id": "1556709306000000001",
+            "reporter_username": "reporter_80f33d09e88a",
+            "reporter_global_name": "Avery Reporter",
+            "reporter_discriminator": "5193",
+            "reported_at": "2026-10-06T04:33:00Z",
+            "status": 0,
+            "report_type": 1,
+            "category": "harassment",
+            "reported_user_id": "1556709306000000002",
+            "reported_user_username": "target_bc57b33ca5c4",
+            "reported_user_discriminator": "8316"
+        });
+        for key in [
+            "reporter_tag",
+            "reporter_email",
+            "reporter_full_legal_name",
+            "reporter_country_of_residence",
+            "additional_info",
+            "reported_user_tag",
+            "reported_user_global_name",
+            "reported_user_avatar_hash",
+            "reported_guild_id",
+            "reported_guild_name",
+            "reported_guild_icon_hash",
+            "reported_message_id",
+            "reported_channel_id",
+            "reported_channel_name",
+            "reported_channel_nsfw",
+            "reported_guild_invite_code",
+            "reported_guild_nsfw_level",
+            "reported_guild_nsfw",
+            "reported_guild_content_warning_level",
+            "reported_guild_content_warning_text",
+            "reported_channel_nsfw_override",
+            "reported_channel_content_warning_level",
+            "reported_channel_content_warning_text",
+            "reported_channel_effective_nsfw",
+            "reported_channel_effective_content_warning_level",
+            "reported_channel_effective_content_warning_text",
+            "resolved_at",
+            "resolved_by_admin_id",
+            "public_comment",
+            "mutual_dm_channel_id",
+            "message_context",
+        ] {
+            value[key] = serde_json::Value::Null;
+        }
+        serde_json::from_value(value).expect("report fixture")
+    }
+
+    #[test]
+    fn narrow_layout_moves_date_and_status_into_visible_columns() {
+        let markup = render_reports_table(&test_config(), &[report()]).into_string();
+        assert!(markup.contains(
+            r#"<span class="text-neutral-600 text-xs xl:hidden" data-report-reported-at-compact="1556709309709027556">Oct 6, 2026, 4:33 AM UTC</span>"#
+        ));
+        assert!(markup.contains(
+            r#"<span class="xl:hidden" data-status-pill-compact="1556709309709027556">"#
+        ));
+        assert!(markup.contains(r#"<span data-status-pill="1556709309709027556">"#));
+        assert_eq!(
+            markup
+                .matches("hidden whitespace-nowrap xl:table-cell")
+                .count(),
+            2
+        );
+        assert_eq!(
+            markup
+                .matches(
+                    "hidden whitespace-nowrap px-3 py-3 text-neutral-600 text-sm xl:table-cell"
+                )
+                .count(),
+            1
+        );
+        assert_eq!(
+            markup
+                .matches("hidden whitespace-nowrap px-3 py-3 text-sm xl:table-cell")
+                .count(),
+            1
+        );
+        assert_eq!(
+            markup
+                .matches("[overflow-wrap:anywhere] [&amp;_.whitespace-nowrap]:whitespace-normal")
+                .count(),
+            2
+        );
+    }
 }

@@ -22,7 +22,6 @@ use axum::{
     Form, Router,
     extract::{FromRequest, Path, Query, Request, State},
     http::HeaderMap,
-    http::StatusCode,
     response::{Html, IntoResponse, Redirect, Response},
     routing::get,
 };
@@ -68,6 +67,8 @@ struct ResolveForm {
     _csrf: Option<String>,
     #[serde(default)]
     resolution: Option<String>,
+    #[serde(default)]
+    public_comment: Option<String>,
     #[serde(default)]
     notify_reporter: Option<String>,
     #[serde(default)]
@@ -287,52 +288,51 @@ async fn report_resolve(
 ) -> Response {
     let config = state.config();
     let base = &config.base_path;
-    let is_background = request
-        .uri()
-        .query()
-        .is_some_and(|query| query.split('&').any(|part| part == "background=1"));
+    let back = format!("{base}/reports/{report_id}");
     let form: ResolveForm = match Form::from_request(request, &state).await {
         Ok(Form(f)) => f,
         Err(error) => {
             tracing::warn!(%error, report_id, "failed to parse report resolve form");
             return flash::redirect_with_flash(
-                &format!("{base}/reports/{report_id}"),
+                &back,
                 FlashData::error("Invalid form data"),
                 config.secure_cookies(),
             );
         }
     };
+    let Some((resolution, label)) =
+        templates::pages::report_detail::resolution_choice(form.resolution.as_deref())
+    else {
+        return flash::redirect_with_flash(
+            &back,
+            FlashData::error(RESOLUTION_REQUIRED),
+            config.secure_cookies(),
+        );
+    };
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let public_comment = clean_string(form.resolution.as_deref().unwrap_or(""));
+    let public_comment = clean_string(form.public_comment.as_deref().unwrap_or(""));
     let notify_reporter =
         form.notify_reporter_present.is_none() || form.notify_reporter.as_deref() == Some("true");
-    let result = client
-        .resolve_report(&report_id, public_comment.as_deref(), notify_reporter, None)
-        .await;
-    match result {
-        Ok(_) => {
-            if is_background {
-                return StatusCode::NO_CONTENT.into_response();
-            }
-            flash::redirect_with_flash(
-                &format!("{base}/reports/{report_id}"),
-                FlashData::success("Report resolved"),
-                config.secure_cookies(),
-            )
-        }
+    let flash = match client
+        .resolve_report(
+            &report_id,
+            resolution,
+            public_comment.as_deref(),
+            notify_reporter,
+            None,
+        )
+        .await
+    {
+        Ok(_) => FlashData::success(format!("Report resolved: {label}")),
         Err(error) => {
             tracing::warn!(%error, report_id, "admin API request failed: resolve report");
-            if is_background {
-                return StatusCode::BAD_GATEWAY.into_response();
-            }
-            flash::redirect_with_flash(
-                &format!("{base}/reports/{report_id}"),
-                FlashData::error("Failed to resolve report"),
-                config.secure_cookies(),
-            )
+            FlashData::error("Failed to resolve report")
         }
-    }
+    };
+    flash::redirect_with_flash(&back, flash, config.secure_cookies())
 }
+
+const RESOLUTION_REQUIRED: &str = "Choose a resolution";
 
 async fn report_legal_hold(
     State(state): State<AppState>,

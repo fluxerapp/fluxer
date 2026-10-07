@@ -16,6 +16,7 @@ use crate::{
             BlocklistActionVariant, blocklist_action_card, blocklist_text_field,
         },
     },
+    utils::timestamps::format_admin_timestamp,
 };
 use maud::{Markup, html};
 
@@ -160,7 +161,7 @@ fn entry_row(base: &str, csrf_token: &str, entry: &BlocklistEntry) -> Markup {
             @if entry.match_subdomains.unwrap_or(true) { "Yes" } @else { "No" }
         }))
         (table_cell(true, html! { (entry.category.as_deref().unwrap_or("")) }))
-        (table_cell(true, html! { (entry.created_at.as_deref().unwrap_or("")) }))
+        (table_cell(true, html! { (entry.created_at.as_deref().map(format_admin_timestamp).unwrap_or_default()) }))
         (table_cell(false, html! {
             form method="post" action=(action_url) {
                 (csrf_input(csrf_token))

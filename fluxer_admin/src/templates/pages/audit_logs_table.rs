@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::timestamps::format_admin_timestamp;
 use crate::{
     api::types::{
         AuditLogChannelSummary, AuditLogEntry, AuditLogGuildSummary, AuditLogUserSummary,
@@ -273,7 +274,7 @@ pub fn log_row(base: &str, entry: &AuditLogEntry, index: usize) -> Markup {
         (table_row(html! {
             (table_cell(true, html! {
                 span class="text-sm whitespace-nowrap" {
-                    (entry.created_at)
+                    (format_admin_timestamp(&entry.created_at))
                 }
             }))
             (table_cell(false, badge(&format_action(&entry.action), action_badge_variant(&entry.action))))

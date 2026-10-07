@@ -1079,7 +1079,7 @@ async fn redirect_flash_actions_convert_to_htmx_toasts() {
                 &format!("{}; csrf_token={}", app.session_cookie, csrf_token),
             ),
         ],
-        &format!("_csrf={csrf_token}&resolution=done"),
+        &format!("_csrf={csrf_token}&resolution=no_violation&public_comment=done"),
     )
     .await;
     assert_eq!(status, StatusCode::NO_CONTENT, "{response_body}");
@@ -1094,7 +1094,101 @@ async fn redirect_flash_actions_convert_to_htmx_toasts() {
         .and_then(|value| value.to_str().ok())
         .unwrap_or_else(|| panic!("missing toast header\n{response_body}"));
     assert!(toast.contains("success"), "{toast}");
-    assert!(toast.contains("Report resolved"), "{toast}");
+    assert!(toast.contains("Report resolved: No violation"), "{toast}");
+}
+
+#[tokio::test]
+async fn report_resolve_form_sends_the_chosen_resolution_and_refuses_none() {
+    let received = Arc::new(Mutex::new(Vec::<Value>::new()));
+    let sink = received.clone();
+    let api = Router::new()
+        .route(
+            "/admin/reports/1800000000000000001",
+            routing::patch(move |Json(body): Json<Value>| {
+                let sink = sink.clone();
+                async move {
+                    sink.lock().unwrap().push(body);
+                    json_response(json!({
+                        "report_id": "1800000000000000001",
+                        "status": 1,
+                        "resolved_at": "2026-05-26T12:03:00.000Z",
+                        "public_comment": null
+                    }))
+                }
+            })
+            .get(|| async { json_response(searched_report()) }),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (headers, page) = get_with_headers(&app, "/reports/1800000000000000001", &[]).await;
+    let csrf_token = csrf_cookie(&headers)
+        .unwrap_or_else(|| panic!("report page did not set csrf_token cookie\n{page}"));
+    assert_form_has_csrf(&page, "/reports/1800000000000000001/resolve", &csrf_token);
+    assert!(
+        page.contains(r#"<select id="resolution" name="resolution" required"#),
+        "{page}"
+    );
+    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
+    let post = |body: String| {
+        let app = &app;
+        let cookie = cookie.clone();
+        async move {
+            let (status, headers, text) = post_form_with_headers(
+                app,
+                "/reports/1800000000000000001/resolve",
+                &[
+                    ("HX-Request", "true"),
+                    ("HX-Target", "flash-container"),
+                    ("Cookie", &cookie),
+                ],
+                &body,
+            )
+            .await;
+            assert_eq!(status, StatusCode::NO_CONTENT, "{text}");
+            headers
+                .get("X-Fluxer-Admin-Toast")
+                .and_then(|value| value.to_str().ok())
+                .unwrap_or_else(|| panic!("missing toast header\n{text}"))
+                .to_owned()
+        }
+    };
+
+    for (value, label) in [
+        ("actioned", "Action taken"),
+        ("no_violation", "No violation"),
+        ("duplicate", "Duplicate"),
+    ] {
+        let toast = post(format!("_csrf={csrf_token}&resolution={value}")).await;
+        assert!(toast.contains("success"), "{toast}");
+        assert!(
+            toast.contains(&format!("Report resolved: {label}")),
+            "{toast}"
+        );
+    }
+    for refused in [
+        format!("_csrf={csrf_token}&public_comment=Looks+fine"),
+        format!("_csrf={csrf_token}&resolution=&public_comment=Looks+fine"),
+        format!("_csrf={csrf_token}&resolution=auto_resolved"),
+    ] {
+        let toast = post(refused).await;
+        assert!(toast.contains("error"), "{toast}");
+        assert!(toast.contains("Choose a resolution"), "{toast}");
+    }
+    let toast = post(format!(
+        "_csrf={csrf_token}&resolution=actioned&public_comment=Removed&notify_reporter_present=1"
+    ))
+    .await;
+    assert!(toast.contains("Report resolved: Action taken"), "{toast}");
+    let received = received.lock().unwrap();
+    assert_eq!(
+        *received,
+        vec![
+            json!({"status": "resolved", "resolution": "actioned", "notify_reporter": true}),
+            json!({"status": "resolved", "resolution": "no_violation", "notify_reporter": true}),
+            json!({"status": "resolved", "resolution": "duplicate", "notify_reporter": true}),
+            json!({"status": "resolved", "resolution": "actioned", "public_comment": "Removed", "notify_reporter": false}),
+        ]
+    );
 }
 
 #[tokio::test]
@@ -1369,6 +1463,24 @@ async fn rendered_heads_never_reference_the_static_cdn_for_fonts() {
         csp.contains("style-src 'self' 'unsafe-inline';"),
         "style-src was {csp}"
     );
+}
+
+#[tokio::test]
+async fn the_csp_allows_images_from_the_configured_reports_bucket() {
+    let app = setup().await;
+    let (headers, _) = get_with_headers(&app, "/reports/1800000000000000001", &[]).await;
+    let csp = headers
+        .get(header::CONTENT_SECURITY_POLICY)
+        .and_then(|value| value.to_str().ok())
+        .expect("missing CSP");
+    assert!(
+        csp.contains(
+            "img-src 'self' data: blob: https://static.example.test https://media.example.test \
+             https://reports.example.test;"
+        ),
+        "img-src was {csp}"
+    );
+    assert!(!csp.contains("vultrobjects"), "{csp}");
 }
 
 struct SearchCase {
@@ -2282,6 +2394,7 @@ fn test_config(api_endpoint: String) -> AdminConfig {
         api_endpoint,
         media_endpoint: "https://media.example.test".to_owned(),
         static_cdn_endpoint: "https://static.example.test".to_owned(),
+        reports_bucket_origin: "https://reports.example.test".to_owned(),
         admin_endpoint: "https://admin.example.test".to_owned(),
         web_app_endpoint: "https://app.example.test".to_owned(),
         oauth_client_id: "admin-client".to_owned(),

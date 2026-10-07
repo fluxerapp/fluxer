@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::snowflake;
+use crate::api::generated::{snowflake, types::UpdateReportRequestResolution};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
@@ -41,11 +41,12 @@ impl AdminApiClient {
     pub async fn resolve_report(
         &self,
         report_id: &str,
+        resolution: UpdateReportRequestResolution,
         public_comment: Option<&str>,
         notify_reporter: bool,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<ResolveReportResponse> {
-        let mut body = serde_json::json!({"status": "resolved"});
+        let mut body = serde_json::json!({"status": "resolved", "resolution": resolution});
         if let Some(public_comment) = public_comment {
             body["public_comment"] = serde_json::Value::from(public_comment);
         }

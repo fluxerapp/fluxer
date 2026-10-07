@@ -8,7 +8,7 @@ use crate::{
         page_container::card_with_header,
         report_category::{reason_repeats_category, report_category},
         report_webhook::{reported_webhook, webhook_identity},
-        table::data_table,
+        table::{table, table_body, table_container, table_head},
     },
     utils::{timestamps::format_admin_timestamp, user_tag::user_tag},
 };
@@ -108,7 +108,7 @@ fn report_section(
                     } else {
                         vec!["Reported At", "Type / Category", "Reporter", "Status"]
                     };
-                    (data_table(
+                    (report_tab_table(
                         &headers,
                         html! {
                             @for report in reports {
@@ -196,19 +196,52 @@ pub(crate) fn reporter_label(report: &ReportEntry) -> Markup {
     }
 }
 
+pub(crate) fn report_tab_table(headers: &[&str], rows: Markup) -> Markup {
+    let has_actions = headers.last() == Some(&"Actions");
+    html! {
+        (table_container(table(html! {
+            (table_head(html! {
+                tr {
+                    @for (index, header) in headers.iter().enumerate() {
+                        @let folded = index == 1 || (has_actions && *header == "Status");
+                        th class={"px-2 py-3 text-left text-neutral-600 text-xs uppercase tracking-wider xl:px-4" (if folded { " hidden whitespace-nowrap xl:table-cell" } else { " whitespace-nowrap" })} {
+                            @if has_actions && index + 1 == headers.len() {
+                                span class="xl:hidden" { "Status / " }
+                            }
+                            (header)
+                        }
+                    }
+                }
+            }))
+            (table_body(rows))
+        })))
+    }
+}
+
 pub(crate) fn reported_at_cell(base: &str, report: &ReportEntry) -> Markup {
     html! {
-        td class="px-3 py-3 text-sm text-neutral-900" {
+        td class="px-2 py-3 text-sm text-neutral-900 xl:px-3" {
             div { (format_admin_timestamp(&report.reported_at)) }
             a href={(base) "/reports/" (report.report_id)}
                 class="whitespace-nowrap font-mono text-blue-600 text-xs tracking-tight hover:underline" {
                 (report.report_id)
+            }
+            div class="mt-1 xl:hidden" data-report-type-compact=(report.report_id) {
+                (type_and_category_lines(report))
             }
         }
     }
 }
 
 pub(crate) fn type_and_category_cell(report: &ReportEntry) -> Markup {
+    html! {
+        td class="hidden px-4 py-3 text-sm text-neutral-900 xl:table-cell" {
+            (type_and_category_lines(report))
+        }
+    }
+}
+
+fn type_and_category_lines(report: &ReportEntry) -> Markup {
     let reason_label = report
         .reason
         .as_deref()
@@ -219,17 +252,15 @@ pub(crate) fn type_and_category_cell(report: &ReportEntry) -> Markup {
         .zip(reason_label)
         .is_some_and(|(category, label)| reason_repeats_category(category, label));
     html! {
-        td class="px-4 py-3 text-sm text-neutral-900" {
-            div class="text-neutral-500 text-xs" { (format_report_type(report.report_type)) }
-            @if let Some(category) = &report.category {
-                div class="break-words" data-report-reason=[report.reason.as_deref().filter(|_| repeats)] {
-                    (report_category(category))
-                }
+        div class="text-neutral-500 text-xs" { (format_report_type(report.report_type)) }
+        @if let Some(category) = &report.category {
+            div class="break-words" data-report-reason=[report.reason.as_deref().filter(|_| repeats)] {
+                (report_category(category))
             }
-            @if !repeats && let (Some(reason), Some(label)) = (&report.reason, reason_label) {
-                div class="break-words text-neutral-500 text-xs" data-report-reason=(reason) {
-                    (label)
-                }
+        }
+        @if !repeats && let (Some(reason), Some(label)) = (&report.reason, reason_label) {
+            div class="break-words text-neutral-500 text-xs" data-report-reason=(reason) {
+                (label)
             }
         }
     }
@@ -270,7 +301,7 @@ fn report_row(config: &AdminConfig, base: &str, kind: &str, report: &ReportEntry
         tr class="hover:bg-neutral-50 transition-colors" {
             (reported_at_cell(base, report))
             (type_and_category_cell(report))
-            td class="px-4 py-3 text-sm [overflow-wrap:anywhere]" {
+            td class="px-2 py-3 text-sm [overflow-wrap:anywhere] [&_.whitespace-nowrap]:whitespace-normal xl:px-4 xl:[&_.whitespace-nowrap]:whitespace-nowrap" {
                 @if let Some(webhook) = &webhook {
                     a href=(webhook.reports_href) class="hover:underline" {
                         (webhook_identity(webhook))
@@ -287,7 +318,7 @@ fn report_row(config: &AdminConfig, base: &str, kind: &str, report: &ReportEntry
                     span { (entity_display) }
                 }
             }
-            td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900" {
+            td class="whitespace-nowrap px-2 py-3 text-sm text-neutral-900 xl:px-4" {
                 (format_status(report.status))
             }
         }
@@ -361,6 +392,7 @@ mod tests {
             api_endpoint: String::new(),
             media_endpoint: "https://media.example.test".to_owned(),
             static_cdn_endpoint: String::new(),
+            reports_bucket_origin: String::new(),
             admin_endpoint: String::new(),
             web_app_endpoint: String::new(),
             oauth_client_id: String::new(),
@@ -476,12 +508,24 @@ mod tests {
         let markup = report_row(&config, "/admin", "received", &report).into_string();
         assert_eq!(
             markup.matches("Harassment or bullying").count(),
-            1,
+            2,
             "{markup}"
         );
         assert_eq!(
             markup.matches(r#"data-report-reason="harassment""#).count(),
-            1,
+            2,
+            "{markup}"
+        );
+        assert!(
+            markup.contains(
+                r#"<div class="mt-1 xl:hidden" data-report-type-compact="1800000000000000007">"#
+            ),
+            "{markup}"
+        );
+        assert!(
+            markup.contains(
+                r#"<td class="hidden px-4 py-3 text-sm text-neutral-900 xl:table-cell">"#
+            ),
             "{markup}"
         );
         assert!(

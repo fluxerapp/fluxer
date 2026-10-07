@@ -4,9 +4,10 @@ use crate::{
     api::types::{GuildInfo, ReportEntry},
     config::AdminConfig,
     templates::{
-        components::{page_container::card_with_header, table::data_table},
+        components::page_container::card_with_header,
         pages::user_detail_tabs::reports::{
-            format_status, reported_at_cell, reporter_label, type_and_category_cell,
+            format_status, report_tab_table, reported_at_cell, reporter_label,
+            type_and_category_cell,
         },
     },
 };
@@ -43,7 +44,7 @@ pub fn reports_tab(
                     }
                 }))
             } @else {
-                (data_table(
+                (report_tab_table(
                     &["Reported At", "Type / Category", "Reporter", "Status", "Actions"],
                     html! {
                         @for report in reports {
@@ -82,7 +83,7 @@ fn report_row(base: &str, report: &ReportEntry) -> Markup {
         tr class="hover:bg-neutral-50 transition-colors" {
             (reported_at_cell(base, report))
             (type_and_category_cell(report))
-            td class="px-4 py-3 text-sm [overflow-wrap:anywhere]" {
+            td class="px-2 py-3 text-sm [overflow-wrap:anywhere] [&_.whitespace-nowrap]:whitespace-normal xl:px-4 xl:[&_.whitespace-nowrap]:whitespace-nowrap" {
                 @if let Some(ref rid) = report.reporter_id {
                     a href={(base) "/users/" (rid)}
                         class="hover:underline" {
@@ -92,10 +93,13 @@ fn report_row(base: &str, report: &ReportEntry) -> Markup {
                     span { (reporter_label(report)) }
                 }
             }
-            td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900" {
+            td class="hidden whitespace-nowrap px-4 py-3 text-sm text-neutral-900 xl:table-cell" {
                 (format_status(report.status))
             }
-            td class="whitespace-nowrap px-4 py-3 text-sm" {
+            td class="whitespace-nowrap px-2 py-3 text-sm xl:px-4" {
+                div class="mb-1 text-neutral-900 xl:hidden" data-status-compact=(report.report_id) {
+                    (format_status(report.status))
+                }
                 a href={(base) "/reports/" (report.report_id)}
                     class="inline-flex items-center rounded-md border border-neutral-300 \
                            bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 \
@@ -138,14 +142,17 @@ mod tests {
             "{markup}"
         );
         assert!(markup.contains("Avery Reporter "), "{markup}");
-        assert_eq!(
-            markup.matches("whitespace-nowrap px-4").count(),
-            2,
+        assert!(
+            markup.contains(r#"<td class="hidden whitespace-nowrap px-4 py-3 text-sm text-neutral-900 xl:table-cell">Pending</td>"#),
+            "{markup}"
+        );
+        assert!(
+            markup.contains(r#"<div class="mb-1 text-neutral-900 xl:hidden" data-status-compact="1800000000000000006">Pending</div>"#),
             "{markup}"
         );
         assert!(markup.contains(">Pending<"), "{markup}");
         assert!(markup.contains(">View<"), "{markup}");
-        assert_eq!(markup.matches(">Spam<").count(), 1, "{markup}");
+        assert_eq!(markup.matches(">Spam<").count(), 2, "{markup}");
         assert!(markup.contains(r#"data-report-reason="spam""#), "{markup}");
     }
 }

@@ -2,9 +2,12 @@
 
 use crate::{
     acl,
-    api::types::{
-        AdminUser, GuildDetailInfo, ReportEntry, ReportFlowAnswerStepEntry, ReportFlowAnswersEntry,
-        ReportProfileSnapshot, ReportProfileSnapshotAsset,
+    api::{
+        generated::types::UpdateReportRequestResolution,
+        types::{
+            AdminUser, GuildDetailInfo, ReportEntry, ReportFlowAnswerStepEntry,
+            ReportFlowAnswersEntry, ReportProfileSnapshot, ReportProfileSnapshotAsset,
+        },
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -15,7 +18,9 @@ use crate::{
                 data_field, data_field_link_mono, data_field_mono, data_field_muted,
                 data_field_text,
             },
-            form::{FORM_CONTROL_CLASS, FORM_LABEL_CLASS, csrf_input, opt_out_checkbox},
+            form::{
+                FORM_CONTROL_CLASS, FORM_LABEL_CLASS, csrf_input, opt_out_checkbox, select_chevron,
+            },
             media::{guild_icon_url, initials, user_avatar_url},
             message_data::ordered_messages,
             message_list::{message_deletion_script, message_list},
@@ -576,19 +581,42 @@ fn actions_card(config: &AdminConfig, report: &ReportEntry, csrf_token: &str) ->
     }
 }
 
+const RESOLUTION_CHOICES: [(UpdateReportRequestResolution, &str); 3] = [
+    (UpdateReportRequestResolution::Actioned, "Action taken"),
+    (UpdateReportRequestResolution::NoViolation, "No violation"),
+    (UpdateReportRequestResolution::Duplicate, "Duplicate"),
+];
+
+pub fn resolution_choice(
+    value: Option<&str>,
+) -> Option<(UpdateReportRequestResolution, &'static str)> {
+    let value = value?.trim();
+    RESOLUTION_CHOICES
+        .into_iter()
+        .find(|(resolution, _)| resolution.to_string() == value)
+}
+
 fn resolve_report_form(base: &str, report_id: &str, csrf_token: &str) -> Markup {
     html! {
         form method="post" action={(base) "/reports/" (report_id) "/resolve"} class="flex flex-col gap-3"
             data-admin-refresh-on-success="#report-detail" {
             (csrf_input(csrf_token))
-            label for="resolution" class="block text-sm font-medium text-neutral-700" {
+            label for="resolution" class=(FORM_LABEL_CLASS) { "Resolution" }
+            div class="relative" {
+                select id="resolution" name="resolution" required
+                    class={(FORM_CONTROL_CLASS) " h-8 appearance-none px-3 py-1.5 pr-10"} {
+                    option value="" selected disabled { "Choose one" }
+                    @for (resolution, label) in RESOLUTION_CHOICES {
+                        option value=(resolution) { (label) }
+                    }
+                }
+                (select_chevron())
+            }
+            label for="public_comment" class=(FORM_LABEL_CLASS) {
                 "Public comment to the reporter (optional)"
             }
-            textarea id="resolution" name="resolution" rows="3" maxlength="512"
-                class="block w-full rounded-md border border-neutral-300 \
-                       px-3 py-2 text-sm shadow-sm \
-                       focus:border-brand-primary focus:outline-none \
-                       focus:ring-1 focus:ring-brand-primary" {}
+            textarea id="public_comment" name="public_comment" rows="3" maxlength="512"
+                class={(FORM_CONTROL_CLASS) " px-3 py-2"} {}
             (opt_out_checkbox("notify_reporter", "Include the public comment in the reporter notice"))
             p class="text-neutral-500 text-xs" data-resolve-notice-help="" {
                 "The reporter is told the report was resolved either way, unless their account is gone or barred from reporting. \
@@ -1142,6 +1170,7 @@ mod tests {
             api_endpoint: String::new(),
             media_endpoint: "https://media.example.test".to_owned(),
             static_cdn_endpoint: String::new(),
+            reports_bucket_origin: String::new(),
             admin_endpoint: String::new(),
             web_app_endpoint: String::new(),
             oauth_client_id: String::new(),
@@ -1741,7 +1770,7 @@ mod tests {
         let markup = resolve_report_form("/admin", "1500000000000000001", "csrf").into_string();
         assert!(markup.contains(r#"action="/admin/reports/1500000000000000001/resolve""#));
         assert!(markup.contains(r##"data-admin-refresh-on-success="#report-detail""##));
-        assert!(markup.contains(r#"name="resolution""#));
+        assert!(markup.contains(r#"<textarea id="public_comment" name="public_comment""#));
         assert!(markup.contains(r#"maxlength="512""#));
         assert!(markup.contains(r#"name="notify_reporter" value="true" checked"#));
         assert!(markup.contains(r#"name="notify_reporter_present" value="1""#));
@@ -1758,6 +1787,57 @@ mod tests {
             "{markup}"
         );
         assert!(!markup.contains("Notify the reporter"), "{markup}");
+    }
+
+    #[test]
+    fn resolve_form_requires_one_of_the_three_resolutions() {
+        let markup = resolve_report_form("/admin", "1500000000000000001", "csrf").into_string();
+        assert!(
+            markup.contains(r#"<select id="resolution" name="resolution" required"#),
+            "{markup}"
+        );
+        assert!(
+            markup.contains(r#"<option value="" selected disabled>Choose one</option>"#),
+            "{markup}"
+        );
+        let options: Vec<&str> = markup
+            .split("<option value=\"")
+            .skip(2)
+            .map(|option| option.split("</option>").next().unwrap_or(""))
+            .collect();
+        assert_eq!(
+            options,
+            [
+                r#"actioned">Action taken"#,
+                r#"no_violation">No violation"#,
+                r#"duplicate">Duplicate"#
+            ]
+        );
+    }
+
+    #[test]
+    fn resolution_choice_accepts_only_the_wire_values() {
+        assert_eq!(
+            resolution_choice(Some("actioned")),
+            Some((UpdateReportRequestResolution::Actioned, "Action taken"))
+        );
+        assert_eq!(
+            resolution_choice(Some(" no_violation ")),
+            Some((UpdateReportRequestResolution::NoViolation, "No violation"))
+        );
+        assert_eq!(
+            resolution_choice(Some("duplicate")),
+            Some((UpdateReportRequestResolution::Duplicate, "Duplicate"))
+        );
+        for missing in [
+            None,
+            Some(""),
+            Some("Action taken"),
+            Some("auto_resolved"),
+            Some("unspecified"),
+        ] {
+            assert_eq!(resolution_choice(missing), None, "{missing:?}");
+        }
     }
 
     #[test]

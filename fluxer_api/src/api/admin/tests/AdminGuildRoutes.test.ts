@@ -16,6 +16,19 @@ interface AdminGuildDetail {
 	} | null;
 }
 
+interface AdminGuildWarningDetail {
+	guild: {
+		nsfw: boolean;
+		content_warning_level: number;
+		content_warning_text: string | null;
+		channels: Array<{
+			nsfw_override: boolean | null;
+			content_warning_level: number;
+			content_warning_text: string | null;
+		}>;
+	} | null;
+}
+
 interface AdminGuildUpdate {
 	guild: {
 		id: string;
@@ -97,6 +110,30 @@ describe('Admin guild routes', () => {
 			'nsfw_level',
 			'owner_id',
 		]);
+	});
+	test('GET /admin/guilds/{guild_id} returns the adult content and content warning state', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup', 'guild:update:settings']);
+		const guild = await createGuild(harness, admin.token, `Warning Lookup Guild ${Date.now()}`);
+		const before = await createBuilder<AdminGuildWarningDetail>(harness, `${admin.token}`)
+			.get(`/admin/guilds/${guild.id}`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(before.guild).toMatchObject({nsfw: false, content_warning_level: 0, content_warning_text: null});
+		expect(before.guild?.channels.length).toBeGreaterThan(0);
+		for (const channel of before.guild?.channels ?? []) {
+			expect(channel).toMatchObject({nsfw_override: null, content_warning_level: 0, content_warning_text: null});
+		}
+		await createBuilder(harness, `${admin.token}`)
+			.patch(`/admin/guilds/${guild.id}`)
+			.body({nsfw: true, content_warning_level: 1, content_warning_text: 'Graphic content'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const after = await createBuilder<AdminGuildWarningDetail>(harness, `${admin.token}`)
+			.get(`/admin/guilds/${guild.id}`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(after.guild).toMatchObject({nsfw: true, content_warning_level: 1, content_warning_text: 'Graphic content'});
 	});
 	test('PATCH /admin/guilds/{guild_id} requires the ACL selected by every supplied field', async () => {
 		const admin = await createTestAccount(harness);

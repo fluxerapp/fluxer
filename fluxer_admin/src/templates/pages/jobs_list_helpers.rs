@@ -4,18 +4,28 @@ use crate::templates::components::{
     badge::{BadgeVariant, badge},
     table::{data_table, table_cell, table_row},
 };
+use crate::utils::timestamps::format_admin_timestamp;
 use maud::{Markup, html};
 
 pub(crate) fn status_badge(status: &str) -> Markup {
-    let variant = match status {
-        "queued" => BadgeVariant::Default,
-        "running" => BadgeVariant::Info,
-        "succeeded" => BadgeVariant::Success,
-        "failed" | "deadletter" => BadgeVariant::Danger,
-        "cancelled" => BadgeVariant::Warning,
-        _ => BadgeVariant::Default,
+    let (label, variant) = match status {
+        "queued" => ("Queued", BadgeVariant::Default),
+        "running" => ("Running", BadgeVariant::Info),
+        "succeeded" => ("Succeeded", BadgeVariant::Success),
+        "failed" => ("Failed", BadgeVariant::Danger),
+        "deadletter" => ("Dead-letter", BadgeVariant::Danger),
+        "cancelled" => ("Canceled", BadgeVariant::Warning),
+        other => (other, BadgeVariant::Default),
     };
-    badge(status, variant)
+    badge(label, variant)
+}
+
+pub(crate) fn job_time(value: &str) -> String {
+    match value {
+        "" | "\u{2014}" => "\u{2014}".to_owned(),
+        "immediate" => "Immediate".to_owned(),
+        other => format_admin_timestamp(other),
+    }
 }
 
 pub(crate) fn format_progress(job: &serde_json::Value) -> String {
@@ -82,7 +92,7 @@ pub(crate) fn job_row(base: &str, job: &serde_json::Value) -> Markup {
 
     table_row(html! {
         (table_cell(true, html! {
-            span class="whitespace-nowrap text-sm" { (created_at) }
+            span class="whitespace-nowrap text-sm" { (job_time(created_at)) }
         }))
         (table_cell(false, html! {
             a href={(base) "/jobs/" (job_id)}
@@ -184,5 +194,24 @@ pub(crate) fn next_page_link(
                 "Next page"
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::status_badge;
+
+    #[test]
+    fn status_badges_use_us_spelling_and_readable_labels() {
+        let canceled = status_badge("cancelled").into_string();
+        assert!(canceled.contains(">Canceled<"));
+        assert!(!canceled.contains("Cancelled"));
+        assert!(
+            status_badge("deadletter")
+                .into_string()
+                .contains(">Dead-letter<")
+        );
+        assert!(status_badge("running").into_string().contains(">Running<"));
+        assert!(status_badge("mystery").into_string().contains(">mystery<"));
     }
 }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::plural::count_noun;
 use crate::{
     api::types::GuildInfo,
     config::AdminConfig,
@@ -97,7 +98,7 @@ pub fn guilds_list_page(
             } @else if let Some(count) = result_state.total {
                 (page_header_with_actions("Guilds", None, html! {
                     p class="text-sm font-normal text-neutral-500" {
-                        "Found " (count) (if count == 1 { " result" } else { " results" }) " (showing "
+                        "Found " (count_noun(count, "result", "results")) " (showing "
                         (result_state.guilds.map(|guilds| guilds.len()).unwrap_or_default())
                         ")"
                     }

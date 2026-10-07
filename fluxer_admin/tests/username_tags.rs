@@ -226,6 +226,7 @@ fn test_config(api_endpoint: String, self_hosted: bool) -> AdminConfig {
         api_endpoint,
         media_endpoint: "https://media.example.test".to_owned(),
         static_cdn_endpoint: "https://static.example.test".to_owned(),
+        reports_bucket_origin: String::new(),
         admin_endpoint: "https://admin.example.test".to_owned(),
         web_app_endpoint: "https://app.example.test".to_owned(),
         oauth_client_id: "admin-client".to_owned(),

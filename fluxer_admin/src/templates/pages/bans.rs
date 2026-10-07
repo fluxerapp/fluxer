@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::plural::count_noun;
 use crate::{
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -35,7 +36,7 @@ pub fn ip_ban_duration_label(hours: u32) -> String {
         .iter()
         .find(|(value, _)| *value == hours)
         .map_or_else(
-            || format!("{hours} hours"),
+            || count_noun(u64::from(hours), "hour", "hours"),
             |(_, label)| (*label).to_owned(),
         )
 }
