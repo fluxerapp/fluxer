@@ -1,3 +1,10 @@
+Как вам идея вернуть issues и discussions? А то я не очень хочу регистрироваться на каком-то левом сайте, чтобы просто писать о багах
+
+Ну или хотя бы отключить регистрацию
+
+<img width="486" height="682" alt="image_proxy" src="https://github.com/user-attachments/assets/face6aae-6c75-447d-a66f-479ea6c58f05" />
+
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./fluxer_static/marketing/branding/logo-white.svg">
