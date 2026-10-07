@@ -82,6 +82,13 @@ async function loadFileDownloads({registerOrigin = true} = {}) {
 			createChildLogger: () => ({debug() {}, info() {}, warn() {}, error() {}}),
 		},
 		'@fluxer/instance_bootstrap/src/NetworkOrigin': {normalizeHTTPNetworkOrigin: (value) => new URL(value).origin},
+		'@electron/main/DesktopSessionHTTP': {
+			isDirectProxyRoute: (route) => route === 'DIRECT',
+			resolveDesktopSessionProxy: async () => 'DIRECT',
+			sendThroughDesktopSession: async () => {
+				throw new Error('a direct route never reaches the session');
+			},
+		},
 	};
 	const sandbox = {
 		console,

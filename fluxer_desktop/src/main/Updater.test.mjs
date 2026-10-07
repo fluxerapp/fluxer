@@ -143,6 +143,7 @@ function loadUpdater({
 		'@electron/common/DesktopIdentity': {DESKTOP_ARTIFACT_PRODUCT_NAME: 'Fluxer-Canary'},
 		'@electron/common/UserDataPath': {isPortableMode: () => false},
 		'@electron/main/DesktopTray': {destroyDesktopTray() {}},
+		'@electron/main/ModuleNetworkFetch': {moduleNetworkFetch: (input, init) => sandbox.fetch(input, init)},
 		'@electron/main/LinuxSandbox': {isFlatpakRuntime: () => false},
 		'@electron/main/Troubleshooting': {
 			relaunchAndExit() {
@@ -164,6 +165,7 @@ function loadUpdater({
 				exit() {},
 			},
 			autoUpdater: {on() {}},
+			net: {fetch: (input, init) => sandbox.fetch(input, init)},
 			ipcMain: {
 				handle(channel, handler) {
 					handlers.set(channel, handler);

@@ -74,6 +74,9 @@ export const NATIVE_GATEWAY_TRANSPORT_CHANNELS = Object.freeze({
 	isAvailable: 'native-gateway-transport:is-available',
 } as const);
 
+export const NATIVE_GATEWAY_TRANSPORT_PROXIED_MESSAGE =
+	'The native gateway transport cannot reach a gateway that resolves through a proxy';
+
 export const NATIVE_GATEWAY_TRANSPORT_EVENT_CHANNEL = 'native-gateway-transport:event';
 
 export const NATIVE_GATEWAY_TRANSPORT_AVAILABLE_RENDERER_ARG = '--fluxer-native-gateway-available=1';

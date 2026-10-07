@@ -14,7 +14,7 @@ import {
 	DICTIONARY_SOURCES,
 	type SpellcheckDictionaryCatalogEntry,
 } from '@electron/main/SpellcheckDictionaries';
-import {app, ipcMain, type Session, type WebContents} from 'electron';
+import {app, ipcMain, net, type Session, type WebContents} from 'electron';
 import log from 'electron-log';
 import {franc} from 'franc-min';
 import {type Hunspell, type HunspellFactory, loadModule} from 'hunspell-asm';
@@ -280,7 +280,7 @@ const downloadDictionaryFile = async (
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), DICTIONARY_DOWNLOAD_TIMEOUT_MS);
 	try {
-		const response = await fetch(dictionaryFileUrl(dict, fileName), {
+		const response = await net.fetch(dictionaryFileUrl(dict, fileName), {
 			headers: {
 				Accept: 'application/octet-stream,*/*;q=0.8',
 			},

@@ -8,6 +8,13 @@ import {isIPv4, isIPv6, type LookupFunction} from 'node:net';
 import {Readable, Transform} from 'node:stream';
 import type {ReadableStream as NodeReadableStream} from 'node:stream/web';
 import {createChildLogger} from '@electron/common/Logger';
+import {
+	type DesktopProxyResolver,
+	type DesktopSessionHTTPSender,
+	isDirectProxyRoute,
+	resolveDesktopSessionProxy,
+	sendThroughDesktopSession,
+} from '@electron/main/DesktopSessionHTTP';
 import {normalizeHTTPNetworkOrigin} from '@fluxer/instance_bootstrap/src/NetworkOrigin';
 
 const logger = createChildLogger('DesktopOutboundHTTP');
@@ -120,6 +127,8 @@ interface DesktopAnchoredOriginRegistration {
 
 interface DesktopOutboundHTTPOptions {
 	readonly resolveHostAddresses?: DesktopHostAddressResolver;
+	readonly resolveProxy?: DesktopProxyResolver;
+	readonly sendThroughSession?: DesktopSessionHTTPSender;
 }
 
 interface DesktopOutboundGETRequest {
@@ -130,7 +139,7 @@ interface DesktopOutboundGETRequest {
 
 export interface DesktopOutboundHTTPMessage {
 	readonly headers: http.IncomingHttpHeaders;
-	readonly message: http.IncomingMessage;
+	readonly message: Readable;
 	readonly status: number;
 	readonly statusText: string;
 	readonly url: URL;
@@ -432,6 +441,11 @@ function isPublicPinnedAddress(pinned: PinnedAddress): boolean {
 	return pinned.family === 4 ? isPublicIPv4Address(pinned.address) : isPublicIPv6Address(pinned.address);
 }
 
+function proxiedHostScope(hostname: string): DesktopOriginAddressScope {
+	const literal = parseIPAddress(hostname);
+	return literal == null ? DesktopOriginAddressScope.PUBLIC : addressScope(literal);
+}
+
 export function requireDesktopHTTPOrigin(value: string): string {
 	const normalized = normalizeHTTPNetworkOrigin(value);
 	if (normalized == null) {
@@ -687,6 +701,17 @@ function createRequestBodyLimit(maximumBytes: number): Transform {
 	});
 }
 
+interface DesktopProxiedSend {
+	readonly body: Uint8Array | Readable | null;
+	readonly headers: Readonly<Record<string, string>>;
+	readonly method: string;
+	readonly release: () => void;
+	readonly signal: AbortSignal | null;
+	readonly target: URL;
+	readonly timeout: () => Error;
+	readonly timeoutMs: number;
+}
+
 export class DesktopOutboundHTTP {
 	private readonly httpAgent = new http.Agent({keepAlive: true, maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS});
 	private readonly httpsAgent = new https.Agent({keepAlive: true, maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS});
@@ -703,6 +728,8 @@ export class DesktopOutboundHTTP {
 	private readonly registeredRequirements = new Map<string, DesktopAddressRequirement>();
 	private readonly originRequestsInFlightByService = new Map<string, number>();
 	private readonly resolveHostAddresses: DesktopHostAddressResolver;
+	private readonly resolveProxy: DesktopProxyResolver;
+	private readonly sendThroughSession: DesktopSessionHTTPSender;
 	private inFlight = 0;
 	private originRequestsInFlight = 0;
 	private activeResolutions = 0;
@@ -710,6 +737,8 @@ export class DesktopOutboundHTTP {
 
 	public constructor(options: DesktopOutboundHTTPOptions = {}) {
 		this.resolveHostAddresses = options.resolveHostAddresses ?? lookupAllAddresses;
+		this.resolveProxy = options.resolveProxy ?? resolveDesktopSessionProxy;
+		this.sendThroughSession = options.sendThroughSession ?? sendThroughDesktopSession;
 	}
 
 	public async get(request: DesktopOutboundGETRequest): Promise<DesktopOutboundHTTPMessage> {
@@ -729,6 +758,15 @@ export class DesktopOutboundHTTP {
 			const requirement = this.registeredRequirements.get(request.url.origin) ?? DesktopAddressRequirement.PUBLIC;
 			if (requirement === DesktopAddressRequirement.PUBLIC && request.url.protocol !== 'https:') {
 				throw blocked(DesktopOutboundBlockReason.INSECURE_TRANSPORT, request.context, request.url.hostname);
+			}
+			if (!(await this.routesDirect(request.url))) {
+				if (
+					requirement === DesktopAddressRequirement.PUBLIC &&
+					proxiedHostScope(request.url.hostname) !== DesktopOriginAddressScope.PUBLIC
+				) {
+					throw blocked(DesktopOutboundBlockReason.NON_PUBLIC_ADDRESS, request.context, request.url.hostname);
+				}
+				return await this.issueProxied(request, release);
 			}
 			const pinned = await this.pinAddress(request.url.hostname, requirement, request.context);
 			return await this.issue(request, pinned, release);
@@ -779,6 +817,11 @@ export class DesktopOutboundHTTP {
 		canonicalAnchor: string,
 		unresolvedAnchorRequirement: DesktopAddressRequirement | null,
 	): Promise<DesktopAddressRequirement> {
+		if (!(await this.routesDirect(new URL(canonicalAnchor)))) {
+			return proxiedHostScope(new URL(canonicalAnchor).hostname) === DesktopOriginAddressScope.PUBLIC
+				? DesktopAddressRequirement.PUBLIC
+				: DesktopAddressRequirement.ANY;
+		}
 		let anchor: DesktopOriginAddressBinding;
 		try {
 			anchor = await this.ensureBinding(canonicalAnchor, DesktopAddressRequirement.ANY);
@@ -825,6 +868,17 @@ export class DesktopOutboundHTTP {
 			throw new DesktopOutboundHTTPRequestBodyLimitError(maximumRequestBodyBytes);
 		}
 		const requirement = this.requirementFor(origin, request.originTrust);
+		if (!(await this.routesDirect(target))) {
+			const scope = proxiedHostScope(target.hostname);
+			if (requirement === DesktopAddressRequirement.PUBLIC && scope !== DesktopOriginAddressScope.PUBLIC) {
+				throw new DesktopOutboundHTTPPublicAddressRequiredError(origin);
+			}
+			if (scope === DesktopOriginAddressScope.PUBLIC && target.protocol !== 'https:') {
+				throw new DesktopOutboundHTTPInsecureTransportError(origin);
+			}
+			this.requireAdmission();
+			return await this.issueProxiedOriginRequest(request, target);
+		}
 		const binding = await this.ensureBinding(origin, requirement);
 		if (binding.scope === DesktopOriginAddressScope.PUBLIC && target.protocol !== 'https:') {
 			throw new DesktopOutboundHTTPInsecureTransportError(origin);
@@ -858,6 +912,107 @@ export class DesktopOutboundHTTP {
 		this.bindings.clear();
 		this.registeredRequirements.clear();
 		this.originRequestsInFlightByService.clear();
+	}
+
+	private async routesDirect(url: URL): Promise<boolean> {
+		return isDirectProxyRoute(await this.resolveProxy(url.href));
+	}
+
+	private issueProxied(request: DesktopOutboundGETRequest, release: () => void): Promise<DesktopOutboundHTTPMessage> {
+		return this.sendProxied({
+			body: null,
+			headers: {},
+			method: 'GET',
+			signal: null,
+			target: request.url,
+			timeout: () => new DesktopOutboundHTTPTimeoutError(),
+			timeoutMs: request.timeoutMs,
+			release,
+		}).catch((error: unknown) => {
+			if (error instanceof DesktopOutboundHTTPTimeoutError) {
+				throw error;
+			}
+			logger.warn('Outbound request failed', {context: request.context, hostname: request.url.hostname, error});
+			throw new DesktopOutboundHTTPTransportError();
+		});
+	}
+
+	private issueProxiedOriginRequest(
+		request: DesktopOutboundHTTPRequest,
+		target: URL,
+	): Promise<DesktopOutboundHTTPMessage> {
+		this.acquireSlot(request.serviceName);
+		let released = false;
+		const release = (): void => {
+			if (released) {
+				return;
+			}
+			released = true;
+			this.releaseSlot(request.serviceName);
+		};
+		return this.sendProxied({
+			body: this.proxiedRequestBody(request),
+			headers: requestHeaders(request.headers),
+			method: request.method,
+			signal: request.signal,
+			target,
+			timeout: () => new DesktopOutboundHTTPRequestTimeoutError(target.toString(), request.timeoutMs),
+			timeoutMs: request.timeoutMs,
+			release,
+		}).catch((error: unknown) => {
+			if (request.signal?.aborted === true) {
+				throw new DesktopOutboundHTTPRequestAbortedError(target.toString());
+			}
+			throw error;
+		});
+	}
+
+	private async sendProxied({
+		body,
+		headers,
+		method,
+		signal,
+		target,
+		timeout,
+		timeoutMs,
+		release,
+	}: DesktopProxiedSend): Promise<DesktopOutboundHTTPMessage> {
+		const deadline = new AbortController();
+		const timer = setTimeout(() => deadline.abort(timeout()), timeoutMs);
+		timer.unref();
+		const settle = (): void => {
+			clearTimeout(timer);
+			release();
+		};
+		try {
+			const response = await this.sendThroughSession({
+				body,
+				headers,
+				method,
+				signal: signal == null ? deadline.signal : AbortSignal.any([deadline.signal, signal]),
+				url: target,
+			});
+			response.message.on('end', settle);
+			response.message.on('close', settle);
+			response.message.on('error', settle);
+			return {...response, url: target};
+		} catch (error) {
+			settle();
+			throw error;
+		}
+	}
+
+	private proxiedRequestBody(request: DesktopOutboundHTTPRequest): Uint8Array | Readable | null {
+		const body = request.body;
+		if (body == null || body instanceof Uint8Array) {
+			return body;
+		}
+		const limit = createRequestBodyLimit(
+			request.maximumRequestBodyBytes ?? DESKTOP_OUTBOUND_HTTP_MAX_REQUEST_BODY_BYTES,
+		);
+		const source = Readable.fromWeb(body as unknown as NodeReadableStream<Uint8Array>);
+		source.on('error', (error: Error) => limit.destroy(error));
+		return source.pipe(limit);
 	}
 
 	private async pinAddress(

@@ -414,7 +414,7 @@ function contentEncoding(incoming: http.IncomingHttpHeaders): string | null {
 	return normalized.length === 0 ? null : normalized;
 }
 
-function decodedMessageStream(message: http.IncomingMessage, encoding: string | null): Readable {
+function decodedMessageStream(message: Readable, encoding: string | null): Readable {
 	if (encoding == null || encoding === 'identity') {
 		return message;
 	}

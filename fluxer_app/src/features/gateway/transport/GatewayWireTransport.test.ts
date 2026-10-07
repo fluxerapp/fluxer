@@ -9,9 +9,10 @@ import {
 	isDesktopNativeGatewayTransportAvailable,
 } from '@app/features/gateway/transport/GatewayWireTransport';
 import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
-import type {
-	NativeGatewayTransportAPI,
-	NativeGatewayTransportEvent,
+import {
+	NATIVE_GATEWAY_TRANSPORT_PROXIED_MESSAGE,
+	type NativeGatewayTransportAPI,
+	type NativeGatewayTransportEvent,
 } from '@fluxer/desktop_ipc/src/GatewayTransportContract';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
@@ -431,7 +432,7 @@ describe('native transport fallback', () => {
 	test('native creates the shell refuses count toward the fallback', async () => {
 		const stub = createNativeGatewayTransportStub({
 			create: async () => {
-				throw new Error('The native gateway transport cannot reach a gateway that resolves through a proxy');
+				throw new Error('The native gateway transport addon is unavailable');
 			},
 		});
 		installElectronAPI(stub.api);
@@ -450,6 +451,28 @@ describe('native transport fallback', () => {
 		expect(createGatewayWireTransport('wss://gateway.example/', {binaryType: 'arraybuffer'}).kind).toBe(
 			GatewayWireTransportKind.BROWSER,
 		);
+	});
+
+	test('a gateway the shell routes through a proxy switches new transports to the browser at once', async () => {
+		const stub = createNativeGatewayTransportStub({
+			create: async () => {
+				throw new Error(
+					`Error invoking remote method 'native-gateway-transport:create': Error: ${NATIVE_GATEWAY_TRANSPORT_PROXIED_MESSAGE}`,
+				);
+			},
+		});
+		installElectronAPI(stub.api);
+
+		const transport = createGatewayWireTransport('wss://gateway.example/', {binaryType: 'arraybuffer'});
+		expect(transport.kind).toBe(GatewayWireTransportKind.DESKTOP_NATIVE);
+		transport.on('error', () => undefined);
+		transport.start();
+		await flush();
+
+		const next = createGatewayWireTransport('wss://gateway.example/', {binaryType: 'arraybuffer'});
+		expect(next.kind).toBe(GatewayWireTransportKind.BROWSER);
+		next.start();
+		expect(FakeWebSocket.instances.map((socket) => socket.url)).toEqual(['wss://gateway.example/']);
 	});
 
 	test('an open between failures resets the count', async () => {

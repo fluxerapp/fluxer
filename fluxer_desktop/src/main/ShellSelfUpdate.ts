@@ -10,6 +10,7 @@ import {
 	stageAppImageUpdate,
 } from '@electron/main/AppImageUpdate';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
+import {moduleNetworkFetch} from '@electron/main/ModuleNetworkFetch';
 import {compareModuleVersions, parseModuleVersion} from '@electron/main/ModuleVersion';
 import {getUpdateBaseUrl} from '@electron/main/ShellDownloadFormats';
 import type {ShellUpdateCapability, ShellUpdatePlan} from '@electron/main/ShellUpdateCapability';
@@ -18,7 +19,7 @@ import {
 	readVelopackApplyAttempt,
 	recordVelopackApplyAttempt,
 } from '@electron/main/UpdaterApplyState';
-import {app, autoUpdater} from 'electron';
+import {app, autoUpdater, net} from 'electron';
 import type {UpdateInfo, VelopackAsset} from 'velopack';
 
 const requireModule = createRequire(import.meta.url);
@@ -148,7 +149,7 @@ async function runVelopackSelfUpdate(control: SelfUpdateControl, hooks: ShellSel
 }
 
 async function fetchPublishedAppImage(): Promise<{version: string; sha256: string | null}> {
-	const response = await fetch(`${getUpdateBaseUrl()}/latest`, {
+	const response = await net.fetch(`${getUpdateBaseUrl()}/latest`, {
 		cache: 'no-store',
 		headers: {Accept: 'application/json', 'Cache-Control': 'no-cache'},
 	});
@@ -199,6 +200,7 @@ async function runAppImageSelfUpdate(
 			target,
 			url: `${getUpdateBaseUrl()}/${published.version}/appimage`,
 			expectedSha256: published.sha256,
+			fetchImpl: moduleNetworkFetch,
 			onProgress: ({transferred, total}) => {
 				if (control.isSettled() || total <= 0) return;
 				hooks.onDownloading(Math.min(100, (transferred / total) * 100));

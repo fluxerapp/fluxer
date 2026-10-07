@@ -153,7 +153,8 @@ export function installElectronStub(extra = {}) {
 		}
 	}
 	const nativeTheme = {themeSource: 'system'};
-	state.electron = {nativeTheme, webContents, webFrameMain, ...extra, app};
+	const session = {defaultSession: {resolveProxy: async () => 'DIRECT'}};
+	state.electron = {nativeTheme, session, webContents, webFrameMain, ...extra, app};
 	return registry;
 }
 

@@ -166,14 +166,13 @@ export async function stageAppImageUpdate(options: {
 	url: string;
 	expectedSha256: string;
 	onProgress?: (progress: AppImageDownloadProgress) => void;
-	fetchImpl?: typeof fetch;
+	fetchImpl: typeof fetch;
 }): Promise<StagedAppImageUpdate> {
 	const expected = options.expectedSha256.trim().toLowerCase();
 	if (!SHA256_PATTERN.test(expected)) {
 		throw new Error('Update checksum is missing or malformed.');
 	}
-	const fetchImpl = options.fetchImpl ?? fetch;
-	const response = await fetchImpl(options.url, {cache: 'no-store', redirect: 'follow'});
+	const response = await options.fetchImpl(options.url, {cache: 'no-store', redirect: 'follow'});
 	if (!response.ok || response.body == null) {
 		throw new Error(`Update download failed: ${response.status}`);
 	}

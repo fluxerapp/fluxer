@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {getDesktopOutboundHTTP} from '@electron/main/DesktopOutboundHTTP';
+import {isDirectProxyRoute} from '@electron/main/DesktopSessionHTTP';
 import type {GatewayOriginRegistry} from '@electron/main/GatewayOriginRegistry';
 import {
 	createGatewaySocketBoundary,
@@ -28,6 +29,7 @@ import {
 	NATIVE_GATEWAY_TRANSPORT_CHANNELS,
 	NATIVE_GATEWAY_TRANSPORT_EVENT_CHANNEL,
 	NATIVE_GATEWAY_TRANSPORT_MAX_CONNECTIONS_PER_DOCUMENT,
+	NATIVE_GATEWAY_TRANSPORT_PROXIED_MESSAGE,
 	type NativeGatewayTransportCreateResult,
 	type NativeGatewayTransportEvent,
 	NativeGatewayTransportEventKind,
@@ -61,7 +63,7 @@ class NativeGatewayTransportUnavailableError extends Error {
 
 class NativeGatewayTransportProxiedError extends Error {
 	public constructor() {
-		super('The native gateway transport cannot reach a gateway that resolves through a proxy');
+		super(NATIVE_GATEWAY_TRANSPORT_PROXIED_MESSAGE);
 		this.name = 'NativeGatewayTransportProxiedError';
 	}
 }
@@ -263,7 +265,7 @@ export class DesktopNativeGatewayTransport {
 
 	private async requireDirectRoute(event: RendererDocumentIpcEvent, url: string): Promise<void> {
 		const route = await this.dependencies.resolveProxy(event, url.replace(/^ws/u, 'http'));
-		if (route.trim() !== 'DIRECT') {
+		if (!isDirectProxyRoute(route)) {
 			throw new NativeGatewayTransportProxiedError();
 		}
 	}

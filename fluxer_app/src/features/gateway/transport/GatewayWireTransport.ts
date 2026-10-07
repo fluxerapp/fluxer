@@ -6,6 +6,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {
+	NATIVE_GATEWAY_TRANSPORT_PROXIED_MESSAGE,
 	type NativeGatewayTransportAPI,
 	type NativeGatewayTransportCloseRequest,
 	type NativeGatewayTransportEvent,
@@ -433,7 +434,11 @@ class DesktopNativeGatewayWireTransport extends BaseGatewayWireTransport {
 
 	private failOpen(error: unknown): void {
 		if (this.disposed) return;
-		recordNativeGatewayFailureWithoutOpen();
+		if (describeError(error).includes(NATIVE_GATEWAY_TRANSPORT_PROXIED_MESSAGE)) {
+			switchProxiedGatewayToBrowserTransport();
+		} else {
+			recordNativeGatewayFailureWithoutOpen();
+		}
 		this.abandonNativeConnection();
 		this.emitTransportFailure(error);
 	}
@@ -598,6 +603,13 @@ function recordNativeGatewayFailureWithoutOpen(): void {
 			`Desktop native gateway transport failed ${state.nativeFailuresWithoutOpen} times before opening, using the browser transport`,
 		);
 	}
+}
+
+function switchProxiedGatewayToBrowserTransport(): void {
+	const state = getRouterState();
+	if (isNativeGatewayFallbackActive(state)) return;
+	state.nativeFailuresWithoutOpen = NATIVE_GATEWAY_FAILURES_BEFORE_BROWSER_FALLBACK;
+	log.warn('Desktop native gateway transport cannot use the configured proxy, using the browser transport');
 }
 
 function createDesktopConnectionId(): string {
