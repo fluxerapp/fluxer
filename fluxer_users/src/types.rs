@@ -5,6 +5,8 @@ use fluxer_common::user_flags::{AccountStanding, USER_FLAG_STAFF, visible_user_f
 #[cfg(test)]
 use fluxer_common::user_flags::{USER_FLAG_PARTNER, USER_FLAG_STAFF_HIDDEN};
 use serde::{Deserialize, Deserializer, Serialize};
+#[cfg(feature = "scylla")]
+use scylla::DeserializeRow;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "op")]
@@ -133,6 +135,18 @@ pub struct UserPartial {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PersonaPartial {
+    pub persona_id: i64,
+		pub owner_id: i64,
+		pub internal_name: String,
+		pub display_name: Option<String>,
+		pub avatar_hash: Option<String>,
+		pub pronouns: Option<String>,
+		pub accent_color: Option<i32>
+}
+
+#[cfg(feature = "scylla")]
+#[derive(Debug, Clone, Serialize, Deserialize, DeserializeRow)]
+pub struct PersonaPartialScyllaRow {
     pub persona_id: i64,
 		pub owner_id: i64,
 		pub internal_name: String,
@@ -272,6 +286,21 @@ where
         I64OrString::Number(value) => Ok(value),
         I64OrString::String(value) => value.parse::<i64>().map_err(serde::de::Error::custom),
     }
+}
+
+#[cfg(feature = "scylla")]
+impl From<PersonaPartialScyllaRow> for PersonaPartial {
+	fn from(value: PersonaPartialScyllaRow) -> Self {
+			PersonaPartial {
+					persona_id: value.persona_id,
+					owner_id: value.owner_id,
+					internal_name: value.internal_name,
+					display_name: value.display_name,
+					avatar_hash: value.avatar_hash,
+					pronouns: value.pronouns,
+					accent_color: value.accent_color
+			}
+	}
 }
 
 #[cfg(test)]

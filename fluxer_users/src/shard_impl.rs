@@ -2,6 +2,8 @@
 
 use crate::types::{ApiUserPartial, PersonaPartial, User, UserPartial, UserRequest, UserResponse, now_ms};
 #[cfg(feature = "scylla")]
+use crate::types::PersonaPartialScyllaRow;
+#[cfg(feature = "scylla")]
 use chrono::{DateTime, NaiveDate, Utc};
 use fluxer_common::user_flags::AccountStanding;
 use fluxer_svc::shard::ShardService;
@@ -656,7 +658,7 @@ impl UsersStorage {
         match self {
             UsersStorage::Postgres(storage) => storage.fetch_partial_persona(persona_id).await,
             #[cfg(feature = "scylla")]
-            UsersStorage::Scylla(storage) => todo!("Persona fetch has not been implemented for Scylla yet"),
+            UsersStorage::Scylla(storage) => storage.fetch_partial_persona(persona_id).await,
         }
     }
 
@@ -746,13 +748,16 @@ impl ScyllaUsersStorage {
             .collect::<Vec<_>>())
     }
 
-		async fn fetch_partial_persona(&self, user_id: i64) -> anyhow::Result<Option<UserPartial>> {
+		async fn fetch_partial_persona(&self, user_id: i64) -> anyhow::Result<Option<PersonaPartial>> {
         let result = self
             .db
-            .execute_unpaged(&self.stmt_partial, (user_id,))
+            .execute_unpaged(&self.stmt_partial_persona, (user_id,))
             .await?;
         let rows = result.into_rows_result()?;
-        let partial = rows.maybe_first_row::<PartialUserDbRow>()?.map(Into::into);
+        //let partial = rows.maybe_first_row::<PersonaPartial>()?.map(Into::into);
+				let partial = rows
+            .maybe_first_row::<PersonaPartialScyllaRow>()?
+            .map(|row| PersonaPartial::from(row));
         Ok(partial)
     }
 }
