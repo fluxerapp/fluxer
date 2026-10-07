@@ -491,13 +491,14 @@ async fn channel_threads_section_renders_and_saves_through_htmx_toasts() {
     let app = setup().await;
     let (headers, body) = get_with_headers(&app, "/instance-config", &[]).await;
     assert_full_layout(&body);
-    assert!(body.contains("Channel threads"), "{body}");
-    assert!(body.contains("Config version 3"), "{body}");
-    assert!(body.contains("Ever enabled"), "{body}");
-    assert!(body.contains("1600000000000000001"), "{body}");
-    assert!(body.contains("1500000000000000009"), "{body}");
+    assert!(body.contains("Threads and forums"), "{body}");
+    assert!(body.contains("Available to everyone"), "{body}");
     assert!(
-        body.contains("Excluded bots are blind to threads, including moderation bots."),
+        body.contains(r#"name="channel_threads_everyone""#),
+        "{body}"
+    );
+    assert!(
+        !body.contains("channel_threads_guild_basis_points"),
         "{body}"
     );
     let csrf_token = csrf_cookie(&headers)
@@ -509,17 +510,9 @@ async fn channel_threads_section_renders_and_saves_through_htmx_toasts() {
         ("Cookie", cookie.as_str()),
     ];
 
-    for (form, expected) in [
-        (
-            format!(
-                "_csrf={csrf_token}&channel_threads_enabled=true&channel_threads_guild_basis_points=0&channel_threads_enabled_guild_ids=1600000000000000001&channel_threads_user_basis_points=10000"
-            ),
-            "Instance config updated",
-        ),
-        (
-            format!("_csrf={csrf_token}&channel_threads_enabled_guild_ids=not-a-guild"),
-            "Enabled guild IDs entry 1 must contain 1 to 20 decimal digits",
-        ),
+    for form in [
+        format!("_csrf={csrf_token}&channel_threads_everyone=true"),
+        format!("_csrf={csrf_token}"),
     ] {
         let (status, response_headers, response_body) = post_form_with_headers(
             &app,
@@ -533,7 +526,7 @@ async fn channel_threads_section_renders_and_saves_through_htmx_toasts() {
             .get("X-Fluxer-Admin-Toast")
             .and_then(|value| value.to_str().ok())
             .unwrap_or_else(|| panic!("missing toast header\n{response_body}"));
-        assert!(toast.contains(expected), "{toast}");
+        assert!(toast.contains("Instance config updated"), "{toast}");
     }
 }
 
