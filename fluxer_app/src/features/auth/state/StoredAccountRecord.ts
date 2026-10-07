@@ -90,14 +90,6 @@ function readUserData(value: unknown): UserData | undefined {
 	if (typeof source.username !== 'string' || typeof source.discriminator !== 'string') {
 		throw new StoredAccountRuntimeRecoveryError('Stored account user data must contain a username and discriminator');
 	}
-	const localAvatarSize = source.localAvatarSize;
-	if (
-		localAvatarSize !== undefined &&
-		localAvatarSize !== null &&
-		(typeof localAvatarSize !== 'number' || !Number.isFinite(localAvatarSize))
-	) {
-		throw new StoredAccountRuntimeRecoveryError('Stored account local avatar size must be finite, null, or absent');
-	}
 	const userData: UserData = {
 		username: source.username,
 		discriminator: source.discriminator,
@@ -110,19 +102,6 @@ function readUserData(value: unknown): UserData | undefined {
 	}
 	if (Object.hasOwn(source, 'avatar')) {
 		userData.avatar = readOptionalNullableString(source, 'avatar', 'Stored account avatar');
-	}
-	if (Object.hasOwn(source, 'localAvatarHash')) {
-		userData.localAvatarHash = readOptionalNullableString(
-			source,
-			'localAvatarHash',
-			'Stored account local avatar hash',
-		);
-	}
-	if (Object.hasOwn(source, 'localAvatarURL')) {
-		userData.localAvatarURL = readOptionalNullableString(source, 'localAvatarURL', 'Stored account local avatar URL');
-	}
-	if (Object.hasOwn(source, 'localAvatarSize')) {
-		userData.localAvatarSize = localAvatarSize;
 	}
 	return userData;
 }

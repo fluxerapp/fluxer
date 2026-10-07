@@ -20,9 +20,6 @@ export interface UserData {
 	globalName?: string | null;
 	email?: string | null;
 	avatar?: string | null;
-	localAvatarHash?: string | null;
-	localAvatarURL?: string | null;
-	localAvatarSize?: number | null;
 }
 
 export interface AccountPresenceIntent {
