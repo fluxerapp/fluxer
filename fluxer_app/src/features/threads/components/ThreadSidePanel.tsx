@@ -61,7 +61,11 @@ const ThreadMembersButton = observer(({thread}: {thread: Channel}) => {
 			position="bottom-end"
 			render={() => (
 				<div className={styles.membersPopout} data-flx="threads.thread-side-panel.members-popout">
-					<MemberListContainer channelId={thread.id} data-flx="threads.thread-side-panel.member-list-container">
+					<MemberListContainer
+						channelId={thread.id}
+						className={styles.membersPopoutList}
+						data-flx="threads.thread-side-panel.member-list-container"
+					>
 						<ThreadMembersList thread={thread} data-flx="threads.thread-side-panel.thread-members-list" />
 					</MemberListContainer>
 				</div>
