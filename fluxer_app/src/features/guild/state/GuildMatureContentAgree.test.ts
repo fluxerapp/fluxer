@@ -37,7 +37,9 @@ function put(channel: WireChannel): void {
 
 beforeEach(() => {
 	channels.clear();
-	GuildMatureContentAgree.reset();
+	GuildMatureContentAgree.revokeChannel('parent');
+	GuildMatureContentAgree.revokeChannel('forum');
+	GuildMatureContentAgree.revokeCategory('category');
 	put({id: 'category', guild_id: 'guild', type: ChannelTypes.GUILD_CATEGORY, nsfw_override: null});
 	put({id: 'parent', guild_id: 'guild', type: ChannelTypes.GUILD_TEXT, parent_id: 'category', nsfw_override: null});
 	put({id: 'thread', guild_id: 'guild', type: ChannelTypes.PUBLIC_THREAD, parent_id: 'parent'});

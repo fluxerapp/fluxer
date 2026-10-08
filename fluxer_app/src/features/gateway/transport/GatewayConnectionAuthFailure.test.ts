@@ -107,8 +107,6 @@ vi.mock('@app/features/app/state/RuntimeCrash', () => ({default: {triggerFatalCr
 
 vi.mock('@app/features/expressions/state/FavoriteMemes', () => ({default: {reset: vi.fn()}}));
 
-vi.mock('@app/features/guild/state/GuildMatureContentAgree', () => ({default: {reset: vi.fn()}}));
-
 vi.mock('@app/features/member/state/MemberSearch', () => ({default: {handleLogout: vi.fn()}}));
 
 vi.mock('@app/features/messaging/state/MessagingMessages', () => ({

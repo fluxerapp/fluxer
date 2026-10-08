@@ -44,7 +44,6 @@ import {
 	type GatewayVoiceStateUpdateParams,
 } from '@app/features/gateway/transport/GatewaySocket';
 import {selectGuildActivationTarget} from '@app/features/gateway/transport/GuildActivationTarget';
-import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import MemberSearch from '@app/features/member/state/MemberSearch';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import Messages from '@app/features/messaging/state/MessagingMessages';
@@ -957,7 +956,6 @@ export class PooledGatewayConnection {
 		Messages.handleSessionInvalidated();
 		FavoriteMemes.reset();
 		AttachmentUrlRefresher.reset();
-		GuildMatureContentAgree.reset();
 		ChannelFrecency.handleLogout();
 		MemberSearch.handleLogout();
 		ThreadPanel.closeCreate();

@@ -128,13 +128,6 @@ class GuildMatureContentAgree {
 		}
 	}
 
-	reset(): void {
-		this.localAgreedChannelIds = [];
-		this.agreedChannelIds = [];
-		this.agreedCategoryIds = [];
-		this.agreedGuildIds = [];
-	}
-
 	revokeChannel(channelId: string): void {
 		this.localAgreedChannelIds = this.localAgreedChannelIds.filter((id) => id !== channelId);
 		this.agreedChannelIds = this.agreedChannelIds.filter((id) => id !== channelId);
