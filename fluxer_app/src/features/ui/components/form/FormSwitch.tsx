@@ -29,6 +29,7 @@ export const Switch = observer(
 		const baseId = useId();
 		const labelId = useMemo(() => `${baseId}-switch-label`, [baseId]);
 		const descriptionId = useMemo(() => `${baseId}-switch-description`, [baseId]);
+		const switchId = useMemo(() => `${baseId}-switch`, [baseId]);
 		const hasLabel = useMemo(
 			() => label !== undefined && label !== null && !(typeof label === 'string' && label.trim().length === 0),
 			[label],
@@ -50,11 +51,6 @@ export const Switch = observer(
 			},
 			[disabled, onChange],
 		);
-		const handleLabelToggle = useCallback(() => {
-			if (disabled) return;
-			onChange(!value);
-			rootRef.current?.focus();
-		}, [disabled, onChange, value]);
 		return (
 			<div
 				ref={forwardedRef}
@@ -62,15 +58,10 @@ export const Switch = observer(
 				data-flx="ui.form.switch.container"
 			>
 				{(hasLabel || hasDescription) && (
-					<button
-						type="button"
+					<label
+						htmlFor={switchId}
 						className={clsx(styles.labelContainer, !disabled && styles.clickable)}
-						disabled={disabled}
-						onClick={handleLabelToggle}
-						aria-pressed={value}
-						aria-labelledby={hasLabel ? labelId : undefined}
-						aria-describedby={hasDescription ? descriptionId : undefined}
-						data-flx="ui.form.switch.label-container.label-toggle"
+						data-flx="ui.form.switch.label-container"
 					>
 						{hasLabel && (
 							<span
@@ -86,11 +77,12 @@ export const Switch = observer(
 								{description}
 							</span>
 						)}
-					</button>
+					</label>
 				)}
 				<FocusRing focusTarget={rootRef} ringTarget={rootRef} offset={-2} data-flx="ui.form.switch.focus-ring">
 					<SwitchPrimitive.Root
 						ref={rootRef}
+						id={switchId}
 						checked={value}
 						onCheckedChange={valueChange}
 						disabled={disabled}
