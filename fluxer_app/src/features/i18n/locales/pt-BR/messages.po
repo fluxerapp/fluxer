@@ -15906,7 +15906,7 @@ msgid "Favorites"
 msgstr "Favoritos"
 
 #. Column header for perk names in the Plutonium page comparison table.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:180
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:184
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:132
 msgid "Feature"
 msgstr "Recurso"
@@ -16602,7 +16602,7 @@ msgid "France"
 msgstr "França"
 
 #. Column header for the free tier in the Plutonium page comparison table.
-#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:185
+#: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:189
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:136
 msgid "Free"
 msgstr "Grátis"
