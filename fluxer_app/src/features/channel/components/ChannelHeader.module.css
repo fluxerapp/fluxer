@@ -502,7 +502,8 @@
 }
 
 .headerContainerThreadPanelOpen {
-	grid-template-columns: minmax(min(12rem, 40%), 1fr) minmax(0, auto);
+	container-type: inline-size;
+	grid-template-columns: minmax(0, max-content) minmax(min-content, 1fr);
 }
 
 .headerContainerThreadPanelOpen .topicDivider,
@@ -512,12 +513,20 @@
 
 .headerContainerThreadPanelOpen .messageSearchFocusWrapper {
 	flex: 0 1 15.25rem;
+	width: 9rem;
 	min-width: 9rem;
 }
 
 .headerContainerThreadPanelOpen .messageSearchFocusWrapper > :first-child {
 	width: 100%;
 	min-width: 0;
+}
+
+@container (max-width: 32rem) {
+	.headerContainerThreadPanelOpen .messageSearchFocusWrapper {
+		width: var(--channel-header-action-size);
+		min-width: var(--channel-header-action-size);
+	}
 }
 
 .iconButton {
