@@ -441,6 +441,24 @@
 	width: 1.5rem;
 }
 
+.updateIconSpinning {
+	composes: updateIcon;
+	animation: updateIconSpin 1s linear infinite;
+}
+
+@keyframes updateIconSpin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.updateIconSpinning {
+		animation: none;
+		opacity: 0.6;
+	}
+}
+
 .iconButtonMobile {
 	display: flex;
 	align-items: center;

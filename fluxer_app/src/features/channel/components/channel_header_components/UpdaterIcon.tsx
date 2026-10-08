@@ -17,6 +17,11 @@ const UPDATE_AVAILABLE_DESCRIPTOR = msg({
 	comment:
 		'Tooltip and accessible label on the channel header updater icon in the desktop app. Clicking it closes the window and opens the updater, which downloads and installs the update.',
 });
+const UPDATING_DESCRIPTOR = msg({
+	message: 'Updating…',
+	comment:
+		'Tooltip and accessible label on the channel header updater icon in the desktop app while an update the user started is downloading. The app reloads by itself when it is done.',
+});
 const CHOOSE_LINUX_PACKAGE_DESCRIPTOR = msg({
 	message: 'Desktop update {version} available. Choose a Linux package.',
 	comment: 'Tooltip on the updater icon for a Linux desktop update that requires choosing a package format.',
@@ -37,9 +42,10 @@ const CLICK_TO_RELOAD_AND_UPDATE_2_DESCRIPTOR = msg({
 		'Tooltip on the channel header updater icon prompting a web reload to apply an update of unknown version. productName is the app name.',
 });
 
-type UpdaterAffordance = 'desktop' | 'manual' | 'web' | null;
+type UpdaterAffordance = 'desktop' | 'updating' | 'manual' | 'web' | null;
 
 function resolveUpdaterAffordance(): UpdaterAffordance {
+	if (Platform.isElectron && Updater.desktopUpdateInProgress) return 'updating';
 	if (Platform.isElectron && Updater.desktopUpdateAvailable) return 'desktop';
 	if (Platform.isElectron && Updater.nativeManualUpdateAvailable) return 'manual';
 	if (Updater.updateInfo.web.available) return 'web';
@@ -61,7 +67,9 @@ export const UpdaterIcon = observer(() => {
 	}
 	const version = Updater.displayVersion;
 	let tooltip: string;
-	if (affordance === 'manual' && Updater.nativeManualDownloadOptions.length > 0) {
+	if (affordance === 'updating') {
+		tooltip = i18n._(UPDATING_DESCRIPTOR);
+	} else if (affordance === 'manual' && Updater.nativeManualDownloadOptions.length > 0) {
 		tooltip = version ? i18n._(CHOOSE_LINUX_PACKAGE_DESCRIPTOR, {version}) : i18n._(CHOOSE_LINUX_PACKAGE_2_DESCRIPTOR);
 	} else if (affordance !== 'web') {
 		tooltip = i18n._(UPDATE_AVAILABLE_DESCRIPTOR);
@@ -77,12 +85,14 @@ export const UpdaterIcon = observer(() => {
 					type="button"
 					className={styles.updateIconButton}
 					onClick={handleClick}
+					disabled={affordance === 'updating'}
+					aria-busy={affordance === 'updating'}
 					aria-label={tooltip}
 					data-flx="channel.channel-header-components.updater-icon.button.click"
 				>
 					<ArrowClockwiseIcon
 						weight="bold"
-						className={styles.updateIcon}
+						className={affordance === 'updating' ? styles.updateIconSpinning : styles.updateIcon}
 						data-flx="channel.channel-header-components.updater-icon.update-icon"
 					/>
 				</button>

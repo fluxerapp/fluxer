@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {
+	ArboriumHighlightWorkerModuleReply,
 	ArboriumHighlightWorkerRequest,
 	ArboriumHighlightWorkerResponse,
 } from '@app/features/code_highlighting/workers/ArboriumHighlightWorker';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {ensureDesktopModuleForAsset} from '@app/features/platform/utils/DesktopModuleAssets';
 import {MAX_CODE_HIGHLIGHT_OUTPUT_LENGTH, MAX_CODE_HIGHLIGHT_SOURCE_LENGTH} from '@fluxer/constants/src/LimitConstants';
 
 export interface HighlightCodeInWorkerOptions {
@@ -31,6 +33,8 @@ const MAX_LANGUAGE_LENGTH = 128;
 const MAX_QUEUE_AGE_MS = 12_000;
 const WORKER_INITIALIZATION_TIMEOUT_MS = 10_000;
 const WORKER_HIGHLIGHT_TIMEOUT_MS = 2_000;
+const WORKER_GRAMMAR_MODULE_TIMEOUT_MS = 60_000;
+const MAX_MODULE_ASSET_URL_LENGTH = 2_048;
 const WORKER_IDLE_TIMEOUT_MS = 30_000;
 
 let worker: Worker | null = null;
@@ -85,6 +89,14 @@ function isWorkerResponse(value: unknown): value is ArboriumHighlightWorkerRespo
 	}
 	if (response.status === 'progress') {
 		return response.phase === 'initializing' || response.phase === 'loading' || response.phase === 'highlighting';
+	}
+	if (response.status === 'module') {
+		return (
+			typeof response.moduleRequestId === 'number' &&
+			Number.isSafeInteger(response.moduleRequestId) &&
+			typeof response.assetUrl === 'string' &&
+			response.assetUrl.length <= MAX_MODULE_ASSET_URL_LENGTH
+		);
 	}
 	if (response.status === 'success') {
 		return typeof response.highlightedHtml === 'string';
@@ -200,6 +212,18 @@ function handleWorkerMessage(instance: Worker, event: MessageEvent<unknown>): vo
 			activeJob,
 			response.phase === 'highlighting' ? WORKER_HIGHLIGHT_TIMEOUT_MS : WORKER_INITIALIZATION_TIMEOUT_MS,
 		);
+		return;
+	}
+	if (response.status === 'module') {
+		armJobTimeout(instance, activeJob, WORKER_GRAMMAR_MODULE_TIMEOUT_MS);
+		const {moduleRequestId, assetUrl} = response;
+		const reply = (available: boolean): void => {
+			if (instance !== worker) {
+				return;
+			}
+			instance.postMessage({moduleRequestId, available} satisfies ArboriumHighlightWorkerModuleReply);
+		};
+		ensureDesktopModuleForAsset(assetUrl).then(reply, () => reply(false));
 		return;
 	}
 	if (response.status === 'error') {

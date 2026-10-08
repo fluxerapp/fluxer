@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {ensureDesktopModule} from '@app/features/platform/utils/DesktopModuleAssets';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
+import {DESKTOP_FONT_MODULE_NAMES, type DesktopFontScript} from '@fluxer/desktop_ipc/src/ModuleContract';
 
 const logger = new Logger('ScriptFontLoader');
 
@@ -26,11 +28,28 @@ const CJK_ADJACENT = /[\u2E80-\u2EFF\u2F00-\u2FDF\u2FF0-\u303F\u3190-\u31EF\u320
 const requested = new Set<ScriptChunk>();
 const inFlight = new Set<Promise<void>>();
 
+const FONT_MODULE_RETRY_DELAY_MS = 60_000;
+
+function isDesktopFontScript(chunk: ScriptChunk): chunk is DesktopFontScript {
+	return Object.hasOwn(DESKTOP_FONT_MODULE_NAMES, chunk);
+}
+
+async function loadChunk(chunk: ScriptChunk): Promise<void> {
+	if (isDesktopFontScript(chunk) && !(await ensureDesktopModule(DESKTOP_FONT_MODULE_NAMES[chunk]))) {
+		setTimeout(() => {
+			requested.delete(chunk);
+			request(chunk);
+		}, FONT_MODULE_RETRY_DELAY_MS);
+		logger.warn(`The ${chunk} font module is not available yet; using OS script fonts until it is`);
+		return;
+	}
+	await loadLazyModule(CHUNK_IMPORTS[chunk]);
+}
+
 function request(chunk: ScriptChunk): void {
 	if (requested.has(chunk)) return;
 	requested.add(chunk);
-	const load = loadLazyModule(CHUNK_IMPORTS[chunk])
-		.then(() => undefined)
+	const load = loadChunk(chunk)
 		.catch((error: unknown) => {
 			logger.warn(`Failed to load the ${chunk} font faces; falling back to OS script fonts:`, error);
 		})
