@@ -231,13 +231,6 @@ class DesktopOutboundHTTPOriginNotRegisteredError extends Error {
 	}
 }
 
-class DesktopOutboundHTTPMixedAddressScopeError extends Error {
-	public constructor(origin: string) {
-		super(`Desktop outbound HTTP origin ${origin} resolved to both public and non-public addresses`);
-		this.name = 'DesktopOutboundHTTPMixedAddressScopeError';
-	}
-}
-
 class DesktopOutboundHTTPEmptyResolutionError extends Error {
 	public constructor(origin: string) {
 		super(`Desktop outbound HTTP origin ${origin} resolved to no usable address`);
@@ -637,15 +630,6 @@ function strictestRequirement(
 function requireScope(binding: DesktopOriginAddressBinding, requirement: DesktopAddressRequirement): void {
 	if (requirement === DesktopAddressRequirement.PUBLIC && binding.scope !== DesktopOriginAddressScope.PUBLIC) {
 		throw new DesktopOutboundHTTPPublicAddressRequiredError(binding.origin);
-	}
-}
-
-function requireStableScope(
-	previous: DesktopOriginAddressBinding | undefined,
-	next: DesktopOriginAddressBinding,
-): void {
-	if (previous != null && previous.scope !== next.scope) {
-		throw new DesktopOutboundHTTPMixedAddressScopeError(next.origin);
 	}
 }
 
@@ -1168,7 +1152,6 @@ export class DesktopOutboundHTTP {
 		const record: DesktopPendingOriginBinding = {
 			operation: this.resolveBinding(origin).then((binding) => {
 				this.requireAdmission();
-				requireStableScope(existing, binding);
 				requireScope(binding, record.requirement);
 				this.bindings.set(origin, binding);
 				return binding;
@@ -1271,13 +1254,21 @@ export class DesktopOutboundHTTP {
 			let attemptsRemaining = isReplayableRequest(request) ? DESKTOP_OUTBOUND_HTTP_STALE_SOCKET_ATTEMPTS : 0;
 			let active: http.ClientRequest | null = null;
 			let terminated = false;
+			const releaseUnconnectedBinding = (): void => {
+				const socket = active?.socket;
+				if (socket == null || socket.connecting) {
+					this.markBindingUnreachable(binding);
+				}
+			};
 			const timeout = setTimeout(() => {
 				terminated = true;
+				releaseUnconnectedBinding();
 				active?.destroy(new DesktopOutboundHTTPRequestTimeoutError(target.toString(), request.timeoutMs));
 			}, request.timeoutMs);
 			timeout.unref();
 			const onAbort = (): void => {
 				terminated = true;
+				releaseUnconnectedBinding();
 				active?.destroy(new DesktopOutboundHTTPRequestAbortedError(target.toString()));
 			};
 			request.signal?.addEventListener('abort', onAbort, {once: true});

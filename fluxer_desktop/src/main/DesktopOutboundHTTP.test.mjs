@@ -508,7 +508,7 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 		}
 	});
 
-	test('a released binding refuses a re-resolution that changes the address scope', async () => {
+	test('a released cleartext binding that re-resolves to a public address never sends cleartext there', async () => {
 		const {port, server} = await startServer({});
 		await new Promise((resolve) => server.close(resolve));
 		let rebound = false;
@@ -528,7 +528,67 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 		};
 		await assert.rejects(client.fetch(request), /ECONNREFUSED/);
 		rebound = true;
-		await assert.rejects(client.fetch(request), /resolved to both public and non-public addresses/);
+		await assert.rejects(client.fetch(request), /requires https for the publicly routable origin/);
+		outboundHTTP.cleanup();
+	});
+
+	test('a split-horizon origin that moves from its LAN address to a public one is resolved again instead of failing until restart', async () => {
+		const {port, server} = await startServer({});
+		await new Promise((resolve) => server.close(resolve));
+		let rebound = false;
+		let resolutions = 0;
+		const outboundHTTP = new DesktopOutboundHTTP({
+			resolveHostAddresses: async () => {
+				resolutions += 1;
+				return rebound ? ['93.184.216.34'] : ['127.0.0.1'];
+			},
+		});
+		const request = (signal) => ({
+			body: null,
+			expectedOrigin: `https://home.example:${port}`,
+			headers: null,
+			method: 'GET',
+			originTrust: DesktopOriginTrust.BOUND,
+			serviceName: 'test',
+			signal,
+			timeoutMs: 2000,
+			url: `https://home.example:${port}/ping`,
+		});
+		await assert.rejects(outboundHTTP.request(request(null)), /ECONNREFUSED/);
+		rebound = true;
+		const left = new AbortController();
+		left.abort();
+		await assert.rejects(outboundHTTP.request(request(left.signal)), /was aborted by its caller/);
+		assert.equal(resolutions, 2);
+		outboundHTTP.cleanup();
+	});
+
+	test('an address that swallows connections is released when the request gives up before connecting', async () => {
+		let resolutions = 0;
+		const outboundHTTP = new DesktopOutboundHTTP({
+			resolveHostAddresses: async () => {
+				resolutions += 1;
+				return ['10.255.255.1'];
+			},
+		});
+		const request = {
+			body: null,
+			expectedOrigin: 'http://blackhole.example:9',
+			headers: null,
+			method: 'GET',
+			originTrust: DesktopOriginTrust.BOUND,
+			serviceName: 'test',
+			signal: null,
+			timeoutMs: 200,
+			url: 'http://blackhole.example:9/ping',
+		};
+		await assert.rejects(outboundHTTP.request(request));
+		await assert.rejects(outboundHTTP.request(request));
+		assert.equal(
+			resolutions,
+			2,
+			'a binding whose address never answers stays pinned for the process lifetime when a timeout does not release it',
+		);
 		outboundHTTP.cleanup();
 	});
 
