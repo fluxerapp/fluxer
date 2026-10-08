@@ -41,6 +41,7 @@ import type {
 	EmailRevertRequest,
 	ForgotPasswordRequest,
 	HandoffCompleteRequest,
+	HandoffCompleteResponse,
 	HandoffInfoResponse,
 	HandoffInitiateResponse,
 	HandoffStatusResponse,
@@ -141,6 +142,7 @@ interface AuthLogoutAuthSessionsRequest {
 
 interface AuthHandoffInitiateRequest {
 	request: Request;
+	returnUri?: string | null;
 }
 
 interface AuthHandoffInfoRequest {
@@ -152,6 +154,7 @@ interface AuthHandoffStatusRequest {
 	code: string;
 	clientIp: string;
 	pollSecret?: string;
+	grant?: string;
 }
 
 interface AuthHandoffCancelRequest {
@@ -339,16 +342,18 @@ export class AuthRequestService {
 		return {available: !(await isUsernameTaken(this.apiContext.services.users, username))};
 	}
 
-	async initiateHandoff({request}: AuthHandoffInitiateRequest): Promise<HandoffInitiateResponse> {
+	async initiateHandoff({request, returnUri}: AuthHandoffInitiateRequest): Promise<HandoffInitiateResponse> {
 		const origin = AuthSession.resolveSessionOrigin(this.apiContext, request);
 		const result = await this.desktopHandoffService.initiateHandoff({
 			origin,
 			initiatorOrigin: request.headers.get('origin'),
+			returnUri,
 		});
 		return {
 			code: result.code,
 			expires_at: result.expiresAt.toISOString(),
 			poll_secret: result.pollSecret,
+			return_method: result.returnMethod,
 		};
 	}
 
@@ -376,16 +381,26 @@ export class AuthRequestService {
 					country: geo.countryName,
 				},
 			},
+			return_method: info.returnMethod,
 		};
 	}
 
-	async completeHandoff({data, clientIp, authToken, approverOrigin}: AuthHandoffCompleteRequest): Promise<void> {
+	async denyHandoff({code, clientIp}: AuthHandoffInfoRequest): Promise<void> {
+		await this.desktopHandoffService.denyHandoff(code, clientIp);
+	}
+
+	async completeHandoff({
+		data,
+		clientIp,
+		authToken,
+		approverOrigin,
+	}: AuthHandoffCompleteRequest): Promise<HandoffCompleteResponse | null> {
 		const sessionToken = data.token ?? authToken;
 		if (!sessionToken) {
 			throw new UnauthorizedError();
 		}
 		let createdToken: string | null = null;
-		const {initiatorOrigin} = await this.desktopHandoffService.completeHandoff(
+		const {initiatorOrigin, returnUrl} = await this.desktopHandoffService.completeHandoff(
 			data.code,
 			async (origin) => {
 				const created = await AuthSession.createAdditionalAuthSessionFromToken(this.apiContext, {
@@ -397,10 +412,12 @@ export class AuthRequestService {
 				return created;
 			},
 			clientIp,
+			data.return_method,
 		);
 		if (createdToken !== null) {
 			await this.recordPushSessionPredecessor(createdToken, sessionToken, initiatorOrigin, approverOrigin);
 		}
+		return returnUrl ? {return_url: returnUrl} : null;
 	}
 
 	private async recordPushSessionPredecessor(
@@ -428,8 +445,13 @@ export class AuthRequestService {
 		}
 	}
 
-	async getHandoffStatus({code, clientIp, pollSecret}: AuthHandoffStatusRequest): Promise<HandoffStatusResponse> {
-		const result = await this.desktopHandoffService.getHandoffStatus(code, clientIp, pollSecret);
+	async getHandoffStatus({
+		code,
+		clientIp,
+		pollSecret,
+		grant,
+	}: AuthHandoffStatusRequest): Promise<HandoffStatusResponse> {
+		const result = await this.desktopHandoffService.getHandoffStatus(code, clientIp, pollSecret, grant);
 		return {
 			status: result.status,
 			token: result.token,

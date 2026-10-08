@@ -21,6 +21,7 @@ const MAX_FAILED_ATTEMPTS = 5;
 const ATTEMPT_TTL_SECONDS = 900;
 const MAX_INFO_LOOKUPS = 3;
 const POLL_SECRET_BYTES = 32;
+const GRANT_BYTES = 32;
 
 interface HandoffData {
 	createdAt: number;
@@ -28,13 +29,18 @@ interface HandoffData {
 	initiatorOrigin?: string | null;
 	infoLookupCount: number;
 	pollSecretHash: string;
+	returnUri?: string | null;
+	denied?: boolean;
 }
 
 interface HandoffTokenData {
 	token: string;
 	userId: string;
 	pollSecretHash: string;
+	grantHash?: string;
 }
+
+export type DesktopHandoffReturnMethod = 'deep_link' | 'code';
 
 interface HandoffApproverData {
 	approvedAt: number;
@@ -62,15 +68,19 @@ function requireNormalizedHandoffCode(code: string): string {
 	return normalized;
 }
 
-function generatePollSecret(): string {
-	return randomBytes(POLL_SECRET_BYTES).toString('base64url');
+function generateSecret(byteLength: number): string {
+	return randomBytes(byteLength).toString('base64url');
 }
 
 function hashPollSecret(secret: string): string {
 	return createHash('sha256').update(secret).digest('hex');
 }
 
-function pollSecretMatches(presented: string | undefined, storedHash: string | undefined): boolean {
+function resolveReturnMethod(handoffData: HandoffData): DesktopHandoffReturnMethod {
+	return handoffData.returnUri ? 'deep_link' : 'code';
+}
+
+function secretMatches(presented: string | undefined, storedHash: string | undefined): boolean {
 	if (!presented || !storedHash) {
 		return false;
 	}
@@ -85,32 +95,44 @@ function pollSecretMatches(presented: string | undefined, storedHash: string | u
 export class DesktopHandoffService {
 	constructor(private readonly apiContext: ApiContext) {}
 
-	async initiateHandoff(args: {origin: SessionOrigin; initiatorOrigin?: string | null}): Promise<{
+	async initiateHandoff(args: {
+		origin: SessionOrigin;
+		initiatorOrigin?: string | null;
+		returnUri?: string | null;
+	}): Promise<{
 		code: string;
 		expiresAt: Date;
 		pollSecret: string;
+		returnMethod: DesktopHandoffReturnMethod;
 	}> {
 		const {cache} = this.apiContext.services;
 		const normalizedCode = generateNormalizedHandoffCode();
-		const pollSecret = generatePollSecret();
+		const pollSecret = generateSecret(POLL_SECRET_BYTES);
 		const handoffData: HandoffData = {
 			createdAt: Date.now(),
 			origin: args.origin,
 			initiatorOrigin: args.initiatorOrigin ?? null,
 			infoLookupCount: 0,
 			pollSecretHash: hashPollSecret(pollSecret),
+			returnUri: args.returnUri ?? null,
 		};
 		const expirySeconds = seconds('5 minutes');
 		await cache.set(`${HANDOFF_CODE_PREFIX}${normalizedCode}`, handoffData, expirySeconds);
 		const expiresAt = new Date(Date.now() + ms('5 minutes'));
-		return {code: formatDesktopHandoffCode(normalizedCode), expiresAt, pollSecret};
+		return {
+			code: formatDesktopHandoffCode(normalizedCode),
+			expiresAt,
+			pollSecret,
+			returnMethod: resolveReturnMethod(handoffData),
+		};
 	}
 
 	async completeHandoff(
 		code: string,
 		createTokenData: (origin: SessionOrigin) => Promise<{token: string; userId: string}>,
 		approverIp: string,
-	): Promise<{initiatorOrigin: string | null}> {
+		returnMethod: DesktopHandoffReturnMethod = 'code',
+	): Promise<{initiatorOrigin: string | null; returnUrl: string | null}> {
 		const {cache} = this.apiContext.services;
 		const normalizedCode = requireNormalizedHandoffCode(code);
 		await this.checkAttemptLimit(approverIp);
@@ -120,8 +142,11 @@ export class DesktopHandoffService {
 			throw new InvalidHandoffCodeError();
 		}
 		const handoffData = await cache.get<HandoffData>(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
-		if (!handoffData) {
+		if (!handoffData || handoffData.denied) {
 			await this.recordFailedAttempt(approverIp);
+			throw new InvalidHandoffCodeError();
+		}
+		if (returnMethod === 'deep_link' && !handoffData.returnUri) {
 			throw new InvalidHandoffCodeError();
 		}
 		const remainingSeconds = Math.max(
@@ -132,15 +157,22 @@ export class DesktopHandoffService {
 			throw new HandoffCodeExpiredError();
 		}
 		const {token, userId} = await createTokenData(handoffData.origin);
+		const grant = returnMethod === 'deep_link' ? generateSecret(GRANT_BYTES) : null;
 		const tokenData: HandoffTokenData = {
 			token,
 			userId,
 			pollSecretHash: handoffData.pollSecretHash,
+			...(grant ? {grantHash: hashPollSecret(grant)} : {}),
 		};
 		await cache.set(`${HANDOFF_TOKEN_PREFIX}${normalizedCode}`, tokenData, remainingSeconds);
 		await cache.delete(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
 		await cache.delete(`${HANDOFF_APPROVER_PREFIX}${normalizedCode}`);
-		return {initiatorOrigin: handoffData.initiatorOrigin ?? null};
+		let returnUrl: string | null = null;
+		if (grant && handoffData.returnUri) {
+			const params = new URLSearchParams({code: formatDesktopHandoffCode(normalizedCode), grant});
+			returnUrl = `${handoffData.returnUri}?${params.toString()}`;
+		}
+		return {initiatorOrigin: handoffData.initiatorOrigin ?? null, returnUrl};
 	}
 
 	async getHandoffInfo(
@@ -149,13 +181,14 @@ export class DesktopHandoffService {
 	): Promise<{
 		status: 'pending' | 'expired';
 		origin?: SessionOrigin;
+		returnMethod?: DesktopHandoffReturnMethod;
 	}> {
 		const {cache} = this.apiContext.services;
 		const normalizedCode = requireNormalizedHandoffCode(code);
 		await this.checkAttemptLimit(approverIp);
 		const codeKey = `${HANDOFF_CODE_PREFIX}${normalizedCode}`;
 		const handoffData = await cache.get<HandoffData>(codeKey);
-		if (!handoffData) {
+		if (!handoffData || handoffData.denied) {
 			await this.recordFailedAttempt(approverIp);
 			return {status: 'expired'};
 		}
@@ -172,15 +205,35 @@ export class DesktopHandoffService {
 			{approvedAt: Date.now()},
 			remainingTtl > 0 ? remainingTtl : seconds('5 minutes'),
 		);
-		return {status: 'pending', origin: handoffData.origin};
+		return {status: 'pending', origin: handoffData.origin, returnMethod: resolveReturnMethod(handoffData)};
+	}
+
+	async denyHandoff(code: string, approverIp: string): Promise<void> {
+		const {cache} = this.apiContext.services;
+		const normalizedCode = requireNormalizedHandoffCode(code);
+		await this.checkAttemptLimit(approverIp);
+		const approverKey = `${HANDOFF_APPROVER_PREFIX}${normalizedCode}`;
+		const codeKey = `${HANDOFF_CODE_PREFIX}${normalizedCode}`;
+		const storedApprover = await cache.get<HandoffApproverData>(approverKey);
+		const handoffData = await cache.get<HandoffData>(codeKey);
+		if (!storedApprover || !handoffData) {
+			await this.recordFailedAttempt(approverIp);
+			throw new InvalidHandoffCodeError();
+		}
+		const remainingTtl = await cache.ttl(codeKey);
+		if (remainingTtl > 0) {
+			await cache.set(codeKey, {...handoffData, denied: true}, remainingTtl);
+		}
+		await cache.delete(approverKey);
 	}
 
 	async getHandoffStatus(
 		code: string,
 		pollerIp: string,
 		pollSecret: string | undefined,
+		grant?: string,
 	): Promise<{
-		status: 'pending' | 'completed' | 'expired';
+		status: 'pending' | 'completed' | 'denied' | 'expired';
 		token?: string;
 		userId?: string;
 	}> {
@@ -190,9 +243,18 @@ export class DesktopHandoffService {
 		const tokenKey = `${HANDOFF_TOKEN_PREFIX}${normalizedCode}`;
 		const tokenData = await cache.get<HandoffTokenData>(tokenKey);
 		if (tokenData) {
-			if (!pollSecretMatches(pollSecret, tokenData.pollSecretHash)) {
+			if (!secretMatches(pollSecret, tokenData.pollSecretHash)) {
 				await this.recordFailedAttempt(pollerIp);
 				return {status: 'pending'};
+			}
+			if (tokenData.grantHash) {
+				if (!grant) {
+					return {status: 'pending'};
+				}
+				if (!secretMatches(grant, tokenData.grantHash)) {
+					await this.recordFailedAttempt(pollerIp);
+					return {status: 'pending'};
+				}
 			}
 			await cache.delete(tokenKey);
 			return {
@@ -203,7 +265,7 @@ export class DesktopHandoffService {
 		}
 		const handoffData = await cache.get<HandoffData>(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
 		if (handoffData) {
-			return {status: 'pending'};
+			return {status: handoffData.denied ? 'denied' : 'pending'};
 		}
 		return {status: 'expired'};
 	}
@@ -216,7 +278,7 @@ export class DesktopHandoffService {
 		const handoffData = await cache.get<HandoffData>(codeKey);
 		const tokenData = await cache.get<HandoffTokenData>(tokenKey);
 		const storedHash = handoffData?.pollSecretHash ?? tokenData?.pollSecretHash;
-		if (!pollSecretMatches(pollSecret, storedHash)) {
+		if (!secretMatches(pollSecret, storedHash)) {
 			throw new InvalidHandoffCodeError();
 		}
 		await cache.delete(codeKey);

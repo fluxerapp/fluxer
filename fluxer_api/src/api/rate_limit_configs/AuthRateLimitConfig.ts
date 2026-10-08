@@ -132,6 +132,10 @@ export const AuthRateLimitConfigs = {
 		bucket: 'auth:handoff:status',
 		config: {limit: 60, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	AUTH_HANDOFF_DENY: {
+		bucket: 'auth:handoff:deny',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	AUTH_HANDOFF_CANCEL: {
 		bucket: 'auth:handoff:cancel',
 		config: {limit: 10, windowMs: ms('1 minute')},

@@ -308,6 +308,14 @@
 				"summary": "Complete handoff",
 				"tags": ["Auth"],
 				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {"anyOf": [{"$ref": "#/components/schemas/HandoffCompleteResponse"}, {"type": "null"}]}
+							}
+						}
+					},
 					"204": {"description": "No Content"},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -340,7 +348,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Complete the handoff process and authenticate on the target device using the handoff code.",
+				"description": "Complete the handoff process and authenticate on the target device using the handoff code. With the deep_link return method, responds with the deep link that hands the one-time grant back to the initiating app. Otherwise responds with no content.",
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/HandoffCompleteRequest"}}}
@@ -388,7 +396,11 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Start a handoff session to transfer authentication between devices. Returns a handoff code for device linking."
+				"description": "Start a handoff session to transfer authentication between devices. Returns a handoff code for device linking. A desktop app that registers a return deep link can be signed in without the user typing the code.",
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/HandoffInitiateRequest"}}}
+				}
 			}
 		},
 		"/auth/handoff/{code}": {
@@ -443,6 +455,56 @@
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/HandoffCancelRequest"}}}
 				}
+			}
+		},
+		"/auth/handoff/{code}/deny": {
+			"post": {
+				"operationId": "deny_handoff",
+				"summary": "Deny handoff",
+				"tags": ["Auth"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Decline a handoff request after looking it up. The initiating device sees the denied status and the code can no longer be approved.",
+				"parameters": [
+					{
+						"name": "code",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The handoff code", "type": "string"},
+						"description": "The handoff code"
+					}
+				]
 			}
 		},
 		"/auth/handoff/{code}/info": {
@@ -32794,14 +32856,18 @@
 			"HandoffStatusRequest": {
 				"type": "object",
 				"properties": {
-					"poll_secret": {"description": "The poll secret issued when the handoff was initiated", "type": "string"}
+					"poll_secret": {"description": "The poll secret issued when the handoff was initiated", "type": "string"},
+					"grant": {"description": "The one-time grant delivered to the app through the deep link", "type": "string"}
 				},
 				"required": ["poll_secret"]
 			},
 			"HandoffStatusResponse": {
 				"type": "object",
 				"properties": {
-					"status": {"type": "string", "description": "Current status of the handoff (pending, completed, expired)"},
+					"status": {
+						"type": "string",
+						"description": "Current status of the handoff (pending, completed, denied, expired)"
+					},
 					"token": {"description": "Authentication token if handoff is complete", "type": ["string", "null"]},
 					"user_id": {
 						"description": "User ID if handoff is complete",
@@ -32842,6 +32908,10 @@
 							},
 							{"type": "null"}
 						]
+					},
+					"return_method": {
+						"description": "How the approving browser hands the sign-in back. deep_link opens the initiating app, code relies on the user comparing the code",
+						"$ref": "#/components/schemas/DesktopHandoffReturnMethod"
 					}
 				},
 				"required": ["status"],
@@ -32853,6 +32923,20 @@
 					"poll_secret": {"description": "The poll secret issued when the handoff was initiated", "type": "string"}
 				},
 				"required": ["poll_secret"]
+			},
+			"HandoffInitiateRequest": {
+				"anyOf": [
+					{
+						"type": "object",
+						"properties": {
+							"return_uri": {
+								"description": "Deep link the approving browser opens to return the sign-in to the initiating desktop app",
+								"type": "string"
+							}
+						}
+					},
+					{"type": "null"}
+				]
 			},
 			"HandoffInitiateResponse": {
 				"type": "object",
@@ -32867,6 +32951,10 @@
 					"poll_secret": {
 						"description": "Secret the initiating device must present to retrieve the token",
 						"type": "string"
+					},
+					"return_method": {
+						"description": "deep_link when the approving browser will hand the sign-in back through the return deep link, code otherwise",
+						"$ref": "#/components/schemas/DesktopHandoffReturnMethod"
 					}
 				},
 				"required": ["code", "expires_at"],
@@ -32877,9 +32965,24 @@
 				"properties": {
 					"code": {"description": "The handoff code from the initiating session", "type": "string"},
 					"token": {"description": "The authentication token to transfer", "type": "string"},
-					"user_id": {"description": "The user ID associated with the authenticated session", "type": "string"}
+					"user_id": {"description": "The user ID associated with the authenticated session", "type": "string"},
+					"return_method": {
+						"description": "deep_link returns a one-time grant the initiating app must present, code releases the token to the poll secret alone",
+						"$ref": "#/components/schemas/DesktopHandoffReturnMethod"
+					}
 				},
 				"required": ["code", "user_id"]
+			},
+			"HandoffCompleteResponse": {
+				"type": "object",
+				"properties": {
+					"return_url": {
+						"type": "string",
+						"description": "Deep link that returns the sign-in to the initiating app, with its one-time grant"
+					}
+				},
+				"required": ["return_url"],
+				"additionalProperties": false
 			},
 			"ForgotPasswordRequest": {
 				"type": "object",
@@ -33609,6 +33712,7 @@
 			},
 			"PasswordType": {"type": "string"},
 			"EmailType": {"type": "string"},
+			"DesktopHandoffReturnMethod": {"type": "string", "enum": ["deep_link", "code"]},
 			"AuthSessionLocation": {
 				"type": "object",
 				"properties": {

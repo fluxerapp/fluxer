@@ -29,7 +29,9 @@ import {
 	HandoffCancelRequest,
 	HandoffCodeParam,
 	HandoffCompleteRequest,
+	HandoffCompleteResponse,
 	HandoffInfoResponse,
+	HandoffInitiateRequest,
 	HandoffInitiateResponse,
 	HandoffStatusRequest,
 	HandoffStatusResponse,
@@ -609,6 +611,7 @@ export function AuthController(app: HonoApp) {
 	app.post(
 		'/auth/handoff/initiate',
 		RateLimitMiddleware(RateLimitConfigs.AUTH_HANDOFF_INITIATE),
+		Validator('json', HandoffInitiateRequest),
 		OpenAPI({
 			operationId: 'initiate_handoff',
 			summary: 'Initiate handoff',
@@ -617,10 +620,15 @@ export function AuthController(app: HonoApp) {
 			security: [],
 			tags: ['Auth'],
 			description:
-				'Start a handoff session to transfer authentication between devices. Returns a handoff code for device linking.',
+				'Start a handoff session to transfer authentication between devices. Returns a handoff code for device linking. A desktop app that registers a return deep link can be signed in without the user typing the code.',
 		}),
 		async (ctx) => {
-			return ctx.json(await ctx.get('authRequestService').initiateHandoff({request: ctx.req.raw}));
+			return ctx.json(
+				await ctx.get('authRequestService').initiateHandoff({
+					request: ctx.req.raw,
+					returnUri: ctx.req.valid('json')?.return_uri ?? null,
+				}),
+			);
 		},
 	);
 	app.get(
@@ -656,23 +664,47 @@ export function AuthController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'complete_handoff',
 			summary: 'Complete handoff',
-			responseSchema: null,
-			statusCode: 204,
+			responseSchema: HandoffCompleteResponse,
+			statusCode: [200, 204],
 			security: [],
 			tags: ['Auth'],
-			description: 'Complete the handoff process and authenticate on the target device using the handoff code.',
+			description:
+				'Complete the handoff process and authenticate on the target device using the handoff code. With the deep_link return method, responds with the deep link that hands the one-time grant back to the initiating app. Otherwise responds with no content.',
 		}),
 		async (ctx) => {
 			const clientIp = requireClientIp(ctx.req.raw, {
 				trustClientIpHeader: Config.proxy.trust_client_ip_header,
 				clientIpHeaderName: Config.proxy.client_ip_header,
 			});
-			await ctx.get('authRequestService').completeHandoff({
+			const response = await ctx.get('authRequestService').completeHandoff({
 				data: ctx.req.valid('json'),
 				clientIp,
 				authToken: ctx.get('authToken') ?? undefined,
 				approverOrigin: ctx.req.header('origin'),
 			});
+			return response ? ctx.json(response) : ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/auth/handoff/:code/deny',
+		RateLimitMiddleware(RateLimitConfigs.AUTH_HANDOFF_DENY),
+		Validator('param', HandoffCodeParam),
+		OpenAPI({
+			operationId: 'deny_handoff',
+			summary: 'Deny handoff',
+			responseSchema: null,
+			statusCode: 204,
+			security: [],
+			tags: ['Auth'],
+			description:
+				'Decline a handoff request after looking it up. The initiating device sees the denied status and the code can no longer be approved.',
+		}),
+		async (ctx) => {
+			const clientIp = requireClientIp(ctx.req.raw, {
+				trustClientIpHeader: Config.proxy.trust_client_ip_header,
+				clientIpHeaderName: Config.proxy.client_ip_header,
+			});
+			await ctx.get('authRequestService').denyHandoff({code: ctx.req.valid('param').code, clientIp});
 			return ctx.body(null, 204);
 		},
 	);
@@ -726,6 +758,7 @@ export function AuthController(app: HonoApp) {
 				code: ctx.req.valid('param').code,
 				clientIp,
 				pollSecret: ctx.req.valid('json').poll_secret,
+				grant: ctx.req.valid('json').grant,
 			});
 			return ctx.json(response);
 		},
