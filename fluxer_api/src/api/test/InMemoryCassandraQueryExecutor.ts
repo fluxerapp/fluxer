@@ -26,6 +26,7 @@ function compareValues(a: unknown, b: unknown): number {
 	}
 	const av = a instanceof Date ? a.getTime() : typeof a === 'bigint' ? Number(a) : a;
 	const bv = b instanceof Date ? b.getTime() : typeof b === 'bigint' ? Number(b) : b;
+	if (Buffer.isBuffer(av) && Buffer.isBuffer(bv)) return Buffer.compare(av, bv);
 	if (av === bv) return 0;
 	return (av as number | string) < (bv as number | string) ? -1 : 1;
 }
@@ -103,12 +104,11 @@ function matchesWhere(row: Row, where: ReadonlyArray<WhereExpr<Row>> | undefined
 				if (compareValues(row[clause.col], getParam(params, clause.param)) > 0) return false;
 				break;
 			case 'gt':
+			case 'tokenGt':
 				if (compareValues(row[clause.col], getParam(params, clause.param)) <= 0) return false;
 				break;
 			case 'gte':
 				if (compareValues(row[clause.col], getParam(params, clause.param)) < 0) return false;
-				break;
-			case 'tokenGt':
 				break;
 			case 'tupleGt': {
 				const left = clause.cols.map((column) => row[column]);
@@ -128,6 +128,23 @@ function matchesWhere(row: Row, where: ReadonlyArray<WhereExpr<Row>> | undefined
 		}
 	}
 	return true;
+}
+
+function compareColumns(columns: ReadonlyArray<string>, left: Row, right: Row): number {
+	for (const column of columns) {
+		const cmp = compareValues(left[column], right[column]);
+		if (cmp !== 0) return cmp;
+	}
+	return 0;
+}
+
+function rowComparator(meta: KvQueryMeta): (left: Row, right: Row) => number {
+	const primaryKey = meta.table.primaryKey as ReadonlyArray<string>;
+	if (!meta.orderBy) return (left, right) => compareColumns(primaryKey, left, right);
+	const column = meta.orderBy.col as string;
+	const columns = [column, ...primaryKey.slice(primaryKey.indexOf(column) + 1)];
+	const direction = meta.orderBy.direction === 'DESC' ? -1 : 1;
+	return (left, right) => compareColumns(columns, left, right) * direction;
 }
 
 function projectRow(row: Row, columns: ReadonlyArray<string> | undefined): Row {
@@ -349,20 +366,9 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 	}
 
 	private select(meta: KvQueryMeta, params: CassandraParams): Array<Row> {
-		let rows = [...this.table(meta).values()].filter((row) => matchesWhere(row, meta.where, params));
-		if (meta.orderBy) {
-			const direction = meta.orderBy.direction === 'DESC' ? -1 : 1;
-			const column = meta.orderBy.col as string;
-			const primaryKey = meta.table.primaryKey as ReadonlyArray<string>;
-			const columns = [column, ...primaryKey.slice(primaryKey.indexOf(column) + 1)];
-			rows = rows.sort((a, b) => {
-				for (const c of columns) {
-					const cmp = compareValues(a[c], b[c]);
-					if (cmp !== 0) return cmp * direction;
-				}
-				return 0;
-			});
-		}
+		let rows = [...this.table(meta).values()]
+			.filter((row) => matchesWhere(row, meta.where, params))
+			.sort(rowComparator(meta));
 		if (typeof meta.limit === 'number') {
 			rows = rows.slice(0, meta.limit);
 		}

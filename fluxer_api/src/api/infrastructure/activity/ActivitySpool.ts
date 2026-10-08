@@ -4,10 +4,10 @@ import type {EventKind} from '@app/api/infrastructure/activity/Contract.generate
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 export const ACTIVITY_SPOOL_KEY = 'activity:spool';
-export const ACTIVITY_SPOOL_SIGNAL_CAP = 200_000;
+const ACTIVITY_SPOOL_SIGNAL_CAP = 200_000;
 export const ACTIVITY_SPOOL_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const DRAIN_BATCH = 200;
-export const DRAIN_BUDGET_MS = 15_000;
+const DRAIN_BUDGET_MS = 15_000;
 
 export interface ActivitySpoolEntry {
 	kind: EventKind;

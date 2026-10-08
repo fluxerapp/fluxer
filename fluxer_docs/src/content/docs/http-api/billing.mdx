@@ -240,6 +240,7 @@ Neither the lifetime block nor the existing subscription block applies here, so 
 | client_geoip_country_code? | string | Two-letter country the client previously observed for itself (2 characters) |
 | eu_withdrawal_waiver_accepted? | boolean | Whether the digital content withdrawal waiver was explicitly accepted |
 | is_business? | boolean | Whether to require a billing address for tax invoicing (default false) |
+| payment_method? | string | Either `card`, `pix` or `upi`, which this operation ignores |
 
 <sup>1</sup> Read only when Fluxer cannot geolocate the request, because the request-time geolocation country wins. The resolved country is required whenever the gift price is not in USD or EUR
 

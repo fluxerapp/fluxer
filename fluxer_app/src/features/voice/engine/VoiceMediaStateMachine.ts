@@ -3,7 +3,7 @@
 import type {EffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export type VoiceMediaPermissionWarmupState =
+type VoiceMediaPermissionWarmupState =
 	| 'unknown'
 	| 'checking'
 	| 'granted'
@@ -11,7 +11,7 @@ export type VoiceMediaPermissionWarmupState =
 	| 'unavailable'
 	| 'failedContinuing';
 
-export type VoiceMediaMicrophoneState =
+type VoiceMediaMicrophoneState =
 	| 'disabled'
 	| 'enabling'
 	| 'enabled'
@@ -20,12 +20,12 @@ export type VoiceMediaMicrophoneState =
 	| 'republishing'
 	| 'permissionDenied';
 
-export type VoiceMediaSpeakingDetectorState = 'detached' | 'attached';
-export type VoiceMediaRefreshState = 'idle' | 'restarting' | 'republishing';
-export type VoiceMediaCameraState = 'disabled' | 'enabling' | 'enabled' | 'disabling' | 'updating' | 'permissionDenied';
-export type VoiceMediaEffectiveAudioMode = 'unknown' | 'muted' | 'unmuted';
+type VoiceMediaSpeakingDetectorState = 'detached' | 'attached';
+type VoiceMediaRefreshState = 'idle' | 'restarting' | 'republishing';
+type VoiceMediaCameraState = 'disabled' | 'enabling' | 'enabled' | 'disabling' | 'updating' | 'permissionDenied';
+type VoiceMediaEffectiveAudioMode = 'unknown' | 'muted' | 'unmuted';
 
-export type VoiceMediaCommand =
+type VoiceMediaCommand =
 	| {type: 'microphone.enable'}
 	| {type: 'microphone.disable'}
 	| {type: 'microphone.republish'}
@@ -40,14 +40,7 @@ export type VoiceMediaCommand =
 	| {type: 'camera.disable'}
 	| {type: 'camera.update'};
 
-export interface VoiceMediaInputState {
-	selfMute: boolean;
-	selfDeaf: boolean;
-	serverMute?: boolean;
-	serverDeaf?: boolean;
-}
-
-export interface VoiceMediaAudioControls {
+interface VoiceMediaAudioControls {
 	pushToTalkActive: boolean;
 	pushToTalkHeld: boolean;
 	pushToMuteActive: boolean;
@@ -149,29 +142,6 @@ function initialContext(): VoiceMediaContext {
 		effectiveAudioState: null,
 		audioControls: DEFAULT_AUDIO_CONTROLS,
 		commands: EMPTY_COMMANDS,
-	};
-}
-
-export function computeVoiceMediaEffectiveAudioState(
-	audioState: VoiceMediaInputState,
-	controls: VoiceMediaAudioControls = DEFAULT_AUDIO_CONTROLS,
-): EffectiveAudioState {
-	const serverMute = audioState.serverMute ?? false;
-	const serverDeaf = audioState.serverDeaf ?? false;
-	const effectiveDeaf = serverDeaf || audioState.selfDeaf;
-	const effectiveMute =
-		effectiveDeaf ||
-		serverMute ||
-		audioState.selfMute ||
-		(controls.pushToTalkActive && !controls.pushToTalkHeld) ||
-		(controls.pushToMuteActive && controls.pushToMuteHeld);
-	return {
-		selfMute: audioState.selfMute,
-		selfDeaf: audioState.selfDeaf,
-		serverMute,
-		serverDeaf,
-		effectiveMute,
-		effectiveDeaf,
 	};
 }
 
@@ -517,7 +487,7 @@ function requestCameraUpdate(
 	return appendCommands({...context, camera: 'updating'}, [{type: 'camera.update'}]);
 }
 
-export const voiceMediaStateMachine = setup({
+const voiceMediaStateMachine = setup({
 	types: {} as {
 		context: VoiceMediaContext;
 		events: VoiceMediaEvent;

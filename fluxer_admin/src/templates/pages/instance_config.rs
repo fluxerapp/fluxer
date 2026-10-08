@@ -167,6 +167,7 @@ pub fn instance_config_page(
                             csrf_token,
                             &instance_config.integrations,
                             instance_config.account_identity.mode,
+                            &instance_config.app_public.branding.product_name,
                         ))
                     },
                 ))
@@ -568,6 +569,7 @@ fn integrations_config_section(
     csrf_token: &str,
     integrations: &InstanceIntegrationsResponse,
     account_identity: AccountIdentityMode,
+    product_name: &str,
 ) -> Markup {
     let smtp_port = integrations
         .email
@@ -629,7 +631,7 @@ fn integrations_config_section(
                                     "integration_email_from_name",
                                     "From name",
                                     integrations.email.from_name.as_deref().unwrap_or(""),
-                                    "Fluxer",
+                                    product_name,
                                 ))
                                 (text_input(
                                     "integration_smtp_host",
@@ -652,7 +654,7 @@ fn integrations_config_section(
                                 (password_input("integration_smtp_password", "SMTP password", Some("Leave blank to keep the current password.")))
                             }
                             (checkbox("integration_smtp_secure", "true", "Use TLS", integrations.email.smtp.secure.unwrap_or(true), true))
-                            (checkbox("integration_email_disable_new_ip_authorization", "true", "Disable new IP login authorisation", integrations.email.disable_new_ip_authorization, true))
+                            (checkbox("integration_email_disable_new_ip_authorization", "true", "Disable new IP login authorization", integrations.email.disable_new_ip_authorization, true))
                             div class="flex flex-wrap gap-2" {
                                 button type="submit"
                                     formaction={(base) "/instance-config?action=test_smtp"}
@@ -955,9 +957,18 @@ fn app_public_config_section(
                                     app_public.legal.privacy_url.as_deref().unwrap_or(""),
                                     "https://example.com/privacy",
                                 ))
+                                (text_input(
+                                    "app_guidelines_url",
+                                    "Community Guidelines URL",
+                                    app_public.legal.guidelines_url.as_deref().unwrap_or(""),
+                                    "https://example.com/guidelines",
+                                ))
                             }
                             p class="text-xs text-neutral-500" {
-                                "Registration asks for agreement only to the documents configured here. Leave both blank to hide legal consent on self-hosted registration."
+                                "Registration asks for agreement only to the terms and privacy documents configured here. Leave both blank to hide legal consent on self-hosted registration."
+                            }
+                            p class="text-xs text-neutral-500" {
+                                "The community guidelines URL is linked from the app, the report flow and enforcement emails. Use an absolute http or https URL. Leave it blank to hide those links."
                             }
                             (form_actions(html! {
                                 (submit_button("Save Legal Documents"))
@@ -1353,7 +1364,7 @@ fn experiment_delivery_section(
         "How often every client revalidates its experiment assignments. This is instance-wide \
          and covers every experiment, not just the ones above. Raising the interval sheds \
          request volume and makes a change take longer to reach a client. Raising the jitter \
-         spreads a fleet that has synchronised on one tick back out across the interval.",
+         spreads a fleet that has synchronized on one tick back out across the interval.",
         html! {
             form method="post" action={(base) "/instance-config?action=update_experiment_delivery"} {
                 (csrf_input(csrf_token))
@@ -1966,6 +1977,7 @@ mod tests {
             "csrf",
             &integrations,
             AccountIdentityMode::Username,
+            "Fluxer",
         )
         .into_string();
         assert!(!username.contains("Email delivery"));
@@ -1978,6 +1990,7 @@ mod tests {
             "csrf",
             &integrations,
             AccountIdentityMode::Email,
+            "Fluxer",
         )
         .into_string();
         assert!(email.contains("Email delivery"));

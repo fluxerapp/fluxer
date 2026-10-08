@@ -8,7 +8,7 @@ import type React from 'react';
 import {useEffect, useRef, useState} from 'react';
 
 const DM_LIST_ENTER_X = -88;
-export const DM_LIST_ENTER_DURATION_MS = 260;
+const DM_LIST_ENTER_DURATION_MS = 260;
 const DM_LIST_EXIT_DURATION_MS = 200;
 export const DM_LIST_REMOVAL_DELAY_MS = DM_LIST_EXIT_DURATION_MS + 120;
 const DM_LIST_ENTER_EASING: [number, number, number, number] = [0.165, 0.84, 0.44, 1];

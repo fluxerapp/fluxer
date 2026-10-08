@@ -479,6 +479,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						? omitUndefinedFields({
 								terms_url: readOptionalField(data.app_public.legal, 'terms_url'),
 								privacy_url: readOptionalField(data.app_public.legal, 'privacy_url'),
+								guidelines_url: readOptionalField(data.app_public.legal, 'guidelines_url'),
 							})
 						: undefined,
 					registration: data.app_public.registration

@@ -45,8 +45,8 @@ export interface ThemeExportPayload {
 	}>;
 }
 
-export const THEME_ASSET_REFERENCE_PREFIX = 'fluxer-theme-asset';
-export const THEME_LOCAL_FILE_REFERENCE_PREFIX = 'fluxer-local-file';
+const THEME_ASSET_REFERENCE_PREFIX = 'fluxer-theme-asset';
+const THEME_LOCAL_FILE_REFERENCE_PREFIX = 'fluxer-local-file';
 const HEADER_COMMENT_PATTERN = /^\s*\/\*([\s\S]*?)\*\//;
 const METADATA_LINE_PATTERN =
 	/^\s*(?:\*\s*)?(?:@?([a-zA-Z][a-zA-Z0-9_-]*)|([a-zA-Z][a-zA-Z0-9 _-]*))\s*[:=]\s*(.*?)\s*$/;
@@ -126,7 +126,7 @@ export function parseThemeMetadata(css: string, fallbackName: string): ThemeMeta
 	return metadata;
 }
 
-export function buildThemeCssHeader(metadata: ThemeMetadata): string {
+function buildThemeCssHeader(metadata: ThemeMetadata): string {
 	const lines = ['/**', ` * @name ${metadata.name || 'Untitled theme'}`];
 	if (metadata.description.trim()) {
 		lines.push(` * @description ${metadata.description.trim()}`);

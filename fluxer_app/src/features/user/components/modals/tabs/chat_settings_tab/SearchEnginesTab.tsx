@@ -435,11 +435,3 @@ export const ReverseImageSearchContent: React.FC = observer(() => {
 		/>
 	);
 });
-
-export const SearchEnginesTabContent: React.FC = observer(() => (
-	<>
-		<TextSearchEnginesContent data-flx="user.chat-settings-tab.search-engines-tab.search-engines-tab-content.text" />
-		<TranslatorsContent data-flx="user.chat-settings-tab.search-engines-tab.search-engines-tab-content.translators" />
-		<ReverseImageSearchContent data-flx="user.chat-settings-tab.search-engines-tab.search-engines-tab-content.image" />
-	</>
-));

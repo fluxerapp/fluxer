@@ -17,6 +17,7 @@ pub mod user_flag_bits {
     pub const FRIENDLY_BOT: u64 = 1 << 4;
     pub const FRIENDLY_BOT_MANUAL_APPROVAL: u64 = 1 << 5;
     pub const SPAMMER: u64 = 1 << 6;
+    pub const PROFILE_HIDDEN: u64 = 1 << 7;
     pub const HIGH_GLOBAL_RATE_LIMIT: u64 = 1 << 33;
     pub const DELETED: u64 = 1 << 34;
     pub const SELF_DELETED: u64 = 1 << 36;
@@ -57,6 +58,10 @@ pub const USER_FLAGS: &[U64Flag] = &[
     U64Flag {
         name: "SPAMMER",
         value: user_flag_bits::SPAMMER,
+    },
+    U64Flag {
+        name: "PROFILE_HIDDEN",
+        value: user_flag_bits::PROFILE_HIDDEN,
     },
     U64Flag {
         name: "HIGH_GLOBAL_RATE_LIMIT",
@@ -154,3 +159,32 @@ pub const PREMIUM_FLAGS: &[I32Flag] = &[
         value: 1 << 8,
     },
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::USER_FLAGS;
+
+    #[test]
+    fn user_flags_cover_every_flag_in_the_admin_spec() {
+        let spec: serde_json::Value =
+            serde_json::from_str(include_str!("../openapi-admin.json")).expect("admin spec");
+        let values = spec["components"]["schemas"]["UserFlags"]["x-bitflagValues"]
+            .as_array()
+            .expect("UserFlags bitflag values");
+        assert!(!values.is_empty());
+        for entry in values {
+            let name = entry["name"].as_str().expect("flag name");
+            let value: u64 = entry["value"]
+                .as_str()
+                .expect("flag value")
+                .parse()
+                .expect("numeric flag value");
+            assert!(
+                USER_FLAGS
+                    .iter()
+                    .any(|flag| flag.name == name && flag.value == value),
+                "{name} ({value}) is missing from USER_FLAGS"
+            );
+        }
+    }
+}

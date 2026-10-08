@@ -72,7 +72,12 @@ export const getMentionDescription = (
 				<Trans>
 					This will notify{' '}
 					<strong data-flx="channel.mention-everyone-popout.get-mention-description.strong">
-						<Plural value={memberCount} one="# member" other="# members" />
+						<Plural
+							value={memberCount}
+							one="# member"
+							other="# members"
+							data-flx="channel.mention-everyone-popout.get-mention-description.plural"
+						/>
 					</strong>{' '}
 					with this role in this channel. Are you sure you want to do this?
 				</Trans>
@@ -83,7 +88,12 @@ export const getMentionDescription = (
 			<Trans comment="Warning text before notifying every member with a role in the current channel.">
 				This will notify{' '}
 				<strong data-flx="channel.mention-everyone-popout.get-mention-description.strong">
-					<Plural value={memberCount} one="# member" other="# members" />
+					<Plural
+						value={memberCount}
+						one="# member"
+						other="# members"
+						data-flx="channel.mention-everyone-popout.get-mention-description.plural--2"
+					/>
 				</strong>{' '}
 				with the{' '}
 				<span className={styles.roleName} data-flx="channel.mention-everyone-popout.get-mention-description.role-name">
@@ -98,7 +108,12 @@ export const getMentionDescription = (
 			<Trans comment="Warning text before notifying every member in the current channel.">
 				This will notify{' '}
 				<strong data-flx="channel.mention-everyone-popout.get-mention-description.strong--2">
-					<Plural value={memberCount} one="# member" other="# members" />
+					<Plural
+						value={memberCount}
+						one="# member"
+						other="# members"
+						data-flx="channel.mention-everyone-popout.get-mention-description.plural--3"
+					/>
 				</strong>{' '}
 				in this channel. Are you sure you want to do this?
 			</Trans>
@@ -108,7 +123,12 @@ export const getMentionDescription = (
 		<Trans comment="Warning text before notifying online members in the current channel with @here.">
 			This will notify up to{' '}
 			<strong data-flx="channel.mention-everyone-popout.get-mention-description.strong--3">
-				<Plural value={memberCount} one="# online member" other="# online members" />
+				<Plural
+					value={memberCount}
+					one="# online member"
+					other="# online members"
+					data-flx="channel.mention-everyone-popout.get-mention-description.plural--4"
+				/>
 			</strong>{' '}
 			in this channel. Are you sure you want to do this?
 		</Trans>

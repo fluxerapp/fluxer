@@ -53,7 +53,7 @@ function resolveGiftDuration(gift: Gift | GiftDurationPayload): {
 	};
 }
 
-export function formatGiftDurationText(
+function formatGiftDurationText(
 	durationType: GiftDurationType,
 	durationQuantity: number,
 	config: GiftDurationTextConfig,
@@ -75,7 +75,7 @@ export function formatGiftDurationText(
 	}
 }
 
-export function getPlutoniumDurationConfig(i18n: I18n): GiftDurationTextConfig {
+function getPlutoniumDurationConfig(i18n: I18n): GiftDurationTextConfig {
 	return {
 		lifetime: i18n._(VISIONARY_LIFETIME_DESCRIPTOR, {premiumProductName: getPremiumProductName()}),
 		days: (durationQuantity: number) =>
@@ -89,7 +89,7 @@ export function getPlutoniumDurationConfig(i18n: I18n): GiftDurationTextConfig {
 	};
 }
 
-export function getPremiumDurationConfig(i18n: I18n): GiftDurationTextConfig {
+function getPremiumDurationConfig(i18n: I18n): GiftDurationTextConfig {
 	return {
 		lifetime: i18n._(LIFETIME_DESCRIPTOR, {premiumProductName: getPremiumProductName()}),
 		days: (durationQuantity: number) =>

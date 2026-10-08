@@ -191,21 +191,6 @@ export async function deleteConnection(i18n: I18n, type: string, connectionId: s
 	}
 }
 
-export async function verifyConnection(i18n: I18n, type: string, connectionId: string): Promise<void> {
-	try {
-		const response = await http.post<ConnectionResponse>(Endpoints.CONNECTION_VERIFY(type, connectionId), {
-			body: {},
-		});
-		UserConnection.updateConnection(connectionId, response.body);
-		UserProfileCommands.clearCurrentUserProfiles();
-		successToast(i18n, CONNECTION_VERIFIED_DESCRIPTOR);
-		logger.debug(`Successfully verified connection: ${type}/${connectionId}`);
-	} catch (error) {
-		logger.error(`Failed to verify connection ${type}/${connectionId}:`, error);
-		throw error;
-	}
-}
-
 export async function reorderConnections(i18n: I18n, connectionIds: Array<string>): Promise<void> {
 	try {
 		await http.patch(Endpoints.CONNECTIONS_REORDER, {body: reorderConnectionsRequest(connectionIds)});

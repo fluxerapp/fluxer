@@ -74,12 +74,10 @@
 	margin-left: calc(-1 * var(--tooltip-pointer-half-size));
 }
 
-.tooltipCenter,
 .tooltipBottom {
 	transform-origin: 50% 0%;
 }
 
-.tooltipCenter .tooltipPointer,
 .tooltipBottom .tooltipPointer {
 	position: absolute;
 	bottom: calc(100% - var(--tooltip-pointer-half-size));
@@ -130,8 +128,7 @@
 	background: var(--tooltip-pointer-surface);
 }
 
-.tooltipBottom .tooltipPointer.tooltipPointerBg,
-.tooltipCenter .tooltipPointer.tooltipPointerBg {
+.tooltipBottom .tooltipPointer.tooltipPointerBg {
 	border-top: var(--tooltip-border-width) solid var(--tooltip-pointer-border);
 	border-left: var(--tooltip-border-width) solid var(--tooltip-pointer-border);
 	background: var(--tooltip-pointer-surface);

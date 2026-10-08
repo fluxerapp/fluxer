@@ -97,7 +97,7 @@ export function findCodes(content: string | null, config: CodeLinkConfig): Array
 	return findCodeMatches(content, config).map((match) => match.code);
 }
 
-export function findCodeMatches(content: string | null, config: CodeLinkConfig): Array<CodeLinkMatch> {
+function findCodeMatches(content: string | null, config: CodeLinkConfig): Array<CodeLinkMatch> {
 	return findCodeMatchesInternal(content, config);
 }
 

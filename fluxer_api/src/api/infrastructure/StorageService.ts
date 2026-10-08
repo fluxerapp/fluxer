@@ -25,7 +25,6 @@ import {
 	GetObjectCommand,
 	type GetObjectCommandOutput,
 	HeadObjectCommand,
-	type HeadObjectCommandOutput,
 	ListObjectsV2Command,
 	ListPartsCommand,
 	PutObjectCommand,
@@ -674,10 +673,6 @@ export class StorageService implements IStorageService {
 
 	async getObject(params: {bucket: string; key: string}): Promise<GetObjectCommandOutput> {
 		return this.client.send(new GetObjectCommand({Bucket: params.bucket, Key: params.key}));
-	}
-
-	async headObject(params: {bucket: string; key: string}): Promise<HeadObjectCommandOutput> {
-		return this.client.send(new HeadObjectCommand({Bucket: params.bucket, Key: params.key}));
 	}
 
 	async listObjects(params: {bucket: string; prefix: string; maxObjects?: number}): Promise<

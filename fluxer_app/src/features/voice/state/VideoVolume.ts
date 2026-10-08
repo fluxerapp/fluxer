@@ -51,10 +51,6 @@ class VideoVolume {
 			this.volume = this.previousVolume;
 		}
 	}
-
-	get effectiveVolume(): number {
-		return this.isMuted ? 0 : this.volume;
-	}
 }
 
 export default new VideoVolume();

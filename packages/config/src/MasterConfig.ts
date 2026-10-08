@@ -2,19 +2,19 @@
 
 import type {DerivedEndpoints} from '@fluxer/config/src/EndpointDerivation';
 
-export type RuntimeEnv = 'development' | 'production' | 'test';
-export type DatabaseBackend = 'postgres' | 'cassandra';
-export type PublicScheme = 'http' | 'https';
+type RuntimeEnv = 'development' | 'production' | 'test';
+type DatabaseBackend = 'postgres' | 'cassandra';
+type PublicScheme = 'http' | 'https';
 export const CACHE_PURGE_ADAPTER_NAMES = ['none', 'http'] as const;
 export type CachePurgeAdapterName = (typeof CACHE_PURGE_ADAPTER_NAMES)[number];
 export const STORE_PRODUCT_SLOT_NAMES = ['monthly', 'yearly', 'gift_1_month', 'gift_1_year'] as const;
 export type StoreProductSlotName = (typeof STORE_PRODUCT_SLOT_NAMES)[number];
 export const ACCOUNT_IDENTITY_MODE_NAMES = ['email', 'username'] as const;
-export type AccountIdentityModeName = (typeof ACCOUNT_IDENTITY_MODE_NAMES)[number];
+type AccountIdentityModeName = (typeof ACCOUNT_IDENTITY_MODE_NAMES)[number];
 export const TAG_STYLE_NAMES = ['none', 'random'] as const;
-export type TagStyleName = (typeof TAG_STYLE_NAMES)[number];
+type TagStyleName = (typeof TAG_STYLE_NAMES)[number];
 
-export interface InstanceBrandingConfig {
+interface InstanceBrandingConfig {
 	product_name: string;
 	icon_url?: string;
 	symbol_url?: string;
@@ -221,13 +221,6 @@ export interface MasterConfig {
 			prices?: Record<string, string | undefined>;
 			legacy_prices?: Record<string, Array<string> | undefined>;
 		};
-		ncmec: {
-			enabled: boolean;
-			base_url: string;
-			username: string;
-			password: string;
-			reporter_email?: string;
-		};
 		clamav: {
 			enabled: boolean;
 			host: string;
@@ -330,4 +323,9 @@ export interface MasterConfig {
 	attachment_decay_enabled: boolean;
 	deletion_grace_period_hours: number;
 	inactivity_deletion_threshold_days: number;
+	report_retention: {
+		days: number;
+		resolved_days: number | null;
+		dry_run: boolean;
+	};
 }

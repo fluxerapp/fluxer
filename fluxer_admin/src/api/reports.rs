@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::snowflake;
+use crate::api::generated::{snowflake, types::UpdateReportRequestResolution};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
-    ListReportsResponse, ReportEntry, ResolveReportResponse, SearchReportsResponse,
+    ReportEntry, ReportLegalHoldResponse, ReportReasonListResponse, ResolveReportResponse,
+    SearchReportsResponse,
 };
 
 #[derive(Default)]
@@ -13,8 +14,10 @@ pub struct SearchReportsParams<'a> {
     pub status: Option<i32>,
     pub report_type: Option<i32>,
     pub category: Option<&'a str>,
+    pub reason: Option<&'a str>,
     pub reporter_id: Option<&'a str>,
     pub reported_user_id: Option<&'a str>,
+    pub reported_webhook_id: Option<&'a str>,
     pub reported_guild_id: Option<&'a str>,
     pub reported_channel_id: Option<&'a str>,
     pub guild_context_id: Option<&'a str>,
@@ -26,23 +29,6 @@ pub struct SearchReportsParams<'a> {
 }
 
 impl AdminApiClient {
-    pub async fn list_reports(
-        &self,
-        status: Option<i32>,
-        limit: u32,
-        offset: Option<u32>,
-    ) -> ApiResult<ListReportsResponse> {
-        let status = status.map(report_status).transpose()?.unwrap_or_default();
-        let limit = limit.to_string();
-        let offset = offset.map(|value| value.to_string()).unwrap_or_default();
-        let query_params = [
-            ("status", status),
-            ("limit", limit.as_str()),
-            ("offset", offset.as_str()),
-        ];
-        self.get("/admin/reports", Some(&query_params)).await
-    }
-
     pub async fn get_report(&self, report_id: &str) -> ApiResult<ReportEntry> {
         let response = self
             .generated()
@@ -55,11 +41,12 @@ impl AdminApiClient {
     pub async fn resolve_report(
         &self,
         report_id: &str,
+        resolution: UpdateReportRequestResolution,
         public_comment: Option<&str>,
         notify_reporter: bool,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<ResolveReportResponse> {
-        let mut body = serde_json::json!({"status": "resolved"});
+        let mut body = serde_json::json!({"status": "resolved", "resolution": resolution});
         if let Some(public_comment) = public_comment {
             body["public_comment"] = serde_json::Value::from(public_comment);
         }
@@ -67,6 +54,40 @@ impl AdminApiClient {
         self.patch_with_reason(
             &format!("/admin/reports/{}", urlencoding::encode(report_id)),
             Some(&body),
+            audit_log_reason,
+        )
+        .await
+    }
+
+    pub async fn set_report_legal_hold(
+        &self,
+        report_id: &str,
+        legal_hold_until: Option<&str>,
+        legal_hold_reason: Option<&str>,
+    ) -> ApiResult<ReportLegalHoldResponse> {
+        let body = serde_json::json!({
+            "legal_hold_until": legal_hold_until,
+            "legal_hold_reason": legal_hold_until.and(legal_hold_reason),
+        });
+        self.post_with_reason(
+            &format!(
+                "/admin/reports/{}/legal-hold",
+                urlencoding::encode(report_id)
+            ),
+            Some(&body),
+            None,
+        )
+        .await
+    }
+
+    pub async fn delete_report(
+        &self,
+        report_id: &str,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<()> {
+        self.delete_void_with_reason(
+            &format!("/admin/reports/{}", urlencoding::encode(report_id)),
+            None,
             audit_log_reason,
         )
         .await
@@ -98,10 +119,15 @@ impl AdminApiClient {
             ("status", status),
             ("report_type", report_type),
             ("category", params.category.unwrap_or_default()),
+            ("reason", params.reason.unwrap_or_default()),
             ("reporter_id", params.reporter_id.unwrap_or_default()),
             (
                 "reported_user_id",
                 params.reported_user_id.unwrap_or_default(),
+            ),
+            (
+                "reported_webhook_id",
+                params.reported_webhook_id.unwrap_or_default(),
             ),
             (
                 "reported_guild_id",
@@ -125,6 +151,10 @@ impl AdminApiClient {
             ("offset", offset.as_str()),
         ];
         self.get("/admin/reports", Some(&query_params)).await
+    }
+
+    pub async fn list_report_reasons(&self) -> ApiResult<ReportReasonListResponse> {
+        self.get("/admin/report-reasons", None).await
     }
 
     pub async fn search_reports_by_reporter(

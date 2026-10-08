@@ -316,10 +316,6 @@ export class UserChannelService {
 		return results;
 	}
 
-	async getExistingDmForUsers(userId: UserID, recipientId: UserID): Promise<Channel | null> {
-		return await this.userRepository.findExistingDmState(userId, recipientId);
-	}
-
 	async ensureDmOpenForBothUsers({
 		userId,
 		recipientId,
@@ -353,28 +349,6 @@ export class UserChannelService {
 			return existingChannel;
 		}
 		return await this.createNewDmForBothUsers({userId, recipientId, userCacheService, requestCache});
-	}
-
-	async reopenDmForBothUsers({
-		userId,
-		recipientId,
-		existingChannel,
-		userCacheService,
-		requestCache,
-	}: {
-		userId: UserID;
-		recipientId: UserID;
-		existingChannel: Channel;
-		userCacheService: UserCacheService;
-		requestCache: RequestCache;
-	}): Promise<void> {
-		await this.reopenExistingDMChannel({userId, existingChannel, userCacheService, requestCache});
-		await this.reopenExistingDMChannel({
-			userId: recipientId,
-			existingChannel,
-			userCacheService,
-			requestCache,
-		});
 	}
 
 	async createNewDmForBothUsers({

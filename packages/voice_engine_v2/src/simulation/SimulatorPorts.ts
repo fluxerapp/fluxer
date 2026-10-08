@@ -163,14 +163,6 @@ export class VoiceEngineV2SimulatorDriver implements VoiceEngineV2Driver {
 		this.inventory = options.inventory;
 	}
 
-	get capturesActive(): ReadonlyArray<string> {
-		return [...this.activeCaptures];
-	}
-
-	get frameSinksActive(): ReadonlyArray<string> {
-		return [...this.activeFrameSinks];
-	}
-
 	subscribe(listener: VoiceEngineV2ExternalEventListener): () => void {
 		assert.ok(typeof listener === 'function', 'subscribe expects a listener function');
 		this.listeners.add(listener);

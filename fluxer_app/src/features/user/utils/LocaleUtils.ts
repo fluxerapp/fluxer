@@ -285,7 +285,7 @@ interface DiscoveryLanguageInfo {
 	label: string;
 }
 
-export function getLocalizedLocaleName(code: string): string {
+function getLocalizedLocaleName(code: string): string {
 	const info = SUPPORTED_LOCALES.find((locale) => locale.code === code);
 	return info ? i18n._(info.name) : code;
 }

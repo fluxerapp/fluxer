@@ -40,9 +40,9 @@ const DUPLICATE_THEME_NAME_DESCRIPTOR = msg({
 		'Name given to the copy created by the Duplicate button in the Theme Studio theme library. {themeName} is the name of the theme being duplicated.',
 });
 
-export type ThemeLibraryThemeSource = 'quick_css' | 'css_file' | 'desktop_directory' | 'shared_theme' | 'import';
+type ThemeLibraryThemeSource = 'quick_css' | 'css_file' | 'desktop_directory' | 'shared_theme' | 'import';
 
-export type ThemeLinkedFileStatus = 'live' | ThemeLinkedFileError;
+type ThemeLinkedFileStatus = 'live' | ThemeLinkedFileError;
 
 export interface ThemeLibraryTheme {
 	id: string;
@@ -80,7 +80,7 @@ export interface ThemeLibraryLocalFileReference {
 	updatedAt: number;
 }
 
-export interface ThemeDirectoryCssFile {
+interface ThemeDirectoryCssFile {
 	fileName: string;
 	path: string;
 	css: string;
@@ -309,16 +309,6 @@ class ThemeLibrary {
 				this.themes.sort((a, b) => themeSortValue(a).localeCompare(themeSortValue(b)));
 			});
 		});
-	}
-
-	async saveCssAsTheme(css: string, name: string): Promise<ThemeLibraryTheme> {
-		const fileName = `${sanitizeFileName(name || 'quick-css').replace(/\.css$/i, '')}.css`;
-		const theme = {
-			...this.createThemeFromCss(css, fileName, 'quick_css'),
-			name: name.trim() || 'Quick CSS',
-		};
-		await this.saveTheme(theme);
-		return theme;
 	}
 
 	async importCssFiles(files: ReadonlyArray<File>): Promise<Array<ThemeLibraryTheme>> {
@@ -596,15 +586,6 @@ class ThemeLibrary {
 			await setEnabledThemeIds(next);
 			runInAction(() => {
 				this.enabledThemeIds = next;
-			});
-		});
-	}
-
-	async clearEnabledThemes(): Promise<void> {
-		await this.mutate(async () => {
-			await setEnabledThemeIds([]);
-			runInAction(() => {
-				this.enabledThemeIds = [];
 			});
 		});
 	}

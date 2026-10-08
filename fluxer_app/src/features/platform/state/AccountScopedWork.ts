@@ -322,7 +322,3 @@ class AccountScopedWorkOwner implements AccountScopedWorkRegistry {
 const owner = new AccountScopedWorkOwner();
 
 export const AccountScopedWork: AccountScopedWorkRegistry = owner;
-
-export function awaitAccountScopedWorkIdle(): Promise<void> {
-	return owner.awaitIdle();
-}

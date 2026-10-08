@@ -264,48 +264,8 @@ export class MeilisearchReportSearchService
 		return this.search(query, filters, options);
 	}
 
-	listReportsByReporter(
-		reporterId: UserID,
-		limit?: number,
-		offset?: number,
-	): Promise<SchemaSearchResult<SearchableReport>> {
-		return this.searchReports('', {reporterId: reporterId.toString()}, {limit, offset});
-	}
-
 	listReportsByStatus(status: number, limit?: number, offset?: number): Promise<SchemaSearchResult<SearchableReport>> {
 		return this.searchReports('', {status}, {limit, offset});
-	}
-
-	listReportsByType(
-		reportType: number,
-		limit?: number,
-		offset?: number,
-	): Promise<SchemaSearchResult<SearchableReport>> {
-		return this.searchReports('', {reportType}, {limit, offset});
-	}
-
-	listReportsByReportedUser(
-		reportedUserId: UserID,
-		limit?: number,
-		offset?: number,
-	): Promise<SchemaSearchResult<SearchableReport>> {
-		return this.searchReports('', {reportedUserId: reportedUserId.toString()}, {limit, offset});
-	}
-
-	listReportsByReportedGuild(
-		reportedGuildId: GuildID,
-		limit?: number,
-		offset?: number,
-	): Promise<SchemaSearchResult<SearchableReport>> {
-		return this.searchReports('', {reportedGuildId: reportedGuildId.toString()}, {limit, offset});
-	}
-
-	listReportsByReportedMessage(
-		reportedMessageId: MessageID,
-		limit?: number,
-		offset?: number,
-	): Promise<SchemaSearchResult<SearchableReport>> {
-		return this.searchReports('', {reportedMessageId: reportedMessageId.toString()}, {limit, offset});
 	}
 }
 

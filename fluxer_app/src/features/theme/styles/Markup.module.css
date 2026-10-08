@@ -323,11 +323,6 @@
 	color: var(--text-primary);
 }
 
-.markup .no-webkit-scrollbar code {
-	scrollbar-width: thin;
-	scrollbar-color: var(--background-tertiary) var(--background-primary);
-}
-
 .markup .blockquoteContainer {
 	display: flex;
 	margin-top: 0.25rem;
@@ -581,9 +576,7 @@
 .markup .mention.interactive[aria-expanded='true'],
 .inlineFormat .mention.interactive[aria-expanded='true'],
 .markup .mention.interactive[data-context-menu-open='true'],
-.inlineFormat .mention.interactive[data-context-menu-open='true'],
-.markup .mention.interactive.mentionActive,
-.inlineFormat .mention.interactive.mentionActive {
+.inlineFormat .mention.interactive[data-context-menu-open='true'] {
 	background-color: var(--markup-interactive-hover-fill);
 	color: var(--markup-mention-color, var(--text-link)) !important;
 	text-decoration: none;
@@ -1115,37 +1108,6 @@
 	border-left: 0.1875rem solid var(--accent-danger);
 	font-family: var(--font-mono);
 	font-size: 0.9em;
-}
-
-.markup .forwardedMessage {
-	display: flex;
-	margin: 0.5rem 0;
-	padding: 0.5rem 0.75rem;
-	background-color: var(--background-modifier-hover);
-	border-left: 0.25rem solid var(--interactive-muted);
-	border-radius: var(--radius-md);
-}
-
-.markup .forwardedContent {
-	flex: 1;
-	color: var(--text-chat);
-}
-
-.markup .forwardedJumpLink {
-	display: inline-block;
-	margin-top: 0.5rem;
-	font-size: 0.875em;
-	color: var(--text-link);
-	text-decoration: none;
-	cursor: pointer;
-	transition: color var(--transition-fast);
-}
-
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.markup
-	.forwardedJumpLink:hover {
-	color: var(--text-link);
-	text-decoration: underline;
 }
 
 @media (max-width: 768px) {

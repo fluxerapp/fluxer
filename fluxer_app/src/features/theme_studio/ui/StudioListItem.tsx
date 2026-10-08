@@ -80,6 +80,3 @@ export const StudioListItem: React.FC<StudioListItemProps> = ({
 		</div>
 	);
 };
-export const StudioListDivider: React.FC = () => (
-	<div className={styles.divider} data-flx="theme-studio.ui.studio-list-item.studio-list-divider.divider" />
-);

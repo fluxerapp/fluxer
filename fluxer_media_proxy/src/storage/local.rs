@@ -37,12 +37,6 @@ impl Store {
         Ok(path)
     }
 
-    pub(super) async fn ensure_bucket_local(&self, bucket: &str) -> Result<(), StorageError> {
-        safe_bucket(bucket)?;
-        tokio::fs::create_dir_all(Path::new(&self.cfg.storage.root).join(bucket)).await?;
-        Ok(())
-    }
-
     pub(super) async fn read_local(
         &self,
         request: BufferedObjectReadRequest<'_>,

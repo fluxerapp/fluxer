@@ -38,7 +38,7 @@ interface ControlIconProps {
 
 const ControlIcon: React.FC<ControlIconProps> = ({icon, 'data-flx': dataFlx}) => (
 	<svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg" data-flx={dataFlx}>
-		<path d={NATIVE_TITLEBAR_CONTROL_ICON_PATH[icon]} />
+		<path d={NATIVE_TITLEBAR_CONTROL_ICON_PATH[icon]} data-flx="app.native-window-controls.control-icon.path" />
 	</svg>
 );
 

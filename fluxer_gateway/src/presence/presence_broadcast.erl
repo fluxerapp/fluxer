@@ -4,7 +4,6 @@
 -typing([eqwalizer]).
 
 -export([
-    publish_global_if_needed/1,
     publish_global_presence/2,
     force_publish_global_presence/1,
     dispatch_global_presence/3,
@@ -13,9 +12,7 @@
     ensure_initial_global_subscriptions/1,
     sync_friend_subscriptions/3,
     sync_group_dm_subscriptions/2,
-    maybe_send_cached_presences/2,
     send_cached_presences_to_session/2,
-    maybe_force_offline/2,
     publish_user_update_to_bus/3,
     is_last_published_visible/1,
     cache_if_visible/2,
@@ -31,15 +28,6 @@
 -type sessions() :: #{binary() => map()}.
 
 -define(CUSTOM_STATUS_EXPIRY_TIMER, custom_status_expiry_timer).
-
--spec publish_global_if_needed({reply, term(), state()} | {noreply, state()}) ->
-    {reply, term(), state()} | {noreply, state()}.
-publish_global_if_needed({reply, Reply, NewState}) ->
-    FinalState = publish_global_presence(maps:get(sessions, NewState), NewState),
-    {reply, Reply, FinalState};
-publish_global_if_needed({noreply, NewState}) ->
-    FinalState = publish_global_presence(maps:get(sessions, NewState), NewState),
-    {noreply, FinalState}.
 
 -spec publish_global_presence(sessions(), state()) -> state().
 publish_global_presence(_Sessions, State0) ->
@@ -135,17 +123,9 @@ sync_friend_subscriptions(FriendIds, FlushedIds, State) ->
 sync_group_dm_subscriptions(RecipientsByChannel, State) ->
     presence_broadcast_subscriptions:sync_group_dm_subscriptions(RecipientsByChannel, State).
 
--spec maybe_send_cached_presences([user_id()], state()) -> state().
-maybe_send_cached_presences(UserIds, State) ->
-    presence_broadcast_subscriptions:maybe_send_cached_presences(UserIds, State).
-
 -spec send_cached_presences_to_session(pid(), state()) -> ok.
 send_cached_presences_to_session(SessionPid, State) ->
     presence_broadcast_subscriptions:send_cached_presences_to_session(SessionPid, State).
-
--spec maybe_force_offline([user_id()], state()) -> state().
-maybe_force_offline(UserIds, State) ->
-    presence_broadcast_subscriptions:maybe_force_offline(UserIds, State).
 
 -spec publish_user_update_to_bus(user_id(), map(), state()) -> ok.
 publish_user_update_to_bus(UserId, UserData, State) ->

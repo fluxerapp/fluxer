@@ -1183,15 +1183,26 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const destinationTooltipText = MobileLayout.enabled
 		? url
 		: () => (
-				<span className={linkRendererStyles.destination}>
+				<span className={linkRendererStyles.destination} data-flx="messaging.markdown.renderers.link-renderer.span">
 					{!isTrustedExternalDestination && (
-						<WarningIcon size={16} weight="fill" className={linkRendererStyles.destinationWarningIcon} />
+						<WarningIcon
+							size={16}
+							weight="fill"
+							className={linkRendererStyles.destinationWarningIcon}
+							data-flx="messaging.markdown.renderers.link-renderer.warning-icon"
+						/>
 					)}
-					<span>{url}</span>
+					<span data-flx="messaging.markdown.renderers.link-renderer.span--2">{url}</span>
 				</span>
 			);
 	return (
-		<Tooltip text={destinationTooltipText} type="normal" position="bottom" maxWidth="xl">
+		<Tooltip
+			text={destinationTooltipText}
+			type="normal"
+			position="bottom"
+			maxWidth="xl"
+			data-flx="messaging.markdown.renderers.link-renderer.tooltip.normal"
+		>
 			{linkElement}
 		</Tooltip>
 	);

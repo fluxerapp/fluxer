@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::plural::noun_for;
 use crate::{
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -139,7 +140,7 @@ fn status_section(base: &str, rs: &RefreshStatus) -> Markup {
                 @if status_str == "completed" {
                     @if let (Some(idx), Some(tot)) = (rs.indexed, rs.total) {
                         p class="text-sm text-neutral-700" {
-                            "Indexed " (idx) " / " (tot) " items"
+                            "Indexed " (idx) " / " (tot) " " (noun_for(tot, "item", "items"))
                         }
                     }
                 }

@@ -5,11 +5,11 @@ import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'x
 
 export type VoiceScreenShareSourceType = 'display' | 'native-display' | 'native-app' | 'device';
 
-export type VoiceScreenShareOperation = 'starting' | 'stopping' | 'replacing' | 'restoring';
+type VoiceScreenShareOperation = 'starting' | 'stopping' | 'replacing' | 'restoring';
 
-export type VoiceScreenShareCodecReadiness = 'idle' | 'loading' | 'ready' | 'timeout';
+type VoiceScreenShareCodecReadiness = 'idle' | 'loading' | 'ready' | 'timeout';
 
-export type VoiceScreenShareWatchCommand = {type: 'watch.add'; key: string} | {type: 'watch.remove'; key: string};
+type VoiceScreenShareWatchCommand = {type: 'watch.add'; key: string} | {type: 'watch.remove'; key: string};
 
 interface VoiceScreenShareContext {
 	active: boolean;
@@ -195,7 +195,7 @@ function syncLocalWatcher(
 	};
 }
 
-export const voiceScreenShareStateMachine = setup({
+const voiceScreenShareStateMachine = setup({
 	types: {} as {
 		context: VoiceScreenShareContext;
 		events: VoiceScreenShareEvent;
@@ -365,7 +365,6 @@ export const voiceScreenShareStateMachine = setup({
 });
 
 export type VoiceScreenShareSnapshot = SnapshotFrom<typeof voiceScreenShareStateMachine>;
-export type VoiceScreenShareStateValue = 'inactive' | 'active' | 'pending';
 
 export function createVoiceScreenShareSnapshot(): VoiceScreenShareSnapshot {
 	return initialTransition(voiceScreenShareStateMachine)[0];
@@ -376,10 +375,4 @@ export function transitionVoiceScreenShareSnapshot(
 	event: VoiceScreenShareEvent,
 ): VoiceScreenShareSnapshot {
 	return transition(voiceScreenShareStateMachine, snapshot, event)[0] as VoiceScreenShareSnapshot;
-}
-
-export function getVoiceScreenShareStateValue(snapshot: VoiceScreenShareSnapshot): VoiceScreenShareStateValue {
-	if (snapshot.value === 'pending') return 'pending';
-	if (snapshot.value === 'active') return 'active';
-	return 'inactive';
 }

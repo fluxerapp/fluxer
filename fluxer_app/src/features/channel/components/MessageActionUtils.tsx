@@ -121,6 +121,9 @@ export function canReportMessage(message: Message): boolean {
 	if (message.author.system) {
 		return false;
 	}
+	if (message.isCrosspostSourceDeleted) {
+		return false;
+	}
 	return message.type === MessageTypes.DEFAULT || message.type === MessageTypes.REPLY;
 }
 
@@ -130,10 +133,6 @@ export function canDeleteAttachmentUtil(message: Message | undefined): boolean {
 	const guild = channel?.guildId ? Guilds.getGuild(channel.guildId) : null;
 	const sendMessageDisabled = guild ? (guild.disabledOperations & GuildOperations.SEND_MESSAGE) !== 0 : false;
 	return !sendMessageDisabled;
-}
-
-export function requestOpenReactionPicker(messageId: string): void {
-	ComponentBus.dispatch('EMOJI_PICKER_OPEN', {messageId});
 }
 
 function messageElementSelector(messageId: string): string {
@@ -530,7 +529,7 @@ export function requestMessageCrosspost(message: Message, i18n: I18n, options: {
 	);
 }
 
-export function requestRemoveAllReactions(message: Message, i18n: I18n): void {
+function requestRemoveAllReactions(message: Message, i18n: I18n): void {
 	ModalCommands.push(
 		modal(() => (
 			<ConfirmModal

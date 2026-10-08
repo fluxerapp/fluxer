@@ -31,16 +31,8 @@ class UserNote {
 		}
 	}
 
-	clearNote(userId: string): void {
-		this.updateUserNote(userId, '');
-	}
-
 	getUserNote(userId: string): string {
 		return this.notes[userId] ?? '';
-	}
-
-	hasNote(userId: string): boolean {
-		return userId in this.notes && this.notes[userId].length > 0;
 	}
 }
 

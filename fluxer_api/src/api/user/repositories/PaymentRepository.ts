@@ -184,19 +184,6 @@ export class PaymentRepository {
 		return result ?? null;
 	}
 
-	async hasEverPaidSuccessfully(userId: UserID): Promise<boolean> {
-		const refs = await fetchMany<{
-			checkout_session_id: string;
-		}>(FETCH_PAYMENTS_BY_USER_QUERY, {
-			user_id: userId,
-		});
-		if (refs.length === 0) return false;
-		const rows = await fetchMany<PaymentRow>(FETCH_PAYMENTS_BY_IDS_QUERY, {
-			checkout_session_ids: refs.map((r) => r.checkout_session_id),
-		});
-		return rows.some((r) => r.status === 'completed');
-	}
-
 	async findPaymentsByUserId(userId: UserID): Promise<Array<Payment>> {
 		const paymentRefs = await fetchMany<{
 			checkout_session_id: string;

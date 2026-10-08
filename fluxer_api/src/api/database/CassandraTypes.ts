@@ -49,7 +49,7 @@ export type CassandraParam =
 	| Record<string, unknown>
 	| null;
 export type CassandraParams = Record<string, CassandraParam>;
-export type KvAction = 'select' | 'count' | 'insert' | 'upsert' | 'delete' | 'patch' | 'batch';
+type KvAction = 'select' | 'count' | 'insert' | 'upsert' | 'delete' | 'patch' | 'batch';
 
 export interface KvTableSpec<Row extends object = Record<string, unknown>> {
 	name: string;

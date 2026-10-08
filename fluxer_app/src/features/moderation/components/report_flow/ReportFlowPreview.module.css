@@ -1,0 +1,50 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.messageScroller {
+	max-height: min(13.75rem, 40vh);
+	border: 0.0625rem solid var(--background-header-secondary);
+	border-radius: var(--radius-lg);
+	background-color: var(--background-secondary-alt);
+}
+
+.messageContent {
+	padding: 0.5rem 0;
+	font-size: 87.5%;
+	pointer-events: none;
+}
+
+.userCard {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.875rem 1rem;
+	border: 0.0625rem solid var(--background-header-secondary);
+	border-radius: var(--radius-lg);
+	background-color: var(--background-secondary-alt);
+}
+
+.userText {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	min-width: 0;
+}
+
+.userName {
+	overflow: hidden;
+	color: var(--text-primary);
+	font-size: 0.9375rem;
+	font-weight: 600;
+	line-height: 1.25rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.userTag {
+	overflow: hidden;
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

@@ -38,7 +38,7 @@ const WAVEFORM_BAR_COUNT = 32;
 const VOICE_PLAYBACK_RATE_STEPS = [0.75, 1, 1.5, 2] as const;
 const voicePlaybackStops = new Map<object, () => void>();
 
-export interface VoiceMessagePlayerProps extends BaseMediaProps {
+interface VoiceMessagePlayerProps extends BaseMediaProps {
 	src: string;
 	title?: string;
 	duration?: number;
@@ -49,7 +49,7 @@ export interface VoiceMessagePlayerProps extends BaseMediaProps {
 	snapshotIndex?: number;
 }
 
-export function decodeWaveform(waveform: string): Array<number> {
+function decodeWaveform(waveform: string): Array<number> {
 	if (!waveform) return [];
 	try {
 		const decoded = atob(waveform);
@@ -64,7 +64,7 @@ export function decodeWaveform(waveform: string): Array<number> {
 	}
 }
 
-export function resampleWaveform(samples: ReadonlyArray<number>, barCount: number): Array<number> {
+function resampleWaveform(samples: ReadonlyArray<number>, barCount: number): Array<number> {
 	if (samples.length === barCount) return [...samples];
 	if (samples.length < barCount) {
 		return [...samples, ...new Array<number>(barCount - samples.length).fill(0)];
@@ -86,12 +86,12 @@ export function resampleWaveform(samples: ReadonlyArray<number>, barCount: numbe
 	return resampled;
 }
 
-export function countPlayedBars(progressPercent: number, barCount: number): number {
+function countPlayedBars(progressPercent: number, barCount: number): number {
 	if (barCount <= 0) return 0;
 	return Math.max(0, Math.min(barCount, Math.round((progressPercent / 100) * barCount)));
 }
 
-export function waveformBarHeightPercent(value: number): number {
+function waveformBarHeightPercent(value: number): number {
 	const clamped = Math.max(0, Math.min(1, value));
 	return ((22 * clamped + 2) / 24) * 100;
 }

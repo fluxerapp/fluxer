@@ -9,12 +9,10 @@
 -export([
     start_link/0,
     lookup/1,
-    lookup_async/2,
     start_or_lookup/1,
     dispatch_to_user/3,
     terminate_all_sessions/1,
     handoff_for_drain/0,
-    call_via_manager/2,
     call_via_manager_local/2,
     track_shard_user/2,
     untrack_shard_user/2,
@@ -56,21 +54,6 @@ start_or_lookup(Request) when is_map(Request) ->
             start_or_lookup_for_user(UserId, Request)
     end.
 
--spec lookup_async(user_id(), term()) -> ok.
-lookup_async(UserId, Message) ->
-    _ =
-        case presence_manager_cache:lookup(UserId) of
-            {hit, Pid} ->
-                _ = gen_server:cast(Pid, Message);
-            miss ->
-                spawn_lookup_and_cast(UserId, Message)
-        end,
-    ok.
-
--spec spawn_lookup_and_cast(user_id(), term()) -> pid().
-spawn_lookup_and_cast(UserId, Message) ->
-    spawn(fun() -> lookup_and_cast(UserId, Message) end).
-
 -spec request_user_id(map()) -> user_id() | undefined.
 request_user_id(#{user_id := UserId}) when is_integer(UserId) ->
     UserId;
@@ -105,20 +88,6 @@ lookup_and_cache(UserId) ->
             {ok, Pid};
         _ ->
             {error, not_found}
-    end.
-
--spec lookup_and_cast(user_id(), term()) -> ok.
-lookup_and_cast(UserId, Message) ->
-    case
-        presence_manager_routing:call_owner_manager(
-            UserId, {lookup, UserId}, ?DEFAULT_GEN_SERVER_TIMEOUT
-        )
-    of
-        {ok, Pid} when is_pid(Pid) ->
-            presence_manager_cache:put_if_local(UserId, Pid),
-            gen_server:cast(Pid, Message);
-        _ ->
-            ok
     end.
 
 -spec terminate_all_sessions(user_id()) -> ok | {error, term()}.
@@ -271,10 +240,6 @@ safe_stop_shard(Pid) when is_pid(Pid) ->
         error:_ -> ok;
         exit:_ -> ok
     end.
-
--spec call_via_manager(term(), pos_integer()) -> term().
-call_via_manager(Request, Timeout) ->
-    presence_manager_routing:call_via_manager(Request, Timeout).
 
 -spec call_via_manager_local(term(), pos_integer()) -> term().
 call_via_manager_local(Request, Timeout) ->

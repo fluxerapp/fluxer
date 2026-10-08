@@ -170,16 +170,12 @@ function loadArborium(): Promise<ArboriumModule> {
 	return arboriumPromise;
 }
 
-export async function _preloadArboriumForTests(): Promise<void> {
-	await loadArborium();
-}
-
 export interface HighlightLanguageOption {
 	canonicalCode: string;
 	code: string;
 }
 
-export let HIGHLIGHT_LANGUAGE_OPTIONS: ReadonlyArray<HighlightLanguageOption> = [
+let HIGHLIGHT_LANGUAGE_OPTIONS: ReadonlyArray<HighlightLanguageOption> = [
 	{canonicalCode: AUTO_DETECT_LANGUAGE_CODE, code: AUTO_DETECT_LANGUAGE_CODE},
 	{canonicalCode: PLAIN_TEXT_LANGUAGE, code: PLAIN_TEXT_LANGUAGE},
 	{canonicalCode: PLAIN_TEXT_LANGUAGE, code: 'plaintext'},
@@ -389,11 +385,11 @@ function getLanguageToken(language?: string | null): string | null {
 	return primaryLanguage ? primaryLanguage.toLowerCase() : null;
 }
 
-export function escapeCodeHtml(value: string): string {
+function escapeCodeHtml(value: string): string {
 	return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-export function normalizeHighlightLanguage(language?: string | null): string | null {
+function normalizeHighlightLanguage(language?: string | null): string | null {
 	const languageToken = getLanguageToken(language);
 	if (!languageToken || languageToken.length > MAX_HIGHLIGHT_LANGUAGE_LENGTH) {
 		return null;
@@ -434,7 +430,7 @@ function resolveHighlightLanguage(language?: string | null): string | null {
 	return normalizeHighlightLanguage(languageToken);
 }
 
-export async function highlightCodeHtml(
+async function highlightCodeHtml(
 	language?: string | null,
 	source?: string | null,
 	signal?: AbortSignal,

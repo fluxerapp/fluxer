@@ -417,6 +417,8 @@ pub struct AppSetupConfigResponse {
 pub struct AppLegalConfigResponse {
     pub terms_url: Option<String>,
     pub privacy_url: Option<String>,
+    #[serde(default)]
+    pub guidelines_url: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -927,6 +929,8 @@ pub struct AppLegalConfigUpdateRequest {
     pub terms_url: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub privacy_url: Option<Option<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub guidelines_url: Option<Option<String>>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]

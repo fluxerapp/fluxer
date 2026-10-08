@@ -32,10 +32,6 @@ class SavedMessages {
 		);
 	}
 
-	getMissingEntries(): Array<SavedMessageMissingEntry> {
-		return this.missingSavedMessages.slice();
-	}
-
 	getHasMore(): boolean {
 		return this.hasMore;
 	}

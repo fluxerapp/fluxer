@@ -24,11 +24,6 @@ export class BillingPriceRepository {
 		return fetchOne<BillingPriceRow>(FETCH_BY_ID, {provider_id: providerId});
 	}
 
-	async listByProduct(productId: string): Promise<Array<BillingPriceRow>> {
-		const result = await fetchPage<BillingPriceRow>(FETCH_ALL, {}, {pageSize: 1000, pageState: null});
-		return result.rows.filter((r) => r.product_id === productId);
-	}
-
 	async listAllActive(page?: {
 		pageSize: number;
 		pageState?: string | null;

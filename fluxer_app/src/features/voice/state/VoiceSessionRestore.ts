@@ -5,7 +5,7 @@ import {initializeStore} from '@app/features/platform/utils/StoreInitialization'
 import {MS_PER_MINUTE} from '@fluxer/date_utils/src/DateConstants';
 import {makeAutoObservable} from 'mobx';
 
-export const VOICE_SESSION_RESTORE_DECAY_MS = 5 * MS_PER_MINUTE;
+const VOICE_SESSION_RESTORE_DECAY_MS = 5 * MS_PER_MINUTE;
 export const VOICE_SESSION_RESTORE_HEARTBEAT_MS = MS_PER_MINUTE;
 
 export interface VoiceSessionRestoreSnapshot {

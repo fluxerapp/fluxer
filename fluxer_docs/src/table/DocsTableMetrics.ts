@@ -24,8 +24,6 @@ export const TABLE_BUDGET_PX = 528;
 
 export const TABLE_FLOOR_CAP_SHARE = 1 / 3;
 
-export const TABLE_NARROW_TIER_PX = TABLE_BUDGET_PX;
-
 export const TABLE_MIDDLE_TIER_PX = 768;
 
 export const TABLE_WIDE_TIER_PX = 960;

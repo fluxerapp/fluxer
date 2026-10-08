@@ -10,12 +10,7 @@ import {
 	upsertOne,
 } from '@app/api/database/CassandraQueryExecution';
 import type {BillingPaymentIntentRow} from '@app/api/database/types/BillingTypes';
-import {
-	BillingPaymentIntents,
-	BillingPaymentIntentsByCustomer,
-	BillingPayments,
-	BillingPaymentsByInvoice,
-} from '@app/api/Tables';
+import {BillingPaymentIntents, BillingPaymentIntentsByCustomer} from '@app/api/Tables';
 import type Stripe from 'stripe';
 
 const FETCH_BY_ID = BillingPaymentIntents.selectCql({
@@ -27,15 +22,6 @@ const FETCH_BY_CUSTOMER = BillingPaymentIntentsByCustomer.selectCql({
 });
 const FETCH_BY_PROVIDER_IDS = BillingPaymentIntents.selectCql({
 	where: BillingPaymentIntents.where.in('provider_id', 'provider_ids'),
-});
-const FETCH_PAYMENT_INTENTS_BY_INVOICE_VIA_PAYMENTS = BillingPayments.selectCql({
-	columns: ['payment_intent_id'],
-	where: BillingPayments.where.eq('provider_id'),
-	limit: 1,
-});
-const FETCH_PAYMENTS_BY_INVOICE = BillingPaymentsByInvoice.select({
-	columns: ['provider_id', 'payment_intent_id'],
-	where: BillingPaymentsByInvoice.where.eq('invoice_id'),
 });
 
 export class BillingPaymentIntentRepository {
@@ -63,32 +49,6 @@ export class BillingPaymentIntentRepository {
 		const ids = refsPage.rows.map((r) => r.provider_id);
 		const rows = await fetchMany<BillingPaymentIntentRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
 		return {rows, pageState: refsPage.pageState};
-	}
-
-	async findByInvoiceId(invoiceId: string): Promise<BillingPaymentIntentRow | null> {
-		const refs = await fetchMany<{
-			provider_id: string;
-			payment_intent_id: string | null;
-		}>(
-			FETCH_PAYMENTS_BY_INVOICE.bind({
-				invoice_id: invoiceId,
-			}),
-		);
-		if (refs.length === 0) return null;
-		for (const ref of refs) {
-			const payment = await fetchOne<{
-				is_default: boolean | null;
-				payment_intent_id: string | null;
-			}>(FETCH_PAYMENT_INTENTS_BY_INVOICE_VIA_PAYMENTS, {provider_id: ref.provider_id});
-			if (payment?.is_default === true && payment.payment_intent_id) {
-				return this.findById(payment.payment_intent_id);
-			}
-		}
-		const firstWithIntent = refs.find((r) => r.payment_intent_id !== null);
-		if (firstWithIntent?.payment_intent_id) {
-			return this.findById(firstWithIntent.payment_intent_id);
-		}
-		return null;
 	}
 
 	async upsertFromStripe(pi: Stripe.PaymentIntent): Promise<{

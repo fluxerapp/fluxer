@@ -359,7 +359,7 @@ fn set_author_and_provider(
     }
     if let Some(name) = site_name {
         embed.provider = Some(EmbedProvider {
-            name: Some(text_limits::truncate(name, text_limits::PROVIDER_NAME_MAX)),
+            name: text_limits::truncate(name, text_limits::PROVIDER_NAME_MAX),
             url: Some(provider_url.to_owned()),
         });
     }

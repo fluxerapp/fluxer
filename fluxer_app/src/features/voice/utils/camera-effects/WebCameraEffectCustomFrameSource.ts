@@ -12,16 +12,16 @@ const MAX_ANIMATED_FRAME_SEARCH_STEPS = 10;
 const VIDEO_FIRST_FRAME_TIMEOUT_MS = 8_000;
 const VIDEO_LEASE_RELEASE_TIMEOUT_MS = 1_000;
 
-export const WebCameraEffectCustomFrameSourceKind = Object.freeze({
+const WebCameraEffectCustomFrameSourceKind = Object.freeze({
 	STATIC: 'static',
 	ANIMATED: 'animated',
 	VIDEO: 'video',
 } as const);
 
-export type WebCameraEffectCustomFrameSourceKind =
+type WebCameraEffectCustomFrameSourceKind =
 	(typeof WebCameraEffectCustomFrameSourceKind)[keyof typeof WebCameraEffectCustomFrameSourceKind];
 
-export type WebCameraEffectCustomFrameImage = ImageBitmap | VideoFrame;
+type WebCameraEffectCustomFrameImage = ImageBitmap | VideoFrame;
 
 export interface WebCameraEffectCustomFrame {
 	readonly image: WebCameraEffectCustomFrameImage;
@@ -30,7 +30,7 @@ export interface WebCameraEffectCustomFrame {
 	readonly index: number;
 }
 
-export interface WebCameraEffectCustomFrameLease {
+interface WebCameraEffectCustomFrameLease {
 	readonly frame: WebCameraEffectCustomFrame;
 	release(): void;
 }

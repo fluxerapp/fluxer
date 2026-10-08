@@ -33,7 +33,7 @@ function snapshot(branding: Partial<Branding>, origin = 'https://chat.example.or
 				...branding,
 			},
 			setup: {configured: true, admin_url: null},
-			legal: {terms_url: null, privacy_url: null},
+			legal: {terms_url: null, privacy_url: null, guidelines_url: null},
 			registration: {collect_date_of_birth: false},
 		},
 	};

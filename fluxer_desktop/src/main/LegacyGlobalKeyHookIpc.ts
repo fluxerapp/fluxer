@@ -16,7 +16,7 @@ const MAX_LEGACY_ID_LENGTH = 512;
 const MAX_LEGACY_KEY_NAME_LENGTH = 64;
 const MAX_LEGACY_MOUSE_BUTTON = 31;
 
-export interface LegacyLinuxEvdevStatus {
+interface LegacyLinuxEvdevStatus {
 	supported: boolean;
 	hasAccess: boolean;
 	canPrompt: boolean;
@@ -27,7 +27,7 @@ export interface LegacyLinuxEvdevStatus {
 	inInputGroup: boolean;
 }
 
-export interface LegacyLinuxEvdevGrantResult {
+interface LegacyLinuxEvdevGrantResult {
 	success: boolean;
 	needsRelogin: boolean;
 	error?: string;
@@ -236,10 +236,6 @@ export function registerLegacyGlobalKeyHookHandlers(
 		requirePrivilegedRendererDocumentSender(event, 'global-key-hook-stop');
 		adapter.release(event.sender.id);
 		await engine.refreshHooks();
-	});
-	ipcMain.handle('global-key-hook-is-running', (event): boolean => {
-		requirePrivilegedRendererDocumentSender(event, 'global-key-hook-is-running');
-		return engine.hooksActive();
 	});
 	ipcMain.handle('check-input-monitoring-access', (event): boolean => {
 		requirePrivilegedRendererDocumentSender(event, 'check-input-monitoring-access');

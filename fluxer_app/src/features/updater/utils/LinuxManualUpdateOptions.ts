@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {CANARY_RELEASE_CHANNEL_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {UpdaterDownloadFormat, UpdaterDownloadOption} from '@app/features/platform/types/Electron';
 
 type LinuxManualDownloadFormat = Extract<UpdaterDownloadFormat, 'appimage' | 'deb' | 'rpm' | 'tar_gz'>;
@@ -144,7 +144,7 @@ function buildLinuxDownloadUrl(params: {
 }
 
 function getModernProductName(channel: DesktopDownloadChannel): string {
-	return channel === 'canary' ? CANARY_RELEASE_CHANNEL_NAME : PRODUCT_NAME;
+	return channel === 'canary' ? `${RuntimeConfig.productName} Canary` : RuntimeConfig.productName;
 }
 
 function getSuggestedName(

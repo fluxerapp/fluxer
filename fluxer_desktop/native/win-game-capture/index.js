@@ -239,15 +239,6 @@ class ScreenCapture extends EventEmitter {
 	}
 }
 
-const FALLBACK_STRATEGY_NAMES = new Set(['wgc', 'dxgi-duplication', 'window-gdi', 'none']);
-function parseFallbackRecommendation(message) {
-	if (typeof message !== 'string') return null;
-	const match = message.match(/\[next-strategy=([a-z-]+)\]/);
-	if (!match) return null;
-	const name = match[1];
-	return FALLBACK_STRATEGY_NAMES.has(name) ? name : null;
-}
-
 async function listSources() {
 	if (!binding || typeof binding.listSources !== 'function') return [];
 	try {
@@ -334,7 +325,6 @@ module.exports = {
 	getAvailability,
 	listSources,
 	ScreenCapture,
-	parseFallbackRecommendation,
 	elevateGpuSchedulingPriority,
 	restoreGpuSchedulingPriority,
 	__setBindingForTests,

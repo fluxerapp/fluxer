@@ -43,10 +43,6 @@ class UserConnection {
 		return Array.from(this.connections.values()).sort((a, b) => a.sortOrder - b.sortOrder);
 	}
 
-	getConnection(id: string): Connection | undefined {
-		return this.connections.get(id);
-	}
-
 	hasConnectionByTypeAndName(type: ConnectionType, name: string): boolean {
 		const lowerName = name.toLowerCase();
 		for (const connection of this.connections.values()) {

@@ -135,6 +135,7 @@ The `flags` field of the [Admin user object](#admin-user-object) is a 64-bit bit
 | 1 &lt;&lt; 4 | FRIENDLY_BOT | Bot accepts friend requests from users |
 | 1 &lt;&lt; 5 | FRIENDLY_BOT_MANUAL_APPROVAL | Bot requires manual approval for friend requests |
 | 1 &lt;&lt; 6 | SPAMMER | Account is flagged as a spammer |
+| 1 &lt;&lt; 7 | PROFILE_HIDDEN | Profile details are hidden from other users |
 | 1 &lt;&lt; 33 | HIGH_GLOBAL_RATE_LIMIT | Account has elevated global rate limits |
 | 1 &lt;&lt; 34 | DELETED | Account has been deleted |
 | 1 &lt;&lt; 36 | SELF_DELETED | Account was self-deleted |
@@ -1410,10 +1411,13 @@ Both modes add the `DISABLED` [account flag](#account-flags) and set `temp_banne
 | --- | --- | --- |
 | duration_hours<sup>1</sup> | integer | Whole-hour ban length, where `0` bans permanently (0-8760) |
 | reason?<sup>2</sup> | string | Statement of reasons sent to the banned account holder (at most 512 characters) |
+| notify_user?<sup>3</sup> | boolean | Whether to email the account holder about a temporary ban (default true) |
 
 <sup>1</sup> Required. The expiry is computed from the moment the ban is applied, so no absolute-expiry field is accepted. The 8760 ceiling is one year
 
 <sup>2</sup> Included in the temporary ban email and in the audit entry, but not stored on the account, so no read operation returns it
+
+<sup>3</sup> A permanent ban sends no email whatever this field says
 
 ### Response body
 
@@ -1438,11 +1442,11 @@ Every authentication session of the account is deleted. [Unban user](#unban-user
 
 An authentication attempt while the ban stands fails with 403 `ACCOUNT_SUSPENDED_TEMPORARILY`. An attempt after the expiry has passed clears the `DISABLED` flag and `temp_banned_until` in the same request, so a temporary ban ends without an Admin operation.
 
-When the account has an email address and `duration_hours` is greater than zero, the account holder is emailed the duration, the expiry, and the supplied `reason`. A permanent ban sends no email.
+When `notify_user` is true, the account has an email address, and `duration_hours` is greater than zero, the account holder is emailed the duration, the expiry, and the supplied `reason`. A permanent ban sends no email. A failed email is logged and the ban still applies.
 
 [User Update](/gateway/events/#user-update) is emitted after the sessions are deleted, so no connection of the account remains to receive it. `DISABLED` is not a public account flag, and no other account observes the change.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `temp_ban`, target type `user`, and the metadata keys `duration_hours`, `reason`, and `banned_until`.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `temp_ban`, target type `user`, and the metadata keys `duration_hours`, `reason`, `banned_until`, `notify_user`, and `notification_sent`.
 
 ### Rate limit
 
@@ -1454,15 +1458,20 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 Clears the account ban and returns the resulting account. Requires `user:temp_ban`.
 
-:::caution[The audit reason reaches the account holder]
-The notification email quotes the `X-Audit-Log-Reason` value verbatim as the reason the ban was lifted, and falls back to the literal text `administrative action` when the header is absent or resolves to null.
-:::
-
 ### Path parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
 | user_id | snowflake | The ID of the target account |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| notify_user? | boolean | Whether to email the account holder that the ban was lifted (default true) |
+| public_reason?<sup>1</sup> | string | Statement shown to the account holder in the email (at most 512 characters) |
+
+<sup>1</sup> Also recorded in the audit entry. The `X-Audit-Log-Reason` value is never emailed
 
 ### Response body
 
@@ -1477,15 +1486,15 @@ The notification email quotes the `X-Audit-Log-Reason` value verbatim as the rea
 | 200<sup>1</sup> | response body | The ban was cleared |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
-<sup>1</sup> The operation checks no precondition. On an account that was never banned it writes `temp_banned_until` as null, clears `DISABLED`, and still emails the account holder
+<sup>1</sup> The operation checks no precondition. On an account that was never banned it writes `temp_banned_until` as null, clears `DISABLED`, and sends no email
 
 ### Side effects
 
 `temp_banned_until` is cleared and `DISABLED` is removed from the account flags.
 
-Deleted sessions are not restored. The account holder is emailed when the account has an email address. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
+Deleted sessions are not restored. Fluxer emails the account holder, with `public_reason` when one is supplied, only when `notify_user` is true, the ban was still in force, the account has an email address, and the account is neither closed nor pending deletion. A failed email is logged and the ban is still cleared. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `unban`, target type `user`, and no metadata.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `unban`, target type `user`, and the metadata keys `notify_user`, `notification_sent`, and `public_reason`.
 
 ### Rate limit
 
@@ -1553,6 +1562,7 @@ The `X-Audit-Log-Reason` value is also stored on the account as the private dele
 | public_reason?<sup>2</sup> | string | Statement of reasons shown to the account holder (at most 512 characters) |
 | days_until_deletion?<sup>3</sup> | integer | Requested whole-day delay (1-365, default 60) |
 | replace_pending_deletion_at?<sup>4</sup> | ISO8601 timestamp | The `pending_deletion_at` of the schedule this request replaces |
+| notify_user? | boolean | Whether to email the account holder about the scheduled deletion (default true) |
 
 <sup>1</sup> Required, and validated against the [deletion reason](#deletion-reasons) registry. `USER_REQUESTED` selects the 14-day minimum, and every other value selects the 60-day minimum
 
@@ -1584,11 +1594,11 @@ The account can no longer authenticate, and its existing authentication sessions
 
 Fluxer cancels a Stripe subscription on the account without proration and refunds the charge behind its latest invoice as fraudulent. When the cancellation or refund fails, Fluxer logs the failure and still keeps the deletion schedule.
 
-The account holder is emailed the deadline and the supplied `public_reason` when the account has an email address.
+The account holder is emailed the deadline and the supplied `public_reason` when `notify_user` is true and the account has an email address. The wording depends on `reason_code`: `USER_REQUESTED` and `INACTIVITY` get a neutral notice, and every other code gets an enforcement notice. A failed email is logged and the schedule is still stored.
 
-For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's email address and resolves the pending reports against the account. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
+For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's email address. For the reasons `SPAM`, `CHEATING_OR_EXPLOITATION`, `COORDINATED_RAIDING`, `AUTOMATION_OR_SELFBOT`, `SCAM_OR_SOCIAL_ENGINEERING`, `HARASSMENT_OR_BULLYING`, `BAN_EVASION`, `TOKEN_OR_CREDENTIAL_SCAM`, `HATE_SPEECH_OR_EXTREMIST_CONTENT`, `MALICIOUS_LINKS_OR_MALWARE`, and `IMPERSONATION_OR_FAKE_IDENTITY`, Fluxer also resolves the pending reports against the account. A pending report in the `child_safety`, `underage_user`, or `self_harm` category is left for a moderator and stays pending. Every other reason leaves all reports pending. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
 
-[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days`, `reason_code`, and `pending_deletion_at`. A replacement adds `replaced_pending_deletion_at`, `replaced_scheduled_by`, `replaced_scheduled_at`, and `replaced_reason_code` for the schedule it replaced. The identifier bans record their own blocklist entries, and when Fluxer resolves at least one report, it records a second entry with action `auto_resolve_reports_on_deletion` and a metadata key `resolved_count`.
+[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days`, `reason_code`, `pending_deletion_at`, `notify_user`, and `notification_sent`. An attempted email adds `notification_template`. A replacement adds `replaced_pending_deletion_at`, `replaced_scheduled_by`, `replaced_scheduled_at`, and `replaced_reason_code` for the schedule it replaced. The identifier bans record their own blocklist entries. For each reason that resolves reports, Fluxer also records a second entry with action `auto_resolve_reports_on_deletion`, target type `user`, and the metadata keys `outcome`, `found_count`, `resolved_count`, `failed_count`, and `notified_count`. `found_count` leaves out the reports in the three categories that stay pending. No such entry is written for any other reason. `outcome` is `completed`, `search_unavailable` when the instance has no report search backend and every report stays pending, or `enumeration_failed` when listing the pending reports failed part way and only those already found were resolved. Each resolved report sends its reporter the generic notice [Update report](/admin-api/reports/#update-report) describes, with no public comment.
 
 ### Rate limit
 

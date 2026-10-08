@@ -5,7 +5,6 @@ use crate::{
     constants::{DEFAULT_IMAGE_SIZE, parse_image_size},
     image_quality::ImageQuality,
     image_transform::EncodeEffort,
-    query::Query,
 };
 
 #[test]
@@ -71,13 +70,4 @@ fn malformed_query_values_fall_back_instead_of_failing_the_request() {
         EncodeEffort::parse_lenient("250").map(EncodeEffort::get),
         Some(9)
     );
-
-    let query = Query::parse("animated=yes&download=TRUE&passthrough=1&empty=");
-    assert!(!query.bool_value("animated", false));
-    assert!(!query.bool_value("animated", true));
-    assert!(query.bool_value("download", false));
-    assert!(query.bool_value("passthrough", false));
-    assert!(!query.bool_value("empty", true));
-    assert!(query.bool_value("missing", true));
-    assert!(!query.bool_value("missing", false));
 }

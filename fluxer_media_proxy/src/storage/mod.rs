@@ -229,13 +229,6 @@ impl Store {
         }
     }
 
-    pub async fn ensure_bucket(&self, bucket: &str) -> Result<(), StorageError> {
-        match self.cfg.storage.backend {
-            StorageBackend::Local => self.ensure_bucket_local(bucket).await,
-            StorageBackend::S3 => self.ensure_bucket_s3(bucket).await,
-        }
-    }
-
     pub async fn relay_put_object(
         &self,
         bucket: &str,

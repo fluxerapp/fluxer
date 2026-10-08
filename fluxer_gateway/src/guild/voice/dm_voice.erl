@@ -4,11 +4,9 @@
 -typing([eqwalizer]).
 
 -export([voice_state_update/2]).
--export([get_voice_state/2]).
 -export([get_voice_token/6]).
 -export([disconnect_voice_user/2]).
--export([broadcast_voice_state_update/3]).
--export([join_or_create_call/5, join_or_create_call/6]).
+-export([]).
 
 -export_type([
     dm_state/0,
@@ -59,11 +57,6 @@ dm_voice_state_update_log_message() ->
     "dm_voice_state_update_start: user_id=~p gateway_session_id=~p "
     "channel_id=~p connection_id=~p".
 
--spec get_voice_state(binary(), dm_state()) -> voice_state() | undefined.
-get_voice_state(ConnectionId, State) ->
-    VoiceStates = maps:get(dm_voice_states, State, #{}),
-    maps:get(ConnectionId, VoiceStates, undefined).
-
 -spec get_voice_token(integer(), integer(), binary(), pid(), term(), term()) -> ok | error.
 get_voice_token(ChannelId, UserId, SessionId, SessionPid, Latitude, Longitude) ->
     dm_voice_token:get_voice_token(
@@ -73,19 +66,3 @@ get_voice_token(ChannelId, UserId, SessionId, SessionPid, Latitude, Longitude) -
 -spec disconnect_voice_user(integer(), dm_state()) -> {reply, map(), dm_state()}.
 disconnect_voice_user(UserId, State) ->
     dm_voice_state:disconnect_voice_user(UserId, State).
-
--spec broadcast_voice_state_update(integer(), voice_state(), dm_state()) -> ok.
-broadcast_voice_state_update(ChannelId, VoiceState, State) ->
-    dm_voice_ring:broadcast_voice_state_update(ChannelId, VoiceState, State).
-
--spec join_or_create_call(integer(), integer(), voice_state(), binary(), pid()) -> ok.
-join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid) ->
-    dm_voice_token:join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid).
-
--spec join_or_create_call(
-    integer(), integer(), voice_state(), binary(), pid(), non_neg_integer()
-) -> ok.
-join_or_create_call(ChannelId, UserId, VoiceState, SessionId, SessionPid, Retries) ->
-    dm_voice_token:join_or_create_call(
-        ChannelId, UserId, VoiceState, SessionId, SessionPid, Retries
-    ).

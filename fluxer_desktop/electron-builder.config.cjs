@@ -145,7 +145,6 @@ const fluxerNativePackages = [
 	'@fluxer/win-game-capture',
 	'@fluxer/win-clipboard',
 	'@fluxer/win-shell',
-	'@fluxer/win-toast',
 	'@fluxer/windows-input-hook',
 	'@fluxer/linux-audio-capture',
 	'@fluxer/linux-portals',
@@ -177,7 +176,6 @@ const fluxerNativePackagesByPlatform = {
 		'@fluxer/win-game-capture',
 		'@fluxer/win-clipboard',
 		'@fluxer/win-shell',
-		'@fluxer/win-toast',
 		'@fluxer/windows-input-hook',
 		'@fluxer/platform-info',
 		'@fluxer/webauthn',
@@ -248,10 +246,6 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/win-shell/index.js',
 	'node_modules/@fluxer/win-shell/loader-diagnostics.cjs',
 	'node_modules/@fluxer/win-shell/*.node',
-	'node_modules/@fluxer/win-toast/package.json',
-	'node_modules/@fluxer/win-toast/index.js',
-	'node_modules/@fluxer/win-toast/loader-diagnostics.cjs',
-	'node_modules/@fluxer/win-toast/*.node',
 	'node_modules/@fluxer/linux-audio-capture/package.json',
 	'node_modules/@fluxer/linux-audio-capture/index.js',
 	'node_modules/@fluxer/linux-audio-capture/loader-diagnostics.cjs',
@@ -325,7 +319,6 @@ const nativeRuntimeFilePatterns = [
 	),
 	'node_modules/.pnpm/@fluxer+win-clipboard@*/node_modules/@fluxer/win-clipboard/*.node',
 	'node_modules/.pnpm/@fluxer+win-shell@*/node_modules/@fluxer/win-shell/*.node',
-	'node_modules/.pnpm/@fluxer+win-toast@*/node_modules/@fluxer/win-toast/*.node',
 	'node_modules/.pnpm/@fluxer+windows-input-hook@*/node_modules/@fluxer/windows-input-hook/*.node',
 	'node_modules/.pnpm/@fluxer+linux-audio-capture@*/node_modules/@fluxer/linux-audio-capture/*.node',
 	'node_modules/.pnpm/@fluxer+linux-portals@*/node_modules/@fluxer/linux-portals/*.node',
@@ -588,10 +581,6 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 		artifacts.push({
 			packageName: '@fluxer/win-shell',
 			relativePath: `win-shell.${tag}.node`,
-		});
-		artifacts.push({
-			packageName: '@fluxer/win-toast',
-			relativePath: `win-toast.${tag}.node`,
 		});
 		artifacts.push({
 			packageName: '@fluxer/windows-input-hook',
@@ -1613,7 +1602,6 @@ module.exports = {
 			),
 			'node_modules/@fluxer/win-clipboard/*.node',
 			'node_modules/@fluxer/win-shell/*.node',
-			'node_modules/@fluxer/win-toast/*.node',
 			'node_modules/@fluxer/linux-audio-capture/*.node',
 			'node_modules/@fluxer/linux-portals/*.node',
 			'node_modules/@fluxer/linux-screen-capture/*.node',
@@ -1641,7 +1629,6 @@ module.exports = {
 			),
 			'node_modules/.pnpm/@fluxer+win-clipboard@*/node_modules/@fluxer/win-clipboard/*.node',
 			'node_modules/.pnpm/@fluxer+win-shell@*/node_modules/@fluxer/win-shell/*.node',
-			'node_modules/.pnpm/@fluxer+win-toast@*/node_modules/@fluxer/win-toast/*.node',
 			'node_modules/.pnpm/@fluxer+windows-input-hook@*/node_modules/@fluxer/windows-input-hook/*.node',
 			'node_modules/.pnpm/@fluxer+linux-audio-capture@*/node_modules/@fluxer/linux-audio-capture/*.node',
 			'node_modules/.pnpm/@fluxer+linux-portals@*/node_modules/@fluxer/linux-portals/*.node',
@@ -1734,9 +1721,6 @@ module.exports = {
 	win: {
 		icon: `build_resources/${iconDir}/icon.ico`,
 		target: winTargets,
-	},
-	portable: {
-		artifactName: `${artifactProductName}-\${version}-portable-\${os}-\${arch}.\${ext}`,
 	},
 	linux: {
 		icon: `build_resources/${iconDir}/1024x1024.png`,

@@ -48,7 +48,6 @@ const REQUEST_SERVICE_VARIABLES: ReadonlyArray<keyof HonoEnv['Variables']> = [
 	'limitConfigService',
 	'mediaService',
 	'messageRequestService',
-	'ncmecSubmissionService',
 	'oauth2ApplicationsRequestService',
 	'oauth2RequestService',
 	'oauth2Service',

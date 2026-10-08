@@ -13,10 +13,6 @@ export function getWorkerDependencies<T>(): T {
 	return workerDependencies as T;
 }
 
-export function hasWorkerDependencies(): boolean {
-	return workerDependencies !== null;
-}
-
 export function clearWorkerDependencies(): void {
 	workerDependencies = null;
 }

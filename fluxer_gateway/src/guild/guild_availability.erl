@@ -5,7 +5,6 @@
 
 -export([
     is_guild_unavailable_for_user/2,
-    is_user_staff/2,
     check_unavailability_transition/2,
     handle_unavailability_transition/2,
     get_cached_unavailability_mode/1,
@@ -41,10 +40,6 @@ is_guild_unavailable_for_user(UserId, State) ->
         available ->
             false
     end.
-
--spec is_user_staff(user_id(), guild_state()) -> boolean().
-is_user_staff(UserId, State) ->
-    guild_availability_check:is_user_staff(UserId, State).
 
 -spec check_unavailability_transition(guild_state(), guild_state()) ->
     {unavailable_enabled, boolean()} | unavailable_disabled | no_change.

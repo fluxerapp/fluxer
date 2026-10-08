@@ -105,6 +105,7 @@ export interface OpenAPIRouteMetadata {
 	requestBodyRequired?: boolean;
 	statusCode?: number | Array<number>;
 	bodylessStatusCodes?: Array<number>;
+	errorStatusCodes?: Array<number>;
 	security?: SecurityScheme | Array<SecurityScheme>;
 	tags: string | Array<string>;
 	deprecated?: boolean;

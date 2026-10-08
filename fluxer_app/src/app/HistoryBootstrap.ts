@@ -3,12 +3,12 @@
 const SYNTHETIC_STATE_FLAG = '__fluxer_synth';
 const MAX_SYNTHETIC_DEPTH = 6;
 
-export interface SyntheticHistoryState {
+interface SyntheticHistoryState {
 	[SYNTHETIC_STATE_FLAG]: true;
 	depth: number;
 }
 
-export function isSyntheticHistoryState(state: unknown): state is SyntheticHistoryState {
+function isSyntheticHistoryState(state: unknown): state is SyntheticHistoryState {
 	return (
 		typeof state === 'object' && state !== null && (state as Record<string, unknown>)[SYNTHETIC_STATE_FLAG] === true
 	);

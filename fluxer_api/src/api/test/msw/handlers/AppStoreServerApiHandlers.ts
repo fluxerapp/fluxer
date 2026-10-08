@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createPublicKey, randomUUID} from 'node:crypto';
+import {createPublicKey} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {Config} from '@app/api/Config';
 import {jwtVerify} from 'jose';
@@ -21,13 +21,13 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 export type AppStoreFakePayload = Record<string, unknown>;
 
-export interface AppStoreFakeTransaction extends AppStoreFakePayload {
+interface AppStoreFakeTransaction extends AppStoreFakePayload {
 	transactionId: string;
 	originalTransactionId: string;
 	productId: string;
 }
 
-export interface AppStoreFakeSubscription {
+interface AppStoreFakeSubscription {
 	originalTransactionId: string;
 	status: number;
 	latestTransactionId: string;
@@ -36,20 +36,20 @@ export interface AppStoreFakeSubscription {
 	renewalInfo?: AppStoreFakePayload | null;
 }
 
-export interface AppStoreFakeError {
+interface AppStoreFakeError {
 	status: number;
 	errorCode?: number;
 	errorMessage?: string;
 	retryAfter?: string;
 }
 
-export interface AppStoreFakeErrorMatch {
+interface AppStoreFakeErrorMatch {
 	environment?: AppStoreFakeEnvironment;
 	method?: string;
 	path?: string;
 }
 
-export interface AppStoreFakeRequest {
+interface AppStoreFakeRequest {
 	environment: AppStoreFakeEnvironment;
 	method: string;
 	path: string;
@@ -351,9 +351,6 @@ export function createAppStoreServerApiFake(options: AppStoreServerApiFakeOption
 					...(hasMore ? {paginationToken: String(nextOffset)} : {}),
 				});
 			}),
-			route(environment, 'post', '/inApps/v1/notifications/test', async () =>
-				HttpResponse.json({testNotificationToken: `${randomUUID()}_${Date.now()}`}),
-			),
 		];
 	}
 

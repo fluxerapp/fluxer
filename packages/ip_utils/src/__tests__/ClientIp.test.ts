@@ -3,8 +3,6 @@
 import {
 	extractClientIp,
 	extractClientIpDetails,
-	extractClientIpDetailsFromHeaders,
-	extractClientIpFromHeaders,
 	MissingClientIpError,
 	requireClientIp,
 	resolveClientIpHeaderName,
@@ -127,35 +125,6 @@ describe('extractClientIpDetails', () => {
 			headers: {'X-Forwarded-For': '203.0.113.50'},
 		});
 		expect(extractClientIpDetails(request, {trustClientIpHeader: false})).toBeNull();
-	});
-});
-
-describe('extractClientIpFromHeaders', () => {
-	it('extracts from node-style headers with configured header name', () => {
-		const headers = {
-			'x-real-ip': '192.168.1.1',
-		};
-		expect(extractClientIpFromHeaders(headers, {trustClientIpHeader: true, clientIpHeaderName: 'x-real-ip'})).toBe(
-			'192.168.1.1',
-		);
-	});
-	it('supports case-insensitive keys and array values', () => {
-		const headers = {
-			'X-FORWARDED-FOR': ['203.0.113.50'],
-		};
-		expect(extractClientIpFromHeaders(headers, {trustClientIpHeader: true})).toBe('203.0.113.50');
-		expect(extractClientIpDetailsFromHeaders(headers, {trustClientIpHeader: true})).toEqual({
-			ip: '203.0.113.50',
-			source: 'client-ip-header',
-			ipVersion: 'ipv4',
-		});
-	});
-	it('returns null when trust is disabled', () => {
-		expect(extractClientIpFromHeaders({'x-forwarded-for': '192.168.1.1'})).toBeNull();
-	});
-	it('returns null for invalid inputs', () => {
-		expect(extractClientIpFromHeaders({}, {trustClientIpHeader: true})).toBeNull();
-		expect(extractClientIpFromHeaders({'x-forwarded-for': 'not-an-ip'}, {trustClientIpHeader: true})).toBeNull();
 	});
 });
 

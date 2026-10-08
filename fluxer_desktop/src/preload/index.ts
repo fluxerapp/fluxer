@@ -62,10 +62,8 @@ import type {
 	UpdaterContext,
 	UpdaterEvent,
 	VirtmicAvailability,
-	VirtmicLinkOptions,
 	VirtmicNode,
 	VirtmicRoutingGraphResult,
-	VirtmicSystemLinkOptions,
 } from '@electron/common/Types';
 import {createBrowserHandoffPreloadAPI} from '@electron/preload/BrowserHandoffPreload';
 import {createDesktopStoragePreloadAPI} from '@electron/preload/DesktopStoragePreload';
@@ -453,10 +451,6 @@ const api: ElectronAPI = {
 		options: SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
 	): Promise<DesktopTroubleshootingSettings> =>
 		ipcRenderer.invoke('desktop-troubleshooting-set-disable-hardware-acceleration', options),
-	desktopTroubleshootingReload: (): Promise<void> => ipcRenderer.invoke('desktop-troubleshooting-reload'),
-	desktopTroubleshootingResetAppData: (options?: {confirm?: boolean}): Promise<void> =>
-		ipcRenderer.invoke('desktop-troubleshooting-reset-app-data', options),
-	popupHelpMenu: (): Promise<void> => ipcRenderer.invoke('desktop-troubleshooting-popup-help-menu'),
 	onUpdaterEvent: (callback: (event: UpdaterEvent) => void): (() => void) => {
 		const handler = (_event: Electron.IpcRendererEvent, data: UpdaterEvent) => callback(data);
 		ipcRenderer.on('updater-event', handler);
@@ -550,9 +544,6 @@ const api: ElectronAPI = {
 		options: PublicKeyCredentialCreationOptionsJSON,
 		requestContext?: {pin?: string; instanceKey?: string},
 	): Promise<RegistrationResponseJSON> => ipcRenderer.invoke('passkey-register', options, requestContext),
-	toggleDevTools: (): void => {
-		ipcRenderer.send('toggle-devtools');
-	},
 	getDesktopSources: (
 		types: Array<'screen' | 'window'>,
 		requestId?: string,
@@ -604,7 +595,6 @@ const api: ElectronAPI = {
 	setBadgeCount: (count: number): void => {
 		ipcRenderer.send('set-badge-count', count);
 	},
-	getBadgeCount: (): Promise<number> => ipcRenderer.invoke('get-badge-count'),
 	setNativeLocale: (locale: string, strings: Record<string, string>): void => {
 		ipcRenderer.send('native-locale-set', {locale, strings});
 	},
@@ -622,16 +612,9 @@ const api: ElectronAPI = {
 		ipcRenderer.on('jump-list-new-dm', handler);
 		return () => ipcRenderer.removeListener('jump-list-new-dm', handler);
 	},
-	bounceDock: (type?: 'critical' | 'informational'): number => {
-		return ipcRenderer.sendSync('bounce-dock', type ?? 'informational');
-	},
-	cancelBounceDock: (id: number): void => {
-		ipcRenderer.send('cancel-bounce-dock', id);
-	},
 	setZoomFactor: (factor: number): void => {
 		ipcRenderer.send('set-zoom-factor', factor);
 	},
-	getZoomFactor: (): Promise<number> => ipcRenderer.invoke('get-zoom-factor'),
 	getAccessibilitySupportEnabled: (): Promise<boolean> => ipcRenderer.invoke('get-accessibility-support-enabled'),
 	onAccessibilitySupportChanged: (callback: (enabled: boolean) => void): (() => void) => {
 		const handler = (_event: Electron.IpcRendererEvent, enabled: boolean): void => callback(enabled);
@@ -673,9 +656,6 @@ const api: ElectronAPI = {
 	releaseStreamingPriority: (): void => {
 		ipcRenderer.send('streaming-priority-release');
 	},
-	resetStreamingPriority: (): void => {
-		ipcRenderer.send('streaming-priority-reset');
-	},
 	getStreamingPriorityDiagnostics: (): Promise<StreamingPriorityDiagnostics> =>
 		ipcRenderer.invoke('streaming-priority-get-diagnostics'),
 	onTrayAction: (callback: (action: TrayActionPayload) => void): (() => void) => {
@@ -685,7 +665,6 @@ const api: ElectronAPI = {
 	},
 	globalKeyHookStart: (): Promise<boolean> => ipcRenderer.invoke('global-key-hook-start'),
 	globalKeyHookStop: (): Promise<void> => ipcRenderer.invoke('global-key-hook-stop'),
-	globalKeyHookIsRunning: (): Promise<boolean> => ipcRenderer.invoke('global-key-hook-is-running'),
 	checkInputMonitoringAccess: (): Promise<boolean> => ipcRenderer.invoke('check-input-monitoring-access'),
 	globalKeyHookRegister: (options: GlobalKeyHookRegisterOptions): Promise<void> =>
 		ipcRenderer.invoke('global-key-hook-register', options),
@@ -759,14 +738,12 @@ const api: ElectronAPI = {
 			};
 		},
 	},
-	spellcheckGetState: (): Promise<SpellcheckState> => ipcRenderer.invoke('spellcheck-get-state'),
 	spellcheckSetState: (state: Partial<SpellcheckState>): Promise<SpellcheckState> =>
 		ipcRenderer.invoke('spellcheck-set-state', state),
 	spellcheckGetAvailableLanguages: (): Promise<Array<string>> =>
 		ipcRenderer.invoke('spellcheck-get-available-languages'),
 	spellcheckGetBundledDictionaries: (): Promise<Array<SpellcheckBundledDictionary>> =>
 		ipcRenderer.invoke('spellcheck:get-bundled-dictionaries'),
-	spellcheckSuggest: (word: string): Promise<Array<string>> => ipcRenderer.invoke('spellcheck:suggest', word),
 	onSpellcheckEngineResolved: (callback: (info: SpellcheckResolvedEngineInfo) => void): (() => void) => {
 		const handler = (_event: Electron.IpcRendererEvent, data: SpellcheckResolvedEngineInfo): void => callback(data);
 		ipcRenderer.on('spellcheck-engine-resolved', handler);
@@ -802,12 +779,6 @@ const api: ElectronAPI = {
 			availability: VirtmicAvailability;
 		}> => ipcRenderer.invoke('virtmic:list', options),
 		getRoutingGraph: (): Promise<VirtmicRoutingGraphResult> => ipcRenderer.invoke('virtmic:get-routing-graph'),
-		startInclude: (include: Array<VirtmicNode>, options?: VirtmicLinkOptions): Promise<boolean> =>
-			ipcRenderer.invoke('virtmic:start-include', include, options),
-		startSystem: (exclude: Array<VirtmicNode>, options?: VirtmicSystemLinkOptions): Promise<boolean> =>
-			ipcRenderer.invoke('virtmic:start-system', exclude, options),
-		resolveWindowPid: (sourceId: string): Promise<number | null> =>
-			ipcRenderer.invoke('virtmic:resolve-window-pid', sourceId),
 		stop: (): Promise<void> => ipcRenderer.invoke('virtmic:stop'),
 	},
 	nativeAudio: {

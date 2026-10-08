@@ -245,7 +245,7 @@ The options name the chosen domain in `rpId` and list only the chosen passkeys. 
 
 ## Replaced passkeys
 
-A [passkey update](#passkey-updates) keeps the old `fluxer.app` credential as a replaced passkey, so the mobile apps and `web.fluxer.app` still accept it. A replaced passkey appears in no list, no [Ready](/gateway/events/#ready) payload, and no [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update), and it does not count toward the 10-credential limit.
+A [passkey update](#passkey-updates) keeps the old `fluxer.app` credential as a replaced passkey, so the mobile apps and `web.fluxer.app` still accept it. A replaced passkey appears in no list, no [Ready](/gateway/events/#ready) payload, and no [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update), and it does not count towards the 10-credential limit.
 
 A replaced passkey works only on requests that are not new-origin requests. It never works on a new origin or through the passkey bridge. Renaming or deleting it by ID returns 404 `UNKNOWN_WEBAUTHN_CREDENTIAL`. Deleting the passkey that replaced it deletes it too, and deleting the account's last listed passkey deletes every replaced one.
 

@@ -170,10 +170,6 @@ function pointToDisplayOffset(
 	return boundaries[Math.min(Math.max(0, pointOffset), boundaries.length - 1)]!;
 }
 
-export function $getComposerDisplayOffset(): number | null {
-	return $getComposerDisplayOffsetFromLayout($buildDisplayLayout());
-}
-
 function $getComposerDisplayOffsetFromLayout(layout: DisplayLayout): number | null {
 	const selection = $getSelection();
 	if (!$isRangeSelection(selection)) {
@@ -541,11 +537,6 @@ function codeBlockPlanFor(
 		return null;
 	}
 	return plan;
-}
-
-export function $isComposerSelectionWrapped(prefix: string, suffix: string): boolean {
-	const wrapped = $queryComposerSelectionWrappers([{prefix, suffix}]).wrapped[0];
-	return wrapped == null ? false : wrapped;
 }
 
 export function $queryComposerSelectionWrappers(

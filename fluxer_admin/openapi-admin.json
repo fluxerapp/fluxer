@@ -5,7 +5,7 @@
 		"title": "Fluxer API",
 		"version": "1.0.0",
 		"description": "API for Fluxer, a free and open source instant messaging and VoIP chat app built for friends, groups, and communities.",
-		"contact": {"name": "Fluxer Platform AB", "email": "support@fluxer.app"},
+		"contact": {"name": "Fluxer Platform AB", "email": "support@fluxer.com"},
 		"license": {"name": "AGPL-3.0", "url": "https://www.gnu.org/licenses/agpl-3.0.html"}
 	},
 	"servers": [{"url": "https://api.fluxer.app/v1", "description": "Production API"}],
@@ -4883,65 +4883,6 @@
 				]
 			}
 		},
-		"/admin/messages/ncmec-reports": {
-			"post": {
-				"operationId": "create_admin_ncmec_report",
-				"summary": "Report an attachment to NCMEC",
-				"tags": ["Admin"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/NcmecAttachmentSubmitResultResponse"}}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Submits a specific image attachment to NCMEC, creates an audit log entry, silently disables the user, triggers one archive for the user, and schedules content deletion after the archive completes.",
-				"security": [{"adminApiKey": []}],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportAttachmentToNcmecRequest"}}}
-				}
-			}
-		},
 		"/admin/messages/shreds/{job_id}": {
 			"get": {
 				"operationId": "get_admin_message_shred",
@@ -5007,6 +4948,59 @@
 				]
 			}
 		},
+		"/admin/report-reasons": {
+			"get": {
+				"operationId": "list_admin_report_reasons",
+				"summary": "List report reasons",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminReportReasonsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists every reason key a report filed through a report flow can carry, with its English label, whether it is a highest-priority reason, and the legacy category it maps to for message, user and community reports. Requires REPORT_VIEW permission.",
+				"security": [{"adminApiKey": []}]
+			}
+		},
 		"/admin/reports": {
 			"get": {
 				"operationId": "list_admin_reports",
@@ -5056,7 +5050,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Lists user and content reports with pagination. Filtering by status alone reads them straight from the database; supplying a free-text query or any of the entity, category and resolver filters searches the report index instead and adds the total, offset and limit of the page to the response. Reporter contact details are redacted unless the caller also holds REPORT_VIEW_REPORTER_PII. Requires REPORT_VIEW permission.",
+				"description": "Lists user and content reports from the report search index with pagination. Without a status filter the list covers reports of every status. A request that filters by status alone lists the reports with that status newest first and ignores sort_by and sort_order. A free-text query and the entity, category, reason and resolver filters narrow the results. Every response includes the total, offset and limit of the page. Reporter contact details are redacted unless the caller also holds REPORT_VIEW_REPORTER_PII. Requires REPORT_VIEW permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -5107,6 +5101,13 @@
 						"description": "Only return reports filed under this category"
 					},
 					{
+						"name": "reason",
+						"in": "query",
+						"required": false,
+						"schema": {"description": "Only return reports filed with this report reason key", "type": "string"},
+						"description": "Only return reports filed with this report reason key"
+					},
+					{
 						"name": "reporter_id",
 						"in": "query",
 						"required": false,
@@ -5125,6 +5126,16 @@
 							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
 						},
 						"description": "Only return reports about this user"
+					},
+					{
+						"name": "reported_webhook_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Only return reports about messages sent by this webhook",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "Only return reports about messages sent by this webhook"
 					},
 					{
 						"name": "reported_guild_id",
@@ -5268,7 +5279,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Retrieves detailed information about a specific report including content, reporter, reason, and the message context captured when it was filed. Requires REPORT_VIEW permission.",
+				"description": "Retrieves detailed information about a specific report including content, reporter, reason, and the message context and profile snapshot captured when it was filed. Requires REPORT_VIEW permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -5331,7 +5342,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Moves a report to the resolved status with an optional public comment shown to the reporter. Marks the report as handled, notifies the reporter by system DM and email unless notify_reporter is false, and creates an audit log entry. Requires REPORT_RESOLVE permission.",
+				"description": "Moves a report to the resolved status. The reporter is always told the report was reviewed: an account reporter by system DM and email, a Digital Services Act notifier by email. notify_reporter false leaves the public comment out of that notice. Nothing is sent when the reporter account is deleted or barred from reporting. Creates an audit log entry. Requires REPORT_RESOLVE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -5348,6 +5359,135 @@
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UpdateReportRequest"}}}
+				}
+			},
+			"delete": {
+				"operationId": "delete_admin_report",
+				"summary": "Delete report",
+				"tags": ["Admin"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Deletes a report now: its record with the captured message context and profile snapshot, its stored evidence copies, its search index entry, and the duplicate-report reservation it holds for the reporter. An evidence copy that another report also uses is kept. A report under a legal hold that has not ended is refused with REPORT_UNDER_LEGAL_HOLD. This cannot be undone. Creates an audit log entry. Requires REPORT_DELETE permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "report_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"description": "The ID of the report",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "The ID of the report"
+					}
+				]
+			}
+		},
+		"/admin/reports/{report_id}/legal-hold": {
+			"post": {
+				"operationId": "set_admin_report_legal_hold",
+				"summary": "Set report legal hold",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportLegalHoldResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Places or clears a legal hold on a report. A report is deleted together with its stored evidence when its retention period ends, unless a hold that ends later is in place, and a held report cannot be deleted through DELETE /admin/reports/{report_id} either. A hold needs an end time in the future and a reason. A null legal_hold_until clears the hold. Creates an audit log entry. Requires REPORT_RESOLVE permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "report_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"description": "The ID of the report",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "The ID of the report"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportLegalHoldRequest"}}}
 				}
 			}
 		},
@@ -9075,7 +9215,10 @@
 			"Error": {
 				"type": "object",
 				"properties": {
-					"code": {"type": "string", "description": "Machine-readable error code"},
+					"code": {
+						"type": "string",
+						"description": "Machine-readable error code. Known values are listed in the APIErrorCode schema"
+					},
 					"message": {"type": "string", "description": "Human-readable error message"},
 					"errors": {
 						"description": "Field-specific validation errors",
@@ -9098,7 +9241,10 @@
 			"ThrottledError": {
 				"type": "object",
 				"properties": {
-					"code": {"type": "string", "description": "Machine-readable error code"},
+					"code": {
+						"type": "string",
+						"description": "Machine-readable error code. Known values are listed in the APIErrorCode schema"
+					},
 					"message": {"type": "string", "description": "Human-readable error message"},
 					"errors": {
 						"description": "Field-specific validation errors",
@@ -10254,6 +10400,41 @@
 					}
 				]
 			},
+			"ReportLegalHoldRequest": {
+				"type": "object",
+				"properties": {
+					"legal_hold_until": {
+						"nullable": true,
+						"description": "When the hold ends, as an ISO 8601 timestamp in the future. Null clears the hold",
+						"type": "string",
+						"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
+					},
+					"legal_hold_reason": {
+						"description": "Why the report is kept past its retention period. Required to place a hold, ignored when clearing one",
+						"nullable": true,
+						"type": "string"
+					}
+				},
+				"required": ["legal_hold_until"]
+			},
+			"ReportLegalHoldResponse": {
+				"type": "object",
+				"properties": {
+					"report_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+					"legal_hold_until": {
+						"nullable": true,
+						"description": "When the hold ends. Null when the report has no hold",
+						"type": "string"
+					},
+					"legal_hold_reason": {
+						"nullable": true,
+						"description": "Why the report is held. Null when the report has no hold",
+						"type": "string"
+					}
+				},
+				"required": ["report_id", "legal_hold_until", "legal_hold_reason"],
+				"additionalProperties": false
+			},
 			"UpdateReportRequest": {
 				"type": "object",
 				"properties": {
@@ -10261,7 +10442,7 @@
 					"public_comment": {"description": "Public comment to include with the resolution", "type": "string"},
 					"notify_reporter": {
 						"default": true,
-						"description": "Whether to notify the reporter by system DM and email",
+						"description": "Whether to include the public comment in the notice sent to the reporter. The reporter is notified either way",
 						"type": "boolean"
 					},
 					"resolution": {
@@ -10312,6 +10493,39 @@
 					"reported_user_global_name": {"nullable": true, "type": "string"},
 					"reported_user_discriminator": {"nullable": true, "type": "string"},
 					"reported_user_avatar_hash": {"nullable": true, "type": "string"},
+					"reported_user_bot": {
+						"description": "Whether the reported account is a bot. Null when there is no reported account or it no longer resolves.",
+						"nullable": true,
+						"type": "boolean"
+					},
+					"reported_webhook_id": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
+					"reported_webhook_name": {"nullable": true, "type": "string"},
+					"reported_webhook_avatar_hash": {"nullable": true, "type": "string"},
+					"reported_webhook_default_name": {"nullable": true, "type": "string"},
+					"reported_webhook_default_avatar_hash": {"nullable": true, "type": "string"},
+					"reported_webhook_type": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/WebhookType"}]},
+					"reported_webhook_application_id": {
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"reported_webhook_channel_id": {
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"reported_webhook_guild_id": {
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"reported_webhook_created_at": {"nullable": true, "type": "string"},
+					"reported_webhook_creator_id": {
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"reported_webhook_creator_tag": {"nullable": true, "type": "string"},
+					"reported_webhook_creator_username": {"nullable": true, "type": "string"},
+					"reported_webhook_creator_global_name": {"nullable": true, "type": "string"},
+					"reported_webhook_creator_discriminator": {"nullable": true, "type": "string"},
+					"reported_webhook_creator_avatar_hash": {"nullable": true, "type": "string"},
 					"reported_guild_id": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
 					"reported_guild_name": {"nullable": true, "type": "string"},
 					"reported_guild_icon_hash": {"nullable": true, "type": "string"},
@@ -10378,37 +10592,9 @@
 											"content_type": {"nullable": true, "type": "string"},
 											"width": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 											"height": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
-											"size": {
-												"nullable": true,
-												"allOf": [{"$ref": "#/components/schemas/NonNegativeSafeIntegerType"}]
-											},
-											"ncmec_status": {
-												"description": "NCMEC submission status",
-												"x-enumNames": ["not_submitted", "submitting", "submitted", "failed"],
-												"x-enumDescriptions": [
-													"Report has not been submitted to NCMEC",
-													"Report submission to NCMEC is in progress",
-													"Report has been submitted to NCMEC",
-													"Report submission to NCMEC failed"
-												],
-												"enum": ["not_submitted", "submitting", "submitted", "failed"],
-												"type": "string"
-											},
-											"ncmec_report_id": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 256},
-											"ncmec_failure_reason": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 4000}
+											"size": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/NonNegativeSafeIntegerType"}]}
 										},
-										"required": [
-											"id",
-											"filename",
-											"url",
-											"nsfw",
-											"content_type",
-											"width",
-											"height",
-											"ncmec_status",
-											"ncmec_report_id",
-											"ncmec_failure_reason"
-										],
+										"required": ["id", "filename", "url", "nsfw", "content_type", "width", "height"],
 										"additionalProperties": false
 									}
 								},
@@ -10417,10 +10603,29 @@
 								"author_global_name": {"nullable": true, "type": "string"},
 								"author_discriminator": {"type": "string"},
 								"author_avatar": {"nullable": true, "type": "string"},
-								"user_prior_ncmec_report_ids": {
-									"maxItems": 100,
+								"webhook_id": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
+								"author_bot": {
+									"description": "Whether the author is a bot account. Null for a webhook message or an account that no longer resolves.",
+									"nullable": true,
+									"type": "boolean"
+								},
+								"missing_attachments": {
+									"description": "Attachments of the message that could not be copied into the report when it was filed",
 									"type": "array",
-									"items": {"type": "string", "minLength": 1, "maxLength": 256}
+									"items": {
+										"type": "object",
+										"properties": {
+											"id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+											"filename": {"type": "string", "minLength": 1, "maxLength": 256},
+											"nsfw": {"nullable": true, "type": "boolean"},
+											"content_type": {"nullable": true, "type": "string"},
+											"width": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
+											"height": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
+											"size": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/NonNegativeSafeIntegerType"}]}
+										},
+										"required": ["id", "filename", "nsfw", "content_type", "width", "height", "size"],
+										"additionalProperties": false
+									}
 								}
 							},
 							"required": [
@@ -10441,7 +10646,218 @@
 							"additionalProperties": false
 						}
 					},
-					"message_responses": {"type": "array", "items": {"$ref": "#/components/schemas/MessageResponseSchema"}}
+					"message_responses": {"type": "array", "items": {"$ref": "#/components/schemas/MessageResponseSchema"}},
+					"reported_profile_snapshot": {
+						"description": "The reported profile as it was when the report was filed. Returned by the report detail only. Null for a report filed before snapshots were stored.",
+						"nullable": true,
+						"type": "object",
+						"properties": {
+							"captured_at": {"type": "string", "description": "When the snapshot was taken"},
+							"user": {
+								"nullable": true,
+								"description": "The reported account as it was when the report was filed",
+								"type": "object",
+								"properties": {
+									"id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+									"username": {"nullable": true, "type": "string"},
+									"discriminator": {"nullable": true, "type": "string"},
+									"global_name": {"nullable": true, "type": "string"},
+									"bio": {"nullable": true, "type": "string"},
+									"pronouns": {"nullable": true, "type": "string"},
+									"avatar": {
+										"nullable": true,
+										"type": "object",
+										"properties": {
+											"hash": {"type": "string", "description": "The asset hash at the time the report was filed"},
+											"url": {
+												"nullable": true,
+												"description": "A download URL valid for 5 minutes. Null when the asset could not be copied into the report or no download URL could be made.",
+												"type": "string",
+												"minLength": 1,
+												"maxLength": 2048
+											}
+										},
+										"required": ["hash", "url"],
+										"additionalProperties": false
+									},
+									"banner": {
+										"nullable": true,
+										"type": "object",
+										"properties": {
+											"hash": {"type": "string", "description": "The asset hash at the time the report was filed"},
+											"url": {
+												"nullable": true,
+												"description": "A download URL valid for 5 minutes. Null when the asset could not be copied into the report or no download URL could be made.",
+												"type": "string",
+												"minLength": 1,
+												"maxLength": 2048
+											}
+										},
+										"required": ["hash", "url"],
+										"additionalProperties": false
+									}
+								},
+								"required": ["id", "username", "discriminator", "global_name", "bio", "pronouns", "avatar", "banner"],
+								"additionalProperties": false
+							},
+							"member": {
+								"nullable": true,
+								"description": "The community profile of the reported account when the report was filed from within a community",
+								"type": "object",
+								"properties": {
+									"guild_id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+									"nick": {"nullable": true, "type": "string"},
+									"bio": {"nullable": true, "type": "string"},
+									"pronouns": {"nullable": true, "type": "string"},
+									"joined_at": {"nullable": true, "type": "string"},
+									"avatar": {
+										"nullable": true,
+										"type": "object",
+										"properties": {
+											"hash": {"type": "string", "description": "The asset hash at the time the report was filed"},
+											"url": {
+												"nullable": true,
+												"description": "A download URL valid for 5 minutes. Null when the asset could not be copied into the report or no download URL could be made.",
+												"type": "string",
+												"minLength": 1,
+												"maxLength": 2048
+											}
+										},
+										"required": ["hash", "url"],
+										"additionalProperties": false
+									},
+									"banner": {
+										"nullable": true,
+										"type": "object",
+										"properties": {
+											"hash": {"type": "string", "description": "The asset hash at the time the report was filed"},
+											"url": {
+												"nullable": true,
+												"description": "A download URL valid for 5 minutes. Null when the asset could not be copied into the report or no download URL could be made.",
+												"type": "string",
+												"minLength": 1,
+												"maxLength": 2048
+											}
+										},
+										"required": ["hash", "url"],
+										"additionalProperties": false
+									}
+								},
+								"required": ["guild_id", "nick", "bio", "pronouns", "joined_at", "avatar", "banner"],
+								"additionalProperties": false
+							},
+							"guild": {
+								"nullable": true,
+								"description": "The reported community as it was when the report was filed",
+								"type": "object",
+								"properties": {
+									"id": {"$ref": "#/components/schemas/SnowflakeStringType"},
+									"name": {"nullable": true, "type": "string"},
+									"vanity_url_code": {"nullable": true, "type": "string"},
+									"icon": {
+										"nullable": true,
+										"type": "object",
+										"properties": {
+											"hash": {"type": "string", "description": "The asset hash at the time the report was filed"},
+											"url": {
+												"nullable": true,
+												"description": "A download URL valid for 5 minutes. Null when the asset could not be copied into the report or no download URL could be made.",
+												"type": "string",
+												"minLength": 1,
+												"maxLength": 2048
+											}
+										},
+										"required": ["hash", "url"],
+										"additionalProperties": false
+									},
+									"banner": {
+										"nullable": true,
+										"type": "object",
+										"properties": {
+											"hash": {"type": "string", "description": "The asset hash at the time the report was filed"},
+											"url": {
+												"nullable": true,
+												"description": "A download URL valid for 5 minutes. Null when the asset could not be copied into the report or no download URL could be made.",
+												"type": "string",
+												"minLength": 1,
+												"maxLength": 2048
+											}
+										},
+										"required": ["hash", "url"],
+										"additionalProperties": false
+									},
+									"splash": {
+										"nullable": true,
+										"type": "object",
+										"properties": {
+											"hash": {"type": "string", "description": "The asset hash at the time the report was filed"},
+											"url": {
+												"nullable": true,
+												"description": "A download URL valid for 5 minutes. Null when the asset could not be copied into the report or no download URL could be made.",
+												"type": "string",
+												"minLength": 1,
+												"maxLength": 2048
+											}
+										},
+										"required": ["hash", "url"],
+										"additionalProperties": false
+									}
+								},
+								"required": ["id", "name", "vanity_url_code", "icon", "banner", "splash"],
+								"additionalProperties": false
+							}
+						},
+						"required": ["captured_at", "user", "member", "guild"],
+						"additionalProperties": false
+					},
+					"legal_hold_until": {
+						"description": "When the legal hold on the report ends. The report is kept past its retention period until then. Returned by the report detail only. Null when the report has no hold.",
+						"nullable": true,
+						"type": "string"
+					},
+					"legal_hold_reason": {
+						"description": "Why the report is held. Returned by the report detail only. Null when the report has no hold.",
+						"nullable": true,
+						"type": "string"
+					},
+					"reason": {"nullable": true, "type": "string"},
+					"reason_label": {"nullable": true, "type": "string"},
+					"reason_highest_priority": {"nullable": true, "type": "boolean"},
+					"flow": {
+						"nullable": true,
+						"type": "object",
+						"properties": {
+							"revision_hash": {"type": "string"},
+							"surface": {"type": "string"},
+							"locale": {"nullable": true, "type": "string"},
+							"steps": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"screen_id": {"type": "string"},
+										"screen_title": {"type": "string"},
+										"option_id": {"nullable": true, "type": "string"},
+										"option_label": {"nullable": true, "type": "string"},
+										"items": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {"id": {"type": "string"}, "label": {"type": "string"}},
+												"required": ["id", "label"],
+												"additionalProperties": false
+											}
+										}
+									},
+									"required": ["screen_id", "screen_title", "option_id", "option_label", "items"],
+									"additionalProperties": false
+								}
+							}
+						},
+						"required": ["revision_hash", "surface", "locale", "steps"],
+						"additionalProperties": false
+					},
+					"reporter_good_faith_confirmed": {"nullable": true, "type": "boolean"}
 				},
 				"required": [
 					"report_id",
@@ -10483,11 +10899,41 @@
 				"type": "object",
 				"properties": {
 					"reports": {"type": "array", "items": {"$ref": "#/components/schemas/ReportAdminResponseSchema"}},
-					"total": {"type": "number"},
-					"offset": {"type": "number"},
-					"limit": {"type": "number"}
+					"total": {"type": "number", "description": "Number of reports in the search index that match the filters"},
+					"offset": {"type": "number", "description": "The offset this page was read from"},
+					"limit": {"type": "number", "description": "The limit this page was read with"}
 				},
 				"required": ["reports", "total", "offset", "limit"],
+				"additionalProperties": false
+			},
+			"AdminReportReasonsResponse": {
+				"type": "object",
+				"properties": {
+					"reasons": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"key": {"type": "string"},
+								"label": {"type": "string"},
+								"highest_priority": {"type": "boolean"},
+								"legacy_category_message": {"type": "string"},
+								"legacy_category_user": {"type": "string"},
+								"legacy_category_guild": {"type": "string"}
+							},
+							"required": [
+								"key",
+								"label",
+								"highest_priority",
+								"legacy_category_message",
+								"legacy_category_user",
+								"legacy_category_guild"
+							],
+							"additionalProperties": false
+						}
+					}
+				},
+				"required": ["reasons"],
 				"additionalProperties": false
 			},
 			"MessageShredStatusResponse": {
@@ -10525,29 +10971,6 @@
 						"additionalProperties": false
 					}
 				]
-			},
-			"ReportAttachmentToNcmecRequest": {
-				"type": "object",
-				"properties": {
-					"channel_id": {"$ref": "#/components/schemas/SnowflakeType"},
-					"message_id": {"$ref": "#/components/schemas/SnowflakeType"},
-					"attachment_id": {"$ref": "#/components/schemas/SnowflakeType"},
-					"filename": {"type": "string", "minLength": 1, "maxLength": 255},
-					"source_report_id": {"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
-					"reporter_full_name": {"type": "string", "minLength": 1, "maxLength": 200},
-					"confirmed_viewed": {"type": "boolean", "enum": [true]}
-				},
-				"required": ["channel_id", "message_id", "attachment_id", "filename", "reporter_full_name", "confirmed_viewed"]
-			},
-			"NcmecAttachmentSubmitResultResponse": {
-				"type": "object",
-				"properties": {
-					"success": {"type": "boolean", "enum": [true]},
-					"ncmec_report_id": {"type": "string", "minLength": 1, "maxLength": 256},
-					"audit_log_reason": {"type": "string", "minLength": 1, "maxLength": 4000}
-				},
-				"required": ["success", "ncmec_report_id", "audit_log_reason"],
-				"additionalProperties": false
 			},
 			"AdminMessageSearchResponse": {
 				"anyOf": [
@@ -10999,9 +11422,10 @@
 								"type": "object",
 								"properties": {
 									"terms_url": {"nullable": true, "type": "string"},
-									"privacy_url": {"nullable": true, "type": "string"}
+									"privacy_url": {"nullable": true, "type": "string"},
+									"guidelines_url": {"nullable": true, "type": "string"}
 								},
-								"required": ["terms_url", "privacy_url"],
+								"required": ["terms_url", "privacy_url", "guidelines_url"],
 								"additionalProperties": false
 							},
 							"registration": {
@@ -11455,7 +11879,8 @@
 								"type": "object",
 								"properties": {
 									"terms_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"privacy_url": {"nullable": true, "type": "string", "maxLength": 2048}
+									"privacy_url": {"nullable": true, "type": "string", "maxLength": 2048},
+									"guidelines_url": {"nullable": true, "type": "string", "maxLength": 2048}
 								}
 							},
 							"registration": {
@@ -11922,10 +12347,7 @@
 							"icon": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 256},
 							"banner": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 256},
 							"member_count": {"$ref": "#/components/schemas/Int32Type"},
-							"nsfw_level": {"allOf": [{"$ref": "#/components/schemas/NSFWLevel"}]},
-							"nsfw": {"type": "boolean"},
-							"content_warning_level": {"allOf": [{"$ref": "#/components/schemas/ContentWarningLevel"}]},
-							"content_warning_text": {"nullable": true, "type": "string", "maxLength": 200}
+							"nsfw_level": {"allOf": [{"$ref": "#/components/schemas/NSFWLevel"}]}
 						},
 						"required": ["id", "name", "features", "owner_id", "icon", "banner", "member_count"],
 						"additionalProperties": false
@@ -13173,7 +13595,6 @@
 					"bulk:delete:user_messages",
 					"bulk:update:guild_features",
 					"bulk:update:user_flags",
-					"csam:submit_ncmec",
 					"discovery:remove",
 					"discovery:review",
 					"gateway:memory_stats",
@@ -13201,6 +13622,7 @@
 					"message:delete",
 					"message:lookup",
 					"message:shred",
+					"report:delete",
 					"report:resolve",
 					"report:view",
 					"report:view:reporter_pii",
@@ -13403,7 +13825,12 @@
 				"properties": {
 					"hashes": {"minItems": 1, "maxItems": 1000, "type": "array", "items": {"type": "string"}},
 					"category": {"type": "string"},
-					"severity": {"type": "integer", "minimum": 0, "maximum": 3},
+					"severity": {
+						"description": "Stored severity label: 0 allow, 1 warn, 2 block, 3 block and report (default 2). The label is informational and every row blocks whatever its severity.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 3
+					},
 					"source_url": {"type": "string"},
 					"reason": {"type": "string"},
 					"notes": {"type": "string"}
@@ -13415,7 +13842,12 @@
 				"properties": {
 					"sha256_hex": {"description": "SHA-256 in hex", "type": "string"},
 					"category": {"type": "string"},
-					"severity": {"type": "integer", "minimum": 0, "maximum": 3},
+					"severity": {
+						"description": "Stored severity label: 0 allow, 1 warn, 2 block, 3 block and report (default 2). The label is informational and every row blocks whatever its severity.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 3
+					},
 					"content_type": {"description": "Optional MIME type hint for observability", "type": "string"},
 					"source_url": {"type": "string"},
 					"notes": {"type": "string"}
@@ -13436,7 +13868,7 @@
 					},
 					"category": {"description": "Category / source slug (defaults to \"manual\")", "type": "string"},
 					"severity": {
-						"description": "Severity: 0 allow, 1 warn, 2 block, 3 block+report (default 2)",
+						"description": "Stored severity label: 0 allow, 1 warn, 2 block, 3 block and report (default 2). The label is informational and every row blocks whatever its severity.",
 						"type": "integer",
 						"minimum": 0,
 						"maximum": 3
@@ -13452,7 +13884,7 @@
 					"url": {"description": "Absolute URL to ban. Canonicalized before storage.", "type": "string"},
 					"category": {"description": "Category / source slug (defaults to \"manual\")", "type": "string"},
 					"severity": {
-						"description": "Severity: 0 allow, 1 warn, 2 block, 3 block+report (default 2)",
+						"description": "Stored severity label: 0 allow, 1 warn, 2 block, 3 block and report (default 2). The label is informational and every row blocks whatever its severity.",
 						"type": "integer",
 						"minimum": 0,
 						"maximum": 3
@@ -13514,7 +13946,12 @@
 				"type": "object",
 				"properties": {
 					"category": {"type": "string"},
-					"severity": {"type": "integer", "minimum": 0, "maximum": 3},
+					"severity": {
+						"description": "Stored severity label: 0 allow, 1 warn, 2 block, 3 block and report (default 2). The label is informational and every row blocks whatever its severity.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 3
+					},
 					"source_url": {"type": "string"},
 					"reason": {"type": "string"},
 					"notes": {"type": "string"}
@@ -13524,7 +13961,12 @@
 				"type": "object",
 				"properties": {
 					"category": {"type": "string"},
-					"severity": {"type": "integer", "minimum": 0, "maximum": 3},
+					"severity": {
+						"description": "Stored severity label: 0 allow, 1 warn, 2 block, 3 block and report (default 2). The label is informational and every row blocks whatever its severity.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 3
+					},
 					"content_type": {"description": "Optional MIME type hint for observability", "type": "string"},
 					"source_url": {"type": "string"},
 					"notes": {"type": "string"}
@@ -13540,7 +13982,7 @@
 					},
 					"category": {"description": "Category / source slug (defaults to \"manual\")", "type": "string"},
 					"severity": {
-						"description": "Severity: 0 allow, 1 warn, 2 block, 3 block+report (default 2)",
+						"description": "Stored severity label: 0 allow, 1 warn, 2 block, 3 block and report (default 2). The label is informational and every row blocks whatever its severity.",
 						"type": "integer",
 						"minimum": 0,
 						"maximum": 3
@@ -13554,7 +13996,7 @@
 				"properties": {
 					"category": {"description": "Category / source slug (defaults to \"manual\")", "type": "string"},
 					"severity": {
-						"description": "Severity: 0 allow, 1 warn, 2 block, 3 block+report (default 2)",
+						"description": "Stored severity label: 0 allow, 1 warn, 2 block, 3 block and report (default 2). The label is informational and every row blocks whatever its severity.",
 						"type": "integer",
 						"minimum": 0,
 						"maximum": 3
@@ -14101,41 +14543,11 @@
 								"content_type": {"nullable": true, "type": "string"},
 								"width": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 								"height": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
-								"size": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/NonNegativeSafeIntegerType"}]},
-								"ncmec_status": {
-									"description": "NCMEC submission status",
-									"x-enumNames": ["not_submitted", "submitting", "submitted", "failed"],
-									"x-enumDescriptions": [
-										"Report has not been submitted to NCMEC",
-										"Report submission to NCMEC is in progress",
-										"Report has been submitted to NCMEC",
-										"Report submission to NCMEC failed"
-									],
-									"enum": ["not_submitted", "submitting", "submitted", "failed"],
-									"type": "string"
-								},
-								"ncmec_report_id": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 256},
-								"ncmec_failure_reason": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 4000}
+								"size": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/NonNegativeSafeIntegerType"}]}
 							},
-							"required": [
-								"id",
-								"filename",
-								"url",
-								"nsfw",
-								"content_type",
-								"width",
-								"height",
-								"ncmec_status",
-								"ncmec_report_id",
-								"ncmec_failure_reason"
-							],
+							"required": ["id", "filename", "url", "nsfw", "content_type", "width", "height"],
 							"additionalProperties": false
 						}
-					},
-					"user_prior_ncmec_report_ids": {
-						"maxItems": 100,
-						"type": "array",
-						"items": {"type": "string", "minLength": 1, "maxLength": 256}
 					}
 				},
 				"required": [
@@ -14605,7 +15017,7 @@
 					"provider": {
 						"description": "The provider of the embed (e.g., YouTube, Twitter)",
 						"nullable": true,
-						"allOf": [{"$ref": "#/components/schemas/EmbedAuthorResponse"}]
+						"allOf": [{"$ref": "#/components/schemas/EmbedProviderResponse"}]
 					},
 					"video": {
 						"description": "The video of the embed",
@@ -14838,7 +15250,7 @@
 					"provider": {
 						"description": "The provider of the embed (e.g., YouTube, Twitter)",
 						"nullable": true,
-						"allOf": [{"$ref": "#/components/schemas/EmbedAuthorResponse"}]
+						"allOf": [{"$ref": "#/components/schemas/EmbedProviderResponse"}]
 					},
 					"video": {
 						"description": "The video of the embed",
@@ -14908,23 +15320,11 @@
 				"required": ["url", "flags"],
 				"additionalProperties": false
 			},
-			"EmbedAuthorResponse": {
+			"EmbedProviderResponse": {
 				"type": "object",
 				"properties": {
-					"name": {"type": "string", "description": "The name of the author"},
-					"url": {"description": "The URL of the author", "nullable": true, "type": "string", "format": "uri"},
-					"icon_url": {
-						"description": "The URL of the author icon",
-						"nullable": true,
-						"type": "string",
-						"format": "uri"
-					},
-					"proxy_icon_url": {
-						"description": "The proxied URL of the author icon",
-						"nullable": true,
-						"type": "string",
-						"format": "uri"
-					}
+					"name": {"type": "string", "description": "The name of the provider"},
+					"url": {"description": "The URL of the provider", "nullable": true, "type": "string", "format": "uri"}
 				},
 				"required": ["name"],
 				"additionalProperties": false
@@ -14957,6 +15357,27 @@
 					}
 				},
 				"required": ["text"],
+				"additionalProperties": false
+			},
+			"EmbedAuthorResponse": {
+				"type": "object",
+				"properties": {
+					"name": {"type": "string", "description": "The name of the author"},
+					"url": {"description": "The URL of the author", "nullable": true, "type": "string", "format": "uri"},
+					"icon_url": {
+						"description": "The URL of the author icon",
+						"nullable": true,
+						"type": "string",
+						"format": "uri"
+					},
+					"proxy_icon_url": {
+						"description": "The proxied URL of the author icon",
+						"nullable": true,
+						"type": "string",
+						"format": "uri"
+					}
+				},
+				"required": ["name"],
 				"additionalProperties": false
 			},
 			"EmbedMediaFlags": {
@@ -16684,6 +17105,600 @@
 					"updated_at"
 				],
 				"additionalProperties": false
+			},
+			"APIErrorCode": {
+				"type": "string",
+				"enum": [
+					"ACCESS_DENIED",
+					"ANNOUNCEMENT_CHANNEL_REQUIRED",
+					"BAD_GATEWAY",
+					"BAD_REQUEST",
+					"BLUESKY_OAUTH_AUTHORIZATION_FAILED",
+					"BLUESKY_OAUTH_NOT_ENABLED",
+					"ACCOUNT_LIMITED",
+					"ACCOUNT_IDENTITY_LOCKED",
+					"ACCOUNT_SUSPENDED_PERMANENTLY",
+					"ACCOUNT_SUSPENDED_TEMPORARILY",
+					"ACCOUNT_TOO_NEW_FOR_GUILD",
+					"ACLS_MUST_BE_NON_EMPTY",
+					"ADMIN_API_KEY_NOT_FOUND",
+					"APPLICATION_NOT_OWNED",
+					"ALREADY_FRIENDS",
+					"BOTS_CANNOT_CREATE_GUILDS",
+					"BOTS_CANNOT_SEND_FRIEND_REQUESTS",
+					"BOT_ALREADY_IN_GUILD",
+					"BOT_IS_PRIVATE",
+					"BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED",
+					"BOT_USER_AUTH_SESSION_CREATION_DENIED",
+					"BOT_USER_GENERATION_FAILED",
+					"BOT_USER_NOT_FOUND",
+					"CALL_ALREADY_EXISTS",
+					"CANNOT_EDIT_OTHER_USER_MESSAGE",
+					"CANNOT_EXECUTE_ON_DM",
+					"CANNOT_BLOCK_SYSTEM_USER",
+					"CANNOT_MODIFY_SYSTEM_WEBHOOK",
+					"CANNOT_REDEEM_PLUTONIUM_WITH_VISIONARY",
+					"CANNOT_REPORT_GUILD",
+					"CANNOT_REPORT_OWN_GUILD",
+					"CANNOT_REPORT_OWN_MESSAGE",
+					"CANNOT_REPORT_YOURSELF",
+					"CANNOT_SEND_EMPTY_MESSAGE",
+					"CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER",
+					"CANNOT_SEND_FRIEND_REQUEST_TO_SELF",
+					"CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL",
+					"CANNOT_SEND_MESSAGES_TO_USER",
+					"CANNOT_TRANSFER_OWNERSHIP_TO_BOT",
+					"CANNOT_SHRINK_RESERVED_SLOTS",
+					"CAPTCHA_REQUIRED",
+					"CHANNEL_ALREADY_FOLLOWED",
+					"CHANNEL_HAS_FOLLOWED_CHANNELS",
+					"CHANNEL_HAS_THREADS",
+					"CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED",
+					"COMMUNICATION_DISABLED",
+					"CONNECTION_ALREADY_EXISTS",
+					"CONNECTION_INITIATION_TOKEN_INVALID",
+					"CONNECTION_INVALID_TYPE",
+					"CONNECTION_LIMIT_REACHED",
+					"CONNECTION_NOT_FOUND",
+					"CONNECTION_VERIFICATION_FAILED",
+					"CONFLICT",
+					"CONTENT_BLOCKED",
+					"DELETION_FAILED",
+					"DISCOVERY_ALREADY_APPLIED",
+					"DISCOVERY_APPLICATION_ALREADY_REVIEWED",
+					"DISCOVERY_APPLICATION_NOT_FOUND",
+					"DISCOVERY_DISABLED",
+					"DISCOVERY_INSUFFICIENT_MEMBERS",
+					"DISCOVERY_NOT_DISCOVERABLE",
+					"DISCRIMINATOR_REQUIRED",
+					"EMAIL_SERVICE_NOT_TESTABLE",
+					"EMAIL_UNAVAILABLE_ON_INSTANCE",
+					"EMAIL_VERIFICATION_REQUIRED",
+					"DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED",
+					"FOLLOW_TARGET_CONTENT_WARNING_REQUIRED",
+					"FOLLOW_TARGET_NOT_AGE_RESTRICTED",
+					"FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED",
+					"GUILD_CREATION_EMAIL_VERIFICATION_REQUIRED",
+					"GUILD_CREATION_PERMISSION_REQUIRED",
+					"GUILD_EMAIL_VERIFICATION_REQUIRED",
+					"INVALID_FOLLOW_TARGET_CHANNEL",
+					"MESSAGE_ALREADY_CROSSPOSTED",
+					"MESSAGE_CROSSPOST_RATE_LIMITED",
+					"MESSAGE_NOT_CROSSPOSTABLE",
+					"MFA_EMAIL_VERIFICATION_REQUIRED",
+					"PROFILE_EMAIL_VERIFICATION_REQUIRED",
+					"PUBLISHED_MESSAGE_EDIT_RATE_LIMITED",
+					"PURCHASE_EMAIL_VERIFICATION_REQUIRED",
+					"REACTION_EMAIL_VERIFICATION_REQUIRED",
+					"REPORT_EMAIL_VERIFICATION_REQUIRED",
+					"REGISTRATION_CLOSED",
+					"REGISTRATION_PENDING_APPROVAL",
+					"REGISTRATION_REJECTED",
+					"REGISTRATION_URL_INVALID",
+					"EXPLICIT_CONTENT_CANNOT_BE_SENT",
+					"FEATURE_NOT_AVAILABLE_SELF_HOSTED",
+					"FEATURE_TEMPORARILY_DISABLED",
+					"FILE_SIZE_TOO_LARGE",
+					"FORBIDDEN",
+					"FORUM_TAG_NAMES_MUST_BE_UNIQUE",
+					"FORUM_TAG_REQUIRED",
+					"FRIEND_REQUEST_BLOCKED",
+					"GATEWAY_TIMEOUT",
+					"GENERAL_ERROR",
+					"GONE",
+					"GIFT_CODE_ALREADY_REDEEMED",
+					"GUILD_TEMPLATE_INVALID",
+					"GUILD_VERIFICATION_REQUIRED",
+					"HANDOFF_CODE_EXPIRED",
+					"HARVEST_EXPIRED",
+					"HARVEST_FAILED",
+					"HARVEST_NOT_READY",
+					"HIDE_MEDIA_DOWNLOAD_OPTION_MEDIA_ONLY",
+					"INTERNAL_SERVER_ERROR",
+					"INVALID_ACLS_FORMAT",
+					"INVALID_API_ORIGIN",
+					"INVALID_AUTH_TOKEN",
+					"INVALID_BOT_FLAG",
+					"INVALID_CAPTCHA",
+					"INVALID_CHANNEL_TYPE_FOR_CALL",
+					"INVALID_CHANNEL_TYPE",
+					"INVALID_DSA_REPORT_TARGET",
+					"INVALID_DSA_TICKET",
+					"INVALID_DSA_VERIFICATION_CODE",
+					"INVALID_FLAGS_FORMAT",
+					"INVALID_FORM_BODY",
+					"INVALID_HANDOFF_CODE",
+					"INVALID_ORIGIN_HANDOFF_NONCE",
+					"INVALID_PASSKEY_BRIDGE_NONCE",
+					"INVALID_PERMISSIONS_INTEGER",
+					"INVALID_PERMISSIONS_NEGATIVE",
+					"INVALID_REPORT_FLOW_ANSWERS",
+					"INVALID_REQUEST",
+					"INVALID_STREAM_KEY_FORMAT",
+					"INVALID_STREAM_THUMBNAIL_PAYLOAD",
+					"INVALID_SYSTEM_FLAG",
+					"INVALID_TIMESTAMP",
+					"INVALID_TOKEN",
+					"INVALID_THREAD_NOTIFICATION_SETTINGS",
+					"INVALID_WEBAUTHN_AUTHENTICATION_COUNTER",
+					"INVALID_WEBAUTHN_CREDENTIAL_COUNTER",
+					"INVALID_WEBAUTHN_CREDENTIAL",
+					"INVALID_WEBAUTHN_PUBLIC_KEY_FORMAT",
+					"INVITES_DISABLED",
+					"IP_AUTHORIZATION_REQUIRED",
+					"IP_AUTHORIZATION_RESEND_COOLDOWN",
+					"IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED",
+					"GLOBAL_IP_BANNED",
+					"GLOBAL_IP_TEMPORARILY_BANNED",
+					"IP_BAN_DECLINED",
+					"MAX_APPLICATIONS",
+					"MAX_BOOKMARKS",
+					"MAX_ACTIVE_THREADS",
+					"MAX_CATEGORY_CHANNELS",
+					"MAX_EMOJIS",
+					"MAX_FAVORITE_MEMES",
+					"MAX_FRIENDS",
+					"MAX_FORUM_TAGS",
+					"MAX_GROUP_DM_RECIPIENTS",
+					"MAX_GROUP_DMS",
+					"GROUP_DM_RECIPIENTS_NOT_ADDABLE",
+					"MAX_GUILD_CHANNELS",
+					"MAX_GUILD_MEMBERS",
+					"MAX_GUILD_ROLES",
+					"MAX_GUILDS",
+					"MAX_PINNED_THREADS_IN_FORUM",
+					"MAX_INVITES",
+					"MAX_REACTIONS",
+					"MAX_STICKERS",
+					"MAX_THREAD_MEMBERS",
+					"MAX_WEBHOOKS_PER_CHANNEL",
+					"MAX_WEBHOOKS_PER_GUILD",
+					"MEDIA_METADATA_ERROR",
+					"METHOD_NOT_ALLOWED",
+					"MISSING_ACCESS",
+					"MISSING_ACL",
+					"MISSING_AUTHORIZATION",
+					"MISSING_OAUTH_SCOPE",
+					"MISSING_PERMISSIONS",
+					"NO_ACTIVE_CALL",
+					"NO_ACTIVE_SUBSCRIPTION",
+					"NO_TAGS_AVAILABLE_TO_NON_MODERATORS",
+					"NOT_FOUND",
+					"NOT_IMPLEMENTED",
+					"NO_PASSKEYS_REGISTERED",
+					"NO_PENDING_DELETION",
+					"NO_USERS_WITH_FLUXERTAG_EXIST",
+					"NOT_A_BOT_APPLICATION",
+					"NOT_FRIENDS_WITH_USER",
+					"NSFW_CONTENT_AGE_RESTRICTED",
+					"PASSKEY_AUTHENTICATION_FAILED",
+					"PREMIUM_PURCHASE_BLOCKED",
+					"PREVIEW_MUST_BE_JPEG",
+					"PROCESSING_FAILED",
+					"RATE_LIMITED",
+					"REPORT_ALREADY_RESOLVED",
+					"REPORT_BANNED",
+					"REPORT_FLOW_OUTDATED",
+					"REPORT_UNDER_LEGAL_HOLD",
+					"RESPONSE_VALIDATION_ERROR",
+					"RESOURCE_LOCKED",
+					"SERVICE_UNAVAILABLE",
+					"SESSION_TOKEN_MISMATCH",
+					"SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS",
+					"SINGLE_COMMUNITY_CANNOT_DELETE",
+					"SINGLE_COMMUNITY_CANNOT_LEAVE",
+					"INSTANCE_POLICY_TRANSITION_NOT_ALLOWED",
+					"SLOWMODE_RATE_LIMITED",
+					"SEARCH_INDEX_NOT_READY",
+					"SSO_REQUIRED",
+					"STORE_BILLING_UNAVAILABLE",
+					"STORE_NOTIFICATION_UNAUTHORIZED",
+					"STORE_PURCHASE_INVALID",
+					"STORE_PURCHASE_OWNED_BY_OTHER_ACCOUNT",
+					"STORE_PURCHASE_SANDBOX_NOT_ENTITLED",
+					"STREAM_KEY_CHANNEL_MISMATCH",
+					"STREAM_KEY_SCOPE_MISMATCH",
+					"STRIPE_ERROR",
+					"STRIPE_GIFT_REDEMPTION_IN_PROGRESS",
+					"STRIPE_INVALID_PRODUCT",
+					"STRIPE_INVALID_PRODUCT_CONFIGURATION",
+					"STRIPE_NO_ACTIVE_SUBSCRIPTION",
+					"STRIPE_NO_PURCHASE_HISTORY",
+					"STRIPE_REFUND_OUTSIDE_WINDOW",
+					"STRIPE_REFUND_COOLDOWN_ACTIVE",
+					"STRIPE_NO_SUBSCRIPTION",
+					"STRIPE_PAYMENT_NOT_AVAILABLE",
+					"STRIPE_SUBSCRIPTION_ALREADY_CANCELING",
+					"STRIPE_SUBSCRIPTION_NOT_CANCELING",
+					"STRIPE_WEBHOOK_NOT_AVAILABLE",
+					"STRIPE_WEBHOOK_SIGNATURE_INVALID",
+					"STRIPE_WEBHOOK_SIGNATURE_MISSING",
+					"DIRECT_MESSAGES_DISABLED",
+					"NEW_CONVERSATIONS_LIMITED",
+					"DONATION_AMOUNT_INVALID",
+					"DONATION_MAGIC_LINK_EXPIRED",
+					"DONATION_MAGIC_LINK_INVALID",
+					"DONATION_MAGIC_LINK_USED",
+					"SUDO_MODE_REQUIRED",
+					"TAG_ALREADY_TAKEN",
+					"TEMPORARY_INVITE_REQUIRES_PRESENCE",
+					"TEST_HARNESS_DISABLED",
+					"TEST_HARNESS_FORBIDDEN",
+					"THREAD_ALREADY_CREATED_FOR_MESSAGE",
+					"THREAD_ARCHIVED",
+					"THREAD_LOCKED",
+					"TWO_FA_NOT_ENABLED",
+					"TWO_FACTOR_REQUIRED",
+					"UNAUTHORIZED",
+					"UNCLAIMED_ACCOUNT_CANNOT_ACCEPT_FRIEND_REQUESTS",
+					"UNCLAIMED_ACCOUNT_CANNOT_ADD_REACTIONS",
+					"UNCLAIMED_ACCOUNT_CANNOT_CREATE_APPLICATIONS",
+					"UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS",
+					"UNCLAIMED_ACCOUNT_CANNOT_JOIN_GROUP_DMS",
+					"UNCLAIMED_ACCOUNT_CANNOT_JOIN_ONE_ON_ONE_VOICE_CALLS",
+					"UNCLAIMED_ACCOUNT_CANNOT_JOIN_VOICE_CHANNELS",
+					"UNCLAIMED_ACCOUNT_CANNOT_MAKE_PURCHASES",
+					"UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES",
+					"UNCLAIMED_ACCOUNT_CANNOT_SEND_FRIEND_REQUESTS",
+					"UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES",
+					"UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS",
+					"UNKNOWN_CHANNEL",
+					"UNKNOWN_EMOJI",
+					"UNKNOWN_FAVORITE_MEME",
+					"UNKNOWN_FORUM_TAG",
+					"UNKNOWN_GIFT_CODE",
+					"UNKNOWN_GUILD",
+					"UNKNOWN_HARVEST",
+					"UNKNOWN_INVITE",
+					"UNKNOWN_MEMBER",
+					"UNKNOWN_MESSAGE",
+					"UNKNOWN_ORIGIN_HANDOFF",
+					"UNKNOWN_PASSKEY_BRIDGE",
+					"UNKNOWN_PASSKEY_MIGRATION",
+					"UNKNOWN_REPORT",
+					"UNKNOWN_ROLE",
+					"UNKNOWN_STICKER",
+					"UNKNOWN_STORE_PURCHASE",
+					"UNKNOWN_THREAD_MEMBER",
+					"UNKNOWN_USER_FLAG",
+					"UNKNOWN_USER",
+					"UNKNOWN_VOICE_REGION",
+					"UNKNOWN_VOICE_SERVER",
+					"UNKNOWN_WEBAUTHN_CREDENTIAL",
+					"UNKNOWN_APPLICATION",
+					"UNKNOWN_WEBHOOK",
+					"WEBHOOK_FORUM_TARGET_CONFLICT",
+					"WEBHOOK_FORUM_TARGET_REQUIRED",
+					"WEBHOOK_SERVICE_FORUM_UNSUPPORTED",
+					"WEBHOOK_THREAD_NAME_REQUIRES_FORUM",
+					"USERNAME_NOT_AVAILABLE",
+					"USERNAME_SIGN_IN_ONLY",
+					"UPDATE_FAILED",
+					"USER_BANNED_FROM_GUILD",
+					"USER_IP_BANNED_FROM_GUILD",
+					"USER_NOT_IN_VOICE",
+					"USER_OWNS_GUILDS",
+					"VALIDATION_ERROR",
+					"VOICE_CHANNEL_FULL",
+					"WEBAUTHN_CREDENTIAL_LIMIT_REACHED",
+					"AGE_VERIFICATION_ALREADY_VERIFIED"
+				],
+				"description": "Known error codes returned by API operations",
+				"x-enumDescriptions": [
+					"You don't have access to this resource or feature.",
+					"This action is only available in announcement channels.",
+					"Bad gateway.",
+					"Bad request.",
+					"We couldn't resolve that Bluesky handle. Please check it and try again.",
+					"Bluesky connections are not enabled on this instance.",
+					"Messaging is paused on your account. Check your email for a quick step to continue.",
+					"The sign-in method is already set and can't be changed.",
+					"This account has been permanently suspended.",
+					"This account has been temporarily suspended.",
+					"Your account is too new to send messages in this community.",
+					"ACLs must be non-empty.",
+					"Admin API key wasn't found.",
+					"You don't own this application.",
+					"You're already friends with this user.",
+					"Bots can't create communities.",
+					"Bots can't send friend requests.",
+					"This bot is already in the community.",
+					"This bot is private.",
+					"Bot users can't use auth endpoints.",
+					"Bot users can't create auth sessions.",
+					"Bot user generation failed.",
+					"Bot user wasn't found.",
+					"A call is already in progress in this channel.",
+					"You can't edit another user's message.",
+					"This action can't be performed in a DM.",
+					"You can't block the system user.",
+					"You can't edit system messages.",
+					"You can't redeem {premium_tier_name} with Visionary.",
+					"You can't report this community.",
+					"You can't report your own community.",
+					"You can't report your own message.",
+					"You can't report yourself.",
+					"You can't send an empty message.",
+					"You can't send a friend request to a blocked user.",
+					"You can't send a friend request to yourself.",
+					"You can't send messages in a non-text channel.",
+					"You can't send messages to this user.",
+					"Community ownership can't be transferred to a bot.",
+					"You can't shrink reserved slots.",
+					"Verification required. Try again.",
+					"This channel already receives updates from that announcement channel.",
+					"Remove the followed channels posting here before converting it to an announcement channel.",
+					"Channels with threads can't be converted to announcement channels.",
+					"Only text and announcement channels can be converted into each other.",
+					"Communication is disabled.",
+					"A connection of this type with this identifier already exists.",
+					"The connection initiation token is invalid or has expired.",
+					"The connection type is not supported.",
+					"You've reached the maximum number of connections ({limit}).",
+					"Unknown connection.",
+					"Connection verification failed. Make sure the verification token is correctly placed.",
+					"Conflict.",
+					"This content was blocked by safety systems.",
+					"We couldn't delete the resource. Please try again.",
+					"This community has already applied for Discovery.",
+					"This Discovery application has already been reviewed.",
+					"Discovery application wasn't found.",
+					"Discovery isn't available on this instance.",
+					"This community doesn't meet the minimum member count for Discovery.",
+					"This community isn't listed in Discovery.",
+					"Discriminator is required.",
+					"Email service is temporarily unavailable. Please try again later.",
+					"This instance doesn't use email.",
+					"Email verification is required for this action.",
+					"Email verification is required for this action.",
+					"Updates from a channel with a content warning can only go to a channel with a content warning or an age restriction.",
+					"Updates from an age-restricted channel can only go to an age-restricted channel.",
+					"Email verification is required for this action.",
+					"Email verification is required for this action.",
+					"You don't have permission to create communities on this instance. Contact your instance administrator to request access.",
+					"Email verification is required for this action.",
+					"Followed channels can only post into text channels.",
+					"This message has already been published.",
+					"This channel has reached its publishing limit. It can publish 10 messages in a row, then one more every 6 minutes.",
+					"This message cannot be published.",
+					"Email verification is required for this action.",
+					"Email verification is required for this action.",
+					"This published message has reached its editing limit. It allows 3 quick edits, then 1 every 20 minutes.",
+					"Email verification is required for this action.",
+					"Email verification is required for this action.",
+					"Email verification is required for this action.",
+					"Registration is closed on this instance.",
+					"This registration is waiting for admin approval.",
+					"This registration request was rejected.",
+					"This registration link is invalid or has expired.",
+					"Explicit content can't be sent.",
+					"This feature isn't available on self-hosted instances.",
+					"This feature is temporarily disabled.",
+					"File size is too large. Maximum file size is {maxSize}.",
+					"Forbidden.",
+					"Tag names must be unique.",
+					"A tag is required to create a post in this channel.",
+					"User does not accept friend requests at this time.",
+					"Gateway timeout.",
+					"Something went wrong. Please try again later.",
+					"Gone.",
+					"Gift code is already redeemed.",
+					"The community template data is invalid or malformed.",
+					"Community verification is required.",
+					"Handoff code expired.",
+					"Your data export request has expired. Please request a new export.",
+					"Your data export request failed. Please try again.",
+					"Your data export is still being prepared. Please check back in a few moments.",
+					"Hiding media download options is only available in media channels.",
+					"Internal server error.",
+					"Invalid ACL format.",
+					"Invalid API origin.",
+					"Invalid or expired authorization token.",
+					"Invalid bot flag.",
+					"Verification failed. Try again.",
+					"Calls can only be made in direct messages or group DMs.",
+					"Invalid channel type.",
+					"Invalid DSA report target.",
+					"Invalid DSA ticket.",
+					"Invalid DSA verification code.",
+					"Invalid flags format.",
+					"Invalid form body.",
+					"Invalid handoff code.",
+					"This sign-in transfer doesn't match the one you started.",
+					"This passkey request could not be confirmed. Try again.",
+					"Permissions must be a valid integer.",
+					"Permissions must be non-negative.",
+					"These answers don't match the report form. Start the report again.",
+					"Invalid request.",
+					"Invalid stream key format.",
+					"Invalid stream thumbnail payload.",
+					"Invalid system flag.",
+					"Invalid timestamp.",
+					"Invalid or expired authorization token.",
+					"Invalid thread notification settings.",
+					"Invalid WebAuthn authentication counter.",
+					"Invalid WebAuthn credential counter.",
+					"Failed to verify WebAuthn credential.",
+					"Invalid WebAuthn public key format.",
+					"Invites are disabled.",
+					"IP authorization is required.",
+					"IP authorization resend is on cooldown.",
+					"IP authorization resend limit exceeded.",
+					"Your IP address {ipAddress} has been permanently blocked from the {product_name} API by platform administrators. {appealEmail, select, null {If you believe this is a mistake, contact the administrators of this instance to appeal.} other {If you believe this is a mistake, contact {appealEmail} to appeal.}} Include this IP address in your appeal.",
+					"Your IP address {ipAddress} has been temporarily blocked from the {product_name} API. The block lifts on its own when it expires. {appealEmail, select, null {If you think this is a mistake, contact the administrators of this instance and include this IP address.} other {If you think this is a mistake, contact {appealEmail} and include this IP address.}}",
+					"This IP address cannot be added to the blocklist.",
+					"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
+					"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
+					"This community has reached its active thread limit of {count}.",
+					"You've reached the maximum of {count, plural, one {# category channel} other {# category channels}}.",
+					"You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}.",
+					"You've reached the maximum of {count, plural, one {# saved media item} other {# saved media items}}.",
+					"You've reached the maximum of {count, plural, one {# friend} other {# friends}}.",
+					"This channel has reached its tag limit of {count}.",
+					"You've reached the maximum of {count, plural, one {# group DM recipient} other {# group DM recipients}}.",
+					"You've reached the maximum of {count, plural, one {# group DM} other {# group DMs}}.",
+					"One or more selected users can't be added to this group DM.",
+					"You've reached the maximum of {count, plural, one {# community channel} other {# community channels}}.",
+					"You've reached the maximum of {count, plural, one {# community member} other {# community members}}.",
+					"You've reached the maximum of {count, plural, one {# community role} other {# community roles}}.",
+					"You've reached the maximum of {count, plural, one {# community} other {# communities}}.",
+					"This channel has reached its pinned post limit of {count}.",
+					"You've reached the maximum of {count, plural, one {# invite} other {# invites}}.",
+					"You've reached the maximum of {count, plural, one {# reaction} other {# reactions}}.",
+					"You've reached the maximum of {count, plural, one {# sticker} other {# stickers}}.",
+					"This thread has reached its member limit of {count}.",
+					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per channel.",
+					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per community.",
+					"Media metadata error.",
+					"Method not allowed.",
+					"You don't have access to this resource or feature.",
+					"Missing ACL.",
+					"Missing or invalid authorization header.",
+					"The requested scope isn't supported or you don't have permission to request it.",
+					"You don't have the permissions required to perform this action.",
+					"No active call.",
+					"No active subscription.",
+					"A tag is required, but only moderators can apply the tags in this channel.",
+					"Not found.",
+					"Not implemented.",
+					"No passkeys are registered.",
+					"Invalid request.",
+					"There are too many users with this username.",
+					"This application isn't a bot.",
+					"You're not friends with this user.",
+					"NSFW content is age restricted.",
+					"Passkey authentication failed.",
+					"No active subscription.",
+					"Preview must be JPEG.",
+					"We couldn't process the request. Please try again.",
+					"You're being rate limited.",
+					"Report already resolved.",
+					"You've been banned from submitting reports.",
+					"The report form changed while you were filling it in. Start the report again.",
+					"This report is under a legal hold and can't be deleted.",
+					"Response validation failed: {errors}.",
+					"This resource is being modified. Please try again shortly.",
+					"Service unavailable.",
+					"Session token mismatch.",
+					"This instance is a single community, so additional communities cannot be created.",
+					"The community for this instance cannot be deleted.",
+					"You cannot leave the community for this instance.",
+					"This instance policy change is not allowed.",
+					"Slowmode rate limited.",
+					"The search index isn't ready yet. Try again in a moment.",
+					"Invalid request.",
+					"In-app purchases are unavailable right now. Try again later.",
+					"The notification signature is invalid.",
+					"This purchase could not be verified.",
+					"This purchase is linked to a different account.",
+					"Test purchases cannot be applied to this account.",
+					"Stream key channel mismatch.",
+					"Stream key scope mismatch.",
+					"{supportEmail, select, null {Payment processing encountered an error. Please try again or contact the administrators of this instance.} other {Payment processing encountered an error. Please try again or contact support.}}",
+					"Gift code redemption is in progress. Try again in a moment.",
+					"Invalid product selection.",
+					"Invalid product configuration.",
+					"No active subscription found.",
+					"No purchase history found. Customer portal isn't available.",
+					"This purchase is outside the 3-day self-serve refund window.",
+					"You can request a self-serve refund once every 30 days. Please try again later.",
+					"No subscription found.",
+					"Payment processing is temporarily unavailable. Please try again later.",
+					"Subscription is already set to cancel at period end.",
+					"Subscription isn't set to cancel.",
+					"Webhook processing isn't available.",
+					"Stripe webhook signature is invalid.",
+					"Stripe webhook signature is missing.",
+					"Direct messages and friend requests are disabled on this instance.",
+					"You can't start new conversations right now. Please try again later.",
+					"Donation amount is invalid.",
+					"Magic link has expired.",
+					"Magic link is invalid.",
+					"Magic link has already been used.",
+					"Sudo mode is required.",
+					"This tag is already taken.",
+					"Temporary invite requires presence.",
+					"Test harness is disabled.",
+					"Test harness is forbidden.",
+					"A thread has already been created for this message.",
+					"This thread is archived.",
+					"This thread is locked.",
+					"Two-factor authentication isn't enabled.",
+					"Two-factor authentication is required.",
+					"Unauthorized.",
+					"You're not friends with this user.",
+					"Invalid request.",
+					"Invalid request.",
+					"You need to complete your account setup before you can create communities.",
+					"You can't add yourself to a group DM.",
+					"Invalid request.",
+					"Invalid request.",
+					"Invalid request.",
+					"You can't send messages to this user.",
+					"Bots can't send friend requests.",
+					"Invalid request.",
+					"You need to complete your account setup before you can submit reports.",
+					"Channel wasn't found.",
+					"Unknown emoji.",
+					"Unknown saved media.",
+					"Tag wasn't found.",
+					"Unknown gift code.",
+					"Community wasn't found.",
+					"Unknown data export.",
+					"Invite wasn't found or is no longer valid.",
+					"Member wasn't found in this community.",
+					"Message wasn't found.",
+					"This sign-in transfer has expired or was already used.",
+					"This passkey request has expired. Try again.",
+					"There is no passkey to update right now.",
+					"Unknown report.",
+					"Role wasn't found.",
+					"Unknown sticker.",
+					"Unknown store purchase.",
+					"Thread member wasn't found.",
+					"The specified user flag isn't recognized.",
+					"User wasn't found.",
+					"Unknown voice region.",
+					"Unknown voice server.",
+					"Unknown WebAuthn credential.",
+					"Unknown application.",
+					"Unknown webhook.",
+					"You can't specify both `thread_id` and `thread_name`.",
+					"Webhooks posting to this channel need a `thread_id` or a `thread_name`.",
+					"This webhook service can't post to a forum or media channel without a `thread_id`.",
+					"`thread_name` and `applied_tags` only work in forum and media channels.",
+					"This username is not available.",
+					"This is only available on instances where people sign in with a username.",
+					"We couldn't update the resource. Please try again.",
+					"This user is banned from this community.",
+					"This user's IP is banned from this community.",
+					"This user isn't in voice.",
+					"This user owns communities.",
+					"Validation failed.",
+					"Voice channel is full.",
+					"You've reached the maximum of {count, plural, one {# WebAuthn credential} other {# WebAuthn credentials}}.",
+					"You've already completed age verification."
+				]
 			}
 		},
 		"securitySchemes": {

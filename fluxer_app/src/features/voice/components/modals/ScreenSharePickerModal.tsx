@@ -2,7 +2,7 @@
 
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Channels from '@app/features/channel/state/Channels';
 import {
 	CANCEL_DESCRIPTOR,
@@ -72,7 +72,6 @@ import {selectVoiceEngineV2AppConnection} from '@app/features/voice/engine/v2/Vo
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import VoiceSettings, {
-	type LastScreenShareSource,
 	type LastScreenShareSourceKind,
 	type ScreenshareResolution,
 } from '@app/features/voice/state/VoiceSettings';
@@ -336,8 +335,6 @@ const SCREEN_SHARE_PREVIEW_TOGGLE_DESCRIPTION_DESCRIPTOR = msg({
 });
 
 const SCREEN_SHARE_PICKER_PRELOAD_CACHE_MS = 1500;
-const LAST_SCREEN_SHARE_SOURCE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
-
 let screenSharePickerPreloadCache: {
 	expiresAt: number;
 	promise: Promise<ScreenSharePickerPreload>;
@@ -350,88 +347,6 @@ function recordLastScreenShareSource(kind: LastScreenShareSourceKind, sourceId: 
 		title,
 		updatedAt: Date.now(),
 	});
-}
-
-function normalizeLastSourceTitle(value: string | undefined): string {
-	return (value ?? '')
-		.normalize('NFKD')
-		.toLowerCase()
-		.replace(/[^\p{L}\p{N}]+/gu, ' ')
-		.trim();
-}
-
-function desktopSourceMatchesLastKind(source: DesktopSource, kind: LastScreenShareSourceKind): boolean {
-	if (kind === 'app') return isWindowSource(source);
-	if (kind === 'display') return isDisplaySource(source);
-	return false;
-}
-
-function findLastDesktopSource(
-	lastSource: LastScreenShareSource,
-	desktopSources: ReadonlyArray<DesktopSource>,
-): DesktopSource | null {
-	if (lastSource.kind !== 'app' && lastSource.kind !== 'display') return null;
-	const candidates = desktopSources.filter((source) => desktopSourceMatchesLastKind(source, lastSource.kind));
-	const lastTitle = normalizeLastSourceTitle(lastSource.title);
-	if (lastSource.sourceId) {
-		const exactIdMatch = candidates.find((source) => source.id === lastSource.sourceId);
-		if (exactIdMatch) {
-			if (lastSource.kind === 'display' || normalizeLastSourceTitle(exactIdMatch.name) === lastTitle) {
-				return exactIdMatch;
-			}
-		}
-	}
-	if (!lastTitle) return null;
-	const titleMatches = candidates.filter((source) => normalizeLastSourceTitle(source.name) === lastTitle);
-	return titleMatches.length === 1 ? titleMatches[0] : null;
-}
-
-function getDesktopSourceDimensions(source: DesktopSource): {width: number; height: number} | undefined {
-	return source.nativeWidth && source.nativeHeight
-		? {width: source.nativeWidth, height: source.nativeHeight}
-		: undefined;
-}
-
-async function tryStartLastDesktopScreenShareSource(lastSource: LastScreenShareSource): Promise<boolean> {
-	const preload = await preloadScreenSharePickerSources();
-	if (usesNativeDisplaySharePicker(preload.displayShareEnvironment)) return false;
-	const desktopSources = preload.desktopSources.map(normaliseDesktopSource);
-	const source = findLastDesktopSource(lastSource, desktopSources);
-	if (!source) return false;
-	const preferredDisplaySurface = lastSource.kind === 'app' ? 'window' : 'monitor';
-	const didStart = await startConfiguredDisplayScreenShare(source.id, {
-		sourceDimensions: getDesktopSourceDimensions(source),
-		preferredDisplaySurface,
-		isOwnWindow: source.isOwnWindow === true,
-	});
-	if (didStart) {
-		recordLastScreenShareSource(lastSource.kind, source.id, source.name || lastSource.title);
-	}
-	return didStart;
-}
-
-async function tryStartLastDeviceScreenShareSource(lastSource: LastScreenShareSource): Promise<boolean> {
-	if (!lastSource.sourceId) return false;
-	const didStart = await startConfiguredDeviceScreenShare(lastSource.sourceId);
-	if (didStart) {
-		recordLastScreenShareSource('device', lastSource.sourceId, lastSource.title);
-	}
-	return didStart;
-}
-
-export async function tryStartLastScreenShareSource(): Promise<boolean> {
-	const lastSource = VoiceSettings.getLastScreenShareSource();
-	if (!lastSource) return false;
-	if (Date.now() - lastSource.updatedAt > LAST_SCREEN_SHARE_SOURCE_MAX_AGE_MS) return false;
-	try {
-		if (lastSource.kind === 'device') {
-			return await tryStartLastDeviceScreenShareSource(lastSource);
-		}
-		return await tryStartLastDesktopScreenShareSource(lastSource);
-	} catch (error) {
-		logger.warn('Failed to start last screen-share source', {error, kind: lastSource.kind});
-		return false;
-	}
 }
 
 async function loadScreenSharePickerPreload(): Promise<ScreenSharePickerPreload> {
@@ -729,10 +644,10 @@ const ScreenSharePreviewInfoModal = observer(() => {
 					data-flx="voice.screen-share-picker-modal.preview-info-modal.content-layout"
 				>
 					<Modal.Description data-flx="voice.screen-share-picker-modal.preview-info-modal.description">
-						{i18n._(getScreenSharePreviewInfoBodyDescriptor(callContext), {productName: PRODUCT_NAME})}
+						{i18n._(getScreenSharePreviewInfoBodyDescriptor(callContext), {productName: RuntimeConfig.productName})}
 					</Modal.Description>
 					<p className={styles.previewInfoParagraph} data-flx="voice.screen-share-picker-modal.preview-info-modal.e2ee">
-						{i18n._(getScreenSharePreviewPrivacyBodyDescriptor(callContext), {productName: PRODUCT_NAME})}
+						{i18n._(getScreenSharePreviewPrivacyBodyDescriptor(callContext), {productName: RuntimeConfig.productName})}
 					</p>
 					<p
 						className={styles.previewInfoParagraph}
@@ -1619,35 +1534,3 @@ const ScreenSharePickerModalLoadedContent = observer(
 		);
 	},
 );
-export const ScreenSharePickerModal = observer(function ScreenSharePickerModal({
-	initialTab,
-	mode = 'start',
-	...contentProps
-}: ScreenSharePickerModalProps) {
-	const {
-		activeTab,
-		devicePreviewsEnabled,
-		devicePreviewPermissionStatus,
-		handleExplicitActiveTabChange,
-		requestDevicePreviewPermission,
-	} = useScreenSharePickerTabState(initialTab);
-	return (
-		<ScreenSharePickerModalFrame
-			activeTab={activeTab}
-			dataFlxPrefix="voice.screen-share-picker-modal"
-			mode={mode}
-			onActiveTabChange={handleExplicitActiveTabChange}
-			data-flx="voice.screen-share-picker-modal.screen-share-picker-modal-frame"
-		>
-			<ScreenSharePickerModalLoadedContent
-				data-flx="voice.screen-share-picker-modal.screen-share-picker-modal-loaded-content"
-				{...contentProps}
-				activeTab={activeTab}
-				devicePreviewsEnabled={devicePreviewsEnabled}
-				devicePreviewPermissionStatus={devicePreviewPermissionStatus}
-				mode={mode}
-				onRequestDevicePreviewPermission={requestDevicePreviewPermission}
-			/>
-		</ScreenSharePickerModalFrame>
-	);
-});

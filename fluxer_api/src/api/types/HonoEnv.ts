@@ -18,7 +18,6 @@ import type {StreamService} from '@app/api/channel/services/StreamService';
 import type {ThreadService} from '@app/api/channel/services/thread/ThreadService';
 import type {ConnectionRequestService} from '@app/api/connection/ConnectionRequestService';
 import type {ConnectionService} from '@app/api/connection/ConnectionService';
-import type {NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
 import type {DonationService} from '@app/api/donation/DonationService';
 import type {FavoriteMemeRequestService} from '@app/api/favorite_meme/FavoriteMemeRequestService';
 import type {FavoriteMemeService} from '@app/api/favorite_meme/FavoriteMemeService';
@@ -160,7 +159,6 @@ export interface HonoEnv {
 		reportService: ReportService;
 		reportRequestService: ReportRequestService;
 		contactChangeLogService: UserContactChangeLogService;
-		ncmecSubmissionService: NcmecSubmissionService;
 		requestCache: RequestCache;
 		rpcService: RpcService;
 		searchService: SearchService;

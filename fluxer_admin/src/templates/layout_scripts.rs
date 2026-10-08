@@ -489,10 +489,11 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 			element = element.firstElementChild;
 			depth += 1;
 		}
-		var level = status >= 400 ? 'error' : 'success';
+		var level = 'success';
 		if (className.indexOf('red-') >= 0) level = 'error';
 		if (className.indexOf('green-') >= 0) level = 'success';
 		if (className.indexOf('blue-') >= 0) level = 'info';
+		if (status >= 400) level = 'error';
 		return {
 			level: level,
 			message: text || (level === 'error' ? 'Action failed.' : 'Done.')
@@ -514,6 +515,20 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 		}
 	}
 
+	function refreshAfterSuccess(detail, level) {
+		if (level !== 'success') return;
+		var elt = (detail && detail.requestConfig && detail.requestConfig.elt) || mutationElement(detail);
+		var form = elt && elt.closest ? elt.closest('form') : null;
+		var selector = form ? form.getAttribute('data-admin-refresh-on-success') : '';
+		if (!selector || !document.querySelector(selector)) return;
+		if (!window.htmx || typeof window.htmx.ajax !== 'function') return;
+		window.htmx.ajax('GET', window.location.pathname + window.location.search, {
+			target: selector,
+			swap: 'outerHTML',
+			select: selector
+		});
+	}
+
 	document.body.addEventListener('showFlash', function (evt) {
 		var d = evt.detail || {};
 		showToast(d.level || 'info', d.message || '');
@@ -533,11 +548,12 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 		var xhr = event.detail.xhr;
 		var parsed = isLoginResponse(xhr)
 			? {level: 'error', message: 'Session expired. Sign in again.'}
-			: parseFlashResponse(xhr ? xhr.responseText : '', xhr ? xhr.status : 200);
+			: parseAdminToastHeader(xhr) || parseFlashResponse(xhr ? xhr.responseText : '', xhr ? xhr.status : 200);
 		event.detail.shouldSwap = false;
 		event.detail.isError = false;
 		markToastHandled(event.detail);
 		showToast(parsed.level, parsed.message);
+		refreshAfterSuccess(event.detail, parsed.level);
 	}, true);
 
 	document.addEventListener('htmx:afterRequest', function (event) {
@@ -548,6 +564,7 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 		if (serverToast) {
 			showToast(serverToast.level, serverToast.message);
 			markToastHandled(event.detail);
+			refreshAfterSuccess(event.detail, serverToast.level);
 			return;
 		}
 		var failed = !event.detail.successful || (xhr && xhr.status >= 400) || isLoginResponse(xhr);
@@ -566,25 +583,6 @@ window.__adminCopyToClipboard = function (text, btn, successLabel) {
 		setTimeout(function () { btn.textContent = original; }, 1500);
 	});
 };
-"#;
-
-pub const ARCHIVE_POLL_SCRIPT: &str = r#"
-(function () {
-	var rows = document.querySelectorAll('tr[data-archive-id]');
-	var hasPending = false;
-	for (var i = 0; i < rows.length; i++) {
-		var status = rows[i].querySelector('.archive-status');
-		if (status && status.textContent.indexOf('Completed') === -1 && status.textContent.indexOf('Failed') === -1) {
-			hasPending = true;
-			break;
-		}
-	}
-	if (hasPending) {
-		setTimeout(function () {
-			window.location.reload();
-		}, 5000);
-	}
-})();
 "#;
 
 pub const SH_LINK_REWRITE_SCRIPT: &str = r#"

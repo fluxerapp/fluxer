@@ -130,19 +130,4 @@ export class AttachmentDecayService {
 			});
 		}
 	}
-
-	async fetchMetadata(
-		attachments: Array<Pick<AttachmentDecayPayload, 'attachmentId'>>,
-	): Promise<Map<string, AttachmentDecayRow>> {
-		const config = await this.resolveConfig();
-		if (!config.enabled) return new Map();
-		if (attachments.length === 0) return new Map();
-		const attachmentIds = attachments.map((a) => a.attachmentId);
-		const recordsMap = await this.repo.fetchByIds(attachmentIds);
-		const result = new Map<string, AttachmentDecayRow>();
-		for (const [id, row] of recordsMap.entries()) {
-			result.set(id.toString(), row);
-		}
-		return result;
-	}
 }

@@ -5,23 +5,23 @@ import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18
 const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_deletion_cancelled": {
 		"subject": "{product_name} hesabının silinmesi iptal edildi",
-		"body": "Merhaba {username},\n\n{product_name} hesabının planlanan silinme işlemi iptal edildi. Hesabın silinmeyecek.\n\nSoruların varsa {safety_email} adresine ulaş.\n\n– {product_name} Ekibi"
+		"body": "Merhaba {username},\n\n{product_name} hesabının planlanan silinme işlemi iptal edildi. Hesabın silinmeyecek.\n\n{safety_email, select, null {Soruların varsa bu kurulumun yöneticileriyle iletişime geç.} other {Soruların varsa {safety_email} adresine ulaş.}}\n\n– {product_name} Ekibi"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "{product_name} hesabın hareketsizlik nedeniyle silinecek",
-		"body": "Merhaba {username},\n\n{product_name} hesabın uzun süredir hareketsiz olduğu için şu tarihte kalıcı olarak silinmek üzere planlandı:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nSebep: {reason}}}\n\nHesabını korumak istiyorsan bu tarihten önce bu e-posta adresinden {safety_email} adresine ulaş.\n\n– {product_name} Ekibi"
+		"body": "Merhaba {username},\n\n{product_name} hesabın uzun süredir hareketsiz olduğu için şu tarihte kalıcı olarak silinmek üzere planlandı:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nSebep: {reason}}}\n\n{safety_email, select, null {Hesabını korumak istiyorsan bu tarihten önce bu kurulumun yöneticileriyle iletişime geç.} other {Hesabını korumak istiyorsan bu tarihten önce bu e-posta adresinden {safety_email} adresine ulaş.}}\n\n– {product_name} Ekibi"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "{product_name} hesabının silinmesi planlandı",
-		"body": "Merhaba {username},\n\nTalebin doğrultusunda {product_name} hesabın şu tarihte kalıcı olarak silinmek üzere planlandı:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nSebep: {reason}}}\n\nHesabın o zamana kadar kilitli. Bunu sen talep etmediysen ya da hesabını korumak istiyorsan bu tarihten önce bu e-posta adresinden {safety_email} adresine ulaş.\n\n– {product_name} Ekibi"
+		"body": "Merhaba {username},\n\nTalebin doğrultusunda {product_name} hesabın şu tarihte kalıcı olarak silinmek üzere planlandı:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nSebep: {reason}}}\n\nHesabın o zamana kadar kilitli. {safety_email, select, null {Bunu sen talep etmediysen ya da hesabını korumak istiyorsan bu tarihten önce bu kurulumun yöneticileriyle iletişime geç.} other {Bunu sen talep etmediysen ya da hesabını korumak istiyorsan bu tarihten önce bu e-posta adresinden {safety_email} adresine ulaş.}}\n\n– {product_name} Ekibi"
 	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name} hesabın kalıcı olarak silinecek",
-		"body": "Merhaba {username},\n\nHizmet Şartlarımızı veya Topluluk Kurallarımızı ihlal ettiğin için {product_name} hesabın kalıcı olarak silinmek üzere planlandı.\n\nPlanlanan silme tarihi: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Sebep: {reason}}\n}\n\nBu, ciddi bir yaptırım işlemidir. Hesap verilerin planlanan tarihte kalıcı olarak silinecektir.\n\nLütfen şunları incele:\n- Hizmet Şartları: {termsUrl}\n- Topluluk Kuralları: {guidelinesUrl}\n\nİtiraz süreci:\nBu yaptırım kararının yanlış veya haksız olduğuna inanıyorsan, itiraz göndermek için 60 günün var. Bu e-posta adresinden {appeals_email} adresine e-posta gönder.\n\nİtirazında:\n- Yaptırım kararının neden yanlış veya haksız olduğunu düşündüğünü açıkça anlat\n- İlgili kanıtı veya bağlamı paylaş\n\n{product_name} Güvenlik Ekibinden bir üye itirazını inceleyecek ve nihai karar verilene kadar bekleyen silme işlemini duraklatabilir.\n\n– {product_name} Güvenlik Ekibi"
+		"body": "Merhaba {username},\n\nHizmet Şartlarımızı veya Topluluk Kurallarımızı ihlal ettiğin için {product_name} hesabın kalıcı olarak silinmek üzere planlandı.\n\nPlanlanan silme tarihi: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Sebep: {reason}\n\n}\n}Bu, ciddi bir yaptırım işlemidir. Hesap verilerin planlanan tarihte kalıcı olarak silinecektir.\n\n{legalLinks, select,\n  both {Lütfen şunları incele:\n- Hizmet Şartları: {termsUrl}\n- Topluluk Kuralları: {guidelinesUrl}\n\n}\n  terms {Lütfen şunları incele:\n- Hizmet Şartları: {termsUrl}\n\n}\n  guidelines {Lütfen şunları incele:\n- Topluluk Kuralları: {guidelinesUrl}\n\n}\n  other {}\n}İtiraz süreci:\nBu yaptırım kararının yanlış veya haksız olduğuna inanıyorsan, itiraz göndermek için 60 günün var. {appeals_email, select, null {Bu kurulumun yöneticileriyle iletişime geç.} other {Bu e-posta adresinden {appeals_email} adresine e-posta gönder.}}\n\nİtirazında:\n- Yaptırım kararının neden yanlış veya haksız olduğunu düşündüğünü açıkça anlat\n- İlgili kanıtı veya bağlamı paylaş\n\n{product_name} Güvenlik Ekibinden bir üye itirazını inceleyecek ve nihai karar verilene kadar bekleyen silme işlemini duraklatabilir.\n\n– {product_name} Güvenlik Ekibi"
 	},
 	"account_temp_banned": {
 		"subject": "{product_name} hesabın geçici olarak askıya alındı",
-		"body": "Merhaba {username},\n\nHizmet Şartlarımızı veya Topluluk Kurallarımızı ihlal ettiğin için {product_name} hesabını geçici olarak askıya aldık.\n\nSüre: {durationHours, plural,\n  =1 {1 saat}\n  other {# saat}\n}\nŞu tarihe kadar askıda: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Sebep: {reason}}\n}\n\nBu süre boyunca hesabına erişemeyeceksin.\n\nLütfen şunları incele:\n- Hizmet Şartları: {termsUrl}\n- Topluluk Kuralları: {guidelinesUrl}\n\nBu yaptırım kararının yanlış veya haksız olduğuna inanıyorsan, itiraz gönderebilirsin. Bu e-posta adresinden {appeals_email} adresine e-posta gönder ve kararın neden yanlış olduğunu düşündüğünü açıkça anlat. İtirazını inceleyip kararımızı sana bildireceğiz.\n\n– {product_name} Güvenlik Ekibi"
+		"body": "Merhaba {username},\n\nHizmet Şartlarımızı veya Topluluk Kurallarımızı ihlal ettiğin için {product_name} hesabını geçici olarak askıya aldık.\n\nSüre: {durationHours, plural,\n  =1 {1 saat}\n  other {# saat}\n}\nŞu tarihe kadar askıda: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Sebep: {reason}\n\n}\n}Bu süre boyunca hesabına erişemeyeceksin.\n\n{legalLinks, select,\n  both {Lütfen şunları incele:\n- Hizmet Şartları: {termsUrl}\n- Topluluk Kuralları: {guidelinesUrl}\n\n}\n  terms {Lütfen şunları incele:\n- Hizmet Şartları: {termsUrl}\n\n}\n  guidelines {Lütfen şunları incele:\n- Topluluk Kuralları: {guidelinesUrl}\n\n}\n  other {}\n}Bu yaptırım kararının yanlış veya haksız olduğuna inanıyorsan, itiraz gönderebilirsin. {appeals_email, select, null {Bu kurulumun yöneticileriyle iletişime geç ve kararın neden yanlış olduğunu düşündüğünü açıkça anlat.} other {Bu e-posta adresinden {appeals_email} adresine e-posta gönder ve kararın neden yanlış olduğunu düşündüğünü açıkça anlat.}} İtirazını inceleyip kararımızı sana bildireceğiz.\n\n– {product_name} Güvenlik Ekibi"
 	},
 	"donation_confirmation": {
 		"subject": "{product_name}'a yaptığın bağış için teşekkürler",
@@ -30,6 +30,10 @@ const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 	"donation_magic_link": {
 		"subject": "{product_name} bağışlarını yönet",
 		"body": "Merhaba,\n\nBağışçı portalına erişmek için aşağıdaki bağlantıya tıkla:\n\n{manageUrl}\n\nPortalda aboneliklerini yönetebilir, faturaları indirebilir ve bağış geçmişini görüntüleyebilirsin.\n\nBu bağlantı {expiresAt, date, full} {expiresAt, time, short} tarihinde sona erecektir.\n\nBu bağlantıyı sen talep etmediysen, bu e-postayı güvenle yok sayabilirsin.\n\n– {product_name} Ekibi"
+	},
+	"dsa_report_resolved": {
+		"subject": "{product_name} raporun hakkında karar verdik",
+		"body": "Merhaba,\n\nGüvenlik Ekibimiz Dijital Hizmetler Yasası raporunu (Kimlik: {reportId}) inceledi ve bir karar verdi.{hasComment, select, yes {\n\nGüvenlik Ekibinin yanıtı:\n{publicComment}} other {}}\n\nBaşka bir kişinin hesabına uygulanan işlemlerin ayrıntılarını paylaşmıyoruz çünkü bunlar o kişinin kişisel verileridir.\n\nBu karara katılmıyorsan 60 gün içinde ücretsiz olarak itiraz edebilirsin. {appeals_email, select, null {Bu kurulumun yöneticileriyle iletişime geç, rapor kimliğini ekle ve kararın neden yanlış olduğunu düşündüğünü açıkla.} other {Bu e-posta adresinden {appeals_email} adresine e-posta gönder, rapor kimliğini ekle ve kararın neden yanlış olduğunu düşündüğünü açıkla.}} AB'deysen anlaşmazlığı sertifikalı bir mahkeme dışı uyuşmazlık çözüm kuruluşuna da götürebilirsin. Bunların hiçbiri mahkemeye başvurma hakkını etkilemez.\n\n– {product_name} Güvenlik Ekibi"
 	},
 	"dsa_report_verification": {
 		"subject": "DSA raporu için e-postanı doğrula",
@@ -53,15 +57,15 @@ const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"gift_chargeback_notification": {
 		"subject": "Kullandığın hediyenin avantajları kaldırıldı",
-		"body": "Merhaba {username},\n\nKullandığın bir hediye kodunun ödemesi başlangıçta başka biri tarafından yapılmıştı. Bu ödeme daha sonra geri alındı (ters ibraz).\n\nBu nedenle, hediyeyi kullandığında hesabına eklenen avantajlar kaldırıldı.\n\nBunun bir hata olduğunu düşünüyorsan, lütfen destek ekibimizle iletişime geç ve hediye koduyla ilgili sahip olduğun tüm detayları ve ne zaman kullandığını belirt.\n\n– {product_name} Ekibi"
+		"body": "Merhaba {username},\n\nKullandığın bir hediye kodunun ödemesi başlangıçta başka biri tarafından yapılmıştı. Bu ödeme daha sonra geri alındı (ters ibraz).\n\nBu nedenle, hediyeyi kullandığında hesabına eklenen avantajlar kaldırıldı.\n\n{support_email, select, null {Bunun bir hata olduğunu düşünüyorsan, lütfen bu kurulumun yöneticileriyle iletişime geç ve hediye koduyla ilgili sahip olduğun tüm detayları ve ne zaman kullandığını belirt.} other {Bunun bir hata olduğunu düşünüyorsan, lütfen destek ekibimizle iletişime geç ve hediye koduyla ilgili sahip olduğun tüm detayları ve ne zaman kullandığını belirt.}}\n\n– {product_name} Ekibi"
 	},
 	"harvest_completed": {
 		"subject": "{product_name} veri dışa aktarımın indirilmeye hazır",
-		"body": "Merhaba {username},\n\nVeri dışa aktarımın hazır.\n\nİndirme bağlantısı:\n{downloadUrl}\n\nDahil edilen mesajlar: {totalMessages, number}\nDosya boyutu: {fileSizeMB, number} MB\n\nBu bağlantı {expiresAt, date, full} {expiresAt, time, short} tarihinde sona erecektir.\n\nBu dışa aktarımı sen talep etmediysen, lütfen hemen şifreni değiştir ve destek ekibimizle iletişime geç.\n\n– {product_name} Ekibi"
+		"body": "Merhaba {username},\n\nVeri dışa aktarımın hazır.\n\nİndirme bağlantısı:\n{downloadUrl}\n\nDahil edilen mesajlar: {totalMessages, number}\nDosya boyutu: {fileSizeMB, number} MB\n\nBu bağlantı {expiresAt, date, full} {expiresAt, time, short} tarihinde sona erecektir.\n\n{support_email, select, null {Bu dışa aktarımı sen talep etmediysen, lütfen hemen şifreni değiştir ve bu kurulumun yöneticileriyle iletişime geç.} other {Bu dışa aktarımı sen talep etmediysen, lütfen hemen şifreni değiştir ve destek ekibimizle iletişime geç.}}\n\n– {product_name} Ekibi"
 	},
 	"inactivity_warning": {
 		"subject": "{product_name} hesabın hareketsizlik nedeniyle silinecek",
-		"body": "Merhaba {username},\n\n{lastActiveDate, date, full} tarihinden beri {product_name} hesabında herhangi bir etkinlik görmedik.\n\n{deletionDate, date, full} {deletionDate, time, short} tarihine kadar giriş yapmazsan, hesabın hareketsizlik nedeniyle kalıcı olarak silinecektir.\n\nBuradan giriş yap:\n{loginUrl}\n\n{product_name}'ı yakın zamanda kullandıysan, lütfen hemen destek ekibimizle iletişime geç.\n\n– {product_name} Ekibi"
+		"body": "Merhaba {username},\n\n{lastActiveDate, date, full} tarihinden beri {product_name} hesabında herhangi bir etkinlik görmedik.\n\n{deletionDate, date, full} {deletionDate, time, short} tarihine kadar giriş yapmazsan, hesabın hareketsizlik nedeniyle kalıcı olarak silinecektir.\n\nBuradan giriş yap:\n{loginUrl}\n\n{support_email, select, null {{product_name}'ı yakın zamanda kullandıysan, lütfen hemen bu kurulumun yöneticileriyle iletişime geç.} other {{product_name}'ı yakın zamanda kullandıysan, lütfen hemen destek ekibimizle iletişime geç.}}\n\n– {product_name} Ekibi"
 	},
 	"ip_authorization": {
 		"subject": "Yeni bir IP adresinden girişi yetkilendir",
@@ -79,17 +83,17 @@ const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "{product_name} şifreni sıfırla",
 		"body": "Merhaba {username},\n\n{product_name} şifre sıfırlama talebinde bulundun. Yeni bir şifre belirlemek için aşağıdaki bağlantıyı kullan:\n\n{resetUrl}\n\nBunu sen talep etmediysen, bu e-postayı güvenle yok sayabilirsin.\n\nBu bağlantı 1 saat geçerlidir.\n\n– {product_name} Ekibi"
 	},
-	"registration_approved": {
-		"subject": "{product_name} kaydın onaylandı",
-		"body": "Merhaba {username},\n\nİyi haber: {product_name} kaydın onaylandı.\n\nArtık {product_name} uygulamasına buradan giriş yapabilirsin:\n{channelsUrl}\n\n{product_name} topluluğuna hoş geldin.\n\n– {product_name} Ekibi"
+	"report_received": {
+		"subject": "{product_name} raporunu aldık",
+		"body": "Merhaba,\n\n{product_name} üzerindeki {targetKind, select, message {bir mesaj} user {bir hesap} guild {bir topluluk} other {içerik}} hakkındaki Dijital Hizmetler Yasası raporunu aldık.\n\nRapor Kimliği: {reportId}\n\nGüvenlik Ekibimiz raporunu inceleyecek ve bir karar verdiğimizde sana bu adrese e-posta göndereceğiz. Bu e-postayı kayıtların için sakla.\n\n– {product_name} Güvenlik Ekibi"
 	},
 	"report_resolved": {
 		"subject": "{product_name} raporun incelendi",
-		"body": "Merhaba {username},\n\nRaporun (Kimlik: {reportId}) Güvenlik Ekibimiz tarafından incelendi.{hasComment, select, yes {\n\nGüvenlik Ekibinin yanıtı:\n{publicComment}} other {}}\n\n{product_name}'ı herkes için güvenli tutmaya yardımcı olduğun için teşekkür ederiz. Tüm raporları ciddiye alıyoruz ve topluluğa katkını takdir ediyoruz.\n\nBu sonuç hakkında herhangi bir sorun veya endişen varsa, lütfen {safety_email} adresine ulaş.\n\n– {product_name} Güvenlik Ekibi"
+		"body": "Merhaba {username},\n\nRaporun (Kimlik: {reportId}) Güvenlik Ekibimiz tarafından incelendi.{hasComment, select, yes {\n\nGüvenlik Ekibinin yanıtı:\n{publicComment}} other {}}\n\n{product_name}'ı herkes için güvenli tutmaya yardımcı olduğun için teşekkür ederiz. Tüm raporları ciddiye alıyoruz ve topluluğa katkını takdir ediyoruz.\n\n{safety_email, select, null {Bu sonuç hakkında herhangi bir sorun veya endişen varsa, lütfen bu kurulumun yöneticileriyle iletişime geç.} other {Bu sonuç hakkında herhangi bir sorun veya endişen varsa, lütfen {safety_email} adresine ulaş.}}\n\n– {product_name} Güvenlik Ekibi"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "{product_name} hesabın kalıcı olarak silinecek",
-		"body": "Merhaba {username},\n\n{product_name} hesabın kalıcı olarak silinmek üzere planlandı.\n\nPlanlanan silme tarihi: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Sebep: {reason}}\n}\n\nBu, ciddi bir yaptırım işlemidir. Hesap verilerin planlanan tarihte kalıcı olarak silinecektir.\n\nBu yaptırım kararının yanlış olduğuna inanıyorsan, itiraz gönderebilirsin. Bu e-posta adresinden {appeals_email} adresine e-posta gönder.\n\n– {product_name} Güvenlik Ekibi"
+		"body": "Merhaba {username},\n\n{product_name} hesabın kalıcı olarak silinmek üzere planlandı.\n\nPlanlanan silme tarihi: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Sebep: {reason}\n\n}\n}Bu, ciddi bir yaptırım işlemidir. Hesap verilerin planlanan tarihte kalıcı olarak silinecektir.\n\nBu yaptırım kararının yanlış olduğuna inanıyorsan, itiraz gönderebilirsin. {appeals_email, select, null {Bu kurulumun yöneticileriyle iletişime geç.} other {Bu e-posta adresinden {appeals_email} adresine e-posta gönder.}}\n\n– {product_name} Güvenlik Ekibi"
 	},
 	"self_deletion_scheduled": {
 		"subject": "{product_name} hesabının silinmesi planlandı",
@@ -97,7 +101,7 @@ const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"unban_notification": {
 		"subject": "{product_name} hesabının askıya alınması kaldırıldı",
-		"body": "Merhaba {username},\n\nİyi haber: {product_name} hesabının askıya alınması kaldırıldı.\n\n{reason, select,\n  null {}\n  other {Sebep: {reason}}\n}\n\nArtık tekrar giriş yapabilir ve {product_name}'ı normal şekilde kullanmaya devam edebilirsin.\n\n– {product_name} Güvenlik Ekibi"
+		"body": "Merhaba {username},\n\nİyi haber: {product_name} hesabının askıya alınması kaldırıldı.\n\n{reason, select,\n  null {}\n  other {Sebep: {reason}\n\n}\n}Artık tekrar giriş yapabilir ve {product_name}'ı normal şekilde kullanmaya devam edebilirsin.\n\n– {product_name} Güvenlik Ekibi"
 	}
 });
 

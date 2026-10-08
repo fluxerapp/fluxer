@@ -2,11 +2,11 @@
 
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
-import {PRODUCT_NAME, SUPPORT_EMAIL, SUPPORT_EMAIL_MAILTO} from '@app/features/app/config/I18nDisplayConstants';
+import {SUPPORT_EMAIL, SUPPORT_EMAIL_MAILTO} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {MULTIPART_ATTACHMENT_FALLBACK_MAX_REQUEST_SIZE} from '@app/features/messaging/utils/AttachmentUploadFallbackUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
-import {msg} from '@lingui/core/macro';
+import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
@@ -23,16 +23,16 @@ export const AttachmentUploadConnectivityModal = observer(() => {
 			message={
 				RuntimeConfig.isSelfHosted() ? (
 					<Trans>
-						We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall back to the standard upload path
-						for messages up to {fallbackSizeFormatted} total, but these attachments exceed that combined limit and can't
-						be sent until connectivity is restored. Try again later or contact the administrators of this instance if
-						this keeps happening.
+						We couldn't reach the attachment upload service. {ph({PRODUCT_NAME: RuntimeConfig.productName})} can fall
+						back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these attachments
+						exceed that combined limit and can't be sent until connectivity is restored. Try again later or contact the
+						administrators of this instance if this keeps happening.
 					</Trans>
 				) : (
 					<Trans>
-						We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall back to the standard upload path
-						for messages up to {fallbackSizeFormatted} total, but these attachments exceed that combined limit and can't
-						be sent until connectivity is restored. Try again later or contact{' '}
+						We couldn't reach the attachment upload service. {ph({PRODUCT_NAME: RuntimeConfig.productName})} can fall
+						back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these attachments
+						exceed that combined limit and can't be sent until connectivity is restored. Try again later or contact{' '}
 						<ExternalLink
 							href={SUPPORT_EMAIL_MAILTO}
 							data-flx="messaging.attachment-upload-connectivity-modal.external-link"

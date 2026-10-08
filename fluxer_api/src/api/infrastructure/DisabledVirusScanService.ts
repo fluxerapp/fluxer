@@ -26,10 +26,6 @@ export class DisabledVirusScanService implements IVirusScanService {
 		};
 	}
 
-	async isVirusHashCached(fileHash: string): Promise<boolean> {
-		return this.cachedVirusHashes.has(fileHash);
-	}
-
 	async cacheVirusHash(fileHash: string): Promise<void> {
 		this.cachedVirusHashes.add(fileHash);
 	}

@@ -98,6 +98,38 @@ pub struct ReportEntry {
     pub reported_user_global_name: Option<String>,
     pub reported_user_discriminator: Option<String>,
     pub reported_user_avatar_hash: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_id: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_name: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_avatar_hash: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_default_name: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_default_avatar_hash: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_type: Option<i32>,
+    #[serde(default)]
+    pub reported_webhook_application_id: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_channel_id: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_guild_id: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_created_at: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_creator_id: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_creator_tag: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_creator_username: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_creator_global_name: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_creator_discriminator: Option<String>,
+    #[serde(default)]
+    pub reported_webhook_creator_avatar_hash: Option<String>,
     pub reported_guild_id: Option<String>,
     pub reported_guild_name: Option<String>,
     pub reported_guild_icon_hash: Option<String>,
@@ -121,6 +153,148 @@ pub struct ReportEntry {
     pub public_comment: Option<String>,
     pub mutual_dm_channel_id: Option<String>,
     pub message_context: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub reason: Option<String>,
+    #[serde(default)]
+    pub reason_label: Option<String>,
+    #[serde(default)]
+    pub reason_highest_priority: Option<bool>,
+    #[serde(default)]
+    pub flow: Option<ReportFlowAnswersEntry>,
+    #[serde(default)]
+    pub reporter_good_faith_confirmed: Option<bool>,
+    #[serde(default)]
+    pub reported_user_bot: Option<bool>,
+    #[serde(default)]
+    pub reported_profile_snapshot: Option<ReportProfileSnapshot>,
+    #[serde(default)]
+    pub legal_hold_until: Option<String>,
+    #[serde(default)]
+    pub legal_hold_reason: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ReportProfileSnapshot {
+    #[serde(default)]
+    pub captured_at: Option<String>,
+    #[serde(default)]
+    pub user: Option<ReportProfileSnapshotUser>,
+    #[serde(default)]
+    pub member: Option<ReportProfileSnapshotMember>,
+    #[serde(default)]
+    pub guild: Option<ReportProfileSnapshotGuild>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ReportProfileSnapshotUser {
+    pub id: String,
+    #[serde(default)]
+    pub username: Option<String>,
+    #[serde(default)]
+    pub discriminator: Option<String>,
+    #[serde(default)]
+    pub global_name: Option<String>,
+    #[serde(default)]
+    pub bio: Option<String>,
+    #[serde(default)]
+    pub pronouns: Option<String>,
+    #[serde(default)]
+    pub avatar: Option<ReportProfileSnapshotAsset>,
+    #[serde(default)]
+    pub banner: Option<ReportProfileSnapshotAsset>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ReportProfileSnapshotMember {
+    pub guild_id: String,
+    #[serde(default)]
+    pub nick: Option<String>,
+    #[serde(default)]
+    pub bio: Option<String>,
+    #[serde(default)]
+    pub pronouns: Option<String>,
+    #[serde(default)]
+    pub joined_at: Option<String>,
+    #[serde(default)]
+    pub avatar: Option<ReportProfileSnapshotAsset>,
+    #[serde(default)]
+    pub banner: Option<ReportProfileSnapshotAsset>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ReportProfileSnapshotGuild {
+    pub id: String,
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
+    pub vanity_url_code: Option<String>,
+    #[serde(default)]
+    pub icon: Option<ReportProfileSnapshotAsset>,
+    #[serde(default)]
+    pub banner: Option<ReportProfileSnapshotAsset>,
+    #[serde(default)]
+    pub splash: Option<ReportProfileSnapshotAsset>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ReportProfileSnapshotAsset {
+    pub hash: String,
+    #[serde(default)]
+    pub url: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ReportLegalHoldResponse {
+    pub report_id: String,
+    pub legal_hold_until: Option<String>,
+    pub legal_hold_reason: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ReportFlowAnswersEntry {
+    pub revision_hash: String,
+    pub surface: String,
+    #[serde(default)]
+    pub locale: Option<String>,
+    #[serde(default)]
+    pub steps: Vec<ReportFlowAnswerStepEntry>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ReportFlowAnswerStepEntry {
+    pub screen_id: String,
+    pub screen_title: String,
+    #[serde(default)]
+    pub option_id: Option<String>,
+    #[serde(default)]
+    pub option_label: Option<String>,
+    #[serde(default)]
+    pub items: Vec<ReportFlowAnswerItemEntry>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ReportFlowAnswerItemEntry {
+    pub id: String,
+    pub label: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ReportReasonEntry {
+    pub key: String,
+    pub label: String,
+    #[serde(default)]
+    pub highest_priority: bool,
+    #[serde(default)]
+    pub legacy_category_message: Option<String>,
+    #[serde(default)]
+    pub legacy_category_user: Option<String>,
+    #[serde(default)]
+    pub legacy_category_guild: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ReportReasonListResponse {
+    pub reasons: Vec<ReportReasonEntry>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -129,11 +303,6 @@ pub struct SearchReportsResponse {
     pub total: u64,
     pub offset: u64,
     pub limit: u64,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ListReportsResponse {
-    pub reports: Vec<ReportEntry>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

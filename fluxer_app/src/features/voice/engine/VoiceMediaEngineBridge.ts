@@ -110,13 +110,9 @@ export function getVoiceConnectionContextFromMediaEngine(): VoiceMediaEngineConn
 	};
 }
 
-export type VoiceMediaEngineVoiceStates = Readonly<
+type VoiceMediaEngineVoiceStates = Readonly<
 	Record<string, Readonly<Record<string, Readonly<Record<string, VoiceMediaEngineVoiceState>>>>>
 >;
-
-export function getAllVoiceStatesFromMediaEngine(): VoiceMediaEngineVoiceStates {
-	return getMediaEngine()?.getAllVoiceStates?.() ?? {};
-}
 
 export function getAllVoiceStatesInChannelFromMediaEngine(
 	guildId: string,

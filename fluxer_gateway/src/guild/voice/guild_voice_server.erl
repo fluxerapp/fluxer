@@ -6,11 +6,10 @@
 -behaviour(gen_server).
 
 -export([
-    start_link/2, start_link/3,
+    start_link/3,
     is_voice_server_pid/1,
     resolve/2,
     resolve_result/2,
-    stop/1,
     lookup/1,
     lookup_registered/1
 ]).
@@ -26,9 +25,7 @@
 -define(MAX_PENDING_CONNECTIONS, 1000).
 -define(MAX_RECENT_DISCONNECTS, 500).
 -define(MAX_E2EE_KEYS, 1000).
--define(PENDING_TTL_MS, 300000).
 -define(RECENT_DISCONNECT_TTL_MS, 120000).
--define(E2EE_KEY_TTL_MS, 300000).
 -define(SEEDED_SESSION_CHECK_DELAY_MS, 60000).
 -define(SESSION_LOOKUP_TIMEOUT_MS, 5000).
 
@@ -42,9 +39,6 @@
     e2ee_room_keys := map()
 }.
 
--spec start_link(integer(), pid()) -> gen_server:start_ret().
-start_link(GuildId, GuildPid) -> start_link(GuildId, GuildPid, #{}).
-
 -spec start_link(integer(), pid(), voice_state_map()) -> gen_server:start_ret().
 start_link(GuildId, GuildPid, InitialVoiceStates) ->
     gen_server:start_link(
@@ -56,9 +50,6 @@ start_link(GuildId, GuildPid, InitialVoiceStates) ->
         },
         []
     ).
-
--spec stop(pid()) -> ok.
-stop(Pid) -> gen_server:stop(Pid, normal, 5000).
 
 -spec lookup(integer()) -> {ok, pid()} | {error, not_found}.
 lookup(GuildId) ->

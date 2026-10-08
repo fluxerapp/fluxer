@@ -21,7 +21,7 @@ function getDefaultDocument(): Document | null {
 	return document;
 }
 
-export function clearAppZoomCache(): void {
+function clearAppZoomCache(): void {
 	clearRemScaleCache();
 }
 

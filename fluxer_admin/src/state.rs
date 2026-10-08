@@ -3,7 +3,7 @@
 use crate::{
     api::{
         client::{AdminApiClient, ApiResultExt},
-        types::{AccountIdentityMode, AccountIdentitySettings, PremiumBranding},
+        types::{AccountIdentityMode, AccountIdentitySettings, PremiumBranding, ReportReasonEntry},
     },
     config::AdminConfig,
 };
@@ -26,6 +26,7 @@ struct AppStateInner {
     pub http_client: reqwest::Client,
     premium_branding: Mutex<Option<(Instant, PremiumBranding)>>,
     account_identity: Mutex<Option<(Instant, AccountIdentitySettings)>>,
+    report_reasons: Mutex<Option<Arc<[ReportReasonEntry]>>>,
 }
 
 impl AppState {
@@ -40,6 +41,7 @@ impl AppState {
                 http_client,
                 premium_branding: Mutex::new(None),
                 account_identity: Mutex::new(None),
+                report_reasons: Mutex::new(None),
             }),
         }
     }
@@ -125,6 +127,35 @@ impl AppState {
             .unwrap_or_else(|poisoned| poisoned.into_inner()) =
             Some((Instant::now() + ttl, settings));
         settings
+    }
+
+    pub async fn report_reasons(
+        &self,
+        client: &AdminApiClient,
+    ) -> Option<Arc<[ReportReasonEntry]>> {
+        if let Some(reasons) = self.cached_report_reasons() {
+            return Some(reasons);
+        }
+        let reasons: Arc<[ReportReasonEntry]> = client
+            .list_report_reasons()
+            .await
+            .log_error("load report reasons")?
+            .reasons
+            .into();
+        *self
+            .inner
+            .report_reasons
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(reasons.clone());
+        Some(reasons)
+    }
+
+    fn cached_report_reasons(&self) -> Option<Arc<[ReportReasonEntry]>> {
+        self.inner
+            .report_reasons
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
     }
 }
 

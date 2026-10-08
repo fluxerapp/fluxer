@@ -3,8 +3,8 @@
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ShareThemeModal} from '@app/features/theme/components/modals/ShareThemeModal';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -138,7 +138,7 @@ export const SettingsSection: React.FC = observer(() => {
 					ModalCommands.push(
 						modal(() => (
 							<ConfirmModal
-								title={i18n._(RESTART_DESCRIPTOR, {productName: PRODUCT_NAME})}
+								title={i18n._(RESTART_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 								description={i18n._(TRANSPARENCY_RESTART_DESCRIPTION_DESCRIPTOR)}
 								primaryText={i18n._(RESTART_NOW_DESCRIPTOR)}
 								secondaryText={i18n._(LATER_DESCRIPTOR)}

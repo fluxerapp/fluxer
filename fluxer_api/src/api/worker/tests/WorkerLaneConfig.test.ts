@@ -70,7 +70,7 @@ describe('WorkerLaneConfig', () => {
 		expect(retired).toEqual({
 			realtime: [],
 			unfurl: [],
-			lifecycle: ['sendScheduledMessage'],
+			lifecycle: ['sendScheduledMessage', 'finalizeNcmecAttachmentReport'],
 			batch: [],
 			crosspost: [],
 		});

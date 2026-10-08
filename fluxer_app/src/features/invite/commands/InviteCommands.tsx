@@ -203,7 +203,6 @@ const accept = async (code: string, target: InstanceHTTPTarget): Promise<Invite>
 		throw error;
 	}
 };
-export const acceptInvite = accept;
 
 export async function acceptAndTransitionToChannel(
 	code: string,

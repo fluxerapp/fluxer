@@ -79,6 +79,5 @@ function getHardwareEncoderCapabilities() {
 
 module.exports = {
 	isSupported,
-	getHardwareEncoderCapability,
 	getHardwareEncoderCapabilities,
 };

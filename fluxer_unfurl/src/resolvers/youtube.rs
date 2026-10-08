@@ -132,7 +132,7 @@ impl Resolver for YouTubeResolver {
             }
 
             embed.provider = Some(EmbedProvider {
-                name: Some("YouTube".to_owned()),
+                name: "YouTube".to_owned(),
                 url: Some("https://www.youtube.com".to_owned()),
             });
 
@@ -224,7 +224,6 @@ struct YouTubePlayer {
 
 #[derive(Debug, Deserialize)]
 struct YouTubeThumbnails {
-    #[allow(dead_code)]
     default: Option<YouTubeThumbnail>,
     medium: Option<YouTubeThumbnail>,
     high: Option<YouTubeThumbnail>,

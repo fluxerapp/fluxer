@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type ChannelID, createMessageID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {type ChannelID, createMessageID, type UserID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import {DMPermissionValidator} from '@app/api/channel/services/DMPermissionValidator';
@@ -543,33 +543,5 @@ export class CallService {
 				throw InputValidationError.fromCode('recipients', ValidationErrorCodes.USER_NOT_IN_CHANNEL);
 			}
 		}
-	}
-
-	async updateCallMessageEnded({
-		channelId,
-		messageId,
-		participants,
-		endedTimestamp,
-	}: {
-		channelId: ChannelID;
-		messageId: MessageID;
-		participants: Array<UserID>;
-		endedTimestamp: Date;
-	}): Promise<void> {
-		const message = await this.channelRepository.getMessage(channelId, messageId);
-		if (!message) {
-			return;
-		}
-		if (message.type !== MessageTypes.CALL) {
-			return;
-		}
-		const messageRow = message.toRow();
-		await this.channelRepository.upsertMessage({
-			...messageRow,
-			call: {
-				participant_ids: new Set(participants),
-				ended_timestamp: endedTimestamp,
-			},
-		});
 	}
 }

@@ -26,15 +26,15 @@ interface CassandraClientOptions {
 	logger?: Logger | undefined;
 }
 
-export interface CassandraExecuteOptions {
+interface CassandraExecuteOptions {
 	prepare?: boolean | undefined;
 }
 
-export interface CassandraBatchOptions {
+interface CassandraBatchOptions {
 	prepare?: boolean | undefined;
 }
 
-export interface ICassandraClient {
+interface ICassandraClient {
 	connect(): Promise<void>;
 	shutdown(): Promise<void>;
 	isConnected(): boolean;
@@ -183,7 +183,7 @@ export async function shutdownCassandra(): Promise<void> {
 	defaultClientState.client = null;
 }
 
-export function getDefaultCassandraClient(): ICassandraClient {
+function getDefaultCassandraClient(): ICassandraClient {
 	if (defaultClientState.client === null) {
 		throw new Error('Cassandra client is not initialized. Call initCassandra() first.');
 	}

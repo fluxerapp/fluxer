@@ -248,7 +248,7 @@ export function getGuildSettingsCategoryLabel(i18n: I18n, category: GuildSetting
 	}
 }
 
-export function getGuildSettingsTabLabel(i18n: I18n, tabType: GuildSettingsTabType): string {
+function getGuildSettingsTabLabel(i18n: I18n, tabType: GuildSettingsTabType): string {
 	const tab = GUILD_SETTINGS_TABS_DESCRIPTORS.find((candidate) => candidate.type === tabType);
 	return tab ? i18n._(tab.label) : '';
 }

@@ -34,7 +34,7 @@ import type {
 import {createVoiceEngineV2SystemClockPort, type VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/runtime';
 import type {Room} from 'livekit-client';
 
-export interface VoiceEngineV2AppProductionHostPortsLogger {
+interface VoiceEngineV2AppProductionHostPortsLogger {
 	trace(...args: Array<unknown>): void;
 	debug(...args: Array<unknown>): void;
 	info(...args: Array<unknown>): void;

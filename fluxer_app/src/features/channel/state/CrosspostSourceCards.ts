@@ -7,7 +7,7 @@ import {makeAutoObservable} from 'mobx';
 
 const CARD_TTL_MS = 60_000;
 
-export type CrosspostSourceCardState =
+type CrosspostSourceCardState =
 	| {status: 'loading'}
 	| {status: 'ready'; card: CrosspostSourceGuildResponse; fetchedAt: number}
 	| {status: 'unavailable'; fetchedAt: number}

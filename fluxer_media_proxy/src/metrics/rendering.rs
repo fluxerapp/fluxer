@@ -184,16 +184,6 @@ pub(super) fn render_metrics(out: &mut String, metrics: &Metrics) -> fmt::Result
     )?;
     render_counter(
         out,
-        "fluxer_media_proxy_framebuffer_pool_borrows_total",
-        &metrics.native_transform.framebuffer_pool_borrows,
-    )?;
-    render_counter(
-        out,
-        "fluxer_media_proxy_framebuffer_pool_grow_events_total",
-        &metrics.native_transform.framebuffer_pool_grow_events,
-    )?;
-    render_counter(
-        out,
         "fluxer_media_proxy_relay_upstream_success_total",
         &metrics.relay.relay_upstream_success,
     )?;

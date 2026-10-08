@@ -90,7 +90,7 @@ export class OpenAPIGenerator {
 				description: this.settings.description,
 				contact: {
 					name: 'Fluxer Platform AB',
-					email: 'support@fluxer.app',
+					email: 'support@fluxer.com',
 				},
 				license: {
 					name: 'AGPL-3.0',
@@ -172,7 +172,7 @@ export class OpenAPIGenerator {
 		referencedSchemas: Set<string>,
 	): Record<string, OpenAPISchema> {
 		const publishedSchemas = new Map<string, OpenAPISchema>();
-		for (const name of referencedSchemas) {
+		for (const name of [...referencedSchemas, ...OpenAPIGeneratorCatalog.alwaysPublishedSchemas]) {
 			assert(Object.hasOwn(allSchemas, name), `Referenced OpenAPI schema is missing: ${name}`);
 			publishedSchemas.set(name, allSchemas[name]);
 		}

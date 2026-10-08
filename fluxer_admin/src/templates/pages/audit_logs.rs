@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::plural::noun_for;
 use crate::{
     api::types::AuditLogsListResponse,
     config::AdminConfig,
@@ -120,7 +121,12 @@ pub fn audit_logs_page(
                 .current_page
                 .checked_add(1)
                 .filter(|page| u64::from(*page) < total_pages);
-            let showing = format!("Showing {} of {} entries", entries.len(), total);
+            let showing = format!(
+                "Showing {} of {} {}",
+                entries.len(),
+                total,
+                noun_for(total, "entry", "entries")
+            );
             html! {
                 (page_header_with_actions("Audit Logs", None, html! {
                     span class="text-sm text-neutral-500" { (showing) }

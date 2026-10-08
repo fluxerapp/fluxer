@@ -28,7 +28,7 @@ export function resolveGuildModerationCapabilities(
 	};
 }
 
-export function resolveMemberModerationActionKeys(options: {
+function resolveMemberModerationActionKeys(options: {
 	canTimeout: boolean;
 	isTimedOut: boolean;
 	canKick: boolean;

@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type {I18n, MessageDescriptor} from '@lingui/core';
@@ -140,47 +137,6 @@ const MESSAGE_PINNED_DESCRIPTOR = msg({
 const MESSAGE_UNPINNED_DESCRIPTOR = msg({
 	message: 'Message unpinned',
 	comment: 'Audit log entry label. A message was unpinned from a channel.',
-});
-const ALL_DESCRIPTOR = msg({
-	message: 'All',
-	comment: 'Audit log target-type filter option. Shows entries for every target type.',
-});
-const MEMBER_DESCRIPTOR = msg({
-	message: 'Member',
-	comment: 'Audit log target-type filter label. Filters entries that target a community member.',
-});
-const USER_DESCRIPTOR = msg({
-	message: 'User',
-	comment: 'Audit log target-type filter label. Filters entries that target a user account.',
-});
-const ROLE_DESCRIPTOR = msg({
-	message: 'Role',
-	comment: 'Audit log target-type filter label. Filters entries that target a role.',
-});
-const CHANNEL_DESCRIPTOR = msg({
-	message: 'Channel',
-	comment: 'Audit log target-type filter label. Filters entries that target a channel.',
-});
-const EMOJI_DESCRIPTOR = msg({
-	message: 'Emoji',
-	comment: 'Audit log target-type filter label. Filters entries that target a custom emoji.',
-});
-const STICKER_DESCRIPTOR = msg({
-	message: 'Sticker',
-	comment: 'Audit log target-type filter label. Filters entries that target a custom sticker.',
-});
-const INVITE_DESCRIPTOR = msg({
-	message: 'Invite',
-	context: 'invite-noun',
-	comment: 'Audit log target-type filter label. Filters entries that target an invite link.',
-});
-const WEBHOOK_DESCRIPTOR = msg({
-	message: 'Webhook',
-	comment: 'Audit log target-type filter label. Filters entries that target a webhook.',
-});
-const MESSAGE_DESCRIPTOR = msg({
-	message: 'Message',
-	comment: 'Audit log target-type filter label. Filters entries that target an individual message.',
 });
 export const AUDIT_LOG_TARGET_TYPES = {
 	ALL: 'all',
@@ -416,26 +372,4 @@ export function getTranslatedAuditLogActions(
 		...action,
 		label: i18n._(action.label),
 	}));
-}
-
-export const AUDIT_LOG_TARGET_LABELS: Record<AuditLogTargetType, MessageDescriptor> = {
-	[AUDIT_LOG_TARGET_TYPES.ALL]: ALL_DESCRIPTOR,
-	[AUDIT_LOG_TARGET_TYPES.GUILD]: COMMUNITY_DESCRIPTOR,
-	[AUDIT_LOG_TARGET_TYPES.MEMBER]: MEMBER_DESCRIPTOR,
-	[AUDIT_LOG_TARGET_TYPES.USER]: USER_DESCRIPTOR,
-	[AUDIT_LOG_TARGET_TYPES.ROLE]: ROLE_DESCRIPTOR,
-	[AUDIT_LOG_TARGET_TYPES.CHANNEL]: CHANNEL_DESCRIPTOR,
-	[AUDIT_LOG_TARGET_TYPES.EMOJI]: EMOJI_DESCRIPTOR,
-	[AUDIT_LOG_TARGET_TYPES.STICKER]: STICKER_DESCRIPTOR,
-	[AUDIT_LOG_TARGET_TYPES.INVITE]: INVITE_DESCRIPTOR,
-	[AUDIT_LOG_TARGET_TYPES.WEBHOOK]: WEBHOOK_DESCRIPTOR,
-	[AUDIT_LOG_TARGET_TYPES.MESSAGE]: MESSAGE_DESCRIPTOR,
-};
-
-export function getTranslatedAuditLogTargetLabels(i18n: I18n): Record<AuditLogTargetType, string> {
-	const translatedLabels: Record<AuditLogTargetType, string> = {} as Record<AuditLogTargetType, string>;
-	for (const [key, descriptor] of Object.entries(AUDIT_LOG_TARGET_LABELS)) {
-		translatedLabels[key as AuditLogTargetType] = i18n._(descriptor);
-	}
-	return translatedLabels;
 }

@@ -70,13 +70,6 @@ function resolveVisibleRowBounds(options: MemberListRangeWindowOptions): Visible
 	return {startIndex, unclampedEnd};
 }
 
-export function areMemberListRangesEqual(left: MemberListRanges, right: MemberListRanges): boolean {
-	if (left === right) {
-		return true;
-	}
-	return areNormalizedMemberListRangesEqual(normalizeMemberListRanges(left), normalizeMemberListRanges(right));
-}
-
 export function areNormalizedMemberListRangesEqual(
 	left: NormalizedMemberListRanges,
 	right: NormalizedMemberListRanges,
@@ -95,13 +88,6 @@ export function areNormalizedMemberListRangesEqual(
 		}
 	}
 	return true;
-}
-
-export function areMemberListRangesCovered(innerRanges: MemberListRanges, outerRanges: MemberListRanges): boolean {
-	return areNormalizedMemberListRangesCovered(
-		normalizeMemberListRanges(innerRanges),
-		normalizeMemberListRanges(outerRanges),
-	);
 }
 
 export function areNormalizedMemberListRangesCovered(

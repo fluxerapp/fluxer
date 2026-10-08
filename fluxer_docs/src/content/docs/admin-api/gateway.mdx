@@ -87,12 +87,48 @@ One entry for each node the request polled, including nodes that did not answer 
 | process_count | integer | The Erlang processes in use on this node |
 | process_limit | integer | The Erlang process ceiling on this node |
 | uptime_seconds | integer | The seconds since this node started |
+| cluster_metrics?<sup>3</sup> | [gateway cluster metrics](#gateway-cluster-metrics-object) object | The clustering counters of this node |
 
 <sup>1</sup> A node reports its `HOSTNAME` environment value when that value is a non-blank string, and its Erlang node name otherwise
 
 <sup>2</sup> `healthy` for a node that answered and `unavailable` for one that did not. A node that did not answer reports null for every counter here and contributes zero to every cluster total
 
+<sup>3</sup> Absent for a node that did not answer
+
 A node entry can have further diagnostic members. A client treats a member it does not recognise as absent.
+
+## Gateway cluster metrics object
+
+How one node sees the Gateway cluster. Every total counts from the moment the node started, so a restart resets it to zero.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| gateway_cluster_member_count | integer | The cluster members this node currently counts as alive |
+| gateway_cluster_discovery_resolve_failures_total | integer | The times this node failed to resolve its cluster peers |
+| gateway_cluster_membership_transitions_total | [membership transition counts](#membership-transition-counts-object) object | The members this node saw join and leave |
+| gateway_node_router_owner_resolutions_total | [owner resolution counts](#owner-resolution-counts-object) object | Where this node routed the work it had to place |
+
+The object can have further diagnostic members. A client treats a member it does not recognise as absent.
+
+### Membership transition counts object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| up | integer | Members that joined the alive set |
+| down | integer | Members that left the alive set |
+
+### Owner resolution counts object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| self | integer | Owner lookups that resolved to this node |
+| peer | integer | Owner lookups that resolved to another node |
 
 ## Node memory object
 

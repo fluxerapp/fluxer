@@ -3,7 +3,7 @@
 import type {ThemeLibraryTheme} from '@app/features/theme/state/ThemeLibrary';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 
-export function escapeRegExp(value: string): string {
+function escapeRegExp(value: string): string {
 	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
@@ -40,11 +40,11 @@ export function updateCssForVariable(css: string, variableName: string, newValue
 	return `${trimmedCss}${prefix}:root { ${variableName}: ${newValue}; }\n`;
 }
 
-export function clampByte(value: number): number {
+function clampByte(value: number): number {
 	return Math.max(0, Math.min(255, Math.round(value)));
 }
 
-export function numberToHex(value: number): string {
+function numberToHex(value: number): string {
 	return `#${(value >>> 0).toString(16).padStart(6, '0').slice(-6)}`.toUpperCase();
 }
 
@@ -149,7 +149,7 @@ function resolveCssColorWithCanvas(color: string): string | null {
 	}
 }
 
-export function cssColorStringToNumber(color: string): number | null {
+function cssColorStringToNumber(color: string): number | null {
 	const normalizedColor = stripCssColorPriority(color);
 	const direct = parseNormalizedCssColor(normalizedColor);
 	if (direct !== null) return direct;

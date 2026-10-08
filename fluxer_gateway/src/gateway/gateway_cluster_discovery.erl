@@ -8,7 +8,6 @@
     start_link/0, start_link/1,
     peers/0,
     subscribe/1,
-    unsubscribe/1,
     force_refresh/0
 ]).
 -export([
@@ -64,10 +63,6 @@ peers() ->
 -spec subscribe(pid()) -> ok.
 subscribe(Pid) when is_pid(Pid) ->
     gen_server:cast(?MODULE, {subscribe, Pid}).
-
--spec unsubscribe(pid()) -> ok.
-unsubscribe(Pid) when is_pid(Pid) ->
-    gen_server:cast(?MODULE, {unsubscribe, Pid}).
 
 -spec force_refresh() -> {ok, [peer()]} | {error, term()}.
 force_refresh() ->
@@ -150,8 +145,6 @@ handle_call(_Request, _From, State) ->
 -spec handle_cast(term(), state()) -> {noreply, state()}.
 handle_cast({subscribe, Pid}, State) when is_pid(Pid) ->
     {noreply, add_subscriber(Pid, State)};
-handle_cast({unsubscribe, Pid}, State) when is_pid(Pid) ->
-    {noreply, remove_subscriber(Pid, State)};
 handle_cast({apply_resolved_peers, NewPeers}, #{peers := OldPeers} = State) when
     is_list(NewPeers)
 ->

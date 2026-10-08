@@ -17,8 +17,11 @@ import {
 	START_VOICE_CALL_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
-import {BLOCK_DESCRIPTOR, REPORT_USER_DESCRIPTOR} from '@app/features/moderation/utils/ModerationMessageDescriptors';
-import {openReportUserModal} from '@app/features/moderation/utils/ReportActionUtils';
+import {
+	BLOCK_DESCRIPTOR,
+	REPORT_USER_PROFILE_DESCRIPTOR,
+} from '@app/features/moderation/utils/ModerationMessageDescriptors';
+import {openReportUserProfileModal} from '@app/features/moderation/utils/ReportActionUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import MemberPresenceSubscription from '@app/features/presence/state/MemberPresenceSubscription';
 import Relationships from '@app/features/relationship/state/Relationships';
@@ -129,7 +132,7 @@ const SEND_FRIEND_REQUEST_DESCRIPTOR = msg({
 });
 const logger = new Logger('UserProfileModal');
 
-export interface UserProfileModalProps {
+interface UserProfileModalProps {
 	userId: string;
 	guildId?: string;
 	autoFocusNote?: boolean;
@@ -339,8 +342,8 @@ export const UserProfileModal: UserProfileModalComponent = observer(
 				showDmActionErrorModal(error);
 			}
 		};
-		const handleReportUser = () => {
-			openReportUserModal({i18n, user: displayUser, guildId});
+		const handleReportUserProfile = () => {
+			openReportUserProfileModal({user: displayUser, guildId});
 		};
 		const handleCopyFluxerTag = () => {
 			TextCopyCommands.copy(i18n, displayUser.tag, true);
@@ -491,13 +494,13 @@ export const UserProfileModal: UserProfileModalComponent = observer(
 							<MenuItem
 								icon={<FlagIcon data-flx="user.user-profile-modal.open-more-options-menu.flag-icon" />}
 								onClick={() => {
-									handleReportUser();
+									handleReportUserProfile();
 									props.onClose();
 								}}
 								danger
-								data-flx="user.user-profile-modal.open-more-options-menu.menu-item.report-user"
+								data-flx="user.user-profile-modal.open-more-options-menu.menu-item.report-user-profile"
 							>
-								{i18n._(REPORT_USER_DESCRIPTOR)}
+								{i18n._(REPORT_USER_PROFILE_DESCRIPTOR)}
 							</MenuItem>
 							{renderBlockMenuItem(props.onClose)}
 						</MenuGroup>

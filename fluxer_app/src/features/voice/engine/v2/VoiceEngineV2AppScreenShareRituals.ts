@@ -15,16 +15,16 @@ import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import type {ScreenShareContentSource} from '@app/features/voice/utils/CodecCapabilityDetector';
 import type {LocalParticipant, Room, TrackPublishOptions} from 'livekit-client';
 
-export interface ScreenSharePublishPipelineOptions {
+interface ScreenSharePublishPipelineOptions {
 	readonly contentSource: ScreenShareContentSource | undefined;
 	readonly effectivePublishOptions: TrackPublishOptions | undefined;
 }
 
-export type ScreenShareActivationAudioSync =
+type ScreenShareActivationAudioSync =
 	| {readonly kind: 'participant-after-watch'}
 	| {readonly kind: 'self-stream-before-watch'; readonly published: boolean};
 
-export interface ScreenShareActivationRitualSteps {
+interface ScreenShareActivationRitualSteps {
 	readonly acquireStreamingPriority: boolean;
 	readonly enforcePublicationCap: boolean;
 	readonly applyState: ((active: boolean) => void) | null;

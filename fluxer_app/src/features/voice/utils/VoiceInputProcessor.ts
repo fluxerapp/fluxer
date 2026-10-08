@@ -63,7 +63,7 @@ export function isVoiceActivityGateEnabled(): boolean {
 	return Keybind.transmitMode === 'voice_activity' && profile.mode !== 'studio' && !profile.stereoCapture;
 }
 
-export function resolveVoiceInputConfig(): VoiceInputConfig {
+function resolveVoiceInputConfig(): VoiceInputConfig {
 	const profile = resolveVoiceProcessingFromStateForDeviceLabel(
 		VoiceSettings,
 		getActiveInputDeviceLabel(VoiceSettings),

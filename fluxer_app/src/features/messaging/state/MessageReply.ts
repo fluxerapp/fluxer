@@ -6,7 +6,7 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {makeAutoObservable} from 'mobx';
 
-export interface MessageReplyState {
+interface MessageReplyState {
 	messageId: string;
 	mentioning: boolean;
 	snapshot: Message;
@@ -68,14 +68,6 @@ class MessageReply {
 		if (current && messageIds.includes(current.messageId)) {
 			delete this.replyingMessageIds[channelId];
 		}
-	}
-
-	highlightMessage(messageId: string): void {
-		this.highlightMessageId = messageId;
-	}
-
-	clearHighlight(): void {
-		this.highlightMessageId = null;
 	}
 
 	getReplyingMessage(channelId: string): MessageReplyState | null {

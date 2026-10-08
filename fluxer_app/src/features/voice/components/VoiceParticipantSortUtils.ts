@@ -127,7 +127,7 @@ export function syncVoiceParticipantSortSnapshot(
 	}
 }
 
-export function compareVoiceParticipantSnapshotMembers(
+function compareVoiceParticipantSnapshotMembers(
 	leftMember: VoiceParticipantSnapshotMember,
 	rightMember: VoiceParticipantSnapshotMember,
 	snapshot: VoiceParticipantSortSnapshot,
@@ -217,41 +217,7 @@ export function sortVoiceParticipantItemsWithSnapshot<T>(
 	return sortedItems;
 }
 
-export function compareVoiceParticipantIdentities(
-	leftIdentity: string,
-	rightIdentity: string,
-	guildId?: string | null,
-	channelId?: string | null,
-): number {
-	const left = buildSortIdentity(leftIdentity);
-	const right = buildSortIdentity(rightIdentity);
-	const leftDisplayName = getUserDisplayName(left.userId, guildId, channelId);
-	const rightDisplayName = getUserDisplayName(right.userId, guildId, channelId);
-	const byDisplayName = DISPLAY_NAME_COLLATOR.compare(leftDisplayName, rightDisplayName);
-	if (byDisplayName !== 0) return byDisplayName;
-	const byUserId = left.userId.localeCompare(right.userId);
-	if (byUserId !== 0) return byUserId;
-	const byConnectionId = left.connectionId.localeCompare(right.connectionId);
-	if (byConnectionId !== 0) return byConnectionId;
-	return leftIdentity.localeCompare(rightIdentity);
-}
-
-export function compareVoiceParticipantsByUserAndConnection(
-	left: VoiceParticipantSortIdentity,
-	right: VoiceParticipantSortIdentity,
-	guildId?: string | null,
-	channelId?: string | null,
-): number {
-	const leftDisplayName = getUserDisplayName(left.userId, guildId, channelId);
-	const rightDisplayName = getUserDisplayName(right.userId, guildId, channelId);
-	const byDisplayName = DISPLAY_NAME_COLLATOR.compare(leftDisplayName, rightDisplayName);
-	if (byDisplayName !== 0) return byDisplayName;
-	const byUserId = left.userId.localeCompare(right.userId);
-	if (byUserId !== 0) return byUserId;
-	return left.connectionId.localeCompare(right.connectionId);
-}
-
-export function compareVoiceParticipantsByUserAndConnectionWithSnapshot(
+function compareVoiceParticipantsByUserAndConnectionWithSnapshot(
 	left: VoiceParticipantSortIdentity,
 	right: VoiceParticipantSortIdentity,
 	snapshot: VoiceParticipantSortSnapshot,
@@ -271,22 +237,6 @@ export function compareVoiceParticipantsByUserAndConnectionWithSnapshot(
 		guildId,
 		channelId,
 	);
-}
-
-export function compareVoiceTrackReferences(
-	left: TrackReferenceOrPlaceholder,
-	right: TrackReferenceOrPlaceholder,
-	guildId?: string | null,
-	channelId?: string | null,
-): number {
-	const byParticipant = compareVoiceParticipantIdentities(
-		left.participant.identity,
-		right.participant.identity,
-		guildId,
-		channelId,
-	);
-	if (byParticipant !== 0) return byParticipant;
-	return `${left.source}`.localeCompare(`${right.source}`);
 }
 
 export function compareVoiceTrackReferencesWithSnapshot(

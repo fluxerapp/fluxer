@@ -12,7 +12,6 @@ import {useSubscriptionStatus} from '@app/features/app/components/dialogs/compon
 import {PurchaseHistorySection} from '@app/features/app/components/dialogs/components/plutonium/PurchaseHistorySection';
 import {SelfServeRefundSection} from '@app/features/app/components/dialogs/components/plutonium/SelfServeRefundSection';
 import {SubscriptionCard} from '@app/features/app/components/dialogs/components/plutonium/SubscriptionCard';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import GeoIP from '@app/features/app/state/GeoIP';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -118,7 +117,7 @@ interface PageButtonProps {
 
 function PageButton({variant, onClick, disabled, loading, directional, badge, children, flx}: PageButtonProps) {
 	return (
-		<FocusRing offset={-2}>
+		<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.page-button.focus-ring">
 			<button
 				type="button"
 				className={clsx(styles.button, variant === 'primary' ? styles.buttonPrimary : styles.buttonSecondary)}
@@ -127,13 +126,28 @@ function PageButton({variant, onClick, disabled, loading, directional, badge, ch
 				aria-busy={loading || undefined}
 				data-flx={flx}
 			>
-				<span>{children}</span>
-				{badge && <span className={styles.buttonBadge}>{badge}</span>}
+				<span data-flx="premium.plutonium-page.plutonium-page.page-button.span">{children}</span>
+				{badge && (
+					<span
+						className={styles.buttonBadge}
+						data-flx="premium.plutonium-page.plutonium-page.page-button.button-badge"
+					>
+						{badge}
+					</span>
+				)}
 				{loading ? (
-					<span className={styles.buttonSpinner} aria-hidden="true" />
+					<span
+						className={styles.buttonSpinner}
+						aria-hidden="true"
+						data-flx="premium.plutonium-page.plutonium-page.page-button.button-spinner"
+					/>
 				) : (
 					directional && (
-						<PlutoniumPageIcon name="arrowRight" className={clsx(styles.buttonIcon, styles.buttonIconDirectional)} />
+						<PlutoniumPageIcon
+							name="arrowRight"
+							className={clsx(styles.buttonIcon, styles.buttonIconDirectional)}
+							data-flx="premium.plutonium-page.plutonium-page.page-button.button-icon"
+						/>
 					)
 				)}
 			</button>
@@ -292,6 +306,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 				badge={savingsBadge}
 				directional
 				flx={`premium.plutonium-page.${flxSuffix}.subscribe-yearly`}
+				data-flx="premium.plutonium-page.plutonium-page.subscribe-buttons.page-button.start-checkout"
 			>
 				{i18n._(SUBSCRIBE_YEARLY_DESCRIPTOR)}
 			</PageButton>
@@ -301,6 +316,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 				disabled={purchaseDisabled}
 				loading={loadingCheckout && pendingPlan === 'monthly'}
 				flx={`premium.plutonium-page.${flxSuffix}.subscribe-monthly`}
+				data-flx="premium.plutonium-page.plutonium-page.subscribe-buttons.page-button.start-checkout--2"
 			>
 				{i18n._(SUBSCRIBE_MONTHLY_DESCRIPTOR)}
 			</PageButton>
@@ -312,6 +328,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 				variant={variant}
 				onClick={PlutoniumPageCommands.openGiftPlutoniumModal}
 				flx={`premium.plutonium-page.${flxSuffix}.gift`}
+				data-flx="premium.plutonium-page.plutonium-page.gift-button.page-button.open-gift-plutonium-modal"
 			>
 				{i18n._(GIFT_PLUTONIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 			</PageButton>
@@ -344,34 +361,53 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 			? i18n._(CLOSING_GIFT_BODY_DESCRIPTOR)
 			: i18n._(CLOSING_BODY_DESCRIPTOR);
 	const showDonationHint = !RuntimeConfig.isSelfHosted();
-	const donationTemplate = i18n._(DONATION_HINT_DESCRIPTOR, {productName: PRODUCT_NAME, donateLink: '\u0000'});
+	const donationTemplate = i18n._(DONATION_HINT_DESCRIPTOR, {
+		productName: RuntimeConfig.productName,
+		donateLink: '\u0000',
+	});
 	const [donationBefore, donationAfter] = splitTemplate(donationTemplate, '\u0000');
-	const footnoteTemplate = i18n._(TAG_FOOTNOTE_DESCRIPTOR, {productName: PRODUCT_NAME, visionaryLink: '\u0000'});
+	const footnoteTemplate = i18n._(TAG_FOOTNOTE_DESCRIPTOR, {
+		productName: RuntimeConfig.productName,
+		visionaryLink: '\u0000',
+	});
 	const [footnoteBefore, footnoteAfter] = splitTemplate(footnoteTemplate, '\u0000');
+	const visionaryHelpUrl = Routes.helpArticle('visionary');
 	const secondaryLinks = (
 		<div className={styles.secondaryLinks} data-flx="premium.plutonium-page.hero.secondary-links">
 			{giftPurchasesAvailable && (
-				<FocusRing offset={-2}>
+				<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring">
 					<button
 						type="button"
 						className={styles.textButton}
 						onClick={PlutoniumPageCommands.openGiftPlutoniumModal}
 						data-flx="premium.plutonium-page.hero.gift-link"
 					>
-						<GiftIcon weight="fill" className={styles.textButtonIcon} aria-hidden="true" />
-						<span>{i18n._(GIFT_PLUTONIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}</span>
+						<GiftIcon
+							weight="fill"
+							className={styles.textButtonIcon}
+							aria-hidden="true"
+							data-flx="premium.plutonium-page.plutonium-page.text-button-icon"
+						/>
+						<span data-flx="premium.plutonium-page.plutonium-page.span">
+							{i18n._(GIFT_PLUTONIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+						</span>
 					</button>
 				</FocusRing>
 			)}
-			<FocusRing offset={-2}>
+			<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring--2">
 				<button
 					type="button"
 					className={styles.textButton}
 					onClick={PlutoniumPageCommands.openGiftInventorySettings}
 					data-flx="premium.plutonium-page.hero.redeem-link"
 				>
-					<TicketIcon weight="fill" className={styles.textButtonIcon} aria-hidden="true" />
-					<span>{i18n._(REDEEM_GIFT_CODE_DESCRIPTOR)}</span>
+					<TicketIcon
+						weight="fill"
+						className={styles.textButtonIcon}
+						aria-hidden="true"
+						data-flx="premium.plutonium-page.plutonium-page.text-button-icon--2"
+					/>
+					<span data-flx="premium.plutonium-page.plutonium-page.span--2">{i18n._(REDEEM_GIFT_CODE_DESCRIPTOR)}</span>
 				</button>
 			</FocusRing>
 		</div>
@@ -385,9 +421,18 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 			)}
 			{pricesLoaded && (
 				<p className={styles.priceLine} data-flx="premium.plutonium-page.hero.price-line">
-					<span className={styles.price}>{monthlyLabel}</span>
-					<span className={styles.priceOr}>{i18n._(PRICE_OR_DESCRIPTOR)}</span>
-					<span className={styles.price}>{yearlyLabel}</span>
+					<span className={styles.price} data-flx="premium.plutonium-page.plutonium-page.render-purchase-hero.price">
+						{monthlyLabel}
+					</span>
+					<span
+						className={styles.priceOr}
+						data-flx="premium.plutonium-page.plutonium-page.render-purchase-hero.price-or"
+					>
+						{i18n._(PRICE_OR_DESCRIPTOR)}
+					</span>
+					<span className={styles.price} data-flx="premium.plutonium-page.plutonium-page.render-purchase-hero.price--2">
+						{yearlyLabel}
+					</span>
 				</p>
 			)}
 			<div className={clsx(styles.actions, styles.heroActions)} data-flx="premium.plutonium-page.hero.actions">
@@ -415,6 +460,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 							onClick={() => scrollToId(MANAGE_ID)}
 							directional
 							flx="premium.plutonium-page.hero.manage"
+							data-flx="premium.plutonium-page.plutonium-page.render-hero-body.page-button.scroll-to-id"
 						>
 							{i18n._(MANAGE_SUBSCRIPTION_DESCRIPTOR)}
 						</PageButton>
@@ -435,6 +481,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 							onClick={PlutoniumPageCommands.openGiftInventorySettings}
 							directional
 							flx="premium.plutonium-page.hero.redeem"
+							data-flx="premium.plutonium-page.plutonium-page.render-hero-body.page-button.open-gift-inventory-settings"
 						>
 							{i18n._(REDEEM_GIFT_CODE_DESCRIPTOR)}
 						</PageButton>
@@ -452,10 +499,14 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 			data-flx="premium.plutonium-page.root"
 		>
 			<div ref={scrollerRef} className={styles.scroller} data-flx="premium.plutonium-page.scroller">
-				<div className={styles.starfield} aria-hidden="true" />
+				<div
+					className={styles.starfield}
+					aria-hidden="true"
+					data-flx="premium.plutonium-page.plutonium-page.starfield"
+				/>
 				{isMobile && (
 					<div className={styles.mobileBar} data-flx="premium.plutonium-page.mobile-bar">
-						<FocusRing offset={-2}>
+						<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring--3">
 							<button
 								type="button"
 								className={styles.backButton}
@@ -463,17 +514,26 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 								aria-label={i18n._(BACK_DESCRIPTOR)}
 								data-flx="premium.plutonium-page.mobile-bar.back"
 							>
-								<ArrowLeftIcon weight="bold" className={styles.backIcon} aria-hidden="true" />
+								<ArrowLeftIcon
+									weight="bold"
+									className={styles.backIcon}
+									aria-hidden="true"
+									data-flx="premium.plutonium-page.plutonium-page.back-icon"
+								/>
 							</button>
 						</FocusRing>
 					</div>
 				)}
 				<section className={styles.hero} data-flx="premium.plutonium-page.hero">
-					<div className={styles.heroInner}>
+					<div className={styles.heroInner} data-flx="premium.plutonium-page.plutonium-page.hero-inner">
 						{!RuntimeConfig.isSelfHosted() && (
-							<div className={styles.crownWrap}>
-								<picture>
-									<source type="image/avif" srcSet={CROWN_AVIF} />
+							<div className={styles.crownWrap} data-flx="premium.plutonium-page.plutonium-page.crown-wrap">
+								<picture data-flx="premium.plutonium-page.plutonium-page.picture">
+									<source
+										type="image/avif"
+										srcSet={CROWN_AVIF}
+										data-flx="premium.plutonium-page.plutonium-page.source.image-avif"
+									/>
 									<img
 										draggable={false}
 										className={styles.crown}
@@ -494,8 +554,8 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 						{renderHeroBody()}
 						{showDonationHint && (
 							<p className={styles.meta} data-flx="premium.plutonium-page.hero.donation-hint">
-								<span>{donationBefore}</span>
-								<FocusRing offset={-2}>
+								<span data-flx="premium.plutonium-page.plutonium-page.span--3">{donationBefore}</span>
+								<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring--4">
 									<a
 										className={styles.inlineLink}
 										href={marketingUrl('donate')}
@@ -506,7 +566,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 										{i18n._(DONATE_INSTEAD_DESCRIPTOR)}
 									</a>
 								</FocusRing>
-								<span>{donationAfter}</span>
+								<span data-flx="premium.plutonium-page.plutonium-page.span--4">{donationAfter}</span>
 							</p>
 						)}
 					</div>
@@ -519,7 +579,11 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 							aria-labelledby={`${MANAGE_ID}-heading`}
 							data-flx="premium.plutonium-page.manage"
 						>
-							<h2 id={`${MANAGE_ID}-heading`} className={styles.manageHeading}>
+							<h2
+								id={`${MANAGE_ID}-heading`}
+								className={styles.manageHeading}
+								data-flx="premium.plutonium-page.plutonium-page.manage-heading"
+							>
 								{i18n._(MANAGE_HEADING_DESCRIPTOR)}
 							</h2>
 							<div className={styles.manageSurface} data-flx="premium.plutonium-page.manage.surface">
@@ -572,7 +636,13 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 									billingUnavailable={billingUnavailable}
 									data-flx="premium.plutonium-page.manage.subscription-card"
 								/>
-								{purchasesAvailable && <PurchaseDisclaimer align="center" isPremium />}
+								{purchasesAvailable && (
+									<PurchaseDisclaimer
+										align="center"
+										isPremium
+										data-flx="premium.plutonium-page.plutonium-page.purchase-disclaimer"
+									/>
+								)}
 								{subscriptionStatus.hasEverPurchased &&
 									!billingUnavailable &&
 									premiumState?.billing.stripe_customer_id != null && (
@@ -600,6 +670,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 						freeUploadSize={uploadSizes.free}
 						footnoteId={FOOTNOTE_ID}
 						onFootnoteClick={handleFootnoteClick}
+						data-flx="premium.plutonium-page.plutonium-page.plutonium-page-showcase"
 					/>
 					<div id={COMPARE_ID} data-flx="premium.plutonium-page.compare-anchor">
 						<PlutoniumPageComparison
@@ -608,6 +679,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 							actions={
 								canSubscribe ? subscribeButtons('comparison') : isMember ? giftButton('primary', 'comparison') : null
 							}
+							data-flx="premium.plutonium-page.plutonium-page.plutonium-page-comparison"
 						/>
 					</div>
 					{(canSubscribe || (isMember && giftPurchasesAvailable)) && (
@@ -616,7 +688,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 							className={clsx(styles.glassPanel, styles.glassPanelBrand, styles.closing)}
 							data-flx="premium.plutonium-page.closing"
 						>
-							<div className={styles.closingInner}>
+							<div className={styles.closingInner} data-flx="premium.plutonium-page.plutonium-page.closing-inner">
 								<h2 className={styles.displayHeading} data-flx="premium.plutonium-page.closing.title">
 									{closingTitle}
 								</h2>
@@ -634,19 +706,25 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 					)}
 					{!RuntimeConfig.usesUniqueUsernames && (
 						<p id={FOOTNOTE_ID} className={styles.footnote} data-flx="premium.plutonium-page.footnote">
-							<span>{`* ${footnoteBefore}`}</span>
-							<FocusRing offset={-2}>
-								<a
-									className={styles.inlineLink}
-									href={Routes.helpArticle('visionary')}
-									target="_blank"
-									rel="noopener noreferrer"
-									data-flx="premium.plutonium-page.footnote.visionary-link"
-								>
+							<span data-flx="premium.plutonium-page.plutonium-page.span--5">{`* ${footnoteBefore}`}</span>
+							{visionaryHelpUrl ? (
+								<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring--5">
+									<a
+										className={styles.inlineLink}
+										href={visionaryHelpUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										data-flx="premium.plutonium-page.footnote.visionary-link"
+									>
+										{i18n._(TAG_FOOTNOTE_LINK_DESCRIPTOR)}
+									</a>
+								</FocusRing>
+							) : (
+								<span data-flx="premium.plutonium-page.footnote.visionary-text">
 									{i18n._(TAG_FOOTNOTE_LINK_DESCRIPTOR)}
-								</a>
-							</FocusRing>
-							<span>{footnoteAfter}</span>
+								</span>
+							)}
+							<span data-flx="premium.plutonium-page.plutonium-page.span--6">{footnoteAfter}</span>
 						</p>
 					)}
 				</div>

@@ -96,10 +96,6 @@ export const TURN_OFF_STREAM_DESCRIPTOR = msg({
 	message: 'Turn off stream',
 	comment: 'Voice menu action that ends the current user screen share.',
 });
-export const SHOW_MY_OWN_CAMERA_DESCRIPTOR = msg({
-	message: 'Show my own camera',
-	comment: 'Voice display preference checkbox that controls whether the current user sees their own camera tile.',
-});
 export const SHOW_MY_SCREEN_SHARE_DESCRIPTOR = msg({
 	message: 'Show my screen share',
 	comment: 'Voice display preference checkbox that controls whether the current user sees their own screen share tile.',

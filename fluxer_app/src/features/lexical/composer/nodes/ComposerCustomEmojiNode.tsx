@@ -3,7 +3,6 @@
 import {ComposerAtomicPresentation} from '@app/features/lexical/composer/nodes/ComposerAtomicPresentation';
 import {ComposerCustomEmoji} from '@app/features/lexical/composer/nodes/ComposerCustomEmoji';
 import styles from '@app/features/lexical/composer/nodes/ComposerInline.module.css';
-import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {
 	DecoratorNode,
 	type DOMExportOutput,
@@ -120,10 +119,6 @@ export class ComposerCustomEmojiNode extends DecoratorNode<JSX.Element> {
 
 	getWireText(): string {
 		return this.getLatest().__wire;
-	}
-
-	getSegmentType(): MentionSegment['type'] {
-		return 'emoji';
 	}
 
 	getEmojiId(): string {

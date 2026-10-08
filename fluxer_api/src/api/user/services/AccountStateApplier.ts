@@ -39,7 +39,7 @@ import {ms} from 'itty-time';
 
 export type ActionOf<T extends ActionEnvelope['type']> = Extract<ActionEnvelope, {type: T}>;
 
-export interface AccountUpdateDispatch {
+interface AccountUpdateDispatch {
 	userUpdated(user: User): Promise<void>;
 	profileChanged(user: User): Promise<void>;
 	contentVisibilityChanged(user: User): Promise<void>;
@@ -113,7 +113,7 @@ export function accountStateDepsFromContext(
 	};
 }
 
-export function observedOf(user: User): Observed {
+function observedOf(user: User): Observed {
 	return {
 		flags: user.flags.toString(),
 		deleted: (user.flags & UserFlags.DELETED) !== 0n,

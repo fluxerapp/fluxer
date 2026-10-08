@@ -239,7 +239,7 @@ export class OpenAPIOperationBuilder {
 				},
 			};
 		}
-		Object.assign(responses, getErrorResponses(requiresAuth));
+		Object.assign(responses, getErrorResponses(requiresAuth, route.errorStatusCodes));
 		return responses;
 	}
 }

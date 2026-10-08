@@ -598,15 +598,6 @@ assert_channel_sync_dispatches_for_ids(ExpectedChannelIds, Dispatches) ->
 
 with_sync_dispatch_mock(Fun) ->
     meck:new(guild_member_list_subscribe, [passthrough, no_link]),
-    Parent = self(),
-    meck:expect(
-        guild_member_list_subscribe,
-        dispatch_sync_to_subscribed_sessions,
-        fun(ListSubs, Sessions, ChannelId, GuildId, State, SyncFun) ->
-            Parent ! {sync_dispatch, ListSubs, Sessions, ChannelId, GuildId, State, SyncFun},
-            ok
-        end
-    ),
     meck:expect(
         guild_member_list_subscribe,
         dispatch_sync_to_subscribed_list,

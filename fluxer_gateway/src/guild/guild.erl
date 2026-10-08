@@ -518,6 +518,12 @@ terminate(Reason, State) when is_map(State) ->
     ),
     safe_cleanup(
         fun() ->
+            cleanup_passive_sync_registry(State)
+        end,
+        "passive_sync_cleanup"
+    ),
+    safe_cleanup(
+        fun() ->
             cleanup_voice_server(State)
         end,
         "voice_cleanup"
@@ -576,6 +582,15 @@ cleanup_per_guild_ets(State) ->
     safe_delete_ets(maps:get(thread_store, Data, undefined)),
     safe_delete_ets(maps:get(member_presence, State, undefined)),
     safe_delete_ets(maps:get(viewable_channels_cache, State, undefined)),
+    ok.
+
+-spec cleanup_passive_sync_registry(guild_state()) -> ok.
+cleanup_passive_sync_registry(#{id := GuildId} = State) when is_integer(GuildId) ->
+    maps:foreach(
+        fun(SessionId, _Session) -> passive_sync_registry:delete(SessionId, GuildId) end,
+        maps:get(sessions, State, #{})
+    );
+cleanup_passive_sync_registry(_State) ->
     ok.
 
 -spec cleanup_voice_server(guild_state()) -> ok.

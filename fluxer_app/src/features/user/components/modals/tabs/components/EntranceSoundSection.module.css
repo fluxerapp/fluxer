@@ -454,14 +454,6 @@
 	line-height: 1.25rem;
 }
 
-.emptyStateDescription {
-	margin: 0.35rem 0 0;
-	color: var(--text-primary-muted);
-	font-size: 0.8125rem;
-	line-height: 1.25rem;
-	overflow-wrap: anywhere;
-}
-
 .actions {
 	display: flex;
 	flex-wrap: wrap;

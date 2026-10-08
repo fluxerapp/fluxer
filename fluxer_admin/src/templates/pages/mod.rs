@@ -29,7 +29,6 @@ pub mod profile_substring_bans;
 pub mod report_detail;
 pub mod reports_list;
 pub mod search_index;
-pub mod strange_place;
 pub mod system_dm;
 pub mod url_domain_bans;
 pub mod user_detail;

@@ -25,7 +25,7 @@ export const ExpiryFootnoteContextMenu: FC = () => {
 		AccessibilityCommands.update({showAttachmentExpiryIndicator: false});
 	}, []);
 	const handleOpenHelpCenter = useCallback(() => {
-		void openExternalUrl(helpUrl);
+		if (helpUrl) void openExternalUrl(helpUrl);
 	}, [helpUrl]);
 	return (
 		<MenuGroup data-flx="app.expiry-footnote-context-menu.menu-group">

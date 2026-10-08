@@ -32,6 +32,7 @@ const adminEndpoints: Array<AdminEndpointCase> = [
 	{method: 'GET', path: '/admin/reports', requiredACL: 'report:view'},
 	{method: 'GET', path: '/admin/reports/1', requiredACL: 'report:view'},
 	{method: 'PATCH', path: '/admin/reports/1', requiredACL: 'report:resolve'},
+	{method: 'DELETE', path: '/admin/reports/1', requiredACL: 'report:delete'},
 	{
 		method: 'POST',
 		path: '/admin/bulk-jobs',

@@ -3,9 +3,9 @@
 import type {VirtmicNode} from '@app/types/electron.d';
 
 export const LINUX_AUDIO_TARGET_OBJECTS_PATTERN_KEY = 'fluxer.target.objects';
-export const LINUX_AUDIO_DISPLAY_PATTERN_PREFIX = 'fluxer.display.';
-export const LINUX_AUDIO_DISPLAY_NAME_PATTERN_KEY = 'fluxer.display.name';
-export const LINUX_AUDIO_PRESERVE_VOLATILE_IDENTITY_PATTERN_KEY = 'fluxer.display.preserveVolatileIdentity';
+const LINUX_AUDIO_DISPLAY_PATTERN_PREFIX = 'fluxer.display.';
+const LINUX_AUDIO_DISPLAY_NAME_PATTERN_KEY = 'fluxer.display.name';
+const LINUX_AUDIO_PRESERVE_VOLATILE_IDENTITY_PATTERN_KEY = 'fluxer.display.preserveVolatileIdentity';
 
 export interface LinuxAudioSourceItem {
 	name: string;
@@ -50,7 +50,7 @@ function buildPlaybackStreamPattern(appName: string): VirtmicNode {
 	return {'application.name': appName};
 }
 
-export function buildLinuxAudioDeviceTargetPattern(node: VirtmicNode, displayName: string): VirtmicNode | null {
+function buildLinuxAudioDeviceTargetPattern(node: VirtmicNode, displayName: string): VirtmicNode | null {
 	const targetObjects = uniqueValues([node['object.serial'], node['node.name']]);
 	if (targetObjects.length === 0) return null;
 	return {
@@ -185,7 +185,7 @@ function removeLegacyVolatilePlaybackIdentity(pattern: VirtmicNode, nativePatter
 	}
 }
 
-export function toNativeLinuxAudioPattern(pattern: VirtmicNode): VirtmicNode | null {
+function toNativeLinuxAudioPattern(pattern: VirtmicNode): VirtmicNode | null {
 	const next: VirtmicNode = {};
 	for (const [key, value] of Object.entries(pattern)) {
 		if (key.startsWith(LINUX_AUDIO_DISPLAY_PATTERN_PREFIX)) continue;

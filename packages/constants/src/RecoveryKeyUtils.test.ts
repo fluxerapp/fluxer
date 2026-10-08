@@ -5,7 +5,6 @@ import {
 	formatRecoveryKey,
 	formatRecoveryKeyInput,
 	generateRecoveryKey,
-	isValidRecoveryKey,
 	normalizeRecoveryKey,
 	RECOVERY_KEY_FORMATTED_LENGTH,
 	RECOVERY_KEY_LENGTH,
@@ -62,8 +61,6 @@ describe('normalizeRecoveryKey', () => {
 		expect(normalizeRecoveryKey(`!${key.slice(1)}`)).toBeNull();
 		expect(normalizeRecoveryKey(key.slice(1))).toBeNull();
 		expect(normalizeRecoveryKey(`${key}0`)).toBeNull();
-		expect(isValidRecoveryKey('')).toBe(false);
-		expect(isValidRecoveryKey(key)).toBe(true);
 	});
 
 	it('rejects characters whose uppercase form is two letters', () => {

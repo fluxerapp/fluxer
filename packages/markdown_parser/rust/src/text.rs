@@ -83,10 +83,6 @@ pub fn concat3(a: &str, b: &str, c: &str) -> String {
     out
 }
 
-pub fn repeat_byte(byte: u8, count: usize) -> String {
-    std::iter::repeat_n(byte as char, count).collect()
-}
-
 pub fn append_text(nodes: &mut Vec<Node>, content: impl Into<String>) {
     let content = content.into();
     if content.is_empty() {
@@ -256,10 +252,6 @@ pub fn remove_text_presentation(text: &str) -> String {
     text.replace("™️", "™")
         .replace("©️", "©")
         .replace("®️", "®")
-}
-
-pub fn ascii_eq_ignore_case(left: &str, right: &str) -> bool {
-    left.eq_ignore_ascii_case(right)
 }
 
 pub fn trim_start_newline_whitespace(value: &str) -> &str {

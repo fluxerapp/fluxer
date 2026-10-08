@@ -7,8 +7,6 @@
     friend_ids_from_state/1,
     group_dm_recipients_from_state/1,
     group_dm_channel_recipient_ids/2,
-    dm_recipients_from_state/1,
-    dm_channel_recipient_ids/2,
     direct_dm_partner_ids/1,
     dm_partner_presence_enabled/1,
     map_from_ids/1
@@ -43,10 +41,6 @@ group_dm_recipients_from_state(State) ->
         #{},
         Channels
     ).
-
--spec dm_recipients_from_state(state()) -> #{channel_id() => #{user_id() => true}}.
-dm_recipients_from_state(State) ->
-    group_dm_recipients_from_state(State).
 
 -spec accumulate_dm_channel(
     term(), term(), user_id() | undefined, #{user_id() => true}, map()
@@ -139,10 +133,6 @@ group_dm_channel_recipient_ids(Channel, SelfUserId) when is_map(Channel) ->
     end;
 group_dm_channel_recipient_ids(_Channel, _SelfUserId) ->
     [].
-
--spec dm_channel_recipient_ids(term(), user_id() | undefined) -> [user_id()].
-dm_channel_recipient_ids(Channel, SelfUserId) ->
-    group_dm_channel_recipient_ids(Channel, SelfUserId).
 
 -spec extract_recipient_ids(map()) -> [user_id()].
 extract_recipient_ids(Channel) ->

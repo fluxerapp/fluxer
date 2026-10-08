@@ -2,7 +2,6 @@
 
 import Initialization from '@app/features/app/state/Initialization';
 import {
-	BACKGROUND_RESUME_STAGGER_MS,
 	BackgroundGatewaySessionManager,
 	MAX_BACKGROUND_GATEWAY_CONNECTIONS,
 	readMaxBackgroundGatewayConnections,
@@ -26,7 +25,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import LocalPresence from '@app/features/presence/state/LocalPresence';
 import {reaction} from 'mobx';
 
-export {BACKGROUND_RESUME_STAGGER_MS, MAX_BACKGROUND_GATEWAY_CONNECTIONS, readMaxBackgroundGatewayConnections};
+export {MAX_BACKGROUND_GATEWAY_CONNECTIONS, readMaxBackgroundGatewayConnections};
 
 const logger = new Logger('GatewaySessionPool');
 const FOREGROUND_RECOVERY_RETRY_DELAYS_MS = [1_000, 3_000, 10_000] as const;

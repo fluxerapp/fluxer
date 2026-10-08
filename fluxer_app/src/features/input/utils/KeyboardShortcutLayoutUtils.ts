@@ -2,11 +2,11 @@
 
 import type {KeyCombo} from '@app/features/input/state/InputKeybind';
 
-export interface KeyboardLayoutMapReader {
+interface KeyboardLayoutMapReader {
 	get(code: string): string | undefined;
 }
 
-export interface KeyboardLayoutProvider {
+interface KeyboardLayoutProvider {
 	getLayoutMap?: () => Promise<KeyboardLayoutMapReader>;
 }
 
@@ -96,21 +96,21 @@ export function keyCombosEqual(a: KeyCombo, b: KeyCombo): boolean {
 	);
 }
 
-export function keyboardLayoutHasDirectSlashKey(layoutMap: KeyboardLayoutMapReader): boolean {
+function keyboardLayoutHasDirectSlashKey(layoutMap: KeyboardLayoutMapReader): boolean {
 	for (const code of NON_NUMPAD_PRINTABLE_LAYOUT_CODES) {
 		if (layoutMap.get(code) === '/') return true;
 	}
 	return false;
 }
 
-export function getKeyboardShortcutsOverlayComboForLayoutMap(layoutMap: KeyboardLayoutMapReader): KeyCombo {
+function getKeyboardShortcutsOverlayComboForLayoutMap(layoutMap: KeyboardLayoutMapReader): KeyCombo {
 	if (keyboardLayoutHasDirectSlashKey(layoutMap)) {
 		return copyKeyCombo(DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO);
 	}
 	return copyKeyCombo(SHIFTED_SLASH_FALLBACK_KEYBOARD_SHORTCUTS_OVERLAY_COMBO);
 }
 
-export function getNavigatorKeyboardLayoutProvider(): KeyboardLayoutProvider | null {
+function getNavigatorKeyboardLayoutProvider(): KeyboardLayoutProvider | null {
 	if (typeof navigator === 'undefined') return null;
 	return (navigator as NavigatorWithKeyboardLayout).keyboard ?? null;
 }

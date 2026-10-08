@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import type {VoiceEngineV2AppDiagnosticsLogger} from '@app/features/voice/engine/v2/VoiceEngineV2AppDiagnosticsAdapter';
 import type {VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/runtime';
 
-export const LIFECYCLE_OPERATION_CAP = 4096;
-export const TEARDOWN_PER_DISPOSABLE_TIMEOUT_MS = 5000;
+const LIFECYCLE_OPERATION_CAP = 4096;
+const TEARDOWN_PER_DISPOSABLE_TIMEOUT_MS = 5000;
 
 type VoiceEngineV2AppLifecycleTimeoutHandle = number | NodeJS.Timeout;
 
@@ -75,14 +75,6 @@ export class VoiceEngineV2AppLifecycleAdapter {
 		this.registry = new Map();
 		this.teardownTimeoutMs = timeoutMs;
 		this.tornDown = false;
-	}
-
-	get isTornDown(): boolean {
-		return this.tornDown;
-	}
-
-	get registrySize(): number {
-		return this.registry.size;
 	}
 
 	register(operationId: number, controller: AbortController, sourceAdapter: string): void {

@@ -64,7 +64,7 @@ export async function ensureLibfluxcoreReady(): Promise<void> {
 	await loadModule();
 }
 
-export function releaseLibfluxcoreMemoryIfIdle(): void {
+function releaseLibfluxcoreMemoryIfIdle(): void {
 	if (isLibfluxcoreModulePinned()) return;
 	if ((moduleExports?.memory.buffer.byteLength ?? 0) <= MAX_RETAINED_LIBFLUXCORE_WASM_MEMORY_BYTES) return;
 	wasm.__resetLibfluxcoreWasmForMemoryPressure();
@@ -113,14 +113,6 @@ export function freeZstdStreamDecoder(decoder: number): void {
 	} finally {
 		releaseLibfluxcoreMemoryIfIdle();
 	}
-}
-
-export async function createZstdStreamEncoder(level: number): Promise<number> {
-	return withPinnedLibfluxcoreModule(() => {
-		const encoder = wasm.create_zstd_stream_encoder(level);
-		liveZstdStreamEncoders.add(encoder);
-		return encoder;
-	});
 }
 
 export function createZstdStreamEncoderSync(level: number): number {

@@ -315,17 +315,14 @@ mod tests {
     #[test]
     fn build_embed_media_payload_prefers_api_dimensions_and_keeps_metadata() {
         let meta = MediaMetadata {
-            format: "jpeg".to_owned(),
             content_type: "image/jpeg".to_owned(),
             content_hash: "hash".to_owned(),
-            size: 123,
             width: Some(640),
             height: Some(480),
             duration: None,
             placeholder: Some("placeholder".to_owned()),
             animated: Some(false),
             nsfw: true,
-            nsfw_probability: Some(0.9),
         };
         let media = build_embed_media_payload("https://example.com/a.jpg", &meta, Some(320), None);
         assert_eq!(media.url.as_deref(), Some("https://example.com/a.jpg"));

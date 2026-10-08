@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::plural::count_noun;
+use crate::utils::timestamps::format_admin_timestamp;
 use crate::{
     api::types::{GuildInfo, GuildMember, ListGuildMembersResponse},
     config::AdminConfig,
@@ -149,11 +151,11 @@ fn member_card(
                             "ID: " (member.user.id)
                         }
                         p class="text-sm text-neutral-500" {
-                            "Joined: " (member.joined_at)
+                            "Joined: " (format_admin_timestamp(&member.joined_at))
                         }
                         @if !member.roles.is_empty() {
                             p class="text-sm text-neutral-500" {
-                                (member.roles.len()) " roles"
+                                (count_noun(member.roles.len() as u64, "role", "roles"))
                             }
                         }
                     }

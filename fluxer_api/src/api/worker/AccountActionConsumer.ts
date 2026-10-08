@@ -43,7 +43,7 @@ interface ConsumerState {
 
 let running: ConsumerState | null = null;
 
-export function decodeActionEnvelope(data: Uint8Array | string): ActionEnvelope | null {
+function decodeActionEnvelope(data: Uint8Array | string): ActionEnvelope | null {
 	try {
 		const value = JSON.parse(typeof data === 'string' ? data : new TextDecoder().decode(data)) as unknown;
 		if (

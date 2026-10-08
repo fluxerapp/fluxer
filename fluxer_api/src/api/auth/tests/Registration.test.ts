@@ -85,6 +85,7 @@ describe('Auth registration', () => {
 		});
 		expect(reg.token.length).toBeGreaterThan(0);
 		expect(reg.user_id.length).toBeGreaterThan(0);
+		expect(Object.keys(reg).sort()).toEqual(['token', 'user', 'user_id']);
 	});
 	it('grants wildcard admin ACL to first accepted local dev registration', async () => {
 		await getInstanceConfigRepository().updateCaptchaConfig({enabled: false});

@@ -358,7 +358,7 @@ export function AuthController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'revert_email_change',
 			summary: 'Revert email change',
-			responseSchema: AuthLoginResponse,
+			responseSchema: AuthTokenWithUserIdResponse,
 			statusCode: 200,
 			security: [],
 			tags: ['Auth'],

@@ -770,7 +770,7 @@ One visible message was deleted.
 | guild_id? | snowflake | Guild the channel belongs to |
 | member?<sup>2</sup> | [guild member](/http-api/guild-members/#guild-member-object) object | The author's guild member object, present in a guild channel |
 
-<sup>1</sup> Both fields are omitted when an instance administrator deleted the message through the Admin API, when Fluxer deleted it after a CSAM report, when Fluxer deleted it because content moderation blocked a link preview in it, or when Fluxer removed a published message and its copies together, and `author_id` is also omitted for a message with no author
+<sup>1</sup> Both fields are omitted when an instance administrator deleted the message through the Admin API, when Fluxer deleted it because content moderation blocked a link preview in it, or when Fluxer removed a published message and its copies together, and `author_id` is also omitted for a message with no author
 
 <sup>2</sup> The `user` field is removed from it, and the whole field is absent when `author_id` is absent or the author is no longer a member
 

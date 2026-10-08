@@ -8,8 +8,6 @@
 	},
 	"scripts": {
 		"generate:types": "tsx scripts/GenerateI18nTypes.ts",
-		"prune:apply": "tsx scripts/PruneUnusedI18nKeys.ts --apply --force",
-		"prune:dry": "tsx scripts/PruneUnusedI18nKeys.ts",
 		"static:compile": "tsx scripts/SyncStaticI18nCatalogs.ts --compile",
 		"static:extract": "tsx scripts/SyncStaticI18nCatalogs.ts --extract",
 		"static:sync": "tsx scripts/SyncStaticI18nCatalogs.ts --extract --compile",
@@ -19,8 +17,7 @@
 	},
 	"dependencies": {
 		"@messageformat/core": "catalog:",
-		"@messageformat/parser": "catalog:",
-		"yaml": "catalog:"
+		"@messageformat/parser": "catalog:"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",

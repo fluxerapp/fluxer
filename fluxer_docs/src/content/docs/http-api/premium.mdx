@@ -156,11 +156,13 @@ A billing cycle change scheduled for the end of the current period. It is return
 | Field | Type | Description |
 | --- | --- | --- |
 | schedule_id | string | The payment provider subscription schedule ID that has the change |
+| change_kind<sup>4</sup> | string | The kind of scheduled change, always `billing_cycle` here |
 | current_billing_cycle<sup>1</sup> | ?string | The current [billing cycle](#billing-cycles) |
 | target_billing_cycle | string | [Billing cycle](#billing-cycles) that takes effect at `effective_at` |
 | effective_at | ISO8601 timestamp | The start of the scheduled future phase |
 | current_price_id | ?string | The price ID of the active subscription item, or null when it cannot be resolved |
 | target_price_id | ?string | The price ID of the scheduled future phase, or null when it cannot be resolved |
+| target_amount_minor | ?integer | The unit amount of the target price, in the minor unit of `currency`, or null when it cannot be resolved |
 | currency | ?string | [Display currency](#display-currencies) of the target price, or null when it is unresolved or unsupported |
 | initial_amount_minor<sup>2</sup> | ?integer | The amount of the first invoice after the change, in the minor unit of `currency` |
 | recurring_amount_minor | ?integer | The amount of each later invoice, in the minor unit of `currency` |
@@ -171,6 +173,8 @@ A billing cycle change scheduled for the end of the current period. It is return
 <sup>2</sup> The recurring amount plus any scheduled invoice adjustment, clamped at zero, and null when the target amount cannot be resolved
 
 <sup>3</sup> Null unless the scheduled adjustment is a credit. A monthly to yearly change credits the smaller of the two amounts, each multiplied by the subscription item quantity, and no credit is scheduled during a trial
+
+<sup>4</sup> A scheduled move to the list price within the same billing cycle is not returned here. The [list price switch](#list-price-switch-object) reports it as `pending`
 
 The complete value is null in each of these cases.
 
@@ -189,17 +193,44 @@ The complete value is null in each of these cases.
 ```json
 {
   "schedule_id": "sub_sched_1QaBcDeFgHiJ",
+  "change_kind": "billing_cycle",
   "current_billing_cycle": "monthly",
   "target_billing_cycle": "yearly",
   "effective_at": "2026-09-28T08:15:00.000Z",
   "current_price_id": "price_1QaMonthlyUsd",
   "target_price_id": "price_1QaYearlyUsd",
+  "target_amount_minor": 4999,
   "currency": "USD",
   "initial_amount_minor": 4500,
   "recurring_amount_minor": 4999,
   "credit_amount_minor": 499
 }
 ```
+
+## List price switch object
+
+Whether the subscription can move to the current list price with [switch subscription to the list price](#switch-subscription-to-the-list-price). It is returned in [Premium billing state](#premium-billing-state-object).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| available | boolean | Whether the switch can be requested now |
+| reason<sup>1</sup> | ?string | The [refusal reason](#refusal-reasons) the switch would get, or null |
+| pending<sup>2</sup> | boolean | Whether a switch to the current list price is already scheduled |
+| current_price_id | ?string | The price ID the subscription bills on today |
+| current_amount_minor | ?integer | The amount billed today, in the minor unit of `currency` |
+| list_price_id | ?string | The current list price ID for the same billing cycle and currency |
+| list_amount_minor | ?integer | The current list price amount, in the minor unit of `currency` |
+| currency | ?string | [Display currency](#display-currencies) of both amounts |
+| billing_cycle | ?string | The [billing cycle](#billing-cycles) the switch applies to |
+| effective_at<sup>3</sup> | ?ISO8601 timestamp | When a switch takes effect |
+
+<sup>1</sup> Null when `available` is true, and null when `pending` is true. `switch_in_progress` and `cancellation_managed_by_schedule` are only returned by the switch operation itself
+
+<sup>2</sup> True when the scheduled change targets the current list price. Any other scheduled change gives `conflicting_pending_change`
+
+<sup>3</sup> The end of the current billing period, or the start of the scheduled change when the subscription has one
 
 ## Premium state object
 
@@ -407,6 +438,7 @@ Billing details can lag behind changes made through the payment provider.
 | stripe_customer_id | ?string | The payment provider customer ID, or null when none was ever created |
 | current_subscription_price | ?[current subscription price](#current-subscription-price-object) object | The price the account is billed against |
 | pending_subscription_change | ?[pending subscription change](#pending-subscription-change-object) object | The scheduled billing cycle change |
+| list_price_switch | [list price switch](#list-price-switch-object) object | Whether the subscription can move to the current list price |
 | subscription | ?[billing subscription](#billing-subscription-object) object | The mirrored subscription Fluxer selects by the rule below this table |
 | invoices<sup>1</sup> | array[[billing invoice](#billing-invoice-object)] | The most recent invoices, newest first |
 | invoices_has_more<sup>2</sup> | boolean | Whether the account has invoices beyond the returned page |
@@ -940,7 +972,7 @@ A subscription set to cancel has no next billing period, so the switch would hav
 
 ### Side effects
 
-A scheduled switch becomes visible as `billing.pending_subscription_change` with `change_kind` `price` in [get premium state](#get-premium-state), and `billing.list_price_switch` reports `pending`. Every account session receives [User Update](/gateway/events/#user-update). A pending cancellation is never cleared by this route.
+A scheduled switch becomes visible in [get premium state](#get-premium-state) as `billing.list_price_switch` with `pending` true. `billing.pending_subscription_change` stays null, because it reports billing cycle changes only. Every account session receives [User Update](/gateway/events/#user-update). A pending cancellation is never cleared by this route.
 
 ### Rate limit
 

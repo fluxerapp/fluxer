@@ -128,58 +128,6 @@
 	padding: var(--spacing-4) 0;
 }
 
-.matchedItem {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-1);
-	padding: var(--spacing-2) var(--spacing-3);
-	border: 0.0625rem solid transparent;
-	border-radius: 0.5rem;
-	cursor: pointer;
-	transition: none;
-}
-
-@media (hover: hover) and (pointer: fine) {
-	.matchedItem:hover {
-		background: var(--settings-hover-background, var(--surface-interactive-hover-bg));
-		border-color: var(
-			--settings-hover-border-color,
-			color-mix(in srgb, var(--background-modifier-accent) 72%, var(--text-tertiary))
-		);
-	}
-}
-
-.matchedItemBreadcrumb {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-1);
-	font-size: 0.6875rem;
-	color: var(--text-tertiary);
-	text-transform: uppercase;
-	letter-spacing: 0.05em;
-}
-
-.breadcrumbSeparator {
-	color: var(--text-tertiary-muted);
-}
-
-.breadcrumbSection {
-	color: var(--text-tertiary);
-}
-
-.matchedItemLabel {
-	font-weight: 500;
-	font-size: 0.875rem;
-	color: var(--text-primary);
-	line-height: 1.4;
-}
-
-.matchedItemDescription {
-	font-size: var(--font-size-xs);
-	color: var(--text-primary-muted);
-	line-height: 1.4;
-}
-
 .emptyState {
 	display: flex;
 	height: 100%;

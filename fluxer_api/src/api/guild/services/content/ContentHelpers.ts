@@ -8,7 +8,7 @@ import {Logger} from '@app/api/Logger';
 import type {GuildEmoji} from '@app/api/models/GuildEmoji';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
 import {serializeEmojiForAudit, serializeStickerForAudit} from '@app/api/utils/AuditSerializationUtils';
-import {hasPermission, requirePermission} from '@app/api/utils/PermissionUtils';
+import {requirePermission} from '@app/api/utils/PermissionUtils';
 import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 
@@ -43,11 +43,6 @@ export class ContentHelpers {
 			return this.checkCreateExpressionsPermission({userId, guildId});
 		}
 		return this.checkManageExpressionsPermission({userId, guildId});
-	}
-
-	async hasManageExpressionsPermission(params: {userId: UserID; guildId: GuildID}): Promise<boolean> {
-		const {userId, guildId} = params;
-		return hasPermission(this.gatewayService, {guildId, userId, permission: Permissions.MANAGE_EXPRESSIONS});
 	}
 
 	serializeEmojiForAudit(emoji: GuildEmoji): Record<string, unknown> {

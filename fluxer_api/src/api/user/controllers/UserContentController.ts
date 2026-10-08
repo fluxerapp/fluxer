@@ -15,6 +15,7 @@ import {MessageListResponse} from '@fluxer/schema/src/domains/message/MessageRes
 import {
 	HarvestArchiveResponse,
 	HarvestCreationResponseSchema,
+	HarvestDownloadQuery,
 	HarvestDownloadUrlResponse,
 	HarvestStatusResponseSchema,
 	HarvestStatusResponseSchemaNullable,
@@ -282,6 +283,9 @@ export function UserContentController(app: HonoApp) {
 		'/harvest-downloads/:harvestId',
 		RateLimitMiddleware(RateLimitConfigs.USER_HARVEST_DOWNLOAD_FILE),
 		Validator('param', HarvestIdParam),
+		Validator('query', HarvestDownloadQuery, (result, ctx) =>
+			result.success ? undefined : ctx.text('Not Found', 404),
+		),
 		OpenAPI({
 			operationId: 'download_data_harvest_archive',
 			summary: 'Download data harvest archive',
@@ -295,10 +299,7 @@ export function UserContentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const {harvestId} = ctx.req.valid('param');
-			const token = ctx.req.query('token');
-			if (!token) {
-				return ctx.text('Not Found', 404);
-			}
+			const {token} = ctx.req.valid('query');
 			try {
 				const result = await ctx.get('userContentRequestService').streamHarvestDownload({
 					harvestId,

@@ -16,7 +16,7 @@ export interface RateLimitService {
 	checkLimit(params: {identifier: string; maxAttempts: number; windowMs: number}): Promise<RateLimitResult>;
 }
 
-export type KeyGenerator = (request: Request) => string | null | Promise<string | null>;
+type KeyGenerator = (request: Request) => string | null | Promise<string | null>;
 
 export interface RateLimitOptions {
 	enabled?: boolean;

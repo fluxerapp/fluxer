@@ -239,14 +239,18 @@ export function HandoffApprovalFlow({handoff, onRetry}: HandoffApprovalFlowProps
 		return (
 			<div className={styles.container} data-flx="auth.flow.handoff-approval-flow.container--4">
 				<h1 className={styles.title} data-flx="auth.flow.handoff-approval-flow.title--3">
-					<ApprovalTitle handoff={handoff} />
+					<ApprovalTitle handoff={handoff} data-flx="auth.flow.handoff-approval-flow.approval-title" />
 				</h1>
 				<p className={styles.description} data-flx="auth.flow.handoff-approval-flow.description--2">
 					<Trans comment="Warning under the title of the browser approval page, so people do not approve a sign-in someone else started.">
 						Only continue if you started this sign-in on a device you control.
 					</Trans>
 				</p>
-				<AccountLine handoff={handoff} onUseAnotherAccount={retry} />
+				<AccountLine
+					handoff={handoff}
+					onUseAnotherAccount={retry}
+					data-flx="auth.flow.handoff-approval-flow.account-line"
+				/>
 				{matchCode != null ? (
 					<div className={styles.matchCheck} data-flx="auth.flow.handoff-approval-flow.match-check">
 						<span data-flx="auth.flow.handoff-approval-flow.match-check-label">
@@ -254,10 +258,10 @@ export function HandoffApprovalFlow({handoff, onRetry}: HandoffApprovalFlowProps
 								Make sure this code matches the one in the {PRODUCT_NAME} app.
 							</Trans>
 						</span>
-						<HandoffCode code={matchCode} />
+						<HandoffCode code={matchCode} data-flx="auth.flow.handoff-approval-flow.handoff-code" />
 					</div>
 				) : null}
-				<DeviceCard clientInfo={handoff.clientInfo} />
+				<DeviceCard clientInfo={handoff.clientInfo} data-flx="auth.flow.handoff-approval-flow.device-card" />
 				<div className={styles.buttonRow} data-flx="auth.flow.handoff-approval-flow.button-row">
 					<Button onClick={handoff.deny} variant="secondary" data-flx="auth.flow.handoff-approval-flow.button.deny">
 						{i18n._(CANCEL_DESCRIPTOR)}

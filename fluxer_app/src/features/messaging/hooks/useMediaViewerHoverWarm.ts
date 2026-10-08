@@ -6,14 +6,14 @@ import {buildViewerMediaURL, isViewerImageItem} from '@app/features/messaging/ut
 import type {MediaViewerItem} from '@app/features/ui/state/MediaViewer';
 import {useCallback, useEffect, useRef} from 'react';
 
-export const MEDIA_VIEWER_HOVER_WARM_DELAY_MS = 220;
+const MEDIA_VIEWER_HOVER_WARM_DELAY_MS = 220;
 
-export interface MediaViewerWarmGates {
+interface MediaViewerWarmGates {
 	saveData: boolean;
 	allowAnimated: boolean;
 }
 
-export function resolveViewerWarmURL(item: MediaViewerItem, gates: MediaViewerWarmGates): string | null {
+function resolveViewerWarmURL(item: MediaViewerItem, gates: MediaViewerWarmGates): string | null {
 	if (gates.saveData) {
 		return null;
 	}

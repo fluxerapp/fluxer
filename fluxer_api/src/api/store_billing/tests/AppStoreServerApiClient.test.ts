@@ -481,13 +481,4 @@ describe('AppStoreServerApiClient', () => {
 			expect(error).toMatchObject({status: 400, errorCode: 4000187, retryable: false});
 		});
 	});
-
-	it('requests a test notification', async () => {
-		const client = new AppStoreServerApiClient();
-		const token = await client.requestTestNotification({environment: 'sandbox', bundleId: 'com.fluxer'});
-		expect(token.length).toBeGreaterThan(0);
-		expect(fake.requests).toMatchObject([
-			{environment: 'sandbox', method: 'POST', path: '/inApps/v1/notifications/test'},
-		]);
-	});
 });

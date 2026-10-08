@@ -137,7 +137,6 @@ struct BskyThreadParent {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[allow(dead_code)]
 struct BskyPost {
     uri: Option<String>,
     author: Option<BskyPostAuthor>,
@@ -145,7 +144,6 @@ struct BskyPost {
     embed: Option<Value>,
     like_count: Option<u64>,
     repost_count: Option<u64>,
-    reply_count: Option<u64>,
     quote_count: Option<u64>,
     bookmark_count: Option<u64>,
 }

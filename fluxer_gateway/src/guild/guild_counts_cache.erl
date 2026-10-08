@@ -10,7 +10,6 @@
 
 -export([
     start_link/0,
-    init/0,
     update/3,
     get/1,
     bulk_get/1,
@@ -43,9 +42,6 @@ start_link() ->
         undefined ->
             start_new()
     end.
-
--spec init() -> ok.
-init() -> ok.
 
 -spec update(guild_id(), non_neg_integer(), non_neg_integer()) -> ok.
 update(GuildId, MemberCount, OnlineCount) when

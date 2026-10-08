@@ -9,7 +9,8 @@ import {
 	SettingsTabSection,
 } from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
-import {I18N_WEBLATE_DOMAIN, I18N_WEBLATE_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {I18N_WEBLATE_DOMAIN, I18N_WEBLATE_URL} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
 import Spellcheck from '@app/features/messaging/state/Spellcheck';
 import type {SpellcheckEngine} from '@app/features/platform/types/Electron';
@@ -27,7 +28,7 @@ import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
 import {TimeFormatTypes} from '@fluxer/constants/src/UserConstants';
 import {getFormattedTime} from '@fluxer/date_utils/src/DateFormatting';
 import {localeUses12Hour} from '@fluxer/date_utils/src/DateHourCycle';
-import {msg} from '@lingui/core/macro';
+import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
@@ -346,7 +347,7 @@ const LanguageTab = observer(() => {
 						<div className={styles.notice} data-flx="user.language-tab.notice">
 							<p className={styles.noticeText} data-flx="user.language-tab.notice-text">
 								<Trans>
-									Help translate {PRODUCT_NAME} into your language on{' '}
+									Help translate {ph({PRODUCT_NAME: RuntimeConfig.productName})} into your language on{' '}
 									<ExternalLink href={I18N_WEBLATE_URL} className={styles.link} data-flx="user.language-tab.link">
 										{I18N_WEBLATE_DOMAIN}
 									</ExternalLink>
@@ -414,12 +415,14 @@ const SpellcheckSettingsSection = observer(() => {
 		{
 			value: 'auto',
 			name: i18n._(RECOMMENDED_DESCRIPTOR),
-			desc: i18n._(USE_THE_IN_APP_HUNSPELL_ENGINE_WHEN_A_DESCRIPTOR, {productName: PRODUCT_NAME}),
+			desc: i18n._(USE_THE_IN_APP_HUNSPELL_ENGINE_WHEN_A_DESCRIPTOR, {productName: RuntimeConfig.productName}),
 		},
 		{
 			value: 'hunspell',
 			name: i18n._(IN_APP_HUNSPELL_DESCRIPTOR),
-			desc: i18n._(ALWAYS_USE_S_HUNSPELL_DICTIONARIES_DOWNLOADED_ON_DEMAND_DESCRIPTOR, {productName: PRODUCT_NAME}),
+			desc: i18n._(ALWAYS_USE_S_HUNSPELL_DICTIONARIES_DOWNLOADED_ON_DEMAND_DESCRIPTOR, {
+				productName: RuntimeConfig.productName,
+			}),
 		},
 		{
 			value: 'system',
@@ -469,8 +472,9 @@ const SpellcheckSettingsSection = observer(() => {
 							data-flx="user.language-tab.spellcheck-settings-section.spellcheck-restart-banner"
 						>
 							<Trans>
-								Reload {PRODUCT_NAME} to fully apply the engine change. Switching between in-app and system spellcheck
-								requires a renderer reload because Electron can't swap providers while running.
+								Reload {ph({PRODUCT_NAME: RuntimeConfig.productName})} to fully apply the engine change. Switching
+								between in-app and system spellcheck requires a renderer reload because Electron can't swap providers
+								while running.
 							</Trans>{' '}
 							<Button
 								small
@@ -545,8 +549,9 @@ const SpellcheckSettingsSection = observer(() => {
 										data-flx="user.language-tab.spellcheck-settings-section.spellcheck-hint--2"
 									>
 										<Trans>
-											In "Operating system" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these
-											language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored.
+											In "Operating system" mode, dictionaries listed above are advisory.{' '}
+											{ph({PRODUCT_NAME: RuntimeConfig.productName})} will pass these language tags to your OS
+											spellchecker when supported. Tags it doesn't recognize are ignored.
 										</Trans>
 									</div>
 								)}

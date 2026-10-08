@@ -59,28 +59,28 @@ export type GuildReorderTarget =
 
 export type GuildFolderReorderIndicator = VerticalEdge | typeof DropPlacement.INSIDE;
 export type GuildItemReorderIndicator = VerticalEdge | typeof DropPlacement.COMBINE;
-export type GuildReorderIndicator = GuildFolderReorderIndicator | GuildItemReorderIndicator;
+type GuildReorderIndicator = GuildFolderReorderIndicator | GuildItemReorderIndicator;
 
-export interface GuildReorderIntent {
+interface GuildReorderIntent {
 	indicator: GuildReorderIndicator;
 	combineSourceGuildId: string | null;
 	result: GuildDropResult;
 }
 
-export const GuildReorderBlockedReason = Object.freeze({
+const GuildReorderBlockedReason = Object.freeze({
 	SAME_SOURCE_AND_TARGET: 'same-source-and-target',
 	FOLDER_INTO_FOLDER_GUILD: 'folder-into-folder-guild',
 	EMPTY_TARGET_RECT: 'empty-target-rect',
 } as const);
 
-export type GuildReorderBlockedReason = (typeof GuildReorderBlockedReason)[keyof typeof GuildReorderBlockedReason];
+type GuildReorderBlockedReason = (typeof GuildReorderBlockedReason)[keyof typeof GuildReorderBlockedReason];
 
-export interface GuildReorderMachineContext {
+interface GuildReorderMachineContext {
 	intent: GuildReorderIntent | null;
 	blockedReason: GuildReorderBlockedReason | null;
 }
 
-export type GuildReorderEvent =
+type GuildReorderEvent =
 	| {
 			type: 'drag.hover';
 			item: GuildDragItem;
@@ -91,7 +91,7 @@ export type GuildReorderEvent =
 	| {type: 'drag.leave'}
 	| {type: 'drag.drop'};
 
-export interface GuildReorderHoverResolution {
+interface GuildReorderHoverResolution {
 	intent: GuildReorderIntent | null;
 	blockedReason: GuildReorderBlockedReason | null;
 }
@@ -140,7 +140,7 @@ interface ResolveTopLevelGuildTargetIntentRequest {
 	readonly targetRect: VerticalDropRect;
 }
 
-export interface GuildReorderHoverRequest extends GuildReorderDropQuery {
+interface GuildReorderHoverRequest extends GuildReorderDropQuery {
 	readonly clientOffset: VerticalDropPoint;
 	readonly targetRect: VerticalDropRect;
 }
@@ -294,7 +294,7 @@ function resolveTopLevelGuildTargetIntent({
 	});
 }
 
-export function resolveGuildReorderHover({
+function resolveGuildReorderHover({
 	item,
 	target,
 	clientOffset,
@@ -368,7 +368,7 @@ const guildReorderStateMachine = setup({
 	},
 });
 
-export type GuildReorderSnapshot = MachineSnapshot<
+type GuildReorderSnapshot = MachineSnapshot<
 	GuildReorderMachineContext,
 	GuildReorderEvent,
 	Record<string, never>,
@@ -379,11 +379,11 @@ export type GuildReorderSnapshot = MachineSnapshot<
 	StateSchema
 >;
 
-export function createGuildReorderSnapshot(): GuildReorderSnapshot {
+function createGuildReorderSnapshot(): GuildReorderSnapshot {
 	return initialTransition(guildReorderStateMachine)[0];
 }
 
-export function transitionGuildReorderSnapshot({
+function transitionGuildReorderSnapshot({
 	snapshot,
 	event,
 }: TransitionGuildReorderSnapshotRequest): GuildReorderSnapshot {

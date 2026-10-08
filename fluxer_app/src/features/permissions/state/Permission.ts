@@ -39,10 +39,6 @@ class Permission {
 		return this.guildPermissions.get(guildId as GuildId);
 	}
 
-	getGuildVersion(guildId: string): number | undefined {
-		return this.guildVersions.get(guildId as GuildId);
-	}
-
 	get version(): number {
 		return this.globalVersion;
 	}
@@ -89,13 +85,6 @@ class Permission {
 
 	handleGatewayReady(): void {
 		this.rebuildPermissions();
-	}
-
-	handleConnectionClose(): void {
-		this.guildPermissions.clear();
-		this.channelPermissions.clear();
-		this.guildVersions.clear();
-		this.bumpGlobalVersion();
 	}
 
 	handleGuild(): void {

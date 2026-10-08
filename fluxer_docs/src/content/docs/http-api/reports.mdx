@@ -1,18 +1,18 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Reports
-description: Safety report submission, the category registries, and the DSA notice flow.
+description: Report flows, safety report submission, the reason catalogue, and the DSA notice flow.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A safety report tells moderators that a message, a user, or a guild broke the rules, and any user account can file one. Digital Services Act notices need no account, only a verified email address. The [Admin Reports API](/admin-api/reports/) covers reading, triaging, and closing a stored report.
+A safety report tells moderators that a message or a user profile broke the rules, and any user account can file one. Before a report is filed, the reporter answers a short series of questions. Fluxer serves those questions as a [report flow](#report-flows), and the answers decide the [reason](#report-reasons) the report is filed under. Digital Services Act notices need no account, only a verified email address, and they can also name a guild. The [Admin Reports API](/admin-api/reports/) covers reading, triaging, and closing a stored report.
 
 | Operation | Credential | Target |
 | --- | --- | --- |
-| [Report message](#report-message) | User session | One message the reporter can read |
-| [Report user](#report-user) | User session | One account, optionally with a guild for context |
-| [Report guild](#report-guild) | User session | One guild the reporter can reach |
+| [Get report flow](#get-report-flow) | None | The questions for one target type |
+| [Submit message report flow](#submit-message-report-flow) | User session | One message the reporter can read |
+| [Submit user report flow](#submit-user-report-flow) | User session | One user profile, optionally with a guild for context |
 | [Send DSA report email](#send-dsa-report-email) | None | An email address to verify |
 | [Verify DSA report email](#verify-dsa-report-email) | None | A verification code, exchanged for a ticket |
 | [Create DSA report](#create-dsa-report) | A ticket | A message, user, or guild |
@@ -20,28 +20,291 @@ A safety report tells moderators that a message, a user, or a guild broke the ru
 Fluxer discards a body member that no schema here defines, so a misspelt member is dropped without an error. A body that is not parseable JSON returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_FORMAT` at the `body` path.
 
 :::caution[A submitted report is durable evidence]
-Fluxer copies the reported content when the report is submitted. A message report also copies the surrounding conversation and the bytes of every attachment in it. Deleting the message or leaving the guild afterwards does not remove that snapshot.
+Fluxer copies the reported content when the report is submitted. A message report also copies the surrounding conversation and the bytes of every attachment in it, and every report copies the reported profile with its images. Deleting the message, editing the profile, or leaving the guild afterwards does not remove that snapshot. The snapshot is kept until the report reaches the end of its [retention period](/admin-api/reports/#report-retention).
 :::
 
 ## Access rules
 
-[Report message](#report-message), [Report user](#report-user), and [Report guild](#report-guild) accept a user session token only. A bot token and an OAuth2 bearer credential are both rejected with 403 `ACCESS_DENIED`. The account must also be claimed and email-verified. An account holding no password and no SSO identity is rejected with 400 `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, and one whose address is unverified with 403 `REPORT_EMAIL_VERIFICATION_REQUIRED`. An account with the report ban flag is rejected with 403 `REPORT_BANNED`.
+[Submit message report flow](#submit-message-report-flow) and [Submit user report flow](#submit-user-report-flow) accept a user session token only. A bot token and an OAuth2 bearer credential are both rejected with 403 `ACCESS_DENIED`. The account must also be claimed and email-verified. An account holding no password and no SSO identity is rejected with 400 `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, and one whose address is unverified with 403 `REPORT_EMAIL_VERIFICATION_REQUIRED`. An account with the report ban flag is rejected with 403 `REPORT_BANNED`.
 
-The Digital Services Act routes require no credential. Fluxer still resolves a valid credential presented anyway, so the request draws on that account's rate limit allowance.
+[Get report flow](#get-report-flow) and the Digital Services Act routes require no credential. Fluxer still resolves a valid credential presented anyway, so the request draws on that account's rate limit allowance, and Get report flow renders the copy in that account's saved locale unless the request names one.
 
 Every route bucket is keyed by the authenticated user ID when a credential resolves and by client IP address otherwise. Report creation also limits how many reports one reporter creates each hour. The rate limit section of each route that creates a report lists those limits.
 
 ## Content screening
 
-The instance-wide content filter screens the JSON body of [Report message](#report-message), [Report user](#report-user), [Report guild](#report-guild), and [Create DSA report](#create-dsa-report) before the route runs. A string of at least 3 characters matching the instance phrase blocklist, or a URL matching the instance URL blocklist, is rejected with 403 `CONTENT_BLOCKED`. The `ticket`, `channel_id`, `message_id`, `user_id`, and `guild_id` members are exempt, and so is any value shorter than 3 characters.
+The instance-wide content filter screens the JSON body of [Submit message report flow](#submit-message-report-flow) and [Submit user report flow](#submit-user-report-flow) before the route runs. A string of at least 3 characters matching the instance phrase blocklist, or a URL matching the instance URL blocklist, is rejected with 403 `CONTENT_BLOCKED`. Every string those two bodies define is an ID, a hash, or a locale, and the filter exempts all of them, so only a member the schema does not define can be blocked.
+
+Every route under `/reports/dsa` is exempt by path, so Fluxer never screens a Digital Services Act notice. A notice about hate speech or a phishing link has to quote the slur or the URL it reports.
 
 :::note[Screening precedes bucket and credential checks]
-A blocked body returns `CONTENT_BLOCKED`, not `RATE_LIMITED` or `UNAUTHORIZED`. [Send DSA report email](#send-dsa-report-email) and [Verify DSA report email](#verify-dsa-report-email) are exempt by path, so a submitted address is never scanned.
+A blocked body returns `CONTENT_BLOCKED`, not `RATE_LIMITED` or `UNAUTHORIZED`.
 :::
 
 ## Submission side effects
 
-Every accepted submission writes one report and returns it as a [report object](#report-object). Only [Report message](#report-message) refuses a repeat, returning 409 `CONFLICT` when the same reporter reports the same message twice. Every accepted [Report user](#report-user) and [Report guild](#report-guild) request writes a new report, and nothing deduplicates a repeat submission. Submission emits no Gateway Dispatch.
+Every accepted submission writes one report and returns it as a [report object](#report-object). A report filed through a flow also stores its reason, the [category](#report-categories) that reason maps to, the submitted steps, the revision hash, and the resolved locale. Submission emits no Gateway Dispatch.
+
+Two kinds of repeat are refused with 409 `CONFLICT`:
+
+- The same reporter reporting the same message again within 365 days of the earlier report, unless that report was deleted.
+- The same reporter reporting the same user again within 24 hours of the earlier report.
+
+Nothing deduplicates a Digital Services Act notice.
+
+Fluxer tells the reporter when a moderator resolves the report. A reporter with an account receives a system direct message, and an email when the account has an address. A Digital Services Act notice gets a receipt email at its verified address as soon as it is filed, and a decision email at the same address when it is resolved. [Update report](/admin-api/reports/#update-report) describes when no notice is sent.
+
+### Profile snapshot
+
+Every report about a user, a guild, or a message an account sent also keeps a copy of the reported profile as it was at submission:
+
+- The account's username, discriminator, display name, bio, pronouns, avatar, and banner.
+- The account's guild nickname, bio, pronouns, join time, avatar, and banner, when the report names a guild the account is a member of.
+- The guild's name, vanity URL code, icon, banner, and splash, for a report about a guild.
+
+Fluxer copies each image into report storage. An image whose copy fails keeps only its hash, and the report is still filed. An account whose deletion has started is recorded by ID alone. Moderators read the snapshot as the [report profile snapshot object](/admin-api/reports/#report-profile-snapshot-object).
+
+## Report flows
+
+A report flow is the set of screens a reporter moves through before a report is filed. Fluxer serves one flow for each [target type](#report-flow-target-types). [Get report flow](#get-report-flow) returns every screen of it in one response, already translated, so a client renders the whole flow from that response and hard-codes no question.
+
+### Screens
+
+Each [screen](#report-flow-screen-object) is one of three kinds, told apart by the member that is set.
+
+| Kind | Member | What the reporter does |
+| --- | --- | --- |
+| Choice | `options` | Picks one option. At least one option is not a link |
+| Checklist | `checklist` | Ticks at least `min_checked` items, then continues |
+| Info | `next_screen_id` | Reads the text and continues, optionally opening a link option first |
+
+An option's [outcome](#report-flow-outcome-object) says what choosing it does. A checklist has one outcome for the whole screen. A screen with `urgent` set covers one of the most serious harms, such as threats, self-harm, sexual content, or a risk to a minor. A client shows an urgency notice on it and on the summary of every walk that passes through it.
+
+### Surfaces
+
+A flow has up to two variants, one for each [surface](#report-flow-surfaces). `in_app` is the variant a signed-in client shows. `dsa` is the variant the public Digital Services Act form shows before it calls [Create DSA report](#create-dsa-report).
+
+The two variants share their screens and differ in a few options. Only `in_app` has the options that end on the thank-you screen without a report, the options for a reporter worried about someone's safety, and the links to the Digital Services Act form, its copyright option among them. Its user flow also starts with an info screen. On `dsa` the copyright option files a report instead. The `guild` flow exists on the `dsa` surface alone.
+
+A self-hosted instance drops the links to the Digital Services Act form. It keeps the crisis line, and keeps the guidelines links only when its operator has set a [guidelines URL](/http-api/instance/#public-legal-configuration-object). Without one its flow has a null `guidelines_url`. Its `in_app` revision hashes therefore differ from those of the hosted instance, and differ again between a self-hosted instance with a guidelines URL and one without. Its `dsa` revision hashes match the hosted ones.
+
+### Walking a flow
+
+A walk starts at `start_screen_id`. Each screen the reporter passes through adds one [step](#report-flow-step-object):
+
+- A choice screen records the chosen `option_id`.
+- A checklist screen records the ticked `item_ids`.
+- An info screen records its `screen_id` alone.
+
+The walk follows `screen` outcomes and `next_screen_id` until an option or a checklist reaches a `submit` outcome. The client then shows a summary and submits every step in order. A `link` outcome opens its `url` and adds no step.
+
+An `end` outcome finishes the walk without a report. The client shows the [notice](#report-flow-notice-object) it names, or a thank-you screen when it names none. Such a walk is never submitted, and Fluxer rejects a submission that contains one.
+
+The report is filed under the `reason` of the final `submit` outcome. A few checklist items name a more specific reason of their own, which takes precedence, and the flow object does not expose it.
+
+Fluxer checks a submitted walk against the current variant. The first step must be the start screen, each later step must be the screen the previous answer led to, every answer must exist on its screen, and the last answer must reach a `submit` outcome.
+
+### Revision hash
+
+`revision_hash` identifies the structure of one variant: its screens, options, items, and outcomes. It does not depend on the locale or the product name, and it changes whenever a screen, option, item, or outcome changes. A submission sends back the hash of the flow the reporter answered.
+
+| Walk | Hash | Result |
+| --- | --- | --- |
+| Valid | Current | The report is filed |
+| Valid | Outdated | The report is filed with the hash that was sent |
+| Invalid | Current | 400 `INVALID_REPORT_FLOW_ANSWERS` with `step_index` |
+| Invalid | Outdated | 409 `REPORT_FLOW_OUTDATED` |
+
+An option or item ID never changes meaning once it ships, so a valid walk from an outdated flow still means what the reporter saw. `step_index` is the zero-based index of the first step that does not fit the current flow. After `REPORT_FLOW_OUTDATED`, fetch the flow again and restart the walk.
+
+### Locale
+
+Fluxer renders the copy in one [supported locale](/topics/locales/#supported-locales). [Get report flow](#get-report-flow) uses its `locale` query parameter when one is sent, and the [negotiated](/topics/locales/#negotiation) request locale otherwise. The response `locale` names the locale used, and the copy names the instance's own product name.
+
+Resolving a tag never fails. Matching ignores case and accepts underscores in place of hyphens, `nb` and `nn` resolve to `no`, and a bare language resolves to its preferred regional locale, so `pt` becomes `pt-BR`. A tag that matches nothing resolves to `en-US`.
+
+A submission stores the locale the reporter saw, resolved the same way from its `locale` member, or the request locale when that member is omitted. The [Admin Reports API](/admin-api/reports/) describes a stored walk in English whatever that locale is.
+
+## Report flow object
+
+[Get report flow](#get-report-flow) returns every screen of one variant in this object.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| target_type | string | [Report flow target type](#report-flow-target-types) |
+| surface | string | [Report flow surface](#report-flow-surfaces) |
+| revision_hash<sup>1</sup> | string | The [revision hash](#revision-hash) of this variant |
+| locale | string | The [locale](/topics/locales/) the copy was rendered in |
+| start_screen_id | string | The ID of the screen a walk starts on |
+| guidelines_url<sup>2</sup> | ?string | The instance's community guidelines page |
+| screens | array[[report flow screen](#report-flow-screen-object) object] | Every screen of the variant |
+| notices | array[[report flow notice](#report-flow-notice-object) object] | Every notice an `end` outcome in the variant names |
+
+<sup>1</sup> 16 lowercase hexadecimal characters
+
+<sup>2</sup> The guidelines URL the operator set. Without one, a hosted instance links its own guidelines page and a self-hosted instance has null. A client links its summary disclaimer to it
+
+### Example
+
+An abridged user flow:
+
+```json
+{
+  "target_type": "user",
+  "surface": "in_app",
+  "revision_hash": "9c41d2a07e5b18f3",
+  "locale": "en-US",
+  "start_screen_id": "profile_intro",
+  "guidelines_url": "https://fluxer.app/guidelines",
+  "screens": [
+    {
+      "id": "profile_intro",
+      "title": "Report profile",
+      "subtitle": "Tell us what's wrong with this profile. They won't be told who reported them.",
+      "urgent": false,
+      "options": [
+        {
+          "id": "learn_more",
+          "label": "Read the Fluxer Community Guidelines",
+          "outcome": {"type": "link", "screen_id": null, "reason": null, "notice_id": null, "url": "https://fluxer.app/guidelines"}
+        }
+      ],
+      "options_heading": "Learn more",
+      "checklist": null,
+      "next_screen_id": "profile_parts"
+    },
+    {
+      "id": "profile_parts",
+      "title": "Which parts of their profile are a problem?",
+      "subtitle": "Pick as many as you need.",
+      "urgent": false,
+      "options": [],
+      "options_heading": null,
+      "checklist": {
+        "items": [
+          {"id": "photo", "label": "Pictures", "description": "What they use as avatar and banner"},
+          {"id": "name", "label": "Names", "description": "Username, display name or community nickname"},
+          {"id": "profile_text", "label": "Profile text", "description": "Bio, custom status or pronouns"}
+        ],
+        "min_checked": 1,
+        "outcome": {"type": "screen", "screen_id": "root_user", "reason": null, "notice_id": null, "url": null}
+      },
+      "next_screen_id": null
+    }
+  ],
+  "notices": [
+    {
+      "id": "need_more_info_profile",
+      "title": "We can't act on this yet",
+      "body": "To review this, we need to see where they say how old they are or make it clear they're under Fluxer's minimum age. Report that message or profile instead."
+    }
+  ]
+}
+```
+
+## Report flow screen object
+
+One question, checklist, or information page in a [report flow](#report-flows).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | The screen ID, unique within the flow |
+| title | string | The question or heading |
+| subtitle | ?string | Supporting text shown under the title |
+| urgent | boolean | Whether the screen covers one of the most serious harms |
+| options<sup>1</sup> | array[[report flow option](#report-flow-option-object) object] | The options, in display order |
+| options_heading | ?string | A heading shown above the options |
+| checklist | ?[report flow checklist](#report-flow-checklist-object) object | The checklist, set only on a checklist screen |
+| next_screen_id | ?string | The screen the Next button leads to, set only on an info screen |
+
+<sup>1</sup> Empty on a checklist screen, and holding only link options on an info screen
+
+## Report flow option object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | The option ID, unique within its screen |
+| label | string | The option text |
+| outcome | [report flow outcome](#report-flow-outcome-object) object | What choosing the option does |
+
+## Report flow outcome object
+
+Every member is always present. The members that do not apply to `type` are null.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type | string | [Report flow outcome type](#report-flow-outcome-types) |
+| screen_id | ?string | The next screen when `type` is `screen` |
+| reason<sup>1</sup> | ?string | The [report reason](#report-reasons) when `type` is `submit` |
+| notice_id | ?string | The notice to show when `type` is `end`, or null for the thank-you screen |
+| url | ?string | The page to open when `type` is `link` |
+
+<sup>1</sup> A plain string, so a client MUST tolerate a reason the [catalogue](#report-reasons) does not list yet
+
+## Report flow checklist object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| items | array[[report flow checklist item](#report-flow-checklist-item-object) object] | The items, in display order |
+| min_checked | integer | The fewest items the reporter must tick before continuing |
+| outcome | [report flow outcome](#report-flow-outcome-object) object | Where the screen leads, always a `screen` or `submit` outcome |
+
+## Report flow checklist item object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | The item ID, unique within its checklist |
+| label | string | The item text |
+| description | ?string | A second line shown under the label |
+
+## Report flow notice object
+
+A notice explains why a walk ended without a report, for example when a specific message has to be reported instead.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | The notice ID |
+| title | string | The notice heading |
+| body | string | The notice text |
+
+## Report flow step object
+
+One answered screen in a submission. A submission lists its steps in walk order.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| screen_id | string | The ID of the screen (1-48 characters) |
+| option_id?<sup>1</sup> | string | The ID of the chosen option (1-48 characters) |
+| item_ids?<sup>1</sup> | array[string] | The IDs of the ticked items, 1-32 unique IDs of 1-48 characters each |
+
+<sup>1</sup> Sent on a choice screen and a checklist screen respectively. An info screen's step sends neither, and a step that sends the member its screen does not use is invalid
+
+### Example
+
+```json
+[
+  {"screen_id": "profile_intro"},
+  {"screen_id": "profile_parts", "item_ids": ["photo"]},
+  {"screen_id": "root_user", "option_id": "abuse"},
+  {"screen_id": "profile_abuse", "option_id": "harassment"}
+]
+```
 
 ## Report object
 
@@ -117,54 +380,123 @@ The single credential [Create DSA report](#create-dsa-report) accepts. Fluxer bi
 
 Only `pending` and `resolved` are ever stored. A client MUST still tolerate a status it does not recognise.
 
-## Message report categories
-
-A message report and the `message` variant of a Digital Services Act notice both draw `category` from this registry. A value outside it returns 400 `INVALID_FORM_BODY`.
+## Report flow target types
 
 | Value | Description |
 | --- | --- |
-| harassment | Content that harasses, bullies, or intimidates users |
-| hate_speech | Content promoting hatred against protected groups |
+| message | A message, on both surfaces |
+| user | A user profile, on both surfaces |
+| guild | A guild, on the `dsa` surface only |
+
+## Report flow surfaces
+
+| Value | Description |
+| --- | --- |
+| in_app | The flow a signed-in client shows, and the default |
+| dsa | The flow the public Digital Services Act form shows |
+
+## Report flow outcome types
+
+| Value | Description |
+| --- | --- |
+| screen | Go to the screen named by `screen_id` |
+| submit | Show the summary, then file a report under `reason` |
+| end | Finish without a report and show the notice named by `notice_id`, or a thank-you screen |
+| link | Open `url` and stay on the current screen |
+
+## Report reasons
+
+A report filed through a flow stores a reason, together with the [category](#report-categories) that reason maps to for the report's target type. Moderators can filter on both. The catalogue grows over time, so a client MUST tolerate a reason it does not list.
+
+The second column gives the reason value, then the category it stores on a message report, a user report, and a guild report, in that order.
+
+| Reason | Value: message, user, guild category |
+| --- | --- |
+| Spam | `spam`: `spam`, `spam_account`, `spam` |
+| Fake or deceptive account | `fake_account`: `spam`, `spam_account`, `spam` |
+| Scraping, automation or other platform abuse | `platform_abuse`: `spam`, `spam_account`, `spam` |
+| Buying or selling accounts, logins or card details | `account_trading`: `illegal_activity`, `spam_account`, `illegal_activity` |
+| Faked member or reaction counts | `metric_manipulation`: `spam`, `spam_account`, `spam` |
+| Harassment or bullying | `harassment`: `harassment`, `harassment`, `harassment` |
+| Stalking or unwanted contact | `unwanted_contact`: `harassment`, `harassment`, `harassment` |
+| Raid or coordinated attack | `raid`: `harassment`, `harassment`, `raid_coordination` |
+| False claims used to target a person | `false_claims_about_person`: `harassment`, `harassment`, `harassment` |
+| Slurs, hateful symbols or stereotypes | `hate_slurs`: `hate_speech`, `hate_speech`, `hate_speech` |
+| Dehumanizing a group | `hate_dehumanizing`: `hate_speech`, `hate_speech`, `hate_speech` |
+| Calls for violence or exclusion against a group<sup>1</sup> | `hate_incitement`: `hate_speech`, `hate_speech`, `hate_speech` |
+| Genocide or atrocity denial or celebration | `atrocity_denial`: `hate_speech`, `hate_speech`, `hate_speech` |
+| Misgendering, deadnaming, outing or identity denial | `lgbtq_targeting`: `hate_speech`, `hate_speech`, `hate_speech` |
+| Promoting conversion therapy | `conversion_therapy`: `hate_speech`, `hate_speech`, `hate_speech` |
+| Other attacks on people for who they are | `hate_other`: `hate_speech`, `hate_speech`, `hate_speech` |
+| Threat of violence<sup>1</sup> | `violent_threat`: `violent_content`, `harassment`, `harassment` |
+| Encouraging violence or instructions to harm<sup>1</sup> | `violence_incitement`: `violent_content`, `inappropriate_profile`, `violent_content` |
+| Glorifying real-world violence | `violence_glorification`: `violent_content`, `inappropriate_profile`, `violent_content` |
+| Real violence shown to shock | `graphic_violence`: `violent_content`, `inappropriate_profile`, `violent_content` |
+| Terrorism or violent extremism | `terrorism_extremism`: `violent_content`, `inappropriate_profile`, `extremist_community` |
+| False claims likely to cause serious harm | `harmful_false_claims`: `other`, `other`, `other` |
+| Fake or AI media presented as real | `deceptive_synthetic_media`: `other`, `other`, `other` |
+| Sexual images or messages nobody asked for | `sexual_unwanted`: `harassment`, `harassment`, `harassment` |
+| Adult content outside an 18+ space | `adult_content_unmarked`: `nsfw_violation`, `inappropriate_profile`, `nsfw_violation` |
+| Intimate images shared without consent<sup>1</sup> | `intimate_image_abuse`: `doxxing`, `inappropriate_profile`, `harassment` |
+| Sexual exploitation, coercion or trafficking<sup>1</sup> | `sexual_exploitation`: `illegal_activity`, `inappropriate_profile`, `illegal_activity` |
+| Sexualized fictional child<sup>1</sup> | `minor_fictional_sexualization`: `child_safety`, `child_safety`, `child_safety` |
+| Sexual comments about minors<sup>1</sup> | `minor_sexualization`: `child_safety`, `child_safety`, `child_safety` |
+| Flirting with or sexually messaging a minor<sup>1</sup> | `minor_sexual_contact`: `child_safety`, `child_safety`, `child_safety` |
+| A minor sharing sexual content themselves<sup>1</sup> | `minor_sexual_content`: `child_safety`, `child_safety`, `child_safety` |
+| Child sexual abuse material<sup>1</sup> | `csam`: `child_safety`, `child_safety`, `child_safety` |
+| Grooming a minor<sup>1</sup> | `minor_grooming`: `child_safety`, `child_safety`, `child_safety` |
+| Predatory contact with a minor<sup>1</sup> | `minor_contact`: `child_safety`, `child_safety`, `child_safety` |
+| A minor in an 18+ space | `minor_in_adult_space`: `child_safety`, `child_safety`, `child_safety` |
+| Community for dating between minors<sup>1</sup> | `minor_dating_community`: `child_safety`, `child_safety`, `child_safety` |
+| Private information shared without consent | `doxxing`: `doxxing`, `inappropriate_profile`, `harassment` |
+| Under the minimum age | `underage`: `underage_user`, `underage_user`, `underage_user` |
+| Worried about someone's safety<sup>1</sup> | `wellbeing_concern`: `self_harm`, `other`, `self_harm` |
+| Encouraging self-harm or sharing methods | `self_harm_promotion`: `self_harm`, `inappropriate_profile`, `self_harm` |
+| Encouraging suicide | `suicide_promotion`: `self_harm`, `inappropriate_profile`, `self_harm` |
+| Encouraging disordered eating | `eating_disorder_promotion`: `self_harm`, `inappropriate_profile`, `self_harm` |
+| Graphic self-harm images | `self_harm_graphic`: `self_harm`, `inappropriate_profile`, `self_harm` |
+| Pressuring someone to harm themselves | `self_harm_pressure`: `self_harm`, `inappropriate_profile`, `self_harm` |
+| Pretending to be staff or support | `impersonation_staff`: `impersonation`, `impersonation`, `impersonation` |
+| Impersonating a person | `impersonation_person`: `impersonation`, `impersonation`, `impersonation` |
+| Impersonating a well-known person | `impersonation_public_figure`: `impersonation`, `impersonation`, `impersonation` |
+| Impersonating a company, brand or group | `impersonation_organization`: `impersonation`, `impersonation`, `impersonation` |
+| Conning people out of money or accounts | `fraud`: `illegal_activity`, `spam_account`, `illegal_activity` |
+| Drug, weapon or other illegal sales | `illegal_goods`: `illegal_activity`, `inappropriate_profile`, `illegal_activity` |
+| Other illegal activity | `illegal_activity`: `illegal_activity`, `inappropriate_profile`, `illegal_activity` |
+| Phishing, malware or hacking attempts | `malware_phishing`: `malicious_links`, `spam_account`, `malware_distribution` |
+| Getting around a ban | `ban_evasion`: `other`, `other`, `other` |
+| Community allows serious rule-breaking | `permits_violations`: `other`, `other`, `other` |
+| Copyright or trademark complaint | `copyright`: `other`, `other`, `other` |
+| Something not listed | `other`: `other`, `other`, `other` |
+
+<sup>1</sup> Highest priority, so moderators see a report with this reason first
+
+## Report categories
+
+Every report stores one category from this registry. A report filed through a flow stores the category its [reason](#report-reasons) maps to for the target type.
+
+| Value | Description |
+| --- | --- |
+| harassment | Harassment, bullying, or intimidation |
+| hate_speech | Hatred against protected groups |
 | violent_content | Content depicting or promoting violence |
+| extremist_community | A guild promoting extremist or terrorist ideologies |
+| raid_coordination | A guild coordinating attacks on other communities |
 | spam | Unsolicited bulk messages or promotional content |
+| spam_account | An account used for spamming or bulk messaging |
 | nsfw_violation | Adult content posted outside age-restricted channels |
+| inappropriate_profile | Inappropriate or offensive profile content |
 | illegal_activity | Content promoting or facilitating illegal activities |
 | doxxing | Content revealing private personal information |
 | self_harm | Content promoting self-harm or suicide |
 | child_safety | Content that endangers minors or depicts child abuse |
+| underage_user | Someone who appears to be under the minimum required age |
 | malicious_links | Links to malware, phishing, or other malicious sites |
-| impersonation | Content falsely claiming to be another person or entity |
-| other | Other violations not covered by specific categories |
+| malware_distribution | Distribution of malware or malicious software |
+| impersonation | Falsely claiming to be another person or entity |
+| other | Anything the other categories do not cover |
 
-## User report categories
-
-A user report and the `user` variant of a Digital Services Act notice both draw `category` from this registry. A value outside it returns 400 `INVALID_FORM_BODY`.
-
-| Value | Description |
-| --- | --- |
-| harassment | User engages in harassment, bullying, or intimidation |
-| hate_speech | User promotes hatred against protected groups |
-| spam_account | Account used for spamming or bulk messaging |
-| impersonation | User falsely claims to be another person or entity |
-| underage_user | User appears to be under the minimum required age |
-| inappropriate_profile | Profile contains inappropriate or offensive content |
-| other | Other violations not covered by specific categories |
-
-## Guild report categories
-
-A guild report and the `guild` variant of a Digital Services Act notice both draw `category` from this registry. A value outside it returns 400 `INVALID_FORM_BODY`.
-
-| Value | Description |
-| --- | --- |
-| harassment | Guild facilitates harassment, bullying, or intimidation |
-| hate_speech | Guild promotes hatred against protected groups |
-| extremist_community | Guild promotes extremist or terrorist ideologies |
-| illegal_activity | Guild promotes or facilitates illegal activities |
-| child_safety | Guild endangers minors or hosts child abuse content |
-| raid_coordination | Guild coordinates attacks on other communities |
-| spam | Guild used for spamming or bulk messaging |
-| malware_distribution | Guild distributes malware or malicious software |
-| other | Other violations not covered by specific categories |
+A user report only ever stores `harassment`, `hate_speech`, `spam_account`, `impersonation`, `underage_user`, `inappropriate_profile`, `child_safety`, or `other`.
 
 ## EU country codes
 
@@ -200,24 +532,65 @@ No instance configuration changes this registry. A value outside it returns 400 
 | ES | Spain |
 | SE | Sweden |
 
-## Report message
+## Get report flow
 
-<RouteHeader method="POST" path="/v1/reports/message" />
+<RouteHeader method="GET" path="/v1/reports/flows/{target_type}" unauthenticated />
 
-Creates and returns a [report object](#report-object) for a message the reporter can currently read.
+Returns the [report flow object](#report-flow-object) for one target type and surface, with its copy rendered in one locale.
+
+The response has `Cache-Control: private, no-cache` and `Vary: Accept-Language`. A client can keep the flow for a session, and `no-cache` makes the refetch after 409 `REPORT_FLOW_OUTDATED` reach Fluxer instead of a stored copy.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| target_type | string | [Report flow target type](#report-flow-target-types) |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| surface? | string | [Report flow surface](#report-flow-surfaces) (default `in_app`) |
+| locale?<sup>1</sup> | string | The language tag of the client UI (1-35 characters) |
+
+<sup>1</sup> Resolved as [Locale](#locale) describes, and the request locale is used when it is omitted. A client SHOULD send it, because the language of its UI can differ from the account's saved locale
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [report flow](#report-flow-object) object | The flow was rendered |
+| 400 | [error response](/http-api/#error-response) | The target type or surface is unknown and the request returns `INVALID_FORM_BODY` |
+| 400 | [error response](/http-api/#error-response) | `guild` was requested on a surface other than `dsa` and the request returns `INVALID_FORM_BODY` |
+
+### Rate limit
+
+40 requests per 10 seconds, on the `report:list` bucket.
+
+<a id="report-message"></a>
+
+## Submit message report flow
+
+<RouteHeader method="POST" path="/v1/reports/flows/message/submissions" />
+
+Files a report about a message from the reporter's answers to the `message` flow on the `in_app` surface, and returns a [report object](#report-object). The reporter must be able to read the message.
+
+A message a bot sent is reported as the bot account, like any other account. A message a [webhook](/http-api/webhooks/) sent has no author account, so the report records the webhook instead, with the name and avatar the message was sent with.
 
 ### Limitations
 
 - The reporter must be able to open the containing channel and read the message.
 - A reporter who authored the message receives 400 `CANNOT_REPORT_OWN_MESSAGE`.
 - A channel that does not exist and a direct message the reporter is not a recipient of both return 404 `UNKNOWN_CHANNEL`.
-- A non-member and a member without [VIEW_CHANNEL](/http-api/permissions/) both return 403 `MISSING_PERMISSIONS`.
+- A guild channel the reporter is not a member of returns 403 `ACCESS_DENIED`, and a member without [VIEW_CHANNEL](/http-api/permissions/) receives 403 `MISSING_PERMISSIONS`.
 - An age-restricted guild channel returns 403 `NSFW_CONTENT_AGE_RESTRICTED` for an account that is not age verified.
-- A message not stored under `channel_id`, a message with no author, and any message a reporter without [READ_MESSAGE_HISTORY](/http-api/permissions/) cannot reach all return 404 `UNKNOWN_MESSAGE`.
+- A message not stored under `channel_id`, a message with neither an author account nor a webhook, and any message a reporter without [READ_MESSAGE_HISTORY](/http-api/permissions/) cannot reach all return 404 `UNKNOWN_MESSAGE`.
 - An author whose account no longer exists returns 404 `UNKNOWN_USER`.
 
-:::note[No cutoff means no history at all]
-A reporter without `READ_MESSAGE_HISTORY` can report only a message at or after the guild's message history cutoff. A guild that sets no cutoff withholds the whole channel from that reporter.
+Fluxer checks the answers right after the claimed account and verified email checks, before the report ban check and before it reads the channel. An invalid walk still counts against the `report:create` bucket but uses none of the further allowances below.
+
+:::note[Reporting without Read Message History]
+A reporter without `READ_MESSAGE_HISTORY` can report a message sent at or after the earlier of two points: the guild's message history cutoff and the time the reporter joined the guild. Every message since the join reached the reporter live, so a guild that sets no cutoff still leaves those messages reportable. This window applies to reports only, and message history reads keep their own rules.
 :::
 
 ### JSON body
@@ -226,34 +599,44 @@ A reporter without `READ_MESSAGE_HISTORY` can report only a message at or after 
 | --- | --- | --- |
 | channel_id | snowflake | The ID of the channel containing the reported message |
 | message_id | snowflake | The ID of the reported message |
-| category | string | [Message report category](#message-report-categories) |
+| revision_hash | string | The `revision_hash` of the flow the reporter answered (1-64 characters) |
+| steps | array[[report flow step](#report-flow-step-object) object] | The answered screens in walk order (1-16 steps) |
+| locale?<sup>1</sup> | string | The language tag the reporter saw the flow in (1-35 characters) |
+
+<sup>1</sup> Stored with the report after it is resolved as [Locale](#locale) describes. The request locale is stored when it is omitted
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [report](#report-object) object | Report was created |
-| 400 | [error response](/http-api/#error-response) | The account is unclaimed and the request returns `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, or the reporter is the message author and the request returns `CANNOT_REPORT_OWN_MESSAGE` |
+| 400 | [error response](/http-api/#error-response) | The answers do not fit the current flow and the request returns `INVALID_REPORT_FLOW_ANSWERS` |
+| 400 | [error response](/http-api/#error-response) | The account is unclaimed and the request returns `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS` |
+| 400 | [error response](/http-api/#error-response) | The reporter is the message author and the request returns `CANNOT_REPORT_OWN_MESSAGE` |
 | 403 | [error response](/http-api/#error-response) | A body string is blocked and the request returns `CONTENT_BLOCKED` |
 | 403 | [error response](/http-api/#error-response) | The credential is a bot token or OAuth2 bearer and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The reporter is not a member of the guild and the request returns `ACCESS_DENIED` |
 | 403 | [error response](/http-api/#error-response) | Its email is unverified and the request returns `REPORT_EMAIL_VERIFICATION_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | The account is report banned and the request returns `REPORT_BANNED` |
-| 403 | [error response](/http-api/#error-response) | The reporter is not a guild member or lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The reporter lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | The channel is age restricted and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 404 | [error response](/http-api/#error-response) | The channel, the message, or the message author is not visible to the reporter |
+| 409 | [error response](/http-api/#error-response) | The answers came from an outdated flow and do not fit the current one, returning `REPORT_FLOW_OUTDATED` |
 | 409<sup>1</sup> | [error response](/http-api/#error-response) | The reporter already reported this message, returning `CONFLICT` |
 
-<sup>1</sup> The reporter, the channel, and the message form a permanent submission key. A second report of the same message by the same reporter is refused however much time has passed and whichever category it names
+<sup>1</sup> The reporter, the channel, and the message form a submission key that expires 365 days after the report. A second report of the same message by the same reporter within that time is refused whichever answers it sends. A submission that fails or is rate limited releases the key, and so does [deleting the report](/admin-api/reports/#delete-report)
 
 ### Side effects
 
-The operation writes one report with a frozen evidence snapshot. The snapshot records the reporter's account ID and email address, the message author's identity and avatar hash, the channel and guild identity, and the guild and channel NSFW and content warning state.
+The operation writes one report with a frozen evidence snapshot. The snapshot records the reporter's account ID, the message author's identity and avatar hash, the channel and guild identity, and the guild and channel NSFW and content warning state. For a message a webhook sent it records the webhook's ID and the name and avatar hash the message was sent with in place of the author. It also records the webhook's own name, avatar hash, type, channel, guild, and creation time, and the ID, username, discriminator, display name, and avatar hash of the account that created the webhook. Only the creator ID is recorded when that account has been deleted. The creator is recorded for moderators and is not the reported account. The report also stores the reason, its category, the steps, the revision hash, and the resolved locale.
 
-The snapshot also records a conversation window of up to 25 messages before the reported message, the reported message itself, and up to 25 messages after it. Each context message records its author identity, content, timestamps, type, flags, mentions, embeds, and sticker items, and each attachment is copied byte for byte. A context message whose author no longer exists is dropped from the window, and an attachment whose copy fails is dropped without failing the request. When the reporter lacks `READ_MESSAGE_HISTORY`, the window holds only messages created at or after the guild's message history cutoff, and holds no messages when the guild sets no cutoff.
+For a message an account sent, the report also keeps a [profile snapshot](#profile-snapshot) of the author, with the author's guild profile when the channel is in a guild.
+
+The snapshot also records a conversation window of up to 25 messages before the reported message, the reported message itself, and up to 25 messages after it. Each context message records its author identity, content, timestamps, type, flags, mentions, embeds, and sticker items, and each attachment is copied byte for byte. A message a webhook sent is recorded under its webhook. A context message whose author account no longer exists stays in the window under a deleted user identity that keeps the author ID. An attachment whose copy fails, and an embedded file that is no longer stored, is listed as missing on its context message with its metadata, and the request still succeeds. When the reporter lacks `READ_MESSAGE_HISTORY`, the window holds only messages created at or after the earlier of the guild's message history cutoff and the time the reporter joined the guild.
 
 ### Rate limit
 
-10 requests per hour, on the `report:create` bucket, which is shared with [Report user](#report-user) and [Report guild](#report-guild).
+10 requests per hour, on the `report:create` bucket, which is shared with [Submit user report flow](#submit-user-report-flow).
 
 Further allowances apply, each counted over one hour:
 
@@ -264,102 +647,62 @@ Further allowances apply, each counted over one hour:
 
 A duplicate submission returns 409 `CONFLICT` before any of them is consumed.
 
-## Report user
+<a id="report-user"></a>
 
-<RouteHeader method="POST" path="/v1/reports/user" />
+## Submit user report flow
 
-Creates and returns a [report object](#report-object) for another user, optionally noting the guild in which the conduct occurred.
+<RouteHeader method="POST" path="/v1/reports/flows/user/submissions" />
+
+Files a report about another user's profile from the reporter's answers to the `user` flow on the `in_app` surface, and returns a [report object](#report-object). The report can name the guild the reporter saw the profile in.
 
 ### Limitations
 
 - A reporter naming their own account receives 400 `CANNOT_REPORT_YOURSELF`.
 - A `user_id` that resolves to no account returns 404 `UNKNOWN_USER`.
-- A `guild_id` that resolves to no guild returns 404 `UNKNOWN_GUILD`.
+- A `guild_id` that resolves to no guild, or to a guild the reporter is not a member of, returns 404 `UNKNOWN_GUILD`.
+
+Fluxer checks the answers right after the claimed account and verified email checks, before the report ban check and before it looks up the user. An invalid walk still counts against the `report:create` bucket but not against the per-reporter allowance below.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
 | user_id | snowflake | The ID of the reported user |
-| category | string | [User report category](#user-report-categories) |
-| guild_id? | snowflake | The ID of the guild in which the reported conduct occurred |
+| guild_id? | snowflake | The ID of the guild in which the reporter saw the profile |
+| revision_hash | string | The `revision_hash` of the flow the reporter answered (1-64 characters) |
+| steps | array[[report flow step](#report-flow-step-object) object] | The answered screens in walk order (1-16 steps) |
+| locale?<sup>1</sup> | string | The language tag the reporter saw the flow in (1-35 characters) |
+
+<sup>1</sup> Stored with the report after it is resolved as [Locale](#locale) describes. The request locale is stored when it is omitted
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [report](#report-object) object | Report was created |
-| 400 | [error response](/http-api/#error-response) | The account is unclaimed and the request returns `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, or the reporter is the reported user and the request returns `CANNOT_REPORT_YOURSELF` |
+| 400 | [error response](/http-api/#error-response) | The answers do not fit the current flow and the request returns `INVALID_REPORT_FLOW_ANSWERS` |
+| 400 | [error response](/http-api/#error-response) | The account is unclaimed and the request returns `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS` |
+| 400 | [error response](/http-api/#error-response) | The reporter is the reported user and the request returns `CANNOT_REPORT_YOURSELF` |
 | 403 | [error response](/http-api/#error-response) | A body string is blocked and the request returns `CONTENT_BLOCKED` |
 | 403 | [error response](/http-api/#error-response) | The credential is a bot token or OAuth2 bearer and the request returns `ACCESS_DENIED` |
 | 403 | [error response](/http-api/#error-response) | Its email is unverified and the request returns `REPORT_EMAIL_VERIFICATION_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | The account is report banned and the request returns `REPORT_BANNED` |
 | 404 | [error response](/http-api/#error-response) | The reported user does not exist and the request returns `UNKNOWN_USER` |
-| 404 | [error response](/http-api/#error-response) | The supplied `guild_id` does not exist and the request returns `UNKNOWN_GUILD` |
+| 404 | [error response](/http-api/#error-response) | The supplied `guild_id` is not a guild the reporter is in and the request returns `UNKNOWN_GUILD` |
+| 409 | [error response](/http-api/#error-response) | The answers came from an outdated flow and do not fit the current one, returning `REPORT_FLOW_OUTDATED` |
+| 409<sup>1</sup> | [error response](/http-api/#error-response) | The reporter already reported this user within 24 hours, returning `CONFLICT` |
+
+<sup>1</sup> The reporter and the reported user form a submission key that expires 24 hours after the report. A submission that fails or is rate limited releases the key, and so does [deleting the report](/admin-api/reports/#delete-report)
 
 ### Side effects
 
-The operation writes one report. It records the reporter's account ID and email address, and the reported user's ID and avatar hash. A supplied `guild_id` adds the guild's ID, name, icon hash, NSFW flag, and content warning state. No message evidence is captured and no media bytes are copied.
+The operation writes one report. It records the reporter's account ID, and the reported user's ID and avatar hash. A supplied `guild_id` adds the guild's ID, name, icon hash, NSFW flag, and content warning state. The report also stores the reason, its category, the steps, the revision hash, and the resolved locale. The steps name the profile parts the reporter selected, and the report keeps a [profile snapshot](#profile-snapshot) of the account, with its guild profile when `guild_id` is supplied. No message evidence is captured.
 
 ### Rate limit
 
-10 requests per hour, on the `report:create` bucket, which is shared with [Report message](#report-message) and [Report guild](#report-guild).
+10 requests per hour, on the `report:create` bucket, which is shared with [Submit message report flow](#submit-message-report-flow).
 
-One reporter creates at most 5 reports each hour across all report types.
-
-## Report guild
-
-<RouteHeader method="POST" path="/v1/reports/guild" />
-
-Creates and returns a [report object](#report-object) for a guild.
-
-### Limitations
-
-- A `guild_id` that resolves to no guild returns 404 `UNKNOWN_GUILD`.
-- The guild owner reporting their own guild returns 400 `CANNOT_REPORT_OWN_GUILD`.
-
-Fluxer establishes access to the guild in one of these ways, tried in order:
-
-1. A current member needs nothing further.
-2. Any reporter can report a guild with the `DISCOVERABLE` [guild feature](/http-api/guilds/#guild-features).
-3. Any other reporter supplies `invite_code` for an invite pointing at that exact guild.
-
-A reporter satisfying none of them returns 403 `CANNOT_REPORT_GUILD`.
-
-### JSON body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| guild_id | snowflake | The ID of the reported guild |
-| category | string | [Guild report category](#guild-report-categories) |
-| invite_code?<sup>1</sup> | string | [Invite](/http-api/invites/) code proving access to the guild (1-64 characters) |
-
-<sup>1</sup> Read only after the member check and the `DISCOVERABLE` check both fail
-
-This route reads the bare code and accepts no invite URL. A code that resolves to no invite, or to an invite for another guild, returns 403 `CANNOT_REPORT_GUILD`, not a 404.
-
-### Response
-
-| Status | Body | Condition |
-| --- | --- | --- |
-| 200 | [report](#report-object) object | Report was created |
-| 400 | [error response](/http-api/#error-response) | The account is unclaimed and the request returns `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, or the reporter owns the guild and the request returns `CANNOT_REPORT_OWN_GUILD` |
-| 403 | [error response](/http-api/#error-response) | A body string is blocked and the request returns `CONTENT_BLOCKED` |
-| 403 | [error response](/http-api/#error-response) | The credential is a bot token or OAuth2 bearer and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | Its email is unverified and the request returns `REPORT_EMAIL_VERIFICATION_REQUIRED` |
-| 403 | [error response](/http-api/#error-response) | The account is report banned and the request returns `REPORT_BANNED` |
-| 403 | [error response](/http-api/#error-response) | Access to the guild cannot be established and the request returns `CANNOT_REPORT_GUILD` |
-| 404 | [error response](/http-api/#error-response) | The reported guild does not exist and the request returns `UNKNOWN_GUILD` |
-
-### Side effects
-
-The operation writes one report. It records the reporter's account ID and email address, the guild's ID, name, icon hash, NSFW flag, and content warning state, and the invite code when one was sent. No message evidence is captured and no media bytes are copied.
-
-### Rate limit
-
-10 requests per hour, on the `report:create` bucket, which is shared with [Report message](#report-message) and [Report user](#report-user).
-
-One reporter creates at most 5 reports each hour across all report types.
+One reporter creates at most 5 reports each hour across all report types. Fluxer checks that allowance right after the report ban check and before it looks up the user, so a reporter who has used it up receives 429 even for a duplicate. Otherwise a duplicate submission returns 409 `CONFLICT` without consuming it.
 
 ## Send DSA report email
 
@@ -369,7 +712,7 @@ Issues a Digital Services Act verification code for an email address and returns
 
 An instance where members sign in with a username sends no email, and returns 400 `EMAIL_UNAVAILABLE_ON_INSTANCE` before it issues a code.
 
-The address must be deliverable. A domain with no MX, A, or AAAA record returns 400 `INVALID_FORM_BODY` with `INVALID_EMAIL_ADDRESS` on `email`. A temporary DNS failure does not reject the address.
+The address must be deliverable. A domain with no MX, A, or AAAA record returns 400 `INVALID_FORM_BODY` with `EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL` on `email`. A temporary DNS failure does not reject the address.
 
 ### JSON body
 
@@ -383,22 +726,29 @@ The address must be deliverable. A domain with no MX, A, or AAAA record returns 
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [success](#success-object) object | The code was generated and handed to the email provider |
-| 400 | [error response](/http-api/#error-response) | The address failed validation or its domain publishes no usable mail DNS record, and the request returns `INVALID_FORM_BODY` |
+| 200<sup>1</sup> | [success](#success-object) object | The code was generated and handed to the email provider |
+| 400 | [error response](/http-api/#error-response) | The address failed validation and the request returns `INVALID_FORM_BODY` |
+| 400 | [error response](/http-api/#error-response) | The domain publishes no usable mail DNS record and the request returns `INVALID_FORM_BODY` |
+| 429 | [error response](/http-api/#error-response) | The address was sent a code in the last minute, or used its 3 sends this hour |
+| 503 | [error response](/http-api/#error-response) | The email could not be sent and the request returns `SERVICE_UNAVAILABLE` |
+
+<sup>1</sup> Also returned on an instance with email delivery switched off, where no email leaves the instance
 
 ### Side effects
 
-The code expires after 10 minutes. Sending again to the same address replaces the previous code and restarts that window. Codes use uppercase letters and digits in `XXXX-XXXX` form.
+The code expires after 10 minutes. Codes use uppercase letters and digits in `XXXX-XXXX` form.
+
+A new code can go to the same address once a minute has passed since the last one, or once that code has expired. It replaces the previous code and restarts the 10 minute window. A request within the minute returns 429 with `retry_after` and leaves the code already sent usable.
+
+When the provider refuses the message, or the address is recorded as a hard bounce, Fluxer keeps no code for the address, so a code sent to it earlier stops working too, and returns 503 `SERVICE_UNAVAILABLE`. That attempt still counts towards the 3 sends an address gets each hour.
 
 The operation creates no ticket and emits no Gateway Dispatch.
-
-:::caution[A 200 covers every delivery outcome]
-The response is 200 when the provider accepts the message and when it refuses it. It is 200 for an address recorded as a hard bounce, and on an instance with email delivery switched off.
-:::
 
 ### Rate limit
 
 5 requests per hour, on the `dsa:report:email:send` bucket.
+
+One address gets at most 3 sends each hour, and at most one each minute while its last code is unexpired. The minute check runs first, so a request it refuses does not count towards the hourly 3. Both return 429 `RATE_LIMITED` with `retry_after`.
 
 ## Verify DSA report email
 
@@ -422,25 +772,39 @@ Consumes a verification code and returns the [ticket object](#ticket-object) tha
 | 200 | [ticket](#ticket-object) object | The code matched the unexpired verification record for the address |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The address or code failed validation, or no unexpired record matches, returning `INVALID_DSA_VERIFICATION_CODE` |
 
-<sup>1</sup> An address with no verification record, an expired record, and a wrong code all produce the same error code. A malformed address or code fails schema validation and returns 400 `INVALID_FORM_BODY`.
+<sup>1</sup> An address with no verification record, an expired record, a wrong code, and an attempt over the per-address limit all produce the same error code. A malformed address or code fails schema validation and returns 400 `INVALID_FORM_BODY`.
 
 ### Side effects
 
-The operation deletes the verification record and writes one ticket that expires one hour later. Fluxer deletes the record only on success, so a wrong guess leaves the outstanding code usable until it expires. The operation emits no Gateway Dispatch.
+The operation deletes the verification record and writes one ticket that expires one hour later. A wrong code leaves the outstanding code usable until it expires or the address reaches the attempt limit below. The operation emits no Gateway Dispatch.
+
+Each address has 5 verification attempts in 10 minutes, counted across letter case, and right and wrong codes both count. The attempt over that limit deletes the outstanding code and returns 400 `INVALID_DSA_VERIFICATION_CODE`. Sending a new code starts a new count.
 
 ### Rate limit
 
 10 requests per hour, on the `dsa:report:email:verify` bucket.
 
+
+<a id="report-guild"></a>
+
 ## Create DSA report
 
 <RouteHeader method="POST" path="/v1/reports/dsa" unauthenticated />
 
-Consumes a ticket, files the notice, and returns a [report object](#report-object).
+Consumes a ticket, files the notice from the reporter's answers to the flow on the `dsa` surface, and returns a [report object](#report-object). This is the only way to report a guild.
 
-`report_type` selects which extra fields the body has, and `category` comes from the registry that matches it.
+Fetch the flow with [Get report flow](#get-report-flow) and `surface=dsa` for the target type the notice is about, walk it as [Walking a flow](#walking-a-flow) describes, and send the steps with the details below. `report_type` selects which target fields the body has.
 
-A ticket that is unknown or past its one hour expiry returns 400 `INVALID_DSA_TICKET`. The ticket is consumed when the notice is written, so a notice that is rejected or rate limited leaves it usable. Nothing deduplicates a repeat notice.
+A ticket that is unknown or past its one hour expiry returns 400 `INVALID_DSA_TICKET` before the answers are checked. The ticket is consumed when the notice is written, so a notice that is rejected or rate limited leaves it usable. Nothing deduplicates a repeat notice.
+
+| Article 16(2) | Fields |
+| --- | --- |
+| (a) An explanation of the problem | `additional_info` |
+| (b) The exact location of the content | `message_link`, `user_id`, `user_tag`, `guild_id`, `invite_code` |
+| (c) The name and email address of the reporter | `reporter_full_legal_name`, `ticket` |
+| (d) A statement of good faith | `good_faith_confirmed` |
+
+A notice whose walk resolves to the `child_safety` [category](#report-categories) may omit the legal name, as Article 16(2)(c) allows for child sexual abuse material. Every other notice needs one, and Fluxer checks this after it resolves the walk.
 
 ### JSON body
 
@@ -450,37 +814,39 @@ A ticket that is unknown or past its one hour expiry returns 400 `INVALID_DSA_TI
 | --- | --- | --- |
 | ticket | string | The ticket returned by [Verify DSA report email](#verify-dsa-report-email) (1-128 characters) |
 | report_type | string | The discriminator selecting the variant, one of `message`, `user`, or `guild` |
-| category | string | The category matching `report_type`, drawn from the [message](#message-report-categories), [user](#user-report-categories), or [guild](#guild-report-categories) registry |
-| additional_info? | string | The free-text context supplied by the reporter (0-1000 characters) |
-| reporter_full_legal_name | string | The full legal name of the person filing the notice (1-160 characters) |
+| revision_hash | string | The `revision_hash` of the `dsa` flow the reporter answered (1-64 characters) |
+| steps | array[[report flow step](#report-flow-step-object) object] | The answered screens in walk order (1-16 steps) |
+| additional_info<sup>1</sup> | string | The reporter's explanation of the problem (1-1000 characters) |
+| good_faith_confirmed | boolean | Always `true`, confirming the notice is accurate and complete to the reporter's knowledge |
+| reporter_full_legal_name?<sup>2</sup> | string | The full legal name of the person filing the notice (1-160 characters) |
 | reporter_country_of_residence | string | [EU country code](#eu-country-codes) of the reporter's residence |
-| reporter_fluxer_tag?<sup>1</sup> | string | The reporter's own tag in `username#1234` form (3-37 characters) |
+| locale?<sup>3</sup> | string | The language tag the reporter saw the flow in (1-35 characters) |
 
-<sup>1</sup> Validated for shape and then discarded, so Fluxer never resolves it against an account and no moderator sees it
+<sup>1</sup> A value that is empty or only whitespace returns 400 `INVALID_FORM_BODY`. When the reporter believes the content is illegal, the explanation says which law it breaks and why
+
+<sup>2</sup> Required unless the walk resolves to the `child_safety` category. A missing name otherwise returns 400 `INVALID_FORM_BODY` on `reporter_full_legal_name`
+
+<sup>3</sup> Stored with the notice after it is resolved as [Locale](#locale) describes. The request locale is stored when it is omitted
 
 #### Message fields
 
 | Field | Type | Description |
 | --- | --- | --- |
 | message_link<sup>1</sup> | string | The link to the reported message (1-2048 characters) |
-| reported_user_tag?<sup>2</sup> | string | The message author's tag in `username#1234` form (3-37 characters) |
+| reported_user_tag?<sup>2</sup> | string | The message author's tag in `username#1234` form, or the bare username on an instance without user tags (1-37 characters) |
 
-<sup>1</sup> Parsed as an absolute URL whose path is `/channels/&lt;guild_id&gt;/&lt;channel_id&gt;/&lt;message_id&gt;`. Fluxer ignores the origin and the guild segment, and reads only the channel and message segments
+<sup>1</sup> Parsed as an absolute URL whose path is `/channels/&lt;guild_id&gt;/&lt;channel_id&gt;/&lt;message_id&gt;`, with `@me` in place of the guild ID for a direct message or group DM. Fluxer ignores the origin
 
-<sup>2</sup> When supplied it resolves to exactly the account that authored the linked message. A mismatch returns 400 `INVALID_DSA_REPORT_TARGET`, and a tag that resolves to no account returns 404 `UNKNOWN_USER`
+<sup>2</sup> When supplied it must be the tag of the account that authored the linked message. A message a webhook sent has no author account, so no tag matches it
 
-A value that is not an absolute URL, whose path holds fewer than four segments, whose first segment is not `channels`, or whose third or fourth segment is not a decimal snowflake, returns 404 `UNKNOWN_MESSAGE`.
-
-:::caution[This variant applies no visibility check]
-The guild need not be discoverable, the channel need not be readable by the default role, and the evidence window is captured with no permission filtering. A notice can reference a message no unauthenticated party could otherwise read.
-:::
+The link must name a message that exists, in the channel it names, and in the guild that channel belongs to. Every link or tag that does not resolve returns the same 404 `UNKNOWN_MESSAGE`, and the ticket stays usable. That covers a value that is not an absolute URL, a path with fewer than four segments, a first segment other than `channels`, a channel or message segment that is not a decimal snowflake, and a guild segment that does not match the channel. It also covers a missing channel or message, a message stored in another channel, a message whose author account no longer exists, and a tag that does not match the author.
 
 #### User fields
 
 | Field | Type | Description |
 | --- | --- | --- |
 | user_id?<sup>1</sup> | snowflake | The ID of the reported user |
-| user_tag?<sup>1</sup> | string | The reported user's tag in `username#1234` form (3-37 characters) |
+| user_tag?<sup>1</sup> | string | The reported user's tag in `username#1234` form, or the bare username on an instance without user tags (1-37 characters) |
 
 <sup>1</sup> Supply at least one of the two. A body that supplies neither returns 400 `INVALID_FORM_BODY`, and an ID or tag that resolves to no account returns 404 `UNKNOWN_USER`
 
@@ -502,15 +868,27 @@ An unknown code returns 404 `UNKNOWN_INVITE`. A code that resolves to an invite 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [report](#report-object) object | The notice was recorded |
-| 400 | [error response](/http-api/#error-response) | The ticket is unknown or expired and the request returns `INVALID_DSA_TICKET`, or a supplied Fluxer tag or invite code is malformed or does not match the reported message author, user, or guild and the request returns `INVALID_DSA_REPORT_TARGET` |
-| 403 | [error response](/http-api/#error-response) | A body string is blocked by content moderation and the request returns `CONTENT_BLOCKED` |
-| 404 | [error response](/http-api/#error-response) | The referenced channel, message, user, guild, or invite does not exist |
+| 400 | [error response](/http-api/#error-response) | The ticket is unknown or expired and the request returns `INVALID_DSA_TICKET` |
+| 400 | [error response](/http-api/#error-response) | A user ID and tag name different accounts, and the request returns `INVALID_DSA_REPORT_TARGET` |
+| 400 | [error response](/http-api/#error-response) | A user tag is malformed and the request returns `INVALID_DSA_REPORT_TARGET` |
+| 400 | [error response](/http-api/#error-response) | The invite code belongs to another guild or type and the request returns `INVALID_DSA_REPORT_TARGET` |
+| 400 | [error response](/http-api/#error-response) | The answers do not fit the current `dsa` flow and the request returns `INVALID_REPORT_FLOW_ANSWERS` |
+| 400 | [error response](/http-api/#error-response) | A required field is missing or malformed and the request returns `INVALID_FORM_BODY` |
+| 404 | [error response](/http-api/#error-response) | The message link or author tag does not resolve and the request returns `UNKNOWN_MESSAGE` |
+| 404 | [error response](/http-api/#error-response) | The reported user, guild, or invite does not exist |
+| 409 | [error response](/http-api/#error-response) | The answers came from an outdated flow and do not fit the current one, returning `REPORT_FLOW_OUTDATED` |
 
 ### Side effects
 
-The operation resolves the target, deletes the ticket, and writes one report under a newly generated [snowflake](/snowflakes/). A message notice captures the same conversation window as [Report message](#report-message), including the byte copy of every attachment, and applies no permission filtering to it. A user notice records the reported user's ID and avatar hash and nothing else about the target. A guild notice records the guild's ID, name, icon hash, NSFW flag, content warning state, and the sanitised invite code when one was supplied.
+The operation resolves the target, deletes the ticket, and writes one report under a newly generated [snowflake](/snowflakes/).
 
-Every notice also records `additional_info`, the reporter's legal name, country of residence, and the verified address behind the ticket. A notice has no account ID even when the request presented a credential, and it discards `reporter_fluxer_tag`.
+A message notice about a guild channel that @everyone can view and read the history of captures the same conversation window as [Submit message report flow](#submit-message-report-flow), including the byte copy of every attachment. For any other guild channel, and for a direct message or group DM, it captures only the reported message and its attachments. A message notice also keeps a [profile snapshot](#profile-snapshot) of an author account, with the author's guild profile in a guild channel.
+
+A user notice records the reported user's ID, avatar hash, and [profile snapshot](#profile-snapshot). A guild notice records the guild's ID, name, icon hash, NSFW flag, content warning state, and the sanitised invite code when one was supplied, together with the guild's [profile snapshot](#profile-snapshot).
+
+Every notice also records `additional_info`, the reporter's legal name when one was supplied, the country of residence, the good faith confirmation, and the verified address behind the ticket. It stores the reason, its category, the steps, the revision hash, and the resolved locale like any flow report. A notice has no account ID even when the request presented a credential.
+
+Once the notice is stored, Fluxer emails a receipt with the report ID to the verified address. A receipt that cannot be sent is logged and does not fail the request. When a moderator resolves the notice, the same address receives the decision.
 
 ### Rate limit
 

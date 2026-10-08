@@ -162,7 +162,7 @@ const DeveloperNotificationSchema = z.object({
 	testNotification: z.object({version: z.string().optional()}).optional(),
 });
 
-export type GooglePlayNotificationEvent =
+type GooglePlayNotificationEvent =
 	| {type: 'subscription'; notificationType: number; purchaseToken: string}
 	| {type: 'one_time_product'; notificationType: number; purchaseToken: string; productId: string | null}
 	| {

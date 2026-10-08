@@ -12,63 +12,6 @@
 	gap: 0.5rem;
 }
 
-.primaryButton {
-	flex: 1;
-	padding: 0.75rem 1rem;
-	border-radius: 0.5rem;
-	background-color: var(--background-modifier-hover);
-	color: var(--text-primary);
-	font-weight: 500;
-	transition: background-color 0.2s ease;
-	cursor: pointer;
-}
-
-@media (hover: hover) and (pointer: fine) {
-	.primaryButton:hover {
-		background-color: var(--background-modifier-selected);
-	}
-}
-
-.dangerButton {
-	flex: 1;
-	padding: 0.75rem 1rem;
-	border-radius: 0.5rem;
-	background-color: var(--status-danger);
-	color: white;
-	font-weight: 500;
-	transition: background-color 0.2s ease;
-	cursor: pointer;
-}
-
-@media (hover: hover) and (pointer: fine) {
-	.dangerButton:hover {
-		background-color: #dc2626;
-	}
-}
-
-.brandButton {
-	flex: 1;
-	padding: 0.75rem 1rem;
-	border-radius: 0.5rem;
-	background-color: var(--brand-primary);
-	color: white;
-	font-weight: 500;
-	transition: background-color 0.2s ease;
-	cursor: pointer;
-}
-
-@media (hover: hover) and (pointer: fine) {
-	.brandButton:hover {
-		background-color: #2563eb;
-	}
-}
-
-.disconnectIcon {
-	margin-right: 0.5rem;
-	display: inline-block;
-	vertical-align: middle;
-}
-
 .actionButtons {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(min(6.25rem, 100%), 1fr));

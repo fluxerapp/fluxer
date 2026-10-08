@@ -42,19 +42,19 @@ export interface CompactAudioAvatarLayoutStyleVars {
 	'--compact-call-edge-gradient-extension': string;
 }
 
-export function resolveCompactCallEdgePadding(callHeight: number): number {
+function resolveCompactCallEdgePadding(callHeight: number): number {
 	return clamp(12, callHeight * 0.045, 24);
 }
 
-export function resolveCompactControlPaddingTop(callHeight: number): number {
+function resolveCompactControlPaddingTop(callHeight: number): number {
 	return clamp(16, callHeight * 0.04, 24);
 }
 
-export function resolveCompactControlGap(callHeight: number): number {
+function resolveCompactControlGap(callHeight: number): number {
 	return clamp(10, callHeight * 0.035, 18);
 }
 
-export function resolveCompactEdgeGradientExtension(callHeight: number, hasControlBar: boolean): number {
+function resolveCompactEdgeGradientExtension(callHeight: number, hasControlBar: boolean): number {
 	return hasControlBar ? clamp(14, callHeight * 0.052, 22) : clamp(12, callHeight * 0.045, 20);
 }
 

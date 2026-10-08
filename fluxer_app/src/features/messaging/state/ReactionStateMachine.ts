@@ -50,7 +50,7 @@ export function emptyMap(): ReactionMap {
 	return new Map();
 }
 
-export function recordToReaction(record: ReactionRecord): MessageReaction {
+function recordToReaction(record: ReactionRecord): MessageReaction {
 	return Object.freeze({
 		emoji: record.emoji,
 		count: record.count,
@@ -265,7 +265,7 @@ function untrackReactorInMap(map: ReactionMap, emoji: ReactionEmoji, userId: str
 	return withRecord(map, key, {...existing, knownReactors: reactors});
 }
 
-export const reactionStateMachine = setup({
+const reactionStateMachine = setup({
 	types: {} as {
 		context: ReactionMachineContext;
 		events: ReactionMachineEvent;

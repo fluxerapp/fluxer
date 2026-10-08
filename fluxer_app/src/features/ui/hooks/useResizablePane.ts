@@ -12,12 +12,12 @@ import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-export interface ResizablePaneSize {
+interface ResizablePaneSize {
 	width: number;
 	height: number;
 }
 
-export interface ResizablePaneWidthSnap {
+interface ResizablePaneWidthSnap {
 	readonly step: number;
 	readonly offset: number;
 }
@@ -86,7 +86,7 @@ const RESIZABLE_PANE_SIZE_JSON_MAX_LENGTH =
 const TITLEBAR_SELECTOR = '[data-native-titlebar]';
 const logger = new Logger('useResizablePane');
 
-export function clampResizablePaneDimension(
+function clampResizablePaneDimension(
 	value: number,
 	configuredMin: number,
 	availableMax: number,

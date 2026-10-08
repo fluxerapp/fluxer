@@ -9,8 +9,8 @@ import {
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
 import {makeAutoObservable} from 'mobx';
 
-export type EmojiLayout = 'list' | 'grid';
-export type StickerViewMode = 'cozy' | 'compact';
+type EmojiLayout = 'list' | 'grid';
+type StickerViewMode = 'cozy' | 'compact';
 
 const EMOJI_FROM_PROTO: Record<EmojiPickerLayout, EmojiLayout | null> = {
 	[EmojiPickerLayout.UNSPECIFIED]: null,
@@ -60,10 +60,6 @@ class EmojiStickerLayout {
 
 	getEmojiLayout(): EmojiLayout {
 		return this.emojiLayout;
-	}
-
-	setEmojiLayout(layout: EmojiLayout): void {
-		this.emojiLayout = layout;
 	}
 
 	getStickerViewMode(): StickerViewMode {

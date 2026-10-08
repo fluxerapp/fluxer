@@ -103,7 +103,7 @@ export const GuildInviteHeader = observer(function GuildInviteHeader({invite}: G
 		</div>
 	);
 });
-export const GroupDMInviteHeader = observer(function GroupDMInviteHeader({invite}: GroupDMInviteHeaderProps) {
+const GroupDMInviteHeader = observer(function GroupDMInviteHeader({invite}: GroupDMInviteHeaderProps) {
 	const inviter = invite.inviter;
 	const inviterDisplayName = inviter ? NicknameUtils.getDisplayName(inviter) : null;
 	const avatarUrl = inviter ? AvatarUtils.getUserAvatarURL(inviter, false) : null;

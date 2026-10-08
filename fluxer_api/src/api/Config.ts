@@ -383,13 +383,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			port: master.integrations.clamav.port,
 			failOpen: master.integrations.clamav.fail_open,
 		},
-		ncmec: {
-			enabled: master.integrations.ncmec.enabled,
-			baseUrl: master.integrations.ncmec.base_url,
-			username: master.integrations.ncmec.username,
-			password: master.integrations.ncmec.password,
-			reporterEmail: master.integrations.ncmec.reporter_email ?? '',
-		},
 		admin: {
 			oauthClientSecret: master.services.admin.oauth_client_secret,
 		},
@@ -455,6 +448,11 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		attachmentDecayEnabled: master.attachment_decay_enabled,
 		deletionGracePeriodHours: master.dev.test_mode_enabled ? 0.01 : master.deletion_grace_period_hours,
 		inactivityDeletionThresholdDays: master.inactivity_deletion_threshold_days,
+		reportRetention: {
+			days: master.report_retention.days,
+			resolvedDays: master.report_retention.resolved_days,
+			dryRun: master.report_retention.dry_run,
+		},
 		push: {
 			publicVapidKey: master.auth.vapid.public_key,
 			apns: {

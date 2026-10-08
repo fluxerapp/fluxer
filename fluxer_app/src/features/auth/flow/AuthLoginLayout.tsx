@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {detectDomainMigrationInstallKind} from '@app/features/app/domain_migration/DomainMigrationBrowser';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
-import {describeAPIEndpoint, type InstanceSsoConfig} from '@app/features/app/state/RuntimeConfig';
+import RuntimeConfig, {describeAPIEndpoint, type InstanceSsoConfig} from '@app/features/app/state/RuntimeConfig';
 import {
 	FORGOT_YOUR_PASSWORD_DESCRIPTOR,
 	SIGN_IN_WITH_BROWSER_DESCRIPTOR,
@@ -860,10 +859,10 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 					type="button"
 					data-flx="auth.flow.auth-login-layout.button.old-app-sign-in"
 				>
-					{i18n._(SIGN_IN_WITH_OLD_APP_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(SIGN_IN_WITH_OLD_APP_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</Button>
 				<div className={styles.ssoSubtitle} data-flx="auth.flow.auth-login-layout.old-app-subtitle">
-					{i18n._(OLD_APP_SIGN_IN_HINT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(OLD_APP_SIGN_IN_HINT_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</div>
 			</div>
 		);

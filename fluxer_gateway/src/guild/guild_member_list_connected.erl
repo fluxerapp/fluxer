@@ -7,17 +7,11 @@
     default_presence/0,
     resolve_presence_for_user/2,
     presence_context/1,
-    add_presence_to_member/2,
     add_presence_to_member/3,
     connected_session_user_ids/1,
     user_is_online/2,
-    partition_members_by_online/2,
-    filter_members_for_list/3,
-    list_id_channel_id/1,
     session_can_view_channel/3,
-    session_can_view_channel_members/3,
-    presence_status_changed/3,
-    member_in_list/2
+    session_can_view_channel_members/3
 ]).
 
 -type guild_state() :: map().
@@ -41,11 +35,6 @@ resolve_presence_for_user(State, UserId) ->
         undefined -> default_presence();
         Tab -> guild_state_member:lookup_presence(Tab, UserId)
     end.
-
--spec add_presence_to_member(map(), guild_state()) -> map().
-add_presence_to_member(Member, State) ->
-    Presence = resolve_presence_for_member(presence_context(State), Member),
-    Member#{<<"presence">> => Presence}.
 
 -spec add_presence_to_member(map(), user_id(), map()) -> map().
 add_presence_to_member(Member, UserId, PresenceCtx) when is_integer(UserId), UserId > 0 ->
@@ -94,37 +83,6 @@ add_connected_session_user(_SessionId, SessionData, Acc) ->
             Acc
     end.
 
--spec partition_members_by_online([map()], guild_state()) -> {[map()], [map()]}.
-partition_members_by_online(Members, State) ->
-    ConnectedUserIds = connected_session_user_ids(State),
-    PresenceCtx = #{
-        member_presence => maps:get(member_presence, State, undefined),
-        connected_user_ids => ConnectedUserIds
-    },
-    lists:partition(
-        fun(Member) ->
-            member_is_online(Member, PresenceCtx, ConnectedUserIds)
-        end,
-        Members
-    ).
-
--spec member_is_online(map(), map(), sets:set()) -> boolean().
-member_is_online(Member, PresenceCtx, ConnectedUserIds) ->
-    Presence = resolve_presence_for_member(PresenceCtx, Member),
-    Status = maps:get(<<"status">>, Presence, <<"offline">>),
-    IsConnected = member_is_connected(Member, ConnectedUserIds),
-    IsOnlineStatus = Status =/= <<"offline">> andalso Status =/= <<"invisible">>,
-    IsConnected andalso IsOnlineStatus.
-
--spec resolve_presence_for_member(map(), map()) -> map().
-resolve_presence_for_member(PresenceCtx, Member) ->
-    case guild_member_list_common:get_member_user_id(Member) of
-        UserId when is_integer(UserId) ->
-            resolve_effective_presence_for_user(PresenceCtx, UserId);
-        undefined ->
-            default_presence()
-    end.
-
 -spec resolve_effective_presence_for_user(map(), user_id()) -> map().
 resolve_effective_presence_for_user(PresenceCtx, UserId) ->
     Presence = resolve_presence_from_context(PresenceCtx, UserId),
@@ -144,57 +102,6 @@ presence_is_visible_in_guild(UserId, Presence, #{connected_user_ids := Connected
     Status = maps:get(<<"status">>, Presence, <<"offline">>),
     IsOnlineStatus = Status =/= <<"offline">> andalso Status =/= <<"invisible">>,
     IsOnlineStatus andalso sets:is_element(UserId, ConnectedUserIds).
-
--spec member_is_connected(map(), sets:set()) -> boolean().
-member_is_connected(Member, ConnectedUserIds) ->
-    case guild_member_list_common:get_member_user_id(Member) of
-        UserId when is_integer(UserId) ->
-            sets:is_element(UserId, ConnectedUserIds);
-        undefined ->
-            false
-    end.
-
--spec filter_members_for_list(list_id(), [map()], guild_state()) -> [map()].
-filter_members_for_list(<<"0">>, Members, _State) ->
-    [
-        Member
-     || Member <- Members,
-        is_integer(guild_member_list_common:get_member_user_id(Member))
-    ];
-filter_members_for_list(ListId, Members, State) ->
-    case list_id_channel_id(ListId) of
-        undefined ->
-            [];
-        ChannelId ->
-            filter_members_for_channel(ChannelId, Members, State)
-    end.
-
--spec filter_members_for_channel(channel_id(), [map()], guild_state()) -> [map()].
-filter_members_for_channel(ChannelId, Members, State) ->
-    lists:filter(
-        fun(Member) ->
-            member_can_view_channel(Member, ChannelId, State)
-        end,
-        Members
-    ).
-
--spec member_can_view_channel(map(), channel_id(), guild_state()) -> boolean().
-member_can_view_channel(Member, ChannelId, State) ->
-    case guild_member_list_common:get_member_user_id(Member) of
-        UserId when is_integer(UserId) ->
-            guild_permissions:can_view_channel(UserId, ChannelId, Member, State);
-        undefined ->
-            false
-    end.
-
--spec list_id_channel_id(list_id()) -> channel_id() | undefined.
-list_id_channel_id(ListId) when is_binary(ListId) ->
-    case snowflake_id:parse_maybe(ListId) of
-        Id when is_integer(Id), Id > 0 -> Id;
-        _ -> undefined
-    end;
-list_id_channel_id(_) ->
-    undefined.
 
 -spec session_can_view_channel(map(), channel_id(), guild_state()) -> boolean().
 session_can_view_channel(_SessionData, ChannelId, _State) when
@@ -241,15 +148,3 @@ session_user_can_view_channel_members(SessionData, ChannelId, State) ->
         _ ->
             false
     end.
-
--spec presence_status_changed(user_id(), guild_state(), guild_state()) -> boolean().
-presence_status_changed(UserId, OldState, UpdatedState) ->
-    OldPresence = resolve_presence_for_user(OldState, UserId),
-    NewPresence = resolve_presence_for_user(UpdatedState, UserId),
-    OldStatus = maps:get(<<"status">>, OldPresence, <<"offline">>),
-    NewStatus = maps:get(<<"status">>, NewPresence, <<"offline">>),
-    OldStatus =/= NewStatus.
-
--spec member_in_list(user_id(), [map()]) -> boolean().
-member_in_list(UserId, Members) ->
-    lists:any(fun(M) -> guild_member_list_common:get_member_user_id(M) =:= UserId end, Members).

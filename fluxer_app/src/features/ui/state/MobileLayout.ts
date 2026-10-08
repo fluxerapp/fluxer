@@ -90,14 +90,6 @@ class MobileLayout {
 	get platformMobileDetected(): boolean {
 		return shouldForceMobileLayout();
 	}
-
-	isNavExpanded(): boolean {
-		return this.navExpanded;
-	}
-
-	isChatExpanded(): boolean {
-		return this.chatExpanded;
-	}
 }
 
 export default new MobileLayout();

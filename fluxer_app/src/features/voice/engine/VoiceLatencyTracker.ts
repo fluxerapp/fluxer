@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const DEFAULT_VOICE_LATENCY_HISTORY_LIMIT = 60;
-export const DEFAULT_VOICE_LATENCY_STALE_AFTER_MS = 10_000;
+const DEFAULT_VOICE_LATENCY_HISTORY_LIMIT = 60;
+const DEFAULT_VOICE_LATENCY_STALE_AFTER_MS = 10_000;
 
 export interface LatencyDataPoint {
 	timestamp: number;
 	latency: number;
 }
 
-export type VoiceLatencyStatus = 'idle' | 'measuring' | 'fresh' | 'stale';
+type VoiceLatencyStatus = 'idle' | 'measuring' | 'fresh' | 'stale';
 
 export interface VoiceLatencySnapshot {
 	tracking: boolean;

@@ -186,7 +186,7 @@ Approves or rejects a pending application and returns the updated [discovery app
 | Field | Type | Description |
 | --- | --- | --- |
 | status<sup>1</sup> | approved \| rejected | Decision to apply |
-| reason<sup>2</sup> <sup>3</sup> | string | Reason stored on the application as `review_reason` (at most 500 characters) |
+| reason?<sup>2</sup> <sup>3</sup> | string | Reason stored on the application as `review_reason` (at most 500 characters) |
 
 <sup>1</sup> A value outside the two listed fails body validation. Neither `removed` nor `pending` is accepted
 

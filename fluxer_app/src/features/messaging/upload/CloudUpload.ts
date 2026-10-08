@@ -12,15 +12,13 @@ import {
 } from '@app/features/platform/utils/DesktopUploadProgressBridge';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {AllowedMentions} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {BehaviorSubject, firstValueFrom, interval, type Observable, type Subscription} from 'rxjs';
-import {filter, map, timeout as rxTimeout, take} from 'rxjs/operators';
+import {BehaviorSubject, interval, type Observable, type Subscription} from 'rxjs';
 
 const logger = new Logger('CloudUpload');
-const hasDOM = true;
 const LOCAL_MEDIA_PROBE_TIMEOUT_MS = 10_000;
 
-export type UploadStatus = 'pending' | 'uploading' | 'failed' | 'sending';
-export type UploadStage = 'idle' | 'queued' | 'uploading' | 'processing' | 'completed' | 'failed' | 'canceled';
+type UploadStatus = 'pending' | 'uploading' | 'failed' | 'sending';
+type UploadStage = 'idle' | 'queued' | 'uploading' | 'processing' | 'completed' | 'failed' | 'canceled';
 
 export interface CloudAttachment {
 	id: number;
@@ -205,27 +203,6 @@ class CloudUploadManager {
 		return this.getMessageUploadInternal(nonce);
 	}
 
-	subscribeToMessageUpload(nonce: string, listener: MessageUploadListener): () => void {
-		if (!this.messageUploadListeners.has(nonce)) {
-			this.messageUploadListeners.set(nonce, new Set());
-		}
-		this.messageUploadListeners.get(nonce)!.add(listener);
-		const subject = this.ensureMessageUploadSubject(nonce);
-		const subscription = subject.subscribe((upload) => {
-			if (upload) listener(upload);
-		});
-		return () => {
-			subscription.unsubscribe();
-			const listeners = this.messageUploadListeners.get(nonce);
-			if (listeners) {
-				listeners.delete(listener);
-				if (listeners.size === 0) {
-					this.messageUploadListeners.delete(nonce);
-				}
-			}
-		};
-	}
-
 	private notifyMessageUploadListeners(nonce: string): void {
 		const listeners = this.messageUploadListeners.get(nonce);
 		const upload = this.getMessageUploadInternal(nonce);
@@ -363,29 +340,6 @@ class CloudUploadManager {
 		return clonedAttachments;
 	}
 
-	moveMessageUpload(oldNonce: string, newNonce: string): void {
-		const upload = this.getMessageUploadInternal(oldNonce);
-		if (!upload) return;
-		const moved: MessageUpload = {
-			...upload,
-			nonce: newNonce,
-		};
-		this.setMessageUploadInternal(newNonce, moved);
-		this.setMessageUploadInternal(oldNonce, null);
-		const listeners = this.messageUploadListeners.get(oldNonce);
-		if (listeners) {
-			this.messageUploadListeners.delete(oldNonce);
-			if (!this.messageUploadListeners.has(newNonce)) {
-				this.messageUploadListeners.set(newNonce, new Set());
-			}
-			const target = this.messageUploadListeners.get(newNonce)!;
-			for (const listener of listeners) {
-				target.add(listener);
-			}
-		}
-		this.notifyMessageUploadListeners(newNonce);
-	}
-
 	removeMessageUpload(nonce: string): void {
 		const upload = this.getMessageUploadInternal(nonce);
 		if (upload) {
@@ -470,24 +424,6 @@ class CloudUploadManager {
 		});
 	}
 
-	async waitForMessageUploads(nonce: string, timeoutMs = 60000): Promise<Array<CloudAttachment>> {
-		const source$ = this.messageUpload$(nonce).pipe(
-			filter((upload): upload is MessageUpload => upload !== null),
-			map((upload) => {
-				const hasFailed = upload.attachments.some((att) => att.status === 'failed');
-				if (hasFailed) {
-					throw new Error('One or more attachments failed to upload');
-				}
-				const allDone = upload.attachments.every((att) => att.status !== 'pending' && att.status !== 'uploading');
-				return allDone ? upload.attachments : null;
-			}),
-			filter((attachments): attachments is Array<CloudAttachment> => attachments !== null),
-			take(1),
-			rxTimeout({first: timeoutMs}),
-		);
-		return firstValueFrom(source$);
-	}
-
 	startSendingProgress(nonce: string): void {
 		this.updateMessageUpload(nonce, (upload) => {
 			const attachments = upload.attachments.map((att) => {
@@ -503,8 +439,6 @@ class CloudUploadManager {
 			};
 		});
 	}
-
-	stopSendingProgress(_nonce: string): void {}
 
 	async cancelUpload(attachmentId: number): Promise<void> {
 		const attachment = this.attachmentIndex.get(attachmentId);
@@ -554,22 +488,20 @@ class CloudUploadManager {
 				const spoiler = file.name.startsWith('SPOILER_');
 				const canPreviewImage = shouldEagerlyPreviewLocalImage(file);
 				const canPreviewVideo = shouldEagerlyPreviewLocalVideo(file);
-				const previewURL = hasDOM && canPreviewImage ? URL.createObjectURL(file) : null;
-				if (hasDOM) {
-					try {
-						if (canPreviewImage && previewURL) {
-							const dims = await this.getImageDimensions(previewURL, file.name);
-							width = dims.width;
-							height = dims.height;
-						} else if (canPreviewVideo) {
-							const data = await this.getVideoData(file);
-							width = data.width;
-							height = data.height;
-							thumbnailURL = data.thumbnailURL;
-						}
-					} catch (error) {
-						logger.warn('Error getting file data:', error);
+				const previewURL = canPreviewImage ? URL.createObjectURL(file) : null;
+				try {
+					if (canPreviewImage && previewURL) {
+						const dims = await this.getImageDimensions(previewURL, file.name);
+						width = dims.width;
+						height = dims.height;
+					} else if (canPreviewVideo) {
+						const data = await this.getVideoData(file);
+						width = data.width;
+						height = data.height;
+						thumbnailURL = data.thumbnailURL;
 					}
+				} catch (error) {
+					logger.warn('Error getting file data:', error);
 				}
 				const flags = spoiler ? MessageAttachmentFlags.IS_SPOILER : 0;
 				const attachment: CloudAttachment = {
@@ -602,7 +534,6 @@ class CloudUploadManager {
 		width: number;
 		height: number;
 	}> {
-		if (!hasDOM) return {width: 0, height: 0};
 		const img = new Image();
 		let probeTimeoutId: ReturnType<typeof setTimeout> | null = null;
 		try {
@@ -632,7 +563,6 @@ class CloudUploadManager {
 		height: number;
 		thumbnailURL: string | null;
 	}> {
-		if (!hasDOM) return {width: 0, height: 0, thumbnailURL: null};
 		const url = URL.createObjectURL(file);
 		const video = document.createElement('video');
 		const canvas = document.createElement('canvas');

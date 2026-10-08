@@ -3,7 +3,7 @@
 const FULL_ROTATION_DEGREES = 360;
 const ROTATION_STEP_DEGREES = 90;
 
-export function normalizeRotationDegrees(degrees: number): number {
+function normalizeRotationDegrees(degrees: number): number {
 	const normalized = degrees % FULL_ROTATION_DEGREES;
 	if (Object.is(normalized, -0)) return 0;
 	return normalized < 0 ? normalized + FULL_ROTATION_DEGREES : normalized;

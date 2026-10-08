@@ -4,6 +4,7 @@ import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
 import {AdminGuildService} from '@app/api/admin/services/AdminGuildService';
 import {AdminUserService} from '@app/api/admin/services/AdminUserService';
+import {ReporterResolutionNotifier} from '@app/api/admin/services/ReporterResolutionNotifier';
 import {createApiContext} from '@app/api/CreateApiContext';
 import {getReportServiceInstance} from '@app/api/middleware/ServiceMiddleware';
 import {
@@ -12,6 +13,7 @@ import {
 	getGuildDiscoveryRepository,
 	getInviteRepository,
 } from '@app/api/middleware/ServiceSingletons';
+import {UserChannelService} from '@app/api/user/services/UserChannelService';
 import type {WorkerDependencies} from '@app/api/worker/WorkerDependencies';
 
 interface AdminBulkServices {
@@ -43,6 +45,22 @@ export function createAdminBulkServices(deps: WorkerDependencies): AdminBulkServ
 		stripe: deps.stripe,
 		reportService: getReportServiceInstance(),
 		storeEntitlementService: deps.storeEntitlementService,
+		reporterResolutionNotifier: new ReporterResolutionNotifier({
+			apiContext,
+			systemDm: {
+				channelService: deps.channelService,
+				userChannelService: new UserChannelService(
+					deps.userRepository,
+					deps.channelService,
+					deps.channelRepository,
+					deps.gatewayService,
+					deps.snowflakeService,
+					deps.userPermissionUtils,
+					deps.limitConfigService,
+				),
+				userCacheService: deps.userCacheService,
+			},
+		}),
 	});
 	const guildService = new AdminGuildService({
 		guildRepository: deps.guildRepository,

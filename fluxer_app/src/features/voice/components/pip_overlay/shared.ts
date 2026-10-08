@@ -8,7 +8,6 @@ import {
 	type DragBounds,
 	type FloatingPaneGeometry,
 	getCornerPoint as getCornerOffset,
-	getEffectiveWidthRange,
 	getDragBounds as getPaneDragBounds,
 	getPaneHeight,
 	type Point,
@@ -20,10 +19,10 @@ import type {PiPContent} from '@app/features/ui/state/PiP';
 import type {SpringOptions} from 'framer-motion';
 import type {Room} from 'livekit-client';
 
-export const PIP_ASPECT_RATIO = 16 / 9;
-export const PIP_MAX_WIDTH = 720;
-export const PIP_MIN_WIDTH = 240;
-export const EDGE_PADDING = 20;
+const PIP_ASPECT_RATIO = 16 / 9;
+const PIP_MAX_WIDTH = 720;
+const PIP_MIN_WIDTH = 240;
+const EDGE_PADDING = 20;
 
 export type {Corner, ResizeEdge};
 
@@ -77,14 +76,6 @@ export function clamp(value: number, min: number, max: number): number {
 
 export function getPiPHeight(width: number): number {
 	return getPaneHeight(width, PIP_ASPECT_RATIO);
-}
-
-export function getViewportMaxWidth(viewportWidth: number, viewportHeight: number): number {
-	return getEffectiveWidthRange(buildGeometry(viewportWidth, viewportHeight, getTitlebarHeight())).max;
-}
-
-export function getViewportMinWidth(viewportMaxWidth: number): number {
-	return Math.min(PIP_MIN_WIDTH, viewportMaxWidth);
 }
 
 export function clampPiPWidth(value: number, viewportWidth: number, viewportHeight: number): number {

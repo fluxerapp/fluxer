@@ -452,38 +452,36 @@ interface VoiceDeviceSettingsMenuProps {
 	onClose: () => void;
 }
 
-export const VoiceDeviceSettingsMenu: React.FC<VoiceDeviceSettingsMenuProps> = observer(
-	({devices, deviceType, onClose}) => {
-		const isInput = deviceType === 'input';
-		return (
-			<>
-				<MenuGroup data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-group">
-					<VoiceAudioDeviceSubmenu
-						devices={devices}
-						deviceType={deviceType}
-						data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-audio-device-submenu"
-					/>
-					{isInput && (
-						<VoiceInputProfileSubmenu data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-input-profile-submenu" />
-					)}
-				</MenuGroup>
-				<MenuGroup data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-group--2">
-					{isInput ? (
-						<VoiceInputVolumeItems data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-input-volume-items" />
-					) : (
-						<VoiceOutputVolumeItem data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-output-volume-item" />
-					)}
-				</MenuGroup>
-				<MenuGroup data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-group--3">
-					<VoiceSettingsMenuItem
-						onClose={onClose}
-						data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-settings-menu-item"
-					/>
-				</MenuGroup>
-			</>
-		);
-	},
-);
+const VoiceDeviceSettingsMenu: React.FC<VoiceDeviceSettingsMenuProps> = observer(({devices, deviceType, onClose}) => {
+	const isInput = deviceType === 'input';
+	return (
+		<>
+			<MenuGroup data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-group">
+				<VoiceAudioDeviceSubmenu
+					devices={devices}
+					deviceType={deviceType}
+					data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-audio-device-submenu"
+				/>
+				{isInput && (
+					<VoiceInputProfileSubmenu data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-input-profile-submenu" />
+				)}
+			</MenuGroup>
+			<MenuGroup data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-group--2">
+				{isInput ? (
+					<VoiceInputVolumeItems data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-input-volume-items" />
+				) : (
+					<VoiceOutputVolumeItem data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-output-volume-item" />
+				)}
+			</MenuGroup>
+			<MenuGroup data-flx="voice.voice-settings-menus.voice-device-settings-menu.menu-group--3">
+				<VoiceSettingsMenuItem
+					onClose={onClose}
+					data-flx="voice.voice-settings-menus.voice-device-settings-menu.voice-settings-menu-item"
+				/>
+			</MenuGroup>
+		</>
+	);
+});
 
 interface VoiceInputSettingsMenuProps {
 	inputDevices: Array<MediaDeviceInfo>;

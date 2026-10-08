@@ -5,23 +5,23 @@ import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18
 const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_deletion_cancelled": {
 		"subject": "Usunięcie Twojego konta {product_name} zostało anulowane",
-		"body": "Witaj {username},\n\nZaplanowane usunięcie Twojego konta {product_name} zostało anulowane. Twoje konto nie zostanie usunięte.\n\nJeśli masz pytania, skontaktuj się z {safety_email}.\n\n– Zespół {product_name}"
+		"body": "Witaj {username},\n\nZaplanowane usunięcie Twojego konta {product_name} zostało anulowane. Twoje konto nie zostanie usunięte.\n\n{safety_email, select, null {Jeśli masz pytania, skontaktuj się z administratorami tej instancji.} other {Jeśli masz pytania, skontaktuj się z {safety_email}.}}\n\n– Zespół {product_name}"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "Twoje konto {product_name} zostanie usunięte z powodu braku aktywności",
-		"body": "Witaj {username},\n\nTwoje konto {product_name} od dawna jest nieaktywne, dlatego zostało zaplanowane do trwałego usunięcia. Termin usunięcia:\n\n{deletionDate, date, full} o {deletionDate, time, short}{reason, select, null {} other {\n\nPowód: {reason}}}\n\nJeśli chcesz zachować konto, skontaktuj się z {safety_email} z tego adresu e-mail przed tym terminem.\n\n– Zespół {product_name}"
+		"body": "Witaj {username},\n\nTwoje konto {product_name} od dawna jest nieaktywne, dlatego zostało zaplanowane do trwałego usunięcia. Termin usunięcia:\n\n{deletionDate, date, full} o {deletionDate, time, short}{reason, select, null {} other {\n\nPowód: {reason}}}\n\n{safety_email, select, null {Jeśli chcesz zachować konto, skontaktuj się z administratorami tej instancji przed tym terminem.} other {Jeśli chcesz zachować konto, skontaktuj się z {safety_email} z tego adresu e-mail przed tym terminem.}}\n\n– Zespół {product_name}"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "Usunięcie Twojego konta {product_name} zostało zaplanowane",
-		"body": "Witaj {username},\n\nZgodnie z Twoją prośbą zaplanowaliśmy trwałe usunięcie konta {product_name}. Termin usunięcia:\n\n{deletionDate, date, full} o {deletionDate, time, short}{reason, select, null {} other {\n\nPowód: {reason}}}\n\nDo tego czasu Twoje konto jest zablokowane. Jeśli nie prosiłeś o to lub chcesz zachować konto, skontaktuj się z {safety_email} z tego adresu e-mail przed tym terminem.\n\n– Zespół {product_name}"
+		"body": "Witaj {username},\n\nZgodnie z Twoją prośbą zaplanowaliśmy trwałe usunięcie konta {product_name}. Termin usunięcia:\n\n{deletionDate, date, full} o {deletionDate, time, short}{reason, select, null {} other {\n\nPowód: {reason}}}\n\nDo tego czasu Twoje konto jest zablokowane. {safety_email, select, null {Jeśli nie prosiłeś o to lub chcesz zachować konto, skontaktuj się z administratorami tej instancji przed tym terminem.} other {Jeśli nie prosiłeś o to lub chcesz zachować konto, skontaktuj się z {safety_email} z tego adresu e-mail przed tym terminem.}}\n\n– Zespół {product_name}"
 	},
 	"account_scheduled_deletion": {
 		"subject": "Twoje konto {product_name} zostanie trwale usunięte",
-		"body": "Witaj {username},\n\nZaplanowaliśmy trwałe usunięcie Twojego konta {product_name} z powodu naruszenia naszych warunków korzystania z usługi lub zasad społeczności.\n\nZaplanowane usunięcie: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Powód: {reason}}\n}\n\nJest to poważna sankcja. Dane Twojego konta zostaną usunięte na stałe w zaplanowanym terminie.\n\nSprawdź:\n- Warunki korzystania z usługi: {termsUrl}\n- Zasady społeczności: {guidelinesUrl}\n\nProces odwoławczy:\nJeśli uważasz, że ta decyzja była błędna lub nieuzasadniona, masz 60 dni na złożenie odwołania. Wyślij e-mail na adres {appeals_email} z tego adresu e-mail.\n\nW swoim odwołaniu:\n- Wyjaśnij jasno, dlaczego uważasz, że decyzja była błędna lub nieuzasadniona\n- Przedstaw wszelkie istotne dowody lub kontekst\n\nCzłonek zespołu ds. bezpieczeństwa {product_name} rozpatrzy Twoje odwołanie i może wstrzymać usunięcie do czasu podjęcia ostatecznej decyzji.\n\n– Zespół ds. bezpieczeństwa {product_name}"
+		"body": "Witaj {username},\n\nZaplanowaliśmy trwałe usunięcie Twojego konta {product_name} z powodu naruszenia naszych warunków korzystania z usługi lub zasad społeczności.\n\nZaplanowane usunięcie: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Powód: {reason}\n\n}\n}Jest to poważna sankcja. Dane Twojego konta zostaną usunięte na stałe w zaplanowanym terminie.\n\n{legalLinks, select,\n  both {Sprawdź:\n- Warunki korzystania z usługi: {termsUrl}\n- Zasady społeczności: {guidelinesUrl}\n\n}\n  terms {Sprawdź:\n- Warunki korzystania z usługi: {termsUrl}\n\n}\n  guidelines {Sprawdź:\n- Zasady społeczności: {guidelinesUrl}\n\n}\n  other {}\n}Proces odwoławczy:\nJeśli uważasz, że ta decyzja była błędna lub nieuzasadniona, masz 60 dni na złożenie odwołania. {appeals_email, select, null {Skontaktuj się z administratorami tej instancji.} other {Wyślij e-mail na adres {appeals_email} z tego adresu e-mail.}}\n\nW swoim odwołaniu:\n- Wyjaśnij jasno, dlaczego uważasz, że decyzja była błędna lub nieuzasadniona\n- Przedstaw wszelkie istotne dowody lub kontekst\n\nCzłonek zespołu ds. bezpieczeństwa {product_name} rozpatrzy Twoje odwołanie i może wstrzymać usunięcie do czasu podjęcia ostatecznej decyzji.\n\n– Zespół ds. bezpieczeństwa {product_name}"
 	},
 	"account_temp_banned": {
 		"subject": "Twoje konto {product_name} zostało tymczasowo zawieszone",
-		"body": "Witaj {username},\n\nTwoje konto {product_name} zostało tymczasowo zawieszone za naruszenie naszych warunków korzystania z usługi lub zasad społeczności.\n\nCzas trwania: {durationHours, plural,\n  one {1 godzina} few {# godziny}\n  many {# godzin} other {# godziny}\n}\nZawieszone do: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Powód: {reason}}\n}\n\nW tym czasie nie będziesz mieć dostępu do swojego konta.\n\nSprawdź:\n- Warunki korzystania z usługi: {termsUrl}\n- Zasady społeczności: {guidelinesUrl}\n\nJeśli uważasz, że ta decyzja była błędna lub nieuzasadniona, możesz złożyć odwołanie. Wyślij e-mail na adres {appeals_email} z tego adresu e-mail i jasno wyjaśnij, dlaczego uważasz, że decyzja była błędna. Rozpatrzymy Twoje odwołanie i poinformujemy Cię o naszej decyzji.\n\n– Zespół ds. bezpieczeństwa {product_name}"
+		"body": "Witaj {username},\n\nTwoje konto {product_name} zostało tymczasowo zawieszone za naruszenie naszych warunków korzystania z usługi lub zasad społeczności.\n\nCzas trwania: {durationHours, plural,\n  one {1 godzina} few {# godziny}\n  many {# godzin} other {# godziny}\n}\nZawieszone do: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Powód: {reason}\n\n}\n}W tym czasie nie będziesz mieć dostępu do swojego konta.\n\n{legalLinks, select,\n  both {Sprawdź:\n- Warunki korzystania z usługi: {termsUrl}\n- Zasady społeczności: {guidelinesUrl}\n\n}\n  terms {Sprawdź:\n- Warunki korzystania z usługi: {termsUrl}\n\n}\n  guidelines {Sprawdź:\n- Zasady społeczności: {guidelinesUrl}\n\n}\n  other {}\n}Jeśli uważasz, że ta decyzja była błędna lub nieuzasadniona, możesz złożyć odwołanie. {appeals_email, select, null {Skontaktuj się z administratorami tej instancji i jasno wyjaśnij, dlaczego uważasz, że decyzja była błędna.} other {Wyślij e-mail na adres {appeals_email} z tego adresu e-mail i jasno wyjaśnij, dlaczego uważasz, że decyzja była błędna.}} Rozpatrzymy Twoje odwołanie i poinformujemy Cię o naszej decyzji.\n\n– Zespół ds. bezpieczeństwa {product_name}"
 	},
 	"donation_confirmation": {
 		"subject": "Dziękujemy za darowiznę dla {product_name}",
@@ -30,6 +30,10 @@ const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
 	"donation_magic_link": {
 		"subject": "Zarządzaj darowiznami dla {product_name}",
 		"body": "Witaj,\n\nKliknij poniższy link, aby przejść do portalu darczyńcy:\n\n{manageUrl}\n\nW portalu możesz zarządzać subskrypcjami, pobierać faktury i przeglądać historię swoich darowizn.\n\nTen link wygasa {expiresAt, date, full} o {expiresAt, time, short}.\n\nJeśli nie prosiłeś o ten link, możesz bezpiecznie zignorować tę wiadomość e-mail.\n\n– Zespół {product_name}"
+	},
+	"dsa_report_resolved": {
+		"subject": "Podjęliśmy decyzję w sprawie Twojego zgłoszenia w {product_name}",
+		"body": "Witaj,\n\nNasz zespół ds. bezpieczeństwa rozpatrzył Twoje zgłoszenie w ramach aktu o usługach cyfrowych (ID: {reportId}) i podjął decyzję.{hasComment, select, yes {\n\nOdpowiedź od zespołu ds. bezpieczeństwa:\n{publicComment}} other {}}\n\nNie udostępniamy szczegółów działań podjętych wobec konta innej osoby, ponieważ są to jej dane osobowe.\n\nJeśli nie zgadzasz się z tą decyzją, możesz bezpłatnie złożyć odwołanie w ciągu 60 dni. {appeals_email, select, null {Skontaktuj się z administratorami tej instancji, podaj ID zgłoszenia i wyjaśnij, dlaczego uważasz, że decyzja jest błędna.} other {Wyślij e-mail na adres {appeals_email} z tego adresu e-mail, podaj ID zgłoszenia i wyjaśnij, dlaczego uważasz, że decyzja jest błędna.}} Jeśli przebywasz w UE, możesz też skierować spór do certyfikowanego organu pozasądowego rozstrzygania sporów. Nic z tego nie wpływa na Twoje prawo do skierowania sprawy do sądu.\n\n– Zespół ds. bezpieczeństwa {product_name}"
 	},
 	"dsa_report_verification": {
 		"subject": "Zweryfikuj adres e-mail na potrzeby zgłoszenia DSA",
@@ -53,15 +57,15 @@ const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"gift_chargeback_notification": {
 		"subject": "Usunięto bonusy z wykorzystanego prezentu",
-		"body": "Witaj {username},\n\nKod podarunkowy wykorzystany na Twoim koncie został pierwotnie opłacony przez inną osobę. Płatność ta została następnie cofnięta (chargeback).\n\nZ tego powodu usunęliśmy bonusy, które zostały dodane do Twojego konta po wykorzystaniu prezentu.\n\nJeśli uważasz, że to pomyłka, skontaktuj się z naszym zespołem wsparcia i podaj wszelkie szczegóły dotyczące kodu podarunkowego oraz daty jego wykorzystania.\n\n– Zespół {product_name}"
+		"body": "Witaj {username},\n\nKod podarunkowy wykorzystany na Twoim koncie został pierwotnie opłacony przez inną osobę. Płatność ta została następnie cofnięta (chargeback).\n\nZ tego powodu usunęliśmy bonusy, które zostały dodane do Twojego konta po wykorzystaniu prezentu.\n\n{support_email, select, null {Jeśli uważasz, że to pomyłka, skontaktuj się z administratorami tej instancji i podaj wszelkie szczegóły dotyczące kodu podarunkowego oraz daty jego wykorzystania.} other {Jeśli uważasz, że to pomyłka, skontaktuj się z naszym zespołem wsparcia i podaj wszelkie szczegóły dotyczące kodu podarunkowego oraz daty jego wykorzystania.}}\n\n– Zespół {product_name}"
 	},
 	"harvest_completed": {
 		"subject": "Twój eksport danych z {product_name} jest gotowy do pobrania",
-		"body": "Witaj {username},\n\nTwój eksport danych jest gotowy.\n\nLink do pobrania:\n{downloadUrl}\n\nLiczba uwzględnionych wiadomości: {totalMessages, number}\nRozmiar pliku: {fileSizeMB, number} MB\n\nTen link wygasa {expiresAt, date, full} o {expiresAt, time, short}.\n\nJeśli nie prosiłeś o ten eksport, natychmiast zmień hasło i skontaktuj się z naszym zespołem wsparcia.\n\n– Zespół {product_name}"
+		"body": "Witaj {username},\n\nTwój eksport danych jest gotowy.\n\nLink do pobrania:\n{downloadUrl}\n\nLiczba uwzględnionych wiadomości: {totalMessages, number}\nRozmiar pliku: {fileSizeMB, number} MB\n\nTen link wygasa {expiresAt, date, full} o {expiresAt, time, short}.\n\n{support_email, select, null {Jeśli nie prosiłeś o ten eksport, natychmiast zmień hasło i skontaktuj się z administratorami tej instancji.} other {Jeśli nie prosiłeś o ten eksport, natychmiast zmień hasło i skontaktuj się z naszym zespołem wsparcia.}}\n\n– Zespół {product_name}"
 	},
 	"inactivity_warning": {
 		"subject": "Twoje konto {product_name} zostanie usunięte z powodu braku aktywności",
-		"body": "Witaj {username},\n\nNie odnotowaliśmy żadnej aktywności na Twoim koncie {product_name} od {lastActiveDate, date, full}.\n\nJeśli nie zalogujesz się do {deletionDate, date, full} o {deletionDate, time, short}, Twoje konto zostanie usunięte na stałe z powodu nieaktywności.\n\nZaloguj się tutaj:\n{loginUrl}\n\nJeśli ostatnio korzystałeś z {product_name}, natychmiast skontaktuj się z naszym zespołem wsparcia.\n\n– Zespół {product_name}"
+		"body": "Witaj {username},\n\nNie odnotowaliśmy żadnej aktywności na Twoim koncie {product_name} od {lastActiveDate, date, full}.\n\nJeśli nie zalogujesz się do {deletionDate, date, full} o {deletionDate, time, short}, Twoje konto zostanie usunięte na stałe z powodu nieaktywności.\n\nZaloguj się tutaj:\n{loginUrl}\n\n{support_email, select, null {Jeśli ostatnio korzystałeś z {product_name}, natychmiast skontaktuj się z administratorami tej instancji.} other {Jeśli ostatnio korzystałeś z {product_name}, natychmiast skontaktuj się z naszym zespołem wsparcia.}}\n\n– Zespół {product_name}"
 	},
 	"ip_authorization": {
 		"subject": "Autoryzuj logowanie z nowego adresu IP",
@@ -79,17 +83,17 @@ const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Zresetuj hasło w {product_name}",
 		"body": "Witaj {username},\n\nPoprosiłeś o zresetowanie hasła w {product_name}. Użyj poniższego linku, aby ustawić nowe hasło:\n\n{resetUrl}\n\nJeśli nie prosiłeś o to, możesz bezpiecznie zignorować tę wiadomość e-mail.\n\nTen link jest ważny przez 1 godzinę.\n\n– Zespół {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Twoja rejestracja w {product_name} została zatwierdzona",
-		"body": "Witaj {username},\n\nDobre wieści: Twoja rejestracja w {product_name} została zatwierdzona.\n\nMożesz teraz zalogować się do aplikacji {product_name} tutaj:\n{channelsUrl}\n\nWitaj w społeczności {product_name}.\n\n– Zespół {product_name}"
+	"report_received": {
+		"subject": "Otrzymaliśmy Twoje zgłoszenie w {product_name}",
+		"body": "Witaj,\n\nOtrzymaliśmy Twoje zgłoszenie w ramach aktu o usługach cyfrowych (DSA) dotyczące {targetKind, select, message {wiadomości} user {konta} guild {społeczności} other {treści}} w {product_name}.\n\nID zgłoszenia: {reportId}\n\nNasz zespół ds. bezpieczeństwa rozpatrzy Twoje zgłoszenie, a gdy podejmiemy decyzję, napiszemy do Ciebie na ten adres. Zachowaj tę wiadomość e-mail na przyszłość.\n\n– Zespół ds. bezpieczeństwa {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Twoje zgłoszenie w {product_name} zostało rozpatrzone",
-		"body": "Witaj {username},\n\nTwoje zgłoszenie (ID: {reportId}) zostało rozpatrzone przez nasz zespół ds. bezpieczeństwa.{hasComment, select, yes {\n\nOdpowiedź od zespołu ds. bezpieczeństwa:\n{publicComment}} other {}}\n\nDziękujemy za pomoc w utrzymaniu bezpieczeństwa {product_name} dla wszystkich. Traktujemy wszystkie zgłoszenia poważnie i doceniamy Twój wkład w społeczność.\n\nJeśli masz pytania lub wątpliwości dotyczące tej decyzji, skontaktuj się z {safety_email}.\n\n– Zespół ds. bezpieczeństwa {product_name}"
+		"body": "Witaj {username},\n\nTwoje zgłoszenie (ID: {reportId}) zostało rozpatrzone przez nasz zespół ds. bezpieczeństwa.{hasComment, select, yes {\n\nOdpowiedź od zespołu ds. bezpieczeństwa:\n{publicComment}} other {}}\n\nDziękujemy za pomoc w utrzymaniu bezpieczeństwa {product_name} dla wszystkich. Traktujemy wszystkie zgłoszenia poważnie i doceniamy Twój wkład w społeczność.\n\n{safety_email, select, null {Jeśli masz pytania lub wątpliwości dotyczące tej decyzji, skontaktuj się z administratorami tej instancji.} other {Jeśli masz pytania lub wątpliwości dotyczące tej decyzji, skontaktuj się z {safety_email}.}}\n\n– Zespół ds. bezpieczeństwa {product_name}"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "Twoje konto {product_name} zostanie trwale usunięte",
-		"body": "Witaj {username},\n\nZaplanowaliśmy trwałe usunięcie Twojego konta {product_name}.\n\nZaplanowane usunięcie: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Powód: {reason}}\n}\n\nJest to poważna sankcja. Dane Twojego konta zostaną usunięte na stałe w zaplanowanym terminie.\n\nJeśli uważasz, że ta decyzja była błędna, możesz złożyć odwołanie. Wyślij e-mail na adres {appeals_email} z tego adresu e-mail.\n\n– Zespół ds. bezpieczeństwa {product_name}"
+		"body": "Witaj {username},\n\nZaplanowaliśmy trwałe usunięcie Twojego konta {product_name}.\n\nZaplanowane usunięcie: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Powód: {reason}\n\n}\n}Jest to poważna sankcja. Dane Twojego konta zostaną usunięte na stałe w zaplanowanym terminie.\n\nJeśli uważasz, że ta decyzja była błędna, możesz złożyć odwołanie. {appeals_email, select, null {Skontaktuj się z administratorami tej instancji.} other {Wyślij e-mail na adres {appeals_email} z tego adresu e-mail.}}\n\n– Zespół ds. bezpieczeństwa {product_name}"
 	},
 	"self_deletion_scheduled": {
 		"subject": "Usunięcie Twojego konta {product_name} zostało zaplanowane",
@@ -97,7 +101,7 @@ const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"unban_notification": {
 		"subject": "Zawieszenie Twojego konta {product_name} zostało zniesione",
-		"body": "Witaj {username},\n\nDobre wieści: zawieszenie Twojego konta {product_name} zostało zniesione.\n\n{reason, select,\n  null {}\n  other {Powód: {reason}}\n}\n\nMożesz teraz ponownie się zalogować i kontynuować korzystanie z {product_name} jak zwykle.\n\n– Zespół ds. bezpieczeństwa {product_name}"
+		"body": "Witaj {username},\n\nDobre wieści: zawieszenie Twojego konta {product_name} zostało zniesione.\n\n{reason, select,\n  null {}\n  other {Powód: {reason}\n\n}\n}Możesz teraz ponownie się zalogować i kontynuować korzystanie z {product_name} jak zwykle.\n\n– Zespół ds. bezpieczeństwa {product_name}"
 	}
 });
 

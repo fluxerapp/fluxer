@@ -306,7 +306,7 @@ describe('ConfigLoader', () => {
 		const config = await loadConfig();
 
 		expect(config.services.api.port).toBe(8080);
-		expect(config.integrations.email.from_name).toBe('Fluxer');
+		expect(config.integrations.email.from_name).toBe('');
 		expect(config.internal.kv).toBe('redis://localhost:6379/0');
 		expect(config.s3?.force_path_style).toBe(false);
 		expect(config.services.api.storage_change_feed?.skip_buckets).toBeUndefined();
@@ -975,6 +975,60 @@ describe('ConfigLoader', () => {
 	test('rejects a public port outside the valid range', async () => {
 		stubMinimalEnv({FLUXER_PUBLIC_PORT: '70000'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_PUBLIC_PORT must be an integer between 1 and 65535');
+	});
+});
+
+describe('report retention settings', () => {
+	beforeEach(() => {
+		resetConfig();
+		clearFluxerEnv();
+	});
+
+	afterEach(() => {
+		resetConfig();
+		vi.unstubAllEnvs();
+	});
+
+	test('deletes reports for real after 365 days with no resolved-report rule by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.report_retention).toEqual({days: 365, resolved_days: null, dry_run: false});
+	});
+
+	test('reads both day settings and the dry run switch from the environment', async () => {
+		stubMinimalEnv({
+			FLUXER_REPORT_RETENTION_DAYS: '730',
+			FLUXER_RESOLVED_REPORT_RETENTION_DAYS: ' 90 ',
+			FLUXER_REPORT_RETENTION_DRY_RUN: 'TRUE',
+		});
+		const config = await loadConfig();
+		expect(config.report_retention).toEqual({days: 730, resolved_days: 90, dry_run: true});
+	});
+
+	test('an empty resolved-report setting leaves the rule off', async () => {
+		stubMinimalEnv({FLUXER_RESOLVED_REPORT_RETENTION_DAYS: '', FLUXER_REPORT_RETENTION_DRY_RUN: 'false'});
+		const config = await loadConfig();
+		expect(config.report_retention).toEqual({days: 365, resolved_days: null, dry_run: false});
+	});
+
+	test.each([
+		['FLUXER_REPORT_RETENTION_DAYS', '0', 'FLUXER_REPORT_RETENTION_DAYS must be an integer between 1 and 36500'],
+		['FLUXER_REPORT_RETENTION_DAYS', '36501', 'FLUXER_REPORT_RETENTION_DAYS must be an integer between 1 and 36500'],
+		['FLUXER_REPORT_RETENTION_DAYS', '1.5', 'FLUXER_REPORT_RETENTION_DAYS must be an integer, got "1.5"'],
+		[
+			'FLUXER_RESOLVED_REPORT_RETENTION_DAYS',
+			'0',
+			'FLUXER_RESOLVED_REPORT_RETENTION_DAYS must be an integer between 1 and 36500',
+		],
+		[
+			'FLUXER_RESOLVED_REPORT_RETENTION_DAYS',
+			'-30',
+			'FLUXER_RESOLVED_REPORT_RETENTION_DAYS must be an integer between 1 and 36500',
+		],
+		['FLUXER_REPORT_RETENTION_DRY_RUN', '1', 'FLUXER_REPORT_RETENTION_DRY_RUN must be true or false'],
+	])('refuses %s=%j', async (name, value, message) => {
+		stubMinimalEnv({[name]: value});
+		await expect(loadConfig()).rejects.toThrow(message);
 	});
 });
 

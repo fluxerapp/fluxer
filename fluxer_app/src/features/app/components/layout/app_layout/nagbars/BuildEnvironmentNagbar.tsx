@@ -4,7 +4,7 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import Config from '@app/features/app/config/Config';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import NagbarController from '@app/features/ui/state/Nagbar';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -31,7 +31,7 @@ export function BuildEnvironmentNagbar({isMobile}: {isMobile: boolean}) {
 				onDismiss={NagbarController.dismissBuildEnvironmentNagbar}
 				message={i18n._(BUILD_ENVIRONMENT_MESSAGE_DESCRIPTOR, {
 					releaseChannel: Config.PUBLIC_RELEASE_CHANNEL,
-					productName: PRODUCT_NAME,
+					productName: RuntimeConfig.productName,
 				})}
 				data-flx="app.app-layout.nagbars.build-environment-nagbar.nagbar-content"
 			/>

@@ -4,11 +4,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {CHANNEL_SETTINGS_LABEL_DESCRIPTOR} from '@app/features/user/components/settings_utils/ChannelSettingsConstants';
 import {msg} from '@lingui/core/macro';
 
-export type {
-	ChannelDetailsBottomSheetProps,
-	ChannelDetailsTab,
-	QuickActionButtonProps,
-} from '@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheetTypes';
+export type {QuickActionButtonProps} from '@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheetTypes';
 
 export const logger = new Logger('ChannelDetailsBottomSheet');
 export const DIRECT_MESSAGE_DESCRIPTOR = msg({

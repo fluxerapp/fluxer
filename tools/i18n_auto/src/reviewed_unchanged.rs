@@ -102,6 +102,34 @@ impl ReviewedUnchangedStore {
         self.dirty_locales.insert(locale.to_string());
     }
 
+    pub fn locales(&self) -> impl Iterator<Item = (&str, &[ReviewedUnchangedEntry])> {
+        self.data
+            .locales
+            .iter()
+            .map(|(locale, entries)| (locale.as_str(), entries.as_slice()))
+    }
+
+    pub fn retain_locale(
+        &mut self,
+        locale: &str,
+        mut keep: impl FnMut(&ReviewedUnchangedEntry) -> bool,
+    ) -> usize {
+        let Some(entries) = self.data.locales.get_mut(locale) else {
+            return 0;
+        };
+        let before = entries.len();
+        entries.retain(|entry| keep(entry));
+        let removed = before - entries.len();
+        if removed == 0 {
+            return 0;
+        }
+        if entries.is_empty() {
+            self.data.locales.remove(locale);
+        }
+        self.dirty_locales.insert(locale.to_string());
+        removed
+    }
+
     pub fn clear_locale(&mut self, locale: &str) {
         if self.data.locales.remove(locale).is_some() {
             self.dirty_locales.insert(locale.to_string());
@@ -254,6 +282,52 @@ mod tests {
         assert!(loaded.contains("de", None, "Audio"));
         assert!(loaded.contains("de", Some("button"), "Save"));
         assert!(!loaded.contains("de", Some("button"), "Audio"));
+    }
+
+    #[test]
+    fn retain_locale_drops_entries_and_saves_only_that_locale() {
+        let temp = tempdir().unwrap();
+        let path = temp.path().join("reviewed.json");
+        let mut store = ReviewedUnchangedStore::load(&path).unwrap();
+        store.mark("de", None, "Audio");
+        store.mark("de", None, "Gone");
+        store.mark("fr", None, "Gone");
+        store.save_if_dirty().unwrap();
+
+        let mut store = ReviewedUnchangedStore::load(&path).unwrap();
+        assert_eq!(store.retain_locale("de", |entry| entry.msgid != "Gone"), 1);
+        assert_eq!(store.retain_locale("de", |_| true), 0);
+        assert_eq!(store.retain_locale("nl", |_| false), 0);
+        store.save_if_dirty().unwrap();
+
+        let loaded = ReviewedUnchangedStore::load(&path).unwrap();
+        assert!(loaded.contains("de", None, "Audio"));
+        assert!(!loaded.contains("de", None, "Gone"));
+        assert!(loaded.contains("fr", None, "Gone"));
+    }
+
+    #[test]
+    fn retain_locale_removes_emptied_locale() {
+        let temp = tempdir().unwrap();
+        let path = temp.path().join("reviewed.json");
+        let mut store = ReviewedUnchangedStore::load(&path).unwrap();
+        store.mark("de", Some("button"), "Save");
+        store.mark("fr", None, "Avatar");
+        store.save_if_dirty().unwrap();
+
+        let mut store = ReviewedUnchangedStore::load(&path).unwrap();
+        assert_eq!(store.retain_locale("de", |_| false), 1);
+        store.save_if_dirty().unwrap();
+
+        let loaded = ReviewedUnchangedStore::load(&path).unwrap();
+        assert_eq!(
+            loaded
+                .locales()
+                .map(|(locale, _)| locale)
+                .collect::<Vec<_>>(),
+            vec!["fr"]
+        );
+        assert!(!fs::read_to_string(&path).unwrap().contains("\"de\""));
     }
 
     #[test]

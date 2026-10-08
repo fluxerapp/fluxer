@@ -25,15 +25,6 @@ export class GuildEmoji {
 		this.user = data.user;
 	}
 
-	withUpdates(updates: Partial<WireGuildEmoji>): GuildEmoji {
-		return new GuildEmoji(this.guildId, {
-			id: updates.id ?? this.id,
-			name: updates.name ?? this.name,
-			animated: updates.animated ?? this.animated,
-			user: updates.user ?? this.user,
-		});
-	}
-
 	equals(other: GuildEmoji): boolean {
 		return (
 			this.id === other.id &&

@@ -14,8 +14,7 @@
 	color: var(--text-primary-muted);
 }
 
-.guildOption,
-.guildValue {
+.guildOption {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--spacing-1);

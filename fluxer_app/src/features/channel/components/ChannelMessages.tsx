@@ -775,7 +775,13 @@ const CachedMessages = observer(function CachedMessages({
 });
 
 export const Messages = observer(function Messages(props: MessagesProps) {
-	return <CachedMessages key={MessagesState.cacheGeneration} {...props} />;
+	return (
+		<CachedMessages
+			key={MessagesState.cacheGeneration}
+			data-flx="channel.channel-messages.messages.cached-messages"
+			{...props}
+		/>
+	);
 });
 const JumpToPresentBar = observer(function JumpToPresentBar({
 	loadingMore,

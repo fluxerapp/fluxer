@@ -19,7 +19,7 @@ interface UseChannelHoverPreloadOptions {
 	preloadMessages?: boolean;
 }
 
-export function ensureMembersForCachedChannelMessages(channelId: string): void {
+function ensureMembersForCachedChannelMessages(channelId: string): void {
 	const messages = Messages.getCachedMessages(channelId);
 	if (!messages || messages.length === 0) {
 		return;

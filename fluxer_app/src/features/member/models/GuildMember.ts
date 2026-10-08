@@ -69,39 +69,6 @@ export class GuildMember {
 		return (this.profileFlags & GuildMemberProfileFlags.BANNER_UNSET) !== 0;
 	}
 
-	withUpdates(updates: Partial<GuildMemberData>): GuildMember {
-		return new GuildMember(
-			this.guildId,
-			{
-				user: updates.user ?? this.user.toJSON(),
-				nick: updates.nick ?? this.nick,
-				avatar: updates.avatar ?? this.avatar,
-				banner: updates.banner ?? this.banner,
-				accent_color: updates.accent_color ?? this.accentColor,
-				roles: updates.roles ?? Array.from(this.roles),
-				joined_at: updates.joined_at ?? this.joinedAt.toISOString(),
-				mute: updates.mute ?? this.mute,
-				deaf: updates.deaf ?? this.deaf,
-				communication_disabled_until:
-					updates.communication_disabled_until ?? this.communicationDisabledUntil?.toISOString() ?? null,
-				profile_flags: updates.profile_flags ?? this.profileFlags,
-				mention_flags: updates.mention_flags ?? this.mentionFlags,
-			},
-			{instanceId: this.instanceId, cacheUser: this.cacheUser},
-		);
-	}
-
-	withRoles(roles: Iterable<string>): GuildMember {
-		return new GuildMember(
-			this.guildId,
-			{
-				...this.toJSON(),
-				roles: Array.from(roles),
-			},
-			{instanceId: this.instanceId, cacheUser: this.cacheUser},
-		);
-	}
-
 	getSortedRoles(): ReadonlyArray<GuildRole> {
 		const guild = Guilds.getGuild(this.guildId);
 		if (!guild) {

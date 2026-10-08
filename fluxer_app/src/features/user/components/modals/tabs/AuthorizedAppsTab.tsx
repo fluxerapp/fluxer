@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {SettingsTabContainer, SettingsTabContent} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {getOAuth2ScopeDescription} from '@app/features/app/constants/AppConstants';
@@ -497,21 +496,3 @@ export const AuthorizedAppsContent = observer(function AuthorizedAppsContent({
 	}
 	return authorizedAppsContent;
 });
-
-const AuthorizedAppsTab = observer(function AuthorizedAppsTab() {
-	return (
-		<SettingsTabContainer data-flx="user.authorized-apps-tab.settings-tab-container">
-			<SettingsTabContent data-flx="user.authorized-apps-tab.settings-tab-content">
-				<SettingsSection
-					id={AUTHORIZED_APPS_TAB_ID}
-					title={<Trans>Authorized apps</Trans>}
-					data-flx="user.authorized-apps-tab.settings-section"
-				>
-					<AuthorizedAppsContent data-flx="user.authorized-apps-tab.authorized-apps-content" />
-				</SettingsSection>
-			</SettingsTabContent>
-		</SettingsTabContainer>
-	);
-});
-
-export default AuthorizedAppsTab;

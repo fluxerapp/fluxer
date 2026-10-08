@@ -7,6 +7,7 @@ use axum::{
     body::{Body, to_bytes},
     http::{HeaderMap, Method, Request, StatusCode, Uri, header},
     response::{IntoResponse, Response},
+    routing,
 };
 use fluxer_admin::{
     api::{generated::types as generated_types, types::LookupGuildResponse},
@@ -15,6 +16,10 @@ use fluxer_admin::{
     session,
 };
 use serde_json::{Value, json};
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicUsize, Ordering},
+};
 use tokio::net::TcpListener;
 use tower::ServiceExt;
 
@@ -246,6 +251,652 @@ async fn report_routes_keep_layout_and_fragment_contract() {
 }
 
 #[tokio::test]
+async fn report_list_reason_select_is_rendered_and_wired() {
+    let app = setup().await;
+    let unfiltered = get(&app, "/reports", &[]).await;
+    assert!(
+        unfiltered.contains(r#"<select id="reason" name="reason""#),
+        "{unfiltered}"
+    );
+    assert!(
+        unfiltered.contains(r#"<option value="" selected>All</option><option value="csam">Priority: Child sexual abuse material</option><option value="harassment">Harassment or bullying</option>"#),
+        "{unfiltered}"
+    );
+    assert!(unfiltered.contains("1800000000000000001"), "{unfiltered}");
+    assert!(!unfiltered.contains("1800000000000000003"), "{unfiltered}");
+
+    let filtered = get(&app, "/reports?reason=csam", &[]).await;
+    assert_full_layout(&filtered);
+    assert!(
+        filtered.contains(
+            r#"<option value="csam" selected>Priority: Child sexual abuse material</option>"#
+        ),
+        "{filtered}"
+    );
+    assert!(filtered.contains("1800000000000000003"), "{filtered}");
+    assert!(!filtered.contains("1800000000000000001"), "{filtered}");
+    assert!(
+        filtered.contains(r#"data-report-reason="csam""#),
+        "{filtered}"
+    );
+    assert!(
+        filtered.contains("Child sexual abuse material"),
+        "{filtered}"
+    );
+    let next = pagination_href(&filtered, "Next");
+    assert!(next.contains("reason=csam"), "{next}");
+    assert!(next.contains("page=1"), "{next}");
+
+    let second = get(&app, "/reports?reason=csam&page=1", &[]).await;
+    let previous = pagination_href(&second, "Previous");
+    assert!(previous.contains("reason=csam"), "{previous}");
+    assert!(previous.contains("page=0"), "{previous}");
+}
+
+#[tokio::test]
+async fn report_list_hides_the_reason_select_until_the_reason_list_loads() {
+    let calls = Arc::new(AtomicUsize::new(0));
+    let reasons_calls = calls.clone();
+    let api = Router::new()
+        .route(
+            "/admin/report-reasons",
+            routing::get(move || {
+                let calls = reasons_calls.clone();
+                async move {
+                    if calls.fetch_add(1, Ordering::SeqCst) == 0 {
+                        (StatusCode::NOT_FOUND, Json(json!({"code": "NOT_FOUND"}))).into_response()
+                    } else {
+                        json_response(report_reasons())
+                    }
+                }
+            }),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+
+    let without = get(&app, "/reports?reason=csam", &[]).await;
+    assert_full_layout(&without);
+    assert!(!without.contains(r#"name="reason""#), "{without}");
+    assert!(without.contains(r#"name="category""#), "{without}");
+    assert!(without.contains("1800000000000000003"), "{without}");
+    assert!(
+        pagination_href(&without, "Next").contains("reason=csam"),
+        "{without}"
+    );
+
+    for _ in 0..2 {
+        let with = get(&app, "/reports", &[]).await;
+        assert!(with.contains(r#"name="reason""#), "{with}");
+    }
+    assert_eq!(calls.load(Ordering::SeqCst), 2);
+}
+
+#[tokio::test]
+async fn report_detail_shows_answers_for_flow_reports_only() {
+    let app = setup().await;
+    let v2 = get(&app, "/reports/1800000000000000003", &[]).await;
+    assert_full_layout(&v2);
+    for expected in [
+        ">Reason<",
+        r#"data-report-reason="csam""#,
+        "Highest priority",
+        "Report Answers",
+        "Report message: Abusive or harmful content",
+        "What private information is shared?: Email address, Phone number",
+        r#"data-report-answer-step="profile_intro""#,
+        "Shown to the reporter in fr",
+        "Form revision",
+        "b7667e8b32c98c40",
+        "Surface: DSA form",
+        "Good-faith statement: Confirmed",
+    ] {
+        assert!(v2.contains(expected), "{expected}\n{v2}");
+    }
+    let v2_fragment = get(&app, "/reports/1800000000000000003/fragment", &[]).await;
+    assert_fragment(&v2_fragment);
+    assert!(v2_fragment.contains(">Reason<"), "{v2_fragment}");
+    assert!(v2_fragment.contains("Report Answers"), "{v2_fragment}");
+
+    let legacy = get(&app, "/reports/1800000000000000001", &[]).await;
+    assert!(!legacy.contains("Report Answers"), "{legacy}");
+    assert!(!legacy.contains(">Reason<"), "{legacy}");
+}
+
+#[tokio::test]
+async fn report_category_filter_keeps_an_unknown_value_and_labels_rows() {
+    let app = setup().await;
+    let unknown = get(&app, "/reports?category=future_value", &[]).await;
+    assert_full_layout(&unknown);
+    let select = select_markup(&unknown, "category");
+    assert!(
+        select.contains(r#"<option value="future_value" selected>future_value</option>"#),
+        "{select}"
+    );
+    assert!(
+        !select.contains(r#"<option value="" selected>"#),
+        "{select}"
+    );
+    assert!(
+        unknown.contains(r#"data-report-category="future_value""#),
+        "{unknown}"
+    );
+    assert!(unknown.contains("1800000000000000006"), "{unknown}");
+    let next = pagination_href(&unknown, "Next");
+    assert!(next.contains("category=future_value"), "{next}");
+
+    let known = get(&app, "/reports?category=spam", &[]).await;
+    let select = select_markup(&known, "category");
+    assert!(
+        select.contains(r#"<option value="spam" selected>Spam</option>"#),
+        "{select}"
+    );
+    assert!(!select.contains("Spam or Scam"), "{select}");
+    assert_eq!(select.matches("<option").count(), 19, "{select}");
+    assert!(known.contains(r#"data-report-category="other""#), "{known}");
+    assert!(known.contains(">Other<"), "{known}");
+
+    let detail = get(&app, "/reports/1800000000000000001", &[]).await;
+    assert!(
+        detail.contains(r#"data-report-category="other""#),
+        "{detail}"
+    );
+
+    for path in [
+        "/users/1500000000000000001/tabs/reports",
+        "/guilds/1600000000000000001/tabs/reports",
+    ] {
+        let tab = get(&app, path, &[]).await;
+        assert!(
+            tab.contains(r#"data-report-category="other""#),
+            "{path}\n{tab}"
+        );
+        assert!(tab.contains(">Other<"), "{path}\n{tab}");
+    }
+}
+
+#[tokio::test]
+async fn report_detail_renders_unknown_status_and_type_values() {
+    let app = setup().await;
+    let detail = get(&app, "/reports/1800000000000000005", &[]).await;
+    assert_full_layout(&detail);
+    assert!(detail.contains("Report Details"), "{detail}");
+    assert!(detail.contains("1800000000000000005"), "{detail}");
+    assert!(detail.contains(">Unknown<"), "{detail}");
+    let fragment = get(&app, "/reports/1800000000000000005/fragment", &[]).await;
+    assert_fragment(&fragment);
+    assert!(!fragment.contains("Failed to load report."), "{fragment}");
+    assert!(fragment.contains("1800000000000000005"), "{fragment}");
+}
+
+#[tokio::test]
+async fn message_tools_offer_delete_only_with_the_acl() {
+    let cases: [(&[&str], bool); 3] = [
+        (&["*"], true),
+        (&["message:lookup"], false),
+        (&["message:delete", "message:lookup"], true),
+    ];
+    for (acls, delete) in cases {
+        let app = setup_with_api(message_tools_api(acls)).await;
+        for path in [
+            "/messages?channel_id=1600000000000000101&message_id=1800000000000001001",
+            "/messages/browse-fragment?channel_id=1600000000000000101",
+        ] {
+            let body = get(&app, path, &[]).await;
+            assert!(body.contains("tools-image.png"), "{acls:?} {path}\n{body}");
+            assert_eq!(
+                body.contains(r#"class="delete-message-btn"#),
+                delete,
+                "{acls:?} {path}\n{body}"
+            );
+        }
+    }
+}
+
+#[tokio::test]
+async fn webhook_reports_show_the_webhook_and_filter_by_it() {
+    let app = setup().await;
+    let list = get(
+        &app,
+        &format!("/reports?reported_webhook_id={WEBHOOK_ID}"),
+        &[],
+    )
+    .await;
+    assert_full_layout(&list);
+    assert!(
+        list.contains(&format!(
+            r#"id="reported_webhook_id" name="reported_webhook_id" value="{WEBHOOK_ID}""#
+        )),
+        "{list}"
+    );
+    assert!(list.contains("1800000000000000004"), "{list}");
+    assert!(!list.contains("1800000000000000001"), "{list}");
+    assert!(
+        list.contains(&format!(r#"data-report-webhook="{WEBHOOK_ID}""#)),
+        "{list}"
+    );
+    assert!(list.contains("Harbor Bulletin"), "{list}");
+    assert!(list.contains(">Webhook<"), "{list}");
+    assert!(
+        list.contains(&format!("Webhook ID: {WEBHOOK_ID}")),
+        "{list}"
+    );
+    assert!(
+        list.contains("https://media.example.test/avatars/1700000000000000500/abc123"),
+        "{list}"
+    );
+    assert!(list.contains("Channel: general"), "{list}");
+    assert!(
+        list.contains(r#"href="/users/1500000000000000002""#),
+        "{list}"
+    );
+    assert!(list.contains("Webhook creator: HookOwner#0002"), "{list}");
+    assert!(!list.contains(&format!("/users/{WEBHOOK_ID}")), "{list}");
+    assert!(!list.contains("User unknown"), "{list}");
+    let next = pagination_href(&list, "Next");
+    assert!(
+        next.contains(&format!("reported_webhook_id={WEBHOOK_ID}")),
+        "{next}"
+    );
+
+    let unfiltered = get(&app, "/reports", &[]).await;
+    assert!(
+        unfiltered.contains(r#"id="reported_webhook_id" name="reported_webhook_id" value="""#),
+        "{unfiltered}"
+    );
+    assert!(!unfiltered.contains("1800000000000000004"), "{unfiltered}");
+
+    let detail = get(&app, "/reports/1800000000000000004", &[]).await;
+    let fragment = get(&app, "/reports/1800000000000000004/fragment", &[]).await;
+    assert_full_layout(&detail);
+    assert_fragment(&fragment);
+    for body in [&detail, &fragment] {
+        for expected in [
+            format!(r#"data-report-webhook="{WEBHOOK_ID}""#),
+            ">Webhook ID<".to_owned(),
+            format!(r#"href="/reports?reported_webhook_id={WEBHOOK_ID}""#),
+            "general".to_owned(),
+            format!(r#"data-message-webhook="{WEBHOOK_ID}""#),
+            "Webhook spam in drawer".to_owned(),
+            r#"href="/users/1500000000000000001""#.to_owned(),
+            ">Webhook Creator<".to_owned(),
+            r#"data-report-webhook-creator="1500000000000000002""#.to_owned(),
+            r#"href="/users/1500000000000000002""#.to_owned(),
+            "HookOwner#0002".to_owned(),
+            ">Configured Name<".to_owned(),
+            "Harbor Hook".to_owned(),
+            ">Configured Avatar<".to_owned(),
+            ">Webhook Type<".to_owned(),
+            ">Incoming<".to_owned(),
+            ">Webhook Created<".to_owned(),
+            "May 20, 2026, 8:30 AM UTC".to_owned(),
+        ] {
+            assert!(body.contains(&expected), "{expected}\n{body}");
+        }
+        assert!(!body.contains(&format!("/users/{WEBHOOK_ID}")), "{body}");
+        assert!(!body.contains("View Reported User"), "{body}");
+        for absent in [
+            ">Webhook Channel ID<",
+            ">Webhook Guild ID<",
+            ">Application ID<",
+            ">Webhook Record<",
+            "data-report-webhook-creator-deleted",
+            "data-report-webhook-creator-bot",
+        ] {
+            assert!(!body.contains(absent), "{absent}\n{body}");
+        }
+    }
+}
+
+fn evidence_report() -> Value {
+    json!({
+        "report_id": "1800000000000000010",
+        "reporter_id": "1500000000000000000",
+        "reporter_tag": "AdminUser#0001",
+        "reported_at": "2026-10-04T10:00:00.000Z",
+        "status": 0,
+        "report_type": 0,
+        "category": "spam",
+        "reason": "spam",
+        "reason_label": "Spam",
+        "reason_highest_priority": false,
+        "additional_info": null,
+        "reported_user_id": "1500000000000000001",
+        "reported_user_tag": "SearchedUser#0001",
+        "reported_user_username": "SearchedUser",
+        "reported_user_discriminator": "0001",
+        "reported_user_bot": true,
+        "reported_message_id": "1800000000000001001",
+        "reported_channel_id": "1600000000000000101",
+        "reported_profile_snapshot": {
+            "captured_at": "2026-10-04T10:00:00.000Z",
+            "user": {
+                "id": "1500000000000000001",
+                "username": "SearchedUser",
+                "discriminator": "1",
+                "global_name": "SearchedUser",
+                "bio": "Original bio",
+                "pronouns": null,
+                "avatar": {"hash": "avatar1", "url": "https://reports.example.test/avatar1?sig=abc"},
+                "banner": null
+            },
+            "member": null,
+            "guild": null
+        },
+        "message_context": [
+            {
+                "id": "1800000000000001001",
+                "channel_id": "1600000000000000101",
+                "channel_nsfw": false,
+                "guild_id": null,
+                "guild_nsfw_level": null,
+                "content": "Buy now",
+                "timestamp": "2026-10-04T10:00:00.000Z",
+                "attachments": [],
+                "author_id": "1500000000000000001",
+                "author_username": "SearchedUser",
+                "author_global_name": null,
+                "author_discriminator": "0001",
+                "author_avatar": null,
+                "webhook_id": null,
+                "author_bot": true,
+                "missing_attachments": [{
+                    "id": "1800000000000001002",
+                    "filename": "flyer.png",
+                    "nsfw": null,
+                    "content_type": "image/png",
+                    "width": 640,
+                    "height": 480,
+                    "size": 4096
+                }]
+            },
+            {
+                "id": "1800000000000000999",
+                "channel_id": "1600000000000000101",
+                "channel_nsfw": false,
+                "guild_id": null,
+                "guild_nsfw_level": null,
+                "content": "hello",
+                "timestamp": "2026-10-04T09:59:00.000Z",
+                "attachments": [],
+                "author_id": "1500000000000000000",
+                "author_username": "AdminUser",
+                "author_global_name": null,
+                "author_discriminator": "0001",
+                "author_avatar": null,
+                "webhook_id": null,
+                "author_bot": false,
+                "missing_attachments": []
+            }
+        ]
+    })
+}
+
+fn evidence_api() -> Router {
+    Router::new()
+        .route(
+            "/admin/reports",
+            routing::get(|| async {
+                json_response(json!({
+                    "reports": [evidence_report(), searched_report()],
+                    "total": 2,
+                    "offset": 0,
+                    "limit": 25
+                }))
+            }),
+        )
+        .route(
+            "/admin/reports/1800000000000000010",
+            routing::get(|| async { json_response(evidence_report()) }),
+        )
+        .fallback(mock_api)
+}
+
+#[tokio::test]
+async fn report_pages_show_bot_badges_missing_attachments_and_the_profile_snapshot() {
+    let app = setup_with_api(evidence_api()).await;
+    let list = get(&app, "/reports", &[]).await;
+    assert!(
+        list.contains(r#"data-report-user-bot="1500000000000000001""#),
+        "{list}"
+    );
+    assert_eq!(list.matches("data-report-user-bot").count(), 1, "{list}");
+
+    let detail = get(&app, "/reports/1800000000000000010", &[]).await;
+    assert_full_layout(&detail);
+    for expected in [
+        r#"data-report-user-bot="1500000000000000001""#,
+        r#"data-message-author-bot="1500000000000000001""#,
+        r#"data-missing-attachment="1800000000000001002""#,
+        "flyer.png was not preserved in the report snapshot",
+        "At Report Time",
+        "Original bio",
+        r#"src="https://reports.example.test/avatar1?sig=abc""#,
+        r#"data-snapshot-field="user.bio" data-snapshot-changed"#,
+        r#"data-snapshot-field="user.avatar" data-snapshot-changed"#,
+        r#"data-snapshot-field="user.username">"#,
+        r#"data-report-legal-hold="none""#,
+        "Include the public comment in the reporter notice",
+    ] {
+        assert!(detail.contains(expected), "{expected}\n{detail}");
+    }
+    assert_eq!(
+        detail.matches("data-message-author-bot").count(),
+        1,
+        "{detail}"
+    );
+
+    let fragment = get(&app, "/reports/1800000000000000010/fragment", &[]).await;
+    assert_fragment(&fragment);
+    assert!(
+        fragment.contains("flyer.png was not preserved in the report snapshot"),
+        "{fragment}"
+    );
+    assert!(!fragment.contains("At Report Time"), "{fragment}");
+
+    let legacy = get(&app, "/reports/1800000000000000001", &[]).await;
+    assert!(!legacy.contains("At Report Time"), "{legacy}");
+    assert!(!legacy.contains("data-report-user-bot"), "{legacy}");
+    assert!(!legacy.contains("data-missing-attachment"), "{legacy}");
+}
+
+#[tokio::test]
+async fn report_legal_hold_form_places_and_clears_the_hold() {
+    let received = Arc::new(Mutex::new(Vec::<Value>::new()));
+    let sink = received.clone();
+    let api = Router::new()
+        .route(
+            "/admin/reports/1800000000000000001/legal-hold",
+            routing::post(move |Json(body): Json<Value>| {
+                let sink = sink.clone();
+                async move {
+                    sink.lock().unwrap().push(body.clone());
+                    if body["legal_hold_reason"] == "rejected" {
+                        return (
+                            StatusCode::BAD_REQUEST,
+                            Json(json!({"code": "INVALID_FORM_BODY", "message": "Invalid"})),
+                        )
+                            .into_response();
+                    }
+                    json_response(json!({
+                        "report_id": "1800000000000000001",
+                        "legal_hold_until": body["legal_hold_until"],
+                        "legal_hold_reason": body["legal_hold_reason"]
+                    }))
+                }
+            }),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (headers, page) = get_with_headers(&app, "/reports/1800000000000000001", &[]).await;
+    let csrf_token = csrf_cookie(&headers)
+        .unwrap_or_else(|| panic!("report page did not set csrf_token cookie\n{page}"));
+    assert_form_has_csrf(
+        &page,
+        "/reports/1800000000000000001/legal-hold",
+        &csrf_token,
+    );
+    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
+    let post = |body: String| {
+        let app = &app;
+        let cookie = cookie.clone();
+        async move {
+            let (status, headers, text) = post_form_with_headers(
+                app,
+                "/reports/1800000000000000001/legal-hold",
+                &[
+                    ("HX-Request", "true"),
+                    ("HX-Target", "flash-container"),
+                    ("Cookie", &cookie),
+                ],
+                &body,
+            )
+            .await;
+            assert_eq!(status, StatusCode::NO_CONTENT, "{text}");
+            headers
+                .get("X-Fluxer-Admin-Toast")
+                .and_then(|value| value.to_str().ok())
+                .unwrap_or_else(|| panic!("missing toast header\n{text}"))
+                .to_owned()
+        }
+    };
+
+    let toast = post(format!(
+        "_csrf={csrf_token}&legal_hold_until=2027-01-31&legal_hold_reason=Court+order+42"
+    ))
+    .await;
+    assert!(toast.contains("success"), "{toast}");
+    assert!(
+        toast.contains("Legal hold placed until Jan 31, 2027, 11:59 PM UTC"),
+        "{toast}"
+    );
+    let toast = post(format!(
+        "_csrf={csrf_token}&clear=1&legal_hold_reason=ignored"
+    ))
+    .await;
+    assert!(toast.contains("Legal hold cleared"), "{toast}");
+    let toast = post(format!(
+        "_csrf={csrf_token}&legal_hold_until=2027-01-31&legal_hold_reason=rejected"
+    ))
+    .await;
+    assert!(toast.contains("error"), "{toast}");
+    assert!(toast.contains("The hold must end in the future"), "{toast}");
+    assert!(!toast.contains("needs a reason"), "{toast}");
+    let toast = post(format!(
+        "_csrf={csrf_token}&legal_hold_until=2020-01-01&legal_hold_reason=Past+date"
+    ))
+    .await;
+    assert!(toast.contains("error"), "{toast}");
+    assert!(toast.contains("The hold must end in the future"), "{toast}");
+    {
+        let received = received.lock().unwrap();
+        assert_eq!(
+            *received,
+            vec![
+                json!({"legal_hold_until": "2027-01-31T23:59:59.999Z", "legal_hold_reason": "Court order 42"}),
+                json!({"legal_hold_until": null, "legal_hold_reason": null}),
+                json!({"legal_hold_until": "2027-01-31T23:59:59.999Z", "legal_hold_reason": "rejected"}),
+            ]
+        );
+    }
+
+    let toast = post(format!(
+        "_csrf={csrf_token}&legal_hold_until=2027-01-31&legal_hold_reason=+"
+    ))
+    .await;
+    assert!(toast.contains("Give a reason for the hold"), "{toast}");
+    let toast = post(format!(
+        "_csrf={csrf_token}&legal_hold_until=soon&legal_hold_reason=x"
+    ))
+    .await;
+    assert!(toast.contains("Choose the date the hold ends"), "{toast}");
+    assert_eq!(received.lock().unwrap().len(), 3);
+}
+
+#[tokio::test]
+async fn instance_config_legal_form_round_trips_the_guidelines_url() {
+    let patches = Arc::new(Mutex::new(Vec::<Value>::new()));
+    let sink = patches.clone();
+    let configured = || {
+        let mut config = instance_config();
+        config["self_hosted"] = json!(true);
+        config["app_public"] = json!({
+            "branding": {"product_name": "Fluxer", "premium_product_name": "Premium"},
+            "setup": {"configured": true},
+            "legal": {
+                "terms_url": "https://example.com/terms",
+                "privacy_url": null,
+                "guidelines_url": "https://example.com/community-guidelines"
+            },
+            "registration": {"collect_date_of_birth": true}
+        });
+        config
+    };
+    let api = Router::new()
+        .route(
+            "/admin/instance/config",
+            routing::get(move || async move { json_response(configured()) }).patch(
+                move |Json(body): Json<Value>| {
+                    let sink = sink.clone();
+                    async move {
+                        sink.lock().unwrap().push(body);
+                        json_response(configured())
+                    }
+                },
+            ),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (headers, page) = get_with_headers(&app, "/instance-config", &[]).await;
+    assert!(
+        page.contains(r#"id="app_guidelines_url" name="app_guidelines_url" value="https://example.com/community-guidelines""#),
+        "{page}"
+    );
+    assert!(page.contains("Community Guidelines URL"), "{page}");
+    let csrf_token = csrf_cookie(&headers)
+        .unwrap_or_else(|| panic!("instance config page did not set csrf_token cookie\n{page}"));
+    assert_form_has_csrf(
+        &page,
+        "/instance-config?action=update_app_legal",
+        &csrf_token,
+    );
+    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
+    for form in [
+        format!(
+            "_csrf={csrf_token}&app_terms_url=https%3A%2F%2Fexample.com%2Fterms&app_privacy_url=&app_guidelines_url=https%3A%2F%2Frules.example.org%2Fguidelines"
+        ),
+        format!("_csrf={csrf_token}&app_terms_url=&app_privacy_url=&app_guidelines_url="),
+    ] {
+        let (status, _, body) = post_form_with_headers(
+            &app,
+            "/instance-config?action=update_app_legal",
+            &[("Cookie", &cookie)],
+            &form,
+        )
+        .await;
+        assert!(
+            status.is_redirection() || status.is_success(),
+            "{status} {body}"
+        );
+    }
+    let patches = patches.lock().unwrap();
+    assert_eq!(
+        *patches,
+        vec![
+            json!({"app_public": {"legal": {
+                "terms_url": "https://example.com/terms",
+                "privacy_url": null,
+                "guidelines_url": "https://rules.example.org/guidelines"
+            }}}),
+            json!({"app_public": {"legal": {
+                "terms_url": null,
+                "privacy_url": null,
+                "guidelines_url": null
+            }}}),
+        ]
+    );
+}
+
+#[tokio::test]
 async fn user_fragment_alias_returns_drawer_fragment() {
     let app = setup().await;
     let fragment = get(&app, "/users/1500000000000000001/fragment", &[]).await;
@@ -428,7 +1079,7 @@ async fn redirect_flash_actions_convert_to_htmx_toasts() {
                 &format!("{}; csrf_token={}", app.session_cookie, csrf_token),
             ),
         ],
-        &format!("_csrf={csrf_token}&resolution=done"),
+        &format!("_csrf={csrf_token}&resolution=no_violation&public_comment=done"),
     )
     .await;
     assert_eq!(status, StatusCode::NO_CONTENT, "{response_body}");
@@ -443,7 +1094,278 @@ async fn redirect_flash_actions_convert_to_htmx_toasts() {
         .and_then(|value| value.to_str().ok())
         .unwrap_or_else(|| panic!("missing toast header\n{response_body}"));
     assert!(toast.contains("success"), "{toast}");
-    assert!(toast.contains("Report resolved"), "{toast}");
+    assert!(toast.contains("Report resolved: No violation"), "{toast}");
+}
+
+#[tokio::test]
+async fn report_resolve_form_sends_the_chosen_resolution_and_refuses_none() {
+    let received = Arc::new(Mutex::new(Vec::<Value>::new()));
+    let sink = received.clone();
+    let api = Router::new()
+        .route(
+            "/admin/reports/1800000000000000001",
+            routing::patch(move |Json(body): Json<Value>| {
+                let sink = sink.clone();
+                async move {
+                    sink.lock().unwrap().push(body);
+                    json_response(json!({
+                        "report_id": "1800000000000000001",
+                        "status": 1,
+                        "resolved_at": "2026-05-26T12:03:00.000Z",
+                        "public_comment": null
+                    }))
+                }
+            })
+            .get(|| async { json_response(searched_report()) }),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (headers, page) = get_with_headers(&app, "/reports/1800000000000000001", &[]).await;
+    let csrf_token = csrf_cookie(&headers)
+        .unwrap_or_else(|| panic!("report page did not set csrf_token cookie\n{page}"));
+    assert_form_has_csrf(&page, "/reports/1800000000000000001/resolve", &csrf_token);
+    assert!(
+        page.contains(r#"<select id="resolution" name="resolution" required"#),
+        "{page}"
+    );
+    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
+    let post = |body: String| {
+        let app = &app;
+        let cookie = cookie.clone();
+        async move {
+            let (status, headers, text) = post_form_with_headers(
+                app,
+                "/reports/1800000000000000001/resolve",
+                &[
+                    ("HX-Request", "true"),
+                    ("HX-Target", "flash-container"),
+                    ("Cookie", &cookie),
+                ],
+                &body,
+            )
+            .await;
+            assert_eq!(status, StatusCode::NO_CONTENT, "{text}");
+            headers
+                .get("X-Fluxer-Admin-Toast")
+                .and_then(|value| value.to_str().ok())
+                .unwrap_or_else(|| panic!("missing toast header\n{text}"))
+                .to_owned()
+        }
+    };
+
+    for (value, label) in [
+        ("actioned", "Action taken"),
+        ("no_violation", "No violation"),
+        ("duplicate", "Duplicate"),
+    ] {
+        let toast = post(format!("_csrf={csrf_token}&resolution={value}")).await;
+        assert!(toast.contains("success"), "{toast}");
+        assert!(
+            toast.contains(&format!("Report resolved: {label}")),
+            "{toast}"
+        );
+    }
+    for refused in [
+        format!("_csrf={csrf_token}&public_comment=Looks+fine"),
+        format!("_csrf={csrf_token}&resolution=&public_comment=Looks+fine"),
+        format!("_csrf={csrf_token}&resolution=auto_resolved"),
+    ] {
+        let toast = post(refused).await;
+        assert!(toast.contains("error"), "{toast}");
+        assert!(toast.contains("Choose a resolution"), "{toast}");
+    }
+    let toast = post(format!(
+        "_csrf={csrf_token}&resolution=actioned&public_comment=Removed&notify_reporter_present=1"
+    ))
+    .await;
+    assert!(toast.contains("Report resolved: Action taken"), "{toast}");
+    let received = received.lock().unwrap();
+    assert_eq!(
+        *received,
+        vec![
+            json!({"status": "resolved", "resolution": "actioned", "notify_reporter": true}),
+            json!({"status": "resolved", "resolution": "no_violation", "notify_reporter": true}),
+            json!({"status": "resolved", "resolution": "duplicate", "notify_reporter": true}),
+            json!({"status": "resolved", "resolution": "actioned", "public_comment": "Removed", "notify_reporter": false}),
+        ]
+    );
+}
+
+#[tokio::test]
+async fn report_delete_form_confirms_sends_the_reason_and_toasts_a_held_report() {
+    let received = Arc::new(Mutex::new(Vec::<Option<String>>::new()));
+    let sink = received.clone();
+    let api = Router::new()
+        .route(
+            "/admin/reports/1800000000000000001",
+            routing::delete(move |headers: HeaderMap| {
+                let sink = sink.clone();
+                async move {
+                    let reason = headers
+                        .get("X-Audit-Log-Reason")
+                        .and_then(|value| value.to_str().ok())
+                        .map(str::to_owned);
+                    sink.lock().unwrap().push(reason.clone());
+                    if reason.as_deref() == Some("held") {
+                        return (
+                            StatusCode::CONFLICT,
+                            Json(json!({
+                                "code": "REPORT_UNDER_LEGAL_HOLD",
+                                "message": "This report is under a legal hold and can't be deleted."
+                            })),
+                        )
+                            .into_response();
+                    }
+                    StatusCode::NO_CONTENT.into_response()
+                }
+            })
+            .get(|| async { json_response(searched_report()) }),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (headers, page) = get_with_headers(&app, "/reports/1800000000000000001", &[]).await;
+    let csrf_token = csrf_cookie(&headers)
+        .unwrap_or_else(|| panic!("report page did not set csrf_token cookie\n{page}"));
+    assert_form_has_csrf(&page, "/reports/1800000000000000001/delete", &csrf_token);
+    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
+    let post = |body: String| {
+        let app = &app;
+        let cookie = cookie.clone();
+        async move {
+            post_form_with_headers(
+                app,
+                "/reports/1800000000000000001/delete",
+                &[
+                    ("HX-Request", "true"),
+                    ("HX-Target", "flash-container"),
+                    ("Cookie", &cookie),
+                ],
+                &body,
+            )
+            .await
+        }
+    };
+    let toast = |headers: &HeaderMap| {
+        headers
+            .get("X-Fluxer-Admin-Toast")
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or_else(|| panic!("missing toast header {headers:?}"))
+            .to_owned()
+    };
+
+    let (status, headers, text) = post(format!(
+        "_csrf={csrf_token}&audit_log_reason=Erasure+request"
+    ))
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT, "{text}");
+    let message = toast(&headers);
+    assert!(message.contains("error"), "{message}");
+    assert!(
+        message.contains("Confirm that the report should be deleted"),
+        "{message}"
+    );
+    assert!(headers.get("HX-Redirect").is_none(), "{headers:?}");
+
+    let (status, headers, text) = post(format!(
+        "_csrf={csrf_token}&confirm=true&audit_log_reason=Erasure+request"
+    ))
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT, "{text}");
+    assert_eq!(
+        headers.get("HX-Redirect").and_then(|v| v.to_str().ok()),
+        Some("/reports"),
+        "{headers:?}"
+    );
+    let message = toast(&headers);
+    assert!(message.contains("success"), "{message}");
+    assert!(message.contains("Report deleted"), "{message}");
+    assert!(
+        headers
+            .get_all(header::SET_COOKIE)
+            .iter()
+            .any(|value| value.to_str().is_ok_and(|v| v.starts_with("flash="))),
+        "{headers:?}"
+    );
+
+    let (status, headers, text) = post(format!(
+        "_csrf={csrf_token}&confirm=true&audit_log_reason=held"
+    ))
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT, "{text}");
+    assert!(headers.get("HX-Redirect").is_none(), "{headers:?}");
+    let message = toast(&headers);
+    assert!(message.contains("error"), "{message}");
+    assert!(
+        message.contains("The report is under a legal hold. Clear the hold before deleting it."),
+        "{message}"
+    );
+
+    let (status, headers, text) = post_form_with_headers(
+        &app,
+        "/reports/1800000000000000001/delete",
+        &[("Cookie", &cookie)],
+        &format!("_csrf={csrf_token}&confirm=true&audit_log_reason=+"),
+    )
+    .await;
+    assert!(status.is_redirection(), "{status} {text}");
+    assert_eq!(
+        headers.get(header::LOCATION).and_then(|v| v.to_str().ok()),
+        Some("/reports"),
+        "{headers:?}"
+    );
+
+    assert_eq!(
+        *received.lock().unwrap(),
+        vec![
+            Some("Erasure request".to_owned()),
+            Some("held".to_owned()),
+            None
+        ]
+    );
+}
+
+#[tokio::test]
+async fn report_actions_toast_the_server_message_and_refresh_the_detail() {
+    let app = setup().await;
+    let page = get(&app, "/reports/1800000000000000001", &[]).await;
+    assert_full_layout(&page);
+    assert!(page.contains(r#"id="report-detail""#), "{page}");
+    for action in ["resolve", "legal-hold"] {
+        let form = page
+            .split("<form ")
+            .find(|form| {
+                form.contains(&format!(
+                    r#"action="/reports/1800000000000000001/{action}""#
+                ))
+            })
+            .unwrap_or_else(|| panic!("no {action} form\n{page}"));
+        let tag = &form[..form.find('>').unwrap_or(form.len())];
+        assert!(
+            tag.contains(r##"data-admin-refresh-on-success="#report-detail""##),
+            "{tag}"
+        );
+        assert!(!tag.contains("data-admin-result-form"), "{tag}");
+    }
+    let before_swap = page
+        .split("htmx:beforeSwap")
+        .nth(1)
+        .and_then(|rest| rest.split("htmx:afterRequest").next())
+        .unwrap_or_else(|| panic!("no beforeSwap handler\n{page}"));
+    let header = before_swap
+        .find("parseAdminToastHeader(xhr)")
+        .unwrap_or_else(|| panic!("beforeSwap ignores the toast header\n{before_swap}"));
+    let body = before_swap
+        .find("parseFlashResponse(")
+        .unwrap_or_else(|| panic!("beforeSwap has no body fallback\n{before_swap}"));
+    assert!(header < body, "{before_swap}");
+    assert!(
+        before_swap.contains("refreshAfterSuccess("),
+        "{before_swap}"
+    );
+    assert!(
+        page.contains("if (status >= 400) level = 'error';"),
+        "{page}"
+    );
 }
 
 #[tokio::test]
@@ -676,6 +1598,24 @@ async fn rendered_heads_never_reference_the_static_cdn_for_fonts() {
     );
 }
 
+#[tokio::test]
+async fn the_csp_allows_images_from_the_configured_reports_bucket() {
+    let app = setup().await;
+    let (headers, _) = get_with_headers(&app, "/reports/1800000000000000001", &[]).await;
+    let csp = headers
+        .get(header::CONTENT_SECURITY_POLICY)
+        .and_then(|value| value.to_str().ok())
+        .expect("missing CSP");
+    assert!(
+        csp.contains(
+            "img-src 'self' data: blob: https://static.example.test https://media.example.test \
+             https://reports.example.test;"
+        ),
+        "img-src was {csp}"
+    );
+    assert!(!csp.contains("vultrobjects"), "{csp}");
+}
+
 struct SearchCase {
     path: &'static str,
     result_target: &'static str,
@@ -691,7 +1631,11 @@ struct TabCase {
 }
 
 async fn setup() -> TestApp {
-    let api_endpoint = spawn_mock_api().await;
+    setup_with_api(Router::new().fallback(mock_api)).await
+}
+
+async fn setup_with_api(api: Router) -> TestApp {
+    let api_endpoint = spawn_mock_api(api).await;
     let router = build_router(test_config(api_endpoint));
     let session_value = session::create_session("1500000000000000000", "test-token", SECRET_KEY);
     TestApp {
@@ -817,13 +1761,32 @@ fn assert_fragment(body: &str) {
     assert!(!body.contains(r#"id="main-content""#), "{body}");
 }
 
-async fn spawn_mock_api() -> String {
+fn select_markup<'a>(body: &'a str, name: &str) -> &'a str {
+    let start = body
+        .find(&format!(r#"<select id="{name}""#))
+        .unwrap_or_else(|| panic!("missing {name} select\n{body}"));
+    let end = start + body[start..].find("</select>").unwrap();
+    &body[start..end]
+}
+
+fn pagination_href(body: &str, label: &str) -> String {
+    let end = body
+        .find(&format!("{label} &"))
+        .or_else(|| body.find(&format!("&larr; {label}")))
+        .unwrap_or_else(|| panic!("missing {label} link\n{body}"));
+    let start = body[..end]
+        .rfind("href=\"")
+        .unwrap_or_else(|| panic!("missing {label} href\n{body}"))
+        + "href=\"".len();
+    let href = &body[start..];
+    href[..href.find('"').unwrap()].replace("&amp;", "&")
+}
+
+async fn spawn_mock_api(api: Router) -> String {
     let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
     let addr = listener.local_addr().unwrap();
     tokio::spawn(async move {
-        axum::serve(listener, Router::new().fallback(mock_api))
-            .await
-            .unwrap();
+        axum::serve(listener, api).await.unwrap();
     });
     format!("http://{addr}")
 }
@@ -862,10 +1825,46 @@ async fn mock_api(method: Method, uri: Uri) -> Response {
         (Method::GET, "/admin/applications") => {
             json_response(json!({ "applications": [searched_application()] }))
         }
+        (Method::GET, "/admin/reports")
+            if query_value(&uri, "reason").as_deref() == Some("csam") =>
+        {
+            json_response(json!({
+                "reports": [flow_report()],
+                "total": 60,
+                "offset": 0,
+                "limit": 25
+            }))
+        }
+        (Method::GET, "/admin/reports")
+            if query_value(&uri, "category").as_deref() == Some("future_value") =>
+        {
+            json_response(json!({
+                "reports": [future_category_report()],
+                "total": 60,
+                "offset": 0,
+                "limit": 25
+            }))
+        }
+        (Method::GET, "/admin/reports")
+            if query_value(&uri, "reported_webhook_id").as_deref() == Some(WEBHOOK_ID) =>
+        {
+            json_response(json!({
+                "reports": [webhook_report()],
+                "total": 60,
+                "offset": 0,
+                "limit": 25
+            }))
+        }
         (Method::GET, "/admin/reports") => json_response(
             json!({ "reports": [searched_report()], "total": 1, "offset": 0, "limit": 25 }),
         ),
+        (Method::GET, "/admin/report-reasons") => json_response(report_reasons()),
         (Method::GET, "/admin/reports/1800000000000000001") => json_response(searched_report()),
+        (Method::GET, "/admin/reports/1800000000000000003") => json_response(flow_report()),
+        (Method::GET, "/admin/reports/1800000000000000004") => json_response(webhook_report()),
+        (Method::GET, "/admin/reports/1800000000000000005") => {
+            json_response(future_status_report())
+        }
         (Method::GET, "/admin/reports/1800000000000000002") => {
             json_response(searched_message_report())
         }
@@ -915,6 +1914,14 @@ async fn mock_api(method: Method, uri: Uri) -> Response {
         }
         _ => (StatusCode::NOT_FOUND, Json(json!({ "error": "not found" }))).into_response(),
     }
+}
+
+fn query_value(uri: &Uri, name: &str) -> Option<String> {
+    uri.query().and_then(|query| {
+        url::form_urlencoded::parse(query.as_bytes())
+            .find(|(key, _)| key == name)
+            .map(|(_, value)| value.into_owned())
+    })
 }
 
 fn json_response(value: Value) -> Response {
@@ -1106,6 +2113,221 @@ fn searched_report() -> Value {
         "additional_info": "Mock report details",
         "reported_user_id": "1500000000000000001",
         "reported_user_tag": "SearchedUser#0001"
+    })
+}
+
+fn message_tools_api(acls: &[&str]) -> Router {
+    let mut admin = admin_user();
+    admin["acls"] = json!(acls);
+    let message = json!({
+        "id": "1800000000000001001",
+        "channel_id": "1600000000000000101",
+        "channel_name": "general",
+        "channel_nsfw": false,
+        "guild_id": "1600000000000000001",
+        "guild_name": "Guild",
+        "guild_nsfw_level": 0,
+        "author_id": "1500000000000000001",
+        "author_username": "SearchedUser",
+        "author_global_name": null,
+        "author_discriminator": "0001",
+        "author_avatar": null,
+        "content": "",
+        "timestamp": "2026-10-04T10:00:00.000Z",
+        "attachments": [{
+            "id": "1800000000000001002",
+            "filename": "tools-image.png",
+            "url": "https://media.example.test/attachments/tools-image.png",
+            "nsfw": false,
+            "content_type": "image/png",
+            "width": 64,
+            "height": 64,
+            "size": 4096
+        }]
+    });
+    let lookup = json!({"messages": [message.clone()], "message_id": "1800000000000001001"});
+    let browse = json!({"messages": [message], "has_more": false});
+    Router::new()
+        .route(
+            "/admin/users/@me",
+            routing::get(move || {
+                let admin = admin.clone();
+                async move { json_response(json!({ "user": admin })) }
+            }),
+        )
+        .route(
+            "/admin/channels/1600000000000000101/messages/1800000000000001001",
+            routing::get(move || {
+                let lookup = lookup.clone();
+                async move { json_response(lookup) }
+            }),
+        )
+        .route(
+            "/admin/channels/1600000000000000101/messages",
+            routing::get(move || {
+                let browse = browse.clone();
+                async move { json_response(browse) }
+            }),
+        )
+        .fallback(mock_api)
+}
+
+fn future_category_report() -> Value {
+    let mut report = searched_report();
+    report["report_id"] = json!("1800000000000000006");
+    report["category"] = json!("future_value");
+    report
+}
+
+fn future_status_report() -> Value {
+    let mut report = searched_report();
+    report["report_id"] = json!("1800000000000000005");
+    report["status"] = json!(7);
+    report["report_type"] = json!(9);
+    report
+}
+
+fn report_reasons() -> Value {
+    json!({
+        "reasons": [
+            {
+                "key": "csam",
+                "label": "Child sexual abuse material",
+                "highest_priority": true,
+                "legacy_category_message": "child_safety",
+                "legacy_category_user": "child_safety",
+                "legacy_category_guild": "child_safety"
+            },
+            {
+                "key": "harassment",
+                "label": "Harassment or bullying",
+                "highest_priority": false,
+                "legacy_category_message": "harassment",
+                "legacy_category_user": "harassment",
+                "legacy_category_guild": "harassment"
+            }
+        ]
+    })
+}
+
+fn flow_report() -> Value {
+    json!({
+        "report_id": "1800000000000000003",
+        "reporter_id": "1500000000000000000",
+        "reporter_tag": "AdminUser#0001",
+        "reported_at": "2026-05-26T12:00:00.000Z",
+        "status": 0,
+        "report_type": 0,
+        "category": "child_safety",
+        "additional_info": "Mock flow report details",
+        "reported_user_id": "1500000000000000001",
+        "reported_user_tag": "SearchedUser#0001",
+        "reported_message_id": "1800000000000001001",
+        "reported_channel_id": "1600000000000000101",
+        "reason": "csam",
+        "reason_label": "Child sexual abuse material",
+        "reason_highest_priority": true,
+        "reporter_good_faith_confirmed": true,
+        "flow": {
+            "revision_hash": "b7667e8b32c98c40",
+            "surface": "dsa",
+            "locale": "fr",
+            "steps": [
+                {
+                    "screen_id": "root_message",
+                    "screen_title": "Report message",
+                    "option_id": "abuse",
+                    "option_label": "Abusive or harmful content",
+                    "items": []
+                },
+                {
+                    "screen_id": "private_info",
+                    "screen_title": "What private information is shared?",
+                    "option_id": null,
+                    "option_label": null,
+                    "items": [
+                        {"id": "email", "label": "Email address"},
+                        {"id": "phone", "label": "Phone number"}
+                    ]
+                },
+                {
+                    "screen_id": "profile_intro",
+                    "screen_title": "Report profile",
+                    "option_id": null,
+                    "option_label": null,
+                    "items": []
+                }
+            ]
+        }
+    })
+}
+
+const WEBHOOK_ID: &str = "1700000000000000500";
+
+fn webhook_report() -> Value {
+    json!({
+        "report_id": "1800000000000000004",
+        "reporter_id": "1500000000000000000",
+        "reporter_tag": "AdminUser#0001",
+        "reported_at": "2026-05-26T12:00:00.000Z",
+        "status": 0,
+        "report_type": 0,
+        "category": "spam",
+        "additional_info": null,
+        "reported_user_id": null,
+        "reported_user_tag": null,
+        "reported_webhook_id": WEBHOOK_ID,
+        "reported_webhook_name": "Harbor Bulletin",
+        "reported_webhook_avatar_hash": "abc123",
+        "reported_webhook_default_name": "Harbor Hook",
+        "reported_webhook_default_avatar_hash": null,
+        "reported_webhook_type": 1,
+        "reported_webhook_application_id": null,
+        "reported_webhook_channel_id": "1600000000000000101",
+        "reported_webhook_guild_id": "1600000000000000001",
+        "reported_webhook_created_at": "2026-05-20T08:30:00.000Z",
+        "reported_webhook_creator_id": "1500000000000000002",
+        "reported_webhook_creator_tag": "HookOwner#0002",
+        "reported_webhook_creator_username": "HookOwner",
+        "reported_webhook_creator_global_name": null,
+        "reported_webhook_creator_discriminator": "0002",
+        "reported_webhook_creator_avatar_hash": null,
+        "reported_message_id": "1800000000000001004",
+        "reported_channel_id": "1600000000000000101",
+        "reported_channel_name": "general",
+        "reported_guild_id": "1600000000000000001",
+        "reported_guild_name": "Searched Guild",
+        "reason": "spam",
+        "reason_label": "Spam",
+        "reason_highest_priority": false,
+        "message_context": [
+            {
+                "id": "1800000000000001003",
+                "content": "Member message before the webhook",
+                "timestamp": "2026-05-26T12:00:30.000Z",
+                "author_id": "1500000000000000001",
+                "author_username": "SearchedUser",
+                "author_global_name": null,
+                "author_discriminator": "0001",
+                "author_avatar": null,
+                "webhook_id": null,
+                "channel_id": "1600000000000000101",
+                "attachments": []
+            },
+            {
+                "id": "1800000000000001004",
+                "content": "Webhook spam in drawer",
+                "timestamp": "2026-05-26T12:01:00.000Z",
+                "author_id": WEBHOOK_ID,
+                "author_username": "Harbor Bulletin",
+                "author_global_name": null,
+                "author_discriminator": "0000",
+                "author_avatar": "abc123",
+                "webhook_id": WEBHOOK_ID,
+                "channel_id": "1600000000000000101",
+                "attachments": []
+            }
+        ]
     })
 }
 
@@ -1305,6 +2527,7 @@ fn test_config(api_endpoint: String) -> AdminConfig {
         api_endpoint,
         media_endpoint: "https://media.example.test".to_owned(),
         static_cdn_endpoint: "https://static.example.test".to_owned(),
+        reports_bucket_origin: "https://reports.example.test".to_owned(),
         admin_endpoint: "https://admin.example.test".to_owned(),
         web_app_endpoint: "https://app.example.test".to_owned(),
         oauth_client_id: "admin-client".to_owned(),

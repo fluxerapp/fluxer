@@ -11,7 +11,12 @@ const logger = new Logger('AccountSwitcherModalCommands');
 export function openAccountSwitcherModal(props: AccountSwitcherModalProps, key: string | null): void {
 	void loadLazyModule(() => import('@app/features/auth/components/accounts/AccountSwitcherModal'))
 		.then(({default: AccountSwitcherModal}) => {
-			const render = modal(() => <AccountSwitcherModal {...props} />);
+			const render = modal(() => (
+				<AccountSwitcherModal
+					data-flx="auth.account-switcher-modal-commands.open-account-switcher-modal.account-switcher-modal"
+					{...props}
+				/>
+			));
 			if (key === null) {
 				ModalCommands.push(render);
 				return;

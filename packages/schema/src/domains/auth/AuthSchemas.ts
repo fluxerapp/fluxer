@@ -232,11 +232,7 @@ export const RecoverAccountResponse = z.union([
 
 export type RecoverAccountResponse = z.infer<typeof RecoverAccountResponse>;
 
-export const AuthRegisterResponse = z.union([
-	AuthTokenWithUserIdResponse,
-	AuthMfaRequiredResponse,
-	AuthRegistrationPendingApprovalResponse,
-]);
+export const AuthRegisterResponse = z.union([AuthTokenWithUserIdResponse, AuthRegistrationPendingApprovalResponse]);
 
 export type AuthRegisterResponse = z.infer<typeof AuthRegisterResponse>;
 

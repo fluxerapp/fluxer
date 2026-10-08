@@ -4,16 +4,13 @@
 -typing([eqwalizer]).
 
 -export([
-    get_member_groups/2,
     get_counts/2,
-    get_items_in_range/3,
     get_online_count/1,
     build_sync_response/4,
     build_sync_response_builder/3,
     build_normalized_sync_response_builder/3,
     member_list_snapshot/2,
     snapshot/2,
-    hydrate_engine_items/2,
     with_member_item_memo/1,
     note_presence_write/1,
     get_members_cursor/2
@@ -96,32 +93,11 @@ with_member_item_memo(Fun) ->
             Fun()
     end.
 
--spec get_member_groups(list_id(), guild_state()) -> [group_item()].
-get_member_groups(ListId, State) ->
-    case store_ref_for(ListId, State) of
-        undefined ->
-            [];
-        Ref ->
-            StoreGroups = guild_member_list_store:get_groups(Ref),
-            visible_groups(StoreGroups)
-    end.
-
 -spec get_counts(list_id(), guild_state()) -> {non_neg_integer(), non_neg_integer()}.
 get_counts(ListId, State) ->
     case store_ref_for(ListId, State) of
         undefined -> {0, 0};
         Ref -> guild_member_list_store:get_counts(Ref)
-    end.
-
--spec get_items_in_range(list_id(), range(), guild_state()) -> [list_item()].
-get_items_in_range(ListId, {Start, End}, State) ->
-    case store_ref_for(ListId, State) of
-        undefined ->
-            [];
-        Ref ->
-            StoreGroups = guild_member_list_store:get_groups(Ref),
-            StoreItems = store_range_items(Ref, StoreGroups, Start, End),
-            hydrate_engine_items(ListId, StoreItems, StoreGroups, State)
     end.
 
 -spec get_online_count(guild_state()) -> non_neg_integer().
@@ -392,10 +368,6 @@ snapshot(ListId, State) ->
             {Total, Online, visible_groups(StoreGroups), Items}
     end.
 
--spec hydrate_engine_items([store_item()], guild_state()) -> [list_item()].
-hydrate_engine_items(StoreItems, State) ->
-    hydrate_engine_items(<<"0">>, StoreItems, group_tuples(StoreItems), State).
-
 -spec hydrate_engine_items(
     list_id(), [store_item()], [{binary(), non_neg_integer()}], guild_state()
 ) ->
@@ -556,20 +528,6 @@ group_visible(<<"offline">>, Count, Threshold) ->
 group_visible(_Id, Count, _Threshold) ->
     Count > 0.
 
--spec store_range_items(
-    guild_member_list_store:store_ref(),
-    [{binary(), non_neg_integer()}],
-    non_neg_integer(),
-    non_neg_integer()
-) -> [store_item()].
-store_range_items(Ref, StoreGroups, Start, End) ->
-    case offline_hidden(StoreGroups) of
-        false ->
-            guild_member_list_store:get_items(Ref, Start, End);
-        true ->
-            visible_range_items(Ref, StoreGroups, Start, End)
-    end.
-
 -spec visible_range_items(
     guild_member_list_store:store_ref(),
     [{binary(), non_neg_integer()}],
@@ -601,10 +559,6 @@ visible_online_rows([_ | Rest]) ->
 offline_hidden(StoreGroups) ->
     OfflineCount = maps:get(<<"offline">>, maps:from_list(StoreGroups), 0),
     OfflineCount > guild_member_list_offline:threshold().
-
--spec group_tuples([store_item()]) -> [{binary(), non_neg_integer()}].
-group_tuples(Items) ->
-    [{Id, Count} || {group, Id, Count} <- Items].
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -638,7 +592,7 @@ hidden_offline_range_is_clamped_test() ->
     ?assertEqual([], [G || #{<<"id">> := <<"offline">>} = G <- visible_groups(StoreGroups)]),
     ?assertEqual([], [
         I
-     || {member, U} = I <- store_range_items(Ref, StoreGroups, 0, 100), U >= 101
+     || {member, U} = I <- visible_range_items(Ref, StoreGroups, 0, 100), U >= 101
     ]),
     guild_member_list_engine:destroy(Ref).
 

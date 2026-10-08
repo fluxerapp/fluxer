@@ -53,6 +53,7 @@ fn admin_config(port: u16, api_endpoint: &str, admin_endpoint: &str) -> AdminCon
         api_endpoint: api_endpoint.to_owned(),
         media_endpoint: format!("{api_endpoint}/media"),
         static_cdn_endpoint: "https://static.example.test".to_owned(),
+        reports_bucket_origin: "https://reports.example.test".to_owned(),
         admin_endpoint: admin_endpoint.to_owned(),
         web_app_endpoint: "http://127.0.0.1:8088".to_owned(),
         oauth_client_id: "1234567890123456789".to_owned(),

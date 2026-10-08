@@ -38,10 +38,6 @@ class FavoriteMemes {
 	getAllMemes(): ReadonlyArray<FavoriteMeme> {
 		return this.memes;
 	}
-
-	getMeme(memeId: string): FavoriteMeme | undefined {
-		return this.memes.find((meme) => meme.id === memeId);
-	}
 }
 
 export default new FavoriteMemes();

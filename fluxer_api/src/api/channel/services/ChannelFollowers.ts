@@ -14,7 +14,7 @@ const CHANNEL_FOLLOW_LOCK_TTL_SECONDS = 5;
 const CHANNEL_FOLLOW_LOCK_ACQUIRE_ATTEMPTS = 6;
 const CHANNEL_FOLLOW_LOCK_RETRY_DELAY_MS = 50;
 
-export type ChannelFollowerRemovalReason = 'deleted' | 'converted';
+type ChannelFollowerRemovalReason = 'deleted' | 'converted';
 export type ChannelFollowerRemovalCopyMode = 'source_deleted' | 'purge';
 
 export async function withChannelFollowLock<T>(
@@ -62,7 +62,7 @@ interface ChannelFollowerRemovalParams {
 	copyMode?: ChannelFollowerRemovalCopyMode;
 }
 
-export async function addChannelFollowerRemovalJob(params: ChannelFollowerRemovalParams): Promise<void> {
+async function addChannelFollowerRemovalJob(params: ChannelFollowerRemovalParams): Promise<void> {
 	const {sourceChannelId, reason, copyMode} = params;
 	const uniqueSuffix = await getSnowflakeService().generate();
 	await getWorkerService().addJob(
@@ -87,7 +87,7 @@ export async function enqueueChannelFollowerRemoval(params: ChannelFollowerRemov
 	}
 }
 
-export async function channelMayHaveFollowerCopies(
+async function channelMayHaveFollowerCopies(
 	channel: Pick<Channel, 'id' | 'type'>,
 	crossposts: Pick<ICrosspostedMessageRepository, 'listSourcesByChannel'>,
 ): Promise<boolean> {

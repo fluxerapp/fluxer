@@ -1,14 +1,14 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Admin reports
-description: Report listing and search, captured message evidence, and report resolution.
+description: Report listing and search, captured evidence, report resolution, report deletion, and report retention.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A report is one complaint filed against a message, an account, or a guild, together with the evidence captured when it was filed. These routes list and search reports, return that evidence, and resolve a report with a comment shown to the reporter.
+A report is one complaint filed against a message, an account, or a guild, together with the evidence captured when it was filed. These routes list and search reports, return that evidence, resolve a report with a comment shown to the reporter, hold a report past its retention period, and delete a report before it.
 
-Report submission belongs to the public [Reports](/http-api/reports/) resource, which defines the category registries `category` is drawn from.
+Report submission belongs to the public [Reports](/http-api/reports/) resource, which defines the [report categories](/http-api/reports/#report-categories) and the [report reasons](/http-api/reports/#report-reasons) a report is filed under.
 
 Reporter contact fields require `report:view:reporter_pii` on top of `report:view`. Without it `reporter_email`, `reporter_full_legal_name`, and `reporter_country_of_residence` are null on every report, so a redacted field looks like a field the reporter never supplied.
 
@@ -22,7 +22,7 @@ Fluxer reads the tag, username, display name, and discriminator of both accounts
 
 ## Admin report object
 
-A report is written once, when the reporter files it. [Update report](#update-report) moves it from PENDING to RESOLVED with an optional comment. [Schedule user deletion](/admin-api/users/#schedule-user-deletion) for any reason other than a user request also resolves every pending report against the deleted account, with no public comment and no notice to the reporter.
+A report is written once, when the reporter files it. [Update report](#update-report) moves it from PENDING to RESOLVED with an optional comment. [Schedule user deletion](/admin-api/users/#schedule-user-deletion) for one of the abuse reasons listed there also resolves the pending reports against the deleted account, with no public comment, and sends each reporter the generic notice [Update report](#update-report) describes. A report in the `child_safety`, `underage_user`, or `self_harm` category is never resolved this way and stays PENDING. A report is deleted at the end of its [retention period](#report-retention), or earlier through [Delete report](#delete-report).
 
 [List reports](#list-reports) returns this object without message context. [Get report](#get-report) returns the [Admin report detail object](#admin-report-detail-object), which extends it.
 
@@ -32,7 +32,7 @@ A report is written once, when the reporter files it. [Update report](#update-re
 | --- | --- | --- |
 | report_id | snowflake | The ID of the report |
 | reporter_id<sup>1</sup> | ?snowflake | The account that filed the report |
-| reporter_tag<sup>1</sup> <sup>2</sup> <sup>10</sup> | ?string | The reporter username and four-digit discriminator joined by `#` |
+| reporter_tag<sup>1</sup> <sup>2</sup> <sup>18</sup> | ?string | The reporter username and four-digit discriminator joined by `#` |
 | reporter_username<sup>1</sup> <sup>2</sup> | ?string | The username of the reporter |
 | reporter_global_name<sup>1</sup> <sup>2</sup> | ?string | The display name of the reporter, or null when unset |
 | reporter_discriminator<sup>1</sup> <sup>2</sup> | ?string | The zero-padded four-digit reporter discriminator |
@@ -42,14 +42,36 @@ A report is written once, when the reporter files it. [Update report](#update-re
 | reported_at | ISO8601 timestamp | When the report was submitted |
 | status | integer | The [report status](#report-status) |
 | report_type | integer | The [report type](#report-type) |
-| category | ?string | The category the reporter filed the report under |
+| category | ?string | The [report category](/http-api/reports/#report-categories), derived from `reason` when the report has one |
+| reason?<sup>7</sup> <sup>10</sup> | ?string | The [report reason](/http-api/reports/#report-reasons) the report was filed under |
+| reason_label?<sup>7</sup> <sup>11</sup> | ?string | The English label of the reason |
+| reason_highest_priority?<sup>7</sup> <sup>12</sup> | ?boolean | Whether the reason is one moderators see first |
+| flow?<sup>7</sup> <sup>10</sup> | ?[report flow answers](#report-flow-answers-object) object | The answers the reporter gave, described in English |
+| reporter_good_faith_confirmed?<sup>7</sup> <sup>13</sup> | ?boolean | Whether the reporter confirmed the notice in good faith |
 | additional_info | ?string | The free-text detail the reporter supplied |
-| reported_user_id | ?snowflake | The reported account, or null for a guild report |
-| reported_user_tag<sup>2</sup> <sup>10</sup> | ?string | The reported username and four-digit discriminator joined by `#` |
+| reported_user_id<sup>14</sup> | ?snowflake | The reported account, or null for a guild report |
+| reported_user_tag<sup>2</sup> <sup>18</sup> | ?string | The reported username and four-digit discriminator joined by `#` |
 | reported_user_username<sup>2</sup> | ?string | The username of the reported account |
 | reported_user_global_name<sup>2</sup> | ?string | The display name of the reported account, or null when unset |
 | reported_user_discriminator<sup>2</sup> | ?string | The zero-padded four-digit reported account discriminator |
 | reported_user_avatar_hash<sup>4</sup> | ?string | The avatar hash of the reported account, or null when unset |
+| reported_user_bot?<sup>2</sup> <sup>7</sup> <sup>17</sup> | ?boolean | Whether the reported account is a bot |
+| reported_webhook_id?<sup>7</sup> <sup>14</sup> | ?snowflake | The [webhook](/http-api/webhooks/) that sent the reported message |
+| reported_webhook_name?<sup>4</sup> <sup>7</sup> <sup>14</sup> | ?string | The name the reported message was sent under |
+| reported_webhook_avatar_hash?<sup>4</sup> <sup>7</sup> <sup>14</sup> | ?string | The avatar hash the reported message was sent with, or null when unset |
+| reported_webhook_default_name?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> | ?string | The name set on the webhook itself |
+| reported_webhook_default_avatar_hash?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> | ?string | The avatar hash set on the webhook itself, or null when unset |
+| reported_webhook_type?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> | ?integer | The [webhook type](/http-api/webhooks/#webhook-types) |
+| reported_webhook_application_id?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> | ?snowflake | The [application](/http-api/applications/#application-object) whose bot account created the webhook, or null when a user account created it |
+| reported_webhook_channel_id?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> | ?snowflake | The channel the webhook belonged to |
+| reported_webhook_guild_id?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> | ?snowflake | The guild the webhook belonged to |
+| reported_webhook_created_at?<sup>7</sup> <sup>14</sup> | ?ISO8601 timestamp | When the webhook was created, derived from its ID |
+| reported_webhook_creator_id?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> | ?snowflake | The account that created the webhook |
+| reported_webhook_creator_tag?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> <sup>16</sup> <sup>18</sup> | ?string | The creator username and four-digit discriminator joined by `#` |
+| reported_webhook_creator_username?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> <sup>16</sup> | ?string | The username of the creator |
+| reported_webhook_creator_global_name?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> <sup>16</sup> | ?string | The display name of the creator, or null when unset |
+| reported_webhook_creator_discriminator?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> <sup>16</sup> | ?string | The zero-padded four-digit creator discriminator |
+| reported_webhook_creator_avatar_hash?<sup>4</sup> <sup>7</sup> <sup>14</sup> <sup>15</sup> <sup>16</sup> | ?string | The avatar hash of the creator, or null when unset |
 | reported_guild_id | ?snowflake | The reported guild, or null when the report names none |
 | reported_guild_name<sup>4</sup> | ?string | The name of the reported guild |
 | reported_guild_icon_hash<sup>4</sup> | ?string | The icon hash of the reported guild, or null when unset |
@@ -76,7 +98,7 @@ A report is written once, when the reporter files it. [Update report](#update-re
 
 <sup>2</sup> Resolved from the account when the response is produced, and null when the account can no longer be read
 
-<sup>3</sup> Null unless the caller holds `report:view:reporter_pii`, and null when the reporter supplied no value
+<sup>3</sup> Null unless the caller holds `report:view:reporter_pii`, and null when the reporter supplied no value. For a report filed from an account, `reporter_email` is the current address of that account, and null when the account no longer exists or has no address. For a Digital Services Act notice it is the verified address the notice was filed with
 
 <sup>4</sup> Captured when the report was filed and never updated afterwards
 
@@ -90,7 +112,23 @@ A report is written once, when the reporter files it. [Update report](#update-re
 
 <sup>9</sup> Null while the report is PENDING and set when it moves to RESOLVED
 
-<sup>10</sup> On an instance with the `none` tag style the tag of an account that is not a bot is the bare username, with no `#0000`
+<sup>10</sup> Null on a report filed without a report flow, which includes every report filed before report flows existed
+
+<sup>11</sup> Null when `reason` is null, and the raw reason key when this API does not know the reason
+
+<sup>12</sup> Null when `reason` is null or unknown to this API
+
+<sup>13</sup> True on a Digital Services Act notice filed through a report flow, and null on every other report
+
+<sup>14</sup> A message a webhook sent has no author account, so its report has a null `reported_user_id` and null reported user fields, and records the webhook instead. Every webhook field is null on any other report, and a message a bot account sent is reported as that account
+
+<sup>15</sup> Read from the webhook when the report was filed, and null when the webhook had already been deleted by then
+
+<sup>16</sup> Captured from the account that created the webhook. Null when that account had been deleted by the time the report was filed, while `reported_webhook_creator_id` still names it. The creator is context for moderators and is not the reported account, so `reported_user_id` stays null
+
+<sup>17</sup> Null when the report names no reported account, which includes a report about a message a webhook sent
+
+<sup>18</sup> On an instance with the `none` tag style the tag of an account that is not a bot is the bare username, with no `#0000`
 
 ### Example
 
@@ -104,8 +142,23 @@ A report is written once, when the reporter files it. [Update report](#update-re
   "status": 0,
   "report_type": 0,
   "category": "harassment",
-  "additional_info": "Repeated after being asked to stop.",
+  "reason": "harassment",
+  "reason_label": "Harassment or bullying",
+  "reason_highest_priority": false,
+  "flow": {
+    "revision_hash": "6b1f0c9e2a7d4413",
+    "surface": "in_app",
+    "locale": "de",
+    "steps": [
+      {"screen_id": "root_message", "screen_title": "Report message", "option_id": "abuse", "option_label": "Abusive or harmful content", "items": []},
+      {"screen_id": "abuse", "screen_title": "What does it involve?", "option_id": "harassment", "option_label": "Bullying, harassment or stalking", "items": []},
+      {"screen_id": "harassment", "screen_title": "How is someone being targeted?", "option_id": "harassment_direct", "option_label": "Repeatedly targeting someone with insults or abuse", "items": []}
+    ]
+  },
+  "reporter_good_faith_confirmed": null,
+  "additional_info": null,
   "reported_user_id": "1490118377238528000",
+  "reported_user_bot": false,
   "reported_guild_id": "1471002884199612416",
   "reported_message_id": "1502771119476146176",
   "reported_channel_id": "1471002884199612420",
@@ -143,12 +196,19 @@ The detail object extends the [Admin report object](#admin-report-object) with t
 | mutual_dm_channel_id<sup>1</sup> | ?snowflake | The direct message channel shared by the reporter and the reported account |
 | message_context<sup>2</sup> | array[[report message context](#report-message-context-object) object] | The messages captured around the reported content |
 | message_responses<sup>3</sup> | array[[message](/http-api/messages/#message-object) object] | The current state of the same messages, read live |
+| reported_profile_snapshot?<sup>4</sup> | ?[report profile snapshot](#report-profile-snapshot-object) object | The reported profile as it was when the report was filed |
+| legal_hold_until?<sup>5</sup> | ?ISO8601 timestamp | When the legal hold on the report ends |
+| legal_hold_reason?<sup>5</sup> | ?string | Why the report is held |
 
 <sup>1</sup> Set only for a USER report that has both a reporter and a reported account, and null when the two share no direct message channel
 
-<sup>2</sup> Empty for a report that captured no message context, which is every user report and every guild report
+<sup>2</sup> Empty for a report that captured no message context, which is every user report and every guild report. An entry for which neither the capture nor the report records a channel is left out
 
 <sup>3</sup> Resolved when the response is produced, so an edited message differs from its captured entry
+
+<sup>4</sup> Always emitted. Null for a report filed before profile snapshots were stored, for a report about a message a webhook sent, and when the stored snapshot cannot be read
+
+<sup>5</sup> Always emitted. Null when the report has no hold. [Set report legal hold](#set-report-legal-hold) places and clears the hold, and [Report retention](#report-retention) describes its effect
 
 :::note[The live array can be shorter than the capture]
 Fluxer skips an entry when neither the capture nor the report records its channel. It also omits a message that no longer exists, or whose channel can no longer be read.
@@ -158,14 +218,14 @@ Fluxer skips an entry when neither the capture nor the report records its channe
 
 A context entry preserves a message as it was when the report was filed. Later edits or deletions do not change it, and attachment evidence survives deletion of the original.
 
-A message report captures the reported message together with at most 25 messages before it and at most 25 after it, for at most 51 entries. A message whose author account Fluxer could not read at capture time is absent from the report.
+A message report captures the reported message together with at most 25 messages before it and at most 25 after it, for at most 51 entries. A Digital Services Act notice about a direct message, a group DM, or a guild channel that @everyone cannot view and read the history of captures the reported message alone. A message whose author account no longer existed at capture time is kept under the `DeletedUser` identity with discriminator `0000` and its original author ID. A message a webhook sent is captured under the name and avatar it was sent with.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | id | snowflake | The ID of the message |
-| channel_id<sup>1</sup> | string | The channel the captured messages were read from |
+| channel_id<sup>1</sup> | snowflake | The channel the captured messages were read from |
 | channel_nsfw<sup>2</sup> | ?boolean | The current NSFW state of that channel |
 | channel_content_warning_level?<sup>3</sup> <sup>4</sup> | ?integer | The channel [content warning level](/http-api/channels/#content-warning-levels) |
 | channel_content_warning_text?<sup>3</sup> <sup>4</sup> | ?string | The channel content warning text |
@@ -177,14 +237,16 @@ A message report captures the reported message together with at most 25 messages
 | content | string | The captured message content, empty when the message had none |
 | timestamp<sup>6</sup> | ISO8601 timestamp | When the message was sent |
 | attachments<sup>7</sup> | array[[report message attachment](#report-message-attachment-object) object] | The captured attachment copies |
-| author_id | snowflake | The author of the message |
-| author_username | string | The captured author username |
+| author_id<sup>8</sup> | snowflake | The author of the message |
+| author_username<sup>8</sup> | string | The captured author username |
 | author_global_name<sup>4</sup> | ?string | The display name of the author |
-| author_discriminator | string | The captured zero-padded four-digit author discriminator |
-| author_avatar | ?string | The captured author avatar hash, or null when unset |
-| user_prior_ncmec_report_ids?<sup>3</sup> <sup>8</sup> | array[string] | The NCMEC report IDs previously filed against the author |
+| author_discriminator<sup>8</sup> | string | The captured zero-padded four-digit author discriminator |
+| author_avatar<sup>8</sup> | ?string | The captured author avatar hash, or null when unset |
+| webhook_id?<sup>3</sup> <sup>9</sup> | ?snowflake | The [webhook](/http-api/webhooks/) that sent the message |
+| author_bot?<sup>3</sup> <sup>10</sup> | ?boolean | Whether the author account is a bot |
+| missing_attachments?<sup>3</sup> <sup>11</sup> | array[[report missing attachment](#report-missing-attachment-object) object] | Attachments that could not be copied into the report |
 
-<sup>1</sup> The channel of the captured entry, otherwise the reported channel. An empty string when neither records one, so it does not always parse as a snowflake
+<sup>1</sup> The channel of the captured entry, otherwise the reported channel. An entry for which neither records a channel is left out of `message_context`
 
 <sup>2</sup> Read from the current channel or guild, and null when the record can no longer be read
 
@@ -198,7 +260,13 @@ A message report captures the reported message together with at most 25 messages
 
 <sup>7</sup> Fluxer drops an evidence copy that records no file name, resolves to no channel, or receives no download URL, so this array can be shorter than the original
 
-<sup>8</sup> Sorted ascending, with at most 100 entries, and empty when no NCMEC report has been filed against the author
+<sup>8</sup> For a message a webhook sent, the webhook ID, the name and avatar hash the message was sent with, and the discriminator `0000`, as the [message object](/http-api/messages/#message-object) shows the author of a webhook message
+
+<sup>9</sup> Null for a message an account sent
+
+<sup>10</sup> Read from the author account when the response is produced. Null for a message a webhook sent and for an author account that no longer resolves
+
+<sup>11</sup> Empty when every attachment was copied, and on a report filed before missing attachments were recorded. An attachment is listed here when its copy failed or, for a file embedded in the message, when the file was no longer stored
 
 ### Report message attachment object
 
@@ -208,27 +276,202 @@ A message report captures the reported message together with at most 25 messages
 | --- | --- | --- |
 | id | snowflake | The ID of the attachment |
 | filename | string | The captured file name |
-| url<sup>9</sup> | string | The download URL for the evidence copy |
+| url<sup>12</sup> | string | The download URL for the evidence copy |
 | nsfw | ?boolean | Whether the attachment was marked NSFW |
 | content_type | ?string | The captured MIME type, or null when unknown |
 | width | ?integer | The pixel width, or null for a non-image attachment |
 | height | ?integer | The pixel height, or null for a non-image attachment |
 | size?<sup>3</sup> | ?integer | The size in bytes, or null when unknown |
-| ncmec_status<sup>10</sup> | string | The [NCMEC submission status](#ncmec-submission-statuses) |
-| ncmec_report_id | ?string | The NCMEC report ID, or null when the attachment was never submitted |
-| ncmec_failure_reason | ?string | The failure detail, or null unless `ncmec_status` is failed |
 
-<sup>9</sup> The URL expires after five minutes. Fetch the report again for fresh attachment links
+<sup>12</sup> The URL expires after five minutes. Fetch the report again for fresh attachment links
 
-<sup>10</sup> An in-flight submission is stored as `submitting`, a value the registry below does not list
+### Report missing attachment object
 
-#### NCMEC submission statuses
+An attachment of a captured message that Fluxer could not copy into the report. It has the captured metadata and no download URL.
 
-| Value | Description |
-| --- | --- |
-| not_submitted | The attachment has never been submitted to NCMEC |
-| submitted | The attachment has been submitted to NCMEC |
-| failed | Submission to NCMEC was attempted and failed |
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the attachment |
+| filename | string | The captured file name |
+| nsfw | ?boolean | Whether the attachment was marked NSFW |
+| content_type | ?string | The captured MIME type, or null when unknown |
+| width | ?integer | The pixel width, or null for a non-image attachment |
+| height | ?integer | The pixel height, or null for a non-image attachment |
+| size<sup>13</sup> | ?integer | The size in bytes, or null when unknown |
+
+<sup>13</sup> `0` for a file embedded in the message that was no longer stored when the report was filed
+
+## Report profile snapshot object
+
+The reported profile as it was when the report was filed. A user report keeps the account, a guild report keeps the guild, and a message report keeps the author account. Each image is a copy Fluxer made when the report was filed, so a later profile change or deletion does not affect it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| captured_at | ISO8601 timestamp | When the snapshot was taken |
+| user<sup>1</sup> | ?[snapshot user](#snapshot-user-object) object | The reported account |
+| member<sup>2</sup> | ?[snapshot member](#snapshot-member-object) object | The guild profile of the reported account |
+| guild<sup>3</sup> | ?[snapshot guild](#snapshot-guild-object) object | The reported guild |
+
+<sup>1</sup> Null on a guild report
+
+<sup>2</sup> Set when the report names a guild the account was a member of, which is a user report with `guild_id` or a message report in a guild channel
+
+<sup>3</sup> Set on a guild report only
+
+### Snapshot user object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the account |
+| username<sup>4</sup> | ?string | The username |
+| discriminator<sup>4</sup> | ?string | The zero-padded four-digit discriminator |
+| global_name<sup>4</sup> | ?string | The display name, or null when unset |
+| bio<sup>4</sup> | ?string | The profile bio, or null when unset |
+| pronouns<sup>4</sup> | ?string | The pronouns, or null when unset |
+| avatar<sup>4</sup> | ?[snapshot asset](#snapshot-asset-object) object | The avatar, or null when unset |
+| banner<sup>4</sup> | ?[snapshot asset](#snapshot-asset-object) object | The profile banner, or null when unset |
+
+<sup>4</sup> Null for an account whose deletion had started when the report was filed, which is kept by ID alone with no member profile
+
+### Snapshot member object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The guild the profile belongs to |
+| nick | ?string | The guild nickname, or null when unset |
+| bio | ?string | The guild profile bio, or null when unset |
+| pronouns | ?string | The guild profile pronouns, or null when unset |
+| joined_at | ?ISO8601 timestamp | When the account joined the guild |
+| avatar | ?[snapshot asset](#snapshot-asset-object) object | The guild avatar, or null when unset |
+| banner | ?[snapshot asset](#snapshot-asset-object) object | The guild profile banner, or null when unset |
+
+### Snapshot guild object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the guild |
+| name | ?string | The guild name |
+| vanity_url_code | ?string | The vanity invite code, or null when unset |
+| icon | ?[snapshot asset](#snapshot-asset-object) object | The icon, or null when unset |
+| banner | ?[snapshot asset](#snapshot-asset-object) object | The banner, or null when unset |
+| splash | ?[snapshot asset](#snapshot-asset-object) object | The invite splash, or null when unset |
+
+### Snapshot asset object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| hash | string | The asset hash when the report was filed |
+| url<sup>5</sup> | ?string | The download URL for the copy |
+
+<sup>5</sup> Expires after five minutes. Null when the image could not be copied into the report, or when no download URL could be made
+
+### Example
+
+```json
+{
+  "captured_at": "2026-03-04T18:22:10.502Z",
+  "user": {
+    "id": "1490118377238528000",
+    "username": "marlow",
+    "discriminator": "0117",
+    "global_name": "Marlow",
+    "bio": "Ask me about trains",
+    "pronouns": null,
+    "avatar": {"hash": "4be1c7a09d2e3f56", "url": "https://reports.example.com/reports/1502771904419102720/profile/user_avatar/4be1c7a09d2e3f56?X-Amz-Expires=300"},
+    "banner": null
+  },
+  "member": {
+    "guild_id": "1471002884199612416",
+    "nick": "Conductor",
+    "bio": null,
+    "pronouns": null,
+    "joined_at": "2026-01-12T09:41:00.000Z",
+    "avatar": null,
+    "banner": null
+  },
+  "guild": null
+}
+```
+
+## Report flow answers object
+
+The answers a reporter gave in a [report flow](/http-api/reports/#report-flows), described in English whatever locale the reporter saw. Fluxer builds the description from the stored IDs when it produces the response, so the labels follow the current catalogue.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| revision_hash | string | The [revision hash](/http-api/reports/#revision-hash) the reporter's client sent |
+| surface | string | The [report flow surface](/http-api/reports/#report-flow-surfaces), `in_app` or `dsa` |
+| locale | ?string | The [locale](/topics/locales/) the reporter saw the flow in |
+| steps | array[[report flow answer step](#report-flow-answer-step-object) object] | The answered screens in walk order |
+
+### Report flow answer step object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| screen_id | string | The ID of the screen |
+| screen_title<sup>1</sup> | string | The English title of the screen |
+| option_id<sup>2</sup> | ?string | The ID of the chosen option |
+| option_label<sup>1</sup> <sup>2</sup> | ?string | The English label of the chosen option |
+| items<sup>3</sup> | array[[report flow answer item](#report-flow-answer-item-object) object] | The ticked checklist items |
+
+<sup>1</sup> The raw ID when the current catalogue no longer has the screen or option
+
+<sup>2</sup> Null on a checklist screen and an info screen
+
+<sup>3</sup> In checklist order, not the order the reporter ticked them, and empty on a choice screen and an info screen
+
+### Report flow answer item object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | The ID of the item |
+| label | string | The English label of the item, or its raw ID when the current catalogue no longer has it |
+
+## Report reason object
+
+One entry of the [report reason](/http-api/reports/#report-reasons) catalogue, as [List report reasons](#list-report-reasons) returns it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key | string | The reason key stored on a report |
+| label | string | The English label |
+| highest_priority | boolean | Whether moderators see reports with this reason first |
+| legacy_category_message | string | The [category](/http-api/reports/#report-categories) a message report stores |
+| legacy_category_user | string | The category a user report stores |
+| legacy_category_guild | string | The category a guild report stores |
+
+### Example
+
+```json
+{
+  "key": "csam",
+  "label": "Child sexual abuse material",
+  "highest_priority": true,
+  "legacy_category_message": "child_safety",
+  "legacy_category_user": "child_safety",
+  "legacy_category_guild": "child_safety"
+}
+```
 
 ## Report resolution object
 
@@ -254,15 +497,47 @@ A report resolution is the reduced view [Update report](#update-report) returns.
 }
 ```
 
+## Report legal hold object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| report_id | snowflake | The ID of the report |
+| legal_hold_until | ?ISO8601 timestamp | When the hold ends, or null when the report has no hold |
+| legal_hold_reason | ?string | Why the report is held, or null when the report has no hold |
+
+### Example
+
+```json
+{
+  "report_id": "1502771904419102720",
+  "legal_hold_until": "2027-06-30T00:00:00.000Z",
+  "legal_hold_reason": "Preservation request from a court"
+}
+```
+
+## Report retention
+
+Fluxer deletes a report when its retention period ends, whether it is pending or resolved, together with its stored evidence: the attachment copies, the profile snapshot images, and its search index entry. The reporter's duplicate-report reservation for it goes too, so the reporter can report the same message, account or guild again.
+
+The retention period is 365 days from when the report was filed, or the number of days in `FLUXER_REPORT_RETENTION_DAYS`. With `FLUXER_RESOLVED_REPORT_RETENTION_DAYS` set, a resolved report is deleted that many days after `resolved_at` when that comes first. A report with a [legal hold](#set-report-legal-hold) that ends later is kept until the next run after the hold ends. An evidence copy that a retained report also uses is kept for that report.
+
+The deletion runs once a day in `worker`. Each run logs one `Processed report retention` line with the counts it found and deleted and the two periods it used. A report that fails to delete keeps its record and is retried on the next run. [Delete report](#delete-report) deletes one report straight away by the same rules.
+
+:::caution[Deleted evidence cannot be restored]
+Retention deletes for real unless `FLUXER_REPORT_RETENTION_DRY_RUN` is `true` on `worker`. In a dry run each run only counts what it would delete and deletes nothing. The [operator configuration](/operator/configuration/#moderation-and-abuse) describes the three settings.
+:::
+
 ## List reports
 
 <RouteHeader method="GET" path="/v1/admin/reports" auditReason />
 
 Returns a page of [Admin report](#admin-report-object) objects without message context. Requires `report:view`.
 
-The operation has these branches. Supplying `q`, `report_type`, `category`, `reporter_id`, `reported_user_id`, `reported_guild_id`, `reported_channel_id`, `guild_context_id`, or `resolved_by_admin_id` searches the report index and returns `total`, `offset`, and `limit` beside the page. Supplying none of them lists by status alone and returns only `reports`.
+The operation has two branches. Both read the report search index, and both return `total`, `offset`, and `limit` beside the page. A request that supplies `status` and no other filter takes the status branch, which lists the reports with that status newest first by `reported_at` and ignores `sort_by` and `sort_order`. Every other request takes the search branch, which applies the supplied filters and sort.
 
-The status-only branch defaults to PENDING, so a request with no query string returns pending reports only. The search branch applies no status filter when `status` is omitted. `sort_by` and `sort_order` reach the search branch only. The status-only branch always orders by `reported_at` descending.
+The search branch applies no status filter when `status` is omitted, so a request with no query string returns reports of every status.
 
 An instance with no search backend returns 403 `FEATURE_TEMPORARILY_DISABLED` on both branches.
 
@@ -274,39 +549,37 @@ An instance with no search backend returns 403 `FEATURE_TEMPORARILY_DISABLED` on
 | status? | pending \| resolved | Restrict results to one [report status](#report-status) |
 | report_type? | message \| user \| guild | Restrict results to one [report type](#report-type) |
 | category? | string | Restrict results to one submitted category (1-128 characters) |
+| reason? | string | Restrict results to one [report reason](/http-api/reports/#report-reasons) key (1-64 characters) |
 | reporter_id? | snowflake | Restrict results to one reporter |
 | reported_user_id? | snowflake | Restrict results to one reported account |
+| reported_webhook_id? | snowflake | Restrict results to messages one [webhook](/http-api/webhooks/) sent |
 | reported_guild_id? | snowflake | Restrict results to one reported guild |
-| reported_channel_id?<sup>2</sup> | snowflake | Restrict results to one reported channel |
+| reported_channel_id? | snowflake | Restrict results to one reported channel |
 | guild_context_id? | snowflake | Restrict results to reports filed from within one guild |
 | resolved_by_admin_id? | snowflake | Restrict results to one resolving Admin account |
-| sort_by?<sup>3</sup> | created_at \| reported_at \| resolved_at | Sort field (default `reported_at`) |
+| sort_by?<sup>2</sup> | created_at \| reported_at \| resolved_at | Sort field (default `reported_at`) |
 | sort_order? | asc \| desc | Sort direction, where asc is oldest first (default `desc`) |
 | limit? | integer | Maximum reports to return (1-200, default 50) |
-| offset?<sup>4</sup> | integer | Reports to skip (0-10000, default 0) |
+| offset?<sup>3</sup> | integer | Reports to skip (0-10000, default 0) |
 
 <sup>1</sup> Matched against `category`, `additional_info`, `reported_guild_name`, and `reported_channel_name` only. Omitting it matches every report satisfying the remaining filters
 
-<sup>2</sup> The route accepts it, and supplying it with no other filter still selects the search branch. The search ignores its value and returns matching reports from every channel
+<sup>2</sup> `created_at` orders by the time encoded in the report ID, and `reported_at` by the submission time stored on the report
 
-<sup>3</sup> `created_at` orders by the time encoded in the report ID, and `reported_at` by the submission time stored on the report
-
-<sup>4</sup> The next page is requested with a larger `offset`
+<sup>3</sup> The next page is requested with a larger `offset`
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
 | reports<sup>1</sup> | array[[Admin report](#admin-report-object) object] | Reports in this page, without message context |
-| total?<sup>2</sup> <sup>3</sup> | integer | Index hits matching the filters, less the hits on this page that no longer resolve |
-| offset?<sup>2</sup> | integer | The offset this page was read from |
-| limit?<sup>2</sup> | integer | The limit this page was read with |
+| total<sup>2</sup> | integer | Index hits matching the filters |
+| offset | integer | The offset this page was read from |
+| limit | integer | The limit this page was read with |
 
-<sup>1</sup> An index hit whose report record no longer exists is dropped and the request still succeeds, so a full page can hold fewer entries than `limit`
+<sup>1</sup> An index hit whose report record no longer exists is dropped and the request still succeeds, so a full page can hold fewer entries than `limit`. Fluxer logs the dropped IDs, and a [Refresh search index](/admin-api/search-indexes/#refresh-search-index) of `reports` removes them from the index
 
-<sup>2</sup> Present on the search branch only, so the status-only branch reports no total
-
-<sup>3</sup> Reduced only by the unresolvable hits of the page that was read, so it is an upper bound on what a caller can page through
+<sup>2</sup> The index count, which still includes hits whose report record no longer exists
 
 ### Response
 
@@ -317,7 +590,35 @@ An instance with no search backend returns 403 `FEATURE_TEMPORARILY_DISABLED` on
 
 ### Side effects
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `search_reports`, target type `report`, and target ID `0` on both branches. The metadata keys are `limit`, `offset`, `result_count` for the reports in this page, and `total`. The search branch adds `sort_by` and `sort_order`. A supplied `q` adds `has_query` with the value `true`, and the query text is not recorded. The supplied filters add `status`, `report_type`, `reported_user_id`, `reported_guild_id`, and `reported_channel_id` under their own names, `reporter_id` as `reporter_user_id`, `guild_context_id` as `context_guild_id`, and `resolved_by_admin_id` as `resolved_by_admin_user_id`. `category` is not recorded. A 403 records nothing.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `search_reports`, target type `report`, and target ID `0` on both branches. The metadata keys are `limit`, `offset`, `result_count` for the reports in this page, and `total`. The search branch adds `sort_by` and `sort_order`. A supplied `q` adds `has_query` with the value `true`, and the query text is not recorded. The supplied filters add `status`, `report_type`, `category`, `reason`, `reported_user_id`, `reported_webhook_id`, `reported_guild_id`, and `reported_channel_id` under their own names, `reporter_id` as `reporter_user_id`, `guild_context_id` as `context_guild_id`, and `resolved_by_admin_id` as `resolved_by_admin_user_id`. A 403 records nothing.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## List report reasons
+
+<RouteHeader method="GET" path="/v1/admin/report-reasons" auditReason />
+
+Returns every [report reason](/http-api/reports/#report-reasons) a report flow can file a report under, with the category each one stores for each report type. Requires `report:view`.
+
+The labels are English. The list is the catalogue this API was built with, so an admin client can label and filter a reason without a copy of its own.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| reasons | array[[report reason](#report-reason-object) object] | Every reason, in catalogue order |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The catalogue was returned |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_report_reasons`, target type `report`, target ID `0`, and the metadata key `result_count`.
 
 ### Rate limit
 
@@ -372,13 +673,19 @@ Resolves one report and returns a [report resolution](#report-resolution-object)
 | --- | --- | --- |
 | status | resolved | The status to move the report to |
 | public_comment?<sup>1</sup> | string | The comment shown to the reporter (0-512 characters) |
-| notify_reporter? | boolean | Whether to notify the reporter by system DM and email (default true) |
-| resolution? | string | How the report was resolved: `actioned`, `no_violation` or `duplicate` |
+| notify_reporter?<sup>2</sup> | boolean | Whether the notice to the reporter includes `public_comment` (default true) |
+| resolution?<sup>3</sup> | string | How the report was resolved, one of `actioned`, `no_violation`, or `duplicate` |
 
-<sup>1</sup> Stored as null when it is omitted or empty, and shown to the reporter in the resolution notice otherwise
+<sup>1</sup> Stored as null when it is omitted or empty. Otherwise it is stored, and the resolution notice shows it to the reporter unless `notify_reporter` is false
+
+<sup>2</sup> The reporter is notified either way. False sends the generic notice without the comment, and the comment is still stored on the report
+
+<sup>3</sup> Optional, so older admin clients that send none still work. It is not stored on the report, not returned by any report route, and not shown to the reporter. It is recorded in the audit entry
+
+The admin panel always sends `resolution`. Its resolve form has a required Resolution select with three choices: Action taken (`actioned`), No violation (`no_violation`), and Duplicate (`duplicate`). The browser refuses to submit the form without a choice, and the panel checks again on the server: a submission with no choice, or with any other value, is refused with the error "Choose a resolution" and the report stays pending. After a resolve, the panel confirms the choice in its message, such as "Report resolved: No violation". The report page itself does not show the choice, because no report route returns it. Staff find it in the `resolution` metadata of the `resolve_report` entry in the audit log.
 
 :::caution[Resolution is terminal]
-Resolving a report notifies the reporter unless `notify_reporter` is false. A resolved report never returns to PENDING, and a second update against it returns 400 `REPORT_ALREADY_RESOLVED` without changing the stored public comment.
+Resolving a report notifies the reporter whatever `notify_reporter` says, as the side effects below describe. A resolved report never returns to PENDING, and a second update against it returns 400 `REPORT_ALREADY_RESOLVED` without changing the stored public comment.
 :::
 
 ### Response
@@ -393,11 +700,86 @@ Resolving a report notifies the reporter unless `notify_reporter` is false. A re
 
 The report moves to RESOLVED and records `resolved_at`, `resolved_by_admin_id`, and the public comment.
 
-Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report`, target ID equal to the report ID, and action `resolve_report`. The metadata is `report_id`, `report_type`, `notify_reporter`, `reporter_dm_sent`, and `reporter_email_sent`, plus `resolution` when the request sets it.
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report`, target ID equal to the report ID, and action `resolve_report`. The metadata is `report_id`, `report_type`, `notify_reporter`, `reporter_dm_sent`, `reporter_email_sent`, and `reporter_dsa_email_sent`, plus `resolution` when the request sets one. When Fluxer does not attempt a notice, `reporter_notice_skipped` names the reason: `reporter_account_deleted`, `reporter_report_banned`, `reporter_lookup_failed`, or `no_reporter_email`.
 
-Unless `notify_reporter` is false, Fluxer notifies the reporter when the report has a reporter account that still exists. The reporter receives a system direct message, and an email when the account has an address. An anonymous Digital Services Act notice has no reporter account and is resolved with no notification.
+Fluxer notifies the reporter of every resolution. A reporter with an account receives a system direct message, and an email when the account has an address. A Digital Services Act notice has no reporter account, so its verified address receives a decision email with the report ID, the comment when one is shared, and how to appeal. Nothing is sent when the reporter account is deleted or barred from reporting.
 
 A reporter who does not already have the system channel open receives [Channel Create](/gateway/events/#channel-create), and every session of the reporter receives [Message Create](/gateway/events/#message-create). Fluxer logs a delivery failure, and the request still succeeds.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Set report legal hold
+
+<RouteHeader method="POST" path="/v1/admin/reports/{report_id}/legal-hold" auditReason />
+
+Places or clears a legal hold on one report and returns a [report legal hold](#report-legal-hold-object) object. Requires `report:resolve`.
+
+A held report is kept past the end of its [retention period](#report-retention) until the hold ends, and [Delete report](#delete-report) refuses it. A hold can be placed on a pending or a resolved report, and a new hold replaces the previous one.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| report_id | snowflake | The ID of the report |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| legal_hold_until<sup>1</sup> | ?ISO8601 timestamp | When the hold ends, or null to clear the hold |
+| legal_hold_reason?<sup>2</sup> | ?string | Why the report is kept (1-512 characters) |
+
+<sup>1</sup> Must be in the future. A time in the past, or a value that is not an ISO 8601 timestamp, returns 400 `INVALID_FORM_BODY` on `legal_hold_until`
+
+<sup>2</sup> Required to place a hold, and a missing or null reason returns 400 `INVALID_FORM_BODY` on `legal_hold_reason`. Ignored when the hold is cleared, which also clears the reason
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [report legal hold](#report-legal-hold-object) object | The hold was placed or cleared |
+| 400 | [error response](/admin-api/#error-response) | The end time or the reason is invalid and the request returns `INVALID_FORM_BODY` |
+| 404 | [error response](/admin-api/#error-response) | Report does not exist and the request returns `UNKNOWN_REPORT` |
+
+### Side effects
+
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report` and the report ID as target ID. Placing a hold records action `set_report_legal_hold` with the metadata keys `report_id`, `report_type`, `legal_hold_until`, and `legal_hold_reason`. Clearing a hold records action `clear_report_legal_hold` with `report_id` and `report_type`. Either adds `previous_legal_hold_until` when the report already had a hold end time stored, including one that has passed. A rejected request records nothing.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Delete report
+
+<RouteHeader method="DELETE" path="/v1/admin/reports/{report_id}" auditReason />
+
+Deletes one report straight away. Requires `report:delete`, which `report:resolve` does not include.
+
+This is the deletion [report retention](#report-retention) runs, without waiting for the retention period. It removes the report record with its captured message context and profile snapshot, its stored evidence copies, its search index entry, and the reporter's duplicate-report reservation for it. An evidence copy that another report also uses is kept for that report. A pending or a resolved report can be deleted, and the reporter is not told.
+
+:::caution[Deletion is permanent]
+Deleted evidence cannot be restored. A report with a legal hold that has not ended is refused. Clear the hold first when the report should go.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| report_id | snowflake | The ID of the report |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The report was deleted |
+| 404 | [error response](/admin-api/#error-response) | Report does not exist and the request returns `UNKNOWN_REPORT` |
+| 409 | [error response](/admin-api/#error-response) | The report has a legal hold that ends later and the request returns `REPORT_UNDER_LEGAL_HOLD` |
+
+### Side effects
+
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `delete_report`, target type `report`, and the report ID as target ID. The metadata keys are `report_id`, `report_type`, `status`, `objects_deleted` for the evidence copies removed, and `shared_objects_kept` for the copies kept because another report uses them. A refused request records nothing.
 
 ### Rate limit
 

@@ -656,18 +656,38 @@ export class NoopGatewayService extends IGatewayService {
 		return members?.has(params.userId) ?? false;
 	}
 
-	async listGuildMembers(_params: {guildId: GuildID; limit: number; offset: number}): Promise<{
+	async listGuildMembers(params: {guildId: GuildID; limit: number; offset: number}): Promise<{
 		members: Array<GuildMemberResponse>;
 		total: number;
 	}> {
-		return {members: [], total: 0};
+		const userIds = await this.sortedMemberIds(params.guildId);
+		const page = params.limit > 0 ? userIds.slice(params.offset, params.offset + params.limit) : [];
+		return {members: await this.memberResponses(params.guildId, page), total: userIds.length};
 	}
 
-	async listGuildMembersCursor(_params: {guildId: GuildID; limit: number; after?: UserID}): Promise<{
+	async listGuildMembersCursor(params: {guildId: GuildID; limit: number; after?: UserID}): Promise<{
 		members: Array<GuildMemberResponse>;
 		total: number;
 	}> {
-		return {members: [], total: 0};
+		const userIds = await this.sortedMemberIds(params.guildId);
+		const after = params.after;
+		const remaining = after === undefined ? userIds : userIds.filter((userId) => userId > after);
+		const page = params.limit > 0 ? remaining.slice(0, params.limit) : [];
+		return {members: await this.memberResponses(params.guildId, page), total: userIds.length};
+	}
+
+	private async sortedMemberIds(guildId: GuildID): Promise<Array<UserID>> {
+		const members = await guildMemberRepository.listMembers(guildId);
+		return members.map((member) => member.userId).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+	}
+
+	private async memberResponses(guildId: GuildID, userIds: Array<UserID>): Promise<Array<GuildMemberResponse>> {
+		const members: Array<GuildMemberResponse> = [];
+		for (const userId of userIds) {
+			const {memberData} = await this.getGuildMember({guildId, userId});
+			if (memberData) members.push(memberData);
+		}
+		return members;
 	}
 
 	async checkPermission(params: {

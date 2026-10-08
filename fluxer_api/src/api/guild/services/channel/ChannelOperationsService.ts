@@ -286,24 +286,6 @@ export class ChannelOperationsService {
 		);
 	}
 
-	async updateChannelPositionsLocked(params: {
-		userId: UserID;
-		guildId: GuildID;
-		operation: ChannelReorderOperation;
-		requestCache: RequestCache;
-	}): Promise<void> {
-		const lockKey = `guild:${params.guildId}:channel-positions`;
-		const lockToken = await this.cacheService.acquireLock(lockKey, 30);
-		if (!lockToken) {
-			throw new ResourceLockedError();
-		}
-		try {
-			await this.executeChannelReorder(params);
-		} finally {
-			await this.cacheService.releaseLock(lockKey, lockToken);
-		}
-	}
-
 	async sanitizeTextChannelNames(params: {guildId: GuildID; requestCache: RequestCache}): Promise<void> {
 		const {guildId, requestCache} = params;
 		const channels = await this.channelRepository.listGuildChannels(guildId, 'enrolled');

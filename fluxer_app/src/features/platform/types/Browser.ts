@@ -11,18 +11,6 @@ export function isLegacyDocument(_document: Document): _document is Document & L
 	return 'selection' in _document && typeof _document.selection === 'object' && _document.selection !== null;
 }
 
-export function supportsWebkitFullscreen(_document: Document): _document is ExtendedDocument {
-	return 'webkitFullscreenElement' in _document;
-}
-
-export function supportsMozFullscreen(_document: Document): _document is ExtendedDocument {
-	return 'mozFullScreenElement' in _document;
-}
-
-export function supportsMsFullscreen(_document: Document): _document is ExtendedDocument {
-	return 'msFullscreenElement' in _document;
-}
-
 export function supportsWebkitRequestFullscreen(_element: HTMLElement): _element is ExtendedHTMLElement {
 	return 'webkitRequestFullscreen' in _element;
 }

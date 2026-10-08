@@ -17,7 +17,7 @@ import NoiseSuppressionAvailability from '@app/features/voice/utils/noise_suppre
 import type {Room} from 'livekit-client';
 import {reaction} from 'mobx';
 
-export interface VoiceEngineV2AppAudioPreferencesSnapshot {
+interface VoiceEngineV2AppAudioPreferencesSnapshot {
 	readonly audioSettings: VoiceEngineV2AppAudioSettingsSnapshot;
 	readonly participantVolumes: Readonly<Record<string, number>>;
 	readonly participantMutes: Readonly<Record<string, boolean>>;
@@ -43,7 +43,7 @@ export interface VoiceEngineV2AppAudioPreferencesSyncSources {
 	getSnapshot(): VoiceEngineV2AppAudioPreferencesSnapshot;
 }
 
-export function createVoiceEngineV2AppAudioPreferencesSnapshot(): VoiceEngineV2AppAudioPreferencesSnapshot {
+function createVoiceEngineV2AppAudioPreferencesSnapshot(): VoiceEngineV2AppAudioPreferencesSnapshot {
 	return {
 		audioSettings: createVoiceEngineV2AppAudioSettingsSnapshot(),
 		participantVolumes: ParticipantVolume.volumes,
@@ -55,7 +55,7 @@ export function createVoiceEngineV2AppAudioPreferencesSnapshot(): VoiceEngineV2A
 	};
 }
 
-export function createVoiceEngineV2AppAudioPreferencesSyncSources(): VoiceEngineV2AppAudioPreferencesSyncSources {
+function createVoiceEngineV2AppAudioPreferencesSyncSources(): VoiceEngineV2AppAudioPreferencesSyncSources {
 	return {
 		stores: [
 			VoiceSettings,
@@ -82,7 +82,7 @@ function refreshMicrophone(
 	});
 }
 
-export function syncVoiceEngineV2AppAudioPreferences(
+function syncVoiceEngineV2AppAudioPreferences(
 	room: Room,
 	adapter: VoiceEngineV2AppAudioPreferencesMediaAdapter,
 	logger: VoiceEngineV2AppAudioPreferencesLogger,

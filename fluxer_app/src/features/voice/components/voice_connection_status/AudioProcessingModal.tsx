@@ -114,7 +114,9 @@ export const AudioProcessingModal = observer(() => {
 						aria-label={i18n._(VOICE_PROCESSING_DESCRIPTOR)}
 						data-flx="voice.voice-connection-status.audio-processing-modal.radio-group.update"
 					/>
-					{mode === 'voice' && noiseSuppressionFallbackMessage && <p>{noiseSuppressionFallbackMessage}</p>}
+					{mode === 'voice' && noiseSuppressionFallbackMessage && (
+						<p data-flx="voice.voice-connection-status.audio-processing-modal.p">{noiseSuppressionFallbackMessage}</p>
+					)}
 					{mode === 'custom' && (
 						<div
 							className={styles.nsOptions}

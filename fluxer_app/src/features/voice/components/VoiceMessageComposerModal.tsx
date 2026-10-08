@@ -121,7 +121,7 @@ function formatElapsedMs(value: number): string {
 	return `${minutes.toString().padStart(1, '0')}:${seconds.toString().padStart(2, '0')}.${tenths}`;
 }
 
-export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps> = observer(({channelId}) => {
+const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps> = observer(({channelId}) => {
 	const {i18n} = useLingui();
 	const [stage, setStage] = useState<ModalStage>('idle');
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);

@@ -49,11 +49,6 @@ export class FuzzPrng {
 		return this.seedValue;
 	}
 
-	get bytesRemaining(): number {
-		assert.ok(this.cursor <= this.capacity, 'cursor must not exceed capacity');
-		return this.capacity - this.cursor;
-	}
-
 	get bytesConsumed(): number {
 		assert.ok(this.cursor >= 0, 'cursor must be non-negative');
 		return this.cursor;

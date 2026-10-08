@@ -91,7 +91,7 @@ export function getProfileAvatarMenuUrl(
 	return null;
 }
 
-export function getProfileBannerUrl(
+function getProfileBannerUrl(
 	context: ProfileDisplayContext,
 	overrides?: ProfilePreviewOverrides,
 	animated = false,

@@ -156,6 +156,7 @@ export const PrivacySetupModal = observer(() => {
 						value={choice}
 						onChange={setChoice}
 						aria-label={i18n._(PRIVACY_SETUP_OPTIONS_LABEL_DESCRIPTOR)}
+						data-flx="user.privacy-setup-modal.radio-group.set-choice"
 					/>
 					{outliers.length > 0 && (
 						<section

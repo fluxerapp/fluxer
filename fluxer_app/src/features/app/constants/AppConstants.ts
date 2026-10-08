@@ -38,26 +38,6 @@ const INVISIBLE_DESCRIPTOR = msg({
 	message: 'Invisible',
 	comment: 'Short label in the app constants.',
 });
-const ONLINE_AND_READY_TO_CHAT_DESCRIPTOR = msg({
-	message: 'Online and ready to chat',
-	comment: 'Short label in the app constants.',
-});
-const BUSY_RIGHT_NOW_DESCRIPTOR = msg({
-	message: 'Busy right now',
-	comment: 'Short label in the app constants.',
-});
-const AWAY_RIGHT_NOW_DESCRIPTOR = msg({
-	message: 'Away right now',
-	comment: 'Short label in the app constants.',
-});
-const SHOWN_AS_OFFLINE_DESCRIPTOR = msg({
-	message: 'Shown as offline',
-	comment: 'Short label in the app constants.',
-});
-const NOT_CONNECTED_DESCRIPTOR = msg({
-	message: 'Not connected',
-	comment: 'Short label in the app constants.',
-});
 export const STATUS_UNTIL_I_CHANGE_IT_DESCRIPTOR = msg({
 	message: 'Until I change it',
 	comment: 'Status duration option meaning the selected presence stays active until the user changes it manually.',
@@ -86,17 +66,4 @@ const StatusTypeToLabelDescriptorsInternal: Record<StatusType, MessageDescriptor
 export function getStatusTypeLabel(i18n: I18n, statusType: StatusType | string): string {
 	const normalized = isStatusType(statusType) ? statusType : normalizeStatus(statusType);
 	return i18n._(StatusTypeToLabelDescriptorsInternal[normalized]);
-}
-
-const StatusTypeToDescriptionDescriptorsInternal: Record<StatusType, MessageDescriptor> = {
-	[StatusTypes.ONLINE]: ONLINE_AND_READY_TO_CHAT_DESCRIPTOR,
-	[StatusTypes.DND]: BUSY_RIGHT_NOW_DESCRIPTOR,
-	[StatusTypes.IDLE]: AWAY_RIGHT_NOW_DESCRIPTOR,
-	[StatusTypes.INVISIBLE]: SHOWN_AS_OFFLINE_DESCRIPTOR,
-	[StatusTypes.OFFLINE]: NOT_CONNECTED_DESCRIPTOR,
-};
-
-export function getStatusTypeDescription(i18n: I18n, statusType: StatusType | string): string {
-	const normalized = isStatusType(statusType) ? statusType : normalizeStatus(statusType);
-	return i18n._(StatusTypeToDescriptionDescriptorsInternal[normalized]);
 }

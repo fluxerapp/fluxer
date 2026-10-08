@@ -4,7 +4,6 @@ import type {
 	VoiceEngineV2Driver,
 	VoiceEngineV2ExternalEventListener,
 } from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
-import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2CameraEncodingOptions,
 	VoiceEngineV2CameraOptions,
@@ -198,12 +197,6 @@ export class FakeVoiceEngineV2Driver implements VoiceEngineV2Driver {
 		return () => {
 			this.listeners.delete(listener);
 		};
-	}
-
-	emitExternalEvent(event: VoiceEngineV2Event): void {
-		for (const listener of this.listeners) {
-			listener(event);
-		}
 	}
 
 	private record(call: FakeVoiceEngineV2DriverCall): void {

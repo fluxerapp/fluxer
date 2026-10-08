@@ -41,7 +41,7 @@ const STICKER_SLOTS_FULL_DESCRIPTOR = msg({
 const logger = new Logger('CloneSticker');
 const stickerCloneGuard = createKeyedActionGuard();
 
-export type CloneableSticker = Readonly<{
+type CloneableSticker = Readonly<{
 	id: string;
 	guildId: string;
 	name: string;

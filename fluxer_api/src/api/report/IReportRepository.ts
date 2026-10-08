@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
+import type {ApplicationID, ChannelID, GuildID, MessageID, ReportID, UserID, WebhookID} from '@app/api/BrandedTypes';
 import type {MessageAttachment, MessageEmbed, MessageStickerItem} from '@app/api/database/types/MessageTypes';
 import type {
 	DSAReportEmailVerificationRow,
 	DSAReportTicketRow,
+	GuildReportSubmissionByReporterRow,
 	IARSubmissionRow,
 	MessageReportSubmissionByReporterRow,
+	UserReportSubmissionByReporterRow,
 } from '@app/api/database/types/ReportTypes';
+import type {ReportFlowStepRecord} from '@app/api/report/flows/ReportFlowRegistry';
+import type {ReportProfileSnapshot} from '@fluxer/schema/src/domains/report/ReportProfileSnapshotSchemas';
 
 export type {IARMessageContextRow, IARSubmissionRow} from '@app/api/database/types/ReportTypes';
 
@@ -34,7 +38,8 @@ export function reportStatusToString(status: ReportStatus | number): string {
 export interface IARMessageContext {
 	messageId: MessageID;
 	channelId: ChannelID | null;
-	authorId: UserID;
+	authorId: UserID | null;
+	webhookId: WebhookID | null;
 	authorUsername: string;
 	authorDiscriminator: number;
 	authorAvatarHash: string | null;
@@ -50,6 +55,7 @@ export interface IARMessageContext {
 	attachments: Array<MessageAttachment>;
 	embeds: Array<MessageEmbed>;
 	stickers: Array<MessageStickerItem>;
+	missingAttachments: Array<MessageAttachment>;
 }
 
 export interface IARSubmission {
@@ -87,6 +93,30 @@ export interface IARSubmission {
 	reportedChannelEffectiveNsfw: boolean | null;
 	reportedChannelEffectiveContentWarningLevel: number | null;
 	reportedChannelEffectiveContentWarningText: string | null;
+	reason: string | null;
+	flowRevision: string | null;
+	flowSteps: Array<ReportFlowStepRecord> | null;
+	flowLocale: string | null;
+	flowSurface: string | null;
+	reporterGoodFaithConfirmed: boolean | null;
+	reportedWebhookId: WebhookID | null;
+	reportedWebhookName: string | null;
+	reportedWebhookAvatarHash: string | null;
+	reportedWebhookDefaultName: string | null;
+	reportedWebhookDefaultAvatarHash: string | null;
+	reportedWebhookType: number | null;
+	reportedWebhookApplicationId: ApplicationID | null;
+	reportedWebhookChannelId: ChannelID | null;
+	reportedWebhookGuildId: GuildID | null;
+	reportedWebhookCreatedAt: Date | null;
+	reportedWebhookCreatorId: UserID | null;
+	reportedWebhookCreatorUsername: string | null;
+	reportedWebhookCreatorDiscriminator: number | null;
+	reportedWebhookCreatorGlobalName: string | null;
+	reportedWebhookCreatorAvatarHash: string | null;
+	reportedProfileSnapshot: ReportProfileSnapshot | null;
+	legalHoldUntil: Date | null;
+	legalHoldReason: string | null;
 }
 
 export abstract class IReportRepository {
@@ -94,7 +124,15 @@ export abstract class IReportRepository {
 
 	abstract reserveMessageReportByReporter(data: MessageReportSubmissionByReporterRow): Promise<boolean>;
 
-	abstract deleteMessageReportByReporter(reporterId: UserID, channelId: ChannelID, messageId: MessageID): Promise<void>;
+	abstract releaseMessageReportByReporter(data: MessageReportSubmissionByReporterRow): Promise<void>;
+
+	abstract reserveUserReportByReporter(data: UserReportSubmissionByReporterRow): Promise<boolean>;
+
+	abstract releaseUserReportByReporter(data: UserReportSubmissionByReporterRow): Promise<void>;
+
+	abstract reserveGuildReportByReporter(data: GuildReportSubmissionByReporterRow): Promise<boolean>;
+
+	abstract releaseGuildReportByReporter(data: GuildReportSubmissionByReporterRow): Promise<void>;
 
 	abstract getReport(reportId: ReportID): Promise<IARSubmission | null>;
 
@@ -105,11 +143,21 @@ export abstract class IReportRepository {
 		auditLogReason: string | null,
 	): Promise<IARSubmission>;
 
+	abstract setReportLegalHold(
+		reportId: ReportID,
+		legalHoldUntil: Date | null,
+		legalHoldReason: string | null,
+	): Promise<IARSubmission>;
+
+	abstract clearReporterEmail(reportId: ReportID, reporterId: UserID): Promise<boolean>;
+
+	abstract deleteReport(reportId: ReportID): Promise<void>;
+
 	abstract listAllReportsPaginated(limit: number, lastReportId?: ReportID): Promise<Array<IARSubmission>>;
 
 	abstract upsertDsaEmailVerification(row: DSAReportEmailVerificationRow): Promise<void>;
 
-	abstract deleteDsaEmailVerification(emailLower: string): Promise<void>;
+	abstract consumeDsaEmailVerification(emailLower: string, codeHash: string): Promise<boolean>;
 
 	abstract getDsaEmailVerification(emailLower: string): Promise<DSAReportEmailVerificationRow | null>;
 
@@ -117,5 +165,5 @@ export abstract class IReportRepository {
 
 	abstract getDsaTicket(ticket: string): Promise<DSAReportTicketRow | null>;
 
-	abstract deleteDsaTicket(ticket: string): Promise<void>;
+	abstract consumeDsaTicket(ticket: string, emailLower: string): Promise<boolean>;
 }

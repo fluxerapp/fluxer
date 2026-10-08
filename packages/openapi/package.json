@@ -21,6 +21,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
+		"@fluxer/constants": "workspace:*",
 		"@types/node": "catalog:",
 		"tsx": "catalog:",
 		"typescript": "catalog:ts7",

@@ -13,9 +13,3 @@ export function recordRecentDeepLink(url: string): void {
 		logger.debug('addRecentDocument failed', {error});
 	}
 }
-
-function _clearRecentDeepLinks(): void {
-	try {
-		app.clearRecentDocuments();
-	} catch {}
-}

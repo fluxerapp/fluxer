@@ -17,25 +17,16 @@ pub type HttpClient = ClientWithMiddleware;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct HTTPClientOptions {
     connect_timeout_ms: NonZeroU64,
-    request_timeout: HTTPRequestTimeout,
+    request_timeout_ms: NonZeroU64,
     retries: HTTPRetryPolicy,
     address_policy: HTTPAddressPolicy,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum HTTPRequestTimeout {
-    Bounded(NonZeroU64),
-    Disabled,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum HTTPRetryPolicy {
-    Disabled,
-    Enabled {
-        max_retries: NonZeroU32,
-        min_delay_ms: NonZeroU64,
-        max_delay_ms: NonZeroU64,
-    },
+struct HTTPRetryPolicy {
+    max_retries: NonZeroU32,
+    min_delay_ms: NonZeroU64,
+    max_delay_ms: NonZeroU64,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -48,23 +39,13 @@ impl HTTPClientOptions {
     pub fn new(connect_timeout_ms: NonZeroU64, timeout_ms: NonZeroU64) -> Self {
         Self {
             connect_timeout_ms,
-            request_timeout: HTTPRequestTimeout::Bounded(timeout_ms),
+            request_timeout_ms: timeout_ms,
             ..Self::default()
         }
     }
 
-    pub fn without_request_timeout(mut self) -> Self {
-        self.request_timeout = HTTPRequestTimeout::Disabled;
-        self
-    }
-
     pub fn restrict_to_public(mut self) -> Self {
         self.address_policy = HTTPAddressPolicy::PublicOnly;
-        self
-    }
-
-    pub fn without_retries(mut self) -> Self {
-        self.retries = HTTPRetryPolicy::Disabled;
         self
     }
 }
@@ -74,10 +55,9 @@ impl Default for HTTPClientOptions {
         Self {
             connect_timeout_ms: NonZeroU64::new(1_500)
                 .expect("default connection timeout must be nonzero"),
-            request_timeout: HTTPRequestTimeout::Bounded(
-                NonZeroU64::new(30_000).expect("default request timeout must be nonzero"),
-            ),
-            retries: HTTPRetryPolicy::Enabled {
+            request_timeout_ms: NonZeroU64::new(30_000)
+                .expect("default request timeout must be nonzero"),
+            retries: HTTPRetryPolicy {
                 max_retries: NonZeroU32::new(2)
                     .expect("default maximum retry count must be nonzero"),
                 min_delay_ms: NonZeroU64::new(25)
@@ -97,11 +77,9 @@ pub fn build_raw(options: HTTPClientOptions) -> Result<reqwest::Client, reqwest:
     // is the one client that opts out, because it only ever dials this process on loopback.
     let mut builder = reqwest::Client::builder()
         .connect_timeout(Duration::from_millis(options.connect_timeout_ms.get()))
+        .timeout(Duration::from_millis(options.request_timeout_ms.get()))
         .redirect(reqwest::redirect::Policy::none())
         .user_agent(crate::constants::OUTBOUND_USER_AGENT);
-    if let HTTPRequestTimeout::Bounded(timeout_ms) = options.request_timeout {
-        builder = builder.timeout(Duration::from_millis(timeout_ms.get()));
-    }
     if options.address_policy == HTTPAddressPolicy::PublicOnly {
         builder = builder.dns_resolver(Arc::new(PinnedDnsResolver));
     }
@@ -114,14 +92,11 @@ pub fn build(
 ) -> Result<HttpClient, reqwest::Error> {
     let client = build_raw(options)?;
     let builder = ClientBuilder::new(client);
-    let HTTPRetryPolicy::Enabled {
+    let HTTPRetryPolicy {
         max_retries,
         min_delay_ms,
         max_delay_ms,
-    } = options.retries
-    else {
-        return Ok(builder.build());
-    };
+    } = options.retries;
     let retry_policy = ExponentialBackoff::builder()
         .retry_bounds(
             Duration::from_millis(min_delay_ms.get()),
@@ -164,25 +139,13 @@ mod tests {
     }
 
     #[test]
-    fn builds_non_retrying_client() {
-        let client = build(
-            HTTPClientOptions::default().without_retries(),
-            Metrics::new().http_client(),
-        );
-        assert!(client.is_ok());
-    }
-
-    #[test]
     fn default_options_keep_the_frozen_timeout_and_retry_budget() {
         let options = HTTPClientOptions::default();
         assert_eq!(options.connect_timeout_ms, millis(1_500));
-        assert_eq!(
-            options.request_timeout,
-            HTTPRequestTimeout::Bounded(millis(30_000))
-        );
+        assert_eq!(options.request_timeout_ms, millis(30_000));
         assert_eq!(
             options.retries,
-            HTTPRetryPolicy::Enabled {
+            HTTPRetryPolicy {
                 max_retries: NonZeroU32::new(2).expect("nonzero"),
                 min_delay_ms: millis(25),
                 max_delay_ms: millis(500),
@@ -195,43 +158,18 @@ mod tests {
     fn new_overrides_only_the_two_timeouts_and_keeps_the_default_retry_budget() {
         let options = HTTPClientOptions::new(millis(250), millis(4_000));
         assert_eq!(options.connect_timeout_ms, millis(250));
-        assert_eq!(
-            options.request_timeout,
-            HTTPRequestTimeout::Bounded(millis(4_000))
-        );
+        assert_eq!(options.request_timeout_ms, millis(4_000));
         assert_eq!(options.retries, HTTPClientOptions::default().retries);
         assert_eq!(options.address_policy, HTTPAddressPolicy::Any);
     }
 
     #[test]
-    fn each_modifier_changes_exactly_one_facet_and_composes_with_the_others() {
+    fn restricting_to_public_changes_only_the_address_policy() {
         let base = HTTPClientOptions::new(millis(250), millis(4_000));
-        let stripped = base
-            .without_request_timeout()
-            .restrict_to_public()
-            .without_retries();
-        assert_eq!(stripped.connect_timeout_ms, millis(250));
-        assert_eq!(stripped.request_timeout, HTTPRequestTimeout::Disabled);
-        assert_eq!(stripped.retries, HTTPRetryPolicy::Disabled);
-        assert_eq!(stripped.address_policy, HTTPAddressPolicy::PublicOnly);
-        assert_eq!(
-            base.without_request_timeout(),
-            HTTPClientOptions {
-                request_timeout: HTTPRequestTimeout::Disabled,
-                ..base
-            }
-        );
         assert_eq!(
             base.restrict_to_public(),
             HTTPClientOptions {
                 address_policy: HTTPAddressPolicy::PublicOnly,
-                ..base
-            }
-        );
-        assert_eq!(
-            base.without_retries(),
-            HTTPClientOptions {
-                retries: HTTPRetryPolicy::Disabled,
                 ..base
             }
         );
@@ -241,7 +179,6 @@ mod tests {
     fn every_option_shape_produces_a_usable_transport_client() {
         let base = HTTPClientOptions::new(millis(250), millis(4_000));
         assert!(build_raw(base).is_ok());
-        assert!(build_raw(base.without_request_timeout()).is_ok());
         assert!(build_raw(base.restrict_to_public()).is_ok());
         assert!(build_raw(HTTPClientOptions::default()).is_ok());
     }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {compareMessageIds} from '@app/features/read_state/state/read_states/shared';
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup} from 'xstate';
 
 export interface ReadStateIncomingMessageInput {
 	isCurrentUserAuthor: boolean;
@@ -35,7 +35,7 @@ export type ReadStateIncomingMessageDecision =
 			coveredByLastMessage: boolean;
 	  };
 
-export type ReadStateIncomingMessageEvent = {
+type ReadStateIncomingMessageEvent = {
 	type: 'incomingMessage.updated';
 	input: ReadStateIncomingMessageInput;
 };
@@ -65,7 +65,7 @@ function getDecision(snapshot: ReadStateIncomingMessageSnapshot): ReadStateIncom
 	}
 }
 
-export const readStateIncomingMessageMachine = setup({
+const readStateIncomingMessageMachine = setup({
 	types: {} as {
 		context: ReadStateIncomingMessageInput;
 		events: ReadStateIncomingMessageEvent;
@@ -120,22 +120,15 @@ export const readStateIncomingMessageMachine = setup({
 	},
 });
 
-export type ReadStateIncomingMessageSnapshot = SnapshotFrom<typeof readStateIncomingMessageMachine>;
+type ReadStateIncomingMessageSnapshot = SnapshotFrom<typeof readStateIncomingMessageMachine>;
 
-export function createReadStateIncomingMessageSnapshot(
+function createReadStateIncomingMessageSnapshot(
 	input: ReadStateIncomingMessageInput,
 ): ReadStateIncomingMessageSnapshot {
 	return initialTransition(readStateIncomingMessageMachine, input)[0];
 }
 
-export function transitionReadStateIncomingMessageSnapshot(
-	snapshot: ReadStateIncomingMessageSnapshot,
-	event: ReadStateIncomingMessageEvent,
-): ReadStateIncomingMessageSnapshot {
-	return transition(readStateIncomingMessageMachine, snapshot, event)[0] as ReadStateIncomingMessageSnapshot;
-}
-
-export function selectReadStateIncomingMessageDecision(
+function selectReadStateIncomingMessageDecision(
 	snapshot: ReadStateIncomingMessageSnapshot,
 ): ReadStateIncomingMessageDecision {
 	return getDecision(snapshot);

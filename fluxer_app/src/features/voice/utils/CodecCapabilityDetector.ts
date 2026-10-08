@@ -24,16 +24,16 @@ import {
 	type ScreenShareCodecProfileEntry,
 	type ScreenShareCodecRanking,
 } from '@app/features/voice/utils/ScreenShareCodecSelection';
-import {isH264SoftwareClamped, normaliseStreamingModeForContext} from '@app/features/voice/utils/ScreenShareOptions';
+import {isH264SoftwareClamped} from '@app/features/voice/utils/ScreenShareOptions';
 import {getProbedVideoDecoderExclusionsSync} from '@app/features/voice/utils/VideoDecoderCapabilities';
 import type {TrackPublishDefaults, TrackPublishOptions} from 'livekit-client';
-import {BackupCodecPolicy, supportsVideoCodec, type VideoCodec, type VideoEncoding} from 'livekit-client';
+import {BackupCodecPolicy, supportsVideoCodec, type VideoCodec} from 'livekit-client';
 
 const logger = new Logger('CodecCapabilityDetector');
 export const LIVEKIT_SUPPORTED_CODECS: ReadonlyArray<VideoCodec> = ['vp8', 'h264', 'vp9', 'av1', 'h265'];
 const PUBLISH_CODEC_FALLBACK_ORDER: ReadonlyArray<VideoCodec> = ['h264', 'vp9', 'vp8', 'av1', 'h265'];
 
-export interface CodecCapabilities {
+interface CodecCapabilities {
 	vp8: boolean;
 	vp9: boolean;
 	h264: boolean;
@@ -41,7 +41,7 @@ export interface CodecCapabilities {
 	av1: boolean;
 }
 
-export type CodecSupportReason =
+type CodecSupportReason =
 	| 'supported'
 	| 'unsupported-browser'
 	| 'unsupported-system'
@@ -50,7 +50,7 @@ export type CodecSupportReason =
 	| 'opt-in-required'
 	| 'runtime-failed';
 
-export interface CodecSupportInfo {
+interface CodecSupportInfo {
 	supported: boolean;
 	reason: CodecSupportReason;
 	detail: string;
@@ -68,14 +68,14 @@ export interface CodecCapabilityReport {
 export type CodecPreference = 'auto' | VideoCodec;
 export type ScreenShareEncoderMode = 'auto' | 'hardware' | 'software';
 export type ScreenShareScalabilityModePreference = 'auto' | 'single_layer' | 'temporal';
-export type AutomaticScreenShareCodecReason =
+type AutomaticScreenShareCodecReason =
 	| 'firefox-vp8'
 	| 'non-chromium-h264'
 	| 'non-chromium-vp8'
 	| `hardware-${VideoCodec}`
 	| `software-${VideoCodec}`;
 
-export interface AutomaticScreenShareCodecSelection {
+interface AutomaticScreenShareCodecSelection {
 	codec: VideoCodec;
 	reason: AutomaticScreenShareCodecReason;
 }
@@ -311,10 +311,6 @@ function buildReport(): CodecCapabilityReport {
 	};
 }
 
-export function getCodecCapabilities(): CodecCapabilities {
-	return probeEncodingCapabilities();
-}
-
 export function getCodecCapabilityReport(): CodecCapabilityReport {
 	const currentGpu = getGpuEncoderReportSync();
 	const currentNativeHardwareEncoder = getNativeHardwareEncoderCapabilitiesSync();
@@ -343,22 +339,6 @@ export function getLiveKitSupportedCodecs(): ReadonlyArray<VideoCodec> {
 	return LIVEKIT_SUPPORTED_CODECS;
 }
 
-export function isCodecLiveKitSupported(codec: string): codec is VideoCodec {
-	return (LIVEKIT_SUPPORTED_CODECS as ReadonlyArray<string>).includes(codec);
-}
-
-export function isH265EncodingSupported(): boolean {
-	return probeEncodingCapabilities().h265;
-}
-
-export function isVP9EncodingSupported(): boolean {
-	return probeEncodingCapabilities().vp9;
-}
-
-export function isAV1EncodingSupported(): boolean {
-	return probeEncodingCapabilities().av1;
-}
-
 export function selectOptimalCameraCodec(preference: CodecPreference = 'auto'): VideoCodec {
 	if (preference !== 'auto') {
 		const caps = probeEncodingCapabilities();
@@ -380,16 +360,6 @@ export function selectOptimalCameraCodec(preference: CodecPreference = 'auto'): 
 	}
 	if (caps.h264 && platform === 'windows') return 'h264';
 	return 'vp8';
-}
-
-export function resolveEffectiveScreenShareEncoderMode(mode: ScreenShareEncoderMode): ScreenShareEncoderMode {
-	if (mode !== 'hardware') return mode;
-	const report = getGpuEncoderReportSync();
-	const codecs: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'h264', 'vp9', 'vp8'];
-	const nativeHardwareEncoder = getNativeHardwareEncoderCapabilitiesSync();
-	if (!report && !nativeHardwareEncoder) return mode;
-	const capabilityReport = getCodecCapabilityReport();
-	return codecs.some((codec) => capabilityReport[codec].hardwareAccelerated === 'hardware') ? 'hardware' : 'auto';
 }
 
 export function buildScreenShareCodecProfile(): ScreenShareCodecProfile {
@@ -479,7 +449,7 @@ export function markScreenShareCodecSoftwareEncodeObserved(codec: VideoCodec): b
 	return true;
 }
 
-export type VideoPublishCodecDenial = 'sender-cannot-encode' | 'policy' | 'runtime-failed' | 'decoder-excluded';
+type VideoPublishCodecDenial = 'sender-cannot-encode' | 'policy' | 'runtime-failed' | 'decoder-excluded';
 
 export interface VideoPublishCodecPolicy {
 	allowed: ReadonlyArray<VideoCodec>;
@@ -611,56 +581,7 @@ export function resolveScreenShareEncoderVerificationAction(
 	};
 }
 
-export function selectNativeScreenCaptureScreenShareCodec(preference: CodecPreference = 'auto'): VideoCodec {
-	return selectOptimalScreenShareCodec(preference);
-}
-
-export function shouldUseNativeScreenCaptureForScreenShareCodec(_codec: VideoCodec): boolean {
-	return true;
-}
-
 export type ScreenShareContentSource = 'app' | 'device' | 'display';
-
-export function resolveScreenShareContentHint(
-	preference: ScreenShareContentHint | undefined = 'auto',
-): 'detail' | 'text' | 'motion' | undefined {
-	return preference === undefined || preference === 'auto' ? undefined : preference;
-}
-
-export function resolveScreenShareContentHintForContext(
-	preference: ScreenShareContentHint | undefined,
-	_codec: VideoCodec,
-	source: ScreenShareContentSource,
-	streamingMode: 'custom' | 'gaming' | 'screenshare',
-): 'detail' | 'text' | 'motion' | undefined {
-	const mode = normaliseStreamingModeForContext(streamingMode, source);
-	if (mode === 'gaming') return 'motion';
-	if (mode === 'screenshare') return 'text';
-	return resolveScreenShareContentHint(preference);
-}
-
-export function adjustScreenShareEncodingForCodec(encoding: VideoEncoding, _codec: VideoCodec): VideoEncoding {
-	return encoding;
-}
-
-export function getBackupCodecForPrimary(primaryCodec: VideoCodec):
-	| false
-	| {
-			codec: 'vp8' | 'h264';
-	  } {
-	switch (primaryCodec) {
-		case 'vp8':
-			return false;
-		case 'h264':
-			return false;
-		case 'vp9':
-		case 'av1':
-		case 'h265':
-			return {codec: 'h264'};
-		default:
-			return {codec: 'h264'};
-	}
-}
 
 export function resetCachedCodecCapabilities(): void {
 	cachedCapabilities = null;

@@ -33,10 +33,6 @@ class MessageEditMobile {
 		delete this.editingMessageIds[channelId];
 	}
 
-	isEditingMobile(channelId: string, messageId: string): boolean {
-		return this.editingMessageIds[channelId] === messageId;
-	}
-
 	getEditingMobileMessageId(channelId: string): string | null {
 		return this.editingMessageIds[channelId] ?? null;
 	}

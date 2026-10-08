@@ -22,11 +22,3 @@ export function countTelemetryEvent(event: TelemetryEvent, amount = 1, ...args: 
 	counts.set(event, total);
 	console.info(`[Telemetry] ${event}`, total, ...args);
 }
-
-export function telemetryCounts(): Readonly<Record<string, number>> {
-	return Object.fromEntries([...counts].sort(([left], [right]) => (left < right ? -1 : 1)));
-}
-
-export function resetTelemetryCounts(): void {
-	counts.clear();
-}

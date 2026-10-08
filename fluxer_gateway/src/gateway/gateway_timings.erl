@@ -8,7 +8,6 @@
     start/0,
     elapsed_us/1,
     record/3,
-    record/4,
     record_function/4,
     record_function/5,
     span/2,
@@ -18,8 +17,6 @@
     from_state/1,
     put_state/2,
     merge_state/2,
-    record_node_hit/3,
-    record_api_node_from_session_result/2,
     api_remote_from_session_result/1,
     remote_node/2,
     is_recorder/1
@@ -64,10 +61,6 @@ elapsed_us(_) ->
 -spec record(term(), integer(), recorder()) -> recorder().
 record(Name, StartedAtUs, Recorder) ->
     record_function(Name, Name, StartedAtUs, Recorder).
-
--spec record(term(), integer(), map(), recorder()) -> recorder().
-record(Name, StartedAtUs, ChildSteps, Recorder0) ->
-    record_function_with_child_steps(Name, Name, StartedAtUs, ChildSteps, #{}, Recorder0).
 
 -spec record_function(term(), term(), integer(), recorder()) -> recorder().
 record_function(StepName, FunctionName, StartedAtUs, Recorder) ->
@@ -151,29 +144,6 @@ put_state(Recorder, State) when is_map(State) ->
 -spec merge_state(term(), map()) -> map().
 merge_state(Update, State) ->
     put_state(merge(from_state(State), Update), State).
-
--spec record_node_hit(term(), term(), recorder()) -> recorder().
-record_node_hit(_Role, Node, Recorder0) when Node =:= node() ->
-    ensure_recorder(Recorder0);
-record_node_hit(Role, Node, Recorder0) ->
-    Recorder = ensure_recorder(Recorder0),
-    case remote_node(Role, Node) of
-        NodeInfo when is_map(NodeInfo) ->
-            Recorder#{nodes := merge_nodes(maps:get(nodes, Recorder, []), [NodeInfo])};
-        _ ->
-            Recorder
-    end.
-
--spec record_api_node_from_session_result(term(), recorder()) -> recorder().
-record_api_node_from_session_result({ok, Data}, Recorder) when is_map(Data) ->
-    case maps:get(<<"_timings">>, Data, undefined) of
-        Timings when is_map(Timings) ->
-            record_external_node(<<"api">>, Timings, Recorder);
-        _ ->
-            Recorder
-    end;
-record_api_node_from_session_result(_, Recorder) ->
-    Recorder.
 
 -spec api_remote_from_session_result(term()) -> map() | undefined.
 api_remote_from_session_result({ok, Data}) when is_map(Data) ->
@@ -352,12 +322,6 @@ maybe_put_steps(Step, ChildSteps) when is_map(ChildSteps), map_size(ChildSteps) 
     Step#{<<"steps">> => ChildSteps};
 maybe_put_steps(Step, _) ->
     maps:remove(<<"steps">>, Step).
-
--spec record_external_node(binary(), map(), recorder()) -> recorder().
-record_external_node(Role, Timings, Recorder0) ->
-    Recorder = ensure_recorder(Recorder0),
-    NodeInfo = external_node_info(Role, Timings),
-    Recorder#{nodes := merge_nodes(maps:get(nodes, Recorder, []), [NodeInfo])}.
 
 -spec external_node_info(binary(), map()) -> map().
 external_node_info(Role, Timings) ->

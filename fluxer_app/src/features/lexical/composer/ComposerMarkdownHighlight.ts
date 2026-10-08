@@ -15,7 +15,6 @@ import {
 	type MarkdownSpan,
 	markSilentMessagePrefix,
 } from '@app/features/lexical/composer/markdownSpans';
-import {$isComposerBlockquoteLineNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
 import {
 	$createComposerBlockquoteMarkerNode,
 	$isComposerBlockquoteMarkerNode,
@@ -114,15 +113,6 @@ type Desired =
 	| {role: 'keep'; node: LexicalNode};
 
 type BuildableDesired = Exclude<Desired, {role: 'keep'}>;
-
-export function $reconcileLineOf(node: TextNode, parserFlags?: number): void {
-	const parent = node.getParent();
-	const block = $isComposerBlockquoteLineNode(parent) ? parent.getParent() : parent;
-	if (block == null || block.getType() !== 'paragraph') {
-		return;
-	}
-	$reconcileParagraph(block as ParagraphNode, parserFlags);
-}
 
 function $reconcileParagraph(
 	paragraph: ParagraphNode,

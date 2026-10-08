@@ -24,13 +24,6 @@ class GlobalLimitsClass {
 		});
 	}
 
-	getAvatarMaxSize(): number {
-		return LimitResolver.resolve({
-			key: 'avatar_max_size',
-			fallback: FALLBACKS.avatar_max_size,
-		});
-	}
-
 	get(key: LimitKey, fallback: number): number {
 		return LimitResolver.resolve({key, fallback});
 	}

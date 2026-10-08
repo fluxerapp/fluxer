@@ -20,7 +20,7 @@ import {
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
-export interface HoverFloatingTooltipState {
+interface HoverFloatingTooltipState {
 	x: number;
 	y: number;
 	isOpen: boolean;

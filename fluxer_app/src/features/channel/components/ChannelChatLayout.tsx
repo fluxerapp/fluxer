@@ -5,7 +5,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {createContext, useContext} from 'react';
+import {createContext} from 'react';
 
 const MESSAGES_DESCRIPTOR = msg({
 	message: 'Messages',
@@ -23,11 +23,6 @@ interface ChannelChatLayoutProps {
 }
 
 const ChannelComposerAmbientStatusVisibilityContext = createContext(true);
-
-export function useChannelComposerAmbientStatusVisibility(): boolean {
-	return useContext(ChannelComposerAmbientStatusVisibilityContext);
-}
-
 export const ChannelChatLayout = observer(({messages, textarea, hideBottomBar = false}: ChannelChatLayoutProps) => {
 	const {i18n} = useLingui();
 	return (

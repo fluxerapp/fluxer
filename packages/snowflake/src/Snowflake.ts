@@ -132,10 +132,6 @@ export class SnowflakeGenerator {
 		return snowflake;
 	}
 
-	getWorkerId(): number {
-		return Number(this.workerId);
-	}
-
 	private waitUntilNextTimestamp(): bigint {
 		let timestamp = getTimestampFromNow(this.now);
 		while (timestamp <= this.lastTimestamp) {

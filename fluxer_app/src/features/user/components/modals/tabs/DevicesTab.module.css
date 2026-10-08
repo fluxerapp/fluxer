@@ -188,36 +188,6 @@
 	padding-bottom: 4rem;
 }
 
-.devicesSection {
-	display: flex;
-	flex-direction: column;
-	gap: 1.5rem;
-}
-
-.deviceGroup {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-}
-
-.deviceGroupHeader {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-}
-
-.deviceGroupTitle {
-	font-size: 0.875rem;
-	font-weight: 600;
-	color: var(--text-primary);
-}
-
-@media (min-width: 640px) {
-	.deviceGroupTitle {
-		font-size: 1rem;
-	}
-}
-
 .devicesGrid {
 	display: flex;
 	flex-direction: column;

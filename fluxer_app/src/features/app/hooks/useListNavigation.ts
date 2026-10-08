@@ -3,7 +3,7 @@
 import type React from 'react';
 import {useCallback, useEffect, useState} from 'react';
 
-export type NavigationDirection = 'up' | 'down' | 'home' | 'end';
+type NavigationDirection = 'up' | 'down' | 'home' | 'end';
 
 export interface UseListNavigationOptions {
 	itemCount: number;

@@ -3,7 +3,7 @@
 import {spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {createServer} from 'node:net';
-import {Config} from '@app/api/Config';
+import {Config, getConfig} from '@app/api/Config';
 import type {CassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import type {PreparedQuery} from '@app/api/database/CassandraTypes';
@@ -15,6 +15,8 @@ import {
 	InstanceConfigWriteConflictError,
 	type InstanceRegistrationConfig,
 } from '@app/api/instance/InstanceConfigRepository';
+import {getLegalUrls, setCachedConfiguredLegalUrls} from '@app/api/instance/LegalUrls';
+import {getInstanceProductName, setCachedProductName} from '@app/api/instance/ProductName';
 import {InstanceConfigWriteRaceExecutor} from '@app/api/instance/tests/InstanceConfigWriteRaceExecutor';
 import {startDockerContainer} from '@app/api/test/DockerTestContainer';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
@@ -270,6 +272,90 @@ describe('InstanceConfigRepository', () => {
 		const config = await repository.getAppPublicConfig();
 		expect(config.branding.favicon_url).toBe(`${Config.endpoints.media}/branding/0/a_0123abcd.gif`);
 		expect(config.branding.icon_url).toBe('https://other.example/branding/0/89abcdef.png');
+	});
+
+	it('round-trips the community guidelines URL and clears a blank one', async () => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
+		const originalSelfHosted = getConfig().instance.selfHosted;
+		getConfig().instance.selfHosted = true;
+		try {
+			expect((await repository.getAppPublicConfig()).legal).toEqual({
+				terms_url: null,
+				privacy_url: null,
+				guidelines_url: null,
+			});
+			const saved = await repository.setAppPublicConfig({
+				legal: {terms_url: 'https://example.org/tos', guidelines_url: ' https://example.org/rules '},
+			});
+			expect(saved.legal).toEqual({
+				terms_url: 'https://example.org/tos',
+				privacy_url: null,
+				guidelines_url: 'https://example.org/rules',
+			});
+			expect((await repository.getAppPublicConfig()).legal.guidelines_url).toBe('https://example.org/rules');
+			expect(getLegalUrls()).toEqual({termsUrl: 'https://example.org/tos', guidelinesUrl: 'https://example.org/rules'});
+			await repository.setAppPublicConfig({legal: {privacy_url: 'https://example.org/privacy'}});
+			expect((await repository.getAppPublicConfig()).legal.guidelines_url).toBe('https://example.org/rules');
+			await repository.setAppPublicConfig({legal: {guidelines_url: '  '}});
+			expect((await repository.getAppPublicConfig()).legal.guidelines_url).toBeNull();
+			expect(getLegalUrls()).toEqual({termsUrl: 'https://example.org/tos', guidelinesUrl: null});
+		} finally {
+			getConfig().instance.selfHosted = originalSelfHosted;
+			setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: null});
+		}
+	});
+
+	it('loads the stored guidelines URL into the legal URL cache on initialize', async () => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const kvProvider = new MockKVProvider();
+		const originalSelfHosted = getConfig().instance.selfHosted;
+		getConfig().instance.selfHosted = true;
+		try {
+			await createRepository(kvProvider).setConfig(
+				APP_PUBLIC_CONFIG_KEY,
+				JSON.stringify({legal: {terms_url: null, privacy_url: null, guidelines_url: 'https://example.org/rules'}}),
+			);
+			setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: null});
+			expect(getLegalUrls().guidelinesUrl).toBeNull();
+			await createRepository(kvProvider).initialize();
+			expect(getLegalUrls().guidelinesUrl).toBe('https://example.org/rules');
+		} finally {
+			getConfig().instance.selfHosted = originalSelfHosted;
+			setCachedConfiguredLegalUrls({terms_url: null, guidelines_url: null});
+		}
+	});
+
+	it('keeps the product name cache in step with the stored branding', async () => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const kvProvider = new MockKVProvider();
+		try {
+			await createRepository(kvProvider).setConfig(
+				APP_PUBLIC_CONFIG_KEY,
+				JSON.stringify({branding: {product_name: 'Example Chat'}}),
+			);
+			setCachedProductName(null);
+			await createRepository(kvProvider).initialize();
+			expect(getInstanceProductName()).toBe('Example Chat');
+			await createRepository(kvProvider).setAppPublicConfig({branding: {product_name: 'Renamed Chat'}});
+			expect(getInstanceProductName()).toBe('Renamed Chat');
+		} finally {
+			setCachedProductName(null);
+		}
+	});
+
+	it('reads a stored legal config written before the guidelines URL existed', async () => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
+		await repository.setConfig(
+			APP_PUBLIC_CONFIG_KEY,
+			JSON.stringify({legal: {terms_url: 'https://example.org/tos', privacy_url: null}}),
+		);
+		expect((await repository.getAppPublicConfig()).legal).toEqual({
+			terms_url: 'https://example.org/tos',
+			privacy_url: null,
+			guidelines_url: null,
+		});
 	});
 
 	it('keeps valid stored instance policy flags when one field is invalid', async () => {

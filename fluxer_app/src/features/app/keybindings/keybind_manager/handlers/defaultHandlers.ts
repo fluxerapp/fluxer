@@ -183,7 +183,9 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	}
 	host.register('misc_help', ({type}) => {
 		if (type !== 'press') return;
-		openExternalUrlWithWarning(Routes.help());
+		const helpUrl = Routes.help();
+		if (!helpUrl) return;
+		openExternalUrlWithWarning(helpUrl);
 	});
 	host.register('misc_search', ({type}) => {
 		if (type !== 'press') return;

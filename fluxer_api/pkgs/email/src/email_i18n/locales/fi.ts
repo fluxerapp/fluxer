@@ -5,23 +5,23 @@ import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18
 const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_deletion_cancelled": {
 		"subject": "{product_name}-tilisi poistaminen on peruttu",
-		"body": "Hei {username},\n\n{product_name}-tilisi ajoitettu poisto on peruttu. Tiliäsi ei poisteta.\n\nJos sinulla on kysyttävää, ota yhteyttä osoitteeseen {safety_email}.\n\n– {product_name}-tiimi"
+		"body": "Hei {username},\n\n{product_name}-tilisi ajoitettu poisto on peruttu. Tiliäsi ei poisteta.\n\n{safety_email, select, null {Jos sinulla on kysyttävää, ota yhteyttä tämän instanssin ylläpitäjiin.} other {Jos sinulla on kysyttävää, ota yhteyttä osoitteeseen {safety_email}.}}\n\n– {product_name}-tiimi"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "{product_name}-tilisi poistetaan käyttämättömyyden vuoksi",
-		"body": "Hei {username},\n\n{product_name}-tilisi on ollut pitkään käyttämättä, joten se on ajoitettu poistettavaksi pysyvästi:\n\n{deletionDate, date, full} klo {deletionDate, time, short}{reason, select, null {} other {\n\nSyy: {reason}}}\n\nJos haluat säilyttää tilisi, ota yhteyttä osoitteeseen {safety_email} tästä sähköpostiosoitteesta ennen tätä päivämäärää.\n\n– {product_name}-tiimi"
+		"body": "Hei {username},\n\n{product_name}-tilisi on ollut pitkään käyttämättä, joten se on ajoitettu poistettavaksi pysyvästi:\n\n{deletionDate, date, full} klo {deletionDate, time, short}{reason, select, null {} other {\n\nSyy: {reason}}}\n\n{safety_email, select, null {Jos haluat säilyttää tilisi, ota yhteyttä tämän instanssin ylläpitäjiin ennen tätä päivämäärää.} other {Jos haluat säilyttää tilisi, ota yhteyttä osoitteeseen {safety_email} tästä sähköpostiosoitteesta ennen tätä päivämäärää.}}\n\n– {product_name}-tiimi"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "{product_name}-tilisi poistaminen on ajoitettu",
-		"body": "Hei {username},\n\nPyyntösi mukaisesti {product_name}-tilisi on ajoitettu poistettavaksi pysyvästi:\n\n{deletionDate, date, full} klo {deletionDate, time, short}{reason, select, null {} other {\n\nSyy: {reason}}}\n\nTilisi on lukittu siihen asti. Jos et pyytänyt tätä tai haluat säilyttää tilisi, ota yhteyttä osoitteeseen {safety_email} tästä sähköpostiosoitteesta ennen tätä päivämäärää.\n\n– {product_name}-tiimi"
+		"body": "Hei {username},\n\nPyyntösi mukaisesti {product_name}-tilisi on ajoitettu poistettavaksi pysyvästi:\n\n{deletionDate, date, full} klo {deletionDate, time, short}{reason, select, null {} other {\n\nSyy: {reason}}}\n\nTilisi on lukittu siihen asti. {safety_email, select, null {Jos et pyytänyt tätä tai haluat säilyttää tilisi, ota yhteyttä tämän instanssin ylläpitäjiin ennen tätä päivämäärää.} other {Jos et pyytänyt tätä tai haluat säilyttää tilisi, ota yhteyttä osoitteeseen {safety_email} tästä sähköpostiosoitteesta ennen tätä päivämäärää.}}\n\n– {product_name}-tiimi"
 	},
 	"account_scheduled_deletion": {
 		"subject": "Käyttäjätilisi {product_name}-palvelussa poistetaan pysyvästi",
-		"body": "Hei {username},\n\n{product_name}-käyttäjätilisi on ajoitettu poistettavaksi pysyvästi käyttöehtojemme tai yhteisösääntöjemme rikkomisen vuoksi.\n\nAjoitettu poisto: {deletionDate, date, full} klo {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nTämä on vakava toimenpide. Tilisi tiedot poistetaan pysyvästi ajoitettuna päivänä.\n\nTutustu:\n- Käyttöehdot: {termsUrl}\n- Yhteisön säännöt: {guidelinesUrl}\n\nValitusprosessi:\nJos uskot, että tämä päätös oli virheellinen tai perusteeton, sinulla on 60 päivää aikaa tehdä valitus. Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta.\n\nValituksessasi:\n- Selitä selkeästi, miksi uskot päätöksen olleen virheellinen tai perusteeton\n- Liitä mukaan asiaankuuluvat todisteet tai taustatiedot\n\n{product_name}-turvallisuustiimin jäsen käsittelee valituksesi ja voi keskeyttää vireillä olevan poiston, kunnes lopullinen päätös on tehty.\n\n– {product_name}-turvallisuustiimi"
+		"body": "Hei {username},\n\n{product_name}-käyttäjätilisi on ajoitettu poistettavaksi pysyvästi käyttöehtojemme tai yhteisösääntöjemme rikkomisen vuoksi.\n\nAjoitettu poisto: {deletionDate, date, full} klo {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Syy: {reason}\n\n}\n}Tämä on vakava toimenpide. Tilisi tiedot poistetaan pysyvästi ajoitettuna päivänä.\n\n{legalLinks, select,\n  both {Tutustu:\n- Käyttöehdot: {termsUrl}\n- Yhteisön säännöt: {guidelinesUrl}\n\n}\n  terms {Tutustu:\n- Käyttöehdot: {termsUrl}\n\n}\n  guidelines {Tutustu:\n- Yhteisön säännöt: {guidelinesUrl}\n\n}\n  other {}\n}Valitusprosessi:\nJos uskot, että tämä päätös oli virheellinen tai perusteeton, sinulla on 60 päivää aikaa tehdä valitus. {appeals_email, select, null {Ota yhteyttä tämän instanssin ylläpitäjiin.} other {Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta.}}\n\nValituksessasi:\n- Selitä selkeästi, miksi uskot päätöksen olleen virheellinen tai perusteeton\n- Liitä mukaan asiaankuuluvat todisteet tai taustatiedot\n\n{product_name}-turvallisuustiimin jäsen käsittelee valituksesi ja voi keskeyttää vireillä olevan poiston, kunnes lopullinen päätös on tehty.\n\n– {product_name}-turvallisuustiimi"
 	},
 	"account_temp_banned": {
 		"subject": "Käyttäjätilisi {product_name}-palvelussa on tilapäisesti jäädytetty",
-		"body": "Hei {username},\n\n{product_name}-käyttäjätilisi on jäädytetty tilapäisesti käyttöehtojemme tai yhteisösääntöjemme rikkomisen vuoksi.\n\nKesto: {durationHours, plural,\n  =1 {1 tunti}\n  other {# tuntia}\n}\nJäädytettynä {bannedUntil, date, full} klo {bannedUntil, time, short} asti\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nTänä aikana et voi käyttää tiliäsi.\n\nTutustu:\n- Käyttöehdot: {termsUrl}\n- Yhteisön säännöt: {guidelinesUrl}\n\nJos uskot, että tämä päätös oli virheellinen tai perusteeton, voit tehdä valituksen. Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta ja selitä selkeästi, miksi uskot päätöksen olleen virheellinen. Käsittelemme valituksesi ja ilmoitamme sinulle päätöksemme.\n\n– {product_name}-turvallisuustiimi"
+		"body": "Hei {username},\n\n{product_name}-käyttäjätilisi on jäädytetty tilapäisesti käyttöehtojemme tai yhteisösääntöjemme rikkomisen vuoksi.\n\nKesto: {durationHours, plural,\n  =1 {1 tunti}\n  other {# tuntia}\n}\nJäädytettynä {bannedUntil, date, full} klo {bannedUntil, time, short} asti\n\n{reason, select,\n  null {}\n  other {Syy: {reason}\n\n}\n}Tänä aikana et voi käyttää tiliäsi.\n\n{legalLinks, select,\n  both {Tutustu:\n- Käyttöehdot: {termsUrl}\n- Yhteisön säännöt: {guidelinesUrl}\n\n}\n  terms {Tutustu:\n- Käyttöehdot: {termsUrl}\n\n}\n  guidelines {Tutustu:\n- Yhteisön säännöt: {guidelinesUrl}\n\n}\n  other {}\n}Jos uskot, että tämä päätös oli virheellinen tai perusteeton, voit tehdä valituksen. {appeals_email, select, null {Ota yhteyttä tämän instanssin ylläpitäjiin ja selitä selkeästi, miksi uskot päätöksen olleen virheellinen.} other {Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta ja selitä selkeästi, miksi uskot päätöksen olleen virheellinen.}} Käsittelemme valituksesi ja ilmoitamme sinulle päätöksemme.\n\n– {product_name}-turvallisuustiimi"
 	},
 	"donation_confirmation": {
 		"subject": "Kiitos {product_name}-lahjoituksestasi",
@@ -30,6 +30,10 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	"donation_magic_link": {
 		"subject": "Hallitse {product_name}-lahjoituksiasi",
 		"body": "Hei,\n\nNapsauta alla olevaa linkkiä päästäksesi lahjoittajaportaaliisi:\n\n{manageUrl}\n\nPortaalissa voit hallinnoida tilauksia, ladata laskuja ja tarkastella lahjoitushistoriaasi.\n\nTämä linkki vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä linkkiä, voit jättää tämän sähköpostin turvallisesti huomiotta.\n\n– {product_name}-tiimi"
+	},
+	"dsa_report_resolved": {
+		"subject": "Teimme päätöksen {product_name}-ilmoituksestasi",
+		"body": "Hei,\n\nTurvallisuustiimimme on käsitellyt digipalvelusäädöksen mukaisen ilmoituksesi (ID: {reportId}) ja tehnyt päätöksen.{hasComment, select, yes {\n\nTurvallisuustiimin vastaus:\n{publicComment}} other {}}\n\nEmme kerro toisen henkilön tiliin kohdistuneista toimista, koska ne ovat hänen henkilötietojaan.\n\nJos olet eri mieltä päätöksestä, voit valittaa siitä maksutta 60 päivän kuluessa. {appeals_email, select, null {Ota yhteyttä tämän instanssin ylläpitäjiin, kerro ilmoituksesi tunnus ja selitä, miksi pidät päätöstä virheellisenä.} other {Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta, kerro ilmoituksesi tunnus ja selitä, miksi pidät päätöstä virheellisenä.}} Jos olet EU:ssa, voit myös viedä riidan sertifioidun tuomioistuimen ulkopuolisen riidanratkaisuelimen käsiteltäväksi. Mikään tästä ei vaikuta oikeuteesi viedä asia tuomioistuimeen.\n\n– {product_name}-turvallisuustiimi"
 	},
 	"dsa_report_verification": {
 		"subject": "Vahvista sähköpostiosoitteesi DSA-ilmoitusta varten",
@@ -53,15 +57,15 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"gift_chargeback_notification": {
 		"subject": "Lunastamasi lahjan edut on poistettu",
-		"body": "Hei {username},\n\nLunastamasi lahjakoodin oli alun perin maksanut joku muu. Kyseinen maksu on sittemmin peruutettu (takaisinperintä).\n\nTämän vuoksi olemme poistaneet edut, jotka lisättiin tilillesi, kun lunastit lahjan.\n\nJos uskot tämän olevan virhe, ota yhteyttä tukitiimiimme ja liitä mukaan kaikki tiedot lahjakoodista ja sen lunastusajankohdasta.\n\n– {product_name}-tiimi"
+		"body": "Hei {username},\n\nLunastamasi lahjakoodin oli alun perin maksanut joku muu. Kyseinen maksu on sittemmin peruutettu (takaisinperintä).\n\nTämän vuoksi olemme poistaneet edut, jotka lisättiin tilillesi, kun lunastit lahjan.\n\n{support_email, select, null {Jos uskot tämän olevan virhe, ota yhteyttä tämän instanssin ylläpitäjiin ja liitä mukaan kaikki tiedot lahjakoodista ja sen lunastusajankohdasta.} other {Jos uskot tämän olevan virhe, ota yhteyttä tukitiimiimme ja liitä mukaan kaikki tiedot lahjakoodista ja sen lunastusajankohdasta.}}\n\n– {product_name}-tiimi"
 	},
 	"harvest_completed": {
 		"subject": "{product_name}-tietojesi vienti on ladattavissa",
-		"body": "Hei {username},\n\nTietojesi vienti on valmis.\n\nLatauslinkki:\n{downloadUrl}\n\nMukana olevat viestit: {totalMessages, number}\nTiedoston koko: {fileSizeMB, number} MB\n\nTämä linkki vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä vientiä, vaihda salasanasi välittömästi ja ota yhteyttä tukitiimiimme.\n\n– {product_name}-tiimi"
+		"body": "Hei {username},\n\nTietojesi vienti on valmis.\n\nLatauslinkki:\n{downloadUrl}\n\nMukana olevat viestit: {totalMessages, number}\nTiedoston koko: {fileSizeMB, number} MB\n\nTämä linkki vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\n{support_email, select, null {Jos et pyytänyt tätä vientiä, vaihda salasanasi välittömästi ja ota yhteyttä tämän instanssin ylläpitäjiin.} other {Jos et pyytänyt tätä vientiä, vaihda salasanasi välittömästi ja ota yhteyttä tukitiimiimme.}}\n\n– {product_name}-tiimi"
 	},
 	"inactivity_warning": {
 		"subject": "{product_name}-tilisi poistetaan käyttämättömyyden vuoksi",
-		"body": "Hei {username},\n\nEmme ole havainneet toimintaa {product_name}-tililläsi {lastActiveDate, date, full} jälkeen.\n\nJos et kirjaudu sisään {deletionDate, date, full} klo {deletionDate, time, short} mennessä, tilisi poistetaan pysyvästi passiivisuuden vuoksi.\n\nKirjaudu sisään täältä:\n{loginUrl}\n\nJos olet käyttänyt {product_name}-palvelua äskettäin, ota yhteyttä tukitiimiimme välittömästi.\n\n– {product_name}-tiimi"
+		"body": "Hei {username},\n\nEmme ole havainneet toimintaa {product_name}-tililläsi {lastActiveDate, date, full} jälkeen.\n\nJos et kirjaudu sisään {deletionDate, date, full} klo {deletionDate, time, short} mennessä, tilisi poistetaan pysyvästi passiivisuuden vuoksi.\n\nKirjaudu sisään täältä:\n{loginUrl}\n\n{support_email, select, null {Jos olet käyttänyt {product_name}-palvelua äskettäin, ota yhteyttä tämän instanssin ylläpitäjiin välittömästi.} other {Jos olet käyttänyt {product_name}-palvelua äskettäin, ota yhteyttä tukitiimiimme välittömästi.}}\n\n– {product_name}-tiimi"
 	},
 	"ip_authorization": {
 		"subject": "Hyväksy kirjautuminen uudesta IP-osoitteesta",
@@ -79,17 +83,17 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Nollaa {product_name}-salasanasi",
 		"body": "Hei {username},\n\nPyysit {product_name}-salasanan nollausta. Käytä alla olevaa linkkiä asettaaksesi uuden salasanan:\n\n{resetUrl}\n\nJos et pyytänyt tätä, voit jättää tämän sähköpostin turvallisesti huomiotta.\n\nTämä linkki on voimassa 1 tunnin.\n\n– {product_name}-tiimi"
 	},
-	"registration_approved": {
-		"subject": "{product_name}-rekisteröitymisesi on hyväksytty",
-		"body": "Hei {username},\n\nHyviä uutisia: {product_name}-rekisteröitymisesi on hyväksytty.\n\nVoit nyt kirjautua {product_name}-sovellukseen täältä:\n{channelsUrl}\n\nTervetuloa {product_name}-yhteisöön.\n\n– {product_name}-tiimi"
+	"report_received": {
+		"subject": "Vastaanotimme {product_name}-ilmoituksesi",
+		"body": "Hei,\n\nVastaanotimme digipalvelusäädöksen mukaisen ilmoituksesi, joka koskee {targetKind, select, message {viestiä} user {tiliä} guild {yhteisöä} other {sisältöä}} {product_name}-palvelussa.\n\nIlmoituksen tunnus: {reportId}\n\nTurvallisuustiimimme käsittelee ilmoituksesi, ja lähetämme sinulle sähköpostia tähän osoitteeseen, kun olemme tehneet päätöksen. Säilytä tämä sähköposti myöhempää tarvetta varten.\n\n– {product_name}-turvallisuustiimi"
 	},
 	"report_resolved": {
 		"subject": "{product_name}-ilmoituksesi on käsitelty",
-		"body": "Hei {username},\n\nTurvallisuustiimimme on käsitellyt ilmoituksesi (ID: {reportId}).{hasComment, select, yes {\n\nTurvallisuustiimin vastaus:\n{publicComment}} other {}}\n\nKiitos, että autat pitämään {product_name}-palvelun turvallisena kaikille. Otamme kaikki ilmoitukset vakavasti ja arvostamme panostasi yhteisöön.\n\nJos sinulla on kysyttävää tai huolenaiheita tästä päätöksestä, ota yhteyttä osoitteeseen {safety_email}.\n\n– {product_name}-turvallisuustiimi"
+		"body": "Hei {username},\n\nTurvallisuustiimimme on käsitellyt ilmoituksesi (ID: {reportId}).{hasComment, select, yes {\n\nTurvallisuustiimin vastaus:\n{publicComment}} other {}}\n\nKiitos, että autat pitämään {product_name}-palvelun turvallisena kaikille. Otamme kaikki ilmoitukset vakavasti ja arvostamme panostasi yhteisöön.\n\n{safety_email, select, null {Jos sinulla on kysyttävää tai huolenaiheita tästä päätöksestä, ota yhteyttä tämän instanssin ylläpitäjiin.} other {Jos sinulla on kysyttävää tai huolenaiheita tästä päätöksestä, ota yhteyttä osoitteeseen {safety_email}.}}\n\n– {product_name}-turvallisuustiimi"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "Käyttäjätilisi {product_name}-palvelussa poistetaan pysyvästi",
-		"body": "Hei {username},\n\n{product_name}-tilisi on ajoitettu poistettavaksi pysyvästi.\n\nAjoitettu poisto: {deletionDate, date, full} klo {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nTämä on vakava toimenpide. Tilisi tiedot poistetaan pysyvästi ajoitettuna päivänä.\n\nJos uskot, että tämä päätös oli virheellinen, voit tehdä valituksen. Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta.\n\n– {product_name}-turvallisuustiimi"
+		"body": "Hei {username},\n\n{product_name}-tilisi on ajoitettu poistettavaksi pysyvästi.\n\nAjoitettu poisto: {deletionDate, date, full} klo {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Syy: {reason}\n\n}\n}Tämä on vakava toimenpide. Tilisi tiedot poistetaan pysyvästi ajoitettuna päivänä.\n\nJos uskot, että tämä päätös oli virheellinen, voit tehdä valituksen. {appeals_email, select, null {Ota yhteyttä tämän instanssin ylläpitäjiin.} other {Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta.}}\n\n– {product_name}-turvallisuustiimi"
 	},
 	"self_deletion_scheduled": {
 		"subject": "{product_name}-tilisi poistaminen on ajoitettu",
@@ -97,7 +101,7 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"unban_notification": {
 		"subject": "{product_name}-tilisi jäädytys on poistettu",
-		"body": "Hei {username},\n\nHyviä uutisia: {product_name}-tilisi jäädytys on poistettu.\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nVoit nyt kirjautua takaisin sisään ja jatkaa {product_name}-palvelun käyttöä normaalisti.\n\n– {product_name}-turvallisuustiimi"
+		"body": "Hei {username},\n\nHyviä uutisia: {product_name}-tilisi jäädytys on poistettu.\n\n{reason, select,\n  null {}\n  other {Syy: {reason}\n\n}\n}Voit nyt kirjautua takaisin sisään ja jatkaa {product_name}-palvelun käyttöä normaalisti.\n\n– {product_name}-turvallisuustiimi"
 	}
 });
 

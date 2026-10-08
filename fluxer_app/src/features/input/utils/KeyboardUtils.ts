@@ -9,12 +9,6 @@ export function isKeyboardActivationKey(key: string): boolean {
 	return key === 'Enter' || key === ' ' || key === 'Space' || key === 'Spacebar';
 }
 
-export function handleStopPropagationForKeyboardActivation(e: React.KeyboardEvent): void {
-	if (isKeyboardActivationKey(e.key)) {
-		e.stopPropagation();
-	}
-}
-
 export function stopPropagationOnEnterSpace(e: React.KeyboardEvent): void {
 	if (isKeyboardActivationKey(e.key)) {
 		e.stopPropagation();

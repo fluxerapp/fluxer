@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type TextareaSelectionDirection = 'forward' | 'backward' | 'none';
+type TextareaSelectionDirection = 'forward' | 'backward' | 'none';
 
 export interface TextareaSelectionSnapshot {
 	selectionStart: number;
@@ -15,13 +15,6 @@ function clampPosition(position: number, max: number): number {
 	return Math.min(Math.max(Math.trunc(position), 0), max);
 }
 
-function normalizeSelectionDirection(direction: string | null): TextareaSelectionDirection {
-	if (direction === 'forward' || direction === 'backward') {
-		return direction;
-	}
-	return 'none';
-}
-
 export function cloneTextareaSelectionSnapshot(snapshot: TextareaSelectionSnapshot): TextareaSelectionSnapshot {
 	return {
 		selectionStart: snapshot.selectionStart,
@@ -30,7 +23,7 @@ export function cloneTextareaSelectionSnapshot(snapshot: TextareaSelectionSnapsh
 	};
 }
 
-export function normalizeTextareaSelectionSnapshot(
+function normalizeTextareaSelectionSnapshot(
 	snapshot: TextareaSelectionSnapshot,
 	valueLength: number,
 ): TextareaSelectionSnapshot {
@@ -44,19 +37,7 @@ export function normalizeTextareaSelectionSnapshot(
 	};
 }
 
-export function captureTextareaSelection(textarea: HTMLTextAreaElement): TextareaSelectionSnapshot {
-	const valueLength = textarea.value.length;
-	return normalizeTextareaSelectionSnapshot(
-		{
-			selectionStart: textarea.selectionStart ?? valueLength,
-			selectionEnd: textarea.selectionEnd ?? valueLength,
-			selectionDirection: normalizeSelectionDirection(textarea.selectionDirection),
-		},
-		valueLength,
-	);
-}
-
-export function restoreTextareaSelection(textarea: HTMLTextAreaElement, snapshot: TextareaSelectionSnapshot): void {
+function restoreTextareaSelection(textarea: HTMLTextAreaElement, snapshot: TextareaSelectionSnapshot): void {
 	const normalized = normalizeTextareaSelectionSnapshot(snapshot, textarea.value.length);
 	textarea.setSelectionRange(normalized.selectionStart, normalized.selectionEnd, normalized.selectionDirection);
 }

@@ -32,9 +32,6 @@ const FETCH_BY_ID = BillingInvoices.selectCql({
 const FETCH_BY_CUSTOMER_PARTITION = BillingInvoicesByCustomer.selectCql({
 	where: BillingInvoicesByCustomer.where.eq('customer_id'),
 });
-const FETCH_BY_SUBSCRIPTION_PARTITION = BillingInvoicesBySubscription.selectCql({
-	where: BillingInvoicesBySubscription.where.eq('subscription_id'),
-});
 const FETCH_BY_PROVIDER_IDS = BillingInvoices.selectCql({
 	where: BillingInvoices.where.in('provider_id', 'provider_ids'),
 });
@@ -61,28 +58,6 @@ export class BillingInvoiceRepository {
 		}>(
 			FETCH_BY_CUSTOMER_PARTITION,
 			{customer_id: customerId},
-			{pageSize: page?.pageSize ?? 50, pageState: page?.pageState ?? null},
-		);
-		if (refsPage.rows.length === 0) {
-			return {rows: [], pageState: refsPage.pageState};
-		}
-		const ids = refsPage.rows.map((r) => r.provider_id);
-		const rows = await fetchMany<BillingInvoiceRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
-		return {rows, pageState: refsPage.pageState};
-	}
-
-	async listBySubscription(
-		subscriptionId: string,
-		page?: {
-			pageSize: number;
-			pageState?: string | null;
-		},
-	): Promise<PagedQueryResult<BillingInvoiceRow>> {
-		const refsPage = await fetchPage<{
-			provider_id: string;
-		}>(
-			FETCH_BY_SUBSCRIPTION_PARTITION,
-			{subscription_id: subscriptionId},
 			{pageSize: page?.pageSize ?? 50, pageState: page?.pageState ?? null},
 		);
 		if (refsPage.rows.length === 0) {

@@ -110,12 +110,12 @@ const KEY_DESCRIPTORS: Partial<Record<string, MessageDescriptor>> = {
 	KanaMode: msg({message: 'Kana', context: 'keyboard-key-name'}),
 };
 
-export function formatMouseButton(i18n: I18n, button: number): string {
+function formatMouseButton(i18n: I18n, button: number): string {
 	const descriptor = MOUSE_BUTTON_DESCRIPTORS[button];
 	return descriptor ? i18n._(descriptor) : i18n._(MOUSE_BUTTON_DESCRIPTOR, {button});
 }
 
-export function formatGamepadButton(i18n: I18n, button: number): string {
+function formatGamepadButton(i18n: I18n, button: number): string {
 	const descriptor = GAMEPAD_BUTTON_DESCRIPTORS[button];
 	return descriptor ? i18n._(descriptor) : i18n._(GAMEPAD_BUTTON_DESCRIPTOR, {button});
 }

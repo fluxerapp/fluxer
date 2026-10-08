@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/voice/components/modals/ScreenSharePickerModal.module.css';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -108,7 +108,7 @@ export const PerWindowAudioNotice: React.FC<PerWindowAudioNoticeProps> = ({platf
 	return (
 		<div className={styles.osNotice} role="status" data-flx="voice.screen-share-picker-modal.os-notice">
 			<strong data-flx="voice.screen-share-picker-modal.strong">{i18n._(copy.title)}</strong>{' '}
-			{i18n._(copy.body, {productName: PRODUCT_NAME})}
+			{i18n._(copy.body, {productName: RuntimeConfig.productName})}
 		</div>
 	);
 };

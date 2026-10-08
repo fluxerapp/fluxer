@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Updater from '@app/features/app/state/Updater';
 import styles from '@app/features/channel/components/ChannelHeader.module.css';
 import {Platform} from '@app/features/platform/types/Platform';
@@ -67,8 +67,8 @@ export const UpdaterIcon = observer(() => {
 		tooltip = i18n._(UPDATE_AVAILABLE_DESCRIPTOR);
 	} else {
 		tooltip = version
-			? i18n._(CLICK_TO_RELOAD_AND_UPDATE_DESCRIPTOR, {version, productName: PRODUCT_NAME})
-			: i18n._(CLICK_TO_RELOAD_AND_UPDATE_2_DESCRIPTOR, {productName: PRODUCT_NAME});
+			? i18n._(CLICK_TO_RELOAD_AND_UPDATE_DESCRIPTOR, {version, productName: RuntimeConfig.productName})
+			: i18n._(CLICK_TO_RELOAD_AND_UPDATE_2_DESCRIPTOR, {productName: RuntimeConfig.productName});
 	}
 	return (
 		<Tooltip text={tooltip} position="bottom" data-flx="channel.channel-header-components.updater-icon.tooltip">

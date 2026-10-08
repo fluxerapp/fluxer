@@ -5,23 +5,23 @@ import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18
 const EMAIL_I18N_HU_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_deletion_cancelled": {
 		"subject": "Visszavontuk {product_name}-fiókod törlését",
-		"body": "Szia, {username}!\n\n{product_name}-fiókod ütemezett törlését visszavontuk. A fiókodat nem töröljük.\n\nHa kérdésed van, írj erre a címre: {safety_email}.\n\n– {product_name} csapata"
+		"body": "Szia, {username}!\n\n{product_name}-fiókod ütemezett törlését visszavontuk. A fiókodat nem töröljük.\n\n{safety_email, select, null {Ha kérdésed van, fordulj ennek a példánynak az adminisztrátoraihoz.} other {Ha kérdésed van, írj erre a címre: {safety_email}.}}\n\n– {product_name} csapata"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "{product_name}-fiókodat inaktivitás miatt törölni fogjuk",
-		"body": "Szia, {username}!\n\n{product_name}-fiókod hosszú ideje inaktív, ezért végleges törlése a következő időpontra van ütemezve:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nIndok: {reason}}}\n\nHa meg szeretnéd tartani a fiókodat, még az időpont előtt írj erről az e-mail-címről erre a címre: {safety_email}.\n\n– {product_name} csapata"
+		"body": "Szia, {username}!\n\n{product_name}-fiókod hosszú ideje inaktív, ezért végleges törlése a következő időpontra van ütemezve:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nIndok: {reason}}}\n\n{safety_email, select, null {Ha meg szeretnéd tartani a fiókodat, még az időpont előtt fordulj ennek a példánynak az adminisztrátoraihoz.} other {Ha meg szeretnéd tartani a fiókodat, még az időpont előtt írj erről az e-mail-címről erre a címre: {safety_email}.}}\n\n– {product_name} csapata"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "Ütemeztük {product_name}-fiókod törlését",
-		"body": "Szia, {username}!\n\nKérésedre {product_name}-fiókod végleges törlése a következő időpontra van ütemezve:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nIndok: {reason}}}\n\nAddig a fiókod zárolva van. Ha nem te kérted ezt, vagy meg szeretnéd tartani a fiókodat, még az időpont előtt írj erről az e-mail-címről erre a címre: {safety_email}.\n\n– {product_name} csapata"
+		"body": "Szia, {username}!\n\nKérésedre {product_name}-fiókod végleges törlése a következő időpontra van ütemezve:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nIndok: {reason}}}\n\nAddig a fiókod zárolva van. {safety_email, select, null {Ha nem te kérted ezt, vagy meg szeretnéd tartani a fiókodat, még az időpont előtt fordulj ennek a példánynak az adminisztrátoraihoz.} other {Ha nem te kérted ezt, vagy meg szeretnéd tartani a fiókodat, még az időpont előtt írj erről az e-mail-címről erre a címre: {safety_email}.}}\n\n– {product_name} csapata"
 	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name}-fiókodat véglegesen törölni fogjuk",
-		"body": "Szia, {username}!\n\n{product_name}-fiókod végleges törlését ütemeztük a szolgáltatási feltételeink vagy a közösségi irányelveink megsértése miatt.\n\nA törlés tervezett időpontja: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Indok: {reason}}\n}\n\nEz súlyos moderációs intézkedés. Fiókod adatait a megadott időpontban véglegesen töröljük.\n\nKérjük, olvasd át az alábbiakat:\n- Szolgáltatási feltételek: {termsUrl}\n- Közösségi irányelvek: {guidelinesUrl}\n\nFellebbezés:\nHa úgy gondolod, hogy ez a döntés hibás vagy indokolatlan volt, 60 napod van fellebbezni. Erről az e-mail-címről írj a következő címre: {appeals_email}.\n\nA fellebbezésben:\n- Világosan fejtsd ki, miért gondolod, hogy a döntés hibás vagy indokolatlan volt.\n- Add meg a kapcsolódó bizonyítékokat és a körülményeket.\n\nA {product_name} biztonsági csapatának egyik tagja elbírálja a fellebbezésedet, és a végleges döntésig felfüggesztheti a tervezett törlést.\n\n– {product_name} biztonsági csapata"
+		"body": "Szia, {username}!\n\n{product_name}-fiókod végleges törlését ütemeztük a szolgáltatási feltételeink vagy a közösségi irányelveink megsértése miatt.\n\nA törlés tervezett időpontja: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Indok: {reason}\n\n}\n}Ez súlyos moderációs intézkedés. Fiókod adatait a megadott időpontban véglegesen töröljük.\n\n{legalLinks, select,\n  both {Kérjük, olvasd át az alábbiakat:\n- Szolgáltatási feltételek: {termsUrl}\n- Közösségi irányelvek: {guidelinesUrl}\n\n}\n  terms {Kérjük, olvasd át az alábbiakat:\n- Szolgáltatási feltételek: {termsUrl}\n\n}\n  guidelines {Kérjük, olvasd át az alábbiakat:\n- Közösségi irányelvek: {guidelinesUrl}\n\n}\n  other {}\n}Fellebbezés:\nHa úgy gondolod, hogy ez a döntés hibás vagy indokolatlan volt, 60 napod van fellebbezni. {appeals_email, select, null {Fordulj ennek a példánynak az adminisztrátoraihoz.} other {Erről az e-mail-címről írj a következő címre: {appeals_email}.}}\n\nA fellebbezésben:\n- Világosan fejtsd ki, miért gondolod, hogy a döntés hibás vagy indokolatlan volt.\n- Add meg a kapcsolódó bizonyítékokat és a körülményeket.\n\nA {product_name} biztonsági csapatának egyik tagja elbírálja a fellebbezésedet, és a végleges döntésig felfüggesztheti a tervezett törlést.\n\n– {product_name} biztonsági csapata"
 	},
 	"account_temp_banned": {
 		"subject": "{product_name}-fiókodat ideiglenesen felfüggesztettük",
-		"body": "Szia, {username}!\n\n{product_name}-fiókodat ideiglenesen felfüggesztettük a szolgáltatási feltételeink vagy a közösségi irányelveink megsértése miatt.\n\nIdőtartam: {durationHours, plural,\n  =1 {1 óra}\n  other {# óra}\n}\nA felfüggesztés vége: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Indok: {reason}}\n}\n\nEz idő alatt nem férsz hozzá a fiókodhoz.\n\nKérjük, olvasd át az alábbiakat:\n- Szolgáltatási feltételek: {termsUrl}\n- Közösségi irányelvek: {guidelinesUrl}\n\nHa úgy gondolod, hogy ez a döntés hibás vagy indokolatlan volt, fellebbezhetsz. Erről az e-mail-címről írj a következő címre: {appeals_email}, és világosan fejtsd ki, miért tartod hibásnak a döntést. Elbíráljuk a fellebbezésedet, és értesítünk a döntésünkről.\n\n– {product_name} biztonsági csapata"
+		"body": "Szia, {username}!\n\n{product_name}-fiókodat ideiglenesen felfüggesztettük a szolgáltatási feltételeink vagy a közösségi irányelveink megsértése miatt.\n\nIdőtartam: {durationHours, plural,\n  =1 {1 óra}\n  other {# óra}\n}\nA felfüggesztés vége: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Indok: {reason}\n\n}\n}Ez idő alatt nem férsz hozzá a fiókodhoz.\n\n{legalLinks, select,\n  both {Kérjük, olvasd át az alábbiakat:\n- Szolgáltatási feltételek: {termsUrl}\n- Közösségi irányelvek: {guidelinesUrl}\n\n}\n  terms {Kérjük, olvasd át az alábbiakat:\n- Szolgáltatási feltételek: {termsUrl}\n\n}\n  guidelines {Kérjük, olvasd át az alábbiakat:\n- Közösségi irányelvek: {guidelinesUrl}\n\n}\n  other {}\n}Ha úgy gondolod, hogy ez a döntés hibás vagy indokolatlan volt, fellebbezhetsz. {appeals_email, select, null {Fordulj ennek a példánynak az adminisztrátoraihoz, és világosan fejtsd ki, miért tartod hibásnak a döntést.} other {Erről az e-mail-címről írj a következő címre: {appeals_email}, és világosan fejtsd ki, miért tartod hibásnak a döntést.}} Elbíráljuk a fellebbezésedet, és értesítünk a döntésünkről.\n\n– {product_name} biztonsági csapata"
 	},
 	"donation_confirmation": {
 		"subject": "Köszönjük, hogy adományoddal támogatod a {product_name} működését",
@@ -30,6 +30,10 @@ const EMAIL_I18N_HU_MESSAGES = defineEmailI18nLocaleMessages({
 	"donation_magic_link": {
 		"subject": "A {product_name} működését támogató adományaid kezelése",
 		"body": "Szia!\n\nKattints az alábbi linkre az adományozói portálod eléréséhez:\n\n{manageUrl}\n\nA portálon kezelheted az előfizetéseket, letöltheted a számlákat, és megtekintheted az adománytörténetedet.\n\nEz a link {expiresAt, date, full} {expiresAt, time, short} időpontban jár le.\n\nHa nem kérted ezt a linket, nyugodtan figyelmen kívül hagyhatod ezt az e-mailt.\n\n– {product_name} csapata"
+	},
+	"dsa_report_resolved": {
+		"subject": "Döntést hoztunk a {product_name} felületén tett bejelentésedről",
+		"body": "Szia!\n\nBiztonsági csapatunk elbírálta a digitális szolgáltatásokról szóló rendelet szerinti bejelentésedet (azonosító: {reportId}), és döntést hozott.{hasComment, select, yes {\n\nA biztonsági csapat válasza:\n{publicComment}} other {}}\n\nMás személy fiókjával szemben tett intézkedések részleteit nem osztjuk meg, mert azok az ő személyes adatai.\n\nHa nem értesz egyet a döntéssel, 60 napon belül díjmentesen fellebbezhetsz. {appeals_email, select, null {Fordulj ennek a példánynak az adminisztrátoraihoz, add meg a bejelentésed azonosítóját, és fejtsd ki, miért tartod hibásnak a döntést.} other {Erről az e-mail-címről írj a következő címre: {appeals_email}, add meg a bejelentésed azonosítóját, és fejtsd ki, miért tartod hibásnak a döntést.}} Ha az EU-ban tartózkodsz, a vitát tanúsított peren kívüli vitarendezési testület elé is viheted. Mindez nem érinti azt a jogodat, hogy bírósághoz fordulj.\n\n– {product_name} biztonsági csapata"
 	},
 	"dsa_report_verification": {
 		"subject": "Erősítsd meg e-mail-címedet a DSA-bejelentéshez",
@@ -53,15 +57,15 @@ const EMAIL_I18N_HU_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"gift_chargeback_notification": {
 		"subject": "Megszűntek a beváltott ajándékodhoz tartozó előnyök",
-		"body": "Szia, {username}!\n\nAz általad beváltott ajándékkódot eredetileg valaki más fizette ki. Ezt a fizetést azóta visszaterhelték (chargeback).\n\nEmiatt megszüntettük azokat az előnyöket, amelyeket az ajándék beváltásakor kapott a fiókod.\n\nHa úgy gondolod, hogy ez tévedés, vedd fel a kapcsolatot ügyfélszolgálatunkkal, és add meg az ajándékkóddal és a beváltás időpontjával kapcsolatos ismert részleteket.\n\n– {product_name} csapata"
+		"body": "Szia, {username}!\n\nAz általad beváltott ajándékkódot eredetileg valaki más fizette ki. Ezt a fizetést azóta visszaterhelték (chargeback).\n\nEmiatt megszüntettük azokat az előnyöket, amelyeket az ajándék beváltásakor kapott a fiókod.\n\n{support_email, select, null {Ha úgy gondolod, hogy ez tévedés, fordulj ennek a példánynak az adminisztrátoraihoz, és add meg az ajándékkóddal és a beváltás időpontjával kapcsolatos ismert részleteket.} other {Ha úgy gondolod, hogy ez tévedés, vedd fel a kapcsolatot ügyfélszolgálatunkkal, és add meg az ajándékkóddal és a beváltás időpontjával kapcsolatos ismert részleteket.}}\n\n– {product_name} csapata"
 	},
 	"harvest_completed": {
 		"subject": "A {product_name} adatexportja elkészült, letöltheted az adataidat",
-		"body": "Szia, {username}!\n\nAz adatexportod elkészült.\n\nLetöltési link:\n{downloadUrl}\n\nÜzenetek száma: {totalMessages, number}\nFájlméret: {fileSizeMB, number} MB\n\nEz a link {expiresAt, date, full} {expiresAt, time, short} időpontban jár le.\n\nHa nem kérted ezt az exportálást, azonnal változtasd meg a jelszavadat, és vedd fel a kapcsolatot az ügyfélszolgálatunkkal.\n\n– {product_name} csapata"
+		"body": "Szia, {username}!\n\nAz adatexportod elkészült.\n\nLetöltési link:\n{downloadUrl}\n\nÜzenetek száma: {totalMessages, number}\nFájlméret: {fileSizeMB, number} MB\n\nEz a link {expiresAt, date, full} {expiresAt, time, short} időpontban jár le.\n\n{support_email, select, null {Ha nem kérted ezt az exportálást, azonnal változtasd meg a jelszavadat, és fordulj ennek a példánynak az adminisztrátoraihoz.} other {Ha nem kérted ezt az exportálást, azonnal változtasd meg a jelszavadat, és vedd fel a kapcsolatot az ügyfélszolgálatunkkal.}}\n\n– {product_name} csapata"
 	},
 	"inactivity_warning": {
 		"subject": "{product_name}-fiókodat inaktivitás miatt törölni fogjuk",
-		"body": "Szia, {username}!\n\nEzen dátum óta nem észleltünk tevékenységet {product_name}-fiókodban: {lastActiveDate, date, full}.\n\nHa nem jelentkezel be az alábbi időpontig, inaktivitás miatt véglegesen töröljük a fiókodat: {deletionDate, date, full} {deletionDate, time, short}.\n\nItt jelentkezhetsz be:\n{loginUrl}\n\nHa mostanában használtad a {product_name} alkalmazást, azonnal vedd fel a kapcsolatot ügyfélszolgálatunkkal.\n\n– {product_name} csapata"
+		"body": "Szia, {username}!\n\nEzen dátum óta nem észleltünk tevékenységet {product_name}-fiókodban: {lastActiveDate, date, full}.\n\nHa nem jelentkezel be az alábbi időpontig, inaktivitás miatt véglegesen töröljük a fiókodat: {deletionDate, date, full} {deletionDate, time, short}.\n\nItt jelentkezhetsz be:\n{loginUrl}\n\n{support_email, select, null {Ha mostanában használtad a {product_name} alkalmazást, azonnal fordulj ennek a példánynak az adminisztrátoraihoz.} other {Ha mostanában használtad a {product_name} alkalmazást, azonnal vedd fel a kapcsolatot ügyfélszolgálatunkkal.}}\n\n– {product_name} csapata"
 	},
 	"ip_authorization": {
 		"subject": "Új IP-címről való bejelentkezés engedélyezése",
@@ -79,17 +83,17 @@ const EMAIL_I18N_HU_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Állítsd vissza {product_name}-fiókod jelszavát",
 		"body": "Szia, {username}!\n\n{product_name}-fiókod jelszavának visszaállítását kérted. Használd az alábbi linket új jelszó beállításához:\n\n{resetUrl}\n\nHa nem kérted ezt, nyugodtan figyelmen kívül hagyhatod ezt az e-mailt.\n\nEz a link 1 óráig érvényes.\n\n– {product_name} csapata"
 	},
-	"registration_approved": {
-		"subject": "Jóváhagytuk a regisztrációdat a {product_name} felületén",
-		"body": "Szia, {username}!\n\nJó hír: jóváhagytuk a regisztrációdat a {product_name} felületén.\n\nMost már bejelentkezhetsz az alkalmazásba:\n{channelsUrl}\n\nÜdvözlünk a {product_name} közösségében!\n\n– {product_name} csapata"
+	"report_received": {
+		"subject": "Megkaptuk a {product_name} felületén tett bejelentésedet",
+		"body": "Szia!\n\nMegkaptuk a digitális szolgáltatásokról szóló rendelet (DSA) szerinti bejelentésedet a {product_name} felületén. A bejelentés tárgya: {targetKind, select, message {egy üzenet} user {egy fiók} guild {egy közösség} other {tartalom}}.\n\nBejelentés azonosítója: {reportId}\n\nBiztonsági csapatunk elbírálja a bejelentésedet, és erre a címre írunk neked, amint döntést hoztunk. Őrizd meg ezt az e-mailt, hogy később is meglegyen.\n\n– {product_name} biztonsági csapata"
 	},
 	"report_resolved": {
 		"subject": "Elbíráltuk a {product_name} felületén tett bejelentésedet",
-		"body": "Szia, {username}!\n\nBiztonsági csapatunk elbírálta a bejelentésedet (azonosító: {reportId}).{hasComment, select, yes {\n\nA biztonsági csapat válasza:\n{publicComment}} other {}}\n\nKöszönjük, hogy segítesz mindenki számára biztonságossá tenni a {product_name} közösségét. Minden bejelentést komolyan veszünk, és nagyra értékeljük, hogy segíted a közösséget.\n\nHa kérdésed vagy aggályod van az eredménnyel kapcsolatban, írj erre a címre: {safety_email}.\n\n– {product_name} biztonsági csapata"
+		"body": "Szia, {username}!\n\nBiztonsági csapatunk elbírálta a bejelentésedet (azonosító: {reportId}).{hasComment, select, yes {\n\nA biztonsági csapat válasza:\n{publicComment}} other {}}\n\nKöszönjük, hogy segítesz mindenki számára biztonságossá tenni a {product_name} közösségét. Minden bejelentést komolyan veszünk, és nagyra értékeljük, hogy segíted a közösséget.\n\n{safety_email, select, null {Ha kérdésed vagy aggályod van az eredménnyel kapcsolatban, fordulj ennek a példánynak az adminisztrátoraihoz.} other {Ha kérdésed vagy aggályod van az eredménnyel kapcsolatban, írj erre a címre: {safety_email}.}}\n\n– {product_name} biztonsági csapata"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "{product_name}-fiókodat véglegesen törölni fogjuk",
-		"body": "Szia, {username}!\n\nÜtemeztük {product_name}-fiókod végleges törlését.\n\nA törlés tervezett időpontja: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Indok: {reason}}\n}\n\nEz súlyos moderációs intézkedés. Fiókod adatait a megadott időpontban véglegesen töröljük.\n\nHa úgy gondolod, hogy ez a döntés hibás volt, fellebbezhetsz. Erről az e-mail-címről írj a következő címre: {appeals_email}.\n\n– {product_name} biztonsági csapata"
+		"body": "Szia, {username}!\n\nÜtemeztük {product_name}-fiókod végleges törlését.\n\nA törlés tervezett időpontja: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Indok: {reason}\n\n}\n}Ez súlyos moderációs intézkedés. Fiókod adatait a megadott időpontban véglegesen töröljük.\n\nHa úgy gondolod, hogy ez a döntés hibás volt, fellebbezhetsz. {appeals_email, select, null {Fordulj ennek a példánynak az adminisztrátoraihoz.} other {Erről az e-mail-címről írj a következő címre: {appeals_email}.}}\n\n– {product_name} biztonsági csapata"
 	},
 	"self_deletion_scheduled": {
 		"subject": "Ütemeztük {product_name}-fiókod törlését",
@@ -97,7 +101,7 @@ const EMAIL_I18N_HU_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"unban_notification": {
 		"subject": "Feloldottuk {product_name}-fiókod felfüggesztését",
-		"body": "Szia, {username}!\n\nJó hír: feloldottuk {product_name}-fiókod felfüggesztését.\n\n{reason, select,\n  null {}\n  other {Indok: {reason}}\n}\n\nMost már újra bejelentkezhetsz, és a megszokott módon használhatod a {product_name} alkalmazást.\n\n– {product_name} biztonsági csapata"
+		"body": "Szia, {username}!\n\nJó hír: feloldottuk {product_name}-fiókod felfüggesztését.\n\n{reason, select,\n  null {}\n  other {Indok: {reason}\n\n}\n}Most már újra bejelentkezhetsz, és a megszokott módon használhatod a {product_name} alkalmazást.\n\n– {product_name} biztonsági csapata"
 	}
 });
 

@@ -456,7 +456,7 @@ export interface BackupCode {
 	readonly consumed: boolean;
 }
 
-export interface PendingBulkMessageDeletion {
+interface PendingBulkMessageDeletion {
 	readonly scheduled_at: string;
 	readonly channel_count: number;
 	readonly message_count: number;

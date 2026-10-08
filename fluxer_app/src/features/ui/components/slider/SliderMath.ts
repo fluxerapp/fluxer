@@ -14,7 +14,7 @@ export function clamp(value: number, min: number, max: number): number {
 	return Math.max(min, Math.min(max, value));
 }
 
-export function findClosestMarkerIndex(value: number, markerArray: ReadonlyArray<number>): number {
+function findClosestMarkerIndex(value: number, markerArray: ReadonlyArray<number>): number {
 	if (markerArray.length === 0) return 0;
 	let previousDiff = 0;
 	for (let i = 0; i < markerArray.length; i++) {
@@ -80,7 +80,7 @@ export function buildMarkerState({
 	};
 }
 
-export function scaleValue(markerState: Pick<MarkerState, 'min' | 'range'>, value: number): number {
+function scaleValue(markerState: Pick<MarkerState, 'min' | 'range'>, value: number): number {
 	if (markerState.range === 0) return 0;
 	return (100 * (value - markerState.min)) / markerState.range;
 }

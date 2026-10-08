@@ -12,8 +12,8 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 
 export type ScreenShareDevicePermissionContext = 'start' | 'replace';
 
-export type NativeMediaPermissionKind = 'camera' | 'microphone' | 'screen';
-export type NativeMediaPermissionDeniedPolicy = 'modal' | 'throw' | 'modal-then-throw' | 'none';
+type NativeMediaPermissionKind = 'camera' | 'microphone' | 'screen';
+type NativeMediaPermissionDeniedPolicy = 'modal' | 'throw' | 'modal-then-throw' | 'none';
 
 export interface EnsureNativeMediaPermissionArgs {
 	kind: NativeMediaPermissionKind;

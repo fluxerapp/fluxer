@@ -31,10 +31,10 @@ import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import type {Participant, RemoteAudioTrack, RemoteTrack, RemoteTrackPublication, Room} from 'livekit-client';
 
 const logger = new Logger('VoiceEngineV2AppRemoteSpeakingAdapter');
-export const REMOTE_SPEAKING_ANALYSER_INTERVAL_MS = 50;
-export const REMOTE_SPEAKING_ANALYSER_HANDLES_CAP = 256;
+const REMOTE_SPEAKING_ANALYSER_INTERVAL_MS = 50;
+const REMOTE_SPEAKING_ANALYSER_HANDLES_CAP = 256;
 
-export function computeTimeDomainRms(samples: Float32Array): number {
+function computeTimeDomainRms(samples: Float32Array): number {
 	if (samples.length === 0) return 0;
 	let sumSquares = 0;
 	for (let i = 0; i < samples.length; i++) {
@@ -53,11 +53,11 @@ interface AnalyserHandle {
 	nextTickAtMs: number;
 }
 
-export interface VoiceEngineV2AppRemoteSpeakingAdapterOptions {
+interface VoiceEngineV2AppRemoteSpeakingAdapterOptions {
 	autoSchedule?: boolean;
 }
 
-export class VoiceEngineV2AppRemoteSpeakingAdapter {
+class VoiceEngineV2AppRemoteSpeakingAdapter {
 	private audioContext: AudioContext | null = null;
 	private audioContextIsShared = false;
 	private analysers = new Map<string, AnalyserHandle>();
@@ -368,15 +368,6 @@ export class VoiceEngineV2AppRemoteSpeakingAdapter {
 		if (typeof window === 'undefined') return;
 		window.clearInterval(this.autoScheduleTimerId);
 		this.autoScheduleTimerId = null;
-	}
-
-	get analyserCount(): number {
-		return this.analysers.size;
-	}
-
-	hasAnalyserForIdentity(identity: string): boolean {
-		assertNonEmptyString(identity, 'hasAnalyserForIdentity.identity');
-		return this.analysers.has(identity);
 	}
 
 	private closeAudioContext(): void {

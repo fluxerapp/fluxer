@@ -10,7 +10,6 @@ const logger = new Logger('ScreenReader');
 class ScreenReader {
 	nativeScreenReaderActive = false;
 	private bridgeStarted = false;
-	private unsubscribe: (() => void) | undefined;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -35,17 +34,11 @@ class ScreenReader {
 			.catch((error: unknown) => {
 				logger.warn('Failed to read initial accessibility-support state', error);
 			});
-		this.unsubscribe = electronApi.onAccessibilitySupportChanged?.((enabled) => {
+		electronApi.onAccessibilitySupportChanged?.((enabled) => {
 			runInAction(() => {
 				this.nativeScreenReaderActive = enabled;
 			});
 		});
-	}
-
-	stopDesktopBridge(): void {
-		this.unsubscribe?.();
-		this.unsubscribe = undefined;
-		this.bridgeStarted = false;
 	}
 }
 

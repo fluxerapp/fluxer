@@ -17,24 +17,24 @@ import type {VirtmicNode} from '@app/types/electron.d';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
-export const NO_AUDIO_DESCRIPTOR = msg({
+const NO_AUDIO_DESCRIPTOR = msg({
 	message: 'No audio',
 	comment: 'Screen-share audio summary shown when the share publishes no audio at all.',
 });
-export const CUSTOM_SOURCES_DESCRIPTOR = msg({
+const CUSTOM_SOURCES_DESCRIPTOR = msg({
 	message: 'Custom',
 	context: 'screen-share-audio-source',
 	comment: 'Screen-share audio summary shown when one audio source is selected but it has no readable name.',
 });
-export const APP_COUNT_DESCRIPTOR = msg({
+const APP_COUNT_DESCRIPTOR = msg({
 	message: '{length, plural, one {# app} other {# apps}}',
 	comment: 'Screen-share audio summary listing how many apps are captured. {length} is the integer app count.',
 });
-export const ENTIRE_SYSTEM_DESCRIPTOR = msg({
+const ENTIRE_SYSTEM_DESCRIPTOR = msg({
 	message: 'Entire system',
 	comment: 'Screen-share audio summary shown when the whole system audio mix is captured.',
 });
-export const SHARED_WINDOW_DESCRIPTOR = msg({
+const SHARED_WINDOW_DESCRIPTOR = msg({
 	message: 'Shared window',
 	comment: 'Screen-share audio summary shown when a window share captures only the audio of the window it shares.',
 });

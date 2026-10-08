@@ -15,14 +15,6 @@
 	color: var(--text-primary);
 }
 
-.notice {
-	margin-bottom: 1rem;
-	text-align: center;
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: var(--text-primary-muted);
-}
-
 .buttonContainer {
 	margin-bottom: 1rem;
 	display: flex;

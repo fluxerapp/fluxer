@@ -5,7 +5,7 @@ import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 
 const logger = new Logger('ScriptFontLoader');
 
-export type ScriptChunk = 'non-latin' | 'sc' | 'tc' | 'jp' | 'kr';
+type ScriptChunk = 'non-latin' | 'sc' | 'tc' | 'jp' | 'kr';
 
 const CHUNK_IMPORTS: Record<ScriptChunk, () => Promise<unknown>> = {
 	'non-latin': () => import('@app/features/theme/fonts/ScriptFacesNonLatin'),
@@ -40,7 +40,7 @@ function request(chunk: ScriptChunk): void {
 	inFlight.add(load);
 }
 
-export function hanChunkForLanguage(language: string | null | undefined): ScriptChunk {
+function hanChunkForLanguage(language: string | null | undefined): ScriptChunk {
 	const tag = (language ?? '').toLowerCase();
 	if (tag === 'ja' || tag.startsWith('ja-')) return 'jp';
 	if (tag.startsWith('zh')) {
@@ -83,18 +83,4 @@ export function scheduleNonLatinScriptFaces(): void {
 		return;
 	}
 	setTimeout(run, 1000);
-}
-
-export function requestedScriptChunks(): ReadonlySet<ScriptChunk> {
-	return requested;
-}
-
-export function resetScriptFontLoaderForTests(): void {
-	requested.clear();
-}
-
-export async function whenScriptChunksSettled(): Promise<void> {
-	while (inFlight.size > 0) {
-		await Promise.all([...inFlight]);
-	}
 }

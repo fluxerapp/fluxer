@@ -4,20 +4,20 @@ import assert from 'node:assert/strict';
 import type {TimerPort, VoiceEngineV2TimerOptions} from '@fluxer/voice_engine_v2';
 import type {VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/runtime';
 
-export const VOICE_ENGINE_V2_TIMER_REGISTRY_CAP = 256;
-export const VOICE_ENGINE_V2_TIMER_ID_MAX_LENGTH = 128;
-export const VOICE_ENGINE_V2_TIMER_DELAY_MAX_MS = 24 * 60 * 60 * 1000;
+const VOICE_ENGINE_V2_TIMER_REGISTRY_CAP = 256;
+const VOICE_ENGINE_V2_TIMER_ID_MAX_LENGTH = 128;
+const VOICE_ENGINE_V2_TIMER_DELAY_MAX_MS = 24 * 60 * 60 * 1000;
 
 type GlobalTimeoutHandle = number | NodeJS.Timeout;
 
-export type VoiceEngineV2AppTimerHandle = unknown;
+type VoiceEngineV2AppTimerHandle = unknown;
 
 export interface VoiceEngineV2AppTimerScheduler {
 	setTimeout(callback: () => void, ms: number): VoiceEngineV2AppTimerHandle;
 	clearTimeout(handle: VoiceEngineV2AppTimerHandle): void;
 }
 
-export interface VoiceEngineV2AppTimerFireEvent {
+interface VoiceEngineV2AppTimerFireEvent {
 	timerId: string;
 	scheduledAtMs: number;
 	firedAtMs: number;
@@ -36,7 +36,7 @@ interface RegistryEntry {
 	scheduledAtMs: number;
 }
 
-export class VoiceEngineV2AppTimerRegistryFullError extends Error {
+class VoiceEngineV2AppTimerRegistryFullError extends Error {
 	readonly code = 'timerRegistryFull' as const;
 	readonly capability = 'timer' as const;
 	readonly timerId: string;

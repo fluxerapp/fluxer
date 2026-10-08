@@ -332,16 +332,8 @@ export class User {
 		return override != null ? override : this._unreadGiftInventoryCount;
 	}
 
-	get nsfwAllowed(): boolean | undefined {
-		return this._nsfwAllowed;
-	}
-
 	get matureContentAllowed(): boolean | undefined {
 		return this._nsfwAllowed;
-	}
-
-	get ageVerifiedAdult(): boolean | undefined {
-		return this._ageVerifiedAdult;
 	}
 
 	get matureContentCheckComplete(): boolean | undefined {
@@ -557,17 +549,6 @@ export class User {
 
 	get maxGroupDmRecipients(): number {
 		return this.resolveRuntimeLimit('max_group_dm_recipients', DEFAULT_STOCK_LIMITS.max_group_dm_recipients);
-	}
-
-	get maxPrivateChannels(): number {
-		return this.resolveRuntimeLimit(
-			'max_private_channels_per_user',
-			DEFAULT_STOCK_LIMITS.max_private_channels_per_user,
-		);
-	}
-
-	get maxRelationships(): number {
-		return this.resolveRuntimeLimit('max_relationships', DEFAULT_STOCK_LIMITS.max_relationships);
 	}
 
 	private resolveRuntimeLimit(key: LimitKey, fallback: number): number {

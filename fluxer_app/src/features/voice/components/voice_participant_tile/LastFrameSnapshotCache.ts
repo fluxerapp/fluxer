@@ -3,9 +3,9 @@
 import {videoElementHasRenderedFrame} from '@app/features/voice/components/VideoElementFrameState';
 import {Store} from '@app/features/voice/engine/Store';
 
-export const LAST_FRAME_SNAPSHOTS_MAX = 8;
-export const LAST_FRAME_SNAPSHOT_WIDTH_MAX = 640;
-export const LAST_FRAME_SNAPSHOT_JPEG_QUALITY = 0.7;
+const LAST_FRAME_SNAPSHOTS_MAX = 8;
+const LAST_FRAME_SNAPSHOT_WIDTH_MAX = 640;
+const LAST_FRAME_SNAPSHOT_JPEG_QUALITY = 0.7;
 
 function computeSnapshotDimensions(sourceWidth: number, sourceHeight: number): {width: number; height: number} {
 	if (sourceWidth <= LAST_FRAME_SNAPSHOT_WIDTH_MAX) {
@@ -152,4 +152,3 @@ class LastFrameSnapshotCache extends Store {
 }
 
 export default new LastFrameSnapshotCache();
-export {LastFrameSnapshotCache};

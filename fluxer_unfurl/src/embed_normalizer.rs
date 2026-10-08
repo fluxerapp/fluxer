@@ -73,14 +73,10 @@ fn normalize_author(
 }
 
 fn normalize_provider(mut provider: EmbedProvider) -> Option<EmbedProvider> {
-    let name = truncate(
-        provider.name.as_deref().unwrap_or_default(),
-        PROVIDER_NAME_MAX,
-    );
-    if name.is_empty() {
+    provider.name = truncate(&provider.name, PROVIDER_NAME_MAX);
+    if provider.name.is_empty() {
         return None;
     }
-    provider.name = Some(name);
     Some(provider)
 }
 
@@ -168,17 +164,6 @@ mod tests {
     }
 
     #[test]
-    fn provider_without_name_is_removed() {
-        let mut e = MessageEmbed::new("rich");
-        e.provider = Some(EmbedProvider {
-            name: None,
-            url: Some("https://example.com".to_owned()),
-        });
-        let result = normalize_embeds(vec![e], &test_proxy());
-        assert!(result[0].provider.is_none());
-    }
-
-    #[test]
     fn fields_limited_to_max() {
         let mut e = MessageEmbed::new("rich");
         let fields: Vec<EmbedField> = (0..50)
@@ -216,7 +201,7 @@ mod tests {
     fn provider_with_empty_name_string_is_removed() {
         let mut e = MessageEmbed::new("rich");
         e.provider = Some(EmbedProvider {
-            name: Some("".to_owned()),
+            name: String::new(),
             url: Some("https://example.com".to_owned()),
         });
         let result = normalize_embeds(vec![e], &test_proxy());
@@ -228,12 +213,12 @@ mod tests {
         let mut e = MessageEmbed::new("rich");
         let long = "X".repeat(500);
         e.provider = Some(EmbedProvider {
-            name: Some(long),
+            name: long,
             url: None,
         });
         let result = normalize_embeds(vec![e], &test_proxy());
         let p = result[0].provider.as_ref().unwrap();
-        assert!(p.name.as_ref().unwrap().chars().count() <= PROVIDER_NAME_MAX);
+        assert!(p.name.chars().count() <= PROVIDER_NAME_MAX);
     }
 
     #[test]

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {LocaleCode} from '@fluxer/constants/src/Locales';
+import {type LocaleCode, Locales} from '@fluxer/constants/src/Locales';
 import {
 	DEFAULT_LOCALE,
 	findLocaleByLanguagePrefix,
@@ -13,6 +13,9 @@ interface AcceptLanguagePreference {
 	locale: string;
 	quality: number;
 }
+
+const TRADITIONAL_CHINESE_SUBTAGS: ReadonlySet<string> = new Set(['hant', 'tw', 'hk', 'mo']);
+const SIMPLIFIED_CHINESE_SUBTAGS: ReadonlySet<string> = new Set(['hans', 'cn', 'sg']);
 
 export function resolveLocaleFromAcceptLanguageHeader(acceptLanguageHeader: string | null | undefined): LocaleCode {
 	if (!acceptLanguageHeader) {
@@ -75,7 +78,15 @@ function findExactLocaleMatch(preferences: ReadonlyArray<AcceptLanguagePreferenc
 
 function findLanguageFallbackMatch(preferences: ReadonlyArray<AcceptLanguagePreference>): LocaleCode | null {
 	for (const {locale} of preferences) {
-		const languageCode = getLanguageCode(locale);
+		const [languageCode = '', ...subtags] = normalizeLocaleCode(locale).split('-');
+		const chineseVariantLocale = findChineseVariantLocale(languageCode, subtags);
+		if (chineseVariantLocale) {
+			return chineseVariantLocale;
+		}
+		const languageLocale = getLocaleByCode(languageCode);
+		if (languageLocale) {
+			return languageLocale;
+		}
 		const preferredFallbackLocale = getPreferredLocaleForLanguageCode(languageCode);
 		if (preferredFallbackLocale) {
 			return preferredFallbackLocale;
@@ -88,8 +99,17 @@ function findLanguageFallbackMatch(preferences: ReadonlyArray<AcceptLanguagePref
 	return null;
 }
 
-function getLanguageCode(locale: string): string {
-	const normalizedLocale = normalizeLocaleCode(locale);
-	const [languageCode] = normalizedLocale.split('-');
-	return languageCode ?? '';
+function findChineseVariantLocale(languageCode: string, subtags: ReadonlyArray<string>): LocaleCode | null {
+	if (languageCode !== 'zh') {
+		return null;
+	}
+	for (const subtag of subtags) {
+		if (TRADITIONAL_CHINESE_SUBTAGS.has(subtag)) {
+			return Locales.ZH_TW;
+		}
+		if (SIMPLIFIED_CHINESE_SUBTAGS.has(subtag)) {
+			return Locales.ZH_CN;
+		}
+	}
+	return null;
 }

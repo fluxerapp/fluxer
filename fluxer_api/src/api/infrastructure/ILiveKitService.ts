@@ -71,14 +71,14 @@ interface ListParticipantsParams {
 	serverId: string;
 }
 
-export interface ListParticipantsSuccess {
+interface ListParticipantsSuccess {
 	status: 'ok';
 	participants: Array<{
 		identity: string;
 	}>;
 }
 
-export interface ListParticipantsError {
+interface ListParticipantsError {
 	status: 'error';
 	errorCode: string;
 	retryable: boolean;

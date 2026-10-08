@@ -56,7 +56,7 @@ interface PendingAttachmentDownload {
 	filename: string;
 }
 
-export interface GuildHarvestAttachment {
+interface GuildHarvestAttachment {
 	id: AttachmentID;
 	filename: string;
 	size: bigint;
@@ -65,7 +65,7 @@ export interface GuildHarvestAttachment {
 	height: number | null;
 }
 
-export function buildGuildHarvestAttachment(
+function buildGuildHarvestAttachment(
 	channelId: ChannelID,
 	attachment: GuildHarvestAttachment,
 	includeAttachments: boolean,

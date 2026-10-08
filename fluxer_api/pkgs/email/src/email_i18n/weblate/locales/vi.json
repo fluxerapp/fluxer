@@ -1,23 +1,23 @@
 {
 	"account_deletion_cancelled": {
 		"subject": "Lịch xóa tài khoản {product_name} của bạn đã được hủy",
-		"body": "Xin chào {username},\n\nLịch xóa tài khoản {product_name} của bạn đã được hủy. Tài khoản của bạn sẽ không bị xóa.\n\nNếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ {safety_email}.\n\n– Đội ngũ {product_name}"
+		"body": "Xin chào {username},\n\nLịch xóa tài khoản {product_name} của bạn đã được hủy. Tài khoản của bạn sẽ không bị xóa.\n\n{safety_email, select, null {Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ quản trị viên của máy chủ này.} other {Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ {safety_email}.}}\n\n– Đội ngũ {product_name}"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "Tài khoản {product_name} của bạn sẽ bị xóa do không hoạt động",
-		"body": "Xin chào {username},\n\nTài khoản {product_name} của bạn đã không hoạt động trong thời gian dài, vì vậy tài khoản được lên lịch xóa vĩnh viễn vào:\n\n{deletionDate, date, full} lúc {deletionDate, time, short}{reason, select, null {} other {\n\nLý do: {reason}}}\n\nNếu bạn muốn giữ tài khoản, hãy liên hệ {safety_email} từ địa chỉ email này trước ngày đó.\n\n– Đội ngũ {product_name}"
+		"body": "Xin chào {username},\n\nTài khoản {product_name} của bạn đã không hoạt động trong thời gian dài, vì vậy tài khoản được lên lịch xóa vĩnh viễn vào:\n\n{deletionDate, date, full} lúc {deletionDate, time, short}{reason, select, null {} other {\n\nLý do: {reason}}}\n\n{safety_email, select, null {Nếu bạn muốn giữ tài khoản, hãy liên hệ quản trị viên của máy chủ này trước ngày đó.} other {Nếu bạn muốn giữ tài khoản, hãy liên hệ {safety_email} từ địa chỉ email này trước ngày đó.}}\n\n– Đội ngũ {product_name}"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "Tài khoản {product_name} của bạn đã được lên lịch xóa",
-		"body": "Xin chào {username},\n\nTheo yêu cầu của bạn, tài khoản {product_name} của bạn được lên lịch xóa vĩnh viễn vào:\n\n{deletionDate, date, full} lúc {deletionDate, time, short}{reason, select, null {} other {\n\nLý do: {reason}}}\n\nTài khoản của bạn sẽ bị khóa cho đến lúc đó. Nếu bạn không yêu cầu điều này, hoặc bạn muốn giữ tài khoản, hãy liên hệ {safety_email} từ địa chỉ email này trước ngày đó.\n\n– Đội ngũ {product_name}"
+		"body": "Xin chào {username},\n\nTheo yêu cầu của bạn, tài khoản {product_name} của bạn được lên lịch xóa vĩnh viễn vào:\n\n{deletionDate, date, full} lúc {deletionDate, time, short}{reason, select, null {} other {\n\nLý do: {reason}}}\n\nTài khoản của bạn sẽ bị khóa cho đến lúc đó. {safety_email, select, null {Nếu bạn không yêu cầu điều này, hoặc bạn muốn giữ tài khoản, hãy liên hệ quản trị viên của máy chủ này trước ngày đó.} other {Nếu bạn không yêu cầu điều này, hoặc bạn muốn giữ tài khoản, hãy liên hệ {safety_email} từ địa chỉ email này trước ngày đó.}}\n\n– Đội ngũ {product_name}"
 	},
 	"account_scheduled_deletion": {
 		"subject": "Tài khoản {product_name} của bạn sẽ bị xóa vĩnh viễn",
-		"body": "Xin chào {username},\n\nTài khoản {product_name} của bạn đã được lên lịch xóa vĩnh viễn do vi phạm Điều khoản dịch vụ hoặc Nguyên tắc cộng đồng của chúng tôi.\n\nThời gian xóa theo lịch: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}}\n}\n\nĐây là một biện pháp xử lý nghiêm trọng. Dữ liệu tài khoản của bạn sẽ bị xóa vĩnh viễn vào ngày đã lên lịch.\n\nVui lòng xem lại:\n- Điều khoản dịch vụ: {termsUrl}\n- Nguyên tắc cộng đồng: {guidelinesUrl}\n\nQuy trình khiếu nại:\nNếu bạn cho rằng quyết định này không chính xác hoặc không hợp lý, bạn có 60 ngày để gửi khiếu nại. Gửi email đến {appeals_email} từ địa chỉ email này.\n\nTrong khiếu nại của bạn:\n- Giải thích rõ ràng lý do bạn cho rằng quyết định này không chính xác hoặc không hợp lý\n- Cung cấp bằng chứng hoặc thông tin liên quan nếu có\n\nMột thành viên của Đội ngũ An toàn {product_name} sẽ xem xét khiếu nại của bạn và có thể tạm dừng việc xóa đang chờ xử lý cho đến khi có quyết định cuối cùng.\n\n– Đội ngũ An toàn {product_name}"
+		"body": "Xin chào {username},\n\nTài khoản {product_name} của bạn đã được lên lịch xóa vĩnh viễn do vi phạm Điều khoản dịch vụ hoặc Nguyên tắc cộng đồng của chúng tôi.\n\nThời gian xóa theo lịch: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}\n\n}\n}Đây là một biện pháp xử lý nghiêm trọng. Dữ liệu tài khoản của bạn sẽ bị xóa vĩnh viễn vào ngày đã lên lịch.\n\n{legalLinks, select,\n  both {Vui lòng xem lại:\n- Điều khoản dịch vụ: {termsUrl}\n- Nguyên tắc cộng đồng: {guidelinesUrl}\n\n}\n  terms {Vui lòng xem lại:\n- Điều khoản dịch vụ: {termsUrl}\n\n}\n  guidelines {Vui lòng xem lại:\n- Nguyên tắc cộng đồng: {guidelinesUrl}\n\n}\n  other {}\n}Quy trình khiếu nại:\nNếu bạn cho rằng quyết định này không chính xác hoặc không hợp lý, bạn có 60 ngày để gửi khiếu nại. {appeals_email, select, null {Liên hệ quản trị viên của máy chủ này.} other {Gửi email đến {appeals_email} từ địa chỉ email này.}}\n\nTrong khiếu nại của bạn:\n- Giải thích rõ ràng lý do bạn cho rằng quyết định này không chính xác hoặc không hợp lý\n- Cung cấp bằng chứng hoặc thông tin liên quan nếu có\n\nMột thành viên của Đội ngũ An toàn {product_name} sẽ xem xét khiếu nại của bạn và có thể tạm dừng việc xóa đang chờ xử lý cho đến khi có quyết định cuối cùng.\n\n– Đội ngũ An toàn {product_name}"
 	},
 	"account_temp_banned": {
 		"subject": "Tài khoản {product_name} của bạn đã bị đình chỉ tạm thời",
-		"body": "Xin chào {username},\n\nTài khoản {product_name} của bạn đã bị đình chỉ tạm thời do vi phạm Điều khoản dịch vụ hoặc Nguyên tắc cộng đồng của chúng tôi.\n\nThời gian: {durationHours, plural,\n  =1 {1 giờ}\n  other {# giờ}\n}\nBị đình chỉ cho đến: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}}\n}\n\nTrong thời gian này, bạn sẽ không thể truy cập tài khoản của mình.\n\nVui lòng xem lại:\n- Điều khoản dịch vụ: {termsUrl}\n- Nguyên tắc cộng đồng: {guidelinesUrl}\n\nNếu bạn cho rằng quyết định này không chính xác hoặc không hợp lý, bạn có thể gửi khiếu nại. Gửi email đến {appeals_email} từ địa chỉ email này và giải thích rõ ràng lý do bạn cho rằng quyết định đó không chính xác. Chúng tôi sẽ xem xét khiếu nại của bạn và thông báo quyết định của chúng tôi cho bạn.\n\n– Đội ngũ An toàn {product_name}"
+		"body": "Xin chào {username},\n\nTài khoản {product_name} của bạn đã bị đình chỉ tạm thời do vi phạm Điều khoản dịch vụ hoặc Nguyên tắc cộng đồng của chúng tôi.\n\nThời gian: {durationHours, plural,\n  =1 {1 giờ}\n  other {# giờ}\n}\nBị đình chỉ cho đến: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}\n\n}\n}Trong thời gian này, bạn sẽ không thể truy cập tài khoản của mình.\n\n{legalLinks, select,\n  both {Vui lòng xem lại:\n- Điều khoản dịch vụ: {termsUrl}\n- Nguyên tắc cộng đồng: {guidelinesUrl}\n\n}\n  terms {Vui lòng xem lại:\n- Điều khoản dịch vụ: {termsUrl}\n\n}\n  guidelines {Vui lòng xem lại:\n- Nguyên tắc cộng đồng: {guidelinesUrl}\n\n}\n  other {}\n}Nếu bạn cho rằng quyết định này không chính xác hoặc không hợp lý, bạn có thể gửi khiếu nại. {appeals_email, select, null {Liên hệ quản trị viên của máy chủ này và giải thích rõ ràng lý do bạn cho rằng quyết định đó không chính xác.} other {Gửi email đến {appeals_email} từ địa chỉ email này và giải thích rõ ràng lý do bạn cho rằng quyết định đó không chính xác.}} Chúng tôi sẽ xem xét khiếu nại của bạn và thông báo quyết định của chúng tôi cho bạn.\n\n– Đội ngũ An toàn {product_name}"
 	},
 	"donation_confirmation": {
 		"subject": "Cảm ơn bạn đã ủng hộ {product_name}",
@@ -26,6 +26,10 @@
 	"donation_magic_link": {
 		"subject": "Quản lý các khoản ủng hộ {product_name} của bạn",
 		"body": "Xin chào,\n\nNhấp vào liên kết bên dưới để truy cập cổng thông tin người ủng hộ của bạn:\n\n{manageUrl}\n\nTrong cổng thông tin, bạn có thể quản lý gói đăng ký, tải xuống hóa đơn và xem lịch sử ủng hộ của mình.\n\nLiên kết này hết hạn vào {expiresAt, date, full} lúc {expiresAt, time, short}.\n\nNếu bạn không yêu cầu liên kết này, bạn có thể bỏ qua email này.\n\n– Đội ngũ {product_name}"
+	},
+	"dsa_report_resolved": {
+		"subject": "Chúng tôi đã có quyết định về báo cáo của bạn trên {product_name}",
+		"body": "Xin chào,\n\nĐội ngũ An toàn của chúng tôi đã xem xét báo cáo theo Đạo luật Dịch vụ kỹ thuật số của bạn (ID: {reportId}) và đã đưa ra quyết định.{hasComment, select, yes {\n\nPhản hồi từ Đội ngũ An toàn:\n{publicComment}} other {}}\n\nChúng tôi không chia sẻ chi tiết về biện pháp áp dụng với tài khoản của người khác, vì đó là dữ liệu cá nhân của họ.\n\nNếu không đồng ý với quyết định này, bạn có thể gửi khiếu nại miễn phí trong vòng 60 ngày. {appeals_email, select, null {Liên hệ quản trị viên của máy chủ này, ghi rõ ID báo cáo của bạn và giải thích lý do bạn cho rằng quyết định đó không chính xác.} other {Gửi email đến {appeals_email} từ địa chỉ email này, ghi rõ ID báo cáo của bạn và giải thích lý do bạn cho rằng quyết định đó không chính xác.}} Nếu bạn ở EU, bạn cũng có thể đưa tranh chấp đến một cơ quan giải quyết tranh chấp ngoài tòa án đã được chứng nhận. Những điều này không ảnh hưởng đến quyền khởi kiện ra tòa của bạn.\n\n– Đội ngũ An toàn {product_name}"
 	},
 	"dsa_report_verification": {
 		"subject": "Xác minh email của bạn cho báo cáo DSA",
@@ -49,15 +53,15 @@
 	},
 	"gift_chargeback_notification": {
 		"subject": "Các đặc quyền từ quà tặng đã đổi của bạn đã bị gỡ bỏ",
-		"body": "Xin chào {username},\n\nMã quà tặng bạn đã đổi vốn do người khác thanh toán. Khoản thanh toán đó sau đó đã bị đảo ngược (chargeback).\n\nVì lý do này, chúng tôi đã gỡ bỏ các đặc quyền đã được thêm vào tài khoản của bạn khi bạn đổi quà tặng.\n\nNếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ đội ngũ hỗ trợ của chúng tôi và cung cấp bất kỳ chi tiết nào bạn có về mã quà tặng và thời điểm bạn đổi mã đó.\n\n– Đội ngũ {product_name}"
+		"body": "Xin chào {username},\n\nMã quà tặng bạn đã đổi vốn do người khác thanh toán. Khoản thanh toán đó sau đó đã bị đảo ngược (chargeback).\n\nVì lý do này, chúng tôi đã gỡ bỏ các đặc quyền đã được thêm vào tài khoản của bạn khi bạn đổi quà tặng.\n\n{support_email, select, null {Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ quản trị viên của máy chủ này và cung cấp bất kỳ chi tiết nào bạn có về mã quà tặng và thời điểm bạn đổi mã đó.} other {Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ đội ngũ hỗ trợ của chúng tôi và cung cấp bất kỳ chi tiết nào bạn có về mã quà tặng và thời điểm bạn đổi mã đó.}}\n\n– Đội ngũ {product_name}"
 	},
 	"harvest_completed": {
 		"subject": "Bản xuất dữ liệu {product_name} của bạn đã sẵn sàng để tải xuống",
-		"body": "Xin chào {username},\n\nBản xuất dữ liệu của bạn đã sẵn sàng.\n\nLiên kết tải xuống:\n{downloadUrl}\n\nSố tin nhắn bao gồm: {totalMessages, number}\nKích thước tệp: {fileSizeMB, number} MB\n\nLiên kết này hết hạn vào {expiresAt, date, full} lúc {expiresAt, time, short}.\n\nNếu bạn không yêu cầu xuất dữ liệu này, vui lòng thay đổi mật khẩu ngay lập tức và liên hệ đội ngũ hỗ trợ của chúng tôi.\n\n– Đội ngũ {product_name}"
+		"body": "Xin chào {username},\n\nBản xuất dữ liệu của bạn đã sẵn sàng.\n\nLiên kết tải xuống:\n{downloadUrl}\n\nSố tin nhắn bao gồm: {totalMessages, number}\nKích thước tệp: {fileSizeMB, number} MB\n\nLiên kết này hết hạn vào {expiresAt, date, full} lúc {expiresAt, time, short}.\n\n{support_email, select, null {Nếu bạn không yêu cầu xuất dữ liệu này, vui lòng thay đổi mật khẩu ngay lập tức và liên hệ quản trị viên của máy chủ này.} other {Nếu bạn không yêu cầu xuất dữ liệu này, vui lòng thay đổi mật khẩu ngay lập tức và liên hệ đội ngũ hỗ trợ của chúng tôi.}}\n\n– Đội ngũ {product_name}"
 	},
 	"inactivity_warning": {
 		"subject": "Tài khoản {product_name} của bạn sẽ bị xóa do không hoạt động",
-		"body": "Xin chào {username},\n\nChúng tôi chưa thấy bất kỳ hoạt động nào trên tài khoản {product_name} của bạn kể từ {lastActiveDate, date, full}.\n\nNếu bạn không đăng nhập trước {deletionDate, date, full} lúc {deletionDate, time, short}, tài khoản của bạn sẽ bị xóa vĩnh viễn do không hoạt động.\n\nĐăng nhập tại đây:\n{loginUrl}\n\nNếu bạn đã sử dụng {product_name} gần đây, vui lòng liên hệ đội ngũ hỗ trợ của chúng tôi ngay lập tức.\n\n– Đội ngũ {product_name}"
+		"body": "Xin chào {username},\n\nChúng tôi chưa thấy bất kỳ hoạt động nào trên tài khoản {product_name} của bạn kể từ {lastActiveDate, date, full}.\n\nNếu bạn không đăng nhập trước {deletionDate, date, full} lúc {deletionDate, time, short}, tài khoản của bạn sẽ bị xóa vĩnh viễn do không hoạt động.\n\nĐăng nhập tại đây:\n{loginUrl}\n\n{support_email, select, null {Nếu bạn đã sử dụng {product_name} gần đây, vui lòng liên hệ quản trị viên của máy chủ này ngay lập tức.} other {Nếu bạn đã sử dụng {product_name} gần đây, vui lòng liên hệ đội ngũ hỗ trợ của chúng tôi ngay lập tức.}}\n\n– Đội ngũ {product_name}"
 	},
 	"ip_authorization": {
 		"subject": "Cho phép đăng nhập từ địa chỉ IP mới",
@@ -75,17 +79,17 @@
 		"subject": "Đặt lại mật khẩu của bạn trên {product_name}",
 		"body": "Xin chào {username},\n\nBạn đã yêu cầu đặt lại mật khẩu {product_name}. Sử dụng liên kết bên dưới để đặt mật khẩu mới:\n\n{resetUrl}\n\nNếu bạn không yêu cầu điều này, bạn có thể bỏ qua email này.\n\nLiên kết này có hiệu lực trong 1 giờ.\n\n– Đội ngũ {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Đăng ký {product_name} của bạn đã được chấp thuận",
-		"body": "Xin chào {username},\n\nTin tốt: đăng ký {product_name} của bạn đã được chấp thuận.\n\nBây giờ bạn có thể đăng nhập vào ứng dụng {product_name} tại đây:\n{channelsUrl}\n\nChào mừng bạn đến với cộng đồng {product_name}.\n\n– Đội ngũ {product_name}"
+	"report_received": {
+		"subject": "Chúng tôi đã nhận được báo cáo của bạn trên {product_name}",
+		"body": "Xin chào,\n\nChúng tôi đã nhận được báo cáo theo Đạo luật Dịch vụ kỹ thuật số của bạn về {targetKind, select, message {một tin nhắn} user {một tài khoản} guild {một cộng đồng} other {nội dung}} trên {product_name}.\n\nID báo cáo: {reportId}\n\nĐội ngũ An toàn của chúng tôi sẽ xem xét báo cáo của bạn và chúng tôi sẽ gửi email đến địa chỉ này khi có quyết định. Hãy giữ lại email này để tiện tra cứu.\n\n– Đội ngũ An toàn {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Báo cáo {product_name} của bạn đã được xem xét",
-		"body": "Xin chào {username},\n\nBáo cáo của bạn (ID: {reportId}) đã được Đội ngũ An toàn của chúng tôi xem xét.{hasComment, select, yes {\n\nPhản hồi từ Đội ngũ An toàn:\n{publicComment}} other {}}\n\nCảm ơn bạn đã giúp giữ cho {product_name} an toàn cho mọi người. Chúng tôi xem xét nghiêm túc mọi báo cáo và đánh giá cao đóng góp của bạn cho cộng đồng.\n\nNếu bạn có bất kỳ câu hỏi hoặc lo ngại nào về kết quả này, vui lòng liên hệ {safety_email}.\n\n– Đội ngũ An toàn {product_name}"
+		"body": "Xin chào {username},\n\nBáo cáo của bạn (ID: {reportId}) đã được Đội ngũ An toàn của chúng tôi xem xét.{hasComment, select, yes {\n\nPhản hồi từ Đội ngũ An toàn:\n{publicComment}} other {}}\n\nCảm ơn bạn đã giúp giữ cho {product_name} an toàn cho mọi người. Chúng tôi xem xét nghiêm túc mọi báo cáo và đánh giá cao đóng góp của bạn cho cộng đồng.\n\n{safety_email, select, null {Nếu bạn có bất kỳ câu hỏi hoặc lo ngại nào về kết quả này, vui lòng liên hệ quản trị viên của máy chủ này.} other {Nếu bạn có bất kỳ câu hỏi hoặc lo ngại nào về kết quả này, vui lòng liên hệ {safety_email}.}}\n\n– Đội ngũ An toàn {product_name}"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "Tài khoản {product_name} của bạn sẽ bị xóa vĩnh viễn",
-		"body": "Xin chào {username},\n\nTài khoản {product_name} của bạn đã được lên lịch xóa vĩnh viễn.\n\nThời gian xóa theo lịch: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}}\n}\n\nĐây là một biện pháp xử lý nghiêm trọng. Dữ liệu tài khoản của bạn sẽ bị xóa vĩnh viễn vào ngày đã lên lịch.\n\nNếu bạn cho rằng quyết định này không chính xác, bạn có thể gửi khiếu nại. Gửi email đến {appeals_email} từ địa chỉ email này.\n\n– Đội ngũ An toàn {product_name}"
+		"body": "Xin chào {username},\n\nTài khoản {product_name} của bạn đã được lên lịch xóa vĩnh viễn.\n\nThời gian xóa theo lịch: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}\n\n}\n}Đây là một biện pháp xử lý nghiêm trọng. Dữ liệu tài khoản của bạn sẽ bị xóa vĩnh viễn vào ngày đã lên lịch.\n\nNếu bạn cho rằng quyết định này không chính xác, bạn có thể gửi khiếu nại. {appeals_email, select, null {Liên hệ quản trị viên của máy chủ này.} other {Gửi email đến {appeals_email} từ địa chỉ email này.}}\n\n– Đội ngũ An toàn {product_name}"
 	},
 	"self_deletion_scheduled": {
 		"subject": "Tài khoản {product_name} của bạn đã được lên lịch xóa",
@@ -93,6 +97,6 @@
 	},
 	"unban_notification": {
 		"subject": "Lệnh đình chỉ tài khoản {product_name} của bạn đã được gỡ bỏ",
-		"body": "Xin chào {username},\n\nTin tốt: lệnh đình chỉ tài khoản {product_name} của bạn đã được gỡ bỏ.\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}}\n}\n\nBây giờ bạn có thể đăng nhập lại và tiếp tục sử dụng {product_name} như bình thường.\n\n– Đội ngũ An toàn {product_name}"
+		"body": "Xin chào {username},\n\nTin tốt: lệnh đình chỉ tài khoản {product_name} của bạn đã được gỡ bỏ.\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}\n\n}\n}Bây giờ bạn có thể đăng nhập lại và tiếp tục sử dụng {product_name} như bình thường.\n\n– Đội ngũ An toàn {product_name}"
 	}
 }

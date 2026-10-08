@@ -38,10 +38,6 @@ class Inbox {
 		}
 	}
 
-	getSelectedTab(): InboxTab {
-		return this.selectedTab;
-	}
-
 	shouldAutoOpenBookmarksPopoutForFirstSave(): boolean {
 		return !this.hasAutoOpenedBookmarksPopoutForFirstSave;
 	}

@@ -66,13 +66,13 @@ fn render_overview_tab(
         div class="space-y-6" {
             @if let Some(until) = &user.temp_banned_until {
                 div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900" {
-                    "Temporarily banned until " (until)
+                    "Temporarily banned until " (format_admin_timestamp(until))
                 }
             }
             @if user.temp_banned_until.is_none() {
                 @if let Some(pending) = &user.pending_deletion_at {
                     div class="rounded-lg border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900" {
-                        div class="font-medium" { "Scheduled for deletion: " (pending) }
+                        div class="font-medium" { "Scheduled for deletion: " (format_admin_timestamp(pending)) }
                         @if let Some(code) = user.deletion_reason_code {
                             div class="mt-1" { "Reason code: " (code) }
                         }
@@ -101,7 +101,7 @@ fn render_overview_tab(
             @if let Some(pending) = &user.pending_bulk_message_deletion_at {
                 div class="rounded-lg border border-neutral-200 bg-neutral-50 p-4" {
                     div class="font-medium text-neutral-700 text-sm" {
-                        "Bulk message deletion scheduled for " (pending)
+                        "Bulk message deletion scheduled for " (format_admin_timestamp(pending))
                     }
                     @if acl::has_permission(admin_acls, acl::USER_CANCEL_BULK_MESSAGE_DELETION) {
                         form method="post"
@@ -197,10 +197,10 @@ fn render_overview_tab(
                         }
                     }))
                     @if let Some(ref value) = user.premium_grace_ends_at {
-                        (detail_row("Grace Period Ends", html! { (value) }))
+                        (detail_row("Grace Period Ends", html! { (format_admin_timestamp(value)) }))
                     }
                     (detail_row("Last Active", html! {
-                        (user.last_active_at.as_deref().unwrap_or("Never"))
+                        (user.last_active_at.as_deref().map_or_else(|| "Never".to_string(), format_admin_timestamp))
                     }))
                     @if acl::has_permission(admin_acls, acl::USER_VIEW_IP) {
                         (detail_row("Last IP", html! {
@@ -239,7 +239,7 @@ fn render_overview_tab(
                                     div class="py-3 text-sm" {
                                         dt class="font-medium text-neutral-900" {
                                             (entry.field)
-                                            span class="ml-2 font-normal text-xs text-neutral-500" { (entry.event_at) }
+                                            span class="ml-2 font-normal text-xs text-neutral-500" { (format_admin_timestamp(&entry.event_at)) }
                                         }
                                         dd class="mt-1 font-mono text-xs text-neutral-700" {
                                             (entry.old_value.as_deref().unwrap_or("null"))
@@ -599,6 +599,7 @@ mod tests {
             api_endpoint: String::new(),
             media_endpoint: String::new(),
             static_cdn_endpoint: String::new(),
+            reports_bucket_origin: String::new(),
             admin_endpoint: String::new(),
             web_app_endpoint: String::new(),
             oauth_client_id: String::new(),
@@ -643,5 +644,24 @@ mod tests {
     #[test]
     fn email_mode_shows_the_email_row() {
         assert!(render_email_row(false).contains("target@example.com"));
+    }
+
+    #[test]
+    fn last_active_and_grace_end_use_the_panel_date_format() {
+        let user: AdminUser = serde_json::from_value(serde_json::json!({
+            "id": "1500000000000000001",
+            "username": "target",
+            "discriminator": "0001",
+            "last_active_at": "2026-10-06T20:23:38.591Z",
+            "premium_grace_ends_at": "2026-11-01T08:00:00Z"
+        }))
+        .expect("valid admin user");
+        let html =
+            render_overview_tab(&test_config(), &user, &[], "csrf", None, None, false, false)
+                .into_string();
+        assert!(!html.contains("2026-10-06T20:23"));
+        assert!(!html.contains("2026-11-01T08:00"));
+        assert!(html.contains(&format_admin_timestamp("2026-10-06T20:23:38.591Z")));
+        assert!(html.contains(&format_admin_timestamp("2026-11-01T08:00:00Z")));
     }
 }

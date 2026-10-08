@@ -7,7 +7,7 @@ import {
 	type LoadableComponent,
 } from '@app/features/platform/components/loadable/LoadableComponent';
 
-export type AuthRoutePageProps = Record<string, unknown>;
+type AuthRoutePageProps = Record<string, unknown>;
 export type AuthRoutePage = LoadableComponent<AuthRoutePageProps>;
 
 export function createAuthRoutePage(displayName: string, load: () => Promise<{default: unknown}>): AuthRoutePage {

@@ -19,12 +19,6 @@
 	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
-.description {
-	color: var(--text-primary-muted);
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-}
-
 .requestsSection {
 	margin-top: 1rem;
 }

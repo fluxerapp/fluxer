@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::plural::{count_noun, noun_for};
 use crate::{
     acl,
     api::{
@@ -359,13 +360,13 @@ fn deletion_card(
                     div class="space-y-3" {
                         (form_label("Private Reason"))
                         input type="text" name="private_reason" required
-                            placeholder="Why this deletion is being cancelled (audit log)..."
+                            placeholder="Why this deletion is being canceled (audit log)..."
                             class="block w-full rounded-md border border-neutral-300 \
                                    px-3 py-2 text-sm shadow-sm \
                                    focus:border-brand-primary focus:outline-none \
                                    focus:ring-1 focus:ring-brand-primary";
                         @if !username_sign_in {
-                            (checkbox("notify_user", "true", "Email the user that the deletion was cancelled", false, true))
+                            (checkbox("notify_user", "true", "Email the user that the deletion was canceled", false, true))
                         }
                         (checkbox("confirm", "true", &confirmation, false, true))
                         (form_actions(html! {
@@ -567,7 +568,7 @@ fn message_shred_status_content(status: &serde_json::Value) -> Markup {
                 "Status: " (message_shred_status_label(status_value))
             }
             p class="text-sm text-neutral-700" {
-                "Requested " (requested) " entries, skipped " (skipped) " entries"
+                "Requested " (count_noun(requested, "entry", "entries")) ", skipped " (count_noun(skipped, "entry", "entries"))
             }
             @if status_value == "in_progress" {
                 div class="space-y-2" {
@@ -582,17 +583,17 @@ fn message_shred_status_content(status: &serde_json::Value) -> Markup {
             }
             @if status_value == "completed" {
                 p class="text-sm text-neutral-700" {
-                    "Deleted " (processed) " / " (total) " entries"
+                    "Deleted " (processed) " / " (total) " " (noun_for(total, "entry", "entries"))
                 }
             }
             @if let Some(started_at) = value_str(status, "started_at") {
-                p class="text-xs text-neutral-500" { "Started " (started_at) }
+                p class="text-xs text-neutral-500" { "Started " (format_admin_timestamp(started_at)) }
             }
             @if let Some(completed_at) = value_str(status, "completed_at") {
-                p class="text-xs text-neutral-500" { "Completed " (completed_at) }
+                p class="text-xs text-neutral-500" { "Completed " (format_admin_timestamp(completed_at)) }
             }
             @if let Some(failed_at) = value_str(status, "failed_at") {
-                p class="text-xs text-red-600" { "Failed " (failed_at) }
+                p class="text-xs text-red-600" { "Failed " (format_admin_timestamp(failed_at)) }
             }
             @if let Some(error) = value_str(status, "error") {
                 p class="text-sm text-red-600" { (error) }

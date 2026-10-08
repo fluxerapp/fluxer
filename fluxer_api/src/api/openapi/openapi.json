@@ -5,7 +5,7 @@
 		"title": "Fluxer API",
 		"version": "1.0.0",
 		"description": "API for Fluxer, a free and open source instant messaging and VoIP chat app built for friends, groups, and communities.",
-		"contact": {"name": "Fluxer Platform AB", "email": "support@fluxer.app"},
+		"contact": {"name": "Fluxer Platform AB", "email": "support@fluxer.com"},
 		"license": {"name": "AGPL-3.0", "url": "https://www.gnu.org/licenses/agpl-3.0.html"}
 	},
 	"servers": [{"url": "https://api.fluxer.app/v1", "description": "Production API"}],
@@ -217,7 +217,7 @@
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AuthLoginResponse"}}}
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AuthTokenWithUserIdResponse"}}}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -11364,6 +11364,13 @@
 						"required": true,
 						"schema": {"description": "The ID of the harvest request", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the harvest request"
+					},
+					{
+						"name": "token",
+						"in": "query",
+						"required": true,
+						"schema": {"description": "The signed download token from the harvest download URL", "type": "string"},
+						"description": "The signed download token from the harvest download URL"
 					}
 				]
 			}
@@ -14163,10 +14170,10 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Creates a DSA complaint report with verified email for Digital Services Act compliance.",
+				"description": "Creates a DSA complaint report with verified email for Digital Services Act compliance. The reason comes from the answers given in the DSA report flow.",
 				"requestBody": {
 					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/DsaReportRequest"}}}
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/DsaReportFlowRequest"}}}
 				}
 			}
 		},
@@ -14209,9 +14216,13 @@
 					"500": {
 						"description": "Internal Server Error - An unexpected error occurred",
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"503": {
+						"description": "Service Unavailable - The request could not be completed right now",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Initiates DSA (Digital Services Act) report submission by sending verification email to reporter.",
+				"description": "Initiates DSA (Digital Services Act) report submission by sending verification email to reporter. Responds with 503 when the email could not be sent.",
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/DsaReportEmailSendRequest"}}}
@@ -14266,10 +14277,10 @@
 				}
 			}
 		},
-		"/reports/guild": {
+		"/reports/flows/message/submissions": {
 			"post": {
-				"operationId": "report_guild",
-				"summary": "Report guild",
+				"operationId": "submit_message_report_flow",
+				"summary": "Submit message report flow",
 				"tags": ["Reports"],
 				"responses": {
 					"200": {
@@ -14315,18 +14326,20 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Submits a report about a guild to moderators for policy violation review.",
+				"description": "Files a report about a message from the answers given in the in-app message report flow. The reporter must be able to access the channel and target message.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportGuildRequest"}}}
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/ReportFlowMessageSubmissionRequest"}}
+					}
 				}
 			}
 		},
-		"/reports/message": {
+		"/reports/flows/user/submissions": {
 			"post": {
-				"operationId": "report_message",
-				"summary": "Report message",
+				"operationId": "submit_user_report_flow",
+				"summary": "Submit user report flow",
 				"tags": ["Reports"],
 				"responses": {
 					"200": {
@@ -14372,34 +14385,26 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Submits a report about a message to moderators for content violation review. The reporter must be able to access the channel and target message.",
+				"description": "Files a report about a user profile from the answers given in the in-app user profile report flow.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportMessageRequest"}}}
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportFlowUserSubmissionRequest"}}}
 				}
 			}
 		},
-		"/reports/user": {
-			"post": {
-				"operationId": "report_user",
-				"summary": "Report user",
+		"/reports/flows/{target_type}": {
+			"get": {
+				"operationId": "get_report_flow",
+				"summary": "Get report flow",
 				"tags": ["Reports"],
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportResponse"}}}
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportFlowResponse"}}}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					},
 					"429": {
@@ -14429,12 +14434,33 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Submits a report about a user to moderators for content violation or behaviour review.",
-				"security": [{"sessionToken": []}],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReportUserRequest"}}}
-				}
+				"description": "Returns every screen of the report flow for a target type, rendered in the requested locale. Message and user flows are available in app and on the DSA form, the guild flow only on the DSA form.",
+				"parameters": [
+					{
+						"name": "target_type",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/ReportFlowTargetType"},
+						"description": "Kind of entity a report flow is about"
+					},
+					{
+						"name": "surface",
+						"in": "query",
+						"required": false,
+						"schema": {"default": "in_app", "$ref": "#/components/schemas/ReportFlowSurface"},
+						"description": "Where the flow is shown"
+					},
+					{
+						"name": "locale",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Language tag of the client UI. The server picks the closest supported locale and reports it in the locale field",
+							"type": "string"
+						},
+						"description": "Language tag of the client UI. The server picks the closest supported locale and reports it in the locale field"
+					}
+				]
 			}
 		},
 		"/search/messages": {
@@ -23187,7 +23213,10 @@
 			"Error": {
 				"type": "object",
 				"properties": {
-					"code": {"type": "string", "description": "Machine-readable error code"},
+					"code": {
+						"type": "string",
+						"description": "Machine-readable error code. Known values are listed in the APIErrorCode schema"
+					},
 					"message": {"type": "string", "description": "Human-readable error message"},
 					"errors": {
 						"description": "Field-specific validation errors",
@@ -23210,7 +23239,10 @@
 			"ThrottledError": {
 				"type": "object",
 				"properties": {
-					"code": {"type": "string", "description": "Machine-readable error code"},
+					"code": {
+						"type": "string",
+						"description": "Machine-readable error code. Known values are listed in the APIErrorCode schema"
+					},
 					"message": {"type": "string", "description": "Human-readable error message"},
 					"errors": {
 						"description": "Field-specific validation errors",
@@ -28118,17 +28150,62 @@
 					}
 				]
 			},
-			"ReportUserRequest": {
+			"ReportFlowSurface": {
+				"description": "Where the flow is shown",
+				"x-enumNames": ["in_app", "dsa"],
+				"x-enumDescriptions": ["The in-app report flow", "The public Digital Services Act report form"],
+				"enum": ["in_app", "dsa"],
+				"type": "string"
+			},
+			"ReportFlowTargetType": {
+				"description": "Kind of entity a report flow is about",
+				"x-enumNames": ["message", "user", "guild"],
+				"x-enumDescriptions": ["A message", "A user profile", "A community, on the DSA form only"],
+				"enum": ["message", "user", "guild"],
+				"type": "string"
+			},
+			"ReportFlowResponse": {
 				"type": "object",
 				"properties": {
-					"user_id": {"description": "ID of the user being reported", "$ref": "#/components/schemas/SnowflakeType"},
-					"category": {"$ref": "#/components/schemas/UserReportCategory"},
-					"guild_id": {
-						"description": "ID of the guild where the violation occurred",
-						"$ref": "#/components/schemas/SnowflakeType"
-					}
+					"target_type": {"$ref": "#/components/schemas/ReportFlowTargetType"},
+					"surface": {"$ref": "#/components/schemas/ReportFlowSurface"},
+					"revision_hash": {"type": "string"},
+					"locale": {"type": "string", "description": "Locale the copy was rendered in"},
+					"start_screen_id": {"type": "string"},
+					"guidelines_url": {
+						"description": "Community guidelines page, null when the instance has none",
+						"type": ["string", "null"]
+					},
+					"screens": {"type": "array", "items": {"$ref": "#/components/schemas/ReportFlowScreen"}},
+					"notices": {"type": "array", "items": {"$ref": "#/components/schemas/ReportFlowNotice"}}
 				},
-				"required": ["user_id", "category"]
+				"required": [
+					"target_type",
+					"surface",
+					"revision_hash",
+					"locale",
+					"start_screen_id",
+					"guidelines_url",
+					"screens",
+					"notices"
+				],
+				"additionalProperties": false
+			},
+			"ReportFlowUserSubmissionRequest": {
+				"type": "object",
+				"properties": {
+					"revision_hash": {"type": "string"},
+					"steps": {
+						"minItems": 1,
+						"maxItems": 16,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ReportFlowStep"}
+					},
+					"locale": {"description": "Language tag the reporter saw the flow in", "type": "string"},
+					"user_id": {"$ref": "#/components/schemas/SnowflakeType"},
+					"guild_id": {"$ref": "#/components/schemas/SnowflakeType"}
+				},
+				"required": ["revision_hash", "steps", "user_id"]
 			},
 			"ReportResponse": {
 				"type": "object",
@@ -28137,38 +28214,27 @@
 						"description": "The unique identifier for this report",
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
-					"status": {"type": "string", "description": "Current status of the report (pending, reviewed, resolved)"},
+					"status": {"type": "string", "description": "Current status of the report (pending, resolved)"},
 					"reported_at": {"type": "string", "description": "ISO 8601 timestamp when the report was submitted"}
 				},
 				"required": ["report_id", "status", "reported_at"],
 				"additionalProperties": false
 			},
-			"ReportMessageRequest": {
+			"ReportFlowMessageSubmissionRequest": {
 				"type": "object",
 				"properties": {
-					"channel_id": {
-						"description": "ID of the accessible channel containing the reported message",
-						"$ref": "#/components/schemas/SnowflakeType"
+					"revision_hash": {"type": "string"},
+					"steps": {
+						"minItems": 1,
+						"maxItems": 16,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ReportFlowStep"}
 					},
-					"message_id": {
-						"description": "ID of the accessible message being reported",
-						"$ref": "#/components/schemas/SnowflakeType"
-					},
-					"category": {"$ref": "#/components/schemas/MessageReportCategory"}
+					"locale": {"description": "Language tag the reporter saw the flow in", "type": "string"},
+					"channel_id": {"$ref": "#/components/schemas/SnowflakeType"},
+					"message_id": {"$ref": "#/components/schemas/SnowflakeType"}
 				},
-				"required": ["channel_id", "message_id", "category"]
-			},
-			"ReportGuildRequest": {
-				"type": "object",
-				"properties": {
-					"guild_id": {"description": "ID of the guild being reported", "$ref": "#/components/schemas/SnowflakeType"},
-					"category": {"$ref": "#/components/schemas/GuildReportCategory"},
-					"invite_code": {
-						"description": "Invite code proving access to the guild (required when not a member of a non-discoverable guild)",
-						"type": "string"
-					}
-				},
-				"required": ["guild_id", "category"]
+				"required": ["revision_hash", "steps", "channel_id", "message_id"]
 			},
 			"DsaReportEmailVerifyRequest": {
 				"type": "object",
@@ -28205,11 +28271,11 @@
 				"required": ["ok"],
 				"additionalProperties": false
 			},
-			"DsaReportRequest": {
+			"DsaReportFlowRequest": {
 				"oneOf": [
-					{"$ref": "#/components/schemas/MessageDsaReportRequest"},
-					{"$ref": "#/components/schemas/UserDsaReportRequest"},
-					{"$ref": "#/components/schemas/GuildDsaReportRequest"}
+					{"$ref": "#/components/schemas/MessageDsaReportFlowRequest"},
+					{"$ref": "#/components/schemas/UserDsaReportFlowRequest"},
+					{"$ref": "#/components/schemas/GuildDsaReportFlowRequest"}
 				]
 			},
 			"ReadStateAckBulkRequest": {
@@ -32591,31 +32657,6 @@
 			"AuthRegisterResponse": {
 				"anyOf": [
 					{"$ref": "#/components/schemas/AuthTokenWithUserIdResponse"},
-					{
-						"type": "object",
-						"properties": {
-							"mfa": {
-								"type": "boolean",
-								"const": true,
-								"description": "Indicates MFA is required to complete authentication"
-							},
-							"ticket": {"type": "string", "description": "MFA ticket to use when completing MFA verification"},
-							"allowed_methods": {
-								"maxItems": 10,
-								"type": "array",
-								"items": {"type": "string"},
-								"description": "List of allowed MFA methods"
-							},
-							"totp": {"type": "boolean", "description": "Whether TOTP authenticator MFA is available"},
-							"webauthn": {"type": "boolean", "description": "Whether WebAuthn security key MFA is available"},
-							"backup_codes": {
-								"type": "boolean",
-								"description": "Whether the account has at least one unconsumed backup code"
-							}
-						},
-						"required": ["mfa", "ticket", "allowed_methods", "totp", "webauthn", "backup_codes"],
-						"additionalProperties": false
-					},
 					{"$ref": "#/components/schemas/AuthRegistrationPendingApprovalResponse"}
 				]
 			},
@@ -33211,11 +33252,15 @@
 									"privacy_url": {
 										"description": "Optional public privacy policy URL for account registration",
 										"type": ["string", "null"]
+									},
+									"guidelines_url": {
+										"description": "Optional public community guidelines URL linked from reporting and enforcement notices",
+										"type": ["string", "null"]
 									}
 								},
-								"required": ["terms_url", "privacy_url"],
+								"required": ["terms_url", "privacy_url", "guidelines_url"],
 								"additionalProperties": false,
-								"description": "Optional legal document URLs shown during public registration"
+								"description": "Optional legal and policy document URLs shown to users"
 							},
 							"registration": {
 								"type": "object",
@@ -33308,11 +33353,15 @@
 							"privacy_url": {
 								"description": "Optional public privacy policy URL for account registration",
 								"type": ["string", "null"]
+							},
+							"guidelines_url": {
+								"description": "Optional public community guidelines URL linked from reporting and enforcement notices",
+								"type": ["string", "null"]
 							}
 						},
-						"required": ["terms_url", "privacy_url"],
+						"required": ["terms_url", "privacy_url", "guidelines_url"],
 						"additionalProperties": false,
-						"description": "Optional legal document URLs shown during public registration"
+						"description": "Optional legal and policy document URLs shown to users"
 					},
 					"registration": {
 						"type": "object",
@@ -35423,7 +35472,7 @@
 					},
 					"provider": {
 						"description": "The provider of the embed (e.g., YouTube, Twitter)",
-						"anyOf": [{"$ref": "#/components/schemas/EmbedAuthorResponse"}, {"type": "null"}]
+						"anyOf": [{"$ref": "#/components/schemas/EmbedProviderResponse"}, {"type": "null"}]
 					},
 					"video": {
 						"description": "The video of the embed",
@@ -35551,7 +35600,7 @@
 					},
 					"provider": {
 						"description": "The provider of the embed (e.g., YouTube, Twitter)",
-						"anyOf": [{"$ref": "#/components/schemas/EmbedAuthorResponse"}, {"type": "null"}]
+						"anyOf": [{"$ref": "#/components/schemas/EmbedProviderResponse"}, {"type": "null"}]
 					},
 					"video": {
 						"description": "The video of the embed",
@@ -35610,20 +35659,12 @@
 				"required": ["url", "flags"],
 				"additionalProperties": false
 			},
-			"EmbedAuthorResponse": {
+			"EmbedProviderResponse": {
 				"type": "object",
 				"properties": {
-					"name": {"type": "string", "description": "The name of the author"},
+					"name": {"type": "string", "description": "The name of the provider"},
 					"url": {
-						"description": "The URL of the author",
-						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
-					},
-					"icon_url": {
-						"description": "The URL of the author icon",
-						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
-					},
-					"proxy_icon_url": {
-						"description": "The proxied URL of the author icon",
+						"description": "The URL of the provider",
 						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
 					}
 				},
@@ -35654,6 +35695,26 @@
 					}
 				},
 				"required": ["text"],
+				"additionalProperties": false
+			},
+			"EmbedAuthorResponse": {
+				"type": "object",
+				"properties": {
+					"name": {"type": "string", "description": "The name of the author"},
+					"url": {
+						"description": "The URL of the author",
+						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
+					},
+					"icon_url": {
+						"description": "The URL of the author icon",
+						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
+					},
+					"proxy_icon_url": {
+						"description": "The proxied URL of the author icon",
+						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
+					}
+				},
+				"required": ["name"],
 				"additionalProperties": false
 			},
 			"EmbedMediaFlags": {
@@ -38128,482 +38189,339 @@
 				"additionalProperties": false
 			},
 			"UnsignedInt64StringType": {"type": "string", "pattern": "^\\d+$", "format": "int64"},
-			"GuildDsaReportRequest": {
+			"GuildDsaReportFlowRequest": {
 				"type": "object",
 				"properties": {
 					"ticket": {"description": "Verification ticket obtained from email verification", "type": "string"},
-					"additional_info": {"description": "Additional context or details about the report", "type": "string"},
-					"reporter_full_legal_name": {
-						"description": "Full legal name of the person filing the report",
-						"type": "string"
-					},
 					"reporter_country_of_residence": {
-						"description": "EU country code of the reporter residence",
-						"x-enumNames": [
-							"AT",
-							"BE",
-							"BG",
-							"HR",
-							"CY",
-							"CZ",
-							"DK",
-							"EE",
-							"FI",
-							"FR",
-							"DE",
-							"GR",
-							"HU",
-							"IE",
-							"IT",
-							"LV",
-							"LT",
-							"LU",
-							"MT",
-							"NL",
-							"PL",
-							"PT",
-							"RO",
-							"SK",
-							"SI",
-							"ES",
-							"SE"
-						],
-						"x-enumDescriptions": [
-							"Austria",
-							"Belgium",
-							"Bulgaria",
-							"Croatia",
-							"Cyprus",
-							"Czechia",
-							"Denmark",
-							"Estonia",
-							"Finland",
-							"France",
-							"Germany",
-							"Greece",
-							"Hungary",
-							"Ireland",
-							"Italy",
-							"Latvia",
-							"Lithuania",
-							"Luxembourg",
-							"Malta",
-							"Netherlands",
-							"Poland",
-							"Portugal",
-							"Romania",
-							"Slovakia",
-							"Slovenia",
-							"Spain",
-							"Sweden"
-						],
-						"enum": [
-							"AT",
-							"BE",
-							"BG",
-							"HR",
-							"CY",
-							"CZ",
-							"DK",
-							"EE",
-							"FI",
-							"FR",
-							"DE",
-							"GR",
-							"HU",
-							"IE",
-							"IT",
-							"LV",
-							"LT",
-							"LU",
-							"MT",
-							"NL",
-							"PL",
-							"PT",
-							"RO",
-							"SK",
-							"SI",
-							"ES",
-							"SE"
-						],
+						"$ref": "#/components/schemas/EuCountryCode",
+						"description": "EU country code of the reporter residence"
+					},
+					"revision_hash": {
+						"description": "revision_hash of the DSA report flow the reporter answered",
 						"type": "string"
 					},
-					"reporter_fluxer_tag": {
-						"description": "Fluxer tag of the reporter if they have an account",
-						"type": "string",
-						"minLength": 3,
-						"maxLength": 37
+					"steps": {
+						"minItems": 1,
+						"maxItems": 16,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ReportFlowStep"},
+						"description": "Screens of the DSA report flow and the answers chosen on each, in order"
+					},
+					"good_faith_confirmed": {
+						"type": "boolean",
+						"const": true,
+						"description": "Confirms in good faith that the information and allegations in the notice are accurate and complete"
+					},
+					"locale": {"description": "Language tag the reporter saw the flow in", "type": "string"},
+					"additional_info": {
+						"description": "Explanation of the problem. If the reporter believes the content is illegal, which law it breaks and why",
+						"type": "string"
+					},
+					"reporter_full_legal_name": {
+						"description": "Full legal name of the person filing the report, required unless the report is about child sexual abuse",
+						"type": "string"
 					},
 					"report_type": {"type": "string", "const": "guild", "description": "Type of report"},
-					"category": {"$ref": "#/components/schemas/GuildReportCategory"},
 					"guild_id": {"description": "ID of the guild being reported", "$ref": "#/components/schemas/SnowflakeType"},
 					"invite_code": {"description": "Invite code used to access the guild", "type": "string"}
 				},
 				"required": [
 					"ticket",
-					"reporter_full_legal_name",
 					"reporter_country_of_residence",
+					"revision_hash",
+					"steps",
+					"good_faith_confirmed",
+					"additional_info",
 					"report_type",
-					"category",
 					"guild_id"
 				]
 			},
-			"UserDsaReportRequest": {
+			"UserDsaReportFlowRequest": {
 				"type": "object",
 				"properties": {
 					"ticket": {"description": "Verification ticket obtained from email verification", "type": "string"},
-					"additional_info": {"description": "Additional context or details about the report", "type": "string"},
-					"reporter_full_legal_name": {
-						"description": "Full legal name of the person filing the report",
-						"type": "string"
-					},
 					"reporter_country_of_residence": {
-						"description": "EU country code of the reporter residence",
-						"x-enumNames": [
-							"AT",
-							"BE",
-							"BG",
-							"HR",
-							"CY",
-							"CZ",
-							"DK",
-							"EE",
-							"FI",
-							"FR",
-							"DE",
-							"GR",
-							"HU",
-							"IE",
-							"IT",
-							"LV",
-							"LT",
-							"LU",
-							"MT",
-							"NL",
-							"PL",
-							"PT",
-							"RO",
-							"SK",
-							"SI",
-							"ES",
-							"SE"
-						],
-						"x-enumDescriptions": [
-							"Austria",
-							"Belgium",
-							"Bulgaria",
-							"Croatia",
-							"Cyprus",
-							"Czechia",
-							"Denmark",
-							"Estonia",
-							"Finland",
-							"France",
-							"Germany",
-							"Greece",
-							"Hungary",
-							"Ireland",
-							"Italy",
-							"Latvia",
-							"Lithuania",
-							"Luxembourg",
-							"Malta",
-							"Netherlands",
-							"Poland",
-							"Portugal",
-							"Romania",
-							"Slovakia",
-							"Slovenia",
-							"Spain",
-							"Sweden"
-						],
-						"enum": [
-							"AT",
-							"BE",
-							"BG",
-							"HR",
-							"CY",
-							"CZ",
-							"DK",
-							"EE",
-							"FI",
-							"FR",
-							"DE",
-							"GR",
-							"HU",
-							"IE",
-							"IT",
-							"LV",
-							"LT",
-							"LU",
-							"MT",
-							"NL",
-							"PL",
-							"PT",
-							"RO",
-							"SK",
-							"SI",
-							"ES",
-							"SE"
-						],
+						"$ref": "#/components/schemas/EuCountryCode",
+						"description": "EU country code of the reporter residence"
+					},
+					"revision_hash": {
+						"description": "revision_hash of the DSA report flow the reporter answered",
 						"type": "string"
 					},
-					"reporter_fluxer_tag": {
-						"description": "Fluxer tag of the reporter if they have an account",
-						"type": "string",
-						"minLength": 3,
-						"maxLength": 37
+					"steps": {
+						"minItems": 1,
+						"maxItems": 16,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ReportFlowStep"},
+						"description": "Screens of the DSA report flow and the answers chosen on each, in order"
+					},
+					"good_faith_confirmed": {
+						"type": "boolean",
+						"const": true,
+						"description": "Confirms in good faith that the information and allegations in the notice are accurate and complete"
+					},
+					"locale": {"description": "Language tag the reporter saw the flow in", "type": "string"},
+					"additional_info": {
+						"description": "Explanation of the problem. If the reporter believes the content is illegal, which law it breaks and why",
+						"type": "string"
+					},
+					"reporter_full_legal_name": {
+						"description": "Full legal name of the person filing the report, required unless the report is about child sexual abuse",
+						"type": "string"
 					},
 					"report_type": {"type": "string", "const": "user", "description": "Type of report"},
-					"category": {"$ref": "#/components/schemas/UserReportCategory"},
 					"user_id": {"description": "ID of the user being reported", "$ref": "#/components/schemas/SnowflakeType"},
 					"user_tag": {
 						"description": "Fluxer tag of the user being reported",
 						"type": "string",
-						"minLength": 3,
-						"maxLength": 37
-					}
-				},
-				"required": ["ticket", "reporter_full_legal_name", "reporter_country_of_residence", "report_type", "category"]
-			},
-			"MessageDsaReportRequest": {
-				"type": "object",
-				"properties": {
-					"ticket": {"description": "Verification ticket obtained from email verification", "type": "string"},
-					"additional_info": {"description": "Additional context or details about the report", "type": "string"},
-					"reporter_full_legal_name": {
-						"description": "Full legal name of the person filing the report",
-						"type": "string"
-					},
-					"reporter_country_of_residence": {
-						"description": "EU country code of the reporter residence",
-						"x-enumNames": [
-							"AT",
-							"BE",
-							"BG",
-							"HR",
-							"CY",
-							"CZ",
-							"DK",
-							"EE",
-							"FI",
-							"FR",
-							"DE",
-							"GR",
-							"HU",
-							"IE",
-							"IT",
-							"LV",
-							"LT",
-							"LU",
-							"MT",
-							"NL",
-							"PL",
-							"PT",
-							"RO",
-							"SK",
-							"SI",
-							"ES",
-							"SE"
-						],
-						"x-enumDescriptions": [
-							"Austria",
-							"Belgium",
-							"Bulgaria",
-							"Croatia",
-							"Cyprus",
-							"Czechia",
-							"Denmark",
-							"Estonia",
-							"Finland",
-							"France",
-							"Germany",
-							"Greece",
-							"Hungary",
-							"Ireland",
-							"Italy",
-							"Latvia",
-							"Lithuania",
-							"Luxembourg",
-							"Malta",
-							"Netherlands",
-							"Poland",
-							"Portugal",
-							"Romania",
-							"Slovakia",
-							"Slovenia",
-							"Spain",
-							"Sweden"
-						],
-						"enum": [
-							"AT",
-							"BE",
-							"BG",
-							"HR",
-							"CY",
-							"CZ",
-							"DK",
-							"EE",
-							"FI",
-							"FR",
-							"DE",
-							"GR",
-							"HU",
-							"IE",
-							"IT",
-							"LV",
-							"LT",
-							"LU",
-							"MT",
-							"NL",
-							"PL",
-							"PT",
-							"RO",
-							"SK",
-							"SI",
-							"ES",
-							"SE"
-						],
-						"type": "string"
-					},
-					"reporter_fluxer_tag": {
-						"description": "Fluxer tag of the reporter if they have an account",
-						"type": "string",
-						"minLength": 3,
-						"maxLength": 37
-					},
-					"report_type": {"type": "string", "const": "message", "description": "Type of report"},
-					"category": {"$ref": "#/components/schemas/MessageReportCategory"},
-					"message_link": {"description": "Link to the message being reported", "type": "string"},
-					"reported_user_tag": {
-						"description": "Fluxer tag of the user who sent the message",
-						"type": "string",
-						"minLength": 3,
+						"minLength": 1,
 						"maxLength": 37
 					}
 				},
 				"required": [
 					"ticket",
-					"reporter_full_legal_name",
 					"reporter_country_of_residence",
+					"revision_hash",
+					"steps",
+					"good_faith_confirmed",
+					"additional_info",
+					"report_type"
+				]
+			},
+			"MessageDsaReportFlowRequest": {
+				"type": "object",
+				"properties": {
+					"ticket": {"description": "Verification ticket obtained from email verification", "type": "string"},
+					"reporter_country_of_residence": {
+						"$ref": "#/components/schemas/EuCountryCode",
+						"description": "EU country code of the reporter residence"
+					},
+					"revision_hash": {
+						"description": "revision_hash of the DSA report flow the reporter answered",
+						"type": "string"
+					},
+					"steps": {
+						"minItems": 1,
+						"maxItems": 16,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/ReportFlowStep"},
+						"description": "Screens of the DSA report flow and the answers chosen on each, in order"
+					},
+					"good_faith_confirmed": {
+						"type": "boolean",
+						"const": true,
+						"description": "Confirms in good faith that the information and allegations in the notice are accurate and complete"
+					},
+					"locale": {"description": "Language tag the reporter saw the flow in", "type": "string"},
+					"additional_info": {
+						"description": "Explanation of the problem. If the reporter believes the content is illegal, which law it breaks and why",
+						"type": "string"
+					},
+					"reporter_full_legal_name": {
+						"description": "Full legal name of the person filing the report, required unless the report is about child sexual abuse",
+						"type": "string"
+					},
+					"report_type": {"type": "string", "const": "message", "description": "Type of report"},
+					"message_link": {"description": "Link to the message being reported", "type": "string"},
+					"reported_user_tag": {
+						"description": "Fluxer tag of the user who sent the message",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 37
+					}
+				},
+				"required": [
+					"ticket",
+					"reporter_country_of_residence",
+					"revision_hash",
+					"steps",
+					"good_faith_confirmed",
+					"additional_info",
 					"report_type",
-					"category",
 					"message_link"
 				]
 			},
-			"MessageReportCategory": {
-				"description": "Category of the message report",
+			"ReportFlowStep": {
+				"type": "object",
+				"properties": {
+					"screen_id": {"type": "string"},
+					"option_id": {"type": "string"},
+					"item_ids": {"minItems": 1, "maxItems": 32, "type": "array", "items": {"type": "string"}}
+				},
+				"required": ["screen_id"]
+			},
+			"EuCountryCode": {
+				"description": "EU country code of residence",
 				"x-enumNames": [
-					"harassment",
-					"hate_speech",
-					"violent_content",
-					"spam",
-					"nsfw_violation",
-					"illegal_activity",
-					"doxxing",
-					"self_harm",
-					"child_safety",
-					"malicious_links",
-					"impersonation",
-					"other"
+					"AT",
+					"BE",
+					"BG",
+					"HR",
+					"CY",
+					"CZ",
+					"DK",
+					"EE",
+					"FI",
+					"FR",
+					"DE",
+					"GR",
+					"HU",
+					"IE",
+					"IT",
+					"LV",
+					"LT",
+					"LU",
+					"MT",
+					"NL",
+					"PL",
+					"PT",
+					"RO",
+					"SK",
+					"SI",
+					"ES",
+					"SE"
 				],
 				"x-enumDescriptions": [
-					"Content that harasses, bullies, or intimidates users",
-					"Content promoting hatred against protected groups",
-					"Content depicting or promoting violence",
-					"Unsolicited bulk messages or promotional content",
-					"Adult content posted outside age-restricted channels",
-					"Content promoting or facilitating illegal activities",
-					"Content revealing private personal information",
-					"Content promoting self-harm or suicide",
-					"Content that endangers minors or depicts child abuse",
-					"Links to malware, phishing, or other malicious sites",
-					"Content falsely claiming to be another person or entity",
-					"Other violations not covered by specific categories"
+					"Austria",
+					"Belgium",
+					"Bulgaria",
+					"Croatia",
+					"Cyprus",
+					"Czechia",
+					"Denmark",
+					"Estonia",
+					"Finland",
+					"France",
+					"Germany",
+					"Greece",
+					"Hungary",
+					"Ireland",
+					"Italy",
+					"Latvia",
+					"Lithuania",
+					"Luxembourg",
+					"Malta",
+					"Netherlands",
+					"Poland",
+					"Portugal",
+					"Romania",
+					"Slovakia",
+					"Slovenia",
+					"Spain",
+					"Sweden"
 				],
 				"enum": [
-					"harassment",
-					"hate_speech",
-					"violent_content",
-					"spam",
-					"nsfw_violation",
-					"illegal_activity",
-					"doxxing",
-					"self_harm",
-					"child_safety",
-					"malicious_links",
-					"impersonation",
-					"other"
+					"AT",
+					"BE",
+					"BG",
+					"HR",
+					"CY",
+					"CZ",
+					"DK",
+					"EE",
+					"FI",
+					"FR",
+					"DE",
+					"GR",
+					"HU",
+					"IE",
+					"IT",
+					"LV",
+					"LT",
+					"LU",
+					"MT",
+					"NL",
+					"PL",
+					"PT",
+					"RO",
+					"SK",
+					"SI",
+					"ES",
+					"SE"
 				],
 				"type": "string"
 			},
-			"UserReportCategory": {
-				"description": "Category of the user report",
-				"x-enumNames": [
-					"harassment",
-					"hate_speech",
-					"spam_account",
-					"impersonation",
-					"underage_user",
-					"inappropriate_profile",
-					"other"
-				],
+			"ReportFlowNotice": {
+				"type": "object",
+				"properties": {"id": {"type": "string"}, "title": {"type": "string"}, "body": {"type": "string"}},
+				"required": ["id", "title", "body"],
+				"additionalProperties": false
+			},
+			"ReportFlowScreen": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string"},
+					"title": {"type": "string"},
+					"subtitle": {"type": ["string", "null"]},
+					"urgent": {"type": "boolean"},
+					"options": {"type": "array", "items": {"$ref": "#/components/schemas/ReportFlowOption"}},
+					"options_heading": {"type": ["string", "null"]},
+					"checklist": {"anyOf": [{"$ref": "#/components/schemas/ReportFlowChecklist"}, {"type": "null"}]},
+					"next_screen_id": {
+						"description": "Set on an info screen, which has a Next button instead of choices",
+						"type": ["string", "null"]
+					}
+				},
+				"required": ["id", "title", "subtitle", "urgent", "options", "options_heading", "checklist", "next_screen_id"],
+				"additionalProperties": false
+			},
+			"ReportFlowChecklist": {
+				"type": "object",
+				"properties": {
+					"items": {"type": "array", "items": {"$ref": "#/components/schemas/ReportFlowChecklistItem"}},
+					"min_checked": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
+					"outcome": {"$ref": "#/components/schemas/ReportFlowOutcome"}
+				},
+				"required": ["items", "min_checked", "outcome"],
+				"additionalProperties": false
+			},
+			"ReportFlowOption": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string"},
+					"label": {"type": "string"},
+					"outcome": {"$ref": "#/components/schemas/ReportFlowOutcome"}
+				},
+				"required": ["id", "label", "outcome"],
+				"additionalProperties": false
+			},
+			"ReportFlowOutcome": {
+				"type": "object",
+				"properties": {
+					"type": {"$ref": "#/components/schemas/ReportFlowOutcomeType"},
+					"screen_id": {"description": "Next screen when type is screen", "type": ["string", "null"]},
+					"reason": {"description": "Report reason when type is submit", "type": ["string", "null"]},
+					"notice_id": {
+						"description": "Notice to show when type is end, null for the thank-you screen",
+						"type": ["string", "null"]
+					},
+					"url": {"description": "Page to open when type is link", "type": ["string", "null"]}
+				},
+				"required": ["type", "screen_id", "reason", "notice_id", "url"],
+				"additionalProperties": false
+			},
+			"ReportFlowOutcomeType": {
+				"description": "What choosing an option does",
+				"x-enumNames": ["screen", "submit", "end", "link"],
 				"x-enumDescriptions": [
-					"User engages in harassment, bullying, or intimidation",
-					"User promotes hatred against protected groups",
-					"Account used for spamming or bulk messaging",
-					"User falsely claims to be another person or entity",
-					"User appears to be under the minimum required age",
-					"Profile contains inappropriate or offensive content",
-					"Other violations not covered by specific categories"
+					"Go to another screen",
+					"Show the summary, then file a report",
+					"Finish without filing a report",
+					"Open an external page"
 				],
-				"enum": [
-					"harassment",
-					"hate_speech",
-					"spam_account",
-					"impersonation",
-					"underage_user",
-					"inappropriate_profile",
-					"other"
-				],
+				"enum": ["screen", "submit", "end", "link"],
 				"type": "string"
 			},
-			"GuildReportCategory": {
-				"description": "Category of the guild report",
-				"x-enumNames": [
-					"harassment",
-					"hate_speech",
-					"extremist_community",
-					"illegal_activity",
-					"child_safety",
-					"raid_coordination",
-					"spam",
-					"malware_distribution",
-					"other"
-				],
-				"x-enumDescriptions": [
-					"Guild facilitates harassment, bullying, or intimidation",
-					"Guild promotes hatred against protected groups",
-					"Guild promotes extremist or terrorist ideologies",
-					"Guild promotes or facilitates illegal activities",
-					"Guild endangers minors or hosts child abuse content",
-					"Guild coordinates attacks on other communities",
-					"Guild used for spamming or bulk messaging",
-					"Guild distributes malware or malicious software",
-					"Other violations not covered by specific categories"
-				],
-				"enum": [
-					"harassment",
-					"hate_speech",
-					"extremist_community",
-					"illegal_activity",
-					"child_safety",
-					"raid_coordination",
-					"spam",
-					"malware_distribution",
-					"other"
-				],
-				"type": "string"
+			"ReportFlowChecklistItem": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string"},
+					"label": {"type": "string"},
+					"description": {"type": ["string", "null"]}
+				},
+				"required": ["id", "label", "description"],
+				"additionalProperties": false
 			},
 			"MessageSearchResultsResponse": {
 				"type": "object",
@@ -39650,6 +39568,600 @@
 			"Int64Type": {
 				"anyOf": [{"type": "string"}, {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}],
 				"format": "int64"
+			},
+			"APIErrorCode": {
+				"type": "string",
+				"enum": [
+					"ACCESS_DENIED",
+					"ANNOUNCEMENT_CHANNEL_REQUIRED",
+					"BAD_GATEWAY",
+					"BAD_REQUEST",
+					"BLUESKY_OAUTH_AUTHORIZATION_FAILED",
+					"BLUESKY_OAUTH_NOT_ENABLED",
+					"ACCOUNT_LIMITED",
+					"ACCOUNT_IDENTITY_LOCKED",
+					"ACCOUNT_SUSPENDED_PERMANENTLY",
+					"ACCOUNT_SUSPENDED_TEMPORARILY",
+					"ACCOUNT_TOO_NEW_FOR_GUILD",
+					"ACLS_MUST_BE_NON_EMPTY",
+					"ADMIN_API_KEY_NOT_FOUND",
+					"APPLICATION_NOT_OWNED",
+					"ALREADY_FRIENDS",
+					"BOTS_CANNOT_CREATE_GUILDS",
+					"BOTS_CANNOT_SEND_FRIEND_REQUESTS",
+					"BOT_ALREADY_IN_GUILD",
+					"BOT_IS_PRIVATE",
+					"BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED",
+					"BOT_USER_AUTH_SESSION_CREATION_DENIED",
+					"BOT_USER_GENERATION_FAILED",
+					"BOT_USER_NOT_FOUND",
+					"CALL_ALREADY_EXISTS",
+					"CANNOT_EDIT_OTHER_USER_MESSAGE",
+					"CANNOT_EXECUTE_ON_DM",
+					"CANNOT_BLOCK_SYSTEM_USER",
+					"CANNOT_MODIFY_SYSTEM_WEBHOOK",
+					"CANNOT_REDEEM_PLUTONIUM_WITH_VISIONARY",
+					"CANNOT_REPORT_GUILD",
+					"CANNOT_REPORT_OWN_GUILD",
+					"CANNOT_REPORT_OWN_MESSAGE",
+					"CANNOT_REPORT_YOURSELF",
+					"CANNOT_SEND_EMPTY_MESSAGE",
+					"CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER",
+					"CANNOT_SEND_FRIEND_REQUEST_TO_SELF",
+					"CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL",
+					"CANNOT_SEND_MESSAGES_TO_USER",
+					"CANNOT_TRANSFER_OWNERSHIP_TO_BOT",
+					"CANNOT_SHRINK_RESERVED_SLOTS",
+					"CAPTCHA_REQUIRED",
+					"CHANNEL_ALREADY_FOLLOWED",
+					"CHANNEL_HAS_FOLLOWED_CHANNELS",
+					"CHANNEL_HAS_THREADS",
+					"CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED",
+					"COMMUNICATION_DISABLED",
+					"CONNECTION_ALREADY_EXISTS",
+					"CONNECTION_INITIATION_TOKEN_INVALID",
+					"CONNECTION_INVALID_TYPE",
+					"CONNECTION_LIMIT_REACHED",
+					"CONNECTION_NOT_FOUND",
+					"CONNECTION_VERIFICATION_FAILED",
+					"CONFLICT",
+					"CONTENT_BLOCKED",
+					"DELETION_FAILED",
+					"DISCOVERY_ALREADY_APPLIED",
+					"DISCOVERY_APPLICATION_ALREADY_REVIEWED",
+					"DISCOVERY_APPLICATION_NOT_FOUND",
+					"DISCOVERY_DISABLED",
+					"DISCOVERY_INSUFFICIENT_MEMBERS",
+					"DISCOVERY_NOT_DISCOVERABLE",
+					"DISCRIMINATOR_REQUIRED",
+					"EMAIL_SERVICE_NOT_TESTABLE",
+					"EMAIL_UNAVAILABLE_ON_INSTANCE",
+					"EMAIL_VERIFICATION_REQUIRED",
+					"DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED",
+					"FOLLOW_TARGET_CONTENT_WARNING_REQUIRED",
+					"FOLLOW_TARGET_NOT_AGE_RESTRICTED",
+					"FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED",
+					"GUILD_CREATION_EMAIL_VERIFICATION_REQUIRED",
+					"GUILD_CREATION_PERMISSION_REQUIRED",
+					"GUILD_EMAIL_VERIFICATION_REQUIRED",
+					"INVALID_FOLLOW_TARGET_CHANNEL",
+					"MESSAGE_ALREADY_CROSSPOSTED",
+					"MESSAGE_CROSSPOST_RATE_LIMITED",
+					"MESSAGE_NOT_CROSSPOSTABLE",
+					"MFA_EMAIL_VERIFICATION_REQUIRED",
+					"PROFILE_EMAIL_VERIFICATION_REQUIRED",
+					"PUBLISHED_MESSAGE_EDIT_RATE_LIMITED",
+					"PURCHASE_EMAIL_VERIFICATION_REQUIRED",
+					"REACTION_EMAIL_VERIFICATION_REQUIRED",
+					"REPORT_EMAIL_VERIFICATION_REQUIRED",
+					"REGISTRATION_CLOSED",
+					"REGISTRATION_PENDING_APPROVAL",
+					"REGISTRATION_REJECTED",
+					"REGISTRATION_URL_INVALID",
+					"EXPLICIT_CONTENT_CANNOT_BE_SENT",
+					"FEATURE_NOT_AVAILABLE_SELF_HOSTED",
+					"FEATURE_TEMPORARILY_DISABLED",
+					"FILE_SIZE_TOO_LARGE",
+					"FORBIDDEN",
+					"FORUM_TAG_NAMES_MUST_BE_UNIQUE",
+					"FORUM_TAG_REQUIRED",
+					"FRIEND_REQUEST_BLOCKED",
+					"GATEWAY_TIMEOUT",
+					"GENERAL_ERROR",
+					"GONE",
+					"GIFT_CODE_ALREADY_REDEEMED",
+					"GUILD_TEMPLATE_INVALID",
+					"GUILD_VERIFICATION_REQUIRED",
+					"HANDOFF_CODE_EXPIRED",
+					"HARVEST_EXPIRED",
+					"HARVEST_FAILED",
+					"HARVEST_NOT_READY",
+					"HIDE_MEDIA_DOWNLOAD_OPTION_MEDIA_ONLY",
+					"INTERNAL_SERVER_ERROR",
+					"INVALID_ACLS_FORMAT",
+					"INVALID_API_ORIGIN",
+					"INVALID_AUTH_TOKEN",
+					"INVALID_BOT_FLAG",
+					"INVALID_CAPTCHA",
+					"INVALID_CHANNEL_TYPE_FOR_CALL",
+					"INVALID_CHANNEL_TYPE",
+					"INVALID_DSA_REPORT_TARGET",
+					"INVALID_DSA_TICKET",
+					"INVALID_DSA_VERIFICATION_CODE",
+					"INVALID_FLAGS_FORMAT",
+					"INVALID_FORM_BODY",
+					"INVALID_HANDOFF_CODE",
+					"INVALID_ORIGIN_HANDOFF_NONCE",
+					"INVALID_PASSKEY_BRIDGE_NONCE",
+					"INVALID_PERMISSIONS_INTEGER",
+					"INVALID_PERMISSIONS_NEGATIVE",
+					"INVALID_REPORT_FLOW_ANSWERS",
+					"INVALID_REQUEST",
+					"INVALID_STREAM_KEY_FORMAT",
+					"INVALID_STREAM_THUMBNAIL_PAYLOAD",
+					"INVALID_SYSTEM_FLAG",
+					"INVALID_TIMESTAMP",
+					"INVALID_TOKEN",
+					"INVALID_THREAD_NOTIFICATION_SETTINGS",
+					"INVALID_WEBAUTHN_AUTHENTICATION_COUNTER",
+					"INVALID_WEBAUTHN_CREDENTIAL_COUNTER",
+					"INVALID_WEBAUTHN_CREDENTIAL",
+					"INVALID_WEBAUTHN_PUBLIC_KEY_FORMAT",
+					"INVITES_DISABLED",
+					"IP_AUTHORIZATION_REQUIRED",
+					"IP_AUTHORIZATION_RESEND_COOLDOWN",
+					"IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED",
+					"GLOBAL_IP_BANNED",
+					"GLOBAL_IP_TEMPORARILY_BANNED",
+					"IP_BAN_DECLINED",
+					"MAX_APPLICATIONS",
+					"MAX_BOOKMARKS",
+					"MAX_ACTIVE_THREADS",
+					"MAX_CATEGORY_CHANNELS",
+					"MAX_EMOJIS",
+					"MAX_FAVORITE_MEMES",
+					"MAX_FRIENDS",
+					"MAX_FORUM_TAGS",
+					"MAX_GROUP_DM_RECIPIENTS",
+					"MAX_GROUP_DMS",
+					"GROUP_DM_RECIPIENTS_NOT_ADDABLE",
+					"MAX_GUILD_CHANNELS",
+					"MAX_GUILD_MEMBERS",
+					"MAX_GUILD_ROLES",
+					"MAX_GUILDS",
+					"MAX_PINNED_THREADS_IN_FORUM",
+					"MAX_INVITES",
+					"MAX_REACTIONS",
+					"MAX_STICKERS",
+					"MAX_THREAD_MEMBERS",
+					"MAX_WEBHOOKS_PER_CHANNEL",
+					"MAX_WEBHOOKS_PER_GUILD",
+					"MEDIA_METADATA_ERROR",
+					"METHOD_NOT_ALLOWED",
+					"MISSING_ACCESS",
+					"MISSING_ACL",
+					"MISSING_AUTHORIZATION",
+					"MISSING_OAUTH_SCOPE",
+					"MISSING_PERMISSIONS",
+					"NO_ACTIVE_CALL",
+					"NO_ACTIVE_SUBSCRIPTION",
+					"NO_TAGS_AVAILABLE_TO_NON_MODERATORS",
+					"NOT_FOUND",
+					"NOT_IMPLEMENTED",
+					"NO_PASSKEYS_REGISTERED",
+					"NO_PENDING_DELETION",
+					"NO_USERS_WITH_FLUXERTAG_EXIST",
+					"NOT_A_BOT_APPLICATION",
+					"NOT_FRIENDS_WITH_USER",
+					"NSFW_CONTENT_AGE_RESTRICTED",
+					"PASSKEY_AUTHENTICATION_FAILED",
+					"PREMIUM_PURCHASE_BLOCKED",
+					"PREVIEW_MUST_BE_JPEG",
+					"PROCESSING_FAILED",
+					"RATE_LIMITED",
+					"REPORT_ALREADY_RESOLVED",
+					"REPORT_BANNED",
+					"REPORT_FLOW_OUTDATED",
+					"REPORT_UNDER_LEGAL_HOLD",
+					"RESPONSE_VALIDATION_ERROR",
+					"RESOURCE_LOCKED",
+					"SERVICE_UNAVAILABLE",
+					"SESSION_TOKEN_MISMATCH",
+					"SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS",
+					"SINGLE_COMMUNITY_CANNOT_DELETE",
+					"SINGLE_COMMUNITY_CANNOT_LEAVE",
+					"INSTANCE_POLICY_TRANSITION_NOT_ALLOWED",
+					"SLOWMODE_RATE_LIMITED",
+					"SEARCH_INDEX_NOT_READY",
+					"SSO_REQUIRED",
+					"STORE_BILLING_UNAVAILABLE",
+					"STORE_NOTIFICATION_UNAUTHORIZED",
+					"STORE_PURCHASE_INVALID",
+					"STORE_PURCHASE_OWNED_BY_OTHER_ACCOUNT",
+					"STORE_PURCHASE_SANDBOX_NOT_ENTITLED",
+					"STREAM_KEY_CHANNEL_MISMATCH",
+					"STREAM_KEY_SCOPE_MISMATCH",
+					"STRIPE_ERROR",
+					"STRIPE_GIFT_REDEMPTION_IN_PROGRESS",
+					"STRIPE_INVALID_PRODUCT",
+					"STRIPE_INVALID_PRODUCT_CONFIGURATION",
+					"STRIPE_NO_ACTIVE_SUBSCRIPTION",
+					"STRIPE_NO_PURCHASE_HISTORY",
+					"STRIPE_REFUND_OUTSIDE_WINDOW",
+					"STRIPE_REFUND_COOLDOWN_ACTIVE",
+					"STRIPE_NO_SUBSCRIPTION",
+					"STRIPE_PAYMENT_NOT_AVAILABLE",
+					"STRIPE_SUBSCRIPTION_ALREADY_CANCELING",
+					"STRIPE_SUBSCRIPTION_NOT_CANCELING",
+					"STRIPE_WEBHOOK_NOT_AVAILABLE",
+					"STRIPE_WEBHOOK_SIGNATURE_INVALID",
+					"STRIPE_WEBHOOK_SIGNATURE_MISSING",
+					"DIRECT_MESSAGES_DISABLED",
+					"NEW_CONVERSATIONS_LIMITED",
+					"DONATION_AMOUNT_INVALID",
+					"DONATION_MAGIC_LINK_EXPIRED",
+					"DONATION_MAGIC_LINK_INVALID",
+					"DONATION_MAGIC_LINK_USED",
+					"SUDO_MODE_REQUIRED",
+					"TAG_ALREADY_TAKEN",
+					"TEMPORARY_INVITE_REQUIRES_PRESENCE",
+					"TEST_HARNESS_DISABLED",
+					"TEST_HARNESS_FORBIDDEN",
+					"THREAD_ALREADY_CREATED_FOR_MESSAGE",
+					"THREAD_ARCHIVED",
+					"THREAD_LOCKED",
+					"TWO_FA_NOT_ENABLED",
+					"TWO_FACTOR_REQUIRED",
+					"UNAUTHORIZED",
+					"UNCLAIMED_ACCOUNT_CANNOT_ACCEPT_FRIEND_REQUESTS",
+					"UNCLAIMED_ACCOUNT_CANNOT_ADD_REACTIONS",
+					"UNCLAIMED_ACCOUNT_CANNOT_CREATE_APPLICATIONS",
+					"UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS",
+					"UNCLAIMED_ACCOUNT_CANNOT_JOIN_GROUP_DMS",
+					"UNCLAIMED_ACCOUNT_CANNOT_JOIN_ONE_ON_ONE_VOICE_CALLS",
+					"UNCLAIMED_ACCOUNT_CANNOT_JOIN_VOICE_CHANNELS",
+					"UNCLAIMED_ACCOUNT_CANNOT_MAKE_PURCHASES",
+					"UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES",
+					"UNCLAIMED_ACCOUNT_CANNOT_SEND_FRIEND_REQUESTS",
+					"UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES",
+					"UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS",
+					"UNKNOWN_CHANNEL",
+					"UNKNOWN_EMOJI",
+					"UNKNOWN_FAVORITE_MEME",
+					"UNKNOWN_FORUM_TAG",
+					"UNKNOWN_GIFT_CODE",
+					"UNKNOWN_GUILD",
+					"UNKNOWN_HARVEST",
+					"UNKNOWN_INVITE",
+					"UNKNOWN_MEMBER",
+					"UNKNOWN_MESSAGE",
+					"UNKNOWN_ORIGIN_HANDOFF",
+					"UNKNOWN_PASSKEY_BRIDGE",
+					"UNKNOWN_PASSKEY_MIGRATION",
+					"UNKNOWN_REPORT",
+					"UNKNOWN_ROLE",
+					"UNKNOWN_STICKER",
+					"UNKNOWN_STORE_PURCHASE",
+					"UNKNOWN_THREAD_MEMBER",
+					"UNKNOWN_USER_FLAG",
+					"UNKNOWN_USER",
+					"UNKNOWN_VOICE_REGION",
+					"UNKNOWN_VOICE_SERVER",
+					"UNKNOWN_WEBAUTHN_CREDENTIAL",
+					"UNKNOWN_APPLICATION",
+					"UNKNOWN_WEBHOOK",
+					"WEBHOOK_FORUM_TARGET_CONFLICT",
+					"WEBHOOK_FORUM_TARGET_REQUIRED",
+					"WEBHOOK_SERVICE_FORUM_UNSUPPORTED",
+					"WEBHOOK_THREAD_NAME_REQUIRES_FORUM",
+					"USERNAME_NOT_AVAILABLE",
+					"USERNAME_SIGN_IN_ONLY",
+					"UPDATE_FAILED",
+					"USER_BANNED_FROM_GUILD",
+					"USER_IP_BANNED_FROM_GUILD",
+					"USER_NOT_IN_VOICE",
+					"USER_OWNS_GUILDS",
+					"VALIDATION_ERROR",
+					"VOICE_CHANNEL_FULL",
+					"WEBAUTHN_CREDENTIAL_LIMIT_REACHED",
+					"AGE_VERIFICATION_ALREADY_VERIFIED"
+				],
+				"description": "Known error codes returned by API operations",
+				"x-enumDescriptions": [
+					"You don't have access to this resource or feature.",
+					"This action is only available in announcement channels.",
+					"Bad gateway.",
+					"Bad request.",
+					"We couldn't resolve that Bluesky handle. Please check it and try again.",
+					"Bluesky connections are not enabled on this instance.",
+					"Messaging is paused on your account. Check your email for a quick step to continue.",
+					"The sign-in method is already set and can't be changed.",
+					"This account has been permanently suspended.",
+					"This account has been temporarily suspended.",
+					"Your account is too new to send messages in this community.",
+					"ACLs must be non-empty.",
+					"Admin API key wasn't found.",
+					"You don't own this application.",
+					"You're already friends with this user.",
+					"Bots can't create communities.",
+					"Bots can't send friend requests.",
+					"This bot is already in the community.",
+					"This bot is private.",
+					"Bot users can't use auth endpoints.",
+					"Bot users can't create auth sessions.",
+					"Bot user generation failed.",
+					"Bot user wasn't found.",
+					"A call is already in progress in this channel.",
+					"You can't edit another user's message.",
+					"This action can't be performed in a DM.",
+					"You can't block the system user.",
+					"You can't edit system messages.",
+					"You can't redeem {premium_tier_name} with Visionary.",
+					"You can't report this community.",
+					"You can't report your own community.",
+					"You can't report your own message.",
+					"You can't report yourself.",
+					"You can't send an empty message.",
+					"You can't send a friend request to a blocked user.",
+					"You can't send a friend request to yourself.",
+					"You can't send messages in a non-text channel.",
+					"You can't send messages to this user.",
+					"Community ownership can't be transferred to a bot.",
+					"You can't shrink reserved slots.",
+					"Verification required. Try again.",
+					"This channel already receives updates from that announcement channel.",
+					"Remove the followed channels posting here before converting it to an announcement channel.",
+					"Channels with threads can't be converted to announcement channels.",
+					"Only text and announcement channels can be converted into each other.",
+					"Communication is disabled.",
+					"A connection of this type with this identifier already exists.",
+					"The connection initiation token is invalid or has expired.",
+					"The connection type is not supported.",
+					"You've reached the maximum number of connections ({limit}).",
+					"Unknown connection.",
+					"Connection verification failed. Make sure the verification token is correctly placed.",
+					"Conflict.",
+					"This content was blocked by safety systems.",
+					"We couldn't delete the resource. Please try again.",
+					"This community has already applied for Discovery.",
+					"This Discovery application has already been reviewed.",
+					"Discovery application wasn't found.",
+					"Discovery isn't available on this instance.",
+					"This community doesn't meet the minimum member count for Discovery.",
+					"This community isn't listed in Discovery.",
+					"Discriminator is required.",
+					"Email service is temporarily unavailable. Please try again later.",
+					"This instance doesn't use email.",
+					"Email verification is required for this action.",
+					"Email verification is required for this action.",
+					"Updates from a channel with a content warning can only go to a channel with a content warning or an age restriction.",
+					"Updates from an age-restricted channel can only go to an age-restricted channel.",
+					"Email verification is required for this action.",
+					"Email verification is required for this action.",
+					"You don't have permission to create communities on this instance. Contact your instance administrator to request access.",
+					"Email verification is required for this action.",
+					"Followed channels can only post into text channels.",
+					"This message has already been published.",
+					"This channel has reached its publishing limit. It can publish 10 messages in a row, then one more every 6 minutes.",
+					"This message cannot be published.",
+					"Email verification is required for this action.",
+					"Email verification is required for this action.",
+					"This published message has reached its editing limit. It allows 3 quick edits, then 1 every 20 minutes.",
+					"Email verification is required for this action.",
+					"Email verification is required for this action.",
+					"Email verification is required for this action.",
+					"Registration is closed on this instance.",
+					"This registration is waiting for admin approval.",
+					"This registration request was rejected.",
+					"This registration link is invalid or has expired.",
+					"Explicit content can't be sent.",
+					"This feature isn't available on self-hosted instances.",
+					"This feature is temporarily disabled.",
+					"File size is too large. Maximum file size is {maxSize}.",
+					"Forbidden.",
+					"Tag names must be unique.",
+					"A tag is required to create a post in this channel.",
+					"User does not accept friend requests at this time.",
+					"Gateway timeout.",
+					"Something went wrong. Please try again later.",
+					"Gone.",
+					"Gift code is already redeemed.",
+					"The community template data is invalid or malformed.",
+					"Community verification is required.",
+					"Handoff code expired.",
+					"Your data export request has expired. Please request a new export.",
+					"Your data export request failed. Please try again.",
+					"Your data export is still being prepared. Please check back in a few moments.",
+					"Hiding media download options is only available in media channels.",
+					"Internal server error.",
+					"Invalid ACL format.",
+					"Invalid API origin.",
+					"Invalid or expired authorization token.",
+					"Invalid bot flag.",
+					"Verification failed. Try again.",
+					"Calls can only be made in direct messages or group DMs.",
+					"Invalid channel type.",
+					"Invalid DSA report target.",
+					"Invalid DSA ticket.",
+					"Invalid DSA verification code.",
+					"Invalid flags format.",
+					"Invalid form body.",
+					"Invalid handoff code.",
+					"This sign-in transfer doesn't match the one you started.",
+					"This passkey request could not be confirmed. Try again.",
+					"Permissions must be a valid integer.",
+					"Permissions must be non-negative.",
+					"These answers don't match the report form. Start the report again.",
+					"Invalid request.",
+					"Invalid stream key format.",
+					"Invalid stream thumbnail payload.",
+					"Invalid system flag.",
+					"Invalid timestamp.",
+					"Invalid or expired authorization token.",
+					"Invalid thread notification settings.",
+					"Invalid WebAuthn authentication counter.",
+					"Invalid WebAuthn credential counter.",
+					"Failed to verify WebAuthn credential.",
+					"Invalid WebAuthn public key format.",
+					"Invites are disabled.",
+					"IP authorization is required.",
+					"IP authorization resend is on cooldown.",
+					"IP authorization resend limit exceeded.",
+					"Your IP address {ipAddress} has been permanently blocked from the {product_name} API by platform administrators. {appealEmail, select, null {If you believe this is a mistake, contact the administrators of this instance to appeal.} other {If you believe this is a mistake, contact {appealEmail} to appeal.}} Include this IP address in your appeal.",
+					"Your IP address {ipAddress} has been temporarily blocked from the {product_name} API. The block lifts on its own when it expires. {appealEmail, select, null {If you think this is a mistake, contact the administrators of this instance and include this IP address.} other {If you think this is a mistake, contact {appealEmail} and include this IP address.}}",
+					"This IP address cannot be added to the blocklist.",
+					"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
+					"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
+					"This community has reached its active thread limit of {count}.",
+					"You've reached the maximum of {count, plural, one {# category channel} other {# category channels}}.",
+					"You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}.",
+					"You've reached the maximum of {count, plural, one {# saved media item} other {# saved media items}}.",
+					"You've reached the maximum of {count, plural, one {# friend} other {# friends}}.",
+					"This channel has reached its tag limit of {count}.",
+					"You've reached the maximum of {count, plural, one {# group DM recipient} other {# group DM recipients}}.",
+					"You've reached the maximum of {count, plural, one {# group DM} other {# group DMs}}.",
+					"One or more selected users can't be added to this group DM.",
+					"You've reached the maximum of {count, plural, one {# community channel} other {# community channels}}.",
+					"You've reached the maximum of {count, plural, one {# community member} other {# community members}}.",
+					"You've reached the maximum of {count, plural, one {# community role} other {# community roles}}.",
+					"You've reached the maximum of {count, plural, one {# community} other {# communities}}.",
+					"This channel has reached its pinned post limit of {count}.",
+					"You've reached the maximum of {count, plural, one {# invite} other {# invites}}.",
+					"You've reached the maximum of {count, plural, one {# reaction} other {# reactions}}.",
+					"You've reached the maximum of {count, plural, one {# sticker} other {# stickers}}.",
+					"This thread has reached its member limit of {count}.",
+					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per channel.",
+					"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per community.",
+					"Media metadata error.",
+					"Method not allowed.",
+					"You don't have access to this resource or feature.",
+					"Missing ACL.",
+					"Missing or invalid authorization header.",
+					"The requested scope isn't supported or you don't have permission to request it.",
+					"You don't have the permissions required to perform this action.",
+					"No active call.",
+					"No active subscription.",
+					"A tag is required, but only moderators can apply the tags in this channel.",
+					"Not found.",
+					"Not implemented.",
+					"No passkeys are registered.",
+					"Invalid request.",
+					"There are too many users with this username.",
+					"This application isn't a bot.",
+					"You're not friends with this user.",
+					"NSFW content is age restricted.",
+					"Passkey authentication failed.",
+					"No active subscription.",
+					"Preview must be JPEG.",
+					"We couldn't process the request. Please try again.",
+					"You're being rate limited.",
+					"Report already resolved.",
+					"You've been banned from submitting reports.",
+					"The report form changed while you were filling it in. Start the report again.",
+					"This report is under a legal hold and can't be deleted.",
+					"Response validation failed: {errors}.",
+					"This resource is being modified. Please try again shortly.",
+					"Service unavailable.",
+					"Session token mismatch.",
+					"This instance is a single community, so additional communities cannot be created.",
+					"The community for this instance cannot be deleted.",
+					"You cannot leave the community for this instance.",
+					"This instance policy change is not allowed.",
+					"Slowmode rate limited.",
+					"The search index isn't ready yet. Try again in a moment.",
+					"Invalid request.",
+					"In-app purchases are unavailable right now. Try again later.",
+					"The notification signature is invalid.",
+					"This purchase could not be verified.",
+					"This purchase is linked to a different account.",
+					"Test purchases cannot be applied to this account.",
+					"Stream key channel mismatch.",
+					"Stream key scope mismatch.",
+					"{supportEmail, select, null {Payment processing encountered an error. Please try again or contact the administrators of this instance.} other {Payment processing encountered an error. Please try again or contact support.}}",
+					"Gift code redemption is in progress. Try again in a moment.",
+					"Invalid product selection.",
+					"Invalid product configuration.",
+					"No active subscription found.",
+					"No purchase history found. Customer portal isn't available.",
+					"This purchase is outside the 3-day self-serve refund window.",
+					"You can request a self-serve refund once every 30 days. Please try again later.",
+					"No subscription found.",
+					"Payment processing is temporarily unavailable. Please try again later.",
+					"Subscription is already set to cancel at period end.",
+					"Subscription isn't set to cancel.",
+					"Webhook processing isn't available.",
+					"Stripe webhook signature is invalid.",
+					"Stripe webhook signature is missing.",
+					"Direct messages and friend requests are disabled on this instance.",
+					"You can't start new conversations right now. Please try again later.",
+					"Donation amount is invalid.",
+					"Magic link has expired.",
+					"Magic link is invalid.",
+					"Magic link has already been used.",
+					"Sudo mode is required.",
+					"This tag is already taken.",
+					"Temporary invite requires presence.",
+					"Test harness is disabled.",
+					"Test harness is forbidden.",
+					"A thread has already been created for this message.",
+					"This thread is archived.",
+					"This thread is locked.",
+					"Two-factor authentication isn't enabled.",
+					"Two-factor authentication is required.",
+					"Unauthorized.",
+					"You're not friends with this user.",
+					"Invalid request.",
+					"Invalid request.",
+					"You need to complete your account setup before you can create communities.",
+					"You can't add yourself to a group DM.",
+					"Invalid request.",
+					"Invalid request.",
+					"Invalid request.",
+					"You can't send messages to this user.",
+					"Bots can't send friend requests.",
+					"Invalid request.",
+					"You need to complete your account setup before you can submit reports.",
+					"Channel wasn't found.",
+					"Unknown emoji.",
+					"Unknown saved media.",
+					"Tag wasn't found.",
+					"Unknown gift code.",
+					"Community wasn't found.",
+					"Unknown data export.",
+					"Invite wasn't found or is no longer valid.",
+					"Member wasn't found in this community.",
+					"Message wasn't found.",
+					"This sign-in transfer has expired or was already used.",
+					"This passkey request has expired. Try again.",
+					"There is no passkey to update right now.",
+					"Unknown report.",
+					"Role wasn't found.",
+					"Unknown sticker.",
+					"Unknown store purchase.",
+					"Thread member wasn't found.",
+					"The specified user flag isn't recognized.",
+					"User wasn't found.",
+					"Unknown voice region.",
+					"Unknown voice server.",
+					"Unknown WebAuthn credential.",
+					"Unknown application.",
+					"Unknown webhook.",
+					"You can't specify both `thread_id` and `thread_name`.",
+					"Webhooks posting to this channel need a `thread_id` or a `thread_name`.",
+					"This webhook service can't post to a forum or media channel without a `thread_id`.",
+					"`thread_name` and `applied_tags` only work in forum and media channels.",
+					"This username is not available.",
+					"This is only available on instances where people sign in with a username.",
+					"We couldn't update the resource. Please try again.",
+					"This user is banned from this community.",
+					"This user's IP is banned from this community.",
+					"This user isn't in voice.",
+					"This user owns communities.",
+					"Validation failed.",
+					"Voice channel is full.",
+					"You've reached the maximum of {count, plural, one {# WebAuthn credential} other {# WebAuthn credentials}}.",
+					"You've already completed age verification."
+				]
 			}
 		},
 		"securitySchemes": {

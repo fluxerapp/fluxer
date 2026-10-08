@@ -150,12 +150,6 @@ import {
 } from '@app/api/database/types/ChannelTypes';
 import {USER_CONNECTION_STORAGE_COLUMNS, type UserConnectionStorageRow} from '@app/api/database/types/ConnectionTypes';
 import {
-	NCMEC_ATTACHMENT_SUBMISSION_COLUMNS,
-	NCMEC_USER_WORKFLOW_COLUMNS,
-	type NcmecAttachmentSubmissionRow,
-	type NcmecUserWorkflowRow,
-} from '@app/api/database/types/CsamTypes';
-import {
 	GUILD_DISCOVERY_BY_STATUS_COLUMNS,
 	GUILD_DISCOVERY_COLUMNS,
 	type GuildDiscoveryByStatusRow,
@@ -255,10 +249,14 @@ import {
 	DSA_REPORT_TICKET_COLUMNS,
 	type DSAReportEmailVerificationRow,
 	type DSAReportTicketRow,
+	GUILD_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	type GuildReportSubmissionByReporterRow,
 	IAR_SUBMISSION_COLUMNS,
 	type IARSubmissionRow,
 	MESSAGE_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
 	type MessageReportSubmissionByReporterRow,
+	USER_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	type UserReportSubmissionByReporterRow,
 } from '@app/api/database/types/ReportTypes';
 import {
 	STORE_ACCOUNT_TOKEN_BY_USER_COLUMNS,
@@ -925,16 +923,41 @@ export const MessageReportSubmissionsByReporter = defineTable<
 	columns: MESSAGE_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
 	primaryKey: ['reporter_id', 'channel_id', 'message_id'],
 	partitionKey: ['reporter_id'],
+	defaultTtlSeconds: seconds('365 days'),
+});
+export const UserReportSubmissionsByReporter = defineTable<
+	UserReportSubmissionByReporterRow,
+	'reporter_id' | 'reported_user_id',
+	'reporter_id'
+>({
+	name: 'user_report_submissions_by_reporter',
+	columns: USER_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	primaryKey: ['reporter_id', 'reported_user_id'],
+	partitionKey: ['reporter_id'],
+	defaultTtlSeconds: seconds('24 hours'),
+});
+export const GuildReportSubmissionsByReporter = defineTable<
+	GuildReportSubmissionByReporterRow,
+	'reporter_id' | 'reported_guild_id',
+	'reporter_id'
+>({
+	name: 'guild_report_submissions_by_reporter',
+	columns: GUILD_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
+	primaryKey: ['reporter_id', 'reported_guild_id'],
+	partitionKey: ['reporter_id'],
+	defaultTtlSeconds: seconds('24 hours'),
 });
 export const DSAReportEmailVerifications = defineTable<DSAReportEmailVerificationRow, 'email_lower'>({
 	name: 'dsa_report_email_verifications',
 	columns: DSA_REPORT_EMAIL_VERIFICATION_COLUMNS,
 	primaryKey: ['email_lower'],
+	defaultTtlSeconds: seconds('10 minutes'),
 });
 export const DSAReportTickets = defineTable<DSAReportTicketRow, 'ticket'>({
 	name: 'dsa_report_tickets',
 	columns: DSA_REPORT_TICKET_COLUMNS,
 	primaryKey: ['ticket'],
+	defaultTtlSeconds: seconds('1 hour'),
 });
 export const EmailVerificationTokens = defineTable<EmailVerificationTokenRow, 'token_' | 'user_id'>({
 	name: 'email_verification_tokens',
@@ -1264,16 +1287,6 @@ export const AttachmentUploadTracesByAttachment = defineTable<AttachmentUploadTr
 	columns: ATTACHMENT_UPLOAD_TRACE_BY_ATTACHMENT_COLUMNS,
 	primaryKey: ['attachment_id'],
 	defaultTtlSeconds: seconds('30 days'),
-});
-export const NcmecAttachmentSubmissions = defineTable<NcmecAttachmentSubmissionRow, 'attachment_id'>({
-	name: 'ncmec_attachment_submissions',
-	columns: NCMEC_ATTACHMENT_SUBMISSION_COLUMNS,
-	primaryKey: ['attachment_id'],
-});
-export const NcmecUserWorkflows = defineTable<NcmecUserWorkflowRow, 'user_id'>({
-	name: 'ncmec_user_workflows',
-	columns: NCMEC_USER_WORKFLOW_COLUMNS,
-	primaryKey: ['user_id'],
 });
 export const BillingCustomers = defineTable<BillingCustomerRow, 'provider_id'>({
 	name: 'billing_customers',

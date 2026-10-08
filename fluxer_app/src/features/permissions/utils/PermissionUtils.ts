@@ -321,7 +321,7 @@ function generateGuildVoicePermissionSpec(i18n: I18n): PermissionSpec {
 	};
 }
 
-export function generateChannelGeneralPermissionSpec(i18n: I18n): PermissionSpec {
+function generateChannelGeneralPermissionSpec(i18n: I18n): PermissionSpec {
 	return {
 		title: formatPermissionCategoryLabel(i18n, 'channelManagement'),
 		permissions: [
@@ -333,7 +333,7 @@ export function generateChannelGeneralPermissionSpec(i18n: I18n): PermissionSpec
 	};
 }
 
-export function generateChannelAccessPermissionSpec(i18n: I18n): PermissionSpec {
+function generateChannelAccessPermissionSpec(i18n: I18n): PermissionSpec {
 	return {
 		title: formatPermissionCategoryLabel(i18n, 'channelAccess'),
 		permissions: [
@@ -343,7 +343,7 @@ export function generateChannelAccessPermissionSpec(i18n: I18n): PermissionSpec 
 	};
 }
 
-export function generateChannelTextPermissionSpec(i18n: I18n): PermissionSpec {
+function generateChannelTextPermissionSpec(i18n: I18n): PermissionSpec {
 	return {
 		title: formatPermissionCategoryLabel(i18n, 'messagesMedia'),
 		permissions: [
@@ -362,7 +362,7 @@ export function generateChannelTextPermissionSpec(i18n: I18n): PermissionSpec {
 	};
 }
 
-export function generateChannelVoicePermissionSpec(i18n: I18n): PermissionSpec {
+function generateChannelVoicePermissionSpec(i18n: I18n): PermissionSpec {
 	return {
 		title: formatPermissionCategoryLabel(i18n, 'audioVideo'),
 		permissions: [
@@ -506,11 +506,6 @@ export function getAllBotPermissions(i18n: I18n, options: {threads?: boolean} = 
 			label: perm.title,
 		})),
 	);
-}
-
-export function getPermissionLabel(i18n: I18n, permission: bigint): string | null {
-	const descriptor = getPermissionTitleDescriptor(permission);
-	return descriptor != null ? i18n._(descriptor) : null;
 }
 
 const UNKNOWN_PERMISSION_DESCRIPTOR = msg({

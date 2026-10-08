@@ -404,6 +404,31 @@
 	-webkit-user-select: text;
 }
 
+.messagePreview .messageAuthorRow {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	column-gap: 0.35rem;
+	white-space: normal;
+}
+
+.messagePreview .messageAuthorPart {
+	display: contents;
+}
+
+.messagePreview .messageAuthorPart > :last-child {
+	margin-inline-end: 0.1rem;
+}
+
+.messagePreview .userTagOffset,
+.messagePreview .messageTimestamp {
+	margin-inline-start: 0;
+}
+
+.messagePreview .authorDashSeparator {
+	margin: 0;
+}
+
 .messageNoText {
 	grid-template-areas: '. . . reply' '. . . .' 'gutter-left avatar gutter-right container';
 }
@@ -439,7 +464,6 @@
 .messageUsername,
 .messageTimestamp,
 .messageTimestampCompact,
-.messageAuthorInfoCompact,
 .compactAuthorPrefix,
 .copyOnly,
 .compactInlineContent,
@@ -579,21 +603,6 @@
 	.messageTimestampHover {
 	opacity: 1;
 	pointer-events: auto;
-}
-
-.messageAuthorInfoCompact {
-	position: relative;
-	display: inline;
-	min-height: var(--message-line-height);
-	color: var(--text-chat-muted);
-	line-height: var(--message-line-height);
-	white-space: nowrap;
-	text-indent: 0;
-	vertical-align: baseline;
-	margin: 0;
-	margin-inline-end: var(--message-compact-username-gap);
-	user-select: text;
-	-webkit-user-select: text;
 }
 
 .messageTimestampCompact {
@@ -1122,22 +1131,6 @@
 	}
 }
 
-.messageAssistiveText {
-	border: 0;
-	clip: rect(0 0 0 0);
-	height: 0.0625rem;
-	margin: -0.0625rem;
-	overflow: hidden;
-	padding: 0;
-	position: absolute;
-	width: 0.0625rem;
-	white-space: nowrap;
-}
-
-.messageAuthorInfoCompact .messageUsername {
-	margin-inline-end: 0;
-}
-
 .userTagOffset {
 	margin-inline-start: 0.35rem;
 	vertical-align: middle;
@@ -1191,29 +1184,6 @@
 	flex: 1 1 auto;
 	min-width: 0;
 	width: 100%;
-}
-
-.typingPill {
-	position: relative;
-	display: inline-flex;
-	align-items: center;
-	gap: 0;
-	min-height: var(--typing-pill-height);
-	padding: 0 0.35rem;
-	border-radius: var(--radius-xl);
-	background-color: var(--background-tertiary);
-	border: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 80%, transparent);
-	pointer-events: auto;
-	grid-column: 1 / -1;
-	justify-self: flex-start;
-	margin-inline-start: 0;
-}
-
-:global(.theme-light) .typingPill {
-	background-color: var(--brand-primary);
-	border: none;
-	color: var(--text-on-brand-primary);
-	--typing-indicator-color: var(--text-on-brand-primary);
 }
 
 .typingIndicator {

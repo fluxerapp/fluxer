@@ -35,7 +35,7 @@ const HARDWARE_VIDEO_IMPLEMENTATION_TERMS = [
 	'videocore',
 ];
 
-export function isSoftwareVideoImplementation(name: string): boolean {
+function isSoftwareVideoImplementation(name: string): boolean {
 	const lower = name.toLowerCase();
 	return (
 		SOFTWARE_VIDEO_IMPLEMENTATION_PREFIXES.some((prefix) => lower.startsWith(prefix)) ||
@@ -43,12 +43,12 @@ export function isSoftwareVideoImplementation(name: string): boolean {
 	);
 }
 
-export function isHardwareVideoImplementation(name: string): boolean {
+function isHardwareVideoImplementation(name: string): boolean {
 	const lower = name.toLowerCase();
 	return HARDWARE_VIDEO_IMPLEMENTATION_TERMS.some((term) => lower.includes(term));
 }
 
-export function classifyVideoAcceleration(
+function classifyVideoAcceleration(
 	implementation: string | null | undefined,
 	powerEfficient: boolean | null | undefined,
 ): VideoAccelerationStatus {

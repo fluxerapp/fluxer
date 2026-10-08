@@ -2,7 +2,7 @@
 
 import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
 
-export const STICKERS_PER_ROW = 4;
+const STICKERS_PER_ROW = 4;
 export const STICKERS_PER_ROW_MOBILE = 5;
 export const STICKER_CATEGORY_HEADER_HEIGHT = 32;
 export const STICKER_SECTION_GAP = 12;
@@ -69,7 +69,7 @@ export function buildStickerRowOffsets(
 	return rowOffsets;
 }
 
-export function findStickerRowForOffset(rowOffsets: ReadonlyArray<number>, pixel: number): number {
+function findStickerRowForOffset(rowOffsets: ReadonlyArray<number>, pixel: number): number {
 	const lastRow = rowOffsets.length - 2;
 	if (lastRow < 0 || pixel <= 0) {
 		return 0;

@@ -127,7 +127,7 @@ const resolveTtsRateInput = (
 		Math.abs(option.value - parsedValue) < Math.abs(nearest.value - parsedValue) ? option : nearest,
 	).value;
 };
-export const AccessibilityTabPreview = observer(() => {
+const AccessibilityTabPreview = observer(() => {
 	const {i18n} = useLingui();
 	const alwaysUnderlineLinks = Accessibility.alwaysUnderlineLinks;
 	const fakeData = useMemo(() => {

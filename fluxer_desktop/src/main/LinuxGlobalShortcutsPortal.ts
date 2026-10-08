@@ -36,7 +36,7 @@ export interface PortalClientOptions {
 	desktop: LinuxDesktopKind;
 }
 
-export interface PortalOpenResult {
+interface PortalOpenResult {
 	version: number;
 	appIdSource: 'sandbox' | 'registered' | 'unregistered';
 	uniqueName: string;

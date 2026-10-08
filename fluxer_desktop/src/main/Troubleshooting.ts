@@ -7,7 +7,7 @@ import {destroyDesktopTray} from '@electron/main/DesktopTray';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {t} from '@electron/main/MainI18n';
 import {clearSavedWindowBounds, getMainWindow, setQuitting} from '@electron/main/Window';
-import {app, BrowserWindow, dialog, Menu, type MenuItemConstructorOptions, session} from 'electron';
+import {app, BrowserWindow, dialog, type MenuItemConstructorOptions, session} from 'electron';
 
 const logger = createChildLogger('Troubleshooting');
 
@@ -44,7 +44,7 @@ export function setHardwareAccelerationDisabledAndRestart(disable: boolean): voi
 	relaunchAndExit();
 }
 
-export function reloadMainWindow(): void {
+function reloadMainWindow(): void {
 	const mainWindow = getMainWindow();
 	if (!mainWindow || mainWindow.isDestroyed()) {
 		logger.warn('Reload requested but no main window is available');
@@ -54,23 +54,21 @@ export function reloadMainWindow(): void {
 	mainWindow.webContents.reloadIgnoringCache();
 }
 
-export async function resetAppDataAndRestart(options?: {confirm?: boolean}): Promise<void> {
+async function resetAppDataAndRestart(): Promise<void> {
 	const mainWindow = getMainWindow();
-	if (options?.confirm !== false) {
-		const choice = await dialog.showMessageBox(mainWindow ?? new BrowserWindow({show: false}), {
-			type: 'warning',
-			buttons: [t('desktop.troubleshooting.resetConfirm'), t('desktop.troubleshooting.resetCancel')],
-			defaultId: 1,
-			cancelId: 1,
-			title: t('desktop.troubleshooting.resetTitle'),
-			message: t('desktop.troubleshooting.resetMessage'),
-			detail: t('desktop.troubleshooting.resetDetail'),
-			noLink: true,
-		});
-		if (choice.response !== 0) {
-			logger.info('App data reset cancelled by user');
-			return;
-		}
+	const choice = await dialog.showMessageBox(mainWindow ?? new BrowserWindow({show: false}), {
+		type: 'warning',
+		buttons: [t('desktop.troubleshooting.resetConfirm'), t('desktop.troubleshooting.resetCancel')],
+		defaultId: 1,
+		cancelId: 1,
+		title: t('desktop.troubleshooting.resetTitle'),
+		message: t('desktop.troubleshooting.resetMessage'),
+		detail: t('desktop.troubleshooting.resetDetail'),
+		noLink: true,
+	});
+	if (choice.response !== 0) {
+		logger.info('App data reset cancelled by user');
+		return;
 	}
 	const partition = mainWindow?.webContents.session ?? session.defaultSession;
 	try {
@@ -128,23 +126,4 @@ export function buildTroubleshootingMenuItems(): Array<MenuItemConstructorOption
 			},
 		},
 	];
-}
-
-function buildHelpPopupMenu(): Menu {
-	const template: Array<MenuItemConstructorOptions> = [
-		{
-			label: t('desktop.appMenu.troubleshooting'),
-			submenu: buildTroubleshootingMenuItems(),
-		},
-	];
-	return Menu.buildFromTemplate(template);
-}
-
-export function popupHelpMenu(window: BrowserWindow | null): void {
-	const menu = buildHelpPopupMenu();
-	if (window && !window.isDestroyed()) {
-		menu.popup({window});
-	} else {
-		menu.popup();
-	}
 }

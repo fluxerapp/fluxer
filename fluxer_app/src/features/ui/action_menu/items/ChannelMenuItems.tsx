@@ -19,7 +19,6 @@ import {
 	CHANNEL_REMOVED_FROM_FAVORITES_DESCRIPTOR,
 	COMMUNITY_DEFAULT_DESCRIPTOR,
 	COPY_CHANNEL_ID_DESCRIPTOR,
-	COPY_LINK_DESCRIPTOR,
 	INVITE_PEOPLE_DESCRIPTOR,
 	MARK_AS_READ_DESCRIPTOR,
 	NOTIFICATION_LEVEL_ALL_MESSAGES_DESCRIPTOR,
@@ -31,14 +30,12 @@ import {
 import {InviteModal} from '@app/features/invite/components/modals/InviteModal';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import Favorites from '@app/features/messaging/state/Favorites';
-import {buildChannelLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {
 	CopyIdIcon,
-	CopyLinkIcon,
 	DeleteIcon,
 	EditSimpleIcon,
 	FavoriteIcon,
@@ -175,28 +172,6 @@ export const InvitePeopleToChannelMenuItem: React.FC<ChannelMenuItemProps> = obs
 			data-flx="ui.action-menu.items.channel-menu-items.invite-people-to-channel-menu-item.menu-item.invite"
 		>
 			{i18n._(INVITE_PEOPLE_DESCRIPTOR)}
-		</MenuItem>
-	);
-});
-export const CopyChannelLinkMenuItem: React.FC<ChannelMenuItemProps> = observer(({channel, onClose}) => {
-	const {i18n} = useLingui();
-	const handleCopyLink = useCallback(() => {
-		const channelLink = buildChannelLink({
-			guildId: channel.guildId,
-			channelId: channel.id,
-		});
-		TextCopyCommands.copy(i18n, channelLink);
-		onClose();
-	}, [channel.id, channel.guildId, onClose, i18n]);
-	return (
-		<MenuItem
-			icon={
-				<CopyLinkIcon data-flx="ui.action-menu.items.channel-menu-items.copy-channel-link-menu-item.copy-link-icon" />
-			}
-			onClick={handleCopyLink}
-			data-flx="ui.action-menu.items.channel-menu-items.copy-channel-link-menu-item.menu-item.copy-link"
-		>
-			{i18n._(COPY_LINK_DESCRIPTOR)}
 		</MenuItem>
 	);
 });

@@ -3,8 +3,6 @@
 import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
 import type {RichEmbedMediaWithMetadata} from '@app/api/channel/EmbedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
-import {nextVersion} from '@app/api/database/CassandraTypes';
 import type {MessageEmbed, MessageEmbedChild} from '@app/api/database/types/MessageTypes';
 import {
 	type IMediaService,
@@ -35,15 +33,6 @@ import type {
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
-interface CreateEmbedsParams {
-	channelId: ChannelID;
-	messageId: MessageID;
-	content: string | null;
-	customEmbeds?: Array<RichEmbedRequest>;
-	guildId: bigint | null;
-	nsfwMode: MediaProxyNsfwMode;
-}
-
 interface ProcessedUrlEmbeds {
 	embeds: Array<Embed>;
 	cacheTtlSeconds: number | null;
@@ -68,19 +57,10 @@ export class EmbedService {
 	private readonly MAX_EMBED_CHARACTERS_BUG_HUNTER = 12000;
 
 	constructor(
-		private channelRepository: IChannelRepository,
 		private unfurlerService: IUnfurlerService,
 		private mediaService: IMediaService,
 		private workerService: IWorkerService<WorkerTaskName>,
 	) {}
-
-	async createAndSaveEmbeds(params: CreateEmbedsParams): Promise<Array<MessageEmbed> | null> {
-		if (params.customEmbeds?.length) {
-			return await this.processCustomEmbeds(params);
-		} else {
-			return await this.processUrlEmbeds(params);
-		}
-	}
 
 	async getInitialEmbeds(params: {
 		content: string | null;
@@ -114,14 +94,6 @@ export class EmbedService {
 		options: {content?: string | null} = {},
 	): Promise<void> {
 		await this.enqueue(channelId, messageId, guildId, nsfwMode, options);
-	}
-
-	async processUrl(
-		url: string,
-		nsfwMode: MediaProxyNsfwMode = 'block',
-		options: UnfurlOptions = {},
-	): Promise<Array<Embed>> {
-		return (await this.processUrlWithCachePolicy(url, nsfwMode, options)).embeds;
 	}
 
 	async processUrlWithCachePolicy(
@@ -188,39 +160,6 @@ export class EmbedService {
 			if (child.nsfw) return true;
 		}
 		return false;
-	}
-
-	private async processCustomEmbeds({
-		channelId,
-		messageId,
-		customEmbeds,
-		nsfwMode,
-	}: CreateEmbedsParams): Promise<Array<MessageEmbed> | null> {
-		if (!customEmbeds?.length) return null;
-		this.validateEmbedSize(customEmbeds);
-		const embeds = await Promise.all(customEmbeds.map((embed) => this.createEmbed(embed, nsfwMode)));
-		await this.updateMessageEmbeds(channelId, messageId, embeds);
-		return embeds.map((embed) => embed.toMessageEmbed());
-	}
-
-	private async processUrlEmbeds({
-		channelId,
-		messageId,
-		content,
-		guildId,
-		nsfwMode,
-	}: CreateEmbedsParams): Promise<Array<MessageEmbed> | null> {
-		if (!content) {
-			await this.updateMessageEmbeds(channelId, messageId, []);
-			return null;
-		}
-		const urls = UnfurlerUtils.extractURLs(content);
-		if (!urls.length) {
-			await this.updateMessageEmbeds(channelId, messageId, []);
-			return null;
-		}
-		await this.enqueue(channelId, messageId, guildId, nsfwMode, {content});
-		return null;
 	}
 
 	private mapResponseEmbed(embed: MessageEmbedResponse): MessageEmbed {
@@ -528,17 +467,5 @@ export class EmbedService {
 				'Dropped url embed extraction, jobs stream is at its limit',
 			);
 		}
-	}
-
-	private async updateMessageEmbeds(channelId: ChannelID, messageId: MessageID, embeds: Array<Embed>): Promise<void> {
-		const currentMessage = await this.channelRepository.getMessage(channelId, messageId);
-		if (!currentMessage) return;
-		const currentRow = currentMessage.toRow();
-		const updatedData = {
-			...currentRow,
-			embeds: embeds.length > 0 ? embeds.map((embed) => embed.toMessageEmbed()) : null,
-			version: nextVersion(currentRow.version),
-		};
-		await this.channelRepository.upsertMessage(updatedData, currentRow);
 	}
 }

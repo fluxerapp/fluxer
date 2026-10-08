@@ -605,17 +605,6 @@ export async function getLatestHarvest(): Promise<HarvestStatusResponse | null> 
 	}
 }
 
-export async function getHarvestStatus(harvestId: string): Promise<HarvestStatusResponse> {
-	try {
-		logger.debug('Fetching harvest status', {harvestId});
-		const response = await http.get<HarvestStatusResponse>(Endpoints.USER_HARVEST_STATUS(harvestId));
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to fetch harvest status', error);
-		throw error;
-	}
-}
-
 export async function getHarvestDownloadUrl(harvestId: string): Promise<HarvestDownloadUrlResponse> {
 	try {
 		logger.debug('Fetching harvest download URL', {harvestId});

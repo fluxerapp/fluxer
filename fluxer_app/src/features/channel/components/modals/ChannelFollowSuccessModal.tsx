@@ -35,85 +35,80 @@ interface ChannelFollowSuccessModalProps {
 	targetChannelId: string;
 }
 
-export const ChannelFollowSuccessModal = observer(
-	({sourceChannelId, targetChannelId}: ChannelFollowSuccessModalProps) => {
-		const {i18n} = useLingui();
-		const source = Channels.getChannel(sourceChannelId);
-		const target = Channels.getChannel(targetChannelId);
-		const sourceGuild = source?.guildId ? Guilds.getGuild(source.guildId) : undefined;
-		const targetGuild = target?.guildId ? Guilds.getGuild(target.guildId) : undefined;
-		const title = i18n._(FOLLOW_SUCCESS_TITLE_DESCRIPTOR);
-		return (
-			<Modal.Root size="small" centered data-flx="channel.channel-follow-success-modal.modal-root">
-				<Modal.ScreenReaderLabel
-					text={title}
-					data-flx="channel.channel-follow-success-modal.modal-screen-reader-label"
+const ChannelFollowSuccessModal = observer(({sourceChannelId, targetChannelId}: ChannelFollowSuccessModalProps) => {
+	const {i18n} = useLingui();
+	const source = Channels.getChannel(sourceChannelId);
+	const target = Channels.getChannel(targetChannelId);
+	const sourceGuild = source?.guildId ? Guilds.getGuild(source.guildId) : undefined;
+	const targetGuild = target?.guildId ? Guilds.getGuild(target.guildId) : undefined;
+	const title = i18n._(FOLLOW_SUCCESS_TITLE_DESCRIPTOR);
+	return (
+		<Modal.Root size="small" centered data-flx="channel.channel-follow-success-modal.modal-root">
+			<Modal.ScreenReaderLabel text={title} data-flx="channel.channel-follow-success-modal.modal-screen-reader-label" />
+			<div className={styles.hero} aria-hidden data-flx="channel.channel-follow-success-modal.hero">
+				<div
+					className={styles.patternImage}
+					style={{backgroundImage: `url(${foodPatternUrl})`}}
+					data-flx="channel.channel-follow-success-modal.pattern-image"
 				/>
-				<div className={styles.hero} aria-hidden data-flx="channel.channel-follow-success-modal.hero">
-					<div
-						className={styles.patternImage}
-						style={{backgroundImage: `url(${foodPatternUrl})`}}
-						data-flx="channel.channel-follow-success-modal.pattern-image"
-					/>
-					<div className={styles.composition} data-flx="channel.channel-follow-success-modal.composition">
-						{sourceGuild && (
-							<div className={styles.sourceIconWrap} data-flx="channel.channel-follow-success-modal.source-icon-wrap">
-								<GuildIcon
-									id={sourceGuild.id}
-									name={sourceGuild.name}
-									icon={sourceGuild.icon}
-									sizePx={56}
-									className={styles.guildIcon}
-									containerProps={{'data-flx': 'channel.channel-follow-success-modal.source-guild-icon'}}
-									data-flx="channel.channel-follow-success-modal.source-guild-icon"
-								/>
-								<span
-									className={styles.announcementBadge}
-									data-flx="channel.channel-follow-success-modal.announcement-badge"
-								>
-									<AnnouncementChannelIcon
-										className={styles.announcementBadgeIcon}
-										data-flx="channel.channel-follow-success-modal.announcement-badge-icon"
-									/>
-								</span>
-							</div>
-						)}
-						<ArrowRightIcon
-							weight="bold"
-							className={styles.arrow}
-							data-flx="channel.channel-follow-success-modal.arrow-right-icon"
-						/>
-						{targetGuild && (
+				<div className={styles.composition} data-flx="channel.channel-follow-success-modal.composition">
+					{sourceGuild && (
+						<div className={styles.sourceIconWrap} data-flx="channel.channel-follow-success-modal.source-icon-wrap">
 							<GuildIcon
-								id={targetGuild.id}
-								name={targetGuild.name}
-								icon={targetGuild.icon}
+								id={sourceGuild.id}
+								name={sourceGuild.name}
+								icon={sourceGuild.icon}
 								sizePx={56}
 								className={styles.guildIcon}
-								containerProps={{'data-flx': 'channel.channel-follow-success-modal.target-guild-icon'}}
-								data-flx="channel.channel-follow-success-modal.target-guild-icon"
+								containerProps={{'data-flx': 'channel.channel-follow-success-modal.source-guild-icon'}}
+								data-flx="channel.channel-follow-success-modal.source-guild-icon"
 							/>
-						)}
-					</div>
+							<span
+								className={styles.announcementBadge}
+								data-flx="channel.channel-follow-success-modal.announcement-badge"
+							>
+								<AnnouncementChannelIcon
+									className={styles.announcementBadgeIcon}
+									data-flx="channel.channel-follow-success-modal.announcement-badge-icon"
+								/>
+							</span>
+						</div>
+					)}
+					<ArrowRightIcon
+						weight="bold"
+						className={styles.arrow}
+						data-flx="channel.channel-follow-success-modal.arrow-right-icon"
+					/>
+					{targetGuild && (
+						<GuildIcon
+							id={targetGuild.id}
+							name={targetGuild.name}
+							icon={targetGuild.icon}
+							sizePx={56}
+							className={styles.guildIcon}
+							containerProps={{'data-flx': 'channel.channel-follow-success-modal.target-guild-icon'}}
+							data-flx="channel.channel-follow-success-modal.target-guild-icon"
+						/>
+					)}
 				</div>
-				<div className={styles.body} data-flx="channel.channel-follow-success-modal.body">
-					<h2 className={styles.title} data-flx="channel.channel-follow-success-modal.title">
-						{title}
-					</h2>
-					<p className={styles.description} data-flx="channel.channel-follow-success-modal.description">
-						{i18n._(FOLLOW_SUCCESS_BODY_DESCRIPTOR, {
-							sourceName: source?.name ?? i18n._(UNKNOWN_CHANNEL_DESCRIPTOR),
-							targetName: target?.name ?? i18n._(UNKNOWN_CHANNEL_DESCRIPTOR),
-						})}
-					</p>
-					<Button onClick={ModalCommands.pop} data-flx="channel.channel-follow-success-modal.button.got-it">
-						{i18n._(GOT_IT_DESCRIPTOR)}
-					</Button>
-				</div>
-			</Modal.Root>
-		);
-	},
-);
+			</div>
+			<div className={styles.body} data-flx="channel.channel-follow-success-modal.body">
+				<h2 className={styles.title} data-flx="channel.channel-follow-success-modal.title">
+					{title}
+				</h2>
+				<p className={styles.description} data-flx="channel.channel-follow-success-modal.description">
+					{i18n._(FOLLOW_SUCCESS_BODY_DESCRIPTOR, {
+						sourceName: source?.name ?? i18n._(UNKNOWN_CHANNEL_DESCRIPTOR),
+						targetName: target?.name ?? i18n._(UNKNOWN_CHANNEL_DESCRIPTOR),
+					})}
+				</p>
+				<Button onClick={ModalCommands.pop} data-flx="channel.channel-follow-success-modal.button.got-it">
+					{i18n._(GOT_IT_DESCRIPTOR)}
+				</Button>
+			</div>
+		</Modal.Root>
+	);
+});
 
 export function openChannelFollowSuccessModal(props: ChannelFollowSuccessModalProps): void {
 	ModalCommands.push(

@@ -173,7 +173,7 @@ export interface ChannelMenuData {
 	state: ChannelMenuState;
 }
 
-export interface ChannelMenuHandlers {
+interface ChannelMenuHandlers {
 	handleMarkAsRead: () => void;
 	handleToggleFavorite: () => void;
 	handleInviteMembers: () => void;
@@ -199,7 +199,7 @@ export interface ChannelMenuHandlers {
 	handleResetMatureContentAgreeState: () => void;
 }
 
-export interface ChannelMenuState {
+interface ChannelMenuState {
 	isGroupDM: boolean;
 	isDM: boolean;
 	isTextChannel: boolean;

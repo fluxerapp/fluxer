@@ -139,6 +139,7 @@ function projectAppPublic(appPublic: InstanceDiscoveryDocument['appPublic']): In
 		legal: {
 			terms_url: requireDefined(value.legal.terms_url, 'app_public.legal.terms_url'),
 			privacy_url: requireDefined(value.legal.privacy_url, 'app_public.legal.privacy_url'),
+			guidelines_url: value.legal.guidelines_url ?? null,
 		},
 		registration: {
 			collect_date_of_birth: requireDefined(

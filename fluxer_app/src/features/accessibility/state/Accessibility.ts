@@ -76,7 +76,7 @@ interface StartupSettingsStorage {
 	getItem(key: string): string | null;
 }
 
-export interface LocalMotionSettings {
+interface LocalMotionSettings {
 	syncReducedMotionWithSystem: boolean;
 	reducedMotionOverride: boolean | null;
 	enableSmoothScrolling: boolean;
@@ -572,12 +572,6 @@ function resolveStartupReducedMotion(
 	return settings.syncReducedMotionWithSystem ? systemReducedMotion : (settings.reducedMotionOverride ?? false);
 }
 
-export enum GuildChannelPresenceIndicatorMode {
-	AVATARS = 0,
-	INDICATOR_ONLY = 1,
-	HIDDEN = 2,
-}
-
 export enum DMMessagePreviewMode {
 	ALL = 0,
 	UNREAD_ONLY = 1,
@@ -770,7 +764,6 @@ class Accessibility {
 	keepNekoStill = false;
 	showVideoSeekPreviewThumbnails = false;
 	mediaQuery: MediaQueryList | null = null;
-	private _hydrated = false;
 	private unsubscribeZoomStorage: (() => void) | null = null;
 	private unsubscribeMotionStorage: (() => void) | null = null;
 	private unsubscribeShowNekoSession: (() => void) | null = null;
@@ -807,10 +800,6 @@ class Accessibility {
 		this.initializeVideoSeekPreviewThumbnailsStorageSync();
 		this.applyStartupPresentationSettings();
 		initializeStore(this, () => this.initPersistence());
-	}
-
-	get isHydrated(): boolean {
-		return this._hydrated;
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -1033,9 +1022,6 @@ class Accessibility {
 		});
 		await this.applyStoredZoom();
 		this.applyStoredCustomThemeCss();
-		runInAction(() => {
-			this._hydrated = true;
-		});
 	}
 
 	private initializeMotionDetection() {
@@ -1239,10 +1225,6 @@ class Accessibility {
 		return MobileLayout.isMobileLayout()
 			? COMFY_MESSAGE_GROUP_SPACING_DEFAULT
 			: getMessageGroupSpacingForDisplayMode(this, messageDisplayCompact);
-	}
-
-	get messageGutterValue(): number {
-		return MobileLayout.isMobileLayout() ? 12 : this.messageGutter;
 	}
 
 	updateSettings(data: Readonly<Partial<AccessibilitySettings>>): void {

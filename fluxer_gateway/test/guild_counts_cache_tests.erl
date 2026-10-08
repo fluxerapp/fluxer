@@ -23,25 +23,6 @@ bulk_get_returns_map_test() ->
     ?assertEqual(ok, guild_counts_cache:delete(2002)),
     stop_for_test(Pid, Started).
 
-resolve_owner_node_uses_remote_owner_when_valid_test() ->
-    LocalNode = node(),
-    RemoteNode = 'gateway_b@127.0.0.1',
-    ?assertEqual(
-        RemoteNode,
-        clustered_ets_cache:resolve_owner_node(123, LocalNode, fun(_GuildId) -> RemoteNode end)
-    ).
-
-resolve_owner_node_falls_back_to_local_when_invalid_owner_test() ->
-    LocalNode = node(),
-    ?assertEqual(
-        LocalNode,
-        clustered_ets_cache:resolve_owner_node(123, LocalNode, fun(_GuildId) -> bad_owner end)
-    ),
-    ?assertEqual(
-        LocalNode,
-        clustered_ets_cache:resolve_owner_node(123, LocalNode, fun(_GuildId) -> {bad_owner} end)
-    ).
-
 group_guild_ids_by_owner_groups_and_deduplicates_test() ->
     LocalNode = node(),
     RemoteNode = 'gateway_c@127.0.0.1',

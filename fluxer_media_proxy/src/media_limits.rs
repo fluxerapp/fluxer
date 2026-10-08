@@ -12,7 +12,6 @@ pub struct MediaLimits {
     animated_frames: u32,
     animated_total_pixels: usize,
     max_media_proxy_bytes: usize,
-    max_internal_request_body_bytes: usize,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -54,18 +53,12 @@ impl MediaLimits {
             (1..=MAX_MEDIA_PROXY_BYTES).contains(&max_media_proxy_bytes),
             "media proxy byte limit must be between 1 and {MAX_MEDIA_PROXY_BYTES}"
         );
-        let max_internal_request_body_bytes = max_media_proxy_bytes
-            .div_ceil(3)
-            .checked_mul(4)
-            .and_then(|bytes| bytes.checked_add(1024 * 1024))
-            .ok_or_else(|| anyhow::anyhow!("internal request body limit overflowed"))?;
         Ok(Self {
             image_dimension,
             image_pixels,
             animated_frames,
             animated_total_pixels,
             max_media_proxy_bytes,
-            max_internal_request_body_bytes,
         })
     }
 
@@ -99,16 +92,11 @@ impl MediaLimits {
     pub fn max_media_proxy_bytes(&self) -> usize {
         self.max_media_proxy_bytes
     }
-
-    pub fn max_internal_request_body_bytes(&self) -> usize {
-        self.max_internal_request_body_bytes
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::constants::MAX_INTERNAL_REQUEST_BODY_BYTES;
 
     #[test]
     fn default_limits_keep_the_frozen_old_era_numbers() {
@@ -118,10 +106,6 @@ mod tests {
         assert_eq!(20_000, limits.animated_frames());
         assert_eq!(4 * 16_384 * 16_384, limits.animated_total_pixels());
         assert_eq!(500 * 1024 * 1024, limits.max_media_proxy_bytes());
-        assert_eq!(
-            MAX_INTERNAL_REQUEST_BODY_BYTES,
-            limits.max_internal_request_body_bytes()
-        );
     }
 
     #[test]

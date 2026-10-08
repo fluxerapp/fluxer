@@ -2,7 +2,6 @@
 
 pub mod background;
 pub mod env;
-pub mod filechooser;
 pub mod global_shortcuts;
 pub mod gnome_shell;
 pub mod kwin;
@@ -29,7 +28,6 @@ mod napi_bindings {
 
     use crate::{
         background::{self, RequestOptions, RequestResult},
-        filechooser::{self, FileChooserResult, Filter, FilterRule, Mode, Options},
         global_shortcuts::{
             BindOutcome, DEFAULT_SESSION_TOKEN, Desktop, GlobalShortcutsClient, OpenResult,
             PortalEvent, PortalOptions, Responder, ShortcutBinding, ShortcutDefinition,
@@ -55,16 +53,8 @@ mod napi_bindings {
         object.get::<String>(key).ok().flatten()
     }
 
-    fn read_string_field_or_empty(object: &Object, key: &str) -> String {
-        read_string_field(object, key).unwrap_or_default()
-    }
-
     fn read_bool_field(object: &Object, key: &str) -> Option<bool> {
         object.get::<bool>(key).ok().flatten()
-    }
-
-    fn read_object_field<'a>(object: &Object<'a>, key: &str) -> Option<Object<'a>> {
-        object.get::<Object>(key).ok().flatten()
     }
 
     fn read_array_field<'a>(object: &Object<'a>, key: &str) -> Option<Array<'a>> {
@@ -144,122 +134,6 @@ mod napi_bindings {
         let token = read_string_field(&spec, "token")
             .ok_or_else(|| invalid_arg("spec.token must be a string"))?;
         Ok(AsyncTask::new(ResolveWindowPidTask { token }))
-    }
-
-    fn parse_filter_rule(object: &Object) -> Result<FilterRule> {
-        let kind = object
-            .get::<u32>("kind")
-            .map_err(|err| invalid_arg(err.reason.clone()))?
-            .ok_or_else(|| invalid_arg("rule.kind must be a number"))?;
-        if kind > 1 {
-            return Err(invalid_arg("rule.kind must be 0 (glob) or 1 (mime-type)"));
-        }
-        let pattern = read_string_field(object, "pattern")
-            .ok_or_else(|| invalid_arg("rule.pattern must be a string"))?;
-        Ok(FilterRule { kind, pattern })
-    }
-
-    fn parse_filter(object: &Object) -> Result<Filter> {
-        let name = read_string_field(object, "name")
-            .ok_or_else(|| invalid_arg("filter.name must be a string"))?;
-        let rules_array = read_array_field(object, "rules")
-            .ok_or_else(|| invalid_arg("filter.rules must be an array"))?;
-        let mut rules = Vec::with_capacity(rules_array.len() as usize);
-        for i in 0..rules_array.len() {
-            let rule_obj = rules_array
-                .get::<Object>(i)
-                .map_err(|err| invalid_arg(err.reason.clone()))?
-                .ok_or_else(|| invalid_arg("rule must be an object"))?;
-            rules.push(parse_filter_rule(&rule_obj)?);
-        }
-        Ok(Filter { name, rules })
-    }
-
-    fn parse_filechooser_options(object: &Object) -> Result<Options> {
-        let parent_window = read_string_field_or_empty(object, "parentWindow");
-        let title = read_string_field_or_empty(object, "title");
-        let accept_label = read_string_field(object, "acceptLabel");
-        let modal = read_bool_field(object, "modal").unwrap_or(true);
-        let multiple = read_bool_field(object, "multiple").unwrap_or(false);
-        let directory = read_bool_field(object, "directory").unwrap_or(false);
-        let current_folder = read_string_field(object, "currentFolder");
-        let current_name = read_string_field(object, "currentName");
-        let current_file = read_string_field(object, "currentFile");
-        let filters = if let Some(array) = read_array_field(object, "filters") {
-            let mut out = Vec::with_capacity(array.len() as usize);
-            for i in 0..array.len() {
-                let f_obj = array
-                    .get::<Object>(i)
-                    .map_err(|err| invalid_arg(err.reason.clone()))?
-                    .ok_or_else(|| invalid_arg("filter must be an object"))?;
-                out.push(parse_filter(&f_obj)?);
-            }
-            out
-        } else {
-            Vec::new()
-        };
-        let current_filter = if let Some(obj) = read_object_field(object, "currentFilter") {
-            Some(parse_filter(&obj)?)
-        } else {
-            None
-        };
-        Ok(Options {
-            parent_window,
-            title,
-            accept_label,
-            modal,
-            multiple,
-            directory,
-            current_folder,
-            current_name,
-            current_file,
-            filters,
-            current_filter,
-        })
-    }
-
-    pub struct FileChooserTask {
-        mode: Mode,
-        options: Options,
-    }
-
-    impl Task for FileChooserTask {
-        type Output = FileChooserResult;
-        type JsValue = Object<'static>;
-
-        fn compute(&mut self) -> Result<Self::Output> {
-            filechooser::invoke(self.mode, self.options.clone())
-                .map_err(|err| generic_error(format!("FileChooser portal: {err}")))
-        }
-
-        fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-            let mut obj = Object::new(&env)?;
-            obj.set("cancelled", output.cancelled)?;
-            let mut array = env.create_array(output.uris.len() as u32)?;
-            for (i, uri) in output.uris.iter().enumerate() {
-                array.set(i as u32, uri.as_str())?;
-            }
-            obj.set("uris", array)?;
-            Ok(unsafe { std::mem::transmute::<Object<'_>, Object<'static>>(obj) })
-        }
-    }
-
-    #[napi(js_name = "openFile")]
-    pub fn open_file(options: Object) -> Result<AsyncTask<FileChooserTask>> {
-        let parsed = parse_filechooser_options(&options)?;
-        Ok(AsyncTask::new(FileChooserTask {
-            mode: Mode::Open,
-            options: parsed,
-        }))
-    }
-
-    #[napi(js_name = "saveFile")]
-    pub fn save_file(options: Object) -> Result<AsyncTask<FileChooserTask>> {
-        let parsed = parse_filechooser_options(&options)?;
-        Ok(AsyncTask::new(FileChooserTask {
-            mode: Mode::Save,
-            options: parsed,
-        }))
     }
 
     fn parse_string_array_field(object: &Object, key: &str) -> Result<Vec<String>> {

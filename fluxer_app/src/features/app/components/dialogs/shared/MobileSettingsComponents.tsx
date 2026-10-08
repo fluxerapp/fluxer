@@ -10,9 +10,7 @@ import {usePressable} from '@app/features/app/hooks/usePressable';
 import {GO_BACK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
-import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import type {TabData} from '@app/features/ui/state/UnsavedChanges';
-import type {SettingsSectionConfig} from '@app/features/user/components/settings_utils/SettingsSectionRegistry';
 import {Trans, useLingui} from '@lingui/react/macro';
 import type {Icon, IconWeight} from '@phosphor-icons/react';
 import {ArrowLeftIcon} from '@phosphor-icons/react';
@@ -20,7 +18,7 @@ import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {type UIEvent, useEffect, useRef} from 'react';
+import type {UIEvent} from 'react';
 
 interface MobileHeaderProps {
 	title: React.ReactNode;
@@ -380,62 +378,3 @@ export const MobileSettingsList = observer(function MobileSettingsList<T extends
 		</Scroller>
 	);
 });
-
-interface MobileSectionNavProps {
-	sections: ReadonlyArray<SettingsSectionConfig>;
-	activeSectionId: string | null;
-	onSectionClick: (sectionId: string) => void;
-}
-
-export const MobileSectionNav: React.FC<MobileSectionNavProps> = observer(
-	({sections, activeSectionId, onSectionClick}) => {
-		const scrollerRef = useRef<ScrollerHandle | null>(null);
-		useEffect(() => {
-			if (!activeSectionId) return;
-			const node = scrollerRef.current?.getViewportElement();
-			if (!node) return;
-			const activeButton = node.querySelector(`[data-section-id="${activeSectionId}"]`);
-			if (activeButton instanceof HTMLElement) {
-				activeButton.scrollIntoView({behavior: 'auto', block: 'nearest', inline: 'center'});
-			}
-		}, [activeSectionId]);
-		return (
-			<div
-				className={styles.sectionNavContainer}
-				data-flx="app.mobile-settings-components.mobile-section-nav.section-nav-container"
-			>
-				<Scroller
-					key="mobile-settings-section-nav-scroller"
-					ref={scrollerRef}
-					className={styles.sectionNavScroller}
-					orientation="horizontal"
-					fade={false}
-					data-flx="app.mobile-settings-components.mobile-section-nav.section-nav-scroller"
-				>
-					<div
-						className={styles.sectionNavContent}
-						data-flx="app.mobile-settings-components.mobile-section-nav.section-nav-content"
-					>
-						{sections.map((section) => (
-							<FocusRing
-								key={section.id}
-								offset={-2}
-								data-flx="app.mobile-settings-components.mobile-section-nav.focus-ring"
-							>
-								<button
-									type="button"
-									className={clsx(styles.sectionNavItem, activeSectionId === section.id && styles.sectionNavItemActive)}
-									onClick={() => onSectionClick(section.id)}
-									data-section-id={section.id}
-									data-flx="app.mobile-settings-components.mobile-section-nav.section-nav-item.section-click.button"
-								>
-									{section.label}
-								</button>
-							</FocusRing>
-						))}
-					</div>
-				</Scroller>
-			</div>
-		);
-	},
-);

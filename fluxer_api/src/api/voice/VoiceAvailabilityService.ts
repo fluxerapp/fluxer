@@ -162,8 +162,4 @@ export class VoiceAvailabilityService {
 		this.rotationIndex.set(regionId, (index + 1) % candidateServers.length);
 		return server;
 	}
-
-	resetRotation(regionId: string): void {
-		this.rotationIndex.delete(regionId);
-	}
 }

@@ -12,9 +12,14 @@ pub struct Attachment {
     pub width: Option<u32>,
     pub height: Option<u32>,
     pub size: Option<u64>,
-    pub ncmec_status: String,
-    pub ncmec_report_id: Option<String>,
-    pub ncmec_failure_reason: Option<String>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct MissingAttachment {
+    pub id: String,
+    pub filename: String,
+    pub content_type: Option<String>,
+    pub size: Option<u64>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -27,12 +32,15 @@ pub struct Message {
     pub author_global_name: Option<String>,
     pub author_discriminator: String,
     pub author_avatar: Option<String>,
+    pub webhook_id: Option<String>,
+    pub author_bot: Option<bool>,
     pub channel_id: String,
     pub channel_nsfw: Option<bool>,
     pub channel_content_warning_level: Option<i32>,
     pub channel_content_warning_text: Option<String>,
     pub guild_nsfw: Option<bool>,
     pub attachments: Vec<Attachment>,
+    pub missing_attachments: Vec<MissingAttachment>,
 }
 
 pub fn ordered_messages(values: &[Value]) -> Vec<Message> {
@@ -48,6 +56,12 @@ fn message_from_value(value: &Value) -> Message {
         .flatten()
         .map(attachment_from_value)
         .collect();
+    let missing_attachments = value["missing_attachments"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(missing_attachment_from_value)
+        .collect();
     Message {
         id: value_id(&value["id"]).unwrap_or_default(),
         content: value["content"].as_str().unwrap_or("").to_owned(),
@@ -61,6 +75,8 @@ fn message_from_value(value: &Value) -> Message {
         author_discriminator: value_id(&value["author_discriminator"])
             .unwrap_or_else(|| "0000".to_owned()),
         author_avatar: value["author_avatar"].as_str().map(ToOwned::to_owned),
+        webhook_id: value_id(&value["webhook_id"]),
+        author_bot: value["author_bot"].as_bool(),
         channel_id: value_id(&value["channel_id"]).unwrap_or_default(),
         channel_nsfw: value["channel_nsfw"].as_bool(),
         channel_content_warning_level: value["channel_content_warning_level"]
@@ -71,6 +87,16 @@ fn message_from_value(value: &Value) -> Message {
             .map(ToOwned::to_owned),
         guild_nsfw: value["guild_nsfw"].as_bool(),
         attachments,
+        missing_attachments,
+    }
+}
+
+fn missing_attachment_from_value(value: &Value) -> MissingAttachment {
+    MissingAttachment {
+        id: value_id(&value["id"]).unwrap_or_default(),
+        filename: value["filename"].as_str().unwrap_or("").to_owned(),
+        content_type: value["content_type"].as_str().map(ToOwned::to_owned),
+        size: value["size"].as_u64(),
     }
 }
 
@@ -84,14 +110,6 @@ fn attachment_from_value(value: &Value) -> Attachment {
         width: value["width"].as_u64().map(|n| n as u32),
         height: value["height"].as_u64().map(|n| n as u32),
         size: value["size"].as_u64(),
-        ncmec_status: value["ncmec_status"]
-            .as_str()
-            .unwrap_or("not_submitted")
-            .to_owned(),
-        ncmec_report_id: value["ncmec_report_id"].as_str().map(ToOwned::to_owned),
-        ncmec_failure_reason: value["ncmec_failure_reason"]
-            .as_str()
-            .map(ToOwned::to_owned),
     }
 }
 
@@ -139,10 +157,7 @@ mod tests {
                 "content_type": "image/png",
                 "width": 640,
                 "height": 480,
-                "size": 4096,
-                "ncmec_status": "submitted",
-                "ncmec_report_id": "report-id",
-                "ncmec_failure_reason": "previous failure"
+                "size": 4096
             }]
         });
 
@@ -157,6 +172,8 @@ mod tests {
                 author_global_name: Some("Alice".into()),
                 author_discriminator: "1234".into(),
                 author_avatar: Some("avatar-hash".into()),
+                webhook_id: None,
+                author_bot: None,
                 channel_id: "100".into(),
                 channel_nsfw: Some(false),
                 channel_content_warning_level: Some(2),
@@ -171,12 +188,68 @@ mod tests {
                     width: Some(640),
                     height: Some(480),
                     size: Some(4096),
-                    ncmec_status: "submitted".into(),
-                    ncmec_report_id: Some("report-id".into()),
-                    ncmec_failure_reason: Some("previous failure".into()),
                 }],
+                missing_attachments: vec![],
             }
         );
+    }
+
+    #[test]
+    fn maps_author_bot_flags() {
+        let bot = message_from_value(&json!({"author_id": "42", "author_bot": true}));
+        assert_eq!(bot.author_bot, Some(true));
+        let human = message_from_value(&json!({"author_id": "43", "author_bot": false}));
+        assert_eq!(human.author_bot, Some(false));
+        let webhook = message_from_value(
+            &json!({"author_id": "500", "webhook_id": "500", "author_bot": null}),
+        );
+        assert_eq!(webhook.author_bot, None);
+        let old = message_from_value(&json!({"author_id": "44"}));
+        assert_eq!(old.author_bot, None);
+    }
+
+    #[test]
+    fn maps_missing_attachments() {
+        let message = message_from_value(&json!({
+            "id": "10",
+            "attachments": [],
+            "missing_attachments": [{
+                "id": 9007199254740993_u64,
+                "filename": "evidence.png",
+                "nsfw": null,
+                "content_type": "image/png",
+                "width": 640,
+                "height": 480,
+                "size": 4096
+            }]
+        }));
+        assert!(message.attachments.is_empty());
+        assert_eq!(
+            message.missing_attachments,
+            vec![MissingAttachment {
+                id: "9007199254740993".into(),
+                filename: "evidence.png".into(),
+                content_type: Some("image/png".into()),
+                size: Some(4096),
+            }]
+        );
+        let old = message_from_value(&json!({"id": "11", "attachments": []}));
+        assert!(old.missing_attachments.is_empty());
+        let null = message_from_value(&json!({"id": "12", "missing_attachments": null}));
+        assert!(null.missing_attachments.is_empty());
+    }
+
+    #[test]
+    fn maps_webhook_authors() {
+        let webhook = message_from_value(&json!({
+            "author_id": "500",
+            "author_username": "Harbor Bulletin",
+            "webhook_id": "500"
+        }));
+        assert_eq!(webhook.webhook_id.as_deref(), Some("500"));
+        assert_eq!(webhook.author_id, "500");
+        let user = message_from_value(&json!({"author_id": "42", "webhook_id": null}));
+        assert_eq!(user.webhook_id, None);
     }
 
     #[test]
@@ -187,6 +260,7 @@ mod tests {
         assert_eq!(message.author_discriminator, "0000");
         assert_eq!(message.content, "");
         assert_eq!(message.author_global_name, None);
+        assert_eq!(message.webhook_id, None);
         assert_eq!(message.channel_nsfw, None);
         assert_eq!(
             message.attachments,
@@ -199,9 +273,6 @@ mod tests {
                 width: None,
                 height: None,
                 size: None,
-                ncmec_status: "not_submitted".into(),
-                ncmec_report_id: None,
-                ncmec_failure_reason: None,
             }]
         );
     }

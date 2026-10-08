@@ -190,7 +190,7 @@ const RemoveReactionsSubmenu = observer(({reactions, channelId, messageId}: Remo
 
 RemoveReactionsSubmenu.displayName = 'RemoveReactionsSubmenu';
 
-export const AddReactionSubmenuItem = observer(
+const AddReactionSubmenuItem = observer(
 	({emoji, onSelect}: {emoji: FlatEmoji; onSelect: (emoji: FlatEmoji) => void}) => {
 		const reactionEmoji = useMemo(() => toReactionEmoji(emoji), [emoji]);
 		const emojiUrl = useReactionSubmenuEmojiSrc(emoji);

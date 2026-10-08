@@ -3,7 +3,7 @@
 import {computeMasonryColumns} from '@app/features/channel/components/pickers/shared/ComputeColumns';
 import {MASONRY_PADDING_PX} from '@app/features/channel/components/pickers/shared/PickerConstants';
 
-export interface GifPickerLoadingSkeletonGifSpec {
+interface GifPickerLoadingSkeletonGifSpec {
 	key: string;
 	width: number;
 	height: number;
@@ -27,7 +27,7 @@ export interface GifPickerLoadingSkeletonLayoutInput {
 	overscanPx?: number;
 }
 
-export const GIF_PICKER_LOADING_SKELETON_GIF_SPECS: ReadonlyArray<GifPickerLoadingSkeletonGifSpec> = [
+const GIF_PICKER_LOADING_SKELETON_GIF_SPECS: ReadonlyArray<GifPickerLoadingSkeletonGifSpec> = [
 	{key: 'square-255', width: 255, height: 255, delaySeconds: 0},
 	{key: 'wide-640-358', width: 640, height: 358, delaySeconds: 0.035},
 	{key: 'wide-480-270', width: 480, height: 270, delaySeconds: 0.07},

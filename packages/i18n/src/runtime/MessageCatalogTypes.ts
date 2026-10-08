@@ -2,7 +2,7 @@
 
 import {parse, type Token} from '@messageformat/parser';
 
-export type MessageVariableValue = string | number | boolean | Date;
+type MessageVariableValue = string | number | boolean | Date;
 type Whitespace = ' ' | '\n' | '\r' | '\t';
 type TrimLeft<T extends string> = T extends `${Whitespace}${infer Rest}` ? TrimLeft<Rest> : T;
 type TrimRight<T extends string> = T extends `${infer Rest}${Whitespace}` ? TrimRight<Rest> : T;
@@ -31,10 +31,10 @@ type NumericPlaceholderNameAfterOpen<T extends string> = T extends `${infer Name
 	: T extends `${infer Name}, selectordinal,${string}`
 		? PlaceholderName<Name>
 		: never;
-export type TemplatePlaceholderNames<T extends string> = T extends `${string}{${infer AfterOpen}`
+type TemplatePlaceholderNames<T extends string> = T extends `${string}{${infer AfterOpen}`
 	? PlaceholderNameAfterOpen<AfterOpen> | TemplatePlaceholderNames<RestAfterPlaceholder<AfterOpen>>
 	: never;
-export type NumericTemplatePlaceholderNames<T extends string> = T extends `${string}{${infer AfterOpen}`
+type NumericTemplatePlaceholderNames<T extends string> = T extends `${string}{${infer AfterOpen}`
 	? NumericPlaceholderNameAfterOpen<AfterOpen> | NumericTemplatePlaceholderNames<RestAfterPlaceholder<AfterOpen>>
 	: never;
 export type MessageVariablesForTemplate<T extends string> = [TemplatePlaceholderNames<T>] extends [never]
@@ -47,9 +47,6 @@ export type MessageVariablesForTemplate<T extends string> = [TemplatePlaceholder
 export type MessageArgsForTemplate<T extends string> = [MessageVariablesForTemplate<T>] extends [never]
 	? [variables?: undefined]
 	: [variables: MessageVariablesForTemplate<T>];
-export type MessageArgsWithFallbackForTemplate<T extends string> = [MessageVariablesForTemplate<T>] extends [never]
-	? [variables?: undefined, fallbackMessage?: string]
-	: [variables: MessageVariablesForTemplate<T>, fallbackMessage?: string];
 type LocaleMessageForTemplate<Source extends string, Translation extends string> = [
 	Exclude<TemplatePlaceholderNames<Source>, TemplatePlaceholderNames<Translation>>,
 ] extends [never]
@@ -103,10 +100,21 @@ function collectMessageTemplateVariables(tokens: ReadonlyArray<Token>, variables
 	}
 }
 
-export function extractMessageTemplateVariables(template: string): Set<string> {
+const templateVariablesByTemplate = new Map<string, ReadonlySet<string>>();
+
+function getMessageTemplateVariables(template: string): ReadonlySet<string> {
+	const cachedVariables = templateVariablesByTemplate.get(template);
+	if (cachedVariables) {
+		return cachedVariables;
+	}
 	const variables = new Set<string>();
 	collectMessageTemplateVariables(parse(template), variables);
+	templateVariablesByTemplate.set(template, variables);
 	return variables;
+}
+
+export function extractMessageTemplateVariables(template: string): Set<string> {
+	return new Set(getMessageTemplateVariables(template));
 }
 
 function collectMessageTemplatePlaceholders(tokens: ReadonlyArray<Token>, placeholders: Set<string>): void {
@@ -161,9 +169,9 @@ export function validateMessageTemplateVariables(
 	template: string,
 	variables: Record<string, unknown> | undefined,
 ): string | null {
-	let requiredVariables: Set<string>;
+	let requiredVariables: ReadonlySet<string>;
 	try {
-		requiredVariables = extractMessageTemplateVariables(template);
+		requiredVariables = getMessageTemplateVariables(template);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Unknown parser error';
 		return `Invalid i18n message template: ${message}`;

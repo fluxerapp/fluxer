@@ -23,6 +23,10 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
+function sortSnowflakes(ids: Array<string>): Array<string> {
+	return [...ids].sort((a, b) => (BigInt(a) < BigInt(b) ? -1 : BigInt(a) > BigInt(b) ? 1 : 0));
+}
+
 describe('Guild Member Management', () => {
 	let harness: ApiTestHarness;
 	beforeEach(async () => {
@@ -377,23 +381,27 @@ describe('Guild Member Management', () => {
 				.execute();
 		});
 		test('should allow regular member to list guild members', async () => {
-			const {members, guild} = await setupTestGuildWithMembers(harness, 1);
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
 			const member = members[0];
-			await createBuilder(harness, member.token).get(`/guilds/${guild.id}/members`).expect(HTTP_STATUS.OK).execute();
+			const memberList = await createBuilder<Array<GuildMemberResponse>>(harness, member.token)
+				.get(`/guilds/${guild.id}/members?limit=10`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(memberList.map((entry) => entry.user.id)).toEqual(sortSnowflakes([owner.userId, member.userId]));
 		});
 		test('should support limit parameter for listing members', async () => {
-			const {owner, guild} = await setupTestGuildWithMembers(harness, 3);
-			const memberList = await createBuilder<
-				Array<{
-					user: {
-						id: string;
-					};
-				}>
-			>(harness, owner.token)
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 3);
+			const expectedIds = sortSnowflakes([owner.userId, ...members.map((member) => member.userId)]);
+			const firstPage = await createBuilder<Array<GuildMemberResponse>>(harness, owner.token)
 				.get(`/guilds/${guild.id}/members?limit=2`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			expect(memberList.length).toBeLessThanOrEqual(2);
+			expect(firstPage.map((entry) => entry.user.id)).toEqual(expectedIds.slice(0, 2));
+			const secondPage = await createBuilder<Array<GuildMemberResponse>>(harness, owner.token)
+				.get(`/guilds/${guild.id}/members?limit=2&after=${firstPage[1]!.user.id}`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(secondPage.map((entry) => entry.user.id)).toEqual(expectedIds.slice(2));
 		});
 	});
 	describe('Get Member Permission Checks', () => {

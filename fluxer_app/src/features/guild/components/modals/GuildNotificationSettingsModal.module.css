@@ -234,37 +234,6 @@
 	}
 }
 
-.removeIcon {
-	font-size: 0.875rem;
-	font-weight: bold;
-}
-
-.optionContainer {
-	display: flex;
-	width: 100%;
-	align-items: center;
-	justify-content: space-between;
-}
-
-.optionContent {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.optionCategory {
-	font-size: 0.75rem;
-	line-height: 1rem;
-	color: var(--text-tertiary);
-	text-transform: uppercase;
-}
-
-.singleValueContainer {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
 .iconTertiary {
 	color: var(--text-tertiary);
 }

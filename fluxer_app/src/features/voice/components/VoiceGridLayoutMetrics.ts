@@ -1,19 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const VOICE_GRID_TILE_ASPECT_RATIO = 16 / 9;
-export const VOICE_GRID_COLUMN_RULES = [
-	{columns: 4, minTileCount: 10, minWidth: 1180, minHeight: 460},
-	{columns: 3, minTileCount: 5, minWidth: 860, minHeight: 360},
-	{columns: 2, minTileCount: 2, minWidth: 520, minHeight: 260},
-] as const;
-export const VOICE_GRID_DEFAULT_GAP_PX = 12;
-export const VOICE_GRID_DEFAULT_SIDE_PADDING_PX = 12;
-export const VOICE_GRID_DEFAULT_VERTICAL_PADDING_PX = 14;
-export const VOICE_GRID_MIN_TILE_WIDTH_PX = 220;
-export const VOICE_GRID_MIN_TILE_HEIGHT_PX = VOICE_GRID_MIN_TILE_WIDTH_PX / VOICE_GRID_TILE_ASPECT_RATIO;
-export const VOICE_GRID_COMPACT_MIN_TILE_WIDTH_PX = 148;
-export const VOICE_GRID_COMPACT_MIN_TILE_HEIGHT_PX =
-	VOICE_GRID_COMPACT_MIN_TILE_WIDTH_PX / VOICE_GRID_TILE_ASPECT_RATIO;
+const VOICE_GRID_TILE_ASPECT_RATIO = 16 / 9;
+const VOICE_GRID_DEFAULT_GAP_PX = 12;
+const VOICE_GRID_DEFAULT_SIDE_PADDING_PX = 12;
+const VOICE_GRID_DEFAULT_VERTICAL_PADDING_PX = 14;
+const VOICE_GRID_MIN_TILE_WIDTH_PX = 220;
+const VOICE_GRID_MIN_TILE_HEIGHT_PX = VOICE_GRID_MIN_TILE_WIDTH_PX / VOICE_GRID_TILE_ASPECT_RATIO;
+const VOICE_GRID_COMPACT_MIN_TILE_WIDTH_PX = 148;
+const VOICE_GRID_COMPACT_MIN_TILE_HEIGHT_PX = VOICE_GRID_COMPACT_MIN_TILE_WIDTH_PX / VOICE_GRID_TILE_ASPECT_RATIO;
 
 type VoiceGridRowVariable =
 	| '--voice-grid-rows-1'
@@ -22,7 +16,7 @@ type VoiceGridRowVariable =
 	| '--voice-grid-rows-4';
 export type VoiceGridRowStyle = Record<VoiceGridRowVariable, string>;
 
-export interface VoiceGridLayoutMetricsInput {
+interface VoiceGridLayoutMetricsInput {
 	tileCount: number;
 	containerWidth: number;
 	containerHeight: number;
@@ -39,7 +33,7 @@ interface VoiceGridLayoutMetricsForColumnsInput extends VoiceGridLayoutMetricsIn
 	columns: number;
 }
 
-export interface VoiceGridLayoutMetrics {
+interface VoiceGridLayoutMetrics {
 	columns: number;
 	rows: number;
 	gap: number;
@@ -105,11 +99,11 @@ function clamp(value: number, min: number, max: number): number {
 	return Math.max(min, Math.min(max, value));
 }
 
-export function getVoiceGridRowCount(tileCount: number, columnCount: number): number {
+function getVoiceGridRowCount(tileCount: number, columnCount: number): number {
 	return Math.max(1, Math.ceil(sanitizeCount(tileCount) / Math.max(1, Math.floor(columnCount))));
 }
 
-export function getVoiceGridRowsByColumnCount(tileCount: number): {1: number; 2: number; 3: number; 4: number} {
+function getVoiceGridRowsByColumnCount(tileCount: number): {1: number; 2: number; 3: number; 4: number} {
 	return {
 		1: getVoiceGridRowCount(tileCount, 1),
 		2: getVoiceGridRowCount(tileCount, 2),
@@ -128,23 +122,7 @@ export function getVoiceGridRowStyle(tileCount: number): VoiceGridRowStyle {
 	};
 }
 
-export function getVoiceGridColumnCount({
-	tileCount,
-	containerWidth,
-	containerHeight,
-}: Pick<VoiceGridLayoutMetricsInput, 'tileCount' | 'containerWidth' | 'containerHeight'>): number {
-	const count = sanitizeCount(tileCount);
-	const width = sanitizeDimension(containerWidth);
-	const height = sanitizeDimension(containerHeight);
-	for (const rule of VOICE_GRID_COLUMN_RULES) {
-		if (count >= rule.minTileCount && width >= rule.minWidth && height >= rule.minHeight) {
-			return rule.columns;
-		}
-	}
-	return 1;
-}
-
-export function getVoiceGridGap({
+function getVoiceGridGap({
 	tileCount,
 	compact = false,
 	containerHeight,
@@ -160,7 +138,7 @@ export function getVoiceGridGap({
 	return VOICE_GRID_DEFAULT_GAP_PX;
 }
 
-export function getVoiceGridPadding({
+function getVoiceGridPadding({
 	containerWidth,
 	containerHeight,
 	compact = false,
@@ -191,7 +169,7 @@ export function getVoiceGridPadding({
 	return {sidePadding, verticalPadding};
 }
 
-export function getVoiceGridMinTileSize(compact = false): {minTileWidth: number; minTileHeight: number} {
+function getVoiceGridMinTileSize(compact = false): {minTileWidth: number; minTileHeight: number} {
 	return compact
 		? {minTileWidth: VOICE_GRID_COMPACT_MIN_TILE_WIDTH_PX, minTileHeight: VOICE_GRID_COMPACT_MIN_TILE_HEIGHT_PX}
 		: {minTileWidth: VOICE_GRID_MIN_TILE_WIDTH_PX, minTileHeight: VOICE_GRID_MIN_TILE_HEIGHT_PX};
@@ -252,27 +230,6 @@ function resolveVoiceGridLayoutMetricsForColumns({
 	};
 }
 
-export function resolveVoiceGridLayoutMetrics({
-	tileCount,
-	containerWidth,
-	containerHeight,
-	compact = false,
-	edgeToEdge = false,
-}: VoiceGridLayoutMetricsInput): VoiceGridLayoutMetrics {
-	const count = sanitizeCount(tileCount);
-	const width = sanitizeDimension(containerWidth);
-	const height = sanitizeDimension(containerHeight);
-	const columns = getVoiceGridColumnCount({tileCount: count, containerWidth: width, containerHeight: height});
-	return resolveVoiceGridLayoutMetricsForColumns({
-		tileCount: count,
-		containerWidth: width,
-		containerHeight: height,
-		compact,
-		edgeToEdge,
-		columns,
-	});
-}
-
 export function resolveVoiceGridPackedLayoutMetrics({
 	tileCount,
 	containerWidth,
@@ -330,8 +287,4 @@ export function resolveVoiceGridPackedLayoutMetrics({
 		}),
 		visibleTileCount: 0,
 	};
-}
-
-export function getVoiceGridVisibleTileCapacity(input: VoiceGridVisibleTileCapacityInput): number {
-	return resolveVoiceGridPackedLayoutMetrics(input).visibleTileCount;
 }

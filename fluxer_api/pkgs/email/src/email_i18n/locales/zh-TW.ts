@@ -5,23 +5,23 @@ import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18
 const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_deletion_cancelled": {
 		"subject": "您的 {product_name} 帳號已取消刪除",
-		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號的排定刪除已取消。您的帳號不會被刪除。\n\n如有任何疑問，請聯絡 {safety_email}。\n\n– {product_name} 團隊"
+		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號的排定刪除已取消。您的帳號不會被刪除。\n\n{safety_email, select, null {如有任何疑問，請聯絡此實例的管理員。} other {如有任何疑問，請聯絡 {safety_email}。}}\n\n– {product_name} 團隊"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "您的 {product_name} 帳號將因長期未使用而刪除",
-		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號已長期未使用，因此已排定於以下時間永久刪除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n如果您想保留帳號，請在該日期前使用此電子郵件地址聯絡 {safety_email}。\n\n– {product_name} 團隊"
+		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號已長期未使用，因此已排定於以下時間永久刪除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n{safety_email, select, null {如果您想保留帳號，請在該日期前聯絡此實例的管理員。} other {如果您想保留帳號，請在該日期前使用此電子郵件地址聯絡 {safety_email}。}}\n\n– {product_name} 團隊"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "您的 {product_name} 帳號已排定刪除",
-		"body": "哈囉 {username}，\n\n依照您的要求，您的 {product_name} 帳號已排定於以下時間永久刪除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n在此之前，您的帳號將被鎖定。如果您沒有提出此要求，或想保留帳號，請在該日期前使用此電子郵件地址聯絡 {safety_email}。\n\n– {product_name} 團隊"
+		"body": "哈囉 {username}，\n\n依照您的要求，您的 {product_name} 帳號已排定於以下時間永久刪除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n在此之前，您的帳號將被鎖定。{safety_email, select, null {如果您沒有提出此要求，或想保留帳號，請在該日期前聯絡此實例的管理員。} other {如果您沒有提出此要求，或想保留帳號，請在該日期前使用此電子郵件地址聯絡 {safety_email}。}}\n\n– {product_name} 團隊"
 	},
 	"account_scheduled_deletion": {
 		"subject": "您的 {product_name} 帳號將被永久刪除",
-		"body": "哈囉 {username}，\n\n由於您違反了我們的服務條款或社群準則，您的 {product_name} 帳號已排定永久刪除。\n\n排定刪除時間：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n這是一項嚴重的處分。您的帳號資料將在排定日期永久刪除。\n\n請參閱：\n- 服務條款：{termsUrl}\n- 社群準則：{guidelinesUrl}\n\n申訴流程：\n如果您認為此處分不正確或不合理，您有 60 天的時間可以提交申訴。請使用此電子郵件地址寄信至 {appeals_email}。\n\n在您的申訴中：\n- 請清楚說明您認為此處分不正確或不合理的原因\n- 提供任何相關證據或背景資訊\n\n{product_name} 安全團隊的成員將會審查您的申訴，並可能在做出最終決定前暫停這項刪除。\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n由於您違反了我們的服務條款或社群準則，您的 {product_name} 帳號已排定永久刪除。\n\n排定刪除時間：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}這是一項嚴重的處分。您的帳號資料將在排定日期永久刪除。\n\n{legalLinks, select,\n  both {請參閱：\n- 服務條款：{termsUrl}\n- 社群準則：{guidelinesUrl}\n\n}\n  terms {請參閱：\n- 服務條款：{termsUrl}\n\n}\n  guidelines {請參閱：\n- 社群準則：{guidelinesUrl}\n\n}\n  other {}\n}申訴流程：\n如果您認為此處分不正確或不合理，您有 60 天的時間可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員。} other {請使用此電子郵件地址寄信至 {appeals_email}。}}\n\n在您的申訴中：\n- 請清楚說明您認為此處分不正確或不合理的原因\n- 提供任何相關證據或背景資訊\n\n{product_name} 安全團隊的成員將會審查您的申訴，並可能在做出最終決定前暫停這項刪除。\n\n– {product_name} 安全團隊"
 	},
 	"account_temp_banned": {
 		"subject": "您的 {product_name} 帳號已暫時停權",
-		"body": "哈囉 {username}，\n\n由於您違反了我們的服務條款或社群準則，您的 {product_name} 帳號已暫時停權。\n\n持續時間：{durationHours, plural,\n  =1 {1 小時}\n  other {# 小時}\n}\n停權至：{bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n在此期間，您將無法存取您的帳號。\n\n請參閱：\n- 服務條款：{termsUrl}\n- 社群準則：{guidelinesUrl}\n\n如果您認為此處分不正確或不合理，可以提交申訴。請使用此電子郵件地址寄信至 {appeals_email}，並清楚說明您認為此處分不正確的原因。我們會審查您的申訴，並回覆我們的決定。\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n由於您違反了我們的服務條款或社群準則，您的 {product_name} 帳號已暫時停權。\n\n持續時間：{durationHours, plural,\n  =1 {1 小時}\n  other {# 小時}\n}\n停權至：{bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}在此期間，您將無法存取您的帳號。\n\n{legalLinks, select,\n  both {請參閱：\n- 服務條款：{termsUrl}\n- 社群準則：{guidelinesUrl}\n\n}\n  terms {請參閱：\n- 服務條款：{termsUrl}\n\n}\n  guidelines {請參閱：\n- 社群準則：{guidelinesUrl}\n\n}\n  other {}\n}如果您認為此處分不正確或不合理，可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員，並清楚說明您認為此處分不正確的原因。} other {請使用此電子郵件地址寄信至 {appeals_email}，並清楚說明您認為此處分不正確的原因。}}我們會審查您的申訴，並回覆我們的決定。\n\n– {product_name} 安全團隊"
 	},
 	"donation_confirmation": {
 		"subject": "感謝您對 {product_name} 的捐款",
@@ -30,6 +30,10 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 	"donation_magic_link": {
 		"subject": "管理您的 {product_name} 捐款",
 		"body": "哈囉，\n\n點擊下方連結以存取您的捐款者入口網站：\n\n{manageUrl}\n\n在入口網站中，您可以管理訂閱、下載發票並查看您的捐款紀錄。\n\n此連結將於 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n如果您沒有要求此連結，可以直接忽略這封電子郵件。\n\n– {product_name} 團隊"
+	},
+	"dsa_report_resolved": {
+		"subject": "我們已對您的 {product_name} 檢舉做出決定",
+		"body": "哈囉，\n\n我們的安全團隊已審核您依據數位服務法提出的檢舉（ID：{reportId}）並做出決定。{hasComment, select, yes {\n\n安全團隊的回覆：\n{publicComment}} other {}}\n\n我們不會透露對他人帳號所採取措施的細節，因為這屬於對方的個人資料。\n\n如果您不同意此決定，可以在 60 天內免費提交申訴。{appeals_email, select, null {請聯絡此實例的管理員，註明您的檢舉 ID，並說明您認為此決定不正確的原因。} other {請使用此電子郵件地址寄信至 {appeals_email}，註明您的檢舉 ID，並說明您認為此決定不正確的原因。}}如果您身在歐盟，也可以將爭議提交給經認證的訴訟外爭議解決機構。以上內容均不影響您向法院提起訴訟的權利。\n\n– {product_name} 安全團隊"
 	},
 	"dsa_report_verification": {
 		"subject": "驗證您的電子郵件以送出 DSA 檢舉",
@@ -53,15 +57,15 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"gift_chargeback_notification": {
 		"subject": "您兌換禮物取得的福利已移除",
-		"body": "哈囉 {username}，\n\n您兌換的禮物代碼原本是由其他人付款購買的。該筆付款後來已被撤銷（拒付）。\n\n因此，我們已移除兌換該禮物時加到您帳號的福利。\n\n如果您認為這是誤判，請聯絡我們的支援團隊，並提供您所知道關於該禮物代碼與兌換時間的任何資訊。\n\n– {product_name} 團隊"
+		"body": "哈囉 {username}，\n\n您兌換的禮物代碼原本是由其他人付款購買的。該筆付款後來已被撤銷（拒付）。\n\n因此，我們已移除兌換該禮物時加到您帳號的福利。\n\n{support_email, select, null {如果您認為這是誤判，請聯絡此實例的管理員，並提供您所知道關於該禮物代碼與兌換時間的任何資訊。} other {如果您認為這是誤判，請聯絡我們的支援團隊，並提供您所知道關於該禮物代碼與兌換時間的任何資訊。}}\n\n– {product_name} 團隊"
 	},
 	"harvest_completed": {
 		"subject": "您的 {product_name} 資料匯出已可下載",
-		"body": "哈囉 {username}，\n\n您的資料匯出已準備就緒。\n\n下載連結：\n{downloadUrl}\n\n包含的訊息：{totalMessages, number} 則\n檔案大小：{fileSizeMB, number} MB\n\n此連結將於 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n如果您沒有要求此匯出，請立即變更您的密碼並聯絡我們的支援團隊。\n\n– {product_name} 團隊"
+		"body": "哈囉 {username}，\n\n您的資料匯出已準備就緒。\n\n下載連結：\n{downloadUrl}\n\n包含的訊息：{totalMessages, number} 則\n檔案大小：{fileSizeMB, number} MB\n\n此連結將於 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n{support_email, select, null {如果您沒有要求此匯出，請立即變更您的密碼並聯絡此實例的管理員。} other {如果您沒有要求此匯出，請立即變更您的密碼並聯絡我們的支援團隊。}}\n\n– {product_name} 團隊"
 	},
 	"inactivity_warning": {
 		"subject": "您的 {product_name} 帳號將因長期未使用而刪除",
-		"body": "哈囉 {username}，\n\n自 {lastActiveDate, date, full} 起，我們未在您的 {product_name} 帳號上看到任何活動。\n\n如果您未在 {deletionDate, date, full} {deletionDate, time, short} 前登入，您的帳號將因長期未使用而永久刪除。\n\n請在此登入：\n{loginUrl}\n\n如果您最近有使用 {product_name}，請立即聯絡我們的支援團隊。\n\n– {product_name} 團隊"
+		"body": "哈囉 {username}，\n\n自 {lastActiveDate, date, full} 起，我們未在您的 {product_name} 帳號上看到任何活動。\n\n如果您未在 {deletionDate, date, full} {deletionDate, time, short} 前登入，您的帳號將因長期未使用而永久刪除。\n\n請在此登入：\n{loginUrl}\n\n{support_email, select, null {如果您最近有使用 {product_name}，請立即聯絡此實例的管理員。} other {如果您最近有使用 {product_name}，請立即聯絡我們的支援團隊。}}\n\n– {product_name} 團隊"
 	},
 	"ip_authorization": {
 		"subject": "授權從新的 IP 位址登入",
@@ -79,17 +83,17 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "重設您的 {product_name} 密碼",
 		"body": "哈囉 {username}，\n\n您已要求重設 {product_name} 密碼。請使用下方連結設定新密碼：\n\n{resetUrl}\n\n如果您沒有提出此要求，可以直接忽略這封電子郵件。\n\n此連結在 1 小時內有效。\n\n– {product_name} 團隊"
 	},
-	"registration_approved": {
-		"subject": "您的 {product_name} 註冊已獲核准",
-		"body": "哈囉 {username}，\n\n好消息：您的 {product_name} 註冊已獲核准。\n\n您現在可以從這裡登入 {product_name} 應用程式：\n{channelsUrl}\n\n歡迎加入 {product_name} 社群。\n\n– {product_name} 團隊"
+	"report_received": {
+		"subject": "我們已收到您的 {product_name} 檢舉",
+		"body": "哈囉，\n\n我們已收到您依據數位服務法提出、關於 {product_name} 上{targetKind, select, message {一則訊息} user {一個帳號} guild {一個社群} other {內容}}的檢舉。\n\n檢舉 ID：{reportId}\n\n我們的安全團隊會審核您的檢舉，並在做出決定後寄信至此電子郵件地址。請保留這封電子郵件以供日後查閱。\n\n– {product_name} 安全團隊"
 	},
 	"report_resolved": {
 		"subject": "您的 {product_name} 檢舉已審核完成",
-		"body": "哈囉 {username}，\n\n您的檢舉（ID：{reportId}）已由我們的安全團隊審核。{hasComment, select, yes {\n\n安全團隊的回覆：\n{publicComment}} other {}}\n\n感謝您協助維護 {product_name} 的安全。我們會認真看待每一則檢舉，並感謝您對社群的貢獻。\n\n如果您對此結果有任何疑問或疑慮，請聯絡 {safety_email}。\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n您的檢舉（ID：{reportId}）已由我們的安全團隊審核。{hasComment, select, yes {\n\n安全團隊的回覆：\n{publicComment}} other {}}\n\n感謝您協助維護 {product_name} 的安全。我們會認真看待每一則檢舉，並感謝您對社群的貢獻。\n\n{safety_email, select, null {如果您對此結果有任何疑問或疑慮，請聯絡此實例的管理員。} other {如果您對此結果有任何疑問或疑慮，請聯絡 {safety_email}。}}\n\n– {product_name} 安全團隊"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "您的 {product_name} 帳號將被永久刪除",
-		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號已排定永久刪除。\n\n排定刪除時間：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n這是一項嚴重的處分。您的帳號資料將在排定日期永久刪除。\n\n如果您認為此處分不正確，可以提交申訴。請使用此電子郵件地址寄信至 {appeals_email}。\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號已排定永久刪除。\n\n排定刪除時間：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}這是一項嚴重的處分。您的帳號資料將在排定日期永久刪除。\n\n如果您認為此處分不正確，可以提交申訴。{appeals_email, select, null {請聯絡此實例的管理員。} other {請使用此電子郵件地址寄信至 {appeals_email}。}}\n\n– {product_name} 安全團隊"
 	},
 	"self_deletion_scheduled": {
 		"subject": "您的 {product_name} 帳號已排定刪除",
@@ -97,7 +101,7 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"unban_notification": {
 		"subject": "您的 {product_name} 帳號停權已解除",
-		"body": "哈囉 {username}，\n\n好消息：您的 {product_name} 帳號停權已解除。\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n您現在可以重新登入並繼續正常使用 {product_name}。\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n好消息：您的 {product_name} 帳號停權已解除。\n\n{reason, select,\n  null {}\n  other {原因：{reason}\n\n}\n}您現在可以重新登入並繼續正常使用 {product_name}。\n\n– {product_name} 安全團隊"
 	}
 });
 

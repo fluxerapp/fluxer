@@ -12,7 +12,7 @@ import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {useEffect, useState} from 'react';
 
-export type PublicAppStatus = 'idle' | 'loading' | 'ready' | 'session_expired' | 'error';
+type PublicAppStatus = 'idle' | 'loading' | 'ready' | 'session_expired' | 'error';
 
 export interface PublicAppState {
 	status: PublicAppStatus;

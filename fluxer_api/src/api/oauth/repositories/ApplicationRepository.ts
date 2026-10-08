@@ -7,6 +7,7 @@ import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQuer
 import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {ApplicationByOwnerRow, ApplicationRow} from '@app/api/database/types/OAuth2Types';
 import {APPLICATION_COLUMNS} from '@app/api/database/types/OAuth2Types';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Application} from '@app/api/models/Application';
 import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import {Applications, ApplicationsByOwner} from '@app/api/Tables';
@@ -51,7 +52,7 @@ function buildAdminApplication(secretHash: string | null): Application {
 	const row: ApplicationRow = {
 		application_id: createApplicationID(ADMIN_OAUTH2_APPLICATION_ID),
 		owner_user_id: SYSTEM_USER_ID,
-		name: 'Fluxer Admin',
+		name: `${getInstanceProductName()} Admin`,
 		bot_user_id: null,
 		bot_is_public: false,
 		bot_require_code_grant: false,

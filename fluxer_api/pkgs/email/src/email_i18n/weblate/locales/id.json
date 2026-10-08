@@ -1,23 +1,23 @@
 {
 	"account_deletion_cancelled": {
 		"subject": "Penghapusan akun {product_name} kamu telah dibatalkan",
-		"body": "Halo {username},\n\nPenghapusan terjadwal untuk akun {product_name} kamu telah dibatalkan. Akunmu tidak akan dihapus.\n\nJika kamu punya pertanyaan, silakan hubungi {safety_email}.\n\n– Tim {product_name}"
+		"body": "Halo {username},\n\nPenghapusan terjadwal untuk akun {product_name} kamu telah dibatalkan. Akunmu tidak akan dihapus.\n\n{safety_email, select, null {Jika kamu punya pertanyaan, silakan hubungi administrator instance ini.} other {Jika kamu punya pertanyaan, silakan hubungi {safety_email}.}}\n\n– Tim {product_name}"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "Akun {product_name} kamu akan dihapus karena tidak aktif",
-		"body": "Halo {username},\n\nAkun {product_name} kamu sudah lama tidak aktif, sehingga dijadwalkan untuk dihapus permanen pada:\n\n{deletionDate, date, full} pukul {deletionDate, time, short}{reason, select, null {} other {\n\nAlasan: {reason}}}\n\nJika kamu ingin mempertahankan akunmu, hubungi {safety_email} dari alamat email ini sebelum tanggal tersebut.\n\n– Tim {product_name}"
+		"body": "Halo {username},\n\nAkun {product_name} kamu sudah lama tidak aktif, sehingga dijadwalkan untuk dihapus permanen pada:\n\n{deletionDate, date, full} pukul {deletionDate, time, short}{reason, select, null {} other {\n\nAlasan: {reason}}}\n\n{safety_email, select, null {Jika kamu ingin mempertahankan akunmu, hubungi administrator instance ini sebelum tanggal tersebut.} other {Jika kamu ingin mempertahankan akunmu, hubungi {safety_email} dari alamat email ini sebelum tanggal tersebut.}}\n\n– Tim {product_name}"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "Penghapusan akun {product_name} kamu telah dijadwalkan",
-		"body": "Halo {username},\n\nSesuai permintaanmu, akun {product_name} kamu dijadwalkan untuk dihapus permanen pada:\n\n{deletionDate, date, full} pukul {deletionDate, time, short}{reason, select, null {} other {\n\nAlasan: {reason}}}\n\nAkunmu dikunci hingga saat itu. Jika kamu tidak meminta ini, atau ingin mempertahankan akunmu, hubungi {safety_email} dari alamat email ini sebelum tanggal tersebut.\n\n– Tim {product_name}"
+		"body": "Halo {username},\n\nSesuai permintaanmu, akun {product_name} kamu dijadwalkan untuk dihapus permanen pada:\n\n{deletionDate, date, full} pukul {deletionDate, time, short}{reason, select, null {} other {\n\nAlasan: {reason}}}\n\nAkunmu dikunci hingga saat itu. {safety_email, select, null {Jika kamu tidak meminta ini, atau ingin mempertahankan akunmu, hubungi administrator instance ini sebelum tanggal tersebut.} other {Jika kamu tidak meminta ini, atau ingin mempertahankan akunmu, hubungi {safety_email} dari alamat email ini sebelum tanggal tersebut.}}\n\n– Tim {product_name}"
 	},
 	"account_scheduled_deletion": {
 		"subject": "Akun {product_name} kamu akan dihapus secara permanen",
-		"body": "Halo {username},\n\nAkun {product_name} kamu telah dijadwalkan untuk dihapus permanen karena melanggar Ketentuan Layanan atau Pedoman Komunitas kami.\n\nPenghapusan terjadwal: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}}\n}\n\nIni adalah tindakan penegakan yang serius. Data akunmu akan dihapus permanen pada tanggal yang dijadwalkan.\n\nSilakan tinjau:\n- Ketentuan Layanan: {termsUrl}\n- Pedoman Komunitas: {guidelinesUrl}\n\nProses banding:\nJika kamu yakin keputusan ini keliru atau tidak beralasan, kamu punya 60 hari untuk mengajukan banding. Kirim email ke {appeals_email} dari alamat email ini.\n\nDalam bandingmu:\n- Uraikan dengan jelas kenapa kamu yakin keputusan ini keliru atau tidak beralasan\n- Berikan bukti atau konteks yang relevan\n\nAnggota Tim Keamanan {product_name} akan meninjau bandingmu dan bisa menunda penghapusan sampai keputusan akhir tercapai.\n\n– Tim Keamanan {product_name}"
+		"body": "Halo {username},\n\nAkun {product_name} kamu telah dijadwalkan untuk dihapus permanen karena melanggar Ketentuan Layanan atau Pedoman Komunitas kami.\n\nPenghapusan terjadwal: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}\n\n}\n}Ini adalah tindakan penegakan yang serius. Data akunmu akan dihapus permanen pada tanggal yang dijadwalkan.\n\n{legalLinks, select,\n  both {Silakan tinjau:\n- Ketentuan Layanan: {termsUrl}\n- Pedoman Komunitas: {guidelinesUrl}\n\n}\n  terms {Silakan tinjau:\n- Ketentuan Layanan: {termsUrl}\n\n}\n  guidelines {Silakan tinjau:\n- Pedoman Komunitas: {guidelinesUrl}\n\n}\n  other {}\n}Proses banding:\nJika kamu yakin keputusan ini keliru atau tidak beralasan, kamu punya 60 hari untuk mengajukan banding. {appeals_email, select, null {Hubungi administrator instance ini.} other {Kirim email ke {appeals_email} dari alamat email ini.}}\n\nDalam bandingmu:\n- Uraikan dengan jelas kenapa kamu yakin keputusan ini keliru atau tidak beralasan\n- Berikan bukti atau konteks yang relevan\n\nAnggota Tim Keamanan {product_name} akan meninjau bandingmu dan bisa menunda penghapusan sampai keputusan akhir tercapai.\n\n– Tim Keamanan {product_name}"
 	},
 	"account_temp_banned": {
 		"subject": "Akun {product_name} kamu telah ditangguhkan sementara",
-		"body": "Halo {username},\n\nAkun {product_name} kamu telah ditangguhkan sementara karena melanggar Ketentuan Layanan atau Pedoman Komunitas kami.\n\nDurasi: {durationHours, plural,\n  =1 {1 jam}\n  other {# jam}\n}\nDitangguhkan hingga: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}}\n}\n\nSelama waktu ini, kamu tidak akan bisa mengakses akunmu.\n\nSilakan tinjau:\n- Ketentuan Layanan: {termsUrl}\n- Pedoman Komunitas: {guidelinesUrl}\n\nJika kamu yakin keputusan ini keliru atau tidak beralasan, kamu bisa mengajukan banding. Kirim email ke {appeals_email} dari alamat email ini dan uraikan dengan jelas kenapa kamu yakin keputusan ini keliru. Kami akan meninjau bandingmu dan menyampaikan keputusan kami.\n\n– Tim Keamanan {product_name}"
+		"body": "Halo {username},\n\nAkun {product_name} kamu telah ditangguhkan sementara karena melanggar Ketentuan Layanan atau Pedoman Komunitas kami.\n\nDurasi: {durationHours, plural,\n  =1 {1 jam}\n  other {# jam}\n}\nDitangguhkan hingga: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}\n\n}\n}Selama waktu ini, kamu tidak akan bisa mengakses akunmu.\n\n{legalLinks, select,\n  both {Silakan tinjau:\n- Ketentuan Layanan: {termsUrl}\n- Pedoman Komunitas: {guidelinesUrl}\n\n}\n  terms {Silakan tinjau:\n- Ketentuan Layanan: {termsUrl}\n\n}\n  guidelines {Silakan tinjau:\n- Pedoman Komunitas: {guidelinesUrl}\n\n}\n  other {}\n}Jika kamu yakin keputusan ini keliru atau tidak beralasan, kamu bisa mengajukan banding. {appeals_email, select, null {Hubungi administrator instance ini dan uraikan dengan jelas kenapa kamu yakin keputusan ini keliru.} other {Kirim email ke {appeals_email} dari alamat email ini dan uraikan dengan jelas kenapa kamu yakin keputusan ini keliru.}} Kami akan meninjau bandingmu dan menyampaikan keputusan kami.\n\n– Tim Keamanan {product_name}"
 	},
 	"donation_confirmation": {
 		"subject": "Terima kasih atas donasimu untuk {product_name}",
@@ -26,6 +26,10 @@
 	"donation_magic_link": {
 		"subject": "Kelola donasimu untuk {product_name}",
 		"body": "Halo,\n\nKlik tautan di bawah untuk mengakses portal donaturmu:\n\n{manageUrl}\n\nDi portal itu, kamu bisa mengelola langganan, mengunduh faktur, dan melihat riwayat donasimu.\n\nTautan ini kedaluwarsa pada {expiresAt, date, full} pukul {expiresAt, time, short}.\n\nJika kamu tidak meminta tautan ini, kamu bisa mengabaikan email ini dengan aman.\n\n– Tim {product_name}"
+	},
+	"dsa_report_resolved": {
+		"subject": "Kami telah mengambil keputusan atas laporanmu di {product_name}",
+		"body": "Halo,\n\nTim Keamanan kami telah meninjau laporan Digital Services Act kamu (ID: {reportId}) dan mengambil keputusan.{hasComment, select, yes {\n\nTanggapan dari Tim Keamanan:\n{publicComment}} other {}}\n\nKami tidak membagikan detail tindakan yang diambil terhadap akun orang lain, karena itu adalah data pribadi mereka.\n\nJika kamu tidak setuju dengan keputusan ini, kamu bisa mengajukan banding secara gratis dalam waktu 60 hari. {appeals_email, select, null {Hubungi administrator instance ini, sertakan ID laporanmu, dan jelaskan kenapa menurutmu keputusan ini keliru.} other {Kirim email ke {appeals_email} dari alamat email ini, sertakan ID laporanmu, dan jelaskan kenapa menurutmu keputusan ini keliru.}} Jika kamu berada di Uni Eropa, kamu juga bisa membawa sengketa ini ke badan penyelesaian sengketa di luar pengadilan yang bersertifikat. Semua ini tidak memengaruhi hakmu untuk menempuh jalur pengadilan.\n\n– Tim Keamanan {product_name}"
 	},
 	"dsa_report_verification": {
 		"subject": "Verifikasi emailmu untuk laporan DSA",
@@ -49,15 +53,15 @@
 	},
 	"gift_chargeback_notification": {
 		"subject": "Manfaat dari hadiah yang kamu tukarkan telah dihapus",
-		"body": "Halo {username},\n\nKode hadiah yang kamu tukarkan awalnya dibayar oleh orang lain. Pembayaran itu kemudian dibatalkan (chargeback).\n\nKarena itu, kami menghapus manfaat yang ditambahkan ke akunmu saat kamu menukarkan hadiah tersebut.\n\nJika kamu merasa ini keliru, silakan hubungi tim dukungan kami dan sertakan detail apa pun yang kamu punya tentang kode hadiah itu dan kapan kamu menukarkannya.\n\n– Tim {product_name}"
+		"body": "Halo {username},\n\nKode hadiah yang kamu tukarkan awalnya dibayar oleh orang lain. Pembayaran itu kemudian dibatalkan (chargeback).\n\nKarena itu, kami menghapus manfaat yang ditambahkan ke akunmu saat kamu menukarkan hadiah tersebut.\n\n{support_email, select, null {Jika kamu merasa ini keliru, silakan hubungi administrator instance ini dan sertakan detail apa pun yang kamu punya tentang kode hadiah itu dan kapan kamu menukarkannya.} other {Jika kamu merasa ini keliru, silakan hubungi tim dukungan kami dan sertakan detail apa pun yang kamu punya tentang kode hadiah itu dan kapan kamu menukarkannya.}}\n\n– Tim {product_name}"
 	},
 	"harvest_completed": {
 		"subject": "Ekspor data {product_name} kamu siap diunduh",
-		"body": "Halo {username},\n\nEkspor datamu sudah siap.\n\nTautan unduh:\n{downloadUrl}\n\nPesan yang disertakan: {totalMessages, number}\nUkuran file: {fileSizeMB, number} MB\n\nTautan ini kedaluwarsa pada {expiresAt, date, full} pukul {expiresAt, time, short}.\n\nJika kamu tidak meminta ekspor ini, segera ubah kata sandimu dan hubungi tim dukungan kami.\n\n– Tim {product_name}"
+		"body": "Halo {username},\n\nEkspor datamu sudah siap.\n\nTautan unduh:\n{downloadUrl}\n\nPesan yang disertakan: {totalMessages, number}\nUkuran file: {fileSizeMB, number} MB\n\nTautan ini kedaluwarsa pada {expiresAt, date, full} pukul {expiresAt, time, short}.\n\n{support_email, select, null {Jika kamu tidak meminta ekspor ini, segera ubah kata sandimu dan hubungi administrator instance ini.} other {Jika kamu tidak meminta ekspor ini, segera ubah kata sandimu dan hubungi tim dukungan kami.}}\n\n– Tim {product_name}"
 	},
 	"inactivity_warning": {
 		"subject": "Akun {product_name} kamu akan dihapus karena tidak aktif",
-		"body": "Halo {username},\n\nKami belum melihat aktivitas apa pun di akun {product_name} kamu sejak {lastActiveDate, date, full}.\n\nJika kamu tidak masuk sebelum {deletionDate, date, full} pukul {deletionDate, time, short}, akunmu akan dihapus permanen karena tidak aktif.\n\nMasuk di sini:\n{loginUrl}\n\nJika kamu baru saja menggunakan {product_name}, segera hubungi tim dukungan kami.\n\n– Tim {product_name}"
+		"body": "Halo {username},\n\nKami belum melihat aktivitas apa pun di akun {product_name} kamu sejak {lastActiveDate, date, full}.\n\nJika kamu tidak masuk sebelum {deletionDate, date, full} pukul {deletionDate, time, short}, akunmu akan dihapus permanen karena tidak aktif.\n\nMasuk di sini:\n{loginUrl}\n\n{support_email, select, null {Jika kamu baru saja menggunakan {product_name}, segera hubungi administrator instance ini.} other {Jika kamu baru saja menggunakan {product_name}, segera hubungi tim dukungan kami.}}\n\n– Tim {product_name}"
 	},
 	"ip_authorization": {
 		"subject": "Otorisasi masuk dari alamat IP baru",
@@ -75,17 +79,17 @@
 		"subject": "Atur ulang kata sandi {product_name} kamu",
 		"body": "Halo {username},\n\nKamu meminta pengaturan ulang kata sandi {product_name}. Gunakan tautan di bawah ini untuk mengatur kata sandi baru:\n\n{resetUrl}\n\nJika kamu tidak meminta ini, kamu bisa mengabaikan email ini dengan aman.\n\nTautan ini berlaku selama 1 jam.\n\n– Tim {product_name}"
 	},
-	"registration_approved": {
-		"subject": "Pendaftaranmu di {product_name} telah disetujui",
-		"body": "Halo {username},\n\nKabar baik: pendaftaranmu di {product_name} telah disetujui.\n\nKamu sekarang bisa masuk ke aplikasi {product_name} di sini:\n{channelsUrl}\n\nSelamat datang di komunitas {product_name}.\n\n– Tim {product_name}"
+	"report_received": {
+		"subject": "Kami telah menerima laporanmu di {product_name}",
+		"body": "Halo,\n\nKami telah menerima laporan Digital Services Act kamu tentang {targetKind, select, message {sebuah pesan} user {sebuah akun} guild {sebuah komunitas} other {konten}} di {product_name}.\n\nID laporan: {reportId}\n\nTim Keamanan kami akan meninjau laporanmu dan kami akan mengirim email ke alamat ini setelah mengambil keputusan. Simpan email ini sebagai arsip.\n\n– Tim Keamanan {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Laporanmu di {product_name} telah ditinjau",
-		"body": "Halo {username},\n\nLaporanmu (ID: {reportId}) telah ditinjau oleh Tim Keamanan kami.{hasComment, select, yes {\n\nTanggapan dari Tim Keamanan:\n{publicComment}} other {}}\n\nTerima kasih telah membantu menjaga {product_name} tetap aman untuk semua orang. Kami menanggapi semua laporan dengan serius dan menghargai kontribusimu bagi komunitas.\n\nJika kamu punya pertanyaan atau kekhawatiran tentang hasil ini, silakan hubungi {safety_email}.\n\n– Tim Keamanan {product_name}"
+		"body": "Halo {username},\n\nLaporanmu (ID: {reportId}) telah ditinjau oleh Tim Keamanan kami.{hasComment, select, yes {\n\nTanggapan dari Tim Keamanan:\n{publicComment}} other {}}\n\nTerima kasih telah membantu menjaga {product_name} tetap aman untuk semua orang. Kami menanggapi semua laporan dengan serius dan menghargai kontribusimu bagi komunitas.\n\n{safety_email, select, null {Jika kamu punya pertanyaan atau kekhawatiran tentang hasil ini, silakan hubungi administrator instance ini.} other {Jika kamu punya pertanyaan atau kekhawatiran tentang hasil ini, silakan hubungi {safety_email}.}}\n\n– Tim Keamanan {product_name}"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "Akun {product_name} kamu akan dihapus secara permanen",
-		"body": "Halo {username},\n\nAkun {product_name} kamu telah dijadwalkan untuk dihapus permanen.\n\nPenghapusan terjadwal: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}}\n}\n\nIni adalah tindakan penegakan yang serius. Data akunmu akan dihapus permanen pada tanggal yang dijadwalkan.\n\nJika kamu yakin keputusan ini keliru, kamu bisa mengajukan banding. Kirim email ke {appeals_email} dari alamat email ini.\n\n– Tim Keamanan {product_name}"
+		"body": "Halo {username},\n\nAkun {product_name} kamu telah dijadwalkan untuk dihapus permanen.\n\nPenghapusan terjadwal: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}\n\n}\n}Ini adalah tindakan penegakan yang serius. Data akunmu akan dihapus permanen pada tanggal yang dijadwalkan.\n\nJika kamu yakin keputusan ini keliru, kamu bisa mengajukan banding. {appeals_email, select, null {Hubungi administrator instance ini.} other {Kirim email ke {appeals_email} dari alamat email ini.}}\n\n– Tim Keamanan {product_name}"
 	},
 	"self_deletion_scheduled": {
 		"subject": "Penghapusan akun {product_name} kamu telah dijadwalkan",
@@ -93,6 +97,6 @@
 	},
 	"unban_notification": {
 		"subject": "Penangguhan akun {product_name} kamu telah dicabut",
-		"body": "Halo {username},\n\nKabar baik: penangguhan akun {product_name} kamu telah dicabut.\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}}\n}\n\nKamu sekarang bisa masuk lagi dan terus menggunakan {product_name} seperti biasa.\n\n– Tim Keamanan {product_name}"
+		"body": "Halo {username},\n\nKabar baik: penangguhan akun {product_name} kamu telah dicabut.\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}\n\n}\n}Kamu sekarang bisa masuk lagi dan terus menggunakan {product_name} seperti biasa.\n\n– Tim Keamanan {product_name}"
 	}
 }

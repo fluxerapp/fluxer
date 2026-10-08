@@ -6,13 +6,13 @@ import {
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
 import {makeAutoObservable} from 'mobx';
 
-export type DeepFilterAssetState = 'idle' | 'loading' | 'ready';
+type DeepFilterAssetState = 'idle' | 'loading' | 'ready';
 
 export type NoiseSuppressionFailureReason = 'assets' | 'model_encoding' | 'build' | 'runtime' | 'sample_rate';
 
-export type NoiseSuppressionFallback = 'loading' | 'failed';
+type NoiseSuppressionFallback = 'loading' | 'failed';
 
-export interface NoiseSuppressionFailure {
+interface NoiseSuppressionFailure {
 	count: number;
 	retryAtMs: number;
 	reason: NoiseSuppressionFailureReason;

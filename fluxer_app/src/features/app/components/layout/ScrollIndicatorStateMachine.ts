@@ -3,7 +3,7 @@
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type ScrollIndicatorSeverity = 'mention' | 'unread';
-export type ScrollIndicatorDirection = 'top' | 'bottom';
+type ScrollIndicatorDirection = 'top' | 'bottom';
 
 export interface ScrollIndicatorTargetMeasurement {
 	id: string;
@@ -13,7 +13,7 @@ export interface ScrollIndicatorTargetMeasurement {
 	order: number;
 }
 
-export interface ScrollIndicatorEdgeCandidate extends ScrollIndicatorTargetMeasurement {
+interface ScrollIndicatorEdgeCandidate extends ScrollIndicatorTargetMeasurement {
 	direction: ScrollIndicatorDirection;
 	distance: number;
 }
@@ -28,7 +28,7 @@ export interface ActiveScrollIndicators {
 	bottom: ActiveScrollIndicator | null;
 }
 
-export interface ScrollIndicatorMeasurement {
+interface ScrollIndicatorMeasurement {
 	scrollTop: number;
 	viewportHeight: number;
 	targets: ReadonlyArray<ScrollIndicatorTargetMeasurement>;
@@ -80,7 +80,7 @@ function isBetterEdgeCandidate(
 	return candidate.order < current.order;
 }
 
-export function resolveScrollIndicatorEdgeCandidates(measurement: ScrollIndicatorMeasurement): {
+function resolveScrollIndicatorEdgeCandidates(measurement: ScrollIndicatorMeasurement): {
 	topIndicator: ScrollIndicatorEdgeCandidate | null;
 	bottomIndicator: ScrollIndicatorEdgeCandidate | null;
 } {
@@ -109,63 +109,7 @@ export function resolveScrollIndicatorEdgeCandidates(measurement: ScrollIndicato
 	return {topIndicator, bottomIndicator};
 }
 
-export function pickActiveScrollIndicator(
-	topIndicator: ScrollIndicatorEdgeCandidate | null,
-	bottomIndicator: ScrollIndicatorEdgeCandidate | null,
-	preferredDirection: ScrollIndicatorDirection | null,
-	previousDirection: ScrollIndicatorDirection | null,
-): ActiveScrollIndicator | null {
-	if (!topIndicator && !bottomIndicator) return null;
-	if (!topIndicator && bottomIndicator) {
-		return {direction: 'bottom', indicator: bottomIndicator};
-	}
-	if (topIndicator && !bottomIndicator) {
-		return {direction: 'top', indicator: topIndicator};
-	}
-	if (!topIndicator || !bottomIndicator) return null;
-	const topSeverityRank = severityOrder[topIndicator.severity];
-	const bottomSeverityRank = severityOrder[bottomIndicator.severity];
-	if (topSeverityRank > bottomSeverityRank) {
-		return {direction: 'top', indicator: topIndicator};
-	}
-	if (bottomSeverityRank > topSeverityRank) {
-		return {direction: 'bottom', indicator: bottomIndicator};
-	}
-	if (topIndicator.distance < bottomIndicator.distance) {
-		return {direction: 'top', indicator: topIndicator};
-	}
-	if (bottomIndicator.distance < topIndicator.distance) {
-		return {direction: 'bottom', indicator: bottomIndicator};
-	}
-	if (preferredDirection === 'top') {
-		return {direction: 'top', indicator: topIndicator};
-	}
-	if (preferredDirection === 'bottom') {
-		return {direction: 'bottom', indicator: bottomIndicator};
-	}
-	if (previousDirection === 'top') {
-		return {direction: 'top', indicator: topIndicator};
-	}
-	if (previousDirection === 'bottom') {
-		return {direction: 'bottom', indicator: bottomIndicator};
-	}
-	return {direction: 'top', indicator: topIndicator};
-}
-
-export function resolveActiveScrollIndicator(
-	measurement: ScrollIndicatorMeasurement,
-	previousDirection: ScrollIndicatorDirection | null = null,
-): ActiveScrollIndicator | null {
-	const {topIndicator, bottomIndicator} = resolveScrollIndicatorEdgeCandidates(measurement);
-	return pickActiveScrollIndicator(
-		topIndicator,
-		bottomIndicator,
-		measurement.preferredDirection ?? null,
-		previousDirection,
-	);
-}
-
-export function resolveActiveScrollIndicators(measurement: ScrollIndicatorMeasurement): ActiveScrollIndicators {
+function resolveActiveScrollIndicators(measurement: ScrollIndicatorMeasurement): ActiveScrollIndicators {
 	const {topIndicator, bottomIndicator} = resolveScrollIndicatorEdgeCandidates(measurement);
 	return {
 		top: topIndicator == null ? null : {direction: 'top', indicator: topIndicator},
@@ -191,7 +135,7 @@ function areActiveScrollIndicatorsEqualAtEdge(
 	return left.indicator.id === right.indicator.id && left.indicator.severity === right.indicator.severity;
 }
 
-export const scrollIndicatorStateMachine = setup({
+const scrollIndicatorStateMachine = setup({
 	types: {} as {
 		context: ScrollIndicatorMachineContext;
 		events: ScrollIndicatorMachineEvent;
@@ -235,7 +179,6 @@ export const scrollIndicatorStateMachine = setup({
 });
 
 export type ScrollIndicatorMachineSnapshot = SnapshotFrom<typeof scrollIndicatorStateMachine>;
-export type ScrollIndicatorStateValue = 'hidden' | 'visible';
 
 export function createScrollIndicatorSnapshot(input: ScrollIndicatorMachineInput = {}): ScrollIndicatorMachineSnapshot {
 	return initialTransition(scrollIndicatorStateMachine, input)[0];
@@ -246,15 +189,6 @@ export function transitionScrollIndicatorSnapshot(
 	event: ScrollIndicatorMachineEvent,
 ): ScrollIndicatorMachineSnapshot {
 	return transition(scrollIndicatorStateMachine, snapshot, event)[0] as ScrollIndicatorMachineSnapshot;
-}
-
-export function getScrollIndicatorStateValue(snapshot: ScrollIndicatorMachineSnapshot): ScrollIndicatorStateValue {
-	return snapshot.value === 'visible' ? 'visible' : 'hidden';
-}
-
-export function selectActiveScrollIndicator(snapshot: ScrollIndicatorMachineSnapshot): ActiveScrollIndicator | null {
-	const topIndicator = snapshot.context.activeIndicators.top;
-	return topIndicator == null ? snapshot.context.activeIndicators.bottom : topIndicator;
 }
 
 export function selectActiveScrollIndicators(snapshot: ScrollIndicatorMachineSnapshot): ActiveScrollIndicators {

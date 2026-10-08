@@ -130,10 +130,6 @@
 	cursor: not-allowed;
 }
 
-.disabled .button {
-	opacity: 1;
-}
-
 .popout {
 	display: flex;
 	flex-direction: column;

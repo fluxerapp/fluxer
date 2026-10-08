@@ -4,7 +4,7 @@ import {Logger} from '@app/api/Logger';
 import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import Bowser from 'bowser';
 
-export type SessionDeviceClass = 'mobile' | 'desktop';
+type SessionDeviceClass = 'mobile' | 'desktop';
 
 interface SessionClientSignals {
 	userAgent: string | null;

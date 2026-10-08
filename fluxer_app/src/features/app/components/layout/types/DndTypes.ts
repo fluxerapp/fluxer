@@ -23,7 +23,7 @@ export const DropPlacement = Object.freeze({
 
 export type DropPlacement = (typeof DropPlacement)[keyof typeof DropPlacement];
 
-export type DropPosition = RelativePosition | typeof DropPlacement.INSIDE;
+type DropPosition = RelativePosition | typeof DropPlacement.INSIDE;
 
 export const DNDReorderState = Object.freeze({
 	IDLE: 'idle',

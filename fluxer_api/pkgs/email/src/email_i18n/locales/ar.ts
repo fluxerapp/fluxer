@@ -5,23 +5,23 @@ import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18
 const EMAIL_I18N_AR_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_deletion_cancelled": {
 		"subject": "تم إلغاء حذف حسابك في {product_name}",
-		"body": "مرحبًا {username}،\n\nتم إلغاء الحذف المجدول لحسابك في {product_name}. لن يتم حذف حسابك.\n\nإذا كانت لديك أي أسئلة، يرجى الاتصال بـ{safety_email}.\n\n– فريق {product_name}"
+		"body": "مرحبًا {username}،\n\nتم إلغاء الحذف المجدول لحسابك في {product_name}. لن يتم حذف حسابك.\n\n{safety_email, select, null {إذا كانت لديك أي أسئلة، يرجى التواصل مع مسؤولي هذا المثيل.} other {إذا كانت لديك أي أسئلة، يرجى الاتصال بـ{safety_email}.}}\n\n– فريق {product_name}"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "سيتم حذف حسابك في {product_name} بسبب عدم النشاط",
-		"body": "مرحبًا {username}،\n\nلم يكن حسابك في {product_name} نشطًا لفترة طويلة، لذا تمت جدولته للحذف الدائم في:\n\n{deletionDate, date, full} الساعة {deletionDate, time, short}{reason, select, null {} other {\n\nالسبب: {reason}}}\n\nإذا كنت ترغب في الاحتفاظ بحسابك، فاتصل بـ{safety_email} من عنوان البريد الإلكتروني هذا قبل ذلك التاريخ.\n\n– فريق {product_name}"
+		"body": "مرحبًا {username}،\n\nلم يكن حسابك في {product_name} نشطًا لفترة طويلة، لذا تمت جدولته للحذف الدائم في:\n\n{deletionDate, date, full} الساعة {deletionDate, time, short}{reason, select, null {} other {\n\nالسبب: {reason}}}\n\n{safety_email, select, null {إذا كنت ترغب في الاحتفاظ بحسابك، فتواصل مع مسؤولي هذا المثيل قبل ذلك التاريخ.} other {إذا كنت ترغب في الاحتفاظ بحسابك، فاتصل بـ{safety_email} من عنوان البريد الإلكتروني هذا قبل ذلك التاريخ.}}\n\n– فريق {product_name}"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "تمت جدولة حذف حسابك في {product_name}",
-		"body": "مرحبًا {username}،\n\nبناءً على طلبك، تمت جدولة حسابك في {product_name} للحذف الدائم في:\n\n{deletionDate, date, full} الساعة {deletionDate, time, short}{reason, select, null {} other {\n\nالسبب: {reason}}}\n\nسيظل حسابك مقفلًا حتى ذلك الحين. إذا لم تطلب هذا، أو كنت ترغب في الاحتفاظ بحسابك، فاتصل بـ{safety_email} من عنوان البريد الإلكتروني هذا قبل ذلك التاريخ.\n\n– فريق {product_name}"
+		"body": "مرحبًا {username}،\n\nبناءً على طلبك، تمت جدولة حسابك في {product_name} للحذف الدائم في:\n\n{deletionDate, date, full} الساعة {deletionDate, time, short}{reason, select, null {} other {\n\nالسبب: {reason}}}\n\nسيظل حسابك مقفلًا حتى ذلك الحين. {safety_email, select, null {إذا لم تطلب هذا، أو كنت ترغب في الاحتفاظ بحسابك، فتواصل مع مسؤولي هذا المثيل قبل ذلك التاريخ.} other {إذا لم تطلب هذا، أو كنت ترغب في الاحتفاظ بحسابك، فاتصل بـ{safety_email} من عنوان البريد الإلكتروني هذا قبل ذلك التاريخ.}}\n\n– فريق {product_name}"
 	},
 	"account_scheduled_deletion": {
 		"subject": "سيتم حذف حسابك في {product_name} نهائيًا",
-		"body": "مرحبًا {username}،\n\nتمت جدولة حسابك في {product_name} للحذف الدائم بسبب انتهاكات لشروط الخدمة أو إرشادات المجتمع الخاصة بنا.\n\nالحذف المجدول: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {السبب: {reason}}\n}\n\nهذا إجراء إنفاذ جاد. سيتم حذف بيانات حسابك نهائيًا في التاريخ المحدد.\n\nيرجى مراجعة:\n- شروط الخدمة: {termsUrl}\n- إرشادات المجتمع: {guidelinesUrl}\n\nعملية الاستئناف:\nإذا كنت تعتقد أن قرار الإنفاذ هذا كان غير صحيح أو غير مبرر، لديك 60 يومًا لتقديم استئناف. أرسل بريدًا إلكترونيًا إلى {appeals_email} من عنوان البريد الإلكتروني هذا.\n\nفي استئنافك:\n- اشرح بوضوح سبب اعتقادك أن قرار الإنفاذ كان غير صحيح أو غير مبرر\n- قدم أي دليل أو سياق ذي صلة\n\nسيقوم عضو من فريق أمان {product_name} بمراجعة استئنافك وقد يوقف الحذف المعلق مؤقتًا إلى حين التوصل إلى قرار نهائي.\n\n– فريق أمان {product_name}"
+		"body": "مرحبًا {username}،\n\nتمت جدولة حسابك في {product_name} للحذف الدائم بسبب انتهاكات لشروط الخدمة أو إرشادات المجتمع الخاصة بنا.\n\nالحذف المجدول: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {السبب: {reason}\n\n}\n}هذا إجراء إنفاذ جاد. سيتم حذف بيانات حسابك نهائيًا في التاريخ المحدد.\n\n{legalLinks, select,\n  both {يرجى مراجعة:\n- شروط الخدمة: {termsUrl}\n- إرشادات المجتمع: {guidelinesUrl}\n\n}\n  terms {يرجى مراجعة:\n- شروط الخدمة: {termsUrl}\n\n}\n  guidelines {يرجى مراجعة:\n- إرشادات المجتمع: {guidelinesUrl}\n\n}\n  other {}\n}عملية الاستئناف:\nإذا كنت تعتقد أن قرار الإنفاذ هذا كان غير صحيح أو غير مبرر، لديك 60 يومًا لتقديم استئناف. {appeals_email, select, null {تواصل مع مسؤولي هذا المثيل.} other {أرسل بريدًا إلكترونيًا إلى {appeals_email} من عنوان البريد الإلكتروني هذا.}}\n\nفي استئنافك:\n- اشرح بوضوح سبب اعتقادك أن قرار الإنفاذ كان غير صحيح أو غير مبرر\n- قدم أي دليل أو سياق ذي صلة\n\nسيقوم عضو من فريق أمان {product_name} بمراجعة استئنافك وقد يوقف الحذف المعلق مؤقتًا إلى حين التوصل إلى قرار نهائي.\n\n– فريق أمان {product_name}"
 	},
 	"account_temp_banned": {
 		"subject": "تم تعليق حسابك في {product_name} مؤقتًا",
-		"body": "مرحبًا {username}،\n\nتم تعليق حسابك في {product_name} مؤقتًا لانتهاك شروط الخدمة أو إرشادات المجتمع الخاصة بنا.\n\nالمدة: {durationHours, plural,\n  =1 {ساعة واحدة}\n  zero {# ساعة}\n  two {ساعتان}\n  few {# ساعات}\n  many {# ساعة}\n  other {# ساعة}\n}\nمعلق حتى: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {السبب: {reason}}\n}\n\nخلال هذه الفترة، لن تتمكن من الوصول إلى حسابك.\n\nيرجى مراجعة:\n- شروط الخدمة: {termsUrl}\n- إرشادات المجتمع: {guidelinesUrl}\n\nإذا كنت تعتقد أن قرار الإنفاذ هذا كان غير صحيح أو غير مبرر، يمكنك تقديم استئناف. أرسل بريدًا إلكترونيًا إلى {appeals_email} من عنوان البريد الإلكتروني هذا واشرح بوضوح سبب اعتقادك أن القرار كان غير صحيح. سنراجع استئنافك ونرد بقرارنا.\n\n– فريق أمان {product_name}"
+		"body": "مرحبًا {username}،\n\nتم تعليق حسابك في {product_name} مؤقتًا لانتهاك شروط الخدمة أو إرشادات المجتمع الخاصة بنا.\n\nالمدة: {durationHours, plural,\n  =1 {ساعة واحدة}\n  zero {# ساعة}\n  two {ساعتان}\n  few {# ساعات}\n  many {# ساعة}\n  other {# ساعة}\n}\nمعلق حتى: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {السبب: {reason}\n\n}\n}خلال هذه الفترة، لن تتمكن من الوصول إلى حسابك.\n\n{legalLinks, select,\n  both {يرجى مراجعة:\n- شروط الخدمة: {termsUrl}\n- إرشادات المجتمع: {guidelinesUrl}\n\n}\n  terms {يرجى مراجعة:\n- شروط الخدمة: {termsUrl}\n\n}\n  guidelines {يرجى مراجعة:\n- إرشادات المجتمع: {guidelinesUrl}\n\n}\n  other {}\n}إذا كنت تعتقد أن قرار الإنفاذ هذا كان غير صحيح أو غير مبرر، يمكنك تقديم استئناف. {appeals_email, select, null {تواصل مع مسؤولي هذا المثيل واشرح بوضوح سبب اعتقادك أن القرار كان غير صحيح.} other {أرسل بريدًا إلكترونيًا إلى {appeals_email} من عنوان البريد الإلكتروني هذا واشرح بوضوح سبب اعتقادك أن القرار كان غير صحيح.}} سنراجع استئنافك ونرد بقرارنا.\n\n– فريق أمان {product_name}"
 	},
 	"donation_confirmation": {
 		"subject": "شكرًا لك على تبرعك لـ{product_name}",
@@ -30,6 +30,10 @@ const EMAIL_I18N_AR_MESSAGES = defineEmailI18nLocaleMessages({
 	"donation_magic_link": {
 		"subject": "إدارة تبرعاتك لـ{product_name}",
 		"body": "مرحبًا،\n\nانقر على الرابط أدناه للوصول إلى بوابة المتبرعين الخاصة بك:\n\n{manageUrl}\n\nفي البوابة، يمكنك إدارة الاشتراكات، وتنزيل الفواتير، وعرض سجل تبرعاتك.\n\nتنتهي صلاحية هذا الرابط في {expiresAt, date, full} الساعة {expiresAt, time, short}.\n\nإذا لم تطلب هذا الرابط، يمكنك تجاهل هذا البريد الإلكتروني بأمان.\n\n– فريق {product_name}"
+	},
+	"dsa_report_resolved": {
+		"subject": "اتخذنا قرارًا بشأن بلاغك في {product_name}",
+		"body": "مرحبًا،\n\nراجع فريق الأمان لدينا بلاغك بموجب قانون الخدمات الرقمية (المعرف: {reportId}) واتخذ قرارًا.{hasComment, select, yes {\n\nرد فريق الأمان:\n{publicComment}} other {}}\n\nلا نشارك تفاصيل أي إجراء يُتخذ بحق حساب شخص آخر، لأنها بياناته الشخصية.\n\nإذا كنت لا توافق على هذا القرار، يمكنك تقديم استئناف مجانًا خلال 60 يومًا. {appeals_email, select, null {تواصل مع مسؤولي هذا المثيل، واذكر معرف بلاغك، واشرح سبب اعتقادك أن القرار غير صحيح.} other {أرسل بريدًا إلكترونيًا إلى {appeals_email} من عنوان البريد الإلكتروني هذا، واذكر معرف بلاغك، واشرح سبب اعتقادك أن القرار غير صحيح.}} إذا كنت في الاتحاد الأوروبي، يمكنك أيضًا إحالة النزاع إلى هيئة معتمدة لتسوية المنازعات خارج المحكمة. لا يؤثر أي من ذلك على حقك في اللجوء إلى القضاء.\n\n– فريق أمان {product_name}"
 	},
 	"dsa_report_verification": {
 		"subject": "تحقق من بريدك الإلكتروني لتقديم بلاغ DSA",
@@ -53,15 +57,15 @@ const EMAIL_I18N_AR_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"gift_chargeback_notification": {
 		"subject": "تمت إزالة مزايا الهدية التي استرددتها",
-		"body": "مرحبًا {username}،\n\nدفع شخص آخر في الأصل ثمن رمز الهدية الذي استرددته، وقد تم التراجع عن تلك الدفعة لاحقًا (رد مبلغ مدفوع).\n\nولهذا السبب أزلنا المزايا التي أُضيفت إلى حسابك عند استرداد الهدية.\n\nإذا كنت تعتقد أن هذا خطأ، يرجى الاتصال بفريق الدعم لدينا مع ذكر أي تفاصيل لديك عن رمز الهدية ووقت استردادك له.\n\n– فريق {product_name}"
+		"body": "مرحبًا {username}،\n\nدفع شخص آخر في الأصل ثمن رمز الهدية الذي استرددته، وقد تم التراجع عن تلك الدفعة لاحقًا (رد مبلغ مدفوع).\n\nولهذا السبب أزلنا المزايا التي أُضيفت إلى حسابك عند استرداد الهدية.\n\n{support_email, select, null {إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع مسؤولي هذا المثيل مع ذكر أي تفاصيل لديك عن رمز الهدية ووقت استردادك له.} other {إذا كنت تعتقد أن هذا خطأ، يرجى الاتصال بفريق الدعم لدينا مع ذكر أي تفاصيل لديك عن رمز الهدية ووقت استردادك له.}}\n\n– فريق {product_name}"
 	},
 	"harvest_completed": {
 		"subject": "تصدير بياناتك من {product_name} جاهز للتنزيل",
-		"body": "مرحبًا {username}،\n\nتصدير بياناتك جاهز.\n\nرابط التنزيل:\n{downloadUrl}\n\nالرسائل المتضمنة: {totalMessages, number}\nحجم الملف: {fileSizeMB, number} ميجابايت\n\nتنتهي صلاحية هذا الرابط في {expiresAt, date, full} الساعة {expiresAt, time, short}.\n\nإذا لم تطلب هذا التصدير، يرجى تغيير كلمة المرور الخاصة بك على الفور والاتصال بفريق الدعم لدينا.\n\n– فريق {product_name}"
+		"body": "مرحبًا {username}،\n\nتصدير بياناتك جاهز.\n\nرابط التنزيل:\n{downloadUrl}\n\nالرسائل المتضمنة: {totalMessages, number}\nحجم الملف: {fileSizeMB, number} ميجابايت\n\nتنتهي صلاحية هذا الرابط في {expiresAt, date, full} الساعة {expiresAt, time, short}.\n\n{support_email, select, null {إذا لم تطلب هذا التصدير، يرجى تغيير كلمة المرور الخاصة بك على الفور والتواصل مع مسؤولي هذا المثيل.} other {إذا لم تطلب هذا التصدير، يرجى تغيير كلمة المرور الخاصة بك على الفور والاتصال بفريق الدعم لدينا.}}\n\n– فريق {product_name}"
 	},
 	"inactivity_warning": {
 		"subject": "سيتم حذف حسابك في {product_name} بسبب عدم النشاط",
-		"body": "مرحبًا {username}،\n\nلم نرَ أي نشاط على حسابك في {product_name} منذ {lastActiveDate, date, full}.\n\nإذا لم تسجل الدخول بحلول {deletionDate, date, full} الساعة {deletionDate, time, short}، فسيتم حذف حسابك نهائيًا بسبب عدم النشاط.\n\nسجل الدخول هنا:\n{loginUrl}\n\nإذا كنت قد استخدمت {product_name} مؤخرًا، يرجى الاتصال بفريق الدعم لدينا على الفور.\n\n– فريق {product_name}"
+		"body": "مرحبًا {username}،\n\nلم نرَ أي نشاط على حسابك في {product_name} منذ {lastActiveDate, date, full}.\n\nإذا لم تسجل الدخول بحلول {deletionDate, date, full} الساعة {deletionDate, time, short}، فسيتم حذف حسابك نهائيًا بسبب عدم النشاط.\n\nسجل الدخول هنا:\n{loginUrl}\n\n{support_email, select, null {إذا كنت قد استخدمت {product_name} مؤخرًا، يرجى التواصل مع مسؤولي هذا المثيل على الفور.} other {إذا كنت قد استخدمت {product_name} مؤخرًا، يرجى الاتصال بفريق الدعم لدينا على الفور.}}\n\n– فريق {product_name}"
 	},
 	"ip_authorization": {
 		"subject": "السماح بتسجيل الدخول من عنوان IP جديد",
@@ -79,17 +83,17 @@ const EMAIL_I18N_AR_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "إعادة تعيين كلمة المرور في {product_name}",
 		"body": "مرحبًا {username}،\n\nلقد طلبت إعادة تعيين كلمة المرور الخاصة بك في {product_name}. استخدم الرابط أدناه لتعيين كلمة مرور جديدة:\n\n{resetUrl}\n\nإذا لم تطلب هذا، يمكنك تجاهل هذا البريد الإلكتروني بأمان.\n\nهذا الرابط صالح لمدة ساعة واحدة.\n\n– فريق {product_name}"
 	},
-	"registration_approved": {
-		"subject": "تمت الموافقة على تسجيلك في {product_name}",
-		"body": "مرحبًا {username}،\n\nأخبار سارة: تمت الموافقة على تسجيلك في {product_name}.\n\nيمكنك الآن تسجيل الدخول إلى تطبيق {product_name} من هنا:\n{channelsUrl}\n\nمرحبًا بك في مجتمع {product_name}.\n\n– فريق {product_name}"
+	"report_received": {
+		"subject": "لقد استلمنا بلاغك في {product_name}",
+		"body": "مرحبًا،\n\nلقد استلمنا بلاغك بموجب قانون الخدمات الرقمية بشأن {targetKind, select, message {رسالة} user {حساب} guild {مجتمع} other {محتوى}} على {product_name}.\n\nمعرف البلاغ: {reportId}\n\nسيراجع فريق الأمان لدينا بلاغك وسنراسلك على هذا العنوان عندما نتخذ قرارًا. احتفظ بهذه الرسالة للرجوع إليها.\n\n– فريق أمان {product_name}"
 	},
 	"report_resolved": {
 		"subject": "تمت مراجعة بلاغك في {product_name}",
-		"body": "مرحبًا {username}،\n\nتمت مراجعة بلاغك (المعرف: {reportId}) من قبل فريق الأمان لدينا.{hasComment, select, yes {\n\nرد فريق الأمان:\n{publicComment}} other {}}\n\nشكرًا لمساعدتك في الحفاظ على {product_name} آمنًا للجميع. نحن نأخذ جميع البلاغات على محمل الجد ونقدر مساهمتك في المجتمع.\n\nإذا كان لديك أي أسئلة أو مخاوف بشأن هذه النتيجة، يرجى الاتصال بـ{safety_email}.\n\n– فريق أمان {product_name}"
+		"body": "مرحبًا {username}،\n\nتمت مراجعة بلاغك (المعرف: {reportId}) من قبل فريق الأمان لدينا.{hasComment, select, yes {\n\nرد فريق الأمان:\n{publicComment}} other {}}\n\nشكرًا لمساعدتك في الحفاظ على {product_name} آمنًا للجميع. نحن نأخذ جميع البلاغات على محمل الجد ونقدر مساهمتك في المجتمع.\n\n{safety_email, select, null {إذا كان لديك أي أسئلة أو مخاوف بشأن هذه النتيجة، يرجى التواصل مع مسؤولي هذا المثيل.} other {إذا كان لديك أي أسئلة أو مخاوف بشأن هذه النتيجة، يرجى الاتصال بـ{safety_email}.}}\n\n– فريق أمان {product_name}"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "سيتم حذف حسابك في {product_name} نهائيًا",
-		"body": "مرحبًا {username}،\n\nتمت جدولة حسابك في {product_name} للحذف الدائم.\n\nالحذف المجدول: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {السبب: {reason}}\n}\n\nهذا إجراء إنفاذ جاد. سيتم حذف بيانات حسابك نهائيًا في التاريخ المحدد.\n\nإذا كنت تعتقد أن قرار الإنفاذ هذا كان غير صحيح، يمكنك تقديم استئناف. أرسل بريدًا إلكترونيًا إلى {appeals_email} من عنوان البريد الإلكتروني هذا.\n\n– فريق أمان {product_name}"
+		"body": "مرحبًا {username}،\n\nتمت جدولة حسابك في {product_name} للحذف الدائم.\n\nالحذف المجدول: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {السبب: {reason}\n\n}\n}هذا إجراء إنفاذ جاد. سيتم حذف بيانات حسابك نهائيًا في التاريخ المحدد.\n\nإذا كنت تعتقد أن قرار الإنفاذ هذا كان غير صحيح، يمكنك تقديم استئناف. {appeals_email, select, null {تواصل مع مسؤولي هذا المثيل.} other {أرسل بريدًا إلكترونيًا إلى {appeals_email} من عنوان البريد الإلكتروني هذا.}}\n\n– فريق أمان {product_name}"
 	},
 	"self_deletion_scheduled": {
 		"subject": "تمت جدولة حذف حسابك في {product_name}",
@@ -97,7 +101,7 @@ const EMAIL_I18N_AR_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"unban_notification": {
 		"subject": "تم رفع تعليق حسابك في {product_name}",
-		"body": "مرحبًا {username}،\n\nأخبار سارة: تم رفع تعليق حسابك في {product_name}.\n\n{reason, select,\n  null {}\n  other {السبب: {reason}}\n}\n\nيمكنك الآن تسجيل الدخول مرة أخرى ومواصلة استخدام {product_name} كالمعتاد.\n\n– فريق أمان {product_name}"
+		"body": "مرحبًا {username}،\n\nأخبار سارة: تم رفع تعليق حسابك في {product_name}.\n\n{reason, select,\n  null {}\n  other {السبب: {reason}\n\n}\n}يمكنك الآن تسجيل الدخول مرة أخرى ومواصلة استخدام {product_name} كالمعتاد.\n\n– فريق أمان {product_name}"
 	}
 });
 

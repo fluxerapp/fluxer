@@ -25,7 +25,7 @@ export interface ApiCustomStatusPayload {
 	emoji_name?: string;
 }
 
-export const CUSTOM_STATUS_TEXT_LIMIT = 128;
+const CUSTOM_STATUS_TEXT_LIMIT = 128;
 
 function trimToNonEmpty(value: string | null | undefined): string | null {
 	if (value == null) return null;

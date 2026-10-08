@@ -58,30 +58,4 @@ export class DeveloperApplication {
 	static from(application: DeveloperApplicationInput): DeveloperApplication {
 		return new DeveloperApplication(application);
 	}
-
-	withUpdates(updates: Partial<DeveloperApplicationWire>): DeveloperApplication {
-		return new DeveloperApplication({
-			...this.toObject(),
-			...updates,
-			redirect_uris: updates.redirect_uris ?? this.redirect_uris,
-			bot: updates.bot ?? this.bot,
-		});
-	}
-
-	toObject(): DeveloperApplicationWire {
-		return {
-			id: this.id,
-			name: this.name,
-			redirect_uris: [...this.redirect_uris],
-			bot_public: this.bot_public,
-			bot_require_code_grant: this.bot_require_code_grant,
-			client_secret: this.client_secret,
-			bot: this.bot
-				? {
-						...this.bot,
-						flags: this.bot.flags,
-					}
-				: undefined,
-		};
-	}
 }

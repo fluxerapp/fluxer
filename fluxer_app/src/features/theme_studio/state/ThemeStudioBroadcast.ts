@@ -48,7 +48,6 @@ const ensureChannel = (): BroadcastChannel | null => {
 	}
 	return channel;
 };
-export const broadcastSenderId = senderId;
 
 export function broadcastThemeStudioMessage(message: ThemeStudioBroadcastInput): void {
 	const ch = ensureChannel();
@@ -60,7 +59,7 @@ export function broadcastThemeStudioMessage(message: ThemeStudioBroadcastInput):
 	}
 }
 
-export function subscribeThemeStudioBroadcast(listener: (message: ThemeStudioBroadcastMessage) => void): () => void {
+function subscribeThemeStudioBroadcast(listener: (message: ThemeStudioBroadcastMessage) => void): () => void {
 	ensureChannel();
 	listeners.add(listener);
 	return () => {

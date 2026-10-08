@@ -84,7 +84,7 @@ describe('per-message worker jobs', () => {
 
 	it('enqueues extractEmbeds without a ledger row', async () => {
 		const workerService = new RecordingWorkerService();
-		const embedService = new EmbedService(null as never, null as never, null as never, workerService);
+		const embedService = new EmbedService(null as never, null as never, workerService);
 		await embedService.enqueueUrlEmbedExtraction(createChannelID(3n), createMessageID(2n), null, 'block');
 		expect(workerService.jobs).toHaveLength(1);
 		expect(workerService.jobs[0]!.taskType).toBe('extractEmbeds');
@@ -109,7 +109,7 @@ describe('per-message worker jobs', () => {
 	});
 
 	it('drops embed extraction instead of failing the send when the jobs stream is full', async () => {
-		const embedService = new EmbedService(null as never, null as never, null as never, new OverflowingWorkerService());
+		const embedService = new EmbedService(null as never, null as never, new OverflowingWorkerService());
 		await expect(
 			embedService.enqueueUrlEmbedExtraction(createChannelID(3n), createMessageID(2n), null, 'block'),
 		).resolves.toBeUndefined();

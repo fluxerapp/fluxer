@@ -182,17 +182,14 @@ mod tests {
     #[test]
     fn build_embed_media_payload_keeps_description_and_metadata() {
         let meta = MediaMetadata {
-            format: "png".to_owned(),
             content_type: "image/png".to_owned(),
             content_hash: "hash".to_owned(),
-            size: 42,
             width: Some(740),
             height: Some(280),
             duration: None,
             placeholder: Some("placeholder".to_owned()),
             animated: Some(false),
             nsfw: false,
-            nsfw_probability: None,
         };
         let media = build_embed_media_payload(
             "https://imgs.xkcd.com/comics/test.png",

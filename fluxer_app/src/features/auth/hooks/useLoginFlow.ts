@@ -22,7 +22,6 @@ import Authentication from '@app/features/auth/state/Authentication';
 import {
 	authenticateMfaWithWebAuthn,
 	authenticateWithWebAuthn,
-	completeLoginSession,
 	getWebAuthnAuthenticationOptions,
 	getWebAuthnMfaOptions,
 	type IpAuthorizationChallenge,
@@ -96,31 +95,6 @@ function requireLoginRuntimeSnapshot(runtimeSnapshot: RuntimeConfigSnapshot | nu
 		throw new Error('Authentication cannot start without a selected instance runtime');
 	}
 	return runtimeSnapshot;
-}
-
-export type LoginCompletionMode =
-	| {
-			type: 'redirect';
-			path: string;
-	  }
-	| {
-			type: 'callback';
-			onComplete: () => void | Promise<void>;
-	  };
-
-export function useLoginCompletion(mode: LoginCompletionMode) {
-	const modeRef = useRef(mode);
-	modeRef.current = mode;
-	const completeLogin = useCallback(async (payload: LoginSuccessPayload) => {
-		await completeLoginSession(payload, RuntimeConfig.getSnapshot());
-		const currentMode = modeRef.current;
-		if (currentMode.type === 'redirect') {
-			RouterUtils.replaceWith(currentMode.path);
-		} else {
-			await currentMode.onComplete();
-		}
-	}, []);
-	return {completeLogin};
 }
 
 type LegacyPasskeyLoginOutcome = LoginSuccessPayload | 'cancelled' | 'navigating';

@@ -3,7 +3,6 @@
 use crate::{
     asset_hash::{self, AssetHash},
     disposition::{self, Decision, PUBLIC_MEDIA_MAX_HEADER_VALUE_BYTES},
-    query::Query,
     test_fixtures::ADVERSARIAL_TEXT_INPUTS,
     upload_relay::token::token_from_query,
 };
@@ -35,21 +34,6 @@ fn adversarial_text_never_escapes_the_asset_hash_digest_contract() {
 #[test]
 fn adversarial_query_text_yields_at_most_one_relay_token() {
     for text in ADVERSARIAL_TEXT_INPUTS {
-        let query = Query::parse(text);
-        for key in ["t", "token", ""] {
-            let Ok(token) = token_from_query(query.get(key)) else {
-                continue;
-            };
-            assert!(!token.is_empty(), "an empty token was accepted from {text}");
-            assert!(
-                !token.contains('&'),
-                "a multi-parameter token was accepted from {text}"
-            );
-            assert!(
-                token.len() <= RELAY_TOKEN_BYTES_MAX,
-                "an unbounded token was accepted from {text}"
-            );
-        }
         if let Ok(token) = token_from_query(Some(text)) {
             assert!(!token.is_empty(), "an empty token was accepted from {text}");
             assert!(token.len() <= RELAY_TOKEN_BYTES_MAX);

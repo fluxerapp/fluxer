@@ -709,6 +709,7 @@ fn build_app_legal_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest 
             legal: Some(AppLegalConfigUpdateRequest {
                 terms_url: optional("app_terms_url"),
                 privacy_url: optional("app_privacy_url"),
+                guidelines_url: optional("app_guidelines_url"),
             }),
             registration: None,
         }),
@@ -1157,6 +1158,47 @@ pub async fn limit_config_post(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn build_app_legal_update_sends_the_guidelines_url_and_clears_blank_fields() {
+        let form = MultiValueForm::parse(
+            b"app_terms_url=+https%3A%2F%2Fexample.com%2Fterms+&app_privacy_url=&app_guidelines_url=https%3A%2F%2Fexample.com%2Frules",
+        );
+        let request = build_app_legal_update(&form);
+        let legal = request
+            .app_public
+            .expect("app public update")
+            .legal
+            .expect("legal update");
+        assert_eq!(
+            legal.terms_url,
+            Some(Some("https://example.com/terms".to_owned()))
+        );
+        assert_eq!(legal.privacy_url, Some(None));
+        assert_eq!(
+            legal.guidelines_url,
+            Some(Some("https://example.com/rules".to_owned()))
+        );
+        let body = serde_json::to_value(&legal).expect("serialize legal update");
+        assert_eq!(
+            body,
+            serde_json::json!({
+                "terms_url": "https://example.com/terms",
+                "privacy_url": null,
+                "guidelines_url": "https://example.com/rules"
+            })
+        );
+
+        let cleared = build_app_legal_update(&MultiValueForm::parse(
+            b"app_terms_url=&app_privacy_url=&app_guidelines_url=+",
+        ));
+        let body = serde_json::to_value(cleared.app_public.expect("app public").legal)
+            .expect("serialize cleared legal update");
+        assert_eq!(
+            body,
+            serde_json::json!({"terms_url": null, "privacy_url": null, "guidelines_url": null})
+        );
+    }
 
     #[test]
     fn build_integrations_update_leaves_email_alone_when_its_fields_are_hidden() {

@@ -37,7 +37,7 @@ export function callCallerRpcParams(caller: CallCaller | undefined): Record<stri
 	return {caller_id: caller.id, caller_name: caller.name, caller_avatar: caller.avatar};
 }
 
-export interface GatewayGuildMemoryStatsEntry {
+interface GatewayGuildMemoryStatsEntry {
 	node_id: string;
 	guild_id: string | null;
 	guild_name: string;
@@ -52,13 +52,13 @@ export interface GatewayGuildMemoryStats {
 	guilds: Array<GatewayGuildMemoryStatsEntry>;
 }
 
-export interface GatewayNodeMemoryStats {
+interface GatewayNodeMemoryStats {
 	total: string;
 	processes: string;
 	system: string;
 }
 
-export interface GatewayNodeStatsEntry {
+interface GatewayNodeStatsEntry {
 	node_id: string;
 	status: string;
 	sessions: number;
@@ -91,12 +91,12 @@ export interface GatewayNodeStats {
 	nodes: Array<GatewayNodeStatsEntry>;
 }
 
-export interface GatewayVoiceStateRegionCount {
+interface GatewayVoiceStateRegionCount {
 	region_id: string;
 	voice_state_count: number;
 }
 
-export interface GatewayVoiceStateServerCount {
+interface GatewayVoiceStateServerCount {
 	server_id: string;
 	voice_state_count: number;
 }

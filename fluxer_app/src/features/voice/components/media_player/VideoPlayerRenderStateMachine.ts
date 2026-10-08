@@ -2,10 +2,10 @@
 
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export type VideoPlayerRenderState = 'poster' | 'playing' | 'paused' | 'ended' | 'error';
+type VideoPlayerRenderState = 'poster' | 'playing' | 'paused' | 'ended' | 'error';
 export type VideoPlayerPlayPauseIndicator = 'play' | 'pause';
 
-export type VideoPlayerPreloadAttribute = 'none' | 'metadata' | undefined;
+type VideoPlayerPreloadAttribute = 'none' | 'metadata' | undefined;
 
 export interface VideoPlayerRenderSignals {
 	autoPlay: boolean;
@@ -26,7 +26,7 @@ export interface VideoPlayerRenderModel {
 	shouldShowControlsOverlay: boolean;
 }
 
-export interface VideoPlayerPlaybackSignals {
+interface VideoPlayerPlaybackSignals {
 	hasPlayed: boolean;
 	isPlaying: boolean;
 }
@@ -85,7 +85,7 @@ function selectPlayPauseIndicator(
 
 const DEFAULT_RENDER_MODEL = createRenderModel(DEFAULT_RENDER_SIGNALS);
 
-export const videoPlayerRenderStateMachine = setup({
+const videoPlayerRenderStateMachine = setup({
 	types: {} as {
 		context: VideoPlayerRenderContext;
 		events: VideoPlayerRenderEvent;

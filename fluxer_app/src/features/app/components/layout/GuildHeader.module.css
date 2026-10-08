@@ -19,10 +19,6 @@
 	transition: background-color var(--transition-normal);
 }
 
-.headerRounded {
-	border-top-left-radius: 0;
-}
-
 .headerContainerActive {
 	background-color: var(--background-modifier-hover);
 }
@@ -118,12 +114,6 @@
 .verifiedIconDefault {
 	composes: verifiedIcon;
 	color: var(--text-primary);
-}
-
-.verifiedIconWithBanner {
-	composes: verifiedIcon;
-	color: white;
-	filter: drop-shadow(0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.9));
 }
 
 .guildName {

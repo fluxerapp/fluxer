@@ -53,22 +53,6 @@ export class ExponentialBackoff {
 		return this.attempts;
 	}
 
-	getMaxAttempts(): number {
-		return this.maxAttempts;
-	}
-
-	isExhausted(): boolean {
-		return this.attempts >= this.maxAttempts;
-	}
-
-	getMinDelay(): number {
-		return this.options.minDelay;
-	}
-
-	getMaxDelay(): number {
-		return this.options.maxDelay;
-	}
-
 	reset(): void {
 		this.attempts = 0;
 	}

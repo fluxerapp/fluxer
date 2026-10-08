@@ -135,62 +135,6 @@ export class AvatarService {
 		return storedHash;
 	}
 
-	async uploadAvatarToPath(params: {
-		bucket: string;
-		keyPath: string;
-		errorPath: string;
-		previousKey?: string | null;
-		base64Image?: string | null;
-	}): Promise<string | null> {
-		const {bucket, keyPath, errorPath, previousKey, base64Image} = params;
-		const stripAnimationPrefix = (key: string) => (key.startsWith('a_') ? key.substring(2) : key);
-		if (!base64Image) {
-			if (previousKey) {
-				await this.storageService.deleteObject(bucket, `${keyPath}/${stripAnimationPrefix(previousKey)}`);
-			}
-			return null;
-		}
-		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
-		const maxAvatarSize = this.resolveSizeLimit('avatar_max_size', AVATAR_MAX_SIZE);
-		if (imageBuffer.length > maxAvatarSize) {
-			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
-				maxSize: maxAvatarSize,
-			});
-		}
-		const metadata = this.requireAllowedMetadata({
-			metadata: await this.mediaService.getMetadata({
-				type: 'base64',
-				base64: base64Data,
-				version: 2,
-				nsfw: 'allow',
-			}),
-			kind: 'avatar',
-			errorPath,
-		});
-		const imageHash = crypto.createHash('md5').update(Buffer.from(imageBuffer)).digest('hex');
-		const imageHashShort = imageHash.slice(0, 8);
-		const isAnimatedAvatar = metadata.animated ?? false;
-		const storedHash = isAnimatedAvatar ? `a_${imageHashShort}` : imageHashShort;
-		if (bannedAvatarHashCache.contains(imageHashShort)) {
-			throw new ContentBlockedError();
-		}
-		await this.scanAndBlockBannedSha({
-			imageBuffer,
-			resourceType: 'other',
-		});
-		const uploadBuffer = await this.stripImageMetadata(imageBuffer, metadata.format);
-		await this.storageService.uploadObject({
-			bucket,
-			key: `${keyPath}/${imageHashShort}`,
-			body: uploadBuffer,
-		});
-		if (previousKey && stripAnimationPrefix(previousKey) !== imageHashShort) {
-			await this.storageService.deleteObject(bucket, `${keyPath}/${stripAnimationPrefix(previousKey)}`);
-		}
-		return storedHash;
-	}
-
 	async processEmoji(params: {errorPath: string; base64Image: string; guildFeatures: Iterable<string>}): Promise<{
 		imageBuffer: Uint8Array;
 		animated: boolean;

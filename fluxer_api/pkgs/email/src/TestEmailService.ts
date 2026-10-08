@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ReportReceivedTargetKind} from '@pkgs/email/src/email_i18n/EmailI18nTypes';
 import type {ITestEmailService, SentEmailRecord} from '@pkgs/email/src/ITestEmailService';
 
 function maskToken(token: string): string {
@@ -228,6 +229,26 @@ export class TestEmailService implements ITestEmailService {
 		return this.record(email, 'report_resolved', {report_id: reportId, public_comment: publicComment});
 	}
 
+	async sendDsaReportResolvedEmail(
+		email: string,
+		reportId: string,
+		publicComment: string,
+		_locale?: string | null,
+	): Promise<boolean> {
+		this.logger.info(`DSA report resolved email sent to ${email}, report: ${reportId}`);
+		return this.record(email, 'dsa_report_resolved', {report_id: reportId, public_comment: publicComment});
+	}
+
+	async sendReportReceivedEmail(
+		email: string,
+		reportId: string,
+		targetKind: ReportReceivedTargetKind,
+		_locale?: string | null,
+	): Promise<boolean> {
+		this.logger.info(`Report received email sent to ${email}, report: ${reportId}`);
+		return this.record(email, 'report_received', {report_id: reportId, target_kind: targetKind});
+	}
+
 	async sendDsaReportVerificationCode(
 		email: string,
 		code: string,
@@ -236,11 +257,6 @@ export class TestEmailService implements ITestEmailService {
 	): Promise<boolean> {
 		this.logger.info(`DSA report verification code sent to ${email}, code: ${maskToken(code)}`);
 		return this.record(email, 'dsa_report_verification', {code, expires_at: expiresAt.toISOString()});
-	}
-
-	async sendRegistrationApprovedEmail(email: string, username: string, _locale?: string | null): Promise<boolean> {
-		this.logger.info(`Registration approved email sent to ${email} for user ${username}`);
-		return this.record(email, 'registration_approved');
 	}
 
 	async sendPasswordChangeVerification(

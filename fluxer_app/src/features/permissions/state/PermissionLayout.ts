@@ -9,12 +9,12 @@ import {
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable} from 'mobx';
 
-export enum PermissionLayoutMode {
+enum PermissionLayoutMode {
 	COMFY = 'comfy',
 	DENSE = 'dense',
 }
 
-export enum PermissionGridMode {
+enum PermissionGridMode {
 	SINGLE = 'single',
 	GRID = 'grid',
 }
@@ -75,14 +75,6 @@ class PermissionLayout {
 
 	get isGrid(): boolean {
 		return this.gridMode === PermissionGridMode.GRID;
-	}
-
-	setLayoutMode(mode: PermissionLayoutMode): void {
-		this.layoutMode = mode;
-	}
-
-	setGridMode(mode: PermissionGridMode): void {
-		this.gridMode = mode;
 	}
 
 	toggleLayoutMode(): void {

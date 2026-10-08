@@ -76,10 +76,6 @@
 	--action-toolbar-item-border-width: 0;
 }
 
-.quickReactionGroupEnd {
-	margin-right: 0.5625rem;
-}
-
 .button[hidden] {
 	display: none;
 }

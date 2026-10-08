@@ -5,23 +5,23 @@ import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18
 const EMAIL_I18N_NO_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_deletion_cancelled": {
 		"subject": "Slettingen av {product_name}-kontoen din er avbrutt",
-		"body": "Hei {username},\n\nDen planlagte slettingen av {product_name}-kontoen din er avbrutt. Kontoen din blir ikke slettet.\n\nHvis du har spørsmål, kan du kontakte {safety_email}.\n\n– {product_name}-teamet"
+		"body": "Hei {username},\n\nDen planlagte slettingen av {product_name}-kontoen din er avbrutt. Kontoen din blir ikke slettet.\n\n{safety_email, select, null {Hvis du har spørsmål, kan du kontakte administratorene av denne instansen.} other {Hvis du har spørsmål, kan du kontakte {safety_email}.}}\n\n– {product_name}-teamet"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "{product_name}-kontoen din vil bli slettet på grunn av inaktivitet",
-		"body": "Hei {username},\n\n{product_name}-kontoen din har vært inaktiv lenge, så den er planlagt for permanent sletting:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nÅrsak: {reason}}}\n\nHvis du vil beholde kontoen din, kan du kontakte {safety_email} fra denne e-postadressen før denne datoen.\n\n– {product_name}-teamet"
+		"body": "Hei {username},\n\n{product_name}-kontoen din har vært inaktiv lenge, så den er planlagt for permanent sletting:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nÅrsak: {reason}}}\n\n{safety_email, select, null {Hvis du vil beholde kontoen din, kan du kontakte administratorene av denne instansen før denne datoen.} other {Hvis du vil beholde kontoen din, kan du kontakte {safety_email} fra denne e-postadressen før denne datoen.}}\n\n– {product_name}-teamet"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "Slettingen av {product_name}-kontoen din er planlagt",
-		"body": "Hei {username},\n\nSom du ba om, er {product_name}-kontoen din planlagt for permanent sletting:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nÅrsak: {reason}}}\n\nKontoen din er låst frem til da. Hvis du ikke ba om dette, eller hvis du vil beholde kontoen din, kan du kontakte {safety_email} fra denne e-postadressen før denne datoen.\n\n– {product_name}-teamet"
+		"body": "Hei {username},\n\nSom du ba om, er {product_name}-kontoen din planlagt for permanent sletting:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nÅrsak: {reason}}}\n\nKontoen din er låst frem til da. {safety_email, select, null {Hvis du ikke ba om dette, eller hvis du vil beholde kontoen din, kan du kontakte administratorene av denne instansen før denne datoen.} other {Hvis du ikke ba om dette, eller hvis du vil beholde kontoen din, kan du kontakte {safety_email} fra denne e-postadressen før denne datoen.}}\n\n– {product_name}-teamet"
 	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name}-kontoen din blir permanent slettet",
-		"body": "Hei {username},\n\nVi har planlagt permanent sletting av {product_name}-kontoen din på grunn av brudd på våre vilkår for bruk eller retningslinjer for fellesskapet.\n\nPlanlagt sletting: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Årsak: {reason}}\n}\n\nDette er et alvorlig tiltak. Kontodataene dine blir permanent slettet på den planlagte datoen.\n\nLes gjennom:\n- Vilkår for bruk: {termsUrl}\n- Retningslinjer for fellesskapet: {guidelinesUrl}\n\nKlageprosessen:\nHvis du mener avgjørelsen var feil eller uberettiget, har du 60 dager på deg til å sende inn en klage. Send en e-post til {appeals_email} fra denne e-postadressen.\n\nI klagen din:\n- Forklar tydelig hvorfor du mener avgjørelsen var feil eller uberettiget\n- Legg ved relevante bevis eller opplysninger\n\nEt medlem av sikkerhetsteamet hos {product_name} vil vurdere klagen din og kan utsette slettingen til en endelig avgjørelse er tatt.\n\n– Sikkerhetsteamet hos {product_name}"
+		"body": "Hei {username},\n\nVi har planlagt permanent sletting av {product_name}-kontoen din på grunn av brudd på våre vilkår for bruk eller retningslinjer for fellesskapet.\n\nPlanlagt sletting: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Årsak: {reason}\n\n}\n}Dette er et alvorlig tiltak. Kontodataene dine blir permanent slettet på den planlagte datoen.\n\n{legalLinks, select,\n  both {Les gjennom:\n- Vilkår for bruk: {termsUrl}\n- Retningslinjer for fellesskapet: {guidelinesUrl}\n\n}\n  terms {Les gjennom:\n- Vilkår for bruk: {termsUrl}\n\n}\n  guidelines {Les gjennom:\n- Retningslinjer for fellesskapet: {guidelinesUrl}\n\n}\n  other {}\n}Klageprosessen:\nHvis du mener avgjørelsen var feil eller uberettiget, har du 60 dager på deg til å sende inn en klage. {appeals_email, select, null {Kontakt administratorene av denne instansen.} other {Send en e-post til {appeals_email} fra denne e-postadressen.}}\n\nI klagen din:\n- Forklar tydelig hvorfor du mener avgjørelsen var feil eller uberettiget\n- Legg ved relevante bevis eller opplysninger\n\nEt medlem av sikkerhetsteamet hos {product_name} vil vurdere klagen din og kan utsette slettingen til en endelig avgjørelse er tatt.\n\n– Sikkerhetsteamet hos {product_name}"
 	},
 	"account_temp_banned": {
 		"subject": "{product_name}-kontoen din er midlertidig suspendert",
-		"body": "Hei {username},\n\n{product_name}-kontoen din er midlertidig suspendert på grunn av brudd på våre vilkår for bruk eller retningslinjer for fellesskapet.\n\nVarighet: {durationHours, plural,\n  =1 {1 time}\n  other {# timer}\n}\nSuspendert til: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Årsak: {reason}}\n}\n\nDu har ikke tilgang til kontoen din i denne perioden.\n\nLes gjennom:\n- Vilkår for bruk: {termsUrl}\n- Retningslinjer for fellesskapet: {guidelinesUrl}\n\nHvis du mener avgjørelsen var feil eller uberettiget, kan du sende inn en klage. Send en e-post til {appeals_email} fra denne e-postadressen, og forklar tydelig hvorfor du mener avgjørelsen var feil. Vi vil vurdere klagen din og gi deg beskjed om avgjørelsen vår.\n\n– Sikkerhetsteamet hos {product_name}"
+		"body": "Hei {username},\n\n{product_name}-kontoen din er midlertidig suspendert på grunn av brudd på våre vilkår for bruk eller retningslinjer for fellesskapet.\n\nVarighet: {durationHours, plural,\n  =1 {1 time}\n  other {# timer}\n}\nSuspendert til: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Årsak: {reason}\n\n}\n}Du har ikke tilgang til kontoen din i denne perioden.\n\n{legalLinks, select,\n  both {Les gjennom:\n- Vilkår for bruk: {termsUrl}\n- Retningslinjer for fellesskapet: {guidelinesUrl}\n\n}\n  terms {Les gjennom:\n- Vilkår for bruk: {termsUrl}\n\n}\n  guidelines {Les gjennom:\n- Retningslinjer for fellesskapet: {guidelinesUrl}\n\n}\n  other {}\n}Hvis du mener avgjørelsen var feil eller uberettiget, kan du sende inn en klage. {appeals_email, select, null {Kontakt administratorene av denne instansen, og forklar tydelig hvorfor du mener avgjørelsen var feil.} other {Send en e-post til {appeals_email} fra denne e-postadressen, og forklar tydelig hvorfor du mener avgjørelsen var feil.}} Vi vil vurdere klagen din og gi deg beskjed om avgjørelsen vår.\n\n– Sikkerhetsteamet hos {product_name}"
 	},
 	"donation_confirmation": {
 		"subject": "Takk for bidraget ditt til {product_name}",
@@ -30,6 +30,10 @@ const EMAIL_I18N_NO_MESSAGES = defineEmailI18nLocaleMessages({
 	"donation_magic_link": {
 		"subject": "Administrer {product_name}-bidragene dine",
 		"body": "Hei,\n\nKlikk på lenken nedenfor for å få tilgang til giverportalen din:\n\n{manageUrl}\n\nI portalen kan du administrere abonnementer, laste ned fakturaer og se bidragshistorikken din.\n\nDenne lenken utløper {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nHvis du ikke ba om denne lenken, kan du trygt ignorere denne e-posten.\n\n– {product_name}-teamet"
+	},
+	"dsa_report_resolved": {
+		"subject": "Vi har tatt en avgjørelse om {product_name}-rapporten din",
+		"body": "Hei,\n\nSikkerhetsteamet vårt har gjennomgått rapporten din i henhold til Digital Services Act (ID: {reportId}) og tatt en avgjørelse.{hasComment, select, yes {\n\nSvar fra sikkerhetsteamet:\n{publicComment}} other {}}\n\nVi deler ikke detaljer om tiltak mot en annen persons konto, fordi det er personopplysningene til den personen.\n\nHvis du er uenig i avgjørelsen, kan du klage gratis innen 60 dager. {appeals_email, select, null {Kontakt administratorene av denne instansen, oppgi rapport-ID-en din, og forklar hvorfor du mener avgjørelsen er feil.} other {Send en e-post til {appeals_email} fra denne e-postadressen, oppgi rapport-ID-en din, og forklar hvorfor du mener avgjørelsen er feil.}} Hvis du befinner deg i EU, kan du også bringe tvisten inn for et sertifisert organ for utenrettslig tvisteløsning. Ingenting av dette påvirker retten din til å gå til domstolene.\n\n– Sikkerhetsteamet hos {product_name}"
 	},
 	"dsa_report_verification": {
 		"subject": "Bekreft e-postadressen din for en DSA-rapport",
@@ -53,15 +57,15 @@ const EMAIL_I18N_NO_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"gift_chargeback_notification": {
 		"subject": "Fordelene fra gaven du løste inn, er fjernet",
-		"body": "Hei {username},\n\nDu løste inn en gavekode som opprinnelig var betalt av noen andre. Betalingen har senere blitt tilbakeført.\n\nDerfor har vi fjernet fordelene som ble lagt til kontoen din da du løste inn gaven.\n\nHvis du mener dette er en feil, kan du kontakte kundestøtten vår. Ta med opplysningene du har om gavekoden og når du løste den inn.\n\n– {product_name}-teamet"
+		"body": "Hei {username},\n\nDu løste inn en gavekode som opprinnelig var betalt av noen andre. Betalingen har senere blitt tilbakeført.\n\nDerfor har vi fjernet fordelene som ble lagt til kontoen din da du løste inn gaven.\n\n{support_email, select, null {Hvis du mener dette er en feil, kan du kontakte administratorene av denne instansen. Ta med opplysningene du har om gavekoden og når du løste den inn.} other {Hvis du mener dette er en feil, kan du kontakte kundestøtten vår. Ta med opplysningene du har om gavekoden og når du løste den inn.}}\n\n– {product_name}-teamet"
 	},
 	"harvest_completed": {
 		"subject": "{product_name}-dataeksporten din er klar til nedlasting",
-		"body": "Hei {username},\n\nDataeksporten din er klar.\n\nNedlastingslenke:\n{downloadUrl}\n\nAntall meldinger: {totalMessages, number}\nFilstørrelse: {fileSizeMB, number} MB\n\nDenne lenken utløper {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nHvis du ikke ba om denne eksporten, må du endre passordet ditt umiddelbart og kontakte kundestøtten vår.\n\n– {product_name}-teamet"
+		"body": "Hei {username},\n\nDataeksporten din er klar.\n\nNedlastingslenke:\n{downloadUrl}\n\nAntall meldinger: {totalMessages, number}\nFilstørrelse: {fileSizeMB, number} MB\n\nDenne lenken utløper {expiresAt, date, full} kl. {expiresAt, time, short}.\n\n{support_email, select, null {Hvis du ikke ba om denne eksporten, må du endre passordet ditt umiddelbart og kontakte administratorene av denne instansen.} other {Hvis du ikke ba om denne eksporten, må du endre passordet ditt umiddelbart og kontakte kundestøtten vår.}}\n\n– {product_name}-teamet"
 	},
 	"inactivity_warning": {
 		"subject": "{product_name}-kontoen din vil bli slettet på grunn av inaktivitet",
-		"body": "Hei {username},\n\nVi har ikke sett noen aktivitet på {product_name}-kontoen din siden {lastActiveDate, date, full}.\n\nHvis du ikke logger inn innen {deletionDate, date, full} kl. {deletionDate, time, short}, blir kontoen din permanent slettet på grunn av inaktivitet.\n\nLogg inn her:\n{loginUrl}\n\nHvis du har brukt {product_name} nylig, må du kontakte kundestøtten vår med en gang.\n\n– {product_name}-teamet"
+		"body": "Hei {username},\n\nVi har ikke sett noen aktivitet på {product_name}-kontoen din siden {lastActiveDate, date, full}.\n\nHvis du ikke logger inn innen {deletionDate, date, full} kl. {deletionDate, time, short}, blir kontoen din permanent slettet på grunn av inaktivitet.\n\nLogg inn her:\n{loginUrl}\n\n{support_email, select, null {Hvis du har brukt {product_name} nylig, må du kontakte administratorene av denne instansen med en gang.} other {Hvis du har brukt {product_name} nylig, må du kontakte kundestøtten vår med en gang.}}\n\n– {product_name}-teamet"
 	},
 	"ip_authorization": {
 		"subject": "Godkjenn pålogging fra en ny IP-adresse",
@@ -79,17 +83,17 @@ const EMAIL_I18N_NO_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Tilbakestill {product_name}-passordet ditt",
 		"body": "Hei {username},\n\nDu ba om å tilbakestille {product_name}-passordet ditt. Bruk lenken nedenfor for å angi et nytt passord:\n\n{resetUrl}\n\nHvis du ikke ba om dette, kan du trygt se bort fra denne e-posten.\n\nDenne lenken er gyldig i 1 time.\n\n– {product_name}-teamet"
 	},
-	"registration_approved": {
-		"subject": "{product_name}-registreringen din er godkjent",
-		"body": "Hei {username},\n\nGode nyheter! Registreringen din hos {product_name} er godkjent.\n\nDu kan nå logge inn på {product_name}-appen her:\n{channelsUrl}\n\nVelkommen til {product_name}-fellesskapet.\n\n– {product_name}-teamet"
+	"report_received": {
+		"subject": "Vi har mottatt {product_name}-rapporten din",
+		"body": "Hei,\n\nVi har mottatt rapporten din i henhold til Digital Services Act om {targetKind, select, message {en melding} user {en konto} guild {et fellesskap} other {innhold}} på {product_name}.\n\nRapport-ID: {reportId}\n\nSikkerhetsteamet vårt går gjennom rapporten din, og vi sender deg en e-post på denne adressen når vi har tatt en avgjørelse. Ta vare på denne e-posten.\n\n– Sikkerhetsteamet hos {product_name}"
 	},
 	"report_resolved": {
 		"subject": "{product_name}-rapporten din er gjennomgått",
-		"body": "Hei {username},\n\nRapporten din (ID: {reportId}) er gjennomgått av sikkerhetsteamet vårt.{hasComment, select, yes {\n\nSvar fra sikkerhetsteamet:\n{publicComment}} other {}}\n\nTakk for at du bidrar til å holde {product_name} trygt for alle. Vi tar alle rapporter på alvor og setter pris på bidraget ditt til fellesskapet.\n\nHvis du har spørsmål eller er bekymret for utfallet, kan du kontakte {safety_email}.\n\n– Sikkerhetsteamet hos {product_name}"
+		"body": "Hei {username},\n\nRapporten din (ID: {reportId}) er gjennomgått av sikkerhetsteamet vårt.{hasComment, select, yes {\n\nSvar fra sikkerhetsteamet:\n{publicComment}} other {}}\n\nTakk for at du bidrar til å holde {product_name} trygt for alle. Vi tar alle rapporter på alvor og setter pris på bidraget ditt til fellesskapet.\n\n{safety_email, select, null {Hvis du har spørsmål eller er bekymret for utfallet, kan du kontakte administratorene av denne instansen.} other {Hvis du har spørsmål eller er bekymret for utfallet, kan du kontakte {safety_email}.}}\n\n– Sikkerhetsteamet hos {product_name}"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "{product_name}-kontoen din blir permanent slettet",
-		"body": "Hei {username},\n\n{product_name}-kontoen din er planlagt for permanent sletting.\n\nPlanlagt sletting: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Årsak: {reason}}\n}\n\nDette er et alvorlig tiltak. Kontodataene dine blir permanent slettet på den planlagte datoen.\n\nHvis du mener avgjørelsen var feil, kan du sende inn en klage. Send en e-post til {appeals_email} fra denne e-postadressen.\n\n– Sikkerhetsteamet hos {product_name}"
+		"body": "Hei {username},\n\n{product_name}-kontoen din er planlagt for permanent sletting.\n\nPlanlagt sletting: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Årsak: {reason}\n\n}\n}Dette er et alvorlig tiltak. Kontodataene dine blir permanent slettet på den planlagte datoen.\n\nHvis du mener avgjørelsen var feil, kan du sende inn en klage. {appeals_email, select, null {Kontakt administratorene av denne instansen.} other {Send en e-post til {appeals_email} fra denne e-postadressen.}}\n\n– Sikkerhetsteamet hos {product_name}"
 	},
 	"self_deletion_scheduled": {
 		"subject": "Slettingen av {product_name}-kontoen din er planlagt",
@@ -97,7 +101,7 @@ const EMAIL_I18N_NO_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"unban_notification": {
 		"subject": "Suspensjonen av {product_name}-kontoen din er opphevet",
-		"body": "Hei {username},\n\nGode nyheter! Suspensjonen av {product_name}-kontoen din er opphevet.\n\n{reason, select,\n  null {}\n  other {Årsak: {reason}}\n}\n\nDu kan nå logge inn igjen og fortsette å bruke {product_name} som normalt.\n\n– Sikkerhetsteamet hos {product_name}"
+		"body": "Hei {username},\n\nGode nyheter! Suspensjonen av {product_name}-kontoen din er opphevet.\n\n{reason, select,\n  null {}\n  other {Årsak: {reason}\n\n}\n}Du kan nå logge inn igjen og fortsette å bruke {product_name} som normalt.\n\n– Sikkerhetsteamet hos {product_name}"
 	}
 });
 

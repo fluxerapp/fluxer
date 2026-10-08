@@ -29,7 +29,7 @@ function isKeptUnderReducedMotion(kind: ShouldAnimateKind): boolean {
 	return false;
 }
 
-export type AnimationAllowanceMode = 'ALWAYS' | 'ON_INTERACTION' | 'NEVER';
+type AnimationAllowanceMode = 'ALWAYS' | 'ON_INTERACTION' | 'NEVER';
 
 function getKindAllowance(kind: ShouldAnimateKind): AnimationAllowanceMode {
 	switch (kind) {
@@ -51,7 +51,7 @@ function getKindAllowance(kind: ShouldAnimateKind): AnimationAllowanceMode {
 	}
 }
 
-export interface ShouldAnimateDecisionInput {
+interface ShouldAnimateDecisionInput {
 	isAnimated?: boolean;
 	allowance: AnimationAllowanceMode;
 	reducedMotion: boolean;
@@ -61,7 +61,7 @@ export interface ShouldAnimateDecisionInput {
 	saveData: boolean;
 }
 
-export function resolveShouldAnimateDecision({
+function resolveShouldAnimateDecision({
 	isAnimated = true,
 	allowance,
 	reducedMotion,

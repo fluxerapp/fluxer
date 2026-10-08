@@ -31,8 +31,6 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {InviteModal} from '@app/features/invite/components/modals/InviteModal';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
-import {REPORT_COMMUNITY_DESCRIPTOR} from '@app/features/moderation/utils/ModerationMessageDescriptors';
-import {openReportGuildModal} from '@app/features/moderation/utils/ReportActionUtils';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
@@ -51,7 +49,6 @@ import {
 	MuteIcon,
 	NotificationSettingsIcon,
 	PrivacySettingsIcon,
-	ReportUserIcon,
 	SettingsIcon,
 } from '@app/features/ui/action_menu/ContextMenuIcons';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -101,7 +98,7 @@ interface UseGuildMenuDataOptions {
 	preserveInitialMarkAsReadVisibility?: boolean;
 }
 
-export interface GuildMenuHandlers {
+interface GuildMenuHandlers {
 	handleMarkAsRead: () => void;
 	handleInviteMembers: () => void;
 	handleCommunitySettings: () => void;
@@ -115,11 +112,10 @@ export interface GuildMenuHandlers {
 	handleCopyGuildId: () => void;
 	handleDebugGuild: () => void;
 	handleResetMatureContentAgreeState: () => void;
-	handleReportGuild: () => void;
 	handleToggleHideMutedChannels: (checked: boolean) => void;
 }
 
-export interface GuildMenuPermissions {
+interface GuildMenuPermissions {
 	canManageGuild: boolean;
 	canManageChannels: boolean;
 	canInvite: boolean;
@@ -307,9 +303,6 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 				GuildMatureContentAgree.revokeGuild(guild.id);
 				onClose();
 			},
-			handleReportGuild: () => {
-				ModalCommands.runAfterBottomSheetClose(onClose, () => openReportGuildModal({i18n, guild}));
-			},
 			handleToggleHideMutedChannels: (checked: boolean) => {
 				const currentSettings = UserGuildSettings.getSettingsForScope(guild.id);
 				const currentValue = currentSettings?.hide_muted_channels ?? false;
@@ -465,19 +458,11 @@ export function useGuildMenuData(guild: Guild, options: UseGuildMenuDataOptions)
 				danger: true,
 			},
 		];
-		if (!isOwner) {
-			if (!isStockCommunityGuild(guild.id)) {
-				dangerActions.push({
-					icon: <LeaveIcon size={20} data-flx="ui.action-menu.items.guild-menu-data.groups.leave-icon" />,
-					label: i18n._(LEAVE_COMMUNITY_DESCRIPTOR),
-					onClick: handlers.handleLeaveCommunity,
-					danger: true,
-				});
-			}
+		if (!isOwner && !isStockCommunityGuild(guild.id)) {
 			dangerActions.push({
-				icon: <ReportUserIcon size={20} data-flx="ui.action-menu.items.guild-menu-data.groups.report-user-icon" />,
-				label: i18n._(REPORT_COMMUNITY_DESCRIPTOR),
-				onClick: handlers.handleReportGuild,
+				icon: <LeaveIcon size={20} data-flx="ui.action-menu.items.guild-menu-data.groups.leave-icon" />,
+				label: i18n._(LEAVE_COMMUNITY_DESCRIPTOR),
+				onClick: handlers.handleLeaveCommunity,
 				danger: true,
 			});
 		}

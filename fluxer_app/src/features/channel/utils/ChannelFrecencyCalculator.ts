@@ -38,12 +38,12 @@ function compareAscending(a: number, b: number): number {
 	return a - b;
 }
 
-export function channelFrecencyDayDiff(now: number, then: number): number {
+function channelFrecencyDayDiff(now: number, then: number): number {
 	const zoneDeltaMs = (utcOffsetMinutes(then) - utcOffsetMinutes(now)) * MINUTE_MS;
 	return Math.trunc((now - then - zoneDeltaMs) / DAY_MS) || 0;
 }
 
-export function channelFrecencyWeight(dayDiff: number): number {
+function channelFrecencyWeight(dayDiff: number): number {
 	if (dayDiff === 0) return 100;
 	if (dayDiff >= 1 && dayDiff < 2) return 70;
 	if (dayDiff >= 2 && dayDiff < 4) return 50;

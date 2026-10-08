@@ -131,8 +131,6 @@ export const MessageFlagsDescriptions: Record<keyof typeof MessageFlags, string>
 };
 export const SENDABLE_MESSAGE_FLAGS =
 	MessageFlags.SUPPRESS_EMBEDS | MessageFlags.SUPPRESS_NOTIFICATIONS | MessageFlags.VOICE_MESSAGE;
-export const CROSSPOST_SERVER_FLAGS =
-	MessageFlags.CROSSPOSTED | MessageFlags.IS_CROSSPOST | MessageFlags.SOURCE_MESSAGE_DELETED;
 export const MessageAttachmentFlags = {
 	IS_SPOILER: 1 << 3,
 	CONTAINS_EXPLICIT_MEDIA: 1 << 4,

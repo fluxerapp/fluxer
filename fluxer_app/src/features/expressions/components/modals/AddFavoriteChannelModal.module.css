@@ -1,28 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.footer {
-	align-items: center;
-	display: flex;
-	flex-wrap: wrap;
-	width: 100%;
-	gap: 0.5rem;
-}
-
-.footer > * {
-	flex: 1;
-	min-width: fit-content;
-}
-
 .selectContainer {
 	margin-bottom: 1rem;
-}
-
-.checkboxLabel {
-	margin-bottom: 0.75rem;
-	display: flex;
-	cursor: pointer;
-	align-items: center;
-	gap: 0.5rem;
 }
 
 .checkboxRow {

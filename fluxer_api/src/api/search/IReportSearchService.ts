@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
+import type {ReportID} from '@app/api/BrandedTypes';
 import type {IARSubmission} from '@app/api/report/IReportRepository';
 import type {
 	ISearchAdapter as SchemaISearchAdapter,
@@ -22,26 +22,5 @@ export interface IReportSearchService extends SchemaISearchAdapter<ReportSearchF
 			offset?: number;
 		},
 	): Promise<SchemaSearchResult<SearchableReport>>;
-	listReportsByReporter(
-		reporterId: UserID,
-		limit?: number,
-		offset?: number,
-	): Promise<SchemaSearchResult<SearchableReport>>;
 	listReportsByStatus(status: number, limit?: number, offset?: number): Promise<SchemaSearchResult<SearchableReport>>;
-	listReportsByType(reportType: number, limit?: number, offset?: number): Promise<SchemaSearchResult<SearchableReport>>;
-	listReportsByReportedUser(
-		reportedUserId: UserID,
-		limit?: number,
-		offset?: number,
-	): Promise<SchemaSearchResult<SearchableReport>>;
-	listReportsByReportedGuild(
-		reportedGuildId: GuildID,
-		limit?: number,
-		offset?: number,
-	): Promise<SchemaSearchResult<SearchableReport>>;
-	listReportsByReportedMessage(
-		reportedMessageId: MessageID,
-		limit?: number,
-		offset?: number,
-	): Promise<SchemaSearchResult<SearchableReport>>;
 }

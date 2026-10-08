@@ -2,7 +2,7 @@
 
 import type {types} from 'cassandra-driver';
 
-export type CassandraValue =
+type CassandraValue =
 	| string
 	| number
 	| bigint

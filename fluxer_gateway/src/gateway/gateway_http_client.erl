@@ -4,7 +4,7 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--export([start_link/0, request/5, request/6]).
+-export([start_link/0, request/6]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export([pick_sharded_profile/1, ensure_started/0, cleanup_max_age_ms/0]).
 
@@ -58,11 +58,6 @@ start_server() ->
         {ok, Pid} -> {ok, Pid};
         {error, E} -> {error, E}
     end.
-
--spec request(workload(), method(), iodata(), request_headers(), iodata() | undefined) ->
-    response().
-request(Workload, Method, Url, Headers, Body) ->
-    request(Workload, Method, Url, Headers, Body, #{}).
 
 -spec request(
     workload(), method(), iodata(), request_headers(), iodata() | undefined, request_options()

@@ -8,10 +8,6 @@ export function usePopoutKeyContext(): PopoutKey | null {
 	return useContext(PopoutKeyContext);
 }
 
-export function usePopoutKey(): PopoutKey | null {
-	return usePopoutKeyContext();
-}
-
 export type PopoutKey = string | number;
 export type PopoutAnimationType = 'smooth' | 'none' | 'profile-slide' | 'profile-slide-inverted';
 export type PopoutPosition =

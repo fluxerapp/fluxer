@@ -16,8 +16,8 @@ import {z} from 'zod';
 
 export const APP_STORE_PRODUCTION_BASE_URL = 'https://api.storekit.apple.com';
 export const APP_STORE_SANDBOX_BASE_URL = 'https://api.storekit-sandbox.apple.com';
-export const APP_STORE_API_AUDIENCE = 'appstoreconnect-v1';
-export const APP_STORE_TRANSACTION_ID_NOT_FOUND_ERROR = 4040010;
+const APP_STORE_API_AUDIENCE = 'appstoreconnect-v1';
+const APP_STORE_TRANSACTION_ID_NOT_FOUND_ERROR = 4040010;
 const APP_STORE_RETRYABLE_ERROR_CODES: ReadonlySet<number> = new Set([4040002, 4040004, 4040006, 5000001, 4290000]);
 const APP_STORE_TOKEN_TTL_SECONDS = seconds('1 hour');
 const APP_STORE_TOKEN_REUSE_SECONDS = seconds('50 minutes');
@@ -57,10 +57,6 @@ const NotificationHistoryResponseSchema = z.object({
 	paginationToken: z.string().nullish(),
 });
 
-const TestNotificationResponseSchema = z.object({
-	testNotificationToken: z.string().min(1),
-});
-
 export class AppStoreServerApiError extends Error {
 	constructor(
 		message: string,
@@ -85,7 +81,7 @@ export interface AppStoreLastTransaction {
 	renewalInfo: AppStoreRenewalInfoPayload | null;
 }
 
-export interface AppStoreSubscriptionGroup {
+interface AppStoreSubscriptionGroup {
 	subscriptionGroupIdentifier: string;
 	lastTransactions: Array<AppStoreLastTransaction>;
 }
@@ -279,16 +275,6 @@ export class AppStoreServerApiClient {
 			signedPayloads: (parsed.data.notificationHistory ?? []).map((item) => item.signedPayload),
 			paginationToken: parsed.data.hasMore ? (parsed.data.paginationToken ?? null) : null,
 		};
-	}
-
-	async requestTestNotification(request: {environment: StoreEnvironment; bundleId: string}): Promise<string> {
-		const path = '/inApps/v1/notifications/test';
-		const body = await this.send({environment: request.environment, bundleId: request.bundleId, method: 'POST', path});
-		const parsed = TestNotificationResponseSchema.safeParse(body);
-		if (!parsed.success) {
-			throw invalidResponse(path, 200);
-		}
-		return parsed.data.testNotificationToken;
 	}
 
 	private async withEnvironmentFallback<T>(

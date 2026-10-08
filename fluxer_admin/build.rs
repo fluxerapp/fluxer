@@ -175,7 +175,13 @@ fn relax_guild_audit_log_schemas(spec: &mut openapiv3::OpenAPI) {
     }
 }
 
-const OPEN_INTEGER_ENUMS: &[&str] = &["ChannelType", "MessageType", "WebhookType"];
+const OPEN_INTEGER_ENUMS: &[&str] = &[
+    "ChannelType",
+    "MessageType",
+    "ReportStatus",
+    "ReportType",
+    "WebhookType",
+];
 
 fn relax_integer_enums(spec: &mut openapiv3::OpenAPI) {
     let components = spec.components.as_mut().expect("missing API components");

@@ -490,9 +490,12 @@ function matchesReportFilters(doc: SearchableReport, filters: ReportSearchFilter
 	if (filters.status !== undefined && doc.status !== filters.status) return false;
 	if (filters.reportType !== undefined && doc.reportType !== filters.reportType) return false;
 	if (filters.category !== undefined && doc.category !== filters.category) return false;
+	if (filters.reason !== undefined && doc.reason !== filters.reason) return false;
 	if (filters.reportedUserId !== undefined && doc.reportedUserId !== filters.reportedUserId) return false;
+	if (filters.reportedWebhookId !== undefined && doc.reportedWebhookId !== filters.reportedWebhookId) return false;
 	if (filters.reportedGuildId !== undefined && doc.reportedGuildId !== filters.reportedGuildId) return false;
 	if (filters.reportedMessageId !== undefined && doc.reportedMessageId !== filters.reportedMessageId) return false;
+	if (filters.reportedChannelId !== undefined && doc.reportedChannelId !== filters.reportedChannelId) return false;
 	if (filters.guildContextId !== undefined && doc.guildContextId !== filters.guildContextId) return false;
 	if (filters.resolvedByAdminId !== undefined && doc.resolvedByAdminId !== filters.resolvedByAdminId) return false;
 	if (filters.isResolved !== undefined && (doc.resolvedAt !== null) !== filters.isResolved) return false;
@@ -508,6 +511,7 @@ function collectReportText(doc: SearchableReport): Array<string | null> {
 		doc.reportedChannelName,
 		doc.publicComment,
 		doc.reportedUserId,
+		doc.reportedWebhookId,
 		doc.reportedGuildId,
 		doc.reportedMessageId,
 	];
@@ -549,28 +553,8 @@ class InMemoryReportSearchService
 		return this.search(query, filters, options);
 	}
 
-	listReportsByReporter(reporterId: UserID, limit?: number, offset?: number) {
-		return this.searchReports('', {reporterId: reporterId.toString()}, {limit, offset});
-	}
-
 	listReportsByStatus(status: number, limit?: number, offset?: number) {
 		return this.searchReports('', {status}, {limit, offset});
-	}
-
-	listReportsByType(reportType: number, limit?: number, offset?: number) {
-		return this.searchReports('', {reportType}, {limit, offset});
-	}
-
-	listReportsByReportedUser(reportedUserId: UserID, limit?: number, offset?: number) {
-		return this.searchReports('', {reportedUserId: reportedUserId.toString()}, {limit, offset});
-	}
-
-	listReportsByReportedGuild(reportedGuildId: GuildID, limit?: number, offset?: number) {
-		return this.searchReports('', {reportedGuildId: reportedGuildId.toString()}, {limit, offset});
-	}
-
-	listReportsByReportedMessage(reportedMessageId: MessageID, limit?: number, offset?: number) {
-		return this.searchReports('', {reportedMessageId: reportedMessageId.toString()}, {limit, offset});
 	}
 }
 

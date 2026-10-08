@@ -330,7 +330,7 @@ export async function resetPassword(
 	};
 }
 
-export interface IssuedRecoveryKit {
+interface IssuedRecoveryKit {
 	recoveryKey: string;
 	createdAt: string;
 }

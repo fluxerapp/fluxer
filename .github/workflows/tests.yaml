@@ -476,6 +476,9 @@ jobs:
       - name: Lint JSX for browser-translation safety
         run: pnpm exec eslint . --max-warnings 0
 
+      - name: Check data-flx attributes
+        run: pnpm --filter fluxer_app theming:data-flx:check
+
   i18n:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -502,7 +505,6 @@ jobs:
         run: |
           if ! git diff --exit-code -- \
             packages/errors/src/i18n/locales \
-            packages/errors/src/i18n/ErrorI18nTypes.generated.ts \
             fluxer_api/pkgs/email/src/email_i18n/locales \
             fluxer_api/pkgs/email/src/email_i18n/EmailI18nTypes.generated.ts \
             fluxer_api/src/api/content_i18n/locales; then

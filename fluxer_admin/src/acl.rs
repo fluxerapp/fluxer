@@ -43,7 +43,6 @@ pub const BULK_DELETE_USERS: &str = "bulk:delete:users";
 pub const BULK_DELETE_USER_MESSAGES: &str = "bulk:delete:user_messages";
 pub const BULK_UPDATE_GUILD_FEATURES: &str = "bulk:update:guild_features";
 pub const BULK_UPDATE_USER_FLAGS: &str = "bulk:update:user_flags";
-pub const CSAM_SUBMIT_NCMEC: &str = "csam:submit_ncmec";
 pub const DISCOVERY_REMOVE: &str = "discovery:remove";
 pub const DISCOVERY_REVIEW: &str = "discovery:review";
 pub const GATEWAY_MEMORY_STATS: &str = "gateway:memory_stats";
@@ -71,6 +70,7 @@ pub const MESSAGE_DELETE_ALL: &str = "message:delete_all";
 pub const MESSAGE_DELETE: &str = "message:delete";
 pub const MESSAGE_LOOKUP: &str = "message:lookup";
 pub const MESSAGE_SHRED: &str = "message:shred";
+pub const REPORT_DELETE: &str = "report:delete";
 pub const REPORT_RESOLVE: &str = "report:resolve";
 pub const REPORT_VIEW: &str = "report:view";
 pub const REPORT_VIEW_REPORTER_PII: &str = "report:view:reporter_pii";
@@ -150,7 +150,6 @@ pub const ALL_ACLS: &[&str] = &[
     BULK_DELETE_USER_MESSAGES,
     BULK_UPDATE_GUILD_FEATURES,
     BULK_UPDATE_USER_FLAGS,
-    CSAM_SUBMIT_NCMEC,
     DISCOVERY_REMOVE,
     DISCOVERY_REVIEW,
     GATEWAY_MEMORY_STATS,
@@ -178,6 +177,7 @@ pub const ALL_ACLS: &[&str] = &[
     MESSAGE_DELETE,
     MESSAGE_LOOKUP,
     MESSAGE_SHRED,
+    REPORT_DELETE,
     REPORT_RESOLVE,
     REPORT_VIEW,
     REPORT_VIEW_REPORTER_PII,

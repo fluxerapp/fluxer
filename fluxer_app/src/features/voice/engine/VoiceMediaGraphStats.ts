@@ -4,11 +4,9 @@ import assert from 'node:assert/strict';
 import {
 	type VoiceMediaGraphStatsEntry,
 	type VoiceMediaGraphStatsKind,
-	type VoiceMediaGraphStatsPlatform,
 	type VoiceMediaGraphStatsTrackObservation,
 	type VoiceMediaGraphStatsTrackTarget,
 	voiceMediaGraphStatsObservationMatchesTarget,
-	voiceMediaGraphStatsTrackKey,
 } from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
 import type {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2';
@@ -33,11 +31,6 @@ export interface VoiceMediaGraphNativeStatsTarget {
 	participantIdentity?: string | null;
 }
 
-export interface VoiceMediaGraphPerTrackStatsTarget {
-	trackSid?: string | null;
-	mediaTrackId?: string | null;
-}
-
 function isPositiveDimension(value: number | undefined): value is number {
 	return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }
@@ -49,54 +42,6 @@ function isPositiveFrameRate(value: number | undefined): value is number {
 function normalizeId(value: string | null | undefined): string | null {
 	const trimmed = value?.trim();
 	return trimmed ? trimmed : null;
-}
-
-function perTrackStatIdentifiers(track: VoiceEngineV2PerTrackStats): Array<string> {
-	const identifiers: Array<string> = [];
-	if (track.trackIdentifier) identifiers.push(track.trackIdentifier);
-	if (track.mediaSourceId) identifiers.push(track.mediaSourceId);
-	if (track.mid) identifiers.push(track.mid);
-	if (track.rid) identifiers.push(track.rid);
-	if (track.ssrc !== undefined) identifiers.push(String(track.ssrc));
-	assert.ok(identifiers.length <= 5, 'per-track stats identifier list exceeded fixed limit');
-	return identifiers;
-}
-
-function perTrackStatMatches(track: VoiceEngineV2PerTrackStats, target: VoiceMediaGraphPerTrackStatsTarget): boolean {
-	const mediaTrackId = normalizeId(target.mediaTrackId);
-	const trackSid = normalizeId(target.trackSid);
-	if (!mediaTrackId && !trackSid) return false;
-	const identifiers = perTrackStatIdentifiers(track);
-	if (mediaTrackId && identifiers.includes(mediaTrackId)) return true;
-	if (trackSid && identifiers.includes(trackSid)) return true;
-	return false;
-}
-
-function perTrackStatToInfo(track: VoiceEngineV2PerTrackStats): VoiceMediaGraphPartialTrackInfo | null {
-	if (track.kind !== 'video') return null;
-	const width = track.frameWidth ?? track.sourceFrameWidth;
-	const height = track.frameHeight ?? track.sourceFrameHeight;
-	const fps = track.effectiveFramesPerSecond ?? track.framesPerSecond;
-	const info: VoiceMediaGraphPartialTrackInfo = {};
-	if (isPositiveDimension(width) && isPositiveDimension(height)) {
-		info.width = width;
-		info.height = height;
-	}
-	if (isPositiveFrameRate(fps)) info.fps = fps;
-	return info.width !== undefined || info.fps !== undefined ? info : null;
-}
-
-export function resolveVoiceMediaGraphPerTrackInfo(
-	tracks: ReadonlyArray<VoiceEngineV2PerTrackStats>,
-	target: VoiceMediaGraphPerTrackStatsTarget,
-): VoiceMediaGraphPartialTrackInfo | null {
-	assert.ok(tracks.length <= VOICE_MEDIA_GRAPH_STATS_TRACK_LIMIT, 'per-track stats list exceeded graph limit');
-	for (const track of tracks) {
-		if (!perTrackStatMatches(track, target)) continue;
-		const info = perTrackStatToInfo(track);
-		if (info) return info;
-	}
-	return null;
 }
 
 function trackInfoFromPartial(partial: VoiceMediaGraphPartialTrackInfo | null): VoiceMediaGraphTrackInfo | null {
@@ -167,22 +112,6 @@ export function voiceMediaGraphStatsObservationsFromPerTrackStats(
 		if (observation) observations.push(observation);
 	}
 	return observations;
-}
-
-export function buildVoiceMediaGraphStatsView(
-	observations: ReadonlyArray<VoiceMediaGraphStatsTrackObservation>,
-	platform: VoiceMediaGraphStatsPlatform,
-	observedAt: number,
-	connectionId: string,
-): VoiceMediaGraphStatsView {
-	assert.ok(observations.length <= VOICE_MEDIA_GRAPH_STATS_TRACK_LIMIT, 'stats view observations exceeded graph limit');
-	const statsByTrackKey = new Map<string, VoiceMediaGraphStatsEntry>();
-	for (const observation of observations) {
-		const trackKey = voiceMediaGraphStatsTrackKey(observation);
-		if (!trackKey) continue;
-		statsByTrackKey.set(trackKey, {connectionId, platform, observedAt, observation});
-	}
-	return {statsConnectionId: connectionId, statsByTrackKey};
 }
 
 function observationToPartialTrackInfo(

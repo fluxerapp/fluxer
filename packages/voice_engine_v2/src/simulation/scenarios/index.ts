@@ -15,7 +15,7 @@ export interface VoiceEngineV2AcceptanceVerdict {
 	readonly reasons: ReadonlyArray<string>;
 }
 
-export type VoiceEngineV2AcceptanceCriteria = (result: VoiceEngineV2SimulatorResult) => VoiceEngineV2AcceptanceVerdict;
+type VoiceEngineV2AcceptanceCriteria = (result: VoiceEngineV2SimulatorResult) => VoiceEngineV2AcceptanceVerdict;
 
 export interface VoiceEngineV2SimulationScenario {
 	readonly name: string;

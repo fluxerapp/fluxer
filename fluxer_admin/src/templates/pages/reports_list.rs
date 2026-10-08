@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::types::{ReportEntry, SearchReportsResponse},
+    api::types::{ReportEntry, ReportReasonEntry, SearchReportsResponse},
     config::AdminConfig,
     middleware::auth::AuthContext,
     templates::{
@@ -11,11 +11,16 @@ use crate::{
             form::{secondary_button_link, select_input, submit_button, text_input},
             media::{guild_icon_url, initials, user_avatar_url},
             page_container::page_header_with_actions,
-            table::{data_table, empty_state},
+            report_category::{reason_repeats_category, report_category, report_category_options},
+            report_webhook::{
+                ReportedWebhook, reported_webhook, webhook_creator_badges, webhook_identity,
+            },
+            table::{empty_state, table, table_body, table_container, table_head},
         },
         layout::admin_layout,
+        pages::user_detail_tabs::reports::tagged_user,
     },
-    utils::user_tag::user_tag,
+    utils::{plural::count_noun, timestamps::format_admin_timestamp, user_tag::user_tag},
 };
 use maud::{Markup, PreEscaped, html};
 
@@ -24,8 +29,10 @@ pub struct ReportFilters<'a> {
     pub status: Option<&'a str>,
     pub report_type: Option<&'a str>,
     pub category: Option<&'a str>,
+    pub reason: Option<&'a str>,
     pub reporter_id: Option<&'a str>,
     pub reported_user_id: Option<&'a str>,
+    pub reported_webhook_id: Option<&'a str>,
     pub reported_guild_id: Option<&'a str>,
     pub reported_channel_id: Option<&'a str>,
     pub guild_context_id: Option<&'a str>,
@@ -38,6 +45,7 @@ pub fn reports_list_page(
     auth: &AuthContext,
     result: Option<&SearchReportsResponse>,
     filters: &ReportFilters<'_>,
+    reasons: Option<&[ReportReasonEntry]>,
     page: u32,
     limit: u32,
 ) -> Markup {
@@ -48,7 +56,7 @@ pub fn reports_list_page(
                 None,
                 report_count_summary(result),
             ))
-            (filters_card(config, filters, limit))
+            (filters_card(config, filters, reasons, limit))
             @if let Some(result) = result {
                 @if result.reports.is_empty() {
                     (empty_state("No reports found."))
@@ -72,14 +80,25 @@ fn report_count_summary(result: Option<&SearchReportsResponse>) -> Markup {
     html! {
         @if let Some(result) = result {
             p class="text-neutral-500 text-sm" {
-                "Found " (result.total) " results (showing " (result.reports.len()) ")"
+                "Found " (count_noun(result.total, "result", "results"))
+                " (showing " (result.reports.len()) ")"
             }
         }
     }
 }
 
-fn filters_card(config: &AdminConfig, filters: &ReportFilters<'_>, limit: u32) -> Markup {
+fn filters_card(
+    config: &AdminConfig,
+    filters: &ReportFilters<'_>,
+    reasons: Option<&[ReportReasonEntry]>,
+    limit: u32,
+) -> Markup {
     let limit_value = limit.to_string();
+    let select_grid_class = if reasons.is_some() {
+        "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+    } else {
+        "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5"
+    };
     html! {
         div class="rounded-lg border border-neutral-200 bg-white p-6 transition-all" {
             form method="get" {
@@ -90,7 +109,7 @@ fn filters_card(config: &AdminConfig, filters: &ReportFilters<'_>, limit: u32) -
                     filters.query.unwrap_or(""),
                     "Search by ID, reporter, category, or description...",
                 ))
-                div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5" {
+                div class=(select_grid_class) {
                     (select_input("status", "Status", &[
                         ("", "All"),
                         ("0", "Pending"),
@@ -102,7 +121,12 @@ fn filters_card(config: &AdminConfig, filters: &ReportFilters<'_>, limit: u32) -
                         ("1", "User"),
                         ("2", "Guild"),
                     ], filters.report_type.unwrap_or("")))
-                    (select_input("category", "Category", report_category_options(), filters.category.unwrap_or("")))
+                    (select_input("category", "Category", &report_category_options(filters.category.unwrap_or("")), filters.category.unwrap_or("")))
+                    @if let Some(reasons) = reasons {
+                        div class="sm:col-span-2 lg:col-span-2" {
+                            (reason_select(reasons, filters.reason.unwrap_or("")))
+                        }
+                    }
                     (select_input("sort", "Sort", &[
                         ("reportedAt_desc", "Reported (newest first)"),
                         ("reportedAt_asc", "Reported (oldest first)"),
@@ -121,6 +145,7 @@ fn filters_card(config: &AdminConfig, filters: &ReportFilters<'_>, limit: u32) -
                 div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" {
                     (text_input("reporter_id", "Reporter user ID", filters.reporter_id.unwrap_or(""), "Snowflake"))
                     (text_input("reported_user_id", "Reported user ID", filters.reported_user_id.unwrap_or(""), "Snowflake"))
+                    (text_input("reported_webhook_id", "Reported webhook ID", filters.reported_webhook_id.unwrap_or(""), "Snowflake"))
                     (text_input("reported_guild_id", "Reported guild ID", filters.reported_guild_id.unwrap_or(""), "Snowflake"))
                     (text_input("reported_channel_id", "Reported channel ID", filters.reported_channel_id.unwrap_or(""), "Snowflake"))
                     (text_input("guild_context_id", "Guild context ID", filters.guild_context_id.unwrap_or(""), "Snowflake"))
@@ -136,28 +161,29 @@ fn filters_card(config: &AdminConfig, filters: &ReportFilters<'_>, limit: u32) -
     }
 }
 
-fn report_category_options() -> &'static [(&'static str, &'static str)] {
-    &[
-        ("", "All"),
-        ("harassment", "Harassment or Bullying"),
-        ("hate_speech", "Hate Speech"),
-        ("spam", "Spam or Scam"),
-        ("illegal_activity", "Illegal Activity"),
-        ("impersonation", "Impersonation"),
-        ("child_safety", "Child Safety Concerns"),
-        ("other", "Other"),
-        ("violent_content", "Violent or Graphic Content"),
-        ("nsfw_violation", "NSFW Policy Violation"),
-        ("doxxing", "Sharing Personal Information"),
-        ("self_harm", "Self-Harm or Suicide"),
-        ("malicious_links", "Malicious Links"),
-        ("spam_account", "Spam Account"),
-        ("underage_user", "Underage User"),
-        ("inappropriate_profile", "Inappropriate Profile"),
-        ("raid_coordination", "Raid Coordination"),
-        ("malware_distribution", "Malware Distribution"),
-        ("extremist_community", "Extremist Community"),
-    ]
+fn reason_select(reasons: &[ReportReasonEntry], selected: &str) -> Markup {
+    let labels = reasons
+        .iter()
+        .map(|reason| {
+            if reason.highest_priority {
+                format!("Priority: {}", reason.label)
+            } else {
+                reason.label.clone()
+            }
+        })
+        .collect::<Vec<_>>();
+    let mut options = std::iter::once(("", "All"))
+        .chain(
+            reasons
+                .iter()
+                .zip(&labels)
+                .map(|(reason, label)| (reason.key.as_str(), label.as_str())),
+        )
+        .collect::<Vec<_>>();
+    if !options.iter().any(|(key, _)| *key == selected) {
+        options.push((selected, selected));
+    }
+    select_input("reason", "Reason", &options, selected)
 }
 
 fn format_status(status: i32) -> (&'static str, BadgeVariant) {
@@ -177,36 +203,21 @@ fn format_report_type(report_type: i32) -> (&'static str, BadgeVariant) {
     }
 }
 
-fn format_category(category: Option<&str>) -> String {
-    let Some(category) = category else {
-        return "\u{2014}".to_owned();
-    };
-    report_category_options()
-        .iter()
-        .find_map(|(value, label)| (*value == category).then_some((*label).to_owned()))
-        .unwrap_or_else(|| category.to_owned())
-}
-
-fn reporter_label(report: &ReportEntry) -> String {
+fn reporter_label(report: &ReportEntry) -> Markup {
     if let Some(username) = &report.reporter_username {
-        let discriminator = report.reporter_discriminator.as_deref().unwrap_or("0000");
-        let tag = user_tag(username, discriminator, false);
-        if let Some(display) = report
-            .reporter_global_name
-            .as_ref()
-            .filter(|v| !v.trim().is_empty())
-        {
-            return format!("{display} ({tag})");
-        }
-        return tag;
+        return tagged_user(
+            report.reporter_global_name.as_deref(),
+            username,
+            report.reporter_discriminator.as_deref(),
+        );
     }
-    if let Some(tag) = &report.reporter_tag {
-        return tag.to_owned();
+    html! {
+        (report
+            .reporter_tag
+            .as_deref()
+            .or(report.reporter_email.as_deref())
+            .unwrap_or("Anonymous"))
     }
-    if let Some(email) = &report.reporter_email {
-        return email.to_owned();
-    }
-    "Anonymous".to_owned()
 }
 
 fn reported_user_label(report: &ReportEntry) -> String {
@@ -277,14 +288,30 @@ fn reported_cell(config: &AdminConfig, report: &ReportEntry) -> Markup {
     }
 }
 
+fn reported_user_name(report: &ReportEntry) -> Markup {
+    match &report.reported_user_username {
+        Some(username) => tagged_user(
+            report.reported_user_global_name.as_deref(),
+            username,
+            report.reported_user_discriminator.as_deref(),
+        ),
+        None => html! { (reported_user_label(report)) },
+    }
+}
+
 fn reported_user_cell(config: &AdminConfig, report: &ReportEntry) -> Markup {
     let base = &config.base_path;
     let primary = reported_user_label(report);
     html! {
         @if let Some(id) = &report.reported_user_id {
-            a href={(base) "/users/" (id)} class="flex items-center gap-2 text-blue-600 hover:underline" {
-                (reported_user_avatar(config, report, id, &primary))
-                span class="font-medium text-sm" { (primary) }
+            div class="flex flex-wrap items-center gap-2" {
+                a href={(base) "/users/" (id)} class="flex items-center gap-2 text-blue-600 hover:underline" {
+                    (reported_user_avatar(config, report, id, &primary))
+                    span class="font-medium text-sm" { (reported_user_name(report)) }
+                }
+                @if report.reported_user_bot == Some(true) {
+                    span class="inline-flex" data-report-user-bot=(id) { (badge("Bot", BadgeVariant::Info)) }
+                }
             }
         } @else {
             span class="text-neutral-900 text-sm" { (primary) }
@@ -328,7 +355,7 @@ fn reported_guild_icon(
         true,
     ) {
         Some(url) => html! {
-            img src=(url) alt="" class="h-8 w-8 flex-shrink-0 rounded-full object-cover";
+            img src=(url) alt="" class="h-8 w-8 max-w-none flex-shrink-0 rounded-full object-cover";
         },
         None => html! {
             span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-neutral-200 text-neutral-600 text-xs" {
@@ -340,32 +367,55 @@ fn reported_guild_icon(
 
 fn reported_message_cell(config: &AdminConfig, report: &ReportEntry) -> Markup {
     let base = &config.base_path;
-    let user_label = reported_user_label(report);
     let channel_label = report
         .reported_channel_name
         .as_deref()
         .or(report.reported_channel_id.as_deref())
         .unwrap_or("Unknown channel");
+    let channel_prefix =
+        if report.reported_guild_id.is_none() && report.reported_channel_id.is_some() {
+            "DM channel: "
+        } else {
+            "Channel: "
+        };
     html! {
         div class="flex flex-col gap-1" {
-            @if let Some(id) = &report.reported_user_id {
-                a href={(base) "/users/" (id)} class="flex items-center gap-2 text-blue-600 hover:underline" {
-                    (reported_user_avatar(config, report, id, &user_label))
-                    span class="font-medium text-sm" { (user_label) }
-                }
+            @if let Some(webhook) = reported_webhook(config, report) {
+                (reported_webhook_author(&webhook))
             } @else {
-                span class="text-neutral-900 text-sm" { (user_label) }
+                (reported_user_cell(config, report))
             }
             @if let Some(channel_id) = &report.reported_channel_id {
                 a href=(message_lookup_href(base, channel_id, report.reported_message_id.as_deref()))
                     class="text-blue-600 text-xs hover:underline" {
-                    "Channel: " (channel_label)
+                    (channel_prefix) (channel_label)
                 }
             } @else {
                 span class="text-neutral-500 text-xs" { "Channel: " (channel_label) }
             }
             @if report.reported_channel_nsfw == Some(true) {
                 span class="self-start" { (badge("NSFW", BadgeVariant::Danger)) }
+            }
+        }
+    }
+}
+
+fn reported_webhook_author(webhook: &ReportedWebhook<'_>) -> Markup {
+    html! {
+        div class="flex flex-col items-start gap-0.5" {
+            (webhook_identity(webhook))
+            a href=(webhook.reports_href) title="Reports about this webhook"
+                class="font-mono text-blue-600 text-xs [overflow-wrap:normal] hover:underline" {
+                "Webhook ID: " (webhook.id)
+            }
+            @if let Some(ref creator) = webhook.creator {
+                a href=(creator.href) title=(creator.id) data-report-webhook-creator=(creator.id)
+                    class="text-blue-600 text-xs hover:underline" {
+                    "Webhook creator: " (creator.label)
+                }
+                @if creator.bot || creator.account_deleted {
+                    span class="inline-flex flex-wrap items-center gap-1" { (webhook_creator_badges(creator)) }
+                }
             }
         }
     }
@@ -385,7 +435,7 @@ fn reported_user_avatar(
         true,
     );
     html! {
-        img src=(url) alt=(format!("{label}'s avatar")) class="h-8 w-8 rounded-full object-cover";
+        img src=(url) alt=(format!("{label}'s avatar")) class="h-8 w-8 max-w-none rounded-full object-cover";
     }
 }
 
@@ -402,32 +452,60 @@ fn render_reports_table(config: &AdminConfig, reports: &[ReportEntry]) -> Markup
     let rows = html! {
         @for report in reports {
             tr class="hover:bg-neutral-50 transition-colors" {
-                td class="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm" {
-                    (report.reported_at)
+                td class="hidden whitespace-nowrap px-3 py-3 text-neutral-600 text-sm xl:table-cell" {
+                    (format_admin_timestamp(&report.reported_at))
                 }
-                td class="px-4 py-3 text-sm" {
+                td class="px-3 py-3 text-sm" {
                     div class="flex flex-col items-start gap-1" {
+                        span class="text-neutral-600 text-xs xl:hidden" data-report-reported-at-compact=(report.report_id) {
+                            (format_admin_timestamp(&report.reported_at))
+                        }
                         @let (type_label, type_variant) = format_report_type(report.report_type);
                         (badge(type_label, type_variant))
-                        span class="text-neutral-600 text-xs" {
-                            (format_category(report.category.as_deref()))
+                        @let reason_label = report.reason.as_deref().map(|reason| report.reason_label.as_deref().unwrap_or(reason));
+                        @let repeats = report.category.as_deref().zip(reason_label).is_some_and(|(category, label)| reason_repeats_category(category, label));
+                        @let priority = report.reason_highest_priority == Some(true);
+                        @let category_class = if repeats && priority {
+                            "font-medium text-red-700 text-xs"
+                        } else {
+                            "text-neutral-600 text-xs"
+                        };
+                        span class=(category_class) data-report-reason=[report.reason.as_deref().filter(|_| repeats)] {
+                            @if let Some(category) = &report.category {
+                                (report_category(category))
+                            } @else {
+                                "\u{2014}"
+                            }
+                        }
+                        @if !repeats && let (Some(reason), Some(label)) = (&report.reason, reason_label) {
+                            @let reason_class = if priority {
+                                "font-medium text-red-700 text-xs"
+                            } else {
+                                "text-neutral-500 text-xs"
+                            };
+                            span class=(reason_class) data-report-reason=(reason) {
+                                (label)
+                            }
                         }
                     }
                 }
-                td class="px-4 py-3 text-sm" {
+                td class="px-3 py-3 text-sm [overflow-wrap:anywhere] [&_.whitespace-nowrap]:whitespace-normal" {
                     (reporter_cell(config, report))
                 }
-                td class="px-4 py-3 text-sm" {
+                td class="px-3 py-3 text-sm [overflow-wrap:anywhere] [&_.whitespace-nowrap]:whitespace-normal" {
                     (reported_cell(config, report))
                 }
-                td class="whitespace-nowrap px-4 py-3 text-sm" {
-                    @let (label, variant) = format_status(report.status);
+                @let (status_label, status_variant) = format_status(report.status);
+                td class="hidden whitespace-nowrap px-3 py-3 text-sm xl:table-cell" {
                     span data-status-pill=(report.report_id) {
-                        (badge(label, variant))
+                        (badge(status_label, status_variant))
                     }
                 }
-                td class="whitespace-nowrap px-4 py-3 text-sm" {
+                td class="whitespace-nowrap px-3 py-3 text-sm" {
                     div class="flex flex-col items-start gap-1" {
+                        span class="xl:hidden" data-status-pill-compact=(report.report_id) {
+                            (badge(status_label, status_variant))
+                        }
                         button type="button"
                             data-drawer-open="report-peek"
                             data-drawer-href={(base) "/reports/" (report.report_id) "/fragment"}
@@ -455,7 +533,25 @@ fn render_reports_table(config: &AdminConfig, reports: &[ReportEntry]) -> Markup
     };
     html! {
         div data-report-table="true" {
-            (data_table(headers, rows))
+            (table_container(table(html! {
+                (table_head(html! {
+                    tr {
+                        @for (index, header) in headers.iter().enumerate() {
+                            th class={"px-3 py-3 text-left text-neutral-600 text-xs uppercase tracking-wider" (match index {
+                                0 | 4 => " hidden whitespace-nowrap xl:table-cell",
+                                5 => " xl:whitespace-nowrap",
+                                _ => " whitespace-nowrap",
+                            })} {
+                                @if index == 5 {
+                                    span class="xl:hidden" { "Status / " }
+                                }
+                                (header)
+                            }
+                        }
+                    }
+                }))
+                (table_body(rows))
+            })))
         }
     }
 }
@@ -508,8 +604,14 @@ fn reports_url(config: &AdminConfig, filters: &ReportFilters<'_>, page: u32, lim
     push_param(&mut params, "status", filters.status);
     push_param(&mut params, "type", filters.report_type);
     push_param(&mut params, "category", filters.category);
+    push_param(&mut params, "reason", filters.reason);
     push_param(&mut params, "reporter_id", filters.reporter_id);
     push_param(&mut params, "reported_user_id", filters.reported_user_id);
+    push_param(
+        &mut params,
+        "reported_webhook_id",
+        filters.reported_webhook_id,
+    );
     push_param(&mut params, "reported_guild_id", filters.reported_guild_id);
     push_param(
         &mut params,
@@ -537,4 +639,127 @@ fn reports_url(config: &AdminConfig, filters: &ReportFilters<'_>, page: u32, lim
         .collect::<Vec<_>>()
         .join("&");
     format!("{}/reports?{}", config.base_path, query)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::{ProxyConfig, RuntimeEnv};
+    use serde_json::json;
+
+    fn test_config() -> AdminConfig {
+        AdminConfig {
+            env: RuntimeEnv::Test,
+            host: String::new(),
+            port: 0,
+            secret_key_base: "test-secret".to_owned(),
+            base_path: "/admin".to_owned(),
+            api_endpoint: String::new(),
+            media_endpoint: "https://media.example.test".to_owned(),
+            static_cdn_endpoint: String::new(),
+            reports_bucket_origin: String::new(),
+            admin_endpoint: String::new(),
+            web_app_endpoint: String::new(),
+            oauth_client_id: String::new(),
+            oauth_client_secret: String::new(),
+            oauth_redirect_uri: String::new(),
+            build_version: "test".to_owned(),
+            self_hosted: false,
+            proxy: ProxyConfig {
+                trust_client_ip_header: false,
+                client_ip_header_name: String::new(),
+            },
+        }
+    }
+
+    fn report() -> ReportEntry {
+        let mut value = json!({
+            "report_id": "1556709309709027556",
+            "reporter_id": "1556709306000000001",
+            "reporter_username": "reporter_80f33d09e88a",
+            "reporter_global_name": "Avery Reporter",
+            "reporter_discriminator": "5193",
+            "reported_at": "2026-10-06T04:33:00Z",
+            "status": 0,
+            "report_type": 1,
+            "category": "harassment",
+            "reported_user_id": "1556709306000000002",
+            "reported_user_username": "target_bc57b33ca5c4",
+            "reported_user_discriminator": "8316"
+        });
+        for key in [
+            "reporter_tag",
+            "reporter_email",
+            "reporter_full_legal_name",
+            "reporter_country_of_residence",
+            "additional_info",
+            "reported_user_tag",
+            "reported_user_global_name",
+            "reported_user_avatar_hash",
+            "reported_guild_id",
+            "reported_guild_name",
+            "reported_guild_icon_hash",
+            "reported_message_id",
+            "reported_channel_id",
+            "reported_channel_name",
+            "reported_channel_nsfw",
+            "reported_guild_invite_code",
+            "reported_guild_nsfw_level",
+            "reported_guild_nsfw",
+            "reported_guild_content_warning_level",
+            "reported_guild_content_warning_text",
+            "reported_channel_nsfw_override",
+            "reported_channel_content_warning_level",
+            "reported_channel_content_warning_text",
+            "reported_channel_effective_nsfw",
+            "reported_channel_effective_content_warning_level",
+            "reported_channel_effective_content_warning_text",
+            "resolved_at",
+            "resolved_by_admin_id",
+            "public_comment",
+            "mutual_dm_channel_id",
+            "message_context",
+        ] {
+            value[key] = serde_json::Value::Null;
+        }
+        serde_json::from_value(value).expect("report fixture")
+    }
+
+    #[test]
+    fn narrow_layout_moves_date_and_status_into_visible_columns() {
+        let markup = render_reports_table(&test_config(), &[report()]).into_string();
+        assert!(markup.contains(
+            r#"<span class="text-neutral-600 text-xs xl:hidden" data-report-reported-at-compact="1556709309709027556">Oct 6, 2026, 4:33 AM UTC</span>"#
+        ));
+        assert!(markup.contains(
+            r#"<span class="xl:hidden" data-status-pill-compact="1556709309709027556">"#
+        ));
+        assert!(markup.contains(r#"<span data-status-pill="1556709309709027556">"#));
+        assert_eq!(
+            markup
+                .matches("hidden whitespace-nowrap xl:table-cell")
+                .count(),
+            2
+        );
+        assert_eq!(
+            markup
+                .matches(
+                    "hidden whitespace-nowrap px-3 py-3 text-neutral-600 text-sm xl:table-cell"
+                )
+                .count(),
+            1
+        );
+        assert_eq!(
+            markup
+                .matches("hidden whitespace-nowrap px-3 py-3 text-sm xl:table-cell")
+                .count(),
+            1
+        );
+        assert_eq!(
+            markup
+                .matches("[overflow-wrap:anywhere] [&amp;_.whitespace-nowrap]:whitespace-normal")
+                .count(),
+            2
+        );
+    }
 }

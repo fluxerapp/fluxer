@@ -60,15 +60,11 @@ import {
 	acquireStreamingPriority,
 	getStreamingPriorityDiagnostics,
 	releaseStreamingPriority,
-	resetStreamingPriority,
 } from '@electron/main/StreamingPriority';
 import {setTaskbarProgress, type TaskbarProgressMode} from '@electron/main/TaskbarProgress';
 import {registerThemeLocalFileHandlers} from '@electron/main/ThemeLocalFiles';
 import {
-	popupHelpMenu,
 	relaunchAndExit,
-	reloadMainWindow,
-	resetAppDataAndRestart,
 	setHardwareAccelerationDisabled,
 	setHardwareAccelerationDisabledAndRestart,
 } from '@electron/main/Troubleshooting';
@@ -93,11 +89,9 @@ import {
 	setVoicePopoutAlwaysOnTop,
 	showWindow,
 	THEME_STUDIO_POPOUT_KEY,
-	toggleWindowDevTools,
 } from '@electron/main/Window';
 import {flashWindowForAttention, stopFlashingWindow} from '@electron/main/WindowFlash';
 import {setWindowsBadgeOverlay} from '@electron/main/WindowsBadge';
-import {registerWindowsToastIpcHandlers} from '@electron/main/WindowsToast';
 import {
 	DESKTOP_MODULE_CHANNELS,
 	DESKTOP_UPDATE_CHANNELS,
@@ -234,31 +228,11 @@ export function registerIpcHandlers(): void {
 			return getLaunchDesktopTroubleshootingSettings();
 		},
 	);
-	ipcMain.handle('desktop-troubleshooting-reload', (): void => {
-		reloadMainWindow();
-	});
-	ipcMain.handle(
-		'desktop-troubleshooting-reset-app-data',
-		async (
-			_event,
-			options?: {
-				confirm?: boolean;
-			},
-		): Promise<void> => {
-			await resetAppDataAndRestart(options);
-		},
-	);
-	ipcMain.handle('desktop-troubleshooting-popup-help-menu', (event): void => {
-		popupHelpMenu(BrowserWindow.fromWebContents(event.sender));
-	});
 	ipcMain.on('streaming-priority-acquire', (event) => {
 		acquireStreamingPriority(event.sender);
 	});
 	ipcMain.on('streaming-priority-release', () => {
 		releaseStreamingPriority();
-	});
-	ipcMain.on('streaming-priority-reset', () => {
-		resetStreamingPriority();
 	});
 	ipcMain.handle('streaming-priority-get-diagnostics', () => getStreamingPriorityDiagnostics());
 	ipcMain.on('tray-runtime-state-update', (event, state: unknown) => {
@@ -418,26 +392,6 @@ export function registerIpcHandlers(): void {
 		event.sender.paste();
 	});
 	ipcMain.handle(
-		'app-set-badge',
-		(
-			_event,
-			payload: {
-				count: number;
-				text?: string;
-			},
-		) => {
-			const count = Math.max(0, Math.floor(payload?.count ?? 0));
-			const label = payload?.text ?? String(count);
-			app.setBadgeCount(count);
-			if (process.platform === 'darwin' && app.dock) {
-				app.dock.setBadge(count > 0 ? label : '');
-			}
-			if (process.platform === 'win32') {
-				setWindowsBadgeOverlay(getMainWindow(), count);
-			}
-		},
-	);
-	ipcMain.handle(
 		'download-file',
 		async (
 			event,
@@ -469,12 +423,6 @@ export function registerIpcHandlers(): void {
 			}
 		},
 	);
-	ipcMain.on('toggle-devtools', (event) => {
-		const win = BrowserWindow.fromWebContents(event.sender);
-		if (win) {
-			toggleWindowDevTools(win);
-		}
-	});
 	ipcMain.handle('check-media-access', async (_event, type: MediaAccessType): Promise<string> => {
 		if (process.platform !== 'darwin') {
 			return 'granted';
@@ -518,7 +466,6 @@ export function registerIpcHandlers(): void {
 		await shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent');
 	});
 	registerNotificationIpcHandlers(getMainWindow);
-	registerWindowsToastIpcHandlers();
 	registerMacTccIpcHandlers({
 		onStatus: (surface, status) => {
 			if (surface === 'input-monitoring' && status === 'granted') retryBlockedGlobalShortcutHooks();
@@ -533,31 +480,11 @@ export function registerIpcHandlers(): void {
 			app.setBadgeCount(count);
 		}
 	});
-	ipcMain.handle('get-badge-count', (): number => {
-		return app.getBadgeCount();
-	});
-	ipcMain.on('bounce-dock', (event, type: 'critical' | 'informational') => {
-		if (process.platform === 'darwin' && app.dock) {
-			const id = app.dock.bounce(type);
-			event.returnValue = id;
-		} else {
-			event.returnValue = -1;
-		}
-	});
-	ipcMain.on('cancel-bounce-dock', (_event, id: number) => {
-		if (process.platform === 'darwin' && app.dock && id >= 0) {
-			app.dock.cancelBounce(id);
-		}
-	});
 	ipcMain.on('set-zoom-factor', (event, factor: number) => {
 		const win = BrowserWindow.fromWebContents(event.sender);
 		if (win && factor > 0) {
 			win.webContents.setZoomFactor(factor);
 		}
-	});
-	ipcMain.handle('get-zoom-factor', (event): number => {
-		const win = BrowserWindow.fromWebContents(event.sender);
-		return win?.webContents.getZoomFactor() ?? 1;
 	});
 	ipcMain.handle('get-accessibility-support-enabled', (): boolean => app.accessibilitySupportEnabled);
 	app.on('accessibility-support-changed', (_event, accessibilitySupportEnabled) => {

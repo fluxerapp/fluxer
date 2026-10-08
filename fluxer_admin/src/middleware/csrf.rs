@@ -213,6 +213,7 @@ mod tests {
             api_endpoint: String::new(),
             media_endpoint: String::new(),
             static_cdn_endpoint: String::new(),
+            reports_bucket_origin: String::new(),
             admin_endpoint: admin_endpoint.to_owned(),
             web_app_endpoint: String::new(),
             oauth_client_id: String::new(),

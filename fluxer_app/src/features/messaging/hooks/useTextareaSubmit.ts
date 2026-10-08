@@ -186,7 +186,7 @@ async function ensureMentionCountsLoaded(guildId: string, channelId: string): Pr
 	await loadPromise;
 }
 
-export function getResolvedMentionCount({
+function getResolvedMentionCount({
 	mentionType,
 	guildId,
 	channelId,
@@ -240,7 +240,7 @@ function shouldBlockSubmissionForSlowmode(
 	return CommandUtils.doesCommandSendCurrentChannelMessage(parsedCommand);
 }
 
-export function shouldShowMentionConfirmation(params: MentionCountResolutionParams): boolean {
+function shouldShowMentionConfirmation(params: MentionCountResolutionParams): boolean {
 	return getResolvedMentionCount(params) > MENTION_EVERYONE_THRESHOLD;
 }
 

@@ -141,6 +141,72 @@ normalize_connect_queue_test() ->
     ?assertEqual(Q, guild_sessions_connect_cleanup:normalize_connect_queue(Q)),
     ?assertEqual(undefined, guild_sessions_connect_cleanup:normalize_connect_queue(undefined)).
 
+session_down_clears_passive_sync_entry_test() ->
+    ok = passive_sync_registry:init(),
+    SessionId = <<"passive-down">>,
+    ok = passive_sync_registry:store(SessionId, 42, stored_passive_state()),
+    {Ref, Session, State} = down_state(SessionId),
+    {noreply, _} = guild_sessions_connect:handle_session_down(Ref, {SessionId, Session}, State),
+    ?assertEqual([], ets:lookup(passive_sync_registry, {SessionId, 42})).
+
+remove_session_clears_passive_sync_entry_test() ->
+    ok = passive_sync_registry:init(),
+    SessionId = <<"passive-remove">>,
+    ok = passive_sync_registry:store(SessionId, 42, stored_passive_state()),
+    _ = guild_sessions_connect:remove_session(SessionId, remove_session_state(SessionId)),
+    ?assertEqual([], ets:lookup(passive_sync_registry, {SessionId, 42})).
+
+passive_sync_registry_stays_bounded_across_session_cycles_test() ->
+    ok = passive_sync_registry:init(),
+    GuildRows = fun() -> length(ets:match(passive_sync_registry, {{'_', 42}, '_'})) end,
+    Before = GuildRows(),
+    lists:foreach(
+        fun(N) ->
+            SessionId = <<"cycle-", (integer_to_binary(N))/binary>>,
+            ok = passive_sync_registry:store(SessionId, 42, stored_passive_state()),
+            {Ref, Session, State} = down_state(SessionId),
+            {noreply, _} = guild_sessions_connect:handle_session_down(
+                Ref, {SessionId, Session}, State
+            )
+        end,
+        lists:seq(1, 500)
+    ),
+    ?assertEqual(Before, GuildRows()).
+
+guild_terminate_clears_passive_sync_entries_test() ->
+    ok = passive_sync_registry:init(),
+    GuildId = 4242,
+    OtherGuildId = 4343,
+    lists:foreach(
+        fun({SessionId, GId}) ->
+            ok = passive_sync_registry:store(SessionId, GId, stored_passive_state())
+        end,
+        [{<<"t1">>, GuildId}, {<<"t2">>, GuildId}, {<<"t1">>, OtherGuildId}]
+    ),
+    ok = guild:terminate(shutdown, #{
+        id => GuildId,
+        sessions => #{<<"t1">> => #{}, <<"t2">> => #{}}
+    }),
+    ?assertEqual([], ets:lookup(passive_sync_registry, {<<"t1">>, GuildId})),
+    ?assertEqual([], ets:lookup(passive_sync_registry, {<<"t2">>, GuildId})),
+    ?assertEqual(
+        stored_passive_state(), passive_sync_registry:lookup(<<"t1">>, OtherGuildId)
+    ),
+    ok = passive_sync_registry:delete(<<"t1">>, OtherGuildId).
+
+stored_passive_state() ->
+    #{
+        previous_passive_updates => #{<<"1">> => <<"2">>},
+        previous_passive_channel_versions => #{},
+        previous_passive_voice_states => #{}
+    }.
+
+down_state(SessionId) ->
+    State0 = remove_session_state(SessionId),
+    Session = maps:get(SessionId, maps:get(sessions, State0)),
+    Ref = maps:get(mref, Session),
+    {Ref, Session, State0#{guild_session_refs => #{Ref => SessionId}}}.
+
 remove_session_state(SessionId) ->
     SessionData = #{
         session_id => SessionId,

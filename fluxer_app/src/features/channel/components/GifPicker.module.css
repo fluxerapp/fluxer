@@ -55,18 +55,9 @@
 	padding-bottom: var(--spacing-3);
 }
 
-.virtualRow {
-	display: flex;
-	gap: var(--spacing-3);
-}
-
 @media (max-width: 768px) {
 	.loadingSkeletonBlob {
 		border-radius: 0.25rem;
-	}
-
-	.virtualRow {
-		gap: var(--spacing-2);
 	}
 }
 
@@ -310,43 +301,6 @@
 	z-index: 0;
 }
 
-.header {
-	display: flex;
-	align-items: center;
-	padding: 1rem;
-	background-color: var(--background-primary);
-}
-
-.backButton {
-	margin-right: 1rem;
-	cursor: pointer;
-	width: 1.5rem;
-	height: 1.5rem;
-	color: var(--text-primary-muted);
-	transition: color 0.1s ease-out;
-}
-
-@media (hover: hover) {
-	.backButton:hover {
-		color: var(--text-primary);
-	}
-}
-
-.header h2 {
-	flex: 1;
-	margin: 0;
-	font-size: 1.25rem;
-	font-weight: 600;
-	color: var(--text-primary);
-}
-
-.skeletonContainer {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.625rem;
-	padding: 0 1rem;
-}
-
 .skeletonItem {
 	background: linear-gradient(
 		90deg,
@@ -465,57 +419,6 @@
 	color: var(--text-primary);
 }
 
-.centeredContent {
-	width: 100%;
-	height: 100%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding-bottom: 4rem;
-}
-
-.slate {
-	display: flex;
-	flex-direction: column;
-	width: 100%;
-	align-items: center;
-	justify-content: center;
-	padding: 0 1rem;
-	gap: 0.5rem;
-}
-
-.slateContent {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.slateIcon {
-	height: 3.5rem;
-	width: 3.5rem;
-	color: var(--text-primary-muted);
-}
-
-.slateTextContainer {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 0.5rem;
-	text-align: center;
-}
-
-.slateTitle {
-	font-size: 1.25rem;
-	font-weight: 600;
-	color: var(--text-primary);
-}
-
-.slateDescription {
-	font-size: 1rem;
-	color: var(--text-primary-muted);
-}
-
 :global(.theme-light) .gifPickerContainer {
 	background-color: var(--background-primary);
 	--gif-picker-category-overlay-bg: rgb(255 255 255 / 0.56);
@@ -524,8 +427,7 @@
 	--gif-picker-gif-overlay-hover-bg: rgb(255 255 255 / 0.04);
 }
 
-:global(.theme-light) .gifPickerMain,
-:global(.theme-light) .scrollArea {
+:global(.theme-light) .gifPickerMain {
 	background-color: var(--background-primary);
 }
 
@@ -571,13 +473,6 @@
 
 :global(.theme-light) .gridItemCategoryEmpty .gridItemBackdrop {
 	background-color: color-mix(in srgb, var(--brand-primary) 40%, transparent);
-}
-
-.searchBarContent {
-	display: flex;
-	width: 100%;
-	flex-direction: column;
-	gap: var(--spacing-3);
 }
 
 .favoriteButtonSpinner {

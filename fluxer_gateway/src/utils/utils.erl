@@ -6,10 +6,8 @@
 -export([
     binary_to_integer_safe/1,
     generate_session_id/0,
-    generate_resume_token/0,
     hash_token/1,
     parse_status/1,
-    safe_json_decode/1,
     check_user_data_differs/2,
     parse_iso8601_to_unix_ms/1
 ]).
@@ -27,11 +25,6 @@ generate_session_id() ->
     Bytes = crypto:strong_rand_bytes(constants:random_session_bytes()),
     binary:encode_hex(Bytes).
 
--spec generate_resume_token() -> binary().
-generate_resume_token() ->
-    Bytes = crypto:strong_rand_bytes(32),
-    base64:encode(Bytes, #{mode => urlsafe, padding => false}).
-
 -spec hash_token(binary()) -> binary().
 hash_token(Token) ->
     crypto:hash(sha256, Token).
@@ -46,16 +39,6 @@ parse_status(Status) when is_atom(Status) ->
     Status;
 parse_status(_) ->
     online.
-
--spec safe_json_decode(binary()) -> map().
-safe_json_decode(Bin) ->
-    try json:decode(Bin) of
-        Map when is_map(Map) -> Map;
-        _ -> #{}
-    catch
-        error:_ -> #{};
-        throw:_ -> #{}
-    end.
 
 -define(GREGORIAN_SECONDS_TO_UNIX_EPOCH, 62167219200).
 
@@ -171,11 +154,6 @@ generate_session_id_test() ->
     ?assert(is_binary(SessionId)),
     ?assertEqual(32, byte_size(SessionId)).
 
-generate_resume_token_test() ->
-    Token = generate_resume_token(),
-    ?assert(is_binary(Token)),
-    ?assert(byte_size(Token) > 0).
-
 hash_token_test() ->
     Hash = hash_token(<<"test_token">>),
     ?assert(is_binary(Hash)),
@@ -196,14 +174,6 @@ parse_status_atom_test() ->
 parse_status_default_test() ->
     ?assertEqual(online, parse_status(123)),
     ?assertEqual(online, parse_status(#{})).
-
-safe_json_decode_valid_test() ->
-    Result = safe_json_decode(<<"{\"key\": \"value\"}">>),
-    ?assertEqual(#{<<"key">> => <<"value">>}, Result).
-
-safe_json_decode_invalid_test() ->
-    ?assertEqual(#{}, safe_json_decode(<<"not json">>)),
-    ?assertEqual(#{}, safe_json_decode(<<"">>)).
 
 parse_iso8601_to_unix_ms_valid_test() ->
     ?assertEqual(1705321845000, parse_iso8601_to_unix_ms(<<"2024-01-15T12:30:45Z">>)),

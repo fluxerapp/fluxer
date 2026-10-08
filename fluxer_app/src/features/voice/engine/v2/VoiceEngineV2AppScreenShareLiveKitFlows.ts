@@ -47,7 +47,6 @@ import {
 	stopMediaTrack,
 } from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
-import type LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import SoftwareEncoderWarning from '@app/features/voice/state/SoftwareEncoderWarning';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
@@ -95,7 +94,7 @@ function isUserCancelledOrPermissionDeniedError(error: unknown): boolean {
 const COMMITTED_PUBLICATION_INVARIANT_ATTEMPTS = 2;
 const SCREEN_SHARE_PUBLISH_CODEC_CORRECTION_MAX = 1;
 
-export class ScreenSharePublishCodecPolicyError extends Error {
+class ScreenSharePublishCodecPolicyError extends Error {
 	readonly violation: VideoPublishCodecPolicyViolation;
 
 	constructor(violation: VideoPublishCodecPolicyViolation) {
@@ -1731,5 +1730,3 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 		}
 	}
 }
-
-export type {LocalVoiceState};

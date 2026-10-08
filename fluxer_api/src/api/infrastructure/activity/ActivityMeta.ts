@@ -31,7 +31,7 @@ export function setActivityProcessChannel(channel: Channel): void {
 	processChannel = channel;
 }
 
-export function activityMetaFromContext(ctx: Context<HonoEnv>): ActivityRequestContext {
+function activityMetaFromContext(ctx: Context<HonoEnv>): ActivityRequestContext {
 	const origin = ctx.req.header('origin');
 	const ua = ctx.req.header('user-agent');
 	const acceptLanguage = ctx.req.header('accept-language');

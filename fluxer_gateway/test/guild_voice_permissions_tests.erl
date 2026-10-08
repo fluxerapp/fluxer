@@ -122,18 +122,6 @@ voice_permissions_virtual_access_other_channel_denied_test() ->
     ),
     ?assertMatch({error, permission_denied, voice_permission_denied}, Result).
 
-users_in_channel_test() ->
-    VoiceStates = #{
-        <<"conn1">> => #{<<"channel_id">> => <<"10">>, <<"user_id">> => <<"1">>},
-        <<"conn2">> => #{<<"channel_id">> => <<"10">>, <<"user_id">> => <<"2">>},
-        <<"conn3">> => #{<<"channel_id">> => <<"20">>, <<"user_id">> => <<"3">>}
-    },
-    Result = guild_voice_permissions:users_in_channel(10, VoiceStates),
-    ?assertEqual(2, sets:size(Result)),
-    ?assert(sets:is_element(1, Result)),
-    ?assert(sets:is_element(2, Result)),
-    ?assertNot(sets:is_element(3, Result)).
-
 permission_sync_disconnects_when_view_channel_lost_test() ->
     ok = drain_mailbox(),
     ConnectOnly = constants:connect_permission(),
@@ -173,6 +161,42 @@ permission_sync_runs_on_role_permission_update_test() ->
                 <<"permissions">> => <<"0">>
             }
         },
+        State
+    ),
+    receive
+        {synced, GuildId, ChannelId, UserId, <<"test-conn">>, Perms} ->
+            ?assertEqual(false, maps:get(can_speak, Perms)),
+            ?assertEqual(false, maps:get(can_stream, Perms))
+    after 200 ->
+        ?assert(false)
+    end.
+
+permission_sync_runs_on_everyone_role_update_test() ->
+    ok = drain_mailbox(),
+    {State, UserId, ChannelId, GuildId, _RoleId} = build_sync_wiring_state(),
+    _ = guild_state:update_state(
+        guild_role_update,
+        #{
+            <<"role">> => #{
+                <<"id">> => integer_to_binary(GuildId),
+                <<"permissions">> => <<"0">>
+            }
+        },
+        State
+    ),
+    receive
+        {synced, GuildId, ChannelId, UserId, <<"test-conn">>, Perms} ->
+            ?assertEqual(true, maps:get(disconnected, Perms, false))
+    after 200 ->
+        ?assert(false)
+    end.
+
+permission_sync_runs_on_role_delete_test() ->
+    ok = drain_mailbox(),
+    {State, UserId, ChannelId, GuildId, RoleId} = build_sync_wiring_state(),
+    _ = guild_state:update_state(
+        guild_role_delete,
+        #{<<"role_id">> => integer_to_binary(RoleId)},
         State
     ),
     receive

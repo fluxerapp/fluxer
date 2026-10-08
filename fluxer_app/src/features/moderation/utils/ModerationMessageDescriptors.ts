@@ -10,13 +10,10 @@ export const REMOVE_TIMEOUT_DESCRIPTOR = msg({
 	message: 'Remove timeout',
 	comment: 'Moderation action label that clears an active timeout on a community member.',
 });
-export const REPORT_USER_DESCRIPTOR = msg({
-	message: 'Report user',
-	comment: 'Action label that opens the report flow targeting a user.',
-});
-export const REPORT_COMMUNITY_DESCRIPTOR = msg({
-	message: 'Report community',
-	comment: 'Action label that opens the report flow targeting a community.',
+export const REPORT_USER_PROFILE_DESCRIPTOR = msg({
+	message: 'Report profile',
+	comment:
+		"Action label in the full user profile's overflow menu, and the title of the report window it opens. Reports the user's profile: their photo, name or bio.",
 });
 export const TIMEOUT_DESCRIPTOR = msg({
 	message: 'Timeout',

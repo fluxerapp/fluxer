@@ -18,7 +18,6 @@ use std::future::Future;
 use std::pin::Pin;
 use url::Url;
 
-#[allow(dead_code)]
 pub struct ResolveContext<'mp> {
     pub url: Url,
     pub original_url: Url,

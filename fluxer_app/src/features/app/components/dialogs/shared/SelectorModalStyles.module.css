@@ -56,12 +56,6 @@
 	padding: 0 0 1rem;
 }
 
-.itemGroupList {
-	display: flex;
-	flex-direction: column;
-	gap: 0.0625rem;
-}
-
 .itemButton {
 	position: relative;
 	display: flex;
@@ -171,29 +165,4 @@
 
 .footer {
 	padding: var(--spacing-4);
-}
-
-.footerContent {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-4);
-	width: 100%;
-}
-
-.itemIcon {
-	width: 1.875rem;
-	height: 1.875rem;
-	flex-shrink: 0;
-	color: var(--text-primary-muted);
-}
-
-.avatar {
-	width: 1.875rem;
-	height: 1.875rem;
-	flex-shrink: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	position: relative;
-	overflow: visible;
 }

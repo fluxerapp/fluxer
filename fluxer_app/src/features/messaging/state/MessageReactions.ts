@@ -65,7 +65,7 @@ function isMissingReactionStateNoop(event: ReactionMachineEvent): boolean {
 	}
 }
 
-export class MessageReactionsManager {
+class MessageReactionsManager {
 	private messageStates: Map<string, MessageReactionState> = new Map();
 	private reactors: Map<string, ReactorEntry> = new Map();
 	private _keysByMessage: Map<string, Set<string>> = new Map();

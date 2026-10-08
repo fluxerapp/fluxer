@@ -5,10 +5,8 @@ import {
 	formatAssetUploadExtensions,
 	formatKnownAnimatedAssetExtensions,
 	getAcceptString,
-	getMimeWhitelist,
 	getUploadExtensions,
 	isExtensionAllowed,
-	isMimeAllowed,
 } from '@fluxer/constants/src/AssetFormatPolicy';
 import {describe, expect, it} from 'vitest';
 
@@ -133,19 +131,6 @@ describe('AssetFormatPolicy', () => {
 			expect(formatKnownAnimatedAssetExtensions('avatar')).toBe('GIF, APNG, WebP');
 		});
 	});
-	describe('getMimeWhitelist', () => {
-		it('returns the per-kind MIME list', () => {
-			expect(getMimeWhitelist('sticker')).toEqual([
-				'image/png',
-				'image/jpeg',
-				'image/apng',
-				'image/gif',
-				'image/webp',
-				'image/avif',
-				'image/svg+xml',
-			]);
-		});
-	});
 	describe('isExtensionAllowed', () => {
 		it('accepts both raw and dot-prefixed extensions', () => {
 			expect(isExtensionAllowed('avatar', 'png')).toBe(true);
@@ -156,16 +141,6 @@ describe('AssetFormatPolicy', () => {
 		it('rejects extensions not in the upload list', () => {
 			expect(isExtensionAllowed('splash', 'gif')).toBe(false);
 			expect(isExtensionAllowed('emoji', 'mp4' as never)).toBe(false);
-		});
-	});
-	describe('isMimeAllowed', () => {
-		it('matches MIMEs case-insensitively', () => {
-			expect(isMimeAllowed('avatar', 'IMAGE/PNG')).toBe(true);
-			expect(isMimeAllowed('avatar', 'image/heic')).toBe(true);
-		});
-		it('rejects MIMEs outside the policy', () => {
-			expect(isMimeAllowed('emoji', 'application/pdf')).toBe(false);
-			expect(isMimeAllowed('splash', 'image/gif')).toBe(false);
 		});
 	});
 });

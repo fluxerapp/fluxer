@@ -33,7 +33,6 @@ pub struct UserListParams {
     pub q: String,
     pub email: String,
     pub ip: String,
-    pub ids: String,
     pub requested_ids: Vec<String>,
     pub limit: u32,
     pub page: u32,
@@ -54,7 +53,6 @@ impl UserListParams {
             email: email.unwrap_or_default().trim().to_owned(),
             ip: ip.unwrap_or_default().trim().to_owned(),
             requested_ids: parse_ids_query(&ids),
-            ids: ids.trim().to_owned(),
             limit: match limit.unwrap_or(25) {
                 50 => 50,
                 100 => 100,

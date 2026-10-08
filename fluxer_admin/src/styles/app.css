@@ -35,6 +35,12 @@ h1, h2, h3, h4, h5, h6 {
   input, select, textarea {
     font-size: 16px;
   }
+
+  select,
+  input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="range"], [type="color"], [type="file"]) {
+    height: auto;
+    min-height: 2.5rem;
+  }
 }
 
 a:focus-visible,
@@ -71,33 +77,6 @@ main:focus {
   outline-offset: 2px;
 }
 
-.flash-success {
-  border: 1px solid #86efac;
-  background-color: #f0fdf4;
-  color: #166534;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-}
-
-.flash-error {
-  border: 1px solid #fca5a5;
-  background-color: #fef2f2;
-  color: #991b1b;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-}
-
-.flash-info {
-  border: 1px solid #93c5fd;
-  background-color: #eff6ff;
-  color: #1e40af;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-}
-
 .drawer-panel {
   inset: unset;
   margin: 0;
@@ -109,8 +88,6 @@ main:focus {
 }
 
 .drawer-panel[data-drawer-side="right"] { right: 0; top: 0; }
-.drawer-panel[data-drawer-side="left"]  { left: 0; top: 0; }
-.drawer-panel[data-drawer-side="bottom"] { bottom: 0; left: 0; right: 0; }
 
 .drawer-panel[data-open],
 .drawer-panel:popover-open {

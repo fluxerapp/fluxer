@@ -990,10 +990,6 @@ const ensureSharedIpc = () => {
 		if (!Array.isArray(words)) return [];
 		return checkWords(event.sender.session, words);
 	});
-	ipcMain.handle('spellcheck:suggest', (event, word: string): Array<string> => {
-		if (typeof word !== 'string' || word.length === 0) return [];
-		return suggestWord(event.sender.session, word);
-	});
 };
 let rendererSpellcheckHandlersRegistered = false;
 
@@ -1032,12 +1028,6 @@ export const registerSpellcheck = (webContents: WebContents): void => {
 	});
 	if (!rendererSpellcheckHandlersRegistered) {
 		rendererSpellcheckHandlersRegistered = true;
-		ipcMain.handle('spellcheck-get-state', (event) => {
-			const targetSession = event.sender.session;
-			const next = applyLaunchSpellcheckMode(sessionState.get(targetSession) ?? {...defaultState});
-			sessionState.set(targetSession, next);
-			return next;
-		});
 		ipcMain.handle('spellcheck-set-state', async (event, patch: RendererSpellcheckPatch) => {
 			const targetSession = event.sender.session;
 			const current = sessionState.get(targetSession) ?? {...defaultState};

@@ -3,7 +3,7 @@
 use crate::api::generated::snowflake;
 
 use super::client::{AdminApiClient, ApiResult};
-use super::types::{ActiveJobsResponse, CancelJobResponse, GetJobResponse, ListJobsResponse};
+use super::types::{CancelJobResponse, GetJobResponse, ListJobsResponse};
 
 pub struct ListJobsParams {
     pub limit: u32,
@@ -58,15 +58,6 @@ impl AdminApiClient {
             audit_log_reason,
         )
         .await
-    }
-
-    pub async fn list_active_jobs(&self) -> ApiResult<ActiveJobsResponse> {
-        let response = self
-            .generated()
-            .list_admin_active_jobs()
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
     }
 }
 

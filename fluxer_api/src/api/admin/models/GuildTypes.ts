@@ -31,6 +31,9 @@ export function mapGuildToAdminResponse(guild: Guild, ownerUser?: User | null): 
 		banner: guild.bannerHash,
 		member_count: guild.memberCount,
 		nsfw_level: guild.nsfwLevel,
+		nsfw: guild.nsfw,
+		content_warning_level: guild.contentWarningLevel as 0 | 1,
+		content_warning_text: guild.contentWarningText,
 	};
 }
 
@@ -48,6 +51,9 @@ export function mapGuildsToAdminResponse(guilds: Array<Guild>, ownerMap?: Map<st
 				banner: guild.bannerHash,
 				member_count: guild.memberCount,
 				nsfw_level: guild.nsfwLevel,
+				nsfw: guild.nsfw,
+				content_warning_level: guild.contentWarningLevel as 0 | 1,
+				content_warning_text: guild.contentWarningText,
 			};
 		}),
 	};

@@ -150,7 +150,10 @@ fn build_admin_csp(config: &AdminConfig) -> String {
         "default-src 'self'".to_owned(),
         "script-src 'self' 'unsafe-inline'".to_owned(),
         "style-src 'self' 'unsafe-inline'".to_owned(),
-        format!("img-src 'self' data: blob: {static_cdn} {media} https://fluxer-reports.ewr1.vultrobjects.com"),
+        format!(
+            "img-src 'self' data: blob: {static_cdn} {media} {}",
+            config.reports_bucket_origin
+        ),
         "font-src 'self'".to_owned(),
         "connect-src 'self'".to_owned(),
         "object-src 'none'".to_owned(),

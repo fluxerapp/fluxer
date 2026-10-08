@@ -140,7 +140,7 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'list_guild_members',
 					targetType: 'guild',
 					targetId: guild.id,
-					metadata: {limit: '10', offset: '5', result_count: '0', total: '0'},
+					metadata: {limit: '10', offset: '5', result_count: '0', total: '1'},
 				},
 			};
 		},

@@ -4,26 +4,13 @@ import assert from 'node:assert/strict';
 import {assertNonNullObject, assertString} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
 import {
 	selectVoiceEngineV2Model,
-	summarizeVoiceEngineV2Stats,
 	type VoiceEngineV2AudioControls,
-	type VoiceEngineV2AudioInputDevice,
 	type VoiceEngineV2AudioMode,
-	type VoiceEngineV2AudioOutputDevice,
-	type VoiceEngineV2CameraDevice,
 	type VoiceEngineV2ConnectionStatus,
-	type VoiceEngineV2DeviceInventory,
-	type VoiceEngineV2E2eeState,
-	type VoiceEngineV2InboundVideoTrack,
 	type VoiceEngineV2MediaStatus,
 	type VoiceEngineV2Model,
 	type VoiceEngineV2Participant,
-	type VoiceEngineV2PermissionResult,
 	type VoiceEngineV2Snapshot,
-	type VoiceEngineV2Stats,
-	type VoiceEngineV2StatsSummary,
-	type VoiceEngineV2Track,
-	type VoiceEngineV2TrackSource,
-	type VoiceEngineV2WatchedStream,
 } from '@fluxer/voice_engine_v2';
 
 export type VoiceEngineV2AppProjectionSource = VoiceEngineV2Model | VoiceEngineV2Snapshot;
@@ -78,7 +65,7 @@ export interface VoiceEngineV2AppConnectionFallback {
 	sessionId?: string | null;
 }
 
-export interface VoiceEngineV2AppLocalMediaProjection {
+interface VoiceEngineV2AppLocalMediaProjection {
 	microphone: VoiceEngineV2MediaStatus;
 	camera: VoiceEngineV2MediaStatus;
 	screen: VoiceEngineV2MediaStatus;
@@ -103,55 +90,6 @@ export interface VoiceEngineV2AppParticipantProjection {
 	participantIdentities: Array<string>;
 }
 
-export interface VoiceEngineV2AppTrackProjection {
-	tracks: Array<VoiceEngineV2Track>;
-	audioTracks: Array<VoiceEngineV2Track>;
-	videoTracks: Array<VoiceEngineV2Track>;
-	microphoneTracks: Array<VoiceEngineV2Track>;
-	cameraTracks: Array<VoiceEngineV2Track>;
-	screenTracks: Array<VoiceEngineV2Track>;
-	screenAudioTracks: Array<VoiceEngineV2Track>;
-	inboundVideoTracks: Array<VoiceEngineV2InboundVideoTrack>;
-}
-
-export interface VoiceEngineV2AppWatchedStreamProjection {
-	streams: Array<VoiceEngineV2WatchedStream>;
-	enabledStreams: Array<VoiceEngineV2WatchedStream>;
-	disabledStreams: Array<VoiceEngineV2WatchedStream>;
-}
-
-export interface VoiceEngineV2AppStatsProjection {
-	stats: VoiceEngineV2Stats | null;
-	summary: VoiceEngineV2StatsSummary | null;
-	hasStats: boolean;
-	rttMs: number | null;
-	outboundTrackCount: number;
-	inboundTrackCount: number;
-	droppedNativeVideoFrames: number;
-	droppedVideoFrameCallbacks: number;
-	failureCode: string | null;
-}
-
-export interface VoiceEngineV2AppDeviceProjection {
-	devices: VoiceEngineV2DeviceInventory;
-	permissions: Record<string, VoiceEngineV2PermissionResult>;
-	selectedAudioInput: VoiceEngineV2AudioInputDevice | null;
-	selectedAudioOutput: VoiceEngineV2AudioOutputDevice | null;
-	selectedCamera: VoiceEngineV2CameraDevice | null;
-	hasAudioInput: boolean;
-	hasAudioOutput: boolean;
-	hasCamera: boolean;
-	microphonePermission: VoiceEngineV2PermissionResult | null;
-	cameraPermission: VoiceEngineV2PermissionResult | null;
-	screenPermission: VoiceEngineV2PermissionResult | null;
-}
-
-export interface VoiceEngineV2AppE2eeProjection extends VoiceEngineV2E2eeState {
-	enabled: boolean;
-	pending: boolean;
-	failed: boolean;
-}
-
 export interface VoiceEngineV2AppParticipantSpeakingSnapshot {
 	isSpeaking?: boolean | null;
 	isAudioLevelSpeaking?: boolean | null;
@@ -159,7 +97,7 @@ export interface VoiceEngineV2AppParticipantSpeakingSnapshot {
 
 export type VoiceEngineV2AppVoiceMuteReason = 'guild' | 'permission' | 'voice_push_to_talk' | 'self' | null;
 
-export interface VoiceEngineV2AppMuteReasonVoiceState {
+interface VoiceEngineV2AppMuteReasonVoiceState {
 	mute?: boolean | null;
 }
 
@@ -167,34 +105,6 @@ export interface VoiceEngineV2AppMuteReasonInput {
 	voiceState: VoiceEngineV2AppMuteReasonVoiceState | null;
 	permissionMuted: boolean;
 	audio: VoiceEngineV2AudioControls;
-}
-
-export interface VoiceEngineV2AppViewProjection {
-	connection: VoiceEngineV2AppConnectionProjection;
-	localMedia: VoiceEngineV2AppLocalMediaProjection;
-	participants: VoiceEngineV2AppParticipantProjection;
-	tracks: VoiceEngineV2AppTrackProjection;
-	watchedStreams: VoiceEngineV2AppWatchedStreamProjection;
-	stats: VoiceEngineV2AppStatsProjection;
-	devices: VoiceEngineV2AppDeviceProjection;
-	e2ee: VoiceEngineV2AppE2eeProjection;
-}
-
-export function selectVoiceEngineV2AppView(source: VoiceEngineV2AppProjectionSource): VoiceEngineV2AppViewProjection {
-	assertNonNullObject(source, 'source');
-	const view = {
-		connection: selectVoiceEngineV2AppConnection(source),
-		localMedia: selectVoiceEngineV2AppLocalMedia(source),
-		participants: selectVoiceEngineV2AppParticipants(source),
-		tracks: selectVoiceEngineV2AppTracks(source),
-		watchedStreams: selectVoiceEngineV2AppWatchedStreams(source),
-		stats: selectVoiceEngineV2AppStats(source),
-		devices: selectVoiceEngineV2AppDevices(source),
-		e2ee: selectVoiceEngineV2AppE2ee(source),
-	};
-	assertNonNullObject(view.connection, 'view.connection');
-	assertNonNullObject(view.localMedia, 'view.localMedia');
-	return view;
 }
 
 export function selectVoiceEngineV2AppConnection(
@@ -265,7 +175,7 @@ export function selectVoiceEngineV2AppConnectionWithFallback(
 	};
 }
 
-export function selectVoiceEngineV2AppLocalMedia(
+function selectVoiceEngineV2AppLocalMedia(
 	source: VoiceEngineV2AppProjectionSource,
 ): VoiceEngineV2AppLocalMediaProjection {
 	assertNonNullObject(source, 'source');
@@ -308,7 +218,7 @@ export function selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload(
 	return selectVoiceEngineV2AppIntentSelfMuteFromAudioControls(selectVoiceEngineV2AppLocalMedia(source).audio);
 }
 
-export function selectVoiceEngineV2AppIntentSelfMuteFromAudioControls(audio: VoiceEngineV2AudioControls): boolean {
+function selectVoiceEngineV2AppIntentSelfMuteFromAudioControls(audio: VoiceEngineV2AudioControls): boolean {
 	assertNonNullObject(audio, 'audio');
 	const intentMuted = audio.locallyMuted || audio.mutedByPermission;
 	assert.equal(typeof intentMuted, 'boolean', 'intent self-mute must be a boolean');
@@ -382,152 +292,8 @@ export function isVoiceEngineV2AppParticipantSpeaking(
 	return Boolean(participant.isAudioLevelSpeaking);
 }
 
-export function selectVoiceEngineV2AppTracks(
-	source: VoiceEngineV2AppProjectionSource,
-): VoiceEngineV2AppTrackProjection {
-	assertNonNullObject(source, 'source');
-	const model = voiceEngineV2AppModel(source);
-	const tracks = sortVoiceEngineV2Tracks([...model.tracks]);
-	const inboundVideoTracks = sortVoiceEngineV2InboundVideoTracks([...model.inboundVideoTracks]);
-	assert.ok(Array.isArray(tracks), 'tracks must be array');
-	return {
-		tracks,
-		audioTracks: tracks.filter((track) => track.kind === 'audio'),
-		videoTracks: tracks.filter((track) => track.kind === 'video'),
-		microphoneTracks: tracks.filter((track) => track.source === 'microphone'),
-		cameraTracks: tracks.filter((track) => track.source === 'camera'),
-		screenTracks: tracks.filter((track) => track.source === 'screen'),
-		screenAudioTracks: tracks.filter((track) => track.source === 'screenAudio'),
-		inboundVideoTracks,
-	};
-}
-
-export function selectVoiceEngineV2AppTracksForParticipant(
-	source: VoiceEngineV2AppProjectionSource,
-	participantIdentity: string,
-): Array<VoiceEngineV2Track> {
-	assertNonNullObject(source, 'source');
-	assertString(participantIdentity, 'participantIdentity');
-	return selectVoiceEngineV2AppTracks(source).tracks.filter(
-		(track) => track.participantIdentity === participantIdentity,
-	);
-}
-
-export function selectVoiceEngineV2AppTrackForSource(
-	source: VoiceEngineV2AppProjectionSource,
-	participantIdentity: string,
-	trackSource: VoiceEngineV2TrackSource | string,
-): VoiceEngineV2Track | null {
-	assertNonNullObject(source, 'source');
-	assertString(participantIdentity, 'participantIdentity');
-	return (
-		selectVoiceEngineV2AppTracks(source).tracks.find(
-			(track) => track.participantIdentity === participantIdentity && track.source === trackSource,
-		) ?? null
-	);
-}
-
-export function selectVoiceEngineV2AppInboundVideoTrack(
-	source: VoiceEngineV2AppProjectionSource,
-	trackSid: string,
-): VoiceEngineV2InboundVideoTrack | null {
-	assertNonNullObject(source, 'source');
-	assertString(trackSid, 'trackSid');
-	return selectVoiceEngineV2AppTracks(source).inboundVideoTracks.find((track) => track.trackSid === trackSid) ?? null;
-}
-
-export function selectVoiceEngineV2AppWatchedStreams(
-	source: VoiceEngineV2AppProjectionSource,
-): VoiceEngineV2AppWatchedStreamProjection {
-	assertNonNullObject(source, 'source');
-	const streams = sortVoiceEngineV2WatchedStreams([...voiceEngineV2AppModel(source).watchedStreams]);
-	assert.ok(Array.isArray(streams), 'streams must be array');
-	return {
-		streams,
-		enabledStreams: streams.filter((stream) => stream.enabled),
-		disabledStreams: streams.filter((stream) => !stream.enabled),
-	};
-}
-
-export function selectVoiceEngineV2AppWatchedStream(
-	source: VoiceEngineV2AppProjectionSource,
-	participantIdentity: string,
-	trackSource: VoiceEngineV2TrackSource | string,
-): VoiceEngineV2WatchedStream | null {
-	assertNonNullObject(source, 'source');
-	assertString(participantIdentity, 'participantIdentity');
-	return (
-		selectVoiceEngineV2AppWatchedStreams(source).streams.find(
-			(stream) => stream.participantIdentity === participantIdentity && stream.source === trackSource,
-		) ?? null
-	);
-}
-
-export function selectVoiceEngineV2AppStats(source: VoiceEngineV2AppProjectionSource): VoiceEngineV2AppStatsProjection {
-	assertNonNullObject(source, 'source');
-	const model = voiceEngineV2AppModel(source);
-	const snapshot = voiceEngineV2AppSnapshot(source);
-	const stats = model.stats;
-	return {
-		stats,
-		summary: stats ? summarizeVoiceEngineV2Stats(stats) : null,
-		hasStats: stats !== null,
-		rttMs: stats?.rttMs ?? null,
-		outboundTrackCount: stats?.outbound.length ?? 0,
-		inboundTrackCount: stats?.inbound.length ?? 0,
-		droppedNativeVideoFrames: stats?.droppedNativeVideoFrames ?? 0,
-		droppedVideoFrameCallbacks: stats?.droppedVideoFrameCallbacks ?? 0,
-		failureCode: snapshot?.statsFailure?.code ?? null,
-	};
-}
-
-export function selectVoiceEngineV2AppDevices(
-	source: VoiceEngineV2AppProjectionSource,
-): VoiceEngineV2AppDeviceProjection {
-	assertNonNullObject(source, 'source');
-	const model = voiceEngineV2AppModel(source);
-	assertNonNullObject(model.devices, 'model.devices');
-	const selectedAudioInput =
-		model.devices.audioInputs.find((device) => device.deviceId === model.devices.selectedAudioInputId) ?? null;
-	const selectedAudioOutput =
-		model.devices.audioOutputs.find((device) => device.deviceId === model.devices.selectedAudioOutputId) ?? null;
-	const selectedCamera =
-		model.devices.cameras.find((device) => device.deviceId === model.devices.selectedCameraId) ?? null;
-	return {
-		devices: model.devices,
-		permissions: model.permissions,
-		selectedAudioInput,
-		selectedAudioOutput,
-		selectedCamera,
-		hasAudioInput: model.devices.audioInputs.length > 0,
-		hasAudioOutput: model.devices.audioOutputs.length > 0,
-		hasCamera: model.devices.cameras.length > 0,
-		microphonePermission: model.permissions.microphone ?? null,
-		cameraPermission: model.permissions.camera ?? null,
-		screenPermission: model.permissions.screen ?? null,
-	};
-}
-
-export function selectVoiceEngineV2AppE2ee(source: VoiceEngineV2AppProjectionSource): VoiceEngineV2AppE2eeProjection {
-	assertNonNullObject(source, 'source');
-	const e2ee = voiceEngineV2AppModel(source).media.e2ee;
-	assertNonNullObject(e2ee, 'e2ee');
-	return {
-		status: e2ee.status,
-		keyId: e2ee.keyId,
-		failure: e2ee.failure,
-		enabled: e2ee.status === 'enabled',
-		pending: e2ee.status === 'pendingKey',
-		failed: e2ee.status === 'failed',
-	};
-}
-
 function voiceEngineV2AppModel(source: VoiceEngineV2AppProjectionSource): VoiceEngineV2Model {
 	return isVoiceEngineV2Snapshot(source) ? selectVoiceEngineV2Model(source) : source;
-}
-
-function voiceEngineV2AppSnapshot(source: VoiceEngineV2AppProjectionSource): VoiceEngineV2Snapshot | null {
-	return isVoiceEngineV2Snapshot(source) ? source : null;
 }
 
 function isVoiceEngineV2Snapshot(source: VoiceEngineV2AppProjectionSource): source is VoiceEngineV2Snapshot {
@@ -540,35 +306,6 @@ function sortVoiceEngineV2Participants(
 	return participants.sort(
 		(left, right) => compareStrings(left.identity, right.identity) || compareStrings(left.sid, right.sid),
 	) as Array<VoiceEngineV2AppParticipantSnapshot>;
-}
-
-function sortVoiceEngineV2Tracks(tracks: Array<VoiceEngineV2Track>): Array<VoiceEngineV2Track> {
-	return tracks.sort(
-		(left, right) =>
-			compareStrings(left.participantIdentity, right.participantIdentity) ||
-			compareStrings(left.source, right.source) ||
-			compareStrings(left.trackSid, right.trackSid),
-	);
-}
-
-function sortVoiceEngineV2InboundVideoTracks(
-	tracks: Array<VoiceEngineV2InboundVideoTrack>,
-): Array<VoiceEngineV2InboundVideoTrack> {
-	return tracks.sort(
-		(left, right) =>
-			compareStrings(left.participantIdentity ?? '', right.participantIdentity ?? '') ||
-			compareStrings(left.source, right.source) ||
-			compareStrings(left.trackSid, right.trackSid),
-	);
-}
-
-function sortVoiceEngineV2WatchedStreams(
-	streams: Array<VoiceEngineV2WatchedStream>,
-): Array<VoiceEngineV2WatchedStream> {
-	return streams.sort(
-		(left, right) =>
-			compareStrings(left.participantIdentity, right.participantIdentity) || compareStrings(left.source, right.source),
-	);
 }
 
 function compareStrings(left: string, right: string): number {

@@ -51,11 +51,6 @@
 	}
 }
 
-.favoriteItemPressed {
-	background-color: var(--background-modifier-hover);
-	color: var(--text-chat);
-}
-
 .favoriteItemSelected {
 	background-color: var(--background-modifier-selected);
 }
@@ -249,30 +244,6 @@
 	gap: 0.0625rem;
 }
 
-.emptyStateContainer {
-	display: flex;
-	height: 100%;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 1rem;
-	padding: 2rem;
-	text-align: center;
-}
-
-.emptyStateTitle {
-	font-size: 1.125rem;
-	font-weight: 600;
-	color: var(--text-tertiary);
-}
-
-.emptyStateDescription {
-	max-width: 24rem;
-	font-size: 0.875rem;
-	color: var(--text-tertiary);
-}
-
-.favoriteItemFavoriteItemSelected .hoverAffordance,
 .favoriteItem.keyboardFocus .hoverAffordance,
 .categoryItem.keyboardFocus .categoryActions .hoverAffordance {
 	display: flex;

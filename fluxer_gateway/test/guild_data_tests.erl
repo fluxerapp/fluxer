@@ -526,16 +526,6 @@ sort_channels_for_ordering_places_announcement_channels_with_text_test() ->
         [maps:get(<<"id">>, C) || C <- Ordered]
     ).
 
-voice_members_from_states_reads_embedded_member_test() ->
-    EmbeddedMember = #{<<"user">> => #{<<"id">> => <<"300">>}, <<"roles">> => []},
-    IndexedMember = #{<<"user">> => #{<<"id">> => <<"200">>}, <<"roles">> => []},
-    VoiceStates = [
-        #{<<"user_id">> => <<"300">>, <<"member">> => EmbeddedMember},
-        #{<<"user_id">> => <<"200">>}
-    ],
-    VoiceMembers = guild_data_channels:voice_members_from_states(VoiceStates, [IndexedMember]),
-    ?assertEqual([EmbeddedMember, IndexedMember], VoiceMembers).
-
 paginate_members_test() ->
     Members = [#{<<"id">> => 1}, #{<<"id">> => 2}, #{<<"id">> => 3}],
     ?assertEqual(

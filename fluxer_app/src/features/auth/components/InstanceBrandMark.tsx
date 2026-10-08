@@ -56,5 +56,13 @@ export function InstanceBrandMark({
 	if (iconUrl == null) {
 		return globe;
 	}
-	return <InstanceBrandImage key={iconUrl} url={iconUrl} size={size} fallback={globe} />;
+	return (
+		<InstanceBrandImage
+			key={iconUrl}
+			url={iconUrl}
+			size={size}
+			fallback={globe}
+			data-flx="auth.instance-brand-mark.instance-brand-image"
+		/>
+	);
 }

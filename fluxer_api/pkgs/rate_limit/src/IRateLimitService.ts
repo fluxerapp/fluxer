@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export type RateLimitScope = 'global' | 'shared' | 'user';
-export type RateLimitAlgorithm = 'leaky_bucket';
+type RateLimitAlgorithm = 'leaky_bucket';
 
 export interface RateLimitResult {
 	allowed: boolean;

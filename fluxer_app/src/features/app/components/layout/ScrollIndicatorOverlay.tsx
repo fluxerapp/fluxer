@@ -83,7 +83,7 @@ function getMeasurableRectInsideScrollContent(node: HTMLElement, container: HTML
 	return nodeRect;
 }
 
-export function measureScrollIndicatorTargets(container: HTMLElement): Array<ScrollIndicatorTargetMeasurement> {
+function measureScrollIndicatorTargets(container: HTMLElement): Array<ScrollIndicatorTargetMeasurement> {
 	const containerRect = container.getBoundingClientRect();
 	const nodes = container.querySelectorAll<HTMLElement>(
 		'[data-scroll-indicator="mention"],[data-scroll-indicator="unread"]',
@@ -114,7 +114,7 @@ function findScrollIndicatorNode(container: HTMLElement, id: string): HTMLElemen
 	return null;
 }
 
-export const useScrollEdgeIndicators = (
+const useScrollEdgeIndicators = (
 	getScrollContainer: () => HTMLElement | null,
 	scrollContainerIdentity: string,
 	dependencies: React.DependencyList = [],

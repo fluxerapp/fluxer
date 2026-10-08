@@ -73,8 +73,6 @@ pub struct NativeTransformMetrics {
     pub(super) native_task_detached_duration: Histogram,
     pub(super) native_tasks_detached: AtomicU64,
     pub(super) native_tasks_detached_active: AtomicU64,
-    pub(super) framebuffer_pool_borrows: AtomicU64,
-    pub(super) framebuffer_pool_grow_events: AtomicU64,
 }
 
 impl NativeTransformMetrics {
@@ -85,8 +83,6 @@ impl NativeTransformMetrics {
             native_task_detached_duration: Histogram::new(),
             native_tasks_detached: AtomicU64::new(0),
             native_tasks_detached_active: AtomicU64::new(0),
-            framebuffer_pool_borrows: AtomicU64::new(0),
-            framebuffer_pool_grow_events: AtomicU64::new(0),
         }
     }
 
@@ -114,15 +110,5 @@ impl NativeTransformMetrics {
             "detached native task count must not underflow"
         );
         self.native_task_detached_duration.observe(ms);
-    }
-
-    pub fn record_framebuffer_pool_borrow(&self) {
-        self.framebuffer_pool_borrows
-            .fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn record_framebuffer_pool_grow(&self) {
-        self.framebuffer_pool_grow_events
-            .fetch_add(1, Ordering::Relaxed);
     }
 }

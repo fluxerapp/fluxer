@@ -11,7 +11,7 @@ const canonicalizeRecipientIds = (recipientIds: ReadonlyArray<string>): string =
 	return JSON.stringify(sortedRecipients);
 };
 
-export function getMaxGroupDmRecipients(): number {
+function getMaxGroupDmRecipients(): number {
 	return Limits.getMaxGroupDmRecipients();
 }
 

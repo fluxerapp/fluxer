@@ -91,7 +91,7 @@ function buildEmbedNotificationPreview(embeds: ReadonlyArray<MessageEmbed> | nul
 	return '';
 }
 
-export function buildStickerNotificationPreview(
+function buildStickerNotificationPreview(
 	stickers: ReadonlyArray<MessageStickerItem> | null | undefined,
 	i18n: I18n,
 ): string {

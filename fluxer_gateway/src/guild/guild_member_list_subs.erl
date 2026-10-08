@@ -20,7 +20,6 @@
     fold_list_subs/4,
     fold_lists/3,
     fold_list_ids/3,
-    foreach_list/2,
     is_subscribed/3
 ]).
 
@@ -152,18 +151,6 @@ fold_lists(Fun, Acc0, Tab) ->
 -spec fold_list_ids(fun((binary(), Acc) -> Acc), Acc, ets:table()) -> Acc.
 fold_list_ids(Fun, Acc0, Tab) ->
     fold_list_ids_loop(Fun, Acc0, Tab, ets:next(Tab, {<<>>, <<>>})).
-
--spec foreach_list(fun((binary(), list_subs()) -> term()), ets:table()) -> ok.
-foreach_list(Fun, Tab) ->
-    _ = fold_lists(
-        fun(ListId, ListSubs, Acc) ->
-            _ = Fun(ListId, ListSubs),
-            Acc
-        end,
-        #{},
-        Tab
-    ),
-    ok.
 
 -spec is_subscribed(binary(), binary(), ets:table()) -> boolean().
 is_subscribed(ListId, SessionId, Tab) ->

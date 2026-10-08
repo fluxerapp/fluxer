@@ -130,32 +130,6 @@
 	gap: 0.125rem;
 }
 
-.controlButton {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 1.75rem;
-	height: 1.75rem;
-	padding: 0;
-	border: none;
-	background: transparent;
-	color: var(--text-secondary);
-	cursor: pointer;
-	border-radius: var(--radius-sm, 0.25rem);
-	transition:
-		opacity 0.1s ease,
-		background-color 0.1s ease;
-}
-
-.controlButton:hover {
-	color: var(--text-primary);
-	background-color: var(--background-modifier-hover);
-}
-
-.timeDisplay {
-	color: var(--text-secondary);
-}
-
 .playPauseIndicator {
 	position: absolute;
 	top: 50%;
@@ -218,10 +192,6 @@
 @media (max-width: 320px) {
 	.controlsRow {
 		gap: 0.125rem;
-	}
-
-	.timeDisplay {
-		display: none;
 	}
 }
 

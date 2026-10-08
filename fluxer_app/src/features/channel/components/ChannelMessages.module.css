@@ -234,29 +234,6 @@
 	}
 }
 
-.loadMoreContainer {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: 0.75rem 0;
-}
-
-.loadMoreTopPadding {
-	padding-top: 1.25rem;
-}
-
-.loadMoreBottomPadding {
-	padding-bottom: 1.25rem;
-}
-
-.unreadOverlay {
-	position: absolute;
-	left: 0;
-	right: 0;
-	z-index: 1;
-	pointer-events: none;
-}
-
 .unreadSlot {
 	display: none;
 	pointer-events: none;

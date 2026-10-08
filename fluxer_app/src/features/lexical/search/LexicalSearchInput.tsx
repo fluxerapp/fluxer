@@ -237,7 +237,7 @@ class SearchEditorUpdateOwner {
 	}
 }
 
-export class SearchKeyboardCommandOwner {
+class SearchKeyboardCommandOwner {
 	readonly #editor: LexicalEditor;
 	readonly #autocompleteOpen: MutableCell<boolean>;
 

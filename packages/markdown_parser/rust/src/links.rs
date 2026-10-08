@@ -3,7 +3,7 @@
 use crate::ast::{
     EmojiKind, GuildNavigationType, MentionKind, Node, ParserFlags, ParserResult, TimestampStyle,
 };
-use crate::constants::{MAX_LINE_LENGTH, MAX_LINK_URL_LENGTH};
+use crate::constants::MAX_LINK_URL_LENGTH;
 use crate::parser::{MarkdownParser, ParseError};
 use crate::text::{
     advance_one, bounded_url_end, byte_at, find_from, has_visible_content, is_alpha_numeric,
@@ -1399,10 +1399,6 @@ pub fn count_repeated_byte(text: &str, position: usize, byte: u8) -> usize {
         count += 1;
     }
     count
-}
-
-pub fn max_inline_scan() -> usize {
-    MAX_LINE_LENGTH
 }
 
 #[cfg(test)]

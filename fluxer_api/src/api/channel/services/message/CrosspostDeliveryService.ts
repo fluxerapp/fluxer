@@ -129,14 +129,14 @@ const UNAVAILABLE_GUILD_FEATURES: ReadonlyArray<string> = [
 	GuildFeatures.UNAVAILABLE_HIDDEN,
 ];
 
-export class CrosspostDeliveryPendingError extends Error {
+class CrosspostDeliveryPendingError extends Error {
 	constructor(sourceMessageId: MessageID, webhookId: WebhookID) {
 		super(`Crosspost delivery for ${sourceMessageId} to webhook ${webhookId} is still pending`);
 		this.name = 'CrosspostDeliveryPendingError';
 	}
 }
 
-export class CrosspostSyncConflictError extends Error {
+class CrosspostSyncConflictError extends Error {
 	constructor(sourceMessageId: MessageID, webhookId: WebhookID) {
 		super(`Crosspost copy for ${sourceMessageId} via webhook ${webhookId} changed during sync`);
 		this.name = 'CrosspostSyncConflictError';
@@ -166,7 +166,7 @@ function toStableValue(value: unknown): unknown {
 	return value;
 }
 
-export function crosspostSourceFingerprint(source: Message): string {
+function crosspostSourceFingerprint(source: Message): string {
 	const state = {
 		content: source.content ?? null,
 		flags: source.flags & SENDABLE_MESSAGE_FLAGS,

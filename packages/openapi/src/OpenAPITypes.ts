@@ -34,6 +34,7 @@ export interface ExtractedRoute {
 	explicitOperationId: string | null;
 	explicitDescription: string | null;
 	explicitStatusCodes: Array<number> | null;
+	errorStatusCodes: Array<number>;
 	explicitSecurity: Array<string> | null;
 	oauth2RequiredScopes: Array<string> | null;
 	oauth2ScopeMode: 'all' | 'any' | null;
@@ -78,14 +79,14 @@ export interface OpenAPIResponse {
 	content?: Record<string, OpenAPIMediaType>;
 	headers?: Record<string, OpenAPIHeaderObject>;
 }
-export interface OpenAPIHeaderObject {
+interface OpenAPIHeaderObject {
 	description?: string;
 	schema: OpenAPISchemaOrRef;
 }
 export interface OpenAPIRef extends core.JSONSchema.JSONSchema {
 	$ref: string;
 }
-export type OpenAPISchemaOrRef = OpenAPISchema | OpenAPIRef;
+type OpenAPISchemaOrRef = OpenAPISchema | OpenAPIRef;
 export type OpenAPISchema = core.JSONSchema.JSONSchema;
 export interface OpenAPIDocument {
 	openapi: '3.0.3' | '3.1.0';

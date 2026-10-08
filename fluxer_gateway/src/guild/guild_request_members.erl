@@ -180,9 +180,16 @@ normalize_nonce(_) ->
 
 -spec process_request(map(), pid(), session_state()) -> ok | {error, atom()}.
 process_request(Request, SocketPid, SessionState) ->
+    UserId = snowflake_id:parse_optional(maps:get(user_id, SessionState)),
+    case guild_request_members_filter:check_request_rate_limit(UserId) of
+        ok -> process_admitted_request(Request, UserId, SocketPid, SessionState);
+        {error, Reason} -> {error, Reason}
+    end.
+
+-spec process_admitted_request(map(), integer() | undefined, pid(), session_state()) ->
+    ok | {error, atom()}.
+process_admitted_request(Request, UserId, SocketPid, SessionState) ->
     #{guild_ids := ReqGuildIds, query := Query, limit := Limit, user_ids := UserIds} = Request,
-    UserIdBin = maps:get(user_id, SessionState),
-    UserId = snowflake_id:parse_optional(UserIdBin),
     IsBot = truthy(maps:get(bot, SessionState, false)),
     case guild_request_members_filter:enforce_single_guild_for_bots(IsBot, ReqGuildIds) of
         ok ->
@@ -248,6 +255,22 @@ dispatch_guild_requests(GIds, UID, Bot, Q, L, UI, Req, SP, SS) ->
     session_state()
 ) -> ok | {error, atom()}.
 process_single_guild(GId, UID, Bot, Q, L, UI, Req, _SP, SS) ->
+    case guild_request_members_filter:check_guild_request_rate_limit(GId) of
+        ok -> process_admitted_guild(GId, UID, Bot, Q, L, UI, Req, SS);
+        {error, Reason} -> {error, Reason}
+    end.
+
+-spec process_admitted_guild(
+    integer(),
+    integer() | undefined,
+    boolean(),
+    binary(),
+    non_neg_integer(),
+    [integer()],
+    map(),
+    session_state()
+) -> ok | {error, atom()}.
+process_admitted_guild(GId, UID, Bot, Q, L, UI, Req, SS) ->
     IsFull = guild_request_members_filter:is_full_member_list(Q, L, UI),
     case guild_request_members_filter:check_full_list_bot_rate_limit(IsFull, Bot, UID, GId) of
         ok ->
@@ -320,6 +343,22 @@ try_guild_or_keep_processed(GId, UID, Bot, Q, L, UI, Req, SS, Acc) ->
     session_state()
 ) -> boolean().
 try_guild(GId, UID, Bot, Q, L, UI, Req, SS) ->
+    case guild_request_members_filter:check_guild_request_rate_limit(GId) of
+        ok -> try_admitted_guild(GId, UID, Bot, Q, L, UI, Req, SS);
+        {error, _Reason} -> false
+    end.
+
+-spec try_admitted_guild(
+    integer(),
+    integer() | undefined,
+    boolean(),
+    binary(),
+    non_neg_integer(),
+    [integer()],
+    map(),
+    session_state()
+) -> boolean().
+try_admitted_guild(GId, UID, Bot, Q, L, UI, Req, SS) ->
     IsFull = guild_request_members_filter:is_full_member_list(Q, L, UI),
     case guild_request_members_filter:check_full_list_bot_rate_limit(IsFull, Bot, UID, GId) of
         ok ->

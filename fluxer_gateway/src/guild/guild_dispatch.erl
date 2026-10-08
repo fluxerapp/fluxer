@@ -7,10 +7,6 @@
 
 -export([
     handle_dispatch/3,
-    extract_and_remove_session_id/1,
-    decorate_member_data/3,
-    extract_member_for_event/3,
-    collect_and_send_push_notifications/3,
     normalize_event/1,
     is_member_list_updates_enabled/1
 ]).
@@ -149,22 +145,6 @@ extract_session_id_if_needed(message_reaction_remove, EventData) ->
     guild_dispatch_decorate:extract_and_remove_session_id(EventData);
 extract_session_id_if_needed(_, EventData) ->
     {undefined, EventData}.
-
--spec extract_and_remove_session_id(event_data()) -> {binary() | undefined, event_data()}.
-extract_and_remove_session_id(Data) ->
-    guild_dispatch_decorate:extract_and_remove_session_id(Data).
-
--spec decorate_member_data(event(), event_data(), guild_state()) -> event_data().
-decorate_member_data(Event, Data, State) ->
-    guild_dispatch_decorate:decorate_member_data(Event, Data, State).
-
--spec extract_member_for_event(event(), event_data(), guild_state()) -> map() | undefined.
-extract_member_for_event(Event, Data, State) ->
-    guild_dispatch_decorate:extract_member_for_event(Event, Data, State).
-
--spec collect_and_send_push_notifications(event_data(), integer(), guild_state()) -> ok.
-collect_and_send_push_notifications(MessageData, GuildId, State) ->
-    guild_dispatch_push:collect_and_send_push_notifications(MessageData, GuildId, State).
 
 -spec is_member_list_updates_enabled(guild_state()) -> boolean().
 is_member_list_updates_enabled(State) ->

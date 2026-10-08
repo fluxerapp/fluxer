@@ -57,7 +57,7 @@ const INTERNAL_VIRTUAL_AUDIO_DEVICE_LABELS = [
 	'fluxer direct capture',
 ];
 
-export function isInternalVirtualAudioDevice(device: MediaDeviceInfo): boolean {
+function isInternalVirtualAudioDevice(device: MediaDeviceInfo): boolean {
 	const label = device.label.trim().toLowerCase();
 	return INTERNAL_VIRTUAL_AUDIO_DEVICE_LABELS.some((internalLabel) => label.includes(internalLabel));
 }
@@ -87,7 +87,7 @@ export interface VoiceAudioDeviceMetadata {
 	defaultPlatform?: VoiceAudioDefaultDevicePlatform;
 }
 
-export type VoiceMediaDeviceInfo = MediaDeviceInfo & {
+type VoiceMediaDeviceInfo = MediaDeviceInfo & {
 	isDefault?: boolean;
 	fluxerVoiceAudioDevice?: VoiceAudioDeviceMetadata;
 };
@@ -314,7 +314,7 @@ function createVideoDeviceInfo(deviceId: string, groupId: string, label: string)
 	} as MediaDeviceInfo;
 }
 
-export function shapeVideoDevices(devices: ReadonlyArray<MediaDeviceInfo>): Array<MediaDeviceInfo> {
+function shapeVideoDevices(devices: ReadonlyArray<MediaDeviceInfo>): Array<MediaDeviceInfo> {
 	const endpointDevices = devices
 		.filter((device) => device.kind === 'videoinput' && device.deviceId.trim().length > 0)
 		.map((device) =>
@@ -406,7 +406,7 @@ function dedupeAudioDeviceInfos(devices: ReadonlyArray<VoiceMediaDeviceInfo>): A
 	return [...devicesByDeviceId.values()];
 }
 
-export function shapeBrowserAudioDevices(devices: ReadonlyArray<MediaDeviceInfo>): Array<MediaDeviceInfo> {
+function shapeBrowserAudioDevices(devices: ReadonlyArray<MediaDeviceInfo>): Array<MediaDeviceInfo> {
 	return shapeAudioDevices(
 		devices.map((device) => ({
 			deviceId: device.deviceId,

@@ -144,8 +144,10 @@ export interface SearchableReport {
 	status: number;
 	reportType: number;
 	category: string;
+	reason: string | null;
 	additionalInfo: string | null;
 	reportedUserId: string | null;
+	reportedWebhookId: string | null;
 	reportedGuildId: string | null;
 	reportedGuildName: string | null;
 	reportedMessageId: string | null;
@@ -163,9 +165,12 @@ export interface ReportSearchFilters {
 	status?: number;
 	reportType?: number;
 	category?: string;
+	reason?: string;
 	reportedUserId?: string;
+	reportedWebhookId?: string;
 	reportedGuildId?: string;
 	reportedMessageId?: string;
+	reportedChannelId?: string;
 	guildContextId?: string;
 	resolvedByAdminId?: string;
 	isResolved?: boolean;

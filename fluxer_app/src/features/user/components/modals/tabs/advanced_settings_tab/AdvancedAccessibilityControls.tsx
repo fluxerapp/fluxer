@@ -3,7 +3,7 @@
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
@@ -15,7 +15,7 @@ import {
 	setDesktopWindowBehaviorSettings,
 } from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
 import type {DesktopWindowBehaviorSettings} from '@app/types/electron.d';
-import {msg} from '@lingui/core/macro';
+import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useLayoutEffect, useState} from 'react';
@@ -106,10 +106,11 @@ function useChromiumScrollingRestartModal() {
 		ModalCommands.push(
 			modal(() => (
 				<ConfirmModal
-					title={i18n._(RESTART_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					title={i18n._(RESTART_PRODUCT_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 					description={
 						<Trans>
-							{PRODUCT_NAME} needs to restart before Chromium's native scrolling settings change how scrolling works.
+							{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart before Chromium's native scrolling
+							settings change how scrolling works.
 						</Trans>
 					}
 					primaryText={i18n._(RESTART_NOW_DESCRIPTOR)}

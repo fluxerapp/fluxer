@@ -5,7 +5,7 @@ import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 
-export const REFUND_ALLOWANCE_BLOCK_THRESHOLD = 2;
+const REFUND_ALLOWANCE_BLOCK_THRESHOLD = 2;
 
 function isCountedAgainstAllowance(refund: BillingRefundRow): boolean {
 	if (refund.status !== 'succeeded') {
@@ -14,7 +14,7 @@ function isCountedAgainstAllowance(refund: BillingRefundRow): boolean {
 	return (refund.metadata?.get('rejection_reason') ?? null) === null;
 }
 
-export async function listCountedRefundIds(user: User, userRepository: IUserRepository): Promise<Array<string>> {
+async function listCountedRefundIds(user: User, userRepository: IUserRepository): Promise<Array<string>> {
 	const payments = await userRepository.findPaymentsByUserId(user.id);
 	const paymentIntentIds = [
 		...new Set(payments.map((payment) => payment.paymentIntentId).filter((id): id is string => id !== null)),

@@ -11,7 +11,6 @@
     get_from_cluster/1,
     get_local_fast/1,
     local_bulk_presence_map/1,
-    fetch_remote_bulk_presence_map/2,
     normalize_user_ids/1,
     group_user_ids_by_owner/1,
     sanitize_presence_map/1,
@@ -122,15 +121,6 @@ local_bulk_presence_map(UserIds) ->
         #{},
         Groups
     ).
-
--spec fetch_remote_bulk_presence_map(node(), [integer()]) -> #{integer() => map()}.
-fetch_remote_bulk_presence_map(OwnerNode, UserIds) ->
-    case safe_remote_call(OwnerNode, {bulk_get_local_map, UserIds}, invalid_reply) of
-        Reply when is_map(Reply) -> sanitize_presence_map(Reply);
-        _ ->
-            FallbackReply = safe_remote_call(OwnerNode, {bulk_get_local, UserIds}, []),
-            map_from_presence_list(FallbackReply)
-    end.
 
 -spec safe_remote_call(node(), term(), term()) -> term().
 safe_remote_call(TargetNode, Request, Fallback) ->

@@ -230,15 +230,6 @@ export class KVAccountDeletionQueueService {
 		}
 	}
 
-	async getStateVersion(): Promise<number | null> {
-		try {
-			return parseStoredTimestamp(await this.kvClient.get(STATE_VERSION_KEY), 'Deletion queue state version');
-		} catch (error) {
-			Logger.error({error}, 'Failed to get state version');
-			throw error;
-		}
-	}
-
 	private getSecondaryKey(userId: UserID): string {
 		return `deletion_queue_by_user:${userId.toString()}`;
 	}

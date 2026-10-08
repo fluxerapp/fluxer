@@ -5,12 +5,12 @@ import {useCallback, useLayoutEffect, useRef} from 'react';
 import type {FieldValues, UseFormReturn} from 'react-hook-form';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export type RemoteFormIdentityKey = string | number | boolean | null | undefined;
+type RemoteFormIdentityKey = string | number | boolean | null | undefined;
 
-export type RemoteFormAutomaticResetReason = 'initial' | 'identity-change' | 'remote-clean';
+type RemoteFormAutomaticResetReason = 'initial' | 'identity-change' | 'remote-clean';
 export type RemoteFormResetReason = RemoteFormAutomaticResetReason | 'commit' | 'explicit-reset';
 
-export interface RemoteFormResetOptions {
+interface RemoteFormResetOptions {
 	readonly keepDefaultValues?: boolean;
 	readonly keepDirty?: boolean;
 	readonly keepDirtyValues?: boolean;
@@ -24,19 +24,12 @@ export interface RemoteFormResetOptions {
 	readonly keepValues?: boolean;
 }
 
-export interface RemoteFormResetDecisionInput {
-	readonly hasAppliedRemoteValues: boolean;
-	readonly identityChanged: boolean;
-	readonly remoteValuesChanged: boolean;
-	readonly isDirty: boolean;
-}
-
-export interface RemoteFormResetDecision {
+interface RemoteFormResetDecision {
 	readonly shouldReset: boolean;
 	readonly reason?: RemoteFormResetReason;
 }
 
-export type RemoteFormResetMachineEvent =
+type RemoteFormResetMachineEvent =
 	| {
 			type: 'remote.inspect';
 			identityChanged: boolean;
@@ -57,7 +50,7 @@ function resetDecision(reason: RemoteFormResetReason): RemoteFormResetDecision {
 	return {shouldReset: true, reason};
 }
 
-export const remoteFormResetStateMachine = setup({
+const remoteFormResetStateMachine = setup({
 	types: {} as {
 		context: RemoteFormResetMachineContext;
 		events: RemoteFormResetMachineEvent;
@@ -105,42 +98,24 @@ export const remoteFormResetStateMachine = setup({
 	},
 });
 
-export type RemoteFormResetMachineSnapshot = SnapshotFrom<typeof remoteFormResetStateMachine>;
-export type RemoteFormResetMachineStateValue = 'unhydrated' | 'hydrated';
+type RemoteFormResetMachineSnapshot = SnapshotFrom<typeof remoteFormResetStateMachine>;
+type RemoteFormResetMachineStateValue = 'unhydrated' | 'hydrated';
 
-export function createRemoteFormResetMachineSnapshot(): RemoteFormResetMachineSnapshot {
+function createRemoteFormResetMachineSnapshot(): RemoteFormResetMachineSnapshot {
 	return initialTransition(remoteFormResetStateMachine)[0];
 }
 
-export function transitionRemoteFormResetSnapshot(
+function transitionRemoteFormResetSnapshot(
 	snapshot: RemoteFormResetMachineSnapshot,
 	event: RemoteFormResetMachineEvent,
 ): RemoteFormResetMachineSnapshot {
 	return transition(remoteFormResetStateMachine, snapshot, event)[0] as RemoteFormResetMachineSnapshot;
 }
 
-export function getRemoteFormResetMachineStateValue(
+function getRemoteFormResetMachineStateValue(
 	snapshot: RemoteFormResetMachineSnapshot,
 ): RemoteFormResetMachineStateValue {
 	return snapshot.value === 'hydrated' ? 'hydrated' : 'unhydrated';
-}
-
-export function getRemoteFormResetDecision({
-	hasAppliedRemoteValues,
-	identityChanged,
-	remoteValuesChanged,
-	isDirty,
-}: RemoteFormResetDecisionInput): RemoteFormResetDecision {
-	let snapshot = createRemoteFormResetMachineSnapshot();
-	if (hasAppliedRemoteValues) {
-		snapshot = transitionRemoteFormResetSnapshot(snapshot, {type: 'remote.commit'});
-	}
-	return transitionRemoteFormResetSnapshot(snapshot, {
-		type: 'remote.inspect',
-		identityChanged,
-		remoteValuesChanged,
-		isDirty,
-	}).context.decision;
 }
 
 type RemoteFormValueMapper<TFormValues extends FieldValues, TRemoteValues> = (

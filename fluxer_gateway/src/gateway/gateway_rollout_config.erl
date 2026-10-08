@@ -8,7 +8,6 @@
 -export([
     start_link/0,
     get/0,
-    is_clustered/0,
     session_rollout_percentage/0,
     session_rollout_mode/0,
     guild_rollout_percentage/0,
@@ -20,7 +19,6 @@
     max_concurrent_guild_starts/0,
     is_session_eligible/1,
     is_guild_eligible/1,
-    session_start_rollout_decision/1,
     subscribe_changes/1,
     unsubscribe_changes/1
 ]).
@@ -47,20 +45,6 @@ get() ->
         persistent_term:get(?PERSISTENT_TERM_KEY)
     catch
         error:badarg -> default_config()
-    end.
-
--spec is_clustered() -> boolean().
-is_clustered() ->
-    case fluxer_gateway_env:get(cluster_enabled) of
-        true -> cluster_member_count() > 1;
-        _ -> false
-    end.
-
--spec cluster_member_count() -> non_neg_integer().
-cluster_member_count() ->
-    case persistent_term:get({gateway_cluster_membership, members}, undefined) of
-        undefined -> 1;
-        Members when is_list(Members) -> length(Members)
     end.
 
 -spec session_rollout_percentage() -> number().
@@ -112,33 +96,6 @@ is_session_eligible(UserId) ->
 -spec is_guild_eligible(binary()) -> boolean().
 is_guild_eligible(GuildId) ->
     check_eligibility(GuildId, guild_rollout_percentage(), modulo).
-
--spec session_start_rollout_decision(map()) -> eligible | not_eligible | missing_user_id.
-session_start_rollout_decision(ApiData) ->
-    Percentage = session_rollout_percentage(),
-    Mode = session_rollout_mode(),
-    case Percentage >= 100 of
-        true ->
-            eligible;
-        false ->
-            check_user_eligibility(ApiData, Percentage, Mode)
-    end.
-
--spec check_user_eligibility(map(), number(), modulo | random) ->
-    eligible | not_eligible | missing_user_id.
-check_user_eligibility(ApiData, Percentage, Mode) ->
-    case maps:get(<<"user_id">>, ApiData, undefined) of
-        undefined ->
-            missing_user_id;
-        UserId ->
-            eligibility_result(check_eligibility(UserId, Percentage, Mode))
-    end.
-
--spec eligibility_result(boolean()) -> eligible | not_eligible.
-eligibility_result(true) ->
-    eligible;
-eligibility_result(false) ->
-    not_eligible.
 
 -spec subscribe_changes(pid()) -> ok.
 subscribe_changes(Pid) ->

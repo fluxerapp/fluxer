@@ -56,17 +56,6 @@ class ContentModerationService {
 		}
 	}
 
-	scanHostname(host: string, ctx: ModerationContext): void {
-		if (!host) return;
-		if (urlBlocklistCache.isHostnameBanned(host)) {
-			Logger.warn(
-				{surface: ctx.surface, userId: ctx.userId?.toString(), host},
-				'content_moderation.block hostname match',
-			);
-			throw new ContentBlockedError();
-		}
-	}
-
 	scanFileBuffer(buffer: Buffer | Uint8Array, ctx: ModerationContext): string {
 		const sha = createHash('sha256').update(buffer).digest('hex');
 		this.scanSha256(sha, ctx);

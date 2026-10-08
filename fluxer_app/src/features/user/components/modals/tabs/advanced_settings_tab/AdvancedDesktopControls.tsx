@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
 	getCachedDesktopTroubleshootingSettings,
 	getDesktopTroubleshootingSettings,
@@ -21,7 +21,7 @@ import {
 } from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@app/types/electron.d';
-import {msg} from '@lingui/core/macro';
+import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useLayoutEffect, useState} from 'react';
@@ -162,8 +162,13 @@ export const NativeTitleBarControl = observer(() => {
 				ModalCommands.push(
 					modal(() => (
 						<ConfirmModal
-							title={i18n._(RESTART_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
-							description={<Trans>{PRODUCT_NAME} needs to restart for the title bar change to take effect.</Trans>}
+							title={i18n._(RESTART_PRODUCT_DESCRIPTOR, {productName: RuntimeConfig.productName})}
+							description={
+								<Trans>
+									{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart for the title bar change to take
+									effect.
+								</Trans>
+							}
 							primaryText={i18n._(RESTART_NOW_DESCRIPTOR)}
 							primaryVariant="primary"
 							secondaryText={i18n._(LATER_DESCRIPTOR)}
@@ -206,11 +211,14 @@ export const HardwareAccelerationControl = observer(() => {
 						}
 						description={
 							value ? (
-								<Trans>{PRODUCT_NAME} needs to restart for hardware acceleration to take effect.</Trans>
+								<Trans>
+									{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart for hardware acceleration to take
+									effect.
+								</Trans>
 							) : (
 								<Trans>
-									{PRODUCT_NAME} needs to restart to disable Chromium's hardware acceleration. Use this only if you're
-									troubleshooting graphics glitches or high GPU usage.
+									{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart to disable Chromium's hardware
+									acceleration. Use this only if you're troubleshooting graphics glitches or high GPU usage.
 								</Trans>
 							)
 						}

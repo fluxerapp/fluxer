@@ -103,11 +103,11 @@ const OAuthAuthorizeActionsBase: React.FC<OAuthAuthorizeActionsProps> = ({
 	);
 };
 
-export const OAuthAuthorizeActions = observer(OAuthAuthorizeActionsBase);
+const OAuthAuthorizeActions = observer(OAuthAuthorizeActionsBase);
 
 type OAuthAuthorizeInlineActionsProps = Omit<OAuthAuthorizeActionsProps, 'layout'>;
 
-export const OAuthAuthorizeInlineActions: React.FC<OAuthAuthorizeInlineActionsProps> = observer((props) => (
+const OAuthAuthorizeInlineActions: React.FC<OAuthAuthorizeInlineActionsProps> = observer((props) => (
 	<div className={styles.actions} data-flx={`${props.dataFlxPrefix}.actions`}>
 		<OAuthAuthorizeActions
 			data-flx="auth.oauth-authorize-page.o-auth-authorize-actions.o-auth-authorize-inline-actions.o-auth-authorize-actions"
@@ -125,7 +125,7 @@ interface OAuthAuthorizeRedirectNoticeProps {
 	hostnameDataFlx: string;
 }
 
-export const OAuthAuthorizeRedirectNotice: React.FC<OAuthAuthorizeRedirectNoticeProps> = ({
+const OAuthAuthorizeRedirectNotice: React.FC<OAuthAuthorizeRedirectNoticeProps> = ({
 	authParams,
 	redirectHostname,
 	dataFlx,

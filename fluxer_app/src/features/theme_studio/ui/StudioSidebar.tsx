@@ -56,11 +56,6 @@ export const StudioSidebarItem: React.FC<StudioSidebarItemProps> = ({icon, label
 		</button>
 	</FocusRing>
 );
-export const StudioSidebarGroupLabel: React.FC<{children: ReactNode}> = ({children}) => (
-	<div className={styles.groupLabel} data-flx="theme-studio.ui.studio-sidebar.studio-sidebar-group-label.group-label">
-		{children}
-	</div>
-);
 export const StudioSidebarFooterText: React.FC<{children: ReactNode}> = ({children}) => (
 	<span className={styles.footerText} data-flx="theme-studio.ui.studio-sidebar.studio-sidebar-footer-text.footer-text">
 		{children}

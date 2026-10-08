@@ -29,11 +29,11 @@ interface CrosspostSourceCounts {
 	presenceCount: number;
 }
 
-export function crosspostSourceCountsCacheKey(guildId: GuildID): string {
+function crosspostSourceCountsCacheKey(guildId: GuildID): string {
 	return `crosspost-source:counts:${guildId.toString()}`;
 }
 
-export function getCrosspostSourceGuildId(message: MessageResponse): GuildID | null {
+function getCrosspostSourceGuildId(message: MessageResponse): GuildID | null {
 	const isCopy = (message.flags & MessageFlags.IS_CROSSPOST) !== 0;
 	const isFollowNotice = message.type === MessageTypes.CHANNEL_FOLLOW_ADD;
 	if (!isCopy && !isFollowNotice) {

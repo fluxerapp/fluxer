@@ -1405,7 +1405,6 @@ describe('LegacyGlobalKeyHookAdapter', () => {
 		await settle();
 		const invoke = registerLegacy(harness);
 		assert.equal(await invoke('global-key-hook-start'), false);
-		assert.equal(await invoke('global-key-hook-is-running'), false);
 		await invoke('global-key-hook-register', {id: 'key:voice_toggle_mute::F9:F9', keyName: 'F9'});
 		assert.equal(harness.portals.length, 0);
 		assert.deepEqual(harness.started, []);

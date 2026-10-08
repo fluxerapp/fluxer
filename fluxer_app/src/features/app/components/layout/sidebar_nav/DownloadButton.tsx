@@ -3,10 +3,11 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import guildStyles from '@app/features/app/components/layout/GuildsLayout.module.css';
 import styles from '@app/features/app/components/layout/sidebar_nav/DownloadButton.module.css';
-import {DESKTOP_DOWNLOAD_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useHover} from '@app/features/app/hooks/useHover';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import HiddenGuildListButtons from '@app/features/guild/state/HiddenGuildListButtons';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
@@ -73,7 +74,7 @@ export const DownloadButton = observer(() => {
 			<Tooltip
 				position="right"
 				size="large"
-				text={() => i18n._(DOWNLOAD_DESCRIPTOR, {productName: PRODUCT_NAME})}
+				text={() => i18n._(DOWNLOAD_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				data-flx="app.sidebar-nav.download-button.tooltip"
 			>
 				<FocusRing
@@ -84,7 +85,7 @@ export const DownloadButton = observer(() => {
 				>
 					<button
 						type="button"
-						aria-label={i18n._(DOWNLOAD_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						aria-label={i18n._(DOWNLOAD_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 						data-guild-list-focus-item="true"
 						onClick={handleDownload}
 						onContextMenu={handleContextMenu}

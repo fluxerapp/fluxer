@@ -28,6 +28,8 @@
 /fluxer_app/pkgs/libfluxcore/
 /fluxer_app/pkgs/libfluxwebp/
 /fluxer_app/src/features/i18n/locales/*/messages.mjs
+**/auto-i18n-reviewed-unchanged.json.lock
+**/weblate/locales/auto-i18n-reviewed-unchanged.json
 /fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
 /fluxer_app/src/features/theme/styles/generated/
 /fluxer_app/src/features/ui/components/SVGMasks.tsx

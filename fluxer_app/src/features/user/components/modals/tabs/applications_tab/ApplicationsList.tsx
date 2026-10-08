@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
-import {PRODUCT_API_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {DeveloperApplication} from '@app/features/devtools/models/DeveloperApplication';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import styles from '@app/features/user/components/modals/tabs/applications_tab/ApplicationsTab.module.css';
@@ -31,7 +31,7 @@ export const ApplicationsList: React.FC<ApplicationsListProps> = observer(({appl
 				<StatusSlate
 					Icon={AppWindowIcon}
 					title={<Trans>No applications yet</Trans>}
-					description={i18n._(FIRST_APPLICATION_DESCRIPTION_DESCRIPTOR, {apiName: PRODUCT_API_NAME})}
+					description={i18n._(FIRST_APPLICATION_DESCRIPTION_DESCRIPTOR, {apiName: `${RuntimeConfig.productName} API`})}
 					data-flx="user.applications-tab.applications-list.status-slate"
 				/>
 			</div>

@@ -70,11 +70,6 @@
 	flex-shrink: 0;
 }
 
-.divider {
-	height: 0.0625rem;
-	background: var(--studio-border);
-}
-
 .code {
 	font-family: var(--studio-font-mono);
 	font-size: var(--studio-fs-xs);

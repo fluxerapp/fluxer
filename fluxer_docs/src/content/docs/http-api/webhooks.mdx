@@ -149,8 +149,8 @@ Every operation returning a [webhook object](#webhook-object) of an incoming web
 | Field | Type | Description |
 | --- | --- | --- |
 | content?<sup>1</sup> | ?string | Message content |
-| embeds?<sup>2</sup> | array[[rich embed input](/http-api/messages/#rich-embed-input-objects) object] | Rich embeds |
-| attachments?<sup>3</sup> | array[[webhook attachment input](#webhook-attachment-input-object) object] | Attachment metadata |
+| embeds?<sup>2</sup> | array[[rich embed](/http-api/messages/#rich-embed-object) object] | Rich embeds |
+| attachments?<sup>3</sup> | array[[pre-uploaded attachment](/http-api/messages/#pre-uploaded-attachment-object) object] | Attachment metadata |
 | message_reference?<sup>4</sup> | ?[message reference input](/http-api/messages/#message-reference-input-object) object | Reply or forward reference, or null |
 | allowed_mentions?<sup>5</sup> | ?[allowed mentions](/http-api/messages/#allowed-mentions-object) object | Mention parsing policy, or null |
 | flags? | integer | [Message flags](/http-api/messages/#message-flags), where omission is treated as zero and every bit outside the sendable mask is cleared |
@@ -165,7 +165,7 @@ Every operation returning a [webhook object](#webhook-object) of an incoming web
 
 <sup>2</sup> Bounded by the resolved [max_embeds_per_message](/http-api/instance/#limit-keys) value for the guild, defaulting to 10. Exceeding it returns 400 `INVALID_FORM_BODY` with `TOO_MANY_EMBEDS`
 
-<sup>3</sup> A JSON body attaches no file. A multipart body attaches files as described in [Execute webhook](#execute-webhook)
+<sup>3</sup> Each entry names a file uploaded earlier by its `upload_filename`. A multipart body also attaches direct files, as [Execute webhook](#execute-webhook) describes
 
 <sup>4</sup> A forward reference requires both `channel_id` and `message_id`, and it must not accompany content, embeds, or attachments. See [message references](#message-references)
 
@@ -180,34 +180,6 @@ Every operation returning a [webhook object](#webhook-object) of an incoming web
 When `embeds` is absent, Fluxer rewrites the singular key `embed` to a one-element `embeds` array, and an `embed` of null becomes an empty array. When both are present, `embed` is dropped.
 
 A multipart body accepts both [pre-uploaded attachments](/http-api/messages/#pre-uploaded-attachment-object) and [direct multipart attachment metadata](/http-api/messages/#direct-multipart-attachment-metadata-object).
-
-## Webhook attachment input object
-
-A JSON [webhook message body](#webhook-message-body) accepts this attachment metadata shape. Every member is optional, and a member outside this table is discarded.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| id? | snowflake \| integer | The ID of the attachment |
-| filename? | string | Attachment filename (1-1024 characters) |
-| description? | string | Attachment description (1-4096 characters) |
-| content_type? | string | Media type (1-256 characters) |
-| size? | integer | Byte count, as a non-negative safe integer |
-| url? | string | Absolute `http` or `https` URL of at most 2,048 characters |
-| proxy_url? | string | Absolute `http` or `https` URL of at most 2,048 characters |
-| height? | integer | Pixel height |
-| width? | integer | Pixel width |
-| ephemeral? | boolean | Whether the attachment is ephemeral |
-| duration? | number | Audio duration in seconds |
-| waveform? | string | Base64 waveform data (1-256 characters) |
-| flags? | integer | [Attachment flags](/http-api/messages/#attachment-flags) |
-
-:::caution[A JSON body cannot attach a file]
-The execution attaches only an entry with `upload_filename`, and this object defines no such member. A webhook that needs to attach a file uses a [multipart body](#execute-webhook).
-:::
-
-Every entry supplied in a JSON body is dropped, and it counts towards neither the attachment limit nor the non-empty message check.
 
 ## Message references
 
@@ -228,7 +200,7 @@ A forward reference must not accompany content, embeds, or attachments, and one 
 | Field | Type | Description |
 | --- | --- | --- |
 | content?<sup>1</sup> | ?string | Replacement message content, or null |
-| embeds?<sup>2</sup> | array[[rich embed input](/http-api/messages/#rich-embed-input-objects) object] | Replacement collection of embeds |
+| embeds?<sup>2</sup> | array[[rich embed](/http-api/messages/#rich-embed-object) object] | Replacement collection of embeds |
 | flags? | integer | Replacement [message flags](/http-api/messages/#message-flags) |
 | allowed_mentions? | ?[allowed mentions](/http-api/messages/#allowed-mentions-object) object | Replacement mention parsing policy, or null |
 
@@ -271,7 +243,7 @@ These objects define the body [Execute Slack webhook](#execute-slack-webhook) ac
 | title_link?<sup>3</sup> | string | Title URL, mapped to the embed URL |
 | fields?<sup>4</sup> | array[[Slack attachment field](#slack-attachment-field-object) object] | Fields mapped to embed fields |
 | footer? | string | Footer text, mapped to the embed footer |
-| ts?<sup>5</sup> | number | Unix seconds, mapped to the embed timestamp |
+| ts?<sup>5</sup> | integer | Unix seconds, mapped to the embed timestamp |
 | author_name?<sup>6</sup> | string | Author name, mapped to the embed author name |
 | author_link?<sup>3</sup> | string | Author URL, mapped to the embed author URL |
 | author_icon?<sup>3</sup> | string | Author icon URL, mapped to the embed author icon |

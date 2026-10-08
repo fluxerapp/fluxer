@@ -11,7 +11,7 @@ export interface ExpressionMetadata {
 	allowCloning: boolean;
 }
 
-export interface ExpressionMetadataRequestState {
+interface ExpressionMetadataRequestState {
 	loading: boolean;
 	error: Error | null;
 	data: ExpressionMetadata | null;

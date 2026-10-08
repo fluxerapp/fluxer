@@ -53,23 +53,6 @@ build_force_disconnect_rpc_request_test() ->
     ?assertEqual(<<"123">>, maps:get(<<"guild_id">>, Req)),
     ?assertEqual(<<"conn">>, maps:get(<<"connection_id">>, Req)).
 
-build_list_participants_rpc_request_test() ->
-    Req = voice_utils:build_list_participants_rpc_request(
-        123, 456, <<"local">>, <<"server-1">>
-    ),
-    ?assertEqual(<<"voice_list_participants">>, maps:get(<<"type">>, Req)),
-    ?assertEqual(<<"123">>, maps:get(<<"guild_id">>, Req)),
-    ?assertEqual(<<"456">>, maps:get(<<"channel_id">>, Req)),
-    ?assertEqual(<<"local">>, maps:get(<<"region_id">>, Req)),
-    ?assertEqual(<<"server-1">>, maps:get(<<"server_id">>, Req)).
-
-build_list_participants_rpc_request_dm_test() ->
-    Req = voice_utils:build_list_participants_rpc_request(
-        null, 456, <<"local">>, <<"server-1">>
-    ),
-    ?assertEqual(<<"voice_list_participants">>, maps:get(<<"type">>, Req)),
-    ?assertNot(maps:is_key(<<"guild_id">>, Req)).
-
 build_update_participant_rpc_request_test() ->
     Req = voice_utils:build_update_participant_rpc_request(123, 456, 789, true, false),
     ?assertEqual(<<"voice_update_participant">>, maps:get(<<"type">>, Req)),

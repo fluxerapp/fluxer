@@ -73,26 +73,6 @@
 	flex-direction: column;
 }
 
-.blurContent {
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	cursor: default;
-	overflow: hidden;
-	border-radius: var(--media-border-radius);
-	border: none;
-	background: var(--background-primary);
-	padding: 0;
-}
-
-.blurInnerContainer {
-	position: relative;
-	height: 100%;
-	width: 100%;
-	overflow: hidden;
-	border-radius: var(--media-border-radius);
-}
-
 .thumbHashContainer {
 	position: absolute;
 	inset: 0;
@@ -131,12 +111,4 @@
 .animatedImageElement {
 	position: absolute;
 	inset: 0;
-}
-
-.opacityHidden {
-	opacity: 0;
-}
-
-.opacityVisible {
-	opacity: 1;
 }

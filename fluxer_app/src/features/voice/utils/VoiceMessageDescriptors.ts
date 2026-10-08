@@ -49,7 +49,7 @@ export const VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR = msg({
 	message: "You can't speak in this channel",
 	comment: 'Voice control tooltip shown when channel permissions prevent the current user from speaking.',
 });
-export const VOICE_PARTICIPANT_NO_SPEAK_PERMISSION_DESCRIPTOR = msg({
+const VOICE_PARTICIPANT_NO_SPEAK_PERMISSION_DESCRIPTOR = msg({
 	message: "This participant can't speak in this channel",
 	comment:
 		'Voice participant status tooltip shown when channel permissions or voice suppression prevent another participant from speaking.',
@@ -58,24 +58,20 @@ export const VOICE_DEAFENED_BY_MODERATORS_DESCRIPTOR = msg({
 	message: 'Deafened by moderators',
 	comment: 'Voice chat status label. A moderator deafened the user in this community, so they cannot hear voice chat.',
 });
-export const VOICE_SELF_DEAFENED_BY_MODERATORS_DESCRIPTOR = msg({
+const VOICE_SELF_DEAFENED_BY_MODERATORS_DESCRIPTOR = msg({
 	message: 'You were deafened by moderators',
 	comment: 'Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.',
 });
-export const VOICE_PARTICIPANT_DEAFENED_BY_MODERATORS_DESCRIPTOR = msg({
+const VOICE_PARTICIPANT_DEAFENED_BY_MODERATORS_DESCRIPTOR = msg({
 	message: 'This participant was deafened by moderators',
 	comment:
 		'Voice participant status tooltip for another user. A moderator deafened that participant so they cannot hear voice chat.',
 });
-export const VOICE_DEAFENED_DESCRIPTOR = msg({
-	message: 'Deafened',
-	comment: 'Voice chat status label. The user cannot hear voice chat. Distinct from muted.',
-});
-export const VOICE_SELF_DEAFENED_STATUS_DESCRIPTOR = msg({
+const VOICE_SELF_DEAFENED_STATUS_DESCRIPTOR = msg({
 	message: 'You are deafened',
 	comment: 'Voice participant status tooltip for the current user. They cannot hear voice chat. Distinct from muted.',
 });
-export const VOICE_PARTICIPANT_DEAFENED_STATUS_DESCRIPTOR = msg({
+const VOICE_PARTICIPANT_DEAFENED_STATUS_DESCRIPTOR = msg({
 	message: 'This participant is deafened',
 	comment: 'Voice participant status tooltip for another user. They cannot hear voice chat. Distinct from muted.',
 });

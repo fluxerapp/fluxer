@@ -16,6 +16,19 @@ interface AdminGuildDetail {
 	} | null;
 }
 
+interface AdminGuildWarningDetail {
+	guild: {
+		nsfw: boolean;
+		content_warning_level: number;
+		content_warning_text: string | null;
+		channels: Array<{
+			nsfw_override: boolean | null;
+			content_warning_level: number;
+			content_warning_text: string | null;
+		}>;
+	} | null;
+}
+
 interface AdminGuildUpdate {
 	guild: {
 		id: string;
@@ -23,6 +36,13 @@ interface AdminGuildUpdate {
 		owner_id: string;
 		features: Array<string>;
 	};
+}
+
+interface AdminGuildMemberList {
+	members: Array<{user: {id: string}}>;
+	total: number;
+	limit: number;
+	offset: number;
 }
 
 describe('Admin guild routes', () => {
@@ -70,6 +90,50 @@ describe('Admin guild routes', () => {
 			.execute();
 		expect(result.guild.name).toBe(renamed);
 		expect(result.guild.features).toContain('VERIFIED');
+	});
+	test('PATCH /admin/guilds/{guild_id} returns the summary fields only when the body sets content warning fields', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:update:settings']);
+		const guild = await createGuild(harness, admin.token, `Warning Guild ${Date.now()}`);
+		const result = await createBuilder<AdminGuildUpdate>(harness, `${admin.token}`)
+			.patch(`/admin/guilds/${guild.id}`)
+			.body({nsfw: true, content_warning_level: 1, content_warning_text: 'Graphic content'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(Object.keys(result.guild).sort()).toEqual([
+			'banner',
+			'features',
+			'icon',
+			'id',
+			'member_count',
+			'name',
+			'nsfw_level',
+			'owner_id',
+		]);
+	});
+	test('GET /admin/guilds/{guild_id} returns the adult content and content warning state', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup', 'guild:update:settings']);
+		const guild = await createGuild(harness, admin.token, `Warning Lookup Guild ${Date.now()}`);
+		const before = await createBuilder<AdminGuildWarningDetail>(harness, `${admin.token}`)
+			.get(`/admin/guilds/${guild.id}`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(before.guild).toMatchObject({nsfw: false, content_warning_level: 0, content_warning_text: null});
+		expect(before.guild?.channels.length).toBeGreaterThan(0);
+		for (const channel of before.guild?.channels ?? []) {
+			expect(channel).toMatchObject({nsfw_override: null, content_warning_level: 0, content_warning_text: null});
+		}
+		await createBuilder(harness, `${admin.token}`)
+			.patch(`/admin/guilds/${guild.id}`)
+			.body({nsfw: true, content_warning_level: 1, content_warning_text: 'Graphic content'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const after = await createBuilder<AdminGuildWarningDetail>(harness, `${admin.token}`)
+			.get(`/admin/guilds/${guild.id}`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(after.guild).toMatchObject({nsfw: true, content_warning_level: 1, content_warning_text: 'Graphic content'});
 	});
 	test('PATCH /admin/guilds/{guild_id} requires the ACL selected by every supplied field', async () => {
 		const admin = await createTestAccount(harness);
@@ -123,19 +187,33 @@ describe('Admin guild routes', () => {
 	});
 	test('GET /admin/guilds/{guild_id}/members lists members', async () => {
 		const admin = await createTestAccount(harness);
-		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:list:members']);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:list:members', 'guild:force_add_member']);
 		const guild = await createGuild(harness, admin.token, `Member List Guild ${Date.now()}`);
-		const result = await createBuilder<{
-			members: Array<unknown>;
-			total: number;
-			limit: number;
-			offset: number;
-		}>(harness, `${admin.token}`)
+		const joined = [await createTestAccount(harness), await createTestAccount(harness)];
+		for (const account of joined) {
+			await createBuilder(harness, `${admin.token}`)
+				.put(`/admin/guilds/${guild.id}/members/${account.userId}`)
+				.body(null)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+		}
+		const expectedIds = [admin.userId, ...joined.map((account) => account.userId)].sort((a, b) =>
+			BigInt(a) < BigInt(b) ? -1 : BigInt(a) > BigInt(b) ? 1 : 0,
+		);
+		const result = await createBuilder<AdminGuildMemberList>(harness, `${admin.token}`)
 			.get(`/admin/guilds/${guild.id}/members?limit=10&offset=0`)
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(result.limit).toBe(10);
 		expect(result.offset).toBe(0);
+		expect(result.total).toBe(3);
+		expect(result.members.map((member) => member.user.id)).toEqual(expectedIds);
+		const page = await createBuilder<AdminGuildMemberList>(harness, `${admin.token}`)
+			.get(`/admin/guilds/${guild.id}/members?limit=1&offset=1`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(page.total).toBe(3);
+		expect(page.members.map((member) => member.user.id)).toEqual([expectedIds[1]]);
 	});
 	test('GET /admin/guilds/{guild_id}/members requires guild:list:members', async () => {
 		const admin = await createTestAccount(harness);

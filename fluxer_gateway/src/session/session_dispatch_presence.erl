@@ -19,7 +19,6 @@
 -export_type([session_state/0, event/0, user_id/0]).
 
 -define(MAX_EVENT_BUFFER_SIZE, 4096).
--define(MAX_SINGLE_EVENT_BUFFER_BYTES, 2097152).
 -define(MAX_TOTAL_BUFFER_BYTES, 16777216).
 -define(MAX_PENDING_PRESENCE_BUFFER_SIZE, 2048).
 

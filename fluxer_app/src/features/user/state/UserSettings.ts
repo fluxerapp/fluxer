@@ -391,10 +391,6 @@ class UserSettingsState {
 		writePersistedSyncedPreferences(SYNCED_PREFERENCES_WIRE_KEY, this.wireSyncedPreferences);
 	}
 
-	getFlags(): number {
-		return this.flags;
-	}
-
 	getStatus(): StatusType {
 		return this.status;
 	}
@@ -411,24 +407,12 @@ class UserSettingsState {
 		return this.timeFormat;
 	}
 
-	getGuildPositions(): ReadonlyArray<string> {
-		return this.guildFolders.flatMap((folder) => folder.guildIds);
-	}
-
 	getLocale(): string {
 		return this.locale;
 	}
 
 	applyLocalLocale(locale: string): void {
 		this.locale = applyLocaleChange(locale);
-	}
-
-	getRestrictedGuilds(): ReadonlyArray<string> {
-		return this.restrictedGuilds;
-	}
-
-	getBotRestrictedGuilds(): ReadonlyArray<string> {
-		return this.botRestrictedGuilds;
 	}
 
 	getBotDefaultGuildsRestricted(): boolean {
@@ -441,10 +425,6 @@ class UserSettingsState {
 
 	getInlineAttachmentMedia(): boolean {
 		return this.inlineAttachmentMedia;
-	}
-
-	getInlineEmbedMedia(): boolean {
-		return this.inlineEmbedMedia;
 	}
 
 	getMotionPreferencesInput(): MotionPreferencesInput {
@@ -489,10 +469,6 @@ class UserSettingsState {
 		return selectEffectiveAnimateStickers(createMotionPreferencesContext(this.getMotionPreferencesInput()));
 	}
 
-	getRenderSpoilers(): number {
-		return this.renderSpoilers;
-	}
-
 	getMessageDisplayCompact(): boolean {
 		if (MobileLayout.isMobileLayout()) {
 			return false;
@@ -524,20 +500,12 @@ class UserSettingsState {
 		return this.privacySetupVersion;
 	}
 
-	getGuildFolders(): ReadonlyArray<GuildFolder> {
-		return this.guildFolders;
-	}
-
 	getCustomStatus(): CustomStatus | null {
 		return this.customStatus;
 	}
 
 	getAfkTimeout(): number {
 		return this.afkTimeout;
-	}
-
-	getDeveloperMode(): boolean {
-		return this.developerMode;
 	}
 
 	getTrustedDomains(): ReadonlyArray<string> {
@@ -552,28 +520,12 @@ class UserSettingsState {
 		return this.defaultHideMutedChannels;
 	}
 
-	getSensitiveContentFriendDmFilter(): number {
-		return this.sensitiveContentFriendDmFilter;
-	}
-
-	getSensitiveContentNonFriendDmFilter(): number {
-		return this.sensitiveContentNonFriendDmFilter;
-	}
-
-	getSensitiveContentGuildFilter(): number {
-		return this.sensitiveContentGuildFilter;
-	}
-
 	getSuppressUnprivilegedSelfMentions(): boolean {
 		return this.suppressUnprivilegedSelfMentions;
 	}
 
 	getSuppressUnprivilegedSelfMentionsBypassUserIds(): ReadonlyArray<string> {
 		return this.suppressUnprivilegedSelfMentionsBypassUserIds;
-	}
-
-	getSuppressUnprivilegedSelfMentionBypassUserIds(): ReadonlyArray<string> {
-		return this.getSuppressUnprivilegedSelfMentionsBypassUserIds();
 	}
 
 	getStaffDmAccessUserIds(): ReadonlyArray<string> {

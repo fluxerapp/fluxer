@@ -6,7 +6,7 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {ENABLE_NOTIFICATIONS_DESCRIPTOR, OKAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {usePushSubscriptions} from '@app/features/notification/hooks/usePushSubscriptions';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
@@ -142,7 +142,7 @@ export const DesktopNotificationNagbar = observer(({isMobile}: {isMobile: boolea
 				onDismiss={handleDismiss}
 				message={
 					isPwaMobile
-						? i18n._(ENABLE_PUSH_NOTIFICATIONS_MESSAGE_DESCRIPTOR, {productName: PRODUCT_NAME})
+						? i18n._(ENABLE_PUSH_NOTIFICATIONS_MESSAGE_DESCRIPTOR, {productName: RuntimeConfig.productName})
 						: i18n._(ENABLE_DESKTOP_NOTIFICATIONS_MESSAGE_DESCRIPTOR)
 				}
 				actions={

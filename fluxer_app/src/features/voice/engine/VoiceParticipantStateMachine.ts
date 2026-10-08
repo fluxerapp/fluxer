@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {SPEAKING_REMOTE_ATTACK_MS, SPEAKING_REMOTE_RELEASE_MS} from '@app/features/voice/engine/VoiceSpeakingThreshold';
-import {
-	asVoiceConnectionQuality,
-	type VoiceConnectionQuality,
-	VoiceTrackSource,
-} from '@app/features/voice/engine/VoiceTrackSource';
-import {areOrderedStringArraysEqual} from '@app/features/voice/utils/StringArrayUtils';
-import type {Participant, Room} from 'livekit-client';
+import type {VoiceConnectionQuality} from '@app/features/voice/engine/VoiceTrackSource';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type LivekitParticipantSnapshot = Readonly<{
@@ -31,20 +25,7 @@ export type LivekitParticipantSnapshot = Readonly<{
 	lastSpokeAt: number | null;
 }>;
 
-export interface VoiceParticipantMachineContext {
-	participants: Readonly<Record<string, LivekitParticipantSnapshot>>;
-}
-
-export type VoiceParticipantEvent =
-	| {type: 'participant.upsert'; snapshot: LivekitParticipantSnapshot}
-	| {type: 'participant.remove'; identity: string}
-	| {type: 'participant.removeConnection'; connectionId: string}
-	| {type: 'participant.hydrate'; snapshots: ReadonlyArray<LivekitParticipantSnapshot>}
-	| {type: 'participant.activeSpeakers'; identities: ReadonlyArray<string>}
-	| {type: 'participant.setAudioLevelSpeaking'; identity: string; speaking: boolean; nowMs?: number}
-	| {type: 'participant.clear'};
-
-export interface RemoteSpeakingAnalyserState {
+interface RemoteSpeakingAnalyserState {
 	identity: string;
 	track: unknown;
 	speaking: boolean;
@@ -60,7 +41,7 @@ export type VoiceRemoteSpeakingCommand =
 	| {type: 'clearPlaybackBoost'; identity: string}
 	| {type: 'rehydrateRemoteAnalysers'};
 
-export interface VoiceRemoteSpeakingMachineContext {
+interface VoiceRemoteSpeakingMachineContext {
 	analysers: ReadonlyMap<string, RemoteSpeakingAnalyserState>;
 	analyserSuspendedByVisibility: boolean;
 	commands: ReadonlyArray<VoiceRemoteSpeakingCommand>;
@@ -74,8 +55,6 @@ export type VoiceRemoteSpeakingEvent =
 	| {type: 'remote.visibilityVisible'}
 	| {type: 'remote.clear'}
 	| {type: 'remote.clearCommands'};
-
-const EMPTY_PARTICIPANTS: Readonly<Record<string, LivekitParticipantSnapshot>> = {};
 const EMPTY_REMOTE_COMMANDS: ReadonlyArray<VoiceRemoteSpeakingCommand> = [];
 const REMOTE_PLAYBACK_TARGET_RMS = 0.09;
 const REMOTE_PLAYBACK_MIN_RMS = 0.0025;
@@ -86,189 +65,6 @@ const REMOTE_PLAYBACK_BOOST_DOWN_COEFF = 0.35;
 const REMOTE_PLAYBACK_SILENCE_HOLD_MS = 3000;
 const REMOTE_PLAYBACK_SILENCE_RELEASE = 0.99;
 const REMOTE_PLAYBACK_UNITY_EPSILON = 0.01;
-
-export const extractParticipantUserId = (identity: string): string | null => {
-	const match = identity.match(/^user_(\d+)(?:_(.+))?$/);
-	return match ? match[1] : null;
-};
-
-export const extractParticipantConnectionId = (identity: string): string | null => {
-	const match = identity.match(/^user_(\d+)_(.+)$/);
-	return match ? match[2] : null;
-};
-
-const keysSorted = (m: Map<string, unknown>): ReadonlyArray<string> => Object.freeze([...m.keys()].sort());
-const attrsClone = (a: Readonly<Record<string, string>>): Readonly<Record<string, string>> => Object.freeze({...a});
-
-const attrsEqual = (a: Readonly<Record<string, string>>, b: Readonly<Record<string, string>>): boolean => {
-	if (a === b) return true;
-	const keysA = Object.keys(a);
-	const keysB = Object.keys(b);
-	if (keysA.length !== keysB.length) return false;
-	for (let i = 0; i < keysA.length; i++) {
-		const k = keysA[i];
-		if (a[k] !== b[k]) return false;
-	}
-	return true;
-};
-
-export const areLivekitParticipantSnapshotsEqual = (
-	a: LivekitParticipantSnapshot | undefined,
-	b: LivekitParticipantSnapshot,
-): boolean => {
-	if (!a) return false;
-	return (
-		a.identity === b.identity &&
-		a.userId === b.userId &&
-		a.connectionId === b.connectionId &&
-		a.sid === b.sid &&
-		a.isLocal === b.isLocal &&
-		a.isSpeaking === b.isSpeaking &&
-		a.isAudioLevelSpeaking === b.isAudioLevelSpeaking &&
-		a.connectionQuality === b.connectionQuality &&
-		a.metadata === b.metadata &&
-		a.isMicrophoneEnabled === b.isMicrophoneEnabled &&
-		a.isCameraEnabled === b.isCameraEnabled &&
-		a.isScreenShareEnabled === b.isScreenShareEnabled &&
-		a.isScreenShareAudioEnabled === b.isScreenShareAudioEnabled &&
-		a.joinedAt === b.joinedAt &&
-		a.lastSpokeAt === b.lastSpokeAt &&
-		areOrderedStringArraysEqual(a.audioTrackSids, b.audioTrackSids) &&
-		areOrderedStringArraysEqual(a.videoTrackSids, b.videoTrackSids) &&
-		attrsEqual(a.attributes, b.attributes)
-	);
-};
-
-function isScreenShareAudioEnabled(p: Participant): boolean {
-	for (const publication of p.audioTrackPublications.values()) {
-		if (publication.source === VoiceTrackSource.ScreenShareAudio) {
-			return !publication.isMuted;
-		}
-	}
-	return false;
-}
-
-export const createLivekitParticipantSnapshot = (
-	p: Participant,
-	previous?: LivekitParticipantSnapshot,
-): LivekitParticipantSnapshot => ({
-	identity: p.identity,
-	userId: extractParticipantUserId(p.identity),
-	connectionId: extractParticipantConnectionId(p.identity),
-	sid: p.sid,
-	isLocal: p.isLocal,
-	isSpeaking: p.isSpeaking,
-	isAudioLevelSpeaking: previous?.isAudioLevelSpeaking ?? false,
-	connectionQuality: asVoiceConnectionQuality(p.connectionQuality),
-	metadata: p.metadata ?? undefined,
-	attributes: attrsClone(p.attributes),
-	audioTrackSids: keysSorted(p.audioTrackPublications),
-	videoTrackSids: keysSorted(p.videoTrackPublications),
-	isMicrophoneEnabled: p.isMicrophoneEnabled,
-	isCameraEnabled: p.isCameraEnabled,
-	isScreenShareEnabled: p.isScreenShareEnabled,
-	isScreenShareAudioEnabled: isScreenShareAudioEnabled(p),
-	joinedAt: p.joinedAt ? p.joinedAt.getTime() : null,
-	lastSpokeAt: previous?.lastSpokeAt ?? null,
-});
-
-export function createLivekitParticipantSnapshotsFromRoom(
-	room: Room,
-	previous: Readonly<Record<string, LivekitParticipantSnapshot>> = EMPTY_PARTICIPANTS,
-): Array<LivekitParticipantSnapshot> {
-	const snapshots: Array<LivekitParticipantSnapshot> = [];
-	if (room.localParticipant) {
-		snapshots.push(createLivekitParticipantSnapshot(room.localParticipant, previous[room.localParticipant.identity]));
-	}
-	room.remoteParticipants.forEach((participant) => {
-		snapshots.push(createLivekitParticipantSnapshot(participant, previous[participant.identity]));
-	});
-	return snapshots;
-}
-
-function upsertParticipant(
-	context: VoiceParticipantMachineContext,
-	snapshot: LivekitParticipantSnapshot,
-): VoiceParticipantMachineContext {
-	const existing = context.participants[snapshot.identity];
-	if (areLivekitParticipantSnapshotsEqual(existing, snapshot)) return context;
-	return {
-		participants: {
-			...context.participants,
-			[snapshot.identity]: snapshot,
-		},
-	};
-}
-
-function removeParticipant(context: VoiceParticipantMachineContext, identity: string): VoiceParticipantMachineContext {
-	if (!(identity in context.participants)) return context;
-	const participants = {...context.participants};
-	delete participants[identity];
-	return {participants};
-}
-
-function removeConnectionParticipants(
-	context: VoiceParticipantMachineContext,
-	connectionId: string,
-): VoiceParticipantMachineContext {
-	let participants: Record<string, LivekitParticipantSnapshot> | null = null;
-	for (const [identity, snapshot] of Object.entries(context.participants)) {
-		if (snapshot.connectionId !== connectionId) continue;
-		participants ??= {...context.participants};
-		delete participants[identity];
-	}
-	return participants ? {participants} : context;
-}
-
-function hydrateParticipants(
-	context: VoiceParticipantMachineContext,
-	snapshots: ReadonlyArray<LivekitParticipantSnapshot>,
-): VoiceParticipantMachineContext {
-	const participants: Record<string, LivekitParticipantSnapshot> = {};
-	let changed = Object.keys(context.participants).length !== snapshots.length;
-	for (const snapshot of snapshots) {
-		const existing = context.participants[snapshot.identity];
-		participants[snapshot.identity] = areLivekitParticipantSnapshotsEqual(existing, snapshot) ? existing! : snapshot;
-		if (participants[snapshot.identity] !== existing) changed = true;
-	}
-	if (!changed) return context;
-	return {participants};
-}
-
-function setActiveSpeakers(
-	context: VoiceParticipantMachineContext,
-	identities: ReadonlyArray<string>,
-): VoiceParticipantMachineContext {
-	const speakerIds = new Set(identities);
-	let changed = false;
-	const participants = {...context.participants};
-	for (const [identity, snapshot] of Object.entries(context.participants)) {
-		const isSpeaking = speakerIds.has(identity);
-		if (snapshot.isSpeaking !== isSpeaking) {
-			participants[identity] = {...snapshot, isSpeaking};
-			changed = true;
-		}
-	}
-	return changed ? {participants} : context;
-}
-
-function setAudioLevelSpeaking(
-	context: VoiceParticipantMachineContext,
-	identity: string,
-	isAudioLevelSpeaking: boolean,
-	nowMs?: number,
-): VoiceParticipantMachineContext {
-	const existing = context.participants[identity];
-	if (!existing) return context;
-	const lastSpokeAt = isAudioLevelSpeaking ? (nowMs ?? existing.lastSpokeAt) : existing.lastSpokeAt;
-	if (existing.isAudioLevelSpeaking === isAudioLevelSpeaking && existing.lastSpokeAt === lastSpokeAt) return context;
-	return {
-		participants: {
-			...context.participants,
-			[identity]: {...existing, isAudioLevelSpeaking, lastSpokeAt},
-		},
-	};
-}
 
 function remoteContext(
 	analysers: ReadonlyMap<string, RemoteSpeakingAnalyserState> = new Map(),
@@ -436,51 +232,7 @@ function showRemoteAnalysers(context: VoiceRemoteSpeakingMachineContext): VoiceR
 	return appendRemoteCommands({...context, analyserSuspendedByVisibility: false}, [{type: 'rehydrateRemoteAnalysers'}]);
 }
 
-export const voiceParticipantStateMachine = setup({
-	types: {} as {
-		context: VoiceParticipantMachineContext;
-		events: VoiceParticipantEvent;
-	},
-	actions: {
-		upsert: assign(({context, event}) =>
-			event.type === 'participant.upsert' ? upsertParticipant(context, event.snapshot) : context,
-		),
-		remove: assign(({context, event}) =>
-			event.type === 'participant.remove' ? removeParticipant(context, event.identity) : context,
-		),
-		removeConnection: assign(({context, event}) =>
-			event.type === 'participant.removeConnection'
-				? removeConnectionParticipants(context, event.connectionId)
-				: context,
-		),
-		hydrate: assign(({context, event}) =>
-			event.type === 'participant.hydrate' ? hydrateParticipants(context, event.snapshots) : context,
-		),
-		activeSpeakers: assign(({context, event}) =>
-			event.type === 'participant.activeSpeakers' ? setActiveSpeakers(context, event.identities) : context,
-		),
-		setAudioLevelSpeaking: assign(({context, event}) =>
-			event.type === 'participant.setAudioLevelSpeaking'
-				? setAudioLevelSpeaking(context, event.identity, event.speaking, event.nowMs)
-				: context,
-		),
-		clear: assign(() => ({participants: EMPTY_PARTICIPANTS})),
-	},
-}).createMachine({
-	id: 'voiceParticipant',
-	context: () => ({participants: EMPTY_PARTICIPANTS}),
-	on: {
-		'participant.upsert': {actions: 'upsert'},
-		'participant.remove': {actions: 'remove'},
-		'participant.removeConnection': {actions: 'removeConnection'},
-		'participant.hydrate': {actions: 'hydrate'},
-		'participant.activeSpeakers': {actions: 'activeSpeakers'},
-		'participant.setAudioLevelSpeaking': {actions: 'setAudioLevelSpeaking'},
-		'participant.clear': {actions: 'clear'},
-	},
-});
-
-export const voiceRemoteSpeakingStateMachine = setup({
+const voiceRemoteSpeakingStateMachine = setup({
 	types: {} as {
 		context: VoiceRemoteSpeakingMachineContext;
 		events: VoiceRemoteSpeakingEvent;
@@ -511,20 +263,7 @@ export const voiceRemoteSpeakingStateMachine = setup({
 		'remote.clearCommands': {actions: 'clearCommands'},
 	},
 });
-
-export type VoiceParticipantSnapshot = SnapshotFrom<typeof voiceParticipantStateMachine>;
 export type VoiceRemoteSpeakingSnapshot = SnapshotFrom<typeof voiceRemoteSpeakingStateMachine>;
-
-export function createVoiceParticipantSnapshot(): VoiceParticipantSnapshot {
-	return initialTransition(voiceParticipantStateMachine)[0];
-}
-
-export function transitionVoiceParticipantSnapshot(
-	snapshot: VoiceParticipantSnapshot,
-	event: VoiceParticipantEvent,
-): VoiceParticipantSnapshot {
-	return transition(voiceParticipantStateMachine, snapshot, event)[0] as VoiceParticipantSnapshot;
-}
 
 export function createVoiceRemoteSpeakingSnapshot(): VoiceRemoteSpeakingSnapshot {
 	return initialTransition(voiceRemoteSpeakingStateMachine)[0];
@@ -539,26 +278,4 @@ export function transitionVoiceRemoteSpeakingSnapshot(
 
 export function clearVoiceRemoteSpeakingCommands(snapshot: VoiceRemoteSpeakingSnapshot): VoiceRemoteSpeakingSnapshot {
 	return transitionVoiceRemoteSpeakingSnapshot(snapshot, {type: 'remote.clearCommands'});
-}
-
-export const __TEST__ = {
-	REMOTE_PLAYBACK_TARGET_RMS,
-	REMOTE_PLAYBACK_MIN_RMS,
-	REMOTE_PLAYBACK_MAX_BOOST,
-	REMOTE_PLAYBACK_SILENCE_HOLD_MS,
-};
-
-export function findParticipantSnapshotByUserIdAndConnectionId(
-	participants: Readonly<Record<string, LivekitParticipantSnapshot>>,
-	userId: string,
-	connectionId: string | null,
-): LivekitParticipantSnapshot | undefined {
-	for (const identity in participants) {
-		const participant = participants[identity];
-		if (!participant) continue;
-		if (participant.userId === userId && participant.connectionId === connectionId) {
-			return participant;
-		}
-	}
-	return undefined;
 }

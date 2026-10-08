@@ -5,23 +5,23 @@ import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18
 const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_deletion_cancelled": {
 		"subject": "Raderingen av ditt {product_name}-konto har avbrutits",
-		"body": "Hej {username},\n\nDen schemalagda raderingen av ditt {product_name}-konto har avbrutits. Ditt konto kommer inte att raderas.\n\nOm du har några frågor, kontakta {safety_email}.\n\n– {product_name}-teamet"
+		"body": "Hej {username},\n\nDen schemalagda raderingen av ditt {product_name}-konto har avbrutits. Ditt konto kommer inte att raderas.\n\n{safety_email, select, null {Om du har några frågor, kontakta administratörerna för den här instansen.} other {Om du har några frågor, kontakta {safety_email}.}}\n\n– {product_name}-teamet"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "Ditt {product_name}-konto kommer att raderas på grund av inaktivitet",
-		"body": "Hej {username},\n\nDitt {product_name}-konto har varit inaktivt länge, så permanent radering av kontot är planerad till följande tidpunkt:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nAnledning: {reason}}}\n\nOm du vill behålla ditt konto, kontakta {safety_email} från den här e-postadressen före det datumet.\n\n– {product_name}-teamet"
+		"body": "Hej {username},\n\nDitt {product_name}-konto har varit inaktivt länge, så permanent radering av kontot är planerad till följande tidpunkt:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nAnledning: {reason}}}\n\n{safety_email, select, null {Om du vill behålla ditt konto, kontakta administratörerna för den här instansen före det datumet.} other {Om du vill behålla ditt konto, kontakta {safety_email} från den här e-postadressen före det datumet.}}\n\n– {product_name}-teamet"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "Raderingen av ditt {product_name}-konto är schemalagd",
-		"body": "Hej {username},\n\nSom du har begärt är permanent radering av ditt {product_name}-konto planerad till följande tidpunkt:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nAnledning: {reason}}}\n\nDitt konto är låst fram till dess. Om du inte begärde detta, eller om du vill behålla ditt konto, kontakta {safety_email} från den här e-postadressen före det datumet.\n\n– {product_name}-teamet"
+		"body": "Hej {username},\n\nSom du har begärt är permanent radering av ditt {product_name}-konto planerad till följande tidpunkt:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nAnledning: {reason}}}\n\nDitt konto är låst fram till dess. {safety_email, select, null {Om du inte begärde detta, eller om du vill behålla ditt konto, kontakta administratörerna för den här instansen före det datumet.} other {Om du inte begärde detta, eller om du vill behålla ditt konto, kontakta {safety_email} från den här e-postadressen före det datumet.}}\n\n– {product_name}-teamet"
 	},
 	"account_scheduled_deletion": {
 		"subject": "Ditt {product_name}-konto kommer att raderas permanent",
-		"body": "Hej {username},\n\nDitt {product_name}-konto har schemalagts för permanent radering på grund av brott mot våra användarvillkor eller communityriktlinjer.\n\nSchemalagd radering: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Anledning: {reason}}\n}\n\nDetta är en allvarlig åtgärd. Dina kontodata kommer att raderas permanent på det schemalagda datumet.\n\nGranska:\n- Användarvillkor: {termsUrl}\n- Communityriktlinjer: {guidelinesUrl}\n\nÖverklagandeprocess:\nOm du anser att detta beslut var felaktigt eller obefogat har du 60 dagar på dig att överklaga. Mejla {appeals_email} från den här e-postadressen.\n\nI ditt överklagande:\n- Förklara tydligt varför du anser att beslutet var felaktigt eller obefogat\n- Bifoga relevanta bevis eller bakgrundsinformation\n\nEn medarbetare i säkerhetsteamet på {product_name} kommer att granska ditt överklagande och kan pausa den planerade raderingen tills ett slutgiltigt beslut har fattats.\n\n– Säkerhetsteamet på {product_name}"
+		"body": "Hej {username},\n\nDitt {product_name}-konto har schemalagts för permanent radering på grund av brott mot våra användarvillkor eller communityriktlinjer.\n\nSchemalagd radering: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Anledning: {reason}\n\n}\n}Detta är en allvarlig åtgärd. Dina kontodata kommer att raderas permanent på det schemalagda datumet.\n\n{legalLinks, select,\n  both {Granska:\n- Användarvillkor: {termsUrl}\n- Communityriktlinjer: {guidelinesUrl}\n\n}\n  terms {Granska:\n- Användarvillkor: {termsUrl}\n\n}\n  guidelines {Granska:\n- Communityriktlinjer: {guidelinesUrl}\n\n}\n  other {}\n}Överklagandeprocess:\nOm du anser att detta beslut var felaktigt eller obefogat har du 60 dagar på dig att överklaga. {appeals_email, select, null {Kontakta administratörerna för den här instansen.} other {Mejla {appeals_email} från den här e-postadressen.}}\n\nI ditt överklagande:\n- Förklara tydligt varför du anser att beslutet var felaktigt eller obefogat\n- Bifoga relevanta bevis eller bakgrundsinformation\n\nEn medarbetare i säkerhetsteamet på {product_name} kommer att granska ditt överklagande och kan pausa den planerade raderingen tills ett slutgiltigt beslut har fattats.\n\n– Säkerhetsteamet på {product_name}"
 	},
 	"account_temp_banned": {
 		"subject": "Ditt {product_name}-konto har tillfälligt stängts av",
-		"body": "Hej {username},\n\nDitt {product_name}-konto har tillfälligt stängts av på grund av brott mot våra användarvillkor eller communityriktlinjer.\n\nVaraktighet: {durationHours, plural,\n  =1 {1 timme}\n  other {# timmar}\n}\nAvstängningen upphör: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Anledning: {reason}}\n}\n\nUnder denna tid kommer du inte att kunna komma åt ditt konto.\n\nGranska:\n- Användarvillkor: {termsUrl}\n- Communityriktlinjer: {guidelinesUrl}\n\nOm du anser att detta beslut var felaktigt eller obefogat kan du överklaga. Kontakta vårt supportteam på {appeals_email} från den här e-postadressen och förklara tydligt varför du anser att beslutet var felaktigt. Vi kommer att granska ditt överklagande och svara med vårt beslut.\n\n– Säkerhetsteamet på {product_name}"
+		"body": "Hej {username},\n\nDitt {product_name}-konto har tillfälligt stängts av på grund av brott mot våra användarvillkor eller communityriktlinjer.\n\nVaraktighet: {durationHours, plural,\n  =1 {1 timme}\n  other {# timmar}\n}\nAvstängningen upphör: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Anledning: {reason}\n\n}\n}Under denna tid kommer du inte att kunna komma åt ditt konto.\n\n{legalLinks, select,\n  both {Granska:\n- Användarvillkor: {termsUrl}\n- Communityriktlinjer: {guidelinesUrl}\n\n}\n  terms {Granska:\n- Användarvillkor: {termsUrl}\n\n}\n  guidelines {Granska:\n- Communityriktlinjer: {guidelinesUrl}\n\n}\n  other {}\n}Om du anser att detta beslut var felaktigt eller obefogat kan du överklaga. {appeals_email, select, null {Kontakta administratörerna för den här instansen och förklara tydligt varför du anser att beslutet var felaktigt.} other {Kontakta vårt supportteam på {appeals_email} från den här e-postadressen och förklara tydligt varför du anser att beslutet var felaktigt.}} Vi kommer att granska ditt överklagande och svara med vårt beslut.\n\n– Säkerhetsteamet på {product_name}"
 	},
 	"donation_confirmation": {
 		"subject": "Tack för din donation till {product_name}",
@@ -30,6 +30,10 @@ const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 	"donation_magic_link": {
 		"subject": "Hantera dina donationer till {product_name}",
 		"body": "Hej,\n\nKlicka på länken nedan för att komma åt din donationsportal:\n\n{manageUrl}\n\nI portalen kan du hantera prenumerationer, ladda ner fakturor och se din donationshistorik.\n\nDen här länken upphör att gälla {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nOm du inte begärde denna länk kan du tryggt ignorera det här mejlet.\n\n– {product_name}-teamet"
+	},
+	"dsa_report_resolved": {
+		"subject": "Vi har fattat ett beslut om din anmälan på {product_name}",
+		"body": "Hej,\n\nVårt säkerhetsteam har granskat din anmälan enligt förordningen om digitala tjänster (ID: {reportId}) och fattat ett beslut.{hasComment, select, yes {\n\nSvar från säkerhetsteamet:\n{publicComment}} other {}}\n\nVi delar inte uppgifter om åtgärder mot någon annans konto, eftersom det är den personens personuppgifter.\n\nOm du inte håller med om beslutet kan du överklaga kostnadsfritt inom 60 dagar. {appeals_email, select, null {Kontakta administratörerna för den här instansen, ange ditt anmälnings-ID och förklara varför du anser att beslutet är felaktigt.} other {Mejla {appeals_email} från den här e-postadressen, ange ditt anmälnings-ID och förklara varför du anser att beslutet är felaktigt.}} Om du befinner dig i EU kan du också hänskjuta tvisten till ett certifierat organ för tvistlösning utanför domstol. Inget av detta påverkar din rätt att vända dig till domstol.\n\n– Säkerhetsteamet på {product_name}"
 	},
 	"dsa_report_verification": {
 		"subject": "Verifiera din e-postadress för en DSA-anmälan",
@@ -53,15 +57,15 @@ const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"gift_chargeback_notification": {
 		"subject": "Förmånerna från din inlösta present har tagits bort",
-		"body": "Hej {username},\n\nEn presentkod du löste in betalades ursprungligen av någon annan. Den betalningen har sedan dess återförts genom en kortreklamation (chargeback).\n\nPå grund av detta har vi tagit bort de förmåner som lades till ditt konto när du löste in presenten.\n\nOm du tror att detta är ett misstag, kontakta vårt supportteam och ta med den information du har om presentkoden och när du löste in den.\n\n– {product_name}-teamet"
+		"body": "Hej {username},\n\nEn presentkod du löste in betalades ursprungligen av någon annan. Den betalningen har sedan dess återförts genom en kortreklamation (chargeback).\n\nPå grund av detta har vi tagit bort de förmåner som lades till ditt konto när du löste in presenten.\n\n{support_email, select, null {Om du tror att detta är ett misstag, kontakta administratörerna för den här instansen och ta med den information du har om presentkoden och när du löste in den.} other {Om du tror att detta är ett misstag, kontakta vårt supportteam och ta med den information du har om presentkoden och när du löste in den.}}\n\n– {product_name}-teamet"
 	},
 	"harvest_completed": {
 		"subject": "Din dataexport från {product_name} är klar att ladda ner",
-		"body": "Hej {username},\n\nDin dataexport är klar.\n\nNedladdningslänk:\n{downloadUrl}\n\nAntal meddelanden: {totalMessages, number}\nFilstorlek: {fileSizeMB, number} MB\n\nDen här länken upphör att gälla {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nOm du inte begärde denna export, ändra ditt lösenord omedelbart och kontakta vårt supportteam.\n\n– {product_name}-teamet"
+		"body": "Hej {username},\n\nDin dataexport är klar.\n\nNedladdningslänk:\n{downloadUrl}\n\nAntal meddelanden: {totalMessages, number}\nFilstorlek: {fileSizeMB, number} MB\n\nDen här länken upphör att gälla {expiresAt, date, full} kl. {expiresAt, time, short}.\n\n{support_email, select, null {Om du inte begärde denna export, ändra ditt lösenord omedelbart och kontakta administratörerna för den här instansen.} other {Om du inte begärde denna export, ändra ditt lösenord omedelbart och kontakta vårt supportteam.}}\n\n– {product_name}-teamet"
 	},
 	"inactivity_warning": {
 		"subject": "Ditt {product_name}-konto kommer att raderas på grund av inaktivitet",
-		"body": "Hej {username},\n\nVi har inte sett någon aktivitet på ditt {product_name}-konto sedan {lastActiveDate, date, full}.\n\nOm du inte loggar in senast {deletionDate, date, full} kl. {deletionDate, time, short} kommer ditt konto att raderas permanent på grund av inaktivitet.\n\nLogga in här:\n{loginUrl}\n\nKontakta vårt supportteam omedelbart om du har använt {product_name} nyligen.\n\n– {product_name}-teamet"
+		"body": "Hej {username},\n\nVi har inte sett någon aktivitet på ditt {product_name}-konto sedan {lastActiveDate, date, full}.\n\nOm du inte loggar in senast {deletionDate, date, full} kl. {deletionDate, time, short} kommer ditt konto att raderas permanent på grund av inaktivitet.\n\nLogga in här:\n{loginUrl}\n\n{support_email, select, null {Kontakta administratörerna för den här instansen omedelbart om du har använt {product_name} nyligen.} other {Kontakta vårt supportteam omedelbart om du har använt {product_name} nyligen.}}\n\n– {product_name}-teamet"
 	},
 	"ip_authorization": {
 		"subject": "Godkänn inloggning från en ny IP-adress",
@@ -79,17 +83,17 @@ const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Återställ ditt lösenord på {product_name}",
 		"body": "Hej {username},\n\nDu har begärt att återställa ditt lösenord på {product_name}. Använd länken nedan för att välja ett nytt lösenord:\n\n{resetUrl}\n\nOm du inte begärde detta kan du tryggt ignorera det här mejlet.\n\nDen här länken är giltig i 1 timme.\n\n– {product_name}-teamet"
 	},
-	"registration_approved": {
-		"subject": "Din registrering på {product_name} har godkänts",
-		"body": "Hej {username},\n\nGoda nyheter: din registrering på {product_name} har godkänts.\n\nDu kan nu logga in i {product_name}-appen här:\n{channelsUrl}\n\nVälkommen till {product_name}-communityn.\n\n– {product_name}-teamet"
+	"report_received": {
+		"subject": "Vi har tagit emot din anmälan på {product_name}",
+		"body": "Hej,\n\nVi har tagit emot din anmälan enligt förordningen om digitala tjänster om {targetKind, select, message {ett meddelande} user {ett konto} guild {en community} other {innehåll}} på {product_name}.\n\nAnmälnings-ID: {reportId}\n\nVårt säkerhetsteam granskar din anmälan och vi mejlar dig på den här adressen när vi har fattat ett beslut. Spara det här mejlet så att du har det kvar.\n\n– Säkerhetsteamet på {product_name}"
 	},
 	"report_resolved": {
 		"subject": "Din anmälan på {product_name} har granskats",
-		"body": "Hej {username},\n\nDin anmälan (ID: {reportId}) har granskats av vårt säkerhetsteam.{hasComment, select, yes {\n\nSvar från säkerhetsteamet:\n{publicComment}} other {}}\n\nTack för att du hjälper till att göra {product_name} tryggt för alla. Vi tar alla anmälningar på allvar och uppskattar ditt bidrag till communityn.\n\nOm du har några frågor eller funderingar kring detta resultat, kontakta oss på {safety_email}.\n\n– Säkerhetsteamet på {product_name}"
+		"body": "Hej {username},\n\nDin anmälan (ID: {reportId}) har granskats av vårt säkerhetsteam.{hasComment, select, yes {\n\nSvar från säkerhetsteamet:\n{publicComment}} other {}}\n\nTack för att du hjälper till att göra {product_name} tryggt för alla. Vi tar alla anmälningar på allvar och uppskattar ditt bidrag till communityn.\n\n{safety_email, select, null {Om du har några frågor eller funderingar kring detta resultat, kontakta administratörerna för den här instansen.} other {Om du har några frågor eller funderingar kring detta resultat, kontakta oss på {safety_email}.}}\n\n– Säkerhetsteamet på {product_name}"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "Ditt {product_name}-konto kommer att raderas permanent",
-		"body": "Hej {username},\n\nDitt {product_name}-konto har schemalagts för permanent radering.\n\nSchemalagd radering: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Anledning: {reason}}\n}\n\nDetta är en allvarlig åtgärd. Dina kontodata kommer att raderas permanent på det schemalagda datumet.\n\nOm du anser att detta beslut var felaktigt kan du överklaga. Mejla {appeals_email} från den här e-postadressen.\n\n– Säkerhetsteamet på {product_name}"
+		"body": "Hej {username},\n\nDitt {product_name}-konto har schemalagts för permanent radering.\n\nSchemalagd radering: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Anledning: {reason}\n\n}\n}Detta är en allvarlig åtgärd. Dina kontodata kommer att raderas permanent på det schemalagda datumet.\n\nOm du anser att detta beslut var felaktigt kan du överklaga. {appeals_email, select, null {Kontakta administratörerna för den här instansen.} other {Mejla {appeals_email} från den här e-postadressen.}}\n\n– Säkerhetsteamet på {product_name}"
 	},
 	"self_deletion_scheduled": {
 		"subject": "Raderingen av ditt {product_name}-konto är schemalagd",
@@ -97,7 +101,7 @@ const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"unban_notification": {
 		"subject": "Avstängningen av ditt {product_name}-konto har hävts",
-		"body": "Hej {username},\n\nGoda nyheter: avstängningen av ditt {product_name}-konto har hävts.\n\n{reason, select,\n  null {}\n  other {Anledning: {reason}}\n}\n\nDu kan nu logga in igen och fortsätta använda {product_name} som vanligt.\n\n– Säkerhetsteamet på {product_name}"
+		"body": "Hej {username},\n\nGoda nyheter: avstängningen av ditt {product_name}-konto har hävts.\n\n{reason, select,\n  null {}\n  other {Anledning: {reason}\n\n}\n}Du kan nu logga in igen och fortsätta använda {product_name} som vanligt.\n\n– Säkerhetsteamet på {product_name}"
 	}
 });
 

@@ -720,8 +720,6 @@ export const GOLDEN_LOCAL_STORAGE_CORPUS: ReadonlyArray<GoldenStorageEntry> = [
 	...GOLDEN_UNKNOWN_STORAGE_ENTRIES,
 ];
 
-export const NEVER_SCOPED_STORAGE_KEYS = ['token', 'userId', 'runtimeConfig', 'AccountManager'] as const;
-
 export const OWNED_CONTENT_STORAGE_KEYS: ReadonlyArray<string> = GOLDEN_DEPLOYED_STORAGE_ENTRIES.filter(
 	(entry) => entry.destination === 'content-account',
 ).map((entry) => entry.key);

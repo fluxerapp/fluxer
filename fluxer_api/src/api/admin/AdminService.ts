@@ -16,6 +16,7 @@ import {AdminSearchService} from '@app/api/admin/services/AdminSearchService';
 import {AdminUserRelationshipService} from '@app/api/admin/services/AdminUserRelationshipService';
 import {AdminUserService} from '@app/api/admin/services/AdminUserService';
 import {AdminVoiceService} from '@app/api/admin/services/AdminVoiceService';
+import {ReporterResolutionNotifier} from '@app/api/admin/services/ReporterResolutionNotifier';
 import type {UserID} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
@@ -30,11 +31,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
 import {JobAdminService} from '@app/api/jobs/JobAdminService';
-import {
-	getGuildDiscoveryRepository,
-	getKVAccountDeletionQueue,
-	getNcmecSubmissionService,
-} from '@app/api/middleware/ServiceSingletons';
+import {getGuildDiscoveryRepository, getKVAccountDeletionQueue} from '@app/api/middleware/ServiceSingletons';
 import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import type {ReportService} from '@app/api/report/ReportService';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
@@ -93,6 +90,14 @@ export class AdminService {
 			adminRepository: this.adminRepository,
 			auditService: this.auditService,
 		});
+		const reporterResolutionNotifier = new ReporterResolutionNotifier({
+			apiContext: this.apiContext,
+			systemDm: {
+				channelService: this.channelService,
+				userChannelService: this.runtimeUserService.channelService,
+				userCacheService: this.userCacheService,
+			},
+		});
 		this.userService = new AdminUserService({
 			apiContext: this.apiContext,
 			guildRepository: this.guildRepository,
@@ -107,6 +112,7 @@ export class AdminService {
 			stripe: this.stripe,
 			reportService: this.reportService,
 			storeEntitlementService: this.storeEntitlementService,
+			reporterResolutionNotifier,
 		});
 		this.guildServiceAggregate = new AdminGuildService({
 			guildRepository: this.guildRepository,
@@ -130,7 +136,6 @@ export class AdminService {
 			channelRepository: this.channelRepository,
 			guildRepository: this.guildRepository,
 			auditService: this.auditService,
-			ncmecSubmissionService: getNcmecSubmissionService(),
 		});
 		this.messageShredService = new AdminMessageShredService({
 			apiContext: this.apiContext,
@@ -146,12 +151,10 @@ export class AdminService {
 			reportService: this.reportService,
 			guildRepository: this.guildRepository,
 			channelRepository: this.channelRepository,
-			channelService: this.channelService,
 			storageService: this.storageService,
 			auditService: this.auditService,
 			userCacheService: this.userCacheService,
-			userChannelService: this.runtimeUserService.channelService,
-			ncmecSubmissionService: getNcmecSubmissionService(),
+			reporterResolutionNotifier,
 		});
 		this.voiceService = new AdminVoiceService({
 			apiContext: this.apiContext,

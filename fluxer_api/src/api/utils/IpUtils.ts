@@ -16,7 +16,7 @@ interface GetIpAddressReverseOptions {
 	cacheTtlSeconds?: number;
 }
 
-export function resolveRequestClientIp(req: Request): string | null {
+function resolveRequestClientIp(req: Request): string | null {
 	return extractClientIp(req, {
 		trustClientIpHeader: Config.proxy.trust_client_ip_header,
 		clientIpHeaderName: Config.proxy.client_ip_header,

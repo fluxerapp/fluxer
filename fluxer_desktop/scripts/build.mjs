@@ -354,10 +354,6 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 			relativePath: `win-shell.${tag}.node`,
 		});
 		artifacts.push({
-			label: '@fluxer/win-toast',
-			relativePath: `win-toast.${tag}.node`,
-		});
-		artifacts.push({
 			label: '@fluxer/windows-input-hook',
 			relativePath: `windows-input-hook.${tag}.node`,
 		});
@@ -565,12 +561,6 @@ function buildNativeAddons() {
 		buildNativeAddon({
 			label: '@fluxer/win-shell',
 			dirName: 'win-shell',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
-		});
-		buildNativeAddon({
-			label: '@fluxer/win-toast',
-			dirName: 'win-toast',
 			commands: [['pnpm', 'build']],
 			jsEntry: 'index.js',
 		});

@@ -29,11 +29,11 @@ const CLOSED_CLEAN_DEDUP_WINDOW_MS = 500;
 
 export type VoiceEngineV2AppSourceLifecycleDispatch = (event: VoiceEngineV2Event) => void;
 
-export type VoiceEngineV2AppSourceLifecycleSubscribe = (
+type VoiceEngineV2AppSourceLifecycleSubscribe = (
 	callback: (message: NativeScreenCaptureLifecycleMessage) => void,
 ) => () => void;
 
-export interface VoiceEngineV2AppSourceLifecycleClosedCleanInfo {
+interface VoiceEngineV2AppSourceLifecycleClosedCleanInfo {
 	captureId: string;
 	sourceId: string;
 	source: 'delegate' | 'programmatic' | 'unknown';

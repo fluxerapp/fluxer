@@ -52,19 +52,3 @@ for (let index = 1; index < CAMERA_SUBSCRIPTION_QUALITY_LAYERS.length; index += 
 	assert.ok(current.width > previous.width, 'camera subscription quality layers must ascend by width');
 	assert.ok(current.height > previous.height, 'camera subscription quality layers must ascend by height');
 }
-
-export function pickCameraSubscriptionQuality(
-	displayWidthPx: number,
-	displayHeightPx: number,
-): VoiceMediaGraphVideoQuality {
-	assert.ok(Number.isFinite(displayWidthPx) && displayWidthPx >= 0, 'display width must be a non-negative number');
-	assert.ok(Number.isFinite(displayHeightPx) && displayHeightPx >= 0, 'display height must be a non-negative number');
-	let selected: VoiceMediaGraphVideoQuality = CAMERA_SUBSCRIPTION_QUALITY_LAYERS[0].quality;
-	for (const {quality, layer} of CAMERA_SUBSCRIPTION_QUALITY_LAYERS) {
-		selected = quality;
-		if (layer.width >= displayWidthPx && layer.height >= displayHeightPx) {
-			return selected;
-		}
-	}
-	return selected;
-}

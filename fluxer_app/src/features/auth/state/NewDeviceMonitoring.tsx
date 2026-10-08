@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import type {DomainMigrationMediaDeviceKind} from '@app/features/app/domain_migration/DomainMigrationCore';
 import {remapMigratedDeviceIds} from '@app/features/app/domain_migration/DomainMigrationDeviceRemap';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/auth/state/NewDeviceMonitoring.module.css';
 import {
 	getNewDevicePromptCandidates,
@@ -18,7 +18,7 @@ import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePe
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import type {VoiceDeviceState} from '@app/features/voice/utils/VoiceDeviceManager';
 import type {I18n} from '@lingui/core';
-import {msg} from '@lingui/core/macro';
+import {msg, ph} from '@lingui/core/macro';
 import {Trans} from '@lingui/react/macro';
 import {makeAutoObservable, runInAction} from 'mobx';
 import type React from 'react';
@@ -195,18 +195,18 @@ class NewDeviceMonitoring {
 					description={
 						deviceType === 'input' ? (
 							<Trans>
-								{PRODUCT_NAME} has found a new audio input device named{' '}
+								{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio input device named{' '}
 								<strong data-flx="auth.new-device-monitoring.strong">{deviceName}</strong>. Do you want to switch to it?
 							</Trans>
 						) : deviceType === 'output' ? (
 							<Trans>
-								{PRODUCT_NAME} has found a new audio output device named{' '}
+								{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio output device named{' '}
 								<strong data-flx="auth.new-device-monitoring.strong--2">{deviceName}</strong>. Do you want to switch to
 								it?
 							</Trans>
 						) : (
 							<Trans>
-								{PRODUCT_NAME} has found a new audio device named{' '}
+								{ph({PRODUCT_NAME: RuntimeConfig.productName})} has found a new audio device named{' '}
 								<strong data-flx="auth.new-device-monitoring.strong--3">{deviceName}</strong>. Do you want to switch to
 								it?
 							</Trans>
@@ -258,23 +258,6 @@ class NewDeviceMonitoring {
 			});
 			logger.debug('Added device to ignore list', {deviceIds: newDeviceIds});
 		}
-	}
-
-	clearIgnoredDevices(): void {
-		this.ignoredDeviceIds = [];
-		logger.debug('Cleared all ignored devices');
-	}
-
-	removeFromIgnored(deviceId: string): void {
-		const index = this.ignoredDeviceIds.indexOf(deviceId);
-		if (index !== -1) {
-			this.ignoredDeviceIds.splice(index, 1);
-			logger.debug('Removed device from ignore list', {deviceId});
-		}
-	}
-
-	getIgnoredDeviceIds(): ReadonlyArray<string> {
-		return this.ignoredDeviceIds;
 	}
 
 	setSuppressAlerts(suppress: boolean): void {

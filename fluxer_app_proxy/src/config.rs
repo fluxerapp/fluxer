@@ -383,10 +383,6 @@ impl ReleaseChannel {
             Self::Canary => "canary",
         }
     }
-
-    pub const fn is_canary(self) -> bool {
-        matches!(self, Self::Canary)
-    }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -877,11 +873,9 @@ mod tests {
     }
 
     #[test]
-    fn release_channel_as_str_and_is_canary() {
+    fn release_channel_as_str() {
         assert_eq!(ReleaseChannel::Stable.as_str(), "stable");
         assert_eq!(ReleaseChannel::Canary.as_str(), "canary");
-        assert!(!ReleaseChannel::Stable.is_canary());
-        assert!(ReleaseChannel::Canary.is_canary());
     }
 
     #[test]

@@ -7,14 +7,14 @@ import {
 } from '@app/features/expressions/workers/AnimatedImageCropMessages';
 
 export const MAX_SOURCE_CANVAS_PIXELS = 16_777_216;
-export const MAX_FRAMES = 20_000;
-export const MAX_OUTPUT_TOTAL_PIXELS = 1_073_741_824;
-export const MAX_SOURCE_TOTAL_PIXELS = 1_073_741_824;
-export const MAX_PLAYS = 65_535;
-export const LOSSLESS_MAX_WORK_PIXELS = 16_777_216;
+const MAX_FRAMES = 20_000;
+const MAX_OUTPUT_TOTAL_PIXELS = 1_073_741_824;
+const MAX_SOURCE_TOTAL_PIXELS = 1_073_741_824;
+const MAX_PLAYS = 65_535;
+const LOSSLESS_MAX_WORK_PIXELS = 16_777_216;
 
-export const QUALITY_RUNGS: ReadonlyArray<number> = [75, 60, 45, 30];
-export const SIZE_RATIO: ReadonlyArray<number> = [1, 0.889, 0.782, 0.595];
+const QUALITY_RUNGS: ReadonlyArray<number> = [75, 60, 45, 30];
+const SIZE_RATIO: ReadonlyArray<number> = [1, 0.889, 0.782, 0.595];
 
 const LADDER_TARGET_FRACTION = 0.95;
 const LADDER_GIVE_UP_FRACTION = 1.15;

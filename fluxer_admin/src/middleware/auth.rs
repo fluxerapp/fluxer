@@ -2,13 +2,12 @@
 
 use crate::{
     api::types::AdminUser,
-    middleware::flash::{self, FlashData},
+    middleware::flash,
     session::{self, Session},
     state::AppState,
 };
 use axum::{
     extract::{Request, State},
-    http::StatusCode,
     middleware::Next,
     response::{IntoResponse, Redirect, Response},
 };
@@ -63,10 +62,6 @@ pub async fn require_auth(
     }
 
     response
-}
-
-pub fn get_flash(request: &Request) -> Option<FlashData> {
-    request.extensions().get::<FlashData>().cloned()
 }
 
 fn admin_cookie_path(config: &crate::config::AdminConfig) -> &str {
@@ -158,12 +153,4 @@ async fn fetch_admin_user(
         Ok(resp) => AdminFetchResult::Ok(Box::new(resp.user)),
         Err(_) => AdminFetchResult::None,
     }
-}
-
-pub fn get_auth_context(request: &Request) -> Option<&AuthContext> {
-    request.extensions().get::<AuthContext>()
-}
-
-pub fn require_auth_context(request: &Request) -> Result<&AuthContext, Box<Response>> {
-    get_auth_context(request).ok_or_else(|| Box::new(StatusCode::UNAUTHORIZED.into_response()))
 }

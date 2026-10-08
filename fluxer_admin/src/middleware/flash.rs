@@ -93,16 +93,20 @@ pub fn clear_flash_cookie(response: &mut Response) {
 }
 
 pub fn redirect_with_flash(url: &str, flash: FlashData, secure: bool) -> Response {
-    let encoded = serialize_flash(&flash);
+    let mut response = Redirect::to(url).into_response();
+    set_flash_cookie(&mut response, &flash, secure);
+    response
+}
+
+pub fn set_flash_cookie(response: &mut Response, flash: &FlashData, secure: bool) {
+    let encoded = serialize_flash(flash);
     let secure_flag = if secure { "; Secure" } else { "" };
     let cookie_value = format!(
         "{FLASH_COOKIE_NAME}={encoded}; Path=/; HttpOnly; SameSite=Lax; Max-Age=60{secure_flag}"
     );
-    let mut response = Redirect::to(url).into_response();
     if let Ok(v) = HeaderValue::from_str(&cookie_value) {
         response.headers_mut().append(header::SET_COOKIE, v);
     }
-    response
 }
 
 #[cfg(test)]

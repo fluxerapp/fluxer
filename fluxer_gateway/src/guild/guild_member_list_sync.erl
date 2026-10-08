@@ -4,7 +4,6 @@
 -typing([eqwalizer]).
 
 -export([
-    build_member_list_items/3,
     slice_items/3,
     update_subscriptions/4,
     remove_session_from_subscriptions/2,
@@ -18,103 +17,6 @@
 -type list_item() :: map().
 
 -export_type([range/0, session_id/0, list_id/0, list_item/0]).
-
--define(UNGROUPED_ITEM_CAP, 250).
-
--spec build_member_list_items([map()], [map()], map()) -> [list_item()].
-build_member_list_items(Groups, Members, State) ->
-    Data = maps:get(data, State, #{}),
-    Roles = map_utils:ensure_list(maps:get(<<"roles">>, Data, [])),
-    GuildId = guild_id(State),
-    HoistedRoles = guild_member_list_groups:get_hoisted_roles_sorted(Roles, GuildId),
-    HoistedIdxMap = guild_member_list_groups:hoisted_idx_map(HoistedRoles),
-    {OnlineMembers, OfflineMembers} =
-        guild_member_list_connected:partition_members_by_online(Members, State),
-    OnlineTopRoles = guild_member_list_groups:top_role_map(OnlineMembers, HoistedIdxMap),
-    UngroupedOnlineCount = count_ungrouped(OnlineTopRoles),
-    SkipUngroupedItems = UngroupedOnlineCount > ?UNGROUPED_ITEM_CAP,
-    SkipOfflineItems = length(OfflineMembers) > ?UNGROUPED_ITEM_CAP,
-    Ctx = #{
-        online_members => OnlineMembers,
-        offline_members => OfflineMembers,
-        online_top_roles => OnlineTopRoles,
-        skip_ungrouped => SkipUngroupedItems,
-        skip_offline => SkipOfflineItems,
-        state => State
-    },
-    lists:flatmap(fun(Group) -> expand_group(Group, Ctx) end, Groups).
-
--spec count_ungrouped(#{integer() => integer() | undefined}) -> non_neg_integer().
-count_ungrouped(OnlineTopRoles) ->
-    maps:fold(
-        fun
-            (_U, undefined, Acc) -> Acc + 1;
-            (_U, _TopId, Acc) -> Acc
-        end,
-        0,
-        OnlineTopRoles
-    ).
-
--spec expand_group(map(), map()) -> [list_item()].
-expand_group(Group, Ctx) ->
-    GroupId = maps:get(<<"id">>, Group),
-    GroupHeader = #{<<"group">> => Group},
-    State = maps:get(state, Ctx),
-    case GroupId of
-        <<"online">> ->
-            expand_online_group(GroupHeader, Ctx, State);
-        <<"offline">> ->
-            expand_offline_group(GroupHeader, Ctx, State);
-        RoleIdBin ->
-            expand_role_group(GroupHeader, RoleIdBin, Ctx, State)
-    end.
-
--spec expand_online_group(map(), map(), map()) -> [list_item()].
-expand_online_group(GroupHeader, #{skip_ungrouped := true}, _State) ->
-    [GroupHeader];
-expand_online_group(GroupHeader, Ctx, State) ->
-    OnlineMembers = maps:get(online_members, Ctx),
-    OnlineTopRoles = maps:get(online_top_roles, Ctx),
-    UngroupedOnline = [
-        M
-     || M <- OnlineMembers,
-        maps:get(
-            guild_member_list_common:get_member_user_id(M), OnlineTopRoles, undefined
-        ) =:= undefined
-    ],
-    [GroupHeader | member_items(UngroupedOnline, State)].
-
--spec expand_offline_group(map(), map(), map()) -> [list_item()].
-expand_offline_group(GroupHeader, #{skip_offline := true}, _State) ->
-    [GroupHeader];
-expand_offline_group(GroupHeader, Ctx, State) ->
-    OfflineMembers = maps:get(offline_members, Ctx),
-    [GroupHeader | member_items(OfflineMembers, State)].
-
--spec expand_role_group(map(), binary(), map(), map()) -> [list_item()].
-expand_role_group(GroupHeader, RoleIdBin, Ctx, State) ->
-    case snowflake_id:parse_maybe(RoleIdBin) of
-        RoleId when is_integer(RoleId), RoleId > 0 ->
-            OnlineMembers = maps:get(online_members, Ctx),
-            OnlineTopRoles = maps:get(online_top_roles, Ctx),
-            RoleMembers = [
-                M
-             || M <- OnlineMembers,
-                maps:get(
-                    guild_member_list_common:get_member_user_id(M), OnlineTopRoles, undefined
-                ) =:= RoleId
-            ],
-            [GroupHeader | member_items(RoleMembers, State)];
-        _ ->
-            [GroupHeader]
-    end.
-
--spec member_items([map()], map()) -> [list_item()].
-member_items(Members, State) ->
-    [
-        #{<<"member">> => guild_member_list_connected:add_presence_to_member(M, State)}
-     || M <- Members, is_integer(guild_member_list_common:get_member_user_id(M))
-    ].
 
 -spec slice_items([list_item()], non_neg_integer(), non_neg_integer()) -> [list_item()].
 slice_items(Items, Start, End) ->
@@ -227,13 +129,6 @@ remove_session_from_list(SessionId, ListId, ListSubs, Acc) ->
     case map_size(Trimmed) of
         0 -> Acc;
         _ -> Acc#{ListId => Trimmed}
-    end.
-
--spec guild_id(map()) -> integer() | undefined.
-guild_id(State) ->
-    case snowflake_id:parse_maybe(maps:get(id, State, undefined)) of
-        GuildId when is_integer(GuildId), GuildId > 0 -> GuildId;
-        _ -> undefined
     end.
 
 -spec valid_list_id(list_id()) -> boolean().

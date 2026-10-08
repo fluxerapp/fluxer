@@ -186,7 +186,7 @@ The input form of the [user settings object](/http-api/users/#user-settings-obje
 
 The staff-only fields are the exception. Every update resets `suppress_unprivileged_self_mentions`, `suppress_unprivileged_self_mentions_bypass_user_ids`, and `staff_dm_access_user_ids` to false, empty, and empty for an ordinary account, including an update that names none of them.
 
-Further members are accepted and ignored. `guild_positions` is an array of at most 200 guild snowflakes, and nothing reads it. `default_share_voice_activity` belongs to [Modify voice activity sharing](#modify-voice-activity-sharing).
+Further members are accepted and ignored. Nothing reads `guild_positions`, and only [Modify voice activity sharing](#modify-voice-activity-sharing) writes `default_share_voice_activity`.
 
 ### Structure
 
@@ -230,6 +230,8 @@ Further members are accepted and ignored. `guild_positions` is an array of at mo
 | profile_privacy? | integer | [Profile privacy level](/http-api/users/#profile-privacy-levels) |
 | privacy_setup_version?<sup>14</sup> | integer | The privacy setup version the user just reviewed (1-1000) |
 | synced_preferences?<sup>13</sup> | ?string | The base64-encoded `fluxer.user.preferences.v1.SyncedPreferences` snapshot, or null to clear it |
+| guild_positions? | array[snowflake] | Accepted and ignored (max 200) |
+| default_share_voice_activity? | boolean | Accepted and ignored |
 
 <sup>1</sup> A string matches ISO 8601 and an integer is Unix milliseconds between 0 and 8640000000000000. Anything else is rejected with `INVALID_ISO_TIMESTAMP`
 

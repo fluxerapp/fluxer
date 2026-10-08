@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/auth/flow/DesktopDeepLinkPrompt.module.css';
 import {Platform} from '@app/features/platform/types/Platform';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -64,7 +64,7 @@ export const DesktopDeepLinkPrompt: React.FC<DesktopDeepLinkPromptProps> = ({cod
 		<div className={styles.banner} data-flx="auth.flow.desktop-deep-link-prompt.banner">
 			<div className={styles.copy} data-flx="auth.flow.desktop-deep-link-prompt.copy">
 				<p className={styles.title} data-flx="auth.flow.desktop-deep-link-prompt.title">
-					{i18n._(OPEN_IN_DESKTOP_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(OPEN_IN_DESKTOP_PRODUCT_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</p>
 				{error ? (
 					<p className={styles.notInstalled} data-flx="auth.flow.desktop-deep-link-prompt.not-installed">
@@ -89,7 +89,7 @@ export const DesktopDeepLinkPrompt: React.FC<DesktopDeepLinkPromptProps> = ({cod
 					data-flx="auth.flow.desktop-deep-link-prompt.arrow-square-out-icon"
 				/>
 				<span data-flx="auth.flow.desktop-deep-link-prompt.span">
-					{i18n._(OPEN_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(OPEN_PRODUCT_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 				</span>
 			</Button>
 		</div>

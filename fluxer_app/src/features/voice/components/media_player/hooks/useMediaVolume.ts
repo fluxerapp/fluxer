@@ -17,7 +17,7 @@ export function mediaGainFromVolumeSetting(setting: number): number {
 	return setting ** VOLUME_CURVE_EXPONENT;
 }
 
-export function volumeSettingFromMediaGain(gain: number): number {
+function volumeSettingFromMediaGain(gain: number): number {
 	if (!Number.isFinite(gain) || gain <= 0) return 0;
 	if (gain >= 1) return 1;
 	return gain ** (1 / VOLUME_CURVE_EXPONENT);
@@ -107,11 +107,6 @@ function publishStoredVolumeSetting(next: StoredVolumeSetting): void {
 	for (const listener of Array.from(storedVolumeListeners)) {
 		listener();
 	}
-}
-
-export function resetStoredVolumeSettingForTests(): void {
-	storedVolumeSetting = null;
-	storedVolumeListeners.clear();
 }
 
 export function useMediaVolume(options: UseMediaVolumeOptions): UseMediaVolumeReturn {

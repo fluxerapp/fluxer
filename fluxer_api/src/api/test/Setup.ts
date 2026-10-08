@@ -23,7 +23,6 @@ import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {MockSnowflakeService} from '@app/api/test/mocks/MockSnowflakeService';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {RepositoryBackedMessageResponseDataService} from '@app/api/test/mocks/RepositoryBackedMessageResponseDataService';
-import {fakeNcmecServer} from '@app/api/test/msw/handlers/NcmecHandlers';
 import {server} from '@app/api/test/msw/server';
 import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {loadConfig} from '@fluxer/config/src/ConfigLoader';
@@ -184,13 +183,6 @@ const testApiConfig: APIConfig = {
 		sandboxUserIds: [],
 		sandboxEntitlesAll: false,
 	},
-	ncmec: {
-		...apiConfig.ncmec,
-		enabled: true,
-		baseUrl: fakeNcmecServer.baseUrl,
-		username: 'usr123',
-		password: 'pswd123',
-	},
 };
 testApiConfig.dev.relaxRegistrationRateLimits = true;
 testApiConfig.dev.disableRateLimits = true;
@@ -211,8 +203,6 @@ setInjectedMessageResponseDataService(new RepositoryBackedMessageResponseDataSer
 
 enableSearchTaskTracking();
 
-export {fakeNcmecServer};
-
 beforeAll(async () => {
 	server.listen({
 		onUnhandledRequest: 'error',
@@ -224,7 +214,6 @@ afterEach(async () => {
 	resetCassandraQueryExecutorForTesting();
 	getInstanceConfigRepository().clearCacheForTesting();
 	server.resetHandlers();
-	fakeNcmecServer.reset();
 });
 
 afterAll(async () => {

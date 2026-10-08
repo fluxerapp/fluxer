@@ -23,7 +23,7 @@ import {makeObservable, observableRef} from 'mobx';
 const logger = new Logger('VoiceMediaGraphStore');
 const LOGGED_VIOLATION_LIMIT = 256;
 
-export class VoiceMediaGraphStore extends Store {
+class VoiceMediaGraphStore extends Store {
 	graph: VoiceMediaGraphSnapshot = createVoiceMediaGraphSnapshot();
 
 	private readonly clock: VoiceMediaGraphClockPort;
@@ -92,5 +92,3 @@ export class VoiceMediaGraphStore extends Store {
 }
 
 export const voiceMediaGraphStore = new VoiceMediaGraphStore();
-
-export default voiceMediaGraphStore;

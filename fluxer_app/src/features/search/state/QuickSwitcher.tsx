@@ -158,10 +158,6 @@ class QuickSwitcher {
 		return this.isOpen;
 	}
 
-	getResults(): ReadonlyArray<QuickSwitcherResult> {
-		return this.results;
-	}
-
 	getSelectedResult(): QuickSwitcherExecutableResult | null {
 		if (this.selectedIndex < 0 || this.selectedIndex >= this.results.length) {
 			return null;

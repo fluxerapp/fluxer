@@ -63,6 +63,22 @@ describe('extractStringValues', () => {
 		const result = extractStringValues(body);
 		expect(result).toEqual(['visible label']);
 	});
+	test('omits the structural fields of report flow submissions', () => {
+		const body = {
+			channel_id: '111111111111111111',
+			message_id: '222222222222222222',
+			user_id: '333333333333333333',
+			guild_id: '444444444444444444',
+			revision_hash: '6b1f0c9e2a7d4413',
+			locale: 'de',
+			steps: [
+				{screen_id: 'root_message', option_id: 'private_info'},
+				{screen_id: 'private_info', item_ids: ['email', 'phone']},
+			],
+		};
+		const result = extractStringValues(body);
+		expect(result).toEqual([]);
+	});
 });
 
 describe('shouldSkipContentFilterPath', () => {
@@ -75,6 +91,16 @@ describe('shouldSkipContentFilterPath', () => {
 		];
 		const result = paths.map((path) => shouldSkipContentFilterPath(path));
 		expect(result).toEqual([true, true, true, true]);
+	});
+	test('skips every DSA report body, which has to quote the reported content', () => {
+		const paths = ['/reports/dsa', '/reports/dsa/email/send', '/reports/dsa/email/verify'];
+		const result = paths.map((path) => shouldSkipContentFilterPath(path));
+		expect(result).toEqual([true, true, true]);
+	});
+	test('does not skip in-app report submissions', () => {
+		const paths = ['/reports/message', '/reports/user', '/reports/flows/message/submissions'];
+		const result = paths.map((path) => shouldSkipContentFilterPath(path));
+		expect(result).toEqual([false, false, false]);
 	});
 	test('does not skip public content update request bodies', () => {
 		const paths = ['/guilds/123/vanity-url', '/channels/123/messages', '/users/@me'];

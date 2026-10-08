@@ -11,7 +11,6 @@
     complete_identify_fetch/3,
     complete_identify_fetch/4,
     handle_identify_fetch_timeout/3,
-    maybe_fail_pending_identify/3,
     maybe_fail_pending_identify/4,
     cleanup_identify_worker/2,
     resolve_identify_result/4,
@@ -429,10 +428,6 @@ handle_identify_fetch_timeout(SessionId, WorkerRef, State) ->
         _Other ->
             {noreply, State}
     end.
-
--spec maybe_fail_pending_identify(session_id(), term(), state()) -> {noreply, state()}.
-maybe_fail_pending_identify(SessionId, Reason, State) ->
-    maybe_fail_pending_identify(SessionId, undefined, Reason, State).
 
 -spec maybe_fail_pending_identify(session_id(), reference() | undefined, term(), state()) ->
     {noreply, state()}.

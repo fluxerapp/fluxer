@@ -176,7 +176,7 @@ function $advanceToNextSlot(includeOptionalAnchor: boolean): boolean {
 	return includeOptionalAnchor ? $focusOptionalAnchorInParagraph(currentSlot.getParent()) : false;
 }
 
-export function $focusNextSlot(): boolean {
+function $focusNextSlot(): boolean {
 	return $advanceToNextSlot(true);
 }
 

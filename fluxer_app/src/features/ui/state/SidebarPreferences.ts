@@ -45,10 +45,6 @@ class SidebarPreferences {
 		this.inlineDmsCollapsed = !this.inlineDmsCollapsed;
 	}
 
-	setInlineDmsCollapsed(value: boolean): void {
-		this.inlineDmsCollapsed = value;
-	}
-
 	setShowCollapsedUnreadDmsBadge(value: boolean): void {
 		this.showCollapsedUnreadDmsBadge = value;
 	}

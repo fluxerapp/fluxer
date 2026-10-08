@@ -253,16 +253,6 @@
 	line-height: 1.35;
 }
 
-.successCard {
-	padding: 0.75rem 0.9rem;
-	border-radius: 0.85rem;
-	background: var(--background-secondary);
-	border: 0.0625rem solid var(--background-modifier-accent);
-	color: var(--text-primary);
-	font-size: 0.9rem;
-	line-height: 1.35;
-}
-
 .successScreen {
 	display: flex;
 	flex-direction: column;

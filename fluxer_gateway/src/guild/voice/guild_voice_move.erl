@@ -4,8 +4,6 @@
 -typing([eqwalizer]).
 
 -export([move_member/2]).
--export([send_voice_server_update_for_move/5]).
--export([send_voice_server_update_for_move/6]).
 -export([send_voice_server_updates_for_move/4]).
 
 -ifdef(TEST).
@@ -137,77 +135,6 @@ normalize_channel_id_integer(Value) when
     type_conv:to_integer(Value);
 normalize_channel_id_integer(_) ->
     undefined.
-
--spec send_voice_server_update_for_move(
-    integer(), integer(), integer(), binary() | undefined, pid()
-) -> ok.
-send_voice_server_update_for_move(GuildId, ChannelId, UserId, SessionId, GuildPid) ->
-    send_voice_server_update_for_move(GuildId, ChannelId, UserId, SessionId, null, GuildPid).
-
--spec send_voice_server_update_for_move(
-    integer(), integer(), integer(), binary() | undefined, binary() | null, pid()
-) -> ok.
-send_voice_server_update_for_move(
-    _GuildId, _ChannelId, _UserId, undefined, _OldConnId, _GuildPid
-) ->
-    ok;
-send_voice_server_update_for_move(
-    GuildId, ChannelId, UserId, SessionId, OldConnectionId, GuildPid
-) ->
-    CapturedGuildId = GuildId,
-    CapturedChannelId = ChannelId,
-    CapturedUserId = UserId,
-    CapturedSessionId = SessionId,
-    CapturedOldConnId = OldConnectionId,
-    CapturedGuildPid = GuildPid,
-    spawn(fun() ->
-        do_send_voice_server_update(
-            CapturedGuildId,
-            CapturedChannelId,
-            CapturedUserId,
-            CapturedSessionId,
-            CapturedOldConnId,
-            CapturedGuildPid
-        )
-    end),
-    ok.
-
--spec do_send_voice_server_update(
-    integer(), integer(), integer(), binary(), binary() | null, pid()
-) -> ok.
-do_send_voice_server_update(GuildId, ChannelId, UserId, SessionId, OldConnectionId, GuildPid) ->
-    try guild_voice_server_state:guild_state_call(GuildPid, 10000) of
-        State when is_map(State) ->
-            request_and_broadcast_token(
-                GuildId, ChannelId, UserId, SessionId, OldConnectionId, State
-            );
-        _ ->
-            ok
-    catch
-        exit:_Reason -> ok;
-        error:_Reason -> ok
-    end.
-
--spec request_and_broadcast_token(
-    integer(), integer(), integer(), binary(), binary() | null, map()
-) -> ok.
-request_and_broadcast_token(GuildId, ChannelId, UserId, SessionId, OldConnectionId, State) ->
-    VoicePermissions = voice_utils:compute_voice_permissions(UserId, ChannelId, State),
-    case
-        guild_voice_connection:request_voice_token(
-            GuildId, ChannelId, UserId, OldConnectionId, VoicePermissions
-        )
-    of
-        {ok, TokenData} ->
-            Token = maps:get(token, TokenData),
-            Endpoint = maps:get(endpoint, TokenData),
-            ConnectionId = maps:get(connection_id, TokenData),
-            guild_voice_broadcast:broadcast_voice_server_update_to_session(
-                GuildId, ChannelId, SessionId, Token, Endpoint, ConnectionId, State
-            );
-        {error, _Reason} ->
-            ok
-    end.
 
 -spec send_voice_server_updates_for_move(integer(), integer(), [map()], pid()) -> ok.
 send_voice_server_updates_for_move(GuildId, ChannelId, SessionDataList, GuildPid) ->

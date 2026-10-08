@@ -8,50 +8,6 @@
 	font-size: var(--textarea-font-size);
 }
 
-.textarea {
-	min-width: 0;
-	max-width: 100%;
-	width: 100%;
-	resize: none;
-	overflow: hidden;
-	white-space: pre-wrap;
-	overflow-wrap: anywhere;
-	word-break: break-word;
-	background-color: transparent;
-	color: var(--text-chat);
-	line-height: var(--textarea-line-height);
-	caret-color: var(--text-chat);
-	scrollbar-gutter: stable;
-	padding: 0;
-	margin: 0;
-	border: none;
-	outline: none;
-	font-family: inherit;
-	font-size: var(--textarea-font-size);
-}
-
-@supports (field-sizing: content) {
-	.textarea {
-		field-sizing: content;
-	}
-}
-
-.textarea:disabled {
-	pointer-events: none;
-}
-
-.textarea::placeholder {
-	color: var(--text-tertiary-secondary);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.textarea:disabled::placeholder {
-	color: var(--text-tertiary);
-	font-size: calc(var(--textarea-font-size) * 0.875);
-}
-
 .divider {
 	width: 0.0625rem;
 	height: 1.5rem;
@@ -90,10 +46,6 @@
 	--composer-box-inset: 0px;
 	--composer-box-inset-inline: 0px;
 	--composer-box-padding-inline: 0px;
-}
-
-.textareaMobile {
-	padding: 0.4375rem 3rem 0.4375rem 0.75rem;
 }
 
 .mainWrapperDense {
@@ -186,18 +138,6 @@
 	display: flex;
 	align-items: flex-start;
 	justify-content: center;
-}
-
-.scroller {
-	max-height: 50svh;
-	width: 100%;
-	min-width: 0;
-}
-
-.flexColumn {
-	display: flex;
-	flex-direction: column;
-	min-width: 0;
 }
 
 .textareaOuterRow {

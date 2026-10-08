@@ -1,23 +1,23 @@
 {
 	"account_deletion_cancelled": {
 		"subject": "Your {product_name} account is no longer scheduled for deletion",
-		"body": "Hello {username},\n\nThe scheduled deletion of your {product_name} account has been cancelled. Your account will not be deleted.\n\nIf you have any questions, contact {safety_email}.\n\n– {product_name} Team"
+		"body": "Hello {username},\n\nThe scheduled deletion of your {product_name} account has been cancelled. Your account will not be deleted.\n\n{safety_email, select, null {If you have any questions, contact the administrators of this instance.} other {If you have any questions, contact {safety_email}.}}\n\n– {product_name} Team"
 	},
 	"account_deletion_scheduled_inactivity": {
 		"subject": "Your {product_name} account will be deleted due to inactivity",
-		"body": "Hello {username},\n\nYour {product_name} account has been inactive for a long time, so it is scheduled for permanent deletion on:\n\n{deletionDate, date, full} at {deletionDate, time, short}{reason, select, null {} other {\n\nReason: {reason}}}\n\nIf you want to keep your account, contact {safety_email} from this email address before that date.\n\n– {product_name} Team"
+		"body": "Hello {username},\n\nYour {product_name} account has been inactive for a long time, so it is scheduled for permanent deletion on:\n\n{deletionDate, date, full} at {deletionDate, time, short}{reason, select, null {} other {\n\nReason: {reason}}}\n\n{safety_email, select, null {If you want to keep your account, contact the administrators of this instance before that date.} other {If you want to keep your account, contact {safety_email} from this email address before that date.}}\n\n– {product_name} Team"
 	},
 	"account_deletion_scheduled_requested": {
 		"subject": "Your {product_name} account deletion is scheduled",
-		"body": "Hello {username},\n\nAs you requested, your {product_name} account is scheduled for permanent deletion on:\n\n{deletionDate, date, full} at {deletionDate, time, short}{reason, select, null {} other {\n\nReason: {reason}}}\n\nYour account is locked until then. If you didn't request this, or you want to keep your account, contact {safety_email} from this email address before that date.\n\n– {product_name} Team"
+		"body": "Hello {username},\n\nAs you requested, your {product_name} account is scheduled for permanent deletion on:\n\n{deletionDate, date, full} at {deletionDate, time, short}{reason, select, null {} other {\n\nReason: {reason}}}\n\nYour account is locked until then. {safety_email, select, null {If you didn't request this, or you want to keep your account, contact the administrators of this instance before that date.} other {If you didn't request this, or you want to keep your account, contact {safety_email} from this email address before that date.}}\n\n– {product_name} Team"
 	},
 	"account_scheduled_deletion": {
 		"subject": "Your {product_name} account will be permanently deleted",
-		"body": "Hello {username},\n\nYour {product_name} account has been scheduled for permanent deletion due to violations of our Terms of Service or Community Guidelines.\n\nScheduled deletion: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Reason: {reason}}\n}\n\nThis is a serious enforcement action. Your account data will be permanently deleted on the scheduled date.\n\nPlease review:\n- Terms of Service: {termsUrl}\n- Community Guidelines: {guidelinesUrl}\n\nAppeals process:\nIf you believe this enforcement decision was incorrect or unjustified, you have 60 days to submit an appeal. Email {appeals_email} from this email address.\n\nIn your appeal:\n- Clearly explain why you believe the enforcement decision was incorrect or unjustified\n- Provide any relevant evidence or context\n\nA member of the {product_name} Safety Team will review your appeal and may pause the pending deletion until a final decision has been reached.\n\n– {product_name} Safety Team"
+		"body": "Hello {username},\n\nYour {product_name} account has been scheduled for permanent deletion due to violations of our Terms of Service or Community Guidelines.\n\nScheduled deletion: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Reason: {reason}\n\n}\n}This is a serious enforcement action. Your account data will be permanently deleted on the scheduled date.\n\n{legalLinks, select,\n  both {Please review:\n- Terms of Service: {termsUrl}\n- Community Guidelines: {guidelinesUrl}\n\n}\n  terms {Please review:\n- Terms of Service: {termsUrl}\n\n}\n  guidelines {Please review:\n- Community Guidelines: {guidelinesUrl}\n\n}\n  other {}\n}Appeals process:\nIf you believe this enforcement decision was incorrect or unjustified, you have 60 days to submit an appeal. {appeals_email, select, null {Contact the administrators of this instance.} other {Email {appeals_email} from this email address.}}\n\nIn your appeal:\n- Clearly explain why you believe the enforcement decision was incorrect or unjustified\n- Provide any relevant evidence or context\n\nA member of the {product_name} Safety Team will review your appeal and may pause the pending deletion until a final decision has been reached.\n\n– {product_name} Safety Team"
 	},
 	"account_temp_banned": {
 		"subject": "Your {product_name} account has been temporarily suspended",
-		"body": "Hello {username},\n\nYour {product_name} account has been temporarily suspended for violating our Terms of Service or Community Guidelines.\n\nDuration: {durationHours, plural,\n  =1 {1 hour}\n  other {# hours}\n}\nSuspended until: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Reason: {reason}}\n}\n\nDuring this time, you won't be able to access your account.\n\nPlease review:\n- Terms of Service: {termsUrl}\n- Community Guidelines: {guidelinesUrl}\n\nIf you believe this enforcement decision was incorrect or unjustified, you can submit an appeal. Email {appeals_email} from this email address and clearly explain why you believe the decision was incorrect. We'll review your appeal and respond with our decision.\n\n– {product_name} Safety Team"
+		"body": "Hello {username},\n\nYour {product_name} account has been temporarily suspended for violating our Terms of Service or Community Guidelines.\n\nDuration: {durationHours, plural,\n  =1 {1 hour}\n  other {# hours}\n}\nSuspended until: {bannedUntil, date, full} {bannedUntil, time, short}\n\n{reason, select,\n  null {}\n  other {Reason: {reason}\n\n}\n}During this time, you won't be able to access your account.\n\n{legalLinks, select,\n  both {Please review:\n- Terms of Service: {termsUrl}\n- Community Guidelines: {guidelinesUrl}\n\n}\n  terms {Please review:\n- Terms of Service: {termsUrl}\n\n}\n  guidelines {Please review:\n- Community Guidelines: {guidelinesUrl}\n\n}\n  other {}\n}If you believe this enforcement decision was incorrect or unjustified, you can submit an appeal. {appeals_email, select, null {Contact the administrators of this instance and clearly explain why you believe the decision was incorrect.} other {Email {appeals_email} from this email address and clearly explain why you believe the decision was incorrect.}} We'll review your appeal and respond with our decision.\n\n– {product_name} Safety Team"
 	},
 	"donation_confirmation": {
 		"subject": "Thank you for your {product_name} donation",
@@ -26,6 +26,10 @@
 	"donation_magic_link": {
 		"subject": "Manage your {product_name} donations",
 		"body": "Hello,\n\nClick the link below to access your donor portal:\n\n{manageUrl}\n\nIn the portal, you can manage subscriptions, download invoices, and view your donation history.\n\nThis link expires on {expiresAt, date, full} at {expiresAt, time, short}.\n\nIf you did not request this link, you can safely ignore this email.\n\n– {product_name} Team"
+	},
+	"dsa_report_resolved": {
+		"subject": "We made a decision on your {product_name} report",
+		"body": "Hello,\n\nOur Safety Team has reviewed your Digital Services Act report (ID: {reportId}) and made a decision.{hasComment, select, yes {\n\nResponse from the Safety Team:\n{publicComment}} other {}}\n\nWe don't share details of any action taken against another person's account, because that is their personal data.\n\nIf you disagree with this decision, you can appeal free of charge within 60 days. {appeals_email, select, null {Contact the administrators of this instance, include your report ID, and explain why you think the decision is wrong.} other {Email {appeals_email} from this email address, include your report ID, and explain why you think the decision is wrong.}} If you are in the EU, you can also refer the dispute to a certified out-of-court dispute settlement body. None of this affects your right to go to court.\n\n– {product_name} Safety Team"
 	},
 	"dsa_report_verification": {
 		"subject": "Verify your email for a DSA report",
@@ -49,15 +53,15 @@
 	},
 	"gift_chargeback_notification": {
 		"subject": "Perks from your redeemed gift have been removed",
-		"body": "Hello {username},\n\nA gift code you redeemed was originally paid for by someone else. That payment has since been reversed (a chargeback).\n\nBecause of this, we've removed the perks that were added to your account when you redeemed the gift.\n\nIf you think this is a mistake, please contact our support team and include any details you have about the gift code and when you redeemed it.\n\n– {product_name} Team"
+		"body": "Hello {username},\n\nA gift code you redeemed was originally paid for by someone else. That payment has since been reversed (a chargeback).\n\nBecause of this, we've removed the perks that were added to your account when you redeemed the gift.\n\n{support_email, select, null {If you think this is a mistake, please contact the administrators of this instance and include any details you have about the gift code and when you redeemed it.} other {If you think this is a mistake, please contact our support team and include any details you have about the gift code and when you redeemed it.}}\n\n– {product_name} Team"
 	},
 	"harvest_completed": {
 		"subject": "Your {product_name} data export is ready to download",
-		"body": "Hello {username},\n\nYour data export is ready.\n\nDownload link:\n{downloadUrl}\n\nMessages included: {totalMessages, number}\nFile size: {fileSizeMB, number} MB\n\nThis link expires on {expiresAt, date, full} at {expiresAt, time, short}.\n\nIf you didn't request this export, please change your password immediately and contact our support team.\n\n– {product_name} Team"
+		"body": "Hello {username},\n\nYour data export is ready.\n\nDownload link:\n{downloadUrl}\n\nMessages included: {totalMessages, number}\nFile size: {fileSizeMB, number} MB\n\nThis link expires on {expiresAt, date, full} at {expiresAt, time, short}.\n\n{support_email, select, null {If you didn't request this export, please change your password immediately and contact the administrators of this instance.} other {If you didn't request this export, please change your password immediately and contact our support team.}}\n\n– {product_name} Team"
 	},
 	"inactivity_warning": {
 		"subject": "Your {product_name} account will be deleted due to inactivity",
-		"body": "Hello {username},\n\nWe haven't seen any activity on your {product_name} account since {lastActiveDate, date, full}.\n\nIf you don't log in by {deletionDate, date, full} at {deletionDate, time, short}, your account will be permanently deleted due to inactivity.\n\nLog in here:\n{loginUrl}\n\nIf you've used {product_name} recently, please contact our support team right away.\n\n– {product_name} Team"
+		"body": "Hello {username},\n\nWe haven't seen any activity on your {product_name} account since {lastActiveDate, date, full}.\n\nIf you don't log in by {deletionDate, date, full} at {deletionDate, time, short}, your account will be permanently deleted due to inactivity.\n\nLog in here:\n{loginUrl}\n\n{support_email, select, null {If you've used {product_name} recently, please contact the administrators of this instance right away.} other {If you've used {product_name} recently, please contact our support team right away.}}\n\n– {product_name} Team"
 	},
 	"ip_authorization": {
 		"subject": "Authorize login from a new IP address",
@@ -75,17 +79,17 @@
 		"subject": "Reset your {product_name} password",
 		"body": "Hello {username},\n\nYou requested a {product_name} password reset. Use the link below to set a new password:\n\n{resetUrl}\n\nIf you didn't request this, you can safely ignore this email.\n\nThis link is valid for 1 hour.\n\n– {product_name} Team"
 	},
-	"registration_approved": {
-		"subject": "Your {product_name} registration has been approved",
-		"body": "Hello {username},\n\nGood news: your {product_name} registration has been approved.\n\nYou can now log in to the {product_name} app here:\n{channelsUrl}\n\nWelcome to the {product_name} community.\n\n– {product_name} Team"
+	"report_received": {
+		"subject": "We received your {product_name} report",
+		"body": "Hello,\n\nWe received your Digital Services Act report about {targetKind, select, message {a message} user {an account} guild {a community} other {content}} on {product_name}.\n\nReport ID: {reportId}\n\nOur Safety Team will review your report and email you at this address once we have made a decision. Keep this email for your records.\n\n– {product_name} Safety Team"
 	},
 	"report_resolved": {
 		"subject": "Your {product_name} report has been reviewed",
-		"body": "Hello {username},\n\nYour report (ID: {reportId}) has been reviewed by our Safety Team.{hasComment, select, yes {\n\nResponse from the Safety Team:\n{publicComment}} other {}}\n\nThanks for helping keep {product_name} safe for everyone. We take all reports seriously and appreciate your contribution to the community.\n\nIf you have any questions or concerns about this outcome, please contact {safety_email}.\n\n– {product_name} Safety Team"
+		"body": "Hello {username},\n\nYour report (ID: {reportId}) has been reviewed by our Safety Team.{hasComment, select, yes {\n\nResponse from the Safety Team:\n{publicComment}} other {}}\n\nThanks for helping keep {product_name} safe for everyone. We take all reports seriously and appreciate your contribution to the community.\n\n{safety_email, select, null {If you have any questions or concerns about this outcome, please contact the administrators of this instance.} other {If you have any questions or concerns about this outcome, please contact {safety_email}.}}\n\n– {product_name} Safety Team"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "Your {product_name} account will be permanently deleted",
-		"body": "Hello {username},\n\nYour {product_name} account has been scheduled for permanent deletion.\n\nScheduled deletion: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Reason: {reason}}\n}\n\nThis is a serious enforcement action. Your account data will be permanently deleted on the scheduled date.\n\nIf you believe this enforcement decision was incorrect, you can submit an appeal. Email {appeals_email} from this email address.\n\n– {product_name} Safety Team"
+		"body": "Hello {username},\n\nYour {product_name} account has been scheduled for permanent deletion.\n\nScheduled deletion: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Reason: {reason}\n\n}\n}This is a serious enforcement action. Your account data will be permanently deleted on the scheduled date.\n\nIf you believe this enforcement decision was incorrect, you can submit an appeal. {appeals_email, select, null {Contact the administrators of this instance.} other {Email {appeals_email} from this email address.}}\n\n– {product_name} Safety Team"
 	},
 	"self_deletion_scheduled": {
 		"subject": "Your {product_name} account deletion is scheduled",
@@ -93,6 +97,6 @@
 	},
 	"unban_notification": {
 		"subject": "Your {product_name} account suspension has been lifted",
-		"body": "Hello {username},\n\nGood news: your {product_name} account suspension has been lifted.\n\n{reason, select,\n  null {}\n  other {Reason: {reason}}\n}\n\nYou can now log back in and continue using {product_name} as normal.\n\n– {product_name} Safety Team"
+		"body": "Hello {username},\n\nGood news: your {product_name} account suspension has been lifted.\n\n{reason, select,\n  null {}\n  other {Reason: {reason}\n\n}\n}You can now log back in and continue using {product_name} as normal.\n\n– {product_name} Safety Team"
 	}
 }

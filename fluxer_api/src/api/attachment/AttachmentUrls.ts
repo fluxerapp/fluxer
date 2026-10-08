@@ -46,7 +46,7 @@ export function signAttachmentUrl(url: string, nowSecs?: number): string {
 	return options === null ? url : signWithSecret(url, options);
 }
 
-export function signDataPackageAttachmentUrl(url: string, nowSecs?: number): string {
+function signDataPackageAttachmentUrl(url: string, nowSecs?: number): string {
 	const options = signingOptions(url, nowSecs);
 	return options === null ? url : signDataPackageWithSecret(url, options);
 }

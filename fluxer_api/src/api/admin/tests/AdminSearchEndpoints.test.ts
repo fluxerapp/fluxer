@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createDmChannel, createFriendship, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
 import {getUserActivityBuffer} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -15,6 +15,38 @@ async function setLastActiveIp(harness: ApiTestHarness, token: string, ip: strin
 		.expect(HTTP_STATUS.OK)
 		.execute();
 	await getUserActivityBuffer().drainAndFlush();
+}
+
+interface ReportListResponse {
+	reports: Array<{report_id: string; status: number}>;
+	total: number;
+	offset: number;
+	limit: number;
+}
+
+async function fileUserReport(harness: ApiTestHarness, reporter: TestAccount): Promise<string> {
+	const reported = await createTestAccount(harness);
+	const report = await createBuilder<{report_id: string}>(harness, reporter.token)
+		.post('/reports/user')
+		.body({user_id: reported.userId, category: 'harassment'})
+		.expect(HTTP_STATUS.OK)
+		.execute();
+	return report.report_id;
+}
+
+async function filePendingAndResolvedReports(
+	harness: ApiTestHarness,
+	admin: TestAccount,
+): Promise<{pendingReportId: string; resolvedReportId: string}> {
+	const reporter = await createTestAccount(harness);
+	const pendingReportId = await fileUserReport(harness, reporter);
+	const resolvedReportId = await fileUserReport(harness, reporter);
+	await createBuilder(harness, admin.token)
+		.patch(`/admin/reports/${resolvedReportId}`)
+		.body({status: 'resolved'})
+		.expect(HTTP_STATUS.OK)
+		.execute();
+	return {pendingReportId, resolvedReportId};
 }
 
 describe('Admin Search Endpoints', () => {
@@ -255,6 +287,51 @@ describe('Admin Search Endpoints', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(Array.isArray(result.reports)).toBe(true);
+		});
+		test('a request with no query returns reports of every status with the page totals', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'report:view', 'report:resolve']);
+			const {pendingReportId, resolvedReportId} = await filePendingAndResolvedReports(harness, admin);
+			const result = await createBuilder<ReportListResponse>(harness, admin.token)
+				.get('/admin/reports')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(new Map(result.reports.map((report) => [report.report_id, report.status]))).toEqual(
+				new Map([
+					[pendingReportId, 0],
+					[resolvedReportId, 1],
+				]),
+			);
+			expect(result.reports).toHaveLength(2);
+			expect(result.total).toBe(2);
+			expect(result.offset).toBe(0);
+			expect(result.limit).toBe(50);
+		});
+		test('a status filter alone returns only that status with the page totals', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'report:view', 'report:resolve']);
+			const {pendingReportId, resolvedReportId} = await filePendingAndResolvedReports(harness, admin);
+			const pending = await createBuilder<ReportListResponse>(harness, admin.token)
+				.get('/admin/reports?status=pending')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(pending.reports.map((report) => [report.report_id, report.status])).toEqual([[pendingReportId, 0]]);
+			expect(pending.total).toBe(1);
+			expect(pending.offset).toBe(0);
+			expect(pending.limit).toBe(50);
+			const resolved = await createBuilder<ReportListResponse>(harness, admin.token)
+				.get('/admin/reports?status=resolved&limit=10&offset=0')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(resolved.reports.map((report) => [report.report_id, report.status])).toEqual([[resolvedReportId, 1]]);
+			expect(resolved.total).toBe(1);
+			expect(resolved.offset).toBe(0);
+			expect(resolved.limit).toBe(10);
+			const pastTheEnd = await createBuilder<ReportListResponse>(harness, admin.token)
+				.get('/admin/reports?status=pending&limit=10&offset=5')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(pastTheEnd).toEqual({reports: [], total: 1, offset: 5, limit: 10});
 		});
 	});
 	describe('/admin/audit-logs (search)', () => {

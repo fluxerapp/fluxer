@@ -900,16 +900,6 @@ const SheetTitleContent: React.FC<TitleProps> = ({children, as: Component = 'h2'
 	);
 };
 
-interface SubtitleProps {
-	children: React.ReactNode;
-}
-
-export const Subtitle: React.FC<SubtitleProps> = ({children}) => (
-	<p className={styles.subtitle} data-flx="ui.sheet.sheet.subtitle.subtitle">
-		{children}
-	</p>
-);
-
 interface ContentProps {
 	children: React.ReactNode;
 	padding?: 'none' | 'md';
@@ -931,51 +921,6 @@ export const Content: React.FC<ContentProps> = ({children, padding = 'md', scrol
 			{children}
 		</div>
 	</div>
-);
-
-interface SectionProps {
-	children: React.ReactNode;
-	className?: string;
-}
-
-export const Section: React.FC<SectionProps> = ({children, className}) => (
-	<div className={clsx(styles.section, className)} data-flx="ui.sheet.sheet.section.section">
-		{children}
-	</div>
-);
-
-interface FooterProps {
-	children: React.ReactNode;
-	border?: boolean;
-	className?: string;
-}
-
-export const Footer: React.FC<FooterProps> = ({children, border = true, className}) => (
-	<div
-		className={clsx(styles.footer, !border && styles.footerNoBorder, className)}
-		data-flx="ui.sheet.sheet.footer.footer"
-	>
-		{children}
-	</div>
-);
-
-interface ActionsProps {
-	children: React.ReactNode;
-	className?: string;
-}
-
-export const Actions: React.FC<ActionsProps> = ({children, className}) => (
-	<div className={clsx(styles.actions, className)} data-flx="ui.sheet.sheet.actions.actions">
-		{children}
-	</div>
-);
-
-interface DividerProps {
-	className?: string;
-}
-
-export const Divider: React.FC<DividerProps> = ({className}) => (
-	<div className={clsx(styles.divider, className)} aria-hidden="true" data-flx="ui.sheet.sheet.divider.divider" />
 );
 
 interface CloseButtonProps {

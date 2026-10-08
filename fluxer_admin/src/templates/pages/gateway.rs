@@ -3,6 +3,7 @@
 use super::gateway_leaderboard;
 use super::gateway_nodes;
 
+use crate::utils::plural::count_noun;
 use crate::{
     api::types::{GatewayVoiceStateCountsResponse, GuildMemoryStatsResponse, NodeStatsResponse},
     config::AdminConfig,
@@ -43,7 +44,7 @@ pub fn gateway_page(config: &AdminConfig, auth: &AuthContext, p: &GatewayPagePar
         ))
         @if let Some(count) = p.reload_result {
             div class="rounded-lg border p-4 bg-green-50 border-green-200 text-green-700" {
-                "Successfully reloaded " (count) " guilds!"
+                "Successfully reloaded " (count_noun(count, "guild", "guilds")) "!"
             }
         }
         div class="space-y-6" {

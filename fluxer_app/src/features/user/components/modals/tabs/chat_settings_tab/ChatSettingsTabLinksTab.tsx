@@ -151,12 +151,3 @@ export const StripTrackingParametersControl: React.FC<LinkSwitchControlProps> = 
 		/>
 	);
 });
-
-export const LinksTabContent: React.FC = observer(() => {
-	return (
-		<>
-			<TrustAllExternalLinksControl data-flx="user.chat-settings-tab.links-tab.links-tab-content.trust-all" />
-			<StripTrackingParametersControl data-flx="user.chat-settings-tab.links-tab.links-tab-content.strip-tracking" />
-		</>
-	);
-});

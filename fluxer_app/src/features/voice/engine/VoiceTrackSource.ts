@@ -75,10 +75,6 @@ export function asVoiceTrackSource(source: unknown): VoiceTrackSource {
 	}
 }
 
-export function isVoiceScreenShareSource(source: unknown): boolean {
-	return asVoiceTrackSource(source) === VoiceTrackSource.ScreenShare;
-}
-
 function normalizeTrackLabel(value: unknown): string | null {
 	if (typeof value !== 'string') return null;
 	const normalized = value

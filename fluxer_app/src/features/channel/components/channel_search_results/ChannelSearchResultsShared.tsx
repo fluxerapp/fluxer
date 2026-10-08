@@ -27,7 +27,7 @@ import type React from 'react';
 export type PaginationItem = number | 'ellipsis-left' | 'ellipsis-right';
 export type ChannelSearchSortMode = 'newest' | 'oldest' | 'relevant';
 
-export const DEFAULT_MAX_VISIBLE_PAGES = 7;
+const DEFAULT_MAX_VISIBLE_PAGES = 7;
 export const RESULTS_PER_PAGE = 25;
 export const DETACHED_MESSAGE_BEHAVIOR: MessageBehaviorOverrides = {
 	isEditing: false,
@@ -38,19 +38,19 @@ export const DETACHED_MESSAGE_BEHAVIOR: MessageBehaviorOverrides = {
 } as const;
 export const EMPTY_SEARCH_MESSAGES: Array<Message> = [];
 export const EMPTY_SEARCH_CHANNELS: Array<Channel> = [];
-export const OTHER_DESCRIPTOR = msg({
+const OTHER_DESCRIPTOR = msg({
 	message: '{total, plural, one {# result} other {# results}}',
 	comment: 'Result count header in the channel search results panel. Plural cases describe the result count.',
 });
-export const INDEXING_DESCRIPTOR = msg({
+const INDEXING_DESCRIPTOR = msg({
 	message: 'Indexing',
 	comment: 'Header status shown while the channel is being indexed for the first time before search is available.',
 });
-export const SEARCHING_DESCRIPTOR = msg({
+const SEARCHING_DESCRIPTOR = msg({
 	message: 'Searching',
 	comment: 'Header status shown while a search request is in flight in the channel search results panel.',
 });
-export const SEARCH_RESULTS_DESCRIPTOR = msg({
+const SEARCH_RESULTS_DESCRIPTOR = msg({
 	message: 'Search results',
 	comment: 'Default header title in the channel search results panel before a query has been submitted.',
 });
@@ -110,10 +110,10 @@ export const SORT_MODE_DESCRIPTOR = msg({
 	comment:
 		'Status label in the channel search results header announcing the current sort mode. label is the selected sort.',
 });
-export const NEWEST_DESCRIPTOR = msg({message: 'Newest'});
-export const OLDEST_DESCRIPTOR = msg({message: 'Oldest'});
-export const MOST_RELEVANT_DESCRIPTOR = msg({message: 'Most relevant'});
-export const getChannelGuild = (channel: Channel): Guild | null => {
+const NEWEST_DESCRIPTOR = msg({message: 'Newest'});
+const OLDEST_DESCRIPTOR = msg({message: 'Oldest'});
+const MOST_RELEVANT_DESCRIPTOR = msg({message: 'Most relevant'});
+const getChannelGuild = (channel: Channel): Guild | null => {
 	if (!channel.guildId) return null;
 	return Guilds.getGuild(channel.guildId) ?? null;
 };

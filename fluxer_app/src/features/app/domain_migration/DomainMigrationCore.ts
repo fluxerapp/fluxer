@@ -11,7 +11,7 @@ export const DOMAIN_MIGRATION_SOURCE_TO_TARGET: Readonly<Record<string, string>>
 	'https://web.canary.fluxer.app': 'https://canary.fluxer.com',
 };
 
-export const DOMAIN_MIGRATION_TARGET_TO_SOURCE: Readonly<Record<string, string>> = Object.fromEntries(
+const DOMAIN_MIGRATION_TARGET_TO_SOURCE: Readonly<Record<string, string>> = Object.fromEntries(
 	Object.entries(DOMAIN_MIGRATION_SOURCE_TO_TARGET).map(([source, target]) => [target, source]),
 );
 
@@ -21,23 +21,23 @@ export const DOMAIN_MIGRATION_PENDING_KEY = 'fluxer:domain-migration:pending';
 export const DOMAIN_MIGRATION_INTENT_KEY = 'fluxer:domain-migration:intent';
 export const DOMAIN_MIGRATION_NOTIFICATIONS_KEY = 'fluxer:domain-migration:notifications';
 export const DOMAIN_MIGRATION_MOVED_DISMISSED_KEY = 'fluxer:domain-migration:moved-dismissed-at';
-export const DOMAIN_MIGRATION_ENROLLED_KEY = 'fluxer:domain-migration:enrolled';
-export const DOMAIN_MIGRATION_PROBED_AT_KEY = 'fluxer:domain-migration:probed-at';
+const DOMAIN_MIGRATION_ENROLLED_KEY = 'fluxer:domain-migration:enrolled';
+const DOMAIN_MIGRATION_PROBED_AT_KEY = 'fluxer:domain-migration:probed-at';
 export const DOMAIN_MIGRATION_IMPORT_KEY = 'fluxer:domain-migration:import';
-export const DOMAIN_MIGRATION_DEVICES_KEY = 'fluxer:domain-migration:devices';
+const DOMAIN_MIGRATION_DEVICES_KEY = 'fluxer:domain-migration:devices';
 export const DOMAIN_MIGRATION_STORAGE_KEY_PREFIXES: ReadonlyArray<string> = [DOMAIN_MIGRATION_MARKER_KEY];
 
 export const DOMAIN_MIGRATION_PAYLOAD_VERSION = 1;
 export const DOMAIN_MIGRATION_DEFAULT_NEXT_PATH = '/channels/@me';
 export const DOMAIN_MIGRATION_MAX_FAILED_ATTEMPTS = 3;
-export const DOMAIN_MIGRATION_FAILED_RETRY_DELAY_MS = 24 * 60 * 60 * 1000;
+const DOMAIN_MIGRATION_FAILED_RETRY_DELAY_MS = 24 * 60 * 60 * 1000;
 export const DOMAIN_MIGRATION_PENDING_MAX_AGE_MS = 10 * 60 * 1000;
 export const DOMAIN_MIGRATION_CUSTOM_SOUNDS_MAX_BYTES = 4 * 1024 * 1024;
 export const DOMAIN_MIGRATION_THEME_ASSETS_MAX_BYTES = 2 * 1024 * 1024;
 export const DOMAIN_MIGRATION_MOVED_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
-export const DOMAIN_MIGRATION_PROBE_INTERVAL_MS = 6 * 60 * 60 * 1000;
-export const DOMAIN_MIGRATION_IMPORT_STALE_MS = 2 * 60 * 1000;
-export const DOMAIN_MIGRATION_DEVICES_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+const DOMAIN_MIGRATION_PROBE_INTERVAL_MS = 6 * 60 * 60 * 1000;
+const DOMAIN_MIGRATION_IMPORT_STALE_MS = 2 * 60 * 1000;
+const DOMAIN_MIGRATION_DEVICES_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 const ONE_SHOT_ROUTE_PREFIXES: ReadonlyArray<string> = [
 	'/reset',
@@ -565,7 +565,7 @@ export interface DomainMigrationCustomSound {
 	data: string;
 }
 
-export interface DomainMigrationThemeAsset {
+interface DomainMigrationThemeAsset {
 	id: string;
 	name: string;
 	mime_type: string;

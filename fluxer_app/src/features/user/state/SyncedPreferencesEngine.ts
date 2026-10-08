@@ -18,7 +18,7 @@ interface TopLevelFieldChunk {
 export const SYNCED_PREFERENCES_FIELDS = SyncedPreferencesSchema.fields.map(
 	(field) => field.localName as SyncedPreferencesField,
 );
-export const SYNCED_PREFERENCES_FIELD_NAMES = new Set<string>(SYNCED_PREFERENCES_FIELDS.map(String));
+const SYNCED_PREFERENCES_FIELD_NAMES = new Set<string>(SYNCED_PREFERENCES_FIELDS.map(String));
 const FIELD_TO_NUMBER = new Map<SyncedPreferencesField, number>(
 	SyncedPreferencesSchema.fields.map((field) => [field.localName as SyncedPreferencesField, field.number]),
 );
@@ -188,7 +188,7 @@ export function encodeSyncedPreferences(preferences: SyncedPreferences): string 
 	return uint8ArrayToBase64(bytes);
 }
 
-export function decodeSyncedPreferencesBytes(encoded: string | null | undefined): Uint8Array {
+function decodeSyncedPreferencesBytes(encoded: string | null | undefined): Uint8Array {
 	if (!encoded) return EMPTY_BYTES;
 	try {
 		return base64ToUint8Array(encoded);
@@ -199,7 +199,7 @@ export function decodeSyncedPreferencesBytes(encoded: string | null | undefined)
 	}
 }
 
-export function decodeSyncedPreferences(encoded: string | null | undefined): SyncedPreferences {
+function decodeSyncedPreferences(encoded: string | null | undefined): SyncedPreferences {
 	try {
 		return preferencesFromBytes(decodeSyncedPreferencesBytes(encoded));
 	} catch (error) {
@@ -225,15 +225,6 @@ export function changedSyncedPreferenceFields(
 
 export function syncedPreferencesEqual(left: SyncedPreferences, right: SyncedPreferences): boolean {
 	return changedFieldNumbers(preferencesToBytes(left), preferencesToBytes(right)).length === 0;
-}
-
-export function copySyncedPreferenceField(
-	target: SyncedPreferences,
-	source: SyncedPreferences,
-	field: SyncedPreferencesField,
-): SyncedPreferences {
-	const bytes = replaceField(preferencesToBytes(target), preferencesToBytes(source), fieldNumber(field));
-	return preferencesFromBytes(bytes);
 }
 
 export function mergeIncomingSyncedPreferences(args: {
@@ -291,11 +282,7 @@ export function mergeIncomingSyncedPreferences(args: {
 	};
 }
 
-export function isEmptySyncedPreferencesEncoded(encoded: string | null | undefined): boolean {
-	return !encoded;
-}
-
-export class SyncedPreferencesDecodeError extends Error {
+class SyncedPreferencesDecodeError extends Error {
 	constructor(message: string) {
 		super(`failed to decode synced_preferences: ${message}`);
 		this.name = 'SyncedPreferencesDecodeError';

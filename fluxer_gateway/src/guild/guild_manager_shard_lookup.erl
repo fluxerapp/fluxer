@@ -16,7 +16,6 @@
     handle_guild_data_fetched/3,
     handle_guild_data_fetched/4,
     handle_fetch_worker_down/3,
-    handle_guild_data_reloaded/5,
     reply_to_all/2,
     collect_active_guild_ids/1,
     ensure_local_owner/1,
@@ -373,18 +372,6 @@ cleanup_fetch_worker(GuildId, FetchToken, State) ->
         FetchWorkers
     ),
     State#{fetch_workers => RemainingWorkers}.
-
--spec handle_guild_data_reloaded(guild_id(), pid(), gen_server:from(), fetch_result(), state()) ->
-    {noreply, state()}.
-handle_guild_data_reloaded(_GuildId, Pid, From, Result, State) ->
-    case Result of
-        {ok, Data} ->
-            _ = shard_utils:safe_gen_call_detailed(Pid, {reload, Data}, ?GUILD_CALL_TIMEOUT),
-            gen_server:reply(From, ok);
-        _ ->
-            gen_server:reply(From, {error, fetch_failed})
-    end,
-    {noreply, State}.
 
 -spec reply_to_all([gen_server:from()], term()) -> ok.
 reply_to_all(Requests, Reply) ->

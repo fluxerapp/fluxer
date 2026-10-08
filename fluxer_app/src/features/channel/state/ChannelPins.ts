@@ -51,14 +51,6 @@ class ChannelPins {
 		return pins[pins.length - 1]?.pinnedAt;
 	}
 
-	getLastPinnedMessageId(channelId: string): string | undefined {
-		const pins = this.channelPins[channelId];
-		if (!pins || pins.length === 0) {
-			return undefined;
-		}
-		return pins[pins.length - 1]?.message.id;
-	}
-
 	handleFetchPending(channelId: string): void {
 		const state = this.channelState[channelId] ?? this.createDefaultState();
 		this.channelState = {

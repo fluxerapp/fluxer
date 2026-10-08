@@ -24,7 +24,7 @@ export function resolveObserverRoot(resolve: ScrollSurfaceResolver, element: Ele
 	return surface;
 }
 
-export function resolveViewportKey(rememberKey: string | null | undefined): string | null {
+function resolveViewportKey(rememberKey: string | null | undefined): string | null {
 	if (!rememberKey) return null;
 	return stripAttachmentSignature(rememberKey);
 }

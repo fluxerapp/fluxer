@@ -37,7 +37,6 @@ import {
 	RelationshipActionMenuItem,
 	UnblockUserMenuItem,
 } from '@app/features/ui/action_menu/items/RelationshipMenuItems';
-import {ReportUserMenuItem} from '@app/features/ui/action_menu/items/ReportUserMenuItem';
 import {AddNoteMenuItem} from '@app/features/ui/action_menu/items/UserNoteMenuItems';
 import {UserProfileMenuItem} from '@app/features/ui/action_menu/items/UserProfileMenuItem';
 import {
@@ -377,11 +376,6 @@ export const GroupDMMemberContextMenu: React.FC<GroupDMMemberContextMenuProps> =
 						user={user}
 						onClose={onClose}
 						data-flx="ui.action-menu.group-dm-context-menu.group-dm-member-context-menu.relationship-action-menu-item"
-					/>
-					<ReportUserMenuItem
-						user={user}
-						onClose={onClose}
-						data-flx="ui.action-menu.group-dm-context-menu.group-dm-member-context-menu.report-user-menu-item"
 					/>
 					{relationshipType === RelationshipTypes.BLOCKED ? (
 						<UnblockUserMenuItem

@@ -196,19 +196,6 @@ class ApplicationsTabState {
 		}
 	}
 
-	clearError(): void {
-		this.error = null;
-		if (this.navigationState === NavigationState.ERROR) {
-			if (this.isDetailView) {
-				this.navigationState = NavigationState.LOADING_DETAIL;
-			} else if (this.hasApplications) {
-				this.navigationState = NavigationState.LIST;
-			} else {
-				this.navigationState = NavigationState.LOADING_LIST;
-			}
-		}
-	}
-
 	private mergeApplications(applications: Array<DeveloperApplicationWire | DeveloperApplication>): void {
 		const nextById: Record<string, DeveloperApplication> = {...this.applicationsById};
 		const nextOrder: Array<string> = [];

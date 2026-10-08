@@ -4,7 +4,6 @@ import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {
 	ASSET_FORMAT_POLICY,
 	type AssetKind,
-	formatAssetUploadExtensions,
 	getAcceptString as getPolicyAcceptString,
 } from '@fluxer/constants/src/AssetFormatPolicy';
 import type {I18n} from '@lingui/core';
@@ -12,10 +11,6 @@ import {msg} from '@lingui/core/macro';
 
 export {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 
-const SUPPORTED_MAX_DESCRIPTOR = msg({
-	message: 'Max {maxSize}.',
-	comment: 'Helper text describing the maximum file size for an asset upload.',
-});
 const UNSUPPORTED_FILE_TYPE_ALLOWED_FORMATS_DESCRIPTOR = msg({
 	message: 'Unsupported file type.',
 	comment: 'Form validation error for an asset of an unsupported file type.',
@@ -43,10 +38,6 @@ export function getAcceptStringFiltered(kind: AssetKind, animatedAllowed: boolea
 
 export type AssetCopyErrorReason = 'unsupported_mime' | 'too_large' | 'bad_dimensions' | 'animated_requires_premium';
 
-function formatExtensions(kind: AssetKind): string {
-	return formatAssetUploadExtensions(kind);
-}
-
 function formatBytes(bytes: number): string {
 	if (bytes >= 1024 * 1024) {
 		const mb = bytes / (1024 * 1024);
@@ -55,15 +46,6 @@ function formatBytes(bytes: number): string {
 	}
 	const kb = Math.round(bytes / 1024);
 	return `${kb} KB`;
-}
-
-export function getSupportedFormatsLabel(i18n: I18n, kind: AssetKind): string {
-	const maxSize = formatBytes(ASSET_FORMAT_POLICY[kind].maxBytes);
-	return i18n._(SUPPORTED_MAX_DESCRIPTOR, {maxSize});
-}
-
-export function getSupportedFormatNamesLabel(kind: AssetKind): string {
-	return formatExtensions(kind);
 }
 
 export function getAssetFormatErrorMessage(i18n: I18n, kind: AssetKind, reason: AssetCopyErrorReason): string {

@@ -28,14 +28,6 @@
 	margin-bottom: 1rem;
 }
 
-.previewStatus {
-	word-break: break-word;
-}
-
-.previewStatusPlaceholder {
-	min-height: 1rem;
-}
-
 .statusInputWrapper {
 	width: 100%;
 	display: flex;
@@ -47,12 +39,6 @@
 	font-size: 0.75rem;
 	color: var(--text-tertiary);
 	text-align: right;
-}
-
-.inputRight {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.25rem;
 }
 
 .emojiTriggerButton {

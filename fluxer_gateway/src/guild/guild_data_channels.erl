@@ -11,7 +11,6 @@
     derive_member_view/4,
     member_view/4,
     sanitize_voice_state/1,
-    voice_members_from_states/2,
     merge_members/2
 ]).
 
@@ -157,14 +156,6 @@ with_missing_parents(Filtered, Channels) ->
 sanitize_voice_state(VS) ->
     voice_state_utils:sanitize_voice_state_for_broadcast(VS).
 
--spec voice_members_from_states([map()], [guild_member()]) -> [guild_member()].
-voice_members_from_states(VoiceStates, Members) ->
-    MemberIndex = build_member_index(Members),
-    lists:filtermap(
-        fun(VoiceState) -> resolve_voice_member(VoiceState, MemberIndex) end,
-        VoiceStates
-    ).
-
 -spec merge_members([guild_member()], [guild_member()]) -> [guild_member()].
 merge_members(Primary, Secondary) ->
     {Merged, _} = lists:foldl(
@@ -267,42 +258,6 @@ role_permissions_for_id_fold(Role, GuildId, Acc) ->
     case safe_snowflake_id(maps:get(<<"id">>, Role, undefined)) of
         GuildId -> permission_bits:parse(maps:get(<<"permissions">>, Role, undefined));
         _ -> Acc
-    end.
-
--spec resolve_voice_member(map(), #{integer() => guild_member()}) ->
-    {true, guild_member()} | false.
-resolve_voice_member(VoiceState, MemberIndex) ->
-    case maps:get(<<"member">>, VoiceState, undefined) of
-        Member when is_map(Member), map_size(Member) > 0 -> {true, Member};
-        _ -> resolve_voice_member_by_id(VoiceState, MemberIndex)
-    end.
-
--spec resolve_voice_member_by_id(map(), #{integer() => guild_member()}) ->
-    {true, guild_member()} | false.
-resolve_voice_member_by_id(VoiceState, MemberIndex) ->
-    case voice_state_utils:voice_state_user_id(VoiceState) of
-        undefined -> false;
-        UserId -> resolve_indexed_voice_member(UserId, MemberIndex)
-    end.
-
--spec resolve_indexed_voice_member(integer(), #{integer() => guild_member()}) ->
-    {true, guild_member()} | false.
-resolve_indexed_voice_member(UserId, MemberIndex) ->
-    case maps:get(UserId, MemberIndex, undefined) of
-        undefined -> false;
-        Member -> {true, Member}
-    end.
-
--spec build_member_index([guild_member()]) -> #{integer() => guild_member()}.
-build_member_index(Members) ->
-    lists:foldl(fun add_member_to_index/2, #{}, Members).
-
--spec add_member_to_index(guild_member(), #{integer() => guild_member()}) ->
-    #{integer() => guild_member()}.
-add_member_to_index(Member, Acc) ->
-    case member_user_id(Member) of
-        undefined -> Acc;
-        UserId -> Acc#{UserId => Member}
     end.
 
 -spec member_user_id(guild_member()) -> integer() | undefined.

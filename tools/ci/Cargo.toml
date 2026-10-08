@@ -10,7 +10,6 @@ aws-config = "1.12.0"
 aws-sdk-s3 = { version = "1.148.0", default-features = false, features = ["default-https-client", "http-1x", "rt-tokio", "sigv4a"] }
 base64 = "0.23.1"
 brotli = "8.0.2"
-bytes = "1.12.1"
 chrono = "0.4.45"
 clap = { version = "4.6.7", features = ["derive"] }
 hex = "0.4.3"

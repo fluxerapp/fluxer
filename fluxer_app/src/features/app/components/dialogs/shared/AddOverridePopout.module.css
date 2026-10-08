@@ -53,22 +53,6 @@
 	transition: none;
 }
 
-.itemButtonActive {
-	background-color: var(--settings-selected-background, var(--surface-interactive-selected-bg));
-	border-color: var(
-		--settings-selected-border-color,
-		color-mix(in srgb, var(--background-modifier-accent) 72%, var(--text-tertiary))
-	);
-}
-
-.itemButtonInactive:hover {
-	background-color: var(--settings-hover-background, var(--surface-interactive-hover-bg));
-	border-color: var(
-		--settings-hover-border-color,
-		color-mix(in srgb, var(--background-modifier-accent) 72%, var(--text-tertiary))
-	);
-}
-
 .roleIndicator {
 	height: 0.75rem;
 	width: 0.75rem;

@@ -327,79 +327,6 @@ export class Guild {
 		};
 	}
 
-	withUpdates(guild: Partial<WireGuild>): Guild {
-		return new Guild(
-			{
-				...this,
-				name: guild.name ?? this.name,
-				icon: guild.icon ?? this.icon,
-				banner: guild.banner ?? this.banner,
-				bannerWidth: guild.banner_width ?? this.bannerWidth,
-				bannerHeight: guild.banner_height ?? this.bannerHeight,
-				splash: guild.splash ?? this.splash,
-				splashWidth: guild.splash_width ?? this.splashWidth,
-				splashHeight: guild.splash_height ?? this.splashHeight,
-				splashCardAlignment: guild.splash_card_alignment ?? this.splashCardAlignment,
-				embedSplash: guild.embed_splash ?? this.embedSplash,
-				embedSplashWidth: guild.embed_splash_width ?? this.embedSplashWidth,
-				embedSplashHeight: guild.embed_splash_height ?? this.embedSplashHeight,
-				features: guild.features ? new Set(guild.features) : this.features,
-				vanityURLCode: guild.vanity_url_code ?? this.vanityURLCode,
-				ownerId: guild.owner_id ?? this.ownerId,
-				systemChannelId: guild.system_channel_id ?? this.systemChannelId,
-				systemChannelFlags: guild.system_channel_flags ?? this.systemChannelFlags,
-				rulesChannelId: guild.rules_channel_id ?? this.rulesChannelId,
-				afkChannelId: guild.afk_channel_id ?? this.afkChannelId,
-				afkTimeout: guild.afk_timeout ?? this.afkTimeout,
-				verificationLevel: guild.verification_level ?? this.verificationLevel,
-				mfaLevel: guild.mfa_level ?? this.mfaLevel,
-				nsfw: guild.nsfw ?? this.nsfw,
-				contentWarningLevel: guild.content_warning_level ?? this.contentWarningLevel,
-				contentWarningText:
-					guild.content_warning_text !== undefined ? (guild.content_warning_text ?? null) : this.contentWarningText,
-				explicitContentFilter: guild.explicit_content_filter ?? this.explicitContentFilter,
-				defaultMessageNotifications: guild.default_message_notifications ?? this.defaultMessageNotifications,
-				disabledOperations: guild.disabled_operations ?? this.disabledOperations,
-				messageHistoryCutoff:
-					guild.message_history_cutoff !== undefined
-						? (guild.message_history_cutoff ?? null)
-						: this.messageHistoryCutoff,
-				unavailable: guild.unavailable ?? this.unavailable,
-				memberCount: guild.member_count ?? this.memberCount,
-			},
-			{instanceId: this.instanceId},
-		);
-	}
-
-	withRoles(roles: Record<string, GuildRole>): Guild {
-		return new Guild(
-			{
-				...this,
-				roles: Object.freeze({...roles}),
-			},
-			{instanceId: this.instanceId},
-		);
-	}
-
-	addRole(role: GuildRole): Guild {
-		return this.withRoles({
-			...this.roles,
-			[role.id]: role,
-		});
-	}
-
-	removeRole(roleId: string): Guild {
-		const {[roleId]: _, ...remainingRoles} = this.roles;
-		return this.withRoles(remainingRoles);
-	}
-
-	updateRole(role: GuildRole): Guild {
-		if (!this.roles[role.id]) {
-			return this;
-		}
-		return this.addRole(role);
-	}
-
 	getRole(roleId: string): GuildRole | undefined {
 		return this.roles[roleId];
 	}
@@ -410,14 +337,6 @@ export class Guild {
 
 	isOwner(userId?: string | null): boolean {
 		return userId != null && this.ownerId === userId;
-	}
-
-	get maxStaticEmojis(): number {
-		return this.maxEmojis;
-	}
-
-	get maxAnimatedEmojis(): number {
-		return this.maxEmojis;
 	}
 
 	get maxEmojis(): number {
@@ -474,10 +393,6 @@ export class Guild {
 			return MessageNotifications.ONLY_MENTIONS;
 		}
 		return this.defaultMessageNotifications;
-	}
-
-	get isNotificationOverrideActive(): boolean {
-		return this.isLargeGuild && this.defaultMessageNotifications === MessageNotifications.ALL_MESSAGES;
 	}
 
 	equals(other: Guild): boolean {

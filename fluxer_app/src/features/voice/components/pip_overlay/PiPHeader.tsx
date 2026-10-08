@@ -7,7 +7,7 @@ import {useLingui} from '@lingui/react/macro';
 import {ArrowLeftIcon} from '@phosphor-icons/react';
 import type React from 'react';
 
-export const BACK_TO_CALL_DESCRIPTOR = msg({
+const BACK_TO_CALL_DESCRIPTOR = msg({
 	message: 'Back to call',
 	comment: 'Button label on the PiP overlay. Returns to the full call view.',
 });

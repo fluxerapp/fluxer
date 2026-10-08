@@ -112,6 +112,7 @@ The `task` discriminator selects one of these structures. Every ID array has an 
 | reason_code | integer | [Deletion reason](/admin-api/users/#deletion-reasons) recorded against every targeted account |
 | public_reason? | string | The reason shown to each account holder in the deletion notice (0-512 characters after normalisation) |
 | days_until_deletion?<sup>1</sup> | integer | The delay before deletion in whole days (1-365, default 60) |
+| notify_user? | boolean | Whether to email each account holder about the scheduled deletion (default true) |
 
 <sup>1</sup> Fluxer raises the value to the reason-specific minimum, 14 days for `USER_REQUESTED` and 60 days for every other code
 
@@ -143,7 +144,7 @@ Every task writes one summary Admin audit entry when it finishes, with the actio
 
 `delete_user_messages` deletes every message each account wrote, across every channel. It writes one `delete_all_user_messages` entry for each account, with the audit reason, the account, and the deleted message count, and reports progress after every account.
 
-`schedule_user_deletion` marks each account deleted. The task runs the same steps as [Schedule user deletion](/admin-api/users/#schedule-user-deletion) for one account. It stores the reason code, public reason, and audit reason on the account, reschedules its pending deletion, terminates its sessions, cancels and refunds its Stripe subscription when one is on file, dispatches [User Update](/gateway/events/#user-update), writes one `schedule_deletion` entry for each account with the audit reason and the reason code, and emails the account holder when an address is on file. A failed email is logged and does not fail the entity. When the reason is not `USER_REQUESTED`, the task also bans the account's identifiers and resolves the pending reports against it.
+`schedule_user_deletion` marks each account deleted. The task runs the same steps as [Schedule user deletion](/admin-api/users/#schedule-user-deletion) for one account. It stores the reason code, public reason, and audit reason on the account, reschedules its pending deletion, terminates its sessions, cancels and refunds its Stripe subscription when one is on file, dispatches [User Update](/gateway/events/#user-update), writes one `schedule_deletion` entry for each account with the audit reason and the reason code, and emails the account holder when `notify_user` is true and an address is on file. A failed email is logged and does not fail the entity. The summary entry records `notify_user`. When the reason is not `USER_REQUESTED`, the task also bans the account's identifiers. When the reason is one that resolves reports under [Schedule user deletion](/admin-api/users/#schedule-user-deletion), the task also resolves the pending reports against the account, leaves the `child_safety`, `underage_user`, and `self_harm` categories pending, and sends each reporter of a resolved report the generic notice [Update report](/admin-api/reports/#update-report) describes. The skip cases of that notice apply.
 
 ### Rate limit
 

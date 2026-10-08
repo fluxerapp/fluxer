@@ -6,18 +6,7 @@ import Keybind, {
 	type KeyCombo,
 } from '@app/features/input/state/InputKeybind';
 import {resolveKeybindCommand} from '@app/features/input/state/input_keybind/KeybindCommands';
-import {replaceTextRange, setTextSelectionSoon} from '@app/features/messaging/utils/TextInputEditUtils';
-import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
-import type React from 'react';
-import {type KeyboardEvent, useCallback, useEffect} from 'react';
-
-interface ShortcutKeyEvent {
-	key: string;
-	ctrlKey: boolean;
-	metaKey: boolean;
-	altKey: boolean;
-	shiftKey: boolean;
-}
+import {useEffect} from 'react';
 
 interface FormattingShortcut {
 	combo: Partial<KeyCombo>;
@@ -28,7 +17,7 @@ interface MarkdownKeybindScopeOptions {
 	preserveEditableFocusActions?: boolean;
 }
 
-export const MARKDOWN_FORMATTING_SHORTCUTS: ReadonlyArray<FormattingShortcut> = [
+const MARKDOWN_FORMATTING_SHORTCUTS: ReadonlyArray<FormattingShortcut> = [
 	{combo: {key: 'b', ctrlOrMeta: true}, wrapper: '**'},
 	{combo: {key: 'i', ctrlOrMeta: true}, wrapper: '*'},
 	{combo: {key: 'u', ctrlOrMeta: true}, wrapper: '__'},
@@ -86,23 +75,6 @@ const doesStoredComboMatchShortcut = (combo: KeyCombo, target: Partial<KeyCombo>
 			meta: Boolean(combo.meta),
 			alt: Boolean(combo.alt),
 			shift: Boolean(combo.shift),
-		},
-		target,
-	);
-};
-export const doesEventMatchShortcut = (event: ShortcutKeyEvent, target: Partial<KeyCombo>): boolean => {
-	const eventKey = event.key ? event.key.toLowerCase() : '';
-	const targetKey = normalizeKeyName(target.key, target.code);
-	if (!eventKey || (targetKey && targetKey !== eventKey)) {
-		return false;
-	}
-	return modifiersMatch(
-		{
-			ctrlOrMeta: event.ctrlKey || event.metaKey,
-			ctrl: event.ctrlKey,
-			meta: event.metaKey,
-			alt: event.altKey,
-			shift: event.shiftKey,
 		},
 		target,
 	);
@@ -175,88 +147,6 @@ class MarkdownKeybindScope {
 }
 
 const markdownKeybindScope = new MarkdownKeybindScope();
-export const useMarkdownFormattingShortcut = ({
-	textareaRef,
-	value,
-	setValue,
-	handleTextChange,
-	previousValueRef,
-}: {
-	textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-	value: string;
-	setValue: React.Dispatch<React.SetStateAction<string>>;
-	handleTextChange: (newValue: string, oldValue: string) => void;
-	previousValueRef: React.RefObject<string>;
-}): ((event: KeyboardEvent<HTMLTextAreaElement>) => void) => {
-	return useCallback(
-		(event: KeyboardEvent<HTMLTextAreaElement>) => {
-			const textarea = textareaRef.current;
-			if (!textarea) {
-				return;
-			}
-			const selectionStart = textarea.selectionStart ?? 0;
-			const selectionEnd = textarea.selectionEnd ?? 0;
-			const inboxCombo = Keybind.getByAction('chat_toggle_inbox').combo;
-			if (doesEventMatchShortcut(event, inboxCombo) && selectionStart === selectionEnd && value.trim().length === 0) {
-				event.preventDefault();
-				event.stopPropagation();
-				ComponentBus.dispatch('INBOX_OPEN');
-				return;
-			}
-			for (const {combo: shortcutCombo, wrapper} of MARKDOWN_FORMATTING_SHORTCUTS) {
-				if (!doesEventMatchShortcut(event, shortcutCombo)) {
-					continue;
-				}
-				if (selectionStart === selectionEnd) {
-					return;
-				}
-				const selectedText = value.slice(selectionStart, selectionEnd);
-				const wrapperLength = wrapper.length;
-				const alreadyWrappedInside =
-					selectedText.length >= wrapperLength * 2 &&
-					selectedText.startsWith(wrapper) &&
-					selectedText.endsWith(wrapper);
-				const hasPrefixWrapper =
-					wrapperLength > 0 &&
-					selectionStart >= wrapperLength &&
-					value.slice(selectionStart - wrapperLength, selectionStart) === wrapper;
-				const hasSuffixWrapper =
-					wrapperLength > 0 &&
-					selectionEnd + wrapperLength <= value.length &&
-					value.slice(selectionEnd, selectionEnd + wrapperLength) === wrapper;
-				let newValue: string;
-				let newSelectionStart: number;
-				let newSelectionEnd: number;
-				if (alreadyWrappedInside) {
-					const unwrappedText = selectedText.slice(wrapperLength, selectedText.length - wrapperLength);
-					newValue = value.slice(0, selectionStart) + unwrappedText + value.slice(selectionEnd);
-					newSelectionStart = selectionStart;
-					newSelectionEnd = selectionStart + unwrappedText.length;
-				} else if (hasPrefixWrapper && hasSuffixWrapper) {
-					newValue =
-						value.slice(0, selectionStart - wrapperLength) + selectedText + value.slice(selectionEnd + wrapperLength);
-					newSelectionStart = selectionStart - wrapperLength;
-					newSelectionEnd = selectionEnd - wrapperLength;
-				} else {
-					const wrappedText = `${wrapper}${selectedText}${wrapper}`;
-					newValue = value.slice(0, selectionStart) + wrappedText + value.slice(selectionEnd);
-					newSelectionStart = selectionStart + wrapperLength;
-					newSelectionEnd = selectionEnd + wrapperLength;
-				}
-				event.preventDefault();
-				event.stopPropagation();
-				const appliedNativeEdit = replaceTextRange(textarea, newValue, 0, value.length);
-				if (!appliedNativeEdit) {
-					handleTextChange(newValue, previousValueRef.current);
-					setValue(newValue);
-				}
-				setTextSelectionSoon(textarea, newSelectionStart, newSelectionEnd);
-				return;
-			}
-		},
-		[handleTextChange, previousValueRef, setValue, textareaRef, value],
-	);
-};
 export const useMarkdownKeybinds = (active: boolean, options: MarkdownKeybindScopeOptions = {}): void => {
 	useEffect(() => {
 		if (!active) {

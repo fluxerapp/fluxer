@@ -20,12 +20,12 @@ An OAuth2 protocol failure raised by the [OAuth2 resource](/http-api/oauth2/) an
 
 ## Supplementary members
 
-The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted. `global` is `true` on a global rate limit denial and `false` on a route one. `required_scope` is the OAuth2 scope the request is missing. `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply. `captcha_provider` and `altcha_challenge` are the challenge described in [CAPTCHA handling](/topics/captcha/).
+The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted. `global` is `true` on a global rate limit denial and `false` on a route one. `required_scope` is the OAuth2 scope the request is missing. `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply. `captcha_provider` and `altcha_challenge` are the challenge described in [CAPTCHA handling](/topics/captcha/). `step_index` is the zero-based index of the first [report flow step](/http-api/reports/#report-flow-step-object) that does not fit the current flow, on `INVALID_REPORT_FLOW_ANSWERS`.
 
 `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED` have their own members:
 
 - `ip_address` is the normalised client address.
-- `appeal_email` is the address an appeal is sent to.
+- `appeal_email` is the address an appeal is sent to. It is `null` on a self-hosted instance, where `message` points at the administrators of the instance and names no address.
 - `appeals_supported` is `true` for both kinds of ban.
 - `ban_kind` is `permanent` or `temporary_24h`. `temporary_24h` covers every ban that records an expiry, whatever its length.
 - `expires_at` is an ISO 8601 timestamp when the ban records an expiry, and `null` otherwise, including on every permanent ban.
@@ -119,6 +119,8 @@ A temporary ban lasts 24 hours by default. Requests from the banned address retu
 ## API error code registry
 
 These codes appear in the top-level `code` field of an error response, sent as the exact JSON string shown. The registry is closed. Each entry states the leading sentence of the English source message, without its final full stop. Those messages call a [guild](/http-api/guilds/) a community.
+
+The [OpenAPI document](/http-api/instance/#get-openapi-document) and the Admin API specification publish the same list as the `APIErrorCode` schema. The `code` member of their error schemas stays a plain string that refers to it.
 
 :::note[The rendered `message` fills in the braced values]
 A description containing a value in braces is an ICU MessageFormat template. `You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}` renders as a complete sentence with the applicable limit.
@@ -466,11 +468,11 @@ Gift code is already redeemed
 
 ### `GLOBAL_IP_BANNED`
 
-Your IP address {ipAddress} has been permanently blocked from the Fluxer API by platform administrators
+Your IP address {ipAddress} has been permanently blocked from the {product_name} API by platform administrators
 
 ### `GLOBAL_IP_TEMPORARILY_BANNED`
 
-Your IP address {ipAddress} has been temporarily blocked from the Fluxer API
+Your IP address {ipAddress} has been temporarily blocked from the {product_name} API
 
 ### `GONE`
 
@@ -595,6 +597,10 @@ Permissions must be a valid integer
 ### `INVALID_PERMISSIONS_NEGATIVE`
 
 Permissions must be non-negative
+
+### `INVALID_REPORT_FLOW_ANSWERS`
+
+These answers don't match the report form
 
 ### `INVALID_REQUEST`
 
@@ -768,14 +774,6 @@ The requested scope isn't supported or you don't have permission to request it
 
 You don't have the permissions required to perform this action
 
-### `NCMEC_ALREADY_SUBMITTED`
-
-This content has already been submitted to NCMEC
-
-### `NCMEC_SUBMISSION_FAILED`
-
-We couldn't submit the report to NCMEC
-
 ### `NOT_A_BOT_APPLICATION`
 
 This application isn't a bot
@@ -879,6 +877,14 @@ You've been banned from submitting reports
 ### `REPORT_EMAIL_VERIFICATION_REQUIRED`
 
 Email verification is required for this action
+
+### `REPORT_FLOW_OUTDATED`
+
+The report form changed while you were filling it in
+
+### `REPORT_UNDER_LEGAL_HOLD`
+
+This report is under a legal hold and can't be deleted
 
 ### `RESOURCE_LOCKED`
 
@@ -1832,10 +1838,6 @@ You must start a session before sending messages
 ### `NAME_EMPTY_AFTER_NORMALIZATION`
 
 Name can't be empty after normalization
-
-### `NCMEC_ATTACHMENT_MUST_BE_IMAGE_OR_VIDEO`
-
-Only image or video attachments can be reported to NCMEC
 
 ### `NEW_EMAIL_MUST_BE_DIFFERENT`
 

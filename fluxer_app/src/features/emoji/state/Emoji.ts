@@ -153,17 +153,6 @@ class EmojiGuildRegistry {
 		return this.guilds.get(guildId);
 	}
 
-	rebuildRegistry(): void {
-		this.customEmojisById.clear();
-		this.customEmojisByLowerName.clear();
-		this.customEmojisByLowerNameByGuild.clear();
-		this.emojiIdsByGuild.clear();
-		for (const [guildId, guild] of this.guilds.entries()) {
-			this.indexGuildEmojis(guildId, guild.usableEmojis);
-		}
-		this.invalidateCaches();
-	}
-
 	updateGuild(guildId: string, guildEmojis?: ReadonlyArray<WireGuildEmoji>): void {
 		const didDelete = this.deleteGuildIndexes(guildId);
 		if (!guildEmojis) {

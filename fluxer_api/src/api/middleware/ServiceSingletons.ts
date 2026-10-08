@@ -5,16 +5,12 @@ import {AdminApiKeyRepository} from '@app/api/admin/repositories/AdminApiKeyRepo
 import {AdminArchiveRepository} from '@app/api/admin/repositories/AdminArchiveRepository';
 import {AdminApiKeyService} from '@app/api/admin/services/AdminApiKeyService';
 import {AdminArchiveService} from '@app/api/admin/services/AdminArchiveService';
-import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {Config} from '@app/api/Config';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import {StreamPreviewService} from '@app/api/channel/services/StreamPreviewService';
 import type {APIConfig} from '@app/api/config/APIConfig';
 import {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
-import {createNcmecApiConfig, NcmecReporter} from '@app/api/csam/NcmecReporter';
-import {NcmecRepository} from '@app/api/csam/NcmecRepository';
-import {NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
 import {DonationRepository} from '@app/api/donation/DonationRepository';
 import {createEmailProvider} from '@app/api/email/EmailProviderFactory';
 import {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
@@ -47,8 +43,11 @@ import {createStorageService} from '@app/api/infrastructure/StorageServiceFactor
 import {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {createUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
 import {VirusScanService} from '@app/api/infrastructure/VirusScanService';
+import {type ContactEmails, resolveContactEmails} from '@app/api/instance/ContactEmails';
 import {GatewayRolloutConfigPublisher} from '@app/api/instance/GatewayRolloutConfigPublisher';
 import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {type LegalUrls, resolveLegalUrls} from '@app/api/instance/LegalUrls';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {PushRelayConfigPublisher} from '@app/api/instance/PushRelayConfigPublisher';
 import {InviteRepository} from '@app/api/invite/InviteRepository';
 import {Logger} from '@app/api/Logger';
@@ -181,27 +180,46 @@ export const getEmailDnsValidationService = singleton(() => new EmailDnsValidati
 
 function createEmailServiceForConfig(
 	emailConfigSource: APIConfig['email'],
+	legalUrls: LegalUrls,
+	contactEmails: ContactEmails,
+	productName: string,
 	bouncedEmailChecker: UserBouncedEmailChecker,
 	emailI18n: EmailI18nService,
 ): IEmailService {
 	const emailConfig: EmailConfig = {
 		enabled: emailConfigSource.enabled,
 		fromEmail: emailConfigSource.fromEmail,
-		fromName: emailConfigSource.fromName,
+		fromName: emailConfigSource.fromName.trim() || productName,
 		replyTo: emailConfigSource.replyToEmail || null,
 		appBaseUrl: emailConfigSource.appBaseUrl,
-		marketingBaseUrl: Config.endpoints.marketing,
+		termsUrl: legalUrls.termsUrl,
+		guidelinesUrl: legalUrls.guidelinesUrl,
+		appealsEmail: contactEmails.appealsEmail,
+		safetyEmail: contactEmails.safetyEmail,
+		supportEmail: contactEmails.supportEmail,
+		productName,
 	};
 	return new EmailService(emailConfig, emailI18n, createEmailProvider(emailConfigSource), bouncedEmailChecker);
 }
 
-function createRuntimeEmailService(bouncedEmailChecker: UserBouncedEmailChecker): IEmailService {
+export function createRuntimeEmailService(bouncedEmailChecker: UserBouncedEmailChecker): IEmailService {
 	const emailI18n = new EmailI18nService();
 	return new Proxy({} as IEmailService, {
 		get(_target, property) {
 			return async (...args: Array<unknown>): Promise<boolean> => {
-				const emailConfig = await getInstanceConfigRepository().getEffectiveEmailConfig();
-				const delegate = createEmailServiceForConfig(emailConfig, bouncedEmailChecker, emailI18n);
+				const instanceConfigRepository = getInstanceConfigRepository();
+				const [emailConfig, appPublic] = await Promise.all([
+					instanceConfigRepository.getEffectiveEmailConfig(),
+					instanceConfigRepository.getAppPublicConfig(),
+				]);
+				const delegate = createEmailServiceForConfig(
+					emailConfig,
+					resolveLegalUrls(appPublic.legal),
+					resolveContactEmails(),
+					getInstanceProductName(),
+					bouncedEmailChecker,
+					emailI18n,
+				);
 				const method = delegate[property as keyof IEmailService];
 				if (typeof method !== 'function') {
 					throw new Error(`Unknown email service method: ${String(property)}`);
@@ -321,40 +339,7 @@ export function getKVAccountDeletionQueue(): KVAccountDeletionQueueService {
 }
 
 export const getThemeService = singleton(() => new ThemeService(getStorageService()));
-const getNcmecReporter = singleton(() => new NcmecReporter({config: createNcmecApiConfig(), fetch}));
-const getNcmecRepository = singleton(() => new NcmecRepository());
 export const getAttachmentUploadTraceRepository = singleton(() => new AttachmentUploadTraceRepository());
-export const getNcmecSubmissionService = singleton(
-	() =>
-		new NcmecSubmissionService({
-			reportRepository: getReportRepository(),
-			ncmecApi: getNcmecReporter(),
-			ncmecRepository: getNcmecRepository(),
-			attachmentUploadTraceRepository: getAttachmentUploadTraceRepository(),
-			storageService: getStorageService(),
-			channelRepository: getChannelRepository(),
-			userRepository: getUserRepository(),
-			guildRepository: getGuildRepository(),
-			gatewayService: getGatewayService(),
-			userCacheService: createUserCacheService(),
-			adminArchiveService: new AdminArchiveService(
-				getAdminArchiveRepository(),
-				getUserRepository(),
-				getGuildRepository(),
-				getStorageService(),
-				getSnowflakeService(),
-				getWorkerService(),
-			),
-			adminAuditService: new AdminAuditService(getAdminRepository(), getSnowflakeService(), {
-				userRepository: getUserRepository(),
-				guildRepository: getGuildRepository(),
-				channelRepository: getChannelRepository(),
-			}),
-			purgeQueue: getPurgeQueue(),
-			workerService: getWorkerService(),
-			deletionQueue: getKVAccountDeletionQueue(),
-		}),
-);
 
 let _virusScanInitPromise: Promise<void> | null = null;
 
@@ -409,7 +394,7 @@ export function getUnfurlerService(): IUnfurlerService {
 }
 
 export const getEmbedService = singleton(
-	() => new EmbedService(getChannelRepository(), getUnfurlerService(), getMediaService(), getWorkerService()),
+	() => new EmbedService(getUnfurlerService(), getMediaService(), getWorkerService()),
 );
 export const getReadStateService = singleton(() => new ReadStateService(getReadStateRepository(), getGatewayService()));
 export const getDiscriminatorService = singleton(

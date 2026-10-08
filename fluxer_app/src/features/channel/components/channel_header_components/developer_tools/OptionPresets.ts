@@ -14,7 +14,7 @@ import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
-export const SUBSCRIPTION_DESCRIPTOR = msg({
+const SUBSCRIPTION_DESCRIPTOR = msg({
 	message: 'Subscription',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
@@ -22,27 +22,27 @@ export const LIFETIME_DESCRIPTOR = msg({
 	message: 'Lifetime',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const USE_ACTUAL_PREMIUM_TYPE_DESCRIPTOR = msg({
+const USE_ACTUAL_PREMIUM_TYPE_DESCRIPTOR = msg({
 	message: 'Use actual premium type',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const NONE_NORMAL_BEHAVIOR_DESCRIPTOR = msg({
+const NONE_NORMAL_BEHAVIOR_DESCRIPTOR = msg({
 	message: 'None (normal behavior)',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const UNVERIFIED_EMAIL_DESCRIPTOR = msg({
+const UNVERIFIED_EMAIL_DESCRIPTOR = msg({
 	message: 'Unverified email',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const UNCLAIMED_ACCOUNT_DESCRIPTOR = msg({
+const UNCLAIMED_ACCOUNT_DESCRIPTOR = msg({
 	message: 'Unclaimed account',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const ACCOUNT_TOO_NEW_DESCRIPTOR = msg({
+const ACCOUNT_TOO_NEW_DESCRIPTOR = msg({
 	message: 'Account too new',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const NOT_A_MEMBER_LONG_ENOUGH_DESCRIPTOR = msg({
+const NOT_A_MEMBER_LONG_ENOUGH_DESCRIPTOR = msg({
 	message: 'Not a member long enough',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
@@ -50,35 +50,35 @@ export const ACCOUNT_LIMITED_DESCRIPTOR = msg({
 	message: 'Messaging paused',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const SEND_MESSAGES_DISABLED_DESCRIPTOR = msg({
+const SEND_MESSAGES_DISABLED_DESCRIPTOR = msg({
 	message: 'Send messages disabled',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const GEO_RESTRICTED_DESCRIPTOR = msg({
+const GEO_RESTRICTED_DESCRIPTOR = msg({
 	message: 'Geo restricted',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const MATURE_CONTENT_GATE_DESCRIPTOR = msg({
+const MATURE_CONTENT_GATE_DESCRIPTOR = msg({
 	message: 'Mature content',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const CONSENT_REQUIRED_DESCRIPTOR = msg({
+const CONSENT_REQUIRED_DESCRIPTOR = msg({
 	message: 'Consent required',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const MESSAGE_1_MONTH_DESCRIPTOR = msg({
+const MESSAGE_1_MONTH_DESCRIPTOR = msg({
 	message: '1 month',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const MESSAGE_3_MONTHS_DESCRIPTOR = msg({
+const MESSAGE_3_MONTHS_DESCRIPTOR = msg({
 	message: '3 months',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const MESSAGE_6_MONTHS_DESCRIPTOR = msg({
+const MESSAGE_6_MONTHS_DESCRIPTOR = msg({
 	message: '6 months',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-export const MESSAGE_12_MONTHS_1_YEAR_DESCRIPTOR = msg({
+const MESSAGE_12_MONTHS_1_YEAR_DESCRIPTOR = msg({
 	message: '12 months (1 year)',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });

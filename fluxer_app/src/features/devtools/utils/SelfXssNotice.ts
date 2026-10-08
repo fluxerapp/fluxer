@@ -50,7 +50,7 @@ function getSelfXssMessage(descriptor: MessageDescriptor, values?: Record<string
 	return formatFallbackMessage(descriptor.message ?? descriptor.id, values);
 }
 
-export function printSelfXssNotice(consoleApi: ConsoleLike = console): void {
+function printSelfXssNotice(consoleApi: ConsoleLike = console): void {
 	consoleApi.log(`%c${getSelfXssMessage(STOP_DESCRIPTOR)}`, STOP_BANNER_STYLE);
 	consoleApi.log(`%c${getSelfXssMessage(DEVELOPER_TOOL_DESCRIPTOR)}`, SUPPORTING_COPY_STYLE);
 	consoleApi.log(
@@ -60,7 +60,7 @@ export function printSelfXssNotice(consoleApi: ConsoleLike = console): void {
 	consoleApi.log(`%c${getSelfXssMessage(ONLY_RUN_CODE_DESCRIPTOR)}`, CAUTION_COPY_STYLE);
 }
 
-export function queueSelfXssNoticeBurst(consoleApi: ConsoleLike = console): () => void {
+function queueSelfXssNoticeBurst(consoleApi: ConsoleLike = console): () => void {
 	const timeoutIds: Array<NodeJS.Timeout> = [];
 	for (let repeatIndex = 0; repeatIndex < SELF_XSS_NOTICE_REPEAT_COUNT; repeatIndex++) {
 		if (repeatIndex === 0) {

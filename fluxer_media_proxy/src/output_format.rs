@@ -70,10 +70,6 @@ impl OutputFormat {
     pub const fn cache_serialization(self) -> &'static str {
         self.extension()
     }
-
-    pub const fn supports_animation(self) -> bool {
-        matches!(self, Self::WebP | Self::GIF | Self::APNG)
-    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -93,10 +89,6 @@ pub struct OutputSelection {
 
 pub fn is_output_format_supported(ext: AssetExtension) -> bool {
     OutputFormat::from_source_extension(ext).is_some()
-}
-
-pub fn coerce_unsupported_format(ext: AssetExtension) -> AssetExtension {
-    OutputFormat::coerce_from_extension(ext).as_asset_extension()
 }
 
 pub fn select_url_variant(input: Input) -> OutputSelection {
@@ -193,7 +185,7 @@ mod tests {
             assert_eq!(extension.mime(), format.mime());
             assert_eq!(extension.name(), format.extension());
             assert_eq!(format.extension(), format.cache_serialization());
-            assert_eq!(extension, coerce_unsupported_format(extension));
+            assert_eq!(format, OutputFormat::coerce_from_extension(extension));
         }
         for extension in [
             AssetExtension::Avif,
@@ -208,16 +200,10 @@ mod tests {
                 OutputFormat::WebP,
                 OutputFormat::coerce_from_extension(extension)
             );
-            assert_eq!(AssetExtension::Webp, coerce_unsupported_format(extension));
+            assert_eq!(
+                AssetExtension::Webp,
+                OutputFormat::coerce_from_extension(extension).as_asset_extension()
+            );
         }
-    }
-
-    #[test]
-    fn only_the_animation_containers_support_animation() {
-        assert!(OutputFormat::WebP.supports_animation());
-        assert!(OutputFormat::GIF.supports_animation());
-        assert!(OutputFormat::APNG.supports_animation());
-        assert!(!OutputFormat::PNG.supports_animation());
-        assert!(!OutputFormat::JPEG.supports_animation());
     }
 }

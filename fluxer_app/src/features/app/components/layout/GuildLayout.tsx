@@ -9,7 +9,7 @@ import {GuildNavbar} from '@app/features/app/components/layout/GuildNavbar';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {GuildSidebarSkeleton} from '@app/features/app/components/skeleton/GuildSidebarSkeleton';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Accounts from '@app/features/auth/state/Accounts';
 import {MatureContentChannelGate} from '@app/features/channel/components/MatureContentChannelGate';
 import Channels from '@app/features/channel/state/Channels';
@@ -160,7 +160,7 @@ const InvitesDisabledNagbar = observer(({isMobile, guildId}: {isMobile: boolean;
 					{isRaidDetected
 						? i18n._(INVITES_DISABLED_RAID_MESSAGE_DESCRIPTOR, {
 								communityName: guild.name,
-								productName: PRODUCT_NAME,
+								productName: RuntimeConfig.productName,
 							})
 						: i18n._(INVITES_DISABLED_MESSAGE_DESCRIPTOR, {communityName: guild.name})}
 				</p>
@@ -278,7 +278,7 @@ const StaffOnlyGuildNagbar = observer(({isMobile, guildId}: {isMobile: boolean; 
 				<p className={styles.nagbarText} data-flx="app.guild-layout.staff-only-guild-nagbar.nagbar-text">
 					{i18n._(STAFF_ONLY_GUILD_MESSAGE_DESCRIPTOR, {
 						communityName: guild.name,
-						productName: PRODUCT_NAME,
+						productName: RuntimeConfig.productName,
 					})}
 				</p>
 				<div

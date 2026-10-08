@@ -1,17 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {MessageDescriptor} from '@lingui/core';
-import {msg} from '@lingui/core/macro';
-
-const AUTO_DETECT_LANGUAGE_DESCRIPTOR = msg({
-	message: 'Auto-detect language',
-	comment: 'Short label in the attachment preview utils helper. Keep it concise.',
-});
-const PLAIN_TEXT_DESCRIPTOR = msg({
-	message: 'Plain text',
-	comment: 'Short label in the attachment preview utils helper. Keep it concise.',
-});
 export const TEXT_PREVIEW_MAX_BYTES = 128 * 1024;
 export const TEXT_PREVIEW_COLLAPSED_BYTES = 16 * 1024;
 const TEXTUAL_MIME_PREFIXES = [
@@ -133,60 +122,8 @@ const MIME_LANGUAGE_MAP: Record<string, string> = {
 	'application/x-python': 'python',
 	'application/x-ruby': 'ruby',
 };
-export const SUPPORTED_PREVIEW_LANGUAGES = [
-	'auto',
-	'plaintext',
-	'json',
-	'javascript',
-	'typescript',
-	'python',
-	'java',
-	'c',
-	'cpp',
-	'csharp',
-	'go',
-	'ruby',
-	'php',
-	'rust',
-	'bash',
-	'powershell',
-	'css',
-	'scss',
-	'xml',
-	'yaml',
-	'markdown',
-	'sql',
-	'ini',
-	'dockerfile',
-];
-export const LANGUAGE_LABELS: Record<string, MessageDescriptor | string> = {
-	auto: AUTO_DETECT_LANGUAGE_DESCRIPTOR,
-	plaintext: PLAIN_TEXT_DESCRIPTOR,
-	json: 'JSON',
-	javascript: 'JavaScript',
-	typescript: 'TypeScript',
-	python: 'Python',
-	java: 'Java',
-	c: 'C',
-	cpp: 'C++',
-	csharp: 'C#',
-	go: 'Go',
-	ruby: 'Ruby',
-	php: 'PHP',
-	rust: 'Rust',
-	bash: 'Bash',
-	powershell: 'PowerShell',
-	css: 'CSS',
-	scss: 'SCSS',
-	xml: 'HTML / XML',
-	yaml: 'YAML',
-	markdown: 'Markdown',
-	sql: 'SQL',
-	ini: 'INI',
-	dockerfile: 'Dockerfile',
-};
 
-export function isTextualAttachment(attachment: MessageAttachment): boolean {
+function isTextualAttachment(attachment: MessageAttachment): boolean {
 	if (!attachment.url) return false;
 	if (attachment.expired) return false;
 	const {content_type: rawType, filename} = attachment;

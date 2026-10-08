@@ -94,7 +94,6 @@ catalog:
   '@vitest/coverage-v8': 5.0.1
   '@vvo/tzdb': 6.198.0
   '@webgpu/types': 0.1.72
-  ajv: 8.20.0
   altcha-lib: 2.5.0
   archiver: 8.0.0
   argon2: 0.44.0
@@ -110,7 +109,6 @@ catalog:
   eslint-plugin-react-google-translate: 1.0.4
   eventemitter3: 5.0.4
   fake-indexeddb: 6.2.5
-  fast-xml-parser: 5.11.1
   favico.js: 0.3.10
   framer-motion: 13.4.0
   hi-base32: 0.5.1

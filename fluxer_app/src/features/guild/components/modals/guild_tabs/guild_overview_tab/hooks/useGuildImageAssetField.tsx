@@ -54,17 +54,17 @@ const IMAGE_COULDN_T_BE_USED_DESCRIPTOR = msg({
 	comment: 'Error modal title shown when a community image upload cannot be accepted or processed.',
 });
 
-export type ImageAssetFieldName = 'icon' | 'banner' | 'splash' | 'embed_splash';
+type ImageAssetFieldName = 'icon' | 'banner' | 'splash' | 'embed_splash';
 type GifMode = 'allow' | 'disallow' | 'require-feature';
 
-export interface GifPolicy {
+interface GifPolicy {
 	mode: GifMode;
 	isAllowed?: () => boolean;
 	featureMissingMessage?: string;
 	disallowedMessage?: string;
 }
 
-export interface AspectRatioConfig {
+interface AspectRatioConfig {
 	compute: (dataUrl: string) => Promise<number>;
 	set: (ratio: number | undefined) => void;
 }

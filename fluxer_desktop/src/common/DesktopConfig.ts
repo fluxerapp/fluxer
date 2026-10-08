@@ -32,7 +32,7 @@ interface DesktopConfig extends Record<string, unknown> {
 
 export type GlobalShortcutsPortalConsent = 'unset' | 'granted' | 'declined';
 
-export interface PersistedGlobalShortcutAction {
+interface PersistedGlobalShortcutAction {
 	action: GlobalShortcutAction;
 	description: string;
 	preferredTrigger: string | null;

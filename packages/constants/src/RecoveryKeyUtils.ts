@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const RECOVERY_KEY_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+const RECOVERY_KEY_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 export const RECOVERY_KEY_BYTE_LENGTH = 20;
 export const RECOVERY_KEY_LENGTH = 32;
-export const RECOVERY_KEY_GROUP_SIZE = 4;
+const RECOVERY_KEY_GROUP_SIZE = 4;
 export const RECOVERY_KEY_SEPARATOR = '-';
 export const RECOVERY_KEY_FORMATTED_LENGTH = RECOVERY_KEY_LENGTH + RECOVERY_KEY_LENGTH / RECOVERY_KEY_GROUP_SIZE - 1;
 
@@ -67,10 +67,6 @@ export function normalizeRecoveryKey(input: string): string | null {
 		normalized += mapped;
 	}
 	return normalized;
-}
-
-export function isValidRecoveryKey(input: string): boolean {
-	return normalizeRecoveryKey(input) !== null;
 }
 
 export function formatRecoveryKeyInput(input: string): string {

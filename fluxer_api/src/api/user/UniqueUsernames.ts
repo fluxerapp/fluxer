@@ -66,7 +66,7 @@ async function findUsernameHolders(users: UsernameLookup, username: string): Pro
 	return [...holders.values()];
 }
 
-export async function findPeopleByUsername(users: UsernameLookup, username: string): Promise<Array<User>> {
+async function findPeopleByUsername(users: UsernameLookup, username: string): Promise<Array<User>> {
 	return (await findUsernameHolders(users, username)).filter(isPerson);
 }
 

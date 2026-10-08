@@ -18,58 +18,6 @@ const NEVER_TRANSLATED_TAGS = new Set([
 	'RP',
 	'svg',
 ]);
-const VALUE_ONLY_TAGS = new Set(['INPUT', 'TEXTAREA', 'TITLE']);
-const BLOCK_CONTAINER_TAGS = new Set([
-	'UL',
-	'OL',
-	'DL',
-	'TABLE',
-	'THEAD',
-	'TBODY',
-	'TFOOT',
-	'TR',
-	'SELECT',
-	'OPTGROUP',
-	'MENU',
-	'NAV',
-	'HEADER',
-	'FOOTER',
-	'SECTION',
-	'ARTICLE',
-	'ASIDE',
-	'MAIN',
-	'FORM',
-	'FIELDSET',
-	'BODY',
-	'HTML',
-]);
-const INLINE_TAGS = new Set([
-	'A',
-	'ABBR',
-	'ACRONYM',
-	'B',
-	'BASEFONT',
-	'BDO',
-	'BIG',
-	'CITE',
-	'DFN',
-	'EM',
-	'FONT',
-	'I',
-	'LABEL',
-	'NOBR',
-	'Q',
-	'S',
-	'SMALL',
-	'SPAN',
-	'STRIKE',
-	'STRONG',
-	'SUB',
-	'SUP',
-	'TT',
-	'U',
-	'VAR',
-]);
 
 function isElement(node: Node): node is Element {
 	return node.nodeType === ELEMENT_NODE;
@@ -79,49 +27,13 @@ function isNonBlankText(node: Node): boolean {
 	return node.nodeType === TEXT_NODE && (node.nodeValue?.trim().length ?? 0) > 0;
 }
 
-export function isTranslationOptedOut(element: Element): boolean {
+function isTranslationOptedOut(element: Element): boolean {
 	return (
 		NEVER_TRANSLATED_TAGS.has(element.tagName) ||
 		element.classList.contains('notranslate') ||
 		element.classList.contains('skiptranslate') ||
 		element.getAttribute('translate') === 'no'
 	);
-}
-
-export function isInlineElement(element: Element): boolean {
-	const view = element.ownerDocument.defaultView;
-	const display = view?.getComputedStyle ? view.getComputedStyle(element).display : '';
-	if (display === 'inline' || display === 'contents') {
-		return true;
-	}
-	return display === '' && INLINE_TAGS.has(element.tagName);
-}
-
-export function isCompoundRoot(element: Element): boolean {
-	if (VALUE_ONLY_TAGS.has(element.tagName) || BLOCK_CONTAINER_TAGS.has(element.tagName)) {
-		return false;
-	}
-	if (element.tagName === 'PRE' || element.tagName === 'RUBY') {
-		return false;
-	}
-	if (isInlineElement(element) || isTranslationOptedOut(element)) {
-		return false;
-	}
-	let hasInlineContent = false;
-	for (const child of Array.from(element.childNodes)) {
-		if (isElement(child)) {
-			if (isTranslationOptedOut(child)) {
-				continue;
-			}
-			if (!isInlineElement(child)) {
-				return false;
-			}
-			hasInlineContent = true;
-		} else if (isNonBlankText(child)) {
-			hasInlineContent = true;
-		}
-	}
-	return hasInlineContent;
 }
 
 function walkTranslatable(element: Element, visit: (element: Element) => boolean): void {
@@ -168,14 +80,14 @@ function wrapTextNodesInFont(element: Element): void {
 	}
 }
 
-export function chromeLegacyFontPipeline(root: Element): void {
+function chromeLegacyFontPipeline(root: Element): void {
 	walkTranslatable(root, (element) => {
 		wrapTextNodesInFont(element);
 		return true;
 	});
 }
 
-export function chromeCompoundPipeline(root: Element): void {
+function chromeCompoundPipeline(root: Element): void {
 	walkTranslatable(root, (element) => {
 		const children = Array.from(element.childNodes);
 		const hasText = children.some(isNonBlankText);
@@ -188,17 +100,7 @@ export function chromeCompoundPipeline(root: Element): void {
 	});
 }
 
-export function chromeFaithfulCompoundPipeline(root: Element): void {
-	walkTranslatable(root, (element) => {
-		if (!isCompoundRoot(element)) {
-			return true;
-		}
-		element.replaceChildren(reassembledFragment(element, Array.from(element.childNodes)));
-		return false;
-	});
-}
-
-export function chromeRevertPipeline(root: Element): void {
+function chromeRevertPipeline(root: Element): void {
 	const savedChildren = new Map<Element, Array<Node>>();
 	walkTranslatable(root, (element) => {
 		const children = Array.from(element.childNodes);
@@ -213,7 +115,7 @@ export function chromeRevertPipeline(root: Element): void {
 	}
 }
 
-export function firefoxMergePipeline(root: Element): void {
+function firefoxMergePipeline(root: Element): void {
 	walkTranslatable(root, (element) => {
 		const children = Array.from(element.childNodes);
 		if (children.length === 0 || !children.some(isNonBlankText)) {

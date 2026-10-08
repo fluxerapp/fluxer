@@ -49,21 +49,6 @@ class SelectedGuild {
 		return guildId;
 	}
 
-	selectGuild(guildId: string, _forceSync = false): void {
-		if (!guildId) {
-			return;
-		}
-		this.setGuild(guildId, {forceNonce: true});
-	}
-
-	syncCurrentGuild(): void {
-		this.bumpNonce();
-	}
-
-	deselectGuild(): void {
-		this.clearSelection();
-	}
-
 	private applyNavigationGuild(guildId: string): void {
 		this.setGuild(guildId);
 	}

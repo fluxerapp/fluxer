@@ -45,7 +45,6 @@ A message object is the full stored form of one post in a channel.
 | embeds<sup>4</sup> | array[[embed](#embed-object) object] | The previews resolved or supplied for the message |
 | attachments<sup>5</sup> | array[[message attachment](#message-attachment-object) object] | The files attached to the message |
 | stickers | array[[sticker item](#sticker-item-object) object] | The stickers sent with the message |
-| nsfw_emojis? | array[snowflake] | IDs of the custom emojis in the message that are classified as explicit |
 | reactions? | array[[reaction](#reaction-object) object] | Reaction summaries |
 | message_reference? | [message reference](#message-reference-object) object | Reply, forward, or published message reference |
 | message_snapshots? | array[[message snapshot](#message-snapshot-object) object] | The immutable copies captured for a forward |
@@ -394,7 +393,6 @@ Each sticker item is the trimmed sticker record on a message.
 | id | snowflake | The ID of the sticker |
 | name | string | Sticker name |
 | animated | boolean | Whether the sticker is animated |
-| nsfw? | boolean | Whether the sticker is classified as explicit |
 
 ## Embed object
 
@@ -1339,6 +1337,7 @@ The body is read exactly as it is for [Create message](#create-message), so a `m
 | allowed_mentions?<sup>2</sup> | ?[allowed mentions](#allowed-mentions-object) object | Replacement active mention policy |
 | flags?<sup>3</sup> | integer | Replacement [message flags](#message-flags) |
 | attachments?<sup>1</sup> | array[[pre-uploaded attachment](#pre-uploaded-attachment-object) object \| [existing attachment reference](#existing-attachment-reference-object) object] | Complete retained and added attachment collection |
+| message_snapshots?<sup>4</sup> | array | Declared by the body schema and never accepted |
 
 <sup>1</sup> Replaces the stored collection outright, so an existing embed or attachment that the array omits is removed. Both collections are bounded by the same resolved limits as message creation
 
@@ -1346,7 +1345,7 @@ The body is read exactly as it is for [Create message](#create-message), so a `m
 
 <sup>3</sup> Only the bits in [message flags](#message-flags) are retained, and the message keeps every other stored bit unchanged
 
-A request that supplies `message_snapshots` is rejected with 403 `MISSING_PERMISSIONS`, so snapshot metadata cannot be edited through this route.
+<sup>4</sup> A request that supplies it is rejected with 403 `MISSING_PERMISSIONS`, so snapshot metadata cannot be edited through this route
 
 An omitted field preserves its stored value, and the message's `edited_timestamp` advances only when `content` changes. The request itself must supply at least one of content with visible characters, an embed, an attachment, or `flags`, and one that supplies none of them fails with 400 `CANNOT_SEND_EMPTY_MESSAGE`.
 
@@ -1615,7 +1614,7 @@ The response is 204 whether the message survives or is deleted, so the emitted G
 
 ### Side effects
 
-The operation permanently deletes the stored attachment object, purges it from media delivery, removes it from the message, and advances the message's edit timestamp. On a [published](#crosspost-message) message it counts toward the published message edit allowance described under [Modify message](#modify-message), and a denial returns 429 `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED`. It then emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. When the removed attachment was the message's only attachment and the message has no content, embeds, or stickers, Fluxer deletes the whole message instead, with the complete [Delete message](#delete-message) effect set, including its Dispatches and guild audit log entry.
+The operation permanently deletes the stored attachment object, purges it from media delivery, removes it from the message, and advances the message's edit timestamp. On a [published](#crosspost-message) message it counts towards the published message edit allowance described under [Modify message](#modify-message), and a denial returns 429 `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED`. It then emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. When the removed attachment was the message's only attachment and the message has no content, embeds, or stickers, Fluxer deletes the whole message instead, with the complete [Delete message](#delete-message) effect set, including its Dispatches and guild audit log entry.
 
 ### Rate limit
 

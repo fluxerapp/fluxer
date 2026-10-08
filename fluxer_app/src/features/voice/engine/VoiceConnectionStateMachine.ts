@@ -523,13 +523,6 @@ export const voiceConnectionStateMachine = setup({
 });
 
 export type VoiceConnectionSnapshot = SnapshotFrom<typeof voiceConnectionStateMachine>;
-export type VoiceConnectionStateValue =
-	| 'disconnected'
-	| 'connecting'
-	| 'connected'
-	| 'reconnecting'
-	| 'channelMove'
-	| 'failed';
 
 export function createVoiceConnectionSnapshot(): VoiceConnectionSnapshot {
 	return initialTransition(voiceConnectionStateMachine)[0];
@@ -540,10 +533,6 @@ export function transitionVoiceConnectionSnapshot(
 	event: VoiceConnectionEvent,
 ): VoiceConnectionSnapshot {
 	return transition(voiceConnectionStateMachine, snapshot, event)[0] as VoiceConnectionSnapshot;
-}
-
-export function getVoiceConnectionStateValue(snapshot: VoiceConnectionSnapshot): VoiceConnectionStateValue {
-	return snapshot.value as VoiceConnectionStateValue;
 }
 
 export function isLatestVoiceConnectionAttempt(snapshot: VoiceConnectionSnapshot, attemptId: number): boolean {

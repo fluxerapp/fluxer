@@ -61,7 +61,6 @@ describe('Admin audit log access filter', () => {
 			expect(getAdminAuditAccess(action)).toBe('read');
 		}
 		expect(getAdminAuditAccess('update_flags')).toBe('write');
-		expect(getAdminAuditAccess('NCMEC Report')).toBe('write');
 	});
 
 	for (const search of ['disabled', 'enabled'] as const) {

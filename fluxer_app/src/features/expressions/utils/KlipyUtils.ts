@@ -46,25 +46,6 @@ export function buildKlipyShareUrl({slug, type = 'gif'}: {slug: string; type?: '
 	return `https://klipy.com/${path}/${encodeURIComponent(normalizedSlug)}`;
 }
 
-export function resolveKlipyShareUrl({
-	url,
-	fallbackSlug,
-	fallbackType = 'gif',
-}: {
-	url: string;
-	fallbackSlug?: string | null;
-	fallbackType?: 'gif' | 'clip';
-}): string {
-	const parsed = parseKlipyPath(url);
-	if (parsed) {
-		return buildKlipyShareUrl(parsed);
-	}
-	if (fallbackSlug?.trim()) {
-		return buildKlipyShareUrl({slug: fallbackSlug, type: fallbackType});
-	}
-	return url;
-}
-
 export function parseTitleFromUrl(url: string): string {
 	if (!url) return '';
 	const klipyPath = parseKlipyPath(url);

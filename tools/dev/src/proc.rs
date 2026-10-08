@@ -73,33 +73,6 @@ pub fn run(args: &[&str]) -> Result<()> {
     run_command(args, RunOptions::default()).map(drop)
 }
 
-pub fn run_with_env(args: &[&str], env: Vec<(String, Option<String>)>) -> Result<()> {
-    run_command(
-        args,
-        RunOptions {
-            env,
-            ..RunOptions::default()
-        },
-    )
-    .map(drop)
-}
-
-pub fn run_capture(
-    args: &[&str],
-    env: Vec<(String, Option<String>)>,
-    check: bool,
-) -> Result<Output> {
-    run_command(
-        args,
-        RunOptions {
-            env,
-            check,
-            capture: true,
-            ..RunOptions::default()
-        },
-    )
-}
-
 #[derive(Debug)]
 pub struct RunOptions<'a> {
     pub cwd: &'a Path,

@@ -53,7 +53,7 @@ function sortNagbarsByPriority(a: NagbarState, b: NagbarState): number {
 	return a.priority - b.priority;
 }
 
-export function selectVisibleNagbars(nagbars: Array<NagbarState>): Array<NagbarState> {
+function selectVisibleNagbars(nagbars: Array<NagbarState>): Array<NagbarState> {
 	const visibleNagbars = nagbars.filter((nagbar) => nagbar.visible).sort(sortNagbarsByPriority);
 	const pinned = visibleNagbars.filter((nagbar) => nagbar.type === NagbarType.BUILD_ENVIRONMENT);
 	const selectable = visibleNagbars.filter((nagbar) => nagbar.type !== NagbarType.BUILD_ENVIRONMENT);

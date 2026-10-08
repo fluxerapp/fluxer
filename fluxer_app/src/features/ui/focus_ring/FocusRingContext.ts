@@ -10,7 +10,7 @@ import {
 } from '@app/features/ui/focus_ring/FocusRingTypes';
 import * as React from 'react';
 
-export let ACTIVE_RING_CONTEXT_MANAGER: FocusRingContextManager | undefined;
+let ACTIVE_RING_CONTEXT_MANAGER: FocusRingContextManager | undefined;
 
 function setActiveRingContextManager(manager: FocusRingContextManager) {
 	if (manager !== ACTIVE_RING_CONTEXT_MANAGER) {

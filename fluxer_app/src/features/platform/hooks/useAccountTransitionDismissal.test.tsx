@@ -16,7 +16,9 @@ function AccountBoundSheet({onOpenChange}: {onOpenChange: (open: boolean) => voi
 		setOpen(false);
 		onOpenChange(false);
 	});
-	return open ? <div data-testid="sheet" /> : null;
+	return open ? (
+		<div data-testid="sheet" data-flx="platform.use-account-transition-dismissal-test.account-bound-sheet.sheet" />
+	) : null;
 }
 
 function switchAccounts(): Promise<void> {
@@ -39,7 +41,14 @@ afterEach(() => {
 
 test('a surface opened under one account is dismissed when the account changes', async () => {
 	const changes: Array<boolean> = [];
-	act(() => root?.render(<AccountBoundSheet onOpenChange={(open) => changes.push(open)} />));
+	act(() =>
+		root?.render(
+			<AccountBoundSheet
+				onOpenChange={(open) => changes.push(open)}
+				data-flx="platform.use-account-transition-dismissal-test.account-bound-sheet"
+			/>,
+		),
+	);
 	expect(container?.querySelector('[data-testid="sheet"]')).not.toBeNull();
 	await act(switchAccounts);
 	expect(changes).toEqual([false]);
@@ -48,7 +57,14 @@ test('a surface opened under one account is dismissed when the account changes',
 
 test('a dismissed surface no longer reacts to later account changes', async () => {
 	const changes: Array<boolean> = [];
-	act(() => root?.render(<AccountBoundSheet onOpenChange={(open) => changes.push(open)} />));
+	act(() =>
+		root?.render(
+			<AccountBoundSheet
+				onOpenChange={(open) => changes.push(open)}
+				data-flx="platform.use-account-transition-dismissal-test.account-bound-sheet--2"
+			/>,
+		),
+	);
 	await act(switchAccounts);
 	await act(switchAccounts);
 	expect(changes).toEqual([false]);
@@ -56,7 +72,14 @@ test('a dismissed surface no longer reacts to later account changes', async () =
 
 test('an unmounted surface releases its registration', async () => {
 	const changes: Array<boolean> = [];
-	act(() => root?.render(<AccountBoundSheet onOpenChange={(open) => changes.push(open)} />));
+	act(() =>
+		root?.render(
+			<AccountBoundSheet
+				onOpenChange={(open) => changes.push(open)}
+				data-flx="platform.use-account-transition-dismissal-test.account-bound-sheet--3"
+			/>,
+		),
+	);
 	act(() => root?.render(null));
 	await act(switchAccounts);
 	expect(changes).toEqual([]);

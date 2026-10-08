@@ -117,47 +117,6 @@ export const MessageAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
-		method: 'POST',
-		route: '/admin/messages/ncmec-reports',
-		auditLogReason: expect.stringMatching(/^NCMEC Report \S+ - \S+$/),
-		async prepare({harness}) {
-			const {author, channelId} = await createAuthorChannel(harness);
-			const message = await createMessageWithImageAttachment(harness, author.token, channelId);
-			const attachment = message.attachments[0];
-			return {
-				request: {
-					path: '/admin/messages/ncmec-reports',
-					body: {
-						channel_id: channelId,
-						message_id: message.id,
-						attachment_id: attachment.id,
-						filename: attachment.filename,
-						reporter_full_name: 'Audit Coverage Reporter',
-						confirmed_viewed: true,
-					},
-				},
-				expected: {
-					action: 'NCMEC Report',
-					targetType: 'user',
-					targetId: author.userId,
-					metadata: {
-						channel_id: channelId,
-						message_id: message.id,
-						attachment_id: attachment.id,
-						reported_user_email: author.email,
-						reported_user_email_verified: 'true',
-						reported_user_date_of_birth: '2000-01-01',
-						reported_user_last_active_ip: '127.0.0.1',
-						attachment_upload_mode: 'form_data',
-						attachment_upload_request_ip: '127.0.0.1',
-						attachment_upload_requested_at: expect.any(String),
-						attachment_upload_ip_source: 'attachment upload request handled directly by Fluxer API',
-					},
-				},
-			};
-		},
-	},
-	{
 		method: 'GET',
 		route: '/admin/messages/shreds/:job_id',
 		async prepare() {

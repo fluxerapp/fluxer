@@ -7,10 +7,7 @@
 
 -export([
     error/1,
-    error_code/1,
-    error_message/1,
-    error_category/1,
-    is_recoverable/1
+    error_category/1
 ]).
 -export_type([error_atom/0, error_category/0]).
 
@@ -70,80 +67,6 @@
 -spec error(error_atom()) -> {error, error_category(), error_atom()}.
 error(ErrorAtom) ->
     {error, error_category(ErrorAtom), ErrorAtom}.
-
--spec error_code(error_atom()) -> binary().
-error_code(ErrorAtom) ->
-    case voice_error_code(ErrorAtom) of
-        undefined -> common_error_code(ErrorAtom);
-        Code -> Code
-    end.
-
--spec voice_error_code(error_atom()) -> binary() | undefined.
-voice_error_code(ErrorAtom) ->
-    case voice_error_info(ErrorAtom) of
-        {Code, _Message, _Category} -> Code;
-        undefined -> undefined
-    end.
-
--spec common_error_code(error_atom()) -> binary().
-common_error_code(dm_channel_not_found) ->
-    <<"DM_CHANNEL_NOT_FOUND">>;
-common_error_code(dm_not_recipient) ->
-    <<"DM_NOT_RECIPIENT">>;
-common_error_code(dm_invalid_channel_type) ->
-    <<"DM_INVALID_CHANNEL_TYPE">>;
-common_error_code(validation_invalid_snowflake) ->
-    <<"VALIDATION_INVALID_SNOWFLAKE">>;
-common_error_code(validation_null_snowflake) ->
-    <<"VALIDATION_NULL_SNOWFLAKE">>;
-common_error_code(validation_invalid_snowflake_list) ->
-    <<"VALIDATION_INVALID_SNOWFLAKE_LIST">>;
-common_error_code(validation_expected_list) ->
-    <<"VALIDATION_EXPECTED_LIST">>;
-common_error_code(validation_expected_map) ->
-    <<"VALIDATION_EXPECTED_MAP">>;
-common_error_code(validation_missing_field) ->
-    <<"VALIDATION_MISSING_FIELD">>;
-common_error_code(validation_invalid_params) ->
-    <<"VALIDATION_INVALID_PARAMS">>;
-common_error_code(internal_error) ->
-    <<"INTERNAL_ERROR">>;
-common_error_code(timeout) ->
-    <<"TIMEOUT">>;
-common_error_code(unknown_error) ->
-    <<"UNKNOWN_ERROR">>;
-common_error_code(_) ->
-    <<"UNKNOWN_ERROR">>.
-
--spec error_message(error_atom()) -> binary().
-error_message(ErrorAtom) ->
-    case voice_error_message(ErrorAtom) of
-        undefined -> common_error_message(ErrorAtom);
-        Message -> Message
-    end.
-
--spec voice_error_message(error_atom()) -> binary() | undefined.
-voice_error_message(ErrorAtom) ->
-    case voice_error_info(ErrorAtom) of
-        {_Code, Message, _Category} -> Message;
-        undefined -> undefined
-    end.
-
--spec common_error_message(error_atom()) -> binary().
-common_error_message(dm_channel_not_found) -> <<"DM channel not found">>;
-common_error_message(dm_not_recipient) -> <<"Not a recipient of this channel">>;
-common_error_message(dm_invalid_channel_type) -> <<"Not a DM or Group DM channel">>;
-common_error_message(validation_invalid_snowflake) -> <<"Invalid snowflake ID format">>;
-common_error_message(validation_null_snowflake) -> <<"Snowflake ID cannot be null">>;
-common_error_message(validation_invalid_snowflake_list) -> <<"Invalid snowflake ID in list">>;
-common_error_message(validation_expected_list) -> <<"Expected a list">>;
-common_error_message(validation_expected_map) -> <<"Expected a map">>;
-common_error_message(validation_missing_field) -> <<"Missing required field">>;
-common_error_message(validation_invalid_params) -> <<"Invalid parameters">>;
-common_error_message(internal_error) -> <<"Internal server error">>;
-common_error_message(timeout) -> <<"Request timed out">>;
-common_error_message(unknown_error) -> <<"An unknown error occurred">>;
-common_error_message(_) -> <<"An unknown error occurred">>.
 
 -spec error_category(error_atom()) -> error_category().
 error_category(ErrorAtom) ->
@@ -248,14 +171,3 @@ common_error_category(internal_error) -> unknown;
 common_error_category(timeout) -> timeout;
 common_error_category(unknown_error) -> unknown;
 common_error_category(_) -> unknown.
-
--spec is_recoverable(error_category()) -> boolean().
-is_recoverable(not_found) -> true;
-is_recoverable(permission_denied) -> true;
-is_recoverable(voice_error) -> true;
-is_recoverable(validation_error) -> true;
-is_recoverable(timeout) -> true;
-is_recoverable(unknown) -> true;
-is_recoverable(rate_limited) -> false;
-is_recoverable(auth_failed) -> false;
-is_recoverable(_) -> true.

@@ -26,6 +26,7 @@ interface SteppedCarouselProps<Step extends string> {
 	children: React.ReactNode;
 	direction?: number;
 	focusOnStepChange?: boolean;
+	onStepShown?: (step: Step) => void;
 	ariaLabel?: string;
 	ariaLive?: SteppedCarouselARIALive;
 	'data-flx'?: string;
@@ -94,6 +95,7 @@ export function SteppedCarousel<Step extends string>({
 	children,
 	direction: directionProp,
 	focusOnStepChange = false,
+	onStepShown,
 	ariaLabel,
 	ariaLive,
 	'data-flx': dataFlx,
@@ -121,6 +123,9 @@ export function SteppedCarousel<Step extends string>({
 	}
 	const model = selectSteppedCarouselModel(nextSnapshot);
 	const paneRef = useRef<HTMLDivElement | null>(null);
+	const pendingFocusRequestRef = useRef(0);
+	const handledFocusRequestRef = useRef(0);
+	const stepShownRef = useRef({step, onStepShown});
 	const measureNode = useCallback((node: HTMLElement) => {
 		const offsetHeight = node.offsetHeight;
 		const scrollHeight = node.scrollHeight;
@@ -134,6 +139,14 @@ export function SteppedCarousel<Step extends string>({
 	const setMeasureNode = useCallback(
 		(node: HTMLDivElement) => {
 			paneRef.current = node;
+			const focusRequestId = pendingFocusRequestRef.current;
+			if (focusRequestId !== handledFocusRequestRef.current) {
+				handledFocusRequestRef.current = focusRequestId;
+				if (!node.contains(document.activeElement)) {
+					(node.querySelector<HTMLElement>(focusableSelector) ?? node).focus({preventScroll: true});
+				}
+			}
+			stepShownRef.current.onStepShown?.(stepShownRef.current.step);
 			let observer: ResizeObserver | null = null;
 			if (typeof ResizeObserver !== 'undefined') {
 				observer = new ResizeObserver(() => {
@@ -153,16 +166,11 @@ export function SteppedCarousel<Step extends string>({
 		[measureNode],
 	);
 	useLayoutEffect(() => {
-		if (!focusOnStepChange || model.focusRequestId === 0) return;
-		const frame = window.requestAnimationFrame(() => {
-			const pane = paneRef.current;
-			if (!pane) return;
-			if (pane.contains(document.activeElement)) return;
-			const focusTarget = pane.querySelector<HTMLElement>(focusableSelector) ?? pane;
-			focusTarget.focus({preventScroll: true});
-		});
-		return () => window.cancelAnimationFrame(frame);
-	}, [focusOnStepChange, model.focusRequestId]);
+		pendingFocusRequestRef.current = model.focusRequestId;
+	}, [model.focusRequestId]);
+	useLayoutEffect(() => {
+		stepShownRef.current = {step, onStepShown};
+	});
 	return (
 		<motion.div
 			className={styles.container}

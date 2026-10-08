@@ -210,6 +210,143 @@ check_guild_request_rate_limit_invalid_guild_test() ->
         guild_request_members_filter:check_guild_request_rate_limit(invalid_guild_id())
     ).
 
+handle_request_consumes_user_budget_test() ->
+    with_rate_limits_enabled(fun() ->
+        UserId = 555000001,
+        clear_request_rate_limit(UserId),
+        SessionState = #{user_id => integer_to_binary(UserId), guilds => #{}, bot => false},
+        Data = #{<<"guild_id">> => <<"777000001">>, <<"query">> => <<"a">>, <<"limit">> => 10},
+        Results = [
+            guild_request_members:handle_request(Data, self(), SessionState)
+         || _ <- lists:seq(1, ?REQUEST_MEMBERS_RATE_LIMIT_MAX_EVENTS)
+        ],
+        ?assertEqual(
+            lists:duplicate(?REQUEST_MEMBERS_RATE_LIMIT_MAX_EVENTS, {error, guild_not_found}),
+            Results
+        ),
+        ?assertEqual(
+            {error, rate_limited},
+            guild_request_members:handle_request(Data, self(), SessionState)
+        ),
+        clear_request_rate_limit(UserId)
+    end).
+
+handle_request_refuses_guild_over_budget_test() ->
+    with_rate_limits_enabled(fun() ->
+        UserId = 555000002,
+        GuildIds = [777000002, 777000003],
+        SessionState = spent_guild_session(UserId, GuildIds),
+        [GuildIdBin | _] = GuildIdBins = [integer_to_binary(Id) || Id <- GuildIds],
+        ?assertEqual(
+            {error, rate_limited},
+            guild_request_members:handle_request(
+                #{<<"guild_id">> => GuildIdBin, <<"query">> => <<"a">>}, self(), SessionState
+            )
+        ),
+        ?assertEqual(
+            {error, guild_not_found},
+            guild_request_members:handle_request(
+                #{<<"guild_ids">> => GuildIdBins, <<"query">> => <<"a">>}, self(), SessionState
+            )
+        ),
+        clear_request_rate_limit(UserId),
+        lists:foreach(fun clear_guild_request_rate_limit/1, GuildIds)
+    end).
+
+spent_guild_session(UserId, GuildIds) ->
+    clear_request_rate_limit(UserId),
+    ensure_ets_table(?REQUEST_MEMBERS_GUILD_RATE_LIMIT_TABLE),
+    Now = erlang:system_time(millisecond),
+    Spent = lists:duplicate(?REQUEST_MEMBERS_GUILD_RATE_LIMIT_MAX_EVENTS, Now - 1000),
+    ets:insert(?REQUEST_MEMBERS_GUILD_RATE_LIMIT_TABLE, [{Id, Spent} || Id <- GuildIds]),
+    #{
+        user_id => integer_to_binary(UserId),
+        guilds => maps:from_list([{Id, {self(), make_ref()}} || Id <- GuildIds]),
+        bot => false
+    }.
+
+handle_request_budgets_disabled_by_env_test() ->
+    OldValue = os:getenv("FLUXER_DISABLE_RATE_LIMITS"),
+    os:putenv("FLUXER_DISABLE_RATE_LIMITS", "true"),
+    try
+        UserId = 555000004,
+        clear_request_rate_limit(UserId),
+        SessionState = #{user_id => integer_to_binary(UserId), guilds => #{}, bot => false},
+        Data = #{<<"guild_id">> => <<"777000004">>, <<"query">> => <<"a">>},
+        Results = [
+            guild_request_members:handle_request(Data, self(), SessionState)
+         || _ <- lists:seq(1, ?REQUEST_MEMBERS_RATE_LIMIT_MAX_EVENTS + 1)
+        ],
+        ?assertEqual(
+            lists:duplicate(
+                ?REQUEST_MEMBERS_RATE_LIMIT_MAX_EVENTS + 1, {error, guild_not_found}
+            ),
+            Results
+        )
+    after
+        restore_env("FLUXER_DISABLE_RATE_LIMITS", OldValue)
+    end.
+
+rate_limit_tables_outlive_the_request_worker_test() ->
+    with_rate_limits_enabled(fun() ->
+        UserId = 555000005,
+        drop_table(?REQUEST_MEMBERS_RATE_LIMIT_TABLE),
+        {ok, OwnerPid} = start_ets_owner(),
+        try
+            ok = check_rate_limit_in_worker(UserId),
+            ?assertMatch(
+                [{UserId, [_]}], ets:lookup(?REQUEST_MEMBERS_RATE_LIMIT_TABLE, UserId)
+            ),
+            ?assertEqual(OwnerPid, ets:info(?REQUEST_MEMBERS_RATE_LIMIT_TABLE, owner))
+        after
+            gen_server:stop(OwnerPid),
+            drop_table(?REQUEST_MEMBERS_RATE_LIMIT_TABLE)
+        end
+    end).
+
+check_rate_limit_in_worker(UserId) ->
+    Self = self(),
+    {Worker, Ref} = spawn_monitor(fun() ->
+        Self ! {checked, guild_request_members_filter:check_request_rate_limit(UserId)}
+    end),
+    receive
+        {checked, ok} -> ok
+    after 1000 -> error(worker_timeout)
+    end,
+    receive
+        {'DOWN', Ref, process, Worker, _} -> ok
+    after 1000 -> error(worker_alive)
+    end.
+
+drop_table(Name) ->
+    case ets:whereis(Name) of
+        undefined -> ok;
+        _ -> ets:delete(Name)
+    end.
+
+prune_expired_entries_drops_idle_keys_test() ->
+    Table = ets:new(request_members_prune_test, [public, set]),
+    Now = erlang:system_time(millisecond),
+    ets:insert(Table, [
+        {idle_window, [Now - 20000, Now - 25000]},
+        {active_window, [Now - 100, Now - 20000]},
+        {idle_bot, Now - 40000},
+        {active_bot, Now - 100}
+    ]),
+    ?assertEqual(ok, guild_request_members_filter:prune_expired_entries(Table, 10000)),
+    ?assertEqual(
+        [active_bot, active_window],
+        lists:sort([Key || {Key, _} <- ets:tab2list(Table)])
+    ),
+    ets:delete(Table),
+    ?assertEqual(gone, guild_request_members_filter:prune_expired_entries(Table, 10000)).
+
+start_ets_owner() ->
+    case whereis(guild_ets_owner) of
+        undefined -> guild_ets_owner:start_link();
+        Existing -> {ok, Existing}
+    end.
+
 restore_env(Key, false) ->
     os:unsetenv(Key);
 restore_env(Key, Value) ->

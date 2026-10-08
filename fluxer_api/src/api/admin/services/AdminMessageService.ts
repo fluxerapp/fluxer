@@ -3,7 +3,6 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {
-	type AttachmentID,
 	type ChannelID,
 	createAttachmentID,
 	createChannelID,
@@ -26,7 +25,6 @@ import {
 	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
-import type {NcmecAttachmentStatusResponse, NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {getPurgeQueue, getStorageService} from '@app/api/middleware/ServiceSingletons';
 import {getMessageSearchService} from '@app/api/SearchFactory';
@@ -49,7 +47,6 @@ interface AdminMessageServiceDeps {
 	channelRepository: IChannelRepository;
 	guildRepository: IGuildRepositoryAggregate;
 	auditService: AdminAuditService;
-	ncmecSubmissionService: NcmecSubmissionService;
 }
 
 interface ChannelNsfwContext {
@@ -63,24 +60,6 @@ interface ChannelNsfwContext {
 export class AdminMessageService {
 	constructor(private readonly deps: AdminMessageServiceDeps) {}
 
-	async lookupAttachment({
-		channelId,
-		attachmentId,
-		filename,
-	}: {
-		channelId: ChannelID;
-		attachmentId: AttachmentID;
-		filename: string;
-	}): Promise<{
-		message_id: MessageID | null;
-	}> {
-		const {channelRepository} = this.deps;
-		const messageId = await channelRepository.lookupAttachmentByChannelAndFilename(channelId, attachmentId, filename);
-		return {
-			message_id: messageId,
-		};
-	}
-
 	async lookupMessage(data: LookupMessageRequest) {
 		const channelId = createChannelID(data.channel_id);
 		const messageId = createMessageID(data.message_id);
@@ -92,10 +71,8 @@ export class AdminMessageService {
 				around: messageId,
 			})
 		).reverse();
-		const attachmentStatuses = await this.getAttachmentStatusesForMessages(messageResponses);
-		const priorReports = await this.getPriorReportsForMessages(messageResponses);
 		const adminMessages = messageResponses.map((message) =>
-			this.mapMessageResponseToAdminMessage(message, channelNsfwContext, attachmentStatuses, priorReports),
+			this.mapMessageResponseToAdminMessage(message, channelNsfwContext),
 		);
 		return {
 			messages: adminMessages,
@@ -207,10 +184,8 @@ export class AdminMessageService {
 			after: afterId,
 		});
 		const messageResponses = afterId ? messages : [...messages].reverse();
-		const attachmentStatuses = await this.getAttachmentStatusesForMessages(messageResponses);
-		const priorReports = await this.getPriorReportsForMessages(messageResponses);
 		const adminMessages = messageResponses.map((message) =>
-			this.mapMessageResponseToAdminMessage(message, channelNsfwContext, attachmentStatuses, priorReports),
+			this.mapMessageResponseToAdminMessage(message, channelNsfwContext),
 		);
 		return {
 			messages: adminMessages,
@@ -241,25 +216,14 @@ export class AdminMessageService {
 			messages: result.messages,
 			access: await this.getMessageResponseAccessForAdmin(channelId),
 		});
-		const attachmentStatuses = await this.getAttachmentStatusesForMessages(messageResponses);
-		const priorReports = await this.getPriorReportsForMessages(messageResponses);
 		const adminMessages = messageResponses.map((message) =>
-			this.mapMessageResponseToAdminMessage(message, channelNsfwContext, attachmentStatuses, priorReports),
+			this.mapMessageResponseToAdminMessage(message, channelNsfwContext),
 		);
 		return {
 			messages: adminMessages,
 			message_responses: messageResponses,
 			total: result.total,
 		};
-	}
-
-	private async getAttachmentStatusesForMessages(
-		messages: Array<MessageResponse>,
-	): Promise<Map<string, NcmecAttachmentStatusResponse>> {
-		const attachmentIds = messages.flatMap((message) =>
-			(message.attachments ?? []).map((attachment) => createAttachmentID(BigInt(attachment.id))),
-		);
-		return this.deps.ncmecSubmissionService.getAttachmentStatuses(attachmentIds);
 	}
 
 	private async getMessageResponseAccessForAdmin(channelId: ChannelID): Promise<MessageResponseAccessContext> {
@@ -287,17 +251,7 @@ export class AdminMessageService {
 		});
 	}
 
-	private async getPriorReportsForMessages(messages: Array<MessageResponse>): Promise<Map<string, Array<string>>> {
-		const authorIds = messages.map((message) => createUserID(BigInt(message.author.id)));
-		return this.deps.ncmecSubmissionService.getUserPriorReportIds(authorIds);
-	}
-
-	private mapMessageResponseToAdminMessage(
-		message: MessageResponse,
-		channelNsfwContext: ChannelNsfwContext,
-		attachmentStatuses: Map<string, NcmecAttachmentStatusResponse>,
-		priorReports: Map<string, Array<string>>,
-	) {
+	private mapMessageResponseToAdminMessage(message: MessageResponse, channelNsfwContext: ChannelNsfwContext) {
 		return {
 			id: message.id,
 			channel_id: message.channel_id ?? '',
@@ -313,7 +267,6 @@ export class AdminMessageService {
 			author_avatar: message.author.avatar,
 			content: message.content ?? '',
 			timestamp: message.timestamp,
-			user_prior_ncmec_report_ids: priorReports.get(message.author.id) ?? [],
 			attachments:
 				message.attachments?.map((attachment) => ({
 					id: attachment.id,
@@ -324,9 +277,6 @@ export class AdminMessageService {
 					width: attachment.width ?? null,
 					height: attachment.height ?? null,
 					size: attachment.size == null ? null : assertSafeByteSize(attachment.size, 'admin message attachment size'),
-					ncmec_status: attachmentStatuses.get(attachment.id)?.status ?? 'not_submitted',
-					ncmec_report_id: attachmentStatuses.get(attachment.id)?.ncmec_report_id ?? null,
-					ncmec_failure_reason: attachmentStatuses.get(attachment.id)?.failure_reason ?? null,
 				})) ?? [],
 		};
 	}

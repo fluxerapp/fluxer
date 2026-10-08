@@ -294,10 +294,18 @@ const SudoVerificationModal: React.FC = observer(() => {
 									className={styles.unavailableBody}
 									data-flx="auth.sudo-verification-modal.unavailable-body"
 								>
-									<Trans>
-										Your account requires multi-factor authentication, but no supported methods are set up on this
-										device. Sign in on a device with your authenticator app or security key, or contact support.
-									</Trans>
+									{RuntimeConfig.isSelfHosted() ? (
+										<Trans>
+											Your account requires multi-factor authentication, but no supported methods are set up on this
+											device. Sign in on a device with your authenticator app or security key, or contact the
+											administrators of this instance.
+										</Trans>
+									) : (
+										<Trans>
+											Your account requires multi-factor authentication, but no supported methods are set up on this
+											device. Sign in on a device with your authenticator app or security key, or contact support.
+										</Trans>
+									)}
 								</Modal.Description>
 							</div>
 						) : (

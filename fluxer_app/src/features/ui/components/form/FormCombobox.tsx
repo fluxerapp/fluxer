@@ -29,7 +29,7 @@ export interface ComboboxFilterOption<O> {
 	data: O;
 }
 
-export type ComboboxInputValueResolver<V extends Primitive, O extends ComboboxOption<V>> = (
+type ComboboxInputValueResolver<V extends Primitive, O extends ComboboxOption<V>> = (
 	inputValue: string,
 	options: ReadonlyArray<O>,
 ) => V | undefined;
@@ -69,6 +69,7 @@ export interface ComboboxProps<
 	renderValue?: (option: IsMulti extends true ? Array<O> : O | null) => React.ReactNode;
 	portalProps?: ComboboxPortalProps;
 	density?: 'default' | 'compact' | 'compactOverlay';
+	dir?: 'ltr' | 'rtl';
 	'aria-label'?: string;
 	'data-flx'?: string;
 }
@@ -169,6 +170,7 @@ export const Combobox = observer(function Combobox<
 	renderValue,
 	portalProps,
 	density = 'default',
+	dir,
 	'aria-label': ariaLabel,
 	'data-flx': dataFlx,
 }: ComboboxProps<V, IsMulti, O>) {
@@ -463,6 +465,7 @@ export const Combobox = observer(function Combobox<
 								align: 'shift',
 								fallbackAxisSide: 'none',
 							}}
+							dir={dir}
 							data-flx="ui.form.combobox.positioner"
 						>
 							<BaseCombobox.Popup
@@ -479,6 +482,7 @@ export const Combobox = observer(function Combobox<
 									overflow="auto"
 									fade={false}
 									scrollbarTrackMode="overlay"
+									dir={dir}
 									data-flx="ui.form.combobox.list-scroller"
 								>
 									<BaseCombobox.List className={styles.list} data-flx="ui.form.combobox.list">

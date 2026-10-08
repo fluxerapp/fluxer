@@ -84,15 +84,6 @@ class LocalUserSpamOverride {
 			this.incrementVersion();
 		}
 	}
-
-	clearAllOverrides(): void {
-		if (this.localSpammerUserIds.size === 0 && this.localNotSpammerUserIds.size === 0) {
-			return;
-		}
-		this.localSpammerUserIds.clear();
-		this.localNotSpammerUserIds.clear();
-		this.incrementVersion();
-	}
 }
 
 export default new LocalUserSpamOverride();

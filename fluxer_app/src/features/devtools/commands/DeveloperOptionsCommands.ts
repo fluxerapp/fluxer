@@ -15,7 +15,7 @@ import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
 const logger = new Logger('DeveloperOptions');
 
 type AttachmentMock = DeveloperOptionsState['mockAttachmentStates'][string];
-export type MockIncomingCallVariant = 'dm' | 'group-dm';
+type MockIncomingCallVariant = 'dm' | 'group-dm';
 
 function publishLayoutResize(): void {
 	ComponentBus.dispatch('LAYOUT_RESIZED');
@@ -117,10 +117,6 @@ export function setAttachmentMock(attachmentId: string, mock: AttachmentMock | n
 export function clearAllAttachmentMocks(): void {
 	updateOption('mockAttachmentStates', {});
 	publishLayoutResize();
-}
-
-export function triggerMockIncomingCall(): void {
-	triggerVariant('dm');
 }
 
 export function triggerMockIncomingCallDM(): void {

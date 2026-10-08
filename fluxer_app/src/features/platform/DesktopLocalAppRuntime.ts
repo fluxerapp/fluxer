@@ -29,17 +29,6 @@ export function parseDesktopLocalRouteKey(pathname: string, basePath: string): s
 	}
 }
 
-export function desktopLocalRuntimeKeyFromEndpoint(apiEndpoint: string): string | null {
-	let endpointUrl: URL;
-	try {
-		endpointUrl = new URL(apiEndpoint);
-	} catch {
-		return null;
-	}
-	if (!isDesktopLocalAppOrigin(endpointUrl.protocol, endpointUrl.hostname)) return null;
-	return parseDesktopLocalRouteKey(endpointUrl.pathname, LOCAL_APP_API_PATH_PREFIX);
-}
-
 export function desktopLocalApiEndpoint(instanceKey: string): string {
 	const encodedInstanceKey = encodeURIComponent(instanceKey);
 	return `${DESKTOP_LOCAL_APP_PROTOCOL}//${DESKTOP_LOCAL_APP_HOST}${LOCAL_APP_API_PATH_PREFIX}/${encodedInstanceKey}`;

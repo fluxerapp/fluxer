@@ -38,7 +38,6 @@ export const HttpStatus = {
 export const MimeType = {
 	JSON: 'application/json',
 	XML: 'application/xml',
-	FORM_URLENCODED: 'application/x-www-form-urlencoded',
 	OCTET_STREAM: 'application/octet-stream',
 	PDF: 'application/pdf',
 	PLAIN: 'text/plain',
@@ -51,14 +50,9 @@ export const MimeType = {
 	GIF: 'image/gif',
 	WEBP: 'image/webp',
 	SVG: 'image/svg+xml',
-	ICO: 'image/x-icon',
 	MP3: 'audio/mpeg',
 	WAV: 'audio/wav',
-	OGG_AUDIO: 'audio/ogg',
 	MP4: 'video/mp4',
-	WEBM: 'video/webm',
-	OGG_VIDEO: 'video/ogg',
-	MULTIPART_FORM_DATA: 'multipart/form-data',
 } as const;
 
 export const REDIRECT_STATUS_CODES = [

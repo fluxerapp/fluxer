@@ -50,14 +50,14 @@ type SquareButtonAccessibleName =
 			'aria-label'?: string;
 			'aria-labelledby': string;
 	  };
-export type SquareButtonProps = BaseButtonProps &
+type SquareButtonProps = BaseButtonProps &
 	SquareButtonAccessibleName & {
 		square: true;
 		children?: never;
 		icon: React.ReactNode;
 	};
 
-export interface RegularButtonProps extends BaseButtonProps {
+interface RegularButtonProps extends BaseButtonProps {
 	square?: false;
 	children?: React.ReactNode;
 }

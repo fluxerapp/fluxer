@@ -76,7 +76,7 @@ const ENTRANCE_SOUNDS_NOT_ENABLED_DESCRIPTOR = msg({
 
 const logger = new Logger('useEntranceSound');
 
-export interface UseEntranceSoundReturn {
+interface UseEntranceSoundReturn {
 	library: Array<EntranceSoundEntry>;
 	libraryFull: boolean;
 	libraryLoaded: boolean;

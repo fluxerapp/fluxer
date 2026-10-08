@@ -62,13 +62,6 @@
 	width: 100%;
 }
 
-.verifiedIcon {
-	height: 1.15rem;
-	width: 1.15rem;
-	flex: 0 0 auto;
-	color: var(--text-primary);
-}
-
 .stats {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(0, max-content));

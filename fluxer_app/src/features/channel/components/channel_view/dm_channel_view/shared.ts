@@ -13,14 +13,14 @@ import {
 import {msg} from '@lingui/core/macro';
 
 export const logger = new Logger('DMChannelView');
-export const CALL_AVATAR_MIN_SIZE = 40;
+const CALL_AVATAR_MIN_SIZE = 40;
 export const CALL_AVATAR_DEFAULT_SIZE = 64;
-export const CALL_AVATAR_MAX_SIZE = 88;
-export const CALL_AVATAR_MIN_GAP = 8;
-export const CALL_AVATAR_MAX_GAP = 16;
+const CALL_AVATAR_MAX_SIZE = 88;
+const CALL_AVATAR_MIN_GAP = 8;
+const CALL_AVATAR_MAX_GAP = 16;
 export const CALL_AVATAR_SPRING = {stiffness: 520, damping: 34, mass: 0.6} as const;
 export const COMPACT_CALL_RESIZE_DRAG_THRESHOLD_SQ = 9;
-export const COMPACT_CALL_RESIZE_VIEWPORT_MARGIN = 32;
+const COMPACT_CALL_RESIZE_VIEWPORT_MARGIN = 32;
 export const COMPACT_CALL_RESIZE_STEP = 16;
 
 export interface CallParticipant {

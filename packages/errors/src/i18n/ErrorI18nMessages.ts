@@ -63,7 +63,6 @@ export const ERROR_I18N_MESSAGES = {
 	'attachments_and_uploads.duplicate_file_index': 'Duplicate file index: {index}.',
 	'attachments_and_uploads.failed_to_parse_multipart_form_data':
 		"We couldn't parse the multipart form data. Check that all field names and filenames are properly formatted.",
-	'attachments_and_uploads.failed_to_parse_multipart_payload': "We couldn't parse the multipart payload.",
 	'attachments_and_uploads.failed_to_upload_image': "We couldn't upload the image. Please try again.",
 	'attachments_and_uploads.file_index_exceeds_maximum':
 		'File index {index} exceeds the maximum allowed index of {maxIndex}.',
@@ -107,11 +106,9 @@ export const ERROR_I18N_MESSAGES = {
 	'auth_and_oauth.invalid_or_expired_sso_state': 'Invalid or expired SSO state. Please start the sign-in flow again.',
 	'auth_and_oauth.invalid_or_expired_ticket': 'Invalid or expired ticket.',
 	'auth_and_oauth.invalid_proof_token': 'Invalid proof token.',
-	'auth_and_oauth.invalid_request': 'Invalid request.',
 	'auth_and_oauth.invalid_scope': "The requested scope isn't supported or you don't have permission to request it.",
 	'auth_and_oauth.invalid_sso_authorization_code': 'Invalid SSO authorization code.',
 	'auth_and_oauth.invalid_sso_token': 'Invalid SSO token.',
-	'auth_and_oauth.invalid_token_admin_api_key': 'Invalid admin API key.',
 	'auth_and_oauth.missing_authorization': 'Missing or invalid authorization header.',
 	'auth_and_oauth.must_start_session_before_sending_messages': 'You must start a session before sending messages.',
 	'auth_and_oauth.origin_handoff_nonce_invalid': "This sign-in transfer doesn't match the one you started.",
@@ -120,8 +117,6 @@ export const ERROR_I18N_MESSAGES = {
 	'auth_and_oauth.registration_pending_approval': 'This registration is waiting for admin approval.',
 	'auth_and_oauth.registration_rejected': 'This registration request was rejected.',
 	'auth_and_oauth.registration_url_invalid': 'This registration link is invalid or has expired.',
-	'auth_and_oauth.response_type_must_be_code_for_non_bot_scopes':
-		'Response type must be "code" for scopes other than "bot".',
 	'auth_and_oauth.sso_identity_mismatch': 'SSO identity mismatch between id_token and userinfo.',
 	'auth_and_oauth.sso_misconfigured': 'SSO is misconfigured. Please contact your administrator.',
 	'auth_and_oauth.sso_provider_did_not_return_email': "Your SSO provider didn't return an email address.",
@@ -262,8 +257,6 @@ export const ERROR_I18N_MESSAGES = {
 		'Connection verification failed. Make sure the verification token is correctly placed.',
 	'content_and_safety.content_blocked': 'This content was blocked by safety systems.',
 	'content_and_safety.explicit_content_cannot_be_sent': "Explicit content can't be sent.",
-	'content_and_safety.ncmec_already_submitted': 'This content has already been submitted to NCMEC.',
-	'content_and_safety.ncmec_submission_failed': "We couldn't submit the report to NCMEC. Please try again later.",
 	'content_and_safety.nsfw_age_restricted': 'NSFW content is age restricted.',
 	'discovery.already_applied': 'This community has already applied for Discovery.',
 	'discovery.application_already_reviewed': 'This Discovery application has already been reviewed.',
@@ -289,7 +282,6 @@ export const ERROR_I18N_MESSAGES = {
 	'email.invalid_verification_code': 'Invalid verification code.',
 	'email.length_invalid': 'Email address must be between {min} and {max} characters.',
 	'email.must_be_changed_via_token': 'Email must be changed via token.',
-	'email.must_change_via_token': 'Email must be changed via `email_token`.',
 	'email.must_have_email_to_change_it': 'You must have an email address to change it.',
 	'email.new_email_must_be_different': 'New email must be different from your current email.',
 	'email.no_new_email_requested': 'No new email was requested.',
@@ -300,7 +292,6 @@ export const ERROR_I18N_MESSAGES = {
 	'email.token_expired': 'Email token expired.',
 	'email.unavailable_on_instance': "This instance doesn't use email.",
 	'email.user_has_no_email_address': "This user doesn't have an email address.",
-	'email.user_is_not_pending_verification': "This user isn't pending verification.",
 	'email.verification_code_expired': 'Verification code has expired.',
 	'email.verification_code_not_issued': 'No verification code has been issued.',
 	'embeds.embed_index_out_of_bounds':
@@ -315,8 +306,6 @@ export const ERROR_I18N_MESSAGES = {
 	'friends_and_dms.direct_messages_disabled': 'Direct messages and friend requests are disabled on this instance.',
 	'friends_and_dms.new_conversations_limited': "You can't start new conversations right now. Please try again later.",
 	'friends_and_dms.at_least_one_recipient_required': 'At least one recipient is required.',
-	'friends_and_dms.at_least_one_recipient_required_to_seed_private_channels':
-		'At least one recipient is required to seed private channels.',
 	'friends_and_dms.bots_cannot_send_friend_requests': "Bots can't send friend requests.",
 	'friends_and_dms.cannot_add_yourself_to_group_dm': "You can't add yourself to a group DM.",
 	'friends_and_dms.cannot_block_system_user': "You can't block the system user.",
@@ -346,15 +335,9 @@ export const ERROR_I18N_MESSAGES = {
 	'http.not_implemented': 'Not implemented.',
 	'http.service_unavailable': 'Service unavailable.',
 	'http.validation_error': 'Validation failed.',
-	'invites_and_beta.invalid_or_already_used_beta_code': 'Invalid or already used beta code.',
-	'invites_and_beta.max_beta_codes_reached':
-		"You've reached the maximum of {count, plural, one {# beta code} other {# beta codes}}.",
-	'invites_and_beta.unknown_beta_code': 'Unknown beta code.',
 	'invites_and_gifts.gift_code_already_redeemed': 'Gift code is already redeemed.',
 	'invites_and_gifts.stripe_gift_redemption_in_progress': 'Gift code redemption is in progress. Try again in a moment.',
 	'invites_and_gifts.unknown_gift_code': 'Unknown gift code.',
-	'invites_and_packs.emoji_requires_access':
-		"You can't use this emoji without access to its community or installed pack.",
 	'invites_and_packs.max_emojis_reached':
 		"You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}.",
 	'limits.at_least_one_entry_required': 'At least one entry is required.',
@@ -421,14 +404,10 @@ export const ERROR_I18N_MESSAGES = {
 	'mfa_and_passkeys.webauthn_credential_limit_reached':
 		"You've reached the maximum of {count, plural, one {# WebAuthn credential} other {# WebAuthn credentials}}.",
 	'misc.cannot_send_messages_in_non_text_channel': "You can't send messages in a non-text channel.",
-	'misc.cannot_send_messages_in_this_guild_without_email_verification':
-		'You need to verify your email to send messages in this community.',
 	'misc.invalid_permissions_integer': 'Permissions must be a valid integer.',
 	'misc.invalid_permissions_negative': 'Permissions must be non-negative.',
 	'misc.invalid_request_generic': 'Invalid request.',
 	'misc.invalid_snowflake': 'Invalid snowflake.',
-	'misc.max_files_exceeded': 'Too many files. Maximum {maxFiles, plural, one {# file} other {# files}} allowed.',
-	'misc.must_have_bot_to_mark_system_user': 'User must be a bot to be marked as a system user.',
 	'misc_limits.max_applications_reached':
 		"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
 	'misc_limits.max_bookmarks_reached':
@@ -443,19 +422,22 @@ export const ERROR_I18N_MESSAGES = {
 	'moderation_and_reports.ip_ban_declined': 'This IP address cannot be added to the blocklist.',
 	'moderation_and_reports.invalid_dsa_ticket': 'Invalid DSA ticket.',
 	'moderation_and_reports.invalid_dsa_verification_code': 'Invalid DSA verification code.',
-	'moderation_and_reports.ncmec_attachment_must_be_image_or_video':
-		'Only image or video attachments can be reported to NCMEC.',
+	'moderation_and_reports.invalid_report_flow_answers':
+		"These answers don't match the report form. Start the report again.",
 	'moderation_and_reports.report_already_resolved': 'Report already resolved.',
 	'moderation_and_reports.report_banned': "You've been banned from submitting reports.",
+	'moderation_and_reports.report_flow_outdated':
+		'The report form changed while you were filling it in. Start the report again.',
+	'moderation_and_reports.report_under_legal_hold': "This report is under a legal hold and can't be deleted.",
 	'moderation_and_reports.unclaimed_account_cannot_submit_reports':
 		'You need to complete your account setup before you can submit reports.',
 	'moderation_and_reports.unknown_report': 'Unknown report.',
 	'moderation_and_reports.user_is_not_banned': "This user isn't banned.",
 	'names_and_normalization.name_empty_after_normalization': "Name can't be empty after normalization.",
 	'permissions.global_ip_banned':
-		'Your IP address {ipAddress} has been permanently blocked from the Fluxer API by platform administrators. If you believe this is a mistake, contact support@fluxer.app to appeal. Include this IP address in your appeal.',
+		'Your IP address {ipAddress} has been permanently blocked from the {product_name} API by platform administrators. {appealEmail, select, null {If you believe this is a mistake, contact the administrators of this instance to appeal.} other {If you believe this is a mistake, contact {appealEmail} to appeal.}} Include this IP address in your appeal.',
 	'permissions.global_ip_temporarily_banned':
-		'Your IP address {ipAddress} has been temporarily blocked from the Fluxer API. The block lifts on its own when it expires. If you think this is a mistake, contact support@fluxer.com and include this IP address.',
+		'Your IP address {ipAddress} has been temporarily blocked from the {product_name} API. The block lifts on its own when it expires. {appealEmail, select, null {If you think this is a mistake, contact the administrators of this instance and include this IP address.} other {If you think this is a mistake, contact {appealEmail} and include this IP address.}}',
 	'permissions.missing_access': "You don't have access to this resource or feature.",
 	'permissions.missing_permissions': "You don't have the permissions required to perform this action.",
 	'permissions.user_banned_from_guild': 'This user is banned from this community.',
@@ -465,7 +447,6 @@ export const ERROR_I18N_MESSAGES = {
 	'permissions.user_owns_guilds': 'This user owns communities.',
 	'premium_and_plans.animated_avatars_require_premium': 'Animated avatars require Premium.',
 	'premium_and_plans.banners_require_premium': 'Banners require Premium.',
-	'premium_and_plans.bio_requires_premium_for_length': 'A bio longer than {maxLength} characters requires Premium.',
 	'premium_and_plans.cannot_redeem_plutonium_with_visionary': "You can't redeem {premium_tier_name} with Visionary.",
 	'premium_and_plans.custom_emojis_outside_source_require_premium':
 		"You can't use custom emojis outside their source communities without Premium.",
@@ -518,7 +499,8 @@ export const ERROR_I18N_MESSAGES = {
 	'store_billing.purchase_sandbox_not_entitled': 'Test purchases cannot be applied to this account.',
 	'store_billing.unavailable': 'In-app purchases are unavailable right now. Try again later.',
 	'store_billing.unknown_purchase': 'Unknown store purchase.',
-	'stripe.error': 'Payment processing encountered an error. Please try again or contact support.',
+	'stripe.error':
+		'{supportEmail, select, null {Payment processing encountered an error. Please try again or contact the administrators of this instance.} other {Payment processing encountered an error. Please try again or contact support.}}',
 	'stripe.invalid_product_configuration': 'Invalid product configuration.',
 	'stripe.invalid_product_selection': 'Invalid product selection.',
 	'stripe.no_active_subscription_found': 'No active subscription found.',
@@ -573,9 +555,7 @@ export const ERROR_I18N_MESSAGES = {
 		"This instance doesn't use tags. Your username is unique on its own.",
 	'usernames_and_tags.discriminator_out_of_range': 'Discriminator must be between {min} and {max}.',
 	'usernames_and_tags.discriminator_required': 'Discriminator is required.',
-	'usernames_and_tags.display_name_length_invalid': 'Display name must be between {min} and {max} characters.',
 	'usernames_and_tags.display_name_reserved_terms': 'Display name can\'t contain "system message".',
-	'usernames_and_tags.display_name_reserved_value': 'Display name can\'t be "everyone" or "here".',
 	'usernames_and_tags.global_name_length_invalid': 'Global name must be between {min} and {max} characters.',
 	'usernames_and_tags.global_name_reserved_value': 'Global name can\'t be "everyone" or "here".',
 	'usernames_and_tags.tag_already_taken': 'This tag is already taken.',

@@ -8,20 +8,13 @@ import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import type {User} from '@app/features/user/models/User';
 import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 
-export interface UserDisplayNameLike {
-	username: string;
-	displayName?: string | null;
-	globalName?: string | null;
-	global_name?: string | null;
-}
-
-export function truncateStreamerModeName(name: string): string {
+function truncateStreamerModeName(name: string): string {
 	const trimmed = name.trim();
 	if (!trimmed) return '…';
 	return `${Array.from(trimmed)[0]}…`;
 }
 
-export function formatNameForStreamerMode(name: string): string {
+function formatNameForStreamerMode(name: string): string {
 	return StreamerMode.shouldTruncateUsernames ? truncateStreamerModeName(name) : name;
 }
 
@@ -33,10 +26,6 @@ export function formatUserTagForStreamerMode(
 	user: Pick<User, 'tag' | 'username' | 'discriminator'> & {bot?: boolean},
 ): string {
 	return formatTagForStreamerMode(user.tag || formatUserTag(user));
-}
-
-export function getDisplayName(user: UserDisplayNameLike): string {
-	return formatNameForStreamerMode(user.displayName || user.globalName || user.global_name || user.username || '');
 }
 
 function resolveRelationshipNickname(userId: string): string | null {

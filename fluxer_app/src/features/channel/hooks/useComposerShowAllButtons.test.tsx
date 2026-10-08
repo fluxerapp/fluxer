@@ -14,7 +14,12 @@ const Composer: React.FC<{isMobile: boolean}> = ({isMobile}) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const showAllButtons = useComposerShowAllButtons(containerRef, isMobile);
 	return (
-		<div ref={containerRef} data-composer="" style={{paddingLeft: '8px', paddingRight: '8px'}}>
+		<div
+			ref={containerRef}
+			data-composer=""
+			style={{paddingLeft: '8px', paddingRight: '8px'}}
+			data-flx="channel.use-composer-show-all-buttons-test.composer.div"
+		>
 			{showAllButtons ? 'all' : 'collapsed'}
 		</div>
 	);
@@ -25,7 +30,7 @@ function mount(isMobile: boolean): string {
 	document.body.appendChild(host);
 	root = createRoot(host);
 	act(() => {
-		root?.render(<Composer isMobile={isMobile} />);
+		root?.render(<Composer isMobile={isMobile} data-flx="channel.use-composer-show-all-buttons-test.mount.composer" />);
 	});
 	return host.textContent ?? '';
 }

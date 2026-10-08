@@ -10,14 +10,14 @@ import {
 	usLayoutKeyToDomCode,
 } from '@electron/main/GlobalShortcutKeys';
 
-export interface ShortcutModifiers {
+interface ShortcutModifiers {
 	ctrl: boolean;
 	alt: boolean;
 	shift: boolean;
 	meta: boolean;
 }
 
-export type ShortcutTrigger =
+type ShortcutTrigger =
 	| {kind: 'key'; layoutKey: string | null; code: string | null}
 	| {kind: 'mouse'; button: number}
 	| {kind: 'modifier-only'; modifiers: Array<ModifierKind>; bothSides: boolean};
