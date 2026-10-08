@@ -3842,7 +3842,13 @@
         "msgid": "Largest file you can upload"
       },
       {
+        "msgid": "Leave private thread"
+      },
+      {
         "msgid": "Leave thread"
+      },
+      {
+        "msgid": "Leave {threadName}? It's private, so you can only come back if someone adds you again."
       },
       {
         "msgid": "Let others clone your emojis"

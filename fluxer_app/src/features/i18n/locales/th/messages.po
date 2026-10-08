@@ -1135,7 +1135,7 @@ msgstr "{count, plural, one {สมาชิก # คน} other {สมาชิ
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:203
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {# ข้อความ} other {# ข้อความ}}"
 
@@ -2399,7 +2399,7 @@ msgstr "1 วัน"
 #. Fixed duration label for a one-hour interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:15
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
 msgid "1 hour"
 msgstr "1 ชั่วโมง"
 
@@ -2446,7 +2446,7 @@ msgstr "1 คน"
 #. Fixed duration label for a one-week interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:36
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
 msgid "1 week"
 msgstr "1 สัปดาห์"
 
@@ -2544,7 +2544,7 @@ msgid "2–32 characters: letters, numbers, and underscores."
 msgstr "2–32 อักขระ: ตัวอักษร ตัวเลข และขีดล่าง"
 
 #. Thread auto archive duration option.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
 msgid "24 hours"
 msgstr "24 ชั่วโมง"
 
@@ -2577,7 +2577,7 @@ msgstr "ข้อกำหนด 2FA"
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
 #. Thread auto archive duration option.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:42
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
 msgid "3 days"
 msgstr "3 วัน"
 
@@ -3042,7 +3042,7 @@ msgstr "การดำเนินการ"
 #. Tab in the thread browser that lists active threads.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
 msgstr "ใช้งานอยู่"
@@ -3878,7 +3878,7 @@ msgstr "ทุกภาษา"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:20
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:352
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:21
 msgid "All messages"
 msgstr "ข้อความทั้งหมด"
@@ -3931,7 +3931,7 @@ msgid "Allow {productName} under Screen Recording in System Settings. If it is a
 msgstr "อนุญาตให้ {productName} ในส่วนการบันทึกหน้าจอ (Screen Recording) ในการตั้งค่าระบบ (System Settings) หากได้รับอนุญาตแล้ว ให้เปิดใช้งาน {productName2} ใหม่เพื่อให้ macOS นำไปใช้"
 
 #. Private thread setting that lets non-moderators add other members.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
 msgid "Allow anyone to invite"
 msgstr "อนุญาตให้ทุกคนเชิญได้"
 
@@ -4833,7 +4833,7 @@ msgid "Are you sure you want to delete {channelLabel}? This cannot be undone."
 msgstr "คุณแน่ใจหรือไม่ว่าต้องการลบ {channelLabel} การดำเนินการนี้ไม่สามารถเลิกทำได้"
 
 #. Confirmation text before deleting a thread. threadName is the thread name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:89
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:97
 msgid "Are you sure you want to delete {threadName}? This cannot be undone."
 msgstr "คุณแน่ใจหรือไม่ว่าต้องการลบ {threadName} การดำเนินการนี้จะไม่สามารถยกเลิกได้"
 
@@ -8724,7 +8724,7 @@ msgid "Close this group DM? You can reopen it anytime."
 msgstr "ปิดแชทกลุ่มนี้ใช่หรือไม่ คุณสามารถเปิดใหม่ได้ทุกเมื่อ"
 
 #. Moderator or owner action that archives a thread so it leaves the channel list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:65
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:73
 msgid "Close thread"
 msgstr "ปิดกระทู้"
 
@@ -8770,7 +8770,7 @@ msgstr "ปิดข้อความส่วนตัวของคุณก
 #. Registration mode option that disables public registration.
 #. Tab in the thread browser that lists archived threads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:256
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
 msgid "Closed"
 msgstr "ปิด"
 
@@ -8785,7 +8785,7 @@ msgid "Closed DMs"
 msgstr "ข้อความส่วนตัวที่ปิดไปแล้ว"
 
 #. Tab in the thread browser that lists closed private threads. Keep it short, it shares a row with Active and Closed.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:185
 msgid "Closed private"
 msgstr "ส่วนตัวที่ปิดแล้ว"
 
@@ -10144,7 +10144,7 @@ msgstr "คัดลอกบรรทัดสำหรับ hyprland.lua"
 #. Action that copies a link to the thread.
 #. Generic action label that copies a URL to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:754
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:105
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:326
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -10259,7 +10259,7 @@ msgid "Copy the setup key into your authenticator app."
 msgstr "คัดลอกคีย์สำหรับการตั้งค่าลงในแอปยืนยันตัวตนของคุณ"
 
 #. Developer mode action that copies the thread ID.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:109
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
 msgid "Copy thread ID"
 msgstr "คัดลอกรหัสเธรด"
 
@@ -10343,7 +10343,7 @@ msgid "Could not start the screen share. The selected source may no longer be av
 msgstr "ไม่สามารถเริ่มการแชร์หน้าจอได้ แหล่งที่มาที่เลือกอาจไม่พร้อมใช้งานแล้ว หรืออาจบล็อกการจับภาพไว้ ลองแชร์ทั้งหน้าจอหรือทั้งจอภาพแทนการแชร์เฉพาะหน้าต่าง"
 
 #. Toast when creating a thread failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
 msgid "Could not start the thread: {detail}"
 msgstr "ไม่สามารถสร้างเธรดได้: {detail}"
 
@@ -10786,7 +10786,7 @@ msgid "Couldn't save the tag: {detail}"
 msgstr "ไม่สามารถบันทึกแท็กได้: {detail}"
 
 #. Error state of the thread browser search.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "Couldn't search threads. Try again later."
 msgstr "ไม่สามารถค้นหาเธรดได้ โปรดลองอีกครั้งในภายหลัง"
 
@@ -12031,7 +12031,7 @@ msgid "Default emoji"
 msgstr "อิโมจิเริ่มต้น"
 
 #. Label of the default auto archive duration for new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
 msgid "Default hide after inactivity"
 msgstr "ซ่อนอัตโนมัติเมื่อไม่มีการใช้งาน"
 
@@ -12089,7 +12089,7 @@ msgid "Default sort order"
 msgstr "ลำดับการเรียงเริ่มต้น"
 
 #. Label of the slowmode copied onto new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
 msgid "Default thread slowmode"
 msgstr "โหมดหน่วงเวลาเริ่มต้นของเธรด"
 
@@ -12402,7 +12402,7 @@ msgid "Delete this message? Can't be undone. This message is also removed from e
 msgstr "ลบข้อความนี้หรือไม่? ไม่สามารถยกเลิกได้ ข้อความนี้จะถูกลบออกจากทุกคอมมูนิตี้ที่ติดตามแชทนี้ด้วย"
 
 #. Destructive moderator action that deletes a thread and all its messages.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:85
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:93
 msgid "Delete thread"
 msgstr "ลบกระทู้"
 
@@ -14087,7 +14087,7 @@ msgid "Edit the bot avatar, tag, bio, banner, and friend request behavior"
 msgstr "แก้ไขรูปโปรไฟล์บอท แท็ก ประวัติ แบนเนอร์ และลักษณะการทำงานของคำขอเป็นเพื่อน"
 
 #. Action that opens the thread settings.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:81
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:89
 msgid "Edit thread"
 msgstr "แก้ไขเธรด"
 
@@ -17977,7 +17977,7 @@ msgid "Hide {premiumProductName} purchase date ({dateUtilsGetFormattedShortDateP
 msgstr "ซ่อนวันที่ซื้อ {premiumProductName} ({dateUtilsGetFormattedShortDatePremiumSince})"
 
 #. Label of the thread auto archive duration setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
 msgid "Hide after inactivity"
 msgstr "ซ่อนหลังไม่ใช้งาน"
 
@@ -19752,7 +19752,7 @@ msgid "Join the call"
 msgstr "เข้าร่วมการโทร"
 
 #. Notice above the composer when the user is not a member of the thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "Join this thread to follow it in your channel list and get notifications."
 msgstr "เข้าร่วมเธรดนี้เพื่อติดตามในรายการช่องของคุณและรับการแจ้งเตือน"
 
@@ -19803,7 +19803,7 @@ msgid "Join voice channels and hear others."
 msgstr "เข้าร่วมช่องเสียงและฟังผู้อื่น"
 
 #. Section header in the thread browser for threads the user joined.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
 msgid "Joined"
 msgstr "เข้าร่วม"
 
@@ -20264,6 +20264,11 @@ msgstr "เรียนรู้เพิ่มเติมเกี่ยวก
 msgid "Leave"
 msgstr "ออก"
 
+#. Confirmation text before leaving a private thread. threadName is the thread name.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:65
+msgid "Leave {threadName}? It's private, so you can only come back if someone adds you again."
+msgstr "ออกจาก {threadName} ไหม? เป็นส่วนตัว คุณจะกลับเข้ามาได้ก็ต่อเมื่อมีคนเชิญคุณอีกครั้ง"
+
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:62
 msgid "Leave blank for a random username"
@@ -20288,6 +20293,11 @@ msgstr "เว้นช่องใดช่องหนึ่งว่างไ
 #: src/features/channel/utils/ChannelMessageDescriptors.ts:57
 msgid "Leave group"
 msgstr "ออกจากกลุ่ม"
+
+#. Title of the confirmation dialog shown before leaving a private thread.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:61
+msgid "Leave private thread"
+msgstr "ออกจากเธรดส่วนตัว"
 
 #. Switch label in the leave-group confirmation modal. Suppresses the system leave notice so other members are not pinged.
 #: src/features/guild/hooks/useLeaveGroup.tsx:34
@@ -20779,7 +20789,7 @@ msgid "Live region"
 msgstr "พื้นที่ประกาศ"
 
 #. Button that loads the next page of archived threads.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
 msgid "Load more"
 msgstr "โหลดเพิ่มเติม"
 
@@ -20892,7 +20902,7 @@ msgid "Location"
 msgstr "ตำแหน่งที่ตั้ง"
 
 #. Moderator action that stops non-moderators from sending messages in a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:73
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:81
 msgid "Lock thread"
 msgstr "ล็อกกระทู้"
 
@@ -22985,7 +22995,7 @@ msgid "Mute stream audio"
 msgstr "ปิดเสียงสตรีม"
 
 #. Action that mutes notifications and unread badges for a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:97
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:105
 msgid "Mute thread"
 msgstr "ปิดเสียงเธรด"
 
@@ -23536,7 +23546,7 @@ msgid "New thread"
 msgstr "กระทู้ใหม่"
 
 #. Help text for the default thread auto archive duration setting on a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
 msgid "New threads will stop showing in the channel list after this period of inactivity."
 msgstr "เธรดใหม่จะหยุดแสดงในรายการช่องหลังจากช่วงเวลาที่ไม่มีการใช้งานนี้"
 
@@ -24189,7 +24199,7 @@ msgid "No themes saved yet."
 msgstr "ยังไม่มีธีมที่บันทึกไว้"
 
 #. Empty state of the thread browser while searching.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
 msgid "No threads match"
 msgstr "ไม่พบเธรดที่ตรงกัน"
 
@@ -24447,7 +24457,7 @@ msgstr "โน้ต (คุณเห็นคนเดียว)"
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #. Thread notification option that never notifies.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:362
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
 msgid "Nothing"
 msgstr "ไม่แจ้งเตือน"
 
@@ -24497,7 +24507,7 @@ msgstr "การตั้งค่าการแจ้งเตือนเฉ
 #. Submenu / section header that groups per-channel or per-community notification preferences.
 #. Submenu label for the thread notification options.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:344
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
 msgid "Notification settings"
 msgstr "การตั้งค่าการแจ้งเตือน"
 
@@ -24745,7 +24755,7 @@ msgid "Only {count, plural, one {# community} other {# communities}}"
 msgstr "เพียง {count, plural, one {# คอมมูนิตี้} other {# คอมมูนิตี้}}"
 
 #. Thread notification option that notifies only for mentions.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
 msgid "Only @mentions"
 msgstr "เฉพาะ @ที่กล่าวถึง"
 
@@ -25386,7 +25396,7 @@ msgid "Open thread"
 msgstr "เปิดกระทู้"
 
 #. Action that unarchives an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:69
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:77
 msgid "Open thread again"
 msgstr "เปิดเธรดอีกครั้ง"
 
@@ -25558,7 +25568,7 @@ msgid "Original message was deleted"
 msgstr "ข้อความต้นฉบับถูกลบแล้ว"
 
 #. Shown at the top of a thread when the message it was started from was deleted.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
 msgid "Original message was deleted."
 msgstr "ข้อความต้นฉบับถูกลบแล้ว"
 
@@ -25587,7 +25597,7 @@ msgid "Other"
 msgstr "อื่น ๆ"
 
 #. Section header in the thread browser for active threads the user did not join.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:181
 msgid "Other active threads"
 msgstr "กระทู้ที่ใช้งานอื่นๆ"
 
@@ -28378,7 +28388,7 @@ msgid "Remove from saved media"
 msgstr "ลบออกจากสื่อที่บันทึกไว้"
 
 #. Moderation action that removes the selected member from a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:61
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:69
 msgid "Remove from thread"
 msgstr "นำออกจากเธรด"
 
@@ -29468,7 +29478,7 @@ msgstr "เปิดใช้งานคำเชิญอีกครั้ง
 #. Button that retries loading forum posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/platform/components/loadable/LoadableComponent.tsx:98
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:294
 msgid "Retry"
 msgstr "ลองอีกครั้ง"
 
@@ -29888,7 +29898,7 @@ msgstr "ความอิ่มตัวของสี"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
@@ -30430,7 +30440,7 @@ msgstr "ค้นหาใน"
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:167
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:290
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "กำลังเตรียมการค้นหาสำหรับชุมชนนี้ ลองอีกครั้งในไม่ช้า..."
 
@@ -30590,7 +30600,7 @@ msgid "Search themes…"
 msgstr "ค้นหาธีม…"
 
 #. Placeholder and label of the search box at the top of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
 msgid "Search threads"
 msgstr "ค้นหาเธรด"
 
@@ -30747,7 +30757,7 @@ msgid "Security key PIN form"
 msgstr "แบบฟอร์มรหัส PIN ของคีย์ความปลอดภัย"
 
 #. Link in the thread created system message that opens the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
 msgid "See all threads"
 msgstr "ดูเธรดทั้งหมด"
 
@@ -33062,7 +33072,7 @@ msgid "Something went wrong while starting checkout. Please try again in a momen
 msgstr "เกิดข้อผิดพลาดขณะเริ่มต้นการชำระเงิน โปรดลองอีกครั้งในภายหลัง"
 
 #. Toast when a thread action failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
 msgid "Something went wrong: {detail}"
 msgstr "เกิดข้อผิดพลาด: {detail}"
 
@@ -33605,12 +33615,12 @@ msgid "Start with computer"
 msgstr "เริ่มด้วยคอมพิวเตอร์"
 
 #. Fragment of the thread created system message. Appears after the author name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
 msgid "started a thread"
 msgstr "เริ่มเธรด"
 
 #. Subtitle at the top of a thread. name is the display name of the member who started it.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
 msgid "Started by {name}"
 msgstr "เริ่มโดย {name}"
 
@@ -33658,7 +33668,7 @@ msgid "Status:"
 msgstr "สถานะ:"
 
 #. Empty state explanation in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:186
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
 msgid "Stay focused on a conversation with a thread, a temporary text channel."
 msgstr "อยู่กับการสนทนาอย่างต่อเนื่องด้วยเธรด ซึ่งเป็นช่องข้อความชั่วคราว"
 
@@ -35404,7 +35414,7 @@ msgid "There are no posts yet"
 msgstr "ยังไม่มีโพสต์ใดๆ"
 
 #. Preview text on a thread chip when the thread has no messages yet.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
 msgid "There are no recent messages in this thread."
 msgstr "ไม่มีข้อความล่าสุดในเธรดนี้"
 
@@ -35413,7 +35423,7 @@ msgid "There are no roles to assign in this community at this time, but you can 
 msgstr "ขณะนี้ยังไม่มีบทบาทให้กำหนดในคอมมูนิตี้นี้ แต่คุณสามารถสร้างบทบาทใหม่ได้ที่ <0>{rolesSettingsPath}</0>"
 
 #. Empty state of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:182
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
 msgid "There are no threads"
 msgstr "ไม่มีเธรด"
 
@@ -36206,12 +36216,12 @@ msgid "This theme may have been removed or the link is invalid."
 msgstr "ธีมนี้อาจถูกลบไปแล้วหรือลิงก์ไม่ถูกต้อง"
 
 #. Notice above the composer of an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
 msgid "This thread is closed. Sending a message will open it again."
 msgstr "เธรดนี้ถูกปิดแล้ว การส่งข้อความจะเปิดเธรดนี้อีกครั้ง"
 
 #. Barrier shown instead of the composer in a locked thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
 msgid "This thread is locked. Only moderators can send messages."
 msgstr "กระทู้นี้ถูกล็อกแล้ว เฉพาะผู้ดูแลเท่านั้นที่สามารถส่งข้อความได้"
 
@@ -36362,17 +36372,17 @@ msgstr "สร้างเธรด"
 #. Activity log action filter option for threads that were deleted.
 #. Toast after a thread was deleted.
 #: src/features/app/config/AuditLogConstants.ts:383
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:93
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:101
 msgid "Thread deleted"
 msgstr "เธรดถูกลบ"
 
 #. Toast after the thread link was copied.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
 msgid "Thread link copied"
 msgstr "คัดลอกลิงก์กระทู้แล้ว"
 
 #. Title of the thread member list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
 msgid "Thread members"
 msgstr "สมาชิกเธรด"
 
@@ -36382,7 +36392,7 @@ msgid "Thread name"
 msgstr "ชื่อเธรด"
 
 #. Title of the thread settings modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
 msgid "Thread settings"
 msgstr "การตั้งค่าเธรด"
 
@@ -36928,7 +36938,7 @@ msgid "Trusted domains cleared."
 msgstr "ล้างโดเมนที่เชื่อถือได้แล้ว"
 
 #. Hint under the empty search state in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Try a different name or check the other tab."
 msgstr "ลองใช้ชื่ออื่น หรือตรวจสอบแท็บอื่น"
 
@@ -37850,7 +37860,7 @@ msgid "Unlock stickers in DMs with {premiumProductName}"
 msgstr "ปลดล็อกสติกเกอร์ในข้อความส่วนตัวด้วย {premiumProductName}"
 
 #. Moderator action that lets everyone send messages in a locked thread again.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:77
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:85
 msgid "Unlock thread"
 msgstr "ปลดล็อกกระทู้"
 
@@ -37955,7 +37965,7 @@ msgid "Unmute stream audio"
 msgstr "เปิดเสียงสตรีม"
 
 #. Action that unmutes a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:101
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:109
 msgid "Unmute thread"
 msgstr "เลิกปิดเสียงเธรด"
 
@@ -38672,7 +38682,7 @@ msgid "Use category default"
 msgstr "ใช้ค่าเริ่มต้นของหมวดหมู่"
 
 #. Thread notification option that follows the parent channel setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
 msgid "Use channel default"
 msgstr "ใช้ค่าเริ่มต้นของช่อง"
 
@@ -41164,7 +41174,7 @@ msgid "You can sign back in at any time."
 msgstr "คุณสามารถลงชื่อเข้าใช้ได้ทุกเมื่อ"
 
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
 msgstr "คุณสามารถเริ่มเธรดอื่นได้ในอีก {seconds, plural, one {# วินาที} other {# วินาที}}"
 

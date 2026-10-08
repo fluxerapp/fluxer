@@ -1135,7 +1135,7 @@ msgstr "{count, plural, other {# 位成员}}"
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:203
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {# 条消息} other {# 条消息}}"
 
@@ -2399,7 +2399,7 @@ msgstr "1 天"
 #. Fixed duration label for a one-hour interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:15
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
 msgid "1 hour"
 msgstr "1 小时"
 
@@ -2446,7 +2446,7 @@ msgstr "1 位用户"
 #. Fixed duration label for a one-week interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:36
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
 msgid "1 week"
 msgstr "1 周"
 
@@ -2544,7 +2544,7 @@ msgid "2–32 characters: letters, numbers, and underscores."
 msgstr "2–32 个字符，可包含字母、数字和下划线。"
 
 #. Thread auto archive duration option.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
 msgid "24 hours"
 msgstr "24 小时"
 
@@ -2577,7 +2577,7 @@ msgstr "双重认证要求"
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
 #. Thread auto archive duration option.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:42
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
 msgid "3 days"
 msgstr "3 天"
 
@@ -3042,7 +3042,7 @@ msgstr "操作"
 #. Tab in the thread browser that lists active threads.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
 msgstr "有效"
@@ -3878,7 +3878,7 @@ msgstr "所有语言"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:20
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:352
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:21
 msgid "All messages"
 msgstr "所有消息"
@@ -3931,7 +3931,7 @@ msgid "Allow {productName} under Screen Recording in System Settings. If it is a
 msgstr "在“系统设置”的“屏幕录制”下允许 {productName}。如果已允许，请重新启动 {productName2} 以便 macOS 应用设置。"
 
 #. Private thread setting that lets non-moderators add other members.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
 msgid "Allow anyone to invite"
 msgstr "允许任何人邀请"
 
@@ -4833,7 +4833,7 @@ msgid "Are you sure you want to delete {channelLabel}? This cannot be undone."
 msgstr "确定要删除“{channelLabel}”吗？此操作无法撤销。"
 
 #. Confirmation text before deleting a thread. threadName is the thread name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:89
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:97
 msgid "Are you sure you want to delete {threadName}? This cannot be undone."
 msgstr "确定要删除 {threadName} 吗？此操作无法撤销。"
 
@@ -8724,7 +8724,7 @@ msgid "Close this group DM? You can reopen it anytime."
 msgstr "要关闭这个群聊吗？你可以随时重新打开。"
 
 #. Moderator or owner action that archives a thread so it leaves the channel list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:65
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:73
 msgid "Close thread"
 msgstr "关闭帖子"
 
@@ -8770,7 +8770,7 @@ msgstr "要关闭与 {username} 的私信吗？你可以随时重新打开。"
 #. Registration mode option that disables public registration.
 #. Tab in the thread browser that lists archived threads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:256
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
 msgid "Closed"
 msgstr "已关闭"
 
@@ -8785,7 +8785,7 @@ msgid "Closed DMs"
 msgstr "已关闭的私信"
 
 #. Tab in the thread browser that lists closed private threads. Keep it short, it shares a row with Active and Closed.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:185
 msgid "Closed private"
 msgstr "已关闭私密"
 
@@ -10144,7 +10144,7 @@ msgstr "复制配置行（hyprland.lua）"
 #. Action that copies a link to the thread.
 #. Generic action label that copies a URL to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:754
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:105
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:326
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -10259,7 +10259,7 @@ msgid "Copy the setup key into your authenticator app."
 msgstr "将设置密钥复制到你的身份验证器应用中。"
 
 #. Developer mode action that copies the thread ID.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:109
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
 msgid "Copy thread ID"
 msgstr "复制线程 ID"
 
@@ -10343,7 +10343,7 @@ msgid "Could not start the screen share. The selected source may no longer be av
 msgstr "无法开始屏幕共享。所选来源可能不再可用或已阻止捕获。请尝试共享整个屏幕或显示器，而不是特定窗口。"
 
 #. Toast when creating a thread failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
 msgid "Could not start the thread: {detail}"
 msgstr "无法创建话题：{detail}"
 
@@ -10786,7 +10786,7 @@ msgid "Couldn't save the tag: {detail}"
 msgstr "无法保存标签：{detail}"
 
 #. Error state of the thread browser search.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "Couldn't search threads. Try again later."
 msgstr "无法搜索帖子。请稍后重试。"
 
@@ -12031,7 +12031,7 @@ msgid "Default emoji"
 msgstr "默认表情"
 
 #. Label of the default auto archive duration for new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
 msgid "Default hide after inactivity"
 msgstr "默认隐藏不活跃内容"
 
@@ -12089,7 +12089,7 @@ msgid "Default sort order"
 msgstr "默认排序方式"
 
 #. Label of the slowmode copied onto new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
 msgid "Default thread slowmode"
 msgstr "默认线程慢速模式"
 
@@ -12402,7 +12402,7 @@ msgid "Delete this message? Can't be undone. This message is also removed from e
 msgstr "删除此消息？无法撤销。此消息也将从关注此频道的每个社群中移除。"
 
 #. Destructive moderator action that deletes a thread and all its messages.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:85
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:93
 msgid "Delete thread"
 msgstr "删除帖子"
 
@@ -14087,7 +14087,7 @@ msgid "Edit the bot avatar, tag, bio, banner, and friend request behavior"
 msgstr "编辑机器人头像、标签、简介、横幅和好友请求行为"
 
 #. Action that opens the thread settings.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:81
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:89
 msgid "Edit thread"
 msgstr "编辑帖子"
 
@@ -17977,7 +17977,7 @@ msgid "Hide {premiumProductName} purchase date ({dateUtilsGetFormattedShortDateP
 msgstr "隐藏 {premiumProductName} 购买日期（{dateUtilsGetFormattedShortDatePremiumSince}）"
 
 #. Label of the thread auto archive duration setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
 msgid "Hide after inactivity"
 msgstr "隐藏不活动后"
 
@@ -19752,7 +19752,7 @@ msgid "Join the call"
 msgstr "加入通话"
 
 #. Notice above the composer when the user is not a member of the thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "Join this thread to follow it in your channel list and get notifications."
 msgstr "加入此频道以在您的频道列表中关注它并接收通知。"
 
@@ -19803,7 +19803,7 @@ msgid "Join voice channels and hear others."
 msgstr "加入语音频道并听到他人说话。"
 
 #. Section header in the thread browser for threads the user joined.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
 msgid "Joined"
 msgstr "已加入"
 
@@ -20264,6 +20264,11 @@ msgstr "了解更多关于 Visionary"
 msgid "Leave"
 msgstr "退出"
 
+#. Confirmation text before leaving a private thread. threadName is the thread name.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:65
+msgid "Leave {threadName}? It's private, so you can only come back if someone adds you again."
+msgstr "离开 {threadName}？这是一个私密对话，除非有人再次添加你，否则你无法返回。"
+
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:62
 msgid "Leave blank for a random username"
@@ -20288,6 +20293,11 @@ msgstr "将任一字段留空，该时间范围的对应一端就不受限制。
 #: src/features/channel/utils/ChannelMessageDescriptors.ts:57
 msgid "Leave group"
 msgstr "退出群聊"
+
+#. Title of the confirmation dialog shown before leaving a private thread.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:61
+msgid "Leave private thread"
+msgstr "退出私密话题"
 
 #. Switch label in the leave-group confirmation modal. Suppresses the system leave notice so other members are not pinged.
 #: src/features/guild/hooks/useLeaveGroup.tsx:34
@@ -20779,7 +20789,7 @@ msgid "Live region"
 msgstr "实时区域"
 
 #. Button that loads the next page of archived threads.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
 msgid "Load more"
 msgstr "加载更多"
 
@@ -20892,7 +20902,7 @@ msgid "Location"
 msgstr "位置"
 
 #. Moderator action that stops non-moderators from sending messages in a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:73
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:81
 msgid "Lock thread"
 msgstr "锁定帖子"
 
@@ -22985,7 +22995,7 @@ msgid "Mute stream audio"
 msgstr "静音直播音频"
 
 #. Action that mutes notifications and unread badges for a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:97
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:105
 msgid "Mute thread"
 msgstr "屏蔽对话"
 
@@ -23536,7 +23546,7 @@ msgid "New thread"
 msgstr "新主题"
 
 #. Help text for the default thread auto archive duration setting on a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
 msgid "New threads will stop showing in the channel list after this period of inactivity."
 msgstr "新创建的帖子在不活跃一段时间后将不再显示在频道列表中。"
 
@@ -24189,7 +24199,7 @@ msgid "No themes saved yet."
 msgstr "暂未保存主题。"
 
 #. Empty state of the thread browser while searching.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
 msgid "No threads match"
 msgstr "没有找到匹配的帖子"
 
@@ -24447,7 +24457,7 @@ msgstr "备注（仅自己可见）"
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #. Thread notification option that never notifies.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:362
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
 msgid "Nothing"
 msgstr "无"
 
@@ -24497,7 +24507,7 @@ msgstr "通知覆盖设置"
 #. Submenu / section header that groups per-channel or per-community notification preferences.
 #. Submenu label for the thread notification options.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:344
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
 msgid "Notification settings"
 msgstr "通知设置"
 
@@ -24745,7 +24755,7 @@ msgid "Only {count, plural, one {# community} other {# communities}}"
 msgstr "仅限 {count, plural, other {# 个社区}}"
 
 #. Thread notification option that notifies only for mentions.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
 msgid "Only @mentions"
 msgstr "仅提及"
 
@@ -25386,7 +25396,7 @@ msgid "Open thread"
 msgstr "打开帖子"
 
 #. Action that unarchives an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:69
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:77
 msgid "Open thread again"
 msgstr "重新打开频道"
 
@@ -25558,7 +25568,7 @@ msgid "Original message was deleted"
 msgstr "原消息已删除"
 
 #. Shown at the top of a thread when the message it was started from was deleted.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
 msgid "Original message was deleted."
 msgstr "原始消息已被删除。"
 
@@ -25587,7 +25597,7 @@ msgid "Other"
 msgstr "其他"
 
 #. Section header in the thread browser for active threads the user did not join.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:181
 msgid "Other active threads"
 msgstr "其他活跃的频道"
 
@@ -28378,7 +28388,7 @@ msgid "Remove from saved media"
 msgstr "从已保存媒体中移除"
 
 #. Moderation action that removes the selected member from a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:61
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:69
 msgid "Remove from thread"
 msgstr "移出频道"
 
@@ -29468,7 +29478,7 @@ msgstr "恢复了邀请"
 #. Button that retries loading forum posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/platform/components/loadable/LoadableComponent.tsx:98
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:294
 msgid "Retry"
 msgstr "重试"
 
@@ -29888,7 +29898,7 @@ msgstr "饱和度"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
@@ -30430,7 +30440,7 @@ msgstr "搜索范围"
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:167
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:290
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "搜索正在为该社区准备中。稍后重试……"
 
@@ -30590,7 +30600,7 @@ msgid "Search themes…"
 msgstr "搜索主题…"
 
 #. Placeholder and label of the search box at the top of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
 msgid "Search threads"
 msgstr "搜索对话"
 
@@ -30747,7 +30757,7 @@ msgid "Security key PIN form"
 msgstr "安全密钥 PIN 码表单"
 
 #. Link in the thread created system message that opens the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
 msgid "See all threads"
 msgstr "查看所有帖子"
 
@@ -33062,7 +33072,7 @@ msgid "Something went wrong while starting checkout. Please try again in a momen
 msgstr "启动结账时出错了。请稍后重试。"
 
 #. Toast when a thread action failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
 msgid "Something went wrong: {detail}"
 msgstr "出了点问题：{detail}"
 
@@ -33605,12 +33615,12 @@ msgid "Start with computer"
 msgstr "开机启动"
 
 #. Fragment of the thread created system message. Appears after the author name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
 msgid "started a thread"
 msgstr "发起了话题"
 
 #. Subtitle at the top of a thread. name is the display name of the member who started it.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
 msgid "Started by {name}"
 msgstr "{name} 发起"
 
@@ -33658,7 +33668,7 @@ msgid "Status:"
 msgstr "状态："
 
 #. Empty state explanation in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:186
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
 msgid "Stay focused on a conversation with a thread, a temporary text channel."
 msgstr "在临时文本频道中，通过 thread 保持专注。"
 
@@ -35404,7 +35414,7 @@ msgid "There are no posts yet"
 msgstr "还没有帖子"
 
 #. Preview text on a thread chip when the thread has no messages yet.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
 msgid "There are no recent messages in this thread."
 msgstr "此频道暂无近期消息。"
 
@@ -35413,7 +35423,7 @@ msgid "There are no roles to assign in this community at this time, but you can 
 msgstr "此社区暂无身份组可分配，但你可以在 <0>{rolesSettingsPath}</0> 中创建新身份组。"
 
 #. Empty state of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:182
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
 msgid "There are no threads"
 msgstr "没有线程"
 
@@ -36206,12 +36216,12 @@ msgid "This theme may have been removed or the link is invalid."
 msgstr "此主题可能已被移除或链接无效。"
 
 #. Notice above the composer of an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
 msgid "This thread is closed. Sending a message will open it again."
 msgstr "此帖子已关闭。发送消息将重新开启它。"
 
 #. Barrier shown instead of the composer in a locked thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
 msgid "This thread is locked. Only moderators can send messages."
 msgstr "此频道已锁定。只有版主可以发送消息。"
 
@@ -36362,17 +36372,17 @@ msgstr "创建的帖子"
 #. Activity log action filter option for threads that were deleted.
 #. Toast after a thread was deleted.
 #: src/features/app/config/AuditLogConstants.ts:383
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:93
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:101
 msgid "Thread deleted"
 msgstr "已删除帖子"
 
 #. Toast after the thread link was copied.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
 msgid "Thread link copied"
 msgstr "已复制帖子链接"
 
 #. Title of the thread member list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
 msgid "Thread members"
 msgstr "帖子成员"
 
@@ -36382,7 +36392,7 @@ msgid "Thread name"
 msgstr "话题名称"
 
 #. Title of the thread settings modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
 msgid "Thread settings"
 msgstr "帖子设置"
 
@@ -36928,7 +36938,7 @@ msgid "Trusted domains cleared."
 msgstr "已清除受信任域名。"
 
 #. Hint under the empty search state in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Try a different name or check the other tab."
 msgstr "换个名字试试，或者看看另一个标签页。"
 
@@ -37850,7 +37860,7 @@ msgid "Unlock stickers in DMs with {premiumProductName}"
 msgstr "使用 {premiumProductName} 解锁私信中的贴纸"
 
 #. Moderator action that lets everyone send messages in a locked thread again.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:77
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:85
 msgid "Unlock thread"
 msgstr "解锁帖子"
 
@@ -37955,7 +37965,7 @@ msgid "Unmute stream audio"
 msgstr "取消直播音频静音"
 
 #. Action that unmutes a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:101
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:109
 msgid "Unmute thread"
 msgstr "取消静音频道"
 
@@ -38672,7 +38682,7 @@ msgid "Use category default"
 msgstr "使用类别默认设置"
 
 #. Thread notification option that follows the parent channel setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
 msgid "Use channel default"
 msgstr "使用频道默认设置"
 
@@ -41164,7 +41174,7 @@ msgid "You can sign back in at any time."
 msgstr "你可以随时重新登录。"
 
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
 msgstr "您可以在 {seconds, plural, one {# 秒} other {# 秒}} 后开始新的帖子。"
 

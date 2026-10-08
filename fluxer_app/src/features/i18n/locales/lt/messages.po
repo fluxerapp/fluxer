@@ -1135,7 +1135,7 @@ msgstr "{count, plural, one {# narys} few {# nariai} other {# narių}}"
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:203
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {# pranešimas} other {# pranešimai}}"
 
@@ -2399,7 +2399,7 @@ msgstr "1 diena"
 #. Fixed duration label for a one-hour interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:15
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
 msgid "1 hour"
 msgstr "1 valanda"
 
@@ -2446,7 +2446,7 @@ msgstr "1 naudotojas"
 #. Fixed duration label for a one-week interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:36
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
 msgid "1 week"
 msgstr "1 savaitė"
 
@@ -2544,7 +2544,7 @@ msgid "2–32 characters: letters, numbers, and underscores."
 msgstr "2–32 simboliai: raidės, skaičiai ir pabraukimo brūkšniai."
 
 #. Thread auto archive duration option.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
 msgid "24 hours"
 msgstr "24 valandos"
 
@@ -2577,7 +2577,7 @@ msgstr "2FA reikalavimas"
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
 #. Thread auto archive duration option.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:42
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
 msgid "3 days"
 msgstr "3 dienos"
 
@@ -3042,7 +3042,7 @@ msgstr "Veiksmai"
 #. Tab in the thread browser that lists active threads.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
 msgstr "Aktyvus"
@@ -3878,7 +3878,7 @@ msgstr "Visos kalbos"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:20
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:352
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:21
 msgid "All messages"
 msgstr "Visos žinutės"
@@ -3931,7 +3931,7 @@ msgid "Allow {productName} under Screen Recording in System Settings. If it is a
 msgstr "Leiskite {productName} „Ekrano įrašymo“ skiltyje „Sistemos nuostatos“. Jei leidimas jau suteiktas, paleiskite iš naujo {productName2}, kad „macOS“ jį pritaikytų."
 
 #. Private thread setting that lets non-moderators add other members.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
 msgid "Allow anyone to invite"
 msgstr "Leisti bet kam pakviesti"
 
@@ -4833,7 +4833,7 @@ msgid "Are you sure you want to delete {channelLabel}? This cannot be undone."
 msgstr "Ar tikrai norite ištrinti „{channelLabel}“? Šio veiksmo anuliuoti negalima."
 
 #. Confirmation text before deleting a thread. threadName is the thread name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:89
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:97
 msgid "Are you sure you want to delete {threadName}? This cannot be undone."
 msgstr "Ar tikrai norite ištrinti {threadName}? Tai negalima atšaukti."
 
@@ -8724,7 +8724,7 @@ msgid "Close this group DM? You can reopen it anytime."
 msgstr "Uždaryti šį grupės DM? Jį galite bet kada vėl atidaryti."
 
 #. Moderator or owner action that archives a thread so it leaves the channel list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:65
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:73
 msgid "Close thread"
 msgstr "Uždaryti temą"
 
@@ -8770,7 +8770,7 @@ msgstr "Uždaryti tiesioginį pokalbį su „{username}“? Jį galėsite bet ka
 #. Registration mode option that disables public registration.
 #. Tab in the thread browser that lists archived threads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:256
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
 msgid "Closed"
 msgstr "Uždaryta"
 
@@ -8785,7 +8785,7 @@ msgid "Closed DMs"
 msgstr "Uždaryti DM pokalbiai"
 
 #. Tab in the thread browser that lists closed private threads. Keep it short, it shares a row with Active and Closed.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:185
 msgid "Closed private"
 msgstr "Uždaryti privatūs"
 
@@ -10144,7 +10144,7 @@ msgstr "Kopijuoti eilutes, skirtas hyprland.lua"
 #. Action that copies a link to the thread.
 #. Generic action label that copies a URL to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:754
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:105
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:326
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -10259,7 +10259,7 @@ msgid "Copy the setup key into your authenticator app."
 msgstr "Nukopijuokite sąrankos raktą į savo autentifikavimo programėlę."
 
 #. Developer mode action that copies the thread ID.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:109
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
 msgid "Copy thread ID"
 msgstr "Kopijuoti gijos ID"
 
@@ -10343,7 +10343,7 @@ msgid "Could not start the screen share. The selected source may no longer be av
 msgstr "Nepavyko pradėti ekrano bendrinimo. Pasirinktas šaltinis gali būti nepasiekiamas arba jo fiksavimas gali būti užblokuotas. Pabandykite bendrinti visą ekraną ar monitorių, o ne konkretų langą."
 
 #. Toast when creating a thread failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
 msgid "Could not start the thread: {detail}"
 msgstr "Nepavyko pradėti temos: {detail}"
 
@@ -10786,7 +10786,7 @@ msgid "Couldn't save the tag: {detail}"
 msgstr "Nepavyko išsaugoti žymos: {detail}"
 
 #. Error state of the thread browser search.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "Couldn't search threads. Try again later."
 msgstr "Nepavyko ieškoti temų. Pabandykite vėliau."
 
@@ -12031,7 +12031,7 @@ msgid "Default emoji"
 msgstr "Numatytasis jaustukas"
 
 #. Label of the default auto archive duration for new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
 msgid "Default hide after inactivity"
 msgstr "Numatytasis slėpti po neaktyvumo"
 
@@ -12089,7 +12089,7 @@ msgid "Default sort order"
 msgstr "Numatytasis rikiavimo tvarka"
 
 #. Label of the slowmode copied onto new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
 msgid "Default thread slowmode"
 msgstr "Numatytoji gija lėtas režimas"
 
@@ -12402,7 +12402,7 @@ msgid "Delete this message? Can't be undone. This message is also removed from e
 msgstr "Ištrinti šį pranešimą? Negalima atšaukti. Šis pranešimas taip pat bus pašalintas iš kiekvienos bendruomenės, sekančios šį kanalą."
 
 #. Destructive moderator action that deletes a thread and all its messages.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:85
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:93
 msgid "Delete thread"
 msgstr "Ištrinti temą"
 
@@ -14087,7 +14087,7 @@ msgid "Edit the bot avatar, tag, bio, banner, and friend request behavior"
 msgstr "Redaguoti boto avatarą, žymą, biografiją, reklamjuostę ir draugystės užklausų elgseną"
 
 #. Action that opens the thread settings.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:81
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:89
 msgid "Edit thread"
 msgstr "Redaguoti temą"
 
@@ -17978,7 +17978,7 @@ msgid "Hide {premiumProductName} purchase date ({dateUtilsGetFormattedShortDateP
 msgstr "Slėpti {premiumProductName} įsigijimo datą ({dateUtilsGetFormattedShortDatePremiumSince})"
 
 #. Label of the thread auto archive duration setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
 msgid "Hide after inactivity"
 msgstr "Slėpti po neaktyvumo"
 
@@ -19753,7 +19753,7 @@ msgid "Join the call"
 msgstr "Prisijungti prie skambučio"
 
 #. Notice above the composer when the user is not a member of the thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "Join this thread to follow it in your channel list and get notifications."
 msgstr "Prisijunkite prie šios temos, kad galėtumėte ją sekti savo kanalo sąraše ir gauti pranešimus."
 
@@ -19804,7 +19804,7 @@ msgid "Join voice channels and hear others."
 msgstr "Prisijunkite prie balso kanalų ir girdėkite kitus."
 
 #. Section header in the thread browser for threads the user joined.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
 msgid "Joined"
 msgstr "Prisijungėte"
 
@@ -20265,6 +20265,11 @@ msgstr "Sužinokite daugiau apie „Visionary“"
 msgid "Leave"
 msgstr "Palikti"
 
+#. Confirmation text before leaving a private thread. threadName is the thread name.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:65
+msgid "Leave {threadName}? It's private, so you can only come back if someone adds you again."
+msgstr "Palikti {threadName}? Tai privatu, todėl galėsite grįžti tik tada, jei kas nors jus vėl pridės."
+
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:62
 msgid "Leave blank for a random username"
@@ -20289,6 +20294,11 @@ msgstr "Palikite bet kurį laukelį tuščią, kad ta laikotarpio riba liktų ne
 #: src/features/channel/utils/ChannelMessageDescriptors.ts:57
 msgid "Leave group"
 msgstr "Palikti grupę"
+
+#. Title of the confirmation dialog shown before leaving a private thread.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:61
+msgid "Leave private thread"
+msgstr "Palikti privatų pokalbį"
 
 #. Switch label in the leave-group confirmation modal. Suppresses the system leave notice so other members are not pinged.
 #: src/features/guild/hooks/useLeaveGroup.tsx:34
@@ -20780,7 +20790,7 @@ msgid "Live region"
 msgstr "Tiesioginė sritis"
 
 #. Button that loads the next page of archived threads.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
 msgid "Load more"
 msgstr "Įkelti daugiau"
 
@@ -20893,7 +20903,7 @@ msgid "Location"
 msgstr "Vieta"
 
 #. Moderator action that stops non-moderators from sending messages in a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:73
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:81
 msgid "Lock thread"
 msgstr "Uždaryti temą"
 
@@ -22986,7 +22996,7 @@ msgid "Mute stream audio"
 msgstr "Nutildyti srauto garsą"
 
 #. Action that mutes notifications and unread badges for a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:97
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:105
 msgid "Mute thread"
 msgstr "Nutildyti temą"
 
@@ -23537,7 +23547,7 @@ msgid "New thread"
 msgstr "Nauja tema"
 
 #. Help text for the default thread auto archive duration setting on a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
 msgid "New threads will stop showing in the channel list after this period of inactivity."
 msgstr "Naujos temos nustos rodytis kanalo sąraše po šio neaktyvumo laikotarpio."
 
@@ -24190,7 +24200,7 @@ msgid "No themes saved yet."
 msgstr "Kol kas neišsaugota jokių temų."
 
 #. Empty state of the thread browser while searching.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
 msgid "No threads match"
 msgstr "Nėra sriegių, atitinkančių paiešką"
 
@@ -24448,7 +24458,7 @@ msgstr "Pastaba (matoma tik jums)"
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #. Thread notification option that never notifies.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:362
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
 msgid "Nothing"
 msgstr "Nieko"
 
@@ -24498,7 +24508,7 @@ msgstr "Pranešimų perrašymai"
 #. Submenu / section header that groups per-channel or per-community notification preferences.
 #. Submenu label for the thread notification options.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:344
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
 msgid "Notification settings"
 msgstr "Pranešimų nustatymai"
 
@@ -24746,7 +24756,7 @@ msgid "Only {count, plural, one {# community} other {# communities}}"
 msgstr "Tik {count, plural, one {# bendruomenė} few {# bendruomenės} other {# bendruomenių}}"
 
 #. Thread notification option that notifies only for mentions.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
 msgid "Only @mentions"
 msgstr "Tik @paminėjimai"
 
@@ -25387,7 +25397,7 @@ msgid "Open thread"
 msgstr "Atidaryti temą"
 
 #. Action that unarchives an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:69
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:77
 msgid "Open thread again"
 msgstr "Atidaryti temą iš naujo"
 
@@ -25559,7 +25569,7 @@ msgid "Original message was deleted"
 msgstr "Originali žinutė buvo ištrinta"
 
 #. Shown at the top of a thread when the message it was started from was deleted.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
 msgid "Original message was deleted."
 msgstr "Originalus pranešimas buvo ištrintas."
 
@@ -25588,7 +25598,7 @@ msgid "Other"
 msgstr "Kita"
 
 #. Section header in the thread browser for active threads the user did not join.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:181
 msgid "Other active threads"
 msgstr "Kitos aktyvios temų grupės"
 
@@ -28379,7 +28389,7 @@ msgid "Remove from saved media"
 msgstr "Pašalinti iš išsaugotos medijos"
 
 #. Moderation action that removes the selected member from a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:61
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:69
 msgid "Remove from thread"
 msgstr "Pašalinti iš temos"
 
@@ -29469,7 +29479,7 @@ msgstr "Atnaujinti kvietimai"
 #. Button that retries loading forum posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/platform/components/loadable/LoadableComponent.tsx:98
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:294
 msgid "Retry"
 msgstr "Bandyti dar kartą"
 
@@ -29889,7 +29899,7 @@ msgstr "Sodrumas"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
@@ -30431,7 +30441,7 @@ msgstr "Kur ieškoti"
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:167
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:290
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "Ieškoma bendruomenėje. Bandysime dar kartą netrukus..."
 
@@ -30591,7 +30601,7 @@ msgid "Search themes…"
 msgstr "Ieškoti temų…"
 
 #. Placeholder and label of the search box at the top of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
 msgid "Search threads"
 msgstr "Ieškoti pokalbių"
 
@@ -30748,7 +30758,7 @@ msgid "Security key PIN form"
 msgstr "Saugos rakto PIN kodo forma"
 
 #. Link in the thread created system message that opens the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
 msgid "See all threads"
 msgstr "Peržiūrėti visas temas"
 
@@ -33063,7 +33073,7 @@ msgid "Something went wrong while starting checkout. Please try again in a momen
 msgstr "Nepavyko pradėti atsiskaitymo. Bandykite dar kartą po akimirkos."
 
 #. Toast when a thread action failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
 msgid "Something went wrong: {detail}"
 msgstr "Klaida: {detail}"
 
@@ -33606,12 +33616,12 @@ msgid "Start with computer"
 msgstr "Paleisti kartu su kompiuteriu"
 
 #. Fragment of the thread created system message. Appears after the author name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
 msgid "started a thread"
 msgstr "pradėjo giją"
 
 #. Subtitle at the top of a thread. name is the display name of the member who started it.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
 msgid "Started by {name}"
 msgstr "Pradėjo {name}"
 
@@ -33659,7 +33669,7 @@ msgid "Status:"
 msgstr "Būsena:"
 
 #. Empty state explanation in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:186
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
 msgid "Stay focused on a conversation with a thread, a temporary text channel."
 msgstr "Dalykus sutelkite į pokalbį su gija – laikinu teksto kanalu."
 
@@ -35405,7 +35415,7 @@ msgid "There are no posts yet"
 msgstr "Dar nėra įrašų"
 
 #. Preview text on a thread chip when the thread has no messages yet.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
 msgid "There are no recent messages in this thread."
 msgstr "Šioje temoje nėra naujausių pranešimų."
 
@@ -35414,7 +35424,7 @@ msgid "There are no roles to assign in this community at this time, but you can 
 msgstr "Šiuo metu šioje bendruomenėje nėra vaidmenų, kuriuos būtų galima priskirti, tačiau galite sukurti naują vaidmenį čia: <0>{rolesSettingsPath}</0>."
 
 #. Empty state of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:182
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
 msgid "There are no threads"
 msgstr "Nėra gijų"
 
@@ -36207,12 +36217,12 @@ msgid "This theme may have been removed or the link is invalid."
 msgstr "Ši tema galėjo būti pašalinta arba nuoroda yra neteisinga."
 
 #. Notice above the composer of an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
 msgid "This thread is closed. Sending a message will open it again."
 msgstr "Ši tema uždaryta. Atsiųskite žinutę, kad ją vėl atidarytumėte."
 
 #. Barrier shown instead of the composer in a locked thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
 msgid "This thread is locked. Only moderators can send messages."
 msgstr "Ši tema užrakinta. Tik moderatoriai gali siųsti žinutes."
 
@@ -36363,17 +36373,17 @@ msgstr "Sukurta tema"
 #. Activity log action filter option for threads that were deleted.
 #. Toast after a thread was deleted.
 #: src/features/app/config/AuditLogConstants.ts:383
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:93
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:101
 msgid "Thread deleted"
 msgstr "Sukurta gija ištrinta"
 
 #. Toast after the thread link was copied.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
 msgid "Thread link copied"
 msgstr "Gija nuoroda nukopijuota"
 
 #. Title of the thread member list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
 msgid "Thread members"
 msgstr "Sraito nariai"
 
@@ -36383,7 +36393,7 @@ msgid "Thread name"
 msgstr "Siūlo pavadinimas"
 
 #. Title of the thread settings modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
 msgid "Thread settings"
 msgstr "Gijų nuostatos"
 
@@ -36929,7 +36939,7 @@ msgid "Trusted domains cleared."
 msgstr "Patikimi domenai išvalyti."
 
 #. Hint under the empty search state in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Try a different name or check the other tab."
 msgstr "Pabandykite kitą pavadinimą arba patikrinkite kitą skirtuką."
 
@@ -37851,7 +37861,7 @@ msgid "Unlock stickers in DMs with {premiumProductName}"
 msgstr "Atrakinkite lipdukus DM pokalbiuose su „{premiumProductName}“"
 
 #. Moderator action that lets everyone send messages in a locked thread again.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:77
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:85
 msgid "Unlock thread"
 msgstr "Atrakinti temą"
 
@@ -37956,7 +37966,7 @@ msgid "Unmute stream audio"
 msgstr "Įjungti srauto garsą"
 
 #. Action that unmutes a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:101
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:109
 msgid "Unmute thread"
 msgstr "Atšaukti giją"
 
@@ -38673,7 +38683,7 @@ msgid "Use category default"
 msgstr "Naudoti kategorijos numatytuosius nustatymus"
 
 #. Thread notification option that follows the parent channel setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
 msgid "Use channel default"
 msgstr "Naudoti kanalo numatytuosius nustatymus"
 
@@ -41165,7 +41175,7 @@ msgid "You can sign back in at any time."
 msgstr "Prisijungti galėsite bet kada."
 
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
 msgstr "Galėsite pradėti kitą temą po {seconds, plural, one {# sekundės} other {# sekundžių}}."
 

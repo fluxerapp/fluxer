@@ -88,6 +88,21 @@ export function confirmDeleteThread(i18n: I18n, thread: Channel): void {
 	);
 }
 
+function confirmLeavePrivateThread(i18n: I18n, thread: Channel): void {
+	ModalCommands.push(
+		modal(() => (
+			<ConfirmModal
+				title={i18n._(D.LEAVE_PRIVATE_THREAD_TITLE_DESCRIPTOR)}
+				description={i18n._(D.LEAVE_PRIVATE_THREAD_CONFIRM_DESCRIPTOR, {threadName: thread.name ?? ''})}
+				primaryText={i18n._(D.LEAVE_THREAD_DESCRIPTOR)}
+				primaryVariant="danger"
+				onPrimary={() => run(i18n, () => ThreadCommands.leaveThread(thread))}
+				data-flx="threads.use-thread-menu-data.confirm-leave-private-thread"
+			/>
+		)),
+	);
+}
+
 export function buildThreadNotificationItems(i18n: I18n, thread: Channel): Array<MenuSheetItem> {
 	const current = getThreadNotificationSetting(thread.id);
 	const options: Array<[ThreadNotificationSetting, string]> = [
@@ -216,9 +231,14 @@ export function useThreadMenuData(thread: Channel, {onClose}: {onClose: () => vo
 		manageItems.push({
 			icon: <LeaveIcon size={20} data-flx="threads.use-thread-menu-data.leave-icon" />,
 			label: i18n._(D.LEAVE_THREAD_DESCRIPTOR),
+			danger: thread.isPrivateThread(),
 			onClick: () => {
-				run(i18n, () => ThreadCommands.leaveThread(thread));
 				onClose();
+				if (thread.isPrivateThread()) {
+					confirmLeavePrivateThread(i18n, thread);
+					return;
+				}
+				run(i18n, () => ThreadCommands.leaveThread(thread));
 			},
 		});
 	}

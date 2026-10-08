@@ -1135,7 +1135,7 @@ msgstr "{count, plural, one {# חבר} other {# חברים}}"
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:203
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {# תגובה} other {# תגובות}}"
 
@@ -2399,7 +2399,7 @@ msgstr "יום אחד"
 #. Fixed duration label for a one-hour interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:15
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
 msgid "1 hour"
 msgstr "שעה אחת"
 
@@ -2446,7 +2446,7 @@ msgstr "משתמש אחד"
 #. Fixed duration label for a one-week interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:36
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
 msgid "1 week"
 msgstr "שבוע אחד"
 
@@ -2544,7 +2544,7 @@ msgid "2–32 characters: letters, numbers, and underscores."
 msgstr "2–32 תווים: אותיות, מספרים וקווים תחתונים."
 
 #. Thread auto archive duration option.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
 msgid "24 hours"
 msgstr "24 שעות"
 
@@ -2577,7 +2577,7 @@ msgstr "דרישת אימות דו-שלבי"
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
 #. Thread auto archive duration option.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:42
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
 msgid "3 days"
 msgstr "3 ימים"
 
@@ -3042,7 +3042,7 @@ msgstr "פעולות"
 #. Tab in the thread browser that lists active threads.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
 msgstr "פעיל"
@@ -3878,7 +3878,7 @@ msgstr "כל השפות"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:20
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:352
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:21
 msgid "All messages"
 msgstr "כל ההודעות"
@@ -3931,7 +3931,7 @@ msgid "Allow {productName} under Screen Recording in System Settings. If it is a
 msgstr "אפשר ל-`{productName}` גישה להקלטת מסך בהגדרות המערכת. אם היא כבר מאושרת, הפעל מחדש את `{productName2}` כדי שמערכת ההפעלה macOS תחיל את השינוי."
 
 #. Private thread setting that lets non-moderators add other members.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
 msgid "Allow anyone to invite"
 msgstr "אפשר לכל אחד להזמין"
 
@@ -4833,7 +4833,7 @@ msgid "Are you sure you want to delete {channelLabel}? This cannot be undone."
 msgstr "האם למחוק את {channelLabel}? לא ניתן לבטל פעולה זו."
 
 #. Confirmation text before deleting a thread. threadName is the thread name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:89
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:97
 msgid "Are you sure you want to delete {threadName}? This cannot be undone."
 msgstr "האם אתה בטוח שברצונך למחוק את {threadName}? לא ניתן לבטל פעולה זו."
 
@@ -8724,7 +8724,7 @@ msgid "Close this group DM? You can reopen it anytime."
 msgstr "לסגור את הצ'אט הקבוצתי הזה? אפשר לפתוח אותו מחדש בכל עת."
 
 #. Moderator or owner action that archives a thread so it leaves the channel list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:65
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:73
 msgid "Close thread"
 msgstr "סגור דיון"
 
@@ -8770,7 +8770,7 @@ msgstr "לסגור את הצ'אט עם {username}? אפשר לפתוח אותו 
 #. Registration mode option that disables public registration.
 #. Tab in the thread browser that lists archived threads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:256
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
 msgid "Closed"
 msgstr "סגורה"
 
@@ -8785,7 +8785,7 @@ msgid "Closed DMs"
 msgstr "הודעות פרטיות סגורות"
 
 #. Tab in the thread browser that lists closed private threads. Keep it short, it shares a row with Active and Closed.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:185
 msgid "Closed private"
 msgstr "סגורים פרטי"
 
@@ -10144,7 +10144,7 @@ msgstr "העתקת שורות עבור hyprland.lua"
 #. Action that copies a link to the thread.
 #. Generic action label that copies a URL to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:754
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:105
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:326
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -10259,7 +10259,7 @@ msgid "Copy the setup key into your authenticator app."
 msgstr "העתק את מפתח ההגדרה לאפליקציית האימות שלך."
 
 #. Developer mode action that copies the thread ID.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:109
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
 msgid "Copy thread ID"
 msgstr "העתק את מזהה השרשור"
 
@@ -10343,7 +10343,7 @@ msgid "Could not start the screen share. The selected source may no longer be av
 msgstr "לא ניתן היה להתחיל את שיתוף המסך. ייתכן שהמקור הנבחר אינו זמין עוד או שהוא חוסם את הלכידה. נסה לשתף את כל המסך או את כל הצג במקום חלון מסוים."
 
 #. Toast when creating a thread failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
 msgid "Could not start the thread: {detail}"
 msgstr "לא ניתן היה ליצור את השרשור: {detail}"
 
@@ -10786,7 +10786,7 @@ msgid "Couldn't save the tag: {detail}"
 msgstr "לא ניתן היה לשמור את התגית: {detail}"
 
 #. Error state of the thread browser search.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "Couldn't search threads. Try again later."
 msgstr "לא ניתן היה לחפש בשרשורים. נסה שוב מאוחר יותר."
 
@@ -12031,7 +12031,7 @@ msgid "Default emoji"
 msgstr "אימוג'י ברירת מחדל"
 
 #. Label of the default auto archive duration for new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
 msgid "Default hide after inactivity"
 msgstr "הסתר לאחר אי-פעילות כברירת מחדל"
 
@@ -12089,7 +12089,7 @@ msgid "Default sort order"
 msgstr "סדר מיון ברירת מחדל"
 
 #. Label of the slowmode copied onto new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
 msgid "Default thread slowmode"
 msgstr "השהיית שרשור ברירת מחדל"
 
@@ -12402,7 +12402,7 @@ msgid "Delete this message? Can't be undone. This message is also removed from e
 msgstr "למחוק הודעה זו? לא ניתן לבטל. הודעה זו תוסר גם מכל קהילה שעוקבת אחר ערוץ זה."
 
 #. Destructive moderator action that deletes a thread and all its messages.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:85
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:93
 msgid "Delete thread"
 msgstr "מחק שרשור"
 
@@ -14087,7 +14087,7 @@ msgid "Edit the bot avatar, tag, bio, banner, and friend request behavior"
 msgstr "עריכת אווטאר הבוט, התגית, הביוגרפיה, הבאנר והתנהגות בקשות החברות"
 
 #. Action that opens the thread settings.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:81
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:89
 msgid "Edit thread"
 msgstr "ערוך נושא"
 
@@ -17977,7 +17977,7 @@ msgid "Hide {premiumProductName} purchase date ({dateUtilsGetFormattedShortDateP
 msgstr "הסתרת תאריך הרכישה של {premiumProductName} ({dateUtilsGetFormattedShortDatePremiumSince})"
 
 #. Label of the thread auto archive duration setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
 msgid "Hide after inactivity"
 msgstr "הסתר לאחר חוסר פעילות"
 
@@ -19752,7 +19752,7 @@ msgid "Join the call"
 msgstr "הצטרף לשיחה"
 
 #. Notice above the composer when the user is not a member of the thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "Join this thread to follow it in your channel list and get notifications."
 msgstr "הצטרפו לשרשור זה כדי לעקוב אחריו ברשימת הערוצים שלכם ולקבל התראות."
 
@@ -19803,7 +19803,7 @@ msgid "Join voice channels and hear others."
 msgstr "הצטרף לערוצי קול ושמע אחרים."
 
 #. Section header in the thread browser for threads the user joined.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
 msgid "Joined"
 msgstr "הצטרפת"
 
@@ -20264,6 +20264,11 @@ msgstr "מידע נוסף על Visionary"
 msgid "Leave"
 msgstr "יציאה"
 
+#. Confirmation text before leaving a private thread. threadName is the thread name.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:65
+msgid "Leave {threadName}? It's private, so you can only come back if someone adds you again."
+msgstr "לעזוב את {threadName}? זה פרטי, אז תוכל לחזור רק אם מישהו יוסיף אותך שוב."
+
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:62
 msgid "Leave blank for a random username"
@@ -20288,6 +20293,11 @@ msgstr "אפשר להשאיר כל אחד מהשדות ריק כדי שאותו 
 #: src/features/channel/utils/ChannelMessageDescriptors.ts:57
 msgid "Leave group"
 msgstr "יציאה מהקבוצה"
+
+#. Title of the confirmation dialog shown before leaving a private thread.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:61
+msgid "Leave private thread"
+msgstr "עזוב/עזבי שרשור פרטי"
 
 #. Switch label in the leave-group confirmation modal. Suppresses the system leave notice so other members are not pinged.
 #: src/features/guild/hooks/useLeaveGroup.tsx:34
@@ -20779,7 +20789,7 @@ msgid "Live region"
 msgstr "אזור פעיל"
 
 #. Button that loads the next page of archived threads.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
 msgid "Load more"
 msgstr "טען עוד"
 
@@ -20892,7 +20902,7 @@ msgid "Location"
 msgstr "מיקום"
 
 #. Moderator action that stops non-moderators from sending messages in a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:73
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:81
 msgid "Lock thread"
 msgstr "נעילת השרשור"
 
@@ -22985,7 +22995,7 @@ msgid "Mute stream audio"
 msgstr "השתקת שמע השידור"
 
 #. Action that mutes notifications and unread badges for a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:97
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:105
 msgid "Mute thread"
 msgstr "השתק שיחה"
 
@@ -23536,7 +23546,7 @@ msgid "New thread"
 msgstr "נושא חדש"
 
 #. Help text for the default thread auto archive duration setting on a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
 msgid "New threads will stop showing in the channel list after this period of inactivity."
 msgstr "שרשורים חדשים יפסיקו להופיע ברשימת הערוצים לאחר תקופת חוסר פעילות זו."
 
@@ -24189,7 +24199,7 @@ msgid "No themes saved yet."
 msgstr "עדיין לא נשמרו ערכות נושא."
 
 #. Empty state of the thread browser while searching.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
 msgid "No threads match"
 msgstr "אין הודעות שתואמות"
 
@@ -24447,7 +24457,7 @@ msgstr "הערה (גלויה רק לך)"
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #. Thread notification option that never notifies.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:362
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
 msgid "Nothing"
 msgstr "כלום"
 
@@ -24497,7 +24507,7 @@ msgstr "הגדרות התראות מותאמות אישית"
 #. Submenu / section header that groups per-channel or per-community notification preferences.
 #. Submenu label for the thread notification options.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:344
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
 msgid "Notification settings"
 msgstr "הגדרות התראות"
 
@@ -24745,7 +24755,7 @@ msgid "Only {count, plural, one {# community} other {# communities}}"
 msgstr "רק {count, plural, one {# קהילה} other {# קהילות}}"
 
 #. Thread notification option that notifies only for mentions.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
 msgid "Only @mentions"
 msgstr "רק אזכורים"
 
@@ -25386,7 +25396,7 @@ msgid "Open thread"
 msgstr "פתח שרשור"
 
 #. Action that unarchives an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:69
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:77
 msgid "Open thread again"
 msgstr "פתח שוב את השיחה"
 
@@ -25558,7 +25568,7 @@ msgid "Original message was deleted"
 msgstr "ההודעה המקורית נמחקה"
 
 #. Shown at the top of a thread when the message it was started from was deleted.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
 msgid "Original message was deleted."
 msgstr "ההודעה המקורית נמחקה."
 
@@ -25587,7 +25597,7 @@ msgid "Other"
 msgstr "אחר"
 
 #. Section header in the thread browser for active threads the user did not join.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:181
 msgid "Other active threads"
 msgstr "שרשורים פעילים אחרים"
 
@@ -28378,7 +28388,7 @@ msgid "Remove from saved media"
 msgstr "הסרה מהמדיה השמורה"
 
 #. Moderation action that removes the selected member from a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:61
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:69
 msgid "Remove from thread"
 msgstr "הסר מהשרשור"
 
@@ -29468,7 +29478,7 @@ msgstr "הזמנות הופעלו מחדש"
 #. Button that retries loading forum posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/platform/components/loadable/LoadableComponent.tsx:98
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:294
 msgid "Retry"
 msgstr "נסה שוב"
 
@@ -29888,7 +29898,7 @@ msgstr "רוויה"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
@@ -30430,7 +30440,7 @@ msgstr "חיפוש בתוך"
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:167
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:290
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "החיפוש מתכונן עבור קהילה זו. נסה שוב בקרוב..."
 
@@ -30590,7 +30600,7 @@ msgid "Search themes…"
 msgstr "חיפוש ערכות נושא…"
 
 #. Placeholder and label of the search box at the top of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
 msgid "Search threads"
 msgstr "חפש בשיחות"
 
@@ -30747,7 +30757,7 @@ msgid "Security key PIN form"
 msgstr "טופס קוד ה-PIN של מפתח האבטחה"
 
 #. Link in the thread created system message that opens the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
 msgid "See all threads"
 msgstr "הצג את כל השרשורים"
 
@@ -33062,7 +33072,7 @@ msgid "Something went wrong while starting checkout. Please try again in a momen
 msgstr "משהו השתבש במהלך התחלת התשלום. יש לנסות שוב בעוד רגע."
 
 #. Toast when a thread action failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
 msgid "Something went wrong: {detail}"
 msgstr "אירעה שגיאה: {detail}"
 
@@ -33605,12 +33615,12 @@ msgid "Start with computer"
 msgstr "הפעלה עם המחשב"
 
 #. Fragment of the thread created system message. Appears after the author name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
 msgid "started a thread"
 msgstr "פתח שרשור"
 
 #. Subtitle at the top of a thread. name is the display name of the member who started it.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
 msgid "Started by {name}"
 msgstr "התחל על ידי {name}"
 
@@ -33658,7 +33668,7 @@ msgid "Status:"
 msgstr "סטטוס:"
 
 #. Empty state explanation in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:186
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
 msgid "Stay focused on a conversation with a thread, a temporary text channel."
 msgstr "הישאר מרוכז בשיחה עם שרשור, ערוץ טקסט זמני."
 
@@ -35404,7 +35414,7 @@ msgid "There are no posts yet"
 msgstr "עדיין אין פוסטים"
 
 #. Preview text on a thread chip when the thread has no messages yet.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
 msgid "There are no recent messages in this thread."
 msgstr "אין הודעות אחרונות בשרשור זה."
 
@@ -35413,7 +35423,7 @@ msgid "There are no roles to assign in this community at this time, but you can 
 msgstr "אין תפקידים להקצאה בקהילה זו כרגע, אך ניתן ליצור תפקיד חדש ב-<0>{rolesSettingsPath}</0>."
 
 #. Empty state of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:182
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
 msgid "There are no threads"
 msgstr "אין שרשורים"
 
@@ -36206,12 +36216,12 @@ msgid "This theme may have been removed or the link is invalid."
 msgstr "ייתכן שהעיצוב הוסר או שהקישור אינו תקף."
 
 #. Notice above the composer of an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
 msgid "This thread is closed. Sending a message will open it again."
 msgstr "השרשור הזה סגור. שליחת הודעה תפתח אותו מחדש."
 
 #. Barrier shown instead of the composer in a locked thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
 msgid "This thread is locked. Only moderators can send messages."
 msgstr "השרשור הזה נעול. רק מנהלים יכולים לשלוח הודעות."
 
@@ -36362,17 +36372,17 @@ msgstr "נוצר שרשור"
 #. Activity log action filter option for threads that were deleted.
 #. Toast after a thread was deleted.
 #: src/features/app/config/AuditLogConstants.ts:383
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:93
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:101
 msgid "Thread deleted"
 msgstr "השרשור נמחק"
 
 #. Toast after the thread link was copied.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
 msgid "Thread link copied"
 msgstr "הקישור לשרשור הועתק"
 
 #. Title of the thread member list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
 msgid "Thread members"
 msgstr "חברי השרשור"
 
@@ -36382,7 +36392,7 @@ msgid "Thread name"
 msgstr "שם השרשור"
 
 #. Title of the thread settings modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
 msgid "Thread settings"
 msgstr "הגדרות שרשור"
 
@@ -36928,7 +36938,7 @@ msgid "Trusted domains cleared."
 msgstr "הדומיינים המהימנים נוקו."
 
 #. Hint under the empty search state in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Try a different name or check the other tab."
 msgstr "נסה שם אחר או בדוק בלשונית האחרת."
 
@@ -37850,7 +37860,7 @@ msgid "Unlock stickers in DMs with {premiumProductName}"
 msgstr "קבל גישה למדבקות בהודעות פרטיות עם {premiumProductName}"
 
 #. Moderator action that lets everyone send messages in a locked thread again.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:77
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:85
 msgid "Unlock thread"
 msgstr "פתח את השרשור"
 
@@ -37955,7 +37965,7 @@ msgid "Unmute stream audio"
 msgstr "בטל השתקת שמע השידור"
 
 #. Action that unmutes a thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:101
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:109
 msgid "Unmute thread"
 msgstr "בטל השתקה של שרשור"
 
@@ -38672,7 +38682,7 @@ msgid "Use category default"
 msgstr "השתמש בברירת המחדל של הקטגוריה"
 
 #. Thread notification option that follows the parent channel setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
 msgid "Use channel default"
 msgstr "השתמש בברירת המחדל של הערוץ"
 
@@ -41164,7 +41174,7 @@ msgid "You can sign back in at any time."
 msgstr "תוכל להיכנס שוב בכל עת."
 
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
 msgstr "אפשר לפתוח שרשור נוסף בעוד {seconds, plural, one {# שנייה} other {# שניות}}."
 

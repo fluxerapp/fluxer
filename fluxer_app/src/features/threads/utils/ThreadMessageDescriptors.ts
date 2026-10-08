@@ -58,6 +58,14 @@ export const LEAVE_THREAD_DESCRIPTOR = msg({
 	message: 'Leave thread',
 	comment: 'Action that removes the current user from a thread.',
 });
+export const LEAVE_PRIVATE_THREAD_TITLE_DESCRIPTOR = msg({
+	message: 'Leave private thread',
+	comment: 'Title of the confirmation dialog shown before leaving a private thread.',
+});
+export const LEAVE_PRIVATE_THREAD_CONFIRM_DESCRIPTOR = msg({
+	message: "Leave {threadName}? It's private, so you can only come back if someone adds you again.",
+	comment: 'Confirmation text before leaving a private thread. threadName is the thread name.',
+});
 export const REMOVE_FROM_THREAD_DESCRIPTOR = msg({
 	message: 'Remove from thread',
 	comment: 'Moderation action that removes the selected member from a thread.',
