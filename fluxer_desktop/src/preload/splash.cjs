@@ -60,6 +60,7 @@ const KNOWN_LAYOUTS = new Set(Object.values(SplashLayout));
 const KNOWN_STATUSES = new Set(Object.values(SplashStatus));
 const PROGRESS_STATUSES = new Set([
 	SplashStatus.DOWNLOADING_UPDATES,
+	SplashStatus.DOWNLOAD_STALLED,
 	SplashStatus.INSTALLING_UPDATES,
 	SplashStatus.SHELL_UPDATE_DOWNLOADING,
 ]);

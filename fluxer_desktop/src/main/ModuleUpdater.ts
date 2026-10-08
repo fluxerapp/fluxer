@@ -492,10 +492,18 @@ export class ModuleUpdater {
 						});
 					}
 				}
+				const stalled = isModulePackageStall(error);
+				const position = stalled && this.lastState.status === ModuleUpdaterStatus.DOWNLOADING ? this.lastState : null;
 				this.emit(ModuleUpdaterStatus.RETRY_WAIT, {
 					seconds: Math.max(1, Math.round(delayMs / 1000)),
 					detail,
-					stalled: isModulePackageStall(error),
+					stalled,
+					current: position?.current ?? undefined,
+					total: position?.total ?? undefined,
+					progress: position?.progress ?? undefined,
+					moduleName: position?.moduleName ?? undefined,
+					receivedBytes: position?.receivedBytes ?? undefined,
+					totalBytes: position?.totalBytes ?? undefined,
 				});
 				await this.sleep(delayMs);
 			}
