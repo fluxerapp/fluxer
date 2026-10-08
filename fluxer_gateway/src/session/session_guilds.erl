@@ -24,7 +24,9 @@ handle_guild_leave(GuildId, #{guilds := Guilds} = State) ->
             DeleteData = #{<<"id">> => integer_to_binary(GuildId)},
             {noreply, DispatchedState} =
                 session_dispatch:handle_dispatch(guild_delete, DeleteData, State),
-            State1 = DispatchedState#{guilds => maps:remove(GuildId, Guilds)},
+            State1 = session_guild_health:forget(GuildId, DispatchedState#{
+                guilds => maps:remove(GuildId, Guilds)
+            }),
             {noreply, remove_guild_subscription_state(GuildId, State1)};
         _ ->
             {noreply, State}
@@ -39,7 +41,10 @@ handle_forced_unavailable_guild_leave(GuildId, UnavailableHidden, #{guilds := Gu
     {noreply, State1} =
         session_dispatch:handle_dispatch(guild_delete, GuildDeleteData, State),
     self() ! {guild_connect, GuildId, 0},
-    {noreply, State1#{guilds => Guilds#{GuildId => cached_unavailable}}}.
+    {noreply,
+        session_guild_health:forget(GuildId, State1#{
+            guilds => Guilds#{GuildId => cached_unavailable}
+        })}.
 
 -spec demonitor_guild_if_connected(term()) -> ok.
 demonitor_guild_if_connected({Pid, Ref}) when is_pid(Pid), is_reference(Ref) ->
@@ -412,6 +417,7 @@ leave_dispatch_state() ->
         presence_pid => undefined,
         ignored_events => #{},
         debounce_reactions => false,
+        thread_channels_capable => false,
         reaction_buffer => [],
         reaction_buffer_timer => undefined
     }.

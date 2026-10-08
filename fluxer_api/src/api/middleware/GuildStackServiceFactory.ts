@@ -24,7 +24,6 @@ import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 
 interface GuildStackServiceFactoryDependencies {
@@ -50,7 +49,6 @@ interface GuildStackServiceFactoryDependencies {
 	voiceRoomStore: IVoiceRoomStore;
 	liveKitService: ILiveKitService;
 	voiceAvailabilityService: VoiceAvailabilityService | null;
-	ipInfoService: IpInfoService;
 }
 
 export interface GuildStackServices {
@@ -106,7 +104,6 @@ class LazyGuildStackServices implements GuildStackServices {
 			this.dependencies.webhookRepository,
 			this.dependencies.guildAuditLogService,
 			this.dependencies.limitConfigService,
-			this.dependencies.ipInfoService,
 		);
 		return this.cachedGuildService;
 	}

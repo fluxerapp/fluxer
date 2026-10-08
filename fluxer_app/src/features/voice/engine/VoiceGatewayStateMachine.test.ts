@@ -9,12 +9,7 @@ import {
 	type VoiceGatewayStateEvent,
 	type VoiceGatewayStateSnapshot,
 } from '@app/features/voice/engine/VoiceGatewayStateMachine';
-import {describe, expect, it, vi} from 'vitest';
-
-vi.mock('@app/features/voice/state/ScreenShareDeliveryRollout', () => ({
-	ScreenShareDeliveryRollout: {enabled: false},
-	default: {enabled: false},
-}));
+import {describe, expect, it} from 'vitest';
 
 function voiceState(overrides: Partial<VoiceState> = {}): VoiceState {
 	return {
@@ -210,6 +205,28 @@ describe('VoiceGatewayStateMachine', () => {
 		expectConnection(snapshot.context, 'connection-other', {
 			guild_id: 'guild-1',
 			channel_id: 'channel-1',
+			user_id: 'user-1',
+		});
+		expectProjectionConsistent(snapshot.context);
+	});
+
+	it('keeps same-session connections in different channels', () => {
+		const snapshot = transition(createVoiceGatewayStateSnapshot(), {
+			type: 'guild.create',
+			guild: guild('guild-1', [
+				voiceState({connection_id: 'connection-a', session_id: 'session-a', channel_id: 'channel-1'}),
+				voiceState({connection_id: 'connection-b', session_id: 'session-a', channel_id: 'channel-2'}),
+			]),
+		});
+
+		expectConnection(snapshot.context, 'connection-a', {
+			guild_id: 'guild-1',
+			channel_id: 'channel-1',
+			user_id: 'user-1',
+		});
+		expectConnection(snapshot.context, 'connection-b', {
+			guild_id: 'guild-1',
+			channel_id: 'channel-2',
 			user_id: 'user-1',
 		});
 		expectProjectionConsistent(snapshot.context);

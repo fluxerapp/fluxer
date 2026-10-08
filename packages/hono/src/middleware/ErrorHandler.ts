@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createErrorHandler as createFluxerErrorHandler} from '@fluxer/errors/src/ErrorHandler';
+import {resolveRoutePattern} from '@fluxer/errors/src/error_handling/RoutePattern';
 import type {Context, ErrorHandler} from 'hono';
 
 export interface ErrorHandlerOptions {
@@ -19,7 +20,7 @@ export function createErrorHandler(options: ErrorHandlerOptions = {}): ErrorHand
 					}
 					if (captureException) {
 						captureException(error, {
-							path: context.req.path,
+							path: resolveRoutePattern(context),
 							method: context.req.method,
 							status: context.res?.status,
 						});

@@ -96,6 +96,24 @@ pub async fn render(
                 config, &guild, &stickers, csrf_token,
             ))
         }
+        "threads" => {
+            if !acl::has_permission(admin_acls, acl::GUILD_LOOKUP) {
+                return None;
+            }
+            let threads = client
+                .list_guild_threads(guild_id)
+                .await
+                .map(|response| response.threads)
+                .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild threads"))
+                .unwrap_or_default();
+            Some(tabs::threads::threads_tab(
+                config,
+                &guild,
+                &threads,
+                acl::has_permission(admin_acls, acl::MESSAGE_DELETE_ALL),
+                csrf_token,
+            ))
+        }
         "audit_log" | "audit-log" => {
             if !acl::has_permission(admin_acls, acl::GUILD_AUDIT_LOG_VIEW) {
                 return None;

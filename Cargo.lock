@@ -1711,6 +1711,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 
 [[package]]
+name = "filetime"
+version = "0.2.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c287a33c7f0a620c38e641e7f60827713987b3c0f26e8ddc9462cc69cf75759"
+dependencies = [
+ "cfg-if",
+ "libc",
+]
+
+[[package]]
 name = "find-msvc-tools"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1741,6 +1751,7 @@ dependencies = [
  "aws-config",
  "aws-sdk-s3",
  "base64 0.23.1",
+ "brotli",
  "bytes",
  "chrono",
  "clap",
@@ -1750,6 +1761,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
+ "tar",
  "tempfile",
  "tokio",
  "walkdir",
@@ -1785,8 +1797,10 @@ name = "fluxer-gifs"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
  "fluxer-svc",
  "fluxer_common",
+ "futures",
  "hmac 0.13.0",
  "moka",
  "reqwest",
@@ -1823,6 +1837,7 @@ dependencies = [
  "cc",
  "clap",
  "criterion",
+ "flate2",
  "fluxer_common",
  "futures-util",
  "hex",
@@ -1850,6 +1865,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tower",
+ "tower-http 0.7.1",
  "tracing",
  "tracing-subscriber",
  "url",
@@ -1904,7 +1920,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
- "tracing-subscriber",
  "url",
 ]
 
@@ -1983,11 +1998,13 @@ dependencies = [
  "fluxer-svc",
  "fluxer_common",
  "futures",
+ "hmac 0.13.0",
  "moka",
  "rmp-serde",
  "scylla",
  "serde",
  "serde_json",
+ "sha2 0.11.0",
  "tokio",
  "tracing",
 ]
@@ -2037,8 +2054,8 @@ dependencies = [
  "hex",
  "rand 0.10.2",
  "reqwest",
- "serde",
  "serde_json",
+ "sha2 0.11.0",
  "tokio",
  "tokio-util",
  "tower",
@@ -2067,6 +2084,7 @@ dependencies = [
  "thiserror",
  "time",
  "tracing",
+ "tracing-subscriber",
  "url",
  "urlencoding",
 ]
@@ -4784,6 +4802,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b2093cf4c8eb1e67749a6762251bc9cd836b6fc171623bd0a9d324d37af2417"
 
 [[package]]
+name = "tar"
+version = "0.4.46"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f6221d9a6003c78398e3b239969f352578258df48c8eb051caadae0015bc840"
+dependencies = [
+ "filetime",
+ "libc",
+ "xattr",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5812,6 +5841,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "xattr"
+version = "1.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32e45ad4206f6d2479085147f02bc2ef834ac85886624a23575ae137c8aa8156"
+dependencies = [
+ "libc",
+ "rustix",
+]
+
+[[package]]
 name = "xmlparser"
 version = "0.13.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5830,9 +5869,9 @@ dependencies = [
 
 [[package]]
 name = "yoke-derive"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33811428bee40dbceb6d545e95754741d17a6aef9a4849f0fd62e2ba4f412a78"
+checksum = "ec8ebde2db3681e8c9980cc27822030e68752690ddfa9473e739aeb4dbde6d71"
 dependencies = [
  "proc-macro2",
  "quote",

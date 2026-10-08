@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {writeShellHint} from '@app/features/app/components/skeleton/ShellHint';
 import {
 	flushSkeletonLayoutMemoryWrite,
 	SKELETON_UNMEASURED_WIDTH_PX,
@@ -8,14 +9,25 @@ import {
 import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
 import {useEffect, useRef} from 'react';
 
+function scheduleIdleShellHintWrite(): () => void {
+	if (typeof requestIdleCallback === 'function') {
+		const handle = requestIdleCallback(writeShellHint, {timeout: 2000});
+		return () => cancelIdleCallback(handle);
+	}
+	const handle = window.setTimeout(writeShellHint, 0);
+	return () => window.clearTimeout(handle);
+}
+
 export function useSkeletonLayoutMemoryCapture(enabled: boolean): void {
 	useEffect(() => {
 		setSkeletonLayoutCaptureEnabled(enabled);
 		if (!enabled) {
 			return;
 		}
+		const cancelInitialWrite = scheduleIdleShellHintWrite();
 		const flushOnLifecycleBoundary = (): void => {
 			flushSkeletonLayoutMemoryWrite();
+			writeShellHint();
 		};
 		const handleVisibilityChange = (): void => {
 			if (document.visibilityState === 'hidden') {
@@ -26,6 +38,7 @@ export function useSkeletonLayoutMemoryCapture(enabled: boolean): void {
 		window.addEventListener('beforeunload', flushOnLifecycleBoundary);
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		return () => {
+			cancelInitialWrite();
 			window.removeEventListener('pagehide', flushOnLifecycleBoundary);
 			window.removeEventListener('beforeunload', flushOnLifecycleBoundary);
 			document.removeEventListener('visibilitychange', handleVisibilityChange);

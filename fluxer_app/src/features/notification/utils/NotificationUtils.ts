@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Authentication from '@app/features/auth/state/Authentication';
+import {unwrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopLocalResourceTarget';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {getNotificationIconURL} from '@app/features/notification/utils/NotificationIconURL';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
@@ -51,11 +52,73 @@ export function ensureDesktopNotificationClickHandler(): void {
 	const electronApi = getElectronAPI();
 	if (!electronApi) return;
 	setDesktopNotificationClickHandlerInitialized();
-	electronApi.onNotificationClick((_id: string, url?: string) => {
-		if (url) {
-			RouterUtils.transitionTo(url);
-		}
+	electronApi.onNotificationClick((id: string, url?: string) => {
+		const accountKey = notificationAccountKeys.get(id) ?? null;
+		notificationAccountKeys.delete(id);
+		void openNotificationTarget(accountKey, url ?? null);
 	});
+}
+
+const MAX_TRACKED_NOTIFICATION_ACCOUNTS = 500;
+const notificationAccountKeys = new Map<string, string>();
+
+function rememberNotificationAccount(id: string, accountKey: string | null): void {
+	notificationAccountKeys.delete(id);
+	if (accountKey === null) return;
+	notificationAccountKeys.set(id, accountKey);
+	while (notificationAccountKeys.size > MAX_TRACKED_NOTIFICATION_ACCOUNTS) {
+		const oldest = notificationAccountKeys.keys().next().value;
+		if (oldest === undefined) break;
+		notificationAccountKeys.delete(oldest);
+	}
+}
+
+export async function openNotificationTarget(accountKey: string | null, url: string | null): Promise<void> {
+	if (accountKey !== null) {
+		const {default: Accounts} = await import('@app/features/auth/state/Accounts');
+		if (accountKey !== Accounts.currentAccountKey) {
+			if (Accounts.getAccount(accountKey) === null) return;
+			const {switchStoredAccountFromSwitcher} = await import('@app/features/auth/utils/AccountSwitcherModalUtils');
+			await switchStoredAccountFromSwitcher({
+				accountKey,
+				onSessionExpired: null,
+				onSuccess: null,
+				redirectAfterSwitch: url,
+				switchAccount: null,
+			});
+			return;
+		}
+	}
+	if (url) {
+		RouterUtils.transitionTo(url);
+	}
+}
+
+const NATIVE_NOTIFICATION_ICON_URL_PATTERN = /^(?:https?:|data:)/i;
+
+function readBlobAsDataURL(blob: Blob): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+		reader.onerror = () => reject(reader.error);
+		reader.readAsDataURL(blob);
+	});
+}
+
+export async function resolveNativeNotificationIcon(icon: string | undefined): Promise<string> {
+	if (!icon) return '';
+	const unwrapped = unwrapDesktopLocalResourceURL(icon);
+	if (NATIVE_NOTIFICATION_ICON_URL_PATTERN.test(unwrapped)) return unwrapped;
+	try {
+		const absolute = new URL(unwrapped, window.location.href);
+		if (NATIVE_NOTIFICATION_ICON_URL_PATTERN.test(absolute.protocol)) return absolute.toString();
+		const response = await fetch(absolute);
+		if (!response.ok) return '';
+		return await readBlobAsDataURL(await response.blob());
+	} catch (error) {
+		logger.warn('Failed to resolve a bundled notification icon', {error});
+		return '';
+	}
 }
 
 export function hasNotification(): boolean {
@@ -255,11 +318,13 @@ const tryShowNotificationViaWindowNotification = ({
 	body,
 	url,
 	icon,
+	accountKey,
 }: {
 	title: string;
 	body: string;
 	url?: string;
 	icon?: string;
+	accountKey: string | null;
 }): NotificationResult => {
 	const notificationOptions: WebNotificationOptions = icon
 		? {body, icon, ...getWebNotificationAlertOptions()}
@@ -268,9 +333,7 @@ const tryShowNotificationViaWindowNotification = ({
 	notification.addEventListener('click', (event) => {
 		event.preventDefault();
 		window.focus();
-		if (url) {
-			RouterUtils.transitionTo(url);
-		}
+		void openNotificationTarget(accountKey, url ?? null);
 		notification.close();
 	});
 	return {browserNotification: notification, nativeNotificationId: null};
@@ -284,6 +347,7 @@ export async function showNotification({
 	url,
 	icon,
 	playSound = true,
+	accountKey = null,
 }: {
 	id?: string;
 	title: string;
@@ -292,6 +356,7 @@ export async function showNotification({
 	url?: string;
 	icon?: string;
 	playSound?: boolean;
+	accountKey?: string | null;
 }): Promise<NotificationResult> {
 	try {
 		if (StreamerMode.shouldDisableNotifications) {
@@ -313,9 +378,10 @@ export async function showNotification({
 					title,
 					subtitle,
 					body,
-					icon: icon ?? '',
+					icon: await resolveNativeNotificationIcon(icon),
 					url,
 				});
+				rememberNotificationAccount(result.id, accountKey);
 				return {browserNotification: null, nativeNotificationId: result.id};
 			} catch (error) {
 				logger.error('Electron native notification show failed; refusing browser/Web Push fallback', {error});
@@ -335,7 +401,7 @@ export async function showNotification({
 		}
 		if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
 			try {
-				return tryShowNotificationViaWindowNotification({title, body, url, icon});
+				return tryShowNotificationViaWindowNotification({title, body, url, icon, accountKey});
 			} catch {
 				const swFallback = await tryShowNotificationViaServiceWorker({title, body, url, icon, targetUserId});
 				return swFallback.result;

@@ -4,10 +4,12 @@ import {marketingUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
 
 export const Routes = {
 	HOME: '/',
+	APP: '/app',
 	LOGIN: '/login',
 	REGISTER: '/register',
 	FORGOT_PASSWORD: '/forgot',
 	RESET_PASSWORD: '/reset',
+	RECOVER_ACCOUNT: '/recover',
 	VERIFY_EMAIL: '/verify',
 	AUTHORIZE_IP: '/authorize-ip',
 	EMAIL_REVERT: '/wasntme',
@@ -33,6 +35,8 @@ export const Routes = {
 	CONNECTION_CALLBACK: '/connection-callback',
 	USER_PROFILE: '/users/:userId',
 	THEME_STUDIO: '/theme-studio',
+	PLUTONIUM: '/channels/@premium',
+	LEGACY_PLUTONIUM: '/plutonium',
 	terms: () => marketingUrl('terms'),
 	privacy: () => marketingUrl('privacy'),
 	guidelines: () => marketingUrl('guidelines'),
@@ -49,6 +53,8 @@ export const Routes = {
 		channelId ? `/channels/${guildId}/${channelId}` : `/channels/${guildId}`,
 	channelMessage: (guildId: string, channelId: string, messageId: string) =>
 		`${Routes.guildChannel(guildId, channelId)}/${messageId}`,
+	threadPanel: (guildId: string, channelId: string, threadId: string, messageId?: string) =>
+		`${Routes.guildChannel(guildId, channelId)}/threads/${threadId}${messageId ? `/${messageId}` : ''}`,
 	dmChannelMessage: (channelId: string, messageId: string) => `${Routes.dmChannel(channelId)}/${messageId}`,
 	favoritesChannelMessage: (channelId: string, messageId: string) =>
 		`${Routes.favoritesChannel(channelId)}/${messageId}`,
@@ -68,10 +74,12 @@ export const Routes = {
 	isDMRoute: (pathname: string) => pathname.startsWith('/channels/@me'),
 	isFavoritesRoute: (pathname: string) => pathname.startsWith('/channels/@favorites'),
 	isDiscoverRoute: (pathname: string) => pathname.startsWith('/channels/@discover'),
-	isChannelRoute: (pathname: string) => pathname.startsWith('/channels/'),
+	isPlutoniumRoute: (pathname: string) => pathname === '/channels/@premium',
+	isChannelRoute: (pathname: string) => pathname.startsWith('/channels/') && !pathname.startsWith('/channels/@premium'),
 	isGuildChannelRoute: (pathname: string) =>
 		pathname.startsWith('/channels/') &&
 		!pathname.startsWith('/channels/@me') &&
 		!pathname.startsWith('/channels/@favorites') &&
-		!pathname.startsWith('/channels/@discover'),
+		!pathname.startsWith('/channels/@discover') &&
+		!pathname.startsWith('/channels/@premium'),
 } as const;

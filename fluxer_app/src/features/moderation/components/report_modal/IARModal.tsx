@@ -2,6 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import {DMCloseFailedModal} from '@app/features/channel/components/alerts/DMCloseFailedModal';
@@ -10,9 +11,11 @@ import {CLOSE_DM_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDes
 import {useLeaveGuild} from '@app/features/guild/hooks/useLeaveGuild';
 import GuildBans from '@app/features/guild/state/GuildBans';
 import {
+	BACK_DESCRIPTOR,
 	CANCEL_DESCRIPTOR,
 	CONTINUE_DESCRIPTOR,
 	DM_CLOSED_DESCRIPTOR,
+	DONE_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import Messages from '@app/features/messaging/state/MessagingMessages';
@@ -52,7 +55,6 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -83,17 +85,9 @@ const FINISH_ACCOUNT_SETUP_DESCRIPTOR = msg({
 	message: 'Finish account setup',
 	comment: 'Button label in the IAR modal that opens the account-setup flow.',
 });
-const BACK_DESCRIPTOR = msg({
-	message: 'Back',
-	comment: 'Footer button in the IAR modal that returns to the previous step.',
-});
 const SEND_REPORT_DESCRIPTOR = msg({
 	message: 'Send report',
 	comment: 'Footer submit button in the IAR modal. Sends the report to the safety team.',
-});
-const DONE_DESCRIPTOR = msg({
-	message: 'Done',
-	comment: 'Footer button in the IAR modal on the final / success screen. Closes the modal.',
 });
 
 interface IARModalProps {
@@ -135,24 +129,30 @@ export const IARModal: React.FC<IARModalProps> = observer(({context}) => {
 	}, []);
 	const openConnectionsSettings = useCallback(() => {
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialTab="privacy_safety"
-					initialSubtab="connections"
-					data-flx="moderation.iar-modal.open-connections-settings.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="privacy_safety"
+						initialSubtab="connections"
+						data-flx="moderation.iar-modal.open-connections-settings.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	}, []);
 	const openCommunicationSettings = useCallback(() => {
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialTab="privacy_safety"
-					initialSubtab="communication"
-					data-flx="moderation.iar-modal.open-communication-settings.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="privacy_safety"
+						initialSubtab="communication"
+						data-flx="moderation.iar-modal.open-communication-settings.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	}, []);
 	const handleBlockUser = useCallback(() => {

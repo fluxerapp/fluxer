@@ -98,7 +98,6 @@ export class PCTransportManager {
 		loggerOptions: LoggerOptions,
 		rtcConfig?: RTCConfiguration,
 		subscriberVideoCodecExclusions?: Array<VideoCodec>,
-		screenShareDelivery: boolean = false,
 	) {
 		this.loggerOptions = loggerOptions;
 		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.PCManager, () => this.logContext);
@@ -106,10 +105,10 @@ export class PCTransportManager {
 
 		this.isPublisherConnectionRequired = mode !== 'subscriber-primary';
 		this.isSubscriberConnectionRequired = mode === 'subscriber-primary';
-		this.publisher = new PCTransport(rtcConfig, loggerOptions, screenShareDelivery);
+		this.publisher = new PCTransport(rtcConfig, loggerOptions);
 		this._mode = mode;
 		if (mode !== 'publisher-only') {
-			this.subscriber = new PCTransport(rtcConfig, loggerOptions, screenShareDelivery);
+			this.subscriber = new PCTransport(rtcConfig, loggerOptions);
 			this.subscriber.onConnectionStateChange = this.updateState;
 			this.subscriber.onIceConnectionStateChange = this.updateState;
 			this.subscriber.onSignalingStatechange = this.updateState;
@@ -127,7 +126,7 @@ export class PCTransportManager {
 			};
 		}
 
-		const receivingTransport = screenShareDelivery ? (this.subscriber ?? this.publisher) : this.subscriber;
+		const receivingTransport = this.subscriber ?? this.publisher;
 		if (receivingTransport) {
 			for (const codec of subscriberVideoCodecExclusions ?? []) {
 				receivingTransport.excludedVideoDecoderMimeTypes.add(`video/${codec}`);

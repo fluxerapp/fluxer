@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {BatchBuilder, executeGroupedBatches, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import {Db, type DbOp, type QueryTemplate, type WhereExpr} from '@app/api/database/CassandraTypes';
 import {executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {
@@ -112,15 +112,13 @@ export class GuildModerationRepository extends IGuildModerationRepository {
 
 	async deleteAllBansForUser(userId: UserID): Promise<void> {
 		const bans = await fetchMany<GuildBanByUserIdRow>(FETCH_GUILD_BANS_BY_USER_ID_QUERY, {user_id: userId});
-		const batch = new BatchBuilder();
-		for (const ban of bans) {
-			batch.addPrepared(GuildBans.deleteByPk({guild_id: ban.guild_id, user_id: userId}));
-			batch.addPrepared(GuildBansByUserId.deleteByPk({user_id: userId, guild_id: ban.guild_id}));
-			if (ban.email) {
-				batch.addPrepared(GuildBansByEmail.deleteByPk({guild_id: ban.guild_id, email: ban.email}));
-			}
-		}
-		await batch.execute();
+		await executeGroupedBatches(
+			bans.map((ban) => [
+				GuildBans.deleteByPk({guild_id: ban.guild_id, user_id: userId}),
+				GuildBansByUserId.deleteByPk({user_id: userId, guild_id: ban.guild_id}),
+				...(ban.email ? [GuildBansByEmail.deleteByPk({guild_id: ban.guild_id, email: ban.email})] : []),
+			]),
+		);
 	}
 
 	async getBanByEmail(guildId: GuildID, email: string): Promise<GuildBan | null> {

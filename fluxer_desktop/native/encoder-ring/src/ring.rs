@@ -863,7 +863,7 @@ mod tests {
         for (sequence, duplicate_count) in by_sequence.iter().take(7) {
             assert_eq!(*duplicate_count, 0, "sequence {sequence} not duplicated");
         }
-        assert_eq!(by_sequence[7], (8, 1), "newest carries the lagged frame");
+        assert_eq!(by_sequence[7], (8, 1), "newest holds the lagged frame");
     }
 
     #[test]

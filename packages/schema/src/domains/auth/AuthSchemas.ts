@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ThemeTypes} from '@fluxer/constants/src/UserConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
 	WebAuthnAuthenticationOptions,
 	WebAuthnAuthenticationResponse,
@@ -12,13 +13,7 @@ import {
 	createStringType,
 	SnowflakeStringType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
-import {
-	EmailType,
-	GlobalNameType,
-	PasswordType,
-	PhoneNumberType,
-	UsernameType,
-} from '@fluxer/schema/src/primitives/UserValidators';
+import {EmailType, GlobalNameType, PasswordType, UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
 import {z} from 'zod';
 
 const RegisterThemeType = createNamedStringLiteralUnion(
@@ -51,17 +46,53 @@ export const RegisterRequest = z.object({
 
 export type RegisterRequest = z.infer<typeof RegisterRequest>;
 
+export const UsernameInstanceRegisterRequest = RegisterRequest.extend({
+	email: createStringType(1, 320)
+		.optional()
+		.describe('Email address sent by older apps. Accepted and discarded on username instances'),
+});
+
 export const UsernameSuggestionsRequest = z.object({
 	global_name: GlobalNameType.describe('Display name to generate username suggestions from'),
 });
 
 export type UsernameSuggestionsRequest = z.infer<typeof UsernameSuggestionsRequest>;
 
-export const LoginRequest = z.object({
-	email: EmailType.describe('Email address for authentication'),
+export const UsernameAvailabilityQuery = z.object({
+	username: UsernameType.describe('Username to check (1-32 characters)'),
+});
+
+export type UsernameAvailabilityQuery = z.infer<typeof UsernameAvailabilityQuery>;
+
+const LoginIdentifierType = createStringType(1, 320);
+
+const LoginRequestObject = z.object({
+	email: EmailType.optional().describe('Email address for authentication. Send this or login, not both'),
+	login: LoginIdentifierType.optional().describe(
+		'Sign-in identifier. An email address on email instances, a username on username instances',
+	),
 	password: PasswordType.describe('Account password'),
 	invite_code: createStringType(0, 256).nullish().describe('Guild invite code to join after login'),
 });
+
+function requireLoginIdentifier(value: unknown): unknown {
+	if (typeof value !== 'object' || value === null || Array.isArray(value)) return value;
+	const {login, ...rest} = value as Record<string, unknown>;
+	if (rest.email !== undefined) return rest;
+	if (login !== undefined && login !== null && login !== '') return value;
+	return {...rest, email: null};
+}
+
+export const LoginRequest = z.preprocess(requireLoginIdentifier, LoginRequestObject);
+
+export const UsernameInstanceLoginRequest = z.preprocess(
+	requireLoginIdentifier,
+	LoginRequestObject.extend({
+		email: LoginIdentifierType.optional().describe(
+			'Sign-in identifier sent by older apps. A username or username@instance host on username instances',
+		),
+	}),
+);
 
 export type LoginRequest = z.infer<typeof LoginRequest>;
 
@@ -177,6 +208,30 @@ export const AuthLoginResponse = z.union([AuthTokenWithUserIdResponse, AuthMfaRe
 
 export type AuthLoginResponse = z.infer<typeof AuthLoginResponse>;
 
+export const RecoverAccountRequest = z.object({
+	login: LoginIdentifierType.describe('Username of the account to recover'),
+	recovery_key: createStringType(1, 128).describe('Recovery key from the recovery kit. Spaces and dashes are ignored'),
+	password: PasswordType.describe('New password to set'),
+});
+
+export type RecoverAccountRequest = z.infer<typeof RecoverAccountRequest>;
+
+const RecoveryKitIssuedFields = {
+	recovery_key: z
+		.string()
+		.describe(
+			'New recovery key as 8 groups of 4 joined by dashes. It replaces the one just used and is shown only once',
+		),
+	recovery_kit_created_at: z.iso.datetime().describe('ISO 8601 timestamp when the new recovery kit was created'),
+};
+
+export const RecoverAccountResponse = z.union([
+	AuthTokenWithUserIdResponse.extend(RecoveryKitIssuedFields),
+	AuthMfaRequiredResponse.extend(RecoveryKitIssuedFields),
+]);
+
+export type RecoverAccountResponse = z.infer<typeof RecoverAccountResponse>;
+
 export const AuthRegisterResponse = z.union([
 	AuthTokenWithUserIdResponse,
 	AuthMfaRequiredResponse,
@@ -228,10 +283,36 @@ export const UsernameSuggestionsResponse = z.object({
 
 export type UsernameSuggestionsResponse = z.infer<typeof UsernameSuggestionsResponse>;
 
+export const UsernameAvailabilityResponse = z.object({
+	available: z.boolean().describe('Whether no other account holds this username'),
+});
+
+export type UsernameAvailabilityResponse = z.infer<typeof UsernameAvailabilityResponse>;
+
+export const DESKTOP_HANDOFF_RETURN_URI_PATTERN = /^fluxer(?:-canary|-development)?:\/\/handoff$/u;
+
+export const DesktopHandoffReturnMethod = z.enum(['deep_link', 'code']);
+
+export type DesktopHandoffReturnMethod = z.infer<typeof DesktopHandoffReturnMethod>;
+
+export const HandoffInitiateRequest = z
+	.object({
+		return_uri: createStringType(1, 64)
+			.refine((value) => DESKTOP_HANDOFF_RETURN_URI_PATTERN.test(value), ValidationErrorCodes.INVALID_FORMAT)
+			.optional()
+			.describe('Deep link the approving browser opens to return the sign-in to the initiating desktop app'),
+	})
+	.nullish();
+
+export type HandoffInitiateRequest = z.infer<typeof HandoffInitiateRequest>;
+
 export const HandoffInitiateResponse = z.object({
 	code: z.string().describe('Handoff code to share with the receiving device'),
 	expires_at: z.iso.datetime().describe('ISO 8601 timestamp when the handoff code expires'),
 	poll_secret: z.string().optional().describe('Secret the initiating device must present to retrieve the token'),
+	return_method: DesktopHandoffReturnMethod.optional().describe(
+		'deep_link when the approving browser will hand the sign-in back through the return deep link, code otherwise',
+	),
 });
 
 export type HandoffInitiateResponse = z.infer<typeof HandoffInitiateResponse>;
@@ -246,12 +327,15 @@ const HandoffInfoClientInfo = z.object({
 export const HandoffInfoResponse = z.object({
 	status: z.string().describe('Current status of the handoff (pending, expired)'),
 	client_info: HandoffInfoClientInfo.nullish().describe('Client information of the initiating device'),
+	return_method: DesktopHandoffReturnMethod.optional().describe(
+		'How the approving browser hands the sign-in back. deep_link opens the initiating app, code relies on the user comparing the code',
+	),
 });
 
 export type HandoffInfoResponse = z.infer<typeof HandoffInfoResponse>;
 
 export const HandoffStatusResponse = z.object({
-	status: z.string().describe('Current status of the handoff (pending, completed, expired)'),
+	status: z.string().describe('Current status of the handoff (pending, completed, denied, expired)'),
 	token: z.string().nullish().describe('Authentication token if handoff is complete'),
 	user_id: SnowflakeStringType.nullish().describe('User ID if handoff is complete'),
 	user: UserPartialResponse.nullish().describe('Partial user data if handoff is complete'),
@@ -326,6 +410,9 @@ export const HandoffCompleteRequest = z.object({
 	code: createStringType().describe('The handoff code from the initiating session'),
 	token: createStringType().optional().describe('The authentication token to transfer'),
 	user_id: createStringType().describe('The user ID associated with the authenticated session'),
+	return_method: DesktopHandoffReturnMethod.optional().describe(
+		'deep_link returns a one-time grant the initiating app must present, code releases the token to the poll secret alone',
+	),
 });
 
 export type HandoffCompleteRequest = z.infer<typeof HandoffCompleteRequest>;
@@ -336,8 +423,15 @@ export const HandoffCodeParam = z.object({
 
 export type HandoffCodeParam = z.infer<typeof HandoffCodeParam>;
 
+export const HandoffCompleteResponse = z.object({
+	return_url: z.string().describe('Deep link that returns the sign-in to the initiating app, with its one-time grant'),
+});
+
+export type HandoffCompleteResponse = z.infer<typeof HandoffCompleteResponse>;
+
 export const HandoffStatusRequest = z.object({
 	poll_secret: createStringType().describe('The poll secret issued when the handoff was initiated'),
+	grant: createStringType(1, 128).optional().describe('The one-time grant delivered to the app through the deep link'),
 });
 
 export type HandoffStatusRequest = z.infer<typeof HandoffStatusRequest>;
@@ -418,59 +512,12 @@ export const MfaBackupCodesChallengeRegenerateRequest = MfaBackupCodesChallengeR
 
 export type MfaBackupCodesChallengeRegenerateRequest = z.infer<typeof MfaBackupCodesChallengeRegenerateRequest>;
 
-export const PhoneSendVerificationRequest = z.object({
-	phone: PhoneNumberType.describe('Phone number to send verification code'),
-	channel: z
-		.enum(['sms', 'inbound_challenge'])
-		.optional()
-		.describe(
-			'Channel to deliver the OTP on. Defaults to the first available channel from server policy. Server may override to an available fallback when the requested channel is disabled.',
-		),
-});
-
-export type PhoneSendVerificationRequest = z.infer<typeof PhoneSendVerificationRequest>;
-
-const PhoneSendVerificationDeliveredResponse = z.object({
-	channel: z
-		.literal('sms')
-		.describe('Channel actually used for delivery (may differ from request when server adjusts)'),
-});
-
-const PhoneSendVerificationInboundChallengeResponse = z.object({
-	channel: z.literal('inbound_challenge').describe('The user must send Fluxer an SMS instead of receiving one'),
-	challenge_code: createStringType(4, 12).describe('The numeric code the user must text to our number'),
-	our_number: createStringType(4, 32).describe('The Twilio number the user must text the code to (E.164)'),
-	expires_at: z.iso.datetime().describe('ISO 8601 timestamp when this inbound challenge expires'),
-	reason: z
-		.enum(['voip', 'canadian', 'unknown_line_type', 'expensive_destination', 'account_forced', 'behavioural_risk'])
-		.describe('Why inbound verification is required'),
-});
-
-export const PhoneSendVerificationResponse = z.union([
-	PhoneSendVerificationDeliveredResponse,
-	PhoneSendVerificationInboundChallengeResponse,
-]);
-
-export type PhoneSendVerificationResponse = z.infer<typeof PhoneSendVerificationResponse>;
-
-export const PhoneVerifyRequest = z.object({
-	phone: PhoneNumberType.describe('Phone number being verified'),
-	code: createStringType(1, 32).describe('The verification code'),
-});
-
-export type PhoneVerifyRequest = z.infer<typeof PhoneVerifyRequest>;
-
-export const PhoneVerifyResponse = z.object({
-	verified: z.literal(true).describe('Indicates the phone number was verified successfully'),
-});
-
-export type PhoneVerifyResponse = z.infer<typeof PhoneVerifyResponse>;
-
 export const WebAuthnCredentialResponse = z.object({
 	id: z.string().describe('The credential ID'),
 	name: z.string().describe('User-assigned name for the credential'),
 	created_at: z.string().describe('When the credential was registered'),
 	last_used_at: z.string().nullable().describe('When the credential was last used'),
+	rp_id: z.string().describe('Relying party ID the passkey belongs to'),
 });
 
 export type WebAuthnCredentialResponse = z.infer<typeof WebAuthnCredentialResponse>;
@@ -527,13 +574,5 @@ export const SudoMfaMethodsResponse = z.object({
 });
 
 export type SudoMfaMethodsResponse = z.infer<typeof SudoMfaMethodsResponse>;
-
-export const InboundSmsChallengeStartResponse = z.object({
-	challenge_code: createStringType(4, 12).describe('The numeric code the user must text to our number'),
-	our_number: createStringType(4, 32).describe('The Twilio number the user must text the code to (E.164)'),
-	expires_at: z.string().describe('ISO timestamp at which the challenge becomes invalid'),
-});
-
-export type InboundSmsChallengeStartResponse = z.infer<typeof InboundSmsChallengeStartResponse>;
 
 export const LogoutAuthSessionsWithVerificationRequest = LogoutAuthSessionsRequest.extend(SudoVerificationSchema.shape);

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type {I18n, MessageDescriptor} from '@lingui/core';
@@ -143,10 +144,6 @@ const MESSAGE_UNPINNED_DESCRIPTOR = msg({
 const ALL_DESCRIPTOR = msg({
 	message: 'All',
 	comment: 'Audit log target-type filter option. Shows entries for every target type.',
-});
-const COMMUNITY_DESCRIPTOR = msg({
-	message: 'Community',
-	comment: 'Audit log target-type filter label. Filters entries to community-level actions.',
 });
 const MEMBER_DESCRIPTOR = msg({
 	message: 'Member',
@@ -375,12 +372,47 @@ export const AUDIT_LOG_ACTIONS: ReadonlyArray<AuditLogActionDefinition> = [
 	},
 ];
 
-export function getTranslatedAuditLogActions(i18n: I18n): Array<{
+const THREAD_CREATED_DESCRIPTOR = msg({
+	message: 'Thread created',
+	comment: 'Activity log action filter option for threads that were started.',
+});
+const THREAD_UPDATED_DESCRIPTOR = msg({
+	message: 'Thread updated',
+	comment: 'Activity log action filter option for threads that were changed.',
+});
+const THREAD_DELETED_DESCRIPTOR = msg({
+	message: 'Thread deleted',
+	comment: 'Activity log action filter option for threads that were deleted.',
+});
+
+export const THREAD_AUDIT_LOG_ACTIONS: ReadonlyArray<AuditLogActionDefinition> = [
+	{
+		value: AuditLogActionType.THREAD_CREATE,
+		label: THREAD_CREATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+	{
+		value: AuditLogActionType.THREAD_UPDATE,
+		label: THREAD_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+	{
+		value: AuditLogActionType.THREAD_DELETE,
+		label: THREAD_DELETED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+];
+
+export function getTranslatedAuditLogActions(
+	i18n: I18n,
+	{includeThreads = false}: {includeThreads?: boolean} = {},
+): Array<{
 	value: AuditLogActionType;
 	label: string;
 	targetType: AuditLogTargetType;
 }> {
-	return AUDIT_LOG_ACTIONS.map((action) => ({
+	const actions = includeThreads ? [...AUDIT_LOG_ACTIONS, ...THREAD_AUDIT_LOG_ACTIONS] : AUDIT_LOG_ACTIONS;
+	return actions.map((action) => ({
 		...action,
 		label: i18n._(action.label),
 	}));

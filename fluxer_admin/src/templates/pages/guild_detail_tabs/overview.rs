@@ -32,7 +32,12 @@ fn channel_type_label(channel_type: i32) -> &'static str {
         0 => "Text",
         2 => "Voice",
         4 => "Category",
-        13 => "Link",
+        5 => "Announcement",
+        11 => "Public thread",
+        12 => "Private thread",
+        15 => "Forum",
+        16 => "Media",
+        998 => "Link",
         _ => "Unknown",
     }
 }
@@ -178,7 +183,7 @@ pub fn overview_tab(config: &AdminConfig, guild: &GuildDetailInfo, csrf_token: &
                 } @else {
                     div class="flex flex-col gap-2" {
                         @for channel in &sorted_channels {
-                            @let is_link = channel.channel_type == 13;
+                            @let is_link = channel.channel_type == 998;
                             @let parent = channel.parent_id.as_deref()
                                 .and_then(|pid| channels_by_id.get(pid));
                             @let parent_nsfw_override = parent

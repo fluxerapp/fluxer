@@ -118,6 +118,7 @@ init_guilds_role_includes_only_guild_state_children_test() ->
     ?assert(lists:member(presence_bus, Ids)),
     ?assert(lists:member(guild_manager, Ids)),
     ?assert(lists:member(guild_counts_cache, Ids)),
+    ?assert(lists:member(gateway_clock_offset, Ids)),
     ?assert(lists:member(voice_state_counts_sync, Ids)),
     ?assert(lists:member(gateway_cluster_handoff, Ids)),
     ?assertNot(lists:member(session_manager, Ids)),
@@ -137,6 +138,7 @@ init_sessions_role_includes_cluster_handoff_test() ->
     ?assert(lists:member(session_state_transfer, Ids)),
     ?assert(lists:member(gateway_cluster_handoff, Ids)),
     ?assertNot(lists:member(guild_manager, Ids)),
+    ?assertNot(lists:member(gateway_clock_offset, Ids)),
     ?assertNot(lists:member(presence_manager, Ids)),
     persistent_term:erase({fluxer_gateway, runtime_config}).
 
@@ -176,7 +178,7 @@ init_push_role_includes_cluster_handoff_test() ->
     ),
     {ok, {_SupFlags, Children}} = fluxer_gateway_sup:init([]),
     Ids = child_ids(Children),
-    ?assert(lists:member(push_dispatcher, Ids)),
+    ?assert(lists:member(push_outbox, Ids)),
     ?assert(lists:member(push, Ids)),
     ?assert(lists:member(gateway_cluster_handoff, Ids)),
     ?assertNot(lists:member(session_manager, Ids)),

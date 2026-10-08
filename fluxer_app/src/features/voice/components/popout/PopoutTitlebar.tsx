@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import nativeTitlebarStyles from '@app/features/app/components/layout/NativeTitlebar.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {getNativePlatformSync} from '@app/features/ui/utils/NativeUtils';
 import styles from '@app/features/voice/components/popout/PopoutTitlebar.module.css';
+import {NATIVE_TITLEBAR_CLASS} from '@fluxer/desktop_ipc/src/NativeTitlebarShell';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowSquareInIcon, PushPinIcon, PushPinSlashIcon, XIcon} from '@phosphor-icons/react';
@@ -70,7 +70,7 @@ export const PopoutTitlebar: React.FC<PopoutTitlebarProps> = ({
 					<FocusRing offset={-2} data-flx="voice.popout-titlebar.focus-ring.pin">
 						<button
 							type="button"
-							className={clsx(nativeTitlebarStyles.controlButton, isAlwaysOnTop && styles.actionButtonActive)}
+							className={clsx(NATIVE_TITLEBAR_CLASS.control, isAlwaysOnTop && styles.actionButtonActive)}
 							onClick={onToggleAlwaysOnTop}
 							aria-pressed={isAlwaysOnTop}
 							aria-label={pinLabel}
@@ -84,7 +84,7 @@ export const PopoutTitlebar: React.FC<PopoutTitlebarProps> = ({
 				<FocusRing offset={-2} data-flx="voice.popout-titlebar.focus-ring.restore">
 					<button
 						type="button"
-						className={nativeTitlebarStyles.controlButton}
+						className={NATIVE_TITLEBAR_CLASS.control}
 						onClick={onRestore}
 						aria-label={i18n._(POP_BACK_IN_DESCRIPTOR)}
 						title={i18n._(POP_BACK_IN_DESCRIPTOR)}
@@ -97,7 +97,7 @@ export const PopoutTitlebar: React.FC<PopoutTitlebarProps> = ({
 					<FocusRing offset={-2} data-flx="voice.popout-titlebar.focus-ring.close">
 						<button
 							type="button"
-							className={clsx(nativeTitlebarStyles.controlButton, nativeTitlebarStyles.closeButton)}
+							className={clsx(NATIVE_TITLEBAR_CLASS.control, NATIVE_TITLEBAR_CLASS.controlClose)}
 							onClick={onClose}
 							aria-label={i18n._(CLOSE_WINDOW_DESCRIPTOR)}
 							data-flx="voice.popout-titlebar.control-button.close"

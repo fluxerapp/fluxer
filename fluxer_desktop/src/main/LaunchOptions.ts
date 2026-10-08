@@ -22,6 +22,7 @@ const NATIVE_AUDIO_MODE_ARGS = new Set(['--fluxer-native-audio']);
 const DISABLE_SPELLCHECK_ARGS = new Set(['--fluxer-disable-spellcheck', '--fluxer-disable-linux-spellcheck']);
 const SPELLCHECK_MODE_ARGS = new Set(['--fluxer-spellcheck']);
 const DISABLE_V8_CODE_CACHE_ARGS = new Set(['--fluxer-disable-v8-code-cache']);
+const DISABLE_NATIVE_GATEWAY_ARGS = new Set(['--fluxer-disable-native-gateway']);
 
 function hasFlag(argv: ReadonlyArray<string>, flags: ReadonlySet<string>): boolean {
 	return argv.some((arg) => flags.has(arg) || [...flags].some((flag) => arg.startsWith(`${flag}=`)));
@@ -65,7 +66,7 @@ function envMode<T extends string>(name: string, allowed: ReadonlyArray<T>): T |
 	return normalizeMode(process.env[name], allowed, name);
 }
 
-function isSafeModeLaunch(argv: ReadonlyArray<string> = process.argv): boolean {
+export function isSafeModeLaunch(argv: ReadonlyArray<string> = process.argv): boolean {
 	return hasFlag(argv, SAFE_MODE_ARGS);
 }
 
@@ -135,8 +136,11 @@ export function shouldDisableV8CodeCache(argv: ReadonlyArray<string> = process.a
 	);
 }
 
-export function shouldStartHiddenAtLogin(): boolean {
-	return false;
+export function getNativeGatewayDisableReason(argv: ReadonlyArray<string> = process.argv): string | null {
+	if (isSafeModeLaunch(argv)) return '--fluxer-safe-mode';
+	if (hasFlag(argv, DISABLE_NATIVE_GATEWAY_ARGS)) return '--fluxer-disable-native-gateway';
+	if (truthyEnv('FLUXER_DISABLE_NATIVE_GATEWAY')) return 'FLUXER_DISABLE_NATIVE_GATEWAY';
+	return null;
 }
 
 export function isPortableLaunchFlag(argv: ReadonlyArray<string> = process.argv): boolean {
@@ -153,5 +157,6 @@ export function describeLaunchDiagnosticOptions(argv: ReadonlyArray<string> = pr
 		nativeAudio: getNativeAudioMode(argv),
 		spellcheck: getSpellcheckLaunchMode(argv),
 		v8CodeCacheDisabled: shouldDisableV8CodeCache(argv),
+		nativeGatewayDisableReason: getNativeGatewayDisableReason(argv),
 	};
 }

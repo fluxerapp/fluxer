@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {APP_PROTOCOL, DESKTOP_APP_ORIGIN, DESKTOP_PREBOOT_THEME_CHANNEL} from '@electron/common/Constants';
 import {
 	type DesktopTroubleshootingSettings,
 	type DesktopWindowBehaviorSettings,
 	getDesktopWindowBehaviorSettings,
 	setDesktopWindowBehaviorSettings,
+	setPrebootTheme,
 } from '@electron/common/DesktopConfig';
 import type {
 	ClipboardWriteFileResult,
@@ -12,29 +14,47 @@ import type {
 	MediaAccessType,
 	TrayPresenceStatus,
 } from '@electron/common/Types';
+import {DesktopBrowserHandoff} from '@electron/main/BrowserHandoff';
 import {hasEnabledBlinkFeature, MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE} from '@electron/main/ChromiumRuntime';
+import {setHandoffReturnLinkSink} from '@electron/main/DeepLinks';
+import {getDesktopAppStorage} from '@electron/main/DesktopAppStorage';
+import {createDesktopAppStorageIpcRoutes} from '@electron/main/DesktopAppStorageIpc';
 import {getLaunchDesktopTroubleshootingSettings} from '@electron/main/DesktopDebugInfo';
+import {cleanupDesktopRuntimeConfigHandlers} from '@electron/main/DesktopRuntimeConfigIpc';
 import {
 	applyDesktopWindowBehaviorSettings,
 	desktopTrayChangePendingRestart,
 	hasActiveDesktopTray,
 	updateTrayRuntimeState,
 } from '@electron/main/DesktopTray';
+import {getDesktopUpdateState, observeDesktopUpdateState, startDesktopUpdate} from '@electron/main/DesktopUpdateGate';
 import {DownloadChecksumError, downloadFile} from '@electron/main/FileDownloads';
+import {getGatewayOriginRegistry} from '@electron/main/GatewayOriginRegistry';
+import {retryBlockedGlobalShortcutHooks} from '@electron/main/GlobalShortcutsIpc';
 import {
 	type LinuxAppearanceSnapshot,
 	type LinuxAppearanceSubscription,
 	readLinuxAppearance,
 	subscribeLinuxAppearance,
 } from '@electron/main/LinuxAppearance';
-import {getTccStatus, registerMacTccIpcHandlers} from '@electron/main/MacTcc';
+import {refreshTccStatus, registerMacTccIpcHandlers} from '@electron/main/MacTcc';
 import {setNativeStrings} from '@electron/main/MainI18n';
 import {copyRemoteFileToClipboard, parseClipboardWriteFileOptions} from '@electron/main/MediaClipboard';
+import {signalRendererLaunchConfirmed} from '@electron/main/ModuleBootHandoff';
+import {ensureDesktopModule} from '@electron/main/ModuleOnDemand';
+import {
+	createDesktopNativeGatewayTransport,
+	type DesktopNativeGatewayTransport,
+} from '@electron/main/NativeGatewayTransport';
 import {registerNotificationIpcHandlers} from '@electron/main/NotificationsIpc';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
 import {registerPasskeyHandlers} from '@electron/main/Passkeys';
 import {getAppMetricsSnapshot, getDesktopInfo, getGpuInfo} from '@electron/main/PlatformInfo';
-import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
+import {
+	createPrivilegedRendererDocumentOwners,
+	requirePrivilegedRendererDocumentSender,
+} from '@electron/main/PrivilegedRendererDocuments';
+import {getDesktopSelectedInstanceClient} from '@electron/main/SelectedInstanceFetch';
 import {getStreamerModeCaptureAppStatus} from '@electron/main/StreamerModeProcessDetection';
 import {
 	acquireStreamingPriority,
@@ -78,7 +98,13 @@ import {
 import {flashWindowForAttention, stopFlashingWindow} from '@electron/main/WindowFlash';
 import {setWindowsBadgeOverlay} from '@electron/main/WindowsBadge';
 import {registerWindowsToastIpcHandlers} from '@electron/main/WindowsToast';
+import {
+	DESKTOP_MODULE_CHANNELS,
+	DESKTOP_UPDATE_CHANNELS,
+	DESKTOP_UPDATE_EVENTS,
+} from '@fluxer/desktop_ipc/src/ModuleContract';
 import {app, BrowserWindow, clipboard, dialog, ipcMain, powerMonitor, shell, systemPreferences} from 'electron';
+import log from 'electron-log';
 
 interface TrayRuntimeStateUpdate {
 	voiceConnected?: boolean;
@@ -106,6 +132,9 @@ function normalizeDesktopWindowBehaviorUpdate(value: unknown): Partial<DesktopWi
 	}
 	if (typeof value.closeToTray === 'boolean') {
 		update.closeToTray = value.closeToTray;
+	}
+	if (typeof value.startMinimized === 'boolean') {
+		update.startMinimized = value.startMinimized;
 	}
 	if (typeof value.useNativeTitleBar === 'boolean') {
 		update.useNativeTitleBar = value.useNativeTitleBar;
@@ -136,6 +165,38 @@ function getActiveMiddleClickAutoscroll(): boolean {
 export function registerIpcHandlers(): void {
 	registerVoiceDebugEventSinkPopoutIpcHandlers();
 	registerVoiceBackgroundMediaCacheHandlers();
+	ipcMain.handle(DESKTOP_MODULE_CHANNELS.ensure, (event, moduleName: unknown) => {
+		requirePrivilegedRendererDocumentSender(event, DESKTOP_MODULE_CHANNELS.ensure);
+		return ensureDesktopModule(moduleName);
+	});
+	ipcMain.handle(DESKTOP_UPDATE_CHANNELS.state, (event) => {
+		requirePrivilegedRendererDocumentSender(event, DESKTOP_UPDATE_CHANNELS.state);
+		return getDesktopUpdateState();
+	});
+	ipcMain.handle(DESKTOP_UPDATE_CHANNELS.start, (event) => {
+		requirePrivilegedRendererDocumentSender(event, DESKTOP_UPDATE_CHANNELS.start);
+		startDesktopUpdate();
+	});
+	ipcMain.handle(DESKTOP_MODULE_CHANNELS.confirmLaunch, (event) => {
+		requirePrivilegedRendererDocumentSender(event, DESKTOP_MODULE_CHANNELS.confirmLaunch);
+		const mainWindow = getMainWindow();
+		if (
+			mainWindow == null ||
+			mainWindow.isDestroyed() ||
+			event.sender !== mainWindow.webContents ||
+			event.senderFrame?.origin !== DESKTOP_APP_ORIGIN
+		) {
+			return;
+		}
+		signalRendererLaunchConfirmed();
+	});
+	observeDesktopUpdateState((state) => {
+		const mainWindow = getMainWindow();
+		if (mainWindow == null || mainWindow.isDestroyed()) {
+			return;
+		}
+		mainWindow.webContents.send(DESKTOP_UPDATE_EVENTS.stateChanged, state);
+	});
 	ipcMain.handle('get-desktop-info', () => getDesktopInfo());
 	ipcMain.handle('get-gpu-info', () => getGpuInfo());
 	ipcMain.handle('get-app-metrics', () => getAppMetricsSnapshot());
@@ -239,6 +300,11 @@ export function registerIpcHandlers(): void {
 				? (mode as TaskbarProgressMode)
 				: 'normal';
 		setTaskbarProgress(numericFraction, resolvedMode);
+	});
+	ipcMain.on(DESKTOP_PREBOOT_THEME_CHANNEL, (event, theme: unknown) => {
+		if (event.senderFrame?.origin === DESKTOP_APP_ORIGIN && typeof theme === 'string') {
+			setPrebootTheme(theme);
+		}
 	});
 	ipcMain.handle('desktop-window-behavior-pending-restart', (): boolean => {
 		return (
@@ -409,7 +475,7 @@ export function registerIpcHandlers(): void {
 			toggleWindowDevTools(win);
 		}
 	});
-	ipcMain.handle('check-media-access', (_event, type: MediaAccessType): string => {
+	ipcMain.handle('check-media-access', async (_event, type: MediaAccessType): Promise<string> => {
 		if (process.platform !== 'darwin') {
 			return 'granted';
 		}
@@ -417,7 +483,7 @@ export function registerIpcHandlers(): void {
 			return 'not-determined';
 		}
 		if (type === 'screen') {
-			return getTccStatus('screen-recording');
+			return refreshTccStatus('screen-recording');
 		}
 		return systemPreferences.getMediaAccessStatus(type);
 	});
@@ -429,7 +495,7 @@ export function registerIpcHandlers(): void {
 			return false;
 		}
 		if (type === 'screen') {
-			return getTccStatus('screen-recording') === 'granted';
+			return (await refreshTccStatus('screen-recording')) === 'granted';
 		}
 		return systemPreferences.askForMediaAccess(type);
 	});
@@ -453,7 +519,11 @@ export function registerIpcHandlers(): void {
 	});
 	registerNotificationIpcHandlers(getMainWindow);
 	registerWindowsToastIpcHandlers();
-	registerMacTccIpcHandlers();
+	registerMacTccIpcHandlers({
+		onStatus: (surface, status) => {
+			if (surface === 'input-monitoring' && status === 'granted') retryBlockedGlobalShortcutHooks();
+		},
+	});
 	ipcMain.on('set-badge-count', (_event, count: number) => {
 		if (process.platform === 'darwin') {
 			app.setBadgeCount(count);
@@ -497,6 +567,7 @@ export function registerIpcHandlers(): void {
 	});
 	registerPasskeyHandlers();
 	registerLinuxAppearanceHandlers();
+	registerBrowserHandoffHandlers();
 }
 
 let linuxAppearanceSubscription: LinuxAppearanceSubscription | null = null;
@@ -522,7 +593,64 @@ function registerLinuxAppearanceHandlers(): void {
 	});
 }
 
+export function registerDesktopAppStorageHandlers(): void {
+	const storage = getDesktopAppStorage();
+	if (storage === null) {
+		return;
+	}
+	for (const [channel, handler] of Object.entries(createDesktopAppStorageIpcRoutes(storage))) {
+		ipcMain.handle(channel, (event, ...args: Array<unknown>) => {
+			requirePrivilegedRendererDocumentSender(event, channel);
+			return handler(...args);
+		});
+	}
+}
+
+let browserHandoff: DesktopBrowserHandoff | null = null;
+
+function registerBrowserHandoffHandlers(): void {
+	if (browserHandoff !== null) {
+		return;
+	}
+	const handoff = new DesktopBrowserHandoff({
+		logger: log,
+		rendererDocumentOwners: createPrivilegedRendererDocumentOwners('BrowserHandoff'),
+		selectedInstanceClient: getDesktopSelectedInstanceClient(),
+		returnUri: () => (app.isDefaultProtocolClient(APP_PROTOCOL) ? `${APP_PROTOCOL}://handoff` : null),
+	});
+	browserHandoff = handoff;
+	setHandoffReturnLinkSink((url) => handoff.acceptReturnLink(url));
+	for (const [channel, handler] of Object.entries(handoff.ipcRoutes())) {
+		ipcMain.handle(channel, handler);
+	}
+}
+
+let nativeGatewayTransport: DesktopNativeGatewayTransport | null = null;
+
+export function registerGatewayTransportHandlers(): void {
+	if (nativeGatewayTransport !== null) {
+		return;
+	}
+	nativeGatewayTransport = createDesktopNativeGatewayTransport({
+		logger: log,
+		originRegistry: getGatewayOriginRegistry(),
+		rendererDocumentOwners: createPrivilegedRendererDocumentOwners('NativeGateway'),
+	});
+	for (const [channel, handler] of Object.entries(nativeGatewayTransport.ipcRoutes())) {
+		ipcMain.handle(channel, handler);
+	}
+}
+
+export function cleanupGatewayTransportHandlers(): void {
+	nativeGatewayTransport?.cleanup();
+	nativeGatewayTransport = null;
+}
+
 export function cleanupIpcHandlers(_options: {quitting?: boolean} = {}): void {
+	cleanupDesktopRuntimeConfigHandlers();
+	browserHandoff?.cleanup();
+	browserHandoff = null;
+	setHandoffReturnLinkSink(null);
 	if (linuxAppearanceSubscription) {
 		try {
 			linuxAppearanceSubscription.close();

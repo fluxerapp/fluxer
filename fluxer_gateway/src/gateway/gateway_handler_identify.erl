@@ -103,6 +103,9 @@ do_identify(
     GwTimings,
     State
 ) ->
+    ok = channel_threads_config:note_identify(
+        session_manager_shard_drain:thread_channels_capable(#{flags => Flags}), Properties
+    ),
     SessionId = utils:generate_session_id(),
     IdentifyData = build_identify_data(
         Token,

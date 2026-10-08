@@ -48,7 +48,7 @@ impl Resolver for KlipyResolver {
         ctx: &'a ResolveContext<'_>,
     ) -> Pin<Box<dyn Future<Output = anyhow::Result<ResolverResult>> + Send + 'a>> {
         Box::pin(async move {
-            let Some(api_key) = ctx.klipy_api_key.clone().or_else(klipy_api_key) else {
+            let Some(api_key) = ctx.klipy_api_key.clone() else {
                 return Ok(ResolverResult { embeds: vec![] });
             };
             let formats = match resolve_media_via_api(ctx, &api_key).await {
@@ -133,17 +133,6 @@ fn klipy_resource(kind: &str) -> &'static str {
     } else {
         "gifs"
     }
-}
-
-fn klipy_api_key() -> Option<String> {
-    std::env::var("FLUXER_KLIPY_API_KEY")
-        .ok()
-        .filter(|key| !key.is_empty())
-        .or_else(|| {
-            std::env::var("KLIPY_API_KEY")
-                .ok()
-                .filter(|key| !key.is_empty())
-        })
 }
 
 async fn resolve_media_via_api(

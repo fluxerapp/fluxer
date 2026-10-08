@@ -154,6 +154,7 @@ jobs:
             BUILD_VERSION=${{ needs.meta.outputs.build_version }}
             SOURCE_SHA=${{ github.sha }}
             SOURCE_DATE=${{ steps.source.outputs.date }}
+            FLUXER_SELF_HOSTED=true
             APP_ASSETS_REF=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:${{ needs.meta.outputs.build_version }}-assets
             APP_ASSETS_PLATFORM=linux/amd64
           cache-from: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:buildcache-${{ matrix.platform }}

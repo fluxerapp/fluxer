@@ -5,7 +5,7 @@
 
 -export([
     sync_user_voice_permissions/2,
-    sync_all_voice_permissions_for_channel/2,
+    sync_all_voice_permissions_for_channels/2,
     sync_users_with_role/2,
     maybe_sync_permissions_on_role_update/2,
     maybe_sync_permissions_on_member_update/2
@@ -54,14 +54,21 @@ maybe_sync_user_voice_state(GuildId, UserId, VoiceState, State) ->
         _ -> ok
     end.
 
--spec sync_all_voice_permissions_for_channel(channel_id(), guild_state()) -> ok.
-sync_all_voice_permissions_for_channel(ChannelId, State) ->
+-spec sync_all_voice_permissions_for_channels([channel_id()], guild_state()) -> ok.
+sync_all_voice_permissions_for_channels([], _State) ->
+    ok;
+sync_all_voice_permissions_for_channels(ChannelIds, State) ->
     VoiceStates = guild_voice_lifecycle:authoritative_voice_states(State),
     case state_guild_id(State) of
         undefined ->
             ok;
         GuildId ->
-            do_sync_channel_permissions(GuildId, ChannelId, VoiceStates, State)
+            lists:foreach(
+                fun(ChannelId) ->
+                    do_sync_channel_permissions(GuildId, ChannelId, VoiceStates, State)
+                end,
+                ChannelIds
+            )
     end.
 
 -spec do_sync_channel_permissions(integer(), channel_id(), map(), guild_state()) -> ok.
@@ -161,7 +168,7 @@ maybe_clear_self_stream(_ChId, _VoiceState, _VoicePermissions, _State) ->
 
 -spec user_has_base_voice_access(user_id(), channel_id(), guild_state()) -> boolean().
 user_has_base_voice_access(UserId, ChannelId, State) ->
-    case guild_virtual_channel_access:has_virtual_access(UserId, ChannelId, State) of
+    case guild_virtual_channel_access:has_voice_access(UserId, ChannelId, State) of
         true ->
             true;
         false ->

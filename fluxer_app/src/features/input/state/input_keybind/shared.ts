@@ -10,6 +10,10 @@ export const EDIT_MESSAGE_DESCRIPTOR = msg({
 	message: 'Edit message',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
 });
+export const EDIT_YOUR_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR = msg({
+	message: 'Edit your messages above or below',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
 export const PIN_MESSAGE_DESCRIPTOR = msg({
 	message: 'Pin message',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
@@ -20,6 +24,10 @@ export const ADD_REACTION_DESCRIPTOR = msg({
 });
 export const REPLY_TO_MESSAGE_DESCRIPTOR = msg({
 	message: 'Reply to message',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
+export const REPLY_TO_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR = msg({
+	message: 'Reply to messages above or below',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
 });
 export const FORWARD_MESSAGE_DESCRIPTOR = msg({
@@ -245,6 +253,15 @@ export const OPEN_THE_CONTEXT_MENU_DESCRIPTOR = msg({
 export const OPEN_YOUR_SETTINGS_DESCRIPTOR = msg({
 	message: 'Open your settings',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
+export const OPEN_ACCOUNT_SWITCHER_DESCRIPTOR = msg({
+	message: 'Open account switcher',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
+export const SWITCH_TO_ACCOUNT_SLOT_DESCRIPTOR = msg({
+	message: 'Switch to account {slot}',
+	comment:
+		'Keyboard shortcut action label shown in the keybind editor. {slot} is a numeric account position, such as 1.',
 });
 export const OPEN_THEME_STUDIO_POPOUT_DESCRIPTOR = msg({
 	message: 'Open theme studio popout',

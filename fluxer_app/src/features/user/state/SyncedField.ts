@@ -20,6 +20,34 @@ export {verifyRoundtripStability};
 
 const logger = new Logger('SyncedField');
 
+interface SyncedFieldUserSettings {
+	isHydrated(): boolean;
+	getSubPreference<F extends SyncedPreferencesField>(field: F): SyncedPreferences[F] | undefined;
+	setSubPreference<F extends SyncedPreferencesField>(field: F, value: NonNullable<SyncedPreferences[F]>): Promise<void>;
+}
+
+interface SyncedFieldSessionManager {
+	readonly userId: string | null;
+}
+
+let announceUserSettings: (settings: SyncedFieldUserSettings) => void;
+const userSettingsReady = new Promise<SyncedFieldUserSettings>((resolve) => {
+	announceUserSettings = resolve;
+});
+
+let announceSessionManager: (manager: SyncedFieldSessionManager) => void;
+const sessionManagerReady = new Promise<SyncedFieldSessionManager>((resolve) => {
+	announceSessionManager = resolve;
+});
+
+export function setSyncedFieldUserSettings(settings: SyncedFieldUserSettings): void {
+	announceUserSettings(settings);
+}
+
+export function setSyncedFieldSessionManager(manager: SyncedFieldSessionManager): void {
+	announceSessionManager(manager);
+}
+
 function isMessageSchema(value: unknown): value is GenMessage<Message> {
 	return (
 		value != null &&
@@ -212,10 +240,8 @@ export async function makeSyncedField<
 		transitionOnly(event);
 		processCommands();
 	}
-	await Promise.resolve();
 	const maxEncodedBytes = config.maxEncodedBytes ?? DEFAULT_SYNCED_FIELD_MAX_ENCODED_BYTES;
-	const UserSettings = (await import('@app/features/user/state/UserSettings')).default;
-	const SessionManager = (await import('@app/features/platform/state/AuthSession')).default;
+	const [UserSettings, SessionManager] = await Promise.all([userSettingsReady, sessionManagerReady]);
 	const applyDefaultsForUserChange = (userId: string): void => {
 		try {
 			runInAction(() => {

@@ -16,6 +16,7 @@ import AuthSessionState from '@app/features/auth/state/AuthSession';
 import {TRY_AGAIN_DESCRIPTOR, UNKNOWN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatTimestamp} from '@app/features/messaging/utils/markdown/DateFormatter';
 import {TimestampStyle} from '@app/features/messaging/utils/markdown/parser/Enums';
+import {currentInstanceTarget, type InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -182,6 +183,7 @@ const DeviceDetailsModal = observer(({authSession, isCurrent}: {authSession: Aut
 
 interface AuthSessionProps {
 	authSession: AuthSession;
+	target: InstanceHTTPTarget;
 	isCurrent?: boolean;
 	isSelected?: boolean;
 	onSelect?: SelectionToggleHandler;
@@ -190,7 +192,7 @@ interface AuthSessionProps {
 }
 
 const AuthSessionItem: React.FC<AuthSessionProps> = observer(
-	({authSession, isCurrent = false, isSelected, onSelect, index, selectionMode}) => {
+	({authSession, target, isCurrent = false, isSelected, onSelect, index, selectionMode}) => {
 		const {i18n} = useLingui();
 		const clientOs = authSession.clientOs ?? i18n._(UNKNOWN_DEVICE_DESCRIPTOR);
 		const platformLabel = authSession.clientPlatform ?? i18n._(UNKNOWN_DESCRIPTOR);
@@ -201,6 +203,7 @@ const AuthSessionItem: React.FC<AuthSessionProps> = observer(
 				modal(() => (
 					<DeviceRevokeModal
 						sessionIdHashes={[authSession.id]}
+						target={target}
 						data-flx="user.devices-tab.auth-session-item.device-revoke-modal"
 					/>
 				)),
@@ -339,6 +342,7 @@ interface DevicesTabContentProps {
 
 export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({presentation = 'settings'}) => {
 	const {i18n} = useLingui();
+	const [authSessionTarget] = useState(currentInstanceTarget);
 	const isModalPresentation = presentation === 'modal';
 	const authSessionIdHash = AuthSessionState.authSessionIdHash;
 	const authSessions = AuthSessionState.authSessions;
@@ -360,30 +364,32 @@ export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({pr
 		getId: getAuthSessionSelectionId,
 	});
 	useEffect(() => {
-		AuthSessionCommands.fetch();
-	}, []);
+		AuthSessionCommands.fetch(authSessionTarget);
+	}, [authSessionTarget]);
 	const openSelectedDevicesRevokeModal = useCallback(() => {
 		if (selectedDeviceIds.length === 0) return;
 		ModalCommands.push(
 			modal(() => (
 				<DeviceRevokeModal
 					sessionIdHashes={selectedDeviceIds}
+					target={authSessionTarget}
 					data-flx="user.devices-tab.selected-device-revoke-modal"
 				/>
 			)),
 		);
-	}, [selectedDeviceIds]);
+	}, [authSessionTarget, selectedDeviceIds]);
 	const openAllOtherDevicesRevokeModal = useCallback(() => {
 		if (otherDeviceIds.length === 0) return;
 		ModalCommands.push(
 			modal(() => (
 				<DeviceRevokeModal
 					sessionIdHashes={otherDeviceIds}
+					target={authSessionTarget}
 					data-flx="user.devices-tab.all-other-devices-revoke-modal"
 				/>
 			)),
 		);
-	}, [otherDeviceIds]);
+	}, [authSessionTarget, otherDeviceIds]);
 	useEffect(() => {
 		if (isModalPresentation) return;
 		if (selectedDeviceIds.length === 0) {
@@ -418,7 +424,7 @@ export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({pr
 				title={i18n._(NETWORK_ERROR_DESCRIPTOR)}
 				description={i18n._(WE_RE_HAVING_TROUBLE_CONNECTING_TO_THE_SPACE_DESCRIPTOR)}
 				buttonText={i18n._(TRY_AGAIN_DESCRIPTOR)}
-				onClick={() => AuthSessionCommands.fetch()}
+				onClick={() => AuthSessionCommands.fetch(authSessionTarget)}
 				data-flx="user.devices-tab.slate.fetch"
 			/>
 		);
@@ -428,7 +434,12 @@ export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({pr
 	const devicesContent = (
 		<>
 			<SettingsTabSection title={<Trans>Current device</Trans>} data-flx="user.devices-tab.current-device">
-				<AuthSessionItem authSession={currentSession} isCurrent={true} data-flx="user.devices-tab.auth-session-item" />
+				<AuthSessionItem
+					authSession={currentSession}
+					target={authSessionTarget}
+					isCurrent={true}
+					data-flx="user.devices-tab.auth-session-item"
+				/>
 			</SettingsTabSection>
 			{otherDevices.length > 0 && (
 				<SettingsTabSection
@@ -447,6 +458,7 @@ export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({pr
 								<AuthSessionItem
 									key={authSession.id}
 									authSession={authSession}
+									target={authSessionTarget}
 									isSelected={selectedDevices.has(authSession.id)}
 									onSelect={toggleDevice}
 									index={index}

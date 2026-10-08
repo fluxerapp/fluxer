@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#![recursion_limit = "256"]
+
 use axum::{
     Json, Router,
     body::{Body, to_bytes},
@@ -161,7 +163,7 @@ async fn post_form(app: &TestApp, uri: &str, body: &str) -> StatusCode {
     let csrf = body
         .split('&')
         .find_map(|pair| pair.strip_prefix("_csrf="))
-        .expect("form carries a csrf token");
+        .expect("form has a csrf token");
     let response = app
         .router
         .clone()
@@ -292,16 +294,16 @@ fn admin_user() -> Value {
         "premium_until": null,
         "premium_grace_ends_at": null,
         "premium_lifetime_sequence": null,
-        "suspicious_activity_flags": 0,
-        "phone_verification_deferred": false,
         "has_totp": false,
         "authenticator_types": [],
-        "has_verified_phone": false,
         "temp_banned_until": null,
         "pending_deletion_at": null,
         "pending_bulk_message_deletion_at": null,
         "deletion_reason_code": null,
         "deletion_public_reason": null,
+        "deletion_audit_log_reason": null,
+        "deletion_scheduled_by": null,
+        "deletion_scheduled_at": null,
         "last_active_at": null,
         "last_active_ip": null,
         "last_active_ip_reverse": null,
@@ -321,12 +323,10 @@ fn test_config(api_endpoint: String) -> AdminConfig {
         static_cdn_endpoint: "https://static.example.test".to_owned(),
         admin_endpoint: "https://admin.example.test".to_owned(),
         web_app_endpoint: "https://app.example.test".to_owned(),
-        kv_url: String::new(),
         oauth_client_id: "admin-client".to_owned(),
         oauth_client_secret: "admin-secret".to_owned(),
         oauth_redirect_uri: "https://admin.example.test/callback".to_owned(),
         build_version: "test".to_owned(),
-        release_channel: "test".to_owned(),
         self_hosted: false,
         proxy: ProxyConfig {
             trust_client_ip_header: false,

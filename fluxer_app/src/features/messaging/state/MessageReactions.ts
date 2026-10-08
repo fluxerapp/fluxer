@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Authentication from '@app/features/auth/state/Authentication';
 import {
 	emptyMap,
@@ -459,4 +460,6 @@ export class MessageReactionsManager {
 	}
 }
 
-export default new MessageReactionsManager();
+const messageReactions = new MessageReactionsManager();
+ResettableStates.register(messageReactions, () => messageReactions.handleGatewayReady());
+export default messageReactions;

@@ -105,23 +105,14 @@ describe('Stripe Webhook Refund', () => {
 			expect(updatedPayment).not.toBeNull();
 			expect(updatedPayment!.status).toBe('refunded');
 		});
-		test('applies permanent purchase block on second refund', async () => {
-			const account = await createTestAccount(harness);
-			const userId = createUserID(BigInt(account.userId));
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
-			const userRepository = new UserRepository();
-			const firstRefundDate = new Date('2024-01-01');
-			await userRepository.patchUpsert(
-				userId,
-				{
-					first_refund_at: firstRefundDate,
-				},
-				(await userRepository.findUnique(userId))!.toRow(),
-			);
+		async function seedRefundedPayment(
+			userId: ReturnType<typeof createUserID>,
+			suffix: string,
+		): Promise<{paymentIntentId: string; chargeId: string}> {
 			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
 			const paymentRepository = new PaymentRepository();
-			const paymentIntentId = 'pi_test_refund_second_456';
-			const checkoutSessionId = 'cs_test_refund_second_456';
+			const paymentIntentId = `pi_test_refund_${suffix}`;
+			const checkoutSessionId = `cs_test_refund_${suffix}`;
 			await paymentRepository.createPayment({
 				checkout_session_id: checkoutSessionId,
 				user_id: userId,
@@ -136,14 +127,41 @@ describe('Stripe Webhook Refund', () => {
 				payment_intent_id: paymentIntentId,
 				completed_at: new Date(),
 			});
-			useRefundListHandler('ch_test_refund_456');
+			return {paymentIntentId, chargeId: `ch_test_refund_${suffix}`};
+		}
+		test('applies permanent purchase block when a second distinct refund exists', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
+			const userRepository = new UserRepository();
+			const firstRefundDate = new Date('2024-01-01');
+			await userRepository.patchUpsert(
+				userId,
+				{first_refund_at: firstRefundDate},
+				(await userRepository.findUnique(userId))!.toRow(),
+			);
+			const {paymentIntentId, chargeId} = await seedRefundedPayment(userId, 'second_456');
+			const nowSeconds = Math.floor(Date.now() / 1000);
+			const earlier = {
+				id: 're_test_refund_second_456_1',
+				object: 'refund',
+				charge: chargeId,
+				payment_intent: paymentIntentId,
+				amount: 1200,
+				currency: 'usd',
+				status: 'succeeded',
+				created: nowSeconds - 600,
+				metadata: {},
+			};
+			const latest = {...earlier, id: 're_test_refund_second_456_2', amount: 1300, created: nowSeconds};
 			await sendWebhook({
 				type: 'charge.refunded',
 				data: {
 					object: {
-						id: 'ch_test_refund_456',
+						id: chargeId,
 						payment_intent: paymentIntentId,
 						amount_refunded: 2500,
+						refunds: {object: 'list', has_more: false, url: `/v1/charges/${chargeId}/refunds`, data: [earlier, latest]},
 					},
 				},
 			});
@@ -154,6 +172,45 @@ describe('Stripe Webhook Refund', () => {
 			const updatedPayment = await userRepository.getPaymentByPaymentIntent(paymentIntentId);
 			expect(updatedPayment).not.toBeNull();
 			expect(updatedPayment!.status).toBe('refunded');
+		});
+		test('does not block purchases when one refund is redelivered after the allowance claim expired', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
+			const userRepository = new UserRepository();
+			const firstRefundDate = new Date('2024-01-01');
+			await userRepository.patchUpsert(
+				userId,
+				{first_refund_at: firstRefundDate},
+				(await userRepository.findUnique(userId))!.toRow(),
+			);
+			const {paymentIntentId, chargeId} = await seedRefundedPayment(userId, 'replay_789');
+			const onlyRefund = {
+				id: 're_test_refund_replay_789',
+				object: 'refund',
+				charge: chargeId,
+				payment_intent: paymentIntentId,
+				amount: 2500,
+				currency: 'usd',
+				status: 'succeeded',
+				created: Math.floor(Date.now() / 1000),
+				metadata: {},
+			};
+			await sendWebhook({
+				type: 'charge.refunded',
+				data: {
+					object: {
+						id: chargeId,
+						payment_intent: paymentIntentId,
+						amount_refunded: 2500,
+						refunds: {object: 'list', has_more: false, url: `/v1/charges/${chargeId}/refunds`, data: [onlyRefund]},
+					},
+				},
+			});
+			const updatedUser = await userRepository.findUnique(userId);
+			expect(updatedUser).not.toBeNull();
+			expect(updatedUser!.firstRefundAt).toEqual(firstRefundDate);
+			expect(updatedUser!.premiumFlags & PremiumFlags.PURCHASE_DISABLED).toBe(0);
 		});
 		test('counts a refund once when the same charge.refunded event is redelivered', async () => {
 			const account = await createTestAccount(harness);

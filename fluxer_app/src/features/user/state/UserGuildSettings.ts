@@ -25,6 +25,7 @@ export interface ChannelOverride {
 		end_time?: string;
 	} | null;
 	unread_badges?: number | null;
+	flags?: number;
 }
 
 interface StoredGuildSettings {
@@ -572,6 +573,10 @@ class UserGuildSettings {
 			this.updateGuildSettings(settings.guild_id, settings);
 		}
 		this.notifyChange();
+	}
+
+	hydrateFromSnapshot(userGuildSettings: ReadonlyArray<GatewayGuildSettings>): void {
+		this.handleGatewayReady([...userGuildSettings]);
 	}
 
 	handleGuildSettingsUpdate(action: {guildId: string; settings: Partial<GatewayGuildSettings>}): void {

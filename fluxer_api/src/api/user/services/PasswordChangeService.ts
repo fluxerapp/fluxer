@@ -137,4 +137,20 @@ export class PasswordChangeService {
 		row.updated_at = now;
 		await this.repo.updateTicket(row);
 	}
+
+	async setPassword(user: User, newPassword: string): Promise<User> {
+		const {users} = this.apiContext.services;
+		if (await AuthPassword.isPasswordPwned(this.apiContext, newPassword)) {
+			throw InputValidationError.fromCode('new_password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
+		}
+		const newPasswordHash = await AuthPassword.hashPassword(this.apiContext, newPassword);
+		return await users.patchUpsert(
+			user.id,
+			{
+				password_hash: newPasswordHash,
+				password_last_changed_at: new Date(),
+			},
+			user.toRow(),
+		);
+	}
 }

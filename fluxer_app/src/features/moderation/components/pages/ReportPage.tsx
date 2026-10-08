@@ -2,7 +2,6 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
-import {AuthLayoutContext} from '@app/features/auth/state/AuthLayoutContext';
 import {showModerationErrorModal} from '@app/features/moderation/components/alerts/ModerationErrorModalUtils';
 import styles from '@app/features/moderation/components/pages/ReportPage.module.css';
 import {
@@ -41,7 +40,7 @@ import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 
 const REPORT_ILLEGAL_CONTENT_DESCRIPTOR = msg({
 	message: 'Report illegal content',
@@ -137,13 +136,7 @@ interface ValidationError {
 
 export const ReportPage = observer(() => {
 	const {i18n} = useLingui();
-	const authLayout = useContext(AuthLayoutContext);
 	useFluxerDocumentTitle(i18n._(REPORT_ILLEGAL_CONTENT_DESCRIPTOR));
-	useLayoutEffect(() => {
-		if (!authLayout) return;
-		authLayout.setShowLogoSide(false);
-		return () => authLayout.setShowLogoSide(true);
-	}, [authLayout]);
 	const [reportSnapshot, setReportSnapshot] = useState(createReportSnapshot);
 	const state = useMemo(() => selectReportState(reportSnapshot), [reportSnapshot]);
 	const dispatch = useCallback((event: Action) => {

@@ -5,10 +5,10 @@ const COMBINING_MARKS = /[\u{300}-\u{36f}]/gu;
 const QUERY_WORD_SEPARATORS = /[, ]+/;
 
 interface SearchTerm {
-	readonly containQuery: RegExp;
-	readonly exactQuery: RegExp;
-	readonly isFullMatch: boolean;
-	readonly queryLower: string;
+	readonly substringPattern: RegExp;
+	readonly prefixPattern: RegExp;
+	readonly spansWholeQuery: boolean;
+	readonly loweredText: string;
 }
 
 let loadedUnicodeConfusables: ReadonlyMap<string, string> | null = null;
@@ -42,11 +42,11 @@ export function fuzzySearch(needle: string, haystack: string): boolean {
 }
 
 export function scoreSearchTerm(value: string, term: SearchTerm, fuzzy = true): number {
-	if (term.exactQuery.test(value)) return value.toLocaleLowerCase() === term.queryLower ? 10 : 7;
-	if (term.containQuery.test(value)) return 5;
-	const words = term.queryLower.split(QUERY_WORD_SEPARATORS);
+	if (term.prefixPattern.test(value)) return value.toLocaleLowerCase() === term.loweredText ? 10 : 7;
+	if (term.substringPattern.test(value)) return 5;
+	const words = term.loweredText.split(QUERY_WORD_SEPARATORS);
 	if (words.every((word) => new RegExp(escapeSearchPattern(word), 'i').test(value))) return 3;
-	if (fuzzy && fuzzySearch(term.queryLower, value)) return 1;
+	if (fuzzy && fuzzySearch(term.loweredText, value)) return 1;
 	return 0;
 }
 
@@ -60,7 +60,7 @@ export function consumeBestSearchTerm(value: string, terms: Array<SearchTerm>, f
 		bestIndex = index;
 	}
 	if (bestIndex === -1) return 0;
-	if (terms[bestIndex].isFullMatch) {
+	if (terms[bestIndex].spansWholeQuery) {
 		terms.length = 0;
 	} else {
 		terms.splice(bestIndex, 1);
@@ -68,17 +68,17 @@ export function consumeBestSearchTerm(value: string, terms: Array<SearchTerm>, f
 	return bestScore;
 }
 
-function buildSearchTerm(queryLower: string, pattern: string, isFullMatch: boolean): SearchTerm {
+function buildSearchTerm(loweredText: string, pattern: string, spansWholeQuery: boolean): SearchTerm {
 	return Object.freeze({
-		containQuery: new RegExp(pattern, 'i'),
-		exactQuery: new RegExp(`^${pattern}`, 'i'),
-		isFullMatch,
-		queryLower,
+		substringPattern: new RegExp(pattern, 'i'),
+		prefixPattern: new RegExp(`^${pattern}`, 'i'),
+		spansWholeQuery,
+		loweredText,
 	});
 }
 
-export function createSearchTerm(queryLower: string): SearchTerm {
-	return buildSearchTerm(queryLower, escapeSearchPattern(queryLower), false);
+export function createSearchTerm(loweredText: string): SearchTerm {
+	return buildSearchTerm(loweredText, escapeSearchPattern(loweredText), false);
 }
 
 export function buildChannelSearchTerms(query: string): ReadonlyArray<SearchTerm> {
@@ -87,8 +87,8 @@ export function buildChannelSearchTerms(query: string): ReadonlyArray<SearchTerm
 		.filter((token) => token !== '')
 		.map((token) => createSearchTerm(token.toLocaleLowerCase()));
 	if (query.includes(' ')) {
-		const queryLower = query.toLocaleLowerCase();
-		terms.unshift(buildSearchTerm(queryLower, escapeSearchPattern(queryLower).replace(' ', '( |-)'), true));
+		const loweredText = query.toLocaleLowerCase();
+		terms.unshift(buildSearchTerm(loweredText, escapeSearchPattern(loweredText).replace(' ', '( |-)'), true));
 	}
 	return terms;
 }

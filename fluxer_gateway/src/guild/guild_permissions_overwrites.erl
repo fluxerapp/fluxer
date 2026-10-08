@@ -46,8 +46,13 @@ apply_channel_overwrites(BasePerms, UserId, MemberRoles, Channel, EveryoneRoleId
     role_id()
 ) -> permission().
 apply_cached_overwrites(BasePerms, UserId, MemberRoles, CachedOWs, EveryoneRoleId) ->
-    EveryonePerms = apply_cached_everyone(BasePerms, CachedOWs, EveryoneRoleId),
-    {RoleAllow, RoleDeny} = accumulate_cached_roles(MemberRoles, CachedOWs),
+    {EveryonePerms, RoleAllow, RoleDeny} = lists:foldl(
+        fun(CachedOW, Acc) ->
+            collect_cached_role_overwrite(CachedOW, MemberRoles, EveryoneRoleId, Acc)
+        end,
+        {BasePerms, 0, 0},
+        CachedOWs
+    ),
     RolePerms = permission_bits:apply_allow_deny(EveryonePerms, RoleAllow, RoleDeny),
     apply_cached_user(RolePerms, CachedOWs, UserId).
 
@@ -79,8 +84,15 @@ maybe_apply_channel_overwrites(
 ) -> permission().
 apply_from_channel_lookup(Permissions, UserId, MemberRoles, ChannelId, GuildId, State) ->
     case guild_permissions_check:find_channel_by_id(ChannelId, State) of
-        undefined -> Permissions;
+        undefined -> unknown_channel_permissions(Permissions, State);
         Channel -> apply_channel_overwrites(Permissions, UserId, MemberRoles, Channel, GuildId)
+    end.
+
+-spec unknown_channel_permissions(permission(), guild_state()) -> permission().
+unknown_channel_permissions(Permissions, State) ->
+    case guild_thread_gate:active(State) of
+        true -> 0;
+        false -> Permissions
     end.
 
 -spec overwrite_cache_from_data(map() | undefined) -> map().
@@ -161,46 +173,21 @@ apply_user_overwrite(Overwrite, UserId, Acc) when is_integer(UserId) ->
 apply_user_overwrite(_Overwrite, _UserId, Acc) ->
     Acc.
 
--spec apply_cached_everyone(
-    permission(), [{integer(), integer(), integer(), integer()}], role_id()
-) -> permission().
-apply_cached_everyone(BasePerms, CachedOWs, EveryoneRoleId) ->
-    lists:foldl(
-        fun
-            ({OWId, 0, Allow, Deny}, Acc) when OWId =:= EveryoneRoleId ->
-                apply_allow_deny(Acc, Allow, Deny);
-            (_, Acc) ->
-                Acc
+-spec collect_cached_role_overwrite(
+    term(), member_roles(), role_id(), {permission(), permission(), permission()}
+) -> {permission(), permission(), permission()}.
+collect_cached_role_overwrite({OWId, 0, Allow, Deny}, MemberRoles, EveryoneRoleId, {E, A, D}) ->
+    E1 =
+        case OWId =:= EveryoneRoleId of
+            true -> apply_allow_deny(E, Allow, Deny);
+            false -> E
         end,
-        BasePerms,
-        CachedOWs
-    ).
-
--spec accumulate_cached_roles(member_roles(), [{integer(), integer(), integer(), integer()}]) ->
-    {permission(), permission()}.
-accumulate_cached_roles(MemberRoles, CachedOWs) ->
-    lists:foldl(
-        fun(RoleId, {AAcc, DAcc}) ->
-            accumulate_cached_role(RoleId, CachedOWs, {AAcc, DAcc})
-        end,
-        {0, 0},
-        MemberRoles
-    ).
-
--spec accumulate_cached_role(
-    role_id(), [{integer(), integer(), integer(), integer()}], {permission(), permission()}
-) -> {permission(), permission()}.
-accumulate_cached_role(RoleId, CachedOWs, Acc) ->
-    lists:foldl(
-        fun
-            ({OWId, 0, Allow, Deny}, {A, D}) when OWId =:= RoleId ->
-                {permission_bits:add(A, Allow), permission_bits:add(D, Deny)};
-            (_, AD) ->
-                AD
-        end,
-        Acc,
-        CachedOWs
-    ).
+    case lists:member(OWId, MemberRoles) of
+        true -> {E1, permission_bits:add(A, Allow), permission_bits:add(D, Deny)};
+        false -> {E1, A, D}
+    end;
+collect_cached_role_overwrite(_, _MemberRoles, _EveryoneRoleId, Acc) ->
+    Acc.
 
 -spec apply_cached_user(
     permission(), [{integer(), integer(), integer(), integer()}], user_id()

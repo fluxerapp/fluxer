@@ -36,7 +36,7 @@ const omitStyle = <T extends {style?: unknown}>(obj: T): Omit<T, 'style'> => {
 
 type FieldSetProps = Omit<React.HTMLProps<HTMLFieldSetElement>, 'label'> & {
 	children: React.ReactNode;
-	error?: string;
+	error?: string | null;
 	errorId?: string;
 	footer?: React.ReactNode;
 	label?: React.ReactNode;
@@ -86,7 +86,7 @@ export interface RenderInputArgs {
 }
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
-	error?: string;
+	error?: string | null;
 	footer?: React.ReactNode;
 	label?: React.ReactNode;
 	labelRight?: React.ReactNode;
@@ -186,7 +186,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 				type: inputType,
 				'aria-label': props['aria-label'] ?? placeholderAriaLabel,
 				'aria-describedby': describedBy,
-				'aria-invalid': ariaInvalid || undefined,
+				'aria-invalid': ariaInvalid || props['aria-invalid'],
 			}),
 			[
 				props,
@@ -330,6 +330,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
 Input.displayName = 'Input';
 
+export const TextInput = Input;
+
 const BaseTextarea = React.forwardRef<HTMLTextAreaElement, TextareaAutosizeProps>(({className, ...rest}, ref) => (
 	<TextareaAutosize
 		data-flx="ui.form.input.base-textarea.input"
@@ -342,7 +344,7 @@ const BaseTextarea = React.forwardRef<HTMLTextAreaElement, TextareaAutosizeProps
 BaseTextarea.displayName = 'BaseTextarea';
 
 type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
-	error?: string;
+	error?: string | null;
 	footer?: React.ReactNode;
 	label: React.ReactNode;
 	minRows?: number;
@@ -410,7 +412,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 				id: textareaId,
 				'aria-label': sanitizedProps['aria-label'] ?? placeholderAriaLabel,
 				'aria-describedby': describedBy,
-				'aria-invalid': !!error,
+				'aria-invalid': !!error || (sanitizedProps['aria-invalid'] ?? false),
 				maxRows,
 				minRows,
 				maxLength,

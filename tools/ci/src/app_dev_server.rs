@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::app_wasm::resolve_app_dir;
+use crate::functions::sha256_file;
 use anyhow::{Context, Result, bail, ensure};
 use clap::Args;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsStr;
 use std::fs;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -391,25 +390,8 @@ where
     Ok(result)
 }
 
-fn hash_file(path: &Path) -> Result<String> {
-    let mut file = fs::File::open(path)
-        .with_context(|| format!("Failed to open {} for hashing", path.display()))?;
-    let mut hasher = Sha256::new();
-    let mut buffer = [0_u8; 64 * 1024];
-    loop {
-        let bytes_read = file
-            .read(&mut buffer)
-            .with_context(|| format!("Failed to read {} for hashing", path.display()))?;
-        if bytes_read == 0 {
-            break;
-        }
-        hasher.update(&buffer[..bytes_read]);
-    }
-    Ok(hex::encode(hasher.finalize()))
-}
-
 fn fingerprint_file(path: &Path) -> Result<InputFingerprint> {
-    let sha256 = hash_file(path)?;
+    let sha256 = sha256_file(path)?;
     let metadata = fs::metadata(path)
         .with_context(|| format!("Failed to stat {} after hashing", path.display()))?;
     Ok(InputFingerprint::Sha256 {
@@ -442,6 +424,11 @@ fn gather_wasm_inputs(project_root: &Path) -> Result<StepInputs> {
     inputs.extend(collect_directory_digests(
         project_root,
         Path::new("rust/libfluxcore"),
+        |path| !path.contains("/target/"),
+    )?);
+    inputs.extend(collect_directory_digests(
+        project_root,
+        Path::new("rust/libfluxwebp"),
         |path| !path.contains("/target/"),
     )?);
     inputs.extend(collect_directory_digests(
@@ -599,6 +586,23 @@ mod tests {
             rel_path_key(Path::new("scripts/GenerateColorSystem.ts")),
             "scripts/GenerateColorSystem.ts"
         );
+    }
+
+    #[test]
+    fn wasm_inputs_cover_the_libfluxwebp_sources_and_headers() {
+        let app_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_app");
+        let inputs = gather_wasm_inputs(&app_dir).expect("gather wasm inputs");
+
+        for key in [
+            "rust/libfluxwebp/Cargo.toml",
+            "rust/libfluxwebp/Cargo.lock",
+            "rust/libfluxwebp/src/lib.rs",
+            "rust/libfluxwebp/shim/stdlib.h",
+            "rust/libfluxwebp/simd/emmintrin.h",
+        ] {
+            assert!(inputs.contains_key(key), "missing {key}");
+        }
+        assert!(inputs.keys().all(|key| !key.contains("/target/")));
     }
 
     #[test]

@@ -8,7 +8,7 @@ import * as InviteUtils from '@app/api/utils/InviteUtils';
 import {URL_REGEX} from '@fluxer/constants/src/Core';
 import * as idna from 'idna-uts46-hx';
 
-const CLIENT_ROUTE_PATH_PREFIXES = ['/channels/', '/theme/'];
+const CLIENT_ROUTE_PATH_PREFIXES = ['/channels/', '/theme/', '/invite/', '/gift/', '/oauth2/', '/users/'];
 
 interface ExcludedLinkBase {
 	hostname: string;
@@ -19,12 +19,14 @@ function normalizeHostname(hostname: string | undefined) {
 	return hostname?.trim().toLowerCase() || '';
 }
 
-function getWebAppHostname() {
-	try {
-		return new URL(Config.endpoints.webApp).hostname;
-	} catch {
-		return '';
-	}
+function getWebAppHostnames(): Array<string> {
+	return Config.endpoints.webAppOrigins.flatMap((origin) => {
+		try {
+			return [new URL(origin).hostname];
+		} catch {
+			return [];
+		}
+	});
 }
 
 function endpointLinkBase(endpoint: string): ExcludedLinkBase | null {
@@ -45,7 +47,7 @@ function getExcludedLinkBases(): Array<ExcludedLinkBase> {
 			endpointLinkBase(Config.endpoints.invite),
 			endpointLinkBase(Config.endpoints.gift),
 		];
-		for (const hostname of [getWebAppHostname(), Config.hosts.marketing]) {
+		for (const hostname of [...getWebAppHostnames(), Config.hosts.marketing]) {
 			for (const pathPrefix of CLIENT_ROUTE_PATH_PREFIXES) {
 				bases.push({hostname: normalizeHostname(hostname), pathPrefix});
 			}

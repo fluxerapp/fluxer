@@ -4,15 +4,23 @@ import KeybindManager from '@app/features/app/keybindings/KeybindManager';
 import styles from '@app/features/input/components/KeybindRecorder.module.css';
 import {
 	beginGlobalKeyCapture,
+	beginShortcutCapture,
 	globalKeyEventToCombo,
-	isGlobalKeyEventModifierKey,
+	isModifierKeyCode,
+	shortcutCaptureKeyToCombo,
+	shortcutCaptureMouseToCombo,
 } from '@app/features/input/components/KeybindRecorderCapture';
+import GlobalShortcuts, {getGlobalShortcutsApi} from '@app/features/input/state/GlobalShortcuts';
 import type {KeybindCommand, KeyCombo} from '@app/features/input/state/InputKeybind';
 import {isGamepadButtonPressed} from '@app/features/input/utils/GamepadButtonUtils';
 import {isKeybindModifierKey} from '@app/features/input/utils/KeybindComboUtils';
 import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
-import type {GlobalKeyEvent} from '@app/features/platform/types/Electron';
+import type {
+	GlobalKeyEvent,
+	GlobalShortcutCaptureEvent,
+	GlobalShortcutsApi,
+} from '@app/features/platform/types/Electron';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -76,6 +84,8 @@ const MODIFIER_BOTH_SIDES_PAIRS: ReadonlyArray<readonly [string, string]> = [
 	['MetaLeft', 'MetaRight'],
 ];
 const RECORDABLE_MOUSE_BUTTONS = new Set([0, 1, 2, 3, 4]);
+const CAPTURE_ONLY_MOUSE_BUTTONS = new Set([1, 3, 4]);
+const HOOK_BACKENDS = new Set(['windows', 'macos', 'x11', 'evdev']);
 const normalizeKeyForCombo = (key: string): string => {
 	if (key === 'Spacebar') return ' ';
 	if (key === 'Break') return 'Pause';
@@ -134,6 +144,12 @@ const modifierOnlyCombo = (event: KeyboardEvent): KeyCombo => ({
 	modifierOnly: true,
 });
 
+function canCaptureFromHook(api: GlobalShortcutsApi): boolean {
+	if (typeof api.startCapture !== 'function') return false;
+	const backend = GlobalShortcuts.backend;
+	return backend !== null && HOOK_BACKENDS.has(backend) && GlobalShortcuts.hookError === null;
+}
+
 interface KeybindEditorPopoutProps {
 	value: KeyCombo;
 	defaultValue: KeyCombo | null;
@@ -182,6 +198,10 @@ const KeybindEditorPopout: React.FC<KeybindEditorPopoutProps> = ({
 		setPreviewCombo(null);
 		setRecording(true);
 	}, []);
+	const onSaveRef = useRef(onSave);
+	onSaveRef.current = onSave;
+	const globalRef = useRef(value.global);
+	globalRef.current = value.global;
 	useEffect(() => {
 		if (!recording) return;
 		let committed = false;
@@ -194,10 +214,10 @@ const KeybindEditorPopout: React.FC<KeybindEditorPopoutProps> = ({
 			committed = true;
 			const savedCombo: KeyCombo = {
 				...combo,
-				global: value.global,
+				global: globalRef.current,
 				enabled: true,
 			};
-			onSave(savedCombo);
+			onSaveRef.current(savedCombo);
 			finishRecording(savedCombo);
 		};
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -250,17 +270,16 @@ const KeybindEditorPopout: React.FC<KeybindEditorPopoutProps> = ({
 			}
 			commit(combo);
 		};
-		const handleGlobalKeyEvent = (event: GlobalKeyEvent) => {
+		const handleGlobalKey = (type: 'keydown' | 'keyup', baseCombo: KeyCombo) => {
 			if (committed) return;
-			const baseCombo = globalKeyEventToCombo(event);
-			if (!baseCombo) return;
 			const comboCode = baseCombo.code ?? baseCombo.key;
-			if (event.type === 'keydown') {
+			const isModifier = isModifierKeyCode(baseCombo.code);
+			if (type === 'keydown') {
 				if (baseCombo.key === 'Escape') {
 					cancelRecording();
 					return;
 				}
-				if (isGlobalKeyEventModifierKey(event)) {
+				if (isModifier) {
 					heldModifierCodes.add(comboCode);
 					seenModifierCodes.add(comboCode);
 					lastModifierCombo = {...baseCombo, modifierOnly: true};
@@ -277,12 +296,11 @@ const KeybindEditorPopout: React.FC<KeybindEditorPopoutProps> = ({
 				commit(combo);
 				return;
 			}
-			if (!isGlobalKeyEventModifierKey(event)) return;
+			if (!isModifier) return;
 			if (sawNonModifier) return;
 			heldModifierCodes.delete(comboCode);
 			if (heldModifierCodes.size > 0) return;
-			const combo = lastModifierCombo ?? globalKeyEventToCombo(event, {modifierOnly: true});
-			if (!combo) return;
+			const combo = lastModifierCombo ?? {...baseCombo, modifierOnly: true};
 			if (!combo.key && !combo.code) return;
 			const modifierFlagCount =
 				(combo.shift ? 1 : 0) +
@@ -299,6 +317,25 @@ const KeybindEditorPopout: React.FC<KeybindEditorPopoutProps> = ({
 				}
 			}
 			commit(combo);
+		};
+		const handleGlobalKeyEvent = (event: GlobalKeyEvent) => {
+			const baseCombo = globalKeyEventToCombo(event);
+			if (baseCombo) handleGlobalKey(event.type, baseCombo);
+		};
+		const handleCaptureEvent = (event: GlobalShortcutCaptureEvent) => {
+			if (committed) return;
+			if (event.type === 'mousedown') {
+				if (event.button === null || !CAPTURE_ONLY_MOUSE_BUTTONS.has(event.button)) return;
+				if (GlobalShortcuts.status?.supportsMouseButtons !== true) return;
+				const combo = shortcutCaptureMouseToCombo(event);
+				if (!combo) return;
+				sawNonModifier = true;
+				commit(combo);
+				return;
+			}
+			if (event.type === 'mouseup') return;
+			const baseCombo = shortcutCaptureKeyToCombo(event);
+			if (baseCombo) handleGlobalKey(event.type, baseCombo);
 		};
 		const handleMouseDown = (event: MouseEvent) => {
 			if (!RECORDABLE_MOUSE_BUTTONS.has(event.button)) return;
@@ -347,22 +384,25 @@ const KeybindEditorPopout: React.FC<KeybindEditorPopoutProps> = ({
 			rafId = requestAnimationFrame(pollGamepads);
 		};
 		rafId = requestAnimationFrame(pollGamepads);
-		const cancelGlobalCapture = beginGlobalKeyCapture(getElectronAPI(), (event) => {
-			handleGlobalKeyEvent(event);
-		});
+		const globalShortcutsApi = getGlobalShortcutsApi();
+		const cancelGlobalCapture = globalShortcutsApi
+			? canCaptureFromHook(globalShortcutsApi)
+				? beginShortcutCapture(globalShortcutsApi, handleCaptureEvent)
+				: null
+			: beginGlobalKeyCapture(getElectronAPI(), handleGlobalKeyEvent);
 		window.addEventListener('keydown', handleKeyDown, true);
 		window.addEventListener('keyup', handleKeyUp, true);
 		window.addEventListener('mousedown', handleMouseDown, true);
 		window.addEventListener('contextmenu', handleContextMenu, true);
 		return () => {
-			cancelGlobalCapture();
+			cancelGlobalCapture?.();
 			window.removeEventListener('keydown', handleKeyDown, true);
 			window.removeEventListener('keyup', handleKeyUp, true);
 			window.removeEventListener('mousedown', handleMouseDown, true);
 			window.removeEventListener('contextmenu', handleContextMenu, true);
 			cancelAnimationFrame(rafId);
 		};
-	}, [recording, onSave, cancelRecording, finishRecording, value.global]);
+	}, [recording, cancelRecording, finishRecording]);
 	const handleClear = () => {
 		setPreviewCombo(null);
 		onClear?.();

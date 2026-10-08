@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {MeilisearchClient, MeilisearchTask} from '@app/api/search/meilisearch/MeilisearchClient';
+import {MeilisearchTaskError} from '@app/api/search/meilisearch/MeilisearchClient';
 import type {MeilisearchFilter} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
 import {joinMeiliFilters} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
 import type {MeilisearchIndexDefinition} from '@app/api/search/meilisearch/MeilisearchIndexDefinitions';
@@ -58,7 +59,13 @@ export class MeilisearchIndexAdapter<
 				uid,
 				primaryKey: this.indexDefinition.primaryKey,
 			});
-			await this.client.waitForTask(task.taskUid);
+			try {
+				await this.client.waitForTask(task.taskUid);
+			} catch (error) {
+				if (!(error instanceof MeilisearchTaskError && error.code === 'index_already_exists')) {
+					throw error;
+				}
+			}
 		}
 		await Promise.all([
 			this.applySetting('PUT', 'searchable-attributes', this.indexDefinition.searchableAttributes),

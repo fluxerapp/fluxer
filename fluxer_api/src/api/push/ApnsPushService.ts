@@ -204,9 +204,7 @@ function buildApnsPayload(payload: Record<string, unknown>): Record<string, unkn
 	if (badge !== undefined) {
 		aps.badge = badge;
 	}
-	if (imageUrl) {
-		aps['mutable-content'] = 1;
-	}
+	aps['mutable-content'] = 1;
 	return {
 		...data,
 		title,

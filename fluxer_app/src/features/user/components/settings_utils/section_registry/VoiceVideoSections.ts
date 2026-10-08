@@ -3,7 +3,7 @@
 import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
 	AUDIO_2_DESCRIPTOR,
-	PLUTONIUM_DESCRIPTOR,
+	PREMIUM_PRODUCT_NAME_KEYWORD,
 	VOICE_DESCRIPTOR,
 	VOLUME_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
@@ -346,7 +346,7 @@ export const voiceVideoSections = [
 			MESSAGE_1080P_DESCRIPTOR,
 			MESSAGE_1440P_DESCRIPTOR,
 			SOURCE_QUALITY_DESCRIPTOR,
-			PLUTONIUM_DESCRIPTOR,
+			PREMIUM_PRODUCT_NAME_KEYWORD,
 		],
 		isAdvanced: false,
 	},

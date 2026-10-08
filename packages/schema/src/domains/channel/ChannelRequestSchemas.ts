@@ -18,7 +18,19 @@ import {
 	VOICE_CHANNEL_USER_LIMIT_MAX,
 	VOICE_CHANNEL_USER_LIMIT_MIN,
 } from '@fluxer/constants/src/LimitConstants';
+import {
+	THREAD_NAME_MAX_LENGTH,
+	THREAD_NAME_MIN_LENGTH,
+	THREAD_RATE_LIMIT_PER_USER_MAX,
+} from '@fluxer/constants/src/ThreadConstants';
 import {ChannelNicknameOverrides} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import {
+	ForumChannelRequestFields,
+	ForumLayoutSchema,
+	ThreadAppliedTagsRequestFields,
+	ThreadParentDefaultsRequestFields,
+} from '@fluxer/schema/src/domains/channel/ForumRequestSchemas';
+import {ThreadAutoArchiveDurationSchema} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
 import {ReadStateResponse} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
 import {ChannelOverwriteTypeSchema, GeneralChannelNameType} from '@fluxer/schema/src/primitives/ChannelValidators';
 import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
@@ -33,6 +45,7 @@ import {
 	UnsignedInt64Type,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {URLType} from '@fluxer/schema/src/primitives/UrlValidators';
+import {withSchemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
 const ChannelOverwriteRequest = z.object({
@@ -137,6 +150,15 @@ const ChannelCreateTextRequest = ChannelCreateCommon.extend({
 	name: GeneralChannelNameType.describe('The name of the channel'),
 });
 
+const ChannelCreateAnnouncementRequest = ChannelCreateCommon.extend({
+	type: createNamedLiteral(
+		ChannelTypes.GUILD_ANNOUNCEMENT,
+		'GUILD_ANNOUNCEMENT',
+		'Channel type (announcement channel)',
+	),
+	name: GeneralChannelNameType.describe('The name of the channel'),
+});
+
 const ChannelCreateVoiceRequest = ChannelCreateCommon.extend({
 	type: createNamedLiteral(ChannelTypes.GUILD_VOICE, 'GUILD_VOICE', 'Channel type (voice channel)'),
 	name: GeneralChannelNameType.describe('The name of the channel'),
@@ -152,17 +174,64 @@ const ChannelCreateLinkRequest = ChannelCreateCommon.extend({
 	name: GeneralChannelNameType.describe('The name of the channel'),
 });
 
-export const ChannelCreateRequest = z.discriminatedUnion('type', [
+const EXPERIMENT = {experiment: 'channel_threads'} as const;
+
+const ChannelCreateThreadParentTextRequest = ChannelCreateTextRequest.extend(ThreadParentDefaultsRequestFields);
+
+const ChannelCreateThreadParentAnnouncementRequest = ChannelCreateAnnouncementRequest.extend(
+	ThreadParentDefaultsRequestFields,
+);
+
+const ChannelCreateForumRequest = withSchemaMetadata(
+	ChannelCreateCommon.extend({
+		type: createNamedLiteral(ChannelTypes.GUILD_FORUM, 'GUILD_FORUM', 'Channel type (forum channel)'),
+		name: GeneralChannelNameType.describe('The name of the channel'),
+		...ForumChannelRequestFields,
+		default_forum_layout: ForumLayoutSchema.nullish(),
+	}),
+	EXPERIMENT,
+);
+
+const ChannelCreateMediaRequest = withSchemaMetadata(
+	ChannelCreateCommon.extend({
+		type: createNamedLiteral(ChannelTypes.GUILD_MEDIA, 'GUILD_MEDIA', 'Channel type (media channel)'),
+		name: GeneralChannelNameType.describe('The name of the channel'),
+		...ForumChannelRequestFields,
+	}),
+	EXPERIMENT,
+);
+
+export const ChannelCreateControlRequest = z.discriminatedUnion('type', [
 	ChannelCreateTextRequest,
+	ChannelCreateAnnouncementRequest,
 	ChannelCreateVoiceRequest,
 	ChannelCreateCategoryRequest,
 	ChannelCreateLinkRequest,
+]);
+
+export const ChannelCreateRequest = z.discriminatedUnion('type', [
+	ChannelCreateThreadParentTextRequest,
+	ChannelCreateThreadParentAnnouncementRequest,
+	ChannelCreateVoiceRequest,
+	ChannelCreateCategoryRequest,
+	ChannelCreateLinkRequest,
+	ChannelCreateForumRequest,
+	ChannelCreateMediaRequest,
 ]);
 
 export type ChannelCreateRequest = z.infer<typeof ChannelCreateRequest>;
 
 const ChannelUpdateTextRequest = ChannelUpdateCommon.extend({
 	type: createNamedLiteral(ChannelTypes.GUILD_TEXT, 'GUILD_TEXT', 'Channel type (text channel)'),
+	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
+});
+
+const ChannelUpdateAnnouncementRequest = ChannelUpdateCommon.extend({
+	type: createNamedLiteral(
+		ChannelTypes.GUILD_ANNOUNCEMENT,
+		'GUILD_ANNOUNCEMENT',
+		'Channel type (announcement channel)',
+	),
 	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
 });
 
@@ -191,19 +260,150 @@ const ChannelUpdateGroupDmRequest = z.object({
 	nicks: ChannelNicknameOverrides.nullish().describe('Custom nicknames for users in this group DM'),
 });
 
-export const ChannelUpdateRequest = z.discriminatedUnion('type', [
+const ChannelUpdateThreadFields = {
+	name: createStringType(THREAD_NAME_MIN_LENGTH, THREAD_NAME_MAX_LENGTH)
+		.optional()
+		.describe('The name of the thread (1-100 characters)'),
+	archived: z.boolean().nullish().describe('Whether the thread is archived'),
+	auto_archive_duration: ThreadAutoArchiveDurationSchema.optional(),
+	locked: z.boolean().nullish().describe('Whether only moderators can unarchive the thread'),
+	rate_limit_per_user: Int32Type.max(THREAD_RATE_LIMIT_PER_USER_MAX)
+		.nullish()
+		.describe('Seconds a user has to wait before sending another message (0-21600)'),
+	flags: Int32Type.optional().describe('Channel flags'),
+};
+
+const ChannelUpdatePublicThreadRequest = z.object({
+	type: createNamedLiteral(ChannelTypes.PUBLIC_THREAD, 'PUBLIC_THREAD', 'Channel type (public thread)'),
+	...ChannelUpdateThreadFields,
+	...ThreadAppliedTagsRequestFields,
+});
+
+const ChannelUpdateAnnouncementThreadRequest = z.object({
+	type: createNamedLiteral(
+		ChannelTypes.ANNOUNCEMENT_THREAD,
+		'ANNOUNCEMENT_THREAD',
+		'Channel type (announcement thread)',
+	),
+	...ChannelUpdateThreadFields,
+});
+
+const ChannelUpdatePrivateThreadRequest = z.object({
+	type: createNamedLiteral(ChannelTypes.PRIVATE_THREAD, 'PRIVATE_THREAD', 'Channel type (private thread)'),
+	...ChannelUpdateThreadFields,
+	invitable: z.boolean().nullish().describe('Whether non-moderators can add other non-moderators'),
+});
+
+const CHANNEL_UPDATE_REQUEST_OPTIONS = [
 	ChannelUpdateTextRequest,
+	ChannelUpdateAnnouncementRequest,
 	ChannelUpdateVoiceRequest,
 	ChannelUpdateCategoryRequest,
 	ChannelUpdateLinkRequest,
 	ChannelUpdateGroupDmRequest,
+] as const;
+
+export const ChannelUpdateRequest = z.discriminatedUnion('type', [
+	...CHANNEL_UPDATE_REQUEST_OPTIONS,
+	ChannelUpdateAnnouncementThreadRequest,
+	ChannelUpdatePublicThreadRequest,
+	ChannelUpdatePrivateThreadRequest,
 ]);
 
 export type ChannelUpdateRequest = z.infer<typeof ChannelUpdateRequest>;
 
-export const ChannelUpdateRequestBody = z.union(
-	ChannelUpdateRequest.options.map(({shape: {type, ...shape}}) => z.object(shape)),
+const ChannelTypeConversionField = z
+	.union([z.literal(ChannelTypes.GUILD_TEXT), z.literal(ChannelTypes.GUILD_ANNOUNCEMENT)])
+	.optional()
+	.describe('Convert between text (0) and announcement (5). Other conversions are rejected.');
+
+const CONVERTIBLE_UPDATE_REQUESTS = new Set<z.ZodObject>([ChannelUpdateTextRequest, ChannelUpdateAnnouncementRequest]);
+
+const ChannelUpdateThreadParentTextRequest = ChannelUpdateTextRequest.extend(ThreadParentDefaultsRequestFields);
+
+const ChannelUpdateThreadParentAnnouncementRequest = ChannelUpdateAnnouncementRequest.extend(
+	ThreadParentDefaultsRequestFields,
 );
+
+const ChannelUpdateForumRequest = ChannelUpdateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.GUILD_FORUM, 'GUILD_FORUM', 'Channel type (forum channel)'),
+	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
+	...ForumChannelRequestFields,
+	default_forum_layout: ForumLayoutSchema.nullish(),
+});
+
+const ChannelUpdateMediaRequest = ChannelUpdateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.GUILD_MEDIA, 'GUILD_MEDIA', 'Channel type (media channel)'),
+	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
+	...ForumChannelRequestFields,
+});
+
+export const ChannelUpdateGatedRequest = z.discriminatedUnion('type', [
+	ChannelUpdateThreadParentTextRequest,
+	ChannelUpdateThreadParentAnnouncementRequest,
+	ChannelUpdateVoiceRequest,
+	ChannelUpdateCategoryRequest,
+	ChannelUpdateLinkRequest,
+	ChannelUpdateGroupDmRequest,
+	ChannelUpdateAnnouncementThreadRequest,
+	ChannelUpdatePublicThreadRequest,
+	ChannelUpdatePrivateThreadRequest,
+	ChannelUpdateForumRequest,
+	ChannelUpdateMediaRequest,
+]);
+
+export type ChannelUpdateGatedRequest = z.infer<typeof ChannelUpdateGatedRequest>;
+
+export type ChannelUpdateNonThreadRequest =
+	| z.infer<(typeof CHANNEL_UPDATE_REQUEST_OPTIONS)[number]>
+	| z.infer<typeof ChannelUpdateThreadParentTextRequest>
+	| z.infer<typeof ChannelUpdateThreadParentAnnouncementRequest>
+	| z.infer<typeof ChannelUpdateForumRequest>
+	| z.infer<typeof ChannelUpdateMediaRequest>;
+
+export type ChannelUpdateThreadRequest =
+	| z.infer<typeof ChannelUpdateAnnouncementThreadRequest>
+	| z.infer<typeof ChannelUpdatePublicThreadRequest>
+	| z.infer<typeof ChannelUpdatePrivateThreadRequest>;
+
+export const ChannelUpdatePublicThreadRequestBody = withSchemaMetadata(
+	ChannelUpdatePublicThreadRequest.omit({type: true}),
+	{experiment: 'channel_threads'},
+);
+
+export const ChannelUpdatePrivateThreadRequestBody = withSchemaMetadata(
+	ChannelUpdatePrivateThreadRequest.omit({type: true}),
+	{experiment: 'channel_threads'},
+);
+
+export const ChannelUpdateThreadParentRequestBody = withSchemaMetadata(
+	z.object(ThreadParentDefaultsRequestFields),
+	EXPERIMENT,
+);
+
+export const ChannelUpdateForumRequestBody = withSchemaMetadata(
+	ChannelUpdateForumRequest.omit({type: true}),
+	EXPERIMENT,
+);
+
+export const ChannelUpdateMediaRequestBody = withSchemaMetadata(
+	ChannelUpdateMediaRequest.omit({type: true}),
+	EXPERIMENT,
+);
+
+export const ChannelUpdateRequestBody = z.union([
+	...CHANNEL_UPDATE_REQUEST_OPTIONS.map((option) => {
+		const {type, ...shape} = option.shape;
+		return CONVERTIBLE_UPDATE_REQUESTS.has(option)
+			? z.object({...shape, type: ChannelTypeConversionField})
+			: z.object(shape);
+	}),
+	ChannelUpdatePublicThreadRequestBody,
+	ChannelUpdatePrivateThreadRequestBody,
+	ChannelUpdateThreadParentRequestBody,
+	ChannelUpdateForumRequestBody,
+	ChannelUpdateMediaRequestBody,
+]);
 
 export const PermissionOverwriteCreateRequest = z.object({
 	type: ChannelOverwriteTypeSchema.describe('The type of overwrite (0 = role, 1 = member)'),

@@ -42,6 +42,7 @@ export interface GuildSummary {
 	name: string | null;
 	icon: string | null;
 	permissions?: string | null;
+	threads_active?: true;
 }
 
 export interface GuildWithPermissions {
@@ -49,6 +50,7 @@ export interface GuildWithPermissions {
 	name: string;
 	icon: string | null;
 	canAuthorizeBotInvite: boolean;
+	threadsActive: boolean;
 }
 
 export interface SignedInView {

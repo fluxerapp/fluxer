@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {useHashParam} from '@app/features/app/hooks/useHashParam';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
-import {VerificationResult} from '@app/features/auth/commands/AuthenticationCommands';
 import styles from '@app/features/auth/components/pages/VerifyEmailPage.module.css';
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
-import {
-	createVerificationError,
-	type VerificationError,
-	VerificationErrorType,
-} from '@app/features/auth/types/VerificationError';
+import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
+import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
+import {useAuthTokenVerification} from '@app/features/auth/flow/useAuthTokenVerification';
+import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
+import {authRequestTargetFromSnapshot} from '@app/features/auth/state/AuthRequestTarget';
+import {type VerificationError, VerificationErrorType} from '@app/features/auth/types/VerificationError';
 import {VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
@@ -17,7 +17,7 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {CheckIcon, XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
-import {useEffect, useState} from 'react';
+import {useCallback, useMemo} from 'react';
 
 const renderErrorMessage = (error: VerificationError | null) => {
 	if (!error) return null;
@@ -28,36 +28,20 @@ const renderErrorMessage = (error: VerificationError | null) => {
 			return <Trans>Something went wrong. Reload the page or request a new verification email.</Trans>;
 	}
 };
-const VerifyPage = observer(function VerifyPage() {
-	const {i18n} = useLingui();
-	const [isLoading, setIsLoading] = useState(true);
-	const [isSuccess, setIsSuccess] = useState(false);
-	const [error, setError] = useState<VerificationError | null>(null);
-	useFluxerDocumentTitle(i18n._(VERIFY_EMAIL_DESCRIPTOR));
-	const token = useHashParam('token');
-	useEffect(() => {
-		const performVerification = async () => {
-			if (!token) {
-				setError(createVerificationError(VerificationErrorType.INVALID_TOKEN));
-				setIsLoading(false);
-				return;
-			}
-			const result = await AuthenticationCommands.verifyEmail(token);
-			switch (result) {
-				case VerificationResult.SUCCESS:
-					setIsSuccess(true);
-					break;
-				case VerificationResult.EXPIRED_TOKEN:
-					setError(createVerificationError(VerificationErrorType.LINK_EXPIRED));
-					break;
-				case VerificationResult.SERVER_ERROR:
-					setError(createVerificationError(VerificationErrorType.SERVER_ERROR));
-					break;
-			}
-			setIsLoading(false);
-		};
-		performVerification();
-	}, [token]);
+
+interface VerifyEmailPageContentProps {
+	readonly runtimeSnapshot: RuntimeConfigSnapshot;
+}
+
+const VerifyEmailPageContent = observer(function VerifyEmailPageContent({
+	runtimeSnapshot,
+}: VerifyEmailPageContentProps) {
+	const requestTarget = useMemo(() => authRequestTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
+	const verify = useCallback(
+		(token: string) => AuthenticationCommands.verifyEmail(token, requestTarget),
+		[requestTarget],
+	);
+	const {isLoading, isSuccess, error} = useAuthTokenVerification(verify);
 	if (isLoading) {
 		return (
 			<div className={styles.container} data-flx="auth.verify-email-page.verify-page.container">
@@ -129,6 +113,19 @@ const VerifyPage = observer(function VerifyPage() {
 				</>
 			)}
 		</div>
+	);
+});
+
+const VerifyPage = observer(function VerifyPage() {
+	const {i18n} = useLingui();
+	useFluxerDocumentTitle(i18n._(VERIFY_EMAIL_DESCRIPTOR));
+	useAuthPresentation({variant: AuthCardVariant.COMPACT});
+	return (
+		<AuthRuntimeTargetGate data-flx="auth.verify-email-page.runtime-target-gate">
+			{(runtimeSnapshot) => (
+				<VerifyEmailPageContent runtimeSnapshot={runtimeSnapshot} data-flx="auth.verify-email-page.content" />
+			)}
+		</AuthRuntimeTargetGate>
 	);
 });
 

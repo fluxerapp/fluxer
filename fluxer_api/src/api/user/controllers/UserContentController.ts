@@ -2,6 +2,7 @@
 
 import {Readable} from 'node:stream';
 import {createChannelID, createMessageID} from '@app/api/BrandedTypes';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {StorageObjectRangeNotSatisfiableError} from '@app/api/infrastructure/IStorageService';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -47,6 +48,7 @@ export function UserContentController(app: HonoApp) {
 		async (ctx) => {
 			const {limit, roles, everyone, guilds, before} = ctx.req.valid('query');
 			const response = await ctx.get('userContentRequestService').listMentions({
+				viewer: viewerFromCtx(ctx),
 				userId: ctx.get('user').id,
 				limit,
 				everyone,
@@ -126,6 +128,7 @@ export function UserContentController(app: HonoApp) {
 		async (ctx) => {
 			const {limit, before} = ctx.req.valid('query');
 			const response = await ctx.get('userContentRequestService').listSavedMessages({
+				viewer: viewerFromCtx(ctx),
 				userId: ctx.get('user').id,
 				limit,
 				before: before ? createMessageID(before) : undefined,
@@ -153,6 +156,7 @@ export function UserContentController(app: HonoApp) {
 		async (ctx) => {
 			const {channel_id, message_id} = ctx.req.valid('json');
 			await ctx.get('userContentRequestService').saveMessage({
+				viewer: viewerFromCtx(ctx),
 				userId: ctx.get('user').id,
 				channelId: createChannelID(channel_id),
 				messageId: createMessageID(message_id),

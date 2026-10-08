@@ -93,17 +93,6 @@ is_user_blocked(UserId, AuthorId) ->
     integer(), integer(), integer(), map(), integer(), map(), map(), map() | undefined
 ) -> boolean().
 check_user_guild_settings(
-    _UserId,
-    0,
-    _ChannelId,
-    _MessageData,
-    _GuildDefaultNotifications,
-    _UserRolesMap,
-    _ConnectedUsers,
-    _LargeGuildMetadata
-) ->
-    true;
-check_user_guild_settings(
     UserId,
     GuildId,
     ChannelId,
@@ -114,8 +103,7 @@ check_user_guild_settings(
     LargeGuildMetadata
 ) ->
     Settings = fetch_settings(UserId, GuildId),
-    MobilePush = get_boolean_setting(mobile_push, Settings, true),
-    case MobilePush of
+    case mobile_push_allowed(GuildId, Settings) of
         false ->
             false;
         true ->
@@ -132,6 +120,12 @@ check_user_guild_settings(
             )
     end.
 
+-spec mobile_push_allowed(integer(), map()) -> boolean().
+mobile_push_allowed(0, _Settings) ->
+    true;
+mobile_push_allowed(_GuildId, Settings) ->
+    get_boolean_setting(mobile_push, Settings, true).
+
 -spec fetch_settings(integer(), integer()) -> map().
 fetch_settings(UserId, GuildId) ->
     case push_ets_cache:get_user_guild_settings(UserId, GuildId) of
@@ -141,13 +135,67 @@ fetch_settings(UserId, GuildId) ->
 
 -spec fetch_settings_rpc(integer(), integer()) -> map().
 fetch_settings_rpc(UserId, GuildId) ->
-    try push_subscriptions:fetch_and_cache_user_guild_settings(UserId, GuildId) of
+    try fetch_and_cache_user_guild_settings(UserId, GuildId) of
         S0 when is_map(S0) -> S0;
         _ -> #{}
     catch
         throw:_ -> #{};
         error:_ -> #{};
         exit:_ -> #{}
+    end.
+
+-spec fetch_and_cache_user_guild_settings(integer(), integer()) -> map() | null.
+fetch_and_cache_user_guild_settings(UserId, GuildId) ->
+    Req = #{
+        <<"type">> => <<"get_user_guild_settings">>,
+        <<"user_ids">> => [integer_to_binary(UserId)],
+        <<"guild_id">> => integer_to_binary(GuildId)
+    },
+    logger:debug(
+        "Push: fetching user guild settings via RPC",
+        #{user_id => UserId, guild_id => GuildId}
+    ),
+    Fill = push_ets_cache:reserve_user_guild_settings([UserId], GuildId),
+    try rpc_client:call(Req) of
+        {ok, Data} ->
+            cache_user_guild_settings(UserId, GuildId, Data, Fill);
+        {error, Reason} ->
+            logger:debug(
+                "Push: RPC failed to fetch user guild settings",
+                #{user_id => UserId, guild_id => GuildId, reason => Reason}
+            ),
+            null
+    after
+        push_ets_cache:release(Fill)
+    end.
+
+-spec cache_user_guild_settings(integer(), integer(), map(), push_ets_cache:fill()) -> map().
+cache_user_guild_settings(UserId, GuildId, Data, Fill) ->
+    SettingsData =
+        case maps:get(<<"user_guild_settings">>, Data, [null]) of
+            [First | _] -> First;
+            _ -> null
+        end,
+    case SettingsData of
+        null ->
+            logger:debug(
+                "Push: user guild settings returned null; caching empty sentinel",
+                #{user_id => UserId, guild_id => GuildId}
+            ),
+            push_ets_cache:put_user_guild_settings(UserId, GuildId, #{}, Fill),
+            #{};
+        Settings ->
+            logger:debug(
+                "Push: user guild settings fetched and cached",
+                #{
+                    user_id => UserId,
+                    guild_id => GuildId,
+                    muted => maps:get(muted, Settings, undefined),
+                    mobile_push => maps:get(mobile_push, Settings, undefined)
+                }
+            ),
+            push_ets_cache:put_user_guild_settings(UserId, GuildId, Settings, Fill),
+            Settings
     end.
 
 -spec prefetch_user_guild_settings([integer()], integer(), integer()) -> ok.
@@ -391,6 +439,110 @@ mention_here_requires_connected_user_test() ->
     MessageData = #{<<"mention_everyone">> => true, <<"mention_here">> => true},
     ?assertEqual(false, is_user_mentioned(123, MessageData, #{}, #{}, #{})),
     ?assertEqual(true, is_user_mentioned(123, MessageData, #{}, #{}, #{123 => true})).
+
+-define(DM_USER, 920001).
+-define(DM_AUTHOR, 920002).
+-define(DM_CHANNEL, 920005).
+
+dm_eligible(ChannelType, PrivateSettings) ->
+    push_ets_cache:init(),
+    ok = push_ets_cache:put_user_guild_settings(?DM_USER, 0, PrivateSettings),
+    try
+        is_eligible_for_push(
+            ?DM_USER,
+            ?DM_AUTHOR,
+            0,
+            ?DM_CHANNEL,
+            #{<<"channel_type">> => ChannelType},
+            0,
+            #{},
+            #{},
+            undefined
+        )
+    after
+        push_ets_cache:delete_user_guild_settings(?DM_USER, 0)
+    end.
+
+dm_override(Override) ->
+    #{<<"channel_overrides">> => #{integer_to_binary(?DM_CHANNEL) => Override}}.
+
+mute_ending_in(OffsetMs) ->
+    Ms = erlang:system_time(millisecond) + OffsetMs,
+    #{
+        <<"end_time">> => list_to_binary(
+            calendar:system_time_to_rfc3339(Ms, [{unit, millisecond}, {offset, "Z"}])
+        )
+    }.
+
+a_muted_dm_is_not_pushed_test() ->
+    Muted = dm_override(#{<<"muted">> => true, <<"mute_config">> => null}),
+    ?assertEqual(false, dm_eligible(1, Muted)).
+
+a_muted_group_dm_is_not_pushed_test() ->
+    Muted = dm_override(#{<<"muted">> => true, <<"mute_config">> => mute_ending_in(60000)}),
+    ?assertEqual(false, dm_eligible(3, Muted)).
+
+a_dm_whose_mute_expired_is_pushed_test() ->
+    Expired = dm_override(#{<<"muted">> => true, <<"mute_config">> => mute_ending_in(-60000)}),
+    ?assertEqual(true, dm_eligible(1, Expired)),
+    ?assertEqual(true, dm_eligible(3, Expired)).
+
+an_unmuted_dm_is_pushed_test() ->
+    ?assertEqual(true, dm_eligible(1, #{})),
+    ?assertEqual(true, dm_eligible(3, #{})),
+    Other = #{<<"channel_overrides">> => #{<<"1">> => #{<<"muted">> => true}}},
+    ?assertEqual(true, dm_eligible(1, Other)).
+
+a_dm_set_to_no_messages_is_not_pushed_test() ->
+    ?assertEqual(false, dm_eligible(1, dm_override(#{<<"message_notifications">> => 2}))),
+    ?assertEqual(false, dm_eligible(3, #{<<"message_notifications">> => 2})).
+
+a_dm_set_to_only_mentions_is_still_pushed_test() ->
+    ?assertEqual(true, dm_eligible(1, dm_override(#{<<"message_notifications">> => 1}))),
+    ?assertEqual(true, dm_eligible(3, #{<<"message_notifications">> => 1})).
+
+all_dms_muted_are_not_pushed_test() ->
+    ?assertEqual(false, dm_eligible(1, #{<<"muted">> => true})).
+
+dm_pushes_ignore_the_private_mobile_push_setting_test() ->
+    ?assertEqual(true, dm_eligible(1, #{<<"mobile_push">> => false})).
+
+dm_settings_are_fetched_once_for_the_private_scope_and_cached_test() ->
+    push_ets_cache:init(),
+    push_ets_cache:delete_user_guild_settings(?DM_USER, 0),
+    Self = self(),
+    Muted = dm_override(#{<<"muted">> => true, <<"mute_config">> => null}),
+    ok = meck:new(rpc_client, [passthrough, no_link]),
+    try
+        ok = meck:expect(rpc_client, call, fun(Request) ->
+            Self ! {settings_request, Request},
+            {ok, #{<<"user_guild_settings">> => [Muted]}}
+        end),
+        MessageData = #{<<"channel_type">> => 1},
+        Check = fun() ->
+            is_eligible_for_push(
+                ?DM_USER, ?DM_AUTHOR, 0, ?DM_CHANNEL, MessageData, 0, #{}, #{}, undefined
+            )
+        end,
+        ?assertEqual(false, Check()),
+        ?assertEqual(false, Check()),
+        ?assertEqual(1, meck:num_calls(rpc_client, call, '_')),
+        receive
+            {settings_request, Request} ->
+                ?assertMatch(
+                    #{
+                        <<"type">> := <<"get_user_guild_settings">>,
+                        <<"guild_id">> := <<"0">>,
+                        <<"user_ids">> := [<<"920001">>]
+                    },
+                    Request
+                )
+        after 0 -> erlang:error(no_settings_request)
+        end
+    after
+        meck:unload(rpc_client),
+        push_ets_cache:delete_user_guild_settings(?DM_USER, 0)
+    end.
 
 mention_here_respects_suppress_everyone_test() ->
     MessageData = #{<<"mention_everyone">> => true, <<"mention_here">> => true},

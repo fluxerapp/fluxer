@@ -2,12 +2,11 @@
 
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import {CANCEL_DESCRIPTOR, GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import Users from '@app/features/user/state/Users';
 import {ATTACHMENT_MAX_SIZE_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
@@ -84,10 +83,10 @@ export const FileSizeTooLargeModal = observer(({oversizedFileCount}: FileSizeToo
 		<ConfirmModal
 			title={i18n._(FILE_SIZE_LIMIT_EXCEEDED_DESCRIPTOR)}
 			description={`${baseDescription} ${i18n._(PREMIUM_FILE_SIZE_UPSELL_DESCRIPTOR, {
-				premiumProductName: PREMIUM_PRODUCT_NAME,
+				premiumProductName: getPremiumProductName(),
 				fileSizeLimit: formatFileSize(i18n.locale, premiumMaxAttachmentFileSize),
 			})}`}
-			primaryText={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+			primaryText={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 			primaryVariant="primary"
 			onPrimary={handleGetPlutoniumClick}
 			secondaryText={i18n._(CANCEL_DESCRIPTOR)}

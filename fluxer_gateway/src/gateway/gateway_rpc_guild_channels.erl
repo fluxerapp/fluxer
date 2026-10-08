@@ -209,6 +209,10 @@ channel_mention_from_snapshot(CId, ChIndex, GuildId, BasePerm) ->
     end.
 
 -spec viewable_channel_mention(map(), integer(), integer()) -> {true, map()} | false.
+viewable_channel_mention(#{<<"type">> := Type}, _GuildId, _BasePerm) when
+    Type =:= 15; Type =:= 16
+->
+    false;
 viewable_channel_mention(Channel, GuildId, BasePerm) ->
     case everyone_can_view(Channel, GuildId, BasePerm) of
         true -> build_channel_mention(Channel);

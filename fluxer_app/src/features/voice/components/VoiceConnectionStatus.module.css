@@ -735,28 +735,3 @@
 	padding-top: var(--spacing-3);
 	border-top: 0.0625rem solid var(--background-modifier-hover);
 }
-
-.nsSliderSection {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-2);
-}
-
-.nsSliderLabel {
-	min-width: 0;
-	font-weight: 500;
-	font-size: 0.8125rem;
-	color: var(--text-secondary);
-}
-
-.nsSliderTitleRow {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-2);
-	min-width: 0;
-	min-height: 1.5rem;
-}
-
-.nsSliderTitleRow .nsSliderLabel {
-	flex: 1;
-}

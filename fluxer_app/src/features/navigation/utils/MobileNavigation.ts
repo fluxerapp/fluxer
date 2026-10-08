@@ -3,6 +3,7 @@
 import {Routes} from '@app/app/Routes';
 import {tryInterceptChannelNavigationPath} from '@app/features/navigation/utils/ChannelNavigationGuard';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {resolveDocumentURLFromRoot} from '@app/features/platform/URLOriginUtils';
 
 export interface Navigator {
 	replace: (path: string) => void;
@@ -39,7 +40,7 @@ const defaultNavigator: Navigator = {
 let inProgress = false;
 
 function computeBasePath(url: string): string | null {
-	const pathname = new URL(url, window.location.origin).pathname;
+	const pathname = resolveDocumentURLFromRoot(url).pathname;
 	if (Routes.isDMRoute(pathname) && pathname !== Routes.ME) {
 		return Routes.ME;
 	}

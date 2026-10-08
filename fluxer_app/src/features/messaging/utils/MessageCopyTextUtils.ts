@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {embedAllowsMarkdown} from '@app/features/channel/components/embeds/EmbedRenderUtils';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
@@ -193,8 +194,13 @@ export function buildMessageEmbedCopyText(embed: MessageEmbed, options: EmbedCop
 	const blocks: Array<string> = [];
 	appendCopyBlock(blocks, embed.provider?.name);
 	appendCopyBlock(blocks, embed.author?.name);
-	appendCopyBlock(blocks, renderMarkdownCopyText(embed.title, EMBED_INLINE_COPY_PARSER_FLAGS, options));
-	appendCopyBlock(blocks, renderMarkdownCopyText(embed.description, EMBED_DESCRIPTION_COPY_PARSER_FLAGS, options));
+	if (embedAllowsMarkdown(embed)) {
+		appendCopyBlock(blocks, renderMarkdownCopyText(embed.title, EMBED_INLINE_COPY_PARSER_FLAGS, options));
+		appendCopyBlock(blocks, renderMarkdownCopyText(embed.description, EMBED_DESCRIPTION_COPY_PARSER_FLAGS, options));
+	} else {
+		appendCopyBlock(blocks, embed.title);
+		appendCopyBlock(blocks, embed.description);
+	}
 	if (options.includeFields !== false && embed.type !== MessageEmbedTypes.BLUESKY) {
 		for (const field of embed.fields ?? []) {
 			const fieldName = renderMarkdownCopyText(field.name, EMBED_INLINE_COPY_PARSER_FLAGS, options);
@@ -202,7 +208,7 @@ export function buildMessageEmbedCopyText(embed: MessageEmbed, options: EmbedCop
 			appendCopyBlock(blocks, joinCopyBlocks([fieldName, fieldValue]));
 		}
 	}
-	appendCopyBlock(blocks, renderMarkdownCopyText(embed.footer?.text, EMBED_INLINE_COPY_PARSER_FLAGS, options));
+	appendCopyBlock(blocks, embed.footer?.text);
 	appendCopyBlock(blocks, getFormattedEmbedTimestamp(embed.timestamp));
 	appendCopyBlock(blocks, embed.image?.description);
 	appendCopyBlock(blocks, embed.thumbnail?.description);

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import ChannelInvitesTab from '@app/features/channel/components/modals/channel_tabs/ChannelInvitesTab';
-import ChannelOverviewTab from '@app/features/channel/components/modals/channel_tabs/ChannelOverviewTab';
 import ChannelPermissionsTab from '@app/features/channel/components/modals/channel_tabs/ChannelPermissionsTab';
 import ChannelWebhooksTab from '@app/features/channel/components/modals/channel_tabs/ChannelWebhooksTab';
+import {ChannelOverviewTabForType} from '@app/features/forum/components/settings/ForumOverviewTab';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -62,7 +62,7 @@ const CHANNEL_SETTINGS_TABS_DESCRIPTORS: Array<ChannelSettingsTabDescriptor> = [
 		category: 'channel_settings',
 		label: OVERVIEW_DESCRIPTOR,
 		icon: GearIcon,
-		component: ChannelOverviewTab,
+		component: ChannelOverviewTabForType,
 		permission: Permissions.MANAGE_CHANNELS,
 	},
 	{

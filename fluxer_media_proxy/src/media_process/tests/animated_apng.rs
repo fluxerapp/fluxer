@@ -135,7 +135,7 @@ fn patch_apng_num_plays(bytes: &[u8], num_plays: u32) -> Vec<u8> {
     let position = out
         .windows(4)
         .position(|window| window == b"acTL")
-        .expect("fixture carries an acTL chunk");
+        .expect("fixture has an acTL chunk");
     let payload_start = position + 4;
     out[payload_start + 4..payload_start + 8].copy_from_slice(&num_plays.to_be_bytes());
     let payload: [u8; 8] = out[payload_start..payload_start + 8]
@@ -147,7 +147,7 @@ fn patch_apng_num_plays(bytes: &[u8], num_plays: u32) -> Vec<u8> {
 }
 
 #[test]
-fn animated_apng_transform_carries_the_source_num_plays() {
+fn animated_apng_transform_keeps_the_source_num_plays() {
     let fixture_b64 = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAACXBIWXMAAAABAAAAAQBPJcTWAAAACGFjVEwAAAACAAAAAPONk3AAAAAaZmNUTAAAAAAAAAAQAAAAEAAAAAAAAAAAAAEABQAAaBqIGAAAAK1JREFUeJxjqGf4hxUxIKF/DH+BiOH/fxAiU4Mcgx0aYkBCtgy2QMRgZwdCg1yDCQMvEL1oMACix00mQCTFwANE/gx8QHSrUwuI0DXsbpkCVJ3IwBDEwADUsLprLkTD2ZoeoOp8OQZgaIEQxG5IiNqCXQARQw5pqJOooCFPj+Fcn96x9gxTBpS49NBk2DwlhBoaaOkHZUOGqYvDnrWJt6kRF6xADUAE1ABEuCIOAPEY5L3Pr8FWAAAAGmZjVEwAAAABAAAAAQAAAAEAAAAAAAAAAAABAAUAAMpQnTkAAAAQZmRBVAAAAAJ4nGOoZ/gHAAJ/AX511aUxAAAAAElFTkSuQmCC";
     let apng = base64::engine::general_purpose::STANDARD
         .decode(fixture_b64)

@@ -2,6 +2,7 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {makeAutoObservable, observableRef} from 'mobx';
 
 export type MediaViewerItem = Readonly<{
@@ -103,4 +104,8 @@ class MediaViewer {
 	}
 }
 
-export default new MediaViewer();
+const mediaViewer = new MediaViewer();
+
+AccountScopedWork.registerCancellation(() => mediaViewer.close());
+
+export default mediaViewer;

@@ -212,6 +212,14 @@ export type RememberedSkeletonGuildRailItem =
 			readonly selectedChildIndex: number;
 	  };
 
+const SKELETON_GUILD_RAIL_FALLBACK_GUILD_COUNT = 6;
+
+export const SKELETON_GUILD_RAIL_FALLBACK_ITEMS: ReadonlyArray<RememberedSkeletonGuildRailItem> = Object.freeze(
+	Array.from({length: SKELETON_GUILD_RAIL_FALLBACK_GUILD_COUNT}, () =>
+		Object.freeze({kind: SkeletonGuildRailItemKind.GUILD, indicator: SkeletonGuildRailItemIndicator.NONE} as const),
+	),
+);
+
 export interface RememberedSkeletonGuildRailLayout {
 	readonly inlineDmRowCount: number;
 	readonly inlineDmUnreadFlags: ReadonlyArray<boolean>;

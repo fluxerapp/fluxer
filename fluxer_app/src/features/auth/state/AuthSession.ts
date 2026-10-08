@@ -16,7 +16,7 @@ class AuthSessions {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
 
-	handleGatewayReady(authSessionIdHash: string): void {
+	handleGatewayReady(authSessionIdHash: string | null): void {
 		this.authSessionIdHash = authSessionIdHash;
 	}
 

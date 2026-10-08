@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
+import {RequireEmailAccountIdentity} from '@app/api/middleware/AccountIdentityMiddleware';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -39,6 +41,7 @@ export function ReportController(app: HonoApp) {
 			return ctx.json(
 				await ctx.get('reportRequestService').reportMessage({
 					user: ctx.get('user'),
+					viewer: viewerFromCtx(ctx),
 					data: ctx.req.valid('json'),
 				}),
 			);
@@ -95,6 +98,7 @@ export function ReportController(app: HonoApp) {
 	app.post(
 		'/reports/dsa/email/send',
 		RateLimitMiddleware(RateLimitConfigs.DSA_REPORT_EMAIL_SEND),
+		RequireEmailAccountIdentity,
 		OpenAPI({
 			operationId: 'send_dsa_report_email',
 			summary: 'Send DSA report email',
@@ -116,6 +120,7 @@ export function ReportController(app: HonoApp) {
 	app.post(
 		'/reports/dsa/email/verify',
 		RateLimitMiddleware(RateLimitConfigs.DSA_REPORT_EMAIL_VERIFY),
+		RequireEmailAccountIdentity,
 		OpenAPI({
 			operationId: 'verify_dsa_report_email',
 			summary: 'Verify DSA report email',

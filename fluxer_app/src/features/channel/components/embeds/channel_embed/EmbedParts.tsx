@@ -69,47 +69,58 @@ export const EmbedAuthorComponent: FC<{author?: EmbedAuthor}> = observer(({autho
 		</div>
 	);
 });
-export const EmbedTitle: FC<{title?: string; url?: string; messageId?: string; channelId?: string}> = observer(
-	({title, url, messageId, channelId}) => {
-		if (title == null || title.length === 0) return null;
-		const options = {
-			context: MarkdownContext.RESTRICTED_INLINE_REPLY,
-			messageId,
-			channelId,
-			disableEmojiInteractions: Boolean(url),
-		};
-		return (
-			<div className={styles.embedTitle} data-flx="channel.embeds.embed.embed-title.embed-title">
-				{url ? (
-					<EmbedLink url={url} data-flx="channel.embeds.channel-embed.embed-parts.embed-title.embed-link">
-						<SafeMarkdown content={title} options={options} data-flx="channel.embeds.embed.embed-title.safe-markdown" />
-					</EmbedLink>
-				) : (
-					<span data-flx="channel.embeds.embed.embed-title.span">
-						<SafeMarkdown
-							content={title}
-							options={options}
-							data-flx="channel.embeds.embed.embed-title.safe-markdown--2"
-						/>
-					</span>
-				)}
-			</div>
-		);
-	},
-);
+export const EmbedTitle: FC<{
+	title?: string;
+	url?: string;
+	markdown: boolean;
+	messageId?: string;
+	channelId?: string;
+}> = observer(({title, url, markdown, messageId, channelId}) => {
+	if (title == null || title.length === 0) return null;
+	const content = markdown ? (
+		<SafeMarkdown
+			content={title}
+			options={{
+				context: MarkdownContext.RESTRICTED_INLINE_REPLY,
+				messageId,
+				channelId,
+				disableEmojiInteractions: Boolean(url),
+			}}
+			data-flx="channel.embeds.embed.embed-title.safe-markdown"
+		/>
+	) : (
+		title
+	);
+	return (
+		<div className={styles.embedTitle} data-flx="channel.embeds.embed.embed-title.embed-title">
+			{url ? (
+				<EmbedLink url={url} data-flx="channel.embeds.channel-embed.embed-parts.embed-title.embed-link">
+					{content}
+				</EmbedLink>
+			) : (
+				<span data-flx="channel.embeds.embed.embed-title.span">{content}</span>
+			)}
+		</div>
+	);
+});
 export const EmbedDescription: FC<{
 	messageId?: string;
 	channelId?: string;
 	description?: string;
-}> = observer(({messageId, channelId, description}) => {
+	markdown: boolean;
+}> = observer(({messageId, channelId, description, markdown}) => {
 	if (!description) return null;
 	return (
 		<div className={styles.embedDescription} data-flx="channel.embeds.embed.embed-description.embed-description">
-			<SafeMarkdown
-				content={description}
-				options={{context: MarkdownContext.RESTRICTED_EMBED_DESCRIPTION, messageId, channelId}}
-				data-flx="channel.embeds.embed.embed-description.safe-markdown"
-			/>
+			{markdown ? (
+				<SafeMarkdown
+					content={description}
+					options={{context: MarkdownContext.RESTRICTED_EMBED_DESCRIPTION, messageId, channelId}}
+					data-flx="channel.embeds.embed.embed-description.safe-markdown"
+				/>
+			) : (
+				description
+			)}
 		</div>
 	);
 });
@@ -182,9 +193,7 @@ export const EmbedFields: FC<{fields?: ReadonlyArray<EmbedField>; messageId?: st
 export const EmbedFooterComponent: FC<{
 	timestamp?: Date;
 	footer?: EmbedFooter;
-	messageId?: string;
-	channelId?: string;
-}> = observer(({timestamp, footer, messageId, channelId}) => {
+}> = observer(({timestamp, footer}) => {
 	const {i18n} = useLingui();
 	const allowIconMotion = useShouldAnimate({kind: 'gif'});
 	const formattedTimestamp = timestamp ? DateUtils.getRelativeDateString(timestamp, i18n) : undefined;
@@ -206,13 +215,7 @@ export const EmbedFooterComponent: FC<{
 				/>
 			)}
 			<div className={styles.embedFooterText} data-flx="channel.embeds.embed.embed-footer-component.embed-footer-text">
-				{footer?.text && (
-					<SafeMarkdown
-						content={footer.text}
-						options={{context: MarkdownContext.RESTRICTED_INLINE_REPLY, messageId, channelId}}
-						data-flx="channel.embeds.embed.embed-footer-component.safe-markdown"
-					/>
-				)}
+				{footer?.text}
 				{formattedTimestamp && (
 					<>
 						{footer?.text && (

@@ -49,7 +49,6 @@ export function applyVideoStartBitrate(
 	codec: string,
 	maxbr: number,
 	isScreenShare = false,
-	screenShareDelivery = false,
 ): number | undefined {
 	if (!media.msid?.includes(cid)) {
 		return undefined;
@@ -65,25 +64,10 @@ export function applyVideoStartBitrate(
 	const calculatedStartBitrate = Math.round(maxbr * startBitrateMultiplier);
 	let startBitrate = Math.min(calculatedStartBitrate, maxStartBitrateKbps);
 	if (isScreenShare) {
-		startBitrate = screenShareDelivery
-			? Math.max(minScreenShareStartBitrateKbps, Math.min(calculatedStartBitrate, maxScreenShareStartBitrateKbps))
-			: calculatedStartBitrate;
-	}
-
-	if (!screenShareDelivery) {
-		const codecPayload = codecPayloads[0];
-		const fmtp = media.fmtp.find((entry) => entry.payload === codecPayload);
-		if (fmtp) {
-			if (!fmtp.config.includes(startBitrateParameter)) {
-				fmtp.config += `;${startBitrateParameter}=${startBitrate}`;
-			}
-		} else {
-			media.fmtp.push({
-				payload: codecPayload,
-				config: `${startBitrateParameter}=${startBitrate}`,
-			});
-		}
-		return codecPayload;
+		startBitrate = Math.max(
+			minScreenShareStartBitrateKbps,
+			Math.min(calculatedStartBitrate, maxScreenShareStartBitrateKbps),
+		);
 	}
 
 	for (const payload of codecPayloads) {
@@ -143,8 +127,6 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 
 	excludedVideoDecoderMimeTypes: Set<string> = new Set();
 
-	private screenShareDelivery: boolean;
-
 	onOffer?: (offer: RTCSessionDescriptionInit, offerId: number) => void;
 
 	onIceCandidate?: (candidate: RTCIceCandidate) => void;
@@ -161,10 +143,9 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 
 	onTrack?: (ev: RTCTrackEvent) => void;
 
-	constructor(config?: RTCConfiguration, loggerOptions: LoggerOptions = {}, screenShareDelivery: boolean = false) {
+	constructor(config?: RTCConfiguration, loggerOptions: LoggerOptions = {}) {
 		super();
 		this.loggerOptions = loggerOptions;
-		this.screenShareDelivery = screenShareDelivery;
 		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.PCTransport, () => this.logContext);
 		this.iceLog = getLogger(LoggerNames.ICE, () => this.logContext);
 		this.config = config;
@@ -276,7 +257,7 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 					}
 				}
 			});
-			const placeholderMids = this.getPlaceholderMids();
+			const placeholderMids = this.getPlaceholderMids(sdpParsed.media);
 			if (placeholderMids.size > 0) {
 				conformBundledCodecFmtp(sdpParsed.media, (media) => placeholderMids.has(getMidString(media.mid!)));
 			}
@@ -412,7 +393,6 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 							trackbr.codec,
 							trackbr.maxbr,
 							trackbr.isScreenShare,
-							this.screenShareDelivery,
 						);
 						if (codecPayload === undefined) {
 							return false;
@@ -430,6 +410,7 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 			if (placeholderMids.size > 0) {
 				conformBundledCodecFmtp(sdpParsed.media, (media) => placeholderMids.has(getMidString(media.mid!)));
 			}
+			sdpParsed.media.forEach(ensureOpusStereoReception);
 			if (this.latestOfferId > offerId) {
 				this.log.warn('latestOfferId mismatch', {
 					latestOfferId: this.latestOfferId,
@@ -471,10 +452,7 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 		for (const transceiver of this.getTransceivers()) {
 			if (transceiver.receiver.track?.kind !== 'video') continue;
 			if ((transceiver as {stopped?: boolean}).stopped) continue;
-			const receives = this.screenShareDelivery
-				? transceiver.direction === 'recvonly'
-				: transceiver.direction === 'recvonly' || transceiver.direction === 'sendrecv';
-			if (!receives) continue;
+			if (transceiver.direction !== 'recvonly') continue;
 			if (typeof transceiver.setCodecPreferences !== 'function') continue;
 			try {
 				transceiver.setCodecPreferences(allowed);
@@ -484,8 +462,11 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 		}
 	}
 
-	private getPlaceholderMids(): Set<string> {
-		return placeholderMidsFromTransceivers(this._pc?.getTransceivers() ?? []);
+	private getPlaceholderMids(remoteMedia?: ReadonlyArray<MediaDescription>): Set<string> {
+		return placeholderMidsFromTransceivers(
+			this._pc?.getTransceivers() ?? [],
+			remoteMedia ?? parse(this._pc?.remoteDescription?.sdp ?? '').media,
+		);
 	}
 
 	createDataChannel(label: string, dataChannelDict: RTCDataChannelInit) {
@@ -850,6 +831,16 @@ export function ensureAudioNackAndStereo(
 	}
 }
 
+export function ensureOpusStereoReception(media: MediaDescription): void {
+	if (media.type !== 'audio' || media.port === 0 || media.direction === 'sendonly' || media.direction === 'inactive') {
+		return;
+	}
+	const opusPayload = getCodecPayload(media, 'opus');
+	if (opusPayload <= 0) return;
+	const fmtp = ensureFmtp(media, opusPayload);
+	fmtp.config = setFmtpParameter(fmtp.config, 'stereo', '1');
+}
+
 export function collectStereoMids(
 	trackBitrates: Array<TrackBitrateInfo>,
 	media: Array<MediaDescription>,
@@ -876,10 +867,28 @@ export function collectStereoMids(
 	return stereoMids;
 }
 
-export function placeholderMidsFromTransceivers(transceivers: ReadonlyArray<RTCRtpTransceiver>): Set<string> {
+export function placeholderMidsFromTransceivers(
+	transceivers: ReadonlyArray<RTCRtpTransceiver>,
+	remoteMedia: ReadonlyArray<MediaDescription> = [],
+): Set<string> {
+	const receivingMids = new Set(
+		remoteMedia
+			.filter(
+				(media) =>
+					media.mid !== undefined &&
+					media.port !== 0 &&
+					(media.direction === 'sendonly' || media.direction === 'sendrecv' || media.direction === undefined),
+			)
+			.map((media) => getMidString(media.mid!)),
+	);
 	const mids = new Set<string>();
 	for (const transceiver of transceivers) {
-		if (transceiver.currentDirection === 'stopped') {
+		if (
+			transceiver.currentDirection === 'stopped' ||
+			transceiver.currentDirection === 'recvonly' ||
+			transceiver.currentDirection === 'sendrecv' ||
+			(transceiver.mid !== null && receivingMids.has(transceiver.mid))
+		) {
 			continue;
 		}
 		if (transceiver.mid && !transceiver.sender.track) {

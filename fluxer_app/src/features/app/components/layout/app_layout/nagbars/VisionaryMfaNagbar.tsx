@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
@@ -9,7 +10,6 @@ import {ENABLE_TWO_FACTOR_AUTH_DESCRIPTOR} from '@app/features/i18n/utils/Common
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -24,13 +24,16 @@ export const VisionaryMfaNagbar = observer(({isMobile}: {isMobile: boolean}) => 
 	const {i18n} = useLingui();
 	const handleEnableMfa = useCallback(() => {
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialTab="account_security"
-					initialSubtab="security"
-					data-flx="app.app-layout.nagbars.visionary-mfa-nagbar.handle-enable-mfa.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="account_security"
+						initialSubtab="security"
+						data-flx="app.app-layout.nagbars.visionary-mfa-nagbar.handle-enable-mfa.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	}, []);
 	const handleDismiss = useCallback(() => {

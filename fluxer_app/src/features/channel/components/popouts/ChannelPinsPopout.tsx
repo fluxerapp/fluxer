@@ -3,6 +3,7 @@
 import {ChannelPinsContent} from '@app/features/app/components/shared/ChannelPinsContent';
 import styles from '@app/features/channel/components/popouts/ChannelPinsPopout.module.css';
 import type {Channel} from '@app/features/channel/models/Channel';
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {RESIZABLE_PANE_DEFAULT_VIEWPORT_PADDING, useResizablePane} from '@app/features/ui/hooks/useResizablePane';
 import {
@@ -71,7 +72,7 @@ export const ChannelPinsPopout = observer(({channel, onClose}: {channel: Channel
 	const {i18n} = useLingui();
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const {size, getHandleProps} = useResizablePane(containerRef, {
-		storageKey: 'fluxer:ui:channel-pins-popout-size',
+		storageKey: AppStorageKey.UI_CHANNEL_PINS_POPOUT_SIZE,
 		defaultSize: CHANNEL_PINS_POPOUT_DEFAULT_SIZE,
 		minSize: CHANNEL_PINS_POPOUT_MIN_SIZE,
 		viewportPadding: RESIZABLE_PANE_DEFAULT_VIEWPORT_PADDING,

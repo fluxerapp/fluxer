@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import {CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Keybind from '@app/features/input/state/InputKeybind';
@@ -15,7 +16,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import {AudioLevelMeter} from '@app/features/user/components/modals/tabs/components/AudioLevelMeter';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
@@ -125,13 +125,16 @@ type VoiceVideoSettingsSection = 'audio' | 'video';
 export function openVoiceVideoSettings(onClose: () => void, section?: VoiceVideoSettingsSection): void {
 	ModalCommands.pushAfterBottomSheetClose(
 		onClose,
-		modal(() => (
-			<UserSettingsModal
-				initialTab="voice_video"
-				initialSubtab={section}
-				data-flx="voice.voice-settings-menus.open-voice-video-settings.user-settings-modal"
-			/>
-		)),
+		modal(
+			() => (
+				<UserSettingsModal
+					initialTab="voice_video"
+					initialSubtab={section}
+					data-flx="voice.voice-settings-menus.open-voice-video-settings.user-settings-modal"
+				/>
+			),
+			'user-settings',
+		),
 	);
 }
 
@@ -875,12 +878,15 @@ export const VoiceMoreOptionsMenu: React.FC<VoiceMoreOptionsMenuProps> = observe
 					onClick={() => {
 						ModalCommands.pushAfterBottomSheetClose(
 							onClose,
-							modal(() => (
-								<UserSettingsModal
-									initialTab="voice_video"
-									data-flx="voice.voice-settings-menus.voice-more-options-menu.user-settings-modal"
-								/>
-							)),
+							modal(
+								() => (
+									<UserSettingsModal
+										initialTab="voice_video"
+										data-flx="voice.voice-settings-menus.voice-more-options-menu.user-settings-modal"
+									/>
+								),
+								'user-settings',
+							),
 						);
 					}}
 					data-flx="voice.voice-settings-menus.voice-more-options-menu.menu-item.close"

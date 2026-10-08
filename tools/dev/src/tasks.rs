@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::desktop::build_desktop;
+use crate::desktop::build_desktop_shell;
 use crate::proc::{RunOptions, run_command};
 use anyhow::Result;
 use std::env;
@@ -98,8 +98,8 @@ pub fn run_test() -> Result<i32> {
 
 pub fn run_build() -> Result<i32> {
     run_generators(false)?;
+    build_desktop_shell()?;
     task_run(&["pnpm", "--filter", "fluxer_app", "build"])?;
-    build_desktop(false)?;
     Ok(0)
 }
 

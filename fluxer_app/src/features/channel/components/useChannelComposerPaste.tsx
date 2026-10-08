@@ -36,6 +36,7 @@ import {useCallback, useEffect} from 'react';
 
 interface UseChannelComposerPasteParams {
 	channel: Channel;
+	attachmentKey: string;
 	handleRef: React.RefObject<ComposerHandle | null>;
 	editableRef: React.RefObject<HTMLDivElement | null>;
 	isFocused: boolean;
@@ -47,6 +48,7 @@ interface UseChannelComposerPasteParams {
 
 export function useChannelComposerPaste({
 	channel,
+	attachmentKey,
 	handleRef,
 	editableRef,
 	isFocused,
@@ -66,6 +68,7 @@ export function useChannelComposerPaste({
 				pastedText,
 				uploadAttachments.length,
 				maxAttachments,
+				attachmentKey,
 			);
 			if (!result.success) {
 				if (result.error === 'too_many_attachments') {
@@ -86,7 +89,7 @@ export function useChannelComposerPaste({
 				}
 			}
 		},
-		[channel, uploadAttachments.length, maxAttachments],
+		[channel, attachmentKey, uploadAttachments.length, maxAttachments],
 	);
 	const handlePasteFiles = useCallback(
 		async (files: Array<File>) => {
@@ -99,6 +102,7 @@ export function useChannelComposerPaste({
 				files,
 				uploadAttachments.length,
 				maxAttachments,
+				attachmentKey,
 			);
 			if (!result.success) {
 				if (result.error === 'too_many_attachments') {
@@ -119,7 +123,7 @@ export function useChannelComposerPaste({
 				}
 			}
 		},
-		[channel, uploadAttachments.length, maxAttachments],
+		[channel, attachmentKey, uploadAttachments.length, maxAttachments],
 	);
 	const insertPastedText = useCallback(
 		(pastedText: string): boolean => {

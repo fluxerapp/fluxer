@@ -36,6 +36,7 @@ COPY patches/ ./patches/
 COPY fluxer_app/package.json ./fluxer_app/
 COPY packages/constants/package.json ./packages/constants/
 COPY packages/date_utils/package.json ./packages/date_utils/
+COPY packages/desktop_ipc/package.json ./packages/desktop_ipc/
 COPY packages/geo_utils/package.json ./packages/geo_utils/
 COPY packages/instance_bootstrap/package.json ./packages/instance_bootstrap/
 COPY packages/limits/package.json ./packages/limits/
@@ -51,6 +52,7 @@ RUN pnpm install --frozen-lockfile --filter fluxer_app...
 COPY tsconfigs ./tsconfigs
 COPY packages/constants/ ./packages/constants/
 COPY packages/date_utils/ ./packages/date_utils/
+COPY packages/desktop_ipc/ ./packages/desktop_ipc/
 COPY packages/geo_utils/ ./packages/geo_utils/
 COPY packages/instance_bootstrap/ ./packages/instance_bootstrap/
 COPY packages/limits/ ./packages/limits/
@@ -116,7 +118,6 @@ WORKDIR /usr/src/app
 COPY Cargo.lock ./
 COPY fluxer_common/ fluxer_common/
 COPY fluxer_app_proxy/ fluxer_app_proxy/
-COPY packages/constants/src/AgeGeos.json packages/constants/src/AgeGeos.json
 
 RUN printf '%s\n' \
 	'[workspace]' \
@@ -143,6 +144,8 @@ RUN cargo build --release -p fluxer_app_proxy \
 FROM debian:trixie-slim
 
 ARG BUILD_VERSION=""
+ARG PUBLIC_ASSET_BASE_URL=""
+ARG FLUXER_SELF_HOSTED="false"
 ARG SOURCE_SHA=""
 ARG SOURCE_DATE=""
 
@@ -168,6 +171,8 @@ COPY --from=rust-builder /usr/local/bin/fluxer-app-proxy /usr/local/bin/fluxer-a
 COPY --from=app-static /assets ./static/
 
 ENV BUILD_VERSION="${BUILD_VERSION}"
+ENV FLUXER_SELF_HOSTED="${FLUXER_SELF_HOSTED}"
+ENV FLUXER_STATIC_CDN_ENDPOINT="${PUBLIC_ASSET_BASE_URL}"
 ENV FLUXER_APP_PROXY_HOST="0.0.0.0"
 ENV FLUXER_APP_PROXY_PORT="8080"
 ENV LD_PRELOAD=libjemalloc.so.2

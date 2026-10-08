@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {switchAccountFromStalledConnection} from '@app/features/app/ConnectionRecovery';
+import {retryStalledConnection, switchAccountFromStalledConnection} from '@app/features/app/ConnectionRecovery';
 import styles from '@app/features/app/components/layout/app_layout/nagbars/ConnectionNagbar.module.css';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
@@ -17,11 +17,9 @@ import {
 	ConnectionNoticeTone,
 	useConnectionNotice,
 } from '@app/features/app/hooks/useConnectionNotice';
-import AccountSwitcherModal from '@app/features/auth/components/accounts/AccountSwitcherModal';
+import {openAccountSwitcherModal} from '@app/features/auth/commands/AccountSwitcherModalCommands';
 import {Typing} from '@app/features/channel/components/ChannelTyping';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -37,6 +35,10 @@ const TYPING_INDICATOR_VIEWBOX_SCALE = 20;
 const SWITCH_ACCOUNT_DESCRIPTOR = msg({
 	message: 'Switch account',
 	comment: 'Button on the connection banner that opens the account switcher.',
+});
+const TRY_AGAIN_DESCRIPTOR = msg({
+	message: 'Try again',
+	comment: 'Button on the connection banner that retries a foreground gateway connection after bounded recovery fails.',
 });
 
 function resolveConnectionActionUrl(notice: ConnectionNotice | null): string | null {
@@ -63,18 +65,19 @@ export const ConnectionNagbar = observer(({isMobile, rememberedRows}: Connection
 		openExternalUrlWithWarning(actionUrl);
 	}, [actionUrl]);
 	const handleSwitchAccount = useCallback(() => {
-		ModalCommands.pushWithKey(
-			modal(() => (
-				<AccountSwitcherModal
-					redirectAfterLogin={null}
-					redirectAfterSwitch={null}
-					switchAccount={switchAccountFromStalledConnection}
-					data-flx="app.app-layout.nagbars.connection-nagbar.handle-switch-account.account-switcher-modal"
-				/>
-			)),
+		openAccountSwitcherModal(
+			{
+				closeCurrentAccountOnSelect: true,
+				initialReloginAccount: null,
+				redirectAfterLogin: null,
+				redirectAfterSwitch: null,
+				switchAccount: switchAccountFromStalledConnection,
+				'data-flx': 'app.app-layout.nagbars.connection-nagbar.handle-switch-account.account-switcher-modal',
+			},
 			CONNECTION_ACCOUNT_SWITCHER_MODAL_KEY,
 		);
 	}, []);
+	const handleRetry = useCallback(() => retryStalledConnection(), []);
 	if (notice == null) {
 		return (
 			<NagbarSkeleton
@@ -118,13 +121,30 @@ export const ConnectionNagbar = observer(({isMobile, rememberedRows}: Connection
 			</NagbarButton>
 		);
 	}
+	function renderRetryAction() {
+		if (!activeNotice.showRetry) {
+			return null;
+		}
+		return (
+			<NagbarButton
+				isMobile={isMobile}
+				onClick={handleRetry}
+				disabled={false}
+				submitting={false}
+				data-flx="app.app-layout.nagbars.connection-nagbar.render-retry-action.nagbar-button.retry"
+			>
+				{i18n._(TRY_AGAIN_DESCRIPTOR)}
+			</NagbarButton>
+		);
+	}
 	function renderActions() {
-		if (activeNotice.action == null && !activeNotice.showSwitchAccount) {
+		if (activeNotice.action == null && !activeNotice.showRetry && !activeNotice.showSwitchAccount) {
 			return undefined;
 		}
 		return (
 			<>
 				{renderNoticeAction()}
+				{renderRetryAction()}
 				{renderSwitchAccountAction()}
 			</>
 		);

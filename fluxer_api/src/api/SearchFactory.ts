@@ -12,6 +12,7 @@ import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {ISearchProvider} from '@app/api/search/ISearchProvider';
+import type {IThreadSearchService} from '@app/api/search/IThreadSearchService';
 import type {IUserSearchService} from '@app/api/search/IUserSearchService';
 import {DEFAULT_SEARCH_CLIENT_TIMEOUT_MS} from '@fluxer/constants/src/Timeouts';
 import type {ElasticsearchDistributedLock} from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchIndexAdapter';
@@ -85,6 +86,10 @@ export function getAuditLogSearchService(): IAuditLogSearchService | null {
 
 export function getGuildMemberSearchService(): IGuildMemberSearchService | null {
 	return searchProvider?.getGuildMemberSearchService() ?? null;
+}
+
+export function getThreadSearchService(): IThreadSearchService | null {
+	return searchProvider?.getThreadSearchService() ?? null;
 }
 
 export async function initializeSearch(lock?: ElasticsearchDistributedLock): Promise<void> {

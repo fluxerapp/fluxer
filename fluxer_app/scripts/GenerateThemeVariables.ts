@@ -558,10 +558,6 @@ const SKELETON_SURFACE_INVARIANTS: ReadonlyArray<SkeletonSurfaceInvariant> = [
 		counts: {'style={MEMBER_LIST_METRICS_STYLE}': 2},
 	},
 	{
-		file: 'src/features/channel/components/textarea/InputWrapper.module.css',
-		requires: ['.composerRoot:has(.statusTypingSlot)::before'],
-	},
-	{
 		file: 'src/features/app/components/layout/GuildsLayout.module.css',
 		requires: [
 			'.guildListScrollContainer.guildListScrollContainer {\n\toverflow-anchor: auto;\n}',

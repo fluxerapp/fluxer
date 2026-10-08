@@ -8,12 +8,12 @@ use crate::constants;
 use crate::secret::{SecretBytes, SecretString};
 use http::HeaderValue;
 use parse::{
-    EnvMap, decode_upload_relay_secret, default_native_transform_concurrency, non_empty,
+    EnvMap, decode_upload_relay_secret, default_native_transform_concurrency,
     parse_allowed_origins, parse_attachment_url_secrets, parse_bool, parse_bucket_style, parse_f32,
     parse_mode_env, parse_policy_mode, parse_storage_backend, parse_u16, parse_u64, parse_usize,
     validate_read_endpoint,
 };
-use std::{env, path::PathBuf};
+use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StorageBackend {
@@ -128,7 +128,6 @@ pub struct UploadRelayConfig {
 
 #[derive(Clone, Debug)]
 pub struct Config {
-    pub node_env: String,
     pub bind_host: String,
     pub port: u16,
     pub(crate) secret_key: SecretString,
@@ -145,10 +144,6 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn load_from_env() -> anyhow::Result<Self> {
-        Self::load_from_iter(env::vars())
-    }
-
     pub fn load_from_iter<I, K, V>(vars: I) -> anyhow::Result<Self>
     where
         I: IntoIterator<Item = (K, V)>,
@@ -174,7 +169,6 @@ impl Config {
             })?;
 
         Ok(Self {
-            node_env: env.get("NODE_ENV").unwrap_or("development").to_owned(),
             bind_host: env
                 .get("FLUXER_MEDIA_PROXY_HOST")
                 .unwrap_or("0.0.0.0")
@@ -185,15 +179,16 @@ impl Config {
                 8080,
             )?,
             secret_key,
-            public_endpoint: non_empty(env.get("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")).map(
-                |endpoint| {
+            public_endpoint: env
+                .get("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
+                .map(str::trim)
+                .map(|endpoint| {
                     fluxer_common::config::normalize_public_endpoint(
                         endpoint.trim_end_matches('/'),
                         &public_base_domain,
                         public_port,
                     )
-                },
-            ),
+                }),
             mode,
             read_only: parse_bool(
                 "FLUXER_MEDIA_PROXY_READ_ONLY",
@@ -234,12 +229,16 @@ impl StorageConfig {
             .get("FLUXER_S3_BUCKET_CDN")
             .map(ToOwned::to_owned)
             .unwrap_or_else(|| "cdn".to_owned());
-        let s3_read_endpoint = non_empty(env.get("FLUXER_S3_READ_ENDPOINT"));
+        let s3_read_endpoint = env
+            .get("FLUXER_S3_READ_ENDPOINT")
+            .map(|v| v.trim().to_owned());
         if let Some(endpoint) = s3_read_endpoint.as_deref() {
             validate_read_endpoint(endpoint)?;
         }
-        let s3_read_bucket =
-            non_empty(env.get("FLUXER_S3_READ_BUCKET")).unwrap_or_else(|| bucket_cdn.clone());
+        let s3_read_bucket = env
+            .get("FLUXER_S3_READ_BUCKET")
+            .map(|v| v.trim().to_owned())
+            .unwrap_or_else(|| bucket_cdn.clone());
         let s3_read_bucket_style = parse_bucket_style(env.get("FLUXER_S3_READ_BUCKET_STYLE"))?
             .unwrap_or(if s3_force_path_style {
                 BucketStyle::Path
@@ -248,7 +247,7 @@ impl StorageConfig {
             });
         let s3_read_signed = parse_bool(
             "FLUXER_S3_READ_SIGNED",
-            non_empty(env.get("FLUXER_S3_READ_SIGNED")).as_deref(),
+            env.get("FLUXER_S3_READ_SIGNED").map(str::trim),
         )?
         .unwrap_or(false);
         Ok(Self {

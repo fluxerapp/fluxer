@@ -1,18 +1,46 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import DesktopRuntimeTransactions, {
+	type CommittedDesktopRuntime,
+	DesktopRuntimeTransactionError,
+	type PreparedDesktopRuntime,
+	requiresDesktopRuntimeTransaction,
+	runtimeTransportApiEndpoint,
+} from '@app/features/app/state/DesktopRuntimeTransaction';
 import {
-	DEFAULT_GIF_PROVIDER_INFO,
 	type GifProvider,
 	type GifProviderInfo,
 	type GifProviderInfoInput,
 	normalizeGifProviderInfo,
 } from '@app/features/app/state/GifProviderConfig';
+import InstanceSnapshotStore, {
+	type InstanceSnapshotResolution,
+	type InstanceSnapshotResolveRequest,
+	type RuntimeConfigSnapshot,
+	runtimeInstanceKey,
+} from '@app/features/app/state/InstanceSnapshotStore';
+import {requireRuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfigSnapshot';
+import {
+	accountIdentityOf,
+	tagStyleOf,
+	usesUniqueUsernames,
+	usesUsernameSignIn,
+} from '@app/features/app/utils/AccountIdentityFeatures';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
-import {http} from '@app/features/platform/transport/RestTransport';
+import {Logger} from '@app/features/platform/utils/AppLogger';
+import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {
+	type AccountIdentityMode,
+	AccountIdentityModes,
+	type TagStyle,
+} from '@fluxer/constants/src/AccountIdentityConstants';
 import {API_CODE_VERSION} from '@fluxer/constants/src/AppConstants';
+import {InstanceDiscoveryUnreachableError} from '@fluxer/instance_bootstrap/src/Discovery';
+import {InstanceEndpointKind, normalizeInstanceEndpoint} from '@fluxer/instance_bootstrap/src/EndpointNormalization';
+import {isOfficialInstanceHost, OFFICIAL_INSTANCE_DISPLAY_HOST} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 import type {
+	InstanceAgePolicy,
 	InstanceAppPublic,
-	InstanceCaptcha,
 	InstanceCommunity,
 	InstanceDiscoveryResponse,
 	InstanceFeatures,
@@ -20,447 +48,686 @@ import type {
 	InstanceServices,
 	InstanceSso as InstanceSsoConfig,
 } from '@fluxer/instance_bootstrap/src/Types';
-import {expandWireFormat} from '@fluxer/limits/src/LimitDiffer';
-import type {LimitConfigSnapshot, LimitConfigWireFormat} from '@fluxer/limits/src/LimitTypes';
+import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {makeAutoObservable, reaction, runInAction} from 'mobx';
+import {makeAutoObservable, observableRef} from 'mobx';
 
+const logger = new Logger('RuntimeConfig');
+
+export {
+	runtimeConfigSnapshotsAreSameInstance,
+	runtimeInstanceKey,
+} from '@app/features/app/state/InstanceSnapshotStore';
 export type {
 	GifProvider,
 	GifProviderInfo,
-	InstanceCaptcha,
 	InstanceCommunity,
 	InstanceDiscoveryResponse,
 	InstanceFeatures,
 	InstanceRegistration,
 	InstanceServices,
+	InstanceSnapshotResolution,
+	InstanceSnapshotResolveRequest,
 	InstanceSsoConfig,
+	RuntimeConfigSnapshot,
 };
 
-export interface RuntimeConfigSnapshot {
-	apiEndpoint: string;
-	apiPublicEndpoint: string;
-	gatewayEndpoint: string;
-	mediaEndpoint: string;
-	staticCdnEndpoint: string;
-	marketingEndpoint: string;
-	adminEndpoint: string;
-	inviteEndpoint: string;
-	giftEndpoint: string;
-	webAppEndpoint: string;
-	gifProvider: GifProvider;
-	gifProviderDisplayName: string;
-	gifAttributionRequired: boolean;
-	captchaProvider: 'hcaptcha' | 'turnstile' | 'none';
-	hcaptchaSiteKey: string | null;
-	turnstileSiteKey: string | null;
-	apiCodeVersion: number;
-	features: InstanceFeatures;
-	sso: InstanceSsoConfig | null;
-	registration?: InstanceRegistration;
-	community?: InstanceCommunity;
-	services?: InstanceServices;
-	publicPushVapidKey: string | null;
-	limits: LimitConfigSnapshot;
-	appPublic: InstanceAppPublic;
+export interface ApplyRuntimeConfigSnapshotRequest {
+	snapshot: RuntimeConfigSnapshot;
+	signal: AbortSignal | null;
 }
 
-function runtimeInstanceKey(snapshot: RuntimeConfigSnapshot): string | null {
-	try {
-		const endpoint = snapshot.apiEndpoint.trim();
-		const url = new URL(endpoint);
-		if (
-			(url.protocol !== 'https:' && url.protocol !== 'http:') ||
-			url.username ||
-			url.password ||
-			url.search ||
-			url.hash
-		) {
-			return null;
-		}
-		const path = url.pathname.replace(/\/+$/u, '');
-		return `${url.origin.toLowerCase()}${path}`;
-	} catch {
-		return null;
+export interface PreparedRuntimeConfig {
+	readonly snapshot: RuntimeConfigSnapshot;
+	readonly transportApiEndpoint: string;
+	readonly expectedGeneration: number;
+	readonly desktopRuntime: PreparedDesktopRuntime | null;
+}
+
+export interface CommittedRuntimeConfig {
+	readonly snapshot: RuntimeConfigSnapshot;
+	readonly transportApiEndpoint: string;
+	readonly expectedGeneration: number;
+	readonly previousRuntime: ActiveRuntime | null;
+	readonly activeRuntime: ActiveRuntime;
+	readonly desktopRuntime: CommittedDesktopRuntime | null;
+	readonly publication: RuntimeConfigPublication;
+}
+
+interface GifProviderOverride {
+	readonly instanceKey: string;
+	readonly info: GifProviderInfo;
+}
+
+interface ActiveRuntime {
+	readonly snapshot: RuntimeConfigSnapshot;
+	readonly transportApiEndpoint: string;
+}
+
+type RuntimeConfigPublicationPhase = 'committed' | 'published' | 'renderer-rolled-back' | 'rolled-back' | 'finalized';
+
+interface RuntimeConfigPublication {
+	phase: RuntimeConfigPublicationPhase;
+}
+
+const DEFAULT_PREMIUM_PRODUCT_NAME = 'Plutonium';
+
+class RuntimeActivationSupersededError extends Error {
+	constructor() {
+		super('Runtime activation was superseded by another instance transition');
+		this.name = 'RuntimeActivationSupersededError';
 	}
 }
 
-export function runtimeConfigSnapshotsAreSameInstance(
-	left: RuntimeConfigSnapshot | undefined,
-	right: RuntimeConfigSnapshot,
-): boolean {
-	if (!left) {
-		return false;
-	}
-	const leftKey = runtimeInstanceKey(left);
-	const rightKey = runtimeInstanceKey(right);
-	return leftKey !== null && leftKey === rightKey;
-}
-
-const DEFAULT_INSTANCE_FEATURES: InstanceFeatures = {
-	voice_enabled: false,
-	stripe_enabled: false,
-	self_hosted: false,
-	presigned_attachment_uploads: false,
-	emails_enabled: false,
-};
-
-export const DEFAULT_INSTANCE_REGISTRATION: InstanceRegistration = {
-	mode: 'open',
-	admin_registration_urls_enabled: true,
-};
-
-export const DEFAULT_INSTANCE_COMMUNITY: InstanceCommunity = {
-	single_community: false,
-	single_community_guild_id: null,
-	direct_messages_disabled: false,
-};
-
-export function normalizeInstanceCommunity(community?: InstanceCommunity | null): InstanceCommunity {
-	return {
-		...DEFAULT_INSTANCE_COMMUNITY,
-		...(community ?? {}),
-	};
-}
-
-export const DEFAULT_INSTANCE_SERVICES: InstanceServices = {
-	gif_enabled: true,
-	youtube_enabled: false,
-	bluesky_enabled: false,
-};
-
-export function normalizeInstanceServices(services?: InstanceServices | null): InstanceServices {
-	return {
-		...DEFAULT_INSTANCE_SERVICES,
-		...(services ?? {}),
-	};
-}
-
-export const DEFAULT_APP_PUBLIC_CONFIG: InstanceAppPublic = {
-	branding: {
-		product_name: 'Fluxer',
-		icon_url: null,
-		symbol_url: null,
-		logo_url: null,
-		wordmark_url: null,
-		favicon_url: null,
-		theme_color: null,
-		status_page_url: null,
-		status_page_incident_history_url: null,
-	},
-	setup: {
-		configured: false,
-		admin_url: null,
-	},
-	legal: {
-		terms_url: null,
-		privacy_url: null,
-	},
-	registration: {
-		collect_date_of_birth: true,
-	},
-};
-
-export function normalizeInstanceRegistration(registration?: InstanceRegistration | null): InstanceRegistration {
-	return {
-		...DEFAULT_INSTANCE_REGISTRATION,
-		...(registration ?? {}),
-	};
-}
-
-function getInlinedInstance(): InstanceDiscoveryResponse {
-	const bootstrap = typeof window !== 'undefined' ? window.__FLUXER_BOOTSTRAP__ : undefined;
-	if (!bootstrap) {
-		throw new Error('window.__FLUXER_BOOTSTRAP__ is missing — app must be served by fluxer_app_proxy');
-	}
-	return bootstrap.instance;
-}
-
-let lastAppliedDocumentProductName = DEFAULT_APP_PUBLIC_CONFIG.branding.product_name;
-
-function escapeRegExp(value: string): string {
-	return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
-}
-
-function upsertDocumentLink(rel: string, href: string): void {
-	if (typeof document === 'undefined') return;
-	const selector = `link[rel="${rel}"][data-fluxer-branding="true"]`;
-	const existing = document.head.querySelector<HTMLLinkElement>(selector);
-	const link = existing ?? document.createElement('link');
-	link.rel = rel;
-	link.href = href;
-	link.dataset.fluxerBranding = 'true';
-	if (!existing) {
-		document.head.appendChild(link);
+class RuntimeInstanceIdentityChangedError extends Error {
+	constructor(expectedInstanceKey: string, resolvedInstanceKey: string) {
+		super(`Runtime discovery resolved ${resolvedInstanceKey} for stored instance ${expectedInstanceKey}`);
+		this.name = 'RuntimeInstanceIdentityChangedError';
 	}
 }
 
-function removeDocumentLink(rel: string): void {
-	if (typeof document === 'undefined') return;
-	document.head.querySelectorAll<HTMLLinkElement>(`link[rel="${rel}"][data-fluxer-branding="true"]`).forEach((link) => {
-		link.remove();
-	});
-}
-
-function upsertDocumentMeta(name: string, content: string): void {
-	if (typeof document === 'undefined') return;
-	const brandedMeta = document.head.querySelector<HTMLMetaElement>(`meta[name="${name}"][data-fluxer-branding="true"]`);
-	const meta = brandedMeta ?? document.createElement('meta');
-	meta.name = name;
-	meta.content = content;
-	meta.dataset.fluxerBranding = 'true';
-	if (brandedMeta) return;
-	const precedingMeta = document.head.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
-	document.head.insertBefore(meta, precedingMeta);
-}
-
-function removeDocumentMeta(name: string): void {
-	if (typeof document === 'undefined') return;
-	document.head
-		.querySelectorAll<HTMLMetaElement>(`meta[name="${name}"][data-fluxer-branding="true"]`)
-		.forEach((meta) => {
-			meta.remove();
-		});
-}
-
-function applyDocumentTitleProductName(previousProductName: string, nextProductName: string): void {
-	if (typeof document === 'undefined' || previousProductName === nextProductName) return;
-	const productPrefix = new RegExp(
-		`^(\\(\\d+\\)\\s+|\\u2022\\s+)?${escapeRegExp(previousProductName)}(?=$| \\| )`,
-		'u',
-	);
-	if (productPrefix.test(document.title)) {
-		document.title = document.title.replace(productPrefix, (_match, prefix: string | undefined) => {
-			return `${prefix ?? ''}${nextProductName}`;
-		});
+class RuntimeCommitRollbackError extends AggregateError {
+	constructor(commitError: unknown, rollbackError: unknown) {
+		super([commitError, rollbackError], 'Desktop runtime commit failed and its native routing could not be restored');
+		this.name = 'RuntimeCommitRollbackError';
 	}
 }
 
-function applyDocumentBranding(appPublic: InstanceAppPublic): void {
-	if (typeof document === 'undefined') return;
-	const productName = appPublic.branding.product_name.trim() || DEFAULT_APP_PUBLIC_CONFIG.branding.product_name;
-	applyDocumentTitleProductName(lastAppliedDocumentProductName, productName);
-	lastAppliedDocumentProductName = productName;
-	upsertDocumentMeta('application-name', productName);
-	upsertDocumentMeta('apple-mobile-web-app-title', productName);
-	const faviconUrl = appPublic.branding.favicon_url ?? appPublic.branding.icon_url;
-	if (faviconUrl) {
-		upsertDocumentLink('icon', faviconUrl);
-	} else {
-		removeDocumentLink('icon');
-	}
-	if (appPublic.branding.theme_color) {
-		upsertDocumentMeta('theme-color', appPublic.branding.theme_color);
-	} else {
-		removeDocumentMeta('theme-color');
+class RuntimeConfigUnavailableError extends Error {
+	constructor() {
+		super('No instance runtime is active');
+		this.name = 'RuntimeConfigUnavailableError';
 	}
 }
 
-export function normalizeAppPublicConfig(appPublic?: Partial<InstanceAppPublic> | null): InstanceAppPublic {
-	return {
-		branding: {
-			...DEFAULT_APP_PUBLIC_CONFIG.branding,
-			...(appPublic?.branding ?? {}),
-		},
-		setup: {
-			...DEFAULT_APP_PUBLIC_CONFIG.setup,
-			...(appPublic?.setup ?? {}),
-		},
-		legal: {
-			...DEFAULT_APP_PUBLIC_CONFIG.legal,
-			...(appPublic?.legal ?? {}),
-		},
-		registration: {
-			...DEFAULT_APP_PUBLIC_CONFIG.registration,
-			...(appPublic?.registration ?? {}),
-		},
-	};
+function nextLifecycleGeneration(generation: number): number {
+	if (!Number.isSafeInteger(generation) || generation < 0 || generation >= Number.MAX_SAFE_INTEGER) {
+		throw new Error('Runtime config lifecycle generation is exhausted');
+	}
+	return generation + 1;
+}
+
+export function describeAPIEndpoint(endpoint: string): string {
+	const normalized = normalizeInstanceEndpoint(endpoint, InstanceEndpointKind.API);
+	if (normalized == null || !normalized.startsWith('https://')) {
+		return normalized ?? endpoint;
+	}
+	const withoutScheme = normalized.slice('https://'.length);
+	const pathStart = withoutScheme.indexOf('/');
+	const host = pathStart === -1 ? withoutScheme : withoutScheme.slice(0, pathStart);
+	const path = pathStart === -1 ? '' : withoutScheme.slice(pathStart);
+	if (isOfficialInstanceHost(host)) {
+		return `${OFFICIAL_INSTANCE_DISPLAY_HOST}${path}`;
+	}
+	return withoutScheme;
 }
 
 class RuntimeConfig {
-	apiEndpoint: string = '';
-	apiPublicEndpoint: string = '';
-	gatewayEndpoint: string = '';
-	mediaEndpoint: string = '';
-	staticCdnEndpoint: string = '';
-	marketingEndpoint: string = '';
-	adminEndpoint: string = '';
-	inviteEndpoint: string = '';
-	giftEndpoint: string = '';
-	webAppEndpoint: string = '';
-	gifProvider: GifProvider = DEFAULT_GIF_PROVIDER_INFO.name;
-	gifProviderDisplayName: string = DEFAULT_GIF_PROVIDER_INFO.displayName;
-	gifAttributionRequired: boolean = DEFAULT_GIF_PROVIDER_INFO.attributionRequired;
-	captchaProvider: 'hcaptcha' | 'turnstile' | 'none' = 'none';
-	hcaptchaSiteKey: string | null = null;
-	turnstileSiteKey: string | null = null;
-	apiCodeVersion: number = API_CODE_VERSION;
-	features: InstanceFeatures = {...DEFAULT_INSTANCE_FEATURES};
-	sso: InstanceSsoConfig | null = null;
-	registration: InstanceRegistration = {...DEFAULT_INSTANCE_REGISTRATION};
-	community: InstanceCommunity = {...DEFAULT_INSTANCE_COMMUNITY};
-	services: InstanceServices = {...DEFAULT_INSTANCE_SERVICES};
-	publicPushVapidKey: string | null = null;
-	limits: LimitConfigSnapshot = this.createEmptyLimitConfig();
-	currentDefaultsHash: string | null = null;
-	appPublic: InstanceAppPublic = normalizeAppPublicConfig();
+	private lifecycleGeneration = 0;
+	private activeRuntime: ActiveRuntime | null = null;
+	private retainedSnapshot: RuntimeConfigSnapshot | null = null;
+	private gifProviderOverride: GifProviderOverride | null = null;
 
 	constructor() {
-		this.updateFromInstance(getInlinedInstance());
-		makeAutoObservable(this, {}, {autoBind: true});
-		reaction(
-			() => this.apiEndpoint,
-			(endpoint) => {
-				if (endpoint) {
-					http.configure({baseUrl: endpoint, apiVersion: this.apiCodeVersion});
-				}
+		makeAutoObservable<
+			RuntimeConfig,
+			'activeRuntime' | 'gifProviderOverride' | 'isCurrentGeneration' | 'lifecycleGeneration' | 'retainedSnapshot'
+		>(
+			this,
+			{
+				isCurrentGeneration: false,
+				activeRuntime: observableRef,
+				retainedSnapshot: observableRef,
+				gifProviderOverride: observableRef,
+				lifecycleGeneration: false,
 			},
-			{fireImmediately: true},
+			{autoBind: true},
 		);
 	}
 
-	waitForInit(): Promise<void> {
-		return Promise.resolve();
+	get apiEndpoint(): string {
+		return this.readableSnapshot().apiEndpoint;
+	}
+
+	get transportApiEndpoint(): string {
+		return this.requireActiveRuntime().transportApiEndpoint;
+	}
+
+	get uploadRelayEndpoint(): string | null {
+		return this.readableSnapshot().uploadRelayEndpoint;
+	}
+
+	get apiPublicEndpoint(): string {
+		return this.readableSnapshot().apiPublicEndpoint;
+	}
+
+	get gatewayEndpoint(): string {
+		return this.readableSnapshot().gatewayEndpoint;
+	}
+
+	get mediaEndpoint(): string {
+		return this.readableSnapshot().mediaEndpoint;
+	}
+
+	get staticCdnEndpoint(): string {
+		return this.readableSnapshot().staticCdnEndpoint;
+	}
+
+	get marketingEndpoint(): string {
+		return this.readableSnapshot().marketingEndpoint;
+	}
+
+	get adminEndpoint(): string {
+		return this.readableSnapshot().adminEndpoint;
+	}
+
+	get inviteEndpoint(): string {
+		return this.readableSnapshot().inviteEndpoint;
+	}
+
+	get giftEndpoint(): string {
+		return this.readableSnapshot().giftEndpoint;
+	}
+
+	get webAppEndpoint(): string {
+		return this.readableSnapshot().webAppEndpoint;
+	}
+
+	get gifProvider(): GifProvider {
+		return this.activeGifProviderOverride()?.name ?? this.readableSnapshot().gifProvider;
+	}
+
+	get gifProviderDisplayName(): string {
+		return this.activeGifProviderOverride()?.displayName ?? this.readableSnapshot().gifProviderDisplayName;
+	}
+
+	get gifAttributionRequired(): boolean {
+		return this.activeGifProviderOverride()?.attributionRequired ?? this.readableSnapshot().gifAttributionRequired;
+	}
+
+	private activeGifProviderOverride(): GifProviderInfo | null {
+		const override = this.gifProviderOverride;
+		const snapshot = this.activeRuntime?.snapshot;
+		if (override === null || snapshot === undefined || runtimeInstanceKey(snapshot) !== override.instanceKey) {
+			return null;
+		}
+		return override.info;
+	}
+
+	applyGifProviderHeaders(input: GifProviderInfoInput): void {
+		const snapshot = this.activeRuntime?.snapshot;
+		const instanceKey = snapshot === undefined ? null : runtimeInstanceKey(snapshot);
+		if (instanceKey === null) {
+			return;
+		}
+		const info = normalizeGifProviderInfo(input);
+		if (
+			this.gifProvider === info.name &&
+			this.gifProviderDisplayName === info.displayName &&
+			this.gifAttributionRequired === info.attributionRequired
+		) {
+			return;
+		}
+		this.gifProviderOverride = {instanceKey, info};
+	}
+
+	get apiCodeVersion(): number {
+		return this.readableSnapshot().apiCodeVersion;
+	}
+
+	get features(): InstanceFeatures {
+		return this.readableSnapshot().features;
+	}
+
+	get sso(): InstanceSsoConfig | null {
+		return this.readableSnapshot().sso;
+	}
+
+	get registration(): InstanceRegistration {
+		return this.readableSnapshot().registration;
+	}
+
+	get community(): InstanceCommunity {
+		return this.readableSnapshot().community;
+	}
+
+	get services(): InstanceServices {
+		return this.readableSnapshot().services;
+	}
+
+	get publicPushVapidKey(): string | null {
+		return this.readableSnapshot().publicPushVapidKey;
+	}
+
+	get limits(): LimitConfigSnapshot {
+		return this.readableSnapshot().limits;
+	}
+
+	get appPublic(): InstanceAppPublic {
+		return this.readableSnapshot().appPublic;
+	}
+
+	get agePolicy(): InstanceAgePolicy | null {
+		return this.readableSnapshot().agePolicy ?? null;
+	}
+
+	private requireActiveSnapshot(): RuntimeConfigSnapshot {
+		return this.requireActiveRuntime().snapshot;
+	}
+
+	private readableSnapshot(): RuntimeConfigSnapshot {
+		const snapshot = this.activeRuntime?.snapshot ?? this.retainedSnapshot;
+		if (snapshot === null) {
+			throw new RuntimeConfigUnavailableError();
+		}
+		return snapshot;
+	}
+
+	private requireActiveRuntime(): ActiveRuntime {
+		const runtime = this.activeRuntime;
+		if (runtime === null) {
+			throw new RuntimeConfigUnavailableError();
+		}
+		return runtime;
+	}
+
+	getSnapshotOrNull(): RuntimeConfigSnapshot | null {
+		return this.activeRuntime?.snapshot ?? null;
 	}
 
 	getSnapshot(): RuntimeConfigSnapshot {
-		return {
-			apiEndpoint: this.apiEndpoint,
-			apiPublicEndpoint: this.apiPublicEndpoint,
-			gatewayEndpoint: this.gatewayEndpoint,
-			mediaEndpoint: this.mediaEndpoint,
-			staticCdnEndpoint: this.staticCdnEndpoint,
-			marketingEndpoint: this.marketingEndpoint,
-			adminEndpoint: this.adminEndpoint,
-			inviteEndpoint: this.inviteEndpoint,
-			giftEndpoint: this.giftEndpoint,
-			webAppEndpoint: this.webAppEndpoint,
-			gifProvider: this.gifProvider,
-			gifProviderDisplayName: this.gifProviderDisplayName,
-			gifAttributionRequired: this.gifAttributionRequired,
-			captchaProvider: this.captchaProvider,
-			hcaptchaSiteKey: this.hcaptchaSiteKey,
-			turnstileSiteKey: this.turnstileSiteKey,
-			apiCodeVersion: this.apiCodeVersion,
-			features: {...this.features},
-			sso: this.sso ? {...this.sso} : null,
-			registration: {...this.registration},
-			community: {...this.community},
-			services: {...this.services},
-			publicPushVapidKey: this.publicPushVapidKey,
-			limits: this.cloneLimits(this.limits),
-			appPublic: normalizeAppPublicConfig(this.appPublic),
-		};
+		return this.readableSnapshot();
 	}
 
-	private createEmptyLimitConfig(): LimitConfigSnapshot {
-		return {
-			version: 1,
-			traitDefinitions: [],
-			rules: [],
-		};
-	}
-
-	private cloneLimits(limits: LimitConfigSnapshot): LimitConfigSnapshot {
-		return JSON.parse(JSON.stringify(limits));
-	}
-
-	private normalizeLimits(limits?: LimitConfigSnapshot): LimitConfigSnapshot {
-		const cloned = this.cloneLimits(limits ?? this.createEmptyLimitConfig());
-		return {
-			...cloned,
-			traitDefinitions: cloned.traitDefinitions ?? [],
-			rules: cloned.rules ?? [],
-		};
-	}
-
-	private processLimitsFromApi(limits: LimitConfigSnapshot | LimitConfigWireFormat | undefined): LimitConfigSnapshot {
-		if (limits && 'defaultsHash' in limits && limits.version === 2) {
-			const expanded = expandWireFormat(limits);
-			this.currentDefaultsHash = limits.defaultsHash;
-			return this.normalizeLimits(expanded);
+	async deactivate(): Promise<void> {
+		const expectedGeneration = this.lifecycleGeneration;
+		const runtime = this.activeRuntime;
+		if (runtime === null) {
+			return;
 		}
-		this.currentDefaultsHash = null;
-		return this.normalizeLimits(limits as LimitConfigSnapshot | undefined);
+		const activeInstanceKey = runtimeInstanceKey(runtime.snapshot);
+		if (activeInstanceKey === null) {
+			throw new Error('Active runtime has no usable instance identity');
+		}
+		const desktop = requiresDesktopRuntimeTransaction();
+		if (desktop) {
+			await DesktopRuntimeTransactions.deactivate(activeInstanceKey);
+		}
+		if (!this.isCurrentGeneration(expectedGeneration) || this.activeRuntime !== runtime) {
+			throw new RuntimeActivationSupersededError();
+		}
+		if (desktop) {
+			this.retainedSnapshot = runtime.snapshot;
+			this.activeRuntime = null;
+		}
+		this.lifecycleGeneration = nextLifecycleGeneration(this.lifecycleGeneration);
+	}
+
+	private isCurrentGeneration(generation: number): boolean {
+		return this.lifecycleGeneration === generation;
+	}
+
+	applySnapshot(snapshot: RuntimeConfigSnapshot): void {
+		if (requiresDesktopRuntimeTransaction()) {
+			throw new DesktopRuntimeTransactionError('Desktop runtime changes must use applySnapshotAndWaitForDesktop');
+		}
+		const prepared = this.prepareLocalSnapshot(snapshot, this.lifecycleGeneration);
+		const committed = this.commitLocalPreparation(prepared);
+		this.publishCommittedSnapshot(committed);
+		committed.publication.phase = 'finalized';
+	}
+
+	async applySnapshotAndWaitForDesktop({snapshot, signal}: ApplyRuntimeConfigSnapshotRequest): Promise<void> {
+		const prepared = await this.prepareSnapshot({snapshot, signal});
+		const committed = await this.commitPreparedSnapshot(prepared);
+		try {
+			this.publishCommittedSnapshot(committed);
+		} catch (error) {
+			return await this.rollbackFailedCommit(committed, error);
+		}
+		try {
+			await this.finalizeCommittedSnapshot(committed);
+		} catch (error) {
+			return await this.rollbackFailedCommit(committed, error);
+		}
+	}
+
+	async prepareSnapshot({snapshot, signal}: ApplyRuntimeConfigSnapshotRequest): Promise<PreparedRuntimeConfig> {
+		signal?.throwIfAborted();
+		const usable = this.requireUsableSnapshot(snapshot);
+		this.assertCodeVersion(usable.apiCodeVersion);
+		const generation = this.lifecycleGeneration;
+		let desktopRuntime: PreparedDesktopRuntime | null = null;
+		try {
+			if (requiresDesktopRuntimeTransaction()) {
+				desktopRuntime = await DesktopRuntimeTransactions.prepare(usable, signal);
+			}
+			signal?.throwIfAborted();
+			if (!this.isCurrentGeneration(generation)) {
+				throw new RuntimeActivationSupersededError();
+			}
+			if (desktopRuntime !== null) {
+				const preparedSnapshot = this.requireUsableSnapshot(desktopRuntime.snapshot);
+				this.assertCodeVersion(preparedSnapshot.apiCodeVersion);
+				return {
+					snapshot: preparedSnapshot,
+					transportApiEndpoint: desktopRuntime.transportApiEndpoint,
+					expectedGeneration: generation,
+					desktopRuntime,
+				};
+			}
+			return this.prepareLocalSnapshot(usable, generation);
+		} catch (error) {
+			if (desktopRuntime !== null) {
+				try {
+					await DesktopRuntimeTransactions.abort(desktopRuntime);
+				} catch (rollbackError) {
+					throw new RuntimeCommitRollbackError(error, rollbackError);
+				}
+			}
+			throw error;
+		}
+	}
+
+	async resolveAndPrepareSnapshot({
+		snapshot,
+		signal,
+	}: ApplyRuntimeConfigSnapshotRequest): Promise<PreparedRuntimeConfig> {
+		const expectedInstanceKey = runtimeInstanceKey(this.requireUsableSnapshot(snapshot));
+		if (expectedInstanceKey === null) {
+			throw new Error('Runtime resolution requires a usable instance key');
+		}
+		let resolution: InstanceSnapshotResolution;
+		try {
+			resolution = await this.resolveEndpoint({input: snapshot.apiEndpoint, signal});
+		} catch (error) {
+			if (!(error instanceof InstanceDiscoveryUnreachableError)) {
+				throw error;
+			}
+			signal?.throwIfAborted();
+			logger.warn('Instance discovery is unreachable, preparing the stored instance snapshot', error);
+			return await this.prepareSnapshot({snapshot, signal});
+		}
+		if (resolution.instanceKey !== expectedInstanceKey) {
+			throw new RuntimeInstanceIdentityChangedError(expectedInstanceKey, resolution.instanceKey);
+		}
+		return await this.prepareSnapshot({snapshot: resolution.snapshot, signal});
+	}
+
+	async commitPreparedSnapshot(prepared: PreparedRuntimeConfig): Promise<CommittedRuntimeConfig> {
+		try {
+			this.requirePreparedRuntime(prepared);
+		} catch (error) {
+			try {
+				await this.abortPreparedSnapshot(prepared);
+			} catch (rollbackError) {
+				throw new RuntimeCommitRollbackError(error, rollbackError);
+			}
+			throw error;
+		}
+		const desktopRuntime = prepared.desktopRuntime;
+		if (desktopRuntime === null) {
+			return this.commitLocalPreparation(prepared);
+		}
+		const committedDesktopRuntime = await DesktopRuntimeTransactions.commit(desktopRuntime);
+		try {
+			return this.createCommittedRuntime(prepared, committedDesktopRuntime);
+		} catch (error) {
+			try {
+				await DesktopRuntimeTransactions.rollback(committedDesktopRuntime);
+			} catch (rollbackError) {
+				throw new RuntimeCommitRollbackError(error, rollbackError);
+			}
+			throw error;
+		}
+	}
+
+	publishCommittedSnapshot(committed: CommittedRuntimeConfig): void {
+		if (committed.publication.phase !== 'committed') {
+			throw new Error(`Runtime config commit cannot publish from ${committed.publication.phase}`);
+		}
+		if (!this.isCurrentGeneration(committed.expectedGeneration)) {
+			throw new RuntimeActivationSupersededError();
+		}
+		if (this.activeRuntime !== committed.previousRuntime) {
+			throw new RuntimeActivationSupersededError();
+		}
+		const snapshot = this.requireUsableSnapshot(committed.snapshot);
+		this.assertCodeVersion(snapshot.apiCodeVersion);
+		const transportApiEndpoint = runtimeTransportApiEndpoint(snapshot);
+		if (committed.transportApiEndpoint !== transportApiEndpoint) {
+			throw new DesktopRuntimeTransactionError('Committed runtime transport does not match its instance snapshot');
+		}
+		if (
+			committed.activeRuntime.snapshot !== committed.snapshot ||
+			committed.activeRuntime.transportApiEndpoint !== committed.transportApiEndpoint
+		) {
+			throw new Error('Runtime config commit contains a different renderer runtime');
+		}
+		const publishedGeneration = nextLifecycleGeneration(this.lifecycleGeneration);
+		if (committed.desktopRuntime !== null) {
+			DesktopRuntimeTransactions.publish(committed.desktopRuntime);
+		}
+		this.activeRuntime = committed.activeRuntime;
+		this.lifecycleGeneration = publishedGeneration;
+		committed.publication.phase = 'published';
+	}
+
+	async abortPreparedSnapshot(prepared: PreparedRuntimeConfig): Promise<void> {
+		if (prepared.desktopRuntime !== null) {
+			await DesktopRuntimeTransactions.abort(prepared.desktopRuntime);
+		}
+	}
+
+	async finalizeCommittedSnapshot(committed: CommittedRuntimeConfig): Promise<void> {
+		if (committed.publication.phase !== 'published') {
+			throw new Error(`Runtime config commit cannot finalize from ${committed.publication.phase}`);
+		}
+		if (committed.desktopRuntime !== null) {
+			await DesktopRuntimeTransactions.finalize(committed.desktopRuntime);
+		}
+		committed.publication.phase = 'finalized';
+	}
+
+	rollbackPublishedSnapshot(committed: CommittedRuntimeConfig): void {
+		if (committed.publication.phase === 'committed') {
+			return;
+		}
+		if (committed.publication.phase !== 'published') {
+			throw new Error(`Runtime config publication cannot roll back from ${committed.publication.phase}`);
+		}
+		const publishedGeneration = nextLifecycleGeneration(committed.expectedGeneration);
+		if (this.lifecycleGeneration !== publishedGeneration || this.activeRuntime !== committed.activeRuntime) {
+			throw new RuntimeActivationSupersededError();
+		}
+		const rollbackGeneration = nextLifecycleGeneration(this.lifecycleGeneration);
+		if (committed.desktopRuntime !== null) {
+			DesktopRuntimeTransactions.rollbackPublished(committed.desktopRuntime);
+		}
+		this.activeRuntime = committed.previousRuntime;
+		this.lifecycleGeneration = rollbackGeneration;
+		committed.publication.phase = 'renderer-rolled-back';
+	}
+
+	async rollbackCommittedSnapshot(committed: CommittedRuntimeConfig): Promise<void> {
+		if (
+			committed.publication.phase !== 'committed' &&
+			committed.publication.phase !== 'published' &&
+			committed.publication.phase !== 'renderer-rolled-back'
+		) {
+			throw new Error(`Runtime config commit cannot roll back from ${committed.publication.phase}`);
+		}
+		if (committed.desktopRuntime !== null) {
+			await DesktopRuntimeTransactions.rollback(committed.desktopRuntime);
+		}
+		committed.publication.phase = 'rolled-back';
+	}
+
+	async resolveEndpoint(request: InstanceSnapshotResolveRequest): Promise<InstanceSnapshotResolution> {
+		const resolution = await InstanceSnapshotStore.resolve(request);
+		this.assertCodeVersion(resolution.snapshot.apiCodeVersion);
+		return resolution;
+	}
+
+	private requireUsableSnapshot(snapshot: RuntimeConfigSnapshot): RuntimeConfigSnapshot {
+		const validated = requireRuntimeConfigSnapshot(snapshot);
+		if (runtimeInstanceKey(validated) === null) {
+			throw new Error(`Runtime snapshot has no usable instance key (apiEndpoint: "${validated.apiEndpoint}")`);
+		}
+		return validated;
+	}
+
+	private prepareLocalSnapshot(snapshot: RuntimeConfigSnapshot, expectedGeneration: number): PreparedRuntimeConfig {
+		const usable = this.requireUsableSnapshot(snapshot);
+		this.assertCodeVersion(usable.apiCodeVersion);
+		return {
+			snapshot: usable,
+			transportApiEndpoint: runtimeTransportApiEndpoint(usable),
+			expectedGeneration,
+			desktopRuntime: null,
+		};
+	}
+
+	private requirePreparedRuntime(prepared: PreparedRuntimeConfig): RuntimeConfigSnapshot {
+		if (!this.isCurrentGeneration(prepared.expectedGeneration)) {
+			throw new RuntimeActivationSupersededError();
+		}
+		const snapshot = this.requireUsableSnapshot(prepared.snapshot);
+		this.assertCodeVersion(snapshot.apiCodeVersion);
+		const transportApiEndpoint = runtimeTransportApiEndpoint(snapshot);
+		if (prepared.transportApiEndpoint !== transportApiEndpoint) {
+			throw new DesktopRuntimeTransactionError('Prepared runtime transport does not match its instance snapshot');
+		}
+		if (requiresDesktopRuntimeTransaction() !== (prepared.desktopRuntime !== null)) {
+			throw new DesktopRuntimeTransactionError('Prepared runtime does not match the renderer transport environment');
+		}
+		return snapshot;
+	}
+
+	private commitLocalPreparation(prepared: PreparedRuntimeConfig): CommittedRuntimeConfig {
+		if (prepared.desktopRuntime !== null) {
+			throw new DesktopRuntimeTransactionError('Desktop runtime preparation cannot be committed as a local runtime');
+		}
+		return this.createCommittedRuntime(prepared, null);
+	}
+
+	private createCommittedRuntime(
+		prepared: PreparedRuntimeConfig,
+		desktopRuntime: CommittedDesktopRuntime | null,
+	): CommittedRuntimeConfig {
+		const snapshot = this.requirePreparedRuntime(prepared);
+		const activeRuntime = {snapshot, transportApiEndpoint: prepared.transportApiEndpoint};
+		return {
+			snapshot,
+			transportApiEndpoint: prepared.transportApiEndpoint,
+			expectedGeneration: prepared.expectedGeneration,
+			previousRuntime: this.activeRuntime,
+			activeRuntime,
+			desktopRuntime,
+			publication: {phase: 'committed'},
+		};
+	}
+
+	private async rollbackFailedCommit(committed: CommittedRuntimeConfig, operationError: unknown): Promise<never> {
+		const rollbackErrors: Array<unknown> = [];
+		try {
+			this.rollbackPublishedSnapshot(committed);
+		} catch (error) {
+			rollbackErrors.push(error);
+		}
+		try {
+			await this.rollbackCommittedSnapshot(committed);
+		} catch (error) {
+			rollbackErrors.push(error);
+		}
+		if (rollbackErrors.length > 0) {
+			throw new AggregateError(
+				[operationError, ...rollbackErrors],
+				'Runtime config commit failed and could not be rolled back completely',
+			);
+		}
+		throw operationError;
+	}
+
+	applyAccountIdentity(mode: AccountIdentityMode, tagStyle: TagStyle): void {
+		const current = this.requireActiveSnapshot();
+		this.replaceActiveFeatures({
+			...current.features,
+			account_identity: mode,
+			tag_style: tagStyle,
+			emails_enabled: mode === AccountIdentityModes.USERNAME ? false : current.features.emails_enabled,
+		});
+	}
+
+	async refreshDiscovery(): Promise<void> {
+		const current = this.requireActiveSnapshot();
+		const resolution = await InstanceSnapshotStore.refresh({input: current.apiEndpoint, signal: null});
+		if (runtimeInstanceKey(resolution.snapshot) !== runtimeInstanceKey(this.requireActiveSnapshot())) {
+			return;
+		}
+		this.replaceActiveFeatures(resolution.snapshot.features);
+	}
+
+	private replaceActiveFeatures(features: InstanceFeatures): void {
+		const runtime = this.requireActiveRuntime();
+		const usable = this.requireUsableSnapshot({...runtime.snapshot, features});
+		this.activeRuntime = {...runtime, snapshot: usable};
+		this.lifecycleGeneration = nextLifecycleGeneration(this.lifecycleGeneration);
 	}
 
 	applyAdminInstanceConfig(config: InstanceConfigResponse): void {
-		const appPublic = normalizeAppPublicConfig({
+		const current = this.requireActiveSnapshot();
+		const appPublic: InstanceAppPublic = {
 			branding: config.app_public.branding,
 			setup: {
-				...config.app_public.setup,
-				admin_url: this.appPublic.setup.admin_url,
+				configured: config.app_public.setup.configured,
+				admin_url: current.appPublic.setup.admin_url,
 			},
 			legal: config.app_public.legal,
 			registration: config.app_public.registration,
-		});
-		runInAction(() => {
-			this.features = {
-				...this.features,
+		};
+		const snapshot: RuntimeConfigSnapshot = {
+			...current,
+			features: {
+				...current.features,
 				self_hosted: config.self_hosted,
-			};
-			this.registration = normalizeInstanceRegistration(config.registration);
-			this.community = normalizeInstanceCommunity({
+				premium_enabled: !config.self_hosted || config.policy.premium_mode === 'mirror',
+				stripe_enabled: config.billing.billing_active,
+				stripe_serviceable: config.billing.stripe_serviceable,
+				account_identity: config.account_identity.mode,
+				tag_style: config.account_identity.tag_style,
+				emails_enabled:
+					config.account_identity.mode === AccountIdentityModes.USERNAME ? false : current.features.emails_enabled,
+			},
+			registration: {
+				mode: config.registration.mode,
+				admin_registration_urls_enabled: config.registration.admin_registration_urls_enabled,
+			},
+			community: {
 				single_community: config.policy.single_community_enabled,
 				single_community_guild_id: config.policy.single_community_enabled
 					? config.policy.single_community_guild_id
 					: null,
 				direct_messages_disabled: config.policy.direct_messages_disabled,
-			});
-			this.services = normalizeInstanceServices({
+				guild_create_access: config.policy.guild_create_access,
+			},
+			services: {
 				gif_enabled: config.policy.services_resolved.gif_enabled,
 				youtube_enabled: config.policy.services_resolved.youtube_enabled,
 				bluesky_enabled: config.policy.services_resolved.bluesky_enabled,
-			});
-			this.appPublic = appPublic;
-		});
-		applyDocumentBranding(appPublic);
-	}
-
-	private updateFromInstance(instance: InstanceDiscoveryResponse): void {
-		this.assertCodeVersion(instance.api_code_version);
-		const apiEndpoint = instance.endpoints.api_client ?? instance.endpoints.api;
-		const apiPublicEndpoint = instance.endpoints.api_public ?? apiEndpoint;
-		const sso = instance.sso ?? null;
-		const appPublic = normalizeAppPublicConfig(instance.app_public);
-		const gifProviderInfo = normalizeGifProviderInfo({
-			provider: instance.gif?.provider,
-			attributionRequired: instance.gif?.attribution_required,
-		});
-		runInAction(() => {
-			this.apiEndpoint = apiEndpoint;
-			this.apiPublicEndpoint = apiPublicEndpoint;
-			this.gatewayEndpoint = instance.endpoints.gateway;
-			this.mediaEndpoint = instance.endpoints.media;
-			this.staticCdnEndpoint = instance.endpoints.static_cdn;
-			this.marketingEndpoint = instance.endpoints.marketing;
-			this.adminEndpoint = instance.endpoints.admin;
-			this.inviteEndpoint = instance.endpoints.invite;
-			this.giftEndpoint = instance.endpoints.gift;
-			this.webAppEndpoint = instance.endpoints.webapp;
-			this.gifProvider = gifProviderInfo.name;
-			this.gifProviderDisplayName = gifProviderInfo.displayName;
-			this.gifAttributionRequired = gifProviderInfo.attributionRequired;
-			this.captchaProvider = instance.captcha.provider;
-			this.hcaptchaSiteKey = instance.captcha.hcaptcha_site_key;
-			this.turnstileSiteKey = instance.captcha.turnstile_site_key;
-			this.apiCodeVersion = instance.api_code_version;
-			this.features = {
-				...DEFAULT_INSTANCE_FEATURES,
-				...instance.features,
-			};
-			this.sso = sso;
-			this.registration = normalizeInstanceRegistration(instance.registration);
-			this.community = normalizeInstanceCommunity(instance.community);
-			this.services = normalizeInstanceServices(instance.services);
-			this.publicPushVapidKey = instance.push?.public_vapid_key ?? null;
-			this.limits = this.processLimitsFromApi(instance.limits);
-			this.appPublic = appPublic;
-		});
-		applyDocumentBranding(appPublic);
+			},
+			appPublic,
+		};
+		const usable = this.requireUsableSnapshot(snapshot);
+		const runtime = this.requireActiveRuntime();
+		this.activeRuntime = {...runtime, snapshot: usable};
+		this.lifecycleGeneration = nextLifecycleGeneration(this.lifecycleGeneration);
 	}
 
 	private assertCodeVersion(instanceVersion: number): void {
+		if (!Number.isSafeInteger(instanceVersion) || instanceVersion <= 0) {
+			throw new Error(`Invalid server code version: ${instanceVersion}`);
+		}
 		if (instanceVersion < API_CODE_VERSION) {
 			throw new Error(
 				`Incompatible server (code version ${instanceVersion}); this client requires ${API_CODE_VERSION}.`,
@@ -469,38 +736,63 @@ class RuntimeConfig {
 	}
 
 	get webAppBaseUrl(): string {
-		if (this.webAppEndpoint) {
-			return this.webAppEndpoint.replace(/\/$/, '');
-		}
-		try {
-			const url = new URL(this.apiEndpoint);
-			if (url.pathname.endsWith('/api')) {
-				url.pathname = url.pathname.slice(0, -4) || '/';
-			}
-			return url.toString().replace(/\/$/, '');
-		} catch {
-			return this.apiEndpoint.replace(/\/api$/, '');
-		}
+		return this.webAppEndpoint;
 	}
 
 	get statusPageUrl(): string {
-		return this.appPublic.branding.status_page_url ?? '';
+		return this.activeRuntime?.snapshot.appPublic.branding.status_page_url ?? '';
 	}
 
 	get statusPageIncidentHistoryUrl(): string {
-		return this.appPublic.branding.status_page_incident_history_url ?? '';
+		return this.activeRuntime?.snapshot.appPublic.branding.status_page_incident_history_url ?? '';
 	}
 
 	isSelfHosted(): boolean {
 		return DeveloperOptions.selfHostedModeOverride || this.features.self_hosted;
 	}
 
+	get premiumEnabled(): boolean {
+		return this.features.premium_enabled;
+	}
+
+	get stripeEnabled(): boolean {
+		return this.features.stripe_enabled;
+	}
+
+	get stripeServiceable(): boolean {
+		return this.features.stripe_serviceable;
+	}
+
+	get premiumProductName(): string {
+		return this.appPublic.branding.premium_product_name?.trim() || DEFAULT_PREMIUM_PRODUCT_NAME;
+	}
+
+	get premiumInfoUrl(): string | null {
+		return this.appPublic.branding.premium_info_url ?? null;
+	}
+
 	get emailsEnabled(): boolean {
 		return this.features.emails_enabled;
 	}
 
+	get accountIdentity(): AccountIdentityMode {
+		return accountIdentityOf(this.features);
+	}
+
+	get usesUsernameSignIn(): boolean {
+		return usesUsernameSignIn(this.features);
+	}
+
+	get tagStyle(): TagStyle {
+		return tagStyleOf(this.features);
+	}
+
+	get usesUniqueUsernames(): boolean {
+		return usesUniqueUsernames(this.features);
+	}
+
 	get productName(): string {
-		return this.appPublic.branding.product_name.trim() || DEFAULT_APP_PUBLIC_CONFIG.branding.product_name;
+		return this.appPublic.branding.product_name;
 	}
 
 	get iconUrl(): string | null {
@@ -508,11 +800,11 @@ class RuntimeConfig {
 	}
 
 	get symbolUrl(): string | null {
-		return this.appPublic.branding.symbol_url ?? this.iconUrl;
+		return this.appPublic.branding.symbol_url;
 	}
 
 	get logoUrl(): string | null {
-		return this.appPublic.branding.logo_url ?? this.iconUrl;
+		return this.appPublic.branding.logo_url;
 	}
 
 	get wordmarkUrl(): string | null {
@@ -520,7 +812,7 @@ class RuntimeConfig {
 	}
 
 	get faviconUrl(): string | null {
-		return this.appPublic.branding.favicon_url ?? this.iconUrl;
+		return this.appPublic.branding.favicon_url;
 	}
 
 	get themeColor(): string | null {
@@ -544,6 +836,12 @@ class RuntimeConfig {
 	}
 
 	requiresSelfHostedSetup(): boolean {
+		if (getElectronAPI() != null) {
+			return false;
+		}
+		if (this.activeRuntime === null) {
+			return false;
+		}
 		return this.isSelfHosted() && !this.appPublic.setup.configured;
 	}
 
@@ -568,72 +866,31 @@ class RuntimeConfig {
 	}
 
 	get marketingHost(): string {
-		try {
-			return new URL(this.marketingEndpoint).host;
-		} catch {
-			return '';
-		}
+		return new URL(this.marketingEndpoint).host;
 	}
 
 	get inviteHost(): string {
-		try {
-			return new URL(this.inviteEndpoint).host;
-		} catch {
-			return '';
-		}
+		return new URL(this.inviteEndpoint).host;
 	}
 
 	get giftHost(): string {
-		try {
-			return new URL(this.giftEndpoint).host;
-		} catch {
-			return '';
-		}
+		return new URL(this.giftEndpoint).host;
 	}
 
 	get inviteUrlBase(): string {
-		try {
-			const url = new URL(this.inviteEndpoint);
-			const path = url.pathname !== '/' ? url.pathname.replace(/\/$/, '') : '';
-			return `${url.host}${path}`;
-		} catch {
-			return '';
-		}
+		const url = new URL(this.inviteEndpoint);
+		const path = url.pathname === '/' ? '' : url.pathname;
+		return `${url.host}${path}`;
 	}
 
 	get giftUrlBase(): string {
-		try {
-			const url = new URL(this.giftEndpoint);
-			const path = url.pathname !== '/' ? url.pathname.replace(/\/$/, '') : '';
-			return `${url.host}${path}`;
-		} catch {
-			return '';
-		}
-	}
-
-	applyGifProviderHeaders(input: GifProviderInfoInput): void {
-		const info = normalizeGifProviderInfo(input);
-		if (
-			this.gifProvider === info.name &&
-			this.gifProviderDisplayName === info.displayName &&
-			this.gifAttributionRequired === info.attributionRequired
-		) {
-			return;
-		}
-		runInAction(() => {
-			this.gifProvider = info.name;
-			this.gifProviderDisplayName = info.displayName;
-			this.gifAttributionRequired = info.attributionRequired;
-		});
+		const url = new URL(this.giftEndpoint);
+		const path = url.pathname === '/' ? '' : url.pathname;
+		return `${url.host}${path}`;
 	}
 
 	get localInstanceDomain(): string {
-		try {
-			const url = new URL(this.apiEndpoint);
-			return url.hostname;
-		} catch {
-			return 'localhost';
-		}
+		return new URL(this.apiEndpoint).hostname;
 	}
 }
 

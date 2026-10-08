@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import {DevtoolsDockProbe} from '@app/features/devtools/utils/DevtoolsDockProbe';
 import {i18n, type MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -53,7 +53,10 @@ function getSelfXssMessage(descriptor: MessageDescriptor, values?: Record<string
 export function printSelfXssNotice(consoleApi: ConsoleLike = console): void {
 	consoleApi.log(`%c${getSelfXssMessage(STOP_DESCRIPTOR)}`, STOP_BANNER_STYLE);
 	consoleApi.log(`%c${getSelfXssMessage(DEVELOPER_TOOL_DESCRIPTOR)}`, SUPPORTING_COPY_STYLE);
-	consoleApi.log(`%c${getSelfXssMessage(SCAM_WARNING_DESCRIPTOR, {productName: PRODUCT_NAME})}`, ALERT_COPY_STYLE);
+	consoleApi.log(
+		`%c${getSelfXssMessage(SCAM_WARNING_DESCRIPTOR, {productName: getActiveInstanceProductName()})}`,
+		ALERT_COPY_STYLE,
+	);
 	consoleApi.log(`%c${getSelfXssMessage(ONLY_RUN_CODE_DESCRIPTOR)}`, CAUTION_COPY_STYLE);
 }
 

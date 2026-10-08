@@ -16,6 +16,7 @@ export interface BooleanTierPerk extends BasePerk {
 	type: 'boolean';
 	restrictedValue: boolean;
 	stockValue: boolean;
+	limitKey?: LimitKey;
 }
 
 export interface NumericTierPerk extends BasePerk {
@@ -30,6 +31,7 @@ export interface TextTierPerk extends BasePerk {
 	type: 'text';
 	restrictedValueI18nKey: string;
 	stockValueI18nKey: string;
+	limitKey?: LimitKey;
 }
 
 export type LimitTierPerk = BooleanTierPerk | NumericTierPerk | TextTierPerk;
@@ -54,6 +56,7 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		i18nKey: 'custom_4_digit_username_tag',
 		restrictedValue: false,
 		stockValue: true,
+		limitKey: 'feature_custom_discriminator',
 	},
 	{
 		id: 'per_guild_profiles',
@@ -62,6 +65,7 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		i18nKey: 'per_community_profiles',
 		restrictedValue: false,
 		stockValue: true,
+		limitKey: 'feature_per_guild_profiles',
 	},
 	{
 		id: 'profile_badge',
@@ -88,6 +92,7 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		i18nKey: 'entrance_sounds',
 		restrictedValue: false,
 		stockValue: true,
+		limitKey: 'feature_voice_entrance_sounds',
 	},
 	{
 		id: 'max_guilds',
@@ -154,6 +159,7 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		i18nKey: 'global_emoji_sticker_access',
 		restrictedValue: false,
 		stockValue: true,
+		limitKey: 'feature_global_expressions',
 	},
 	{
 		id: 'video_quality',
@@ -162,6 +168,7 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		i18nKey: 'video_quality',
 		restrictedValueI18nKey: 'video_quality_restricted',
 		stockValueI18nKey: 'video_quality_stock',
+		limitKey: 'feature_higher_video_quality',
 	},
 	{
 		id: 'animated_profile',
@@ -170,6 +177,7 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		i18nKey: 'animated_avatars_and_banners',
 		restrictedValue: false,
 		stockValue: true,
+		limitKey: 'feature_animated_avatar',
 	},
 	{
 		id: 'early_access',
@@ -178,6 +186,7 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		i18nKey: 'early_access',
 		restrictedValue: false,
 		stockValue: true,
+		limitKey: 'feature_early_access',
 	},
 	{
 		id: 'custom_themes',

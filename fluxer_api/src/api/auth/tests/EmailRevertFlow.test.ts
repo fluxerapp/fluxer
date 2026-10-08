@@ -10,8 +10,9 @@ import {
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 interface EmailChangeStartResponse {
 	ticket: string;
@@ -39,7 +40,6 @@ interface EmailChangeVerifyNewResponse {
 interface UserPrivateResponse {
 	id: string;
 	email: string;
-	has_verified_phone: boolean;
 	username: string;
 	discriminator: string;
 	global_name: string;
@@ -131,11 +131,20 @@ describe('Email revert flow', () => {
 		await harness.reset();
 		await clearTestEmails(harness);
 	});
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
 	it('restores original email and clears mfa', async () => {
 		const account = await createTestAccount(harness);
+		await createBuilderWithoutAuth(harness)
+			.post(`/test/users/${account.userId}/premium`)
+			.body({stripe_customer_id: 'cus_email_revert_sync'})
+			.expect(200)
+			.execute();
+		const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
 		const startResp = await startEmailChange(harness, account, account.password);
 		let originalProof: string;
 		if (startResp.require_original) {
@@ -179,6 +188,7 @@ describe('Email revert flow', () => {
 		expect(revertEmail?.metadata?.token).toBeDefined();
 		const revertToken = revertEmail!.metadata!.token!;
 		const newPassword = uniquePassword();
+		addJob.mockClear();
 		const revertResp = await createBuilderWithoutAuth<EmailRevertResponse>(harness)
 			.post('/auth/email-revert')
 			.body({
@@ -187,12 +197,12 @@ describe('Email revert flow', () => {
 			})
 			.execute();
 		expect(revertResp.token.length).toBeGreaterThan(0);
+		expect(addJob).toHaveBeenCalledWith('syncStripeCustomerEmail', {userId: account.userId});
 		await createBuilder(harness, account.token).get('/users/@me').expect(401).execute();
 		const user = await createBuilder<UserPrivateResponse>(harness, revertResp.token).get('/users/@me').execute();
 		expect(user.email).toBe(account.email);
 		expect(user.mfa_enabled).toBe(false);
 		expect(user.authenticator_types?.length ?? 0).toBe(0);
-		expect(user.has_verified_phone).toBe(false);
 		expect(user.password_last_changed_at).toBeDefined();
 		const login = await loginUser(harness, {email: account.email, password: newPassword});
 		expect('mfa' in login).toBe(false);

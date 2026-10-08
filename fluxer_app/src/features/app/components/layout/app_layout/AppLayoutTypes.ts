@@ -9,6 +9,7 @@ export const NagbarType = {
 	SCHEDULED_MAINTENANCE: 'scheduled-maintenance',
 	UNCLAIMED_ACCOUNT: 'unclaimed-account',
 	EMAIL_VERIFICATION: 'email-verification',
+	ACCOUNT_LIMITED: 'account-limited',
 	DESKTOP_NOTIFICATION: 'desktop-notification',
 	PREMIUM_GRACE_PERIOD: 'premium-grace-period',
 	PREMIUM_EXPIRED: 'premium-expired',
@@ -17,14 +18,14 @@ export const NagbarType = {
 	LEGACY_PRICE_OPT_IN: 'legacy-price-opt-in',
 	GIFT_INVENTORY: 'gift-inventory',
 	DESKTOP_DOWNLOAD: 'desktop-download',
-	DESKTOP_UPDATE_READY: 'desktop-update-ready',
 	GUILD_MEMBERSHIP_CTA: 'guild-membership-cta',
 	VISIONARY_MFA: 'visionary-mfa',
 	VOICE_SESSION_RESTORE: 'voice-session-restore',
 	TERMS_ACCEPTANCE: 'terms-acceptance',
-	LINUX_INPUT_ACCESS: 'linux-input-access',
+	PRIVACY_SETUP: 'privacy-setup',
 	SOFTWARE_ENCODER: 'software-encoder',
 	STREAMER_MODE: 'streamer-mode',
+	DOMAIN_MOVED: 'domain-moved',
 } as const;
 
 export type NagbarType = ValueOf<typeof NagbarType>;
@@ -47,6 +48,7 @@ export interface NagbarConditions {
 	canShowScheduledMaintenance: boolean;
 	userIsUnclaimed: boolean;
 	userNeedsVerification: boolean;
+	canShowAccountLimited: boolean;
 	canShowDesktopNotification: boolean;
 	canShowPremiumGracePeriod: boolean;
 	canShowPremiumExpired: boolean;
@@ -55,12 +57,12 @@ export interface NagbarConditions {
 	canShowLegacyPriceOptIn: boolean;
 	canShowGiftInventory: boolean;
 	canShowDesktopDownload: boolean;
-	canShowDesktopUpdateReady: boolean;
 	canShowGuildMembershipCta: boolean;
 	canShowVisionaryMfa: boolean;
 	canShowVoiceSessionRestore: boolean;
 	needsTermsAcceptance: boolean;
-	canShowLinuxInputAccess: boolean;
+	needsPrivacySetup: boolean;
 	canShowSoftwareEncoder: boolean;
 	canShowStreamerMode: boolean;
+	canShowDomainMoved: boolean;
 }

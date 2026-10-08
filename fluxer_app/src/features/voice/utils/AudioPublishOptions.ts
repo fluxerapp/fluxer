@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import type {TrackPublishOptions} from 'livekit-client';
 
 export const OPUS_MAX_AUDIO_BITRATE_BPS = 510000;
 export const VOICE_CHANNEL_MIN_AUDIO_BITRATE_BPS = 8000;
-export const STEREO_VOICE_MIN_AUDIO_BITRATE_BPS = 128000;
+export const STEREO_VOICE_MIN_AUDIO_BITRATE_BPS = 64000;
 export const SCREEN_SHARE_AUDIO_BITRATE_BPS = 128000;
 
 export function normaliseAudioBitrateBps(value: number | null | undefined): number | undefined {
@@ -14,6 +13,11 @@ export function normaliseAudioBitrateBps(value: number | null | undefined): numb
 	const rounded = Math.round(value);
 	const bitsPerSecond = rounded >= 8 && rounded <= 512 ? rounded * 1000 : rounded;
 	return Math.min(Math.max(bitsPerSecond, VOICE_CHANNEL_MIN_AUDIO_BITRATE_BPS), OPUS_MAX_AUDIO_BITRATE_BPS);
+}
+
+export function sendsStereoMicrophone(channelBitrate: number | null | undefined, stereoCapture: boolean): boolean {
+	const maxBitrate = normaliseAudioBitrateBps(channelBitrate);
+	return stereoCapture && maxBitrate !== undefined && maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS;
 }
 
 export function buildMicrophonePublishOptions(
@@ -29,15 +33,13 @@ export function buildMicrophonePublishOptions(
 		},
 		dtx: false,
 		red: true,
-		forceStereo: stereoCapture && maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS ? undefined : false,
+		forceStereo: sendsStereoMicrophone(maxBitrate, stereoCapture),
 	};
 }
 
 export const SCREEN_SHARE_AUDIO_PUBLISH_OPTIONS: TrackPublishOptions = {
 	audioPreset: {
-		get maxBitrate(): number {
-			return ScreenShareDeliveryRollout.enabled ? SCREEN_SHARE_AUDIO_BITRATE_BPS : OPUS_MAX_AUDIO_BITRATE_BPS;
-		},
+		maxBitrate: SCREEN_SHARE_AUDIO_BITRATE_BPS,
 		priority: 'high',
 	},
 	dtx: false,

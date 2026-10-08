@@ -3,12 +3,26 @@
 import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
 import React, {useContext} from 'react';
 
-export type AuthCardVariant = 'default' | 'standard' | 'compact' | 'wide';
+export const AuthCardVariant = Object.freeze({
+	DEFAULT: 'default',
+	STANDARD: 'standard',
+	COMPACT: 'compact',
+	WIDE: 'wide',
+} as const);
 
-interface AuthLayoutContextType {
+export type AuthCardVariant = (typeof AuthCardVariant)[keyof typeof AuthCardVariant];
+
+export const AuthLayoutContentMode = Object.freeze({
+	CARD: 'card',
+	FULL: 'full',
+} as const);
+
+export type AuthLayoutContentMode = (typeof AuthLayoutContentMode)[keyof typeof AuthLayoutContentMode];
+
+export interface AuthLayoutContextType {
 	setSplashUrl: (url: string | null) => void;
-	setShowLogoSide: (show: boolean) => void;
 	setCardVariant: React.Dispatch<React.SetStateAction<AuthCardVariant>>;
+	setContentMode: React.Dispatch<React.SetStateAction<AuthLayoutContentMode>>;
 	setSplashCardAlignment: React.Dispatch<React.SetStateAction<GuildSplashCardAlignmentValue>>;
 }
 

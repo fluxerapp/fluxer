@@ -10,8 +10,11 @@ import {dispatchMessageCreateBroadcast} from '@app/api/channel/services/message/
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
@@ -19,6 +22,7 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {User} from '@app/api/models/User';
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -46,6 +50,8 @@ export class GroupDmOperationsService {
 		private snowflakeService: ISnowflakeService,
 		private messagePersistenceService: MessagePersistenceService,
 		private readonly limitConfigService: LimitConfigService,
+		private readonly voiceRoomStore: IVoiceRoomStore,
+		private readonly liveKitService: ILiveKitService,
 	) {
 		this.userPermissionUtils = new UserPermissionUtils(userRepository, guildRepository);
 	}
@@ -69,6 +75,7 @@ export class GroupDmOperationsService {
 		if (!channel.recipientIds.has(userId)) {
 			throw new MissingAccessError();
 		}
+		await this.assertInviterNotLimited(userId);
 		const friendship = await this.userRepository.getRelationship(userId, recipientId, RelationshipTypes.FRIEND);
 		if (!friendship) {
 			throw new NotFriendsWithUserError();
@@ -105,6 +112,7 @@ export class GroupDmOperationsService {
 		if (!channel.recipientIds.has(userId)) {
 			throw new MissingAccessError();
 		}
+		await this.assertInviterNotLimited(userId);
 		const {channel: updatedChannel} = await this.addRecipientViaInviteWithResult({
 			channelId,
 			recipientId: botUserId,
@@ -112,6 +120,11 @@ export class GroupDmOperationsService {
 			requestCache,
 		});
 		return updatedChannel;
+	}
+
+	private async assertInviterNotLimited(userId: UserID): Promise<void> {
+		const user = await this.userRepository.findUnique(userId);
+		if (user) assertAccountNotLimited(user);
 	}
 
 	async addRecipientViaInvite({
@@ -250,6 +263,7 @@ export class GroupDmOperationsService {
 			await deleteChannelMessageSearchDocuments(channelId, {context: {source: 'group_dm_delete'}});
 			await this.channelRepository.channelData.delete(channelId);
 			await this.userRepository.closeDmForUser(recipientId, channelId);
+			await this.disconnectRemovedRecipientFromCall(channelId, recipientId);
 			await dispatchChannelDelete({
 				channel,
 				requestCache,
@@ -267,6 +281,7 @@ export class GroupDmOperationsService {
 			nicks: updatedNicknames.size > 0 ? updatedNicknames : null,
 		});
 		await this.userRepository.closeDmForUser(recipientId, channelId);
+		await this.disconnectRemovedRecipientFromCall(channelId, recipientId);
 		const recipientUserResponse = await this.userCacheService.getUserPartialResponse(recipientId, requestCache);
 		for (const recId of updatedRecipientIds) {
 			await this.gatewayService.dispatchPresence({
@@ -309,6 +324,31 @@ export class GroupDmOperationsService {
 				await this.syncGroupDmRecipientsForUser(recId);
 			}),
 		);
+	}
+
+	private async disconnectRemovedRecipientFromCall(channelId: ChannelID, recipientId: UserID): Promise<void> {
+		try {
+			const {voiceStates} = await this.gatewayService.getVoiceStatesForChannel({channelId});
+			await this.gatewayService.disconnectVoiceUserIfInChannel({channelId, userId: recipientId});
+			const recipientVoiceStates = voiceStates.filter((voiceState) => voiceState.userId === recipientId.toString());
+			if (recipientVoiceStates.length === 0) return;
+			const pinnedServer = await this.voiceRoomStore.getPinnedRoomServer(undefined, channelId);
+			if (!pinnedServer) return;
+			for (const voiceState of recipientVoiceStates) {
+				await this.liveKitService.disconnectParticipant({
+					userId: recipientId,
+					channelId,
+					connectionId: voiceState.connectionId,
+					regionId: pinnedServer.regionId,
+					serverId: pinnedServer.serverId,
+				});
+			}
+		} catch (error) {
+			Logger.error(
+				{error, channelId: channelId.toString(), userId: recipientId.toString()},
+				'Failed to disconnect removed group DM recipient from call',
+			);
+		}
 	}
 
 	private async syncGroupDmRecipientsForUser(userId: UserID): Promise<void> {

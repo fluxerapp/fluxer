@@ -22,7 +22,7 @@ describe('WebAuthn registration user handle', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	it('ensures registration options carry the stable user identifier', async () => {
+	it('ensures registration options include the stable user identifier', async () => {
 		const account = await createTestAccount(harness);
 		const secret = createTotpSecret();
 		await createBuilder(harness, account.token)

@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GuildSettingsModal, UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {EVERYONE_MENTION, HERE_MENTION} from '@app/features/app/config/I18nDisplayConstants';
 import Authentication from '@app/features/auth/state/Authentication';
 import {getMuteDurationOptions} from '@app/features/channel/components/MuteOptions';
 import {CategoryCreateModal} from '@app/features/channel/components/modals/CategoryCreateModal';
 import {ChannelCreateModal} from '@app/features/channel/components/modals/ChannelCreateModal';
 import Channels from '@app/features/channel/state/Channels';
+import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import {GuildNotificationSettingsModal} from '@app/features/guild/components/modals/GuildNotificationSettingsModal';
 import {GuildPrivacySettingsModal} from '@app/features/guild/components/modals/GuildPrivacySettingsModal';
-import {GuildSettingsModal} from '@app/features/guild/components/modals/GuildSettingsModal';
 import {useLeaveGuild} from '@app/features/guild/hooks/useLeaveGuild';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {isStockCommunityGuild} from '@app/features/guild/utils/GuildCommunityUtils';
@@ -33,6 +34,7 @@ import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {getUnreadThreadIds} from '@app/features/threads/utils/ThreadViewUtils';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {
 	CopyIdIcon,
@@ -53,7 +55,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {
 	GUILD_SETTINGS_LABEL_DESCRIPTOR,
 	type GuildSettingsTab,
@@ -95,18 +96,22 @@ interface GuildMenuItemProps {
 export const MarkAsReadMenuItem: React.FC<GuildMenuItemProps> = observer(({guild, onClose}) => {
 	const {i18n} = useLingui();
 	const channels = Channels.getGuildChannels(guild.id);
-	const hasUnread = useMemo(() => {
-		return channels.some((channel) => ReadStates.hasUnread(channel.id));
+	const hasChannelUnread = useMemo(() => {
+		return channels.some((channel) =>
+			channel.isThreadOnly() ? hasForumUnread(channel) : ReadStates.hasUnread(channel.id),
+		);
 	}, [channels]);
+	const hasUnread = hasChannelUnread || getUnreadThreadIds(guild.id).length > 0;
 	const handleMarkAsRead = useCallback(() => {
 		const channelIds = channels
 			.filter((channel) => ReadStates.isUnreadOrMentioned(channel.id))
 			.map((channel) => channel.id);
+		channelIds.push(...getUnreadThreadIds(guild.id));
 		if (channelIds.length > 0) {
 			void ReadStateCommands.bulkAckChannels(channelIds);
 		}
 		onClose();
-	}, [channels, onClose]);
+	}, [channels, guild.id, onClose]);
 	return (
 		<MenuItem
 			icon={
@@ -368,13 +373,16 @@ export const CommunitySettingsMenuItem: React.FC<GuildMenuItemProps> = observer(
 	const handleOpenSettings = useCallback(
 		(tab: GuildSettingsTab) => {
 			ModalCommands.push(
-				modal(() => (
-					<GuildSettingsModal
-						guildId={guild.id}
-						initialTab={tab.type}
-						data-flx="ui.action-menu.items.guild-menu-items.handle-open-settings.guild-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<GuildSettingsModal
+							guildId={guild.id}
+							initialTab={tab.type}
+							data-flx="ui.action-menu.items.guild-menu-items.handle-open-settings.guild-settings-modal"
+						/>
+					),
+					'guild-settings',
+				),
 			);
 			onClose();
 		},
@@ -446,13 +454,16 @@ export const EditCommunityProfileMenuItem: React.FC<GuildMenuItemProps> = observ
 	const currentUser = Users.getCurrentUser();
 	const handleEditProfile = useCallback(() => {
 		ModalCommands.push(
-			modal(() => (
-				<UserSettingsModal
-					initialGuildId={guild.id}
-					initialTab="my_profile"
-					data-flx="ui.action-menu.items.guild-menu-items.handle-edit-profile.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialGuildId={guild.id}
+						initialTab="my_profile"
+						data-flx="ui.action-menu.items.guild-menu-items.handle-edit-profile.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 		onClose();
 	}, [guild.id, onClose]);

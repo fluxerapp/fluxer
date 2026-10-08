@@ -14,7 +14,7 @@ import {
 	DICTIONARY_SOURCES,
 	type SpellcheckDictionaryCatalogEntry,
 } from '@electron/main/SpellcheckDictionaries';
-import {app, ipcMain, type Session, type WebContents} from 'electron';
+import {app, ipcMain, net, type Session, type WebContents} from 'electron';
 import log from 'electron-log';
 import {franc} from 'franc-min';
 import {type Hunspell, type HunspellFactory, loadModule} from 'hunspell-asm';
@@ -140,13 +140,6 @@ let factoryPromise: Promise<HunspellFactory> | null = null;
 let ipcRegistered = false;
 let launchModeLogged = false;
 
-const contextSourceByWebContents = new WeakMap<
-	WebContents,
-	{
-		isTextarea: boolean;
-		ts: number;
-	}
->();
 const norm = (code: string): string => code.toLowerCase();
 const beginSessionApply = (session: Session): number => {
 	const generation = (sessionApplyGeneration.get(session) ?? 0) + 1;
@@ -280,7 +273,7 @@ const downloadDictionaryFile = async (
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), DICTIONARY_DOWNLOAD_TIMEOUT_MS);
 	try {
-		const response = await fetch(dictionaryFileUrl(dict, fileName), {
+		const response = await net.fetch(dictionaryFileUrl(dict, fileName), {
 			headers: {
 				Accept: 'application/octet-stream,*/*;q=0.8',
 			},
@@ -972,20 +965,6 @@ const ensureSharedIpc = () => {
 	if (ipcRegistered) return;
 	ipcRegistered = true;
 	ipcMain.on(
-		'spellcheck-context-target',
-		(
-			event,
-			payload: {
-				isTextarea?: boolean;
-			},
-		) => {
-			contextSourceByWebContents.set(event.sender, {
-				isTextarea: Boolean(payload?.isTextarea),
-				ts: Date.now(),
-			});
-		},
-	);
-	ipcMain.on(
 		'spellcheck:update-autodetect-text',
 		(
 			event,
@@ -1016,31 +995,8 @@ const ensureSharedIpc = () => {
 		return suggestWord(event.sender.session, word);
 	});
 };
-const shouldHandleContextMenu = (webContents: WebContents, params: Electron.ContextMenuParams): boolean => {
-	if (!params['isEditable']) return false;
-	const inputFieldType = (
-		params as {
-			inputFieldType?: string;
-		}
-	).inputFieldType;
-	const isPassword =
-		(
-			params as {
-				isPassword?: boolean;
-			}
-		).isPassword === true ||
-		inputFieldType === 'password' ||
-		(
-			params as {
-				formControlType?: string;
-			}
-		).formControlType === 'password';
-	if (isPassword) return false;
-	const target = contextSourceByWebContents.get(webContents);
-	const targetRecent = target && Date.now() - target.ts < 5000;
-	const isTextLike = inputFieldType === 'plainText' || inputFieldType === 'textarea' || inputFieldType === undefined;
-	return Boolean((targetRecent && target.isTextarea) || isTextLike);
-};
+let rendererSpellcheckHandlersRegistered = false;
+
 export const registerSpellcheck = (webContents: WebContents): void => {
 	ensureSharedIpc();
 	if (!launchModeLogged) {
@@ -1074,7 +1030,8 @@ export const registerSpellcheck = (webContents: WebContents): void => {
 	webContents.on('did-finish-load', () => {
 		void applyStateToWebContents(webContents, sessionState.get(session) ?? state, {broadcastResolved: true});
 	});
-	if (!ipcMain.eventNames().includes('spellcheck-get-state')) {
+	if (!rendererSpellcheckHandlersRegistered) {
+		rendererSpellcheckHandlersRegistered = true;
 		ipcMain.handle('spellcheck-get-state', (event) => {
 			const targetSession = event.sender.session;
 			const next = applyLaunchSpellcheckMode(sessionState.get(targetSession) ?? {...defaultState});
@@ -1114,7 +1071,7 @@ export const registerSpellcheck = (webContents: WebContents): void => {
 		});
 	}
 	webContents.on('context-menu', (event, params) => {
-		if (!shouldHandleContextMenu(webContents, params)) return;
+		if (!params.isEditable) return;
 		event.preventDefault();
 		const cur = sessionState.get(session) ?? {...defaultState};
 		const resolved = sessionResolvedEngine.get(session) ?? resolveEngine(cur, session);

@@ -154,7 +154,7 @@ mod tests {
         assert_ne!(
             unfurl_cache_key(URL, NsfwMode::Block, "none"),
             unfurl_cache_key(URL, NsfwMode::Allow, "none"),
-            "an unscanned result carries no nsfw media flag and must not serve a scanning request"
+            "an unscanned result has no nsfw media flag and must not serve a scanning request"
         );
     }
 

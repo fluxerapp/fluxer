@@ -15,7 +15,7 @@ use crate::{
         layout::admin_layout,
         pages::user_detail_tabs,
     },
-    utils::bigint::format_discriminator,
+    utils::{bigint::format_discriminator, user_tag::user_tag},
 };
 use maud::{Markup, html};
 
@@ -38,11 +38,22 @@ pub fn user_detail_page(
     auth: &AuthContext,
     user: Option<&AdminUser>,
     user_id: &str,
+    premium_badge_name: Option<&str>,
     is_htmx: bool,
 ) -> Markup {
-    user_detail_with_tab(config, auth, user, user_id, "overview", None, is_htmx)
+    user_detail_with_tab(
+        config,
+        auth,
+        user,
+        user_id,
+        "overview",
+        None,
+        premium_badge_name,
+        is_htmx,
+    )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn user_detail_with_tab(
     config: &AdminConfig,
     auth: &AuthContext,
@@ -50,10 +61,13 @@ pub fn user_detail_with_tab(
     user_id: &str,
     active_tab: &str,
     tab_body: Option<Markup>,
+    premium_badge_name: Option<&str>,
     is_htmx: bool,
 ) -> Markup {
     let content = match user {
-        Some(user) => render_user_detail(config, auth, user, active_tab, tab_body),
+        Some(user) => {
+            render_user_detail(config, auth, user, active_tab, tab_body, premium_badge_name)
+        }
         None => not_found_state("User", user_id, None, None),
     };
     let title = user
@@ -79,6 +93,7 @@ fn render_user_detail(
     user: &AdminUser,
     active_tab: &str,
     tab_body: Option<Markup>,
+    premium_badge_name: Option<&str>,
 ) -> Markup {
     let display_name = user
         .global_name
@@ -143,11 +158,12 @@ fn render_user_detail(
                         user.premium_type,
                         user.premium_since.as_deref(),
                         config.self_hosted,
+                        premium_badge_name,
                         false,
                     ))
                 }
                 p class="break-words text-sm text-neutral-500" {
-                    (user.username) "#" (format_discriminator(&user.discriminator))
+                    (user_tag(&user.username, &format_discriminator(&user.discriminator), user.bot))
                 }
                 p class="break-all text-sm text-neutral-500" {
                     (user.id)

@@ -44,8 +44,7 @@ render_metrics() ->
         render_gateway_gauges(),
         render_cluster_counters(),
         render_process_counts(),
-        render_push_dispatcher_stats(),
-        render_push_delivery_gate_stats(),
+        render_channel_threads_stats(),
         render_push_outbox_stats(safe_apply_map(fun push_outbox:stats/0)),
         render_vm_metrics()
     ].
@@ -53,6 +52,9 @@ render_metrics() ->
 -spec render_gateway_gauges() -> iolist().
 render_gateway_gauges() ->
     Sessions = safe_apply_int(fun session_manager:session_count/0),
+    DispatchDrops = safe_apply_int(fun gateway_cluster_metrics:dispatch_drops_total/0),
+    Dispatches = safe_apply_int(fun gateway_cluster_metrics:dispatches_total/0),
+    Resumes = safe_apply_int(fun gateway_cluster_metrics:resumes_total/0),
     Guilds = safe_apply_int(fun guild_manager:local_guild_count/0),
     VoiceCounts = safe_apply_map(fun voice_state_counts_cache:get_local_counts/0),
     CallIds = safe_apply_list(fun call_manager:local_call_ids/0),
@@ -67,10 +69,28 @@ render_gateway_gauges() ->
             integer_to_binary(Sessions)
         ),
         format_metric(
+            <<"fluxer_gateway_session_resumes_total">>,
+            <<"counter">>,
+            <<"Successful WebSocket session resumes">>,
+            integer_to_binary(Resumes)
+        ),
+        format_metric(
             <<"fluxer_gateway_guilds_total">>,
             <<"gauge">>,
             <<"Locally loaded guilds">>,
             integer_to_binary(Guilds)
+        ),
+        format_metric(
+            <<"fluxer_gateway_websocket_dispatches_total">>,
+            <<"counter">>,
+            <<"WebSocket dispatch frames handed to the transport, including replays">>,
+            integer_to_binary(Dispatches)
+        ),
+        format_metric(
+            <<"fluxer_gateway_websocket_dispatch_drops_total">>,
+            <<"counter">>,
+            <<"WebSocket dispatches dropped due to encoding or compression errors">>,
+            integer_to_binary(DispatchDrops)
         ),
         render_voice_metrics(VoiceCounts),
         format_metric(
@@ -254,97 +274,139 @@ count_registry_prefix(Prefix) ->
         error:badarg -> 0
     end.
 
--spec render_push_dispatcher_stats() -> iolist().
-render_push_dispatcher_stats() ->
-    Stats = safe_apply_map(fun push_dispatcher:stats/0),
-    case map_size(Stats) of
-        0 ->
-            [];
-        _ ->
-            Queued = maps:get(queued, Stats, 0),
-            Inflight = maps:get(inflight, Stats, 0),
-            [
-                format_metric(
-                    <<"fluxer_gateway_push_dispatcher_queued">>,
-                    <<"gauge">>,
-                    <<"Push dispatcher queued jobs">>,
-                    integer_to_binary(Queued)
-                ),
-                format_metric(
-                    <<"fluxer_gateway_push_dispatcher_inflight">>,
-                    <<"gauge">>,
-                    <<"Push dispatcher in-flight jobs">>,
-                    integer_to_binary(Inflight)
-                )
-            ]
-    end.
-
--spec render_push_delivery_gate_stats() -> iolist().
-render_push_delivery_gate_stats() ->
-    ConfigVersion = safe_apply_int(fun push_delivery_config:config_version/0),
+-spec render_channel_threads_stats() -> iolist().
+render_channel_threads_stats() ->
+    UpdateCounts = safe_apply_map(fun channel_threads_config:update_counts/0),
+    FlipCounts = safe_apply_map(fun channel_threads_flip:flip_counts/0),
     [
         format_metric(
-            <<"fluxer_gateway_push_delivery_config_version">>,
+            <<"fluxer_gateway_channel_threads_config_version">>,
             <<"gauge">>,
-            <<"Push delivery config version in effect">>,
-            integer_to_binary(ConfigVersion)
+            <<"Channel threads config version in effect">>,
+            integer_to_binary(safe_apply_int(fun channel_threads_config:version/0))
         ),
-        render_push_delivery_config_updates(
-            safe_apply_map(fun push_delivery_config:update_counts/0)
+        format_labeled_series(
+            <<"fluxer_gateway_channel_threads_config_updates_total">>,
+            <<"counter">>,
+            <<"Channel threads config reads by outcome">>,
+            [
+                {
+                    <<"result=\"", (atom_to_binary(Result))/binary, "\"">>,
+                    gate_counter(Result, UpdateCounts)
+                }
+             || Result <- [updated, unchanged, stale, rejected]
+            ]
         ),
-        render_push_delivery_gate_counters(safe_apply_map(fun push:delivery_gate_counters/0))
+        format_labeled_series(
+            <<"fluxer_gateway_channel_threads_flips_total">>,
+            <<"counter">>,
+            <<"Channel threads gate flips scheduled by kind">>,
+            [
+                {
+                    <<"kind=\"", (atom_to_binary(Kind))/binary, "\"">>,
+                    gate_counter(Kind, FlipCounts)
+                }
+             || Kind <- [guild, viewers, user, heal]
+            ]
+        ),
+        render_identify_counts(safe_apply_map(fun channel_threads_config:identify_counts/0)),
+        render_thread_stats()
     ].
 
--spec render_push_delivery_config_updates(map()) -> iolist().
-render_push_delivery_config_updates(Counts) ->
+-spec render_thread_stats() -> iolist().
+render_thread_stats() ->
+    DispatchCounts = safe_apply_map(fun guild_thread_dispatch:dispatch_counts/0),
+    SyncCounts = safe_apply_map(fun guild_thread_subscriptions:list_sync_counts/0),
+    FetchCounts = safe_apply_map(fun guild_thread_load:fetch_counts/0),
+    [
+        format_metric(
+            <<"fluxer_gateway_thread_store_threads">>,
+            <<"gauge">>,
+            <<"Active threads held in guild thread stores on this node">>,
+            integer_to_binary(safe_apply_int(fun guild_thread_store:total_threads/0))
+        ),
+        format_labeled_series(
+            <<"fluxer_gateway_thread_dispatch_total">>,
+            <<"counter">>,
+            <<"Thread-gated events delivered to sessions by event and variant">>,
+            [
+                {
+                    <<"event=\"", (atom_to_binary(Event))/binary, "\",variant=\"",
+                        (atom_to_binary(Variant))/binary, "\"">>,
+                    integer_to_binary(Count)
+                }
+             || {{Event, Variant}, Count} <- lists:sort(maps:to_list(DispatchCounts)),
+                is_atom(Event),
+                is_atom(Variant),
+                is_integer(Count)
+            ]
+        ),
+        format_labeled_series(
+            <<"fluxer_gateway_thread_list_sync_total">>,
+            <<"counter">>,
+            <<"THREAD_LIST_SYNC sends by reason">>,
+            [
+                {
+                    <<"reason=\"", (atom_to_binary(Reason))/binary, "\"">>,
+                    gate_counter(Reason, SyncCounts)
+                }
+             || Reason <- [full, access]
+            ]
+        ),
+        format_labeled_series(
+            <<"fluxer_gateway_thread_collection_fetch_total">>,
+            <<"counter">>,
+            <<"Thread collection fetches by result">>,
+            [
+                {
+                    <<"result=\"", (atom_to_binary(Result))/binary, "\"">>,
+                    gate_counter(Result, FetchCounts)
+                }
+             || Result <- [ok, error, refetch]
+            ]
+        ),
+        format_metric(
+            <<"fluxer_gateway_thread_permission_unknown_parent_total">>,
+            <<"counter">>,
+            <<"Thread permission checks whose parent channel was unknown">>,
+            integer_to_binary(
+                safe_apply_int(fun guild_thread_permissions:unknown_parent_count/0)
+            )
+        ),
+        format_metric(
+            <<"fluxer_gateway_channel_threads_flip_resend_total">>,
+            <<"counter">>,
+            <<"GUILD_CREATE resends after a channel threads gate flip">>,
+            integer_to_binary(safe_apply_int(fun guild_thread_flip:resend_count/0))
+        )
+    ].
+
+-spec render_identify_counts(map()) -> iolist().
+render_identify_counts(Counts) when map_size(Counts) =:= 0 ->
+    [];
+render_identify_counts(Counts) ->
     format_labeled_series(
-        <<"fluxer_gateway_push_delivery_config_updates_total">>,
+        <<"fluxer_gateway_identify_total">>,
         <<"counter">>,
-        <<"Push delivery config reads by outcome">>,
+        <<"Identify attempts by channel threads capability and OS">>,
         [
-            {<<"result=\"updated\"">>, gate_counter(updated, Counts)},
-            {<<"result=\"unchanged\"">>, gate_counter(unchanged, Counts)},
-            {<<"result=\"stale\"">>, gate_counter(stale, Counts)},
-            {<<"result=\"rejected\"">>, gate_counter(rejected, Counts)}
+            {identify_labels(Key), integer_to_binary(Count)}
+         || {Key, Count} <- lists:sort(maps:to_list(Counts)), is_integer(Count)
         ]
     ).
 
--spec render_push_delivery_gate_counters(map()) -> iolist().
-render_push_delivery_gate_counters(Counters) when map_size(Counters) =:= 0 ->
-    [];
-render_push_delivery_gate_counters(Counters) ->
-    [
-        format_metric(
-            <<"fluxer_gateway_push_delivery_service_users_total">>,
-            <<"counter">>,
-            <<"Recipients routed to the push service">>,
-            gate_counter(delivery_gate_service_users, Counters)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_delivery_gateway_users_total">>,
-            <<"counter">>,
-            <<"Recipients kept on the gateway push path">>,
-            gate_counter(delivery_gate_gateway_users, Counters)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_delivery_jobs_published_total">>,
-            <<"counter">>,
-            <<"Push jobs published to the push service">>,
-            gate_counter(delivery_gate_jobs_published, Counters)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_delivery_publish_failed_total">>,
-            <<"counter">>,
-            <<"Push job publishes that fell back to the gateway path">>,
-            gate_counter(delivery_gate_publish_failed, Counters)
-        )
-    ].
+-spec identify_labels(term()) -> binary().
+identify_labels({Capable, Os}) when is_boolean(Capable), is_binary(Os) ->
+    <<"channel_threads_capable=\"", (atom_to_binary(Capable))/binary, "\",os=\"", Os/binary,
+        "\"">>;
+identify_labels(_Key) ->
+    <<"channel_threads_capable=\"false\",os=\"other\"">>.
 
 -spec render_push_outbox_stats(map()) -> iolist().
 render_push_outbox_stats(Stats) when map_size(Stats) =:= 0 ->
     [];
 render_push_outbox_stats(Stats) ->
-    [render_push_outbox_queue_stats(Stats), render_push_outbox_hand_back_stats(Stats)].
+    [render_push_outbox_queue_stats(Stats), render_push_outbox_dropped(Stats)].
 
 -spec render_push_outbox_queue_stats(map()) -> iolist().
 render_push_outbox_queue_stats(Stats) ->
@@ -390,37 +452,34 @@ render_push_outbox_queue_stats(Stats) ->
             <<"counter">>,
             <<"Queued recipients skipped because they became active">>,
             gate_counter(skipped_active, Stats)
+        ),
+        format_metric(
+            <<"fluxer_gateway_push_outbox_followup_clears_total">>,
+            <<"counter">>,
+            <<"Clears queued after an in-flight push job whose recipient read the channel">>,
+            gate_counter(followup_clears, Stats)
         )
     ].
 
--spec render_push_outbox_hand_back_stats(map()) -> iolist().
-render_push_outbox_hand_back_stats(Stats) ->
-    [
-        format_metric(
-            <<"fluxer_gateway_push_outbox_fallbacks_total">>,
-            <<"counter">>,
-            <<"Push jobs handed back to the gateway push path">>,
-            gate_counter(fallbacks, Stats)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_outbox_lost_total">>,
-            <<"counter">>,
-            <<"Push job hand-backs whose gateway push path send crashed">>,
-            gate_counter(lost, Stats)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_outbox_fallback_backlog">>,
-            <<"gauge">>,
-            <<"Push job hand-backs waiting for a runner">>,
-            gate_counter(fallback_backlog, Stats)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_outbox_fallback_runners">>,
-            <<"gauge">>,
-            <<"Push job hand-backs running on the gateway push path">>,
-            gate_counter(fallback_runners, Stats)
-        )
-    ].
+-spec render_push_outbox_dropped(map()) -> iolist().
+render_push_outbox_dropped(Stats) ->
+    format_labeled_series(
+        <<"fluxer_gateway_push_outbox_dropped_total">>,
+        <<"counter">>,
+        <<"Push jobs dropped undelivered by kind and reason">>,
+        [
+            {push_outbox_dropped_label(Kind, Reason), integer_to_binary(Count)}
+         || {{Kind, Reason}, Count} <- lists:sort(maps:to_list(maps:get(dropped, Stats, #{}))),
+            is_atom(Kind),
+            is_atom(Reason),
+            is_integer(Count)
+        ]
+    ).
+
+-spec push_outbox_dropped_label(atom(), atom()) -> binary().
+push_outbox_dropped_label(Kind, Reason) ->
+    <<"kind=\"", (atom_to_binary(Kind))/binary, "\",reason=\"", (atom_to_binary(Reason))/binary,
+        "\"">>.
 
 -spec gate_counter(atom(), map()) -> binary().
 gate_counter(Key, Counters) ->
@@ -519,3 +578,32 @@ format_labeled_series(Name, Type, Help, LabelValues) ->
          || {Label, Value} <- LabelValues
         ]
     ].
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+push_outbox_drops_render_one_series_per_kind_and_reason_test() ->
+    Rendered = iolist_to_binary(
+        render_push_outbox_dropped(#{
+            dropped => #{{message, expired} => 3, {clear, outbox_unavailable} => 1}
+        })
+    ),
+    ?assertNotEqual(
+        nomatch,
+        binary:match(
+            Rendered,
+            <<"fluxer_gateway_push_outbox_dropped_total{kind=\"message\",reason=\"expired\"} 3\n">>
+        )
+    ),
+    ?assertNotEqual(
+        nomatch,
+        binary:match(
+            Rendered,
+            <<"fluxer_gateway_push_outbox_dropped_total{kind=\"clear\",reason=\"outbox_unavailable\"} 1\n">>
+        )
+    ).
+
+push_outbox_without_drops_renders_no_dropped_series_test() ->
+    ?assertEqual([], render_push_outbox_dropped(#{dropped => #{}})).
+
+-endif.

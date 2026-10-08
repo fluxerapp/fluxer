@@ -9,7 +9,7 @@ use crate::{
         resource_link::{ResourceType, resource_link},
         table::{table_body, table_cell, table_head, table_header_cell, table_row},
     },
-    utils::bigint::format_discriminator,
+    utils::{bigint::format_discriminator, user_tag::user_tag},
 };
 use maud::{Markup, html};
 
@@ -19,13 +19,11 @@ pub fn format_action(action: &str) -> String {
 
 pub fn action_badge_variant(action: &str) -> BadgeVariant {
     match action {
-        "temp_ban"
-        | "disable_suspicious_activity"
-        | "schedule_deletion"
-        | "ban_ip"
-        | "ban_email" => BadgeVariant::Danger,
+        "temp_ban" | "schedule_deletion" | "ban_ip" | "ban_email" => BadgeVariant::Danger,
         "unban" | "cancel_deletion" | "unban_ip" | "unban_email" => BadgeVariant::Success,
-        "update_flags" | "update_features" | "set_acls" | "update_settings" => BadgeVariant::Info,
+        "update_flags" | "update_features" | "set_acls" | "update_settings" | "annotate_ban" => {
+            BadgeVariant::Info
+        }
         "delete_message" => BadgeVariant::Warning,
         _ => BadgeVariant::Default,
     }
@@ -44,10 +42,10 @@ fn type_label(target_type: &str) -> String {
 }
 
 fn user_label(user: &AuditLogUserSummary) -> String {
-    let tag = format!(
-        "{}#{}",
-        user.username,
-        format_discriminator(&user.discriminator)
+    let tag = user_tag(
+        &user.username,
+        &format_discriminator(&user.discriminator),
+        false,
     );
     match user
         .global_name
@@ -354,9 +352,31 @@ mod tests {
     }
 
     #[test]
+    fn admin_labels_drop_the_zero_tag_only_without_tags() {
+        let admin = AuditLogUserSummary {
+            id: "1500000000000000001".to_owned(),
+            username: "lilith".to_owned(),
+            discriminator: "0".to_owned(),
+            global_name: Some("Lilith".to_owned()),
+        };
+        assert_eq!(user_label(&admin), "Lilith (lilith#0000)");
+        crate::utils::user_tag::sync_with_unique_usernames(true, || {
+            assert_eq!(user_label(&admin), "Lilith (lilith)");
+        });
+    }
+
+    #[test]
     fn unknown_target_types_stay_unlinked() {
         let markup = target_cell("/admin", &entry("email_domain", "spam.example")).into_string();
         assert!(!markup.contains("<a "));
         assert!(markup.contains("Email domain"));
+    }
+
+    #[test]
+    fn retired_action_names_still_render() {
+        let mut retired = entry("user", "1500000000000000002");
+        retired.action = "update_retired_toggle".to_string();
+        let markup = audit_log_table_body("/admin", &[retired]).into_string();
+        assert!(markup.contains("Update retired toggle"));
     }
 }

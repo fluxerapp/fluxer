@@ -115,21 +115,23 @@
 }
 
 .optionIcon {
+	box-sizing: content-box;
 	width: 1.25rem;
 	height: 1.25rem;
+	padding: 0.125rem;
 	flex-shrink: 0;
 	color: var(--qs-icon-colour, var(--text-secondary));
 }
 
 .avatar {
-	width: 1.25rem;
-	height: 1.25rem;
+	width: 1.5rem;
+	height: 1.5rem;
 	flex-shrink: 0;
 }
 
 .guildIcon {
-	height: 1.25rem;
-	width: 1.25rem;
+	height: 1.5rem;
+	width: 1.5rem;
 	border-radius: 624.9375rem;
 	flex-shrink: 0;
 }

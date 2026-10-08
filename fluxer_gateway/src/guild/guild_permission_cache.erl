@@ -14,6 +14,7 @@
     delete/1,
     get_permissions/3,
     get_snapshot/1,
+    get_role_members/2,
     has_member/2,
     get_member/2,
     strip_data/1,
@@ -24,10 +25,11 @@
 -type guild_id() :: integer().
 -type user_id() :: integer().
 -type channel_id() :: integer().
+-type role_id() :: integer().
 -type guild_state() :: map().
 -type guild_data() :: map().
 
--export_type([guild_id/0, user_id/0, channel_id/0, guild_state/0, guild_data/0]).
+-export_type([guild_id/0, user_id/0, channel_id/0, role_id/0, guild_state/0, guild_data/0]).
 
 -define(TABLE, guild_permission_cache).
 -define(STRIPPED_MEMBERS_MEMO, guild_permission_cache_stripped_members).
@@ -57,24 +59,33 @@ put_normalized_data(GuildId, NormalizedData) when is_integer(GuildId), is_map(No
     ensure_table(),
     StrippedData = strip_data(NormalizedData),
     Snapshot = #{id => GuildId, data => StrippedData},
-    true = ets:insert(?TABLE, {GuildId, Snapshot}),
+    RoleIndex = maps:get(<<"member_role_index">>, NormalizedData, #{}),
+    MemberSource = maps:with([members_ets], StrippedData),
+    true = ets:insert(?TABLE, [
+        {GuildId, Snapshot},
+        {role_index_key(GuildId), RoleIndex, MemberSource}
+    ]),
     ok;
 put_normalized_data(_, _) ->
     ok.
+
+-spec role_index_key(guild_id()) -> {member_role_index, guild_id()}.
+role_index_key(GuildId) ->
+    {member_role_index, GuildId}.
 
 -spec delete(guild_id()) -> ok.
 delete(GuildId) when is_integer(GuildId) ->
     case ets:whereis(?TABLE) of
         undefined -> ok;
-        _ -> safe_ets_delete(GuildId)
+        _ -> safe_ets_delete([GuildId, role_index_key(GuildId)])
     end,
     ok;
 delete(_) ->
     ok.
 
--spec safe_ets_delete(guild_id()) -> ok.
-safe_ets_delete(GuildId) ->
-    try ets:delete(?TABLE, GuildId) of
+-spec safe_ets_delete([term()]) -> ok.
+safe_ets_delete(Keys) ->
+    try lists:foreach(fun(Key) -> true = ets:delete(?TABLE, Key) end, Keys) of
         _ -> ok
     catch
         error:badarg -> ok
@@ -133,20 +144,37 @@ get_snapshot(GuildId) when is_integer(GuildId) ->
 get_snapshot(_) ->
     {error, not_found}.
 
--spec snapshot_with_live_members(guild_state()) -> {ok, guild_state()} | {error, not_found}.
-snapshot_with_live_members(Snapshot) ->
-    case snapshot_member_table(Snapshot) of
-        Tab when is_reference(Tab) -> live_member_table_snapshot(Tab, Snapshot);
-        undefined -> {ok, Snapshot}
+-spec get_role_members(guild_id(), role_id()) -> {ok, [user_id()]} | {error, not_found}.
+get_role_members(GuildId, RoleId) when is_integer(GuildId), is_integer(RoleId) ->
+    ensure_table(),
+    case ets:lookup(?TABLE, role_index_key(GuildId)) of
+        [{_Key, RoleIndex, MemberSource}] ->
+            live_role_members(maps:get(RoleId, RoleIndex, #{}), MemberSource);
+        [] ->
+            {error, not_found}
+    end;
+get_role_members(_, _) ->
+    {error, not_found}.
+
+-spec live_role_members(map(), guild_data()) -> {ok, [user_id()]} | {error, not_found}.
+live_role_members(RoleMembers, MemberSource) ->
+    case live_members(data_member_table(MemberSource)) of
+        true -> {ok, lists:sort(maps:keys(RoleMembers))};
+        false -> {error, not_found}
     end.
 
--spec live_member_table_snapshot(ets:tid(), guild_state()) ->
-    {ok, guild_state()} | {error, not_found}.
-live_member_table_snapshot(Tab, Snapshot) ->
-    case ets:info(Tab, owner) of
-        undefined -> {error, not_found};
-        _ -> {ok, Snapshot}
+-spec snapshot_with_live_members(guild_state()) -> {ok, guild_state()} | {error, not_found}.
+snapshot_with_live_members(Snapshot) ->
+    case live_members(snapshot_member_table(Snapshot)) of
+        true -> {ok, Snapshot};
+        false -> {error, not_found}
     end.
+
+-spec live_members(ets:tid() | undefined) -> boolean().
+live_members(undefined) ->
+    true;
+live_members(Tab) ->
+    ets:info(Tab, owner) =/= undefined.
 
 -spec snapshot_member_table(guild_state()) -> ets:tid() | undefined.
 snapshot_member_table(#{data := Data}) when is_map(Data) ->
@@ -181,18 +209,17 @@ strip_data(Data) when is_map(Data) ->
     Roles = strip_roles(maps:get(<<"roles">>, Data, [])),
     Channels = strip_channels(maps:get(<<"channels">>, Data, [])),
     ChannelIndex = strip_channel_index(maps:get(<<"channel_index">>, Data, #{})),
-    MemberRoleIndex = maps:get(<<"member_role_index">>, Data, #{}),
     RolePermsCache = maps:get(role_perms_cache, Data, #{}),
     OverwritePermsCache = maps:get(overwrite_perms_cache, Data, #{}),
-    with_member_source(Data, #{
+    Base = maps:merge(maps:with([thread_gate, thread_store, thread_forum_categories], Data), #{
         <<"guild">> => Guild,
         <<"roles">> => Roles,
         <<"channels">> => Channels,
         <<"channel_index">> => ChannelIndex,
-        <<"member_role_index">> => MemberRoleIndex,
         role_perms_cache => RolePermsCache,
         overwrite_perms_cache => OverwritePermsCache
-    });
+    }),
+    with_member_source(Data, Base);
 strip_data(Data) ->
     Data.
 
@@ -416,20 +443,20 @@ parse_user_id(Id) ->
 -spec migrate_existing_entries() -> {ok, non_neg_integer()}.
 migrate_existing_entries() ->
     ensure_table(),
-    Count = ets:foldl(
-        fun
-            ({GuildId, #{data := Data} = _Snapshot}, Acc) ->
-                Stripped = strip_data(Data),
-                NewSnapshot = #{id => GuildId, data => Stripped},
-                true = ets:insert(?TABLE, {GuildId, NewSnapshot}),
-                Acc + 1;
-            (_, Acc) ->
-                Acc
-        end,
-        0,
-        ?TABLE
-    ),
+    Count = ets:foldl(fun migrate_entry/2, 0, ?TABLE),
     {ok, Count}.
+
+-spec migrate_entry(term(), non_neg_integer()) -> non_neg_integer().
+migrate_entry({GuildId, #{data := #{<<"member_role_index">> := _} = Data}}, Acc) when
+    is_integer(GuildId)
+->
+    ok = put_normalized_data(GuildId, Data),
+    Acc + 1;
+migrate_entry({GuildId, #{data := Data}}, Acc) when is_integer(GuildId), is_map(Data) ->
+    true = ets:insert(?TABLE, {GuildId, #{id => GuildId, data => strip_data(Data)}}),
+    Acc + 1;
+migrate_entry(_, Acc) ->
+    Acc.
 
 -ifdef(TEST).
 

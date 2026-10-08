@@ -112,6 +112,10 @@
 	user-select: none;
 }
 
+.inputGroupDisabled .input {
+	cursor: not-allowed;
+}
+
 .inputDefault {
 	font-size: 0.875rem;
 	line-height: 1.25rem;
@@ -140,6 +144,10 @@
 .inputWithValueOverlay {
 	color: transparent;
 	caret-color: transparent;
+}
+
+.inputWithValueOverlay::selection {
+	background: transparent;
 }
 
 .inputWithValueOverlay::placeholder {
@@ -461,6 +469,9 @@
 .itemRendered .itemText {
 	box-sizing: border-box;
 	width: 100%;
+}
+
+.itemRendered:has(.itemIndicator:not(.itemIndicatorHidden)) .itemText {
 	padding-inline-end: 1.5rem;
 }
 

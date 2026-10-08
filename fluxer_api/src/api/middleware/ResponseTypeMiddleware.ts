@@ -4,6 +4,7 @@ import {Config} from '@app/api/Config';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {InternalServerError} from '@fluxer/errors/src/domains/core/InternalServerError';
+import {resolveRoutePattern} from '@fluxer/errors/src/error_handling/RoutePattern';
 import {createLogger} from '@fluxer/logger/src/Logger';
 import type {Context, MiddlewareHandler} from 'hono';
 import type {ZodType} from 'zod';
@@ -53,7 +54,7 @@ async function validateAndRewriteResponse(ctx: Context<HonoEnv>, schema: ZodType
 		}));
 		const errorContext = {
 			method: ctx.req.method,
-			path: ctx.req.path,
+			path: resolveRoutePattern(ctx),
 			status: response.status,
 			validationErrors,
 			body,
@@ -97,6 +98,7 @@ export interface OpenAPIRouteMetadata {
 	summary: string;
 	description: string;
 	responseSchema: ZodType | null;
+	acceptedResponseSchema?: ZodType;
 	responseContentType?: string;
 	requestSchema?: ZodType;
 	requestFormSchema?: ZodType;
@@ -110,6 +112,7 @@ export interface OpenAPIRouteMetadata {
 		url: string;
 		description?: string;
 	};
+	experiment?: string;
 }
 
 interface OpenAPIOptions {
@@ -180,9 +183,16 @@ export function OpenAPI(
 		ctx.set('openapiMetadata', fullMetadata);
 		ctx.set('responseSchema', schema);
 		await next();
-		if (!schema || !hasJsonResponse || !Config.dev.validateResponses || bodylessStatusCodes?.includes(ctx.res.status)) {
+		const statusSchema =
+			ctx.res.status === 202 && metadata.acceptedResponseSchema ? metadata.acceptedResponseSchema : schema;
+		if (
+			!statusSchema ||
+			!hasJsonResponse ||
+			!Config.dev.validateResponses ||
+			bodylessStatusCodes?.includes(ctx.res.status)
+		) {
 			return;
 		}
-		await validateAndRewriteResponse(ctx, schema);
+		await validateAndRewriteResponse(ctx, statusSchema);
 	};
 }

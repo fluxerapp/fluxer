@@ -41,3 +41,30 @@ describe('canAuthorizeBotInvite', () => {
 		).toBe(true);
 	});
 });
+
+describe('bot invite permission mask', () => {
+	const threadBit = 1n << 38n;
+
+	it('drops bits outside the default mask', () => {
+		expect(normalizeBotInvitePermissions(threadBit | Permissions.SEND_MESSAGES)).toBe(Permissions.SEND_MESSAGES);
+	});
+
+	it('keeps bits inside a wider mask', () => {
+		const mask = Permissions.SEND_MESSAGES | threadBit;
+		expect(normalizeBotInvitePermissions(threadBit | Permissions.SEND_MESSAGES, mask)).toBe(mask);
+		expect(
+			canAuthorizeBotInvite({
+				userPermissions: Permissions.MANAGE_GUILD,
+				requestedPermissions: threadBit,
+				mask,
+			}),
+		).toBe(false);
+		expect(
+			canAuthorizeBotInvite({
+				userPermissions: Permissions.MANAGE_GUILD | threadBit,
+				requestedPermissions: threadBit,
+				mask,
+			}),
+		).toBe(true);
+	});
+});

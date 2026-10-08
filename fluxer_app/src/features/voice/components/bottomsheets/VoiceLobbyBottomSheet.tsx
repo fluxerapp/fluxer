@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import type {Guild} from '@app/features/guild/models/Guild';
@@ -24,7 +25,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import styles from '@app/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.module.css';
 import {CameraPreviewModalInRoom} from '@app/features/voice/components/modals/CameraPreviewModal';
 import {
@@ -162,12 +162,15 @@ export const VoiceLobbyBottomSheet = observer(function VoiceLobbyBottomSheet({
 	const handleOpenVoiceSettings = () => {
 		ModalCommands.pushAfterBottomSheetClose(
 			onClose,
-			modal(() => (
-				<UserSettingsModal
-					initialTab="voice_video"
-					data-flx="voice.voice-lobby-bottom-sheet.handle-open-voice-settings.user-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<UserSettingsModal
+						initialTab="voice_video"
+						data-flx="voice.voice-lobby-bottom-sheet.handle-open-voice-settings.user-settings-modal"
+					/>
+				),
+				'user-settings',
+			),
 		);
 	};
 	const handleEnterCall = () => {

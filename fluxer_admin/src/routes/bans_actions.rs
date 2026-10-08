@@ -34,6 +34,8 @@ pub struct BanFormData {
     #[serde(default)]
     pub substring: Option<String>,
     #[serde(default)]
+    pub duration_hours: Option<String>,
+    #[serde(default)]
     pub audit_log_reason: Option<String>,
     #[serde(default)]
     pub _csrf: Option<String>,
@@ -58,10 +60,12 @@ pub async fn execute_ban(
     ban_type: &str,
     action: &str,
     value: &str,
-    bulk_hashes: Option<&str>,
-    bulk_sha256_list: Option<&str>,
-    audit_log_reason: Option<&str>,
+    form: &BanFormData,
 ) -> (&'static str, String) {
+    let bulk_hashes = form.hashes.as_deref();
+    let bulk_sha256_list = form.sha256_list.as_deref();
+    let duration_hours = form.duration_hours.as_deref();
+    let audit_log_reason = form.audit_log_reason.as_deref();
     if (action == "bulk-ban" || action == "bulk-ban-files") && ban_type == "file-sha-bans" {
         let raw_hashes = if action == "bulk-ban-files" {
             bulk_sha256_list
@@ -74,6 +78,9 @@ pub async fn execute_ban(
         return ("error", "Value is required".into());
     }
     match action {
+        "ban" if ban_type == "ip-bans" => {
+            execute_ip_ban(client, value, duration_hours, audit_log_reason).await
+        }
         "ban" => execute_single_ban(client, ban_type, value, audit_log_reason).await,
         "unban" => execute_single_unban(client, ban_type, value, audit_log_reason).await,
         "check" => execute_check(client, ban_type, value).await,
@@ -107,6 +114,34 @@ async fn execute_bulk_ban(
     }
 }
 
+async fn execute_ip_ban(
+    client: &AdminApiClient,
+    value: &str,
+    duration_hours: Option<&str>,
+    audit_log_reason: Option<&str>,
+) -> (&'static str, String) {
+    let duration_hours = match duration_hours.map(str::trim).filter(|v| !v.is_empty()) {
+        None => 0,
+        Some(raw) => match raw.parse::<u32>() {
+            Ok(hours) => hours,
+            Err(_) => return ("error", "Invalid ban duration".into()),
+        },
+    };
+    let success_message = if duration_hours == 0 {
+        format!("{value} banned permanently")
+    } else {
+        format!(
+            "{value} banned for {}",
+            crate::templates::pages::bans::ip_ban_duration_label(duration_hours)
+        )
+    };
+    ban_action_result(
+        client.ban_ip(value, duration_hours, audit_log_reason).await,
+        success_message,
+        format!("Failed to ban {value}"),
+    )
+}
+
 async fn execute_single_ban(
     client: &AdminApiClient,
     ban_type: &str,
@@ -114,13 +149,7 @@ async fn execute_single_ban(
     audit_log_reason: Option<&str>,
 ) -> (&'static str, String) {
     let result = match ban_type {
-        "ip-bans" => client.ban_ip(value, audit_log_reason).await,
         "email-bans" => client.ban_email(value, audit_log_reason).await,
-        "suspicious-email-domains" => {
-            client
-                .add_suspicious_email_domain(value, audit_log_reason)
-                .await
-        }
         "phrase-bans" => client.ban_phrase(value, audit_log_reason).await,
         "url-bans" => client.ban_url(value, audit_log_reason).await,
         "file-sha-bans" => client.ban_file_sha(value, audit_log_reason).await,
@@ -143,11 +172,6 @@ async fn execute_single_unban(
     let result = match ban_type {
         "ip-bans" => client.unban_ip(value, audit_log_reason).await,
         "email-bans" => client.unban_email(value, audit_log_reason).await,
-        "suspicious-email-domains" => {
-            client
-                .remove_suspicious_email_domain(value, audit_log_reason)
-                .await
-        }
         "phrase-bans" => client.unban_phrase(value, audit_log_reason).await,
         "url-bans" => client.unban_url(value, audit_log_reason).await,
         "file-sha-bans" => client.unban_file_sha(value, audit_log_reason).await,
@@ -169,7 +193,6 @@ async fn execute_check(
     let result = match ban_type {
         "ip-bans" => client.check_ip_ban(value).await,
         "email-bans" => client.check_email_ban(value).await,
-        "suspicious-email-domains" => client.check_suspicious_email_domain(value).await,
         "phrase-bans" => client.check_phrase_ban(value).await,
         "url-bans" => client.check_url_ban(value).await,
         "file-sha-bans" => client.check_file_sha_ban(value).await,
@@ -177,7 +200,10 @@ async fn execute_check(
         _ => return ("error", "Unknown ban type".into()),
     };
     match result {
-        Ok(r) if r.banned => ("info", format!("{value} is banned")),
+        Ok(r) if r.banned => match r.expires_at {
+            Some(expires_at) => ("info", format!("{value} is banned until {expires_at}")),
+            None => ("info", format!("{value} is banned")),
+        },
         Ok(_) => ("info", format!("{value} is NOT banned")),
         Err(error) => {
             tracing::warn!(%error, ban_type, value, "admin API request failed: check ban status");
@@ -200,6 +226,7 @@ fn ban_action_result(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn flash_response(
     config: &crate::config::AdminConfig,
     auth: &AuthContext,
@@ -208,13 +235,20 @@ pub fn flash_response(
     message: &str,
     ban_cfg: &templates::pages::bans::BanConfig,
     csrf_token: &str,
+    username_sign_in: bool,
 ) -> Response {
     if is_htmx {
         render_inline_flash(level, message)
     } else {
         let flash = to_flash(level, message);
-        let markup =
-            templates::pages::bans::bans_page(config, auth, ban_cfg, Some(&flash), csrf_token);
+        let markup = templates::pages::bans::bans_page(
+            config,
+            auth,
+            ban_cfg,
+            Some(&flash),
+            csrf_token,
+            username_sign_in,
+        );
         Html(markup.into_string()).into_response()
     }
 }
@@ -254,25 +288,16 @@ pub fn custom_flash(
     level: &str,
     message: &str,
     csrf_token: &str,
-    page_type: &str,
 ) -> Response {
     if is_htmx {
         return render_inline_flash(level, message);
     }
     let flash = to_flash(level, message);
-    let markup = match page_type {
-        "url-domain" => templates::pages::url_domain_bans::url_domain_bans_page(
-            config,
-            auth,
-            Some(&flash),
-            csrf_token,
-        ),
-        _ => templates::pages::profile_substring_bans::profile_substring_bans_page(
-            config,
-            auth,
-            Some(&flash),
-            csrf_token,
-        ),
-    };
+    let markup = templates::pages::profile_substring_bans::profile_substring_bans_page(
+        config,
+        auth,
+        Some(&flash),
+        csrf_token,
+    );
     Html(markup.into_string()).into_response()
 }

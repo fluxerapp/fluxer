@@ -2,11 +2,13 @@
 
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Keybind from '@app/features/input/state/InputKeybind';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
+import {useCanSendGift} from '@app/features/premium/hooks/useCanSendGift';
+import {CREATE_THREAD_DESCRIPTOR} from '@app/features/threads/utils/ThreadMessageDescriptors';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CreateThreadIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
@@ -70,6 +72,7 @@ interface TextareaPlusMenuProps {
 	textareaValue?: string;
 	onUploadAsFile?: () => void;
 	onSendVoiceMessage?: () => void;
+	onCreateThread?: () => void;
 }
 
 export const TextareaPlusMenu = observer(
@@ -80,6 +83,7 @@ export const TextareaPlusMenu = observer(
 		textareaValue,
 		onUploadAsFile,
 		onSendVoiceMessage,
+		onCreateThread,
 	}: TextareaPlusMenuProps) => {
 		const {i18n} = useLingui();
 		const showGifButton = Accessibility.showGifButton;
@@ -87,7 +91,7 @@ export const TextareaPlusMenu = observer(
 		const showStickersButton = Accessibility.showStickersButton;
 		const showEmojiButton = Accessibility.showEmojiButton;
 		const showMessageSendButton = Accessibility.showMessageSendButton;
-		const isSelfHosted = RuntimeConfig.isSelfHosted();
+		const canSendGift = useCanSendGift();
 		const hasTextContent = textareaValue && textareaValue.trim().length > 0;
 		const cannotSendMessagesHint = i18n._(CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR);
 		const cannotUploadFilesHint = i18n._(YOU_DO_NOT_HAVE_PERMISSION_TO_UPLOAD_FILES_DESCRIPTOR);
@@ -133,7 +137,16 @@ export const TextareaPlusMenu = observer(
 						{i18n._(UPLOAD_YOUR_MESSAGE_AS_A_FILE_DESCRIPTOR)}
 					</MenuItem>
 				)}
-				{!isSelfHosted && (
+				{onCreateThread && (
+					<MenuItem
+						icon={<CreateThreadIcon size={20} data-flx="channel.textarea.textarea-plus-menu.create-thread-icon" />}
+						onClick={onCreateThread}
+						data-flx="channel.textarea.textarea-plus-menu.menu-item.create-thread"
+					>
+						{i18n._(CREATE_THREAD_DESCRIPTOR)}
+					</MenuItem>
+				)}
+				{canSendGift && (
 					<MenuItem
 						icon={<GiftIcon data-flx="channel.textarea.textarea-plus-menu.gift-icon" />}
 						onClick={() => PremiumModalCommands.open(true)}

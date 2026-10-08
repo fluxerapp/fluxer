@@ -21,6 +21,9 @@ function successStatusCodes(route: ExtractedRoute): Array<number> {
 	if (route.successStatusCodes.length) return route.successStatusCodes;
 	return [route.hasNoContent ? 204 : 200];
 }
+function isBodyless(route: ExtractedRoute, code: number): boolean {
+	return code === 204 || route.bodylessStatusCodes.includes(code) || (route.hasNoContent && !route.responseSchemaName);
+}
 export class OpenAPIOperationBuilder {
 	private readonly schemaRegistry: SchemaRegistry;
 	private readonly usedOperationIds: Set<string>;
@@ -64,6 +67,9 @@ export class OpenAPIOperationBuilder {
 		if (route.explicitExternalDocs) {
 			operation.externalDocs = route.explicitExternalDocs;
 		}
+		if (route.explicitExperiment) {
+			operation['x-fluxer-experiment'] = route.explicitExperiment;
+		}
 		if (security.length > 0) {
 			operation.security = security;
 		}
@@ -90,7 +96,10 @@ export class OpenAPIOperationBuilder {
 		if (route.path === '/users/@me' || route.path.startsWith('/users/@me/')) {
 			return [{bearerToken: []}, {sessionToken: []}];
 		}
-		if (!route.hasLoginRequired && !route.hasLoginRequiredAllowSuspicious && !route.hasDefaultUserOnly) {
+		if (route.hasBotOnly) {
+			return [{botToken: []}];
+		}
+		if (!route.hasLoginRequired && !route.hasDefaultUserOnly) {
 			return [];
 		}
 		if (route.hasDefaultUserOnly) {
@@ -202,21 +211,31 @@ export class OpenAPIOperationBuilder {
 				responses['304'] = {description: 'Not Modified'};
 				continue;
 			}
-			if (
-				code === 204 ||
-				route.bodylessStatusCodes.includes(code) ||
-				(route.hasNoContent && !route.responseSchemaName)
-			) {
+			if (code === 202 && route.acceptedResponseSchemaName) {
+				responses['202'] = {
+					description: 'Accepted',
+					content: {
+						'application/json': {schema: this.schemaRegistry.getRef(route.acceptedResponseSchemaName, 'output')},
+					},
+				};
+				continue;
+			}
+			if (isBodyless(route, code)) {
 				responses[String(code)] = {description: code === 204 ? 'No Content' : 'Success'};
 				continue;
 			}
 			if (!route.responseSchemaName) {
 				throw new Error(`Missing response schema for ${route.method.toUpperCase()} ${route.path}`);
 			}
+			const ref = this.schemaRegistry.getRef(route.responseSchemaName, 'output');
 			responses[String(code)] = {
 				description: 'Success',
 				content: {
-					[route.responseContentType]: {schema: this.schemaRegistry.getRef(route.responseSchemaName, 'output')},
+					[route.responseContentType]: {
+						schema: statusCodes.some((other) => other >= 200 && other < 300 && isBodyless(route, other))
+							? this.schemaRegistry.nullable(ref)
+							: ref,
+					},
 				},
 			};
 		}

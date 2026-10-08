@@ -6,13 +6,11 @@ import {
 	stopMediaTrack,
 	stopUnselectedStreamTracks,
 } from '@app/features/voice/engine/voice_screen_share_manager/shared';
-import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import {rememberCapturedDisplayAudioTrack} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {ScreenShareAudioCaptureError} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
 import type {ScreenShareCaptureOptions} from 'livekit-client';
 
 type DisplayMediaVideoConstraints = MediaTrackConstraints & {
-	colorSpace?: string;
 	cursor?: 'always' | 'motion' | 'never';
 	displaySurface?: 'browser' | 'monitor' | 'window';
 };
@@ -20,35 +18,10 @@ type DisplayMediaAudioConstraints = MediaTrackConstraints & {
 	restrictOwnAudio?: boolean;
 	suppressLocalAudioPlayback?: boolean;
 };
-type DisplayMediaTrackSettings = MediaTrackSettings & {
-	cursor?: 'always' | 'motion' | 'never';
-	displaySurface?: 'browser' | 'monitor' | 'window';
-};
 function resolveDisplayMediaCursorCapture(
 	displaySurface: DisplayMediaVideoConstraints['displaySurface'],
 ): 'always' | 'motion' | 'never' {
 	return displaySurface === 'window' ? 'never' : 'always';
-}
-
-function getRequestedDisplayMediaVideoConstraints(
-	options: ScreenShareCaptureOptions | undefined,
-): DisplayMediaVideoConstraints | null {
-	if (typeof options?.video !== 'object' || !options.video) return null;
-	return options.video as DisplayMediaVideoConstraints;
-}
-
-function resolveCapturedDisplayMediaCursorCapture(
-	track: Pick<MediaStreamTrack, 'getSettings'>,
-	options?: ScreenShareCaptureOptions,
-): 'always' | 'motion' | 'never' {
-	const requestedVideo = getRequestedDisplayMediaVideoConstraints(options);
-	const requestedCursor = requestedVideo?.cursor;
-	const requestedDisplaySurface = requestedVideo?.displaySurface;
-	if (requestedCursor && requestedCursor !== resolveDisplayMediaCursorCapture(requestedDisplaySurface)) {
-		return requestedCursor;
-	}
-	const settings = track.getSettings() as DisplayMediaTrackSettings;
-	return resolveDisplayMediaCursorCapture(settings.displaySurface ?? requestedDisplaySurface);
 }
 
 export function getDisplayMediaOptions(options?: ScreenShareCaptureOptions): DisplayMediaStreamOptions {
@@ -95,21 +68,6 @@ export function getDisplayMediaOptions(options?: ScreenShareCaptureOptions): Dis
 	} as DisplayMediaStreamOptions;
 }
 
-function buildCapturedDisplayMediaConstraints(
-	displayMediaOptions: DisplayMediaStreamOptions,
-	cursor: 'always' | 'motion' | 'never',
-): MediaTrackConstraints {
-	const requestedVideo =
-		typeof displayMediaOptions.video === 'object' && displayMediaOptions.video
-			? (displayMediaOptions.video as DisplayMediaVideoConstraints)
-			: undefined;
-	const constraints: DisplayMediaVideoConstraints = {colorSpace: 'rec709', cursor};
-	if (requestedVideo?.width !== undefined) constraints.width = requestedVideo.width;
-	if (requestedVideo?.height !== undefined) constraints.height = requestedVideo.height;
-	if (requestedVideo?.frameRate !== undefined) constraints.frameRate = requestedVideo.frameRate;
-	return constraints;
-}
-
 export async function createDisplayScreenShareTracks(
 	options?: ScreenShareCaptureOptions,
 	captureContext?: DisplayScreenShareCaptureContext,
@@ -126,12 +84,6 @@ export async function createDisplayScreenShareTracks(
 		}
 		if (options?.contentHint) {
 			videoTrack.contentHint = options.contentHint;
-		}
-		if (ActiveScreenShareSource.getTarget()?.delivery !== true) {
-			const cursor = resolveCapturedDisplayMediaCursorCapture(videoTrack, options);
-			await videoTrack
-				.applyConstraints(buildCapturedDisplayMediaConstraints(displayMediaOptions, cursor))
-				.catch(() => undefined);
 		}
 		const capturedAudioTrack = stream.getAudioTracks()[0];
 		const audioTrack = capturedAudioTrack?.readyState === 'live' ? capturedAudioTrack : undefined;

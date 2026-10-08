@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {CrosspostCommunityPopout} from '@app/features/channel/components/CrosspostCommunityPopout';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -29,6 +30,29 @@ export const MessageAvatar = observer(
 		const onPopoutToggle = useMaybeMessageViewContext()?.onPopoutToggle;
 		const handlePopoutOpen = useCallback(() => onPopoutToggle?.(true), [onPopoutToggle]);
 		const handlePopoutClose = useCallback(() => onPopoutToggle?.(false), [onPopoutToggle]);
+		if (message.isCrosspostCopy) {
+			return (
+				<CrosspostCommunityPopout
+					message={message}
+					onPopoutOpen={handlePopoutOpen}
+					onPopoutClose={handlePopoutClose}
+					data-flx="channel.message-avatar.crosspost-community-popout"
+				>
+					<FocusRing data-flx="channel.message-avatar.focus-ring--2">
+						<Avatar
+							user={user}
+							size={size}
+							className={className}
+							forceAnimate={isHovering}
+							guildId={guildId}
+							data-user-id={user.id}
+							data-guild-id={guildId}
+							data-flx="channel.message-avatar.crosspost-author-avatar"
+						/>
+					</FocusRing>
+				</CrosspostCommunityPopout>
+			);
+		}
 		return (
 			<PreloadableUserPopout
 				user={user}

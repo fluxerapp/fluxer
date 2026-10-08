@@ -30,6 +30,7 @@ import {
 	withFieldDescription,
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {withSchemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
 function normalizeGuildFeatures(features: Array<string>): Array<string> {
@@ -108,6 +109,11 @@ export const GuildFeatureSchema = withOpenApiType(
 			[GuildFeatures.VISIONARY, 'VISIONARY', 'Guild is a visionary guild'],
 			[GuildFeatures.LARGE_GUILD_OVERRIDE, 'LARGE_GUILD_OVERRIDE', 'Guild has large guild overrides enabled'],
 			[GuildFeatures.VERY_LARGE_GUILD, 'VERY_LARGE_GUILD', 'Guild has increased member capacity enabled'],
+			[
+				GuildFeatures.ANNOUNCEMENT_CHANNELS_DISABLED,
+				'ANNOUNCEMENT_CHANNELS_DISABLED',
+				'Guild cannot publish announcement messages or gain new followers',
+			],
 		],
 		'A guild feature flag',
 	),
@@ -194,6 +200,14 @@ export const GuildResponse = z.object({
 	approximate_presence_count: Int32Type.optional().describe(
 		'Approximate online member count (only when with_counts is true)',
 	),
+	threads_active: withSchemaMetadata(
+		z
+			.literal(true)
+			.describe(
+				'Present and true when threads, forum and media channels are active in this guild for the requesting client. Only set on the current user guild list',
+			),
+		{experiment: 'channel_threads'},
+	).optional(),
 });
 
 export type GuildResponse = z.infer<typeof GuildResponse>;

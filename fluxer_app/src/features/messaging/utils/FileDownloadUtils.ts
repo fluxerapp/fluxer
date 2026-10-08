@@ -3,6 +3,11 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {isUrlOnEndpoint, parseEndpoint} from '@app/features/messaging/utils/AttachmentCdnUrl';
+import {
+	unwrapDesktopLocalResourceURL,
+	updateDesktopLocalResourceURLTarget,
+	wrapDesktopLocalResourceURL,
+} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {isMobileOrTabletUserAgent} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {supportsShowSaveFilePicker} from '@app/features/platform/types/Browser';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -13,24 +18,20 @@ const logger = new Logger('FileDownloadUtils');
 type MediaType = 'image' | 'gif' | 'video' | 'audio' | 'file';
 
 function appendMediaProxyDownloadParam(src: string): string {
-	let parsedSrc: URL;
-	try {
-		parsedSrc = new URL(src);
-	} catch {
-		return src;
-	}
-	const mediaEndpoint = parseEndpoint(RuntimeConfig.mediaEndpoint);
-	if (!mediaEndpoint || !isUrlOnEndpoint(parsedSrc, mediaEndpoint)) {
-		return src;
-	}
-	parsedSrc.searchParams.set('download', 'true');
-	return parsedSrc.toString();
+	return updateDesktopLocalResourceURLTarget(src, (target) => {
+		const mediaEndpoint = parseEndpoint(RuntimeConfig.mediaEndpoint);
+		if (!mediaEndpoint || !isUrlOnEndpoint(target, mediaEndpoint)) {
+			return false;
+		}
+		target.searchParams.set('download', 'true');
+		return true;
+	});
 }
 
 function deriveSuggestedName(src: string, type: MediaType, providedFilename?: string): string {
 	if (providedFilename) return applyDefaultExtension(providedFilename, type);
 	try {
-		const parsed = new URL(src);
+		const parsed = new URL(unwrapDesktopLocalResourceURL(src));
 		const segments = parsed.pathname.split('/').filter(Boolean);
 		const lastSegment = segments[segments.length - 1];
 		if (lastSegment) {
@@ -196,10 +197,10 @@ function downloadViaAnchor(src: string, suggestedName: string, options?: {append
 export async function downloadFile(src: string, type: MediaType, providedFilename?: string): Promise<void> {
 	if (!src) return;
 	const suggestedName = deriveSuggestedName(src, type, providedFilename);
-	const target = await AttachmentUrlRefresher.refresh(src);
+	const target = wrapDesktopLocalResourceURL(await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(src)));
 	if (isElectron()) {
 		try {
-			const outcome = await downloadWithNative({url: target, suggestedName});
+			const outcome = await downloadWithNative({url: unwrapDesktopLocalResourceURL(target), suggestedName});
 			if (outcome !== 'unavailable') return;
 		} catch (error) {
 			logger.warn('Native download failed', error);
@@ -209,7 +210,7 @@ export async function downloadFile(src: string, type: MediaType, providedFilenam
 	if (await downloadViaFileSystemAccess(target, suggestedName, type)) return;
 	if (await downloadViaFetchBlob(target, suggestedName)) return;
 	if (downloadViaAnchor(target, suggestedName)) return;
-	await openExternalUrl(appendMediaProxyDownloadParam(target));
+	await openExternalUrl(unwrapDesktopLocalResourceURL(appendMediaProxyDownloadParam(target)));
 }
 
 export function createDownloadHandler(src: string, type: MediaType, providedFilename?: string) {

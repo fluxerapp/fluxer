@@ -4,6 +4,7 @@ import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {MuteDurationSheet} from '@app/features/app/components/bottomsheets/MuteDurationSheet';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {ChannelPinsContent} from '@app/features/app/components/shared/ChannelPinsContent';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
@@ -40,7 +41,6 @@ import {
 	GROUP_SETTINGS_DESCRIPTOR,
 	logger,
 	MARKED_AS_READ_DESCRIPTOR,
-	MORE_DESCRIPTOR,
 	MUTE_DESCRIPTOR,
 	PINNED_GROUP_DESCRIPTOR,
 	SEARCH_DESCRIPTOR,
@@ -55,11 +55,12 @@ import {MoreOptionsSheet} from '@app/features/channel/components/bottomsheets/ch
 import {NotificationSettingsSheet} from '@app/features/channel/components/bottomsheets/channel_details_bottom_sheet/NotificationSettingsSheet';
 import {QuickActionButton} from '@app/features/channel/components/bottomsheets/channel_details_bottom_sheet/QuickActionButton';
 import {createMuteConfig} from '@app/features/channel/components/MuteOptions';
-import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
+import {ChannelFollowModal} from '@app/features/channel/components/modals/ChannelFollowModal';
 import {CreateDMModal} from '@app/features/channel/components/modals/CreateDMModal';
 import {EditGroupModal} from '@app/features/channel/components/modals/EditGroupModal';
 import {GroupInvitesModal} from '@app/features/channel/components/modals/GroupInvitesModal';
 import {useDeleteMyMessagesInChannel} from '@app/features/channel/hooks/useDeleteMyMessagesInChannel';
+import {canFollowAnnouncementChannel, FOLLOW_DESCRIPTOR} from '@app/features/channel/utils/ChannelFollowUtils';
 import {
 	CLOSE_DM_DESCRIPTOR,
 	DELETE_CHANNEL_DESCRIPTOR,
@@ -76,8 +77,10 @@ import {useLeaveGroup} from '@app/features/guild/hooks/useLeaveGroup';
 import Guilds from '@app/features/guild/state/Guilds';
 import {
 	ADDED_TO_FAVORITES_TOAST_DESCRIPTOR,
+	ANNOUNCEMENT_CHANNEL_DESCRIPTOR,
 	CHANNEL_DELETED_DESCRIPTOR,
 	LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR,
+	MORE_DESCRIPTOR,
 	PERSONAL_NOTES_DESCRIPTOR,
 	PINNED_DM_DESCRIPTOR,
 	REMOVED_FROM_FAVORITES_TOAST_DESCRIPTOR,
@@ -94,6 +97,7 @@ import {buildChannelLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
+import {ThreadMembersList} from '@app/features/threads/components/ThreadMembersPanel';
 import {
 	MembersIcon,
 	MoreOptionsVerticalIcon,
@@ -119,6 +123,7 @@ import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {Trans, useLingui} from '@lingui/react/macro';
+import {MegaphoneSimpleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
@@ -156,6 +161,8 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 			switch (channel.type) {
 				case ChannelTypes.GUILD_TEXT:
 					return i18n._(TEXT_CHANNEL_DESCRIPTOR);
+				case ChannelTypes.GUILD_ANNOUNCEMENT:
+					return i18n._(ANNOUNCEMENT_CHANNEL_DESCRIPTOR);
 				case ChannelTypes.GUILD_VOICE:
 					return i18n._(VOICE_CHANNEL_DESCRIPTOR);
 				case ChannelTypes.DM:
@@ -213,6 +220,17 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 					<InviteModal
 						channelId={channel.id}
 						data-flx="channel.channel-details-bottom-sheet.handle-invite.invite-modal"
+					/>
+				)),
+			);
+		}, [channel.id, onClose]);
+		const handleFollowChannel = useCallback(() => {
+			ModalCommands.pushAfterBottomSheetClose(
+				onClose,
+				modal(() => (
+					<ChannelFollowModal
+						channelId={channel.id}
+						data-flx="channel.channel-details-bottom-sheet.handle-follow-channel.channel-follow-modal"
 					/>
 				)),
 			);
@@ -387,12 +405,15 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 		const handleEditChannel = useCallback(() => {
 			ModalCommands.pushAfterBottomSheetClose(
 				onClose,
-				modal(() => (
-					<ChannelSettingsModal
-						channelId={channel.id}
-						data-flx="channel.channel-details-bottom-sheet.handle-edit-channel.channel-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<ChannelSettingsModal
+							channelId={channel.id}
+							data-flx="channel.channel-details-bottom-sheet.handle-edit-channel.channel-settings-modal"
+						/>
+					),
+					'channel-settings',
+				),
 			);
 		}, [channel.id, onClose]);
 		const handleDeleteChannel = useCallback(() => {
@@ -551,6 +572,16 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 										onClick={() => setSearchSheetOpen(true)}
 										data-flx="channel.channel-details-bottom-sheet.quick-action-button.search-click"
 									/>
+									{canFollowAnnouncementChannel(channel) && (
+										<QuickActionButton
+											icon={
+												<MegaphoneSimpleIcon size={20} data-flx="channel.channel-details-bottom-sheet.follow-icon" />
+											}
+											label={i18n._(FOLLOW_DESCRIPTOR)}
+											onClick={handleFollowChannel}
+											data-flx="channel.channel-details-bottom-sheet.quick-action-button.follow-click"
+										/>
+									)}
 									<QuickActionButton
 										icon={
 											<MoreOptionsVerticalIcon
@@ -630,7 +661,13 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 												data-flx="channel.channel-details-bottom-sheet.dm-members-list"
 											/>
 										)}
-										{isGuildChannel && guild && (
+										{isGuildChannel && guild && channel.isThread() && (
+											<ThreadMembersList
+												thread={channel}
+												data-flx="channel.channel-details-bottom-sheet.thread-members-list"
+											/>
+										)}
+										{isGuildChannel && guild && !channel.isThread() && (
 											<GuildMemberList
 												guild={guild}
 												channel={channel}

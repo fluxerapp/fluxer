@@ -10,20 +10,17 @@ use napi::{
 };
 use napi_derive::napi;
 
-const RING_CAPACITY: usize = 1024;
 const KEY_NAME_BUF: usize = 32;
 const LLKHF_EXTENDED_FLAG: u32 = 0x01;
+const VK_PACKET: u32 = 0xe7;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum EventKind {
+    #[default]
     KeyDown,
     KeyUp,
     MouseDown,
     MouseUp,
-
-    #[default]
-    MouseMove,
-    Wheel,
 }
 
 impl EventKind {
@@ -33,8 +30,6 @@ impl EventKind {
             Self::KeyUp => "keyup",
             Self::MouseDown => "mousedown",
             Self::MouseUp => "mouseup",
-            Self::MouseMove => "mousemove",
-            Self::Wheel => "wheel",
         }
     }
 }
@@ -43,9 +38,9 @@ impl EventKind {
 pub struct QueuedEvent {
     pub kind: EventKind,
     pub keycode: u32,
+    pub scan_code: u32,
+    pub extended: bool,
     pub button: u8,
-    pub delta_x: i32,
-    pub delta_y: i32,
     pub x: i32,
     pub y: i32,
     pub has_xy: bool,
@@ -61,6 +56,59 @@ impl QueuedEvent {
     fn key_name(&self) -> &str {
         let len = (self.key_name_len as usize).min(KEY_NAME_BUF);
         std::str::from_utf8(&self.key_name_buf[..len]).unwrap_or("")
+    }
+
+    fn same_input(&self, other: &QueuedEvent) -> bool {
+        match self.kind {
+            EventKind::KeyDown | EventKind::KeyUp => {
+                matches!(other.kind, EventKind::KeyDown | EventKind::KeyUp)
+                    && self.keycode == other.keycode
+                    && self.scan_code == other.scan_code
+                    && self.extended == other.extended
+            }
+            EventKind::MouseDown | EventKind::MouseUp => {
+                matches!(other.kind, EventKind::MouseDown | EventKind::MouseUp)
+                    && self.button == other.button
+            }
+        }
+    }
+
+    fn release(&self) -> QueuedEvent {
+        QueuedEvent {
+            kind: match self.kind {
+                EventKind::KeyDown | EventKind::KeyUp => EventKind::KeyUp,
+                EventKind::MouseDown | EventKind::MouseUp => EventKind::MouseUp,
+            },
+            has_xy: false,
+            x: 0,
+            y: 0,
+            ctrl: false,
+            alt: false,
+            shift: false,
+            meta: false,
+            ..*self
+        }
+    }
+}
+
+#[derive(Default)]
+struct HeldInputs {
+    pressed: Vec<QueuedEvent>,
+}
+
+impl HeldInputs {
+    fn track(&mut self, event: &QueuedEvent) {
+        self.pressed.retain(|held| !held.same_input(event));
+        if matches!(event.kind, EventKind::KeyDown | EventKind::MouseDown) {
+            self.pressed.push(*event);
+        }
+    }
+
+    fn take_releases(&mut self) -> Vec<QueuedEvent> {
+        std::mem::take(&mut self.pressed)
+            .iter()
+            .map(QueuedEvent::release)
+            .collect()
     }
 }
 
@@ -99,6 +147,17 @@ pub fn write_key_name(buf: &mut [u8; KEY_NAME_BUF], len_out: &mut u8, vk: u16) {
     }
 }
 
+pub fn write_packet_key_name(buf: &mut [u8; KEY_NAME_BUF], len_out: &mut u8, unit: u32) {
+    match char::from_u32(unit) {
+        Some(' ') => write_ascii_key_name(buf, len_out, "Space"),
+        Some(ch) if ch.is_ascii_alphanumeric() => {
+            let mut utf8 = [0u8; 4];
+            write_ascii_key_name(buf, len_out, ch.to_ascii_uppercase().encode_utf8(&mut utf8));
+        }
+        _ => *len_out = 0,
+    }
+}
+
 pub fn write_key_name_from_hook(
     buf: &mut [u8; KEY_NAME_BUF],
     len_out: &mut u8,
@@ -125,21 +184,11 @@ impl ToNapiValue for QueuedEvent {
             EventKind::KeyDown | EventKind::KeyUp => {
                 object.set("keycode", event.keycode)?;
                 object.set("keyName", event.key_name())?;
+                object.set("scanCode", event.scan_code)?;
+                object.set("extended", event.extended)?;
             }
             EventKind::MouseDown | EventKind::MouseUp => {
                 object.set("button", u32::from(event.button))?;
-                if event.has_xy {
-                    object.set("x", event.x)?;
-                    object.set("y", event.y)?;
-                }
-            }
-            EventKind::MouseMove => {
-                object.set("x", event.x)?;
-                object.set("y", event.y)?;
-            }
-            EventKind::Wheel => {
-                object.set("deltaX", event.delta_x)?;
-                object.set("deltaY", event.delta_y)?;
                 if event.has_xy {
                     object.set("x", event.x)?;
                     object.set("y", event.y)?;
@@ -150,19 +199,19 @@ impl ToNapiValue for QueuedEvent {
     }
 }
 
-type EventThreadsafeFunction = ThreadsafeFunction<
-    QueuedEvent,
-    UnknownReturnValue,
-    QueuedEvent,
-    napi::Status,
-    false,
-    true,
-    RING_CAPACITY,
->;
+type EventThreadsafeFunction =
+    ThreadsafeFunction<QueuedEvent, UnknownReturnValue, QueuedEvent, napi::Status, false, true>;
 
 #[cfg(target_os = "windows")]
 mod platform {
-    use super::{EventKind, EventThreadsafeFunction, QueuedEvent, write_key_name_from_hook};
+    use super::{
+        EventKind, EventThreadsafeFunction, HeldInputs, QueuedEvent, VK_PACKET,
+        write_key_name_from_hook, write_packet_key_name,
+    };
+    use fluxer_desktop_native::input::modifiers::{
+        Modifiers,
+        windows::{from_sampled, with_pressed_key},
+    };
     use napi::threadsafe_function::ThreadsafeFunctionCallMode;
     use std::sync::{
         Arc, Mutex, MutexGuard, OnceLock,
@@ -204,6 +253,7 @@ mod platform {
         pub(crate) last_event_ms: AtomicU64,
         pub(crate) last_cursor_change_ms: AtomicU64,
         pub(crate) reinstall_count: AtomicU64,
+        held: Mutex<HeldInputs>,
     }
 
     unsafe impl Send for HookHandle {}
@@ -238,17 +288,15 @@ mod platform {
         unsafe { windows::Win32::System::SystemInformation::GetTickCount64() }
     }
 
-    fn sample_modifiers() -> (bool, bool, bool, bool) {
-        use fluxer_desktop_native::input::modifiers::windows::from_sampled;
+    fn sample_modifiers() -> Modifiers {
         unsafe {
-            let m = from_sampled(
+            from_sampled(
                 GetKeyState(VK_SHIFT.0 as i32) as u16,
                 GetKeyState(VK_CONTROL.0 as i32) as u16,
                 GetKeyState(VK_MENU.0 as i32) as u16,
                 GetKeyState(VK_LWIN.0 as i32) as u16,
                 GetKeyState(VK_RWIN.0 as i32) as u16,
-            );
-            (m.ctrl, m.alt, m.shift, m.meta)
+            )
         }
     }
 
@@ -276,6 +324,11 @@ mod platform {
 
     fn enqueue(handle: &HookHandle, event: QueuedEvent) {
         handle.last_event_ms.store(now_ms(), Ordering::Release);
+        lock_recover(&handle.held).track(&event);
+        send(handle, event);
+    }
+
+    fn send(handle: &HookHandle, event: QueuedEvent) {
         let status = handle
             .tsfn
             .call(event, ThreadsafeFunctionCallMode::NonBlocking);
@@ -294,7 +347,17 @@ mod platform {
             let is_down = msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN;
             let is_up = msg == WM_KEYUP || msg == WM_SYSKEYUP;
             if is_down || is_up {
-                let (ctrl, alt, shift, meta) = sample_modifiers();
+                let sampled = sample_modifiers();
+                let Modifiers {
+                    ctrl,
+                    alt,
+                    shift,
+                    meta,
+                } = if is_down {
+                    with_pressed_key(sampled, vk)
+                } else {
+                    sampled
+                };
                 let mut event = QueuedEvent {
                     kind: if is_down {
                         EventKind::KeyDown
@@ -302,19 +365,29 @@ mod platform {
                         EventKind::KeyUp
                     },
                     keycode: info.vkCode,
+                    scan_code: info.scanCode,
+                    extended: (info.flags.0 & super::LLKHF_EXTENDED_FLAG) != 0,
                     ctrl,
                     alt,
                     shift,
                     meta,
                     ..QueuedEvent::default()
                 };
-                let layout_vk = layout_aware_vk_from_scan_code(vk, info.scanCode, info.flags.0);
-                write_key_name_from_hook(
-                    &mut event.key_name_buf,
-                    &mut event.key_name_len,
-                    layout_vk,
-                    info.flags.0,
-                );
+                if info.vkCode == VK_PACKET {
+                    write_packet_key_name(
+                        &mut event.key_name_buf,
+                        &mut event.key_name_len,
+                        info.scanCode,
+                    );
+                } else {
+                    let layout_vk = layout_aware_vk_from_scan_code(vk, info.scanCode, info.flags.0);
+                    write_key_name_from_hook(
+                        &mut event.key_name_buf,
+                        &mut event.key_name_len,
+                        layout_vk,
+                        info.flags.0,
+                    );
+                }
                 enqueue(&handle, event);
             }
         }
@@ -322,18 +395,22 @@ mod platform {
     }
 
     unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
-        use fluxer_desktop_native::input::windows_mouse::{Action, Axis, classify};
+        use fluxer_desktop_native::input::windows_mouse::{Action, classify};
         if code >= 0
             && let Some(handle) = current_handle()
         {
             let info = unsafe { &*(lparam.0 as *const MSLLHOOKSTRUCT) };
             let md = info.mouseData;
             let x_button = ((md >> 16) & 0xffff) as u16;
-            let wheel_delta = ((md >> 16) & 0xffff) as i16;
-            let (ctrl, alt, shift, meta) = sample_modifiers();
-            let action = classify(wparam.0 as u32, x_button, wheel_delta);
+            let action = classify(wparam.0 as u32, x_button);
             match action {
                 Action::Button { down, button } => {
+                    let Modifiers {
+                        ctrl,
+                        alt,
+                        shift,
+                        meta,
+                    } = sample_modifiers();
                     enqueue(
                         &handle,
                         QueuedEvent {
@@ -354,43 +431,8 @@ mod platform {
                         },
                     );
                 }
-                Action::Move => {
-                    enqueue(
-                        &handle,
-                        QueuedEvent {
-                            kind: EventKind::MouseMove,
-                            x: info.pt.x,
-                            y: info.pt.y,
-                            has_xy: true,
-                            ctrl,
-                            alt,
-                            shift,
-                            meta,
-                            ..QueuedEvent::default()
-                        },
-                    );
-                }
-                Action::Wheel { axis, delta } => {
-                    let (dx, dy) = match axis {
-                        Axis::Horizontal => (i32::from(delta), 0),
-                        Axis::Vertical => (0, i32::from(delta)),
-                    };
-                    enqueue(
-                        &handle,
-                        QueuedEvent {
-                            kind: EventKind::Wheel,
-                            delta_x: dx,
-                            delta_y: dy,
-                            x: info.pt.x,
-                            y: info.pt.y,
-                            has_xy: true,
-                            ctrl,
-                            alt,
-                            shift,
-                            meta,
-                            ..QueuedEvent::default()
-                        },
-                    );
+                Action::Activity => {
+                    handle.last_event_ms.store(now_ms(), Ordering::Release);
                 }
                 Action::Ignored => {}
             }
@@ -460,6 +502,10 @@ mod platform {
                 break;
             }
             if msg.message == WM_APP_REINSTALL {
+                let releases = lock_recover(&handle.held).take_releases();
+                for event in releases {
+                    send(&handle, event);
+                }
                 uninstall_hooks(&handle);
                 if install_hooks(&handle).is_ok() {
                     handle.last_event_ms.store(now_ms(), Ordering::Release);
@@ -622,6 +668,7 @@ mod platform {
             last_event_ms: AtomicU64::new(0),
             last_cursor_change_ms: AtomicU64::new(0),
             reinstall_count: AtomicU64::new(0),
+            held: Mutex::new(HeldInputs::default()),
         })
     }
 }
@@ -668,7 +715,6 @@ impl InputHook {
             .build_threadsafe_function::<QueuedEvent>()
             .weak::<true>()
             .callee_handled::<false>()
-            .max_queue_size::<RING_CAPACITY>()
             .build()
             .map_err(|err| {
                 napi::Error::new(
@@ -771,9 +817,26 @@ mod tests {
     }
 
     #[test]
-    fn queued_event_default_is_mouse_move_kind() {
+    fn write_packet_key_name_uses_the_injected_character() {
+        let name = |unit: u32| {
+            let mut buf = [0xffu8; KEY_NAME_BUF];
+            let mut len = 7u8;
+            write_packet_key_name(&mut buf, &mut len, unit);
+            String::from_utf8(buf[..len as usize].to_vec()).unwrap()
+        };
+        assert_eq!(name(u32::from('g')), "G");
+        assert_eq!(name(u32::from('G')), "G");
+        assert_eq!(name(u32::from('7')), "7");
+        assert_eq!(name(u32::from(' ')), "Space");
+        assert_eq!(name(u32::from('.')), "");
+        assert_eq!(name(0x00f6), "");
+        assert_eq!(name(0xd83d), "");
+    }
+
+    #[test]
+    fn queued_event_default_is_empty_keydown() {
         let event = QueuedEvent::default();
-        assert_eq!(event.kind, EventKind::MouseMove);
+        assert_eq!(event.kind, EventKind::KeyDown);
         assert_eq!(event.key_name_len, 0);
     }
 
@@ -783,8 +846,53 @@ mod tests {
         assert_eq!(EventKind::KeyUp.as_str(), "keyup");
         assert_eq!(EventKind::MouseDown.as_str(), "mousedown");
         assert_eq!(EventKind::MouseUp.as_str(), "mouseup");
-        assert_eq!(EventKind::MouseMove.as_str(), "mousemove");
-        assert_eq!(EventKind::Wheel.as_str(), "wheel");
+    }
+
+    #[test]
+    fn held_inputs_release_each_pressed_input_once_without_modifiers() {
+        let key = |kind, keycode, scan_code, extended| QueuedEvent {
+            kind,
+            keycode,
+            scan_code,
+            extended,
+            ctrl: true,
+            ..QueuedEvent::default()
+        };
+        let mut held = HeldInputs::default();
+        held.track(&key(EventKind::KeyDown, 0x41, 0x1e, false));
+        held.track(&key(EventKind::KeyDown, 0x41, 0x1e, false));
+        held.track(&key(EventKind::KeyDown, 0x0d, 0x1c, true));
+        held.track(&key(EventKind::KeyDown, 0x0d, 0x1c, false));
+        held.track(&key(EventKind::KeyUp, 0x0d, 0x1c, false));
+        held.track(&QueuedEvent {
+            kind: EventKind::MouseDown,
+            button: 3,
+            has_xy: true,
+            ..QueuedEvent::default()
+        });
+        let releases = held.take_releases();
+        let summary: Vec<(EventKind, u32, bool, u8, bool, bool)> = releases
+            .iter()
+            .map(|event| {
+                (
+                    event.kind,
+                    event.keycode,
+                    event.extended,
+                    event.button,
+                    event.ctrl,
+                    event.has_xy,
+                )
+            })
+            .collect();
+        assert_eq!(
+            summary,
+            vec![
+                (EventKind::KeyUp, 0x41, false, 0, false, false),
+                (EventKind::KeyUp, 0x0d, true, 0, false, false),
+                (EventKind::MouseUp, 0, false, 3, false, false),
+            ]
+        );
+        assert!(held.take_releases().is_empty());
     }
 
     #[test]
@@ -799,12 +907,12 @@ mod tests {
 
         unsafe {
             let slots = ring.slots.as_ptr() as *mut QueuedEvent;
-            (*slots.add(idx)).kind = EventKind::Wheel;
-            (*slots.add(idx)).delta_y = 120;
+            (*slots.add(idx)).kind = EventKind::MouseUp;
+            (*slots.add(idx)).button = 4;
         }
         let pop_idx = ring.pop().expect("pop slot") as usize;
-        assert_eq!(ring.slots[pop_idx].kind, EventKind::Wheel);
-        assert_eq!(ring.slots[pop_idx].delta_y, 120);
+        assert_eq!(ring.slots[pop_idx].kind, EventKind::MouseUp);
+        assert_eq!(ring.slots[pop_idx].button, 4);
         ring.release();
         assert!(ring.pop().is_none());
     }

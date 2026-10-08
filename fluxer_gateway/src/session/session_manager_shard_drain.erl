@@ -14,6 +14,7 @@
     validate_identify_sharding/3,
     check_identify_rate_limit/1,
     should_debounce_reactions/1,
+    thread_channels_capable/1,
     extract_e2ee_capable/1,
     fetch_rpc_data/2
 ]).
@@ -21,6 +22,8 @@
 -export_type([handoff_result/0, identify_data/0, session_id/0, shard_identify_data/0, state/0]).
 
 -define(IDENTIFY_FLAG_DEBOUNCE_MESSAGE_REACTIONS, 16#2).
+-define(IDENTIFY_FLAG_CHANNEL_THREADS, 16#4).
+-define(READ_STATE_FLAG_IS_THREAD, 16#2).
 -define(SESSION_RPC_RETRY_CONFIG, {1, 1000, 10000, 500}).
 
 -type session_id() :: binary().
@@ -188,13 +191,19 @@ build_session_data(Data, IdentifyData, Version, SocketPid, SessionId, UserDataMa
         mobile => extract_mobile(Presence, Properties),
         socket_pid => SocketPid,
         guilds => filter_guild_ids_for_identify(Data, IdentifyData),
-        ready => build_ready_data_for_session(Data),
+        ready => filter_thread_read_states(
+            build_ready_data_for_session(Data),
+            thread_channels_capable(IdentifyData),
+            map_utils:get_safe(UserDataMap, <<"bot">>, false) =:= true,
+            UserId
+        ),
         bot => map_utils:get_safe(UserDataMap, <<"bot">>, false),
         e2ee_capable => extract_e2ee_capable(Properties),
         ignored_events => term_detach:detach(IgnoredEvents),
         initial_guild_id => map_utils:get_safe(IdentifyData, initial_guild_id, undefined),
         shard => Shard,
-        debounce_reactions => should_debounce_reactions(IdentifyData)
+        debounce_reactions => should_debounce_reactions(IdentifyData),
+        thread_channels_capable => thread_channels_capable(IdentifyData)
     },
     BaseFields.
 
@@ -285,6 +294,58 @@ build_ready_data_for_session(Data) ->
         _ -> #{}
     end.
 
+-spec filter_thread_read_states(map(), boolean(), boolean(), integer()) -> map().
+filter_thread_read_states(#{<<"read_states">> := Rows} = Ready, Capable, Bot, UserId) when
+    is_list(Rows)
+->
+    case lists:any(fun has_read_state_flags/1, Rows) of
+        false ->
+            Ready;
+        true ->
+            Viewer =
+                case channel_threads_config:loaded() of
+                    false ->
+                        fun(_Row) -> Capable orelse Bot end;
+                    true ->
+                        fun(Row) ->
+                            guild_thread_gate:compute_viewer(
+                                read_state_guild_active(Row), Bot, Capable, UserId
+                            )
+                        end
+                end,
+            Ready#{
+                <<"read_states">> => lists:filtermap(
+                    fun(Row) -> filter_read_state(Row, Capable orelse Bot, Viewer) end, Rows
+                )
+            }
+    end;
+filter_thread_read_states(Ready, _Capable, _Bot, _UserId) ->
+    Ready.
+
+-spec has_read_state_flags(term()) -> boolean().
+has_read_state_flags(#{<<"flags">> := _}) -> true;
+has_read_state_flags(_) -> false.
+
+-spec read_state_guild_active(map()) -> boolean().
+read_state_guild_active(Row) ->
+    case snowflake_id:parse_maybe(maps:get(<<"guild_id">>, Row, undefined)) of
+        GuildId when is_integer(GuildId) -> channel_threads_config:guild_active(GuildId);
+        _ -> true
+    end.
+
+-spec filter_read_state(term(), boolean(), fun((map()) -> boolean())) ->
+    boolean() | {true, term()}.
+filter_read_state(#{<<"flags">> := Flags} = Row, Capable, Viewer) when is_integer(Flags) ->
+    case Flags band ?READ_STATE_FLAG_IS_THREAD =/= 0 andalso not Viewer(Row) of
+        true -> false;
+        false when Capable -> true;
+        false -> {true, maps:remove(<<"flags">>, Row)}
+    end;
+filter_read_state(Row, false, _Viewer) when is_map(Row) ->
+    {true, maps:remove(<<"flags">>, Row)};
+filter_read_state(_Row, _Capable, _Viewer) ->
+    true.
+
 -spec check_identify_rate_limit(list()) -> {ok, list()} | {error, rate_limited}.
 check_identify_rate_limit(Attempts) ->
     case fluxer_gateway_env:get(identify_rate_limit_enabled) of
@@ -306,6 +367,15 @@ should_debounce_reactions(IdentifyData) ->
     case map_utils:get_safe(IdentifyData, flags, 0) of
         Flags when is_integer(Flags), Flags >= 0 ->
             bitset:has(Flags, ?IDENTIFY_FLAG_DEBOUNCE_MESSAGE_REACTIONS);
+        _ ->
+            false
+    end.
+
+-spec thread_channels_capable(map()) -> boolean().
+thread_channels_capable(IdentifyData) ->
+    case map_utils:get_safe(IdentifyData, flags, 0) of
+        Flags when is_integer(Flags), Flags >= 0 ->
+            bitset:has(Flags, ?IDENTIFY_FLAG_CHANNEL_THREADS);
         _ ->
             false
     end.
@@ -349,8 +419,17 @@ do_fetch_rpc_data(Request, PeerIP) ->
         <<"ip">> => PeerIP
     },
     RpcWithCoords = session_manager_shard_lookup:add_coordinates(RpcRequest, Lat, Lon),
-    RpcResult = api_rpc_client:call_with_retry(RpcWithCoords, ?SESSION_RPC_RETRY_CONFIG),
+    RpcWithCapability = add_thread_channels_capable(
+        RpcWithCoords, thread_channels_capable(IdentifyData)
+    ),
+    RpcResult = api_rpc_client:call_with_retry(RpcWithCapability, ?SESSION_RPC_RETRY_CONFIG),
     classify_rpc_result(RpcResult, PeerIP).
+
+-spec add_thread_channels_capable(map(), boolean()) -> map().
+add_thread_channels_capable(RpcRequest, true) ->
+    RpcRequest#{<<"thread_channels_capable">> => true};
+add_thread_channels_capable(RpcRequest, false) ->
+    RpcRequest.
 
 -spec classify_rpc_result(term(), term()) -> {ok, map()} | {error, term()}.
 classify_rpc_result({ok, Data}, _PeerIP) when is_map(Data) -> {ok, Data};
@@ -370,3 +449,87 @@ classify_rpc_result({error, {retries_exhausted, Reason}}, PeerIP) ->
     {error, {retries_exhausted, Reason}};
 classify_rpc_result({error, Reason}, _PeerIP) ->
     {error, {network_error, Reason}}.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+filter_thread_read_states_test() ->
+    Key = channel_threads_config,
+    Previous = persistent_term:get(Key, undefined),
+    persistent_term:put(Key, (channel_threads_config:default_config())#{config_version => 1}),
+    try
+        Rows = [
+            #{<<"id">> => <<"1">>},
+            #{<<"id">> => <<"2">>, <<"flags">> => 1},
+            #{<<"id">> => <<"3">>, <<"flags">> => 3}
+        ],
+        Ready = #{<<"read_states">> => Rows},
+        ?assertEqual(
+            #{<<"read_states">> => [#{<<"id">> => <<"1">>}, #{<<"id">> => <<"2">>}]},
+            filter_thread_read_states(Ready, false, false, 7)
+        ),
+        ?assertEqual(
+            #{
+                <<"read_states">> => [
+                    #{<<"id">> => <<"1">>}, #{<<"id">> => <<"2">>, <<"flags">> => 1}
+                ]
+            },
+            filter_thread_read_states(Ready, true, false, 7)
+        ),
+        Plain = #{<<"read_states">> => [#{<<"id">> => <<"1">>}]},
+        ?assertEqual(Plain, filter_thread_read_states(Plain, false, false, 7))
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end
+    end.
+
+filter_thread_read_states_keeps_thread_rows_before_the_config_loads_test() ->
+    Key = channel_threads_config,
+    Previous = persistent_term:get(Key, undefined),
+    persistent_term:put(Key, channel_threads_config:default_config()),
+    try
+        Thread = #{<<"id">> => <<"1">>, <<"guild_id">> => <<"5">>, <<"flags">> => 3},
+        Ready = #{<<"read_states">> => [Thread]},
+        ?assertEqual(Ready, filter_thread_read_states(Ready, true, false, 7)),
+        ?assertEqual(Ready, filter_thread_read_states(Ready, false, true, 7)),
+        ?assertEqual(
+            #{<<"read_states">> => []}, filter_thread_read_states(Ready, false, false, 7)
+        )
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end
+    end.
+
+filter_thread_read_states_checks_the_row_guild_test() ->
+    Key = channel_threads_config,
+    Previous = persistent_term:get(Key, undefined),
+    persistent_term:put(Key, (channel_threads_config:default_config())#{
+        enabled => true,
+        enabled_guilds => #{<<"5">> => true},
+        included_users => #{<<"7">> => true}
+    }),
+    try
+        Active = #{<<"id">> => <<"1">>, <<"guild_id">> => <<"5">>, <<"flags">> => 3},
+        Inactive = #{<<"id">> => <<"2">>, <<"guild_id">> => <<"6">>, <<"flags">> => 3},
+        Ready = #{<<"read_states">> => [Active, Inactive]},
+        ?assertEqual(
+            #{<<"read_states">> => [Active]}, filter_thread_read_states(Ready, true, false, 7)
+        ),
+        ?assertEqual(
+            #{<<"read_states">> => []}, filter_thread_read_states(Ready, false, false, 7)
+        ),
+        ?assertEqual(
+            #{<<"read_states">> => [Active]}, filter_thread_read_states(Ready, false, true, 8)
+        )
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end
+    end.
+
+-endif.

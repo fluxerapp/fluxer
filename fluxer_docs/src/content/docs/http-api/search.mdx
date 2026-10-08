@@ -277,7 +277,6 @@ Content moderation scans every string in the body whose field name does not end 
 | 200 | [message search result](#message-search-result-object) object \| [search indexing](#search-indexing-object) object | Search completed, or an index it needed is not queryable yet |
 | 400 | [error response](/http-api/#error-response) | A bot supplied a scope other than `current`, the `current` scope has no context, or a requested channel does not belong to the context guild, each returning `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller presents an OAuth2 bearer credential, or the guild of the context channel cannot be resolved while a stored guild record still exists, each returning `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | A body string is blocked by content moderation and the request returns `CONTENT_BLOCKED` |
 | 403 | [error response](/http-api/#error-response) | No search backend is configured for the instance and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | A requested channel is outside the resolved scope, the caller is not a member of the context guild, or the caller cannot view the context channel, each returning `MISSING_PERMISSIONS` |

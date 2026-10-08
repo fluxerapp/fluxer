@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import RuntimeConfig, {DEFAULT_APP_PUBLIC_CONFIG} from '@app/features/app/state/RuntimeConfig';
+import {DEFAULT_APP_SHELL_BRANDING, resolveAppShellBranding} from '@app/features/app/state/AppShellBranding';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {type BrandSvgProps, getDataFlx, getImageSizingProps} from '@app/features/ui/components/icons/BrandImageUtils';
 import FluxerWordmarkMonochromeAsset from '@app/media/images/fluxer-logo-wordmark-monochrome.svg?react';
 import FluxerWordmarkAsset from '@app/media/images/fluxer-wordmark.svg?react';
@@ -20,19 +21,20 @@ interface FluxerWordmarkProps extends BrandSvgProps {
 
 export const FluxerWordmark = observer(({variant = 'default', ...props}: FluxerWordmarkProps) => {
 	const {i18n} = useLingui();
-	const productName = RuntimeConfig.productName;
+	const branding = resolveAppShellBranding(RuntimeConfig.getSnapshotOrNull());
+	const productName = branding.productName;
 	const ariaLabel = i18n._(APPLICATION_WORDMARK_DESCRIPTOR, {productName});
-	if (RuntimeConfig.wordmarkUrl) {
+	if (branding.wordmarkUrl !== null) {
 		return (
 			<img
 				{...getImageSizingProps(props)}
-				src={RuntimeConfig.wordmarkUrl}
+				src={branding.wordmarkUrl}
 				alt={ariaLabel}
 				data-flx={getDataFlx(props, 'ui.icons.fluxer-wordmark.img')}
 			/>
 		);
 	}
-	if (productName !== DEFAULT_APP_PUBLIC_CONFIG.branding.product_name) {
+	if (productName !== DEFAULT_APP_SHELL_BRANDING.productName) {
 		const style: React.CSSProperties = {
 			...(props.style as React.CSSProperties | undefined),
 			alignItems: 'center',

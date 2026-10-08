@@ -19,21 +19,22 @@ const UNRENDERED_INDEX_TEMPLATE = [
 	'<!doctype html><html lang="en"><head>',
 	'<link rel="preconnect" href="{{STATIC_CDN_ENDPOINT}}">',
 	'<link rel="apple-touch-icon" href="{{STATIC_CDN_ENDPOINT}}/web/apple-touch-icon.png">',
-	'<script nonce="{{CSP_NONCE_PLACEHOLDER}}"></script>',
+	'<script></script>',
 	'</head><body><div id="root"></div></body></html>',
 ].join('');
 
 const RENDERED_INDEX_DOCUMENT = [
 	'<!doctype html><html lang="en"><head>',
 	'<link rel="preconnect" href="https://cdn.fluxer.test">',
-	'<script nonce="abc123">window.__FLUXER_BOOTSTRAP__={"instance":{}};</script>',
+	'<script>window.__FLUXER_BOOTSTRAP__={"instance":{}};</script>',
 	'</head><body><div id="root"></div></body></html>',
 ].join('');
 
+const MARKETING_DOCUMENT = '<!doctype html><html lang="en"><head></head><body>Marketing</body></html>';
+
 const DEPLOYED_PRECACHE_MANIFEST: ReadonlyArray<PrecacheEntry> = [
-	{url: '/index.html', revision: '2757:1'},
-	{url: '/', revision: '2757:1'},
-	{url: '/assets/app.js', revision: '10:1'},
+	{url: '/manifest.json', revision: '512:1'},
+	{url: '/version.json', revision: '32:1'},
 ];
 
 class FakeCache {
@@ -97,11 +98,13 @@ function createAppProxyFetch(navigationDelayMs: number): (request: Request) => P
 		if (pathname === '/index.html') {
 			return new Response(UNRENDERED_INDEX_TEMPLATE, {headers: {'content-type': 'text/html; charset=utf-8'}});
 		}
-		if (pathname === '/assets/app.js') {
-			return new Response('console.log(1)', {headers: {'content-type': 'text/javascript'}});
+		if (pathname === '/manifest.json' || pathname === '/version.json') {
+			return new Response('{}', {headers: {'content-type': 'application/json'}});
 		}
 		await delay(navigationDelayMs);
-		return new Response(RENDERED_INDEX_DOCUMENT, {headers: {'content-type': 'text/html; charset=utf-8'}});
+		return new Response(RENDERED_INDEX_DOCUMENT, {
+			headers: {'content-type': 'text/html; charset=utf-8', 'x-fluxer-app-shell': '1'},
+		});
 	};
 }
 
@@ -153,16 +156,6 @@ describe('WorkerAppShell', () => {
 		expect(html).toBe(RENDERED_INDEX_DOCUMENT);
 	});
 
-	it('keeps documents out of the precache', async () => {
-		const runtime = createRuntime(0);
-		await precacheAssets(runtime, DEPLOYED_PRECACHE_MANIFEST);
-
-		const precache = await cacheStorage.open(PRECACHE_NAME);
-
-		expect(await precache.match('/index.html')).toBeUndefined();
-		expect(await precache.match('/')).toBeUndefined();
-		expect(await precache.match('/assets/app.js')).toBeDefined();
-	});
 	it('serves the seeded app shell when the network is unavailable', async () => {
 		await seedAppShell(createRuntime(0));
 
@@ -192,5 +185,22 @@ describe('WorkerAppShell', () => {
 
 		expect(html).toContain('window.__FLUXER_BOOTSTRAP__');
 		expect(html).not.toContain('{{STATIC_CDN_ENDPOINT}}');
+	});
+
+	it('never keeps a document without the app shell marker as the app shell', async () => {
+		await seedAppShell(createRuntime(0));
+		const marketingRuntime: AppShellRuntime = {
+			...createRuntime(0),
+			fetch: async () => new Response(MARKETING_DOCUMENT, {headers: {'content-type': 'text/html; charset=utf-8'}}),
+		};
+		await fetchAppShellNavigation(marketingRuntime, navigationRequest('/channels/@me'));
+
+		const offlineRuntime: AppShellRuntime = {
+			...createRuntime(0),
+			fetch: () => Promise.reject(new Error('Failed to fetch')),
+		};
+		const response = await fetchAppShellNavigation(offlineRuntime, navigationRequest('/channels/@me'));
+
+		expect(await response.text()).toBe(RENDERED_INDEX_DOCUMENT);
 	});
 });

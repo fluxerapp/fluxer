@@ -11,7 +11,8 @@ import type {UserSettings} from '@app/api/models/UserSettings';
 import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
 import {BaseUserUpdatePropagator} from '@app/api/user/services/BaseUserUpdatePropagator';
 import {propagatePartialUserChange} from '@app/api/user/services/PartialUserChangePropagation';
-import {mapUserGuildSettingsToResponse, mapUserSettingsToResponse} from '@app/api/user/UserMappers';
+import {dispatchUserGuildSettingsUpdate} from '@app/api/user/UserGuildSettingsThreadView';
+import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
 
 interface UserAccountUpdatePropagatorDeps {
 	userCacheService: UserCacheService;
@@ -48,19 +49,7 @@ export class UserAccountUpdatePropagator extends BaseUserUpdatePropagator {
 		userId: UserID;
 		settings: UserGuildSettings;
 	}): Promise<void> {
-		const payload = mapUserGuildSettingsToResponse(settings);
-		await this.deps.gatewayService.dispatchPresence({
-			userId,
-			event: 'USER_GUILD_SETTINGS_UPDATE',
-			data: payload,
-		});
-		if (payload.guild_id !== null) {
-			await this.deps.gatewayService.syncPushUserGuildSettings({
-				userId,
-				guildId: settings.guildId,
-				settings: payload,
-			});
-		}
+		await dispatchUserGuildSettingsUpdate(this.deps.gatewayService, userId, settings);
 	}
 
 	async dispatchUserNoteUpdate(params: {userId: UserID; targetId: UserID; note: string}): Promise<void> {

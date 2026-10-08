@@ -65,15 +65,17 @@ function formatSlowmodeDuration(i18n: I18n, seconds: number): string {
 
 interface SlowmodeControlProps {
 	form: UseFormReturn<FormInputs>;
+	name?: 'slowmode' | 'default_thread_rate_limit_per_user';
+	label?: string;
 }
 
-export const SlowmodeControl: React.FC<SlowmodeControlProps> = ({form}) => {
+export const SlowmodeControl: React.FC<SlowmodeControlProps> = ({form, name = 'slowmode', label}) => {
 	const {i18n} = useLingui();
-	const slowmodeLabel = i18n._(SLOWMODE_DESCRIPTOR);
+	const slowmodeLabel = label ?? i18n._(SLOWMODE_DESCRIPTOR);
 	const bypassSlowmodePermissionLabel = formatPermissionLabel(i18n, Permissions.BYPASS_SLOWMODE);
 	return (
 		<Controller
-			name="slowmode"
+			name={name}
 			control={form.control}
 			render={({field}) => {
 				let currentSeconds: number;

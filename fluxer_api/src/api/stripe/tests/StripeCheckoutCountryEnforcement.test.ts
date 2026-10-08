@@ -167,4 +167,37 @@ describe('StripeCheckoutCountryEnforcement', () => {
 		expect(priceIds.currency).toBe('BRL');
 		expect(priceIds.monthly).toBe(MOCK_PRICES.monthlyBrl);
 	});
+	test('offers pix and nothing else for a localized BRL subscription', async () => {
+		lookupGeoipMock.mockResolvedValue(geoipCountry('BR'));
+		const token = await createPurchaser();
+		await createBuilder<{url: string}>(harness, token)
+			.post('/stripe/checkout/subscription')
+			.body({price_id: MOCK_PRICES.monthlyBrl, country_code: 'BR'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(1);
+		expect(stripeHandlers.spies.createdCheckoutSessions[0].payment_method_types).toEqual(['pix']);
+	});
+
+	test('forces pix even when the caller explicitly asks for card on a BRL subscription', async () => {
+		lookupGeoipMock.mockResolvedValue(geoipCountry('BR'));
+		const token = await createPurchaser();
+		await createBuilder<{url: string}>(harness, token)
+			.post('/stripe/checkout/subscription')
+			.body({price_id: MOCK_PRICES.monthlyBrl, country_code: 'BR', payment_method: 'card'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(stripeHandlers.spies.createdCheckoutSessions[0].payment_method_types).toEqual(['pix']);
+	});
+
+	test('leaves payment methods open for a base-currency subscription', async () => {
+		lookupGeoipMock.mockResolvedValue(geoipCountry('US'));
+		const token = await createPurchaser();
+		await createBuilder<{url: string}>(harness, token)
+			.post('/stripe/checkout/subscription')
+			.body({price_id: MOCK_PRICES.monthlyUsd, country_code: 'US'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(stripeHandlers.spies.createdCheckoutSessions[0].payment_method_types).toBeUndefined();
+	});
 });

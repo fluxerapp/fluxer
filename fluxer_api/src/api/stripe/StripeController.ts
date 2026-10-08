@@ -6,10 +6,17 @@ import {CaptchaMiddleware} from '@app/api/middleware/CaptchaMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {
+	getEffectiveBillingConfig,
+	isBillingActive,
+	isPremiumTieringActive,
+	isStripeServiceable,
+} from '@app/api/stripe/BillingConfigCache';
 import {mapGiftCodeToMetadataResponse, mapGiftCodeToResponse} from '@app/api/stripe/StripeModel';
-import type {HonoApp} from '@app/api/types/HonoEnv';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {Validator} from '@app/api/Validator';
+import {AppNotFoundHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {StripeWebhookNotAvailableError} from '@fluxer/errors/src/domains/payment/StripeWebhookNotAvailableError';
 import {StripeWebhookSignatureInvalidError} from '@fluxer/errors/src/domains/payment/StripeWebhookSignatureInvalidError';
 import {StripeWebhookSignatureMissingError} from '@fluxer/errors/src/domains/payment/StripeWebhookSignatureMissingError';
@@ -22,8 +29,6 @@ import {
 import {
 	ChangeSubscriptionRequest,
 	CurrentSubscriptionPriceResponse,
-	LocalizedCardPreapprovalContinueRequest,
-	LocalizedCardPreapprovalContinueResponse,
 	PriceIdsQueryRequest,
 	PriceIdsResponse,
 	SelfServeRefundEligibilityResponse,
@@ -32,15 +37,37 @@ import {
 	UrlResponse,
 	WebhookReceivedResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
+import {createMiddleware} from 'hono/factory';
 
 async function getPurchaseGeoipCountryCode(request: Request): Promise<string | null> {
 	const geoip = await lookupGeoip(request);
 	return geoip.countryCode ?? null;
 }
 
+function routeAvailableWhen(isAvailable: () => boolean) {
+	return createMiddleware<HonoEnv>(async (ctx, next) => {
+		if (Config.instance.selfHosted && !isAvailable()) {
+			return AppNotFoundHandler(ctx);
+		}
+		return next();
+	});
+}
+
+function isStripeWebhookAvailable(): boolean {
+	const billing = getEffectiveBillingConfig();
+	return billing.webhookSecret !== null && isStripeServiceable(billing);
+}
+
+const HostedOnlyRoute = routeAvailableWhen(() => false);
+const GiftRouteAvailable = routeAvailableWhen(isPremiumTieringActive);
+const BillingRouteAvailable = routeAvailableWhen(() => isBillingActive());
+const StripeServicingRouteAvailable = routeAvailableWhen(() => isStripeServiceable());
+const StripeWebhookRouteAvailable = routeAvailableWhen(isStripeWebhookAvailable);
+
 export function StripeController(app: HonoApp) {
 	app.post(
 		'/stripe/webhook',
+		StripeWebhookRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_WEBHOOK),
 		OpenAPI({
 			operationId: 'process_stripe_webhook',
@@ -57,12 +84,13 @@ export function StripeController(app: HonoApp) {
 				throw new StripeWebhookSignatureMissingError();
 			}
 			const stripe = ctx.get('stripeService').getStripe();
-			if (!stripe || !Config.stripe.webhookSecret) {
+			const webhookSecret = getEffectiveBillingConfig().webhookSecret;
+			if (!stripe || !webhookSecret) {
 				throw new StripeWebhookNotAvailableError();
 			}
 			const body = await ctx.req.text();
 			try {
-				stripe.webhooks.constructEvent(body, signature, Config.stripe.webhookSecret);
+				stripe.webhooks.constructEvent(body, signature, webhookSecret);
 			} catch {
 				throw new StripeWebhookSignatureInvalidError();
 			}
@@ -72,6 +100,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/stripe/checkout/subscription',
+		BillingRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_CHECKOUT_SUBSCRIPTION),
 		LoginRequired,
 		DefaultUserOnly,
@@ -110,59 +139,8 @@ export function StripeController(app: HonoApp) {
 		},
 	);
 	app.post(
-		'/stripe/checkout/subscription/preapproval',
-		RateLimitMiddleware(RateLimitConfigs.STRIPE_CHECKOUT_SUBSCRIPTION_PREAPPROVAL),
-		LoginRequired,
-		DefaultUserOnly,
-		OpenAPI({
-			operationId: 'create_localized_card_preapproval_session',
-			summary: 'Create localized card preapproval session',
-			description:
-				'Initiates a Stripe Checkout setup-mode session to preapprove a local card before continuing to paid localized checkout.',
-			responseSchema: UrlResponse,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: 'Billing',
-		}),
-		Validator('json', CreateCheckoutSessionRequest),
-		async (ctx) => {
-			const {price_id, country_code, client_geoip_country_code, eu_withdrawal_waiver_accepted, is_business} =
-				ctx.req.valid('json');
-			const userId = ctx.get('user').id;
-			const checkoutUrl = await ctx.get('stripeService').createLocalizedCardPreapprovalSession({
-				userId,
-				priceId: price_id,
-				countryCode: country_code,
-				clientGeoipCountryCode: client_geoip_country_code,
-				purchaseGeoipCountryCode: await getPurchaseGeoipCountryCode(ctx.req.raw),
-				euWithdrawalWaiverAccepted: eu_withdrawal_waiver_accepted,
-				isBusiness: is_business,
-			});
-			return ctx.json({url: checkoutUrl});
-		},
-	);
-	app.post(
-		'/stripe/checkout/subscription/preapproval/continue',
-		RateLimitMiddleware(RateLimitConfigs.STRIPE_CHECKOUT_SUBSCRIPTION_PREAPPROVAL_CONTINUE),
-		OpenAPI({
-			operationId: 'continue_localized_card_preapproval_session',
-			summary: 'Continue localized card preapproval session',
-			description:
-				'Checks the status of a localized card preapproval flow and returns the paid Stripe Checkout URL when it is ready.',
-			responseSchema: LocalizedCardPreapprovalContinueResponse,
-			statusCode: 200,
-			security: [],
-			tags: 'Billing',
-		}),
-		Validator('json', LocalizedCardPreapprovalContinueRequest),
-		async (ctx) => {
-			const {token} = ctx.req.valid('json');
-			const result = await ctx.get('stripeService').continueLocalizedCardPreapproval(token);
-			return ctx.json(result);
-		},
-	);
-	app.post(
 		'/stripe/checkout/gift',
+		BillingRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_CHECKOUT_GIFT),
 		LoginRequired,
 		DefaultUserOnly,
@@ -195,6 +173,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.get(
 		'/gifts/:code',
+		GiftRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.GIFT_CODE_GET),
 		OpenAPI({
 			operationId: 'get_gift_code',
@@ -220,6 +199,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/gifts/:code/redeem',
+		GiftRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.GIFT_CODE_REDEEM),
 		LoginRequired,
 		DefaultUserOnly,
@@ -243,6 +223,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.get(
 		'/users/@me/gifts',
+		GiftRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.GIFTS_LIST),
 		LoginRequired,
 		DefaultUserOnly,
@@ -272,6 +253,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.get(
 		'/premium/price-ids',
+		BillingRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_PRICE_IDS),
 		Validator('query', PriceIdsQueryRequest),
 		OpenAPI({
@@ -292,6 +274,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.get(
 		'/premium/current-subscription-price',
+		StripeServicingRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_CURRENT_SUBSCRIPTION_PRICE),
 		LoginRequired,
 		DefaultUserOnly,
@@ -313,6 +296,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/premium/customer-portal',
+		StripeServicingRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_CUSTOMER_PORTAL),
 		LoginRequired,
 		DefaultUserOnly,
@@ -334,6 +318,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/premium/grace/end',
+		StripeServicingRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_PREMIUM_GRACE_END),
 		LoginRequired,
 		DefaultUserOnly,
@@ -355,6 +340,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/users/@me/age-verification',
+		HostedOnlyRoute,
 		RateLimitMiddleware(RateLimitConfigs.AGE_VERIFICATION),
 		LoginRequired,
 		DefaultUserOnly,
@@ -369,13 +355,18 @@ export function StripeController(app: HonoApp) {
 			tags: 'Billing',
 		}),
 		async (ctx) => {
+			const ageVerificationService = ctx.get('ageVerificationService');
+			if (!ageVerificationService) {
+				return AppNotFoundHandler(ctx);
+			}
 			const userId = ctx.get('user').id;
-			const url = await ctx.get('ageVerificationService').createVerificationSession(userId);
+			const url = await ageVerificationService.createVerificationSession(userId);
 			return ctx.json({url});
 		},
 	);
 	app.get(
 		'/premium/refund-eligibility',
+		HostedOnlyRoute,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_REFUND_ELIGIBILITY),
 		LoginRequired,
 		DefaultUserOnly,
@@ -397,6 +388,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/premium/refund-latest',
+		HostedOnlyRoute,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_REFUND_LATEST),
 		LoginRequired,
 		DefaultUserOnly,
@@ -418,6 +410,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/premium/cancel-subscription',
+		StripeServicingRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_SUBSCRIPTION_CANCEL),
 		LoginRequired,
 		DefaultUserOnly,
@@ -438,6 +431,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/premium/reactivate-subscription',
+		StripeServicingRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_SUBSCRIPTION_REACTIVATE),
 		LoginRequired,
 		DefaultUserOnly,
@@ -458,6 +452,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/premium/change-subscription',
+		StripeServicingRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_SUBSCRIPTION_CHANGE),
 		LoginRequired,
 		DefaultUserOnly,
@@ -481,6 +476,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/premium/switch-to-list-price',
+		HostedOnlyRoute,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_SUBSCRIPTION_CHANGE),
 		LoginRequired,
 		DefaultUserOnly,
@@ -502,6 +498,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/premium/cancel-pending-subscription-change',
+		StripeServicingRouteAvailable,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_SUBSCRIPTION_CHANGE),
 		LoginRequired,
 		DefaultUserOnly,
@@ -523,6 +520,7 @@ export function StripeController(app: HonoApp) {
 	);
 	app.post(
 		'/premium/visionary/rejoin',
+		HostedOnlyRoute,
 		RateLimitMiddleware(RateLimitConfigs.STRIPE_VISIONARY_REJOIN),
 		LoginRequired,
 		DefaultUserOnly,

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Authentication from '@app/features/auth/state/Authentication';
+import ForumPosts from '@app/features/forum/state/ForumPosts';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import {TooManyReactionsModal} from '@app/features/messaging/components/alerts/TooManyReactionsModal';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
@@ -12,10 +14,11 @@ import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import {blockIfAccountLimited, showAccountLimitedModal} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import type {ReactionUsersPageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -52,6 +55,15 @@ const checkReactionResponse = (i18n: I18n, error: HttpError): boolean => {
 					<FeatureTemporarilyDisabledModal data-flx="messaging.reaction-commands.check-reaction-response.feature-temporarily-disabled-modal" />
 				)),
 			);
+			return true;
+		}
+		if (errorCode === APIErrorCodes.ACCOUNT_LIMITED) {
+			logger.debug('Account limited, not retrying');
+			showAccountLimitedModal(failureMessage(error));
+			return true;
+		}
+		if (errorCode === APIErrorCodes.NEW_CONVERSATIONS_LIMITED) {
+			showDmActionErrorModal(error);
 			return true;
 		}
 		if (errorCode === APIErrorCodes.COMMUNICATION_DISABLED) {
@@ -108,10 +120,15 @@ const optimisticUpdate = (
 			optimistic: true,
 			skipReactionStore: true,
 		});
+		if (actualUserId === Authentication.currentUserId) {
+			ForumPosts.handleReaction(channelId, messageId, emoji, type === 'MESSAGE_REACTION_ADD', true);
+		}
 	} else if (type === 'MESSAGE_REACTION_REMOVE_ALL') {
 		Messages.handleRemoveAllReactions({channelId, messageId});
+		ForumPosts.handleReactionClear(channelId, messageId);
 	} else if (type === 'MESSAGE_REACTION_REMOVE_EMOJI') {
 		Messages.handleRemoveReactionEmoji({channelId, messageId, emoji});
+		ForumPosts.handleReactionClear(channelId, messageId, emoji);
 	}
 	logger.debug(
 		`Optimistically applied ${type} for message ${messageId} ` +
@@ -298,6 +315,7 @@ export async function loadMoreReactions(
 }
 
 export function addReaction(i18n: I18n, channelId: string, messageId: string, emoji: ReactionEmoji): void {
+	if (blockIfAccountLimited()) return;
 	logger.debug(`Adding reaction ${emoji.name} to message ${messageId}`);
 	const apiFunc = () => addReactionRequest(channelId, messageId, emoji);
 	performReactionAction(i18n, 'MESSAGE_REACTION_ADD', apiFunc, channelId, messageId, emoji);

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {makeAutoObservable} from 'mobx';
 
-const SIDEBAR_WIDTH_STORAGE_KEY = 'fluxer:ui:sidebar-width';
 const SIDEBAR_WIDTH_MIN = 200;
 const SIDEBAR_WIDTH_MAX = 480;
 const SIDEBAR_WIDTH_DEFAULT = 320;
@@ -21,15 +21,15 @@ function parseSidebarWidth(value: string | null): number | null {
 }
 
 class SidebarWidth {
-	width: number | null = parseSidebarWidth(AppStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY));
+	width: number | null = parseSidebarWidth(AppStorage.getItem(AppStorageKey.UI_SIDEBAR_WIDTH));
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		AppStorage.subscribe(this.loadStoredWidth, {key: SIDEBAR_WIDTH_STORAGE_KEY, source: 'external'});
+		AppStorage.subscribe(this.loadStoredWidth, {key: AppStorageKey.UI_SIDEBAR_WIDTH, source: 'external'});
 	}
 
 	private loadStoredWidth(): void {
-		this.width = parseSidebarWidth(AppStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY));
+		this.width = parseSidebarWidth(AppStorage.getItem(AppStorageKey.UI_SIDEBAR_WIDTH));
 	}
 
 	get cssValue(): string | null {
@@ -40,13 +40,13 @@ class SidebarWidth {
 	setWidth(width: number, persist: boolean): number {
 		const clamped = clampSidebarWidth(width);
 		this.width = clamped;
-		if (persist) AppStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, `${clamped}`);
+		if (persist) AppStorage.setItem(AppStorageKey.UI_SIDEBAR_WIDTH, `${clamped}`);
 		return clamped;
 	}
 
 	reset(): void {
 		this.width = null;
-		AppStorage.removeItem(SIDEBAR_WIDTH_STORAGE_KEY);
+		AppStorage.removeItem(AppStorageKey.UI_SIDEBAR_WIDTH);
 	}
 }
 

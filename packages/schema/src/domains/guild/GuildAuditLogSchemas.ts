@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {AuditLogActionTypeSchema} from '@fluxer/schema/src/primitives/AuditLogValidators';
+import {
+	AuditLogActionTypeFilterSchema,
+	AuditLogActionTypeSchema,
+} from '@fluxer/schema/src/primitives/AuditLogValidators';
 import {
 	coerceNumberFromString,
 	Int32Type,
@@ -95,6 +99,10 @@ export const GuildAuditLogListResponse = z.object({
 	audit_log_entries: z.array(GuildAuditLogEntryResponse).describe('Array of audit log entries'),
 	users: z.array(UserPartialResponse).describe('Users referenced in the audit log entries'),
 	webhooks: z.array(AuditLogWebhookResponse).describe('Webhooks referenced in the audit log entries'),
+	threads: z
+		.array(z.lazy(() => ThreadChannelResponse))
+		.optional()
+		.describe('Threads referenced in the audit log entries, when the viewer can see threads'),
 });
 
 export type GuildAuditLogListResponse = z.infer<typeof GuildAuditLogListResponse>;
@@ -106,9 +114,15 @@ export const GuildAuditLogListQuery = z.object({
 	before: SnowflakeType.optional().describe('Get entries before this audit log entry ID'),
 	after: SnowflakeType.optional().describe('Get entries after this audit log entry ID'),
 	user_id: SnowflakeType.optional().describe('Filter entries by the user who performed the action'),
-	action_type: coerceNumberFromString(AuditLogActionTypeSchema)
+	action_type: coerceNumberFromString(AuditLogActionTypeFilterSchema)
 		.optional()
 		.describe('Filter entries by the type of action'),
 });
 
 export type GuildAuditLogListQuery = z.infer<typeof GuildAuditLogListQuery>;
+
+export const GuildAuditLogListQueryWithThreads = GuildAuditLogListQuery.extend({
+	action_type: coerceNumberFromString(AuditLogActionTypeSchema)
+		.optional()
+		.describe('Filter entries by the type of action'),
+});

@@ -1319,7 +1319,7 @@ mod tests {
     }
 
     #[test]
-    fn format_pod_with_modifiers_carries_mandatory_dont_fixate_choice() {
+    fn format_pod_with_modifiers_has_mandatory_dont_fixate_choice() {
         let bytes = serialize_video_format_pod(VideoFormat::BGRA, Some(&DMABUF_MODIFIERS_BASELINE))
             .expect("modifier pod serializes");
         let obj = deserialize_format_object(&bytes);

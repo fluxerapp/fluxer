@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {http} from '@app/features/platform/transport/RestTransport';
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -65,6 +66,7 @@ function isDocumentHidden(): boolean {
 
 class ExperimentAssignmentsStore {
 	response: ExperimentAssignmentsResponse = INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE;
+	ownerId: string | null = null;
 	private started = false;
 	private etag: string | null = null;
 	private listening = false;
@@ -100,11 +102,15 @@ class ExperimentAssignmentsStore {
 		);
 	}
 
-	start(): void {
+	start(ownerId: string | null = null): void {
+		if (this.started && this.ownerId !== ownerId) {
+			this.reset();
+		}
 		if (this.started || this.pollingDisabled) {
 			return;
 		}
 		this.started = true;
+		this.ownerId = ownerId;
 		try {
 			this.addVisibilityListener();
 			if (isDocumentHidden()) {
@@ -139,6 +145,7 @@ class ExperimentAssignmentsStore {
 		this.notFoundStreak = 0;
 		this.pollingDisabled = false;
 		this.lastFetchStartedAt = 0;
+		this.ownerId = null;
 		this.setResponse(INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE);
 	}
 
@@ -326,5 +333,7 @@ class ExperimentAssignmentsStore {
 }
 
 export const ExperimentAssignments = new ExperimentAssignmentsStore();
+
+ResettableStates.register(ExperimentAssignments, ExperimentAssignments.reset);
 
 export default ExperimentAssignments;

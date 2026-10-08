@@ -12,7 +12,14 @@ describe('MessageTypeSchema', () => {
 		},
 	);
 
-	it.each([MessageTypes.CLIENT_SYSTEM, 8, -1, 0.5, '0', null])('rejects non-wire message type %j', (value) => {
+	it.each([MessageTypes.THREAD_CREATED, MessageTypes.THREAD_STARTER_MESSAGE])(
+		'accepts thread message type %i',
+		(value) => {
+			expect(MessageTypeSchema.parse(value)).toBe(value);
+		},
+	);
+
+	it.each([MessageTypes.CLIENT_SYSTEM, 8, 20, -1, 0.5, '0', null])('rejects non-wire message type %j', (value) => {
 		expect(MessageTypeSchema.safeParse(value).success).toBe(false);
 	});
 });

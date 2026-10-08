@@ -42,8 +42,6 @@ function sameMicrophoneOptions(
 		a?.echoCancellation === b?.echoCancellation &&
 		a?.noiseSuppression === b?.noiseSuppression &&
 		a?.autoGainControl === b?.autoGainControl &&
-		a?.deepFilter === b?.deepFilter &&
-		a?.deepFilterNoiseReductionLevel === b?.deepFilterNoiseReductionLevel &&
 		a?.maxBitrateBps === b?.maxBitrateBps
 	);
 }

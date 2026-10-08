@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getCurrency, getCurrencyPreferences, getGiftCurrencyPreferences} from '@app/api/utils/CurrencyUtils';
+import {Config} from '@app/api/Config';
+import {
+	getCurrency,
+	getCurrencyPreferences,
+	getGiftCurrencyPreferences,
+	shouldDisableAdaptivePricing,
+} from '@app/api/utils/CurrencyUtils';
 import {describe, expect, it} from 'vitest';
 
 describe('getCurrency', () => {
@@ -79,8 +85,8 @@ describe('getCurrency', () => {
 		it('returns NOK for Norway (EEA but not EU)', () => {
 			expect(getCurrency('NO')).toBe('NOK');
 		});
-		it('returns EUR for Iceland (EEA but not EU)', () => {
-			expect(getCurrency('IS')).toBe('EUR');
+		it('returns ISK for Iceland (EEA but not EU)', () => {
+			expect(getCurrency('IS')).toBe('ISK');
 		});
 		it('returns EUR for Liechtenstein (EEA but not EU)', () => {
 			expect(getCurrency('LI')).toBe('EUR');
@@ -146,8 +152,8 @@ describe('getCurrency', () => {
 			'SK',
 			'SI',
 			'ES',
-			'IS',
 			'LI',
+			'AX',
 		];
 		for (const country of eeaCountries) {
 			it(`returns EUR for ${country}`, () => {
@@ -166,19 +172,62 @@ describe('getCurrency', () => {
 		it('uses local currency for Norway', () => {
 			expect(getCurrency('NO')).toBe('NOK');
 		});
+		it('uses local currency for Iceland', () => {
+			expect(getCurrency('IS')).toBe('ISK');
+		});
+	});
+	describe('maps Nordic territories to their home currency', () => {
+		it('returns DKK for the Faroe Islands and Greenland', () => {
+			expect(getCurrencyPreferences('FO')).toEqual(['DKK', 'EUR', 'USD']);
+			expect(getCurrencyPreferences('GL')).toEqual(['DKK', 'EUR', 'USD']);
+		});
+		it('returns NOK for Svalbard and Jan Mayen', () => {
+			expect(getCurrencyPreferences('SJ')).toEqual(['NOK', 'EUR', 'USD']);
+		});
+		it('returns ISK with EUR as the fallback for Iceland', () => {
+			expect(getCurrencyPreferences('IS')).toEqual(['ISK', 'EUR', 'USD']);
+		});
+		it('returns EUR for Åland', () => {
+			expect(getCurrencyPreferences('AX')).toEqual(['EUR', 'USD']);
+		});
+	});
+});
+
+describe('shouldDisableAdaptivePricing', () => {
+	it('disables adaptive pricing for the native Nordic currencies', () => {
+		for (const currency of ['SEK', 'NOK', 'DKK', 'ISK', 'sek']) {
+			expect(shouldDisableAdaptivePricing(currency)).toBe(true);
+		}
+	});
+	it('leaves adaptive pricing alone for every other currency', () => {
+		for (const currency of ['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']) {
+			expect(shouldDisableAdaptivePricing(currency)).toBe(false);
+		}
+	});
+	it('leaves adaptive pricing alone on a self-hosted instance', () => {
+		const originalSelfHosted = Config.instance.selfHosted;
+		Config.instance.selfHosted = true;
+		try {
+			expect(shouldDisableAdaptivePricing('SEK')).toBe(false);
+		} finally {
+			Config.instance.selfHosted = originalSelfHosted;
+		}
 	});
 });
 
 describe('getGiftCurrencyPreferences', () => {
-	it('never offers a localized currency that is cheaper than the base price', () => {
+	it('never offers BRL, INR, PLN or TRY gifts', () => {
 		for (const country of ['BR', 'IN', 'PL', 'TR']) {
 			expect(getGiftCurrencyPreferences(country)).not.toContain(getCurrencyPreferences(country)[0]);
 		}
 	});
-	it('offers the localized currency where it is not cheaper than the base price', () => {
+	it('offers the Nordic localized currencies for gifts', () => {
 		expect(getGiftCurrencyPreferences('SE')).toEqual(['SEK', 'EUR', 'USD']);
 		expect(getGiftCurrencyPreferences('DK')).toEqual(['DKK', 'EUR', 'USD']);
 		expect(getGiftCurrencyPreferences('NO')).toEqual(['NOK', 'EUR', 'USD']);
+		expect(getGiftCurrencyPreferences('IS')).toEqual(['ISK', 'EUR', 'USD']);
+		expect(getGiftCurrencyPreferences('FO')).toEqual(['DKK', 'EUR', 'USD']);
+		expect(getGiftCurrencyPreferences('SJ')).toEqual(['NOK', 'EUR', 'USD']);
 	});
 	it('uses EUR for other EEA countries', () => {
 		expect(getGiftCurrencyPreferences('DE')).toEqual(['EUR', 'USD']);

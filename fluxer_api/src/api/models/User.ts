@@ -25,7 +25,6 @@ export class User {
 	readonly email: string | null;
 	readonly emailVerified: boolean;
 	readonly emailBounced: boolean;
-	readonly hasVerifiedPhone: boolean;
 	readonly passwordHash: string | null;
 	readonly passwordLastChangedAt: Date | null;
 	readonly totpSecret: string | null;
@@ -54,7 +53,6 @@ export class User {
 	readonly stripeSubscriptionId: string | null;
 	readonly stripeCustomerId: string | null;
 	readonly hasEverPurchased: boolean;
-	readonly suspiciousActivityFlags: number;
 	readonly termsAgreedAt: Date | null;
 	readonly privacyAgreedAt: Date | null;
 	readonly lastActiveAt: Date | null;
@@ -68,6 +66,9 @@ export class User {
 	readonly deletionReasonCode: number | null;
 	readonly deletionPublicReason: string | null;
 	readonly deletionAuditLogReason: string | null;
+	readonly deletionScheduledBy: UserID | null;
+	readonly deletionScheduledAt: Date | null;
+	readonly contentHiddenSince: Date | null;
 	readonly acls: Set<string>;
 	private readonly _traits: Set<string>;
 	readonly firstRefundAt: Date | null;
@@ -88,7 +89,6 @@ export class User {
 		this.email = row.email ?? null;
 		this.emailVerified = row.email_verified ?? false;
 		this.emailBounced = row.email_bounced ?? false;
-		this.hasVerifiedPhone = row.has_verified_phone ?? false;
 		this.passwordHash = row.password_hash ?? null;
 		this.passwordLastChangedAt = row.password_last_changed_at ?? null;
 		this.totpSecret = row.totp_secret ?? null;
@@ -118,7 +118,6 @@ export class User {
 		this.stripeSubscriptionId = row.stripe_subscription_id ?? null;
 		this.stripeCustomerId = row.stripe_customer_id ?? null;
 		this.hasEverPurchased = row.has_ever_purchased ?? false;
-		this.suspiciousActivityFlags = row.suspicious_activity_flags ?? 0;
 		this.termsAgreedAt = row.terms_agreed_at ?? null;
 		this.privacyAgreedAt = row.privacy_agreed_at ?? null;
 		this.lastActiveAt = row.last_active_at ?? null;
@@ -132,6 +131,9 @@ export class User {
 		this.deletionReasonCode = row.deletion_reason_code ?? null;
 		this.deletionPublicReason = row.deletion_public_reason ?? null;
 		this.deletionAuditLogReason = row.deletion_audit_log_reason ?? null;
+		this.deletionScheduledBy = row.deletion_scheduled_by ?? null;
+		this.deletionScheduledAt = row.deletion_scheduled_at ?? null;
+		this.contentHiddenSince = row.content_hidden_since ?? null;
 		this.acls = row.acls ?? new Set();
 		this._traits = row.traits ?? new Set();
 		this.firstRefundAt = row.first_refund_at ?? null;
@@ -180,7 +182,6 @@ export class User {
 			email: this.email,
 			email_verified: this.emailVerified,
 			email_bounced: this.emailBounced,
-			has_verified_phone: this.hasVerifiedPhone,
 			password_hash: this.passwordHash,
 			password_last_changed_at: this.passwordLastChangedAt,
 			totp_secret: this.totpSecret,
@@ -209,7 +210,6 @@ export class User {
 			stripe_subscription_id: this.stripeSubscriptionId,
 			stripe_customer_id: this.stripeCustomerId,
 			has_ever_purchased: this.hasEverPurchased,
-			suspicious_activity_flags: this.suspiciousActivityFlags,
 			terms_agreed_at: this.termsAgreedAt,
 			privacy_agreed_at: this.privacyAgreedAt,
 			last_active_at: this.lastActiveAt,
@@ -223,6 +223,9 @@ export class User {
 			deletion_reason_code: this.deletionReasonCode,
 			deletion_public_reason: this.deletionPublicReason,
 			deletion_audit_log_reason: this.deletionAuditLogReason,
+			deletion_scheduled_by: this.deletionScheduledBy,
+			deletion_scheduled_at: this.deletionScheduledAt,
+			content_hidden_since: this.contentHiddenSince,
 			acls: this.acls.size > 0 ? this.acls : null,
 			traits: this._traits.size > 0 ? this._traits : null,
 			first_refund_at: this.firstRefundAt,

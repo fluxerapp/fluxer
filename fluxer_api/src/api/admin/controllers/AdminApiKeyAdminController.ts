@@ -9,7 +9,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {AdminACLs, filterKnownAdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {
 	AdminApiKeyListResponse,
 	CreateAdminApiKeyRequest,
@@ -30,7 +30,7 @@ function toApiKeyResponse(key: AdminApiKeyView): ListAdminApiKeyResponseType {
 		last_used_at: key.lastUsedAt?.toISOString() ?? null,
 		expires_at: key.expiresAt?.toISOString() ?? null,
 		created_by_user_id: String(key.createdById),
-		acls: Array.from(key.acls),
+		acls: filterKnownAdminACLs(key.acls),
 	};
 }
 
@@ -62,7 +62,7 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 				name: result.apiKey.name,
 				created_at: result.apiKey.createdAt.toISOString(),
 				expires_at: result.apiKey.expiresAt?.toISOString() ?? null,
-				acls: Array.from(result.apiKey.acls),
+				acls: filterKnownAdminACLs(result.apiKey.acls),
 			};
 			await recordAdminWrite(ctx, {
 				targetType: 'admin_api_key',
@@ -146,7 +146,7 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 			security: ['adminApiKey'],
 			tags: ['Admin'],
 			description:
-				'Renames an API key or replaces the access control lists (ACLs) it carries. The key may only carry permissions the acting admin already holds. Omitted fields are left unchanged and the key material is never rotated or returned.',
+				'Renames an API key or replaces the access control lists (ACLs) it has. The key may only hold permissions the acting admin already holds. Omitted fields are left unchanged and the key material is never rotated or returned.',
 		}),
 		async (ctx) => {
 			const adminApiKeyService = ctx.get('adminApiKeyService');

@@ -47,6 +47,7 @@ impl Hop {
                 }
                 .to_owned()
             }),
+            thread_channels: sub.thread_channels,
         }
     }
 }
@@ -97,6 +98,10 @@ pub fn parse(endpoint: &str, hosts: &[String]) -> Option<Hop> {
     })
 }
 
+pub fn is_managed(endpoint: &str, hosts: &[String]) -> bool {
+    parse(endpoint, hosts).is_some()
+}
+
 fn decode(segment: &str) -> Option<String> {
     percent_encoding::percent_decode_str(segment)
         .decode_utf8()
@@ -141,6 +146,27 @@ mod tests {
     }
 
     #[test]
+    fn a_voip_endpoint_on_our_own_relay_keeps_its_own_leg() {
+        let hop = parse(
+            &format!("https://push.fluxer.com/relay/v1/apns-voip/canary/production/{TOKEN}"),
+            &ours(),
+        )
+        .expect("a voip endpoint parses");
+        assert_eq!(hop.leg, Leg::ApnsVoip);
+    }
+
+    #[test]
+    fn only_the_alert_legs_are_taken_in_process() {
+        let shortcut = |path: &str| {
+            parse(&format!("https://push.fluxer.com/relay/v1/{path}"), &ours())
+                .filter(|hop| matches!(hop.leg, Leg::Apns | Leg::Fcm))
+        };
+        assert!(shortcut(&format!("apns/canary/production/{TOKEN}")).is_some());
+        assert!(shortcut(&format!("apns-voip/canary/production/{TOKEN}")).is_none());
+        assert!(shortcut("fcm/canary/dYC_x9gXTjyyrG8_Aw3nUM%3AAPA91bExample").is_some());
+    }
+
+    #[test]
     fn a_relay_we_do_not_operate_is_left_on_the_network_path() {
         let endpoint = format!("https://push.example.org/relay/v1/apns/canary/production/{TOKEN}");
         assert!(parse(&endpoint, &ours()).is_none());
@@ -162,6 +188,26 @@ mod tests {
             .is_none()
         );
         assert!(parse("https://ntfy.sh/upZzH87cT9jJCc?up=1", &ours()).is_none());
+    }
+
+    #[test]
+    fn every_managed_relay_leg_is_recognised_and_nothing_else_is() {
+        for path in [
+            format!("apns/canary/production/{TOKEN}"),
+            format!("apns-voip/canary/production/{TOKEN}"),
+            "fcm/canary/dYC_x9gXTjyyrG8_Aw3nUM%3AAPA91bExample".to_owned(),
+        ] {
+            let endpoint = format!("https://push.fluxer.com/relay/v1/{path}");
+            assert!(
+                is_managed(&endpoint, &ours()),
+                "{endpoint} must be a managed relay endpoint"
+            );
+        }
+        assert!(!is_managed("https://ntfy.sh/upZzH87cT9jJCc?up=1", &ours()));
+        assert!(!is_managed(
+            "https://updates.push.services.mozilla.com/wpush/v2/gAAAAA",
+            &ours()
+        ));
     }
 
     #[test]

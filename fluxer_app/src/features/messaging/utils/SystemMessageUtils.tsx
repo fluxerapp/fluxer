@@ -119,6 +119,11 @@ const REMOVED_SOMEONE_FROM_THE_GROUP_DESCRIPTOR = msg({
 	message: '{username} removed someone from the group.',
 	comment: 'System message in a group DM when a member removes someone whose user record is not resolvable locally.',
 });
+const ADDED_FOLLOWED_CHANNEL_DESCRIPTOR = msg({
+	message: '{username} followed {name} into this channel. Messages published there will appear here.',
+	comment:
+		'Plain-text system message used in previews and screen readers when someone makes this channel follow an announcement channel. name is the follower webhook name, usually the source community and channel.',
+});
 const CHANGED_THE_CHANNEL_NAME_TO_DESCRIPTOR = msg({
 	message: '{username} changed the channel name to {newName}.',
 	comment: 'System message in a group DM when a member renames the channel. newName is the new channel name.',
@@ -134,6 +139,11 @@ const CHANGED_THE_CHANNEL_ICON_DESCRIPTOR = msg({
 const STARTED_A_CALL_DESCRIPTOR = msg({
 	message: '{username} started a call.',
 	comment: 'System message shown inline when a user starts a voice or video call in a DM or group DM.',
+});
+const STARTED_A_THREAD_NAMED_DESCRIPTOR = msg({
+	message: '{username} started a thread: {threadName}',
+	comment:
+		'Plain text summary of the thread created system message. username is the author, threadName the thread name.',
 });
 
 interface StringifyableMessage {
@@ -231,6 +241,10 @@ export const SystemMessageUtils = {
 				return i18n._(CHANGED_THE_CHANNEL_ICON_DESCRIPTOR, {username});
 			case MessageTypes.CALL:
 				return i18n._(STARTED_A_CALL_DESCRIPTOR, {username});
+			case MessageTypes.CHANNEL_FOLLOW_ADD:
+				return i18n._(ADDED_FOLLOWED_CHANNEL_DESCRIPTOR, {username, name: message.content});
+			case MessageTypes.THREAD_CREATED:
+				return i18n._(STARTED_A_THREAD_NAMED_DESCRIPTOR, {username, threadName: message.content});
 			default:
 				return null;
 		}

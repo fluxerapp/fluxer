@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {joinDiscoveryGuild} from '@app/features/discovery/commands/DiscoveryJoinCommands';
 import type {ExpressionKind} from '@app/features/expressions/commands/ExpressionMetadataCommands';
@@ -407,11 +407,11 @@ export const ExpressionInfoCard = observer(function ExpressionInfoCard(props: Ex
 	const isMember = sourceGuild != null && GuildList.guilds.some((candidate) => candidate.id === sourceGuild.id);
 	const resolveDescription = (): string => {
 		if (kind == null) {
-			return i18n._(DEFAULT_EMOJI_DESCRIPTION_DESCRIPTOR, {productName: PRODUCT_NAME});
+			return i18n._(DEFAULT_EMOJI_DESCRIPTION_DESCRIPTOR, {productName: getActiveInstanceProductName()});
 		}
 		if (sourceGuild != null && isMember) {
 			return hasGlobalExpressionsEnabled()
-				? i18n._(GUILD_EXPRESSION_ANYWHERE_DESCRIPTORS[kind], {productName: PRODUCT_NAME})
+				? i18n._(GUILD_EXPRESSION_ANYWHERE_DESCRIPTORS[kind], {productName: getActiveInstanceProductName()})
 				: i18n._(GUILD_EXPRESSION_HERE_DESCRIPTORS[kind]);
 		}
 		return i18n._(FOREIGN_EXPRESSION_DESCRIPTORS[kind]);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {VOICE_CHANNEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {Platform} from '@app/features/platform/types/Platform';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {
 	CHAT_INPUT_DESCRIPTOR,
@@ -8,6 +9,8 @@ import {
 	KEEP_NEKO_STILL_DESCRIPTOR,
 	KEYBOARD_HINTS_DESCRIPTOR,
 	NEKO_DESCRIPTOR,
+	SHOW_DOWNLOAD_BUTTON_DESCRIPTOR,
+	SHOW_HELP_CENTER_BUTTON_DESCRIPTOR,
 	SHOW_NEKO_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
@@ -88,6 +91,22 @@ const CHOOSE_WHETHER_FAVORITES_ARE_VISIBLE_THROUGHOUT_THE_APP_DESCRIPTOR = msg({
 	message: 'Show favorites throughout the app',
 	comment: 'Settings search entry description. One-line summary of what the setting controls.',
 });
+const HELP_BUTTON_DESCRIPTOR = msg({
+	message: 'Help button',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const DOWNLOAD_APP_DESCRIPTOR = msg({
+	message: 'Download app',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const HELP_CENTER_BUTTON_IN_THE_SIDEBAR_DESCRIPTOR = msg({
+	message: 'Help center button in the sidebar',
+	comment: 'Settings search entry description. One-line summary of what the setting controls.',
+});
+const DOWNLOAD_BUTTON_IN_THE_SIDEBAR_DESCRIPTOR = msg({
+	message: 'Download app button in the sidebar',
+	comment: 'Settings search entry description. One-line summary of what the setting controls.',
+});
 export const appearanceIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'appearance-show-neko',
@@ -128,6 +147,27 @@ export const appearanceIndex: Array<SearchableSettingDescriptor> = [
 		description: CHOOSE_WHETHER_FAVORITES_ARE_VISIBLE_THROUGHOUT_THE_APP_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['appearance'],
+	},
+	{
+		id: 'appearance-show-help-center-button',
+		tabType: 'appearance',
+		sectionId: 'interface',
+		label: SHOW_HELP_CENTER_BUTTON_DESCRIPTOR,
+		keywords: [HELP_BUTTON_DESCRIPTOR],
+		description: HELP_CENTER_BUTTON_IN_THE_SIDEBAR_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['appearance'],
+	},
+	{
+		id: 'appearance-show-download-button',
+		tabType: 'appearance',
+		sectionId: 'interface',
+		label: SHOW_DOWNLOAD_BUTTON_DESCRIPTOR,
+		keywords: [DOWNLOAD_APP_DESCRIPTOR],
+		description: DOWNLOAD_BUTTON_IN_THE_SIDEBAR_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['appearance'],
+		isVisible: () => !Platform.isElectron && !Platform.isPWA,
 	},
 	{
 		id: 'appearance-voice-channel-join-behavior',

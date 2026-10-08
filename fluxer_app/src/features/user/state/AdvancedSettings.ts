@@ -29,20 +29,20 @@ class AdvancedSettings {
 			return;
 		}
 		AppStorage.subscribe(
-			(event) => {
-				this.unreadBadgeCustomizationEnabled = event.newValue === null ? false : readStoredBoolean(event.key ?? '');
+			() => {
+				this.unreadBadgeCustomizationEnabled = readStoredBoolean(UNREAD_BADGE_CUSTOMIZATION_STORAGE_KEY);
 			},
 			{key: UNREAD_BADGE_CUSTOMIZATION_STORAGE_KEY, source: 'external'},
 		);
 		AppStorage.subscribe(
-			(event) => {
-				this.keepAttachmentsOnEmptyMessageEdit = event.newValue === null ? false : readStoredBoolean(event.key ?? '');
+			() => {
+				this.keepAttachmentsOnEmptyMessageEdit = readStoredBoolean(KEEP_ATTACHMENTS_ON_EMPTY_MESSAGE_EDIT_STORAGE_KEY);
 			},
 			{key: KEEP_ATTACHMENTS_ON_EMPTY_MESSAGE_EDIT_STORAGE_KEY, source: 'external'},
 		);
 		AppStorage.subscribe(
-			(event) => {
-				this.expressionCloneShortcutsEnabled = event.newValue === null ? false : readStoredBoolean(event.key ?? '');
+			() => {
+				this.expressionCloneShortcutsEnabled = readStoredBoolean(EXPRESSION_CLONE_SHORTCUTS_STORAGE_KEY);
 			},
 			{key: EXPRESSION_CLONE_SHORTCUTS_STORAGE_KEY, source: 'external'},
 		);

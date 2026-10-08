@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {startDomainMigrationTrigger} from '@app/features/app/domain_migration/DomainMigrationTrigger';
 import Initialization from '@app/features/app/state/Initialization';
-import AccountManager from '@app/features/auth/state/AccountManager';
-import accountStorage from '@app/features/auth/state/AccountStorage';
+import {syncAccountUserData} from '@app/features/auth/state/AccountUserDataSync';
 import Authentication from '@app/features/auth/state/Authentication';
 import AuthSession from '@app/features/auth/state/AuthSession';
 import ChannelPins from '@app/features/channel/state/ChannelPins';
@@ -10,9 +10,11 @@ import Channels from '@app/features/channel/state/Channels';
 import UserConnection from '@app/features/connection/state/UserConnection';
 import Emoji from '@app/features/emoji/state/Emoji';
 import Sticker from '@app/features/emoji/state/EmojiSticker';
-import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import type {FavoriteMemeWire} from '@app/features/expressions/models/FavoriteMeme';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
+import ForumPosts from '@app/features/forum/state/ForumPosts';
+import ForumReadState from '@app/features/forum/state/ForumReadState';
+import {scheduleAccountReadyWork} from '@app/features/gateway/events/AccountReadyWork';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {PresenceRecord} from '@app/features/gateway/types/GatewayPresenceTypes';
@@ -29,30 +31,36 @@ import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
+import NavigationSideEffects from '@app/features/navigation/state/NavigationSideEffects';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import Presence from '@app/features/presence/state/Presence';
 import ReadStates, {type GatewayReadState} from '@app/features/read_state/state/ReadStates';
 import type {RelationshipWire} from '@app/features/relationship/models/Relationship';
 import Relationships from '@app/features/relationship/state/Relationships';
-import CountryCode from '@app/features/user/state/CountryCode';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
+import ThreadSubscriptions from '@app/features/threads/state/ThreadSubscriptions';
 import UserGuildSettings, {type GatewayGuildSettings} from '@app/features/user/state/UserGuildSettings';
 import UserNote from '@app/features/user/state/UserNote';
 import UserPinnedDM from '@app/features/user/state/UserPinnedDM';
-import UserSettings, {type UserSettings as UserSettingsWire} from '@app/features/user/state/UserSettings';
+import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import WebAuthnCredentials, {type WebAuthnCredential} from '@app/features/user/state/WebAuthnCredentials';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import RtcRegions from '@app/features/voice/state/RtcRegions';
+import {seedVoiceStatesFromReady} from '@app/features/voice/VoiceGatewayLifecycle';
 import type {RtcRegionResponse, Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import type {UserPrivate, User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import type {
+	UserPrivate,
+	UserSettingsResponse,
+	User as WireUser,
+} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {runInAction} from 'mobx';
 
 const logger = new Logger('READY Handler');
 
-interface ReadyPayload {
+export interface ReadyPayload {
 	session_id: string;
 	guilds: Array<GuildReadyData>;
 	user: UserPrivate;
@@ -65,7 +73,7 @@ interface ReadyPayload {
 	relationships?: Array<RelationshipWire>;
 	favorite_memes?: Array<FavoriteMemeWire>;
 	users?: Array<WireUser>;
-	user_settings?: UserSettingsWire;
+	user_settings?: UserSettingsResponse;
 	user_guild_settings?: Array<GatewayGuildSettings>;
 	read_states?: Array<GatewayReadState>;
 	read_state_proto?: string;
@@ -75,11 +83,33 @@ interface ReadyPayload {
 	webauthn_credentials?: Array<WebAuthnCredential>;
 }
 
-export function handleReady(data: ReadyPayload, context: GatewayHandlerContext): void {
-	runInAction(() => handleReadyInternal(data, context));
+export class GatewayReadyIdentityMismatchError extends Error {
+	constructor(expectedUserId: string, receivedUserId: string) {
+		super(`READY user mismatch: expected ${expectedUserId}, received ${receivedUserId}`);
+		this.name = 'GatewayReadyIdentityMismatchError';
+	}
 }
 
-function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext): void {
+export class GatewayReadyAccountContextMissingError extends Error {
+	constructor() {
+		super('Gateway READY has no account context');
+		this.name = 'GatewayReadyAccountContextMissingError';
+	}
+}
+
+export function handleReady(data: ReadyPayload, context: GatewayHandlerContext): void {
+	const accountKey = context.accountKey;
+	if (accountKey === null) {
+		throw new GatewayReadyAccountContextMissingError();
+	}
+	const expectedUserId = context.expectedUserId;
+	if (expectedUserId != null && data.user.id !== expectedUserId) {
+		throw new GatewayReadyIdentityMismatchError(expectedUserId, data.user.id);
+	}
+	runInAction(() => handleReadyInternal(data, context, accountKey));
+}
+
+function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext, accountKey: string): void {
 	const currentSessionId = data.session_id;
 	const isNewSession = context.previousSessionId !== null && context.previousSessionId !== currentSessionId;
 	if (isNewSession) {
@@ -94,74 +124,49 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	context.setPreviousSessionId(currentSessionId);
 	const guilds = data.guilds;
 	const channels: Array<WireChannel> = [];
-	if (data.private_channels) {
-		for (const channel of data.private_channels) {
-			channels.push({...channel});
-		}
+	for (const channel of data.private_channels ?? []) {
+		channels.push({...channel});
 	}
 	for (const guild of guilds) {
 		if (guild.unavailable) continue;
 		for (const channel of guild.channels) {
 			channels.push({...channel, guild_id: guild.id});
 		}
+		if (guild.threads) {
+			for (const thread of guild.threads) {
+				channels.push({...thread, guild_id: guild.id});
+			}
+		}
 	}
 	GuildAvailability.loadUnavailableGuilds(guilds);
-	if (data.notes) {
-		UserNote.loadNotes(data.notes);
-	}
-	if (data.country_code) {
-		CountryCode.setCountryCode(data.country_code);
-	}
+	UserNote.loadNotes(data.notes ?? {});
 	context.setConnectionGeoip({
 		country_code: data.country_code,
 		latitude: data.latitude,
 		longitude: data.longitude,
 	});
-	if (data.pinned_dms) {
-		UserPinnedDM.setPinnedDMs(data.pinned_dms);
-	}
-	if (data.relationships) {
-		Relationships.loadRelationships(data.relationships);
-	}
-	if (data.favorite_memes) {
-		FavoriteMemes.loadFavoriteMemes(data.favorite_memes);
-	}
-	if (data.rtc_regions) {
-		RtcRegions.setRegions(data.rtc_regions);
-	}
-	ExperimentAssignments.start();
-	Users.handleGatewayReady(data.user);
-	if (data.users && data.users.length > 0) {
-		Users.cacheUsers(data.users);
-	}
-	const user = data.user;
-	if (user.id) {
-		const userData = {
-			username: user.username,
-			discriminator: user.discriminator,
-			globalName: user.global_name,
-			email: user.email ?? undefined,
-			avatar: user.avatar ?? undefined,
-		};
-		void accountStorage.updateAccountUserData(user.id, userData);
-		void AccountManager.updateAccountUserData(user.id, userData);
-	}
+	UserPinnedDM.setPinnedDMs(data.pinned_dms ?? []);
+	Relationships.loadRelationships(data.relationships ?? []);
+	FavoriteMemes.loadFavoriteMemes(data.favorite_memes ?? []);
+	RtcRegions.setRegions(data.rtc_regions ?? []);
+	Users.handleGatewayReady(accountKey, data.user);
+	Users.cacheUsers(data.users ?? []);
+	syncAccountUserData(accountKey, data.user);
 	Authentication.handleGatewayReady({user: data.user});
-	void PremiumCommands.refreshPremiumState().catch((error) => {
-		logger.warn('Failed to refresh premium state after READY', error);
-	});
 	Guilds.handleGatewayReady({guilds});
 	UserSettings.handleGatewayReady(data.user_settings);
 	GuildList.handleGatewayReady(guilds);
 	GuildCount.handleGatewayReady(guilds);
 	GuildMembers.handleGatewayReady(guilds);
 	GuildVerification.handleGatewayReady();
+	ThreadGuilds.handleGatewayReady(guilds);
 	Channels.handleGatewayReady({channels});
-	if (data.auth_session_id_hash) {
-		AuthSession.handleGatewayReady(data.auth_session_id_hash);
-	} else {
-		logger.warn('READY missing auth_session_id_hash; continuing without AuthSession init');
-	}
+	ChannelThreads.handleGatewayReady(guilds);
+	ThreadSubscriptions.handleConnectionReady();
+	ForumPosts.handleGatewayReady();
+	ForumReadState.handleGatewayReady();
+	NavigationSideEffects.handleGatewayReady();
+	AuthSession.handleGatewayReady(data.auth_session_id_hash ?? null);
 	MessageReactions.handleGatewayReady();
 	Sticker.handleGatewayReady(guilds);
 	Emoji.handleGatewayReady({guilds});
@@ -180,8 +185,10 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	});
 	GuildReadState.handleGatewayReady();
 	Presence.handleGatewayReady(data.user, guilds, data.presences);
-	MediaEngine.handleGatewayReady(guilds);
+	seedVoiceStatesFromReady(guilds);
+	if (!context.setReady()) return;
 	Initialization.setReady();
-	context.setReady();
 	Messages.handleGatewayReady();
+	startDomainMigrationTrigger();
+	scheduleAccountReadyWork(data.user.id);
 }

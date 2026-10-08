@@ -3,6 +3,7 @@
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {syncLocalVoiceStateWithServer} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import {
@@ -47,7 +48,6 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 	selfStream = false;
 	selfStreamAudio = false;
 	selfStreamAudioMute = false;
-	noiseSuppressionEnabled = true;
 	viewerStreamKeys: Array<string> = [];
 	hasUserSetMute = false;
 	hasUserSetDeaf = false;
@@ -120,7 +120,6 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 				getSelfStreamAudioMute: false,
 				getViewerStreamKeys: false,
 				hasViewerStreamKey: false,
-				getNoiseSuppressionEnabled: false,
 				getHasUserSetMute: false,
 				getHasUserSetDeaf: false,
 				getMutedByPermission: false,
@@ -132,7 +131,7 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 			logger.error('Failed to hydrate LocalVoiceState from persistence', error);
 		});
 		this.initializePersistedDefaultSync();
-		this.initializePermissionSync();
+		initializeStore(this, () => this.initializePermissionSync());
 		this.initializeDevicePermissionSync();
 	}
 
@@ -253,7 +252,6 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 			[
 				'persistedSelfMute',
 				'persistedSelfDeaf',
-				'noiseSuppressionEnabled',
 				'persistedHasUserSetMute',
 				'persistedHasUserSetDeaf',
 				'selfStreamAudio',
@@ -470,10 +468,6 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 		return this.getActiveStateForRead().viewerStreamKeys.includes(key);
 	}
 
-	getNoiseSuppressionEnabled(): boolean {
-		return this.noiseSuppressionEnabled;
-	}
-
 	getHasUserSetMute(): boolean {
 		return this.getActiveStateForRead().hasUserSetMute;
 	}
@@ -525,13 +519,6 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 		runInAction(() => {
 			this.selfStreamAudioMute = !this.selfStreamAudioMute;
 			logger.debug('User toggled self stream audio mute', {selfStreamAudioMute: this.selfStreamAudioMute});
-		});
-	}
-
-	toggleNoiseSuppression(): void {
-		runInAction(() => {
-			this.noiseSuppressionEnabled = !this.noiseSuppressionEnabled;
-			logger.debug('User toggled noise suppression', {enabled: this.noiseSuppressionEnabled});
 		});
 	}
 
@@ -590,7 +577,6 @@ class LocalVoiceState implements LocalVoiceConnectionState {
 			this.transitionLocalState({type: 'preferences.reset'});
 			this.selfStreamAudio = false;
 			this.selfStreamAudioMute = false;
-			this.noiseSuppressionEnabled = true;
 		});
 		logger.info('Reset user voice preferences');
 	}

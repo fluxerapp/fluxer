@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export interface ChannelFrecencyEntry {
-	readonly totalUses: number;
-	readonly recentUses: ReadonlyArray<number>;
-	readonly frecency: number;
+	readonly hitCount: number;
+	readonly recentHits: ReadonlyArray<number>;
+	readonly heat: number;
 	readonly score: number;
 }
 
@@ -11,7 +11,7 @@ export type ChannelFrecencyHistory = Map<string, ChannelFrecencyEntry>;
 
 interface RankedChannelFrecency {
 	readonly id: string;
-	readonly frecency: number;
+	readonly heat: number;
 }
 
 const CHANNEL_FRECENCY_MAX_ITEMS = 100;
@@ -22,12 +22,12 @@ const DAY_MS = 86_400_000;
 const MINUTE_MS = 60_000;
 
 function createEntry(
-	totalUses: number,
-	recentUses: ReadonlyArray<number>,
-	frecency: number,
+	hitCount: number,
+	recentHits: ReadonlyArray<number>,
+	heat: number,
 	score: number,
 ): ChannelFrecencyEntry {
-	return Object.freeze({totalUses, recentUses: Object.freeze(recentUses), frecency, score});
+	return Object.freeze({hitCount, recentHits: Object.freeze(recentHits), heat, score});
 }
 
 function utcOffsetMinutes(timestamp: number): number {
@@ -52,11 +52,11 @@ export function channelFrecencyWeight(dayDiff: number): number {
 	return 1;
 }
 
-function scoreRecentUses(recentUses: ReadonlyArray<number>, now: number): number {
-	const sampleCount = Math.min(recentUses.length, CHANNEL_FRECENCY_MAX_SAMPLES);
+function scoreRecentUses(recentHits: ReadonlyArray<number>, now: number): number {
+	const sampleCount = Math.min(recentHits.length, CHANNEL_FRECENCY_MAX_SAMPLES);
 	let score = 0;
 	for (let index = 0; index < sampleCount; index++) {
-		score += channelFrecencyWeight(channelFrecencyDayDiff(now, recentUses[index]));
+		score += channelFrecencyWeight(channelFrecencyDayDiff(now, recentHits[index]));
 	}
 	return score;
 }
@@ -68,15 +68,15 @@ export function trackChannelUse(history: ChannelFrecencyHistory, key: string, ti
 		history.set(key, createEntry(1, [use], CHANNEL_FRECENCY_UNCOMPUTED, 0));
 		return;
 	}
-	const recentUses = [...entry.recentUses, use];
+	const recentHits = [...entry.recentHits, use];
 	if (timestamp !== undefined) {
-		recentUses.sort(compareAscending);
+		recentHits.sort(compareAscending);
 	}
 	history.set(
 		key,
 		createEntry(
-			entry.totalUses + 1,
-			recentUses.slice(-CHANNEL_FRECENCY_MAX_SAMPLES),
+			entry.hitCount + 1,
+			recentHits.slice(-CHANNEL_FRECENCY_MAX_SAMPLES),
 			CHANNEL_FRECENCY_UNCOMPUTED,
 			entry.score,
 		),
@@ -85,11 +85,11 @@ export function trackChannelUse(history: ChannelFrecencyHistory, key: string, ti
 
 export function computeChannelFrecency(history: ChannelFrecencyHistory, now: number): void {
 	for (const [key, entry] of history) {
-		if (entry.frecency !== CHANNEL_FRECENCY_UNCOMPUTED) continue;
-		const score = scoreRecentUses(entry.recentUses, now);
+		if (entry.heat !== CHANNEL_FRECENCY_UNCOMPUTED) continue;
+		const score = scoreRecentUses(entry.recentHits, now);
 		if (score > 0) {
-			const frecency = Math.ceil(entry.totalUses * (score / entry.recentUses.length));
-			history.set(key, createEntry(entry.totalUses, entry.recentUses, frecency, score));
+			const heat = Math.ceil(entry.hitCount * (score / entry.recentHits.length));
+			history.set(key, createEntry(entry.hitCount, entry.recentHits, heat, score));
 		} else {
 			history.delete(key);
 		}
@@ -100,7 +100,7 @@ function findOldestLastUseKey(history: ReadonlyMap<string, ChannelFrecencyEntry>
 	let oldestKey: string | null = null;
 	let oldestLastUse = Number.POSITIVE_INFINITY;
 	for (const [key, entry] of history) {
-		const lastUse = entry.recentUses.at(-1);
+		const lastUse = entry.recentHits.at(-1);
 		if (lastUse !== undefined && lastUse < oldestLastUse) {
 			oldestKey = key;
 			oldestLastUse = lastUse;
@@ -125,10 +125,10 @@ export function rankFrequentChannelIds(
 	for (const [key, entry] of history) {
 		const id = resolveRecordId(key);
 		if (id !== null) {
-			ranked.push({id, frecency: entry.frecency});
+			ranked.push({id, heat: entry.heat});
 		}
 	}
-	ranked.sort((a, b) => b.frecency - a.frecency);
+	ranked.sort((a, b) => b.heat - a.heat);
 	return Object.freeze(ranked.slice(0, CHANNEL_FRECENCY_MAX_ITEMS).map((item) => item.id));
 }
 
@@ -142,7 +142,7 @@ export type ChannelFrecencyWireUsage = Record<string, {totalUses: number; recent
 export type ChannelFrecencyWireUsageInput = Readonly<Record<string, ChannelFrecencyWireEntry | undefined>>;
 
 function entryToWire(entry: ChannelFrecencyEntry): {totalUses: number; recentUsesMs: Array<bigint>} {
-	return {totalUses: entry.totalUses, recentUsesMs: entry.recentUses.map((use) => BigInt(use))};
+	return {totalUses: entry.hitCount, recentUsesMs: entry.recentHits.map((use) => BigInt(use))};
 }
 
 export function channelFrecencyHistoryToWire(
@@ -164,11 +164,11 @@ export function channelFrecencyHistoryFromWire(
 	usage: ChannelFrecencyWireUsageInput,
 	now: number,
 ): ChannelFrecencyHistory {
-	const persisted: Array<readonly [string, unknown]> = [];
+	const revived: Array<readonly [string, unknown]> = [];
 	for (const [key, entry] of Object.entries(usage)) {
-		persisted.push([key, {totalUses: entry?.totalUses, recentUses: readWireUses(entry)}]);
+		revived.push([key, {hitCount: entry?.totalUses, recentHits: readWireUses(entry)}]);
 	}
-	return restoreChannelFrecencyHistory(persisted, now);
+	return restoreChannelFrecencyHistory(revived, now);
 }
 
 export function mergeChannelFrecencyWireUsage(
@@ -199,17 +199,17 @@ function isUseTimestamp(value: unknown): value is number {
 
 function readPersistedEntry(value: unknown): ChannelFrecencyEntry | null {
 	if (typeof value !== 'object' || value === null) return null;
-	const {totalUses, recentUses} = value as {readonly totalUses?: unknown; readonly recentUses?: unknown};
-	if (typeof totalUses !== 'number' || !Number.isFinite(totalUses) || !Array.isArray(recentUses)) return null;
-	return createEntry(totalUses, recentUses.filter(isUseTimestamp), CHANNEL_FRECENCY_UNCOMPUTED, 0);
+	const {hitCount, recentHits} = value as {readonly hitCount?: unknown; readonly recentHits?: unknown};
+	if (typeof hitCount !== 'number' || !Number.isFinite(hitCount) || !Array.isArray(recentHits)) return null;
+	return createEntry(hitCount, recentHits.filter(isUseTimestamp), CHANNEL_FRECENCY_UNCOMPUTED, 0);
 }
 
 export function restoreChannelFrecencyHistory(
-	persisted: Iterable<readonly [unknown, unknown]>,
+	revived: Iterable<readonly [unknown, unknown]>,
 	now: number,
 ): ChannelFrecencyHistory {
 	const history: ChannelFrecencyHistory = new Map();
-	for (const [key, value] of persisted) {
+	for (const [key, value] of revived) {
 		if (typeof key !== 'string') continue;
 		const entry = readPersistedEntry(value);
 		if (entry !== null) {

@@ -2,9 +2,10 @@
 
 import {randomUUID} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
-import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '@app/api/auth/AuthEmail';
 import * as AuthPassword from '@app/api/auth/AuthPassword';
+import {assertEmailNotBlocklisted} from '@app/api/auth/EmailBlocklist';
 import type {User} from '@app/api/models/User';
+import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
 import type {EmailChangeRepository} from '@app/api/user/repositories/auth/EmailChangeRepository';
 import {
 	assertChangeCooldown,
@@ -176,6 +177,7 @@ export class EmailChangeService {
 		if (row.original_email && trimmedEmail.toLowerCase() === row.original_email.toLowerCase()) {
 			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.NEW_EMAIL_MUST_BE_DIFFERENT);
 		}
+		await assertEmailNotBlocklisted(trimmedEmail, 'new_email');
 		const hasValidDns = await emailDnsValidation.hasValidDnsRecords(trimmedEmail);
 		if (!hasValidDns) {
 			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
@@ -299,7 +301,7 @@ export class EmailChangeService {
 	}
 
 	async verifyBouncedNew(user: User, ticket: string, code: string): Promise<User> {
-		const {users} = this.apiContext.services;
+		const {users, worker} = this.apiContext.services;
 		this.ensureBouncedEmailRecoveryAllowed(user);
 		const row = await getActiveChangeTicketForUser(this.repo, ticket, user.id);
 		if (row.require_original || !row.original_proof) {
@@ -307,24 +309,13 @@ export class EmailChangeService {
 		}
 		const emailToken = await this.verifyNew(user, ticket, code, row.original_proof);
 		const updatedEmail = await this.getTokenEmail(user.id, emailToken);
-		const updates: {
-			email: string;
-			email_verified: boolean;
-			email_bounced: boolean;
-			suspicious_activity_flags?: number;
-		} = {
-			email: updatedEmail,
-			email_verified: true,
-			email_bounced: false,
-		};
-		if (user.suspiciousActivityFlags !== null && user.suspiciousActivityFlags !== 0) {
-			const newFlags = user.suspiciousActivityFlags & ~EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS;
-			if (newFlags !== user.suspiciousActivityFlags) {
-				updates.suspicious_activity_flags = newFlags;
-			}
-		}
-		const updatedUser = await users.patchUpsert(user.id, updates, user.toRow());
+		const updatedUser = await users.patchUpsert(
+			user.id,
+			{email: updatedEmail, email_verified: true, email_bounced: false},
+			user.toRow(),
+		);
 		await this.deleteToken(emailToken);
+		await enqueueStripeCustomerEmailSync(worker, user, updatedUser);
 		return updatedUser;
 	}
 

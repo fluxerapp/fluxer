@@ -310,7 +310,7 @@ mod tests {
     }
 
     #[test]
-    fn link_props_carry_per_port_routing() {
+    fn link_props_include_per_port_routing() {
         let props = build_link_props(101, 7, 202, 13);
         let dict = props.dict();
         assert_eq!(dict.get("link.output.node"), Some("101"));

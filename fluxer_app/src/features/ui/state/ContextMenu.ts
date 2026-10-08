@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {shouldRestoreFocusToTarget} from '@app/features/ui/utils/PointerActivationFocus';
@@ -196,4 +197,8 @@ class ContextMenuState {
 	}
 }
 
-export default new ContextMenuState();
+const contextMenuState = new ContextMenuState();
+
+AccountScopedWork.registerCancellation(() => contextMenuState.close());
+
+export default contextMenuState;

@@ -103,6 +103,7 @@ describe('channel update request body', () => {
 
 	it.each([
 		ChannelTypes.GUILD_TEXT,
+		ChannelTypes.GUILD_ANNOUNCEMENT,
 		ChannelTypes.GUILD_VOICE,
 		ChannelTypes.GUILD_CATEGORY,
 		ChannelTypes.GUILD_LINK,
@@ -119,7 +120,11 @@ describe('channel update request body', () => {
 		expect(ChannelUpdateRequestBody.parse(input)).toEqual({...input, topic: 'Topic', parent_id: 123n});
 	});
 
-	it('does not accept the injected discriminator as a body property', () => {
+	it('keeps only text and announcement conversions as a body type', () => {
+		expect(ChannelUpdateRequestBody.parse({type: ChannelTypes.GUILD_TEXT})).toEqual({type: ChannelTypes.GUILD_TEXT});
+		expect(ChannelUpdateRequestBody.parse({type: ChannelTypes.GUILD_ANNOUNCEMENT})).toEqual({
+			type: ChannelTypes.GUILD_ANNOUNCEMENT,
+		});
 		expect(ChannelUpdateRequestBody.parse({type: ChannelTypes.GUILD_VOICE})).toEqual({});
 	});
 });

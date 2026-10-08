@@ -11,7 +11,8 @@ const CLEAR_ACTION: &str = "clear_channel";
 const RING_TYPE: &str = "call_ring";
 const FALLBACK_TAG: &str = "fluxer-message";
 const FALLBACK_TITLE: &str = "Fluxer";
-const APNS_CATEGORY: &str = "FLUXER_MESSAGE";
+const APNS_CATEGORY: &str = "fluxer_message";
+const FCM_CLICK_ACTION: &str = "FLUXER_MESSAGE";
 const APNS_SOUND: &str = "default";
 const APNS_ALERT_EXPIRATION_SECONDS: i64 = 86_400;
 const APNS_BACKGROUND_EXPIRATION_SECONDS: i64 = 86_400;
@@ -25,8 +26,17 @@ const RING_CALLER_NAME_KEY: &str = "caller_name";
 const RING_CALLER_AVATAR_KEY: &str = "caller_avatar_url";
 const RING_AVATAR_KEYS: [&str; 1] = [RING_CALLER_AVATAR_KEY];
 const RING_IDENTITY_KEYS: [&str; 2] = [RING_CALLER_ID_KEY, RING_CALLER_NAME_KEY];
-const MINIMAL_DATA_KEYS: [&str; 7] = [
+const THREAD_DATA_KEYS: [&str; 3] = ["parent_id", "parent_name", "channel_name"];
+const NOTIF_TYPE_KEY: &str = "notif_type_id";
+const FORUM_THREAD_CREATED_NOTIF_TYPE: u64 = 9;
+const FCM_DEFAULT_CHANNEL_ID: &str = "fluxer_default_push";
+const FCM_FORUM_THREAD_CREATED_CHANNEL_ID: &str = "fluxer_forum_thread_created";
+const MINIMAL_DATA_KEYS: [&str; 11] = [
+    "type",
+    "action",
     "channel_id",
+    "parent_id",
+    NOTIF_TYPE_KEY,
     "message_id",
     "guild_id",
     "target_user_id",
@@ -54,8 +64,8 @@ pub fn web_push_message(job: &MessageJob, target_user_id: &str, badge_count: u32
         "target_user_id": target_user_id,
         "has_media": image_url.is_some(),
     });
-    merge_image_fields(&mut data, image_url);
-    let mut notification = json!({
+    merge_thread_fields(&mut data, job);
+    let notification = json!({
         "title": fields.title,
         "body": fields.body,
         "icon": fields.icon,
@@ -65,7 +75,6 @@ pub fn web_push_message(job: &MessageJob, target_user_id: &str, badge_count: u32
         "app_badge": badge_count.to_string(),
         "data": data,
     });
-    merge_image_fields(&mut notification, image_url);
     let mut envelope = json!({
         "web_push": WEB_PUSH_MARKER,
         "notification": notification,
@@ -78,6 +87,28 @@ pub fn web_push_message(job: &MessageJob, target_user_id: &str, badge_count: u32
     });
     merge_image_fields(&mut envelope, image_url);
     envelope
+}
+
+fn merge_thread_fields(data: &mut Value, job: &MessageJob) {
+    let Some(object) = data.as_object_mut() else {
+        return;
+    };
+    let fields = [
+        job.parent_id.as_deref(),
+        job.parent_name.as_deref(),
+        job.channel_name.as_deref(),
+    ];
+    for (key, value) in THREAD_DATA_KEYS.into_iter().zip(fields) {
+        if let Some(value) = value.filter(|value| !value.is_empty()) {
+            object.insert(key.to_owned(), value.into());
+        }
+    }
+    if job.is_forum_thread_created() {
+        object.insert(
+            NOTIF_TYPE_KEY.to_owned(),
+            FORUM_THREAD_CREATED_NOTIF_TYPE.into(),
+        );
+    }
 }
 
 pub fn web_push_clear(job: &ClearJob, badge_count: u32) -> Value {
@@ -199,9 +230,9 @@ fn fcm_notification_message(device_token: &str, envelope: &Value) -> Value {
         data.insert("image_url".to_owned(), url.into());
     }
     let mut android_notification = json!({
-        "channel_id": "fluxer_default_push",
+        "channel_id": fcm_channel_id(envelope),
         "tag": tag,
-        "click_action": APNS_CATEGORY,
+        "click_action": FCM_CLICK_ACTION,
     });
     put_image(&mut android_notification, image_url);
     json!({
@@ -217,6 +248,18 @@ fn fcm_notification_message(device_token: &str, envelope: &Value) -> Value {
             "fcm_options": {"analytics_label": "message_create"},
         },
     })
+}
+
+fn fcm_channel_id(envelope: &Value) -> &'static str {
+    let notif_type = envelope
+        .get("data")
+        .and_then(|data| data.get(NOTIF_TYPE_KEY))
+        .and_then(Value::as_u64);
+    if notif_type == Some(FORUM_THREAD_CREATED_NOTIF_TYPE) {
+        FCM_FORUM_THREAD_CREATED_CHANNEL_ID
+    } else {
+        FCM_DEFAULT_CHANNEL_ID
+    }
 }
 
 pub fn apns_payload(envelope: &Value) -> Value {
@@ -262,9 +305,7 @@ pub fn apns_payload(envelope: &Value) -> Value {
     if let Some(badge) = badge_number(data.and_then(|data| data.get("badge_count"))) {
         aps.insert("badge".to_owned(), badge.into());
     }
-    if image_url.is_some() {
-        aps.insert("mutable-content".to_owned(), 1.into());
-    }
+    aps.insert("mutable-content".to_owned(), 1.into());
     payload.insert("title".to_owned(), title.into());
     payload.insert("body".to_owned(), body.into());
     payload.remove("url");
@@ -581,7 +622,6 @@ fn merge_image_fields(target: &mut Value, image_url: Option<&str>) {
         return;
     };
     object.insert("image_url".to_owned(), image_url.into());
-    object.insert("image".to_owned(), image_url.into());
 }
 
 fn non_empty(value: &Value) -> Option<&str> {
@@ -590,4 +630,164 @@ fn non_empty(value: &Value) -> Option<&str> {
 
 fn serialize(value: &Value) -> Vec<u8> {
     serde_json::to_vec(value).expect("a json value serialises")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::job::{ClearJob, MessageJob, NotificationFields};
+
+    const CHANNEL_ID: &str = "9876543210987654321";
+    const MESSAGE_ID: &str = "1122334455667788990";
+    const USER_ID: &str = "1234567890123456789";
+
+    fn message_job(image_url: Option<&str>) -> MessageJob {
+        MessageJob {
+            v: 1,
+            guild_id: "0".to_owned(),
+            channel_id: CHANNEL_ID.to_owned(),
+            message_id: MESSAGE_ID.to_owned(),
+            notification: NotificationFields {
+                title: "Elias".to_owned(),
+                body: "see you tomorrow".to_owned(),
+                icon: "https://media.fluxer.app/avatars/1/a.webp".to_owned(),
+                badge: "https://media.fluxer.app/badge.png".to_owned(),
+                tag: format!("channel:{CHANNEL_ID}:{MESSAGE_ID}"),
+                notification_tag: format!("channel:{CHANNEL_ID}"),
+                url: format!("/channels/@me/{CHANNEL_ID}"),
+                image_url: image_url.map(str::to_owned),
+            },
+            user_ids: vec![USER_ID.to_owned()],
+            kind: None,
+            parent_id: None,
+            parent_name: None,
+            channel_name: None,
+        }
+    }
+
+    fn thread_job() -> MessageJob {
+        MessageJob {
+            guild_id: "4455".to_owned(),
+            kind: Some("thread".to_owned()),
+            parent_id: Some("7788".to_owned()),
+            parent_name: Some("general".to_owned()),
+            channel_name: Some("release plans".to_owned()),
+            ..message_job(None)
+        }
+    }
+
+    fn clear_job() -> ClearJob {
+        ClearJob {
+            v: 1,
+            user_id: USER_ID.to_owned(),
+            channel_id: CHANNEL_ID.to_owned(),
+            message_id: MESSAGE_ID.to_owned(),
+            after_message_id: None,
+        }
+    }
+
+    fn apns_for(image_url: Option<&str>) -> Value {
+        apns_payload(&web_push_message(&message_job(image_url), USER_ID, 3))
+    }
+
+    #[test]
+    fn a_message_without_an_image_still_runs_the_notification_service_extension() {
+        assert_eq!(apns_for(None)["aps"]["mutable-content"], json!(1));
+    }
+
+    #[test]
+    fn a_message_with_an_image_still_runs_the_notification_service_extension() {
+        assert_eq!(
+            apns_for(Some("https://media.fluxer.app/proxy/attachment.webp"))["aps"]["mutable-content"],
+            json!(1)
+        );
+    }
+
+    #[test]
+    fn a_background_clear_never_runs_the_notification_service_extension() {
+        let payload = apns_payload(&web_push_clear(&clear_job(), 3));
+        assert_eq!(payload["aps"], json!({"content-available": 1}));
+    }
+
+    #[test]
+    fn the_apns_category_is_the_identifier_the_app_registers() {
+        assert_eq!(apns_for(None)["aps"]["category"], json!("fluxer_message"));
+    }
+
+    #[test]
+    fn the_android_click_action_keeps_its_own_identifier() {
+        let message = fcm_message(
+            "device-token",
+            &web_push_message(&message_job(None), USER_ID, 3),
+        );
+        assert_eq!(
+            message["message"]["android"]["notification"]["click_action"],
+            json!("FLUXER_MESSAGE")
+        );
+    }
+
+    #[test]
+    fn a_message_outside_a_thread_carries_no_thread_keys() {
+        let envelope = web_push_message(&message_job(None), USER_ID, 3);
+        for key in THREAD_DATA_KEYS {
+            assert!(envelope["data"].get(key).is_none(), "{key} leaked");
+        }
+    }
+
+    #[test]
+    fn a_thread_message_carries_its_parent_and_names() {
+        let envelope = web_push_message(&thread_job(), USER_ID, 3);
+        assert_eq!(envelope["data"]["parent_id"], json!("7788"));
+        assert_eq!(envelope["data"]["parent_name"], json!("general"));
+        assert_eq!(envelope["data"]["channel_name"], json!("release plans"));
+        assert_eq!(apns_payload(&envelope)["parent_id"], json!("7788"));
+    }
+
+    #[test]
+    fn only_a_forum_thread_created_message_carries_its_notification_type() {
+        let thread = web_push_message(&thread_job(), USER_ID, 3);
+        assert!(thread["data"].get(NOTIF_TYPE_KEY).is_none());
+        let forum = MessageJob {
+            kind: Some("forum_thread_created".to_owned()),
+            ..thread_job()
+        };
+        let envelope = web_push_message(&forum, USER_ID, 3);
+        assert_eq!(envelope["data"][NOTIF_TYPE_KEY], json!(9));
+        assert_eq!(envelope["data"]["parent_id"], json!("7788"));
+        let message = fcm_message("device-token", &envelope);
+        assert_eq!(message["message"]["data"][NOTIF_TYPE_KEY], json!("9"));
+        assert_eq!(
+            message["message"]["android"]["notification"]["channel_id"],
+            json!(FCM_FORUM_THREAD_CREATED_CHANNEL_ID)
+        );
+        assert_eq!(
+            fcm_message("device-token", &thread)["message"]["android"]["notification"]["channel_id"],
+            json!(FCM_DEFAULT_CHANNEL_ID)
+        );
+        let budget = serialize(&minimal(&envelope, usize::MAX)).len();
+        let (bytes, _step) = fit(&envelope, budget);
+        let shrunk: Value = serde_json::from_slice(&bytes).expect("the shrunk payload is json");
+        assert_eq!(shrunk["data"][NOTIF_TYPE_KEY], json!(9));
+    }
+
+    #[test]
+    fn a_shrunk_thread_message_keeps_its_parent_id() {
+        let envelope = web_push_message(&thread_job(), USER_ID, 3);
+        let budget = serialize(&minimal(&envelope, usize::MAX)).len();
+        let (bytes, step) = fit(&envelope, budget);
+        assert_eq!(step, Some(PayloadShrink::Minimal));
+        let shrunk: Value = serde_json::from_slice(&bytes).expect("the shrunk payload is json");
+        assert_eq!(shrunk["data"]["parent_id"], json!("7788"));
+    }
+
+    #[test]
+    fn a_shrunk_clear_still_tells_the_client_it_is_a_clear() {
+        let envelope = web_push_clear(&clear_job(), 3);
+        let budget = serialize(&envelope).len() - 1;
+        let (bytes, step) = fit(&envelope, budget);
+        assert_eq!(step, Some(PayloadShrink::Minimal));
+        let shrunk: Value = serde_json::from_slice(&bytes).expect("the shrunk payload is json");
+        assert_eq!(shrunk["data"]["type"], json!(CLEAR_TYPE));
+        assert_eq!(shrunk["data"]["action"], json!(CLEAR_ACTION));
+    }
 }

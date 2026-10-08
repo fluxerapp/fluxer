@@ -91,9 +91,11 @@ An operator can limit which web origins read media through CORS. `FLUXER_MEDIA_P
 | `report` | Every response is the same as under `off`, and each read `enforce` would refuse is logged |
 | `enforce` | A read from an origin outside the allowlist returns 403 |
 
-Under `enforce`, an `Origin` is allowed when it equals the serialised form of an entry in `FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS` byte for byte. Anything else is refused, including `null`, a repeated `Origin` header, and a value that is not ASCII. A refused read returns 403 on every read path, and the Media Proxy reads no object and fetches no external URL for it. [Media Proxy settings](/operator/configuration/#media-proxy-settings) defines how an entry is parsed and serialised.
+Under `enforce`, an `Origin` is allowed when it equals the serialised form of an entry in `FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS` byte for byte. The desktop app origin `fluxer-app://app` is always allowed and needs no entry. Anything else is refused, including `null`, a repeated `Origin` header, and a value that is not ASCII. A refused read returns 403 on every read path, and the Media Proxy reads no object and fetches no external URL for it. [Media Proxy settings](/operator/configuration/#media-proxy-settings) defines how an entry is parsed and serialised.
 
 A read with no `Origin` is served without `Access-Control-Allow-Origin`. A browser sends no `Origin` for an `<img>` or a `<video>` without `crossorigin`, so those elements still load. An allowed read gets its own origin back in `Access-Control-Allow-Origin` on a media representation and on a 416. No error has CORS headers.
+
+A preflight `OPTIONS` request from an allowed origin gets a 204 that allows `GET` and `HEAD` with the `Range` header. A preflight from a refused origin gets the same 403 as a read.
 
 Under `enforce`, every response to a `GET` or `HEAD` on a read path has `Vary: Accept-Encoding, Origin`, the 403 for a refused `Origin` included.
 

@@ -7,6 +7,7 @@ import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
 import {extractId} from '@app/api/stripe/StripeUtils';
+import {shouldBlockFurtherPurchases} from '@app/api/stripe/services/RefundAllowance';
 import {REFUND_ALLOWANCE_CLAIM_PREFIX} from '@app/api/stripe/services/StripeDisputeWebhookHandler';
 import type {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
@@ -261,7 +262,7 @@ export class StripeRefundService {
 		const subscriptionId = refund.metadata.subscription_id;
 		if (subscriptionId) {
 			try {
-				await this.subscriptionService.cancelSubscriptionImmediately(user.id, 'self_serve_refund');
+				await this.subscriptionService.cancelSubscriptionImmediately(user.id, 'self_serve_refund', subscriptionId);
 			} catch (error) {
 				Logger.error(
 					{error, userId: user.id.toString(), subscriptionId},
@@ -271,17 +272,31 @@ export class StripeRefundService {
 		}
 		const claimKey = `${REFUND_ALLOWANCE_CLAIM_PREFIX}:${refund.id}`;
 		const claim = await getBillingRepository().webhookEvents.tryClaim(claimKey);
-		if (claim !== 'claimed') {
+		if (claim === 'in_flight') {
 			Logger.debug(
 				{userId: user.id.toString(), refundId: refund.id, claim},
-				'Self-serve refund already counted against the user refund allowance',
+				'Self-serve refund allowance is being counted by another delivery',
 			);
 			return;
 		}
 		const isFirstRefund = !user.firstRefundAt;
-		const patch: Partial<UserRow> = isFirstRefund
-			? {first_refund_at: new Date()}
-			: {premium_flags: user.premiumFlags | PremiumFlags.PURCHASE_DISABLED};
+		let patch: Partial<UserRow>;
+		let countedRefundIds: Array<string> = [];
+		if (isFirstRefund) {
+			patch = {first_refund_at: new Date()};
+		} else {
+			const outcome = await shouldBlockFurtherPurchases(user, this.userRepository);
+			countedRefundIds = outcome.countedRefundIds;
+			if (!outcome.blocked) {
+				await getBillingRepository().webhookEvents.markProcessed(claimKey);
+				Logger.info(
+					{userId: user.id.toString(), refundId: refund.id, countedRefundIds},
+					'Self-serve refund redelivered after the allowance claim expired; not counting it twice',
+				);
+				return;
+			}
+			patch = {premium_flags: user.premiumFlags | PremiumFlags.PURCHASE_DISABLED};
+		}
 		try {
 			await this.userRepository.patchUpsert(user.id, patch, user.toRow());
 		} catch (error) {
@@ -290,7 +305,13 @@ export class StripeRefundService {
 		}
 		await getBillingRepository().webhookEvents.markProcessed(claimKey);
 		Logger.info(
-			{userId: user.id.toString(), refundId: refund.id, subscriptionId: subscriptionId || null, isFirstRefund},
+			{
+				userId: user.id.toString(),
+				refundId: refund.id,
+				subscriptionId: subscriptionId || null,
+				isFirstRefund,
+				countedRefundIds,
+			},
 			'Self-serve refund confirmed succeeded; refund allowance and cancellation finalized',
 		);
 	}

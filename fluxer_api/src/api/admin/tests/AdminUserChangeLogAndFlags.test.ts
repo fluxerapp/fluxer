@@ -2,11 +2,12 @@
 
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {HTTP_STATUS, TEST_CREDENTIALS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 
 interface ChangeLogResponse {
 	entries: Array<{
@@ -24,7 +25,7 @@ interface ChangeLogResponse {
 interface UserMutationResponse {
 	user: {
 		id: string;
-		suspicious_activity_flags: number;
+		flags: string;
 	};
 }
 
@@ -33,17 +34,19 @@ interface VerifyEmailMutationResponse {
 		id: string;
 		email_verified: boolean;
 		email_bounced: boolean;
-		suspicious_activity_flags: number;
 	};
 }
 
-describe('Admin User Change Log and Suspicious Flags', () => {
+describe('Admin User Change Log and Flags', () => {
 	let harness: ApiTestHarness;
 	beforeAll(async () => {
 		harness = await createApiTestHarness();
 	});
 	beforeEach(async () => {
 		await harness.reset();
+	});
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
@@ -130,101 +133,23 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 				.execute();
 		});
 	});
-	describe('PUT /admin/users/{user_id}/suspicious-activity-flags', () => {
-		test('sets suspicious activity flags', async () => {
+	describe('PATCH /admin/users/{user_id}/flags account limitation', () => {
+		test('sets and clears the account limitation', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
-			const flags = SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL | SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE;
-			const result = await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
-				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
-				.body({flags})
+			const limited = await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
+				.patch(`/admin/users/${target.userId}/flags`)
+				.body({add_flags: [UserFlags.ACCOUNT_LIMITED.toString()]})
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			expect(result.user.suspicious_activity_flags).toBe(flags);
-		});
-		test('clears all suspicious activity flags by setting to zero', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
-			const target = await createTestAccount(harness);
-			await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
-				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
-				.body({flags: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL})
+			expect(BigInt(limited.user.flags) & UserFlags.ACCOUNT_LIMITED).toBe(UserFlags.ACCOUNT_LIMITED);
+			const lifted = await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
+				.patch(`/admin/users/${target.userId}/flags`)
+				.body({remove_flags: [UserFlags.ACCOUNT_LIMITED.toString()]})
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			const result = await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
-				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
-				.body({flags: 0})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.user.suspicious_activity_flags).toBe(0);
-		});
-		test('rejects invalid user_id format', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
-			await createBuilder(harness, `${admin.token}`)
-				.put('/admin/users/not-a-snowflake/suspicious-activity-flags')
-				.body({flags: 1})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-				.execute();
-		});
-		test('rejects missing flags', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
-			const target = await createTestAccount(harness);
-			await createBuilder(harness, `${admin.token}`)
-				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
-				.body({})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-				.execute();
-		});
-		test('rejects negative flags', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
-			const target = await createTestAccount(harness);
-			await createBuilder(harness, `${admin.token}`)
-				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
-				.body({flags: -1})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-				.execute();
-		});
-		test('rejects non-existent user', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
-			await createBuilder(harness, `${admin.token}`)
-				.put('/admin/users/999999999999999999/suspicious-activity-flags')
-				.body({flags: 1})
-				.expect(HTTP_STATUS.NOT_FOUND)
-				.execute();
-		});
-		test('requires USER_UPDATE_SUSPICIOUS_ACTIVITY ACL', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
-			const target = await createTestAccount(harness);
-			await createBuilder(harness, `${admin.token}`)
-				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
-				.body({flags: 1})
-				.expect(HTTP_STATUS.FORBIDDEN)
-				.execute();
-		});
-		test('updates flags multiple times in sequence', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
-			const target = await createTestAccount(harness);
-			const result1 = await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
-				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
-				.body({flags: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result1.user.suspicious_activity_flags).toBe(SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL);
-			const combined =
-				SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL | SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL;
-			const result2 = await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
-				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
-				.body({flags: combined})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result2.user.suspicious_activity_flags).toBe(combined);
+			expect(BigInt(lifted.user.flags) & UserFlags.ACCOUNT_LIMITED).toBe(0n);
 		});
 	});
 	describe('DELETE /admin/users/{user_id}/mfa', () => {
@@ -255,8 +180,39 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 				.execute();
 		});
 	});
+	describe('PATCH /admin/users/{user_id}/email', () => {
+		test('queues a Stripe customer email sync for users with a Stripe customer', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
+			const target = await createTestAccount(harness);
+			await createBuilderWithoutAuth(harness)
+				.post(`/test/users/${target.userId}/premium`)
+				.body({stripe_customer_id: 'cus_admin_email_sync'})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
+			await createBuilder(harness, `${admin.token}`)
+				.patch(`/admin/users/${target.userId}/email`)
+				.body({email: `admin-changed-${Date.now()}@example.com`})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(addJob).toHaveBeenCalledWith('syncStripeCustomerEmail', {userId: target.userId});
+		});
+		test('does not queue a Stripe customer email sync for users without a Stripe customer', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
+			const target = await createTestAccount(harness);
+			const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
+			await createBuilder(harness, `${admin.token}`)
+				.patch(`/admin/users/${target.userId}/email`)
+				.body({email: `admin-changed-${Date.now()}@example.com`})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(addJob).not.toHaveBeenCalledWith('syncStripeCustomerEmail', expect.anything());
+		});
+	});
 	describe('PUT /admin/users/{user_id}/email-verification', () => {
-		test('verifying email clears email_bounced and only email-related suspicious flags', async () => {
+		test('verifying email clears email_bounced', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
@@ -265,7 +221,6 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 				.body({
 					email_bounced: true,
 					email_verified: false,
-					suspicious_activity_flag_names: ['REQUIRE_REVERIFIED_EMAIL', 'REQUIRE_VERIFIED_PHONE'],
 				})
 				.expect(HTTP_STATUS.OK)
 				.execute();
@@ -275,7 +230,6 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 				.execute();
 			expect(result.user.email_verified).toBe(true);
 			expect(result.user.email_bounced).toBe(false);
-			expect(result.user.suspicious_activity_flags).toBe(SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE);
 		});
 	});
 	describe('POST /admin/users/{user_id}/verification-email', () => {

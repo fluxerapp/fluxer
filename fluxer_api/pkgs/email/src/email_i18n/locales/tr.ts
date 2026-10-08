@@ -3,9 +3,17 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
-	"account_disabled_suspicious": {
-		"subject": "{product_name} hesabın geçici olarak devre dışı bırakıldı",
-		"body": "Merhaba {username},\n\nŞüpheli etkinlik tespit ettiğimiz için {product_name} hesabını geçici olarak devre dışı bıraktık.\n\n{reason, select,\n  null {}\n  other {Sebep: {reason}}\n}\n\nHesabına tekrar erişmek için şifreni sıfırlaman gerekiyor:\n\n{forgotUrl}\n\nŞifreni sıfırladıktan sonra tekrar giriş yapabilirsin.\n\nBunun bir hata olduğunu düşünüyorsan, lütfen destek ekibimizle iletişime geç.\n\n– {product_name} Güvenlik Ekibi"
+	"account_deletion_cancelled": {
+		"subject": "{product_name} hesabının silinmesi iptal edildi",
+		"body": "Merhaba {username},\n\n{product_name} hesabının planlanan silinme işlemi iptal edildi. Hesabın silinmeyecek.\n\nSoruların varsa {safety_email} adresine ulaş.\n\n– {product_name} Ekibi"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "{product_name} hesabın hareketsizlik nedeniyle silinecek",
+		"body": "Merhaba {username},\n\n{product_name} hesabın uzun süredir hareketsiz olduğu için şu tarihte kalıcı olarak silinmek üzere planlandı:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nSebep: {reason}}}\n\nHesabını korumak istiyorsan bu tarihten önce bu e-posta adresinden {safety_email} adresine ulaş.\n\n– {product_name} Ekibi"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "{product_name} hesabının silinmesi planlandı",
+		"body": "Merhaba {username},\n\nTalebin doğrultusunda {product_name} hesabın şu tarihte kalıcı olarak silinmek üzere planlandı:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nSebep: {reason}}}\n\nHesabın o zamana kadar kilitli. Bunu sen talep etmediysen ya da hesabını korumak istiyorsan bu tarihten önce bu e-posta adresinden {safety_email} adresine ulaş.\n\n– {product_name} Ekibi"
 	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name} hesabın kalıcı olarak silinecek",
@@ -37,7 +45,7 @@ const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "{product_name} e-posta adresin değiştirildi",
-		"body": "Merhaba {username},\n\n{product_name} hesabındaki e-posta adresi {newEmail} olarak değiştirildi.\n\nBu değişikliği sen yaptıysan, herhangi bir işlem yapmana gerek yok. Yapmadıysan, bu bağlantıyı kullanarak değişikliği geri alabilir ve hesabını güvence altına alabilirsin:\n\n{revertUrl}\n\nBu işlem önceki e-posta adresini geri yükleyecek, tüm cihazlardaki oturumlarını kapatacak, bağlı telefon numaralarını kaldıracak, MFA'yı devre dışı bırakacak ve yeni bir şifre belirlemeni gerektirecek.\n\n– {product_name} Güvenlik Ekibi"
+		"body": "Merhaba {username},\n\n{product_name} hesabındaki e-posta adresi {newEmail} olarak değiştirildi.\n\nBu değişikliği sen yaptıysan, herhangi bir işlem yapmana gerek yok. Yapmadıysan, bu bağlantıyı kullanarak değişikliği geri alabilir ve hesabını güvence altına alabilirsin:\n\n{revertUrl}\n\nBu işlem önceki e-posta adresini geri yükleyecek, tüm cihazlardaki oturumlarını kapatacak, MFA'yı devre dışı bırakacak ve yeni bir şifre belirlemeni gerektirecek.\n\n– {product_name} Güvenlik Ekibi"
 	},
 	"email_verification": {
 		"subject": "{product_name} e-posta adresini doğrula",
@@ -65,7 +73,7 @@ const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "{product_name} şifre değişikliğini onayla",
-		"body": "Merhaba {username},\n\n{product_name} hesabının şifresini değiştirme isteği aldık.\n\nBu değişikliği onaylamak için bu kodu uygulamaya gir:\n\n{code}\n\nBu kod {expiresAt} tarihinde sona erecektir.\n\nBunu sen talep etmediysen, birisi hesabına erişmiş olabilir. Şifreni hemen değiştir ve iki faktörlü kimlik doğrulamayı etkinleştir.\n\n– {product_name} Ekibi"
+		"body": "Merhaba {username},\n\n{product_name} hesabının şifresini değiştirme isteği aldık.\n\nBu değişikliği onaylamak için bu kodu uygulamaya gir:\n\n{code}\n\nBu kod {expiresAt, date, full} {expiresAt, time, short} tarihinde sona erecektir.\n\nBunu sen talep etmediysen, birisi hesabına erişmiş olabilir. Şifreni hemen değiştir ve iki faktörlü kimlik doğrulamayı etkinleştir.\n\n– {product_name} Ekibi"
 	},
 	"password_reset": {
 		"subject": "{product_name} şifreni sıfırla",

@@ -164,6 +164,18 @@ describe('mac-screen-capture loader wrapper', () => {
 			screenPermission: 'authorized',
 		});
 	});
+	test('forwards the screen recording probe result from the native binding', async () => {
+		const {binding} = makeFakeBinding();
+		binding.probeScreenRecordingAccess = async () => 'granted';
+		macScreenCapture.__setBindingForTests(binding);
+		assert.equal(await macScreenCapture.probeScreenRecordingAccess(), 'granted');
+	});
+	test('reports the screen recording probe as unsupported without a binding that has it', async () => {
+		macScreenCapture.__setBindingForTests(null);
+		assert.equal(await macScreenCapture.probeScreenRecordingAccess(), 'unsupported');
+		macScreenCapture.__setBindingForTests(makeFakeBinding().binding);
+		assert.equal(await macScreenCapture.probeScreenRecordingAccess(), 'unsupported');
+	});
 	test('installs a native frame sink handle once before start', async () => {
 		const {binding, calls, frameSinkHandleCalls} = makeFakeBinding();
 		macScreenCapture.__setBindingForTests(binding);

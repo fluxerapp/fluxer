@@ -282,3 +282,50 @@ async fn exact_stream_accepts_small_transport_chunks_and_bounds_empty_ones() {
         .expect_err("empty chunk flood");
     assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
 }
+
+fn chunked_provider_response(chunks: Vec<Bytes>) -> reqwest::Response {
+    let body = reqwest::Body::wrap_stream(stream::iter(
+        chunks.into_iter().map(Ok::<Bytes, std::io::Error>),
+    ));
+    reqwest::Response::from(http::Response::new(body))
+}
+
+#[tokio::test]
+async fn response_reader_accepts_transport_chunks_of_any_size_within_the_length() {
+    const LARGE_CHUNK_BYTES: usize =
+        crate::response_body_limit::RESPONSE_BODY_TRANSPORT_CHUNK_BYTES_MAX + 155_648;
+    let budget = ByteBudget::new(4 * LARGE_CHUNK_BYTES);
+    let large = read_response_bytes(
+        provider_response(vec![7u8; LARGE_CHUNK_BYTES]),
+        LARGE_CHUNK_BYTES,
+        &budget,
+    )
+    .await
+    .expect("a transport chunk larger than the reserved allowance");
+    assert_eq!(large.as_ref().len(), LARGE_CHUNK_BYTES);
+
+    const SMALL_CHUNK_BYTES: usize = 1448;
+    const SMALL_CHUNKS: usize = 512;
+    let small = read_response_bytes(
+        chunked_provider_response(
+            (0..SMALL_CHUNKS)
+                .map(|_| Bytes::from(vec![9u8; SMALL_CHUNK_BYTES]))
+                .collect(),
+        ),
+        SMALL_CHUNK_BYTES * SMALL_CHUNKS,
+        &budget,
+    )
+    .await
+    .expect("packet-sized transport chunks");
+    assert_eq!(small.as_ref().len(), SMALL_CHUNK_BYTES * SMALL_CHUNKS);
+
+    assert!(matches!(
+        read_response_bytes(
+            chunked_provider_response((0..4096).map(|_| Bytes::new()).collect()),
+            4,
+            &budget,
+        )
+        .await,
+        Err(StorageError::ObjectStorage(_))
+    ));
+}

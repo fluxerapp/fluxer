@@ -2,8 +2,9 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {EXAMPLE_FLUXER_TAG, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {EXAMPLE_FLUXER_TAG} from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {
@@ -13,7 +14,7 @@ import {
 	USERNAME_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -81,12 +82,14 @@ interface FluxerTagChangeModalProps {
 }
 
 export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps) => {
+	const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 	const {i18n} = useLingui();
 	const usernameRef = useRef<HTMLInputElement>(null);
 	const hasCustomDiscriminator = isLimitToggleEnabled(
 		{feature_custom_discriminator: LimitResolver.resolve({key: 'feature_custom_discriminator', fallback: 0})},
 		'feature_custom_discriminator',
 	);
+	const usernameOnly = RuntimeConfig.usesUniqueUsernames;
 	const isVisionary = user.premiumType === UserPremiumTypes.LIFETIME;
 	const showPremium = shouldShowPremiumFeatures();
 	const skipAvailabilityCheckRef = useRef(false);
@@ -111,6 +114,12 @@ export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps)
 	const onSubmit = useCallback(
 		async (data: FormInputs) => {
 			const usernameValue = data.username.trim();
+			if (usernameOnly) {
+				await UserCommands.update({username: usernameValue});
+				ModalCommands.pop();
+				ToastCommands.createToast({type: 'success', children: i18n._(USERNAME_UPDATED_DESCRIPTOR)});
+				return;
+			}
 			const normalizedDiscriminator = data.discriminator;
 			const currentUsername = user.username.trim();
 			const currentDiscriminator = user.discriminator;
@@ -175,7 +184,7 @@ export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps)
 			ModalCommands.pop();
 			ToastCommands.createToast({type: 'success', children: i18n._(USERNAME_UPDATED_DESCRIPTOR)});
 		},
-		[hasCustomDiscriminator],
+		[hasCustomDiscriminator, usernameOnly],
 	);
 	const {handleSubmit, isSubmitting} = useFormSubmit({
 		form,
@@ -184,7 +193,7 @@ export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps)
 	});
 	resubmitHandlerRef.current = handleSubmit;
 	const selectedDiscriminator = form.watch('discriminator');
-	const hasNonLifetimePremium = showPremium && user.isPremium() && !isVisionary;
+	const hasNonLifetimePremium = !usernameOnly && showPremium && user.isPremium() && !isVisionary;
 	const hasPendingDiscriminatorChange = hasNonLifetimePremium && selectedDiscriminator !== user.discriminator;
 	const shouldShowPremiumDiscriminatorWarning =
 		hasNonLifetimePremium && (user.premiumDiscriminator || hasPendingDiscriminatorChange);
@@ -242,101 +251,108 @@ export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps)
 										data-flx="user.fluxer-tag-change-modal.controller"
 									/>
 								</div>
-								<span className={styles.separator} data-flx="user.fluxer-tag-change-modal.separator">
-									#
-								</span>
-								<div className={styles.discriminatorInput} data-flx="user.fluxer-tag-change-modal.discriminator-input">
-									{!hasCustomDiscriminator ? (
-										showPremium ? (
-											<Tooltip
-												text={i18n._(GET_TO_CUSTOMIZE_YOUR_TAG_OR_KEEP_IT_DESCRIPTOR, {
-													premiumProductName: PREMIUM_PRODUCT_NAME,
-												})}
-												data-flx="user.fluxer-tag-change-modal.tooltip"
-											>
-												<div
-													className={styles.discriminatorInputDisabled}
-													data-flx="user.fluxer-tag-change-modal.discriminator-input-disabled"
+								{!usernameOnly && (
+									<span className={styles.separator} data-flx="user.fluxer-tag-change-modal.separator">
+										#
+									</span>
+								)}
+								{!usernameOnly && (
+									<div
+										className={styles.discriminatorInput}
+										data-flx="user.fluxer-tag-change-modal.discriminator-input"
+									>
+										{!hasCustomDiscriminator ? (
+											showPremium ? (
+												<Tooltip
+													text={i18n._(GET_TO_CUSTOMIZE_YOUR_TAG_OR_KEEP_IT_DESCRIPTOR, {
+														premiumProductName: PREMIUM_PRODUCT_NAME,
+													})}
+													data-flx="user.fluxer-tag-change-modal.tooltip"
 												>
-													<Input
-														data-flx="user.fluxer-tag-change-modal.input.set-value.text"
-														{...form.register('discriminator')}
-														aria-label={i18n._(TAG_DESCRIPTOR)}
-														maxLength={4}
-														placeholder="0000"
-														required={true}
-														type="text"
-														disabled={true}
-														onChange={(e) => {
-															const value = e.target.value.replace(/\D/g, '');
-															form.setValue('discriminator', value);
-														}}
-													/>
-													<FocusRing offset={-2} data-flx="user.fluxer-tag-change-modal.focus-ring">
-														<button
-															type="button"
-															onClick={() => {
-																PremiumModalCommands.open();
+													<div
+														className={styles.discriminatorInputDisabled}
+														data-flx="user.fluxer-tag-change-modal.discriminator-input-disabled"
+													>
+														<Input
+															data-flx="user.fluxer-tag-change-modal.input.set-value.text"
+															{...form.register('discriminator')}
+															aria-label={i18n._(TAG_DESCRIPTOR)}
+															maxLength={4}
+															placeholder="0000"
+															required={true}
+															type="text"
+															disabled={true}
+															onChange={(e) => {
+																const value = e.target.value.replace(/\D/g, '');
+																form.setValue('discriminator', value);
 															}}
-															className={styles.discriminatorOverlay}
-															aria-label={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
-															data-flx="user.fluxer-tag-change-modal.discriminator-overlay.open.button"
 														/>
-													</FocusRing>
-												</div>
-											</Tooltip>
-										) : (
-											<Tooltip
-												text={i18n._(CUSTOM_DISCRIMINATORS_ARE_NOT_AVAILABLE_ON_THIS_INSTANCE_DESCRIPTOR)}
-												data-flx="user.fluxer-tag-change-modal.tooltip--2"
-											>
-												<div
-													className={styles.discriminatorInputDisabled}
-													data-flx="user.fluxer-tag-change-modal.discriminator-input-disabled--2"
+														<FocusRing offset={-2} data-flx="user.fluxer-tag-change-modal.focus-ring">
+															<button
+																type="button"
+																onClick={() => {
+																	PremiumModalCommands.open();
+																}}
+																className={styles.discriminatorOverlay}
+																aria-label={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+																data-flx="user.fluxer-tag-change-modal.discriminator-overlay.open.button"
+															/>
+														</FocusRing>
+													</div>
+												</Tooltip>
+											) : (
+												<Tooltip
+													text={i18n._(CUSTOM_DISCRIMINATORS_ARE_NOT_AVAILABLE_ON_THIS_INSTANCE_DESCRIPTOR)}
+													data-flx="user.fluxer-tag-change-modal.tooltip--2"
 												>
-													<Input
-														data-flx="user.fluxer-tag-change-modal.input.set-value.text--2"
-														{...form.register('discriminator')}
-														aria-label={i18n._(TAG_DESCRIPTOR)}
-														maxLength={4}
-														placeholder="0000"
-														required={true}
-														type="text"
-														disabled={true}
-														onChange={(e) => {
-															const value = e.target.value.replace(/\D/g, '');
-															form.setValue('discriminator', value);
-														}}
-													/>
-												</div>
-											</Tooltip>
-										)
-									) : (
-										<Input
-											data-flx="user.fluxer-tag-change-modal.input.set-value.text--3"
-											{...form.register('discriminator', {
-												validate: (value) =>
-													isVisionaryDiscriminator0000Blocked({
-														showPremium,
-														isVisionary,
-														discriminator: value,
-													})
-														? i18n._(THE_0000_TAG_IS_RESERVED_FOR_VISIONARY_SUBSCRIBERS_DESCRIPTOR)
-														: true,
-											})}
-											aria-label={i18n._(TAG_DESCRIPTOR)}
-											maxLength={4}
-											placeholder="0000"
-											required={true}
-											type="text"
-											disabled={false}
-											onChange={(e) => {
-												const value = e.target.value.replace(/\D/g, '');
-												form.setValue('discriminator', value, {shouldValidate: true});
-											}}
-										/>
-									)}
-								</div>
+													<div
+														className={styles.discriminatorInputDisabled}
+														data-flx="user.fluxer-tag-change-modal.discriminator-input-disabled--2"
+													>
+														<Input
+															data-flx="user.fluxer-tag-change-modal.input.set-value.text--2"
+															{...form.register('discriminator')}
+															aria-label={i18n._(TAG_DESCRIPTOR)}
+															maxLength={4}
+															placeholder="0000"
+															required={true}
+															type="text"
+															disabled={true}
+															onChange={(e) => {
+																const value = e.target.value.replace(/\D/g, '');
+																form.setValue('discriminator', value);
+															}}
+														/>
+													</div>
+												</Tooltip>
+											)
+										) : (
+											<Input
+												data-flx="user.fluxer-tag-change-modal.input.set-value.text--3"
+												{...form.register('discriminator', {
+													validate: (value) =>
+														isVisionaryDiscriminator0000Blocked({
+															showPremium,
+															isVisionary,
+															discriminator: value,
+														})
+															? i18n._(THE_0000_TAG_IS_RESERVED_FOR_VISIONARY_SUBSCRIBERS_DESCRIPTOR)
+															: true,
+												})}
+												aria-label={i18n._(TAG_DESCRIPTOR)}
+												maxLength={4}
+												placeholder="0000"
+												required={true}
+												type="text"
+												disabled={false}
+												onChange={(e) => {
+													const value = e.target.value.replace(/\D/g, '');
+													form.setValue('discriminator', value, {shouldValidate: true});
+												}}
+											/>
+										)}
+									</div>
+								)}
 							</div>
 							<div className={styles.validationBox} data-flx="user.fluxer-tag-change-modal.validation-box">
 								<UsernameValidationRules
@@ -378,7 +394,7 @@ export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps)
 									)}
 								</WarningAlert>
 							)}
-							{!hasCustomDiscriminator && (
+							{!usernameOnly && !hasCustomDiscriminator && (
 								<PlutoniumUpsell
 									className={styles.premiumUpsell}
 									data-flx="user.fluxer-tag-change-modal.premium-upsell"

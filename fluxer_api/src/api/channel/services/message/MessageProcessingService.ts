@@ -18,7 +18,7 @@ import type {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {CannotEditOtherUserMessageError} from '@fluxer/errors/src/domains/channel/CannotEditOtherUserMessageError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
@@ -204,6 +204,9 @@ export class MessageProcessingService {
 	}
 
 	async repairMentionsOnRead(message: Message, sourceChannel?: Channel): Promise<Message> {
+		if ((message.flags & MessageFlags.IS_CROSSPOST) !== 0) {
+			return message;
+		}
 		if (
 			message.mentionedUserIds.size === 0 &&
 			message.mentionedRoleIds.size === 0 &&
@@ -216,7 +219,7 @@ export class MessageProcessingService {
 			}
 		}
 		const referencedMessage =
-			message.reference && message.mentionedUserIds.size > 0
+			message.reference?.messageId && message.mentionedUserIds.size > 0
 				? await this.channelRepository.messages.getMessage(message.reference.channelId, message.reference.messageId)
 				: null;
 		const repair = await this.mentionService.buildReadRepairMentionData({message, referencedMessage});

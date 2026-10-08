@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import styles from '@app/features/messaging/components/modals/ExternalLinkWarningModal.module.css';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as TrustedDomainCommands from '@app/features/trusted_domain/commands/TrustedDomainCommands';
@@ -69,7 +69,7 @@ export const ExternalLinkWarningModal = observer(({url}: {url: string}) => {
 						</div>
 						<div className={styles.textContainer} data-flx="messaging.external-link-warning-modal.text-container">
 							<p className={styles.title} data-flx="messaging.external-link-warning-modal.title">
-								{i18n._(LEAVING_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+								{i18n._(LEAVING_PRODUCT_DESCRIPTOR, {productName: getActiveInstanceProductName()})}
 							</p>
 							<p className={styles.description} data-flx="messaging.external-link-warning-modal.description">
 								<Trans>External links can be dangerous. Be careful.</Trans>

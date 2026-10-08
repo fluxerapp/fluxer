@@ -10,6 +10,7 @@ import {
 	REGISTRATION_REJECTED_TRAIT,
 } from '@app/api/instance/InstanceConfigRepository';
 import {Logger} from '@app/api/Logger';
+import {getKVAccountDeletionQueue} from '@app/api/middleware/ServiceSingletons';
 import type {AuthSession} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
@@ -43,7 +44,6 @@ interface DispatchAuthSessionChangeParams {
 	userId: UserID;
 	oldAuthSessionIdHash: string;
 	newAuthSessionIdHash: string;
-	newToken: string;
 }
 
 interface ReplaceCurrentAuthSessionParams {
@@ -87,6 +87,7 @@ export async function createAuthSession(
 	if (user.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)) throw new RegistrationPendingApprovalError();
 	if (user.traits.has(REGISTRATION_REJECTED_TRAIT)) throw new RegistrationRejectedError();
 	user = await AuthUtility.handleBanStatus(ctx, user);
+	user = await AuthUtility.reactivateOnSignIn(ctx, user, getKVAccountDeletionQueue());
 	const now = new Date();
 	const token = await AuthUtility.generateAuthToken(ctx);
 	let clientCountry: string | null = null;
@@ -190,13 +191,12 @@ export async function replaceCurrentAuthSession(
 	await deleteAndTerminateAuthSessions(ctx, user.id, otherAuthSessions);
 	const [newToken, newAuthSession] = await createAuthSession(ctx, {user, origin: resolveSessionOrigin(ctx, request)});
 	const newAuthSessionIdHash = encodeSessionIdHash(newAuthSession.sessionIdHash);
+	await deleteAndTerminateAuthSessions(ctx, user.id, [currentAuthSession]);
 	await dispatchAuthSessionChange(ctx, {
 		userId: user.id,
 		oldAuthSessionIdHash,
 		newAuthSessionIdHash,
-		newToken,
 	});
-	await deleteAndTerminateAuthSessions(ctx, user.id, [currentAuthSession]);
 	return {
 		token: newToken,
 		authSession: newAuthSession,
@@ -229,14 +229,13 @@ function encodeSessionIdHash(sessionIdHash: Uint8Array): string {
 
 async function dispatchAuthSessionChange(ctx: ApiContext, params: DispatchAuthSessionChangeParams): Promise<void> {
 	const {gateway} = ctx.services;
-	const {userId, oldAuthSessionIdHash, newAuthSessionIdHash, newToken} = params;
+	const {userId, oldAuthSessionIdHash, newAuthSessionIdHash} = params;
 	await gateway.dispatchPresence({
 		userId,
 		event: 'AUTH_SESSION_CHANGE',
 		data: {
 			old_auth_session_id_hash: oldAuthSessionIdHash,
 			new_auth_session_id_hash: newAuthSessionIdHash,
-			new_token: newToken,
 		},
 	});
 }

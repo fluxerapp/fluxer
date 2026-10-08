@@ -9,11 +9,13 @@ import {
 	type UserID,
 } from '@app/api/BrandedTypes';
 import type {ChannelOverride, UserGuildSettingsRow} from '@app/api/database/types/UserTypes';
+import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {GuildChannelOverride} from '@app/api/models/GuildChannelOverride';
 import type {User} from '@app/api/models/User';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
@@ -23,9 +25,11 @@ import type {IUserSettingsRepository} from '@app/api/user/repositories/IUserSett
 import {CustomStatusValidator} from '@app/api/user/services/CustomStatusValidator';
 import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
 import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+import {controlUserGuildSettingsView} from '@app/api/user/UserGuildSettingsThreadView';
 import {mapRelationshipToResponse} from '@app/api/user/UserMappers';
 import {dedupeGuildFolders} from '@app/api/user/utils/GuildFolderUtils';
-import {isUserAdult} from '@app/api/utils/AgeUtils';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
+import {CHANNEL_OVERRIDE_FLAG_MASK} from '@fluxer/constants/src/ThreadConstants';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
 	GroupDmAddPermissionFlags,
@@ -133,6 +137,10 @@ export class UserAccountSettingsService {
 		if (data.bot_default_guilds_restricted !== undefined) {
 			updatedRowData.bot_default_guilds_restricted = data.bot_default_guilds_restricted;
 		}
+		if (data.privacy_setup_version !== undefined) {
+			updatedRowData.privacy_setup_version = data.privacy_setup_version;
+			updatedRowData.privacy_setup_completed_at = new Date();
+		}
 		if (data.inline_attachment_media !== undefined) {
 			updatedRowData.inline_attachment_media = data.inline_attachment_media;
 		}
@@ -200,7 +208,7 @@ export class UserAccountSettingsService {
 		if (data.default_hide_muted_channels !== undefined) {
 			updatedRowData.default_hide_muted_channels = data.default_hide_muted_channels;
 		}
-		const userIsAdult = isUserAdult(dateOfBirth);
+		const userIsAdult = canUserAccessNsfwContent({isBot: false, dateOfBirth});
 		if (userIsAdult) {
 			if (data.sensitive_content_friend_dm_filter !== undefined) {
 				updatedRowData.sensitive_content_friend_dm_filter = data.sensitive_content_friend_dm_filter;
@@ -226,11 +234,17 @@ export class UserAccountSettingsService {
 				updatedRowData.sensitive_content_friend_dm_filter = data.sensitive_content_friend_dm_filter;
 			}
 			if (data.sensitive_content_non_friend_dm_filter !== undefined) {
-				throw ValidationError.fromPath(
-					'sensitive_content_non_friend_dm_filter',
-					'AGE_RESTRICTED',
-					'Non-adult users cannot modify the non-friend DM content filter',
-				);
+				const allowed =
+					data.sensitive_content_non_friend_dm_filter === SensitiveMediaFilterLevel.BLUR ||
+					data.sensitive_content_non_friend_dm_filter === SensitiveMediaFilterLevel.BLOCK;
+				if (!allowed) {
+					throw ValidationError.fromPath(
+						'sensitive_content_non_friend_dm_filter',
+						'AGE_RESTRICTED',
+						'Non-adult users can only set non-friend DM filter to blur or block',
+					);
+				}
+				updatedRowData.sensitive_content_non_friend_dm_filter = data.sensitive_content_non_friend_dm_filter;
 			}
 			if (data.sensitive_content_guild_filter !== undefined) {
 				throw ValidationError.fromPath(
@@ -285,6 +299,7 @@ export class UserAccountSettingsService {
 		userId: UserID;
 		guildId: GuildID | null;
 		data: UserGuildSettingsUpdateRequest;
+		viewer?: ThreadViewer;
 	}): Promise<UserGuildSettings> {
 		const {userId, guildId, data} = params;
 		const currentSettings = await this.deps.userSettingsRepository.findGuildSettings(userId, guildId);
@@ -326,27 +341,37 @@ export class UserAccountSettingsService {
 		if (data.hide_muted_channels !== undefined) updatedRowData.hide_muted_channels = data.hide_muted_channels;
 		if (data.unread_badges !== undefined) updatedRowData.unread_badges = data.unread_badges ?? null;
 		if (data.channel_overrides !== undefined) {
-			if (data.channel_overrides) {
-				const channelOverrides = new Map<ChannelID, ChannelOverride>();
-				for (const [channelIdStr, override] of Object.entries(data.channel_overrides)) {
-					const channelId = createChannelID(BigInt(channelIdStr));
-					channelOverrides.set(channelId, {
-						collapsed: override.collapsed,
-						message_notifications: override.message_notifications,
-						muted: override.muted,
-						mute_config: override.mute_config
-							? {
-									end_time: override.mute_config.end_time ?? null,
-									selected_time_window: override.mute_config.selected_time_window,
-								}
-							: null,
-						unread_badges: override.unread_badges ?? null,
-					});
-				}
-				updatedRowData.channel_overrides = channelOverrides.size > 0 ? channelOverrides : null;
-			} else {
-				updatedRowData.channel_overrides = null;
+			const flagsWritable = guildId !== null && params.viewer !== undefined && viewerActive(params.viewer, guildId);
+			const previousOverrides = currentSettings?.channelOverrides ?? new Map<ChannelID, GuildChannelOverride>();
+			const channelOverrides = new Map<ChannelID, ChannelOverride>();
+			for (const [channelIdStr, override] of Object.entries(data.channel_overrides ?? {})) {
+				const channelId = createChannelID(BigInt(channelIdStr));
+				const flags = flagsWritable
+					? override.flags !== undefined
+						? override.flags & CHANNEL_OVERRIDE_FLAG_MASK
+						: previousOverrides.get(channelId)?.flags
+					: previousOverrides.get(channelId)?.flags;
+				channelOverrides.set(channelId, {
+					collapsed: override.collapsed,
+					message_notifications: override.message_notifications,
+					muted: override.muted,
+					mute_config: override.mute_config
+						? {
+								end_time: override.mute_config.end_time ?? null,
+								selected_time_window: override.mute_config.selected_time_window,
+							}
+						: null,
+					unread_badges: override.unread_badges ?? null,
+					...(flags ? {flags} : {}),
+				});
 			}
+			if (!flagsWritable && currentSettings) {
+				const hidden = (await controlUserGuildSettingsView(currentSettings))?.hiddenChannelIds;
+				for (const [channelId, override] of previousOverrides) {
+					if (hidden?.has(channelId.toString())) channelOverrides.set(channelId, override.toChannelOverride());
+				}
+			}
+			updatedRowData.channel_overrides = channelOverrides.size > 0 ? channelOverrides : null;
 		}
 		const updatedSettings = await this.deps.userSettingsRepository.upsertGuildSettings(updatedRowData);
 		await this.deps.updatePropagator.dispatchUserGuildSettingsUpdate({userId, settings: updatedSettings});

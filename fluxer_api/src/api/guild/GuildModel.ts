@@ -14,6 +14,7 @@ import type {GuildEmoji} from '@app/api/models/GuildEmoji';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {GuildRole} from '@app/api/models/GuildRole';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
+import {hiddenGuildMember, isHiddenPartial} from '@app/api/user/ProfileVisibility';
 import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
 import type {
 	GuildEmojiResponse,
@@ -132,6 +133,11 @@ export function mapGuildStickerToResponse(sticker: GuildSticker): GuildStickerRe
 }
 
 function mapMemberWithUser(member: GuildMember, userPartial: UserPartialResponse): GuildMemberResponse {
+	const response = mapMemberFields(member, userPartial);
+	return isHiddenPartial(userPartial) ? hiddenGuildMember(response) : response;
+}
+
+function mapMemberFields(member: GuildMember, userPartial: UserPartialResponse): GuildMemberResponse {
 	const now = Date.now();
 	const isTimedOut = member.communicationDisabledUntil != null && member.communicationDisabledUntil.getTime() > now;
 	return {

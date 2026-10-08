@@ -25,39 +25,83 @@
 	line-height: 1.5;
 }
 
-.warningBox {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 0.625rem;
-	padding: 1.125rem;
-	background-color: hsla(40, calc(100% * var(--saturation-factor)), 55%, 0.06);
-	border: 0.125rem solid hsla(40, calc(100% * var(--saturation-factor)), 55%, 0.25);
-	border-radius: 0.625rem;
-	margin-bottom: 1rem;
-}
-
-.warningIcon {
-	color: var(--status-warning);
-}
-
-.warningTitle {
-	font-size: 1.125rem;
-	font-weight: 700;
-	color: var(--text-primary);
-	margin: 0;
-}
-
-.warningDescription {
-	font-size: 0.875rem;
-	color: var(--text-secondary);
-	line-height: 1.5;
-	margin: 0;
-}
-
 .codeInputSection {
 	margin-bottom: 0.75rem;
 	width: 100%;
+	text-align: left;
+}
+
+.codeInput {
+	font-family: var(--font-mono);
+	font-size: 1.125rem;
+	letter-spacing: 0.08em;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+.code {
+	display: inline-block;
+	padding: 0.5rem 0.75rem;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.5rem;
+	background: var(--background-tertiary);
+	color: var(--text-primary);
+	font-family: var(--font-mono);
+	font-size: 1.25rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	line-height: 1.1;
+	overflow-wrap: anywhere;
+}
+
+.matchCheck {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	width: 100%;
+	margin: 0.25rem 0 0.75rem;
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+	line-height: 1.4;
+}
+
+.accountLine {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem 0.5rem;
+	width: 100%;
+	margin-bottom: 0.75rem;
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+}
+
+.wrongAccount {
+	width: 100%;
+	margin: 0;
+	padding: 0.625rem 0.75rem;
+	border: 0.0625rem solid hsla(40, calc(100% * var(--saturation-factor)), 55%, 0.25);
+	border-radius: 0.5rem;
+	background-color: hsla(40, calc(100% * var(--saturation-factor)), 55%, 0.06);
+	color: var(--text-primary);
+	line-height: 1.4;
+}
+
+.textButton {
+	padding: 0.125rem 0.25rem;
+	border: none;
+	border-radius: 0.25rem;
+	background: none;
+	color: var(--text-link);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.textButton:hover {
+	text-decoration: underline;
 }
 
 .deviceCard {
@@ -115,24 +159,6 @@
 	padding: 1.5rem 0;
 }
 
-.spinnerIcon {
-	width: 1.5rem;
-	height: 1.5rem;
-	border: 0.1875rem solid var(--background-modifier-accent);
-	border-top-color: var(--brand-primary);
-	border-radius: 50%;
-	animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
-}
-
 .error {
 	background-color: hsla(0, calc(100% * var(--saturation-factor)), 50%, 0.1);
 	border: 0.0625rem solid hsla(0, calc(100% * var(--saturation-factor)), 50%, 0.2);
@@ -146,4 +172,8 @@
 
 .successIcon {
 	color: var(--status-online);
+}
+
+.deniedIcon {
+	color: var(--text-tertiary);
 }

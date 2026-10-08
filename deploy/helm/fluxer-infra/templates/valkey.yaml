@@ -1,0 +1,67 @@
+{{- with .Values.valkey }}
+{{- $ctx := dict "root" $ "w" . "name" "valkey" "component" "cache" }}
+{{- include "fluxer-infra.pdb" $ctx }}
+{{- include "fluxer-infra.service" (merge (dict "svcName" "valkey" "ports" (list (list "valkey" 6379))) $ctx) }}
+{{- include "fluxer-infra.service" (merge (dict "svcName" "valkey-headless" "headless" true "publishNotReady" true "ports" (list (list "valkey" 6379))) $ctx) }}
+{{- $mounts := list }}
+{{- if .persistence.enabled }}
+{{- $mounts = append $mounts (dict "name" "data" "mountPath" "/data") }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: valkey
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-infra.labels" $ctx | nindent 4 }}
+spec:
+  replicas: 1
+  serviceName: valkey-headless
+  {{- with include "fluxer-infra.statefulSetSpec" $ctx | trim }}
+  {{- . | nindent 2 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "fluxer-infra.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluxer-infra.labels" $ctx | nindent 8 }}
+      {{- with include "fluxer-infra.podAnnotations" $ctx | trim }}
+      {{- . | nindent 6 }}
+      {{- end }}
+    spec:
+      {{- include "fluxer-infra.podSpec" $ctx | trim | nindent 6 }}
+      containers:
+        - name: valkey
+          {{- include "fluxer-infra.containerCommon" (merge (dict "env" list "mounts" $mounts) $ctx) | trim | nindent 10 }}
+          command:
+            - valkey-server
+            {{- if .persistence.enabled }}
+            - --appendonly
+            - "yes"
+            - --dir
+            - /data
+            {{- else }}
+            - --save
+            - ""
+            - --appendonly
+            - "no"
+            {{- end }}
+            - --maxmemory
+            - {{ .maxmemory | quote }}
+            - --maxmemory-policy
+            - {{ .maxmemoryPolicy | quote }}
+          ports:
+            - name: valkey
+              containerPort: 6379
+      {{- with .extraVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .persistence.enabled }}
+  volumeClaimTemplates:
+    {{- include "fluxer-infra.volumeClaim" .persistence | nindent 4 }}
+  {{- end }}
+{{- end }}

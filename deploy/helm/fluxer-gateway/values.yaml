@@ -1,0 +1,86 @@
+image:
+  registry: ghcr.io/fluxerapp
+  tag: v1
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+clusterDomain: cluster.local
+
+env:
+  FLUXER_ENV: production
+  FLUXER_GATEWAY_PORT: "8080"
+  FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: https://media.example.com
+  FLUXER_INTERNAL_API_ENDPOINT: http://api:8080
+
+extraEnv: []
+
+envFrom:
+- secretRef:
+    name: fluxer-env
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+
+probes:
+  startup:
+    httpGet:
+      path: /_health
+      port: http
+    failureThreshold: 30
+  liveness:
+    httpGet:
+      path: /_health
+      port: http
+  readiness:
+    exec:
+      command:
+      - curl
+      - -fsS
+      - -o
+      - /dev/null
+      - --max-time
+      - "2"
+      - http://127.0.0.1:8080/_health/ready
+    timeoutSeconds: 3
+
+strategy: {}
+updateStrategy: {}
+
+topologySpreadConstraints: []
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+networkPolicy:
+  enabled: false
+  ingressNamespace: ingress-nginx
+  clients:
+  - app.kubernetes.io/part-of: fluxer
+
+deployments:
+  gateway:
+    role: all
+    replicas: 1
+    lifecycle:
+      preStop:
+        exec:
+          command:
+          - /bin/sh
+          - -c
+          - curl -fsS -o /dev/null --max-time 2 http://127.0.0.1:8080/_health/drain; sleep 5
+    resources:
+      requests:
+        cpu: 100m
+        memory: 384Mi
+      limits:
+        memory: 1Gi
+
+statefulsets: {}

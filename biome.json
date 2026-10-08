@@ -144,6 +144,10 @@
 			"linter": {"rules": {"style": {"noRestrictedImports": "off"}}}
 		},
 		{
+			"includes": ["fluxer_app/src/**/*.worklet.js"],
+			"javascript": {"globals": ["AudioWorkletProcessor", "registerProcessor", "sampleRate", "currentTime"]}
+		},
+		{
 			"includes": ["**/*.astro"],
 			"linter": {"rules": {"correctness": {"noUnusedImports": "off", "noUnusedVariables": "off"}}},
 			"assist": {"actions": {"source": {"organizeImports": "off"}}}

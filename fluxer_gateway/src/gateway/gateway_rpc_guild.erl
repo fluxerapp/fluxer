@@ -36,6 +36,7 @@ route(M, P) ->
 
 -define(HANDLER_MAP, #{
     <<"guild.dispatch">> => fun gateway_rpc_guild_lifecycle:handle/2,
+    <<"guild.dispatch_many">> => fun gateway_rpc_guild_lifecycle:handle/2,
     <<"guild.get_data">> => fun gateway_rpc_guild_lifecycle:handle/2,
     <<"guild.get_auth_context">> => fun gateway_rpc_guild_lifecycle:handle/2,
     <<"guild.start">> => fun gateway_rpc_guild_lifecycle:handle/2,

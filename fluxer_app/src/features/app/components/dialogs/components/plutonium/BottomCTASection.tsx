@@ -3,7 +3,7 @@
 import {PurchaseDisclaimer} from '@app/features/app/components/dialogs/components/PurchaseDisclaimer';
 import styles from '@app/features/app/components/dialogs/components/plutonium/BottomCTASection.module.css';
 import {PurchaseDisabledWrapper} from '@app/features/app/components/dialogs/components/plutonium/PurchaseDisabledWrapper';
-import {PREMIUM_PRODUCT_FULL_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getPremiumProductFullName} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -43,7 +43,7 @@ export const BottomCTASection: React.FC<BottomCTASectionProps> = observer(
 		const {i18n} = useLingui();
 		const tooltipText: React.ReactNode =
 			purchaseDisabledTooltip ??
-			i18n._(CLAIM_YOUR_ACCOUNT_TO_PURCHASE_DESCRIPTOR, {premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME});
+			i18n._(CLAIM_YOUR_ACCOUNT_TO_PURCHASE_DESCRIPTOR, {premiumProductFullName: getPremiumProductFullName()});
 		return (
 			<div className={styles.container} data-flx="app.plutonium.bottom-cta-section.container">
 				<h2 className={styles.title} data-flx="app.plutonium.bottom-cta-section.title">

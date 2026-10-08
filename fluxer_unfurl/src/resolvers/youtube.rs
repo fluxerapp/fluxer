@@ -6,7 +6,6 @@ use crate::media_proxy::embed_media_flags;
 use crate::text_limits;
 use crate::types::{EmbedAuthor, EmbedMedia, EmbedProvider, MessageEmbed};
 use serde::Deserialize;
-use std::env;
 use std::future::Future;
 use std::pin::Pin;
 use std::time::Duration;
@@ -61,7 +60,7 @@ impl Resolver for YouTubeResolver {
                 }
             };
 
-            let Some(api_key) = ctx.youtube_api_key.clone().or_else(youtube_api_key) else {
+            let Some(api_key) = ctx.youtube_api_key.clone() else {
                 tracing::debug!("No YouTube API key configured");
                 return Ok(ResolverResult { embeds: vec![] });
             };
@@ -249,17 +248,6 @@ struct YouTubeThumbnail {
     url: String,
     width: Option<u32>,
     height: Option<u32>,
-}
-
-fn youtube_api_key() -> Option<String> {
-    env::var("FLUXER_YOUTUBE_API_KEY")
-        .ok()
-        .filter(|key| !key.is_empty())
-        .or_else(|| {
-            env::var("YOUTUBE_API_KEY")
-                .ok()
-                .filter(|key| !key.is_empty())
-        })
 }
 
 fn build_youtube_api_url(video_id: &str, api_key: &str) -> anyhow::Result<Url> {

@@ -11,6 +11,7 @@ import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {GiftCode} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
 import {extractId} from '@app/api/stripe/StripeUtils';
+import {shouldBlockFurtherPurchases} from '@app/api/stripe/services/RefundAllowance';
 import type {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
 import type {StripePaymentFraudService} from '@app/api/stripe/services/StripePaymentFraudService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
@@ -113,10 +114,9 @@ export class StripeDisputeWebhookHandler {
 			});
 			await this.userCacheService.setUserPartialResponseFromUser(updatedUser);
 			if (updatedUser.email) {
-				await this.emailService.sendUnbanNotification(
+				await this.emailService.sendAccountDeletionCancelledEmail(
 					updatedUser.email,
 					updatedUser.username,
-					'chargeback withdrawal',
 					updatedUser.locale,
 				);
 			}
@@ -237,9 +237,25 @@ export class StripeDisputeWebhookHandler {
 			return;
 		}
 		const isFirstRefund = !user.firstRefundAt;
-		const patch: Partial<UserRow> = isFirstRefund
-			? {first_refund_at: new Date()}
-			: {premium_flags: user.premiumFlags | PremiumFlags.PURCHASE_DISABLED};
+		let patch: Partial<UserRow>;
+		let countedRefundIds: Array<string> = [];
+		if (isFirstRefund) {
+			patch = {first_refund_at: new Date()};
+		} else {
+			const outcome = await shouldBlockFurtherPurchases(user, this.userRepository);
+			countedRefundIds = outcome.countedRefundIds;
+			if (!outcome.blocked) {
+				for (const claimKey of claimedKeys) {
+					await getBillingRepository().webhookEvents.markProcessed(claimKey);
+				}
+				Logger.info(
+					{userId: user.id, chargeId: charge.id, paymentIntentId, countedRefundIds},
+					'Refund redelivered after the allowance claim expired; not counting it twice',
+				);
+				return;
+			}
+			patch = {premium_flags: user.premiumFlags | PremiumFlags.PURCHASE_DISABLED};
+		}
 		let updatedUser: User;
 		try {
 			updatedUser = await this.userRepository.patchUpsert(user.id, patch, user.toRow());
@@ -254,7 +270,7 @@ export class StripeDisputeWebhookHandler {
 		}
 		await this.dispatchUser(updatedUser);
 		Logger.debug(
-			{userId: user.id, chargeId: charge.id, paymentIntentId},
+			{userId: user.id, chargeId: charge.id, paymentIntentId, countedRefundIds},
 			isFirstRefund
 				? 'First refund recorded - 30 day self-serve refund cooldown applied'
 				: 'Second refund recorded - permanent purchase block applied',

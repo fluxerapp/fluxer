@@ -157,7 +157,7 @@ Starts a direct message or group direct message call, or adds ringing recipients
 
 - The caller must satisfy the [access rules](#access-rules).
 - Every explicitly named recipient must be a current recipient other than the caller.
-- A direct message also requires that the caller is allowed to send the other recipient a direct message.
+- A direct message also requires that the caller is allowed to send the other recipient a direct message, including the [new conversation limit](/http-api/users/private-channels/#new-conversation-limit).
 
 ### Path parameters
 
@@ -193,6 +193,7 @@ A named recipient is only rung when the incoming call policy described by [Get c
 | 400 | [error response](/http-api/#error-response) | The direct message send policy rejects the caller and the request returns `CANNOT_SEND_MESSAGES_TO_USER` |
 | 400 | [error response](/http-api/#error-response) | That same policy rejects a caller who has never claimed its credentials with `UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES` |
 | 400 | [error response](/http-api/#error-response) | A concurrent request already created the call and the request returns `CALL_ALREADY_EXISTS` |
+| 403 | [error response](/http-api/#error-response) | A limited caller rings an account that has not written in the direct message and the request returns `NEW_CONVERSATIONS_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller is not a recipient, each returning `UNKNOWN_CHANNEL` |
 
 ### Side effects

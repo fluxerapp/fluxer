@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 type ElasticsearchFieldType = 'text' | 'keyword' | 'boolean' | 'long' | 'integer' | 'date' | 'float';
-export type FluxerSearchIndexName = 'messages' | 'guilds' | 'users' | 'reports' | 'audit_logs' | 'guild_members';
+export type FluxerSearchIndexName =
+	| 'messages'
+	| 'guilds'
+	| 'users'
+	| 'reports'
+	| 'audit_logs'
+	| 'guild_members'
+	| 'threads';
 
 export interface ElasticsearchFieldMapping {
 	type: ElasticsearchFieldType;
@@ -131,7 +138,6 @@ export const ELASTICSEARCH_INDEX_DEFINITIONS: Record<FluxerSearchIndexName, Elas
 				id: keyword(),
 				username: textWithKeyword(),
 				email: textWithKeyword(),
-				phone: textWithKeyword(),
 				discriminator: integer(),
 				isBot: bool(),
 				isSystem: bool(),
@@ -139,7 +145,6 @@ export const ELASTICSEARCH_INDEX_DEFINITIONS: Record<FluxerSearchIndexName, Elas
 				premiumType: integer(),
 				emailVerified: bool(),
 				emailBounced: bool(),
-				suspiciousActivityFlags: integer(),
 				acls: keyword(),
 				createdAt: long(),
 				lastActiveAt: long(),
@@ -172,6 +177,26 @@ export const ELASTICSEARCH_INDEX_DEFINITIONS: Record<FluxerSearchIndexName, Elas
 				resolvedByAdminId: keyword(),
 				publicComment: keyword(),
 				createdAt: long(),
+			},
+		},
+	},
+	threads: {
+		indexName: 'threads',
+		mappings: {
+			properties: {
+				id: keyword(),
+				guildId: keyword(),
+				parentId: keyword(),
+				type: integer(),
+				name: textWithKeyword(),
+				ownerId: keyword(),
+				archived: bool(),
+				locked: bool(),
+				appliedTagIds: keyword(),
+				createdAt: long(),
+				idSequence: long(),
+				lastMessageAt: long(),
+				archivedAt: long(),
 			},
 		},
 	},

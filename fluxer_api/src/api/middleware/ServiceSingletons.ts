@@ -6,9 +6,6 @@ import {AdminArchiveRepository} from '@app/api/admin/repositories/AdminArchiveRe
 import {AdminApiKeyService} from '@app/api/admin/services/AdminApiKeyService';
 import {AdminArchiveService} from '@app/api/admin/services/AdminArchiveService';
 import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import {PhoneAttemptRiskService} from '@app/api/auth/services/PhoneAttemptRiskService';
-import {PhoneFraudGraphService} from '@app/api/auth/services/PhoneFraudGraphService';
-import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
@@ -43,6 +40,7 @@ import type {IUnfurlerService} from '@app/api/infrastructure/IUnfurlerService';
 import {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
 import {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
+import {KVThreadAutoArchiveQueueService} from '@app/api/infrastructure/KVThreadAutoArchiveQueueService';
 import {NatsUnfurlerService} from '@app/api/infrastructure/NatsUnfurlerService';
 import {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import {createStorageService} from '@app/api/infrastructure/StorageServiceFactory';
@@ -51,7 +49,7 @@ import {createUsersServiceClient} from '@app/api/infrastructure/UsersServiceClie
 import {VirusScanService} from '@app/api/infrastructure/VirusScanService';
 import {GatewayRolloutConfigPublisher} from '@app/api/instance/GatewayRolloutConfigPublisher';
 import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
-import {PushServiceDeliveryConfigPublisher} from '@app/api/instance/PushServiceDeliveryConfigPublisher';
+import {PushRelayConfigPublisher} from '@app/api/instance/PushRelayConfigPublisher';
 import {InviteRepository} from '@app/api/invite/InviteRepository';
 import {Logger} from '@app/api/Logger';
 import {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -75,6 +73,11 @@ import {ReadStateRequestService} from '@app/api/read_state/ReadStateRequestServi
 import {ReadStateService} from '@app/api/read_state/ReadStateService';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {getGuildSearchService} from '@app/api/SearchFactory';
+import {AppStoreServerApiClient} from '@app/api/store_billing/app_store/AppStoreServerApiClient';
+import {GooglePlayAccessTokenProvider} from '@app/api/store_billing/google_play/GooglePlayAccessTokenProvider';
+import {GooglePlayDeveloperApiClient} from '@app/api/store_billing/google_play/GooglePlayDeveloperApiClient';
+import {GooglePlayPushVerifier} from '@app/api/store_billing/google_play/GooglePlayPushVerifier';
+import {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
 import {ThemeService} from '@app/api/theme/ThemeService';
 import {EntranceSoundPlayService} from '@app/api/user/entrance_sound/EntranceSoundPlayService';
 import {EntranceSoundRepository} from '@app/api/user/entrance_sound/EntranceSoundRepository';
@@ -91,7 +94,6 @@ import {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import {SweegoWebhookService} from '@app/api/webhook/SweegoWebhookService';
 import {WebhookRepository} from '@app/api/webhook/WebhookRepository';
-import {createMockLogger} from '@fluxer/logger/src/mock';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {KVCacheProvider} from '@pkgs/cache/src/providers/KVCacheProvider';
 import {EmailI18nService} from '@pkgs/email/src/EmailI18nService';
@@ -102,9 +104,6 @@ import {TestEmailService} from '@pkgs/email/src/TestEmailService';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import {RateLimitService} from '@pkgs/rate_limit/src/RateLimitService';
-import type {ISmsProvider} from '@pkgs/sms/src/providers/ISmsProvider';
-import {createSmsProvider} from '@pkgs/sms/src/providers/SmsProviderFactory';
-import {SmsService} from '@pkgs/sms/src/SmsService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 
 export const getUserRepository = singleton(() => new UserRepository(getKVClient()));
@@ -126,6 +125,13 @@ export const getEmailChangeRepository = singleton(() => new EmailChangeRepositor
 export const getPasswordChangeRepository = singleton(() => new PasswordChangeRepository());
 const getUserContactChangeLogRepository = singleton(() => new UserContactChangeLogRepository());
 export const getDonationRepository = singleton(() => new DonationRepository());
+export const getStoreBillingRepository = singleton(() => new StoreBillingRepository());
+export const getAppStoreServerApiClient = singleton(() => new AppStoreServerApiClient());
+const getGooglePlayAccessTokenProvider = singleton(() => new GooglePlayAccessTokenProvider());
+export const getGooglePlayDeveloperApiClient = singleton(
+	() => new GooglePlayDeveloperApiClient({accessTokenProvider: getGooglePlayAccessTokenProvider()}),
+);
+export const getGooglePlayPushVerifier = singleton(() => new GooglePlayPushVerifier());
 const getAdminApiKeyRepository = singleton(() => new AdminApiKeyRepository());
 let instanceConfigRepositoryInstance: InstanceConfigRepository | null = null;
 export const getInstanceConfigRepository = singleton(
@@ -157,13 +163,13 @@ export const getGatewayRolloutConfigPublisher = singleton(
 		),
 );
 
-export const getPushServiceDeliveryConfigPublisher = singleton(
+export const getPushRelayConfigPublisher = singleton(
 	() =>
-		new PushServiceDeliveryConfigPublisher(
+		new PushRelayConfigPublisher(
 			new NatsConnectionManager({
 				url: Config.nats.coreUrl,
 				token: Config.nats.authToken || undefined,
-				name: 'fluxer-api-push-service-delivery-config',
+				name: 'fluxer-api-push-relay-config',
 			}),
 		),
 );
@@ -171,17 +177,6 @@ export const getPushServiceDeliveryConfigPublisher = singleton(
 export const getVisionarySlotRepository = singleton(() => new VisionarySlotRepository());
 export const getCacheService: () => ICacheService = singleton(() => new KVCacheProvider({client: getKVClient()}));
 export const getRateLimitService = singleton(() => new RateLimitService(getKVClient()));
-export const getPhoneFraudGraphService = singleton(
-	() => new PhoneFraudGraphService(getKVClient(), getUserRepository()),
-);
-export const getPhoneAttemptRiskService = singleton(() => {
-	const service = new PhoneAttemptRiskService(getCacheService(), getKVClient());
-	const graph = getPhoneFraudGraphService();
-	service.onHardBlock(({userId, clientIp}) => {
-		void graph.propagateHardBlock(userId ? (BigInt(userId) as UserID) : null, clientIp);
-	});
-	return service;
-});
 export const getEmailDnsValidationService = singleton(() => new EmailDnsValidationService());
 
 function createEmailServiceForConfig(
@@ -193,6 +188,7 @@ function createEmailServiceForConfig(
 		enabled: emailConfigSource.enabled,
 		fromEmail: emailConfigSource.fromEmail,
 		fromName: emailConfigSource.fromName,
+		replyTo: emailConfigSource.replyToEmail || null,
 		appBaseUrl: emailConfigSource.appBaseUrl,
 		marketingBaseUrl: Config.endpoints.marketing,
 	};
@@ -262,6 +258,18 @@ export function getKVBulkMessageDeletionQueue(): KVBulkMessageDeletionQueueServi
 		bulkMessageDeletionQueueClient = kvClient;
 	}
 	return bulkMessageDeletionQueue;
+}
+
+let threadAutoArchiveQueueClient: IKVProvider | null = null;
+let threadAutoArchiveQueue: KVThreadAutoArchiveQueueService | null = null;
+
+export function getKVThreadAutoArchiveQueue(): KVThreadAutoArchiveQueueService {
+	const kvClient = getKVClient();
+	if (!threadAutoArchiveQueue || threadAutoArchiveQueueClient !== kvClient) {
+		threadAutoArchiveQueue = new KVThreadAutoArchiveQueueService(kvClient);
+		threadAutoArchiveQueueClient = kvClient;
+	}
+	return threadAutoArchiveQueue;
 }
 
 let premiumStateQueueClient: IKVProvider | null = null;
@@ -362,23 +370,6 @@ export async function ensureVirusScanInitialized(): Promise<void> {
 	await _virusScanInitPromise;
 }
 
-const getSmsProvider: () => ISmsProvider = singleton(() => {
-	if (Config.dev.testModeEnabled) {
-		return createSmsProvider({mode: 'test', logger: createMockLogger()});
-	}
-	if (Config.sms.enabled && Config.sms.accountSid && Config.sms.authToken && Config.sms.verifyServiceSid) {
-		return createSmsProvider({
-			mode: 'twilio',
-			config: {
-				accountSid: Config.sms.accountSid,
-				authToken: Config.sms.authToken,
-				verifyServiceSid: Config.sms.verifyServiceSid,
-			},
-		});
-	}
-	return createSmsProvider({mode: 'unavailable'});
-});
-export const getSmsService = singleton(() => new SmsService(getSmsProvider()));
 export const getEmailService: () => IEmailService = singleton(() => {
 	if (Config.dev.testModeEnabled) return new TestEmailService();
 	const userRepository = getUserRepository();
@@ -424,7 +415,7 @@ export const getReadStateService = singleton(() => new ReadStateService(getReadS
 export const getDiscriminatorService = singleton(
 	() => new DiscriminatorService(getUserRepository(), getCacheService(), getLimitConfigService()),
 );
-export const getBotAuthService = singleton(() => new BotAuthService(getApplicationRepository()));
+export const getBotAuthService = singleton(() => new BotAuthService(getApplicationRepository(), getUserRepository()));
 export const getBotMfaMirrorService = singleton(
 	() => new BotMfaMirrorService(getApplicationRepository(), getUserRepository(), getGatewayService()),
 );
@@ -485,6 +476,7 @@ export const getGuildDiscoveryService = singleton(
 			getGuildRepository(),
 			getGatewayService(),
 			getGuildSearchService(),
+			getChannelRepository().channelData,
 		),
 );
 export const getReadStateRequestService = singleton(() => new ReadStateRequestService(getReadStateService()));
@@ -527,6 +519,8 @@ export async function initializeServiceSingletons(): Promise<void> {
 			const limitConfigService = getLimitConfigService();
 			owner.limitConfigService = limitConfigService;
 			await getInstanceConfigRepository().initialize();
+			assertServiceSingletonInitializationActive(owner);
+			await getInstanceConfigRepository().ensureAccountIdentityMode();
 			assertServiceSingletonInitializationActive(owner);
 			await limitConfigService.initialize();
 			assertServiceSingletonInitializationActive(owner);

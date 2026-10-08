@@ -11,6 +11,10 @@ import type {
 	InstanceEmailSmtpTestRequest,
 	InstanceEmailSmtpTestResponse,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {
+	InstanceAccountIdentityResponse,
+	InstanceAccountIdentityUpdateRequest,
+} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 
 const logger = new Logger('SetupWizardClient');
 
@@ -35,6 +39,15 @@ export async function uploadBrandingAsset(
 	return response.body;
 }
 
+export async function setSetupAccountIdentity(
+	mode: InstanceAccountIdentityUpdateRequest['mode'],
+	tagStyle?: InstanceAccountIdentityUpdateRequest['tag_style'],
+): Promise<InstanceAccountIdentityResponse> {
+	const body: InstanceAccountIdentityUpdateRequest = tagStyle === undefined ? {mode} : {mode, tag_style: tagStyle};
+	const response = await http.put<InstanceAccountIdentityResponse>(Endpoints.INSTANCE_SETUP_ACCOUNT_IDENTITY, {body});
+	return response.body;
+}
+
 export async function testSmtpConfig(body: InstanceEmailSmtpTestRequest): Promise<InstanceEmailSmtpTestResponse> {
 	const response = await http.post<InstanceEmailSmtpTestResponse>(Endpoints.ADMIN_INSTANCE_CONFIG_SMTP_TESTS, {body});
 	return response.body;
@@ -44,7 +57,7 @@ export type SetupUnauthorizedCause = 'stale_session' | 'origin_mismatch' | 'unkn
 
 export async function classifySetupUnauthorized(): Promise<SetupUnauthorizedCause> {
 	if (!SessionManager.token) return 'unknown';
-	if (!http.carriesAuthorization()) return 'origin_mismatch';
+	if (!http.hasAuthorization()) return 'origin_mismatch';
 	try {
 		const response = await http.get(Endpoints.USER_ME, {mode: 'silent'});
 		return response.status === 401 ? 'stale_session' : 'unknown';

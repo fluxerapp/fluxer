@@ -1,0 +1,13 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.actions {
+	grid-row: 4;
+	grid-column: -2 / -1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0 0.75rem;
+	margin-right: 1rem;
+	border-bottom: 0.0625rem solid var(--background-modifier-accent);
+}

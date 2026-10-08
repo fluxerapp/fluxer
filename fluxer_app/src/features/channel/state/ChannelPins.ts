@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -223,4 +224,6 @@ class ChannelPins {
 	}
 }
 
-export default new ChannelPins();
+const channelPins = new ChannelPins();
+ResettableStates.register(channelPins, channelPins.handleGatewayReady);
+export default channelPins;

@@ -332,7 +332,7 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 			canFavorite,
 			isPreview ? undefined : message,
 			isRealAttachment ? attachment.id : undefined,
-			{disableDelete: !!isPreview || snapshotIndex !== undefined},
+			{disableDelete: !!isPreview || snapshotIndex !== undefined, mediaType},
 		);
 		const gridItemStyle: CSSProperties = {
 			...style,
@@ -366,7 +366,6 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 						onClick={handleClick}
 						onMouseEnter={scheduleViewerWarm}
 						onMouseLeave={cancelViewerWarm}
-						onMouseDown={openInBrowser.onMouseDown}
 						onAuxClick={openInBrowser.onAuxClick}
 						onKeyDown={handleClick}
 						aria-label={ariaLabel}

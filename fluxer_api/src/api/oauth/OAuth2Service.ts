@@ -18,6 +18,7 @@ import {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepo
 import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import type {IOAuth2TokenRepository} from '@app/api/oauth/repositories/IOAuth2TokenRepository';
 import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import {isSignInRefused} from '@app/api/user/UserHelpers';
 import {mapUserToOAuthResponse} from '@app/api/user/UserMappers';
 import {verifyPassword} from '@app/api/utils/PasswordUtils';
 import {InvalidRequestError} from '@fluxer/errors/src/domains/core/InvalidRequestError';
@@ -48,6 +49,11 @@ export class OAuth2Service {
 	) {
 		this.applications = deps.applicationRepository ?? new ApplicationRepository();
 		this.tokens = deps.oauth2TokenRepository ?? new OAuth2TokenRepository();
+	}
+
+	private async findActiveUser(userId: UserID) {
+		const user = await this.apiContext.services.users.findUnique(userId);
+		return user && !isSignInRefused(user) ? user : null;
 	}
 
 	private parseScope(scope: string): Array<string> {
@@ -295,7 +301,13 @@ export class OAuth2Service {
 					throw new InvalidGrantError();
 				}
 			}
-			await this.tokens.deleteAuthorizationCode(code);
+			if (authCode.userId && !(await this.findActiveUser(authCode.userId))) {
+				throw new InvalidGrantError();
+			}
+			if (!(await this.tokens.consumeAuthorizationCode(code, authCode.applicationId))) {
+				Logger.debug({code_len: code.length}, 'OAuth2 tokenExchange: authorization code already redeemed');
+				throw new InvalidGrantError();
+			}
 			const res = await this.issueTokens({
 				application,
 				userId: authCode.userId,
@@ -316,7 +328,12 @@ export class OAuth2Service {
 		if (refresh.applicationId !== application.applicationId) {
 			throw new InvalidGrantError();
 		}
-		await this.tokens.deleteRefreshToken(params.refreshToken!, refresh.applicationId, refresh.userId);
+		if (!(await this.findActiveUser(refresh.userId))) {
+			throw new InvalidGrantError();
+		}
+		if (!(await this.tokens.consumeRefreshToken(params.refreshToken!, refresh.applicationId, refresh.userId))) {
+			throw new InvalidGrantError();
+		}
 		const res = await this.issueTokens({
 			application,
 			userId: refresh.userId,
@@ -340,7 +357,7 @@ export class OAuth2Service {
 		if (!application) {
 			throw new InvalidTokenError();
 		}
-		const user = await this.apiContext.services.users.findUnique(token.userId);
+		const user = await this.findActiveUser(token.userId);
 		if (!user) {
 			throw new InvalidTokenError();
 		}
@@ -378,6 +395,9 @@ export class OAuth2Service {
 		}
 		const accessToken = await this.tokens.getAccessToken(tokenStr);
 		if (accessToken && accessToken.applicationId === application.applicationId) {
+			if (accessToken.userId && !(await this.findActiveUser(accessToken.userId))) {
+				return {active: false};
+			}
 			return {
 				active: true,
 				client_id: accessToken.applicationId.toString(),
@@ -390,6 +410,9 @@ export class OAuth2Service {
 		}
 		const refreshToken = await this.tokens.getRefreshToken(tokenStr);
 		if (refreshToken && refreshToken.applicationId === application.applicationId) {
+			if (!(await this.findActiveUser(refreshToken.userId))) {
+				return {active: false};
+			}
 			return {
 				active: true,
 				client_id: refreshToken.applicationId.toString(),

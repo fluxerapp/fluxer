@@ -7,7 +7,11 @@ import * as MfaCommands from '@app/features/auth/commands/MfaCommands';
 import {BackupCodesModal} from '@app/features/auth/components/modals/BackupCodesModal';
 import styles from '@app/features/auth/components/modals/MfaTotpEnableModal.module.css';
 import * as MfaUtils from '@app/features/auth/utils/AuthMfaUtils';
-import {CANCEL_DESCRIPTOR, CONTINUE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CANCEL_DESCRIPTOR,
+	CODE_DESCRIPTOR,
+	CONTINUE_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -32,10 +36,6 @@ const ENABLE_TWO_FACTOR_AUTHENTICATION_FORM_DESCRIPTOR = msg({
 const SETUP_AUTHENTICATOR_APP_DESCRIPTOR = msg({
 	message: 'Set up authenticator app',
 	comment: 'Security modal title for adding a TOTP authenticator app.',
-});
-const CODE_DESCRIPTOR = msg({
-	message: 'Code',
-	comment: 'Input label for a one-time authenticator app verification code.',
 });
 const TWO_FACTOR_AUTHENTICATION_ENABLED_DESCRIPTOR = msg({
 	message: 'Two-factor authentication enabled',
@@ -114,7 +114,7 @@ export const MfaTotpEnableModal = observer(({user}: MfaTotpEnableModalProps) => 
 							{!isMobileExperience && (
 								<div className={styles.qrCode} data-flx="auth.mfa-totp-enable-modal.qr-code">
 									<QRCodeCanvas
-										data={MfaUtils.encodeTotpSecretAsURL(user.email!, secret)}
+										data={MfaUtils.encodeTotpSecretAsURL(user.email ?? user.tag, secret)}
 										data-flx="auth.mfa-totp-enable-modal.qr-code-canvas"
 									/>
 								</div>

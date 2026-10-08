@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Authentication from '@app/features/auth/state/Authentication';
+import * as ForumDescriptors from '@app/features/forum/utils/ForumMessageDescriptors';
 import Guilds from '@app/features/guild/state/Guilds';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import {
@@ -18,6 +19,8 @@ import {
 	Permissions,
 } from '@fluxer/constants/src/ChannelConstants';
 import {GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import {ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
 import type {RoleId, UserId} from '@fluxer/schema/src/branded/WireIds';
 import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {Guild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -376,38 +379,130 @@ export function generateChannelVoicePermissionSpec(i18n: I18n): PermissionSpec {
 	};
 }
 
-export function generateChannelPermissionSpecs(i18n: I18n, channelType: number): Array<PermissionSpec> {
+const THREAD_PERMISSION_ORDER: ReadonlyArray<bigint> = [
+	ThreadPermissionFlags.CREATE_PUBLIC_THREADS,
+	ThreadPermissionFlags.CREATE_PRIVATE_THREADS,
+	ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS,
+	ThreadPermissionFlags.MANAGE_THREADS,
+];
+
+function withThreadPermissions(
+	i18n: I18n,
+	spec: PermissionSpec,
+	scope: PermissionScope,
+	order: ReadonlyArray<bigint> = THREAD_PERMISSION_ORDER,
+): PermissionSpec {
+	return {
+		...spec,
+		permissions: [...spec.permissions, ...order.map((permission) => makePermissionEntry(i18n, permission, {scope}))],
+	};
+}
+
+const THREAD_PERMISSION_CHANNEL_TYPES = new Set<number>([ChannelTypes.GUILD_TEXT, ChannelTypes.GUILD_CATEGORY]);
+
+const ANNOUNCEMENT_THREAD_PERMISSION_ORDER: ReadonlyArray<bigint> = THREAD_PERMISSION_ORDER.filter(
+	(permission) => permission !== ThreadPermissionFlags.CREATE_PRIVATE_THREADS,
+);
+
+function generateChannelTextSpecWithThreads(i18n: I18n, channelType: number, threads: boolean): PermissionSpec {
+	const spec = generateChannelTextPermissionSpec(i18n);
+	if (!threads) return spec;
+	if (THREAD_PERMISSION_CHANNEL_TYPES.has(channelType)) return withThreadPermissions(i18n, spec, 'channel');
+	if (channelType === ChannelTypes.GUILD_ANNOUNCEMENT) {
+		return withThreadPermissions(i18n, spec, 'channel', ANNOUNCEMENT_THREAD_PERMISSION_ORDER);
+	}
+	return spec;
+}
+
+function generateForumPermissionSpec(i18n: I18n): PermissionSpec {
+	return {
+		title: formatPermissionCategoryLabel(i18n, 'messagesMedia'),
+		permissions: [
+			makePermissionEntry(i18n, Permissions.SEND_MESSAGES, {
+				scope: 'channel',
+				title: ForumDescriptors.CREATE_POSTS_PERMISSION_DESCRIPTOR,
+				description: ForumDescriptors.CREATE_POSTS_PERMISSION_DESCRIPTION_DESCRIPTOR,
+			}),
+			makePermissionEntry(i18n, ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS, {
+				scope: 'channel',
+				title: ForumDescriptors.SEND_MESSAGES_IN_POSTS_PERMISSION_DESCRIPTOR,
+				description: ForumDescriptors.SEND_MESSAGES_IN_POSTS_PERMISSION_DESCRIPTION_DESCRIPTOR,
+			}),
+			makePermissionEntry(i18n, ThreadPermissionFlags.MANAGE_THREADS, {
+				scope: 'channel',
+				title: ForumDescriptors.MANAGE_POSTS_PERMISSION_DESCRIPTOR,
+				description: ForumDescriptors.MANAGE_POSTS_PERMISSION_DESCRIPTION_DESCRIPTOR,
+			}),
+			makePermissionEntry(i18n, Permissions.MANAGE_MESSAGES, {scope: 'channel'}),
+			makePermissionEntry(i18n, Permissions.EMBED_LINKS, {scope: 'channel'}),
+			makePermissionEntry(i18n, Permissions.ATTACH_FILES, {scope: 'channel'}),
+			makePermissionEntry(i18n, Permissions.READ_MESSAGE_HISTORY, {scope: 'channel'}),
+			makePermissionEntry(i18n, Permissions.MENTION_EVERYONE, {scope: 'channel'}),
+			makePermissionEntry(i18n, Permissions.USE_EXTERNAL_EMOJIS, {scope: 'channel'}),
+			makePermissionEntry(i18n, Permissions.USE_EXTERNAL_STICKERS, {scope: 'channel'}),
+			makePermissionEntry(i18n, Permissions.ADD_REACTIONS, {scope: 'channel'}),
+			makePermissionEntry(i18n, Permissions.BYPASS_SLOWMODE, {scope: 'channel'}),
+		],
+	};
+}
+
+export function generateChannelPermissionSpecs(
+	i18n: I18n,
+	channelType: number,
+	{threads = false}: {threads?: boolean} = {},
+): Array<PermissionSpec> {
 	const specs = [generateChannelAccessPermissionSpec(i18n), generateChannelGeneralPermissionSpec(i18n)];
+	if (threads && THREAD_ONLY_CHANNEL_TYPES.has(channelType)) {
+		specs.push(generateForumPermissionSpec(i18n));
+		return specs;
+	}
 	const isCategoryChannel = channelType === ChannelTypes.GUILD_CATEGORY;
 	const isVoiceChannel = channelType === ChannelTypes.GUILD_VOICE;
-	specs.push(generateChannelTextPermissionSpec(i18n));
+	specs.push(generateChannelTextSpecWithThreads(i18n, channelType, threads));
 	if (isVoiceChannel || isCategoryChannel) {
 		specs.push(generateChannelVoicePermissionSpec(i18n));
 	}
 	return specs;
 }
 
-export function generatePermissionSpec(i18n: I18n): Array<PermissionSpec> {
+export function generatePermissionSpec(i18n: I18n, {threads = false}: {threads?: boolean} = {}): Array<PermissionSpec> {
 	return [
 		generateGuildGeneralPermissionSpec(i18n),
 		generateGuildAccessPermissionSpec(i18n),
-		generateGuildTextPermissionSpec(i18n),
+		threads
+			? withThreadPermissions(i18n, generateGuildTextPermissionSpec(i18n), 'guild')
+			: generateGuildTextPermissionSpec(i18n),
 		generateGuildModerationPermissionSpec(i18n),
 		generateGuildVoicePermissionSpec(i18n),
 	];
 }
 
+export type PermissionKey = keyof typeof Permissions | keyof typeof ThreadPermissionFlags;
+
 export interface BotPermissionOption {
-	id: keyof typeof Permissions;
+	id: PermissionKey;
 	label: string;
 }
 
-export function getAllBotPermissions(i18n: I18n): Array<BotPermissionOption> {
-	return generatePermissionSpec(i18n).flatMap((spec) =>
+export function getPermissionFlagByKey(key: string): bigint | undefined {
+	return (
+		Permissions[key as keyof typeof Permissions] ?? ThreadPermissionFlags[key as keyof typeof ThreadPermissionFlags]
+	);
+}
+
+function findPermissionKey(flag: bigint): PermissionKey {
+	const key =
+		Object.keys(Permissions).find((name) => Permissions[name as keyof typeof Permissions] === flag) ??
+		Object.keys(ThreadPermissionFlags).find(
+			(name) => ThreadPermissionFlags[name as keyof typeof ThreadPermissionFlags] === flag,
+		);
+	return key as PermissionKey;
+}
+
+export function getAllBotPermissions(i18n: I18n, options: {threads?: boolean} = {}): Array<BotPermissionOption> {
+	return generatePermissionSpec(i18n, options).flatMap((spec) =>
 		spec.permissions.map((perm) => ({
-			id: Object.keys(Permissions).find(
-				(key) => Permissions[key as keyof typeof Permissions] === perm.flag,
-			) as keyof typeof Permissions,
+			id: findPermissionKey(perm.flag),
 			label: perm.title,
 		})),
 	);
@@ -432,10 +527,6 @@ export function formatPermissionLabel(i18n: I18n, permission: bigint, preferChan
 }
 
 export function formatBotPermissionsQuery(permissions: Array<string>): string {
-	const total = permissions.reduce((acc, perm) => {
-		const key = perm as keyof typeof Permissions;
-		const value = Permissions[key];
-		return acc | (value ?? 0n);
-	}, 0n);
+	const total = permissions.reduce((acc, perm) => acc | (getPermissionFlagByKey(perm) ?? 0n), 0n);
 	return total.toString();
 }

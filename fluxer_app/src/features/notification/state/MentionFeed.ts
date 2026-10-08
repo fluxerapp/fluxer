@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Channels from '@app/features/channel/state/Channels';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -9,8 +10,10 @@ import {
 	type MentionFilters,
 	messageMatchesMentionTypeFilters,
 } from '@app/features/notification/utils/MentionFeedFilters';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
+import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
 import type {Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
@@ -32,7 +35,7 @@ class MentionFeed {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -86,7 +89,11 @@ class MentionFeed {
 			case ChannelTypes.GROUP_DM:
 				return channel.recipientIds.length > 0;
 			case ChannelTypes.GUILD_TEXT:
-			case ChannelTypes.GUILD_VOICE: {
+			case ChannelTypes.GUILD_ANNOUNCEMENT:
+			case ChannelTypes.GUILD_VOICE:
+			case ChannelTypes.ANNOUNCEMENT_THREAD:
+			case ChannelTypes.PUBLIC_THREAD:
+			case ChannelTypes.PRIVATE_THREAD: {
 				if (!channel.guildId) return false;
 				const guild = Guilds.getGuild(channel.guildId);
 				return guild != null;
@@ -178,14 +185,19 @@ class MentionFeed {
 	}
 
 	handleMessageCreate(message: WireMessage): void {
-		if (!messageMentionsCurrentUser(message)) {
+		const channel = Channels.getChannel(message.channel_id);
+		if (!channel) return;
+		const guildId = channel.guildId ?? null;
+		const mentioned = messageMentionsCurrentUser(message, {
+			suppressEveryone: UserGuildSettings.isEveryoneMentionSuppressed(guildId),
+			suppressRoles: UserGuildSettings.isRoleMentionSuppressed(guildId),
+		});
+		if (!mentioned) {
 			return;
 		}
 		if (Relationships.isBlocked(message.author.id)) {
 			return;
 		}
-		const channel = Channels.getChannel(message.channel_id);
-		if (!channel) return;
 		if (!this.isMessageIncludedByFilters(message, channel)) {
 			return;
 		}
@@ -220,4 +232,7 @@ class MentionFeed {
 	}
 }
 
-export default new MentionFeed();
+const mentionFeed = new MentionFeed();
+ResettableStates.register(mentionFeed, mentionFeed.handleGatewayReady);
+
+export default mentionFeed;

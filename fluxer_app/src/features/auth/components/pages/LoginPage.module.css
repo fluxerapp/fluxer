@@ -137,18 +137,6 @@
 	color: var(--text-tertiary);
 }
 
-.footerLink {
-	font-size: 0.875rem;
-	color: var(--text-link);
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.footerLink:hover {
-	color: var(--text-link);
-	text-decoration: underline;
-}
-
 .mfaDescription {
 	margin-bottom: 2rem;
 	text-align: center;
@@ -368,6 +356,7 @@
 }
 
 .ssoRetryButton {
+	display: inline-block;
 	padding: 0.75rem 1.5rem;
 	border-radius: 0.625rem;
 	border: none;
@@ -376,6 +365,7 @@
 	font-weight: 600;
 	font-size: 0.95rem;
 	cursor: pointer;
+	text-decoration: none;
 	transition: background 120ms ease;
 }
 

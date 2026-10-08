@@ -60,6 +60,10 @@ export const GuildRateLimitConfigs = {
 		bucket: 'guild:channels:list::guild_id',
 		config: {limit: 60, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	GUILD_THREADS_ACTIVE: {
+		bucket: 'guild:threads:active::guild_id',
+		config: {limit: 5, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	GUILD_CHANNEL_CREATE: {
 		bucket: 'guild:channel:create::guild_id',
 		config: {limit: 10, windowMs: ms('1 minute')},

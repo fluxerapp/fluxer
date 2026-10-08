@@ -6,6 +6,7 @@ import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IC
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {dispatchMessageCreateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import {purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import {withThreadParentFields} from '@app/api/channel/services/thread/ThreadParentSettings';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
@@ -48,12 +49,16 @@ export class ChannelUtilsService {
 
 	async dispatchChannelUpdate({channel, requestCache}: {channel: Channel; requestCache: RequestCache}): Promise<void> {
 		if (channel.guildId) {
-			const channelResponse = await mapChannelToResponse({
+			const channelResponse = await withThreadParentFields(
+				this.channelRepository.threads,
 				channel,
-				currentUserId: null,
-				userCacheService: this.userCacheService,
-				requestCache,
-			});
+				await mapChannelToResponse({
+					channel,
+					currentUserId: null,
+					userCacheService: this.userCacheService,
+					requestCache,
+				}),
+			);
 			await dispatchChannelEvent({
 				gatewayService: this.gatewayService,
 				channel,

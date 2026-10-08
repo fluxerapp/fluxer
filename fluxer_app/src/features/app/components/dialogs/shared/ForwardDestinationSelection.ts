@@ -10,7 +10,7 @@ export interface ForwardPinnedDestinations {
 }
 
 export function forwardDestinationKey(destination: ForwardDestination): string {
-	return `${destination.type}:${destination.id}`;
+	return `${destination.type}/${destination.id}`;
 }
 
 export function toggleForwardDestination(

@@ -160,6 +160,22 @@ const DesktopSettingsTab: React.FC = observer(() => {
 						data-flx="user.desktop-settings-tab.switch.autostart-change"
 					/>
 				)}
+				{isDesktop() && desktopWindowBehavior?.startMinimized !== undefined && (
+					<Switch
+						label={<Trans>Start minimized</Trans>}
+						description={
+							isMac ? (
+								<Trans>When launched at login, start in the menu bar instead of opening the window</Trans>
+							) : (
+								<Trans>When launched at login, start in the system tray instead of opening the window</Trans>
+							)
+						}
+						value={desktopWindowBehavior.startMinimized}
+						disabled={desktopWindowBehaviorBusy || !autostartEnabled || !desktopWindowBehavior.showTrayIcon}
+						onChange={(value) => handleDesktopWindowBehaviorChange({startMinimized: value})}
+						data-flx="user.desktop-settings-tab.switch.start-minimized-change"
+					/>
+				)}
 				{isDesktop() && desktopWindowBehavior && (
 					<>
 						<Switch
@@ -204,7 +220,7 @@ const DesktopSettingsTab: React.FC = observer(() => {
 					title={<Trans>macOS permissions</Trans>}
 					data-flx="user.desktop-settings-tab.macos-permissions-section"
 				>
-					<MacPermissionsSettingsRow showTitle={false} data-flx="user.desktop-settings-tab.macos-permissions-row" />
+					<MacPermissionsSettingsRow data-flx="user.desktop-settings-tab.macos-permissions-row" />
 				</SettingsSection>
 			)}
 		</SettingsTabContainer>

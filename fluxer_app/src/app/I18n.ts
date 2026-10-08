@@ -206,6 +206,16 @@ function activateLocale(localeCode: LocaleCode, messages: Messages): void {
 	AppStorage.setItem('locale', localeCode);
 }
 
+export function ensureActiveLocale(): void {
+	if (i18n.locale) {
+		return;
+	}
+	i18n.loadAndActivate({locale: DEFAULT_LOCALE, messages: messagesEnUS});
+	if (typeof document !== 'undefined') {
+		document.documentElement.lang = DEFAULT_LOCALE;
+	}
+}
+
 const inFlightLoads = new Map<LocaleCode, Promise<Messages>>();
 let requestedLocale: LocaleCode | null = null;
 
@@ -246,6 +256,11 @@ export function applyLocaleChange(localeCode: string): LocaleCode {
 }
 
 let initPromise: Promise<typeof i18n> | null = null;
+let initialized = false;
+
+export function isI18nInitialized(): boolean {
+	return initialized;
+}
 
 export async function initI18n(forceLocale?: string) {
 	if (!initPromise) {
@@ -257,6 +272,7 @@ export async function initI18n(forceLocale?: string) {
 				logger.error('Failed to initialize i18n, falling back to default locale', error);
 				activateLocale(DEFAULT_LOCALE, messagesEnUS);
 			}
+			initialized = true;
 			return i18n;
 		})();
 	}

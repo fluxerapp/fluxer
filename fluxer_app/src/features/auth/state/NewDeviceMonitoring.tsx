@@ -2,9 +2,12 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import type {DomainMigrationMediaDeviceKind} from '@app/features/app/domain_migration/DomainMigrationCore';
+import {remapMigratedDeviceIds} from '@app/features/app/domain_migration/DomainMigrationDeviceRemap';
 import styles from '@app/features/auth/state/NewDeviceMonitoring.module.css';
 import {
 	getNewDevicePromptCandidates,
+	getRealDeviceIds,
 	type PendingDevicePrompt,
 } from '@app/features/auth/state/NewDeviceMonitoringDevices';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -32,6 +35,9 @@ const NOT_NOW_DESCRIPTOR = msg({
 	message: 'Not now',
 	comment: 'Short label in the authentication new device monitoring. Keep the tone plain and specific.',
 });
+const NEW_DEVICE_MODAL_KEY = 'new-audio-device';
+const MAX_PROMPTABLE_NEW_DEVICE_GROUPS = 2;
+const MIGRATED_AUDIO_DEVICE_KINDS: ReadonlyArray<DomainMigrationMediaDeviceKind> = ['audioinput', 'audiooutput'];
 const logger = new Logger('NewDeviceMonitoring');
 
 interface IgnoreDeviceLinkProps {
@@ -60,8 +66,6 @@ class NewDeviceMonitoring {
 	private isStarted = false;
 	private startPromise: Promise<void> | null = null;
 	private startEpoch = 0;
-	private pendingPrompts: Array<PendingDevicePrompt> = [];
-	private isShowingPrompt = false;
 	private unsubscribe: (() => void) | null = null;
 	private i18n: I18n | null = null;
 
@@ -91,7 +95,9 @@ class NewDeviceMonitoring {
 		this.isStarted = true;
 		const epoch = ++this.startEpoch;
 		this.startPromise = (async () => {
-			await makePersistent(this, 'NewDeviceMonitoring', ['knownDeviceIds', 'ignoredDeviceIds', 'suppressAlerts']);
+			await makePersistent(this, 'NewDeviceMonitoring', ['knownDeviceIds', 'ignoredDeviceIds', 'suppressAlerts'], {
+				syncAcrossTabs: true,
+			});
 			if (!this.isStarted || epoch !== this.startEpoch) return;
 			await this.refreshDeviceSnapshot();
 			if (!this.isStarted || epoch !== this.startEpoch) return;
@@ -102,6 +108,12 @@ class NewDeviceMonitoring {
 
 	private handleDeviceStateChange(state: VoiceDeviceState): void {
 		if (!this.isStarted) return;
+		const ignoredDeviceIds = remapMigratedDeviceIds(this.ignoredDeviceIds, MIGRATED_AUDIO_DEVICE_KINDS);
+		if (ignoredDeviceIds !== this.ignoredDeviceIds) {
+			runInAction(() => {
+				this.ignoredDeviceIds = ignoredDeviceIds;
+			});
+		}
 		if (state.permissionStatus.audio !== 'granted') {
 			return;
 		}
@@ -112,27 +124,34 @@ class NewDeviceMonitoring {
 		const currentOutputIds = state.outputDevices.map((d) => d.deviceId);
 		const allCurrentIds = [...currentInputIds, ...currentOutputIds];
 		if (!this.isInitialized) {
-			const promptCandidates =
-				this.knownDeviceIds.length > 0
-					? getNewDevicePromptCandidates(state, this.knownDeviceIds, this.ignoredDeviceIds, {
-							inputDeviceId: VoiceSettings.getInputDeviceId(),
-							outputDeviceId: VoiceSettings.getOutputDeviceId(),
-						})
-					: [];
+			const knownDeviceIdSet = new Set(this.knownDeviceIds);
+			const realDeviceIds = getRealDeviceIds(state);
+			const isFreshIdSpace =
+				realDeviceIds.length > 0 && !realDeviceIds.some((deviceId) => knownDeviceIdSet.has(deviceId));
+			const knownDeviceIds = isFreshIdSpace
+				? this.knownDeviceIds
+				: remapMigratedDeviceIds(this.knownDeviceIds, MIGRATED_AUDIO_DEVICE_KINDS);
+			const promptCandidates = isFreshIdSpace
+				? []
+				: getNewDevicePromptCandidates(state, knownDeviceIds, this.ignoredDeviceIds, {
+						inputDeviceId: VoiceSettings.getInputDeviceId(),
+						outputDeviceId: VoiceSettings.getOutputDeviceId(),
+					});
 			runInAction(() => {
-				if (promptCandidates.length > 0) {
-					this.pendingPrompts.push(...promptCandidates);
+				this.knownDeviceIds = isFreshIdSpace
+					? [...new Set(allCurrentIds)]
+					: [...new Set([...knownDeviceIds, ...allCurrentIds])];
+				if (ignoredDeviceIds !== this.ignoredDeviceIds) {
+					this.ignoredDeviceIds = ignoredDeviceIds;
 				}
-				this.knownDeviceIds = [...new Set([...this.knownDeviceIds, ...allCurrentIds])];
 				this.isInitialized = true;
 			});
 			logger.debug('Initialized with known devices', {
 				count: this.knownDeviceIds.length,
+				isFreshIdSpace,
 				promptCount: promptCandidates.length,
 			});
-			if (promptCandidates.length > 0) {
-				this.processNextPrompt();
-			}
+			this.promptForNewDevice(promptCandidates);
 			return;
 		}
 		const promptCandidates = getNewDevicePromptCandidates(state, this.knownDeviceIds, this.ignoredDeviceIds, {
@@ -140,9 +159,6 @@ class NewDeviceMonitoring {
 			outputDeviceId: VoiceSettings.getOutputDeviceId(),
 		});
 		runInAction(() => {
-			if (promptCandidates.length > 0) {
-				this.pendingPrompts.push(...promptCandidates);
-			}
 			this.knownDeviceIds = [...new Set([...this.knownDeviceIds, ...allCurrentIds])];
 		});
 		if (promptCandidates.length > 0) {
@@ -153,21 +169,17 @@ class NewDeviceMonitoring {
 					deviceType: prompt.deviceType,
 				})),
 			});
-			this.processNextPrompt();
 		}
+		this.promptForNewDevice(promptCandidates);
 	}
 
-	private processNextPrompt(): void {
-		if (!this.isStarted) return;
-		if (this.isShowingPrompt || this.pendingPrompts.length === 0) {
+	private promptForNewDevice(promptCandidates: ReadonlyArray<PendingDevicePrompt>): void {
+		if (promptCandidates.length === 0 || promptCandidates.length > MAX_PROMPTABLE_NEW_DEVICE_GROUPS) {
 			return;
 		}
-		const prompt = this.pendingPrompts.shift();
-		if (!prompt) {
-			return;
-		}
-		this.isShowingPrompt = true;
-		this.showNewDeviceModal(prompt);
+		this.showNewDeviceModal(
+			promptCandidates.find((prompt) => prompt.inputDeviceId !== undefined) ?? promptCandidates[0],
+		);
 	}
 
 	private showNewDeviceModal(prompt: PendingDevicePrompt): void {
@@ -176,7 +188,7 @@ class NewDeviceMonitoring {
 		}
 		const i18n = this.i18n;
 		const {deviceIds, deviceName, deviceType, inputDeviceId, outputDeviceId} = prompt;
-		ModalCommands.push(
+		ModalCommands.pushWithKey(
 			modal(() => (
 				<ConfirmModal
 					title={i18n._(NEW_AUDIO_DEVICE_DETECTED_DESCRIPTOR)}
@@ -208,8 +220,7 @@ class NewDeviceMonitoring {
 							deviceName={deviceName}
 							onClick={() => {
 								this.addToIgnored(deviceIds);
-								ModalCommands.pop();
-								setTimeout(() => this.onModalClosed(), 0);
+								ModalCommands.popWithKey(NEW_DEVICE_MODAL_KEY);
 							}}
 							data-flx="auth.new-device-monitoring.ignore-device-link.add-to-ignored"
 						/>
@@ -225,23 +236,17 @@ class NewDeviceMonitoring {
 						if (dontAskAgain) {
 							this.addToIgnored(deviceIds);
 						}
-						setTimeout(() => this.onModalClosed(), 0);
 					}}
 					onSecondary={(dontAskAgain) => {
 						if (dontAskAgain) {
 							this.addToIgnored(deviceIds);
 						}
-						setTimeout(() => this.onModalClosed(), 0);
 					}}
 					data-flx="auth.new-device-monitoring.confirm-modal"
 				/>
 			)),
+			NEW_DEVICE_MODAL_KEY,
 		);
-	}
-
-	private onModalClosed(): void {
-		this.isShowingPrompt = false;
-		this.processNextPrompt();
 	}
 
 	private addToIgnored(deviceIds: string | ReadonlyArray<string>): void {
@@ -290,8 +295,6 @@ class NewDeviceMonitoring {
 		this.isStarted = false;
 		this.startPromise = null;
 		this.startEpoch++;
-		this.pendingPrompts = [];
-		this.isShowingPrompt = false;
 		if (this.unsubscribe) {
 			this.unsubscribe();
 			this.unsubscribe = null;

@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
-import type {VoiceNoiseSuppressionAssignmentResponse} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+import type {DomainMigrationAssignmentResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {
 	type ExperimentAssignmentsResponse,
 	INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE,
-	readScreenShareDeliveryAssignment,
-	readVoiceNoiseSuppressionAssignment,
+	readChannelThreadsAssignment,
+	readDomainMigrationAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -26,25 +26,16 @@ vi.mock('@app/features/platform/transport/RestTransport', () => ({
 
 const {http} = await import('@app/features/platform/transport/RestTransport');
 const {ExperimentAssignments} = await import('@app/features/experiment/state/ExperimentAssignments');
+const {ResettableStates} = await import('@app/features/app/state/ResettableStates');
 
-const GUILD_ID = '1485064866382176262';
-
-const CANARY_ASSIGNMENT: VoiceNoiseSuppressionAssignmentResponse = {
+const CANARY_ASSIGNMENT: DomainMigrationAssignmentResponse = {
 	enabled: true,
-	config_version: 7,
-	user_targeted: true,
-	backend: 'rnnoise',
-	source: 'canary',
-	guild_overrides: [{guild_id: GUILD_ID, backend: 'speex'}],
-	enabled_backends: ['none', 'speex', 'rnnoise', 'gtcrn'],
-	allow_user_override: true,
-	suppression_strength: 80,
 };
 
 const CANARY_ENVELOPE: ExperimentAssignmentsResponse = {
 	poll_interval_seconds: 300,
 	poll_jitter_percent: 15,
-	assignments: {voice_noise_suppression: CANARY_ASSIGNMENT},
+	assignments: {domain_migration: CANARY_ASSIGNMENT},
 };
 
 let visibility: DocumentVisibilityState = 'visible';
@@ -79,8 +70,8 @@ function subscribe(listener: () => void): () => void {
 	return unsubscribe;
 }
 
-function voiceConfigVersion(): number {
-	return readVoiceNoiseSuppressionAssignment(ExperimentAssignments.response).config_version;
+function migrationEnabled(): boolean {
+	return readDomainMigrationAssignment(ExperimentAssignments.response).enabled;
 }
 
 function deferredReply(): {resolve: (response: RestResponse<unknown>) => void} {
@@ -122,9 +113,7 @@ describe('ExperimentAssignments cold start', () => {
 		ExperimentAssignments.start();
 		await settle();
 		expect(ExperimentAssignments.response).toBe(INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE);
-		expect(ExperimentAssignments.response.assignments.voice_noise_suppression).toBeUndefined();
-		expect(ExperimentAssignments.response.assignments.screen_share_delivery).toBeUndefined();
-		expect(readScreenShareDeliveryAssignment(ExperimentAssignments.response).enabled).toBe(false);
+		expect(ExperimentAssignments.response.assignments.domain_migration).toBeUndefined();
 	});
 
 	it('keeps the inert envelope while unauthenticated and retries later', async () => {
@@ -142,7 +131,22 @@ describe('ExperimentAssignments response handling', () => {
 	it('adopts a valid envelope', async () => {
 		await adopt(CANARY_ENVELOPE);
 		expect(ExperimentAssignments.response).toEqual(CANARY_ENVELOPE);
-		expect(readVoiceNoiseSuppressionAssignment(ExperimentAssignments.response)).toEqual(CANARY_ASSIGNMENT);
+		expect(readDomainMigrationAssignment(ExperimentAssignments.response)).toEqual(CANARY_ASSIGNMENT);
+	});
+
+	it('parses the channel_threads assignment alongside the others', async () => {
+		const envelope: ExperimentAssignmentsResponse = {
+			...CANARY_ENVELOPE,
+			assignments: {...CANARY_ENVELOPE.assignments, channel_threads: {active: true, config_version: 3}},
+		};
+		await adopt(envelope);
+		expect(readChannelThreadsAssignment(ExperimentAssignments.response)).toEqual({active: true, config_version: 3});
+		expect(readDomainMigrationAssignment(ExperimentAssignments.response)).toEqual(CANARY_ASSIGNMENT);
+	});
+
+	it('reads no channel_threads assignment when the key is absent', async () => {
+		await adopt(CANARY_ENVELOPE);
+		expect(readChannelThreadsAssignment(ExperimentAssignments.response)).toBeNull();
 	});
 
 	it('requests the shared experiment endpoint', async () => {
@@ -155,7 +159,7 @@ describe('ExperimentAssignments response handling', () => {
 		vi.mocked(http.get).mockResolvedValue(
 			reply(200, {
 				...CANARY_ENVELOPE,
-				assignments: {voice_noise_suppression: {...CANARY_ASSIGNMENT, backend: 'telepathy'}},
+				assignments: {domain_migration: {enabled: 'yes'}},
 			}),
 		);
 		await vi.advanceTimersByTimeAsync(400_000);
@@ -170,35 +174,9 @@ describe('ExperimentAssignments response handling', () => {
 		expect(ExperimentAssignments.response).toEqual(CANARY_ENVELOPE);
 	});
 
-	it('adopts a screen share delivery assignment beside the voice one', async () => {
-		await adopt({
-			...CANARY_ENVELOPE,
-			assignments: {...CANARY_ENVELOPE.assignments, screen_share_delivery: {enabled: true}},
-		});
-		expect(readScreenShareDeliveryAssignment(ExperimentAssignments.response).enabled).toBe(true);
-		expect(readVoiceNoiseSuppressionAssignment(ExperimentAssignments.response)).toEqual(CANARY_ASSIGNMENT);
-	});
-
-	it('reads screen share delivery as disabled when the envelope omits it', async () => {
-		await adopt(CANARY_ENVELOPE);
-		expect(readScreenShareDeliveryAssignment(ExperimentAssignments.response).enabled).toBe(false);
-	});
-
-	it('discards an envelope with a malformed screen share delivery assignment', async () => {
-		await adopt(CANARY_ENVELOPE);
-		vi.mocked(http.get).mockResolvedValue(
-			reply(200, {
-				...CANARY_ENVELOPE,
-				assignments: {...CANARY_ENVELOPE.assignments, screen_share_delivery: {enabled: 'yes'}},
-			}),
-		);
-		await vi.advanceTimersByTimeAsync(400_000);
-		expect(ExperimentAssignments.response).toEqual(CANARY_ENVELOPE);
-	});
-
-	it('accepts an envelope that carries no voice noise suppression assignment', async () => {
+	it('accepts an envelope that has no domain migration assignment', async () => {
 		await adopt({poll_interval_seconds: 600, poll_jitter_percent: 0, assignments: {}});
-		expect(ExperimentAssignments.response.assignments.voice_noise_suppression).toBeUndefined();
+		expect(ExperimentAssignments.response.assignments.domain_migration).toBeUndefined();
 		expect(lastScheduledDelayMs()).toBe(600_000);
 	});
 
@@ -426,7 +404,7 @@ describe('ExperimentAssignments lifecycle', () => {
 		expect(vi.mocked(http.get)).toHaveBeenCalledTimes(1);
 	});
 
-	it('does not carry the etag or the backoff of the previous session across a reset', async () => {
+	it('does not keep the etag or the backoff of the previous session across a reset', async () => {
 		vi.spyOn(Math, 'random').mockReturnValue(0.5);
 		await adopt(CANARY_ENVELOPE);
 		vi.mocked(http.get).mockResolvedValue(reply(500, {message: '500: Internal Server Error'}));
@@ -454,27 +432,23 @@ describe('ExperimentAssignments lifecycle', () => {
 
 describe('ExperimentAssignments subscribe', () => {
 	it('fires once per envelope change and stops after unsubscribe', async () => {
-		const seen: Array<number> = [];
-		const unsubscribe = subscribe(() => seen.push(voiceConfigVersion()));
+		const seen: Array<boolean> = [];
+		const unsubscribe = subscribe(() => seen.push(migrationEnabled()));
 		await adopt(CANARY_ENVELOPE);
-		expect(seen).toEqual([7]);
+		expect(seen).toEqual([true]);
 		vi.mocked(http.get).mockResolvedValue(reply(304, undefined));
 		await vi.advanceTimersByTimeAsync(400_000);
-		expect(seen).toEqual([7]);
+		expect(seen).toEqual([true]);
 		vi.mocked(http.get).mockResolvedValue(
-			reply(
-				200,
-				{...CANARY_ENVELOPE, assignments: {voice_noise_suppression: {...CANARY_ASSIGNMENT, config_version: 8}}},
-				{etag: 'W/"v8"'},
-			),
+			reply(200, {...CANARY_ENVELOPE, assignments: {domain_migration: {enabled: false}}}, {etag: 'W/"v8"'}),
 		);
 		await vi.advanceTimersByTimeAsync(400_000);
-		expect(seen).toEqual([7, 8]);
+		expect(seen).toEqual([true, false]);
 		ExperimentAssignments.reset();
-		expect(seen).toEqual([7, 8, 0]);
+		expect(seen).toEqual([true, false, false]);
 		unsubscribe();
 		await adopt(CANARY_ENVELOPE);
-		expect(seen).toEqual([7, 8, 0]);
+		expect(seen).toEqual([true, false, false]);
 	});
 
 	it('does not fire when a malformed or rejected response is discarded', async () => {
@@ -567,5 +541,48 @@ describe('ExperimentAssignments endpoint failures', () => {
 		await vi.advanceTimersByTimeAsync(600_000);
 		expect(vi.mocked(http.get)).toHaveBeenCalledTimes(5);
 		expect(vi.getTimerCount()).toBe(1);
+	});
+});
+
+describe('ExperimentAssignments account transitions', () => {
+	it('clears the previous account assignments and etag on an account switch', async () => {
+		vi.mocked(http.get).mockResolvedValue(reply(200, CANARY_ENVELOPE, {etag: 'W/"a"'}));
+		ExperimentAssignments.start('a');
+		await settle();
+		expect(migrationEnabled()).toBe(true);
+		ResettableStates.prepareForAccountTransition('account-switch');
+		expect(ExperimentAssignments.response).toBe(INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE);
+		expect(ExperimentAssignments.ownerId).toBeNull();
+		expect(vi.getTimerCount()).toBe(0);
+		vi.mocked(http.get).mockResolvedValue(reply(200, CANARY_ENVELOPE, {etag: 'W/"b"'}));
+		ExperimentAssignments.start('b');
+		await settle();
+		expect(ExperimentAssignments.ownerId).toBe('b');
+		expect(requestHeaders(1)['If-None-Match']).toBeUndefined();
+	});
+
+	it('polls the next account after the previous instance disabled the endpoint', async () => {
+		vi.mocked(http.get).mockResolvedValue(reply(404, {message: '404: Not Found'}));
+		ExperimentAssignments.start('a');
+		await settle();
+		await vi.advanceTimersByTimeAsync(600_000);
+		await vi.advanceTimersByTimeAsync(1_200_000);
+		expect(vi.mocked(http.get)).toHaveBeenCalledTimes(3);
+		ResettableStates.prepareForAccountTransition('account-switch');
+		vi.mocked(http.get).mockResolvedValue(reply(200, CANARY_ENVELOPE, {etag: 'W/"b"'}));
+		ExperimentAssignments.start('b');
+		await settle();
+		expect(vi.mocked(http.get)).toHaveBeenCalledTimes(4);
+		expect(migrationEnabled()).toBe(true);
+	});
+
+	it('ignores a response for the previous account that lands after the switch', async () => {
+		const pending = deferredReply();
+		ExperimentAssignments.start('a');
+		await settle();
+		ResettableStates.prepareForAccountTransition('account-switch');
+		pending.resolve(reply(200, CANARY_ENVELOPE, {etag: 'W/"a"'}));
+		await settle();
+		expect(ExperimentAssignments.response).toBe(INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE);
 	});
 });

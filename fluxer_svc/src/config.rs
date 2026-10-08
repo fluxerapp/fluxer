@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::env;
+use std::fs;
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 
@@ -20,7 +21,6 @@ pub struct ServiceConfig {
     pub nats_auth_token: Option<String>,
     pub cache_max_entries: u64,
     pub cache_ttl: Duration,
-    pub cache_hard_ttl: Duration,
     pub max_concurrent_requests: usize,
     pub scylla_hosts: Vec<String>,
     pub scylla_keyspace: String,
@@ -53,7 +53,7 @@ pub enum DatabaseBackend {
 
 impl ServiceConfig {
     pub fn from_env() -> anyhow::Result<Self> {
-        Self::from_env_reader(|name| env::var(name).ok())
+        Self::from_env_reader(env_var)
     }
 
     fn from_env_reader<F>(get: F) -> anyhow::Result<Self>
@@ -114,12 +114,6 @@ impl ServiceConfig {
             .transpose()?
             .unwrap_or(30_000);
 
-        let cache_hard_ttl_ms = optional_from(&get, "FLUXER_SVC_CACHE_HARD_TTL_MS")
-            .map(|v| v.parse::<u64>())
-            .transpose()?
-            .unwrap_or(600_000)
-            .max(cache_ttl_ms);
-
         let cassandra_port = optional_from(&get, "FLUXER_CASSANDRA_PORT")
             .map(|v| v.parse::<u16>())
             .transpose()?
@@ -175,7 +169,6 @@ impl ServiceConfig {
                 .transpose()?
                 .unwrap_or(100_000),
             cache_ttl: Duration::from_millis(cache_ttl_ms),
-            cache_hard_ttl: Duration::from_millis(cache_hard_ttl_ms),
             max_concurrent_requests,
             scylla_hosts,
             scylla_keyspace: optional_from(&get, "FLUXER_CASSANDRA_KEYSPACE")
@@ -211,14 +204,70 @@ fn default_max_concurrent_requests(service_name: &str) -> usize {
 }
 
 pub fn optional_env(name: &str) -> Option<String> {
-    optional_from(&|key| env::var(key).ok(), name)
+    env_var(name)
+}
+
+fn env_var(name: &str) -> Option<String> {
+    resolve_env_value(name, |key| env::var(key).ok()).unwrap_or_else(|error| panic!("{error}"))
+}
+
+fn resolve_env_value<F>(name: &str, get: F) -> Result<Option<String>, String>
+where
+    F: Fn(&str) -> Option<String>,
+{
+    let non_blank = |value: Option<String>| value.filter(|value| !value.trim().is_empty());
+    let value = non_blank(get(name));
+    let Some(path) = non_blank(get(&format!("{name}_FILE"))) else {
+        return Ok(value);
+    };
+    if value.is_some() {
+        return Err(format!("{name} and {name}_FILE are both set, set only one"));
+    }
+    let contents = fs::read_to_string(&path)
+        .map_err(|error| format!("{name}_FILE could not read {path} ({error})"))?;
+    let contents = contents
+        .strip_suffix('\n')
+        .map_or(contents.as_str(), |rest| {
+            rest.strip_suffix('\r').unwrap_or(rest)
+        });
+    Ok(non_blank(Some(contents.to_owned())))
+}
+
+pub fn resolve_env_files<I>(vars: I) -> Result<Vec<(String, String)>, String>
+where
+    I: IntoIterator<Item = (String, String)>,
+{
+    let vars: Vec<(String, String)> = vars.into_iter().collect();
+    let get = |key: &str| {
+        vars.iter()
+            .find_map(|(name, value)| (name == key).then(|| value.clone()))
+    };
+    let mut resolved = Vec::new();
+    for (key, _) in &vars {
+        let Some(name) = key
+            .strip_suffix("_FILE")
+            .filter(|name| name.starts_with("FLUXER_"))
+        else {
+            continue;
+        };
+        if let Some(value) = resolve_env_value(name, get)? {
+            resolved.push((name.to_owned(), value));
+        }
+    }
+    let rest: Vec<(String, String)> = vars
+        .iter()
+        .filter(|(key, _)| !resolved.iter().any(|(name, _)| name == key))
+        .cloned()
+        .collect();
+    resolved.extend(rest);
+    Ok(resolved)
 }
 
 fn optional_from<F>(get: &F, name: &str) -> Option<String>
 where
     F: Fn(&str) -> Option<String>,
 {
-    get(name).filter(|v| !v.is_empty())
+    get(name).filter(|v| !v.trim().is_empty())
 }
 
 pub fn parse_hosts(hosts: &str) -> Vec<String> {
@@ -282,6 +331,46 @@ mod tests {
                 .find_map(|(key, value)| (*key == name).then(|| (*value).to_owned()))
         })
         .unwrap()
+    }
+
+    #[test]
+    fn resolves_name_file_entries() {
+        let dir = env::temp_dir().join(format!("fluxer-svc-env-file-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("token");
+        fs::write(&path, "from-file\r\n").unwrap();
+        let path = path.to_string_lossy().into_owned();
+        let missing = dir.join("missing").to_string_lossy().into_owned();
+        let resolved = resolve_env_files(vec![
+            ("FLUXER_NATS_AUTH_TOKEN".to_owned(), String::new()),
+            ("FLUXER_NATS_AUTH_TOKEN_FILE".to_owned(), path.clone()),
+        ])
+        .unwrap();
+        let both = resolve_env_files(vec![
+            ("FLUXER_X".to_owned(), "direct".to_owned()),
+            ("FLUXER_X_FILE".to_owned(), path),
+        ]);
+        let unreadable = resolve_env_files(vec![("FLUXER_X_FILE".to_owned(), missing.clone())]);
+        let unrelated = resolve_env_files(vec![("SSL_CERT_FILE".to_owned(), missing.clone())]);
+        fs::remove_dir_all(&dir).unwrap();
+        assert_eq!(
+            vec!["from-file"],
+            resolved
+                .iter()
+                .filter(|(name, _)| name == "FLUXER_NATS_AUTH_TOKEN")
+                .map(|(_, value)| value.as_str())
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            Err("FLUXER_X and FLUXER_X_FILE are both set, set only one".to_owned()),
+            both
+        );
+        assert!(
+            unreadable
+                .unwrap_err()
+                .starts_with(&format!("FLUXER_X_FILE could not read {missing} ("))
+        );
+        assert_eq!(Ok(vec![("SSL_CERT_FILE".to_owned(), missing)]), unrelated);
     }
 
     #[test]
@@ -356,6 +445,33 @@ mod tests {
         assert_eq!(None, cfg.postgres_ssl_ca);
         assert_eq!(20, cfg.postgres_max_connections);
         assert_eq!("fluxer_kv", cfg.postgres_kv_table);
+        assert!(cfg.postgres_prepared_statements);
+    }
+
+    #[test]
+    fn blank_values_fall_back_to_the_defaults() {
+        let cfg = config_from_pairs(&[
+            ("FLUXER_SVC_NAME", "messages"),
+            ("FLUXER_SVC_MODE", ""),
+            ("FLUXER_SVC_PORT", "  "),
+            ("FLUXER_SVC_MAX_CONCURRENT_REQUESTS", ""),
+            ("FLUXER_NATS_AUTH_TOKEN", " "),
+            ("FLUXER_POSTGRES_HOST", ""),
+            ("FLUXER_POSTGRES_PASSWORD", "  "),
+            ("FLUXER_POSTGRES_MAX_CONNECTIONS", ""),
+            ("FLUXER_POSTGRES_PREPARED_STATEMENTS", " "),
+        ]);
+
+        assert_eq!(Mode::Router, cfg.mode);
+        assert_eq!(8090, cfg.listen_addr.port());
+        assert_eq!(
+            MESSAGES_MAX_CONCURRENT_REQUESTS,
+            cfg.max_concurrent_requests
+        );
+        assert_eq!(None, cfg.nats_auth_token);
+        assert_eq!("127.0.0.1", cfg.postgres_host);
+        assert_eq!(Some("fluxer".to_owned()), cfg.postgres_password);
+        assert_eq!(20, cfg.postgres_max_connections);
         assert!(cfg.postgres_prepared_statements);
     }
 

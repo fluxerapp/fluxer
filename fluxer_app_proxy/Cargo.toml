@@ -7,19 +7,19 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.104"
-axum = { version = "0.8.9", features = ["macros"] }
+axum = "0.8.9"
 base64 = "0.23"
 fluxer_common = { path = "../fluxer_common" }
 futures-util = { version = "0.3.34", default-features = false, features = ["std"] }
 hex = "0.4"
 rand = "0.10"
-reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls", "stream", "gzip", "brotli", "deflate"] }
-serde = { version = "1.0.229", features = ["derive"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls", "stream", "gzip", "brotli", "deflate"] }
 serde_json = "1.0.151"
-tokio = { version = "1.53.1", features = ["macros", "net", "rt-multi-thread", "signal", "time", "fs"] }
+sha2 = "0.11.0"
+tokio = { version = "1.53.1", features = ["macros", "net", "rt-multi-thread", "signal", "time", "fs", "io-util", "sync"] }
 tokio-util = { version = "0.7.19", features = ["io"] }
 tower = { version = "0.5.3", features = ["util"] }
 tower-http = { version = "0.7.1", features = ["compression-gzip", "trace"] }
 tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+tracing-subscriber = "0.3.23"
 

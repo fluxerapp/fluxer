@@ -80,21 +80,11 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.boolean()
 		.optional()
 		.describe('Whether the current email address is marked as bounced by the mail provider'),
-	phone: z
-		.string()
-		.nullish()
-		.describe(
-			'Always null. Retained for old-client backward compatibility — phone numbers are no longer stored on the user record.',
-		),
-	has_verified_phone: z.boolean().describe('Whether this account has completed phone verification'),
+	has_verified_phone: z.boolean().describe('Deprecated. Always false.'),
 	bio: z.string().nullable().describe('The user biography text'),
 	pronouns: z.string().nullable().describe('The preferred pronouns of the user'),
 	accent_color: Int32Type.nullable().describe('The user-selected accent color as an integer'),
-	timezone: z
-		.string()
-		.nullable()
-		.optional()
-		.describe('The IANA timezone identifier saved by the user. Omitted unless the user has staff access.'),
+	timezone: z.string().nullable().optional().describe('The IANA timezone identifier saved by the user'),
 	timezone_privacy_flags: createBitflagInt32Type(
 		ProfileFieldPrivacyFlags,
 		ProfileFieldPrivacyFlagsDescriptions,
@@ -102,7 +92,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		'ProfileFieldPrivacyFlags',
 	)
 		.optional()
-		.describe('Bitfield controlling who can see the profile timezone. Omitted unless the user has staff access.'),
+		.describe('Bitfield controlling who can see the profile timezone'),
 	banner: z.string().nullable().describe('The hash of the user profile banner image'),
 	banner_color: Int32Type.nullable().describe('The default banner color if no custom banner is set'),
 	mfa_enabled: z.boolean().describe('Whether multi-factor authentication is enabled'),
@@ -111,6 +101,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.optional()
 		.describe('The types of authenticators configured for MFA'),
 	verified: z.boolean().describe('Whether the email address has been verified'),
+	account_limited: z.boolean().optional().describe('Whether the account is limited'),
 	premium_type: withFieldDescription(UserPremiumTypesSchema, 'The type of premium subscription').nullable(),
 	premium_since: z.string().nullable().describe('ISO8601 timestamp of when premium was first activated'),
 	premium_until: z
@@ -124,7 +115,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.string()
 		.nullable()
 		.describe(
-			'ISO8601 timestamp at which the post-cancel grace period ends. Set when the subscription is fully canceled in Stripe; perks remain active and the original premium_since is restored on resubscribe until this timestamp passes. Null when not in grace.',
+			'ISO8601 timestamp at which grace access ends after premium_until passes: after a failed renewal payment (7 days from the renewal for monthly plans, 14 for yearly), after a subscription ends (3 days), or during an App Store or Google Play grace period. Perks stay active and the original premium_since is kept on resubscribe until this timestamp passes. Null when no grace is recorded, in which case access lasts 3 days after premium_until.',
 		),
 	premium_discriminator: z
 		.boolean()
@@ -138,12 +129,6 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 	premium_purchase_disabled: z.boolean().describe('Whether premium purchases are disabled for this account'),
 	premium_enabled_override: z.boolean().describe('Whether premium features are enabled via override'),
 	premium_perks_disabled: z.boolean().describe('Whether premium perks are temporarily disabled for this account'),
-	force_inbound_phone_verification: z
-		.boolean()
-		.optional()
-		.describe(
-			'Whether this account is forced through the inbound (expensive-destination) phone verification flow regardless of prefix, for debugging',
-		),
 	password_last_changed_at: z.string().nullable().describe('ISO8601 timestamp of the last password change'),
 	last_voice_activity_sharing_change_at: z
 		.string()
@@ -151,7 +136,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.describe(
 			'ISO8601 timestamp of the last bulk voice-activity-sharing change. Drives the 24-hour cooldown for re-toggling the Active Now sharing default.',
 		),
-	required_actions: z.array(z.string()).describe('Actions the user must complete before full access'),
+	required_actions: z.array(z.string()).describe('Deprecated. Always empty.'),
 	nsfw_allowed: z.boolean().describe('Whether the user is allowed to view NSFW content'),
 	has_dismissed_premium_onboarding: z.boolean().describe('Whether the user has dismissed the premium onboarding flow'),
 	has_ever_purchased: z.boolean().describe('Whether the user has ever made a purchase'),
@@ -182,6 +167,21 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 });
 
 export type UserPrivateResponse = z.infer<typeof UserPrivateResponse>;
+
+export const UserUpdateResponse = UserPrivateResponse.extend({
+	token: z
+		.string()
+		.optional()
+		.describe('Authentication token for the replacement session, present when the password was changed'),
+	auth_session_id_hash: z
+		.string()
+		.optional()
+		.describe(
+			'Base64url-encoded hash of the replacement authentication session, present when the password was changed',
+		),
+});
+
+export type UserUpdateResponse = z.infer<typeof UserUpdateResponse>;
 
 export const EmailChangeStartResponse = z.object({
 	ticket: z.string().describe('Ticket returned for email change actions'),
@@ -238,6 +238,29 @@ export const PasswordChangeCompleteResponse = z.object({
 });
 
 export type PasswordChangeCompleteResponse = z.infer<typeof PasswordChangeCompleteResponse>;
+
+export const UserPasswordUpdateResponse = z.object({
+	token: z.string().describe('Authentication token for the newly created session'),
+	auth_session_id_hash: z.string().describe('Base64url-encoded hash of the newly created authentication session'),
+});
+
+export type UserPasswordUpdateResponse = z.infer<typeof UserPasswordUpdateResponse>;
+
+export const RecoveryKitStatusResponse = z.object({
+	has_recovery_kit: z.boolean().describe('Whether the account has a recovery kit'),
+	created_at: z.iso.datetime().nullable().describe('ISO 8601 timestamp when the current recovery kit was created'),
+});
+
+export type RecoveryKitStatusResponse = z.infer<typeof RecoveryKitStatusResponse>;
+
+export const RecoveryKitCreateResponse = z.object({
+	recovery_key: z
+		.string()
+		.describe('New recovery key as 8 groups of 4 joined by dashes, shown only once. Any previous kit stops working'),
+	created_at: z.iso.datetime().describe('ISO 8601 timestamp when the recovery kit was created'),
+});
+
+export type RecoveryKitCreateResponse = z.infer<typeof RecoveryKitCreateResponse>;
 
 export interface UserProfileResponse {
 	bio: string | null;
@@ -352,6 +375,14 @@ export const UserSettingsResponse = z.object({
 		.describe(
 			'Default value of share_voice_activity applied to newly accepted friend relationships. Read-only here; mutated via PUT /users/@me/settings/voice-activity-sharing.',
 		),
+	privacy_setup_version: z
+		.number()
+		.int()
+		.describe('Latest privacy setup version the user has reviewed, 0 if never reviewed'),
+	privacy_setup_completed_at: z.iso
+		.datetime()
+		.nullable()
+		.describe('When the user last completed the privacy setup, or null if never'),
 });
 
 export type UserSettingsResponse = z.infer<typeof UserSettingsResponse>;
@@ -373,6 +404,9 @@ const UserGuildChannelOverride = z.object({
 	unread_badges: withFieldDescription(UserNotificationSettingsSchema, 'Unread badges level override for this channel')
 		.nullish()
 		.describe('Unread badges level override for this channel (null = inherit)'),
+	flags: Int32Type.optional().describe(
+		'Channel override flags (NEW_FORUM_THREADS_OFF 1<<13, NEW_FORUM_THREADS_ON 1<<14)',
+	),
 });
 export const UserGuildSettingsResponse = z.object({
 	guild_id: SnowflakeStringType.nullable().describe('The ID of the guild these settings apply to'),
@@ -417,17 +451,6 @@ export const RelationshipResponse = z.object({
 });
 
 export type RelationshipResponse = z.infer<typeof RelationshipResponse>;
-export type RequiredAction =
-	| 'REQUIRE_VERIFIED_EMAIL'
-	| 'REQUIRE_REVERIFIED_EMAIL'
-	| 'REQUIRE_VERIFIED_PHONE'
-	| 'REQUIRE_REVERIFIED_PHONE'
-	| 'REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE'
-	| 'REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE'
-	| 'REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE'
-	| 'REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE'
-	| 'REQUIRE_INBOUND_PHONE_VERIFICATION';
-
 export interface BackupCode {
 	readonly code: string;
 	readonly consumed: boolean;
@@ -459,10 +482,10 @@ export interface UserPrivate extends UserPartial, UserProfile {
 	readonly email: string | null;
 	readonly email_bounced?: boolean;
 	readonly mfa_enabled: boolean;
-	readonly phone?: string | null;
 	readonly has_verified_phone: boolean;
 	readonly authenticator_types: ReadonlyArray<number>;
 	readonly verified: boolean;
+	readonly account_limited?: boolean;
 	readonly premium_type: number | null;
 	readonly premium_since: string | null;
 	readonly premium_until: string | null;
@@ -478,12 +501,11 @@ export interface UserPrivate extends UserPartial, UserProfile {
 	readonly premium_purchase_disabled: boolean;
 	readonly premium_enabled_override: boolean;
 	readonly premium_perks_disabled: boolean;
-	readonly force_inbound_phone_verification?: boolean;
 	readonly timezone?: string | null;
 	readonly timezone_privacy_flags?: number;
 	readonly password_last_changed_at: string | null;
 	readonly last_voice_activity_sharing_change_at: string | null;
-	readonly required_actions: ReadonlyArray<RequiredAction>;
+	readonly required_actions: ReadonlyArray<string>;
 	readonly nsfw_allowed: boolean;
 	readonly pending_bulk_message_deletion: PendingBulkMessageDeletion | null;
 	readonly has_dismissed_premium_onboarding: boolean;
@@ -650,22 +672,5 @@ export const BulkIgnoreFriendRequestsResponse = z.object({
 });
 
 export type BulkIgnoreFriendRequestsResponse = z.infer<typeof BulkIgnoreFriendRequestsResponse>;
-
-const PhoneGateEscapeGuildResponse = z.object({
-	id: SnowflakeStringType.describe('The unique identifier (snowflake) for the community'),
-	name: z.string().describe('The community name'),
-});
-
-export const PhoneGateEscapePreviewResponse = z.object({
-	available: z.boolean().describe('Whether this account can set the deferred phone verification check aside right now'),
-	guilds: z
-		.array(PhoneGateEscapeGuildResponse)
-		.describe('Communities that trigger the phone check and will be left when the escape runs'),
-	owned_guilds: z
-		.array(PhoneGateEscapeGuildResponse)
-		.describe('Communities that trigger the phone check but are owned by this user, so they are kept'),
-});
-
-export type PhoneGateEscapePreviewResponse = z.infer<typeof PhoneGateEscapePreviewResponse>;
 
 export const RelationshipListResponse = z.array(RelationshipResponse);

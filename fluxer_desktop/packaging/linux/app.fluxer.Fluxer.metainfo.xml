@@ -44,10 +44,10 @@
     <screenshots>
         <screenshot type="default" xml:lang="en">
             <caption>The main Fluxer window.</caption>
-            <image type="source" width="1920" height="1080">https://raw.githubusercontent.com/fluxerapp/fluxer/refs/heads/main/fluxer_static/marketing/screenshots/desktop-2560w.avif</image>
+            <image type="source" width="2560" height="2227">https://fluxer.app/static/img/screenshots-desktop-2560w.948e9d88f4c9807a.avif</image>
         </screenshot>
     </screenshots>
-    <url type="bugtracker">https://github.com/fluxerapp/fluxer/issues</url>
+    <url type="bugtracker">https://feedback.fluxer.com</url>
     <url type="homepage">https://fluxer.app</url>
     <url type="donation">https://fluxer.app/donate</url>
     <url type="contact">https://fluxer.app/company-information#contact</url>

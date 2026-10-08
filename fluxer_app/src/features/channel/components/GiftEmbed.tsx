@@ -14,6 +14,7 @@ import {
 } from '@app/features/messaging/components/embeds/embed_card/EmbedCard';
 import cardStyles from '@app/features/messaging/components/embeds/embed_card/EmbedCard.module.css';
 import {useEmbedSkeletonOverride} from '@app/features/messaging/components/embeds/embed_card/useEmbedSkeletonOverride';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {Button} from '@app/features/ui/button/Button';
@@ -23,7 +24,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {GiftIcon, QuestionIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
-import {useEffect, useRef} from 'react';
+import {useEffect, useMemo, useRef} from 'react';
 
 const FROM_DESCRIPTOR = msg({
 	message: 'From {creatorTag}',
@@ -73,16 +74,17 @@ interface GiftEmbedProps {
 
 export const GiftEmbed = observer(function GiftEmbed({code}: GiftEmbedProps) {
 	const {i18n} = useLingui();
-	const giftState = Gifts.gifts.get(code) ?? null;
+	const target = useMemo(currentInstanceTarget, []);
+	const giftState = Gifts.getGift(code, target);
 	const gift = giftState?.data;
 	const creator = Users.getUser(gift?.created_by?.id ?? '');
 	const isUnclaimed = !(Users.currentUser?.isClaimed() ?? false);
 	const shouldForceSkeleton = useEmbedSkeletonOverride();
 	useEffect(() => {
 		if (!giftState) {
-			void GiftCommands.fetchWithCoalescing(code).catch(() => {});
+			void GiftCommands.fetchWithCoalescing(code, target).catch(() => {});
 		}
-	}, [code, giftState]);
+	}, [code, giftState, target]);
 	const prevLoadingRef = useRef<boolean>(true);
 	useEffect(() => {
 		const isLoading = !!giftState?.loading;
@@ -105,7 +107,7 @@ export const GiftEmbed = observer(function GiftEmbed({code}: GiftEmbedProps) {
 			return;
 		}
 		try {
-			await GiftCommands.redeem(i18n, code);
+			await GiftCommands.redeem(i18n, code, target);
 		} catch (error) {
 			logger.error('Failed to redeem gift', error);
 		}

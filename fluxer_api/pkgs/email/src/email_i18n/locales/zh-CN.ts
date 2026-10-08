@@ -3,9 +3,17 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
-	"account_disabled_suspicious": {
-		"subject": "你的 {product_name} 账号已被暂时禁用",
-		"body": "你好 {username}，\n\n我们检测到你的 {product_name} 账号存在可疑活动，因此暂时禁用了你的账号。\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n要重新访问你的账号，你需要重置密码：\n\n{forgotUrl}\n\n重置密码后，你将能够再次登录。\n\n如果你认为这是误判，请联系我们的支持团队。\n\n– {product_name} 安全团队"
+	"account_deletion_cancelled": {
+		"subject": "你的 {product_name} 账号已取消删除",
+		"body": "你好 {username}，\n\n你的 {product_name} 账号的计划删除已取消。你的账号不会被删除。\n\n如有任何疑问，请联系 {safety_email}。\n\n– {product_name} 团队"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "你的 {product_name} 账号将因长期未活动而被删除",
+		"body": "你好 {username}，\n\n你的 {product_name} 账号已长期未活动，因此将于以下时间永久删除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n如果你想保留账号，请在该日期前使用此邮箱地址联系 {safety_email}。\n\n– {product_name} 团队"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "你的 {product_name} 账号已安排删除",
+		"body": "你好 {username}，\n\n根据你的请求，你的 {product_name} 账号将于以下时间永久删除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n在此之前，你的账号将被锁定。如果你未请求此操作，或者想保留账号，请在该日期前使用此邮箱地址联系 {safety_email}。\n\n– {product_name} 团队"
 	},
 	"account_scheduled_deletion": {
 		"subject": "你的 {product_name} 账号将被永久删除",
@@ -37,7 +45,7 @@ const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "你的 {product_name} 邮箱已变更",
-		"body": "你好 {username}，\n\n你的 {product_name} 账号邮箱已变更为 {newEmail}。\n\n如果你进行了此更改，则无需采取任何操作。如果不是你本人操作，请使用此链接撤销更改并保护账号安全：\n\n{revertUrl}\n\n这将恢复你之前的邮箱，让你在所有设备上退出登录，移除关联的手机号，禁用 MFA，并要求你设置新密码。\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n你的 {product_name} 账号邮箱已变更为 {newEmail}。\n\n如果你进行了此更改，则无需采取任何操作。如果不是你本人操作，请使用此链接撤销更改并保护账号安全：\n\n{revertUrl}\n\n这将恢复你之前的邮箱，让你在所有设备上退出登录，禁用 MFA，并要求你设置新密码。\n\n– {product_name} 安全团队"
 	},
 	"email_verification": {
 		"subject": "验证你的 {product_name} 邮箱地址",
@@ -65,7 +73,7 @@ const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "确认你的 {product_name} 密码更改",
-		"body": "你好 {username}，\n\n我们收到了更改你的 {product_name} 账号密码的请求。\n\n要确认此更改，请在应用中输入此验证码：\n\n{code}\n\n此验证码将于 {expiresAt} 失效。\n\n如果你未请求此操作，可能有人可以访问你的账号。请立即更改密码并启用双重认证。\n\n– {product_name} 团队"
+		"body": "你好 {username}，\n\n我们收到了更改你的 {product_name} 账号密码的请求。\n\n要确认此更改，请在应用中输入此验证码：\n\n{code}\n\n此验证码将于 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n如果你未请求此操作，可能有人可以访问你的账号。请立即更改密码并启用双重认证。\n\n– {product_name} 团队"
 	},
 	"password_reset": {
 		"subject": "重置你的 {product_name} 账号密码",

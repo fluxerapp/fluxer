@@ -6,7 +6,7 @@ description: The system direct message broadcast and the delivery job it queues.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A system DM broadcast delivers one identical message, authored by the system account, to each supplied recipient. A recipient receives a normal message in a normal direct message channel.
+A system DM broadcast delivers one identical message, authored by the system account, to each supplied recipient or to every user. A recipient receives a normal message in a normal direct message channel.
 
 The [Jobs](/admin-api/jobs/) resource reports delivery progress. [Cancelling that job](/admin-api/jobs/#cancel-job) stops an in-flight broadcast.
 
@@ -14,24 +14,27 @@ The [Jobs](/admin-api/jobs/) resource reports delivery progress. [Cancelling tha
 
 <RouteHeader method="POST" path="/v1/admin/system-dms" auditReason />
 
-Queues one message for delivery to every supplied recipient. Requires `system_dm:send`. Returns the number of recipients queued.
+Queues one message for delivery to every supplied recipient, or to every user when `all_users` is set. Requires `system_dm:send`. Returns the number of recipients queued.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
 | content<sup>1</sup> | string | The message delivered to every recipient (1-4000 characters) |
-| user_ids<sup>2</sup> | array[snowflake] | The recipients of the broadcast (1-10,000 entries) |
+| user_ids?<sup>2</sup> | array[snowflake] | The recipients of the broadcast (1-10,000 entries) |
+| all_users?<sup>3</sup> | boolean | Whether to deliver to every user instead of `user_ids` |
 
 <sup>1</sup> Content with no visible character is accepted and then fails for every recipient
 
 <sup>2</sup> Fluxer keeps duplicate IDs, so a repeated recipient receives the message once per occurrence. An ID naming no account is accepted here and skipped at delivery time
 
+<sup>3</sup> Supply exactly one of `user_ids` or `all_users: true`. A broadcast to every user skips bots, the system account, and accounts that are deleted, self-deleted, or disabled
+
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| recipient_count | integer | The number of entries in the submitted `user_ids` array |
+| recipient_count | ?integer | The number of entries in the submitted `user_ids` array, or null for a broadcast to every user |
 
 ### Response
 
@@ -56,7 +59,7 @@ Recipients need not have interacted with the system account before. Fluxer skips
 
 Cancellation stops remaining deliveries and leaves sent messages in place. The [job](/admin-api/jobs/#admin-job-object) then reports `cancelled`.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `system_dm.send`, the target type `system_dm`, and the target ID `0`. Its metadata has `recipient_count` and `content_length` as decimal strings, and the content itself is not recorded.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `system_dm.send`, the target type `system_dm`, and the target ID `0`. Its metadata has `recipient_count` and `content_length` as decimal strings, with `recipient_count` set to `all` for a broadcast to every user. The content itself is not recorded.
 
 ### Rate limit
 

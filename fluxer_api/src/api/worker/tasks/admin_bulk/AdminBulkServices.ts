@@ -5,12 +5,7 @@ import {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagem
 import {AdminGuildService} from '@app/api/admin/services/AdminGuildService';
 import {AdminUserService} from '@app/api/admin/services/AdminUserService';
 import {createApiContext} from '@app/api/CreateApiContext';
-import {
-	getHistoricalOutcomeRepository,
-	getIpInfoService,
-	getReportServiceInstance,
-	getSuspiciousIpRepository,
-} from '@app/api/middleware/ServiceMiddleware';
+import {getReportServiceInstance} from '@app/api/middleware/ServiceMiddleware';
 import {
 	getDiscriminatorService,
 	getEntityAssetService,
@@ -33,8 +28,6 @@ export function createAdminBulkServices(deps: WorkerDependencies): AdminBulkServ
 		apiContext,
 		adminRepository: deps.adminRepository,
 		auditService,
-		ipInfoService: getIpInfoService(),
-		suspiciousIpRepository: getSuspiciousIpRepository(),
 	});
 	const userService = new AdminUserService({
 		apiContext,
@@ -48,8 +41,8 @@ export function createAdminBulkServices(deps: WorkerDependencies): AdminBulkServ
 		kvDeletionQueue: deps.deletionQueueService,
 		bulkMessageDeletionQueue: deps.bulkMessageDeletionQueueService,
 		stripe: deps.stripe,
-		riskHistoryRepository: getHistoricalOutcomeRepository(),
 		reportService: getReportServiceInstance(),
+		storeEntitlementService: deps.storeEntitlementService,
 	});
 	const guildService = new AdminGuildService({
 		guildRepository: deps.guildRepository,

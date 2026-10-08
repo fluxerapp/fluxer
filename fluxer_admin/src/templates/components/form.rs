@@ -227,6 +227,13 @@ pub fn checkbox(name: &str, value: &str, label: &str, checked: bool, enabled: bo
     }
 }
 
+pub fn opt_out_checkbox(name: &str, label: &str) -> Markup {
+    html! {
+        input type="hidden" name={(name) "_present"} value="1";
+        (checkbox(name, "true", label, true, true))
+    }
+}
+
 pub fn secondary_button_link(label: &str, href: &str) -> Markup {
     html! {
         a href=(href) role="button"

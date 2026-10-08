@@ -9,6 +9,7 @@ import {
 	REMOVE_FROM_FAVORITES_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
+import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -205,7 +206,7 @@ export function InlineAudioPlayer({
 			>
 				<audio
 					ref={mediaRef as React.RefObject<HTMLAudioElement>}
-					src={sourceAttribute}
+					src={resolveDesktopCrossOriginMediaURL(sourceAttribute)}
 					preload={preloadAttribute}
 					onError={handleMediaError}
 					data-flx="voice.media-player.inline-audio-player.audio"
@@ -333,7 +334,7 @@ export function InlineAudioPlayer({
 		>
 			<audio
 				ref={mediaRef as React.RefObject<HTMLAudioElement>}
-				src={sourceAttribute}
+				src={resolveDesktopCrossOriginMediaURL(sourceAttribute)}
 				preload={preloadAttribute}
 				onError={handleMediaError}
 				data-flx="voice.media-player.inline-audio-player.audio--2"

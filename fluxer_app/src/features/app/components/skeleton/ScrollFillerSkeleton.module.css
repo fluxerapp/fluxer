@@ -12,6 +12,7 @@
 	position: relative;
 	overflow: hidden;
 	contain: strict;
+	transition: none;
 	padding-top: 1rem;
 	padding-bottom: var(--message-filler-padding-bottom);
 	margin-left: calc(-1 * var(--message-mobile-margin));

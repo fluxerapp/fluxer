@@ -13,6 +13,7 @@ pub mod client;
 pub mod codes;
 pub mod discovery;
 pub mod guild_assets;
+pub mod guild_threads;
 pub mod guilds;
 pub mod instance_config;
 pub mod jobs;

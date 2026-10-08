@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
+import Accounts from '@app/features/auth/state/Accounts';
 import {ActiveNowTabContent as ActiveNowTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab';
 import {CommunicationTabContent as CommunicationTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab';
 import {ConnectionsTabContent as ConnectionsTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab';
@@ -9,6 +10,7 @@ import {DataExportTabContent as DataExportTab} from '@app/features/user/componen
 import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/PrivacySafetyTabInline.module.css';
 import {ProfilePrivacyTabContent as ProfilePrivacyTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab';
 import {SensitiveContentTabContent as SensitiveContentTab} from '@app/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab';
+import {useUserSettingsMutationController} from '@app/features/user/hooks/useUserSettingsMutationController';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -44,8 +46,14 @@ const DATA_DELETION_DESCRIPTOR = msg({
 });
 export const PrivacyDashboardContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
+	const accountKey = Accounts.currentAccountKey;
+	const mutationController = useUserSettingsMutationController();
 	return (
-		<div className={styles.container} data-flx="user.privacy-safety-tab.privacy-dashboard-content.container">
+		<div
+			key={accountKey}
+			className={styles.container}
+			data-flx="user.privacy-safety-tab.privacy-dashboard-content.container"
+		>
 			<SettingsSection
 				id="profile-privacy"
 				tabType="privacy_safety"
@@ -68,7 +76,10 @@ export const PrivacyDashboardContent: React.FC = observer(() => {
 				title={i18n._(COMMUNICATION_DESCRIPTOR)}
 				data-flx="user.privacy-safety-tab.privacy-dashboard-content.communication"
 			>
-				<CommunicationTab data-flx="user.privacy-safety-tab.privacy-dashboard-content.communication-tab" />
+				<CommunicationTab
+					mutationController={mutationController}
+					data-flx="user.privacy-safety-tab.privacy-dashboard-content.communication-tab"
+				/>
 			</SettingsSection>
 			<SettingsSection
 				id="active-now"

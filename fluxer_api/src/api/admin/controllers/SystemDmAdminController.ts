@@ -23,7 +23,7 @@ export function SystemDmAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Queue a worker job that delivers the same content to every listed user as a direct message from the system account. Progress is observable through the Jobs admin resource (task_type=sendSystemDm), and an in-flight broadcast is stopped by cancelling that job. Requires SYSTEM_DM_SEND permission.',
+				'Queue a worker job that delivers the same content to every listed user, or to every user when all_users is set, as a direct message from the system account. Progress is observable through the Jobs admin resource (task_type=sendSystemDm), and an in-flight broadcast is stopped by cancelling that job. Requires SYSTEM_DM_SEND permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -31,7 +31,12 @@ export function SystemDmAdminController(app: HonoApp) {
 			const auditLogReason = ctx.get('auditLogReason');
 			const payload = ctx.req.valid('json');
 			const result = await adminService.sendSystemDm(
-				{content: payload.content, userIds: payload.user_ids.map((id) => id.toString())},
+				{
+					content: payload.content,
+					recipients: payload.all_users
+						? {kind: 'all'}
+						: {kind: 'list', userIds: (payload.user_ids ?? []).map((id) => id.toString())},
+				},
 				adminUserId,
 				auditLogReason,
 			);

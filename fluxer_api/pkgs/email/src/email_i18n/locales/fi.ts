@@ -3,9 +3,17 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
-	"account_disabled_suspicious": {
-		"subject": "Käyttäjätilisi {product_name}-palvelussa on tilapäisesti poistettu käytöstä",
-		"body": "Hei {username},\n\nOlemme poistaneet {product_name}-tilisi tilapäisesti käytöstä, koska havaitsimme epäilyttävää toimintaa.\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nPäästäksesi takaisin tilillesi sinun on nollattava salasanasi:\n\n{forgotUrl}\n\nKun olet nollannut salasanasi, voit kirjautua sisään uudelleen.\n\nJos uskot, että tämä oli virhe, ota yhteyttä tukitiimiimme.\n\n– {product_name}-turvallisuustiimi"
+	"account_deletion_cancelled": {
+		"subject": "{product_name}-tilisi poistaminen on peruttu",
+		"body": "Hei {username},\n\n{product_name}-tilisi ajoitettu poisto on peruttu. Tiliäsi ei poisteta.\n\nJos sinulla on kysyttävää, ota yhteyttä osoitteeseen {safety_email}.\n\n– {product_name}-tiimi"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "{product_name}-tilisi poistetaan käyttämättömyyden vuoksi",
+		"body": "Hei {username},\n\n{product_name}-tilisi on ollut pitkään käyttämättä, joten se on ajoitettu poistettavaksi pysyvästi:\n\n{deletionDate, date, full} klo {deletionDate, time, short}{reason, select, null {} other {\n\nSyy: {reason}}}\n\nJos haluat säilyttää tilisi, ota yhteyttä osoitteeseen {safety_email} tästä sähköpostiosoitteesta ennen tätä päivämäärää.\n\n– {product_name}-tiimi"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "{product_name}-tilisi poistaminen on ajoitettu",
+		"body": "Hei {username},\n\nPyyntösi mukaisesti {product_name}-tilisi on ajoitettu poistettavaksi pysyvästi:\n\n{deletionDate, date, full} klo {deletionDate, time, short}{reason, select, null {} other {\n\nSyy: {reason}}}\n\nTilisi on lukittu siihen asti. Jos et pyytänyt tätä tai haluat säilyttää tilisi, ota yhteyttä osoitteeseen {safety_email} tästä sähköpostiosoitteesta ennen tätä päivämäärää.\n\n– {product_name}-tiimi"
 	},
 	"account_scheduled_deletion": {
 		"subject": "Käyttäjätilisi {product_name}-palvelussa poistetaan pysyvästi",
@@ -37,7 +45,7 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "{product_name}-tilisi sähköpostiosoite on vaihdettu",
-		"body": "Hei {username},\n\nSähköpostiosoitteesi {product_name}-tilillä on vaihdettu osoitteeseen {newEmail}.\n\nJos teit tämän muutoksen, toimenpiteitä ei tarvita. Jos et tehnyt, voit kumota muutoksen ja turvata tilisi käyttämällä tätä linkkiä:\n\n{revertUrl}\n\nTämä palauttaa edellisen sähköpostiosoitteesi, kirjaa sinut ulos kaikkialta, poistaa linkitetyt puhelinnumerot, poistaa MFA:n käytöstä ja edellyttää uuden salasanan asettamista.\n\n– {product_name}-turvallisuustiimi"
+		"body": "Hei {username},\n\nSähköpostiosoitteesi {product_name}-tilillä on vaihdettu osoitteeseen {newEmail}.\n\nJos teit tämän muutoksen, toimenpiteitä ei tarvita. Jos et tehnyt, voit kumota muutoksen ja turvata tilisi käyttämällä tätä linkkiä:\n\n{revertUrl}\n\nTämä palauttaa edellisen sähköpostiosoitteesi, kirjaa sinut ulos kaikkialta, poistaa MFA:n käytöstä ja edellyttää uuden salasanan asettamista.\n\n– {product_name}-turvallisuustiimi"
 	},
 	"email_verification": {
 		"subject": "Vahvista sähköpostiosoitteesi {product_name}-tilillä",
@@ -65,7 +73,7 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Vahvista salasanan muutos {product_name}-tilillä",
-		"body": "Hei {username},\n\nSaimme pyynnön muuttaa salasanaa {product_name}-tililläsi.\n\nSyötä tämä koodi sovellukseen vahvistaaksesi muutoksen:\n\n{code}\n\nTämä koodi vanhenee {expiresAt}.\n\nJos et pyytänyt tätä, joku saattaa päästä tilillesi. Vaihda salasanasi välittömästi ja ota käyttöön kaksivaiheinen todennus.\n\n– {product_name}-tiimi"
+		"body": "Hei {username},\n\nSaimme pyynnön muuttaa salasanaa {product_name}-tililläsi.\n\nSyötä tämä koodi sovellukseen vahvistaaksesi muutoksen:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä, joku saattaa päästä tilillesi. Vaihda salasanasi välittömästi ja ota käyttöön kaksivaiheinen todennus.\n\n– {product_name}-tiimi"
 	},
 	"password_reset": {
 		"subject": "Nollaa {product_name}-salasanasi",

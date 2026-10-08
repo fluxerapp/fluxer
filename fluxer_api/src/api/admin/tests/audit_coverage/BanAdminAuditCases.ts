@@ -37,7 +37,7 @@ export const BanAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'list_blocklists',
 					targetType: 'blocklist',
 					targetId: '0',
-					metadata: {result_count: '9'},
+					metadata: {result_count: '8'},
 				},
 			};
 		},

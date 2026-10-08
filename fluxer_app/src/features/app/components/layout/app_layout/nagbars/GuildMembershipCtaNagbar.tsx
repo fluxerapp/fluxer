@@ -13,6 +13,7 @@ import {InviteAcceptModal} from '@app/features/invite/components/modals/InviteAc
 import Invites from '@app/features/invite/state/Invites';
 import {isGuildInvite} from '@app/features/invite/types/InviteTypes';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import NagbarState from '@app/features/ui/state/Nagbar';
@@ -34,7 +35,8 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 	const {i18n} = useLingui();
 	const isSelfHosted = RuntimeConfig.isSelfHosted();
 	const currentUserId = Authentication.currentUserId;
-	const inviteState = Invites.invites.get(FLUXER_HQ_INVITE_CODE);
+	const instanceTarget = currentInstanceTarget();
+	const inviteState = Invites.getInvite(FLUXER_HQ_INVITE_CODE, instanceTarget);
 	const invite = inviteState?.data ?? null;
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	useEffect(() => {
@@ -60,13 +62,14 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 		if (isSubmitting) return;
 		setIsSubmitting(true);
 		try {
-			await InviteCommands.fetchWithCoalescing(FLUXER_HQ_INVITE_CODE);
+			await InviteCommands.fetchWithCoalescing(FLUXER_HQ_INVITE_CODE, instanceTarget);
 		} finally {
 			setIsSubmitting(false);
 			ModalCommands.push(
 				modal(() => (
 					<InviteAcceptModal
 						code={FLUXER_HQ_INVITE_CODE}
+						target={instanceTarget}
 						data-flx="app.app-layout.nagbars.guild-membership-cta-nagbar.handle-join-guild.invite-accept-modal"
 					/>
 				)),

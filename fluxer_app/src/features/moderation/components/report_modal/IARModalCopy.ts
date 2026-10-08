@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CLOSE_DM_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import {
 	type IARReportContextType,
@@ -27,6 +28,10 @@ const FINISH_ACCOUNT_SETUP_FIRST_DESCRIPTOR = msg({
 const CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR = msg({
 	message: 'Claim your account and verify your email to send reports.',
 	comment: 'IAR modal: body of the account-not-ready notice.',
+});
+const CLAIM_TO_REPORT_DESCRIPTOR = msg({
+	message: 'Claim your account to send reports.',
+	comment: 'IAR modal: body of the account-not-ready notice on an instance where people sign in with a username.',
 });
 const WHICH_AREA_DESCRIPTOR = msg({
 	message: 'What kind of rule was broken?',
@@ -454,7 +459,7 @@ export function getIARModalDescription(i18n: I18n): string {
 export function getIARReportEligibilityCopy(i18n: I18n): IARCopyBlock {
 	return {
 		title: i18n._(FINISH_ACCOUNT_SETUP_FIRST_DESCRIPTOR),
-		body: i18n._(CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR),
+		body: i18n._(RuntimeConfig.usesUsernameSignIn ? CLAIM_TO_REPORT_DESCRIPTOR : CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR),
 	};
 }
 
@@ -575,7 +580,7 @@ function getMessageRuleReasonOptions(i18n: I18n): Array<IARRadioOption<IARRuleRe
 		{
 			value: 'other',
 			name: i18n._(OTHER_LABEL_DESCRIPTOR),
-			desc: i18n._(OTHER_DESC_DESCRIPTOR, {productName: PRODUCT_NAME}),
+			desc: i18n._(OTHER_DESC_DESCRIPTOR, {productName: getActiveInstanceProductName()}),
 		},
 	];
 }
@@ -621,7 +626,7 @@ function getUserRuleReasonOptions(i18n: I18n): Array<IARRadioOption<IARRuleReaso
 		{
 			value: 'other',
 			name: i18n._(OTHER_LABEL_DESCRIPTOR),
-			desc: i18n._(OTHER_DESC_DESCRIPTOR, {productName: PRODUCT_NAME}),
+			desc: i18n._(OTHER_DESC_DESCRIPTOR, {productName: getActiveInstanceProductName()}),
 		},
 	];
 }
@@ -659,7 +664,7 @@ function getGuildRuleReasonOptions(i18n: I18n): Array<IARRadioOption<IARRuleReas
 		{
 			value: 'other',
 			name: i18n._(OTHER_LABEL_DESCRIPTOR),
-			desc: i18n._(OTHER_DESC_DESCRIPTOR, {productName: PRODUCT_NAME}),
+			desc: i18n._(OTHER_DESC_DESCRIPTOR, {productName: getActiveInstanceProductName()}),
 		},
 	];
 }

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const APP_SHELL_CACHE_KEY = '/app-shell';
-const APP_SHELL_SEED_PATH = '/';
+const APP_SHELL_SEED_PATH = '/app';
+const APP_SHELL_MARKER_HEADER = 'x-fluxer-app-shell';
 
 export interface PrecacheEntry {
 	readonly url: string;
@@ -22,9 +23,8 @@ export function isCacheableResponse(response: Response): boolean {
 	return response.ok || response.type === 'opaque';
 }
 
-export function isPrecacheableAssetUrl(url: string): boolean {
-	const pathname = url.split(/[?#]/, 1)[0].toLowerCase();
-	return pathname !== '/' && !pathname.endsWith('.html');
+export function isAppShellResponse(response: Response): boolean {
+	return response.ok && response.headers.get(APP_SHELL_MARKER_HEADER) === '1';
 }
 
 export async function precacheAssets(runtime: AppShellRuntime, manifest: ReadonlyArray<PrecacheEntry>): Promise<void> {
@@ -33,15 +33,13 @@ export async function precacheAssets(runtime: AppShellRuntime, manifest: Readonl
 	}
 	const cache = await runtime.caches.open(runtime.precacheName);
 	await Promise.allSettled(
-		manifest
-			.filter((entry) => isPrecacheableAssetUrl(entry.url))
-			.map(async (entry) => {
-				const request = new Request(new URL(entry.url, runtime.origin).toString(), {cache: 'reload'});
-				const response = await runtime.fetch(request);
-				if (isCacheableResponse(response)) {
-					await cache.put(entry.url, response);
-				}
-			}),
+		manifest.map(async (entry) => {
+			const request = new Request(new URL(entry.url, runtime.origin).toString(), {cache: 'reload'});
+			const response = await runtime.fetch(request);
+			if (isCacheableResponse(response)) {
+				await cache.put(entry.url, response);
+			}
+		}),
 	);
 }
 
@@ -54,7 +52,7 @@ async function readAppShell(runtime: AppShellRuntime): Promise<Response | undefi
 }
 
 async function storeAppShell(runtime: AppShellRuntime, response: Response): Promise<void> {
-	if (!runtime.caches || !isCacheableResponse(response)) {
+	if (!runtime.caches || !isAppShellResponse(response)) {
 		return;
 	}
 	try {

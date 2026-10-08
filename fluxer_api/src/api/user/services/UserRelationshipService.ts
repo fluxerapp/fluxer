@@ -3,6 +3,7 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import type {UserID} from '@app/api/BrandedTypes';
+import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -12,12 +13,13 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Relationship} from '@app/api/models/Relationship';
 import type {User} from '@app/api/models/User';
+import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
 import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
 import type {IUserSettingsRepository} from '@app/api/user/repositories/IUserSettingsRepository';
-import type {DirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
-import {createDirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
 import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import {mapRelationshipToResponse} from '@app/api/user/UserMappers';
 import type {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -44,13 +46,28 @@ import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 
 interface UserRelationshipRepository
 	extends IUserAccountRepository,
+		IUserChannelRepository,
 		IUserRelationshipRepository,
 		IUserSettingsRepository {}
+
+function emitUserBlocked(userId: UserID, targetId: UserID): void {
+	void emitActivity('user_blocked', targetId.toString(), {
+		blocker_id: userId.toString(),
+		blocked_id: targetId.toString(),
+	});
+}
+
+function emitFriendRequest(userId: UserID, targetId: UserID, delivered: boolean): void {
+	void emitActivity('friend_request', userId.toString(), {
+		user_id: userId.toString(),
+		target_id: targetId.toString(),
+		delivered,
+	});
+}
 
 export class UserRelationshipService {
 	private readonly userRepository: UserRelationshipRepository;
 	private readonly gatewayService: IGatewayService;
-	private readonly dmSpamMitigationService: DirectMessageSpamMitigationService;
 
 	constructor(
 		apiContext: ApiContext,
@@ -60,7 +77,6 @@ export class UserRelationshipService {
 		const {users, gateway} = apiContext.services;
 		this.userRepository = users;
 		this.gatewayService = gateway;
-		this.dmSpamMitigationService = createDirectMessageSpamMitigationService(apiContext, this.userRepository);
 	}
 
 	async getRelationship(params: {userId: UserID; targetId: UserID; type: number}): Promise<Relationship | null> {
@@ -129,7 +145,8 @@ export class UserRelationshipService {
 		if (!requesterUser) {
 			throw new UnknownUserError();
 		}
-		if (this.dmSpamMitigationService.shouldSuppressDirectMessageDelivery(requesterUser)) {
+		if (isDirectDeliverySuppressed(requesterUser)) {
+			emitFriendRequest(userId, targetId, false);
 			return await this.createShadowFriendRequest({
 				requesterUser,
 				userId,
@@ -169,22 +186,11 @@ export class UserRelationshipService {
 				return relationship;
 			}
 		}
-		const spamDecision = await this.dmSpamMitigationService.recordFriendRequestSend({
-			requester: requesterUser,
-			targetId,
-		});
-		if (spamDecision.shouldSuppressRecipientDelivery) {
-			return await this.createShadowFriendRequest({
-				requesterUser,
-				userId,
-				targetId,
-				userCacheService,
-				requestCache,
-			});
-		}
 		const targetUser = await this.validateFriendRequest({userId, targetId});
+		await assertMayStartConversation({user: requesterUser, targetId, users: this.userRepository});
 		await this.validateRelationshipCounts({userId, targetId});
 		const requestRelationship = await this.createFriendRequest({userId, targetId, userCacheService, requestCache});
+		emitFriendRequest(userId, targetId, true);
 		const targetIsFriendlyBot =
 			targetUser.isBot && (targetUser.flags & UserFlags.FRIENDLY_BOT) === UserFlags.FRIENDLY_BOT;
 		const manualApprovalFlag = UserFlags.FRIENDLY_BOT_MANUAL_APPROVAL;
@@ -341,6 +347,7 @@ export class UserRelationshipService {
 			userCacheService,
 			requestCache,
 		});
+		emitUserBlocked(userId, targetId);
 		return blockRelationship;
 	}
 

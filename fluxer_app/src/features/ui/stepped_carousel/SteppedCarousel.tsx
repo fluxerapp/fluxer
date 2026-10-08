@@ -3,12 +3,22 @@
 import styles from '@app/features/ui/stepped_carousel/SteppedCarousel.module.css';
 import {
 	createSteppedCarouselSnapshot,
+	getSteppedCarouselStateValue,
+	resolveSteppedCarouselHeight,
 	selectSteppedCarouselModel,
 	transitionSteppedCarouselSnapshot,
 } from '@app/features/ui/stepped_carousel/SteppedCarouselStateMachine';
+import {flxElementClassName} from '@app/lib/react';
 import {AnimatePresence, motion, type Transition, useReducedMotion, type Variants} from 'framer-motion';
 import type React from 'react';
 import {useCallback, useLayoutEffect, useRef, useState} from 'react';
+
+export const SteppedCarouselARIALive = Object.freeze({
+	OFF: 'off',
+	POLITE: 'polite',
+} as const);
+
+export type SteppedCarouselARIALive = (typeof SteppedCarouselARIALive)[keyof typeof SteppedCarouselARIALive];
 
 interface SteppedCarouselProps<Step extends string> {
 	step: Step;
@@ -17,8 +27,12 @@ interface SteppedCarouselProps<Step extends string> {
 	direction?: number;
 	focusOnStepChange?: boolean;
 	ariaLabel?: string;
-	ariaLive?: 'off' | 'polite';
+	ariaLive?: SteppedCarouselARIALive;
 	'data-flx'?: string;
+}
+
+interface SteppedCarouselActionsProps extends React.HTMLAttributes<HTMLElement> {
+	children: React.ReactNode;
 }
 
 const slideVariants: Variants = {
@@ -108,18 +122,18 @@ export function SteppedCarousel<Step extends string>({
 	const model = selectSteppedCarouselModel(nextSnapshot);
 	const paneRef = useRef<HTMLDivElement | null>(null);
 	const measureNode = useCallback((node: HTMLElement) => {
+		const offsetHeight = node.offsetHeight;
+		const scrollHeight = node.scrollHeight;
 		setSnapshot((current) =>
-			transitionSteppedCarouselSnapshot(current, {
-				type: 'carousel.measured',
-				offsetHeight: node.offsetHeight,
-				scrollHeight: node.scrollHeight,
-			}),
+			getSteppedCarouselStateValue(current) === 'ready' &&
+			current.context.contentHeight === resolveSteppedCarouselHeight({offsetHeight, scrollHeight})
+				? current
+				: transitionSteppedCarouselSnapshot(current, {type: 'carousel.measured', offsetHeight, scrollHeight}),
 		);
 	}, []);
 	const setMeasureNode = useCallback(
 		(node: HTMLDivElement) => {
 			paneRef.current = node;
-			measureNode(node);
 			let observer: ResizeObserver | null = null;
 			if (typeof ResizeObserver !== 'undefined') {
 				observer = new ResizeObserver(() => {
@@ -161,7 +175,7 @@ export function SteppedCarousel<Step extends string>({
 			data-flx={dataFlx ?? 'ui.stepped-carousel.container'}
 		>
 			<AnimatePresence
-				mode="wait"
+				mode="popLayout"
 				initial={false}
 				custom={model.direction}
 				data-flx="ui.stepped-carousel.stepped-carousel.animate-presence"
@@ -183,5 +197,21 @@ export function SteppedCarousel<Step extends string>({
 				</motion.div>
 			</AnimatePresence>
 		</motion.div>
+	);
+}
+
+export function SteppedCarouselActions({
+	children,
+	className,
+	...props
+}: SteppedCarouselActionsProps): React.ReactElement {
+	return (
+		<flx-ui-stepped-carousel-actions
+			className={flxElementClassName(styles.actions, className)}
+			data-flx="ui.stepped-carousel.actions"
+			{...props}
+		>
+			{children}
+		</flx-ui-stepped-carousel-actions>
 	);
 }

@@ -2,13 +2,14 @@
 
 use crate::{
     api::types::{
-        AppPublicConfigResponse, EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigResponse,
+        AccountIdentityConfigResponse, AccountIdentityMode, AppPublicConfigResponse,
+        CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE, CaptchaConfigResponse,
+        DOMAIN_MIGRATION_DEFAULT_SALT, DomainMigrationConfigResponse,
+        EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigResponse,
         GatewayRolloutConfigResponse, InstanceConfigResponse, InstanceIntegrationsResponse,
         InstanceMediaResponse, InstancePolicyResponse, InstanceRegistrationResponse,
-        LimitConfigResponse, NoiseSuppressionBackend, PUSH_SERVICE_DELIVERY_DEFAULT_SALT,
-        PendingRegistrationResponse, PushServiceDeliveryConfigResponse, RegistrationUrlResponse,
-        SCREEN_SHARE_DELIVERY_DEFAULT_SALT, ScreenShareDeliveryConfigResponse, SsoConfigResponse,
-        VOICE_NS_MAX_GUILD_OVERRIDES, VoiceNoiseSuppressionConfigResponse,
+        LimitConfigResponse, PendingRegistrationResponse, PushRelayConfigResponse,
+        RegistrationUrlResponse, SsoConfigResponse, TagStyle,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -24,6 +25,7 @@ use crate::{
             section_card::{section_card_simple, section_card_with_description},
         },
         layout::admin_layout,
+        pages::instance_billing::premium_billing_section,
     },
     utils::timestamps::format_admin_timestamp,
 };
@@ -109,6 +111,9 @@ pub fn instance_config_page(
                     "Access & accounts",
                     "Who can sign in and create accounts on this instance.",
                     html! {
+                        @if instance_config.self_hosted {
+                            (account_identity_section(&instance_config.account_identity))
+                        }
                         (registration_config_section(
                             config,
                             csrf_token,
@@ -117,7 +122,13 @@ pub fn instance_config_page(
                             instance_config.self_hosted,
                         ))
                         (sso_config_section(base, csrf_token, &instance_config.sso))
-                        (deferred_phone_gate_form(base, csrf_token, &instance_config.policy))
+                    },
+                ))
+                (config_group(
+                    "Bot protection",
+                    "A proof-of-work check on sign-up, login, password reset and a few other abuse-prone actions.",
+                    html! {
+                        (captcha_section(base, csrf_token, &instance_config.captcha))
                     },
                 ))
                 @if instance_config.self_hosted {
@@ -125,7 +136,25 @@ pub fn instance_config_page(
                         "Community & policy",
                         "Community shape, direct messaging, the premium model, and optional embed services.",
                         html! {
-                            (policy_config_section(base, csrf_token, &instance_config.policy))
+                            (policy_config_section(
+                                base,
+                                csrf_token,
+                                &instance_config.policy,
+                                &instance_config.app_public.branding.premium_product_name,
+                            ))
+                        },
+                    ))
+                    (config_group(
+                        "Premium & billing",
+                        "The premium tier's name, Stripe credentials and the prices members pay.",
+                        html! {
+                            (premium_billing_section(
+                                base,
+                                csrf_token,
+                                &instance_config.app_public.branding,
+                                &instance_config.billing,
+                                instance_config.policy.premium_mode,
+                            ))
                         },
                     ))
                 }
@@ -133,7 +162,19 @@ pub fn instance_config_page(
                     "Runtime integrations",
                     "Credentials and provider choices that override environment variables at runtime.",
                     html! {
-                        (integrations_config_section(base, csrf_token, &instance_config.integrations))
+                        (integrations_config_section(
+                            base,
+                            csrf_token,
+                            &instance_config.integrations,
+                            instance_config.account_identity.mode,
+                        ))
+                    },
+                ))
+                (config_group(
+                    "Push notifications",
+                    "Consent for the relay that delivers official mobile app notifications.",
+                    html! {
+                        (push_relay_section(base, csrf_token, &instance_config.push_relay))
                     },
                 ))
                 (config_group(
@@ -148,9 +189,9 @@ pub fn instance_config_page(
                     "Gateway rollout behavior and the limit rules applied to users and guilds.",
                     html! {
                         (gateway_rollout_section(base, csrf_token, &instance_config.gateway_rollout))
-                        (voice_noise_suppression_section(base, csrf_token, &instance_config.voice_noise_suppression))
-                        (screen_share_delivery_section(base, csrf_token, &instance_config.screen_share_delivery))
-                        (push_service_delivery_section(base, csrf_token, &instance_config.push_service_delivery))
+                        @if !instance_config.self_hosted {
+                            (domain_migration_section(base, csrf_token, &instance_config.domain_migration))
+                        }
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
@@ -199,7 +240,12 @@ fn config_group(title: &str, description: &str, content: Markup) -> Markup {
     }
 }
 
-fn policy_config_section(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) -> Markup {
+fn policy_config_section(
+    base: &str,
+    csrf_token: &str,
+    policy: &InstancePolicyResponse,
+    premium_name: &str,
+) -> Markup {
     section_card_with_description(
         "Community & Policy",
         "Control whether this instance runs as a single community, whether direct messages and \
@@ -209,7 +255,8 @@ fn policy_config_section(base: &str, csrf_token: &str, policy: &InstancePolicyRe
             div class="space-y-8" {
                 (single_community_form(base, csrf_token, policy))
                 (direct_messages_form(base, csrf_token, policy))
-                (premium_mode_form(base, csrf_token, policy))
+                (premium_mode_form(base, csrf_token, policy, premium_name))
+                (community_creation_form(base, csrf_token, policy))
                 (services_form(base, csrf_token, policy))
             }
         },
@@ -302,58 +349,14 @@ fn direct_messages_form(base: &str, csrf_token: &str, policy: &InstancePolicyRes
     }
 }
 
-fn deferred_phone_gate_form(
+fn premium_mode_form(
     base: &str,
     csrf_token: &str,
     policy: &InstancePolicyResponse,
+    premium_name: &str,
 ) -> Markup {
-    let gate = &policy.deferred_phone_gate;
-    let status = if gate.enabled {
-        ("Enabled", BadgeVariant::Success)
-    } else {
-        ("Disabled", BadgeVariant::Default)
-    };
-    html! {
-        div class="space-y-4 border-t border-neutral-200 pt-6" {
-            div class="flex flex-wrap items-center gap-2" {
-                h3 class="text-sm font-semibold text-neutral-900" { "Deferred phone verification" }
-                (badge(status.0, status.1))
-            }
-            p class="text-sm text-neutral-500" {
-                "When enabled, a phone requirement raised at registration is held back and only \
-                 applied if the account joins a discoverable community, or one above the member \
-                 threshold, within the window. Accounts that wait out the window are not challenged. \
-                 Inbound-SMS requirements are never deferred."
-            }
-            form method="post" action={(base) "/instance-config?action=update_policy"} {
-                (csrf_input(csrf_token))
-                div class="space-y-4" {
-                    (select_input("policy_deferred_phone_gate_enabled", "Deferred phone verification", &[
-                        ("true", "Enabled"),
-                        ("false", "Disabled"),
-                    ], if gate.enabled { "true" } else { "false" }))
-                    (text_input(
-                        "policy_deferred_phone_gate_window_hours",
-                        "Window (hours)",
-                        &gate.window_hours.to_string(),
-                        "6",
-                    ))
-                    (text_input(
-                        "policy_deferred_phone_gate_member_threshold",
-                        "Member threshold",
-                        &gate.member_threshold.to_string(),
-                        "50",
-                    ))
-                    (form_actions(html! {
-                        (submit_button("Save deferred phone verification"))
-                    }))
-                }
-            }
-        }
-    }
-}
-
-fn premium_mode_form(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) -> Markup {
+    let mirror_label = format!("Mirror (Free and {premium_name} tiers)");
+    let everyone_label = format!("Everyone (every member gets {premium_name} limits)");
     html! {
         div class="space-y-4 border-t border-neutral-200 pt-6" {
             h3 class="text-sm font-semibold text-neutral-900" { "Premium model" }
@@ -361,11 +364,42 @@ fn premium_mode_form(base: &str, csrf_token: &str, policy: &InstancePolicyRespon
                 (csrf_input(csrf_token))
                 div class="space-y-4" {
                     (select_input("policy_premium_mode", "Premium model", &[
-                        ("mirror", "Mirror (Free and Premium tiers)"),
-                        ("everyone", "Everyone (every member gets Plutonium limits)"),
+                        ("mirror", mirror_label.as_str()),
+                        ("everyone", everyone_label.as_str()),
                     ], policy.premium_mode.as_str()))
                     (form_actions(html! {
                         (submit_button("Save premium model"))
+                    }))
+                }
+            }
+        }
+    }
+}
+
+fn community_creation_form(
+    base: &str,
+    csrf_token: &str,
+    policy: &InstancePolicyResponse,
+) -> Markup {
+    html! {
+        div id="community-creation" class="space-y-4 border-t border-neutral-200 pt-6" {
+            h3 class="text-sm font-semibold text-neutral-900" { "Community creation" }
+            form method="post" action={(base) "/instance-config?action=update_policy"} {
+                (csrf_input(csrf_token))
+                div class="space-y-4" {
+                    (select_input("policy_guild_create_access", "Who can create communities", &[
+                        ("true", "Everyone"),
+                        ("false", "Restricted"),
+                    ], if policy.guild_create_access { "true" } else { "false" }))
+                    p class="text-xs text-neutral-500" {
+                        "When restricted, only admins with the wildcard ACL and users matched by a "
+                        a href={(base) "/limit-config"} class="text-blue-600 hover:underline" {
+                            "limit rule"
+                        }
+                        " that grants Community Creation Access can create communities."
+                    }
+                    (form_actions(html! {
+                        (submit_button("Save community creation policy"))
                     }))
                 }
             }
@@ -475,16 +509,66 @@ fn password_input(name: &str, label: &str, helper: Option<&str>) -> Markup {
     )
 }
 
+fn account_identity_section(account_identity: &AccountIdentityConfigResponse) -> Markup {
+    let description = match account_identity.mode {
+        AccountIdentityMode::Username => {
+            "Members sign in with a username and password. The instance never collects an email \
+             address. A member who forgets their password uses their recovery kit or a reset link \
+             from an admin."
+        }
+        AccountIdentityMode::Email => "Members sign in with an email address and password.",
+    };
+    section_card_with_description(
+        "Sign-in Method",
+        "How members identify themselves when they sign in.",
+        html! {
+            div class="space-y-3" {
+                div class="flex flex-wrap items-center gap-2" {
+                    h3 class="text-sm font-semibold text-neutral-900" {
+                        (account_identity.mode.label())
+                    }
+                    @match account_identity.locked {
+                        Some(true) => (badge("Fixed", BadgeVariant::Default)),
+                        Some(false) => (badge("Not fixed yet", BadgeVariant::Warning)),
+                        None => {}
+                    }
+                }
+                p class="text-sm text-neutral-600" { (description) }
+                @if !account_identity.mode.is_username() {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" {
+                            (account_identity.tag_style.label())
+                        }
+                    }
+                    p class="text-sm text-neutral-600" {
+                        @match account_identity.tag_style {
+                            TagStyle::None => {
+                                "Each name belongs to one person and is shown without a tag."
+                            }
+                            TagStyle::Random => {
+                                "Names have a random tag, like alex#4821, so several people can share a name."
+                            }
+                        }
+                    }
+                }
+                p class="text-xs text-neutral-500" {
+                    @if account_identity.mode.is_username() {
+                        "The sign-in method is chosen during setup. It cannot be changed once setup is complete or the first account exists."
+                    } @else {
+                        "The sign-in method and the username tags are chosen during setup. They cannot be changed once setup is complete or the first account exists."
+                    }
+                }
+            }
+        },
+    )
+}
+
 fn integrations_config_section(
     base: &str,
     csrf_token: &str,
     integrations: &InstanceIntegrationsResponse,
+    account_identity: AccountIdentityMode,
 ) -> Markup {
-    let captcha_provider = integrations
-        .captcha
-        .provider
-        .as_deref()
-        .unwrap_or(integrations.captcha.effective_provider.as_str());
     let smtp_port = integrations
         .email
         .smtp
@@ -516,91 +600,65 @@ fn integrations_config_section(
                         (password_input("integration_youtube_api_key", "YouTube API key", Some("Leave blank to keep the current key.")))
                     }
 
-                    div class="space-y-4 border-t border-neutral-200 pt-6" {
-                        div class="flex flex-wrap items-center gap-2" {
-                            h3 class="text-sm font-semibold text-neutral-900" { "Bot protection" }
-                            (secret_badge("hCaptcha secret", integrations.captcha.hcaptcha_secret_key_set))
-                            (secret_badge("Turnstile secret", integrations.captcha.turnstile_secret_key_set))
-                        }
-                        div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" {
-                            (select_input("integration_captcha_provider", "Provider", &[
-                                ("none", "Disabled"),
-                                ("hcaptcha", "hCaptcha"),
-                                ("turnstile", "Cloudflare Turnstile"),
-                            ], captcha_provider))
-                            (text_input(
-                                "integration_hcaptcha_site_key",
-                                "hCaptcha site key",
-                                integrations.captcha.hcaptcha_site_key.as_deref().unwrap_or(""),
-                                "",
-                            ))
-                            (password_input("integration_hcaptcha_secret_key", "hCaptcha secret key", Some("Leave blank to keep the current secret.")))
-                            (text_input(
-                                "integration_turnstile_site_key",
-                                "Turnstile site key",
-                                integrations.captcha.turnstile_site_key.as_deref().unwrap_or(""),
-                                "",
-                            ))
-                            (password_input("integration_turnstile_secret_key", "Turnstile secret key", Some("Leave blank to keep the current secret.")))
-                        }
-                    }
-
-                    div class="space-y-4 border-t border-neutral-200 pt-6" {
-                        div class="flex flex-wrap items-center gap-2" {
-                            h3 class="text-sm font-semibold text-neutral-900" { "Email delivery" }
-                            @if integrations.email.effective_enabled {
-                                (badge("Effective: enabled", BadgeVariant::Success))
-                            } @else {
-                                (badge("Effective: disabled", BadgeVariant::Default))
+                    @if !account_identity.is_username() {
+                        div class="space-y-4 border-t border-neutral-200 pt-6" {
+                            div class="flex flex-wrap items-center gap-2" {
+                                h3 class="text-sm font-semibold text-neutral-900" { "Email delivery" }
+                                @if integrations.email.effective_enabled {
+                                    (badge("Effective: enabled", BadgeVariant::Success))
+                                } @else {
+                                    (badge("Effective: disabled", BadgeVariant::Default))
+                                }
+                                @if integrations.email.effective_disable_new_ip_authorization {
+                                    (badge("IP auth disabled", BadgeVariant::Warning))
+                                } @else {
+                                    (badge("IP auth required", BadgeVariant::Default))
+                                }
+                                (secret_badge("SMTP password", integrations.email.smtp.password_set))
                             }
-                            @if integrations.email.effective_disable_new_ip_authorization {
-                                (badge("IP auth disabled", BadgeVariant::Warning))
-                            } @else {
-                                (badge("IP auth required", BadgeVariant::Default))
+                            input type="hidden" name="integration_email_present" value="1";
+                            (checkbox("integration_email_enabled", "true", "Enable email delivery", integrations.email.effective_enabled, true))
+                            div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
+                                (text_input(
+                                    "integration_email_from_email",
+                                    "From email",
+                                    integrations.email.from_email.as_deref().unwrap_or(""),
+                                    "notifications@example.com",
+                                ))
+                                (text_input(
+                                    "integration_email_from_name",
+                                    "From name",
+                                    integrations.email.from_name.as_deref().unwrap_or(""),
+                                    "Fluxer",
+                                ))
+                                (text_input(
+                                    "integration_smtp_host",
+                                    "SMTP host",
+                                    integrations.email.smtp.host.as_deref().unwrap_or(""),
+                                    "smtp.example.com",
+                                ))
+                                (text_input(
+                                    "integration_smtp_port",
+                                    "SMTP port",
+                                    &smtp_port,
+                                    "587",
+                                ))
+                                (text_input(
+                                    "integration_smtp_username",
+                                    "SMTP username",
+                                    integrations.email.smtp.username.as_deref().unwrap_or(""),
+                                    "user@example.com",
+                                ))
+                                (password_input("integration_smtp_password", "SMTP password", Some("Leave blank to keep the current password.")))
                             }
-                            (secret_badge("SMTP password", integrations.email.smtp.password_set))
-                        }
-                        (checkbox("integration_email_enabled", "true", "Enable email delivery", integrations.email.effective_enabled, true))
-                        div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                            (text_input(
-                                "integration_email_from_email",
-                                "From email",
-                                integrations.email.from_email.as_deref().unwrap_or(""),
-                                "notifications@example.com",
-                            ))
-                            (text_input(
-                                "integration_email_from_name",
-                                "From name",
-                                integrations.email.from_name.as_deref().unwrap_or(""),
-                                "Fluxer",
-                            ))
-                            (text_input(
-                                "integration_smtp_host",
-                                "SMTP host",
-                                integrations.email.smtp.host.as_deref().unwrap_or(""),
-                                "smtp.example.com",
-                            ))
-                            (text_input(
-                                "integration_smtp_port",
-                                "SMTP port",
-                                &smtp_port,
-                                "587",
-                            ))
-                            (text_input(
-                                "integration_smtp_username",
-                                "SMTP username",
-                                integrations.email.smtp.username.as_deref().unwrap_or(""),
-                                "user@example.com",
-                            ))
-                            (password_input("integration_smtp_password", "SMTP password", Some("Leave blank to keep the current password.")))
-                        }
-                        (checkbox("integration_smtp_secure", "true", "Use TLS", integrations.email.smtp.secure.unwrap_or(true), true))
-                        (checkbox("integration_email_disable_new_ip_authorization", "true", "Disable new IP login authorisation", integrations.email.disable_new_ip_authorization, true))
-                        div class="flex flex-wrap gap-2" {
-                            button type="submit"
-                                formaction={(base) "/instance-config?action=test_smtp"}
-                                class="inline-flex w-fit items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2 font-medium text-base text-neutral-700 transition-all duration-150 hover:border-neutral-400 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white" {
-                                span { "Test SMTP connection" }
+                            (checkbox("integration_smtp_secure", "true", "Use TLS", integrations.email.smtp.secure.unwrap_or(true), true))
+                            (checkbox("integration_email_disable_new_ip_authorization", "true", "Disable new IP login authorisation", integrations.email.disable_new_ip_authorization, true))
+                            div class="flex flex-wrap gap-2" {
+                                button type="submit"
+                                    formaction={(base) "/instance-config?action=test_smtp"}
+                                    class="inline-flex w-fit items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2 font-medium text-base text-neutral-700 transition-all duration-150 hover:border-neutral-400 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white" {
+                                    span { "Test SMTP connection" }
+                                }
                             }
                         }
                     }
@@ -983,416 +1041,302 @@ fn gateway_rollout_section(
     )
 }
 
-fn voice_noise_suppression_section(
+fn push_relay_section(
     base: &str,
     csrf_token: &str,
-    voice_noise_suppression: &VoiceNoiseSuppressionConfigResponse,
+    push_relay: &PushRelayConfigResponse,
 ) -> Markup {
-    let status = if voice_noise_suppression.enabled {
+    let status = if push_relay.relay_consent_accepted {
+        ("Accepted", BadgeVariant::Success)
+    } else {
+        ("Not accepted", BadgeVariant::Default)
+    };
+    let accepted_at =
+        format_optional_admin_timestamp(push_relay.relay_consent_accepted_at.as_deref(), "Never");
+    let accepted_by = push_relay
+        .relay_consent_accepted_by
+        .as_deref()
+        .unwrap_or("Nobody");
+    section_card_with_description(
+        "Push Relay",
+        "Official mobile app notifications travel through Fluxer's relay to Apple and Google. \
+         The relay delivers them only after an operator accepts its privacy notice.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_push_relay"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Relay consent" }
+                        (badge(status.0, status.1))
+                    }
+                    (checkbox(
+                        "push_relay_consent_accepted",
+                        "true",
+                        "Accept the push relay supplemental privacy notice",
+                        push_relay.relay_consent_accepted,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Until this is accepted official mobile app notifications are dropped. \
+                         Self-hosted UnifiedPush and ntfy endpoints never reach the relay and are \
+                         unaffected. "
+                        a href="https://fluxer.com/push-relay" target="_blank" rel="noreferrer"
+                            class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
+                            "Read the notice"
+                        }
+                    }
+                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
+                        (form_field_group("Accepted at", "push_relay_consent_accepted_at", false, None, None,
+                            html! {
+                                input type="text" id="push_relay_consent_accepted_at"
+                                    value=(accepted_at)
+                                    disabled class=(FORM_INPUT_CLASS);
+                            },
+                        ))
+                        (form_field_group("Accepted by user ID", "push_relay_consent_accepted_by", false, None, None,
+                            html! {
+                                input type="text" id="push_relay_consent_accepted_by"
+                                    value=(accepted_by)
+                                    disabled class=(FORM_INPUT_CLASS);
+                            },
+                        ))
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Push Relay Settings"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn domain_migration_section(
+    base: &str,
+    csrf_token: &str,
+    domain_migration: &DomainMigrationConfigResponse,
+) -> Markup {
+    let status = if domain_migration.enabled {
         ("Live", BadgeVariant::Success)
     } else {
         ("Inert", BadgeVariant::Default)
     };
-    let backend_labels =
-        NoiseSuppressionBackend::ALL.map(|backend| (backend.to_string(), backend.label()));
-    let backend_options = backend_labels
-        .iter()
-        .map(|(value, label)| (value.as_str(), *label))
-        .collect::<Vec<_>>();
-    let included_user_ids = voice_noise_suppression.included_user_ids.join("\n");
-    let excluded_user_ids = voice_noise_suppression.excluded_user_ids.join("\n");
-    let guild_overrides = voice_noise_suppression
-        .guild_overrides
-        .iter()
-        .map(|entry| format!("{}={}", entry.guild_id, entry.backend))
-        .collect::<Vec<_>>()
-        .join("\n");
+    let included_user_ids = domain_migration.included_user_ids.join("\n");
+    let excluded_user_ids = domain_migration.excluded_user_ids.join("\n");
     section_card_with_description(
-        "Voice Noise Suppression",
-        "Pick which noise suppression backend targeted clients load in voice calls, and how many \
-         of them are targeted. While the master switch below is off nothing on this form reaches \
-         any client: every user keeps the audio pipeline they have today, whatever the rest of \
-         these fields say.",
+        "Domain Migration",
+        "Moves web clients of the official instance from the legacy web app origin to the new \
+         one. Selected accounts copy their local data across and continue on the new origin. \
+         Clients of other instances read this configuration and ignore it.",
         html! {
-            form method="post" action={(base) "/instance-config?action=update_voice_noise_suppression"} {
+            form method="post" action={(base) "/instance-config?action=update_domain_migration"} {
                 (csrf_input(csrf_token))
                 div class="space-y-6" {
                     div class="flex flex-wrap items-center gap-2" {
                         h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
                         (badge(status.0, status.1))
                         span class="text-xs text-neutral-500" {
-                            "Config version " (voice_noise_suppression.config_version)
+                            "Config version " (domain_migration.config_version)
                         }
                     }
                     (checkbox(
-                        "voice_ns_enabled",
+                        "domain_migration_enabled",
                         "true",
-                        "Serve noise suppression assignments to clients",
-                        voice_noise_suppression.enabled,
+                        "Move selected web clients to the new origin",
+                        domain_migration.enabled,
                         true,
                     ))
                     p class="text-xs text-neutral-500" {
-                        "Off is the safe state. With this unchecked every client is told the \
-                         feature is inert and keeps its current behavior, so the rollout, targeting \
-                         and override fields below have no effect at all."
+                        "Off is the safe state and the kill switch. With this unchecked no client \
+                         starts a migration and clients that already migrated stop forwarding the \
+                         legacy origin, so the rollout and targeting fields below have no effect at all."
                     }
 
-                    h3 class="text-sm font-semibold text-neutral-900" { "Backends" }
-                    (select_input(
-                        "voice_ns_default_backend",
-                        "Default Backend",
-                        &backend_options,
-                        &voice_noise_suppression.default_backend.to_string(),
+                    h3 class="text-sm font-semibold text-neutral-900" { "Installed apps" }
+                    (checkbox(
+                        "domain_migration_standalone_forwarding",
+                        "true",
+                        "Forward installed desktop web apps to the new origin",
+                        domain_migration.standalone_forwarding,
+                        true,
                     ))
                     p class="text-xs text-neutral-500" {
-                        "The backend assigned by always-on user rules and the canary. A default \
-                         that is not ticked below is unavailable, but per-guild overrides can \
-                         still target users."
+                        "Leave this off until the manifest scope extension and the association file \
+                         are live and verified. While it is off, installed Chromium desktop apps copy \
+                         their data across but stay on the legacy origin and offer to install the new \
+                         app. Installed mobile and Safari apps never forward either way."
                     }
-                    div class="grid grid-cols-1 gap-2 sm:grid-cols-2" {
-                        @for backend in NoiseSuppressionBackend::ALL {
-                            (checkbox(
-                                "voice_ns_enabled_backends[]",
-                                &backend.to_string(),
-                                backend.label(),
-                                voice_noise_suppression.enabled_backends.contains(&backend),
-                                true,
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
+                    (number_field(
+                        "domain_migration_rollout_basis_points",
+                        "Rollout (basis points)",
+                        &domain_migration.rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of logged-in users bucketed into the migration, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                    ))
+                    (number_field(
+                        "domain_migration_anonymous_rollout_basis_points",
+                        "Anonymous rollout (basis points)",
+                        &domain_migration.anonymous_rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of logged-out devices sent to the new origin, in basis points. Each device is bucketed on its own random ID."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "domain_migration_rollout_salt",
+                            "Rollout Salt",
+                            &domain_migration.rollout_salt,
+                            DOMAIN_MIGRATION_DEFAULT_SALT,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the bucketing hash for users and devices. Changing it reshuffles \
+                             which users and devices fall inside the percentages above. Leave it \
+                             alone to keep the current cohort stable."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "domain_migration_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            domain_migration.included_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These users are targeted \
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save. Blank entries and duplicate \
+                             IDs are ignored."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (checkbox(
+                            "domain_migration_include_premium_users",
+                            "true",
+                            "Include premium users",
+                            domain_migration.include_premium_users,
+                            true,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Includes every account with active premium perks, regardless of the \
+                             percentage above. The never-on list still wins."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "domain_migration_included_guild_ids",
+                            "Always-on Guild IDs",
+                            "1500000000000000005\n1500000000000000006",
+                            &domain_migration.included_guild_ids.join("\n"),
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            domain_migration.included_guild_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format, with guild IDs. Every member of a listed guild is \
+                             included regardless of the percentage above, unless the user is \
+                             in the never-on list."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "domain_migration_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            domain_migration.excluded_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage. It stops new migrations only. A user who already moved \
+                             stays on the new origin."
+                        }
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Domain Migration Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn estimate_low_end_solve_seconds(cost: u32, max_counter: u32) -> f64 {
+    0.75 * f64::from(cost) * f64::from(max_counter) / 1_050_000.0
+}
+
+fn captcha_section(base: &str, csrf_token: &str, captcha: &CaptchaConfigResponse) -> Markup {
+    let status = if captcha.enabled {
+        ("On", BadgeVariant::Success)
+    } else {
+        ("Off", BadgeVariant::Default)
+    };
+    let estimate = estimate_low_end_solve_seconds(captcha.cost, captcha.max_counter);
+    section_card_with_description(
+        "Proof-of-work check",
+        "Clients solve it in the background. The API issues and verifies every challenge itself, \
+         and no third party is involved.",
+        html! {
+            div class="space-y-6" {
+                div class="flex flex-wrap items-center gap-2" {
+                    (badge(status.0, status.1))
+                }
+                form method="post" action={(base) "/instance-config?action=update_captcha"} {
+                    (csrf_input(csrf_token))
+                    div class="space-y-6" {
+                        (checkbox(
+                            "captcha_enabled",
+                            "true",
+                            "Require a proof-of-work check",
+                            captcha.enabled,
+                            true,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "On by default. Turning it off removes the check from every request."
+                        }
+                        (number_field(
+                            "captcha_cost",
+                            "Cost (PBKDF2 iterations per try)",
+                            &captcha.cost.to_string(),
+                            Some(*CAPTCHA_COST_RANGE.start()),
+                            Some(*CAPTCHA_COST_RANGE.end()),
+                            "1",
+                            Some("Default 5000."),
+                        ))
+                        (number_field(
+                            "captcha_max_counter",
+                            "Maximum counter",
+                            &captcha.max_counter.to_string(),
+                            Some(*CAPTCHA_MAX_COUNTER_RANGE.start()),
+                            Some(*CAPTCHA_MAX_COUNTER_RANGE.end()),
+                            "1",
+                            Some("Default 1000. Solve time grows with cost times this value."),
+                        ))
+                        p class="text-sm text-neutral-700" {
+                            (format!(
+                                "Average solve: about {estimate:.1} s on a low-end Android device, \
+                                 well under a second in desktop browsers."
                             ))
                         }
+                        (form_actions(html! {
+                            (submit_button("Save"))
+                        }))
                     }
-                    p class="text-xs text-neutral-500" {
-                        "Backends clients are allowed to load. Unticking one withdraws it from \
-                         every user, including anyone who picked it themselves."
-                    }
-                    (checkbox(
-                        "voice_ns_allow_user_override",
-                        "true",
-                        "Let users pick their own backend from the ticked list",
-                        voice_noise_suppression.allow_user_override,
-                        true,
-                    ))
-                    p class="text-xs text-neutral-500" {
-                        "Applies only to users who are already targeted. It never pulls anyone \
-                         into the rollout."
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
-                    (number_field(
-                        "voice_ns_rollout_basis_points",
-                        "Rollout (basis points)",
-                        &voice_noise_suppression.rollout_basis_points.to_string(),
-                        Some(0), Some(10000), "1",
-                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
-                    ))
-                    div class="flex flex-col gap-2" {
-                        (text_input(
-                            "voice_ns_rollout_salt",
-                            "Rollout Salt",
-                            &voice_noise_suppression.rollout_salt,
-                            "voice-ns-v1",
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
-                             inside the percentage above. Leave it alone to keep the current \
-                             cohort stable."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "voice_ns_included_user_ids",
-                            "Always-on User IDs",
-                            "1500000000000000001\n1500000000000000002",
-                            &included_user_ids,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            voice_noise_suppression.included_user_ids.len(),
-                            EXPERIMENT_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "One snowflake per line, or comma separated. These users are targeted \
-                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
-                             digits. Invalid entries prevent the save. Blank entries and duplicate \
-                             IDs are ignored."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "voice_ns_excluded_user_ids",
-                            "Never-on User IDs",
-                            "1500000000000000003\n1500000000000000004",
-                            &excluded_user_ids,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            voice_noise_suppression.excluded_user_ids.len(),
-                            EXPERIMENT_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Same format. Exclusion wins over both the always-on list and the \
-                             percentage. This is the per-user kill switch."
-                        }
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Per-guild overrides" }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "voice_ns_guild_overrides",
-                            "Guild Overrides",
-                            "1600000000000000001=rnnoise\n1600000000000000002=deep_filter",
-                            &guild_overrides,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            voice_noise_suppression.guild_overrides.len(),
-                            VOICE_NS_MAX_GUILD_OVERRIDES,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "One per line as guild_id=backend. A guild \
-                             rule targets callers even outside the canary. Always-on user rules \
-                             take precedence, and excluded users stay off. Invalid lines and \
-                             conflicting rules for the same guild prevent the save. \
-                             Unticked backends stay stored but are inactive."
-                        }
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Processing" }
-                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                        (number_field(
-                            "voice_ns_suppression_strength",
-                            "Suppression Strength",
-                            &voice_noise_suppression.suppression_strength.to_string(),
-                            Some(0), Some(100), "1",
-                            Some("How aggressively the backend removes noise, 0 to 100. Higher values cut more background but chew more of the voice."),
-                        ))
-                    }
-
-                    (form_actions(html! {
-                        (submit_button("Save Voice Noise Suppression Configuration"))
-                    }))
-                }
-            }
-        },
-    )
-}
-
-fn screen_share_delivery_section(
-    base: &str,
-    csrf_token: &str,
-    screen_share_delivery: &ScreenShareDeliveryConfigResponse,
-) -> Markup {
-    let status = if screen_share_delivery.enabled {
-        ("Live", BadgeVariant::Success)
-    } else {
-        ("Inert", BadgeVariant::Default)
-    };
-    let included_user_ids = screen_share_delivery.included_user_ids.join("\n");
-    let excluded_user_ids = screen_share_delivery.excluded_user_ids.join("\n");
-    section_card_with_description(
-        "Screen Share Delivery",
-        "Pick how many clients publish screen shares through the reworked delivery path. While \
-         the master switch below is off nothing on this form reaches any client: every user \
-         keeps the screen share pipeline they have today, whatever the rest of these fields say. \
-         A client that is already sharing keeps the path it started on until the share ends.",
-        html! {
-            form method="post" action={(base) "/instance-config?action=update_screen_share_delivery"} {
-                (csrf_input(csrf_token))
-                div class="space-y-6" {
-                    div class="flex flex-wrap items-center gap-2" {
-                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
-                        (badge(status.0, status.1))
-                        span class="text-xs text-neutral-500" {
-                            "Config version " (screen_share_delivery.config_version)
-                        }
-                    }
-                    (checkbox(
-                        "screen_share_delivery_enabled",
-                        "true",
-                        "Serve screen share delivery assignments to clients",
-                        screen_share_delivery.enabled,
-                        true,
-                    ))
-                    p class="text-xs text-neutral-500" {
-                        "Off is the safe state. With this unchecked every client is told the \
-                         feature is inert and keeps its current behavior, so the rollout and \
-                         targeting fields below have no effect at all."
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
-                    (number_field(
-                        "screen_share_delivery_rollout_basis_points",
-                        "Rollout (basis points)",
-                        &screen_share_delivery.rollout_basis_points.to_string(),
-                        Some(0), Some(10000), "1",
-                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
-                    ))
-                    div class="flex flex-col gap-2" {
-                        (text_input(
-                            "screen_share_delivery_rollout_salt",
-                            "Rollout Salt",
-                            &screen_share_delivery.rollout_salt,
-                            SCREEN_SHARE_DELIVERY_DEFAULT_SALT,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
-                             inside the percentage above. Leave it alone to keep the current \
-                             cohort stable."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "screen_share_delivery_included_user_ids",
-                            "Always-on User IDs",
-                            "1500000000000000001\n1500000000000000002",
-                            &included_user_ids,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            screen_share_delivery.included_user_ids.len(),
-                            EXPERIMENT_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "One snowflake per line, or comma separated. These users are targeted \
-                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
-                             digits. Invalid entries prevent the save. Blank entries and duplicate \
-                             IDs are ignored."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "screen_share_delivery_excluded_user_ids",
-                            "Never-on User IDs",
-                            "1500000000000000003\n1500000000000000004",
-                            &excluded_user_ids,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            screen_share_delivery.excluded_user_ids.len(),
-                            EXPERIMENT_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Same format. Exclusion wins over both the always-on list and the \
-                             percentage. This is the per-user kill switch."
-                        }
-                    }
-
-                    (form_actions(html! {
-                        (submit_button("Save Screen Share Delivery Configuration"))
-                    }))
-                }
-            }
-        },
-    )
-}
-
-fn push_service_delivery_section(
-    base: &str,
-    csrf_token: &str,
-    push_service_delivery: &PushServiceDeliveryConfigResponse,
-) -> Markup {
-    let status = if push_service_delivery.enabled {
-        ("Live", BadgeVariant::Success)
-    } else {
-        ("Inert", BadgeVariant::Default)
-    };
-    let included_user_ids = push_service_delivery.included_user_ids.join("\n");
-    let excluded_user_ids = push_service_delivery.excluded_user_ids.join("\n");
-    section_card_with_description(
-        "Push Service Delivery",
-        "Routes push notification delivery for the selected accounts through the push service. \
-         Accounts the rollout does not select keep the current path.",
-        html! {
-            form method="post" action={(base) "/instance-config?action=update_push_service_delivery"} {
-                (csrf_input(csrf_token))
-                div class="space-y-6" {
-                    div class="flex flex-wrap items-center gap-2" {
-                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
-                        (badge(status.0, status.1))
-                        span class="text-xs text-neutral-500" {
-                            "Config version " (push_service_delivery.config_version)
-                        }
-                    }
-                    (checkbox(
-                        "push_service_delivery_enabled",
-                        "true",
-                        "Hand push notifications to the push service",
-                        push_service_delivery.enabled,
-                        true,
-                    ))
-                    p class="text-xs text-neutral-500" {
-                        "Off is the safe state. With this unchecked every notification keeps the \
-                         current delivery path, so the rollout and targeting fields below have no \
-                         effect at all."
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
-                    (number_field(
-                        "push_service_delivery_rollout_basis_points",
-                        "Rollout (basis points)",
-                        &push_service_delivery.rollout_basis_points.to_string(),
-                        Some(0), Some(10000), "1",
-                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
-                    ))
-                    div class="flex flex-col gap-2" {
-                        (text_input(
-                            "push_service_delivery_rollout_salt",
-                            "Rollout Salt",
-                            &push_service_delivery.rollout_salt,
-                            PUSH_SERVICE_DELIVERY_DEFAULT_SALT,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
-                             inside the percentage above. Leave it alone to keep the current \
-                             cohort stable."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "push_service_delivery_included_user_ids",
-                            "Always-on User IDs",
-                            "1500000000000000001\n1500000000000000002",
-                            &included_user_ids,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            push_service_delivery.included_user_ids.len(),
-                            EXPERIMENT_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "One snowflake per line, or comma separated. These users are targeted \
-                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
-                             digits. Invalid entries prevent the save. Blank entries and duplicate \
-                             IDs are ignored."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "push_service_delivery_excluded_user_ids",
-                            "Never-on User IDs",
-                            "1500000000000000003\n1500000000000000004",
-                            &excluded_user_ids,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            push_service_delivery.excluded_user_ids.len(),
-                            EXPERIMENT_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Same format. Exclusion wins over both the always-on list and the \
-                             percentage. This is the per-user kill switch."
-                        }
-                    }
-
-                    (form_actions(html! {
-                        (submit_button("Save Push Service Delivery Configuration"))
-                    }))
                 }
             }
         },
@@ -1991,7 +1935,7 @@ fn sso_config_section(base: &str, csrf_token: &str, sso: &SsoConfigResponse) -> 
 
 fn limit_config_section(base: &str, limit_config: &LimitConfigResponse) -> Markup {
     let description = if limit_config.self_hosted.unwrap_or(false) {
-        "Self-hosted instance with all premium features enabled. Configure user and guild limits."
+        "Self-hosted instance with all premium features enabled by default. Configure user and guild limits."
     } else {
         "Configure limit rules that control user and guild restrictions based on traits and features."
     };
@@ -2013,63 +1957,179 @@ fn limit_config_section(base: &str, limit_config: &LimitConfigResponse) -> Marku
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::types::VoiceNoiseSuppressionGuildOverride;
 
-    fn rendered_voice_noise_suppression_section(
-        voice_noise_suppression: &VoiceNoiseSuppressionConfigResponse,
-    ) -> String {
-        voice_noise_suppression_section("/admin", "csrf", voice_noise_suppression).into_string()
+    #[test]
+    fn username_instances_hide_email_delivery_and_the_smtp_test() {
+        let integrations = InstanceIntegrationsResponse::default();
+        let username = integrations_config_section(
+            "/admin",
+            "csrf",
+            &integrations,
+            AccountIdentityMode::Username,
+        )
+        .into_string();
+        assert!(!username.contains("Email delivery"));
+        assert!(!username.contains("test_smtp"));
+        assert!(!username.contains("integration_email_present"));
+        assert!(username.contains("Bluesky OAuth"));
+
+        let email = integrations_config_section(
+            "/admin",
+            "csrf",
+            &integrations,
+            AccountIdentityMode::Email,
+        )
+        .into_string();
+        assert!(email.contains("Email delivery"));
+        assert!(email.contains("test_smtp"));
+        assert!(email.contains(r#"name="integration_email_present" value="1""#));
     }
 
     #[test]
-    fn voice_noise_suppression_section_shows_list_counts_and_caps() {
-        let voice_noise_suppression = VoiceNoiseSuppressionConfigResponse {
-            included_user_ids: vec!["1500000000000000001".to_owned()],
-            excluded_user_ids: vec![
-                "1500000000000000002".to_owned(),
-                "1500000000000000003".to_owned(),
-            ],
-            guild_overrides: vec![VoiceNoiseSuppressionGuildOverride {
-                guild_id: "1600000000000000001".to_owned(),
-                backend: NoiseSuppressionBackend::Rnnoise,
-            }],
-            ..VoiceNoiseSuppressionConfigResponse::default()
-        };
-        let markup = rendered_voice_noise_suppression_section(&voice_noise_suppression);
-        assert!(markup.contains("1 of 1000 stored"));
-        assert!(markup.contains("2 of 1000 stored"));
-        assert!(markup.contains("1 of 200 stored"));
-        assert!(!markup.contains("at the cap"));
+    fn account_identity_section_has_no_tag_choice_in_username_mode() {
+        let markup = account_identity_section(&AccountIdentityConfigResponse {
+            mode: AccountIdentityMode::Username,
+            locked: Some(true),
+            tag_style: TagStyle::None,
+        })
+        .into_string();
+        assert!(markup.contains("Sign-in Method"));
+        assert!(markup.contains("Username"));
+        assert!(markup.contains("Fixed"));
+        assert!(!markup.contains("No tags"));
+        assert!(!markup.contains("Random tags"));
+        assert!(!markup.contains("username tags"));
+        assert!(!markup.contains("<form"));
+        assert!(!markup.contains("<input"));
     }
 
     #[test]
-    fn screen_share_delivery_section_shows_list_counts_and_the_master_switch() {
-        let screen_share_delivery = ScreenShareDeliveryConfigResponse {
-            included_user_ids: vec!["1500000000000000001".to_owned()],
-            excluded_user_ids: vec![
-                "1500000000000000002".to_owned(),
-                "1500000000000000003".to_owned(),
-            ],
-            ..ScreenShareDeliveryConfigResponse::default()
+    fn account_identity_section_shows_random_tags_in_email_mode() {
+        let markup = account_identity_section(&AccountIdentityConfigResponse {
+            mode: AccountIdentityMode::Email,
+            locked: Some(true),
+            tag_style: TagStyle::Random,
+        })
+        .into_string();
+        assert!(markup.contains("Random tags"));
+        assert!(!markup.contains("No tags"));
+        assert!(markup.contains("username tags"));
+    }
+
+    #[test]
+    fn account_identity_section_shows_no_tags_in_email_mode() {
+        let markup = account_identity_section(&AccountIdentityConfigResponse {
+            mode: AccountIdentityMode::Email,
+            locked: Some(true),
+            tag_style: TagStyle::None,
+        })
+        .into_string();
+        assert!(markup.contains("No tags"));
+        assert!(!markup.contains("Random tags"));
+        assert!(!markup.contains("<input"));
+    }
+
+    #[test]
+    fn account_identity_section_shows_the_lock_state_only_when_known() {
+        let render = |locked| {
+            account_identity_section(&AccountIdentityConfigResponse {
+                mode: AccountIdentityMode::Email,
+                locked,
+                tag_style: TagStyle::Random,
+            })
+            .into_string()
         };
+        let unlocked = render(Some(false));
+        assert!(unlocked.contains("Not fixed yet"));
+        let unknown = render(None);
+        assert!(!unknown.contains("Fixed"));
+        assert!(!unknown.contains("Not fixed yet"));
+        assert!(unknown.contains("Random tags"));
+    }
+
+    #[test]
+    fn captcha_section_posts_the_switch_and_difficulty_fields() {
         let markup =
-            screen_share_delivery_section("/admin", "csrf", &screen_share_delivery).into_string();
-        assert!(markup.contains("action=update_screen_share_delivery"));
-        assert!(markup.contains("screen_share_delivery_enabled"));
+            captcha_section("/admin", "csrf", &CaptchaConfigResponse::default()).into_string();
+        assert!(markup.contains("/admin/instance-config?action=update_captcha"));
+        assert!(markup.contains(r#"name="captcha_enabled""#));
+        assert!(markup.contains(r#"name="captcha_cost""#));
+        assert!(markup.contains(r#"name="captcha_max_counter""#));
+        assert!(markup.contains("about 3.6 s"));
+    }
+
+    #[test]
+    fn low_end_solve_estimate_at_the_defaults_is_about_three_and_a_half_seconds() {
+        let seconds = estimate_low_end_solve_seconds(5_000, 1_000);
+        assert!((seconds - 3.57).abs() < 0.01, "{seconds}");
+    }
+
+    #[test]
+    fn domain_migration_section_shows_both_rollouts_and_list_counts() {
+        let domain_migration = DomainMigrationConfigResponse {
+            anonymous_rollout_basis_points: 250,
+            included_user_ids: vec!["1500000000000000001".to_owned()],
+            excluded_user_ids: vec![
+                "1500000000000000002".to_owned(),
+                "1500000000000000003".to_owned(),
+            ],
+            ..DomainMigrationConfigResponse::default()
+        };
+        let markup = domain_migration_section("/admin", "csrf", &domain_migration).into_string();
+        assert!(markup.contains("action=update_domain_migration"));
+        assert!(markup.contains("domain_migration_enabled"));
+        assert!(markup.contains("name=\"domain_migration_anonymous_rollout_basis_points\""));
+        assert!(markup.contains("value=\"250\""));
+        assert!(markup.contains("name=\"domain_migration_standalone_forwarding\""));
         assert!(markup.contains("1 of 1000 stored"));
         assert!(markup.contains("2 of 1000 stored"));
         assert!(!markup.contains("at the cap"));
     }
 
     #[test]
-    fn voice_noise_suppression_section_flags_a_list_at_its_cap() {
-        let voice_noise_suppression = VoiceNoiseSuppressionConfigResponse {
+    fn push_relay_section_shows_the_consent_toggle() {
+        let accepted = PushRelayConfigResponse {
+            relay_consent_accepted: true,
+            relay_consent_accepted_at: Some("2026-09-27T10:11:12.000Z".to_owned()),
+            relay_consent_accepted_by: Some("1130650140672000000".to_owned()),
+        };
+        let markup = push_relay_section("/admin", "csrf", &accepted).into_string();
+        assert!(markup.contains("action=update_push_relay"));
+        assert!(markup.contains("name=\"push_relay_consent_accepted\""));
+        assert!(markup.contains("https://fluxer.com/push-relay"));
+        assert!(markup.contains("value=\"Sep 27, 2026, 10:11 AM UTC\""));
+        assert!(markup.contains("value=\"1130650140672000000\""));
+        assert!(!markup.contains("name=\"push_relay_consent_accepted_at\""));
+        assert!(!markup.contains("name=\"push_relay_consent_accepted_by\""));
+        assert!(!markup.to_lowercase().contains("rollout"));
+
+        let unaccepted =
+            push_relay_section("/admin", "csrf", &PushRelayConfigResponse::default()).into_string();
+        assert!(unaccepted.contains("name=\"push_relay_consent_accepted\""));
+        assert!(unaccepted.contains("Not accepted"));
+        assert!(unaccepted.contains("value=\"Never\""));
+        assert!(unaccepted.contains("value=\"Nobody\""));
+    }
+
+    #[test]
+    fn premium_mode_options_use_the_configured_premium_name() {
+        let markup =
+            premium_mode_form("/admin", "csrf", &InstancePolicyResponse::default(), "Gold")
+                .into_string();
+        assert!(markup.contains("Mirror (Free and Gold tiers)"));
+        assert!(markup.contains("Everyone (every member gets Gold limits)"));
+        assert!(!markup.contains("Plutonium"));
+    }
+
+    #[test]
+    fn domain_migration_section_flags_a_list_at_its_cap() {
+        let domain_migration = DomainMigrationConfigResponse {
             included_user_ids: (0..EXPERIMENT_MAX_TARGETED_USERS)
                 .map(|index| index.to_string())
                 .collect(),
-            ..VoiceNoiseSuppressionConfigResponse::default()
+            ..DomainMigrationConfigResponse::default()
         };
-        let markup = rendered_voice_noise_suppression_section(&voice_noise_suppression);
+        let markup = domain_migration_section("/admin", "csrf", &domain_migration).into_string();
         assert!(markup.contains("1000 of 1000 stored"));
         assert!(markup.contains("at the cap"));
     }

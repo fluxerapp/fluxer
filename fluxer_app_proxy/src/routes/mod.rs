@@ -3,10 +3,12 @@
 mod android_association;
 mod apple_association;
 mod assets_proxy;
-mod file_stream;
+pub(crate) mod file_stream;
 mod health;
 mod spa_index;
 mod spa_static;
+
+pub use spa_index::present_local_asset_prefixes;
 
 use crate::state::AppState;
 use axum::{
@@ -121,7 +123,7 @@ fn generate_request_id() -> String {
     hex::encode(bytes)
 }
 
-pub(super) fn capacity_refused_response() -> Response {
+pub(crate) fn capacity_refused_response() -> Response {
     let mut response = axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
     let headers = response.headers_mut();
     headers.insert(header::RETRY_AFTER, HeaderValue::from_static("1"));

@@ -1,19 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as GiftCommands from '@app/features/gift/commands/GiftCommands';
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
+import {type AppPageId, navigateToAppPage, parseAppPagePath} from '@app/features/navigation/utils/AppPageLinks';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
+import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {
 	parseUserSettingsDeepLinkPath,
 	type UserSettingsDeepLinkTarget,
@@ -47,6 +53,10 @@ type DeepLinkTarget =
 	| {
 			type: 'user_settings';
 			target: UserSettingsDeepLinkTarget;
+	  }
+	| {
+			type: 'app_page';
+			page: AppPageId;
 	  };
 
 function normalizeAppRoutePath(rawUrl: string): string | null {
@@ -108,6 +118,8 @@ export const parseDeepLink = (rawUrl: string): DeepLinkTarget | null => {
 		if (target) return target;
 		const settingsTarget = parseUserSettingsDeepLinkPath(appRoutePath);
 		if (settingsTarget) return {type: 'user_settings', target: settingsTarget};
+		const appPage = parseAppPagePath(pathPart);
+		if (appPage) return {type: 'app_page', page: appPage};
 		if (isRoutableDeepLinkPath(pathPart)) return {type: 'route', path: appRoutePath};
 	}
 	try {
@@ -120,12 +132,18 @@ export const parseDeepLink = (rawUrl: string): DeepLinkTarget | null => {
 };
 
 function openUserSettingsDeepLink(target: UserSettingsDeepLinkTarget): void {
+	if (target.tab === 'plutonium' && PlutoniumPageRollout.enabled) {
+		PlutoniumPageCommands.openPlutoniumPage();
+		return;
+	}
 	ModalCommands.push(
-		ModalCommands.modal(() =>
-			createElement(UserSettingsModal, {
-				initialTab: target.tab,
-				initialSubtab: target.section,
-			}),
+		ModalCommands.modal(
+			() =>
+				createElement(UserSettingsModal, {
+					initialTab: target.tab,
+					initialSubtab: target.section,
+				}),
+			'user-settings',
 		),
 	);
 	ComponentBus.dispatchOrBuffer('USER_SETTINGS_TAB_SELECT', {tab: target.tab, section: target.section});
@@ -133,15 +151,16 @@ function openUserSettingsDeepLink(target: UserSettingsDeepLinkTarget): void {
 
 const navigateForTarget = (target: DeepLinkTarget) => {
 	const isAuthenticated = Authentication.isAuthenticated;
-	if (target.type === 'gift' && RuntimeConfig.isSelfHosted()) {
+	if (target.type === 'gift' && RuntimeConfig.getSnapshotOrNull() !== null && !shouldShowPremiumFeatures()) {
 		return;
 	}
 	if (isAuthenticated) {
+		const instanceTarget = currentInstanceTarget();
 		if (target.type === 'invite') {
-			void InviteCommands.openAcceptModal(target.code);
+			void InviteCommands.openAcceptModal(target.code, instanceTarget);
 			RouterUtils.transitionTo(Routes.ME);
 		} else if (target.type === 'gift') {
-			void GiftCommands.openAcceptModal(target.code);
+			void GiftCommands.openAcceptModal(target.code, instanceTarget);
 			RouterUtils.transitionTo(Routes.ME);
 		} else if (target.type === 'user') {
 			navigateToLinkedUserProfile(target.userId);
@@ -149,6 +168,8 @@ const navigateForTarget = (target: DeepLinkTarget) => {
 			openUserSettingsDeepLink(target.target);
 		} else if (target.type === 'route') {
 			RouterUtils.transitionTo(target.path);
+		} else if (target.type === 'app_page') {
+			navigateToAppPage(target.page);
 		}
 		return;
 	}
@@ -156,7 +177,7 @@ const navigateForTarget = (target: DeepLinkTarget) => {
 		RouterUtils.transitionTo(setPathQueryParams(Routes.LOGIN, {redirect_to: Routes.userProfile(target.userId)}));
 		return;
 	}
-	if (target.type === 'user_settings') {
+	if (target.type === 'user_settings' || target.type === 'app_page') {
 		RouterUtils.transitionTo(Routes.LOGIN);
 		return;
 	}
@@ -206,7 +227,14 @@ export async function startDeepLinkHandling(): Promise<void> {
 	}
 }
 
-const OFFICIAL_INTERNAL_APP_HOSTS = ['fluxer.app', 'canary.fluxer.app', 'web.fluxer.app', 'web.canary.fluxer.app'];
+const OFFICIAL_INTERNAL_APP_HOSTS = [
+	'fluxer.app',
+	'canary.fluxer.app',
+	'web.fluxer.app',
+	'web.canary.fluxer.app',
+	'fluxer.com',
+	'canary.fluxer.com',
+];
 const getNormalizedWebAppHost = (): string => {
 	try {
 		return new URL(RuntimeConfig.webAppBaseUrl).host.toLowerCase();
@@ -218,7 +246,11 @@ const getNormalizedWebAppHost = (): string => {
 export function isInternalChannelHost(host: string): boolean {
 	if (!host) return false;
 	const normalizedHost = host.toLowerCase();
-	if (typeof location !== 'undefined' && normalizedHost === location.host.toLowerCase()) {
+	if (
+		typeof location !== 'undefined' &&
+		!isDesktopLocalAppDocument() &&
+		normalizedHost === location.host.toLowerCase()
+	) {
 		return true;
 	}
 	if (RuntimeConfig.marketingHost && normalizedHost === RuntimeConfig.marketingHost.toLowerCase()) {

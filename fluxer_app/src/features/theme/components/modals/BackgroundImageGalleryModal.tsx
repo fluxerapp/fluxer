@@ -3,7 +3,7 @@
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {BACKGROUND_MEDIA_MAX_SIZE_BYTES, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {BACKGROUND_MEDIA_MAX_SIZE_BYTES} from '@app/features/app/config/I18nDisplayConstants';
 import {useAnimatedMediaVideoPlayback} from '@app/features/app/hooks/useAnimatedMediaPlayback';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
@@ -21,7 +21,7 @@ import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import styles from '@app/features/theme/components/modals/BackgroundImageGalleryModal.module.css';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as BackgroundImageDB from '@app/features/theme/utils/BackgroundImageDB';
@@ -996,7 +996,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 										data-flx="theme.background-image-gallery-modal.premium-icon"
 									/>
 									<span className={styles.premiumTitle} data-flx="theme.background-image-gallery-modal.premium-title">
-										{i18n._(UNLOCK_MORE_BACKGROUNDS_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+										{i18n._(UNLOCK_MORE_BACKGROUNDS_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 									</span>
 								</div>
 								<p className={styles.premiumDesc} data-flx="theme.background-image-gallery-modal.premium-desc">
@@ -1011,7 +1011,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 									onClick={() => PremiumModalCommands.open()}
 									data-flx="theme.background-image-gallery-modal.button.open"
 								>
-									{i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+									{i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 								</Button>
 							</div>
 						)}

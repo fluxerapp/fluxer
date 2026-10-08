@@ -8,13 +8,6 @@
 	border-radius: 0.75rem;
 }
 
-.withMenu {
-	gap: 0;
-	overflow: hidden;
-	border: 0.0625rem solid var(--background-modifier-accent);
-	background-color: var(--background-secondary);
-}
-
 .mainButton {
 	display: flex;
 	align-items: center;
@@ -23,14 +16,9 @@
 	min-width: 0;
 	padding: 0.5rem 0.75rem;
 	border-radius: 0.75rem;
+	text-align: start;
 	background-color: var(--background-secondary);
 	border: 0.0625rem solid var(--background-modifier-accent);
-}
-
-.withMenu .mainButton {
-	border: none;
-	border-radius: 0;
-	background-color: transparent;
 }
 
 button.clickable {
@@ -44,6 +32,11 @@ button.clickable:hover {
 
 button.clickable:active {
 	background-color: var(--background-modifier-selected);
+}
+
+.disabled {
+	cursor: default;
+	opacity: 0.5;
 }
 
 .avatarWrap {
@@ -64,16 +57,6 @@ button.clickable:active {
 	gap: 0.4rem;
 }
 
-.displayName {
-	font-weight: 600;
-	font-size: 1rem;
-}
-
-.tag {
-	font-size: 0.875rem;
-	color: var(--text-tertiary);
-}
-
 .primaryLine {
 	font-weight: 600;
 	font-size: 0.9rem;
@@ -85,7 +68,6 @@ button.clickable:active {
 }
 
 .discriminator {
-	margin-left: 0.25rem;
 	color: var(--text-tertiary);
 	font-weight: 400;
 }
@@ -95,54 +77,9 @@ button.clickable:active {
 	color: var(--status-online);
 }
 
-.meta {
-	font-size: 0.75rem;
-	color: var(--text-tertiary);
-}
-
 .expired {
 	font-size: 0.75rem;
 	color: var(--status-danger);
-}
-
-.menuButton {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 2.5rem;
-	height: 2.5rem;
-	border: none;
-	background: transparent;
-	color: var(--text-secondary);
-	cursor: pointer;
-	flex-shrink: 0;
-	border-radius: 0.5rem;
-}
-
-.withMenu .menuButton {
-	align-self: stretch;
-	height: auto;
-	border-radius: 0;
-}
-
-.menuButton:hover {
-	color: var(--text-primary);
-	background: var(--background-modifier-hover);
-}
-
-.menuButtonActive {
-	color: var(--text-primary);
-	background: var(--background-modifier-hover);
-}
-
-.menuIcon {
-	width: 1.25rem;
-	height: 1.25rem;
-}
-
-.compact .mainButton {
-	padding: 0.4rem 0.6rem;
-	background-color: var(--background-primary);
 }
 
 .manage .mainButton {
@@ -151,24 +88,6 @@ button.clickable:active {
 
 .manage .primaryLine {
 	font-size: 1rem;
-}
-
-.compactRow {
-	display: flex;
-	align-items: center;
-	gap: 0.4rem;
-}
-
-.checkIndicator {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-	width: 1.25rem;
-	height: 1.25rem;
-	background-color: var(--brand-primary);
-	border-radius: 50%;
-	color: white;
 }
 
 .caretIndicator {

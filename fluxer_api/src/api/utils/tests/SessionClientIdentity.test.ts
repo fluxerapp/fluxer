@@ -66,7 +66,7 @@ describe('resolveSessionClientInfo', () => {
 		});
 	});
 
-	it('treats a narrow Linux window as a desktop because the product token cannot carry form factor', () => {
+	it('treats a narrow Linux window as a desktop because the product token cannot include form factor', () => {
 		expect(resolve('Fluxer Linux/1.4.2 (stable)', 'linux')).toEqual({
 			platform: 'Fluxer Lite Linux',
 			os: 'Linux',

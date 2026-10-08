@@ -5,7 +5,7 @@ import {
 	SettingsTabContent,
 	SettingsTabSection,
 } from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {PLAY_DESCRIPTOR, SETTINGS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {MORE_DESCRIPTOR, PLAY_DESCRIPTOR, SETTINGS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -121,10 +121,6 @@ const DELETE_DESCRIPTOR = msg({
 const DELETED_DESCRIPTOR = msg({
 	message: 'Deleted.',
 	comment: 'Button or menu action label in the buttons tab. Keep it concise. Keep the tone plain and specific.',
-});
-const MORE_DESCRIPTOR = msg({
-	message: 'More',
-	comment: 'Short label in the buttons tab. Keep it concise.',
 });
 const OPEN_MENU_ICON_DESCRIPTOR = msg({
 	message: 'Open menu icon',

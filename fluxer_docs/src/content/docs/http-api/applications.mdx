@@ -10,7 +10,7 @@ An application is an OAuth2 client owned by one user account, and every bot acco
 
 ## Access rules
 
-Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`. Every route on this page accepts an account that has an outstanding [required action](/http-api/users/#required-actions).
+Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`.
 
 The sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid sudo token in that header, issued to the authenticated account, satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) with no body proof. Fluxer returns the same token in the `X-Fluxer-Sudo-Mode-JWT` response header. Fluxer issues no token to an account holding neither a TOTP secret nor a registered WebAuthn credential, so that account proves sudo mode with `password` in the body.
 
@@ -291,12 +291,9 @@ An unclaimed account cannot create an application. An account is unclaimed while
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | The CAPTCHA proof for the request |
-| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider to verify against, either `hcaptcha` or `turnstile` |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Fluxer skips verification when CAPTCHA is disabled for the instance, when the account has the CAPTCHA exemption flag, or when the instance's account policy grants the caller's email address the CAPTCHA exemption capability, as described by [CAPTCHA handling](/topics/captcha/)
-
-<sup>2</sup> Fluxer verifies against the instance's configured provider when the header is absent
+<sup>1</sup> A missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. Fluxer skips verification when the check is off for the instance, when the account has the CAPTCHA exemption flag, or when the caller's email address is on an exempt domain
 
 ### JSON body
 

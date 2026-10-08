@@ -53,9 +53,11 @@ normalize_map(Data) ->
     ),
     Roles = guild_data_index_roles:role_list(Data0),
     Channels = guild_data_index_channels:channel_list(Data0),
-    Data0#{
+    Data1 = guild_data_index_channels:put_forum_categories(Channels, Data0),
+    Data1#{
         <<"members">> => MemberMap,
         members_normalized => MemberMap,
+        member_list_revision => make_ref(),
         members_sorted_ids => lists:sort(maps:keys(MemberMap)),
         <<"roles">> => Roles,
         <<"channels">> => Channels,
@@ -214,5 +216,20 @@ extract_integer_list_mixed_types_test() ->
 ensure_list_test() ->
     ?assertEqual([1, 2], ensure_list([1, 2])),
     ?assertEqual([], ensure_list(not_a_list)).
+
+member_list_revision_rotates_on_every_member_writer_test() ->
+    Member = #{<<"user">> => #{<<"id">> => 1}},
+    Data0 = normalize_map(#{<<"members">> => [Member]}),
+    Data1 = normalize_map(Data0),
+    Data2 = put_member(Member#{<<"nick">> => <<"renamed">>}, Data1),
+    Data3 = put_member_map(member_map(Data2), Data2),
+    Data4 = put_member_list(member_list(Data3), Data3),
+    Data5 = remove_member(1, Data4),
+    Revisions = [
+        maps:get(member_list_revision, D)
+     || D <- [Data0, Data1, Data2, Data3, Data4, Data5]
+    ],
+    ?assert(lists:all(fun is_reference/1, Revisions)),
+    ?assertEqual(length(Revisions), length(lists:usort(Revisions))).
 
 -endif.

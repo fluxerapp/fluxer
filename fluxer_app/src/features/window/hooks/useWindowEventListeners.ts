@@ -1,24 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import FocusManager from '@app/features/platform/utils/FocusManager';
 import {createWindowFocusInteractionGuard} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import {useActivityRecorder} from '@app/features/voice/hooks/useActivityRecorder';
 import * as WindowCommands from '@app/features/window/commands/WindowCommands';
 import {useCallback, useEffect} from 'react';
 
-interface WindowEventListenersOptions {
-	preventDocumentScroll: boolean;
-}
-
-export function useWindowEventListeners({preventDocumentScroll}: WindowEventListenersOptions): void {
+export function useWindowEventListeners(): void {
 	const recordActivity = useActivityRecorder();
 	const handleUserActivity = useCallback(() => recordActivity(), [recordActivity]);
 	const handleImmediateActivity = useCallback(() => recordActivity(true), [recordActivity]);
 	const handleResize = useCallback(() => WindowCommands.resized(), []);
 	useEffect(() => {
-		FocusManager.init();
 		const guard = createWindowFocusInteractionGuard({initiallyFocused: document.hasFocus()});
 		guard.setFocused(document.hasFocus());
+		WindowCommands.focused(document.hasFocus());
+		WindowCommands.visibilityChanged(!document.hidden);
+		WindowCommands.resized();
 		const handleFocus = () => {
 			guard.setFocused(true);
 			WindowCommands.focused(true);
@@ -37,7 +34,6 @@ export function useWindowEventListeners({preventDocumentScroll}: WindowEventList
 				event.preventDefault();
 			}
 		};
-		const preventScroll = (event: Event) => event.preventDefault();
 		window.addEventListener('focus', handleFocus);
 		window.addEventListener('blur', handleBlur);
 		document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -48,11 +44,7 @@ export function useWindowEventListeners({preventDocumentScroll}: WindowEventList
 		window.addEventListener('touchstart', handleImmediateActivity);
 		document.addEventListener('touchstart', preventPinchZoom, {passive: false});
 		document.addEventListener('touchmove', preventPinchZoom, {passive: false});
-		if (preventDocumentScroll) {
-			document.addEventListener('scroll', preventScroll);
-		}
 		return () => {
-			FocusManager.destroy();
 			guard.destroy();
 			window.removeEventListener('focus', handleFocus);
 			window.removeEventListener('blur', handleBlur);
@@ -64,9 +56,6 @@ export function useWindowEventListeners({preventDocumentScroll}: WindowEventList
 			window.removeEventListener('touchstart', handleImmediateActivity);
 			document.removeEventListener('touchstart', preventPinchZoom);
 			document.removeEventListener('touchmove', preventPinchZoom);
-			if (preventDocumentScroll) {
-				document.removeEventListener('scroll', preventScroll);
-			}
 		};
-	}, [handleImmediateActivity, handleUserActivity, handleResize, preventDocumentScroll]);
+	}, [handleImmediateActivity, handleUserActivity, handleResize]);
 }

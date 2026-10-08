@@ -8,7 +8,6 @@ import {resolveConfiguredScreenShareTarget} from '@app/features/voice/engine/voi
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import {clearDesktopSourceIntent, setDesktopSourceIntent} from '@app/features/voice/state/DesktopSourceIntent';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	filterRoutableLinuxAudioSources,
@@ -806,7 +805,6 @@ export async function switchConfiguredDisplayScreenShare(
 }
 
 export async function restartActiveScreenShareCapture(): Promise<boolean> {
-	if (!ScreenShareDeliveryRollout.enabled) return false;
 	if (!didScreenShareStart()) return false;
 	const publishedSource = ActiveScreenShareSource.getPublishedSource();
 	const sourceId = ActiveScreenShareSource.getSourceId();

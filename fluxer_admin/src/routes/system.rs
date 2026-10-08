@@ -221,6 +221,11 @@ async fn instance_config_page(
         .get_instance_config()
         .await
         .log_error("load instance config");
+    if let Some(instance_config) = &instance_config {
+        state.remember_premium_branding(crate::api::types::PremiumBranding::from_instance_config(
+            instance_config,
+        ));
+    }
     let limit_config = client
         .get_limit_config()
         .await

@@ -54,7 +54,6 @@ pub const NAV_SECTIONS: &[NavSection] = &[
                 "bulk-actions",
                 [
                     acl::BULK_UPDATE_USER_FLAGS,
-                    acl::BULK_UPDATE_SUSPICIOUS_ACTIVITY,
                     acl::BULK_UPDATE_GUILD_FEATURES,
                     acl::BULK_ADD_GUILD_MEMBERS,
                     acl::BULK_DELETE_USERS,
@@ -112,16 +111,6 @@ pub const NAV_SECTIONS: &[NavSection] = &[
                     acl::BAN_EMAIL_CHECK,
                     acl::BAN_EMAIL_ADD,
                     acl::BAN_EMAIL_REMOVE
-                ]
-            ),
-            item!(
-                "Suspicious Email Domains",
-                "/suspicious-email-domains",
-                "suspicious-email-domains",
-                [
-                    acl::SUSPICIOUS_EMAIL_DOMAIN_CHECK,
-                    acl::SUSPICIOUS_EMAIL_DOMAIN_ADD,
-                    acl::SUSPICIOUS_EMAIL_DOMAIN_REMOVE,
                 ]
             ),
             item!(
@@ -255,13 +244,12 @@ pub const NAV_SECTIONS: &[NavSection] = &[
         ],
     },
     NavSection {
-        title: "Hosted Features",
+        title: "Premium",
         items: &[item!(
             "Gift Codes",
             "/gift-codes",
             "gift-codes",
-            [acl::GIFT_CODES_GENERATE],
-            hosted
+            [acl::GIFT_CODES_GENERATE]
         )],
     },
 ];
@@ -279,7 +267,6 @@ mod tests {
             .expect("bulk actions nav item");
         for required in [
             acl::BULK_UPDATE_USER_FLAGS,
-            acl::BULK_UPDATE_SUSPICIOUS_ACTIVITY,
             acl::BULK_UPDATE_GUILD_FEATURES,
             acl::BULK_ADD_GUILD_MEMBERS,
             acl::BULK_DELETE_USERS,

@@ -310,7 +310,7 @@ mod tests {
         router.l1_insert(&unfurl_allowing_nsfw(url), &resolved_response());
         assert!(
             router.l1_lookup(&unfurl(url, None)).is_none(),
-            "a result resolved with nsfw scanning off carries no nsfw flags and must not be reused"
+            "a result resolved with nsfw scanning off has no nsfw flags and must not be reused"
         );
         assert!(router.l1_lookup(&unfurl_allowing_nsfw(url)).is_some());
     }

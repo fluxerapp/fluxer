@@ -2,10 +2,12 @@
 _channel="${FLUXER_CHANNEL:-stable}"
 if [[ $_channel == canary ]]; then
 	pkgname=fluxer-canary
+	_desktopid=app.fluxer.FluxerDesktopCanary
 	_appname='Fluxer Canary'
 	_comment='Canary build of Fluxer'
 else
 	pkgname=fluxer
+	_desktopid=app.fluxer.FluxerDesktop
 	_appname='Fluxer'
 	_comment='Instant messaging and VoIP'
 fi
@@ -71,14 +73,15 @@ package() {
 	ln -s "/opt/$pkgname/$pkgname" "$pkgdir/usr/bin/$pkgname"
 
 	install -dm755 "$pkgdir/usr/share/applications"
-	cat > "$pkgdir/usr/share/applications/$pkgname.desktop" <<-EOF
+	cat > "$pkgdir/usr/share/applications/$_desktopid.desktop" <<-EOF
 		[Desktop Entry]
 		Name=$_appname
 		Exec=/opt/$pkgname/$pkgname %U
+		TryExec=/opt/$pkgname/$pkgname
 		Terminal=false
 		Type=Application
 		Icon=$pkgname
-		StartupWMClass=$pkgname
+		StartupWMClass=$_desktopid
 		GenericName=Instant Messenger
 		Comment=$_comment
 		Keywords=chat;im;messaging;messenger;voip;voice;video;call;
@@ -97,7 +100,7 @@ package() {
 		Name=New Direct Message
 		Exec=/opt/$pkgname/$pkgname --fluxer-task=new-dm %U
 	EOF
-	chmod 644 "$pkgdir/usr/share/applications/$pkgname.desktop"
+	chmod 644 "$pkgdir/usr/share/applications/$_desktopid.desktop"
 
 	for size in 16 24 32 48 64 128 256 512; do
 		install -Dm644 "$opt/resources/icons/${size}x${size}.png" \

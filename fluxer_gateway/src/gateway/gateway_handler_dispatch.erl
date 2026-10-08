@@ -16,6 +16,7 @@
     cleanup_request_workers/1,
     handle_request_guild_counts/3,
     handle_request_channel_member_counts/3,
+    handle_request_forum_unreads/3,
     handle_lazy_request/3,
     validate_presence_data/1,
     adjust_status/1
@@ -30,7 +31,11 @@
 -define(MAX_REQUEST_WORKERS, 4).
 
 -type request_worker_type() ::
-    request_guild_members | request_guild_counts | request_channel_member_counts | lazy_request.
+    request_guild_members
+    | request_guild_counts
+    | request_channel_member_counts
+    | request_forum_unreads
+    | lazy_request.
 
 -spec handle_opcode(atom(), map(), state()) -> ws_result().
 handle_opcode(heartbeat, #{<<"d">> := Seq}, State) ->
@@ -85,6 +90,10 @@ handle_authenticated_opcode(
     is_pid(Pid)
 ->
     handle_request_channel_member_counts(Data, Pid, State);
+handle_authenticated_opcode(request_forum_unreads, Data, #{session_pid := Pid} = State) when
+    is_pid(Pid)
+->
+    handle_request_forum_unreads(Data, Pid, State);
 handle_authenticated_opcode(_, _, State) ->
     gateway_handler_encode:close_with_reason(unknown_opcode, <<"Unknown opcode">>, State).
 
@@ -138,8 +147,10 @@ dispatch_pre_encoded(Event, EncodedData, Seq, #{compress_ctx := CompressCtx} = S
     case gateway_compress:compress(JsonFrame, Ctx) of
         {ok, Compressed, NewCompressCtx} ->
             Frame = gateway_handler_encode:make_frame(Compressed, text, NewCompressCtx),
+            gateway_cluster_metrics:record_dispatch(),
             {[Frame], State#{compress_ctx => NewCompressCtx}};
         {error, _Reason} ->
+            gateway_cluster_metrics:record_dispatch_drop(),
             {ok, State}
     end.
 
@@ -156,9 +167,11 @@ dispatch_standard(Event, Data, Seq, State) ->
     },
     case gateway_handler_encode:encode_and_compress(Message, State) of
         {ok, Frame, NewState} ->
+            gateway_cluster_metrics:record_dispatch(),
             trigger_gc_after_large_dispatch(Data),
             {[Frame], NewState};
         {error, _Reason} ->
+            gateway_cluster_metrics:record_dispatch_drop(),
             {ok, State}
     end.
 
@@ -439,6 +452,58 @@ do_request_channel_member_counts_inner(Data, SocketPid, SessionPid) ->
             );
         _ ->
             ok
+    end.
+
+-spec handle_request_forum_unreads(term(), pid(), state()) -> ws_result().
+handle_request_forum_unreads(Data, Pid, State) when is_map(Data) ->
+    case channel_threads_config:enabled() orelse not channel_threads_config:loaded() of
+        true ->
+            SocketPid = self(),
+            Fun = fun() -> do_request_forum_unreads(Data, SocketPid, Pid) end,
+            case start_request_worker(request_forum_unreads, Fun, State) of
+                {ok, _WorkerPid, WorkerState} ->
+                    {ok, WorkerState};
+                dropped ->
+                    _ = spawn(fun() -> do_request_forum_unreads(#{}, SocketPid, Pid) end),
+                    {ok, State}
+            end;
+        false ->
+            gateway_handler_encode:close_with_reason(
+                unknown_opcode, <<"Unknown opcode">>, State
+            )
+    end;
+handle_request_forum_unreads(_Data, _Pid, State) ->
+    gateway_handler_encode:close_with_reason(unknown_opcode, <<"Unknown opcode">>, State).
+
+-spec do_request_forum_unreads(map(), pid(), pid()) -> ok.
+do_request_forum_unreads(Data, SocketPid, SessionPid) ->
+    case forum_unreads_session_state(SessionPid) of
+        {ok, SessionState} ->
+            try
+                guild_request_forum_unreads:handle_request(
+                    Data, SocketPid, SessionState#{session_pid => SessionPid}
+                )
+            of
+                ok -> ok
+            catch
+                error:_Reason -> ok;
+                exit:_Reason -> ok;
+                throw:_Reason -> ok
+            end;
+        error ->
+            SocketPid ! forum_unreads_unknown_opcode,
+            ok
+    end.
+
+-spec forum_unreads_session_state(pid()) -> {ok, map()} | error.
+forum_unreads_session_state(SessionPid) ->
+    try gen_server:call(SessionPid, {get_state}, 5000) of
+        SessionState when is_map(SessionState) -> {ok, SessionState};
+        _ -> error
+    catch
+        error:_Reason -> error;
+        exit:_Reason -> error;
+        throw:_Reason -> error
     end.
 
 -spec handle_lazy_request(map(), pid(), state()) -> ws_result().

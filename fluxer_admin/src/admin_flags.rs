@@ -19,19 +19,18 @@ pub mod user_flag_bits {
     pub const SPAMMER: u64 = 1 << 6;
     pub const HIGH_GLOBAL_RATE_LIMIT: u64 = 1 << 33;
     pub const DELETED: u64 = 1 << 34;
-    pub const DISABLED_SUSPICIOUS_ACTIVITY: u64 = 1 << 35;
     pub const SELF_DELETED: u64 = 1 << 36;
     pub const DISABLED: u64 = 1 << 38;
     pub const HAS_SESSION_STARTED: u64 = 1 << 39;
     pub const RATE_LIMIT_BYPASS: u64 = 1 << 47;
     pub const REPORT_BANNED: u64 = 1 << 48;
     pub const VERIFIED_NOT_UNDERAGE: u64 = 1 << 49;
+    pub const ACCOUNT_LIMITED: u64 = 1 << 50;
     pub const HAS_DISMISSED_PREMIUM_ONBOARDING: u64 = 1 << 51;
     pub const APP_STORE_REVIEWER: u64 = 1 << 53;
     pub const STAFF_HIDDEN: u64 = 1 << 57;
     pub const AGE_VERIFIED_ADULT: u64 = 1 << 60;
-    pub const FORCE_INBOUND_PHONE_VERIFICATION: u64 = 1 << 61;
-    pub const NOT_SUSPICIOUS: u64 = 1 << 62;
+    pub const LIMIT_EXEMPT: u64 = 1 << 62;
 }
 
 pub const USER_FLAGS: &[U64Flag] = &[
@@ -68,10 +67,6 @@ pub const USER_FLAGS: &[U64Flag] = &[
         value: user_flag_bits::DELETED,
     },
     U64Flag {
-        name: "DISABLED_SUSPICIOUS_ACTIVITY",
-        value: user_flag_bits::DISABLED_SUSPICIOUS_ACTIVITY,
-    },
-    U64Flag {
         name: "SELF_DELETED",
         value: user_flag_bits::SELF_DELETED,
     },
@@ -96,6 +91,10 @@ pub const USER_FLAGS: &[U64Flag] = &[
         value: user_flag_bits::VERIFIED_NOT_UNDERAGE,
     },
     U64Flag {
+        name: "ACCOUNT_LIMITED",
+        value: user_flag_bits::ACCOUNT_LIMITED,
+    },
+    U64Flag {
         name: "HAS_DISMISSED_PREMIUM_ONBOARDING",
         value: user_flag_bits::HAS_DISMISSED_PREMIUM_ONBOARDING,
     },
@@ -112,12 +111,8 @@ pub const USER_FLAGS: &[U64Flag] = &[
         value: user_flag_bits::AGE_VERIFIED_ADULT,
     },
     U64Flag {
-        name: "FORCE_INBOUND_PHONE_VERIFICATION",
-        value: user_flag_bits::FORCE_INBOUND_PHONE_VERIFICATION,
-    },
-    U64Flag {
-        name: "NOT_SUSPICIOUS",
-        value: user_flag_bits::NOT_SUSPICIOUS,
+        name: "LIMIT_EXEMPT",
+        value: user_flag_bits::LIMIT_EXEMPT,
     },
 ];
 
@@ -156,45 +151,6 @@ pub const PREMIUM_FLAGS: &[I32Flag] = &[
     },
     I32Flag {
         name: "PERKS_DISABLED",
-        value: 1 << 8,
-    },
-];
-
-pub const SUSPICIOUS_ACTIVITY_FLAGS: &[I32Flag] = &[
-    I32Flag {
-        name: "REQUIRE_VERIFIED_EMAIL",
-        value: 1 << 0,
-    },
-    I32Flag {
-        name: "REQUIRE_REVERIFIED_EMAIL",
-        value: 1 << 1,
-    },
-    I32Flag {
-        name: "REQUIRE_VERIFIED_PHONE",
-        value: 1 << 2,
-    },
-    I32Flag {
-        name: "REQUIRE_REVERIFIED_PHONE",
-        value: 1 << 3,
-    },
-    I32Flag {
-        name: "REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE",
-        value: 1 << 4,
-    },
-    I32Flag {
-        name: "REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE",
-        value: 1 << 5,
-    },
-    I32Flag {
-        name: "REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE",
-        value: 1 << 6,
-    },
-    I32Flag {
-        name: "REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE",
-        value: 1 << 7,
-    },
-    I32Flag {
-        name: "REQUIRE_INBOUND_PHONE_VERIFICATION",
         value: 1 << 8,
     },
 ];

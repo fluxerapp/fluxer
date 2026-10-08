@@ -11,11 +11,11 @@
 #   -Rollback  Put the images and the stack files of the last recorded upgrade back.
 #
 # Why one script and not a separate upgrader: an upgrade needs the host checks, the stack
-# download, the readiness poll and the health probe that the install already carries. A second
+# download, the readiness poll and the health probe that the install already has. A second
 # script either copies them or drifts from them, and the operator has two downloads and two
 # checksums to verify instead of one.
 #
-# This file is also the procedure. Every step of the upgrade carries the command an operator
+# This file is also the procedure. Every step of the upgrade includes the command an operator
 # types to do that step by hand, and the reason the step exists.
 #
 # Read this file before running it. The default mode writes .env, which holds every secret the
@@ -52,17 +52,24 @@ param(
 	[switch]$Update,
 	[switch]$Rollback,
 	[switch]$NoVolumeBackup,
+	[switch]$NoVolumeCompression,
 	[switch]$SkipBackupAcceptDataLoss,
 	[switch]$Help,
 	[Parameter(ValueFromRemainingArguments = $true)]
 	[string[]]$Rest = @()
 )
 
+$FluxerScriptArguments = @{}
+foreach ($entry in $PSBoundParameters.GetEnumerator()) {
+	$FluxerScriptArguments[$entry.Key] = $entry.Value
+}
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
 $FluxerRawBase = 'https://raw.githubusercontent.com/fluxerapp/fluxer'
+$FluxerInstallerUrl = 'https://fluxer.dev/install.ps1'
 $FluxerStackPath = 'deploy/self-hosting'
 $FluxerHealthPath = '/_health'
 $FluxerInitService = 'seaweedfs-init'
@@ -86,9 +93,8 @@ $FluxerImagesFile = 'images'
 $FluxerTagFile = 'image-tag'
 $FluxerDumpFile = 'fluxer.dump'
 
-# Free space demanded before a volume copy, as a percentage of the measured volume size. The
-# tarball compresses, so this is generous on purpose. A backup that fills the disk it writes to
-# takes the instance down with it.
+# Free space demanded before a volume copy, as a percentage of the measured volume size. A backup
+# that fills the disk it writes to takes the instance down with it.
 $FluxerVolumeHeadroomPercent = 110
 
 $FluxerExitUsage = 1
@@ -104,6 +110,7 @@ $FluxerStackFiles = @(
 	'docker-compose.yml'
 	'docker-compose.proxy.yml'
 	'tunnel.compose.yml'
+	'external-object-store.compose.yml'
 	'Caddyfile'
 	'.env.example'
 )
@@ -172,6 +179,7 @@ $FluxerBackupVolumes = @(
 $FluxerUpgradeSecretKeys = @(
 	@{Name = 'FLUXER_ERLANG_COOKIE'; Kind = 'hex'}
 	@{Name = 'FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64'; Kind = 'base64'}
+	@{Name = 'FLUXER_PROFILE_PSEUDONYM_SECRET'; Kind = 'hex'}
 )
 
 $FluxerSecretKeys = @(
@@ -180,6 +188,7 @@ $FluxerSecretKeys = @(
 	@{Name = 'FLUXER_S3_SECRET_KEY'; Kind = 'hex'}
 	@{Name = 'FLUXER_SUDO_MODE_SECRET'; Kind = 'hex'}
 	@{Name = 'FLUXER_CONNECTION_INITIATION_SECRET'; Kind = 'hex'}
+	@{Name = 'FLUXER_PROFILE_PSEUDONYM_SECRET'; Kind = 'hex'}
 	@{Name = 'FLUXER_GATEWAY_RPC_AUTH_TOKEN'; Kind = 'hex'}
 	@{Name = 'FLUXER_ERLANG_COOKIE'; Kind = 'hex'}
 	@{Name = 'FLUXER_MEDIA_PROXY_SECRET_KEY'; Kind = 'hex'}
@@ -215,13 +224,13 @@ function Stop-Fluxer([string]$Message, [int]$Code) {
 }
 
 function Show-FluxerUsage {
-	Write-FluxerLine 'Usage: install.ps1 -Domain <host> -Email <address> [options]'
+	Write-FluxerLine 'Usage: install.ps1 -Domain <host> [options]'
 	Write-FluxerLine '       install.ps1 -Update [options]'
 	Write-FluxerLine '       install.ps1 -Rollback [options]'
 	Write-FluxerLine ''
 	Write-FluxerLine 'Options:'
 	Write-FluxerLine '  -Domain <host>          Hostname the instance answers on. Prompted when absent.'
-	Write-FluxerLine '  -Email <address>        Contact email for web push. Prompted when absent.'
+	Write-FluxerLine '  -Email <address>        Contact email for web push. Default: admin@<domain>.'
 	Write-FluxerLine '  -Engine <command>       Container engine to drive. Default: docker, or podman when'
 	Write-FluxerLine '                          docker is absent.'
 	Write-FluxerLine '  -Dir <path>             Working directory. Default: the fluxer folder in the home'
@@ -238,6 +247,7 @@ function Show-FluxerUsage {
 	Write-FluxerLine '  -Rollback               Restore the images and stack files of the last record.'
 	Write-FluxerLine '  -BackupDir <path>       Where records go. Default: the backups folder under -Dir.'
 	Write-FluxerLine '  -NoVolumeBackup         Take the database dump and skip the uploads copy.'
+	Write-FluxerLine '  -NoVolumeCompression    Copy the uploads as a plain .tar. Faster, larger.'
 	Write-FluxerLine '  -SkipBackupAcceptDataLoss'
 	Write-FluxerLine '                          Upgrade with no backup at all. Losable data is lost.'
 	Write-FluxerLine '  -Help                   Print this text.'
@@ -433,8 +443,8 @@ function Get-FluxerRefForTag([string]$Tag) {
 }
 
 # The images come from FLUXER_IMAGE_TAG and the stack files come from a git ref. A release tags its
-# images and its commit with the same CalVer string, so a pinned tag names the commit that carries
-# its compose files. The moving tags v1 and latest track main.
+# images and its commit with the same CalVer string, so a pinned tag names the commit that holds its
+# compose files. The moving tags v1 and latest map to main, which can run ahead of the v1 images.
 function Assert-FluxerDerivedRef([string]$Value, [string]$EnvPath) {
 	if ($Value.Length -eq 0) {
 		Stop-Fluxer "$EnvPath declares no FLUXER_IMAGE_TAG, so no ref can be derived. Pass -Ref." $FluxerExitRefused
@@ -629,8 +639,10 @@ function Remove-FluxerStagingDirectory([string]$Path) {
 #   Invoke-WebRequest -Uri https://raw.githubusercontent.com/fluxerapp/fluxer/main/deploy/self-hosting/docker-compose.yml -OutFile docker-compose.yml
 #
 # The files come from a git ref and the images come from FLUXER_IMAGE_TAG. The ref is derived from
-# the tag unless -Ref names one, which is the pairing rule that stops a compose file from asking for
-# a variable the running images do not read.
+# the tag unless -Ref names one. A pinned CalVer tag names the commit its images were built from, so
+# its compose file asks only for variables those images read. The moving tags v1 and latest map to
+# main, and main's compose file can run ahead of the v1 images until the image builds are dispatched
+# again.
 #
 # Everything lands in a staging directory first, so a failed download leaves the working directory
 # on the set it already had, and so the upgrade can compare old against new before replacing.
@@ -660,7 +672,7 @@ function Get-FluxerStackFiles([string]$StagingDir, [string]$RefValue) {
 # None of these files is part of an image, and all four are read from the working directory, so
 # docker compose pull never updates any of them. That is why an upgrade refreshes them itself.
 #
-# A refreshed docker-compose.yml can declare a variable the running .env does not carry. Compose
+# A refreshed docker-compose.yml can declare a variable the running .env does not define. Compose
 # writes ${NAME:?message} for a variable the stack requires and stops with that message until .env
 # sets it, and ${NAME:-default} for one that needs nothing from the operator. Every optional
 # override ships commented out in .env.example, so a new required key is the only kind that asks
@@ -669,17 +681,18 @@ function Move-FluxerStackFiles([string]$StagingDir, [string]$TargetDir) {
 	foreach ($name in $FluxerStackFiles) {
 		Move-Item -LiteralPath (Join-Path $StagingDir $name) -Destination (Join-Path $TargetDir (Get-FluxerPlacedName $name)) -Force
 	}
+	$script:FluxerStackServices = $null
 }
 
 # The same file by hand, which is what the caller of this function does in one pass:
 #
 #   Copy-Item .env.example .env
 #
-# Close .env to every account but your own, then set FLUXER_DOMAIN and FLUXER_VAPID_EMAIL, the two
-# values only the operator knows. The five other non-secret keys in the list above ship correct in
-# .env.example and need no edit.
+# Close .env to every account but your own, then set FLUXER_DOMAIN, the one value only the operator
+# knows. FLUXER_VAPID_EMAIL is optional, and compose derives admin@FLUXER_DOMAIN while it is unset.
+# The five other non-secret keys in the list above ship correct in .env.example and need no edit.
 #
-# Every secret in .env.example carries the literal CHANGE_ME. A key whose name ends in _BASE64
+# Every secret in .env.example contains the literal CHANGE_ME. A key whose name ends in _BASE64
 # takes 32 random bytes as base64, every other key takes 32 random bytes as hex, and the VAPID pair
 # comes from the generator above.
 #
@@ -784,7 +797,7 @@ function Wait-FluxerStack([string]$Lead) {
 	$deadline = (Get-Date).AddSeconds($FluxerReadyTimeoutSeconds)
 	$reportAt = (Get-Date).AddSeconds($FluxerReadyReportSeconds)
 	while ((Get-Date) -lt $deadline) {
-		$rows = @(Get-FluxerComposeRows)
+		$rows = @(Get-FluxerComposeRows | Where-Object { Test-FluxerStackDefinesService (Get-FluxerProperty $_ 'Service') (Get-Location).Path })
 		if ($rows.Count -gt 0) {
 			$ready = Measure-FluxerReadyRows $rows
 			if ($ready -eq $rows.Count) {
@@ -992,14 +1005,33 @@ function Get-FluxerRunningImageId($Running, [string]$Reference) {
 	return ''
 }
 
-function Get-FluxerPostgresMajor([string]$Path) {
+function Get-FluxerPostgresMajor([string]$Path, [string]$EnvPath) {
 	if (-not (Test-Path -LiteralPath $Path)) {
 		return ''
 	}
+	$image = ''
 	foreach ($line in [System.IO.File]::ReadAllText($Path).Split("`n")) {
-		if ($line -match '^\s*image:\s*postgres:(\d+)') {
-			return $Matches[1]
+		if ($line -match '^\s*image:\s*(postgres:\S*)') {
+			$image = $Matches[1]
+			break
 		}
+	}
+	if ($image.Length -eq 0) {
+		foreach ($line in [System.IO.File]::ReadAllText($Path).Split("`n")) {
+			if ($line -match '^\s*image:\s*\$\{FLUXER_POSTGRES_IMAGE:-([^}]*)\}') {
+				$image = $Matches[1]
+				$configured = Get-FluxerComposeValue $EnvPath 'FLUXER_POSTGRES_IMAGE'
+				if ($configured.Length -gt 0) {
+					$image = $configured
+				}
+				break
+			}
+		}
+	}
+	$name = ($image -split '@')[0]
+	$name = ($name -split '/')[-1]
+	if ($name -match ':(\d+)[^:]*$') {
+		return $Matches[1]
 	}
 	return ''
 }
@@ -1209,7 +1241,7 @@ function Write-FluxerTextFile([string]$Path, [string[]]$Lines) {
 # keep, and what makes a rollback possible on a moving tag.
 #
 # The reference list comes from Compose and the ID under each reference comes from the container
-# running it, for the reason in Get-FluxerRunningImageIds. A reference no container carries is
+# running it, for the reason in Get-FluxerRunningImageIds. A reference no container uses is
 # recorded as `-`, which a rollback skips, because a version that was not running is not a version
 # to go back to.
 #
@@ -1294,9 +1326,12 @@ function Test-FluxerDumpHeader([string]$Path) {
 # schema change.
 #
 # By hand:
-#   docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom > backups\fluxer.dump
+#   docker compose exec -T postgres sh -c 'pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom -f /tmp/fluxer.dump'
+#   docker compose cp postgres:/tmp/fluxer.dump backups\fluxer.dump
+#   docker compose exec -T postgres rm /tmp/fluxer.dump
 #
-# The database and the role are both named fluxer and are fixed in docker-compose.yml. Keep -T.
+# The postgres container's POSTGRES_USER and POSTGRES_DB follow FLUXER_POSTGRES_USERNAME and
+# FLUXER_POSTGRES_DATABASE, so the command needs no names. Keep -T.
 # Without it Docker attaches a terminal to the command and the dump arrives corrupted, which is
 # why the first five bytes are checked against the custom-format magic rather than only the size.
 #
@@ -1324,9 +1359,42 @@ function Test-FluxerStackDefinesService([string]$Name, [string]$TargetDir) {
 	return $script:FluxerStackServices -contains $Name
 }
 
+# The bundled postgres container takes POSTGRES_USER and POSTGRES_DB from FLUXER_POSTGRES_USERNAME
+# and FLUXER_POSTGRES_DATABASE, and the image applies them only to an empty data directory. When
+# those names point the apps at a database outside the stack, the bundled directory still holds the
+# role and database it was first started with, so a dump that reads the container env asks for a
+# role that is not there. The bundled service is idle in that shape and the dump skips it.
+function Test-FluxerPostgresExternal([string]$TargetDir) {
+	$envPath = Join-Path $TargetDir '.env'
+	$pgHost = Get-FluxerComposeValue $envPath 'FLUXER_POSTGRES_HOST'
+	if ($pgHost.Length -gt 0 -and $pgHost -ne 'postgres') {
+		return $true
+	}
+	$url = Get-FluxerComposeValue $envPath 'FLUXER_POSTGRES_URL'
+	if ($url.Length -eq 0) {
+		return $false
+	}
+	$urlHost = $url
+	$scheme = $urlHost.IndexOf('://')
+	if ($scheme -ge 0) {
+		$urlHost = $urlHost.Substring($scheme + 3)
+	}
+	$urlHost = ($urlHost -split '[/?]', 2)[0]
+	$at = $urlHost.LastIndexOf('@')
+	if ($at -ge 0) {
+		$urlHost = $urlHost.Substring($at + 1)
+	}
+	$urlHost = ($urlHost -split ':', 2)[0]
+	return $urlHost -ne 'postgres'
+}
+
 function Backup-FluxerDatabase([string]$Record, [string]$TargetDir) {
 	if (-not (Test-FluxerStackDefinesService 'postgres' $TargetDir)) {
 		Write-FluxerLine 'Skipping the database dump. This stack defines no postgres service, so its database runs outside the stack and only the operator of that database can dump it.'
+		return
+	}
+	if (Test-FluxerPostgresExternal $TargetDir) {
+		Write-FluxerLine 'Skipping the database dump. FLUXER_POSTGRES_HOST or FLUXER_POSTGRES_URL points the stack at a database outside it, so the bundled postgres service is idle and only the operator of that database can dump it.'
 		return
 	}
 	if (-not (Test-FluxerPostgresRunning)) {
@@ -1337,7 +1405,7 @@ function Backup-FluxerDatabase([string]$Record, [string]$TargetDir) {
 	}
 	$dump = Join-Path $Record $FluxerDumpFile
 	Write-FluxerLine 'Dumping the database.'
-	$code = Invoke-FluxerDockerToFile @('compose', 'exec', '-T', 'postgres', 'pg_dump', '-U', 'fluxer', '-d', 'fluxer', '--format=custom') $dump $TargetDir
+	$code = Invoke-FluxerDockerToFile @('compose', 'exec', '-T', 'postgres', 'sh', '-c', '"exec pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom"') $dump $TargetDir
 	if ($code -ne 0) {
 		Remove-FluxerTemporary $dump
 		Stop-Fluxer 'pg_dump failed. The instance is untouched.' $FluxerExitBackup
@@ -1413,6 +1481,12 @@ function Copy-FluxerVolumes([string]$Record, [string]$Project, [string]$TargetDi
 	if ($present.Count -eq 0) {
 		return
 	}
+	$tarFlags = 'czf'
+	$tarExtension = 'tgz'
+	if ($NoVolumeCompression) {
+		$tarFlags = 'cf'
+		$tarExtension = 'tar'
+	}
 	Write-FluxerLine 'Stopping the stack for a consistent copy of the uploads.'
 	if ((Invoke-FluxerDocker @('compose', 'stop')) -ne 0) {
 		Stop-Fluxer 'docker compose stop failed.' $FluxerExitBackup
@@ -1420,7 +1494,7 @@ function Copy-FluxerVolumes([string]$Record, [string]$Project, [string]$TargetDi
 	foreach ($volume in $present) {
 		$full = "${Project}_$volume"
 		Write-FluxerLine "Copying $full."
-		$code = Invoke-FluxerDocker @('run', '--rm', '-v', "${full}:/data:ro", '-v', "${Record}:/backup", $FluxerHelperImage, 'tar', 'czf', "/backup/$volume.tgz", '-C', '/data', '.')
+		$code = Invoke-FluxerDocker @('run', '--rm', '-v', "${full}:/data:ro", '-v', "${Record}:/backup", $FluxerHelperImage, 'tar', $tarFlags, "/backup/$volume.$tarExtension", '-C', '/data', '.')
 		if ($code -ne 0) {
 			[void](Invoke-FluxerDocker @('compose', 'up', '-d', '--remove-orphans'))
 			Stop-Fluxer "Copying $full failed. The stack is started again on the images it was running." $FluxerExitBackup
@@ -1453,8 +1527,9 @@ function Backup-FluxerInstance([string]$Record, [string]$TargetDir, [string]$Pro
 # The refreshed file is still staged when this runs, so a refusal here leaves the instance exactly
 # as it was.
 function Assert-FluxerPostgresMajor([string]$TargetDir, [string]$StagingDir) {
-	$old = Get-FluxerPostgresMajor (Join-Path $TargetDir $script:FluxerComposeBase)
-	$new = Get-FluxerPostgresMajor (Join-Path $StagingDir 'docker-compose.yml')
+	$envPath = Join-Path $TargetDir '.env'
+	$old = Get-FluxerPostgresMajor (Join-Path $TargetDir $script:FluxerComposeBase) $envPath
+	$new = Get-FluxerPostgresMajor (Join-Path $StagingDir 'docker-compose.yml') $envPath
 	if ($old.Length -eq 0 -or $new.Length -eq 0 -or $old -eq $new) {
 		return
 	}
@@ -1529,7 +1604,11 @@ function Show-FluxerUpdatePlan([string]$TargetDir, [string]$EnvPath, [string]$Ba
 	} elseif ($NoVolumeBackup) {
 		Write-FluxerLine '  Backup:     the database dump, .env, and the stack files'
 	} else {
-		Write-FluxerLine '  Backup:     the database dump, the uploads volume, .env, and the stack files'
+		if ($NoVolumeCompression) {
+			Write-FluxerLine '  Backup:     the database dump, the uploads volume uncompressed, .env, and the stack files'
+		} else {
+			Write-FluxerLine '  Backup:     the database dump, the uploads volume, .env, and the stack files'
+		}
 		Write-FluxerLine '  Downtime:   the stack stops for the uploads copy, then again for the recreate'
 	}
 	# The dry run downloads into a temporary directory so it can name the files that actually
@@ -1556,8 +1635,8 @@ function Show-FluxerUpdatePlan([string]$TargetDir, [string]$EnvPath, [string]$Ba
 		if ($changed -eq 0) {
 			Write-FluxerLine "  Note:       ref $Ref moves no stack file"
 		}
-		$old = Get-FluxerPostgresMajor (Join-Path $TargetDir $script:FluxerComposeBase)
-		$new = Get-FluxerPostgresMajor (Join-Path $staging 'docker-compose.yml')
+		$old = Get-FluxerPostgresMajor (Join-Path $TargetDir $script:FluxerComposeBase) $EnvPath
+		$new = Get-FluxerPostgresMajor (Join-Path $staging 'docker-compose.yml') $EnvPath
 		if ($old.Length -gt 0 -and $new.Length -gt 0 -and $old -ne $new) {
 			Write-FluxerLine "  Refusal:    postgres moves from $old to $new, which this script does not do"
 			Write-FluxerLine '  Outcome:    the run stops at that refusal and changes nothing'
@@ -1677,7 +1756,7 @@ function Invoke-FluxerUpgrade([string]$TargetDir, [string]$EnvPath, [string]$Bac
 #
 # Two shapes, depending on what the upgrade moved:
 #
-#   A pinned tag moved, so the old images still carry their own tag. The tag goes back into .env
+#   A pinned tag moved, so the old images still have their own tag. The tag goes back into .env
 #   and Compose finds them.
 #
 #     By hand: set FLUXER_IMAGE_TAG back, then docker compose up -d
@@ -1810,6 +1889,14 @@ function Get-FluxerEnvScalar([string]$EnvPath, [string]$Name) {
 	return $raw
 }
 
+function Get-FluxerComposeValue([string]$EnvPath, [string]$Name) {
+	$value = [string][Environment]::GetEnvironmentVariable($Name)
+	if ($value.Length -eq 0 -and (Test-Path -LiteralPath $EnvPath)) {
+		$value = Get-FluxerEnvScalar $EnvPath $Name
+	}
+	return $value
+}
+
 function Get-FluxerComposeSetting([string]$EnvPath) {
 	$value = ''
 	$source = 'the environment'
@@ -1866,6 +1953,13 @@ function Resolve-FluxerComposeBase([string]$TargetDir, [string]$EnvPath) {
 	}
 }
 
+function Get-FluxerOverlayAbsence([string]$Name) {
+	if ($Name -eq 'external-object-store.compose.yml') {
+		return 'Without it the bundled seaweedfs starts again and api, worker and media-proxy wait for it.'
+	}
+	return "Without $Name the edge container binds 80 and 443 and requests its own certificate."
+}
+
 function Assert-FluxerComposeFiles([string]$TargetDir, [string]$EnvPath) {
 	$setting = Get-FluxerComposeSetting $EnvPath
 	$value = $setting.Value
@@ -1886,10 +1980,75 @@ function Assert-FluxerComposeFiles([string]$TargetDir, [string]$EnvPath) {
 			continue
 		}
 		if ($FluxerStackFiles -contains $name) {
-			Stop-Fluxer "COMPOSE_FILE from $source names $name and $path is not there, so every docker compose command in $TargetDir fails and this run stops before it changes anything. This script downloads $name, and an instance set up before it existed does not hold that file yet. Put it in place and run this again:`n  Invoke-WebRequest -Uri $FluxerRawBase/$Ref/$FluxerStackPath/$name -OutFile $path -UseBasicParsing`nLeave the COMPOSE_FILE line as it is. Without $name the edge container binds 80 and 443 and requests its own certificate." $FluxerExitPrerequisite
+			Stop-Fluxer "COMPOSE_FILE from $source names $name and $path is not there, so every docker compose command in $TargetDir fails and this run stops before it changes anything. This script downloads $name, and an instance set up before it existed does not hold that file yet. Put it in place and run this again:`n  Invoke-WebRequest -Uri $FluxerRawBase/$Ref/$FluxerStackPath/$name -OutFile $path -UseBasicParsing`nLeave the COMPOSE_FILE line as it is. $(Get-FluxerOverlayAbsence $name)" $FluxerExitPrerequisite
 		}
 		Stop-Fluxer "COMPOSE_FILE from $source names $name and $path is not there, so every docker compose command in $TargetDir fails. This script does not download $name. Put that file back, or take it out of the COMPOSE_FILE line." $FluxerExitPrerequisite
 	}
+}
+
+function Get-FluxerSha256([string]$Path) {
+	return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
+function Update-FluxerInstaller {
+	if ($env:FLUXER_INSTALLER_REFRESHED) {
+		return
+	}
+	$self = $PSCommandPath
+	if (-not $self) {
+		return
+	}
+	$selfDir = Split-Path -Parent $self
+	if ($DryRun) {
+		$staging = New-FluxerStagingDirectory ([System.IO.Path]::GetTempPath())
+	} else {
+		$staging = New-FluxerStagingDirectory $selfDir
+	}
+	try {
+		$digestPath = Join-Path $staging 'install.ps1.sha256'
+		try {
+			Invoke-WebRequest -Uri "$FluxerInstallerUrl.sha256" -OutFile $digestPath -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 60
+		} catch {
+			Write-FluxerLine "Could not reach $FluxerInstallerUrl.sha256, so this run goes on with $self."
+			return
+		}
+		$published = ([System.IO.File]::ReadAllText($digestPath).Trim() -split '\s+')[0].ToLowerInvariant()
+		if ($published -notmatch '^[0-9a-f]{64}$') {
+			Stop-Fluxer "$FluxerInstallerUrl.sha256 holds no sha256 digest. Nothing was changed." $FluxerExitDownload
+		}
+		if ((Get-FluxerSha256 $self) -eq $published) {
+			return
+		}
+		$fresh = Join-Path $staging 'install.ps1'
+		try {
+			Invoke-WebRequest -Uri $FluxerInstallerUrl -OutFile $fresh -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 120
+		} catch {
+			Stop-Fluxer "Download failed for $FluxerInstallerUrl. Nothing was changed." $FluxerExitDownload
+		}
+		if ((Get-FluxerSha256 $fresh) -ne $published) {
+			Stop-Fluxer "$FluxerInstallerUrl does not match the digest in $FluxerInstallerUrl.sha256. Nothing was changed." $FluxerExitDownload
+		}
+		Write-FluxerLine "$self differs from the installer $FluxerInstallerUrl serves. The stack files an upgrade downloads can require .env keys that only the current installer writes."
+		if ($DryRun) {
+			Write-FluxerLine 'The run asks to replace it with the current installer before it changes anything. The plan below is the one this copy would follow.'
+			return
+		}
+		if ($NonInteractive -or [Console]::IsInputRedirected) {
+			Stop-Fluxer "Nothing was changed. Download the current installer and run it:`n  Invoke-WebRequest -Uri $FluxerInstallerUrl -OutFile install.ps1 -UseBasicParsing" $FluxerExitRefused
+		}
+		$answer = Read-Host -Prompt "Replace $self with the current installer and run that? [y/N]"
+		if ($null -eq $answer -or $answer.Trim() -notmatch '^(y|yes)$') {
+			Stop-Fluxer "Kept $self. Nothing was changed. Read the current installer at $FluxerInstallerUrl and run it once it is in place." $FluxerExitRefused
+		}
+		Move-Item -LiteralPath $fresh -Destination $self -Force
+	} finally {
+		Remove-FluxerStagingDirectory $staging
+	}
+	Write-FluxerLine "Replaced $self. Running it."
+	$env:FLUXER_INSTALLER_REFRESHED = '1'
+	$global:LASTEXITCODE = 0
+	& $self @FluxerScriptArguments
+	exit $LASTEXITCODE
 }
 
 function Invoke-FluxerInstall {
@@ -1925,8 +2084,18 @@ function Invoke-FluxerInstall {
 	if ($SkipBackupAcceptDataLoss -and $NoVolumeBackup) {
 		Stop-Fluxer '-SkipBackupAcceptDataLoss already skips the volume copy.' $FluxerExitUsage
 	}
+	if ($NoVolumeCompression -and -not $Update) {
+		Stop-Fluxer '-NoVolumeCompression belongs to -Update.' $FluxerExitUsage
+	}
+	if ($NoVolumeCompression -and ($SkipBackupAcceptDataLoss -or $NoVolumeBackup)) {
+		Stop-Fluxer '-NoVolumeCompression changes the volume copy, which this run skips.' $FluxerExitUsage
+	}
 
 	Invoke-FluxerPreflight
+
+	if ($Update) {
+		Update-FluxerInstaller
+	}
 
 	$targetPath = $Dir
 	$adoptedCwd = $false
@@ -2001,9 +2170,11 @@ function Invoke-FluxerInstall {
 	}
 
 	$domainValue = Resolve-FluxerValue $Domain 'Hostname the instance answers on' '-Domain' $allowPrompt
-	$emailValue = Resolve-FluxerValue $Email 'Contact email for web push' '-Email' $allowPrompt
+	$emailValue = $Email
 	Assert-FluxerDomain $domainValue
-	Assert-FluxerEmail $emailValue
+	if ($emailValue.Length -gt 0) {
+		Assert-FluxerEmail $emailValue
+	}
 
 	if ($Ref.Length -eq 0) {
 		$script:Ref = Get-FluxerRefForTag $ImageTag
@@ -2020,7 +2191,11 @@ function Invoke-FluxerInstall {
 			Write-FluxerLine "  Edge bind:  $EdgeBind"
 		}
 		Write-FluxerLine "  Domain:     $domainValue"
-		Write-FluxerLine "  Email:      $emailValue"
+		if ($emailValue.Length -gt 0) {
+			Write-FluxerLine "  Email:      $emailValue"
+		} else {
+			Write-FluxerLine "  Email:      admin@$domainValue, derived by compose"
+		}
 		Write-FluxerLine "  Files:      $($FluxerStackFiles -join ', ')"
 		Write-FluxerLine "  Secrets:    $($FluxerSecretKeys.Count) generated into .env"
 		Write-FluxerLine 'Nothing was written.'
@@ -2053,6 +2228,9 @@ function Invoke-FluxerInstall {
 			} elseif ($entry.Kind -eq 'domain') {
 				$value = $domainValue
 			} elseif ($entry.Kind -eq 'email') {
+				if ($emailValue.Length -eq 0) {
+					continue
+				}
 				$value = $emailValue
 			} elseif ($entry.Kind -eq 'image_tag') {
 				$value = $ImageTag
@@ -2089,10 +2267,14 @@ function Invoke-FluxerInstall {
 			exit 0
 		}
 
+		Write-FluxerLine 'Pulling images. The first start pulls eighteen of them, which takes several minutes.'
+		if ((Invoke-FluxerDocker @('compose', 'pull')) -ne 0) {
+			Stop-Fluxer 'docker compose pull failed. Nothing was started.' $FluxerExitDownload
+		}
 		if ((Invoke-FluxerDocker @('compose', 'up', '-d')) -ne 0) {
 			Stop-Fluxer 'docker compose up -d failed.' $FluxerExitUnhealthy
 		}
-		Wait-FluxerStack 'Waiting for the stack to report healthy. The first start pulls images and takes several minutes.'
+		Wait-FluxerStack 'Waiting for the stack to report healthy.'
 		$readyOrigin = Get-FluxerPublicOrigin $envPath
 		if ($readyOrigin.Length -eq 0) {
 			$readyOrigin = "https://$domainValue"

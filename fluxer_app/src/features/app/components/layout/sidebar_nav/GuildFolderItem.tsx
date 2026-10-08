@@ -29,6 +29,7 @@ import GuildReadState from '@app/features/guild/state/GuildReadState';
 import {getInitialsFromName, truncateInitials} from '@app/features/guild/utils/GuildInitialsUtils';
 import {MENTION_COUNT_ARIA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {useRecoveringBackgroundImageURL} from '@app/features/messaging/hooks/useImageRecovery';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import Theme from '@app/features/theme/state/Theme';
 import {Edge} from '@app/features/ui/AxisOrientation';
@@ -766,8 +767,8 @@ interface MiniGuildIconProps {
 }
 
 const MiniGuildIcon = observer(({guild}: MiniGuildIconProps) => {
-	const iconURL = AvatarSourceUtils.getGuildIconURL(guild, false);
-	if (iconURL !== '') {
+	const iconURL = useRecoveringBackgroundImageURL(AvatarSourceUtils.getGuildIconURL(guild, false));
+	if (iconURL != null) {
 		return (
 			<flx-app-mini-guild-icon
 				className={flxElementClassName(styles.miniGuildIcon)}

@@ -8,6 +8,7 @@ import type {IUserRepository} from '@app/api/user/IUserRepository';
 import * as EmojiUtils from '@app/api/utils/EmojiUtils';
 import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {GuildExplicitContentFilterTypes, GuildFeatures, GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {SensitiveMediaFilterLevel} from '@fluxer/constants/src/UserConstants';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -50,7 +51,11 @@ export class MessageContentService {
 		if (isBot) {
 			return true;
 		}
-		if (channel && GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) && channel.isNsfw) {
+		if (
+			channel &&
+			(GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) &&
+			channel.isNsfw
+		) {
 			return true;
 		}
 		if (channel?.type === ChannelTypes.DM_PERSONAL_NOTES) {

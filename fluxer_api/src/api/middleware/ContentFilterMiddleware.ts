@@ -4,7 +4,6 @@ import {Logger} from '@app/api/Logger';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
 import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
 import {readRequestJsonBody} from '@app/api/utils/RequestJsonBody';
-import {extractUrlCandidates} from '@app/api/utils/UrlNormalizer';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {createMiddleware} from 'hono/factory';
 
@@ -73,14 +72,16 @@ const SKIP_FIELD_SUFFIXES = [
 ] as const;
 const SKIP_CONTENT_FILTER_PATH_PARTS = [
 	'/admin/blocklists/phrase/',
+	'/admin/blocklists/url-domain/',
+	'/admin/blocklists/url/',
 	'/auth/',
 	'/oauth2/',
+	'/premium/store/',
 	'/reports/dsa/email/',
 	'/users/@me/authorized-ips',
 	'/users/@me/email-change/',
 	'/users/@me/mfa/',
 	'/users/@me/password-change/',
-	'/users/@me/phone/',
 	'/users/@me/sudo/',
 	'/webhooks/',
 ] as const;
@@ -149,15 +150,12 @@ const ContentFilterMiddleware = createMiddleware(async (ctx, next) => {
 			);
 			throw new ContentBlockedError();
 		}
-		const urls = extractUrlCandidates(text);
-		for (const url of urls) {
-			if (urlBlocklistCache.isUrlOrDomainBanned(url)) {
-				Logger.warn(
-					{surface: 'global_filter', userId: userId?.toString(), path},
-					'content_moderation.block url match in request body',
-				);
-				throw new ContentBlockedError();
-			}
+		if (urlBlocklistCache.containsBannedLink(text)) {
+			Logger.warn(
+				{surface: 'global_filter', userId: userId?.toString(), path},
+				'content_moderation.block url match in request body',
+			);
+			throw new ContentBlockedError();
 		}
 	}
 	return next();

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
+import {ChannelOriginIcon} from '@app/features/channel/components/ChannelOriginIcon';
 import Channels from '@app/features/channel/state/Channels';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import {COMMUNITIES_DESCRIPTOR, MENTION_COUNT_ARIA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -37,7 +38,7 @@ import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {ArrowRightIcon, HashIcon, HouseIcon, SpeakerHighIcon, StarIcon, UsersIcon} from '@phosphor-icons/react';
+import {ArrowRightIcon, HouseIcon, StarIcon, UsersIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
 import {useEffect, useLayoutEffect, useRef} from 'react';
@@ -131,6 +132,8 @@ export function getViewContext(result: QuickSwitcherExecutableResult): string | 
 	return undefined;
 }
 
+const QUICK_SWITCHER_ICON_SIZE = 24;
+
 export function renderIcon(
 	result: QuickSwitcherExecutableResult,
 	isHighlight: boolean,
@@ -146,7 +149,7 @@ export function renderIcon(
 				content: (
 					<StatusAwareAvatar
 						user={userResult.user}
-						size={24}
+						size={QUICK_SWITCHER_ICON_SIZE}
 						data-flx="search.quick-switcher-modal-utils.render-icon.status-aware-avatar"
 					/>
 				),
@@ -159,34 +162,27 @@ export function renderIcon(
 				content: (
 					<GroupDMAvatar
 						channel={groupDMResult.channel}
-						size={24}
+						size={QUICK_SWITCHER_ICON_SIZE}
 						data-flx="search.quick-switcher-modal-utils.render-icon.group-dm-avatar"
 					/>
 				),
 			};
 		}
 		case QuickSwitcherResultTypes.TEXT_CHANNEL:
+		case QuickSwitcherResultTypes.VOICE_CHANNEL: {
+			const channelResult = result as TextChannelResult | VoiceChannelResult;
 			return {
-				type: 'icon' as const,
+				type: 'avatar' as const,
 				content: (
-					<HashIcon
-						weight="bold"
-						className={iconClass}
-						data-flx="search.quick-switcher-modal-utils.render-icon.hash-icon"
+					<ChannelOriginIcon
+						channel={channelResult.channel}
+						highlighted={isHighlight}
+						size={QUICK_SWITCHER_ICON_SIZE}
+						data-flx="search.quick-switcher-modal-utils.render-icon.channel-origin-icon"
 					/>
 				),
 			};
-		case QuickSwitcherResultTypes.VOICE_CHANNEL:
-			return {
-				type: 'icon' as const,
-				content: (
-					<SpeakerHighIcon
-						weight="fill"
-						className={iconClass}
-						data-flx="search.quick-switcher-modal-utils.render-icon.speaker-high-icon"
-					/>
-				),
-			};
+		}
 		case QuickSwitcherResultTypes.GUILD: {
 			const guildResult = result as GuildResult;
 			return {
@@ -196,7 +192,7 @@ export function renderIcon(
 						id={guildResult.guild.id}
 						name={guildResult.guild.name}
 						icon={guildResult.guild.icon}
-						sizePx={24}
+						sizePx={QUICK_SWITCHER_ICON_SIZE}
 						data-flx="search.quick-switcher-modal-utils.render-icon.guild-icon"
 					/>
 				),

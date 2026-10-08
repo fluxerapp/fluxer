@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Channels from '@app/features/channel/state/Channels';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
+import {isSyncExcludedChannelId} from '@app/features/threads/utils/SyncedPreferenceGuard';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import {FavoritesStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
@@ -29,7 +31,7 @@ class Favorites {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -130,6 +132,7 @@ class Favorites {
 	}
 
 	addChannel(channelId: string, guildId: string, parentId: string | null = null): void {
+		if (isSyncExcludedChannelId(channelId)) return;
 		const existing = this.channels.find((ch) => ch.channelId === channelId);
 		if (existing) return;
 		const position = this.channels.length;

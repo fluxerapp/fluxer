@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ActivityContextMiddleware} from '@app/api/infrastructure/activity/ActivityMeta';
+import {applySharedListUpdate, resetSharedListsForTests} from '@app/api/infrastructure/activity/SharedLists';
 import {IpBanMiddleware, ipBanCache} from '@app/api/middleware/IpBanMiddleware';
-import {torExitListCache} from '@app/api/middleware/TorExitListCache';
-import {TorExitMiddleware} from '@app/api/middleware/TorExitMiddleware';
 import {TrustedClientIpHeaderMiddleware} from '@app/api/middleware/TrustedClientIpHeaderMiddleware';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
@@ -35,7 +35,7 @@ function createPipeline(clientIpHeaderName = 'x-forwarded-for'): Pipeline {
 			clientIpHeaderName,
 		}),
 	);
-	app.use(TorExitMiddleware);
+	app.use(ActivityContextMiddleware);
 	app.get('/v1/messages', (ctx) => {
 		resolutions.push(ctx.get('clientIpResolution'));
 		return ctx.text('ok');
@@ -53,7 +53,7 @@ function createPipeline(clientIpHeaderName = 'x-forwarded-for'): Pipeline {
 
 beforeEach(() => {
 	ipBanCache.resetCaches();
-	torExitListCache.clearForTesting();
+	resetSharedListsForTests();
 });
 
 describe('client ip resolution across the request pipeline', () => {
@@ -72,8 +72,8 @@ describe('client ip resolution across the request pipeline', () => {
 		expect(response.status).toBe(403);
 		expect(pipeline.errors[0]).toBeInstanceOf(IpBannedError);
 	});
-	it('still blocks a tor exit client ip', async () => {
-		torExitListCache.seedForTesting(['203.0.113.30']);
+	it('blocks a client ip on the shared blocked list', async () => {
+		applySharedListUpdate('ip_blocked', '203.0.113.30\n');
 		const pipeline = createPipeline();
 		const response = await pipeline.request({'x-forwarded-for': '203.0.113.30'});
 		expect(response.status).toBe(403);
@@ -102,7 +102,7 @@ describe('client ip resolution across the request pipeline', () => {
 		expect(pipeline.resolutions[0]?.ip).toBe('203.0.113.10');
 		expect(pipeline.resolutions[1]?.ip).toBe('203.0.113.10');
 	});
-	it('rejects an invalid trusted header even when the configured header carries a valid address', async () => {
+	it('rejects an invalid trusted header even when the configured header contains a valid address', async () => {
 		const pipeline = createPipeline('x-real-ip');
 		const response = await pipeline.request({'x-forwarded-for': '203.0.113.10', 'x-real-ip': 'not-an-ip'});
 		expect(response.status).toBe(403);

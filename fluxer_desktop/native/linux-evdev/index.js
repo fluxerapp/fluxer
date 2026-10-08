@@ -59,6 +59,6 @@ if (process.platform === 'linux') {
 
 module.exports = {
 	EvdevHook: binding ? binding.EvdevHook : null,
-	nameToEvdevKeycode: binding ? binding.nameToEvdevKeycode : null,
+	isKeyboardReadable: binding ? binding.isKeyboardReadable : null,
 	loadError,
 };

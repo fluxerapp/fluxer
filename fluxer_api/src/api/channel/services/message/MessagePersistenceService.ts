@@ -15,8 +15,11 @@ import {MessageEmbedAttachmentResolver} from '@app/api/channel/services/message/
 import {
 	assertAttachmentFileSizesWithinLimit,
 	collectMessageAttachments,
+	isCrosspostCopy,
+	keepOwnedEmbedAttachments,
 } from '@app/api/channel/services/message/MessageHelpers';
 import {MessageStickerService} from '@app/api/channel/services/message/MessageStickerService';
+import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import type {
 	MessageAttachment,
@@ -91,6 +94,7 @@ interface CreateMessageParams {
 	embeds?: Array<RichEmbedRequest>;
 	attachments?: Array<AttachmentToProcess>;
 	attachmentUploadUserId?: UserID;
+	uploadChannelId?: ChannelID;
 	processedAttachments?: Array<MessageAttachment>;
 	stickerIds?: Array<StickerID>;
 	messageReference?: MessageReference;
@@ -111,6 +115,10 @@ interface CreateMessageParams {
 	};
 	allowEmbeds?: boolean;
 	dmNsfwContext?: DmNsfwContext;
+	processedEmbeds?: Array<MessageEmbed>;
+	processedStickerItems?: Array<MessageStickerItem>;
+	skipDeferredEmbeds?: boolean;
+	threadInsert?: boolean;
 }
 
 export class MessagePersistenceService {
@@ -146,6 +154,10 @@ export class MessagePersistenceService {
 		this.attachmentDecayService = new AttachmentDecayService();
 	}
 
+	private nsfwScopeChannel(channel: Channel): Promise<Channel> {
+		return resolveNsfwScopeChannel(channel, (channelId) => this.channelRepository.channelData.findUnique(channelId));
+	}
+
 	getEmbedAttachmentResolver(): MessageEmbedAttachmentResolver {
 		return this.embedAttachmentResolver;
 	}
@@ -164,7 +176,7 @@ export class MessagePersistenceService {
 		const isBot = params.user?.isBot ?? false;
 		const isBugHunterBot = isBot && ((params.user?.flags ?? 0n) & UserFlags.BUG_HUNTER) !== 0n;
 		const isNSFWAllowed = this.contentService.isNSFWContentAllowed({
-			channel: params.channel,
+			channel: params.channel ? await this.nsfwScopeChannel(params.channel) : undefined,
 			guild: params.guild,
 			member: params.member,
 			isBot,
@@ -190,8 +202,12 @@ export class MessagePersistenceService {
 		const allowEmbeds = params.allowEmbeds ?? true;
 		let initialEmbeds: Array<MessageEmbed> | null = null;
 		let hasUncachedUrls = false;
-		const referencedFilenames = this.embedAttachmentResolver.collectReferencedAttachmentFilenames(params.embeds);
-		if (allowEmbeds) {
+		const referencedFilenames = params.processedEmbeds
+			? new Set<string>()
+			: this.embedAttachmentResolver.collectReferencedAttachmentFilenames(params.embeds);
+		if (params.processedEmbeds) {
+			initialEmbeds = params.processedEmbeds.length > 0 ? params.processedEmbeds : null;
+		} else if (allowEmbeds) {
 			const resolvedEmbeds = this.embedAttachmentResolver.resolveEmbedAttachmentUrls({
 				embeds: params.embeds,
 				attachments: processedAttachments.map(mapAttachmentForEmbedResolution),
@@ -239,7 +255,11 @@ export class MessagePersistenceService {
 			has_reaction: false,
 			version: 1,
 		};
-		const message = await this.channelRepository.messages.upsertMessage(messageRowData, null);
+		const message = await this.channelRepository.messages.upsertMessage(
+			messageRowData,
+			null,
+			params.threadInsert ? {isInsert: true} : undefined,
+		);
 		const enqueueDeferredEmbeds = await this.runPostPersistenceOperations({
 			message,
 			params,
@@ -288,6 +308,7 @@ export class MessagePersistenceService {
 			} as Message,
 			attachments: params.attachments,
 			uploadUserId,
+			uploadChannelId: params.uploadChannelId,
 			channel: params.channel,
 			guild: params.guild,
 			member: params.member,
@@ -299,6 +320,9 @@ export class MessagePersistenceService {
 		params: CreateMessageParams,
 		authorId: UserID | null,
 	): Promise<Array<MessageStickerItem>> {
+		if (params.processedStickerItems) {
+			return params.processedStickerItems;
+		}
 		if (!params.stickerIds || params.stickerIds.length === 0) {
 			return [];
 		}
@@ -320,7 +344,7 @@ export class MessagePersistenceService {
 	}): Promise<() => Promise<void>> {
 		const {message, params, authorId, allowEmbeds, hasUncachedUrls, isNSFWAllowed} = context;
 		const operations: Array<Promise<unknown>> = [];
-		const trackedAttachments = collectMessageAttachments(message);
+		const trackedAttachments = isCrosspostCopy(message) ? [] : collectMessageAttachments(message);
 		if (trackedAttachments.length > 0) {
 			const uploadedAt = snowflakeToDate(params.messageId);
 			const decayPayloads = trackedAttachments.map((att) => ({
@@ -334,7 +358,7 @@ export class MessagePersistenceService {
 			operations.push(this.attachmentDecayService.upsertMany(decayPayloads));
 		}
 		let enqueueDeferredEmbeds: () => Promise<void> = () => Promise.resolve();
-		if (allowEmbeds && hasUncachedUrls) {
+		if (allowEmbeds && hasUncachedUrls && !params.skipDeferredEmbeds) {
 			enqueueDeferredEmbeds = () =>
 				this.embedService.enqueueUrlEmbedExtraction(
 					params.channelId,
@@ -353,8 +377,9 @@ export class MessagePersistenceService {
 						channelId: params.channelId,
 						messageId: params.messageId,
 						mentionCount: 0,
-						silent: true,
+						implicit: {unreadThrough: params.user ? (params.channel?.lastMessageId ?? null) : null},
 						emitGateway: false,
+						...(params.threadInsert ? {capable: true, channel: params.channel ?? null} : {}),
 					}),
 				);
 			}
@@ -383,7 +408,7 @@ export class MessagePersistenceService {
 			throw InputValidationError.fromCode('message', ValidationErrorCodes.MESSAGES_WITH_SNAPSHOTS_CANNOT_BE_EDITED);
 		}
 		const isNSFWAllowed = this.contentService.isNSFWContentAllowed({
-			channel,
+			channel: await this.nsfwScopeChannel(channel),
 			guild,
 			member,
 			isBot: params.isBot,
@@ -524,6 +549,7 @@ export class MessagePersistenceService {
 				isBugHunterBot: params.isBugHunterBot,
 			});
 			if (embedsExplicitlyProvided) {
+				keepOwnedEmbedAttachments(message, initialEmbeds);
 				updatedRowData.embeds = initialEmbeds;
 			} else {
 				const preservedEmbeds = message.embeds
@@ -702,6 +728,7 @@ export class MessagePersistenceService {
 			guildId: params.guildId ?? null,
 			allowEmbeds: false,
 			messageReference: params.messageReference,
+			threadInsert: true,
 			mentionData: {
 				flags: 0,
 				mentionUserIds: params.mentionUserIds ?? [],

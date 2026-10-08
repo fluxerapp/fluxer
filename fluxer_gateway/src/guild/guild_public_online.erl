@@ -28,7 +28,12 @@ compute_count(State) ->
 
 -spec compute_count_for_data(map(), guild_state()) -> non_neg_integer().
 compute_count_for_data(Data, State) ->
-    Channels = [C || C <- ensure_list(maps:get(<<"channels">>, Data, [])), is_map(C)],
+    Channels = [
+        C
+     || C <- ensure_list(maps:get(<<"channels">>, Data, [])),
+        is_map(C),
+        not guild_thread_gate:is_thread_only_type(maps:get(<<"type">>, C, undefined))
+    ],
     case classify_everyone_viewable(Channels, State) of
         {open, _ChannelIds} -> guild_member_list:get_online_count(State);
         {restricted, ChannelIdSet} -> count_online_with_access(ChannelIdSet, State);
@@ -126,12 +131,13 @@ channel_has_view_restricting_overrides(Channel, ViewBit) ->
 count_online_with_access(ChannelIdSet, State) ->
     TargetMap = maps:from_list([{Ch, true} || Ch <- sets:to_list(ChannelIdSet)]),
     Tab = maps:get(member_presence, State),
-    ets:foldl(
-        fun({UserId, Presence}, Acc) ->
+    sets:fold(
+        fun(UserId, Acc) ->
+            Presence = guild_state_member:lookup_presence(Tab, UserId),
             maybe_count_online_user(UserId, Presence, TargetMap, State, Acc)
         end,
         0,
-        Tab
+        guild_member_list_connected:connected_session_user_ids(State)
     ).
 
 -spec maybe_count_online_user(term(), term(), map(), guild_state(), non_neg_integer()) ->
@@ -211,6 +217,7 @@ build_state(Channels, Members, Roles, Presences) ->
         },
         member_presence => Tab,
         member_list_engine => build_engine(Presences),
+        connected_user_ids => sets:from_list([UserId || {UserId, _} <- Presences]),
         sessions => #{}
     }.
 
@@ -397,6 +404,11 @@ plain_open_channel_unchanged_by_flag_test() ->
 
 user_deny_collapses_count_without_flag_test() ->
     ?assertEqual(2, compute_count(user_deny_state())).
+
+restricted_count_skips_disconnected_online_rows_test() ->
+    State = user_deny_state(),
+    ?assertEqual(1, compute_count(State#{connected_user_ids => sets:from_list([41, 42])})),
+    ?assertEqual(0, compute_count(State#{connected_user_ids => sets:new()})).
 
 user_deny_reports_full_count_with_flag_test() ->
     State = user_deny_state(),

@@ -8,18 +8,18 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export([
     handle_message_create/1,
+    handle_buffered_message_creates/1,
     sync_user_guild_settings/3,
     sync_user_guild_settings_local/3,
     sync_user_blocked_ids/2,
     sync_user_blocked_ids_local/2,
-    invalidate_user_subscriptions/1,
     invalidate_user_subscriptions_local/1,
-    invalidate_user_badge_count/1,
     invalidate_user_badge_count_local/1,
     invalidate_user_badge_counts_local/1,
-    clear_channel_notifications/3
+    clear_channel_notifications/3,
+    clear_notifications_enabled/0
 ]).
--export([get_cache_stats/0, delivery_gate_counters/0]).
+-export([get_cache_stats/0]).
 -export([push_owner_key/1]).
 
 -define(EVICT_INTERVAL_MS, 60000).
@@ -31,28 +31,14 @@
 -define(CNT_FETCH_FAILURES, push_blocked_ids_fetch_failures).
 -define(CNT_SUPPRESSED, push_blocked_ids_suppressed).
 -define(CNT_BUDGET_EXHAUSTED, push_blocked_ids_budget_exhausted).
--define(CNT_DISPATCH_DROPPED, push_loss_dispatch_dropped).
--define(CNT_DISPATCH_DROPPED_USERS, push_loss_dispatch_dropped_users).
--define(CNT_CLEAR_DROPPED, push_loss_clear_dropped).
--define(CNT_CLEAR_RETRIED, push_clear_retried).
--define(CLEAR_RETRY_ATTEMPTS, 3).
--define(CLEAR_RETRY_BASE_MS, 250).
--define(CNT_QUEUE_FULL, push_loss_queue_full).
--define(CNT_INVALID_JOB, push_loss_invalid_job).
--define(CNT_ENQUEUE_TIMEOUT, push_loss_enqueue_timeout).
--define(CNT_ENQUEUE_FAILED, push_loss_enqueue_failed).
--define(CNT_JOB_CRASHED, push_loss_job_crashed).
--define(CNT_WORKER_DIED, push_loss_worker_died).
--define(CNT_DISPATCHER_RESTARTS, push_dispatcher_restarts).
--define(CNT_RESTART_DISCARDED, push_dispatcher_restart_discarded).
--define(CNT_QUEUE_ENQUEUED, push_dispatcher_queue_enqueued).
--define(CNT_QUEUE_DEQUEUED, push_dispatcher_queue_dequeued).
--define(CNT_GATE_SERVICE_USERS, push_delivery_gate_service_users).
--define(CNT_GATE_GATEWAY_USERS, push_delivery_gate_gateway_users).
--define(CNT_GATE_JOBS_PUBLISHED, push_delivery_gate_jobs_published).
--define(CNT_GATE_PUBLISH_FAILED, push_delivery_gate_publish_failed).
-
+-define(CNT_READ_STATE_SUPPRESSED, push_read_state_suppressed).
+-define(CNT_READ_STATE_FAILURES, push_read_state_fetch_failures).
+-define(CNT_READ_STATE_SKIPPED, push_read_state_fetch_skipped).
 -define(MAX_FETCH_RPCS, 8).
+-define(READ_STATE_FETCH_TIMEOUT_MS, 2000).
+-define(READ_STATE_TABLE, push_read_state_counters).
+-define(READ_STATE_FETCH_SLOTS, read_state_fetches_in_flight).
+-define(MAX_READ_STATE_FETCHES, 64).
 -define(DEFAULT_FETCH_USERS, 2000).
 -define(MAX_FETCH_USERS, 5000).
 -define(DEFAULT_FETCH_CHUNK, 500).
@@ -60,12 +46,10 @@
 -define(MAX_FETCH_CHUNK, 1000).
 
 -type state() :: #{
-    badge_counts_ttl_seconds := non_neg_integer(),
     max_entries := non_neg_integer()
 }.
--type worker_state() :: #{
-    badge_counts_ttl_seconds := non_neg_integer()
-}.
+-type read_key() :: {integer(), integer(), integer()}.
+-type read_marks() :: #{{integer(), integer()} => non_neg_integer()}.
 
 -spec start_link() -> {ok, pid()} | {error, term()} | ignore.
 start_link() ->
@@ -76,22 +60,15 @@ init([]) ->
     erlang:process_flag(fullsweep_after, 10),
     push_ets_cache:init(),
     init_worker_counter(),
-    PushEnabled = env_boolean(push_enabled),
-    maybe_warn_vapid_misconfigured(PushEnabled),
-    case PushEnabled of
-        true ->
-            BcTtl = env_non_neg_integer(push_badge_counts_cache_ttl_seconds, 0),
-            schedule_eviction(),
-            {ok, #{
-                badge_counts_ttl_seconds => BcTtl,
-                max_entries => ?DEFAULT_MAX_ENTRIES
-            }};
-        false ->
-            {ok, #{
-                badge_counts_ttl_seconds => 0,
-                max_entries => ?DEFAULT_MAX_ENTRIES
-            }}
-    end.
+    maybe_schedule_eviction(env_boolean(push_enabled)),
+    {ok, #{max_entries => ?DEFAULT_MAX_ENTRIES}}.
+
+-spec maybe_schedule_eviction(boolean()) -> ok.
+maybe_schedule_eviction(true) ->
+    _ = schedule_eviction(),
+    ok;
+maybe_schedule_eviction(false) ->
+    ok.
 
 -spec handle_call(term(), gen_server:from(), state()) -> {reply, term(), state()}.
 handle_call(get_cache_stats, _From, State) ->
@@ -109,16 +86,10 @@ handle_cast({sync_user_guild_settings, UserId, GuildId, UserGuildSettings}, Stat
     {noreply, State};
 handle_cast({sync_user_blocked_ids, UserId, BlockedIds}, State) when is_integer(UserId) ->
     handle_sync_user_blocked_ids(UserId, BlockedIds, State);
-handle_cast({invalidate_user_subscriptions, UserId}, State) when is_integer(UserId) ->
-    push_ets_cache:delete_subscriptions(UserId),
-    {noreply, State};
 handle_cast({cache_user_guild_settings, UserId, GuildId, Settings}, State) when
     is_integer(UserId), is_integer(GuildId), is_map(Settings)
 ->
     push_ets_cache:put_user_guild_settings(UserId, GuildId, Settings),
-    {noreply, State};
-handle_cast({invalidate_user_badge_count, UserId}, State) when is_integer(UserId) ->
-    push_ets_cache:delete_badge_count(UserId),
     {noreply, State};
 handle_cast({clear_channel_notifications, UserId, ChannelId, MessageId}, State) when
     is_integer(UserId), is_integer(ChannelId), is_integer(MessageId)
@@ -132,14 +103,10 @@ handle_info(evict_caches, State) ->
     MaxEntries = maps:get(max_entries, State),
     push_ets_cache:evict_tables(#{
         user_guild_settings => MaxEntries,
-        subscriptions => MaxEntries,
-        blocked_ids => MaxEntries,
-        badge_counts => MaxEntries
+        blocked_ids => MaxEntries
     }),
     schedule_eviction(),
     {noreply, State};
-handle_info({retry_clear_notifications, UserId, ChannelId, MessageId, Attempt}, State) ->
-    clear_via_dispatcher(UserId, ChannelId, MessageId, Attempt, State);
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -157,6 +124,17 @@ handle_message_create(Params) ->
     case is_push_active() of
         true -> cast_to_push_owner(push_owner_key(Params), {handle_message_create, Params});
         false -> ok
+    end.
+
+-spec handle_buffered_message_creates([map()]) -> ok.
+handle_buffered_message_creates(ParamsList) ->
+    case is_push_active() of
+        true ->
+            {Stale, Fresh} = split_stale_buffered(ParamsList),
+            lists:foreach(fun handle_message_create/1, Fresh),
+            spawn_read_state_check(Stale);
+        false ->
+            ok
     end.
 
 -spec sync_user_guild_settings(integer(), integer(), map()) -> ok.
@@ -182,40 +160,23 @@ sync_user_blocked_ids_local(UserId, BlockedIds) ->
             ok
     end.
 
+-spec invalidate_user_subscriptions_local(integer()) -> ok.
+invalidate_user_subscriptions_local(_UserId) ->
+    ok.
+
+-spec invalidate_user_badge_count_local(integer()) -> ok.
+invalidate_user_badge_count_local(_UserId) ->
+    ok.
+
+-spec invalidate_user_badge_counts_local([integer()]) -> ok.
+invalidate_user_badge_counts_local(_UserIds) ->
+    ok.
+
 -spec put_blocked_ids_local(integer(), [integer()]) -> ok.
 put_blocked_ids_local(UserId, TypedBlockedIds) ->
     local_cache_mutation(fun() ->
         push_ets_cache:put_blocked_ids(UserId, TypedBlockedIds)
     end).
-
--spec invalidate_user_subscriptions(integer()) -> ok.
-invalidate_user_subscriptions(UserId) ->
-    maybe_cast(UserId, {invalidate_user_subscriptions, UserId}).
-
--spec invalidate_user_subscriptions_local(integer()) -> ok.
-invalidate_user_subscriptions_local(UserId) ->
-    local_cache_mutation(fun() ->
-        push_ets_cache:delete_subscriptions(UserId)
-    end).
-
--spec invalidate_user_badge_count(integer()) -> ok.
-invalidate_user_badge_count(UserId) ->
-    maybe_cast(UserId, {invalidate_user_badge_count, UserId}).
-
--spec invalidate_user_badge_count_local(integer()) -> ok.
-invalidate_user_badge_count_local(UserId) ->
-    local_cache_mutation(fun() ->
-        push_ets_cache:delete_badge_count(UserId)
-    end).
-
--spec invalidate_user_badge_counts_local(term()) -> ok.
-invalidate_user_badge_counts_local(UserIds) ->
-    case push_normalize:integer_list(UserIds) of
-        {ok, TypedUserIds} ->
-            lists:foreach(fun invalidate_user_badge_count_local/1, TypedUserIds);
-        error ->
-            ok
-    end.
 
 -spec maybe_cast(term(), term()) -> ok.
 maybe_cast(Key, Msg) ->
@@ -236,19 +197,13 @@ is_push_noop() ->
 clear_channel_notifications(UserId, ChannelId, MessageId) ->
     case is_push_active() of
         true ->
-            clear_for_enrolment(
-                push_delivery_config:is_enrolled(UserId), UserId, ChannelId, MessageId
+            ok = push_outbox:truncate_read(UserId, ChannelId, MessageId),
+            cast_clear_if_enabled(
+                clear_notifications_enabled(), UserId, ChannelId, MessageId
             );
         false ->
             ok
     end.
-
--spec clear_for_enrolment(boolean(), integer(), integer(), integer()) -> ok.
-clear_for_enrolment(true, UserId, ChannelId, MessageId) ->
-    ok = push_outbox:truncate_read(UserId, ChannelId, MessageId),
-    cast_clear_if_enabled(clear_notifications_enabled(), UserId, ChannelId, MessageId);
-clear_for_enrolment(false, UserId, ChannelId, MessageId) ->
-    cast_clear_if_enabled(clear_notifications_enabled(), UserId, ChannelId, MessageId).
 
 -spec cast_clear_if_enabled(boolean(), integer(), integer(), integer()) -> ok.
 cast_clear_if_enabled(true, UserId, ChannelId, MessageId) ->
@@ -258,9 +213,9 @@ cast_clear_if_enabled(false, _UserId, _ChannelId, _MessageId) ->
 
 -spec clear_notifications_enabled() -> boolean().
 clear_notifications_enabled() ->
-    case persistent_term:get(push_clear_notifications_enabled, undefined) of
+    case persistent_term:get(push_enrolled_clear_notifications_enabled, undefined) of
         OperatorChoice when is_boolean(OperatorChoice) -> OperatorChoice;
-        _ -> env_boolean(push_clear_notifications_enabled, true)
+        _ -> env_boolean(push_enrolled_clear_notifications_enabled, true)
     end.
 
 -spec get_cache_stats() -> {ok, map()}.
@@ -311,18 +266,188 @@ resolve_push_owner(Key) ->
         exit:_Reason -> unavailable
     end.
 
--spec do_handle_message_create(map(), worker_state()) -> ok.
-do_handle_message_create(Params, State) ->
+-spec do_handle_message_create(map()) -> ok.
+do_handle_message_create(Params) ->
     case push_message_params:context(Params) of
         {ok, Context} ->
-            do_handle_message_create_context(Context, State);
+            do_handle_message_create_context(Context);
         {error, Reason} ->
             logger:debug("Push: skipping malformed message create", #{reason => Reason}),
             ok
     end.
 
--spec do_handle_message_create_context(push_message_params:context(), worker_state()) -> ok.
-do_handle_message_create_context(Context, State) ->
+-spec split_stale_buffered([map()]) -> {[{read_key(), map()}], [map()]}.
+split_stale_buffered(ParamsList) ->
+    lists:foldr(
+        fun(Params, {Stale, Fresh}) ->
+            Unbuffered = maps:remove(buffered_at, Params),
+            case stale_read_key(Params) of
+                {ok, Key} -> {[{Key, Unbuffered} | Stale], Fresh};
+                none -> {Stale, [Unbuffered | Fresh]}
+            end
+        end,
+        {[], []},
+        ParamsList
+    ).
+
+-spec stale_read_key(map()) -> {ok, read_key()} | none.
+stale_read_key(#{buffered_at := BufferedAt} = Params) when is_integer(BufferedAt) ->
+    case
+        erlang:system_time(millisecond) - BufferedAt >= push_outbox:max_age_ms() andalso
+            push_message_params:context(Params)
+    of
+        {ok, #{user_ids := [UserId], channel_id := ChannelId, message_id := MessageId}} ->
+            {ok, {UserId, ChannelId, MessageId}};
+        _ ->
+            none
+    end;
+stale_read_key(_Params) ->
+    none.
+
+-spec spawn_read_state_check([{read_key(), map()}]) -> ok.
+spawn_read_state_check([]) ->
+    ok;
+spawn_read_state_check(Stale) ->
+    Channels = lists:usort([{UserId, ChannelId} || {{UserId, ChannelId, _}, _Params} <- Stale]),
+    case read_state_fetch_allowed(length(Channels)) of
+        true ->
+            _ = spawn(fun() -> publish_unread(Channels, Stale) end),
+            ok;
+        false ->
+            lists:foreach(fun(Entry) -> publish_unless_read(#{}, Entry) end, Stale)
+    end.
+
+-spec publish_unread([{integer(), integer()}], [{read_key(), map()}]) -> ok.
+publish_unread(Channels, Stale) ->
+    try
+        ReadMarks =
+            try
+                fetch_each_read_mark(Channels, #{})
+            catch
+                _:_ -> #{}
+            end,
+        lists:foreach(fun(Entry) -> publish_unless_read(ReadMarks, Entry) end, Stale)
+    after
+        release_read_state_fetch_slot()
+    end.
+
+-spec publish_unless_read(read_marks(), {read_key(), map()}) -> ok.
+publish_unless_read(ReadMarks, {{UserId, ChannelId, MessageId}, Params}) ->
+    case MessageId =< maps:get({UserId, ChannelId}, ReadMarks, 0) of
+        true -> bump_read_state_counter(?CNT_READ_STATE_SUPPRESSED, 1);
+        false -> handle_message_create(Params)
+    end.
+
+-spec read_state_fetch_allowed(non_neg_integer()) -> boolean().
+read_state_fetch_allowed(Fetches) ->
+    case acquire_read_state_fetch_slot() of
+        true ->
+            true;
+        false ->
+            bump_read_state_counter(?CNT_READ_STATE_SKIPPED, Fetches),
+            false
+    end.
+
+-spec acquire_read_state_fetch_slot() -> boolean().
+acquire_read_state_fetch_slot() ->
+    ok = ensure_read_state_table(),
+    try
+        ets:update_counter(
+            ?READ_STATE_TABLE, ?READ_STATE_FETCH_SLOTS, {2, 1}, {?READ_STATE_FETCH_SLOTS, 0}
+        )
+    of
+        InFlight when InFlight > ?MAX_READ_STATE_FETCHES ->
+            release_read_state_fetch_slot(),
+            false;
+        _InFlight ->
+            true
+    catch
+        error:badarg -> false
+    end.
+
+-spec release_read_state_fetch_slot() -> ok.
+release_read_state_fetch_slot() ->
+    try ets:update_counter(?READ_STATE_TABLE, ?READ_STATE_FETCH_SLOTS, {2, -1, 0, 0}) of
+        _InFlight -> ok
+    catch
+        error:badarg -> ok
+    end.
+
+-spec bump_read_state_counter(atom(), non_neg_integer()) -> ok.
+bump_read_state_counter(Key, Increment) ->
+    ok = ensure_read_state_table(),
+    try ets:update_counter(?READ_STATE_TABLE, Key, {2, Increment}, {Key, 0}) of
+        _Value -> ok
+    catch
+        error:badarg -> ok
+    end.
+
+-spec ensure_read_state_table() -> ok.
+ensure_read_state_table() ->
+    case ets:whereis(?READ_STATE_TABLE) of
+        undefined ->
+            guild_ets_utils:ensure_table(?READ_STATE_TABLE, [
+                named_table, public, set, {write_concurrency, true}
+            ]);
+        _Table ->
+            ok
+    end.
+
+-spec read_state_counter(atom()) -> non_neg_integer() | unavailable.
+read_state_counter(Key) ->
+    try ets:lookup(?READ_STATE_TABLE, Key) of
+        [{Key, Value}] when is_integer(Value), Value >= 0 -> Value;
+        _ -> unavailable
+    catch
+        error:badarg -> unavailable
+    end.
+
+-spec fetch_each_read_mark([{integer(), integer()}], read_marks()) -> read_marks().
+fetch_each_read_mark([], ReadMarks) ->
+    ReadMarks;
+fetch_each_read_mark([{UserId, ChannelId} = Key | Rest], ReadMarks) ->
+    case fetch_read_message_id(UserId, ChannelId) of
+        {ok, ReadMessageId} ->
+            fetch_each_read_mark(Rest, ReadMarks#{Key => ReadMessageId});
+        error ->
+            bump_read_state_counter(?CNT_READ_STATE_SKIPPED, length(Rest)),
+            ReadMarks
+    end.
+
+-spec fetch_read_message_id(integer(), integer()) -> {ok, non_neg_integer()} | error.
+fetch_read_message_id(UserId, ChannelId) ->
+    Request = #{
+        <<"type">> => <<"get_read_state">>,
+        <<"user_id">> => integer_to_binary(UserId),
+        <<"channel_id">> => integer_to_binary(ChannelId)
+    },
+    case read_state_call(Request) of
+        {ok, #{<<"last_message_id">> := LastMessageId}} ->
+            {ok, read_message_id(snowflake_id:parse_maybe(LastMessageId))};
+        {ok, _Data} ->
+            {ok, 0};
+        {error, Reason} ->
+            bump_read_state_counter(?CNT_READ_STATE_FAILURES, 1),
+            logger:debug("Push: read state fetch failed", #{
+                reason => Reason, user_id => UserId, channel_id => ChannelId
+            }),
+            error
+    end.
+
+-spec read_state_call(map()) -> {ok, term()} | {error, term()}.
+read_state_call(Request) ->
+    try
+        rpc_client:call(Request, ?READ_STATE_FETCH_TIMEOUT_MS)
+    catch
+        Class:Reason -> {error, {Class, Reason}}
+    end.
+
+-spec read_message_id(integer() | undefined) -> non_neg_integer().
+read_message_id(MessageId) when is_integer(MessageId), MessageId > 0 -> MessageId;
+read_message_id(_MessageId) -> 0.
+
+-spec do_handle_message_create_context(push_message_params:context()) -> ok.
+do_handle_message_create_context(Context) ->
     #{
         message_data := MessageData,
         user_ids := UserIds,
@@ -360,158 +485,59 @@ do_handle_message_create_context(Context, State) ->
         channel_id => ChannelId,
         eligible_count => length(EligibleUsers)
     }),
-    route_partitioned_users(
-        split_for_delivery(EligibleUsers),
-        MessageData,
+    publish_eligible_users(
+        EligibleUsers,
+        push_eligibility_checks:strip_thread_eligibility(MessageData),
         MarkdownContext,
         GuildId,
         ChannelId,
         MessageId,
         GuildName,
-        ChannelName,
-        State
+        ChannelName
     ).
 
--spec split_for_delivery([integer()]) -> {non_neg_integer(), [integer()], [integer()]}.
-split_for_delivery(UserIds) ->
-    Config = push_delivery_config:config(),
-    {ServiceUsers, GatewayUsers} = push_delivery_config:partition_users(Config, UserIds),
-    {maps:get(config_version, Config), ServiceUsers, GatewayUsers}.
-
--spec route_partitioned_users(
-    {non_neg_integer(), [integer()], [integer()]},
-    map(),
-    map(),
-    integer(),
-    integer(),
-    integer(),
-    binary() | undefined,
-    binary() | undefined,
-    worker_state()
-) -> ok.
-route_partitioned_users(
-    {ConfigVersion, ServiceUsers, GatewayUsers},
-    MessageData,
-    MarkdownContext,
-    GuildId,
-    ChannelId,
-    MessageId,
-    GuildName,
-    ChannelName,
-    State
-) ->
-    ok = route_service_users(
-        ServiceUsers,
-        ConfigVersion,
-        MessageData,
-        MarkdownContext,
-        GuildId,
-        ChannelId,
-        MessageId,
-        GuildName,
-        ChannelName,
-        State
-    ),
-    count_gateway_users(length(GatewayUsers)),
-    dispatch_if_eligible(
-        GatewayUsers,
-        MessageData,
-        MarkdownContext,
-        GuildId,
-        ChannelId,
-        MessageId,
-        GuildName,
-        ChannelName,
-        State
-    ).
-
--spec route_service_users(
+-spec publish_eligible_users(
     [integer()],
-    non_neg_integer(),
     map(),
     map(),
     integer(),
     integer(),
     integer(),
     binary() | undefined,
-    binary() | undefined,
-    worker_state()
+    binary() | undefined
 ) -> ok.
-route_service_users(
+publish_eligible_users(
     [],
-    _ConfigVersion,
     _MessageData,
     _MarkdownContext,
     _GuildId,
     _ChannelId,
     _MessageId,
     _GuildName,
-    _ChannelName,
-    _State
+    _ChannelName
 ) ->
     ok;
-route_service_users(
-    ServiceUsers,
-    ConfigVersion,
+publish_eligible_users(
+    EligibleUsers,
     MessageData,
     MarkdownContext,
     GuildId,
     ChannelId,
     MessageId,
     GuildName,
-    ChannelName,
-    State
+    ChannelName
 ) ->
-    Fallback = fun(RemainingUsers) ->
-        dispatch_if_eligible(
-            RemainingUsers,
-            MessageData,
-            MarkdownContext,
-            GuildId,
-            ChannelId,
-            MessageId,
-            GuildName,
-            ChannelName,
-            State
-        )
-    end,
-    case
-        push_job_publisher:publish_message(
-            ServiceUsers,
-            MessageData,
-            MarkdownContext,
-            GuildId,
-            ChannelId,
-            MessageId,
-            GuildName,
-            ChannelName,
-            ConfigVersion,
-            Fallback
-        )
-    of
-        ok ->
-            bump_counter(?CNT_GATE_SERVICE_USERS, length(ServiceUsers)),
-            bump_counter(?CNT_GATE_JOBS_PUBLISHED);
-        {error, _Reason} ->
-            bump_counter(?CNT_GATE_PUBLISH_FAILED),
-            dispatch_if_eligible(
-                ServiceUsers,
-                MessageData,
-                MarkdownContext,
-                GuildId,
-                ChannelId,
-                MessageId,
-                GuildName,
-                ChannelName,
-                State
-            )
-    end.
-
--spec count_gateway_users(non_neg_integer()) -> ok.
-count_gateway_users(0) ->
-    ok;
-count_gateway_users(Count) ->
-    bump_counter(?CNT_GATE_GATEWAY_USERS, Count).
+    _ = push_job_publisher:publish_message(
+        EligibleUsers,
+        MessageData,
+        MarkdownContext,
+        GuildId,
+        ChannelId,
+        MessageId,
+        GuildName,
+        ChannelName
+    ),
+    ok.
 
 -spec filter_eligible_users(
     [integer()],
@@ -738,81 +764,6 @@ blocked_ids_counters() ->
         blocked_ids_budget_exhausted => read_counter(?CNT_BUDGET_EXHAUSTED)
     }.
 
--spec dispatch_if_eligible(
-    [integer()],
-    map(),
-    map(),
-    integer(),
-    integer(),
-    integer(),
-    binary() | undefined,
-    binary() | undefined,
-    worker_state()
-) -> ok.
-dispatch_if_eligible(
-    [],
-    _MessageData,
-    _MarkdownContext,
-    _GuildId,
-    _ChannelId,
-    _MessageId,
-    _GuildName,
-    _ChannelName,
-    _State
-) ->
-    ok;
-dispatch_if_eligible(
-    EligibleUsers,
-    MessageData,
-    MarkdownContext,
-    GuildId,
-    ChannelId,
-    MessageId,
-    GuildName,
-    ChannelName,
-    State
-) ->
-    BadgeCountsTtl = maps:get(badge_counts_ttl_seconds, State),
-    case
-        push_dispatcher:enqueue_send_notifications(
-            EligibleUsers,
-            MessageData,
-            MarkdownContext,
-            GuildId,
-            ChannelId,
-            MessageId,
-            GuildName,
-            ChannelName,
-            BadgeCountsTtl
-        )
-    of
-        ok ->
-            ok;
-        dropped ->
-            EligibleCount = length(EligibleUsers),
-            count_dispatch_dropped(EligibleCount),
-            log_dispatch_drop(
-                loss_logging_enabled(), MessageId, ChannelId, GuildId, EligibleCount
-            ),
-            ok
-    end.
-
--spec log_dispatch_drop(boolean(), integer(), integer(), integer(), non_neg_integer()) -> ok.
-log_dispatch_drop(true, MessageId, ChannelId, GuildId, EligibleCount) ->
-    logger:error("Push: dispatcher saturated, dropping notification job", #{
-        message_id => MessageId,
-        channel_id => ChannelId,
-        guild_id => GuildId,
-        eligible_count => EligibleCount
-    });
-log_dispatch_drop(false, MessageId, ChannelId, GuildId, EligibleCount) ->
-    logger:debug("Push: dispatcher saturated, dropping notification job", #{
-        message_id => MessageId,
-        channel_id => ChannelId,
-        guild_id => GuildId,
-        eligible_count => EligibleCount
-    }).
-
 -spec handle_sync_user_blocked_ids(integer(), term(), state()) -> {noreply, state()}.
 handle_sync_user_blocked_ids(UserId, BlockedIds, State) ->
     case push_normalize:integer_list(BlockedIds) of
@@ -825,83 +776,15 @@ handle_sync_user_blocked_ids(UserId, BlockedIds, State) ->
 
 -spec handle_message_create_cast(map(), state()) -> {noreply, state()}.
 handle_message_create_cast(Params, State) ->
-    BadgeCountsTtl = maps:get(badge_counts_ttl_seconds, State),
-    WorkerState = #{badge_counts_ttl_seconds => BadgeCountsTtl},
-    SpawnResult = maybe_spawn_push_worker(fun() ->
-        do_handle_message_create(Params, WorkerState)
-    end),
+    SpawnResult = maybe_spawn_push_worker(fun() -> do_handle_message_create(Params) end),
     log_message_worker_drop(SpawnResult, Params),
     {noreply, State}.
 
 -spec handle_clear_channel_notifications(integer(), integer(), integer(), state()) ->
     {noreply, state()}.
 handle_clear_channel_notifications(UserId, ChannelId, MessageId, State) ->
-    case split_for_delivery([UserId]) of
-        {ConfigVersion, [UserId], []} ->
-            clear_via_service(UserId, ChannelId, MessageId, ConfigVersion, State);
-        {_ConfigVersion, _ServiceUsers, _GatewayUsers} ->
-            clear_via_dispatcher(UserId, ChannelId, MessageId, State)
-    end.
-
--spec clear_via_service(integer(), integer(), integer(), non_neg_integer(), state()) ->
-    {noreply, state()}.
-clear_via_service(UserId, ChannelId, MessageId, ConfigVersion, State) ->
-    Fallback = fun(_UserIds) -> clear_via_dispatcher(UserId, ChannelId, MessageId, State) end,
-    case
-        push_job_publisher:publish_clear(UserId, ChannelId, MessageId, ConfigVersion, Fallback)
-    of
-        ok ->
-            bump_counter(?CNT_GATE_JOBS_PUBLISHED),
-            {noreply, State};
-        {error, _Reason} ->
-            bump_counter(?CNT_GATE_PUBLISH_FAILED),
-            clear_via_dispatcher(UserId, ChannelId, MessageId, State)
-    end.
-
--spec clear_via_dispatcher(integer(), integer(), integer(), state()) -> {noreply, state()}.
-clear_via_dispatcher(UserId, ChannelId, MessageId, State) ->
-    clear_via_dispatcher(UserId, ChannelId, MessageId, 0, State).
-
--spec clear_via_dispatcher(
-    integer(), integer(), integer(), non_neg_integer(), state()
-) -> {noreply, state()}.
-clear_via_dispatcher(UserId, ChannelId, MessageId, Attempt, State) ->
-    BadgeCountsTtl = maps:get(badge_counts_ttl_seconds, State),
-    case
-        push_dispatcher:enqueue_clear_notifications(
-            UserId, ChannelId, MessageId, BadgeCountsTtl
-        )
-    of
-        ok ->
-            ok;
-        dropped ->
-            retry_or_drop_clear(UserId, ChannelId, MessageId, Attempt)
-    end,
+    _ = push_job_publisher:publish_clear(UserId, ChannelId, MessageId),
     {noreply, State}.
-
--spec retry_or_drop_clear(integer(), integer(), integer(), non_neg_integer()) -> ok.
-retry_or_drop_clear(UserId, ChannelId, MessageId, Attempt) when
-    Attempt < ?CLEAR_RETRY_ATTEMPTS
-->
-    bump_counter(?CNT_CLEAR_RETRIED),
-    Delay = ?CLEAR_RETRY_BASE_MS bsl Attempt,
-    _ = erlang:send_after(
-        Delay, self(), {retry_clear_notifications, UserId, ChannelId, MessageId, Attempt + 1}
-    ),
-    ok;
-retry_or_drop_clear(UserId, ChannelId, MessageId, _Attempt) ->
-    count_clear_dropped(),
-    log_clear_drop(loss_logging_enabled(), UserId, ChannelId, MessageId).
-
--spec log_clear_drop(boolean(), integer(), integer(), integer()) -> ok.
-log_clear_drop(true, UserId, ChannelId, MessageId) ->
-    logger:warning("Push: dispatcher saturated, dropping clear notification job", #{
-        user_id => UserId, channel_id => ChannelId, message_id => MessageId
-    });
-log_clear_drop(false, UserId, ChannelId, MessageId) ->
-    logger:debug("Push: dispatcher saturated, dropping clear notification job", #{
-        user_id => UserId, channel_id => ChannelId, message_id => MessageId
-    }).
 
 -spec log_message_worker_drop(ok | dropped, map()) -> ok.
 log_message_worker_drop(ok, _Params) ->
@@ -928,59 +811,18 @@ log_worker_pool_drop(false, MessageId, ChannelId) ->
 -spec cache_stats_with_counters() -> map().
 cache_stats_with_counters() ->
     Base = maps:merge(push_ets_cache:cache_stats(), blocked_ids_counters()),
-    WithLossCounters = maps:merge(Base, push_loss_counters()),
-    maps:merge(WithLossCounters, delivery_gate_counters()).
-
--spec delivery_gate_counters() -> map().
-delivery_gate_counters() ->
-    case counter_table_status() of
-        live -> live_delivery_gate_counters();
-        unavailable -> #{}
-    end.
-
--spec live_delivery_gate_counters() -> map().
-live_delivery_gate_counters() ->
-    #{
-        delivery_gate_service_users => counter_or_zero(?CNT_GATE_SERVICE_USERS),
-        delivery_gate_gateway_users => counter_or_zero(?CNT_GATE_GATEWAY_USERS),
-        delivery_gate_jobs_published => counter_or_zero(?CNT_GATE_JOBS_PUBLISHED),
-        delivery_gate_publish_failed => counter_or_zero(?CNT_GATE_PUBLISH_FAILED)
-    }.
-
--spec counter_or_zero(atom()) -> non_neg_integer().
-counter_or_zero(Key) ->
-    case read_counter(Key) of
-        Value when is_integer(Value) -> Value;
-        unavailable -> 0
-    end.
+    maps:merge(Base, push_loss_counters()).
 
 -spec push_loss_counters() -> map().
 push_loss_counters() ->
     #{
         counters => counter_table_status(),
         worker_pool_dropped => read_counter(?CNT_WORKER_POOL),
-        dispatch_dropped => read_counter(?CNT_DISPATCH_DROPPED),
-        dispatch_dropped_users => read_counter(?CNT_DISPATCH_DROPPED_USERS),
-        clear_dispatch_dropped => read_counter(?CNT_CLEAR_DROPPED),
-        dispatcher_queue_full => read_counter(?CNT_QUEUE_FULL),
-        dispatcher_invalid_job => read_counter(?CNT_INVALID_JOB),
-        dispatcher_enqueue_timeout => read_counter(?CNT_ENQUEUE_TIMEOUT),
-        dispatcher_enqueue_failed => read_counter(?CNT_ENQUEUE_FAILED),
-        dispatcher_job_crashed => read_counter(?CNT_JOB_CRASHED),
-        dispatcher_worker_died => read_counter(?CNT_WORKER_DIED),
-        dispatcher_restarts => read_counter(?CNT_DISPATCHER_RESTARTS),
-        dispatcher_restart_discarded => read_counter(?CNT_RESTART_DISCARDED),
-        dispatcher_queue_backlog => dispatcher_queue_backlog()
+        read_state_suppressed => read_state_counter(?CNT_READ_STATE_SUPPRESSED),
+        read_state_fetch_failures => read_state_counter(?CNT_READ_STATE_FAILURES),
+        read_state_fetch_skipped => read_state_counter(?CNT_READ_STATE_SKIPPED),
+        read_state_fetches_in_flight => read_state_counter(?READ_STATE_FETCH_SLOTS)
     }.
-
--spec count_dispatch_dropped(non_neg_integer()) -> ok.
-count_dispatch_dropped(EligibleCount) ->
-    bump_counter(?CNT_DISPATCH_DROPPED),
-    bump_counter(?CNT_DISPATCH_DROPPED_USERS, EligibleCount).
-
--spec count_clear_dropped() -> ok.
-count_clear_dropped() ->
-    bump_counter(?CNT_CLEAR_DROPPED).
 
 -spec counter_table_status() -> live | unavailable.
 counter_table_status() ->
@@ -988,19 +830,6 @@ counter_table_status() ->
         Size when is_integer(Size) -> live;
         _ -> unavailable
     end.
-
--spec dispatcher_queue_backlog() -> non_neg_integer() | unavailable.
-dispatcher_queue_backlog() ->
-    backlog(read_counter(?CNT_QUEUE_ENQUEUED), read_counter(?CNT_QUEUE_DEQUEUED)).
-
--spec backlog(non_neg_integer() | unavailable, non_neg_integer() | unavailable) ->
-    non_neg_integer() | unavailable.
-backlog(Enqueued, Dequeued) when is_integer(Enqueued), is_integer(Dequeued) ->
-    max(0, Enqueued - Dequeued);
-backlog(Enqueued, unavailable) when is_integer(Enqueued) ->
-    Enqueued;
-backlog(_Enqueued, _Dequeued) ->
-    unavailable.
 
 -spec loss_logging_enabled() -> boolean().
 loss_logging_enabled() ->
@@ -1073,43 +902,6 @@ maybe_spawn_push_worker(Fun) ->
 schedule_eviction() ->
     erlang:send_after(?EVICT_INTERVAL_MS, self(), evict_caches).
 
--spec maybe_warn_vapid_misconfigured(boolean()) -> ok.
-maybe_warn_vapid_misconfigured(true) ->
-    Public = fluxer_gateway_env:get(vapid_public_key),
-    Private = fluxer_gateway_env:get(vapid_private_key),
-    case {Public, Private} of
-        {Public0, Private0} when
-            is_binary(Public0),
-            is_binary(Private0),
-            byte_size(Public0) > 0,
-            byte_size(Private0) > 0
-        ->
-            warn_unless_vapid_pair_valid(Public0, Private0);
-        _ ->
-            logger:error(
-                "Push: push_enabled=true but VAPID keys are missing or empty; "
-                "all web push notifications will be silently dropped"
-            ),
-            ok
-    end;
-maybe_warn_vapid_misconfigured(_) ->
-    ok.
-
--spec warn_unless_vapid_pair_valid(binary(), binary()) -> ok.
-warn_unless_vapid_pair_valid(Public, Private) ->
-    try
-        push_utils:assert_vapid_pair(Public, Private)
-    catch
-        _:Reason ->
-            logger:error(
-                "Push: FLUXER_VAPID_PUBLIC_KEY and FLUXER_VAPID_PRIVATE_KEY are not a "
-                "valid base64url P-256 pair; expected a 65-byte 0x04-prefixed point and "
-                "a 32-byte scalar; all web push notifications will be silently dropped",
-                #{reason => Reason}
-            ),
-            ok
-    end.
-
 -spec env_boolean(atom()) -> boolean().
 env_boolean(Key) ->
     case fluxer_gateway_env:get(Key) of
@@ -1121,13 +913,6 @@ env_boolean(Key) ->
 env_boolean(Key, Default) ->
     case fluxer_gateway_env:get(Key) of
         Value when is_boolean(Value) -> Value;
-        _ -> Default
-    end.
-
--spec env_non_neg_integer(atom(), non_neg_integer()) -> non_neg_integer().
-env_non_neg_integer(Key, Default) ->
-    case fluxer_gateway_env:get(Key) of
-        Value when is_integer(Value), Value >= 0 -> Value;
         _ -> Default
     end.
 
@@ -1150,38 +935,59 @@ sync_user_blocked_ids_local_updates_local_cache_test() ->
         ?assertEqual([20, 30], push_ets_cache:get_blocked_ids(10))
     end).
 
-invalidate_user_badge_counts_local_deletes_every_cached_entry_test() ->
+a_message_publishes_every_eligible_recipient_in_one_call_test() ->
     push_ets_cache:init(),
-    ok = seed_badge_count(10, 5, 1000),
-    ok = seed_badge_count(11, 7, 1000),
-    ?assertEqual({5, 1000}, push_ets_cache:get_badge_count(10)),
-    ?assertEqual({7, 1000}, push_ets_cache:get_badge_count(11)),
-    with_registered_push(fun() ->
-        ok = invalidate_user_badge_counts_local([10, 11])
-    end),
-    ?assertEqual(undefined, push_ets_cache:get_badge_count(10)),
-    ?assertEqual(undefined, push_ets_cache:get_badge_count(11)).
+    lists:foreach(fun(UserId) -> ok = push_ets_cache:put_blocked_ids(UserId, []) end, [51, 52]),
+    ok = push_ets_cache:put_blocked_ids(53, [7]),
+    Self = self(),
+    ok = meck:new(push_job_publisher, [passthrough, no_link]),
+    try
+        ok = meck:expect(
+            push_job_publisher,
+            publish_message,
+            fun(UserIds, _Data, _Markdown, GuildId, ChannelId, MessageId, _GName, _CName) ->
+                Self ! {published, UserIds, GuildId, ChannelId, MessageId},
+                ok
+            end
+        ),
+        ok = do_handle_message_create(#{
+            message_data => #{
+                <<"channel_id">> => <<"123">>,
+                <<"id">> => <<"456">>,
+                <<"channel_type">> => 1
+            },
+            user_ids => [51, 52, 53],
+            guild_id => 0,
+            author_id => 7
+        }),
+        receive
+            {published, UserIds, GuildId, ChannelId, MessageId} ->
+                ?assertEqual({[51, 52], 0, 123, 456}, {UserIds, GuildId, ChannelId, MessageId})
+        after 2000 -> erlang:error(nothing_published)
+        end
+    after
+        meck:unload(push_job_publisher)
+    end.
 
-invalidate_user_badge_counts_local_ignores_untyped_ids_test() ->
+a_message_without_eligible_recipients_publishes_nothing_test() ->
     push_ets_cache:init(),
-    ok = seed_badge_count(12, 5, 1000),
-    with_registered_push(fun() ->
-        ok = invalidate_user_badge_counts_local([<<"12">>])
-    end),
-    ?assertEqual({5, 1000}, push_ets_cache:get_badge_count(12)),
-    push_ets_cache:delete_badge_count(12).
-
-invalidate_user_subscriptions_local_deletes_local_cache_test() ->
-    push_ets_cache:init(),
-    Subscriptions = [#{<<"endpoint">> => <<"test">>}],
-    ok = push_ets_cache:put_subscriptions(
-        10, Subscriptions, push_ets_cache:reserve_subscriptions([10])
-    ),
-    ?assertEqual(Subscriptions, push_ets_cache:get_subscriptions(10)),
-    with_registered_push(fun() ->
-        ok = invalidate_user_subscriptions_local(10),
-        ?assertEqual(undefined, push_ets_cache:get_subscriptions(10))
-    end).
+    ok = push_ets_cache:put_blocked_ids(61, [7]),
+    ok = meck:new(push_job_publisher, [passthrough, no_link]),
+    try
+        ok = do_handle_message_create(#{
+            message_data => #{
+                <<"channel_id">> => <<"123">>,
+                <<"id">> => <<"456">>,
+                <<"channel_type">> => 1
+            },
+            user_ids => [61],
+            guild_id => 0,
+            author_id => 7
+        }),
+        ?assertEqual(0, meck:num_calls(push_job_publisher, publish_message, '_'))
+    after
+        meck:unload(push_job_publisher)
+    end.
 
 filter_eligible_users_fetches_large_metadata_once_test() ->
     push_ets_cache:init(),
@@ -1214,6 +1020,208 @@ filter_eligible_users_fetches_large_metadata_once_test() ->
             fun(UserId) -> push_ets_cache:delete_user_guild_settings(UserId, 42) end,
             [1, 2, 3]
         )
+    end.
+
+a_dm_buffered_past_the_outbox_window_and_read_since_is_not_published_test() ->
+    Suppressed = read_counter_value(?CNT_READ_STATE_SUPPRESSED),
+    Published = with_buffered_dms(
+        [{stale_buffered_at(), 123, 456}], read_through(#{123 => <<"456">>})
+    ),
+    ?assertEqual({0, 1}, Published),
+    ?assertEqual(Suppressed + 1, read_counter_value(?CNT_READ_STATE_SUPPRESSED)).
+
+a_dm_buffered_past_the_outbox_window_and_still_unread_is_published_test() ->
+    Published = with_buffered_dms(
+        [{stale_buffered_at(), 123, 456}], read_through(#{123 => <<"455">>})
+    ),
+    ?assertEqual({1, 1}, Published).
+
+a_dm_buffered_past_the_outbox_window_without_a_read_state_is_published_test() ->
+    Published = with_buffered_dms(
+        [{stale_buffered_at(), 123, 456}], fun(_ChannelId) ->
+            {ok, #{<<"last_message_id">> => null}}
+        end
+    ),
+    ?assertEqual({1, 1}, Published).
+
+a_dm_buffered_past_the_outbox_window_is_published_when_the_read_state_fetch_fails_test() ->
+    Published = with_buffered_dms(
+        [{stale_buffered_at(), 123, 456}], fun(_ChannelId) -> {error, timeout} end
+    ),
+    ?assertEqual({1, 1}, Published).
+
+a_dm_buffered_within_the_outbox_window_is_published_without_a_read_state_fetch_test() ->
+    Published = with_buffered_dms(
+        [{erlang:system_time(millisecond), 123, 456}], fun(_ChannelId) ->
+            {error, unexpected}
+        end
+    ),
+    ?assertEqual({1, 0}, Published).
+
+a_buffered_dm_without_a_buffer_time_is_published_without_a_read_state_fetch_test() ->
+    Published = with_buffered_dms(
+        [{undefined, 123, 456}], fun(_ChannelId) -> {error, unexpected} end
+    ),
+    ?assertEqual({1, 0}, Published).
+
+a_dm_buffered_past_the_outbox_window_is_published_without_a_fetch_when_all_slots_are_taken_test() ->
+    Skipped = read_counter_value(?CNT_READ_STATE_SKIPPED),
+    ok = ensure_read_state_table(),
+    true = ets:insert(?READ_STATE_TABLE, {?READ_STATE_FETCH_SLOTS, ?MAX_READ_STATE_FETCHES}),
+    try
+        Published = with_buffered_dm_push(read_through(#{123 => <<"456">>}), fun() ->
+            ok = handle_buffered_message_creates([
+                buffered_dm_params(stale_buffered_at(), 123, 456)
+            ]),
+            length(published_message_ids(0))
+        end),
+        ?assertEqual({1, 0}, Published),
+        ?assertEqual(?MAX_READ_STATE_FETCHES, read_state_counter(?READ_STATE_FETCH_SLOTS))
+    after
+        true = ets:insert(?READ_STATE_TABLE, {?READ_STATE_FETCH_SLOTS, 0})
+    end,
+    ?assertEqual(Skipped + 1, read_counter_value(?CNT_READ_STATE_SKIPPED)).
+
+a_full_buffer_of_read_dms_is_not_published_by_its_own_flush_test() ->
+    Entries = [{stale_buffered_at(), 123, 1000 + N} || N <- lists:seq(1, 128)],
+    Published = with_buffered_dms(Entries, fun(123) ->
+        timer:sleep(50),
+        {ok, #{<<"last_message_id">> => <<"999999">>}}
+    end),
+    ?assertEqual({0, 1}, Published).
+
+a_flush_fetches_each_channel_read_state_once_test() ->
+    Entries = [
+        {stale_buffered_at(), 123, 456},
+        {stale_buffered_at(), 124, 460},
+        {stale_buffered_at(), 123, 470}
+    ],
+    Published = with_buffered_dms(Entries, read_through(#{123 => <<"456">>, 124 => <<"459">>})),
+    ?assertEqual({2, 2}, Published).
+
+a_failed_read_state_fetch_publishes_the_rest_of_the_flush_without_fetching_test() ->
+    Entries = [
+        {stale_buffered_at(), 123, 456},
+        {stale_buffered_at(), 124, 460},
+        {stale_buffered_at(), 125, 470}
+    ],
+    Skipped = read_counter_value(?CNT_READ_STATE_SKIPPED),
+    Published = with_buffered_dms(Entries, fun(_ChannelId) -> {error, timeout} end),
+    ?assertEqual({3, 1}, Published),
+    ?assertEqual(Skipped + 2, read_counter_value(?CNT_READ_STATE_SKIPPED)).
+
+a_flush_publishes_fresh_and_unread_stale_dms_and_drops_read_ones_test() ->
+    Stale = stale_buffered_at(),
+    Params = [
+        buffered_dm_params(erlang:system_time(millisecond), 123, 500),
+        buffered_dm_params(Stale, 124, 456),
+        buffered_dm_params(Stale, 125, 470)
+    ],
+    {Published, Requests} = with_buffered_dm_push(
+        read_through(#{124 => <<"456">>, 125 => <<"469">>}),
+        fun() ->
+            ok = handle_buffered_message_creates(Params),
+            lists:sort(published_message_ids(1000))
+        end
+    ),
+    ?assertEqual([470, 500], Published),
+    ?assertEqual(2, Requests).
+
+stale_buffered_at() ->
+    erlang:system_time(millisecond) - push_outbox:max_age_ms() - 1000.
+
+read_through(ReadMessageIds) ->
+    fun(ChannelId) -> {ok, #{<<"last_message_id">> => maps:get(ChannelId, ReadMessageIds)}} end.
+
+read_counter_value(Key) ->
+    case read_state_counter(Key) of
+        Value when is_integer(Value) -> Value;
+        unavailable -> 0
+    end.
+
+with_buffered_dms(Entries, ReadStateReply) ->
+    with_buffered_dm_push(ReadStateReply, fun() ->
+        {Stale, Fresh} = split_stale_buffered([
+            buffered_dm_params(BufferedAt, ChannelId, MessageId)
+         || {BufferedAt, ChannelId, MessageId} <- Entries
+        ]),
+        lists:foreach(fun handle_message_create/1, Fresh),
+        ok = spawn_read_state_check(Stale),
+        ok = wait_for_read_state_fetches(100),
+        length(published_message_ids(0))
+    end).
+
+wait_for_read_state_fetches(0) ->
+    erlang:error(read_state_fetch_still_in_flight);
+wait_for_read_state_fetches(Attempts) ->
+    case read_state_counter(?READ_STATE_FETCH_SLOTS) of
+        InFlight when is_integer(InFlight), InFlight > 0 ->
+            timer:sleep(20),
+            wait_for_read_state_fetches(Attempts - 1);
+        _ ->
+            ok
+    end.
+
+with_buffered_dm_push(ReadStateReply, Fun) ->
+    ok = push_worker_pool:init_counter(),
+    Self = self(),
+    Modules = [fluxer_gateway_env, gateway_node_router, rpc_client],
+    lists:foreach(fun(Module) -> ok = meck:new(Module, [passthrough, no_link]) end, Modules),
+    try
+        ok = meck:expect(fluxer_gateway_env, get, fun
+            (push_enabled) -> true;
+            (Key) -> meck:passthrough([Key])
+        end),
+        ok = meck:expect(gateway_node_router, owner_node_result, fun(_Key, push) ->
+            {ok, node()}
+        end),
+        ok = meck:expect(rpc_client, call, fun(Request, ?READ_STATE_FETCH_TIMEOUT_MS) ->
+            Self ! {read_state_request, Request},
+            ReadStateReply(binary_to_integer(maps:get(<<"channel_id">>, Request)))
+        end),
+        Published = with_registered_push(Fun),
+        Requests = meck:num_calls(rpc_client, call, ['_', '_']),
+        assert_read_state_requests(Requests),
+        {Published, Requests}
+    after
+        lists:foreach(fun meck:unload/1, Modules)
+    end.
+
+published_message_ids(Timeout) ->
+    receive
+        {'$gen_cast', {handle_message_create, Params}} ->
+            ?assertNot(maps:is_key(buffered_at, Params)),
+            MessageData = maps:get(message_data, Params),
+            [
+                binary_to_integer(maps:get(<<"id">>, MessageData))
+                | published_message_ids(Timeout)
+            ]
+    after Timeout -> []
+    end.
+
+buffered_dm_params(BufferedAt, ChannelId, MessageId) ->
+    #{
+        message_data => #{
+            <<"channel_id">> => integer_to_binary(ChannelId),
+            <<"id">> => integer_to_binary(MessageId),
+            <<"channel_type">> => 1
+        },
+        user_ids => [71],
+        guild_id => 0,
+        author_id => 7,
+        buffered_at => BufferedAt
+    }.
+
+assert_read_state_requests(0) ->
+    ok;
+assert_read_state_requests(Count) ->
+    receive
+        {read_state_request, Request} ->
+            ?assertMatch(
+                #{<<"type">> := <<"get_read_state">>, <<"user_id">> := <<"71">>}, Request
+            ),
+            assert_read_state_requests(Count - 1)
+    after 0 -> erlang:error(no_read_state_request)
     end.
 
 blocked_ids_fetch_defaults_are_bounded_test() ->
@@ -1299,65 +1307,31 @@ assert_cache_stats_expose_blocked_ids() ->
 push_loss_counters_expose_every_counter_push_writes_test() ->
     with_counter_table(fun() ->
         ok = log_message_worker_drop(dropped, #{}),
-        ok = count_dispatch_dropped(12),
-        ok = count_clear_dropped(),
         Stats = push_loss_counters(),
         ?assertEqual(live, maps:get(counters, Stats)),
-        ?assertEqual(1, maps:get(worker_pool_dropped, Stats)),
-        ?assertEqual(1, maps:get(dispatch_dropped, Stats)),
-        ?assertEqual(12, maps:get(dispatch_dropped_users, Stats)),
-        ?assertEqual(1, maps:get(clear_dispatch_dropped, Stats))
+        ?assertEqual(1, maps:get(worker_pool_dropped, Stats))
     end).
 
 push_loss_counters_are_unavailable_without_the_shared_table_test() ->
     delete_counter_table(),
     Stats = push_loss_counters(),
     ?assertEqual(unavailable, maps:get(counters, Stats)),
-    ?assertEqual(unavailable, maps:get(worker_pool_dropped, Stats)),
-    ?assertEqual(unavailable, maps:get(dispatch_dropped, Stats)),
-    ?assertEqual(unavailable, maps:get(dispatcher_enqueue_timeout, Stats)),
-    ?assertEqual(unavailable, maps:get(dispatcher_queue_backlog, Stats)).
+    ?assertEqual(unavailable, maps:get(worker_pool_dropped, Stats)).
 
 push_loss_counters_keep_a_genuine_zero_distinct_from_absent_test() ->
     with_counter_table(fun() ->
-        ok = count_dispatch_dropped(0),
-        Stats = push_loss_counters(),
-        ?assertEqual(1, maps:get(dispatch_dropped, Stats)),
-        ?assertEqual(0, maps:get(dispatch_dropped_users, Stats)),
-        ?assertEqual(unavailable, maps:get(clear_dispatch_dropped, Stats))
+        ?assertEqual(unavailable, maps:get(worker_pool_dropped, push_loss_counters())),
+        ok = bump_counter(?CNT_WORKER_POOL, 0),
+        ?assertEqual(0, maps:get(worker_pool_dropped, push_loss_counters()))
     end).
 
-dispatcher_queue_backlog_survives_an_untrappable_dispatcher_kill_test() ->
-    with_counter_table(fun() ->
-        ?assertEqual(unavailable, dispatcher_queue_backlog()),
-        ok = bump_counter(?CNT_QUEUE_ENQUEUED, 9),
-        ?assertEqual(9, dispatcher_queue_backlog()),
-        ok = bump_counter(?CNT_QUEUE_DEQUEUED, 4),
-        ?assertEqual(5, dispatcher_queue_backlog())
-    end).
-
-cache_stats_with_counters_carries_the_loss_surface_test() ->
+cache_stats_with_counters_includes_the_loss_surface_test() ->
     push_ets_cache:init(),
     with_counter_table(fun() ->
         Stats = cache_stats_with_counters(),
         lists:foreach(
             fun(Key) -> ?assertEqual(true, maps:is_key(Key, Stats)) end,
-            [
-                blocked_ids_size,
-                blocked_ids_suppressed,
-                counters,
-                worker_pool_dropped,
-                dispatch_dropped,
-                dispatch_dropped_users,
-                clear_dispatch_dropped,
-                dispatcher_queue_full,
-                dispatcher_enqueue_timeout,
-                dispatcher_job_crashed,
-                dispatcher_worker_died,
-                dispatcher_restarts,
-                dispatcher_restart_discarded,
-                dispatcher_queue_backlog
-            ]
+            [blocked_ids_size, blocked_ids_suppressed, counters, worker_pool_dropped]
         )
     end).
 
@@ -1376,11 +1350,6 @@ delete_counter_table() ->
     catch
         error:badarg -> ok
     end.
-
-seed_badge_count(UserId, Count, CachedAt) ->
-    push_ets_cache:put_badge_count(
-        UserId, Count, CachedAt, push_ets_cache:reserve_badge_counts([UserId])
-    ).
 
 seed_fetched_blocked_ids(UserId, BlockedIds) ->
     push_ets_cache:put_blocked_ids_fetched(

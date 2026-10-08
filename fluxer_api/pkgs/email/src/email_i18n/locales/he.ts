@@ -3,9 +3,17 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
-	"account_disabled_suspicious": {
-		"subject": "חשבון ה-{product_name} שלכם הושבת זמנית",
-		"body": "שלום {username},\n\nהשבתנו זמנית את חשבון ה-{product_name} שלכם מכיוון שזיהינו פעילות חשודה.\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}}\n}\n\nכדי לשחזר את הגישה לחשבון, תצטרכו לאפס את הסיסמה:\n\n{forgotUrl}\n\nלאחר שתאפסו את הסיסמה, תוכלו להתחבר שוב.\n\nאם אתם חושבים שזו טעות, צרו קשר עם צוות התמיכה שלנו.\n\nצוות הבטיחות של {product_name}"
+	"account_deletion_cancelled": {
+		"subject": "מחיקת חשבון ה-{product_name} שלכם בוטלה",
+		"body": "שלום {username},\n\nהמחיקה המתוזמנת של חשבון ה-{product_name} שלכם בוטלה. החשבון שלכם לא יימחק.\n\nאם יש לכם שאלות, צרו קשר עם {safety_email}.\n\nצוות {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "חשבון ה-{product_name} שלכם יימחק עקב חוסר פעילות",
+		"body": "שלום {username},\n\nחשבון ה-{product_name} שלכם לא היה פעיל זמן רב, ולכן הוא מתוכנן להימחק לצמיתות בתאריך:\n\n{deletionDate, date, full} בשעה {deletionDate, time, short}{reason, select, null {} other {\n\nסיבה: {reason}}}\n\nאם ברצונכם לשמור על החשבון, צרו קשר עם {safety_email} מכתובת האימייל הזו לפני תאריך זה.\n\nצוות {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "מחיקת חשבון ה-{product_name} שלכם מתוזמנת",
+		"body": "שלום {username},\n\nבהתאם לבקשתכם, חשבון ה-{product_name} שלכם מתוכנן להימחק לצמיתות בתאריך:\n\n{deletionDate, date, full} בשעה {deletionDate, time, short}{reason, select, null {} other {\n\nסיבה: {reason}}}\n\nעד אז החשבון שלכם נעול. אם לא ביקשתם זאת, או שברצונכם לשמור על החשבון, צרו קשר עם {safety_email} מכתובת האימייל הזו לפני תאריך זה.\n\nצוות {product_name}"
 	},
 	"account_scheduled_deletion": {
 		"subject": "חשבון ה-{product_name} שלכם יימחק לצמיתות",
@@ -37,7 +45,7 @@ const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "האימייל שלכם ב-{product_name} שונה",
-		"body": "שלום {username},\n\nכתובת האימייל בחשבון ה-{product_name} שלכם שונתה ל-{newEmail}.\n\nאם אתם ביצעתם שינוי זה, אין צורך בפעולה. אם לא, אתם יכולים לבטל את השינוי ולאבטח את חשבונכם באמצעות קישור זה:\n\n{revertUrl}\n\nפעולה זו תשחזר את האימייל הקודם שלכם, תנתק אתכם מכל המכשירים, תסיר מספרי טלפון מקושרים, תבטל את האימות הרב-שלבי (MFA), ותדרוש מכם להגדיר סיסמה חדשה.\n\nצוות הבטיחות של {product_name}"
+		"body": "שלום {username},\n\nכתובת האימייל בחשבון ה-{product_name} שלכם שונתה ל-{newEmail}.\n\nאם אתם ביצעתם שינוי זה, אין צורך בפעולה. אם לא, אתם יכולים לבטל את השינוי ולאבטח את חשבונכם באמצעות קישור זה:\n\n{revertUrl}\n\nפעולה זו תשחזר את האימייל הקודם שלכם, תנתק אתכם מכל המכשירים, תבטל את האימות הרב-שלבי (MFA), ותדרוש מכם להגדיר סיסמה חדשה.\n\nצוות הבטיחות של {product_name}"
 	},
 	"email_verification": {
 		"subject": "אימות האימייל שלכם ב-{product_name}",
@@ -65,7 +73,7 @@ const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "אישור שינוי הסיסמה שלכם ב-{product_name}",
-		"body": "שלום {username},\n\nקיבלנו בקשה לשינוי הסיסמה בחשבון ה-{product_name} שלכם.\n\nכדי לאשר שינוי זה, הזינו קוד זה באפליקציה:\n\n{code}\n\nקוד זה יפוג ב-{expiresAt}.\n\nאם לא ביקשתם זאת, ייתכן שלמישהו יש גישה לחשבונכם. שנו את הסיסמה שלכם מיד והפעילו אימות דו-שלבי.\n\nצוות {product_name}"
+		"body": "שלום {username},\n\nקיבלנו בקשה לשינוי הסיסמה בחשבון ה-{product_name} שלכם.\n\nכדי לאשר שינוי זה, הזינו קוד זה באפליקציה:\n\n{code}\n\nקוד זה יפוג בתאריך {expiresAt, date, full} בשעה {expiresAt, time, short}.\n\nאם לא ביקשתם זאת, ייתכן שלמישהו יש גישה לחשבונכם. שנו את הסיסמה שלכם מיד והפעילו אימות דו-שלבי.\n\nצוות {product_name}"
 	},
 	"password_reset": {
 		"subject": "איפוס הסיסמה שלכם ב-{product_name}",

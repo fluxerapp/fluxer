@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import type {ForwardDestination} from '@app/features/app/components/dialogs/shared/ForwardDefaultDestinations';
 import {MAX_FORWARD_DESTINATIONS} from '@app/features/app/components/dialogs/shared/ForwardDestinationSelection';
@@ -8,7 +9,6 @@ import {
 	type ForwardDestinationOption,
 	useForwardDestinations,
 } from '@app/features/app/components/dialogs/shared/UseForwardDestinations';
-import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {MessageCharacterCounter} from '@app/features/channel/components/MessageCharacterCounter';
@@ -22,6 +22,7 @@ import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexic
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {MessageForwardFailedModal} from '@app/features/messaging/components/alerts/MessageForwardFailedModal';
 import {showMessagingErrorModal} from '@app/features/messaging/components/alerts/MessagingErrorModalUtils';
+import {ForwardDestinationIcon} from '@app/features/messaging/components/modals/ForwardDestinationIcon';
 import {ForwardMessagePreview} from '@app/features/messaging/components/modals/ForwardMessagePreview';
 import modalStyles from '@app/features/messaging/components/modals/ForwardModal.module.css';
 import {shouldNavigateAfterForward} from '@app/features/messaging/components/modals/ForwardModalUtils';
@@ -31,7 +32,7 @@ import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegment
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/AutofocusUtils';
-import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import {Button} from '@app/features/ui/button/Button';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -39,17 +40,17 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Scroller} from '@app/features/ui/components/Scroller';
-import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import type {User} from '@app/features/user/models/User';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import Users from '@app/features/user/state/Users';
+import {blockIfAccountLimited, showAccountLimitedModal} from '@app/features/user/utils/AccountLimitUtils';
 import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {HashIcon, MagnifyingGlassIcon, NotePencilIcon, SmileyIcon, SpeakerHighIcon} from '@phosphor-icons/react';
+import {MagnifyingGlassIcon, SmileyIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {type MouseEvent, useCallback, useEffect, useId, useRef, useState} from 'react';
@@ -110,8 +111,6 @@ const SEND_SELECTED_COUNT_DESCRIPTOR = msg({
 		'Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.',
 });
 const logger = new Logger('ForwardModal');
-
-const DESTINATION_ICON_SIZE = 32;
 
 interface ForwardModalProps {
 	message: Message;
@@ -205,63 +204,6 @@ function insertForwardEmoji(handle: LexicalRichInputHandle | null, emoji: FlatEm
 	return handle.insertEmoji(emoji);
 }
 
-function renderForwardDestinationIcon(option: ForwardDestinationOption) {
-	if (option.user != null) {
-		return (
-			<div className={selectorStyles.avatar} data-flx="messaging.forward-modal.get-channel-icon.div">
-				<StatusAwareAvatar
-					user={option.user}
-					size={DESTINATION_ICON_SIZE}
-					data-flx="messaging.forward-modal.get-channel-icon.status-aware-avatar"
-				/>
-			</div>
-		);
-	}
-	const channel = option.channel;
-	if (channel == null) {
-		return null;
-	}
-	if (channel.type === ChannelTypes.DM_PERSONAL_NOTES) {
-		return (
-			<NotePencilIcon
-				className={selectorStyles.itemIcon}
-				weight="fill"
-				size={remFromPx(DESTINATION_ICON_SIZE)}
-				data-flx="messaging.forward-modal.get-channel-icon.note-pencil-icon"
-			/>
-		);
-	}
-	if (channel.type === ChannelTypes.GROUP_DM) {
-		return (
-			<div className={selectorStyles.avatar} data-flx="messaging.forward-modal.get-channel-icon.div--2">
-				<GroupDMAvatar
-					channel={channel}
-					size={DESTINATION_ICON_SIZE}
-					data-flx="messaging.forward-modal.get-channel-icon.group-dm-avatar"
-				/>
-			</div>
-		);
-	}
-	if (channel.type === ChannelTypes.GUILD_VOICE) {
-		return (
-			<SpeakerHighIcon
-				className={selectorStyles.itemIcon}
-				weight="fill"
-				size={remFromPx(DESTINATION_ICON_SIZE)}
-				data-flx="messaging.forward-modal.get-channel-icon.speaker-high-icon"
-			/>
-		);
-	}
-	return (
-		<HashIcon
-			className={selectorStyles.itemIcon}
-			weight="bold"
-			size={remFromPx(DESTINATION_ICON_SIZE)}
-			data-flx="messaging.forward-modal.get-channel-icon.hash-icon"
-		/>
-	);
-}
-
 const EMPTY_FORWARD_COMMENT_SEGMENTS: ReadonlyArray<MentionSegment> = Object.freeze([]);
 
 export const ForwardModal = observer(
@@ -270,10 +212,10 @@ export const ForwardModal = observer(
 		const {
 			composerChannel,
 			options,
-			searchQuery,
+			filterText,
 			selected,
 			selectedKeys,
-			setSearchQuery,
+			setFilterText,
 			slowmodeActiveSelectedOptions,
 			slowmodeEnabledSelectedOptions,
 			toggleDestination,
@@ -294,11 +236,11 @@ export const ForwardModal = observer(
 		const isMobileLayout = MobileLayout.enabled;
 		const shouldFocusSearch = !shouldDisableAutofocusOnMobile();
 		useEffect(() => {
-			if (searchQuery !== '' || shouldDisableAutofocusOnMobile()) {
+			if (filterText !== '' || shouldDisableAutofocusOnMobile()) {
 				return;
 			}
 			searchInputRef.current?.focus();
-		}, [searchQuery]);
+		}, [filterText]);
 		const handleOptionalMessageExceedsLimit = useCallback(() => {
 			showMessagingErrorModal({
 				title: i18n._(MESSAGE_IS_TOO_LONG_DESCRIPTOR),
@@ -331,6 +273,7 @@ export const ForwardModal = observer(
 		const isCommentCounterVisible = actualOptionalMessage.length > user.maxMessageLength * 0.8;
 		const handleForward = async (skipNavigation = false) => {
 			if (selected.length === 0) return;
+			if (blockIfAccountLimited()) return;
 			if (isForwarding) return;
 			if (isSendBlockedBySlowmode) return;
 			if (!isCommentComposerDisabled && isCommentOverLimit) {
@@ -364,6 +307,9 @@ export const ForwardModal = observer(
 					actualMessage,
 				);
 				if (!forwarded) {
+					if (Users.currentUser?.accountLimited === true) {
+						showAccountLimitedModal();
+					}
 					return;
 				}
 				ToastCommands.createToast({
@@ -390,6 +336,10 @@ export const ForwardModal = observer(
 				}
 			} catch (error) {
 				logger.error('Failed to forward message:', error);
+				if (failureCode(error)) {
+					showDmActionErrorModal(error);
+					return;
+				}
 				ModalCommands.push(
 					modal(() => (
 						<MessageForwardFailedModal data-flx="messaging.forward-modal.handle-forward.message-forward-failed-modal" />
@@ -411,8 +361,8 @@ export const ForwardModal = observer(
 						<Input
 							ref={searchInputRef}
 							type="text"
-							value={searchQuery}
-							onChange={(event) => setSearchQuery(event.target.value)}
+							value={filterText}
+							onChange={(event) => setFilterText(event.target.value)}
 							placeholder={i18n._(SEARCH_DESCRIPTOR)}
 							aria-label={i18n._(SEARCH_DESCRIPTOR)}
 							maxLength={100}
@@ -470,7 +420,10 @@ export const ForwardModal = observer(
 													data-flx="messaging.forward-modal.button"
 												>
 													<div className={selectorStyles.itemContent} data-flx="messaging.forward-modal.div--5">
-														{renderForwardDestinationIcon(option)}
+														<ForwardDestinationIcon
+															option={option}
+															data-flx="messaging.forward-modal.forward-destination-icon"
+														/>
 														<div className={selectorStyles.itemInfo} data-flx="messaging.forward-modal.div--6">
 															<span className={selectorStyles.itemName} data-flx="messaging.forward-modal.span">
 																{option.displayName}

@@ -13,7 +13,8 @@ import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccou
 import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
 import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
 import type {IUserSettingsRepository} from '@app/api/user/repositories/IUserSettingsRepository';
-import {canUseProfileTimezone} from '@app/api/user/UserHelpers';
+import {isUsernameTaken} from '@app/api/user/UniqueUsernames';
+import {hasFixedDiscriminator} from '@app/api/user/UserTag';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
 	PremiumFlags,
@@ -127,7 +128,6 @@ export class UserAccountLookupService {
 			: await this.getProfileFieldPrivacyContext(userId, targetId);
 		const timezoneVisible =
 			!restrictProfile &&
-			canUseProfileTimezone(user) &&
 			user.timezone != null &&
 			profileFieldPrivacyContext != null &&
 			this.canViewProfileField(user.timezonePrivacyFlags, profileFieldPrivacyContext);
@@ -281,8 +281,15 @@ export class UserAccountLookupService {
 		}));
 	}
 
-	async checkUsernameDiscriminatorAvailability(params: {username: string; discriminator: number}): Promise<boolean> {
-		const {username, discriminator} = params;
+	async checkUsernameDiscriminatorAvailability(params: {
+		username: string;
+		discriminator: number;
+		currentUser: User;
+	}): Promise<boolean> {
+		const {username, discriminator, currentUser} = params;
+		if (hasFixedDiscriminator(currentUser)) {
+			return await isUsernameTaken(this.deps.userAccountRepository, username, currentUser.id);
+		}
 		const isAvailable = await this.deps.discriminatorService.isDiscriminatorAvailableForUsername(
 			username,
 			discriminator,

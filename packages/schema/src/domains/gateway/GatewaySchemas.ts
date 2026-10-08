@@ -41,6 +41,7 @@ export const ReadStateResponse = z.object({
 	last_message_id: SnowflakeStringType.nullable().describe('The ID of the last message read'),
 	last_pin_timestamp: z.string().nullable().describe('ISO8601 timestamp of the last pinned message acknowledged'),
 	version: UnsignedInt64StringType.optional().describe('Read-state version for ordering updates as a decimal uint64'),
+	flags: Int32Type.optional().describe('Server-stamped read state flags, present only on thread and forum read states'),
 });
 
 export type ReadStateResponse = z.infer<typeof ReadStateResponse>;

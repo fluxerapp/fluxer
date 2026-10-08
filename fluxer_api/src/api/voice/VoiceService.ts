@@ -8,7 +8,6 @@ import type {LiveKitService} from '@app/api/infrastructure/LiveKitService';
 import type {PinnedRoomServer, VoiceRoomStore} from '@app/api/infrastructure/VoiceRoomStore';
 import {Logger} from '@app/api/Logger';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {getEffectiveSuspiciousFlags} from '@app/api/user/UserHelpers';
 import type {VoiceAccessContext, VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {VoiceRegionAvailability, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 import {
@@ -23,7 +22,6 @@ import {UnclaimedAccountCannotJoinVoiceChannelsError} from '@fluxer/errors/src/d
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
-import {AccountSuspiciousActivityError} from '@fluxer/errors/src/domains/user/AccountSuspiciousActivityError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 
 interface GetVoiceTokenParams {
@@ -84,10 +82,6 @@ export class VoiceService {
 		const user = await this.userRepository.findUnique(userId);
 		if (!user) {
 			throw new UnknownUserError();
-		}
-		const effectiveSuspiciousFlags = getEffectiveSuspiciousFlags(user);
-		if (effectiveSuspiciousFlags !== 0) {
-			throw new AccountSuspiciousActivityError(effectiveSuspiciousFlags);
 		}
 		const channel = await this.channelRepository.findUnique(channelId);
 		if (!channel) {

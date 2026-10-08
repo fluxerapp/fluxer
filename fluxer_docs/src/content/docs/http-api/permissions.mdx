@@ -29,7 +29,7 @@ Every bit Fluxer defines appears below.
 | 1 &lt;&lt; 8 | PRIORITY_SPEAKER | Use priority speaker in a guild voice channel, evaluated by the client |
 | 1 &lt;&lt; 9 | STREAM<sup>2</sup> | Publish a screenshare track on a guild voice connection |
 | 1 &lt;&lt; 10 | VIEW_CHANNEL<sup>3</sup> | View a guild channel |
-| 1 &lt;&lt; 11 | SEND_MESSAGES | Send a message in a guild text or voice channel |
+| 1 &lt;&lt; 11 | SEND_MESSAGES | Send a message in a guild text, announcement, or voice channel, and publish the caller's own announcement |
 | 1 &lt;&lt; 12 | SEND_TTS_MESSAGES | Send a message that requests text-to-speech playback |
 | 1 &lt;&lt; 13 | MANAGE_MESSAGES<sup>4</sup> | Delete another member's message, bulk delete messages, remove another member's reaction, and edit the flags and attachments of another member's message |
 | 1 &lt;&lt; 14 | EMBED_LINKS | Have a link in the caller's own message expanded into an embed |
@@ -46,7 +46,7 @@ Every bit Fluxer defines appears below.
 | 1 &lt;&lt; 26 | CHANGE_NICKNAME | Change the caller's own nickname in the guild |
 | 1 &lt;&lt; 27 | MANAGE_NICKNAMES | Change another member's nickname in the guild |
 | 1 &lt;&lt; 28 | MANAGE_ROLES<sup>5</sup> | Create, modify, position, and delete a role, assign a role to a member, and set a channel permission overwrite |
-| 1 &lt;&lt; 29 | MANAGE_WEBHOOKS | Create, modify, and delete a webhook on a guild channel |
+| 1 &lt;&lt; 29 | MANAGE_WEBHOOKS | Create, modify, and delete a webhook on a guild channel, and follow an announcement channel into it |
 | 1 &lt;&lt; 30 | MANAGE_EXPRESSIONS<sup>6</sup> | Modify and delete an emoji or sticker created by another member |
 | 1 &lt;&lt; 37 | USE_EXTERNAL_STICKERS | Use a sticker owned by another guild |
 | 1 &lt;&lt; 40 | MODERATE_MEMBERS | Apply and clear a member communication timeout |
@@ -96,6 +96,14 @@ Fluxer trims and lowercases each name in the header before matching it. A name t
 
 On [Create guild role](#create-guild-role), a request that supplies `permissions` without declaring the feature always creates the role with `VIEW_CHANNEL_MEMBERS` cleared. A request that omits `permissions` copies the everyone role mask without applying the gate.
 
+## Announcement channel permissions
+
+[Crosspost message](/http-api/messages/#crosspost-message) publishes a message from an announcement channel. The author needs `VIEW_CHANNEL` and `SEND_MESSAGES` in the channel. Publishing another member's message, or a webhook's, needs `MANAGE_MESSAGES` as well, and a caller without `READ_MESSAGE_HISTORY` can publish only a message newer than the guild's message history cutoff.
+
+[Follow announcement channel](/http-api/channels/#follow-announcement-channel) needs `VIEW_CHANNEL` on the announcement channel alone, so any member who can read it can follow it. The follow is created in the target guild, which needs `MANAGE_WEBHOOKS` at guild level and `VIEW_CHANNEL` and `MANAGE_WEBHOOKS` in the target channel. A guild receives copies only in a channel that one of its webhook managers chose.
+
+Delivery rechecks access. While the account that created a follow cannot view the announcement channel, no new copy is delivered through it.
+
 ## Elevated permissions
 
 `KICK_MEMBERS`, `BAN_MEMBERS`, `ADMINISTRATOR`, `MANAGE_CHANNELS`, `MANAGE_GUILD`, `MANAGE_MESSAGES`, `MANAGE_ROLES`, `MANAGE_WEBHOOKS`, and `MODERATE_MEMBERS` are elevated permissions. In a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, only the guild owner uses them without an enrolled authenticator.
@@ -138,6 +146,7 @@ While the timeout is in the future, these operations fail with 403 `COMMUNICATIO
 
 - Sending a message
 - Editing the caller's own message
+- Publishing the caller's own message in an announcement channel
 - Adding a reaction
 - Requesting an attachment upload
 - Starting a typing indicator

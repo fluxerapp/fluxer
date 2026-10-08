@@ -6,6 +6,7 @@ import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {ConnectionRateLimitConfigs} from '@app/api/rate_limit_configs/ConnectionRateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {Validator} from '@app/api/Validator';
 import {
 	ConnectionListResponse,
@@ -56,6 +57,7 @@ export function ConnectionController(app: HonoApp) {
 				'Initiates a new external service connection and returns verification instructions. No database record is created until verification succeeds.',
 		}),
 		async (ctx) => {
+			assertAccountNotLimited(ctx.get('user'));
 			const verification = await ctx
 				.get('connectionRequestService')
 				.initiateConnection(ctx.get('user').id, ctx.req.valid('json'));
@@ -79,6 +81,7 @@ export function ConnectionController(app: HonoApp) {
 				'Verifies the external service connection using the initiation token and creates the connection record on success.',
 		}),
 		async (ctx) => {
+			assertAccountNotLimited(ctx.get('user'));
 			const connection = await ctx
 				.get('connectionRequestService')
 				.verifyAndCreateConnection(ctx.get('user').id, ctx.req.valid('json'));

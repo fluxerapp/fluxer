@@ -84,6 +84,41 @@ describe('stripNonJpegImageMetadataForUpload', () => {
 	});
 });
 
+function riffChunk(type: string, data: Uint8Array): Uint8Array {
+	const out = new Uint8Array(8 + data.length + (data.length & 1));
+	out.set(textBytes(type), 0);
+	new DataView(out.buffer).setUint32(4, data.length, true);
+	out.set(data, 8);
+	return out;
+}
+
+function webp(chunks: ReadonlyArray<Uint8Array>): Uint8Array {
+	const body = concatBytes(chunks);
+	const header = concatBytes([textBytes('RIFF'), new Uint8Array(4), textBytes('WEBP')]);
+	new DataView(header.buffer).setUint32(4, 4 + body.length, true);
+	return concatBytes([header, body]);
+}
+
+describe('stripNonJpegImageMetadataForUpload for WebP', () => {
+	it('drops EXIF and XMP chunks without re-encoding frames', async () => {
+		const vp8x = new Uint8Array(10);
+		vp8x[0] = 0x02 | 0x08 | 0x04;
+		const anmf = riffChunk('ANMF', new Uint8Array([9, 8, 7]));
+		const input = webp([
+			riffChunk('VP8X', vp8x),
+			riffChunk('ANIM', new Uint8Array(6)),
+			anmf,
+			riffChunk('EXIF', textBytes('GPS=1,2')),
+			riffChunk('XMP ', textBytes('private metadata')),
+		]);
+		const stripped = await stripNonJpegImageMetadataForUpload(input, 'image/webp');
+		const expectedVp8x = new Uint8Array(10);
+		expectedVp8x[0] = 0x02;
+		expect(stripped.contentType).toBe('image/webp');
+		expect(stripped.body).toEqual(webp([riffChunk('VP8X', expectedVp8x), riffChunk('ANIM', new Uint8Array(6)), anmf]));
+	});
+});
+
 describe('buildProcessedMediaObject', () => {
 	it('leaves non-media objects for plain copy', async () => {
 		await expect(buildProcessedMediaObject(textBytes('plain text'), 'text/plain')).resolves.toBeNull();

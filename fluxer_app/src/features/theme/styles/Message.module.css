@@ -119,10 +119,14 @@
 	background-color: var(--message-reply-bg);
 }
 
-:global([data-blocked-messages]) .message.messageHovered,
-:global([data-blocked-messages]) .messageCompact.messageHovered,
-:global([data-blocked-messages]) .message.contextMenuActive,
-:global([data-blocked-messages]) .messageCompact.contextMenuActive {
+:global([data-blocked-messages])
+	.message.messageHovered:not(.messageMentioned):not(.messageReplying):not(.messageHighlight),
+:global([data-blocked-messages])
+	.messageCompact.messageHovered:not(.messageMentioned):not(.messageReplying):not(.messageHighlight),
+:global([data-blocked-messages])
+	.message.contextMenuActive:not(.messageMentioned):not(.messageReplying):not(.messageHighlight),
+:global([data-blocked-messages])
+	.messageCompact.contextMenuActive:not(.messageMentioned):not(.messageReplying):not(.messageHighlight) {
 	background-color: transparent !important;
 }
 

@@ -5,6 +5,7 @@ import type {Channel} from '@app/api/models/Channel';
 import {serializeChannelForAudit as serializeChannelForAuditUtil} from '@app/api/utils/AuditSerializationUtils';
 import {toIdString} from '@app/api/utils/IdUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 
@@ -12,6 +13,15 @@ export interface ChannelReorderOperation {
 	channelId: ChannelID;
 	parentId: ChannelID | null | undefined;
 	precedingSiblingId: ChannelID | null;
+}
+
+function isTextLikeChannelType(type: number): boolean {
+	return (
+		type === ChannelTypes.GUILD_TEXT ||
+		type === ChannelTypes.GUILD_ANNOUNCEMENT ||
+		type === ChannelTypes.GUILD_LINK ||
+		THREAD_ONLY_CHANNEL_TYPES.has(type)
+	);
 }
 
 // biome-ignore lint/complexity/noStaticOnlyClass: Existing callers use this as a namespaced helper API.
@@ -32,9 +42,7 @@ export class ChannelHelpers {
 			return existingChannels.reduce((max, c) => Math.max(max, c.position || 0), 0) + 1;
 		}
 		const channelsInCategory = existingChannels.filter((c) => c.parentId === parentId);
-		const textChannels = channelsInCategory.filter(
-			(c) => c.type === ChannelTypes.GUILD_TEXT || c.type === ChannelTypes.GUILD_LINK,
-		);
+		const textChannels = channelsInCategory.filter((c) => isTextLikeChannelType(c.type));
 		const voiceChannels = channelsInCategory.filter((c) => c.type === ChannelTypes.GUILD_VOICE);
 		if (channelType === ChannelTypes.GUILD_VOICE) {
 			if (voiceChannels.length > 0) {
@@ -82,11 +90,10 @@ export class ChannelHelpers {
 				if (movedIndex < 0) continue;
 				const movedChannel = siblings[movedIndex];
 				const isMovedVoice = movedChannel.type === ChannelTypes.GUILD_VOICE;
-				const isMovedText =
-					movedChannel.type === ChannelTypes.GUILD_TEXT || movedChannel.type === ChannelTypes.GUILD_LINK;
+				const isMovedText = isTextLikeChannelType(movedChannel.type);
 				if (isMovedVoice) {
 					const next = siblings[movedIndex + 1];
-					if (next && (next.type === ChannelTypes.GUILD_TEXT || next.type === ChannelTypes.GUILD_LINK)) {
+					if (next && isTextLikeChannelType(next.type)) {
 						throw InputValidationError.fromCode(
 							'preceding_sibling_id',
 							ValidationErrorCodes.VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS,
@@ -108,7 +115,7 @@ export class ChannelHelpers {
 						encounteredVoice = true;
 						continue;
 					}
-					const isText = sibling.type === ChannelTypes.GUILD_TEXT || sibling.type === ChannelTypes.GUILD_LINK;
+					const isText = isTextLikeChannelType(sibling.type);
 					if (encounteredVoice && isText) {
 						throw InputValidationError.fromCode(
 							'preceding_sibling_id',

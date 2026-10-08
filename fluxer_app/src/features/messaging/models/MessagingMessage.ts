@@ -13,7 +13,6 @@ import {emojiEquals} from '@app/features/messaging/utils/ReactionUtils';
 import Relationships from '@app/features/relationship/state/Relationships';
 import * as ThemeUtils from '@app/features/theme/utils/ThemeUtils';
 import {User} from '@app/features/user/models/User';
-import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
 import {LRUMap} from '@app/lib/list/ListLruMap';
 import {MessageFlags, MessageStates, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -255,6 +254,18 @@ export class Message {
 
 	get isSilent(): boolean {
 		return this.hasFlag(MessageFlags.SUPPRESS_NOTIFICATIONS);
+	}
+
+	get isCrossposted(): boolean {
+		return this.hasFlag(MessageFlags.CROSSPOSTED);
+	}
+
+	get isCrosspostCopy(): boolean {
+		return this.hasFlag(MessageFlags.IS_CROSSPOST);
+	}
+
+	get isCrosspostSourceDeleted(): boolean {
+		return this.hasFlag(MessageFlags.IS_CROSSPOST) && this.hasFlag(MessageFlags.SOURCE_MESSAGE_DELETED);
 	}
 
 	isUserMessage(): boolean {
@@ -548,15 +559,23 @@ export class Message {
 	}
 }
 
-export const messageMentionsCurrentUser = (message: WireMessage): boolean => {
+interface MentionSuppression {
+	suppressEveryone?: boolean;
+	suppressRoles?: boolean;
+}
+
+export const messageMentionsCurrentUser = (
+	message: WireMessage,
+	{suppressEveryone = false, suppressRoles = false}: MentionSuppression = {},
+): boolean => {
 	const channel = Channels.getChannel(message.channel_id);
 	if (!channel) return false;
-	if (message.mention_everyone && !UserGuildSettings.isEveryoneMentionSuppressed(channel.guildId ?? null)) return true;
+	if (message.mention_everyone && !suppressEveryone) return true;
 	if (message.mentions?.some((user) => user.id === Authentication.currentUserId)) {
 		return true;
 	}
 	if (!channel.guildId) return false;
-	if (UserGuildSettings.isRoleMentionSuppressed(channel.guildId)) return false;
+	if (suppressRoles) return false;
 	const guild = Guilds.getGuild(channel.guildId);
 	if (!guild) return false;
 	const guildMember = GuildMembers.getMember(guild.id, Authentication.currentUserId);

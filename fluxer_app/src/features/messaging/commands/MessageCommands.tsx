@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
@@ -19,10 +21,12 @@ import {
 	resolveMessageFetchWindowCached,
 } from '@app/features/messaging/commands/MessageFetchStateMachine';
 import {resolveMessagePageState} from '@app/features/messaging/commands/MessagePageStateMachine';
+import {MessageCrosspostLimitModal} from '@app/features/messaging/components/alerts/MessageCrosspostLimitModal';
 import {MessageDeleteFailedModal} from '@app/features/messaging/components/alerts/MessageDeleteFailedModal';
 import {MessageDeleteTooQuickModal} from '@app/features/messaging/components/alerts/MessageDeleteTooQuickModal';
 import {MessageEditFailedModal} from '@app/features/messaging/components/alerts/MessageEditFailedModal';
 import {MessageEditTooQuickModal} from '@app/features/messaging/components/alerts/MessageEditTooQuickModal';
+import {PublishedMessageEditLimitModal} from '@app/features/messaging/components/alerts/PublishedMessageEditLimitModal';
 import type {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
 import type {JumpOptions} from '@app/features/messaging/state/ChannelMessages';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
@@ -45,18 +49,25 @@ import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils
 import * as IARCommands from '@app/features/moderation/commands/IARCommands';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Permission from '@app/features/permissions/state/Permission';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
+import {isAccountTransitionAbortError} from '@app/features/platform/state/AccountTransitionAbort';
+import SessionManager from '@app/features/platform/state/AuthSession';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import * as SlowmodeCommands from '@app/features/slowmode/commands/SlowmodeCommands';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
+import {blockIfAccountLimited, handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {MessageFlags, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {JumpType} from '@fluxer/constants/src/JumpConstants';
@@ -84,6 +95,41 @@ const ALSO_REPORT_TO_SAFETY_TEAM_DESCRIPTOR = msg({
 	message: 'Also report this message to the {productName} Safety Team',
 	comment:
 		'Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).',
+});
+const DELETE_PUBLISHED_MESSAGE_BODY_DESCRIPTOR = msg({
+	message:
+		"Delete this message? Can't be undone. This message is also removed from every community that follows this channel.",
+	comment:
+		'Body of the delete confirmation for a message that was published from an announcement channel to the channels that follow it.',
+});
+const EDIT_PUBLISHED_MESSAGE_TITLE_DESCRIPTOR = msg({
+	message: 'Edit published message?',
+	comment: 'Title of the confirmation shown before saving an edit to a message published from an announcement channel.',
+});
+const EDIT_PUBLISHED_MESSAGE_BODY_DESCRIPTOR = msg({
+	message:
+		'Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes.',
+	comment: 'Body of the confirmation shown before saving an edit to a message published from an announcement channel.',
+});
+const SAVE_EDIT_DESCRIPTOR = msg({
+	message: 'Save',
+	comment: 'Confirm button on the alert shown before saving an edit to a published announcement message.',
+});
+const MESSAGE_PUBLISHED_DESCRIPTOR = msg({
+	message: 'Message published',
+	comment: 'Toast shown after a message in an announcement channel was published to the channels that follow it.',
+});
+const MESSAGE_ALREADY_PUBLISHED_DESCRIPTOR = msg({
+	message: 'This message has already been published',
+	comment: 'Toast shown when someone tries to publish an announcement message that was already published.',
+});
+const COULD_NOT_PUBLISH_MESSAGE_DESCRIPTOR = msg({
+	message: "Couldn't publish this message",
+	comment: 'Title of the error alert shown when publishing an announcement message fails.',
+});
+const TRY_PUBLISHING_AGAIN_DESCRIPTOR = msg({
+	message: 'Something went wrong while publishing. Try again in a moment.',
+	comment: 'Fallback body of the error alert shown when publishing an announcement message fails.',
 });
 const logger = new Logger('MessageCommands');
 const MESSAGE_EDIT_MAX_RETRIES = 5;
@@ -131,6 +177,9 @@ function shouldBlockMessageFetch(channelId: string): boolean {
 	const channel = Channels.getChannel(channelId);
 	if (!channel || channel.isPrivate()) {
 		return false;
+	}
+	if (channel.isThreadOnly()) {
+		return true;
 	}
 	return GuildMatureContentAgree.shouldShowGate({channelId: channel.id, guildId: channel.guildId ?? null});
 }
@@ -250,6 +299,9 @@ function handleMessageFetchSuccess(
 	cached: boolean,
 	jump?: JumpOptions,
 ): void {
+	if (ThreadGuilds.anyActive) {
+		ChannelThreads.ingestMessageThreads(messages);
+	}
 	Messages.handleLoadMessagesSuccess({
 		channelId,
 		messages,
@@ -394,6 +446,7 @@ export async function fetchMessages(
 	const inFlight = pendingFetchPromises.get(key);
 	const preflightDecision = resolveMessageFetchPreflightDecision({
 		hasInFlightRequest: inFlight != null,
+		accountTransitionActive: AccountScopedWork.isSuspended,
 		shouldBlockForGate: shouldBlockMessageFetch(channelId),
 		cacheHit: getMessageFetchCacheHit(channelId, before, after, jump),
 	});
@@ -401,6 +454,10 @@ export async function fetchMessages(
 		case 'useInFlightRequest':
 			logger.debug(`Using in-flight fetchMessages for channel ${channelId} (deduped)`);
 			return inFlight as Promise<Array<WireMessage>>;
+		case 'waitForAccountTransition':
+			logger.debug(`Holding message fetch for channel ${channelId} until the account transition completes`);
+			Messages.handleLoadMessagesBlocked({channelId});
+			return [];
 		case 'blockForGate':
 			logger.debug(`Skipping message fetch for gated channel ${channelId}`);
 			Messages.handleLoadMessagesBlocked({channelId});
@@ -438,7 +495,11 @@ export async function fetchMessages(
 			return messages;
 		} catch (error) {
 			logger.error(`Failed to fetch messages for channel ${channelId}:`, error);
-			Messages.handleLoadMessagesFailure({channelId});
+			if (isAccountTransitionAbortError(error)) {
+				Messages.handleLoadMessagesBlocked({channelId});
+			} else {
+				Messages.handleLoadMessagesFailure({channelId});
+			}
 			if (options?.throwOnError) {
 				throw error;
 			}
@@ -529,6 +590,7 @@ function nextChannelOrder(channelId: string): number {
 }
 
 export async function send(channelId: string, params: SendMessageParams): Promise<WireMessage | null> {
+	const accountKey = SessionManager.currentAccountKey;
 	if (!MessageQueue.consumeLocalSendReservation(channelId, params.nonce)) {
 		MessageQueue.rejectLocalRateLimitedSend(channelId, params.nonce, params.hasAttachments);
 		return null;
@@ -543,6 +605,7 @@ export async function send(channelId: string, params: SendMessageParams): Promis
 	}
 	const payload = {
 		type: 'send' as const,
+		accountKey,
 		channelId,
 		nonce: params.nonce,
 		content: params.content,
@@ -623,7 +686,29 @@ function showDeleteFailureModal(error: unknown, messageId: string): void {
 	);
 }
 
+function showPublishedEditLimitModal(error: unknown): boolean {
+	if (!(error instanceof HttpError) || failureCode(error) !== APIErrorCodes.PUBLISHED_MESSAGE_EDIT_RATE_LIMITED) {
+		return false;
+	}
+	const retryAfterMs = resolveRetryAfterMs(error);
+	ModalCommands.push(
+		modal(() => (
+			<PublishedMessageEditLimitModal
+				retryAfter={retryAfterMs === null ? undefined : Math.ceil(retryAfterMs / 1000)}
+				data-flx="messaging.message-commands.published-message-edit-limit-modal"
+			/>
+		)),
+	);
+	return true;
+}
+
 function showEditFailureModal(error: unknown): void {
+	if (handleAccountLimitedError(error)) {
+		return;
+	}
+	if (showPublishedEditLimitModal(error)) {
+		return;
+	}
 	if (error instanceof HttpError) {
 		const errorCode = failureCode(error);
 		if (error.status === 429) {
@@ -653,6 +738,10 @@ function showEditFailureModal(error: unknown): void {
 			return;
 		}
 	}
+	if (failureCode(error) === APIErrorCodes.NEW_CONVERSATIONS_LIMITED) {
+		showDmActionErrorModal(error);
+		return;
+	}
 	ModalCommands.push(
 		modal(() => <MessageEditFailedModal data-flx="messaging.message-commands.message-edit-failed-modal" />),
 	);
@@ -667,10 +756,11 @@ export async function edit(
 	attachments?: Array<ApiMessageEditAttachmentMetadata>,
 ): Promise<WireMessage | null> {
 	logger.debug(`Editing message ${messageId} in channel ${channelId}`);
+	const isPublished = Messages.getMessage(channelId, messageId)?.isCrossposted === true;
 	try {
 		const response = await http.patch<WireMessage>(Endpoints.CHANNEL_MESSAGE(channelId, messageId), {
 			body: buildMessageEditRequest({content, flags, allowedMentions, attachments}),
-			mode: 'auto-retry',
+			mode: isPublished ? 'strict' : 'auto-retry',
 			retries: MESSAGE_EDIT_MAX_RETRIES,
 			timeoutMs: MESSAGE_EDIT_TIMEOUT_MS,
 			suppressContentBlockedModal: true,
@@ -731,7 +821,11 @@ export function showDeleteConfirmation(
 		modal(() => (
 			<ConfirmModal
 				title={i18n._(DELETE_MESSAGE_DESCRIPTOR)}
-				description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_DELETE_THIS_DESCRIPTOR)}
+				description={
+					message.isCrossposted
+						? i18n._(DELETE_PUBLISHED_MESSAGE_BODY_DESCRIPTOR)
+						: i18n._(ARE_YOU_SURE_YOU_WANT_TO_DELETE_THIS_DESCRIPTOR)
+				}
 				message={message}
 				primaryText={i18n._(DELETE_DESCRIPTOR)}
 				primaryVariant="danger"
@@ -740,7 +834,7 @@ export function showDeleteConfirmation(
 						<Switch
 							value={false}
 							onChange={() => {}}
-							label={i18n._(ALSO_REPORT_TO_SAFETY_TEAM_DESCRIPTOR, {productName: PRODUCT_NAME})}
+							label={i18n._(ALSO_REPORT_TO_SAFETY_TEAM_DESCRIPTOR, {productName: getActiveInstanceProductName()})}
 							compact
 							data-flx="messaging.message-commands.show-delete-confirmation.switch"
 						/>
@@ -764,9 +858,97 @@ export function showDeleteConfirmation(
 	);
 }
 
+export function confirmPublishedMessageEdit(i18n: I18n, message: MessageModel, submit: () => void): void {
+	if (!message.isCrossposted) {
+		submit();
+		return;
+	}
+	ModalCommands.push(
+		modal(() => (
+			<ConfirmModal
+				title={i18n._(EDIT_PUBLISHED_MESSAGE_TITLE_DESCRIPTOR)}
+				description={i18n._(EDIT_PUBLISHED_MESSAGE_BODY_DESCRIPTOR)}
+				message={message}
+				primaryText={i18n._(SAVE_EDIT_DESCRIPTOR)}
+				primaryVariant="primary"
+				onPrimary={submit}
+				data-flx="messaging.message-commands.confirm-published-message-edit.confirm-modal"
+			/>
+		)),
+	);
+}
+
+function showCrosspostFailure(i18n: I18n, error: unknown): void {
+	if (handleAccountLimitedError(error)) {
+		return;
+	}
+	const errorCode = failureCode(error);
+	if (
+		error instanceof HttpError &&
+		error.status === 429 &&
+		errorCode === APIErrorCodes.MESSAGE_CROSSPOST_RATE_LIMITED
+	) {
+		const retryAfterMs = resolveRetryAfterMs(error);
+		ModalCommands.push(
+			modal(() => (
+				<MessageCrosspostLimitModal
+					retryAfter={retryAfterMs === null ? undefined : Math.ceil(retryAfterMs / 1000)}
+					data-flx="messaging.message-commands.show-crosspost-failure.message-crosspost-limit-modal"
+				/>
+			)),
+		);
+		return;
+	}
+	if (errorCode === APIErrorCodes.MESSAGE_ALREADY_CROSSPOSTED) {
+		ToastCommands.error(i18n._(MESSAGE_ALREADY_PUBLISHED_DESCRIPTOR));
+		return;
+	}
+	if (error instanceof HttpError && error.status === 403 && errorCode === APIErrorCodes.FEATURE_TEMPORARILY_DISABLED) {
+		ModalCommands.push(
+			modal(() => (
+				<FeatureTemporarilyDisabledModal data-flx="messaging.message-commands.show-crosspost-failure.feature-temporarily-disabled-modal" />
+			)),
+		);
+		return;
+	}
+	if (errorCode === APIErrorCodes.CONTENT_BLOCKED) {
+		void import('@app/features/auth/components/ContentBlockedHandler').then((module) =>
+			module.showContentBlockedModal(),
+		);
+		return;
+	}
+	const apiMessage =
+		errorCode === APIErrorCodes.MESSAGE_NOT_CROSSPOSTABLE || errorCode === APIErrorCodes.ANNOUNCEMENT_CHANNEL_REQUIRED
+			? failureMessage(error)
+			: undefined;
+	showGenericErrorModal({
+		title: i18n._(COULD_NOT_PUBLISH_MESSAGE_DESCRIPTOR),
+		message: apiMessage ?? i18n._(TRY_PUBLISHING_AGAIN_DESCRIPTOR),
+		dataFlx: 'messaging.message-commands.show-crosspost-failure.generic-error-modal',
+	});
+}
+
+export async function crosspost(i18n: I18n, channelId: string, messageId: string): Promise<boolean> {
+	logger.debug(`Publishing message ${messageId} in channel ${channelId}`);
+	if (blockIfAccountLimited()) return false;
+	try {
+		await http.post<WireMessage>(Endpoints.CHANNEL_MESSAGE_CROSSPOST(channelId, messageId), {
+			mode: 'strict',
+			suppressContentBlockedModal: true,
+		});
+		ToastCommands.createToast({type: 'success', children: i18n._(MESSAGE_PUBLISHED_DESCRIPTOR)});
+		return true;
+	} catch (error) {
+		logger.error(`Failed to publish message ${messageId} in channel ${channelId}:`, error);
+		showCrosspostFailure(i18n, error);
+		return false;
+	}
+}
+
 export function deleteLocal(channelId: string, messageId: string): void {
 	logger.debug(`Deleting message ${messageId} locally in channel ${channelId}`);
 	Messages.handleMessageDelete({id: messageId, channelId});
+	MessageReply.handleMessageDelete(channelId, messageId);
 }
 
 export function revealMessage(channelId: string, messageId: string | null): void {
@@ -878,7 +1060,7 @@ export async function forward(
 					embed_indices: messageReference.embed_indices,
 					type: 1,
 				},
-				flags: 1,
+				flags: normalizedComment?.flags ?? 0,
 			});
 			if (!forwardedMessage) {
 				logger.warn(`Forward send failed in channel ${channelId}`);
@@ -929,6 +1111,9 @@ export async function toggleSuppressEmbeds(channelId: string, messageId: string,
 		logger.debug(`Successfully ${isSuppressed ? 'unsuppressed' : 'suppressed'} embeds for message ${messageId}`);
 	} catch (error) {
 		logger.error('Failed to toggle suppress embeds:', error);
+		if (handleAccountLimitedError(error) || showPublishedEditLimitModal(error)) {
+			return;
+		}
 		throw error;
 	}
 }
@@ -956,13 +1141,17 @@ async function requestAttachmentDelete(channelId: string, messageId: string, att
 	await http.delete(Endpoints.CHANNEL_MESSAGE_ATTACHMENT(channelId, messageId, attachmentId));
 }
 
-export async function deleteAttachment(channelId: string, messageId: string, attachmentId: string): Promise<void> {
+export async function deleteAttachment(channelId: string, messageId: string, attachmentId: string): Promise<boolean> {
 	try {
 		logger.debug(`Deleting attachment ${attachmentId} from message ${messageId}`);
 		await requestAttachmentDelete(channelId, messageId, attachmentId);
 		logger.debug(`Successfully deleted attachment ${attachmentId} from message ${messageId}`);
+		return true;
 	} catch (error) {
 		logger.error('Failed to delete attachment:', error);
+		if (showPublishedEditLimitModal(error)) {
+			return false;
+		}
 		throw error;
 	}
 }

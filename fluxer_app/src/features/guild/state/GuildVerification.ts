@@ -20,7 +20,6 @@ export const VerificationFailureReason = {
 	UNVERIFIED_EMAIL: 'UNVERIFIED_EMAIL',
 	ACCOUNT_TOO_NEW: 'ACCOUNT_TOO_NEW',
 	NOT_MEMBER_LONG_ENOUGH: 'NOT_MEMBER_LONG_ENOUGH',
-	NO_PHONE_NUMBER: 'NO_PHONE_NUMBER',
 	SEND_MESSAGE_DISABLED: 'SEND_MESSAGE_DISABLED',
 	TIMED_OUT: 'TIMED_OUT',
 } as const;
@@ -148,12 +147,6 @@ class GuildVerification {
 			return {canAccess: true};
 		}
 		if (member && member.roles.size > 0) {
-			return {canAccess: true};
-		}
-		if (verificationLevel === GuildVerificationLevel.VERY_HIGH) {
-			if (!user.hasVerifiedPhone) {
-				return {canAccess: false, reason: VerificationFailureReason.NO_PHONE_NUMBER};
-			}
 			return {canAccess: true};
 		}
 		if (!user.isClaimed()) {

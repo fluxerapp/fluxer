@@ -70,6 +70,7 @@ const REQUEST_SERVICE_VARIABLES: ReadonlyArray<keyof HonoEnv['Variables']> = [
 	'stripeService',
 	'sweegoWebhookService',
 	'themeService',
+	'threadService',
 	'userAccountRequestService',
 	'userActivityBuffer',
 	'userAuthRequestService',

@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A gift is a code that grants premium to the account that redeems it. Until then it belongs to no account. [Create gift checkout](/http-api/billing/#create-gift-checkout) defines how one is bought.
 
-Both routes are hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. [Redeem gift](#redeem-gift) is user-only.
+A self-hosted deployment serves both routes only while its [premium mode](/admin-api/instance/#premium-modes) is `mirror`, as [deployment availability](/http-api/deployment-availability/) describes. [Redeem gift](#redeem-gift) is user-only.
 
 :::caution[A code is a bearer credential]
 A gift records no recipient, so Fluxer binds the code to whichever eligible account presents it first. [Get gift](#get-gift) takes no credential and returns the full public record for any code. Treat an unredeemed code as a secret.
@@ -131,12 +131,9 @@ One redemption can be in flight for a code across the whole deployment, and a se
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | The proof issued by the CAPTCHA provider |
-| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider, either `hcaptcha` or `turnstile` |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Verification is skipped when CAPTCHA is disabled, when the account has the exemption flag, or when the account's email address has the `captcha_exempt` account policy capability, as described by [CAPTCHA handling](/topics/captcha/)
-
-<sup>2</sup> Any other value, including an omitted header, falls back to the instance's configured provider
+<sup>1</sup> A missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. Verification is skipped when the check is off for the instance, when the account has the exemption flag, or when the account's email address is on an exempt domain
 
 ### Response
 

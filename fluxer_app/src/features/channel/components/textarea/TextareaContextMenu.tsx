@@ -2,6 +2,7 @@
 
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import Spellcheck from '@app/features/messaging/state/Spellcheck';
 import {isEditableTextInput, replaceSelectedText} from '@app/features/messaging/utils/TextInputEditUtils';
@@ -13,7 +14,6 @@ import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {getElectronAPI, isElectron} from '@app/features/ui/utils/NativeUtils';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {
@@ -140,12 +140,6 @@ export const TextareaContextMenu = observer(
 			}
 			targetElement.focus({preventScroll: true});
 		};
-		const handleReplaceMisspelling = async (suggestion: string) => {
-			if (electronAPI?.spellcheckReplaceMisspelling) {
-				await electronAPI.spellcheckReplaceMisspelling(suggestion);
-			}
-			onClose();
-		};
 		const handleAddToDictionary = async () => {
 			if (!misspelledWord) return;
 			Spellcheck.addPersonalWord(misspelledWord);
@@ -165,6 +159,11 @@ export const TextareaContextMenu = observer(
 			requestAnimationFrame(() => {
 				focusTargetElement();
 				requestAnimationFrame(action);
+			});
+		};
+		const handleReplaceMisspelling = (suggestion: string) => {
+			runAfterClose(() => {
+				void electronAPI?.spellcheckReplaceMisspelling?.(suggestion);
 			});
 		};
 		const execCommand = (command: string) => {
@@ -205,15 +204,19 @@ export const TextareaContextMenu = observer(
 		};
 		const handleOpenSpellcheckSettings = () => {
 			ModalCommands.push(
-				ModalCommands.modal(() => (
-					<UserSettingsModal
-						initialTab="language"
-						data-flx="channel.textarea.textarea-context-menu.handle-open-spellcheck-settings.user-settings-modal"
-					/>
-				)),
+				ModalCommands.modal(
+					() => (
+						<UserSettingsModal
+							initialTab="language"
+							data-flx="channel.textarea.textarea-context-menu.handle-open-spellcheck-settings.user-settings-modal"
+						/>
+					),
+					'user-settings',
+				),
 			);
 			onClose();
 		};
+		const isPasswordTarget = targetElement instanceof HTMLInputElement && targetElement.type === 'password';
 		const spellcheckEnabled = Spellcheck.enabled;
 		const hasMisspelling = spellcheckEnabled && misspelledWord && suggestions.length > 0;
 		return (
@@ -304,19 +307,21 @@ export const TextareaContextMenu = observer(
 						{i18n._(SELECT_ALL_DESCRIPTOR)}
 					</MenuItem>
 				</MenuGroup>
-				<MenuGroup data-flx="channel.textarea.textarea-context-menu.menu-group--5">
-					<MenuItemSubmenu
-						label={i18n._(SPELLCHECK_DESCRIPTOR)}
-						render={() => (
-							<SpellcheckSubmenu
-								isElectron={isElectron()}
-								onOpenSpellcheckSettings={handleOpenSpellcheckSettings}
-								data-flx="channel.textarea.textarea-context-menu.spellcheck-submenu"
-							/>
-						)}
-						data-flx="channel.textarea.textarea-context-menu.menu-item-submenu"
-					/>
-				</MenuGroup>
+				{!isPasswordTarget && (
+					<MenuGroup data-flx="channel.textarea.textarea-context-menu.menu-group--5">
+						<MenuItemSubmenu
+							label={i18n._(SPELLCHECK_DESCRIPTOR)}
+							render={() => (
+								<SpellcheckSubmenu
+									isElectron={isElectron()}
+									onOpenSpellcheckSettings={handleOpenSpellcheckSettings}
+									data-flx="channel.textarea.textarea-context-menu.spellcheck-submenu"
+								/>
+							)}
+							data-flx="channel.textarea.textarea-context-menu.menu-item-submenu"
+						/>
+					</MenuGroup>
+				)}
 				{showSendButtonToggle && (
 					<MenuGroup data-flx="channel.textarea.textarea-context-menu.menu-group--6">
 						<CheckboxItem

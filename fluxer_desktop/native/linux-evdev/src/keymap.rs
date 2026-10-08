@@ -185,14 +185,6 @@ pub fn keycode_to_name(code: u16) -> Option<&'static str> {
         .map(|(_, name)| *name)
 }
 
-pub fn name_to_keycode(name: &str) -> u16 {
-    KEY_MAP
-        .iter()
-        .find(|(_, entry_name)| *entry_name == name)
-        .map(|(code, _)| *code)
-        .unwrap_or(0)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -209,15 +201,6 @@ mod tests {
         assert_eq!(keycode_to_name(125), Some("MetaLeft"));
         assert_eq!(keycode_to_name(0), None);
         assert_eq!(keycode_to_name(0xffff), None);
-    }
-
-    #[test]
-    fn name_to_keycode_round_trips_every_entry() {
-        for (code, name) in KEY_MAP {
-            assert_eq!(name_to_keycode(name), *code);
-        }
-        assert_eq!(name_to_keycode("NoSuchKey"), 0);
-        assert_eq!(name_to_keycode(""), 0);
     }
 
     #[test]

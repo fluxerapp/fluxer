@@ -25,6 +25,7 @@ import {
 } from '@app/features/channel/components/embeds/channel_embed/EmbedParts';
 import {
 	EMBED_TEXT_OUTER_WIDTH,
+	embedAllowsMarkdown,
 	formatResponsiveEmbedWidth,
 } from '@app/features/channel/components/embeds/EmbedRenderUtils';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
@@ -83,6 +84,7 @@ export const RichEmbed: FC<EmbedProps> = observer(
 							<EmbedTitle
 								title={embed.title}
 								url={embed.url}
+								markdown={embedAllowsMarkdown(embed)}
 								messageId={message.id}
 								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.rich-embed.embed-title"
@@ -90,6 +92,7 @@ export const RichEmbed: FC<EmbedProps> = observer(
 							{!isYouTubeEmbed && (
 								<EmbedDescription
 									description={embed.description}
+									markdown={embedAllowsMarkdown(embed)}
 									messageId={message.id}
 									channelId={message.channelId}
 									data-flx="channel.embeds.channel-embed.rich-embed.embed-description"
@@ -127,8 +130,6 @@ export const RichEmbed: FC<EmbedProps> = observer(
 								<EmbedFooterComponent
 									footer={embed.footer}
 									timestamp={embed.timestamp ? new Date(embed.timestamp) : undefined}
-									messageId={message.id}
-									channelId={message.channelId}
 									data-flx="channel.embeds.channel-embed.rich-embed.embed-footer-component"
 								/>
 							)}

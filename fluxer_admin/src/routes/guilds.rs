@@ -134,6 +134,7 @@ async fn guild_detail(
         .as_ref()
         .map(|user| user.acls.as_slice())
         .unwrap_or(&[]);
+    let username_sign_in = state.account_identity(&client).await.is_username();
     let tab_body = if let Some(guild) = guild.as_ref() {
         guild_tabs::render(
             &client,
@@ -152,6 +153,7 @@ async fn guild_detail(
                 active_tab,
                 &csrf_token,
                 admin_acls,
+                username_sign_in,
             ))
         })
     } else {
@@ -166,6 +168,7 @@ async fn guild_detail(
         active_tab,
         tab_body,
         is_detail_fragment,
+        username_sign_in,
     );
     Html(markup.into_string()).into_response()
 }
@@ -430,6 +433,16 @@ async fn dispatch_guild_action(
                 "Failed to delete sticker",
             )
         }
+        "delete_thread" => {
+            let Some(thread_id) = get("thread_id") else {
+                return FlashData::error("Thread ID is required");
+            };
+            action_result(
+                client.delete_thread_channel(&thread_id).await,
+                "Thread deleted",
+                "Failed to delete thread",
+            )
+        }
         "trigger_archive" => {
             let inc = form.bool_value("include_attachments");
             action_result(
@@ -508,6 +521,7 @@ async fn guild_tab(
             normalize_guild_tab(&tab),
             &csrf_token,
             admin_acls,
+            state.account_identity(&client).await.is_username(),
         ),
         None => maud::html! {
             div class="p-4 text-red-600 text-sm" {

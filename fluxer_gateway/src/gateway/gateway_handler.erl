@@ -141,6 +141,8 @@ websocket_info({'DOWN', Ref, process, Pid, Reason}, State) when
     gateway_handler_dispatch:handle_request_worker_down(Ref, Pid, Reason, State);
 websocket_info({gateway_request_worker_timeout, Ref, Type}, State) when is_reference(Ref) ->
     gateway_handler_dispatch:handle_request_worker_timeout(Ref, Type, State);
+websocket_info(forum_unreads_unknown_opcode, State) ->
+    gateway_handler_encode:close_with_reason(unknown_opcode, <<"Unknown opcode">>, State);
 websocket_info({process_voice_queue}, State) ->
     QueueState = State#{voice_queue_timer => undefined},
     NewState = gateway_handler_voice:process_queued_voice_updates(QueueState),
@@ -261,11 +263,15 @@ handle_incoming_data(Data, #{encoding := Encoding, compress_ctx := CompressCtx0}
     ws_result().
 handle_decompressed_incoming_data(Data, Encoding, CompressCtx, State) ->
     MaxPayloadSize = constants:max_payload_size(),
-    case gateway_compress:decompress(Data, CompressCtx) of
+    case gateway_compress:decompress(Data, CompressCtx, MaxPayloadSize) of
         {ok, Decompressed, NewCompressCtx} when byte_size(Decompressed) =< MaxPayloadSize ->
             Decoded = gateway_codec:decode(Decompressed, Encoding),
             handle_decode(Decoded, State#{compress_ctx => NewCompressCtx});
         {ok, _Decompressed, _NewCompressCtx} ->
+            gateway_handler_encode:close_with_reason(
+                decode_error, <<"Payload too large">>, State
+            );
+        {error, decompression_too_large} ->
             gateway_handler_encode:close_with_reason(
                 decode_error, <<"Payload too large">>, State
             );

@@ -18,7 +18,7 @@ import {buildFluxerAudioExcludePatterns, isKnownFluxerAudioProcessPid} from '@el
 import {getNativeAudioMode} from '@electron/main/LaunchOptions';
 import {resolveVirtmicWindowPid} from '@electron/main/LinuxAudioCapture';
 import {parseWindowSourceToken as parseDesktopWindowSourceToken} from '@electron/main/LinuxAudioCaptureHelpers';
-import {getTccStatus} from '@electron/main/MacTcc';
+import {refreshTccStatus} from '@electron/main/MacTcc';
 import {
 	audioFrameDebugDetails,
 	isValidAudioFrame,
@@ -426,9 +426,9 @@ function loadNativeAudioAddon(): NativeAddonLoadResult {
 	return cachedLoadResult;
 }
 
-function getMacScreenPermissionStatus(): string | null {
+async function getMacScreenPermissionStatus(): Promise<string | null> {
 	try {
-		return getTccStatus('screen-recording');
+		return await refreshTccStatus('screen-recording');
 	} catch (error) {
 		logger.debug('Failed to read macOS screen capture status', error);
 		return null;
@@ -463,7 +463,7 @@ async function getNativeAudioAvailability(): Promise<NativeAudioAvailability> {
 				capabilities,
 			};
 		}
-		const screenPermissionStatus = getMacScreenPermissionStatus();
+		const screenPermissionStatus = await getMacScreenPermissionStatus();
 		if (screenPermissionStatus === 'denied' || screenPermissionStatus === 'restricted') {
 			return {
 				available: false,

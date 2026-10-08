@@ -4,6 +4,7 @@ import type {ApiContext} from '@app/api/ApiContext';
 import type {ChannelID, GuildID, InviteCode, UserID} from '@app/api/BrandedTypes';
 import {createInviteCode, vanityCodeToInviteCode} from '@app/api/BrandedTypes';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {THREAD_FEATURE_CHANNEL_TYPES, type ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
@@ -14,11 +15,13 @@ import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder'
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import {Invite} from '@app/api/models/Invite';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ChannelTypes, InviteTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures, GuildOperations, JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
 import {MAX_GUILD_INVITES} from '@fluxer/constants/src/LimitConstants';
+import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {UnclaimedAccountCannotJoinGroupDmsError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotJoinGroupDmsError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
@@ -32,8 +35,11 @@ import type {
 	GuildInviteMetadataResponse,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
 
+const INVITE_USE_RESERVATION_EXTRA_ATTEMPTS = 8;
+
 interface GetChannelInvitesParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 }
 
@@ -44,6 +50,7 @@ interface GetGuildInvitesParams {
 
 interface CreateInviteParams {
 	inviterId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 	maxUses: number;
 	maxAge: number;
@@ -59,11 +66,13 @@ interface AcceptInviteParams {
 
 interface DeleteInviteParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	inviteCode: InviteCode;
 }
 
 interface GetChannelInvitesSortedParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 }
 
@@ -112,8 +121,8 @@ export class InviteService {
 		throw new UnknownInviteError();
 	}
 
-	async getChannelInvites({userId, channelId}: GetChannelInvitesParams): Promise<Array<Invite>> {
-		const channel = await this.channelService.channelData.operations.getChannel({userId, channelId});
+	async getChannelInvites({userId, viewer, channelId}: GetChannelInvitesParams): Promise<Array<Invite>> {
+		const channel = await this.channelService.channelData.operations.getChannel({userId, viewer, channelId});
 		if (!channel.guildId) {
 			if (channel.type !== ChannelTypes.GROUP_DM) throw new UnknownChannelError();
 			if (channel.ownerId !== userId) {
@@ -141,7 +150,7 @@ export class InviteService {
 	}
 
 	async createInvite(
-		{inviterId, channelId, maxUses, maxAge, unique, temporary = false}: CreateInviteParams,
+		{inviterId, viewer, channelId, maxUses, maxAge, unique, temporary = false}: CreateInviteParams,
 		auditLogReason?: string | null,
 	): Promise<{
 		invite: Invite;
@@ -149,8 +158,12 @@ export class InviteService {
 	}> {
 		const channel = await this.channelService.channelData.operations.getChannel({
 			userId: inviterId,
+			viewer,
 			channelId,
 		});
+		if (THREAD_FEATURE_CHANNEL_TYPES.has(channel.type)) {
+			throw new InvalidChannelTypeError();
+		}
 		if (!channel.guildId) {
 			if (!unique) {
 				const channelInvites = await this.inviteRepository.listChannelInvites(channelId);
@@ -260,13 +273,18 @@ export class InviteService {
 			if (channel.recipientIds.has(userId)) {
 				return invite;
 			}
-			await this.channelService.groupDms.addRecipientViaInvite({
-				channelId: invite.channelId,
-				recipientId: userId,
-				inviterId: invite.inviterId,
-				requestCache,
-			});
-			return this.incrementInviteUses(invite, {deleteWhenExhausted: true});
+			if (user) assertAccountNotLimited(user);
+			const channelId = invite.channelId;
+			const reservedInvite = await this.reserveInviteUse(invite);
+			await this.withReservedInviteUse(reservedInvite, () =>
+				this.channelService.groupDms.addRecipientViaInvite({
+					channelId,
+					recipientId: userId,
+					inviterId: invite.inviterId,
+					requestCache,
+				}),
+			);
+			return this.completeInviteUse(reservedInvite, {deleteWhenExhausted: true});
 		}
 		if (!invite.guildId) throw new UnknownInviteError();
 		const guild = await this.guildService.data.getGuildSystem(invite.guildId);
@@ -292,20 +310,24 @@ export class InviteService {
 		}
 		const vanityCode = guild.vanityUrlCode ? vanityCodeToInviteCode(guild.vanityUrlCode) : null;
 		const isVanityInvite = invite.code === vanityCode;
-		await this.guildService.members.addUserToGuild({
-			userId,
-			guildId: invite.guildId,
-			sendJoinMessage: true,
-			requestCache,
-			isTemporary: invite.temporary,
-			joinSourceType: isVanityInvite ? JoinSourceTypes.VANITY_URL : JoinSourceTypes.INSTANT_INVITE,
-			sourceInviteCode: isVanityInvite ? undefined : invite.code,
-			inviterId: isVanityInvite ? undefined : (invite.inviterId ?? undefined),
-		});
+		const guildId = invite.guildId;
+		const reservedInvite = await this.reserveInviteUse(invite);
+		await this.withReservedInviteUse(reservedInvite, () =>
+			this.guildService.members.addUserToGuild({
+				userId,
+				guildId,
+				sendJoinMessage: true,
+				requestCache,
+				isTemporary: invite.temporary,
+				joinSourceType: isVanityInvite ? JoinSourceTypes.VANITY_URL : JoinSourceTypes.INSTANT_INVITE,
+				sourceInviteCode: isVanityInvite ? undefined : invite.code,
+				inviterId: isVanityInvite ? undefined : (invite.inviterId ?? undefined),
+			}),
+		);
 		if (invite.temporary) {
-			await this.apiContext.services.gateway.addTemporaryGuild({userId, guildId: invite.guildId});
+			await this.apiContext.services.gateway.addTemporaryGuild({userId, guildId});
 		}
-		return this.incrementInviteUses(invite, {deleteWhenExhausted: !isVanityInvite});
+		return this.completeInviteUse(reservedInvite, {deleteWhenExhausted: !isVanityInvite});
 	}
 
 	private createRandomInviteCode(): InviteCode {
@@ -324,13 +346,53 @@ export class InviteService {
 		});
 	}
 
-	private async incrementInviteUses(invite: Invite, params: {deleteWhenExhausted: boolean}): Promise<Invite> {
-		const newUses = invite.uses + 1;
-		await this.inviteRepository.updateInviteUses(invite.code, newUses, invite);
-		if (params.deleteWhenExhausted && invite.maxUses > 0 && newUses >= invite.maxUses) {
+	private async reserveInviteUse(invite: Invite): Promise<Invite> {
+		if (invite.maxUses <= 0) return invite;
+		let current: Invite | null = invite;
+		for (let attempt = 0; attempt <= invite.maxUses + INVITE_USE_RESERVATION_EXTRA_ATTEMPTS; attempt++) {
+			if (!current || current.uses >= current.maxUses) break;
+			const reservedUses = current.uses + 1;
+			if (await this.inviteRepository.compareAndSetInviteUses(current, reservedUses)) {
+				return this.cloneInviteWithUses(current, reservedUses);
+			}
+			current = await this.inviteRepository.findUnique(invite.code);
+		}
+		throw new UnknownInviteError();
+	}
+
+	private async withReservedInviteUse(reservedInvite: Invite, join: () => Promise<unknown>): Promise<void> {
+		try {
+			await join();
+		} catch (error) {
+			await this.releaseInviteUse(reservedInvite);
+			throw error;
+		}
+	}
+
+	private async releaseInviteUse(reservedInvite: Invite): Promise<void> {
+		if (reservedInvite.maxUses <= 0) return;
+		try {
+			let current = await this.inviteRepository.findUnique(reservedInvite.code);
+			for (let attempt = 0; attempt <= reservedInvite.maxUses + INVITE_USE_RESERVATION_EXTRA_ATTEMPTS; attempt++) {
+				if (!current || current.uses <= 0) return;
+				if (await this.inviteRepository.compareAndSetInviteUses(current, current.uses - 1)) return;
+				current = await this.inviteRepository.findUnique(reservedInvite.code);
+			}
+		} catch (error) {
+			Logger.error({error, inviteCode: reservedInvite.code}, 'Failed to release reserved invite use');
+		}
+	}
+
+	private async completeInviteUse(invite: Invite, params: {deleteWhenExhausted: boolean}): Promise<Invite> {
+		if (invite.maxUses <= 0) {
+			const newUses = invite.uses + 1;
+			await this.inviteRepository.updateInviteUses(invite.code, newUses, invite);
+			return this.cloneInviteWithUses(invite, newUses);
+		}
+		if (params.deleteWhenExhausted && invite.uses >= invite.maxUses) {
 			await this.inviteRepository.delete(invite.code);
 		}
-		return this.cloneInviteWithUses(invite, newUses);
+		return invite;
 	}
 
 	private async findInviteWithLowercaseFallback(inviteCode: InviteCode): Promise<Invite | null> {
@@ -359,13 +421,14 @@ export class InviteService {
 		return resolveLimitSafe(this.limitConfigService.getConfigSnapshot(), ctx, 'max_guild_invites', limit);
 	}
 
-	async deleteInvite({userId, inviteCode}: DeleteInviteParams, auditLogReason?: string | null): Promise<void> {
+	async deleteInvite({userId, viewer, inviteCode}: DeleteInviteParams, auditLogReason?: string | null): Promise<void> {
 		const invite = await this.findInviteWithLowercaseFallback(inviteCode);
 		if (!invite) throw new UnknownInviteError();
 		if (invite.type === InviteTypes.GROUP_DM) {
 			if (!invite.channelId) throw new UnknownInviteError();
 			const channel = await this.channelService.channelData.operations.getChannel({
 				userId,
+				viewer,
 				channelId: invite.channelId,
 			});
 			if (!channel.recipientIds.has(userId)) {
@@ -404,8 +467,8 @@ export class InviteService {
 		return await this.channelService.channelData.operations.getChannelSystem(channelId);
 	}
 
-	async getChannelInvitesSorted({userId, channelId}: GetChannelInvitesSortedParams): Promise<Array<Invite>> {
-		const invites = await this.getChannelInvites({userId, channelId});
+	async getChannelInvitesSorted({userId, viewer, channelId}: GetChannelInvitesSortedParams): Promise<Array<Invite>> {
+		const invites = await this.getChannelInvites({userId, viewer, channelId});
 		return invites.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 	}
 

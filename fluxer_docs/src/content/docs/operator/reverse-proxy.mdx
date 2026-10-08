@@ -390,13 +390,14 @@ Forward every path and query string unchanged. The edge handles routing:
 | `/media/*` | Media and attachment delivery |
 | `/livekit/*` | Voice signalling |
 | `/admin`, `/admin/*` | Admin dashboard |
-| `/web/*`, `/emoji/*`, `/libs/*`, `/avatars/*`, `/badges/*`, `/desktop/*`, `/embeds/*` | Static assets |
+| `/web/*`, `/emoji/*`, `/libs/*`, `/avatars/*`, `/badges/*`, `/desktop/*` | Static assets |
 | `/.well-known/fluxer` | Instance discovery |
 | `/.well-known/apple-app-site-association`, `/apple-app-site-association` | Apple app association |
 | `/.well-known/assetlinks.json` | Android app association |
 | `/version.json` | Client version metadata |
+| `/_geoip` | Client location lookup |
 
-All other paths serve the web app.
+All other paths serve the web app. The admin path follows `FLUXER_ADMIN_BASE_PATH`, `/admin` by default.
 
 Pass the query string on `/gateway` through untouched. Clients always send `?v=`, `?encoding=`, `?compress=` and `?stream=`, and `1` is the only version the Gateway accepts.
 
@@ -521,10 +522,13 @@ LiveKit signalling goes through `/livekit/*` like everything else. WebRTC media 
 
 Both ports are published directly by the stack and must reach the host. A proxy or tunnel in front of `443` does nothing for them.
 
-Hosting LiveKit on a hostname other than `FLUXER_DOMAIN` means widening the Content-Security-Policy the web app runs under. The line goes in `.env`, beside `FLUXER_DOMAIN`:
+Signalling can use a hostname other than `FLUXER_DOMAIN`. Two lines go in `.env`, beside `FLUXER_DOMAIN`. The first points clients at the new hostname, and the second lets the web app's Content-Security-Policy connect to it:
 
 ```ini
-FLUXER_CSP_EXTRA_CONNECT_SRC=wss://livekit.example.com:7881
+FLUXER_LIVEKIT_URL=wss://livekit.example.com/livekit
+FLUXER_CSP_EXTRA_CONNECT_SRC=wss://livekit.example.com
 ```
 
-`app-proxy` builds the policy and reads its environment at container start, so apply the change with `docker compose up -d app-proxy`. `docker compose restart app-proxy` reuses the existing container with its old environment. [Content Security Policy](/operator/configuration/#content-security-policy) has the other variables.
+The policy entry is the origin alone, with no port or path. The hostname needs a valid TLS certificate and must reach the `/livekit` route on the edge with WebSocket upgrades. The media ports above never belong in the policy, because WebRTC media is not governed by `connect-src`. A separate hostname is rarely needed, since media goes to the address LiveKit advertises, not to a hostname.
+
+`api` writes `FLUXER_LIVEKIT_URL` into the default voice server at start, and `app-proxy` builds the policy at container start, so apply the change with `docker compose up -d api app-proxy`. `docker compose restart` reuses the existing containers with their old environment. [Content Security Policy](/operator/configuration/#content-security-policy) has the other variables.

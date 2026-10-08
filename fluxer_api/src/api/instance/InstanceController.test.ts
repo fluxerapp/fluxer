@@ -8,13 +8,12 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {DEFAULT_DOMAIN_MIGRATION_CONFIG} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {Hono} from 'hono';
 import {afterEach, describe, expect, it} from 'vitest';
 
 interface DiscoveryCaptcha {
 	provider: string;
-	hcaptcha_site_key: string | null;
-	turnstile_site_key: string | null;
 }
 
 describe('InstanceController discovery captcha', () => {
@@ -61,39 +60,46 @@ describe('InstanceController discovery captcha', () => {
 		return ((await response.json()) as {captcha: DiscoveryCaptcha}).captcha;
 	}
 
-	it('advertises no provider and no site key while the selected pair is incomplete', async () => {
-		const repository = createRepository();
-		await repository.setInstanceIntegrationsConfig({
-			captcha: {
-				provider: 'turnstile',
-				hcaptcha_site_key: 'hcaptcha-site-key',
-				hcaptcha_secret_key: 'hcaptcha-secret-key',
-			},
-		});
-
-		await expect(readCaptcha(repository)).resolves.toEqual({
-			provider: 'none',
-			hcaptcha_site_key: null,
-			turnstile_site_key: null,
-		});
+	it('advertises altcha by default', async () => {
+		await expect(readCaptcha(createRepository())).resolves.toEqual({provider: 'altcha'});
 	});
 
-	it('advertises only the site key that matches the named provider', async () => {
+	it('advertises no provider once an admin turns the captcha off', async () => {
 		const repository = createRepository();
-		await repository.setInstanceIntegrationsConfig({
-			captcha: {
-				provider: 'turnstile',
-				hcaptcha_site_key: 'hcaptcha-site-key',
-				hcaptcha_secret_key: 'hcaptcha-secret-key',
-				turnstile_site_key: 'turnstile-site-key',
-				turnstile_secret_key: 'turnstile-secret-key',
-			},
+		await repository.updateCaptchaConfig({enabled: false});
+
+		await expect(readCaptcha(repository)).resolves.toEqual({provider: 'none'});
+	});
+
+	it('publishes the domain migration kill switch and anonymous rollout without the targeting lists', async () => {
+		const repository = createRepository();
+		const app = createApp(repository);
+
+		const initial = await app.request('http://localhost/.well-known/fluxer');
+		expect(((await initial.json()) as {domain_migration: unknown}).domain_migration).toEqual({
+			enabled: false,
+			anonymous_rollout_basis_points: 0,
+			rollout_salt: 'domain-migration-v1',
+			standalone_forwarding: false,
 		});
 
-		await expect(readCaptcha(repository)).resolves.toEqual({
-			provider: 'turnstile',
-			hcaptcha_site_key: null,
-			turnstile_site_key: 'turnstile-site-key',
+		await repository.setDomainMigrationConfig({
+			...DEFAULT_DOMAIN_MIGRATION_CONFIG,
+			enabled: true,
+			config_version: 2,
+			rollout_basis_points: 100,
+			anonymous_rollout_basis_points: 1500,
+			included_user_ids: ['1400000000000000001'],
+			standalone_forwarding: true,
+		});
+
+		const updated = await app.request('http://localhost/.well-known/fluxer');
+		expect(updated.headers.get('etag')).not.toBe(initial.headers.get('etag'));
+		expect(((await updated.json()) as {domain_migration: unknown}).domain_migration).toEqual({
+			enabled: true,
+			anonymous_rollout_basis_points: 1500,
+			rollout_salt: 'domain-migration-v1',
+			standalone_forwarding: true,
 		});
 	});
 });

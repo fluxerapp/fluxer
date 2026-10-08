@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fs from 'node:fs';
-import {createAttachmentID, type UserID} from '@app/api/BrandedTypes';
+import {type ChannelID, createAttachmentID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {AttachmentToProcess} from '@app/api/channel/AttachmentDTOs';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
@@ -45,6 +45,7 @@ interface ProcessAttachmentParams {
 	attachment: AttachmentToProcess;
 	index: number;
 	uploadUserId: UserID;
+	uploadChannelId?: ChannelID;
 	channel?: Channel;
 	guild?: GuildResponse | null;
 	member?: GuildMemberResponse | null;
@@ -81,6 +82,7 @@ export class AttachmentProcessingService {
 		message: Message;
 		attachments: Array<AttachmentToProcess>;
 		uploadUserId: UserID;
+		uploadChannelId?: ChannelID;
 		channel?: Channel;
 		guild?: GuildResponse | null;
 		member?: GuildMemberResponse | null;
@@ -104,6 +106,7 @@ export class AttachmentProcessingService {
 						attachment,
 						index,
 						uploadUserId: params.uploadUserId,
+						uploadChannelId: params.uploadChannelId,
 						channel: params.channel,
 						guild: params.guild,
 						member: params.member,
@@ -181,7 +184,7 @@ export class AttachmentProcessingService {
 		const pendingUpload = await this.attachmentUploadTraceRepository.getPendingUpload({
 			uploadKey: attachment.upload_filename,
 			userId: params.uploadUserId,
-			channelId: message.channelId,
+			channelId: params.uploadChannelId ?? message.channelId,
 		});
 		if (!pendingUpload) {
 			throw InputValidationError.fromCode(

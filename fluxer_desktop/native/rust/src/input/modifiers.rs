@@ -63,6 +63,28 @@ pub mod windows {
             meta: ((lwin_state | rwin_state) & HIGH_BIT) != 0,
         }
     }
+
+    pub fn with_pressed_key(modifiers: Modifiers, vk: u16) -> Modifiers {
+        match vk {
+            0x10 | 0xa0 | 0xa1 => Modifiers {
+                shift: true,
+                ..modifiers
+            },
+            0x11 | 0xa2 | 0xa3 => Modifiers {
+                ctrl: true,
+                ..modifiers
+            },
+            0x12 | 0xa4 | 0xa5 => Modifiers {
+                alt: true,
+                ..modifiers
+            },
+            0x5b | 0x5c => Modifiers {
+                meta: true,
+                ..modifiers
+            },
+            _ => modifiers,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -193,6 +215,72 @@ mod tests {
                 ..Modifiers::default()
             },
             windows::from_sampled(windows::HIGH_BIT, 0, 0, 0, 0)
+        );
+    }
+
+    #[test]
+    fn windows_pressed_modifier_adds_its_own_flag() {
+        let ctrl = Modifiers {
+            ctrl: true,
+            ..Modifiers::default()
+        };
+        assert_eq!(
+            Modifiers {
+                ctrl: true,
+                shift: true,
+                ..Modifiers::default()
+            },
+            windows::with_pressed_key(ctrl, 0xa0)
+        );
+        assert_eq!(
+            Modifiers {
+                shift: true,
+                ..Modifiers::default()
+            },
+            windows::with_pressed_key(Modifiers::default(), 0xa1)
+        );
+        assert_eq!(ctrl, windows::with_pressed_key(Modifiers::default(), 0xa3));
+        assert_eq!(
+            Modifiers {
+                alt: true,
+                ..Modifiers::default()
+            },
+            windows::with_pressed_key(Modifiers::default(), 0xa5)
+        );
+        assert_eq!(
+            Modifiers {
+                meta: true,
+                ..Modifiers::default()
+            },
+            windows::with_pressed_key(Modifiers::default(), 0x5c)
+        );
+        assert_eq!(
+            Modifiers {
+                ctrl: true,
+                alt: true,
+                shift: true,
+                meta: false,
+            },
+            windows::with_pressed_key(
+                windows::with_pressed_key(
+                    windows::with_pressed_key(Modifiers::default(), 0x10),
+                    0x11
+                ),
+                0x12
+            )
+        );
+    }
+
+    #[test]
+    fn windows_pressed_non_modifier_keeps_sampled_flags() {
+        let ctrl = Modifiers {
+            ctrl: true,
+            ..Modifiers::default()
+        };
+        assert_eq!(ctrl, windows::with_pressed_key(ctrl, 0x41));
+        assert_eq!(
+            Modifiers::default(),
+            windows::with_pressed_key(Modifiers::default(), 0x14)
         );
     }
 

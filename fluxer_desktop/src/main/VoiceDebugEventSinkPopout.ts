@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import path from 'node:path';
-import {fileURLToPath} from 'node:url';
 import type {DesktopVoiceDebugEventSinkEntry} from '@electron/common/Types';
+import {getDesktopDistributionPath} from '@electron/main/DesktopDistributionPath';
 import {focusWindow} from '@electron/main/Window';
 import {BrowserWindow, ipcMain} from 'electron';
 import log from 'electron-log';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const VOICE_DEBUG_EVENT_SINK_WINDOW_TITLE = 'Fluxer | Voice Debug Event Sink';
 export const VOICE_DEBUG_EVENT_SINK_POPOUT_KEY = 'fluxer-voice-debug-event-sink';
 const VOICE_DEBUG_EVENT_SINK_WINDOW_WIDTH = 1000;
@@ -393,7 +391,7 @@ function createEventSinkWindow(): BrowserWindow {
 		show: true,
 		title: VOICE_DEBUG_EVENT_SINK_WINDOW_TITLE,
 		webPreferences: {
-			preload: path.join(__dirname, '../preload/index.cjs'),
+			preload: getDesktopDistributionPath('preload', 'index.cjs'),
 			contextIsolation: true,
 			nodeIntegration: false,
 			sandbox: false,

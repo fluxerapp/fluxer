@@ -7,7 +7,6 @@ import {
 } from '@app/api/database/PostgresKvQueryExecutor';
 import * as DonationTables from '@app/api/donation/DonationTables';
 import * as Tables from '@app/api/Tables';
-import {IPINFO_CACHE_TTL_SECONDS, IPINFO_REQUEST_AUDIT_TTL_SECONDS} from '@pkgs/geoip/src/PostgresIpInfoKv';
 import {type IPostgresClient, quoteIdentifier} from '@pkgs/postgres/src/Client';
 import {ms} from 'itty-time';
 
@@ -23,8 +22,6 @@ export const DEFAULT_TTL_TABLES: ReadonlyArray<{name: string; defaultTtlSeconds:
 			? []
 			: [{name: table.name, defaultTtlSeconds: table.defaultTtlSeconds}],
 	),
-	{name: 'ipinfo_cache', defaultTtlSeconds: IPINFO_CACHE_TTL_SECONDS},
-	{name: 'ipinfo_requests_by_hour', defaultTtlSeconds: IPINFO_REQUEST_AUDIT_TTL_SECONDS},
 ];
 
 export interface LegacyDefaultTtlExpiryResult {

@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A private channel is a conversation outside any guild. It is either a direct message between two accounts or a group DM with its own participant set. Its fields come from the [channel object](/http-api/channels/#channel-object).
 
-The routes here take a user session or a bot token. An OAuth2 bearer credential receives 403 `ACCESS_DENIED`, and an account with an outstanding required action receives 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+The routes here take a user session or a bot token. An OAuth2 bearer credential receives 403 `ACCESS_DENIED`.
 
 :::note[Open state is per participant]
 A direct message channel exists once, and each participant holds its own open state. Closing one side leaves the channel and its messages in place, so a later [Create private channel](#create-private-channel) request for the same pair returns that stored channel.
@@ -86,11 +86,17 @@ When the instance [community policy](/http-api/instance/#community-policy-object
 
 An unclaimed account holds no password and did not arrive through SSO. Fluxer rejects an unclaimed caller with 400 `UNCLAIMED_ACCOUNT_CANNOT_JOIN_GROUP_DMS` when `recipients` is supplied, and with 400 `UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES` otherwise. An ordinary caller then needs a verified email address, failing which the request returns 403 `DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED`. A bot caller is exempt from the email requirement and is never unclaimed.
 
+### New conversation limit
+
+An account can be limited from starting new conversations. While the limit stands, opening a direct message with an account that is not a friend returns 403 `NEW_CONVERSATIONS_LIMITED`, unless the other account has already written in a direct message between the two. The same check applies to sending, editing, pinning and reacting in a direct message, to ringing a direct message call, and to sending a friend request.
+
+Friends, bots, conversations where the other account has written, incoming friend requests, group DMs and guild channels are unaffected. Bots, staff and accounts marked as trusted are never limited. The limit ends on its own, and a moderator who restores the account, marks it trusted or removes a flag from it lifts the limit at once.
+
 ### Direct message admission
 
 A request naming the caller as its own target returns 400 `CANNOT_DM_YOURSELF` as the field code on `recipient_id` under `INVALID_FORM_BODY`. An unresolved target returns 404 `UNKNOWN_USER`.
 
-Fluxer reads no block state, no friendship, and no shared guild on this route. A target that resolves is admitted, so the caller opens a direct message with an account that has blocked them. `CANNOT_SEND_MESSAGES_TO_USER` is reachable from [Create message](/http-api/messages/#create-message) alone, which applies the recipient's direct message policy on every send.
+Fluxer reads no block state and no shared guild on this route, and it reads friendship only for a caller under a [new conversation limit](#new-conversation-limit). A target that resolves is admitted, so the caller opens a direct message with an account that has blocked them. `CANNOT_SEND_MESSAGES_TO_USER` is reachable from [Create message](/http-api/messages/#create-message) alone, which applies the recipient's direct message policy on every send.
 
 :::caution[Blocking removes no channel from the blocked account]
 Blocking closes no existing channel. The blocked account still opens the pair's direct message through this route and receives 200. Only the send is refused, with 400 `CANNOT_SEND_MESSAGES_TO_USER`.
@@ -120,12 +126,9 @@ Fluxer holds a bot caller to no friendship. A recipient that has blocked the bot
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | The CAPTCHA proof |
-| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider, either `hcaptcha` or `turnstile` |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
 
-<sup>1</sup> Read only on a request supplying `recipients`, where a missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`, as does a proof for a provider the instance holds no secret key for. [CAPTCHA](/topics/captcha/) states when an instance skips verification
-
-<sup>2</sup> The value `hcaptcha` or `turnstile` selects that provider whether or not the instance configured it. The instance's configured provider is used when the header is absent or has any other value
+<sup>1</sup> Read only on a request supplying `recipients`, where a missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. [CAPTCHA handling](/topics/captcha/#exemption) states when an instance skips verification
 
 ### JSON body
 
@@ -142,7 +145,8 @@ Fluxer holds a bot caller to no friendship. A recipient that has blocked the bot
 | --- | --- | --- |
 | 200 | [channel](/http-api/channels/#channel-object) object | The direct message was opened or the group DM was created |
 | 400 | [error response](/http-api/#error-response) | CAPTCHA, account eligibility, the recipient set, relationship policy, a group DM limit, or instance policy rejects creation |
-| 403 | [error response](/http-api/#error-response) | An ordinary caller's email address is unverified and the request returns `DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | An ordinary caller's email address is unverified and the request returns `DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED`, or a limited caller opens a new conversation and the request returns `NEW_CONVERSATIONS_LIMITED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and creates a group direct message, and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | The caller or the direct message recipient does not resolve |
 
 ### Side effects

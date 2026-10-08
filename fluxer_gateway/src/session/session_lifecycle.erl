@@ -21,7 +21,8 @@
     handle_resume/3,
     handle_resume_offline_timeout/2,
     handle_presence_update_cast/2,
-    handle_initial_global_presences/2
+    handle_initial_global_presences/2,
+    send_guild_push_hold/2
 ]).
 
 -export_type([session_state/0, channel_id/0, user_id/0, session_id/0, seq/0, status/0]).
@@ -352,6 +353,7 @@ handle_resume(Seq, SocketPid, #{seq := CurrentSeq} = State) ->
     NewState1 = replace_socket(SocketPid, NewState0),
     ReplyEvents = replay_missed_events_inline(MissedEvents, SocketPid),
     NewState = NewState1#{status => ResumeStatus, resume_status => ResumeStatus},
+    ok = sync_guild_push_hold(State, NewState),
     NewState2 = ensure_presence_attached_on_resume(
         NewState, SessionId, ResumeStatus, Afk, Mobile
     ),
@@ -509,7 +511,39 @@ handle_presence_update_cast(Update, State) ->
         NewStatus, State#{status => NewStatus, afk => NewAfk, mobile => NewMobile}
     ),
     send_presence_update(State, SessionId, NewStatus, NewAfk, NewMobile, Update),
+    ok = sync_guild_push_hold(State, NewState),
     {noreply, NewState}.
+
+-spec sync_guild_push_hold(session_state(), session_state()) -> ok.
+sync_guild_push_hold(OldState, NewState) ->
+    notify_guild_push_hold(guild_push_hold(OldState), guild_push_hold(NewState), NewState).
+
+-spec notify_guild_push_hold(boolean(), boolean(), session_state()) -> ok.
+notify_guild_push_hold(Hold, Hold, _State) ->
+    ok;
+notify_guild_push_hold(_OldHold, _NewHold, State) ->
+    maps:foreach(
+        fun(_GuildId, GuildRef) -> send_guild_push_hold(GuildRef, State) end,
+        maps:get(guilds, State, #{})
+    ).
+
+-spec send_guild_push_hold(term(), session_state()) -> ok.
+send_guild_push_hold({GuildPid, _Ref}, #{id := SessionId} = State) when is_pid(GuildPid) ->
+    case maps:get(bot, State, false) of
+        true ->
+            ok;
+        false ->
+            gen_server:cast(
+                GuildPid, {set_session_push_hold, SessionId, guild_push_hold(State)}
+            )
+    end;
+send_guild_push_hold(_GuildRef, _State) ->
+    ok.
+
+-spec guild_push_hold(session_state()) -> boolean().
+guild_push_hold(State) ->
+    lists:member(maps:get(status, State, online), [online, dnd, invisible]) andalso
+        not maps:get(afk, State, false) andalso not maps:get(mobile, State, false).
 
 -spec maybe_update_resume_status(status(), session_state()) -> session_state().
 maybe_update_resume_status(offline, State) ->
@@ -569,11 +603,13 @@ serialize_state(State) ->
         bot => maps:get(bot, State, false),
         shard => maps:get(shard, State, undefined),
         e2ee_capable => maps:get(e2ee_capable, State, false),
+        thread_channels_capable => maps:get(thread_channels_capable, State, false),
         guilds => maps:get(guilds, State, #{}),
         active_guilds => maps:get(active_guilds, State, sets:new()),
         collected_guild_states => maps:get(collected_guild_states, State),
         collected_sessions => maps:get(collected_sessions, State),
         collected_presences => maps:get(collected_presences, State, []),
+        guild_health => maps:get(guild_health, State, #{}),
         guild_subscription_state => maps:get(guild_subscription_state, State, #{})
     }.
 
@@ -605,7 +641,8 @@ serialize_transfer_identity(State) ->
         ignored_events => maps:keys(maps:get(ignored_events, State, #{})),
         initial_guild_id => maps:get(initial_guild_id, State, undefined),
         active_guilds => maps:get(active_guilds, State, sets:new()),
-        debounce_reactions => maps:get(debounce_reactions, State, false)
+        debounce_reactions => maps:get(debounce_reactions, State, false),
+        thread_channels_capable => maps:get(thread_channels_capable, State, false)
     }.
 
 -spec serialize_transfer_runtime(session_state()) -> map().
@@ -623,6 +660,7 @@ serialize_transfer_runtime(State) ->
         collected_guild_states => maps:get(collected_guild_states, State, []),
         collected_sessions => maps:get(collected_sessions, State, []),
         collected_presences => maps:get(collected_presences, State, []),
+        guild_health => maps:get(guild_health, State, #{}),
         guild_subscription_state => maps:get(guild_subscription_state, State, #{})
     }.
 

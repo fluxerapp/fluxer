@@ -1,0 +1,205 @@
+{{- range $name, $w := .Values.workloads }}
+{{- if not (kindIs "invalid" $w) }}
+{{- $ctx := dict "root" $ "name" $name "w" $w }}
+{{- $mode := include "fluxer-push.mode" $ctx }}
+{{- $port := include "fluxer-push.port" $ctx | int }}
+{{- $globalProbes := $.Values.probes | default dict }}
+{{- $workloadProbes := $w.probes | default dict }}
+{{- $probes := dict }}
+{{- range $probe := list "startup" "liveness" "readiness" }}
+{{- $_ := set $probes $probe (ternary (index $workloadProbes $probe) (index $globalProbes $probe) (hasKey $workloadProbes $probe)) }}
+{{- end }}
+{{- $annotations := mergeOverwrite (deepCopy ($.Values.podAnnotations | default dict)) (deepCopy ($w.podAnnotations | default dict)) }}
+{{- $pullSecrets := ternary $w.imagePullSecrets $.Values.imagePullSecrets (hasKey $w "imagePullSecrets") }}
+{{- $podSecurityContext := ternary $w.podSecurityContext $.Values.podSecurityContext (hasKey $w "podSecurityContext") }}
+{{- $securityContext := ternary $w.securityContext $.Values.securityContext (hasKey $w "securityContext") }}
+{{- $strategy := ternary $w.strategy $.Values.strategy (hasKey $w "strategy") }}
+{{- $tsc := ternary $w.topologySpreadConstraints $.Values.topologySpreadConstraints (hasKey $w "topologySpreadConstraints") }}
+{{- $nodeSelector := ternary $w.nodeSelector $.Values.nodeSelector (hasKey $w "nodeSelector") }}
+{{- $tolerations := ternary $w.tolerations $.Values.tolerations (hasKey $w "tolerations") }}
+{{- $affinity := ternary $w.affinity $.Values.affinity (hasKey $w "affinity") }}
+{{- $envFrom := concat ($.Values.envFrom | default list) ($w.envFrom | default list) }}
+{{- $env := include "fluxer-push.env" $ctx }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-push.labels" $ctx | nindent 4 }}
+spec:
+  {{- if not $w.hpa }}
+  replicas: {{ ternary $w.replicas 1 (hasKey $w "replicas") | int }}
+  {{- end }}
+  {{- if hasKey $w "minReadySeconds" }}
+  minReadySeconds: {{ $w.minReadySeconds | int }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "fluxer-push.selectorLabels" $ctx | nindent 6 }}
+  {{- with $strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      {{- with $annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "fluxer-push.labels" $ctx | nindent 8 }}
+    spec:
+      {{- with $pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if hasKey $w "terminationGracePeriodSeconds" }}
+      terminationGracePeriodSeconds: {{ $w.terminationGracePeriodSeconds | int }}
+      {{- end }}
+      {{- with $nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $tsc }}
+      topologySpreadConstraints:
+        {{- range . }}
+        {{- $c := deepCopy . }}
+        {{- if not $c.labelSelector }}
+        {{- $_ := set $c "labelSelector" (dict "matchLabels" (include "fluxer-push.selectorLabels" $ctx | fromYaml)) }}
+        {{- end }}
+        {{- toYaml (list $c) | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          image: {{ include "fluxer-push.image" $ctx | quote }}
+          imagePullPolicy: {{ ($w.image | default dict).pullPolicy | default ($.Values.image | default dict).pullPolicy | default "IfNotPresent" }}
+          command:
+            - /usr/local/bin/fluxer-push
+          {{- if eq $mode "relay" }}
+          args:
+            - --mode
+            - relay
+          {{- end }}
+          {{- with trim $env }}
+          env:
+            {{- . | nindent 12 }}
+          {{- end }}
+          {{- with $envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ $port }}
+              protocol: TCP
+          {{- with $probes.startup }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $probes.liveness }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $probes.readiness }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $w.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $w.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $w.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with $w.extraVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-push.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "fluxer-push.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ $port }}
+      protocol: TCP
+      targetPort: http
+{{- with $w.pdb }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $name }}-pdb
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-push.labels" $ctx | nindent 4 }}
+spec:
+  {{- toYaml . | nindent 2 }}
+  selector:
+    matchLabels:
+      {{- include "fluxer-push.selectorLabels" $ctx | nindent 6 }}
+{{- end }}
+{{- with $w.hpa }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-push.labels" $ctx | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $name }}
+  minReplicas: {{ required (printf "workloads.%s.hpa.minReplicas is required" $name) .minReplicas | int }}
+  maxReplicas: {{ required (printf "workloads.%s.hpa.maxReplicas is required" $name) .maxReplicas | int }}
+  {{- if not (kindIs "invalid" .targetCPUUtilizationPercentage) }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .targetCPUUtilizationPercentage | int }}
+  {{- end }}
+  {{- with .behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

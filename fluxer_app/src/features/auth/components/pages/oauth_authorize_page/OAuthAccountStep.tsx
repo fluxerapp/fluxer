@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {openAccountSwitcherModal} from '@app/features/auth/commands/AccountSwitcherModalCommands';
 import {AccountRow} from '@app/features/auth/components/accounts/AccountRow';
 import styles from '@app/features/auth/components/pages/OAuthAuthorizePage.module.css';
+import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import {useAccountSwitcherLogic} from '@app/features/auth/utils/AccountSwitcherModalUtils';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {Account} from '@app/features/platform/state/AuthSession';
@@ -44,28 +46,29 @@ interface OAuthAccountStepProps {
 
 export const OAuthAccountStep: React.FC<OAuthAccountStepProps> = observer(({clientLabel, onCancel, onContinue}) => {
 	const {i18n} = useLingui();
-	const {accounts, currentAccount, isBusy, handleSwitchAccount, handleReLogin, handleAddAccount} =
-		useAccountSwitcherLogic({
-			redirectAfterSwitch: null,
-			redirectAfterLogin: null,
-		});
+	const openAccountSwitcher = useCallback((reloginAccount: Account | null) => {
+		openAccountSwitcherModal(
+			{
+				closeCurrentAccountOnSelect: true,
+				initialReloginAccount: reloginAccount,
+				redirectAfterLogin: null,
+				redirectAfterSwitch: null,
+				switchAccount: null,
+				'data-flx': 'auth.o-auth-authorize-page.account-step.account-switcher-modal',
+			},
+			null,
+		);
+	}, []);
+	const {accounts, currentAccountKey, currentAccount, isBusy, handleSelectAccount} = useAccountSwitcherLogic({
+		onSelectCurrent: null,
+		onSessionExpired: openAccountSwitcher,
+		redirectAfterSwitch: null,
+		switchAccount: null,
+	});
 	const canContinue = Boolean(currentAccount && currentAccount.isValid !== false);
-	const handleAccountClick = useCallback(
-		(account: Account) => {
-			if (isBusy) {
-				return;
-			}
-			if (account.isValid === false) {
-				handleReLogin(account.userId);
-				return;
-			}
-			if (account.userId === currentAccount?.userId) {
-				return;
-			}
-			void handleSwitchAccount(account.userId);
-		},
-		[currentAccount?.userId, handleReLogin, handleSwitchAccount, isBusy],
-	);
+	const handleAddAccount = useCallback(() => {
+		openAccountSwitcher(null);
+	}, [openAccountSwitcher]);
 	return (
 		<div className={styles.page} data-flx="auth.o-auth-authorize-page.account-step.page">
 			<div className={styles.heroCard} data-flx="auth.o-auth-authorize-page.account-step.hero-card">
@@ -85,16 +88,16 @@ export const OAuthAccountStep: React.FC<OAuthAccountStepProps> = observer(({clie
 					</div>
 				) : (
 					accounts.map((account) => {
-						const isCurrent = account.userId === currentAccount?.userId;
+						const accountKey = getAccountKey(account);
+						const isCurrent = accountKey === currentAccountKey;
 						const canClick = !isCurrent || account.isValid === false;
 						return (
 							<AccountRow
-								key={account.userId}
+								key={accountKey}
 								account={account}
-								variant="manage"
 								isCurrent={isCurrent}
 								isExpired={account.isValid === false}
-								onClick={canClick ? () => handleAccountClick(account) : undefined}
+								onClick={canClick ? () => handleSelectAccount(account) : undefined}
 								data-flx="auth.o-auth-authorize-page.account-step.account-row"
 							/>
 						);

@@ -111,7 +111,7 @@ mod tests {
     use crate::constants::MAX_INTERNAL_REQUEST_BODY_BYTES;
 
     #[test]
-    fn default_limits_carry_the_frozen_old_era_numbers() {
+    fn default_limits_keep_the_frozen_old_era_numbers() {
         let limits = MediaLimits::default_from_config();
         assert_eq!(16_384, limits.image_dimension());
         assert_eq!(16_384 * 16_384, limits.image_pixels());

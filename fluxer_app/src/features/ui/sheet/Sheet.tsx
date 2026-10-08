@@ -2,6 +2,7 @@
 
 import {useBottomSheetBackHandler} from '@app/features/app/hooks/useBottomSheetBackHandler';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {useAccountTransitionDismissal} from '@app/features/platform/hooks/useAccountTransitionDismissal';
 import {resolvePortalHost, usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import styles from '@app/features/ui/sheet/Sheet.module.css';
 import OverlayStack from '@app/features/ui/state/OverlayStack';
@@ -653,6 +654,7 @@ const RootComponent: React.FC<RootProps> = ({
 		if (!isMounted) return undefined;
 		return lockDocumentScroll();
 	}, [isMounted]);
+	useAccountTransitionDismissal(isOpen, onClose);
 	useEffect(() => {
 		if (!isOpen) return undefined;
 		const handleKeyDown = (event: KeyboardEvent) => {

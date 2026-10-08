@@ -11,6 +11,7 @@ import {ChannelMessages} from '@app/features/messaging/state/ChannelMessages';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import Relationships from '@app/features/relationship/state/Relationships';
 import Dimension from '@app/features/ui/state/Dimension';
 import Users from '@app/features/user/state/Users';
@@ -52,6 +53,7 @@ class Messages {
 	private messageRefsByAuthor = new Map<string, Map<string, Set<string>>>();
 	private indexedAuthorsByChannel = new Map<string, Map<string, string>>();
 	updateCounter = 0;
+	cacheGeneration = 0;
 	private pendingFullHydration = false;
 
 	constructor() {
@@ -232,7 +234,12 @@ class Messages {
 
 	getLastEditableMessage(channelId: string): Message | undefined {
 		return this.getMessages(channelId).searchFromNewest((message) => {
-			return message.isCurrentUserAuthor() && message.state === MessageStates.SENT && message.isUserMessage();
+			return (
+				message.isCurrentUserAuthor() &&
+				message.state === MessageStates.SENT &&
+				message.isUserMessage() &&
+				!message.messageSnapshots
+			);
 		});
 	}
 
@@ -273,7 +280,11 @@ class Messages {
 
 	handleSessionInvalidated(): boolean {
 		const channelIds: Array<string> = [];
-		ChannelMessages.forEach((messages) => channelIds.push(messages.channelId));
+		let discardedLoadedMessages = false;
+		ChannelMessages.forEach((messages) => {
+			channelIds.push(messages.channelId);
+			discardedLoadedMessages ||= messages.length > 0;
+		});
 		for (const channelId of channelIds) {
 			this.clearMessages(channelId);
 			Dimension.forgetChannelDimensions(channelId);
@@ -282,11 +293,17 @@ class Messages {
 		this.indexedAuthorsByChannel.clear();
 		this.pendingJumpDispatches.clear();
 		this.pendingFullHydration = true;
+		if (discardedLoadedMessages) {
+			this.cacheGeneration += 1;
+		}
 		this.notifyChange();
 		return true;
 	}
 
 	handleGatewayReady(): boolean {
+		if (AccountScopedWork.isSuspended) {
+			return false;
+		}
 		const selectedChannelId = SelectedChannel.currentChannelId;
 		let didHydrateSelectedChannel = false;
 		if (selectedChannelId) {
@@ -660,6 +677,15 @@ class Messages {
 		return hasChanges;
 	}
 
+	handleGuildThreadsPurged(guildId: string): void {
+		ChannelMessages.forEach(({channelId}) => {
+			if (Channels.getChannel(channelId)?.guildId === guildId) {
+				this.clearMessages(channelId);
+				Dimension.forgetChannelDimensions(channelId);
+			}
+		});
+	}
+
 	handleCleanup(): boolean {
 		ChannelMessages.forEach(({channelId}) => {
 			if (Channels.getChannel(channelId) == null) {
@@ -824,4 +850,16 @@ class Messages {
 	}
 }
 
-export default new Messages();
+const messages = new Messages();
+
+AccountScopedWork.registerTransition({
+	suspend: () => {},
+	resume: () => {},
+	released: () => {
+		if (GatewayConnection.isReady) {
+			messages.handleGatewayReady();
+		}
+	},
+});
+
+export default messages;

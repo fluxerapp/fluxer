@@ -49,7 +49,7 @@ export function MessageAdminController(app: HonoApp) {
 			operationId: 'search_admin_messages',
 			summary: 'Search messages',
 			description:
-				'Searches the messages of a channel by content, or resolves a single message by its ID or by one of its attachments. Passing message_id returns that message with the messages surrounding it; passing attachment_id together with filename returns the message carrying that attachment with its surrounding context. Requires MESSAGE_LOOKUP permission.',
+				'Searches the messages of a channel by content, or resolves a single message by its ID or by one of its attachments. Passing message_id returns that message with the messages surrounding it; passing attachment_id together with filename returns the message with that attachment with its surrounding context. Requires MESSAGE_LOOKUP permission.',
 			responseSchema: AdminMessageSearchResponse,
 			statusCode: 200,
 			security: 'adminApiKey',

@@ -23,6 +23,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
+import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
 import {useCopyLinkHandler} from '@app/lib/copy-link';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
@@ -142,6 +143,7 @@ export const ShareThemeModal = observer(({themeCss}: {themeCss: string}) => {
 	const handleCopy = useCopyLinkHandler(themeUrl, true);
 	const handleSendTheme = async (item: RecipientItem) => {
 		if (!themeUrl) return;
+		if (blockIfAccountLimited()) return;
 		const userId = item.type === 'group_dm' ? item.id : item.user.id;
 		setSendingTo((prev) => new Set(prev).add(userId));
 		try {

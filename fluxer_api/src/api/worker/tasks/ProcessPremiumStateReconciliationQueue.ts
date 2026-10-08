@@ -6,14 +6,17 @@ import type {UserRow} from '@app/api/database/types/UserTypes';
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
+import {isBillingActive} from '@app/api/stripe/BillingConfigCache';
 import {canProvisionPremiumFromSubscriptionStatus} from '@app/api/stripe/StripeSubscriptionAccessPolicy';
 import {
 	getInvoiceLatestLinePeriodEnd,
 	getPrimarySubscriptionItem,
+	getSubscriptionCurrentPeriodStart,
 	getSubscriptionPremiumPeriodEnd,
 	getSubscriptionStartDate,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
-import {createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
+import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
+import {clearPerksSanitizedFlag, createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -21,7 +24,14 @@ import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import type Stripe from 'stripe';
 
 interface ReconcileResult {
-	status: 'patched' | 'no_change' | 'skipped' | 'no_active_subscription' | 'stripped_no_subscription' | 'missing_user';
+	status:
+		| 'patched'
+		| 'no_change'
+		| 'skipped'
+		| 'no_active_subscription'
+		| 'stripped_no_subscription'
+		| 'store_entitled'
+		| 'missing_user';
 	patchedFields: Array<string>;
 }
 
@@ -63,15 +73,31 @@ function buildStripePremiumRepairPatch(user: User, subscription: Stripe.Subscrip
 	}
 	if (premiumUntil && user.premiumUntil?.getTime() !== premiumUntil.getTime()) {
 		patch.premium_until = premiumUntil;
+		const giftEnd = shiftGiftExtensionPastPremiumUntil(
+			{premiumUntil: user.premiumUntil, giftEnd: user.premiumGiftExtensionEndsAt},
+			premiumUntil,
+			new Date(),
+			getSubscriptionCurrentPeriodStart(subscription),
+		);
+		if (giftEnd !== user.premiumGiftExtensionEndsAt) {
+			patch.premium_gift_extension_ends_at = giftEnd;
+		}
 	}
 	if (user.premiumWillCancel !== premiumWillCancel) {
 		patch.premium_will_cancel = premiumWillCancel;
+	}
+	if (user.premiumGraceEndsAt != null) {
+		patch.premium_grace_ends_at = null;
 	}
 	if (premiumBillingCycle && user.premiumBillingCycle !== premiumBillingCycle) {
 		patch.premium_billing_cycle = premiumBillingCycle;
 	}
 	if (user.stripeSubscriptionId !== subscription.id) {
 		patch.stripe_subscription_id = subscription.id;
+	}
+	const clearedPremiumFlags = clearPerksSanitizedFlag(user.premiumFlags);
+	if (user.premiumFlags !== clearedPremiumFlags) {
+		patch.premium_flags = clearedPremiumFlags;
 	}
 	if (subscriptionCustomerId && user.stripeCustomerId !== subscriptionCustomerId) {
 		patch.stripe_customer_id = subscriptionCustomerId;
@@ -269,13 +295,21 @@ async function reconcileUserPremiumStateFromStripe(params: {userId: UserID; stri
 		user,
 	);
 	if (!subscription) {
+		const {storeEntitlementService} = getWorkerDependencies();
+		if (await storeEntitlementService.getActiveStoreEntitlement(user.id)) {
+			await storeEntitlementService.applyStoreEntitlementToUser(user.id);
+			return {status: 'store_entitled', patchedFields: []};
+		}
 		const hasStalePremium = user.premiumType === UserPremiumTypes.SUBSCRIPTION;
-		const hasNonStripePremium = Config.instance.selfHosted || (user.premiumFlags & PremiumFlags.ENABLED_OVERRIDE) !== 0;
+		const hasNonStripePremium =
+			(Config.instance.selfHosted && !isBillingActive()) || (user.premiumFlags & PremiumFlags.ENABLED_OVERRIDE) !== 0;
 		if (hasStalePremium && !hasNonStripePremium) {
 			const patch: Partial<UserRow> = {};
 			let effectivePremiumUntil = getEffectivePremiumUntil(user);
 			const paidThrough = await getPaidThroughFromSubscriptionInvoices(stripe, mostRecentTerminalSubscription);
-			if (mostRecentTerminalSubscription?.ended_at && user.premiumUntil) {
+			const terminalSubscriptionIsCurrent =
+				user.stripeSubscriptionId == null || mostRecentTerminalSubscription?.id === user.stripeSubscriptionId;
+			if (mostRecentTerminalSubscription?.ended_at && user.premiumUntil && terminalSubscriptionIsCurrent) {
 				const subscriptionEndedAt = new Date(mostRecentTerminalSubscription.ended_at * 1000);
 				const entitlementEnd =
 					paidThrough && paidThrough.getTime() > subscriptionEndedAt.getTime() ? paidThrough : subscriptionEndedAt;
@@ -296,7 +330,10 @@ async function reconcileUserPremiumStateFromStripe(params: {userId: UserID; stri
 					premiumGiftExtensionEndsAt: user.premiumGiftExtensionEndsAt,
 				});
 			}
-			const hasFutureLocalEntitlement = effectivePremiumUntil != null && Date.now() <= effectivePremiumUntil.getTime();
+			const graceEndsAt = patch.premium_grace_ends_at ?? user.premiumGraceEndsAt;
+			const hasFutureLocalEntitlement =
+				(effectivePremiumUntil != null && Date.now() <= effectivePremiumUntil.getTime()) ||
+				(graceEndsAt != null && Date.now() <= graceEndsAt.getTime());
 			if (hasFutureLocalEntitlement) {
 				if (user.premiumWillCancel !== true) {
 					patch.premium_will_cancel = true;
@@ -349,6 +386,7 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 	let skippedCount = 0;
 	let noActiveSubscriptionCount = 0;
 	let strippedNoSubscriptionCount = 0;
+	let storeEntitledCount = 0;
 	let failedCount = 0;
 	let requeuedCount = 0;
 	let claimedElsewhereCount = 0;
@@ -387,6 +425,8 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 					},
 					'Stripped expired premium with no active Stripe subscription via worker queue',
 				);
+			} else if (result.status === 'store_entitled') {
+				storeEntitledCount += 1;
 			} else if (result.status === 'no_change') {
 				noChangeCount += 1;
 			} else if (result.status === 'no_active_subscription') {
@@ -420,6 +460,7 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 			skippedCount,
 			noActiveSubscriptionCount,
 			strippedNoSubscriptionCount,
+			storeEntitledCount,
 			failedCount,
 			requeuedCount,
 			claimedElsewhereCount,

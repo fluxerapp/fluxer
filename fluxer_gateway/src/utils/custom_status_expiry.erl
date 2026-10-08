@@ -110,7 +110,7 @@ repair(WindowSeconds) when
 repair(_WindowSeconds) ->
     #{error => invalid_window_seconds}.
 
-%% Only presences whose cached payload actually carries an expires_at are worth
+%% Only presences whose cached payload actually has an expires_at are worth
 %% nudging. Nudging every local presence would cost one payload rebuild and one
 %% replicated cache write each, thousands per node, to correct a few dozen.
 %% Filtering on "has an expiry" rather than "is expired" is deliberate: it also
@@ -129,7 +129,7 @@ expiring_presence_pids(UserIds) ->
 has_expires_at(UserId) ->
     try presence_cache:get(UserId) of
         {ok, Presence} when is_map(Presence) ->
-            presence_carries_expiry(Presence);
+            presence_has_expiry(Presence);
         _ ->
             false
     catch
@@ -139,8 +139,8 @@ has_expires_at(UserId) ->
 
 %% presence_cache:get/1 returns {ok, map()} | not_found, never a bare map, and
 %% expires_at_ms/1 takes the timestamp value rather than the custom_status map.
--spec presence_carries_expiry(map()) -> boolean().
-presence_carries_expiry(Presence) ->
+-spec presence_has_expiry(map()) -> boolean().
+presence_has_expiry(Presence) ->
     case maps:get(<<"custom_status">>, Presence, null) of
         CustomStatus when is_map(CustomStatus) ->
             expires_at_ms(maps:get(<<"expires_at">>, CustomStatus, null)) =/= none;
@@ -198,15 +198,15 @@ spread_ms(Index, Total, WindowMs) -> (Index * WindowMs) div Total.
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-presence_carries_expiry_detects_an_expiry_test() ->
+presence_has_expiry_detects_an_expiry_test() ->
     ?assert(
-        presence_carries_expiry(#{
+        presence_has_expiry(#{
             <<"custom_status">> => #{<<"expires_at">> => <<"2026-05-13T13:02:27.497Z">>}
         })
     ),
-    ?assertNot(presence_carries_expiry(#{<<"custom_status">> => #{<<"text">> => <<"hi">>}})),
-    ?assertNot(presence_carries_expiry(#{<<"custom_status">> => null})),
-    ?assertNot(presence_carries_expiry(#{})).
+    ?assertNot(presence_has_expiry(#{<<"custom_status">> => #{<<"text">> => <<"hi">>}})),
+    ?assertNot(presence_has_expiry(#{<<"custom_status">> => null})),
+    ?assertNot(presence_has_expiry(#{})).
 
 -define(LIVE_EXPIRES_AT, <<"2026-05-13T13:02:27.497Z">>).
 

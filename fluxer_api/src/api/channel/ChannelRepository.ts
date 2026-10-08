@@ -3,6 +3,8 @@
 import type {AttachmentID, ChannelID, EmojiID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import {ChannelRepository as NewChannelRepository} from '@app/api/channel/repositories/ChannelRepository';
+import type {GuildChannelListMode} from '@app/api/channel/repositories/IChannelDataRepository';
+import type {UpsertMessageOptions} from '@app/api/channel/repositories/IMessageRepository';
 import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import type {MessageRow} from '@app/api/database/types/MessageTypes';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -30,6 +32,14 @@ export class ChannelRepository extends IChannelRepository {
 		return this.repository.messageInteractions;
 	}
 
+	get threads() {
+		return this.repository.threads;
+	}
+
+	get crossposts() {
+		return this.repository.crossposts;
+	}
+
 	async findUnique(channelId: ChannelID): Promise<Channel | null> {
 		return this.repository.channelData.findUnique(channelId);
 	}
@@ -38,12 +48,12 @@ export class ChannelRepository extends IChannelRepository {
 		return this.repository.channelData.upsert(data);
 	}
 
-	async updateLastMessageId(channelId: ChannelID, messageId: MessageID): Promise<void> {
-		return this.repository.channelData.updateLastMessageId(channelId, messageId);
+	async updateLastMessageId(channelId: ChannelID, messageId: MessageID, opts?: {isInsert?: boolean}): Promise<void> {
+		return this.repository.channelData.updateLastMessageId(channelId, messageId, opts);
 	}
 
-	async delete(channelId: ChannelID, guildId?: GuildID): Promise<void> {
-		return this.repository.channelData.delete(channelId, guildId);
+	async delete(channelId: ChannelID, guildId?: GuildID, type?: number): Promise<void> {
+		return this.repository.channelData.delete(channelId, guildId, type);
 	}
 
 	async listMessages(
@@ -59,8 +69,8 @@ export class ChannelRepository extends IChannelRepository {
 		return this.repository.messages.getMessage(channelId, messageId);
 	}
 
-	async upsertMessage(data: MessageRow, oldData?: MessageRow | null): Promise<Message> {
-		return this.repository.messages.upsertMessage(data, oldData);
+	async upsertMessage(data: MessageRow, oldData?: MessageRow | null, opts?: UpsertMessageOptions): Promise<Message> {
+		return this.repository.messages.upsertMessage(data, oldData, opts);
 	}
 
 	async deleteMessage(
@@ -172,8 +182,8 @@ export class ChannelRepository extends IChannelRepository {
 		);
 	}
 
-	async listGuildChannels(guildId: GuildID): Promise<Array<Channel>> {
-		return this.repository.channelData.listGuildChannels(guildId);
+	async listGuildChannels(guildId: GuildID, mode: GuildChannelListMode): Promise<Array<Channel>> {
+		return this.repository.channelData.listGuildChannels(guildId, mode);
 	}
 
 	async listChannels(channelIds: Array<ChannelID>): Promise<Array<Channel>> {

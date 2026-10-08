@@ -2,18 +2,19 @@
 
 import authLayoutStyles from '@app/features/app/components/layout/AuthLayout.module.css';
 import styles from '@app/features/auth/flow/AuthCardContainer.module.css';
-import type {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
-import {FluxerLogo} from '@app/features/ui/components/icons/FluxerLogo';
-import {FluxerWordmark} from '@app/features/ui/components/icons/FluxerWordmark';
+import {type AuthCardVariant, AuthLayoutContentMode} from '@app/features/auth/state/AuthLayoutContext';
+import {flxElementClassName} from '@app/lib/react';
 import clsx from 'clsx';
 import type {ReactNode} from 'react';
 
 interface AuthCardContainerProps {
-	showLogoSide?: boolean;
 	variant?: AuthCardVariant;
+	presentation?: AuthLayoutContentMode;
 	children: ReactNode;
 	isInert?: boolean;
 	className?: string;
+	cardClassName?: string;
+	contentClassName?: string;
 }
 
 const cardVariantClassNames: Record<AuthCardVariant, string | undefined> = {
@@ -29,49 +30,75 @@ const formSideVariantClassNames: Record<AuthCardVariant, string | undefined> = {
 	wide: authLayoutStyles.formSideWide,
 };
 
+function resolveContainerClassName(isFullscreen: boolean, className: string | undefined): string {
+	if (isFullscreen) {
+		return authLayoutStyles.fullscreenPassthrough;
+	}
+	return clsx(authLayoutStyles.cardContainer, className);
+}
+
+function resolveSurfaceClassName(
+	isFullscreen: boolean,
+	variant: AuthCardVariant,
+	cardClassName: string | undefined,
+): string {
+	if (isFullscreen) {
+		return authLayoutStyles.fullscreenPassthrough;
+	}
+	return clsx(authLayoutStyles.card, cardVariantClassNames[variant], cardClassName);
+}
+
+function resolveFormSideClassName(
+	isFullscreen: boolean,
+	variant: AuthCardVariant,
+	contentClassName: string | undefined,
+): string {
+	if (isFullscreen) {
+		return authLayoutStyles.fullscreenPassthrough;
+	}
+	return clsx(authLayoutStyles.formSide, formSideVariantClassNames[variant], contentClassName);
+}
+
+function renderCardContents(children: ReactNode, isInert: boolean): ReactNode {
+	if (!isInert) {
+		return children;
+	}
+	return (
+		<flx-auth-card-inert-overlay
+			className={flxElementClassName(styles.inertOverlay)}
+			data-flx="auth.flow.auth-card-container.inert-overlay"
+		>
+			{children}
+		</flx-auth-card-inert-overlay>
+	);
+}
+
 export function AuthCardContainer({
-	showLogoSide = true,
 	variant = 'default',
+	presentation = 'card',
 	children,
 	isInert = false,
 	className,
+	cardClassName,
+	contentClassName,
 }: AuthCardContainerProps) {
+	const isFullscreen = presentation === AuthLayoutContentMode.FULL;
 	return (
-		<div className={clsx(authLayoutStyles.cardContainer, className)} data-flx="auth.flow.auth-card-container.div">
-			<div
-				className={clsx(
-					authLayoutStyles.card,
-					!showLogoSide && authLayoutStyles.cardSingle,
-					cardVariantClassNames[variant],
-				)}
+		<flx-auth-card
+			className={flxElementClassName(resolveContainerClassName(isFullscreen, className))}
+			data-flx="auth.flow.auth-card-container.div"
+		>
+			<flx-auth-card-surface
+				className={flxElementClassName(resolveSurfaceClassName(isFullscreen, variant, cardClassName))}
 				data-flx="auth.flow.auth-card-container.div--2"
 			>
-				{showLogoSide && (
-					<div className={authLayoutStyles.logoSide} data-flx="auth.flow.auth-card-container.div--3">
-						<FluxerLogo className={authLayoutStyles.logo} data-flx="auth.flow.auth-card-container.fluxer-logo" />
-						<FluxerWordmark
-							className={authLayoutStyles.wordmark}
-							data-flx="auth.flow.auth-card-container.fluxer-wordmark"
-						/>
-					</div>
-				)}
-				<div
-					className={clsx(
-						authLayoutStyles.formSide,
-						!showLogoSide && authLayoutStyles.formSideSingle,
-						formSideVariantClassNames[variant],
-					)}
+				<flx-auth-card-form-side
+					className={flxElementClassName(resolveFormSideClassName(isFullscreen, variant, contentClassName))}
 					data-flx="auth.flow.auth-card-container.div--4"
 				>
-					{isInert ? (
-						<div className={styles.inertOverlay} data-flx="auth.flow.auth-card-container.inert-overlay">
-							{children}
-						</div>
-					) : (
-						children
-					)}
-				</div>
-			</div>
-		</div>
+					{renderCardContents(children, isInert)}
+				</flx-auth-card-form-side>
+			</flx-auth-card-surface>
+		</flx-auth-card>
 	);
 }

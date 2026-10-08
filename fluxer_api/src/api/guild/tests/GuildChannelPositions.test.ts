@@ -318,7 +318,7 @@ describe('Guild Channel Positions', () => {
 			{id: coopVoice.id, parent_id: coopGames.id},
 		]);
 		const channelRepository = new ChannelRepository();
-		const channelsBeforeMove = await channelRepository.listGuildChannels(createGuildID(BigInt(guild.id)));
+		const channelsBeforeMove = await channelRepository.listGuildChannels(createGuildID(BigInt(guild.id)), 'enrolled');
 		const storedCoopText = channelsBeforeMove.find((channel) => channel.id.toString() === coopText.id);
 		const storedCoopVoice = channelsBeforeMove.find((channel) => channel.id.toString() === coopVoice.id);
 		expect(storedCoopText).toBeDefined();

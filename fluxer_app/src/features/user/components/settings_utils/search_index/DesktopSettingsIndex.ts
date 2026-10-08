@@ -7,6 +7,35 @@ import type {SearchableSettingDescriptor} from '@app/features/user/components/se
 import {BACKGROUND_DESCRIPTOR} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
 
+const DOWNLOAD_SOURCE_MAPS_DESCRIPTOR = msg({
+	message: 'Download source maps',
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+});
+const SOURCE_MAPS_DESCRIPTOR = msg({
+	message: 'Source maps',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const SOURCEMAPS_DESCRIPTOR = msg({
+	message: 'Sourcemaps',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const DEBUGGING_DESCRIPTOR = msg({
+	message: 'Debugging',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const STACK_TRACES_DESCRIPTOR = msg({
+	message: 'Stack traces',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const SYMBOLS_DESCRIPTOR = msg({
+	message: 'Symbols',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const DOWNLOAD_SOURCE_MAPS_FOR_READABLE_STACK_TRACES_DESCRIPTOR = msg({
+	message: 'Download source maps so stack traces and the developer tools point at real source',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
+
 const HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 	message: 'Hardware acceleration',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
@@ -195,6 +224,14 @@ const HIDE_WINDOW_DESCRIPTOR = msg({
 	message: 'Hide window',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
+const START_MINIMIZED_DESCRIPTOR = msg({
+	message: 'Start minimized',
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+});
+const START_IN_THE_TRAY_WHEN_LAUNCHED_AT_LOGIN_DESCRIPTOR = msg({
+	message: 'Start in the tray instead of opening the window when launched at login',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
 const HIDE_THE_WINDOW_WHEN_MINIMIZED_AND_REOPEN_FROM_DESCRIPTOR = msg({
 	message: 'Hide the window when minimized and reopen from the tray',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
@@ -248,6 +285,24 @@ export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 		isVisible: isDesktop,
 	},
 	{
+		id: 'advanced-start-minimized',
+		tabType: 'desktop_settings',
+		label: START_MINIMIZED_DESCRIPTOR,
+		keywords: [
+			START_MINIMIZED_DESCRIPTOR,
+			MINIMIZE_DESCRIPTOR,
+			STARTUP_DESCRIPTOR,
+			LAUNCH_AT_LOGIN_2_DESCRIPTOR,
+			TRAY_DESCRIPTOR,
+			HIDE_WINDOW_DESCRIPTOR,
+			BACKGROUND_DESCRIPTOR,
+		],
+		description: START_IN_THE_TRAY_WHEN_LAUNCHED_AT_LOGIN_DESCRIPTOR,
+		audience: 'primary',
+		tags: ['desktop'],
+		isVisible: isDesktop,
+	},
+	{
 		id: 'advanced-remember-window-state',
 		tabType: 'desktop_settings',
 		label: REMEMBER_SIZE_POSITION_DESCRIPTOR,
@@ -265,6 +320,22 @@ export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 		description: KEEP_WINDOW_DIMENSIONS_AND_PLACEMENT_BETWEEN_RELOADS_DESCRIPTOR,
 		audience: 'primary',
 		tags: ['desktop'],
+		isVisible: isDesktop,
+	},
+	{
+		id: 'desktop-source-maps',
+		tabType: 'desktop_settings',
+		label: DOWNLOAD_SOURCE_MAPS_DESCRIPTOR,
+		keywords: [
+			SOURCE_MAPS_DESCRIPTOR,
+			SOURCEMAPS_DESCRIPTOR,
+			DEBUGGING_DESCRIPTOR,
+			STACK_TRACES_DESCRIPTOR,
+			SYMBOLS_DESCRIPTOR,
+		],
+		description: DOWNLOAD_SOURCE_MAPS_FOR_READABLE_STACK_TRACES_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['desktop', 'developer'],
 		isVisible: isDesktop,
 	},
 	{

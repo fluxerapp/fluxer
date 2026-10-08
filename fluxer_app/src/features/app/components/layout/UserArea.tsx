@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {UserAreaPopout} from '@app/features/app/components/floating/UserAreaPopout';
 import styles from '@app/features/app/components/layout/UserArea.module.css';
 import {
@@ -13,7 +14,7 @@ import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHo
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import Keybind from '@app/features/input/state/InputKeybind';
-import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
+import {getPushToTalkHoldLabel} from '@app/features/input/utils/PushToTalkHint';
 import Presence from '@app/features/presence/state/Presence';
 import {SettingsContextMenu} from '@app/features/ui/action_menu/SettingsContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -27,7 +28,6 @@ import {TooltipWithKeybind} from '@app/features/ui/keybind_hint/KeybindHint';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {USER_SETTINGS_LABEL_DESCRIPTOR} from '@app/features/user/components/settings_utils/SettingsConstants';
 import type {User} from '@app/features/user/models/User';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
@@ -142,7 +142,10 @@ const UserAreaInner = observer(
 		};
 		const handleSettingsClick = () => {
 			ModalCommands.push(
-				modal(() => <UserSettingsModal data-flx="app.user-area.handle-settings-click.user-settings-modal" />),
+				modal(
+					() => <UserSettingsModal data-flx="app.user-area.handle-settings-click.user-settings-modal" />,
+					'user-settings',
+				),
 			);
 		};
 		const storeConnectedChannelId = MediaEngine.channelId;
@@ -205,8 +208,6 @@ const UserAreaInner = observer(
 			};
 		}, [hasVoiceConnection]);
 		const wrapperClassName = styles.userAreaInnerWrapper;
-		const pushToTalkCombo = Keybind.getByAction('voice_push_to_talk').combo;
-		const pushToTalkHint = formatKeyCombo(i18n, pushToTalkCombo);
 		const isPushToTalkEffective = Keybind.isPushToTalkEffective();
 		const microphoneState = selectUserAreaMicrophoneState({
 			effectiveAudioMuted: isMuted,
@@ -226,7 +227,7 @@ const UserAreaInner = observer(
 			if (isGuildDeafened) return getVoiceDeafenedByModeratorsStatusLabel(i18n, true);
 			if (isGuildMuted) return i18n._(VOICE_MUTED_BY_MODERATORS_DESCRIPTOR);
 			if (isPermissionMuted || muteReason === 'permission') return i18n._(VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR);
-			if (isPushToTalkEffective) return i18n._(PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR, {pushToTalkHint});
+			if (isPushToTalkEffective) return getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR);
 			if (effectiveMuted) return i18n._(UNMUTE_MICROPHONE_DESCRIPTOR);
 			return i18n._(MUTE_MICROPHONE_DESCRIPTOR);
 		})();
@@ -234,7 +235,7 @@ const UserAreaInner = observer(
 			if (isGuildDeafened) return getVoiceDeafenedByModeratorsStatusLabel(i18n, true);
 			if (isGuildMuted) return i18n._(VOICE_MUTED_BY_MODERATORS_DESCRIPTOR);
 			if (isPermissionMuted || muteReason === 'permission') return i18n._(VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR);
-			if (isPushToTalkEffective) return i18n._(PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR, {pushToTalkHint});
+			if (isPushToTalkEffective) return getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR);
 			if (effectiveMuted) return i18n._(UNMUTE_MICROPHONE_DESCRIPTOR);
 			return i18n._(MUTE_MICROPHONE_DESCRIPTOR);
 		})();

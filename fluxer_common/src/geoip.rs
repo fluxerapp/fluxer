@@ -181,19 +181,14 @@ fn prepare_geoip_database(
         GeoipSourceConfig::Filesystem { maxmind_db_path } => Ok(maxmind_db_path.clone()),
         GeoipSourceConfig::S3 {
             maxmind_db_path,
-            maxmind_asn_db_path,
             s3_bucket,
             s3_key,
-            s3_asn_key,
         } => {
             let s3 = s3_config.ok_or_else(|| {
                 anyhow::anyhow!("GeoIP is configured for S3 mode, but S3 configuration is missing")
             })?;
             require_s3_config(s3)?;
             download_s3_object(s3, s3_bucket, s3_key, Path::new(maxmind_db_path))?;
-            if let (Some(asn_key), Some(asn_path)) = (s3_asn_key, maxmind_asn_db_path) {
-                download_s3_object(s3, s3_bucket, asn_key, Path::new(asn_path))?;
-            }
             tracing::info!(
                 maxmind_db_path,
                 s3_bucket,

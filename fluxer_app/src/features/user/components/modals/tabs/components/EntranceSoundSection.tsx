@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PREMIUM_PRODUCT_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -17,7 +17,7 @@ import {
 	parseEntranceSoundScopeId,
 } from '@app/features/notification/utils/EntranceSoundScopes';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -441,7 +441,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 							/>
 							<span className={styles.premiumCardTitle} data-flx="user.entrance-sound-section.premium-card-title">
 								{i18n._(CUSTOM_ENTRANCE_SOUNDS_PREMIUM_DESCRIPTOR, {
-									premiumProductName: PREMIUM_PRODUCT_NAME,
+									premiumProductName: getPremiumProductName(),
 								})}
 							</span>
 						</div>
@@ -460,7 +460,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 							onClick={() => PremiumModalCommands.open()}
 							data-flx="user.entrance-sound-section.button.open"
 						>
-							{i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+							{i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						</Button>
 					</div>
 				) : (

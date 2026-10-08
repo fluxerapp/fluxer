@@ -36,15 +36,9 @@ handle_dispatch(#{<<"user_id">> := UserIdBin, <<"event">> := Event, <<"data">> :
 
 -spec handle_unreachable_dispatch(atom(), integer(), map()) -> no_return().
 handle_unreachable_dispatch(message_create, UserId, Data) ->
-    push_unreachable_dispatch(push_delivery_config:is_enrolled(UserId), UserId, Data);
-handle_unreachable_dispatch(_EventAtom, _UserId, _Data) ->
-    gateway_rpc_error:raise(<<"presence_dispatch_error">>).
-
--spec push_unreachable_dispatch(boolean(), integer(), map()) -> no_return().
-push_unreachable_dispatch(true, UserId, Data) ->
     _ = handle_offline_dispatch(message_create, UserId, Data),
     gateway_rpc_error:raise(<<"presence_dispatch_error">>);
-push_unreachable_dispatch(false, _UserId, _Data) ->
+handle_unreachable_dispatch(_EventAtom, _UserId, _Data) ->
     gateway_rpc_error:raise(<<"presence_dispatch_error">>).
 
 -spec dispatch_event_atom_or_error(term()) -> atom().
@@ -372,6 +366,13 @@ resolve_owner_node_returns_unavailable_when_invalid_owner_test() ->
         unavailable,
         resolve_owner_node(123, fun(_UserId) -> {bad_owner} end)
     ).
+
+dispatch_event_atom_accepts_thread_events_test() ->
+    ?assertEqual(
+        thread_member_update, dispatch_event_atom_or_error(<<"THREAD_MEMBER_UPDATE">>)
+    ),
+    ?assertEqual(thread_list_sync, dispatch_event_atom_or_error(<<"THREAD_LIST_SYNC">>)),
+    ?assertEqual(forum_unreads, dispatch_event_atom_or_error(<<"FORUM_UNREADS">>)).
 
 presence_manager_server_ref_local_test() ->
     ?assertEqual(presence_manager, presence_manager_server_ref(node())).

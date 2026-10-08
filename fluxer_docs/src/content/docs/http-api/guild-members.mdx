@@ -271,6 +271,7 @@ The body is a [guild member update object](#guild-member-update-object) without 
 | 403 | [error response](/http-api/#error-response) | Guild is unavailable, the caller is not a member, or the email address is unverified |
 | 403 | [error response](/http-api/#error-response) | Blocked content was supplied, the caller is timed out, or a required voice permission is absent |
 | 403 | [error response](/http-api/#error-response) | `communication_disabled_until` was supplied |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the body changes a profile field, and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist, or the membership record or account is absent |
 
 ### Side effects

@@ -50,10 +50,40 @@ clamp_int() {
 	echo "$value"
 }
 
-: "${FLUXER_ERLANG_SCHEDULERS_MIN:=2}"
-: "${FLUXER_ERLANG_SCHEDULERS_MAX:=16}"
+is_positive_int "${FLUXER_ERLANG_SCHEDULERS_MIN:-}" || FLUXER_ERLANG_SCHEDULERS_MIN=2
+is_positive_int "${FLUXER_ERLANG_SCHEDULERS_MAX:-}" || FLUXER_ERLANG_SCHEDULERS_MAX=16
 : "${FLUXER_ERLANG_NODE_NAME:=fluxer_gateway@127.0.0.1}"
 : "${FLUXER_ERLANG_DIST_PORT:=8081}"
+node_name_file=/opt/fluxer_gateway/node_name
+
+if [ -n "${FLUXER_ERLANG_NODE_NAME_PREFIX:-}" ]; then
+	case "$FLUXER_ERLANG_NODE_NAME_PREFIX" in
+	*[!A-Za-z0-9_]*)
+		echo 'FLUXER_ERLANG_NODE_NAME_PREFIX may only contain letters, digits and underscores.' >&2
+		exit 1
+		;;
+	esac
+	node_nonce="$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')"
+	FLUXER_ERLANG_NODE_NAME="${FLUXER_ERLANG_NODE_NAME_PREFIX}_${node_nonce}@${FLUXER_ERLANG_NODE_NAME#*@}"
+	printf '%s\n' "$FLUXER_ERLANG_NODE_NAME" >"$node_name_file"
+else
+	rm -f "$node_name_file"
+fi
+
+case "${FLUXER_ERLANG_COOKIE_FILE:-}" in
+*[![:space:]]*)
+	case "${FLUXER_ERLANG_COOKIE:-}" in
+	*[![:space:]]*)
+		echo 'FLUXER_ERLANG_COOKIE and FLUXER_ERLANG_COOKIE_FILE are both set, set only one.' >&2
+		exit 1
+		;;
+	esac
+	if ! FLUXER_ERLANG_COOKIE="$(cat -- "$FLUXER_ERLANG_COOKIE_FILE")"; then
+		echo "FLUXER_ERLANG_COOKIE_FILE could not read $FLUXER_ERLANG_COOKIE_FILE." >&2
+		exit 1
+	fi
+	;;
+esac
 
 if [ -z "${FLUXER_ERLANG_COOKIE:-}" ]; then
 	echo 'FLUXER_ERLANG_COOKIE is required.' >&2

@@ -52,6 +52,10 @@ struct ResolveForm {
     _csrf: Option<String>,
     #[serde(default)]
     resolution: Option<String>,
+    #[serde(default)]
+    notify_reporter: Option<String>,
+    #[serde(default)]
+    notify_reporter_present: Option<String>,
 }
 
 pub fn router() -> Router<AppState> {
@@ -227,8 +231,10 @@ async fn report_resolve(
     };
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let public_comment = clean_string(form.resolution.as_deref().unwrap_or(""));
+    let notify_reporter =
+        form.notify_reporter_present.is_none() || form.notify_reporter.as_deref() == Some("true");
     let result = client
-        .resolve_report(&report_id, public_comment.as_deref(), None)
+        .resolve_report(&report_id, public_comment.as_deref(), notify_reporter, None)
         .await;
     match result {
         Ok(_) => {

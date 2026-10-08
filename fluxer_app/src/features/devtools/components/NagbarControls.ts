@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ACCOUNT_LIMITED_DESCRIPTOR} from '@app/features/channel/components/channel_header_components/developer_tools/OptionPresets';
 import type {Nagbar, NagbarToggleKey} from '@app/features/ui/state/Nagbar';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -65,6 +66,10 @@ const TERMS_ACCEPTANCE_NAGBAR_DESCRIPTOR = msg({
 	message: 'Terms acceptance nagbar',
 	comment: 'Developer control label for the terms-acceptance banner.',
 });
+const PRIVACY_SETUP_NAGBAR_DESCRIPTOR = msg({
+	message: 'Privacy setup nagbar',
+	comment: 'Developer control label for the privacy setup banner.',
+});
 const VOICE_SESSION_RESTORE_NAGBAR_DESCRIPTOR = msg({
 	message: 'Voice session restore nagbar',
 	comment: 'Developer control label for the voice-session-restore banner.',
@@ -72,6 +77,11 @@ const VOICE_SESSION_RESTORE_NAGBAR_DESCRIPTOR = msg({
 const INVITES_DISABLED_NAGBAR_DESCRIPTOR = msg({
 	message: 'Invites disabled nagbar',
 	comment: 'Developer control label for the invites-disabled banner.',
+});
+const DOMAIN_MOVED_NAGBAR_DESCRIPTOR = msg({
+	message: 'Domain moved nagbar',
+	comment:
+		'Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.',
 });
 const GUILD_MFA_REQUIREMENT_NAGBAR_DESCRIPTOR = msg({
 	message: 'Community MFA requirement nagbar',
@@ -158,6 +168,22 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		useActualDisabled: (state) => !state.forceEmailVerification && !state.forceHideEmailVerification,
 		forceShowDisabled: (state) => state.forceEmailVerification,
 		forceHideDisabled: (state) => state.forceHideEmailVerification,
+	},
+	{
+		key: 'forceAccountLimited',
+		label: ACCOUNT_LIMITED_DESCRIPTOR,
+		forceKey: 'forceAccountLimited',
+		forceHideKey: 'forceHideAccountLimited',
+		resetKeys: ['forceAccountLimited'],
+		status: (state) =>
+			state.forceAccountLimited
+				? FORCE_ENABLED
+				: state.forceHideAccountLimited
+					? FORCE_DISABLED
+					: USING_ACTUAL_ACCOUNT_STATE,
+		useActualDisabled: (state) => !state.forceAccountLimited && !state.forceHideAccountLimited,
+		forceShowDisabled: (state) => state.forceAccountLimited,
+		forceHideDisabled: (state) => state.forceHideAccountLimited,
 	},
 	{
 		key: 'forceDesktopNotification',
@@ -278,6 +304,18 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		useActualDisabled: (state) => !state.forceTermsAcceptance && !state.forceHideTermsAcceptance,
 		forceShowDisabled: (state) => state.forceTermsAcceptance,
 		forceHideDisabled: (state) => state.forceHideTermsAcceptance,
+	},
+	{
+		key: 'forcePrivacySetup',
+		label: PRIVACY_SETUP_NAGBAR_DESCRIPTOR,
+		forceKey: 'forcePrivacySetup',
+		forceHideKey: 'forceHidePrivacySetup',
+		resetKeys: ['forcePrivacySetup'],
+		status: (state) =>
+			state.forcePrivacySetup ? FORCE_ENABLED : state.forceHidePrivacySetup ? FORCE_DISABLED : USING_ACTUAL_STATE,
+		useActualDisabled: (state) => !state.forcePrivacySetup && !state.forceHidePrivacySetup,
+		forceShowDisabled: (state) => state.forcePrivacySetup,
+		forceHideDisabled: (state) => state.forceHidePrivacySetup,
 	},
 	{
 		key: 'forceDesktopDownload',
@@ -408,5 +446,17 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		useActualDisabled: (state) => !state.forceGuildMfaRequirement && !state.forceHideGuildMfaRequirement,
 		forceShowDisabled: (state) => state.forceGuildMfaRequirement,
 		forceHideDisabled: (state) => state.forceHideGuildMfaRequirement,
+	},
+	{
+		key: 'forceDomainMoved',
+		label: DOMAIN_MOVED_NAGBAR_DESCRIPTOR,
+		forceKey: 'forceDomainMoved',
+		forceHideKey: 'forceHideDomainMoved',
+		resetKeys: ['forceDomainMoved'],
+		status: (state) =>
+			state.forceDomainMoved ? FORCE_ENABLED : state.forceHideDomainMoved ? FORCE_DISABLED : USING_ACTUAL_STATE,
+		useActualDisabled: (state) => !state.forceDomainMoved && !state.forceHideDomainMoved,
+		forceShowDisabled: (state) => state.forceDomainMoved,
+		forceHideDisabled: (state) => state.forceHideDomainMoved,
 	},
 ];

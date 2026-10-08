@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {
@@ -29,7 +30,11 @@ import {
 	ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR,
 	ModalFooterContext,
 } from '@app/features/guild/components/modals/add_guild_modal/shared';
-import {getGuildIconDisplayInitials, getInitialsLength} from '@app/features/guild/utils/GuildInitialsUtils';
+import {
+	getGuildIconDisplayInitials,
+	getGuildInitialsFitStyle,
+	getInitialsLength,
+} from '@app/features/guild/utils/GuildInitialsUtils';
 import {
 	CREATE_COMMUNITY_DESCRIPTOR,
 	FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR,
@@ -45,7 +50,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Form} from '@app/features/ui/components/form/Form';
 import {Input} from '@app/features/ui/components/form/FormInput';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as StringUtils from '@app/lib/strings';
@@ -75,13 +79,12 @@ export const GuildCreateForm = observer(() => {
 	const currentUser = Users.currentUser;
 	const shouldRequireClaimedAccount = currentUser != null && !currentUser.isClaimed();
 	const nameValue = form.watch('name');
-	const rawInitials = useMemo(() => {
+	const initials = useMemo(() => {
 		const raw = (nameValue || '').trim();
 		if (!raw) return '';
-		return StringUtils.getInitialsFromName(raw);
+		return getGuildIconDisplayInitials(StringUtils.getInitialsFromName(raw));
 	}, [nameValue]);
-	const initials = useMemo(() => getGuildIconDisplayInitials(rawInitials), [rawInitials]);
-	const initialsLength = useMemo(() => (rawInitials ? getInitialsLength(rawInitials) : null), [rawInitials]);
+	const initialsLength = initials ? getInitialsLength(initials) : null;
 	const showIconUploadErrorModal = useCallback(
 		(message: string) => {
 			showGuildErrorModal({
@@ -116,7 +119,6 @@ export const GuildCreateForm = observer(() => {
 					<AssetCropModal
 						assetType={AssetType.GUILD_ICON}
 						imageUrl={base64}
-						sourceMimeType={svg ? 'image/svg+xml' : file.type}
 						onCropComplete={(croppedBlob) => {
 							const reader = new FileReader();
 							reader.onload = () => {
@@ -235,12 +237,15 @@ export const GuildCreateForm = observer(() => {
 					<Button
 						onClick={() =>
 							ModalCommands.push(
-								modal(() => (
-									<UserSettingsModal
-										initialTab="account_security"
-										data-flx="guild.add-guild-modal.guild-create-form.user-settings-modal"
-									/>
-								)),
+								modal(
+									() => (
+										<UserSettingsModal
+											initialTab="account_security"
+											data-flx="guild.add-guild-modal.guild-create-form.user-settings-modal"
+										/>
+									),
+									'user-settings',
+								),
 							)
 						}
 						data-flx="guild.add-guild-modal.guild-create-form.button.push"
@@ -287,6 +292,7 @@ export const GuildCreateForm = observer(() => {
 									{initials ? (
 										<span
 											className={styles.iconInitials}
+											style={getGuildInitialsFitStyle(initials)}
 											data-flx="guild.add-guild-modal.guild-create-form.icon-initials"
 										>
 											{initials}

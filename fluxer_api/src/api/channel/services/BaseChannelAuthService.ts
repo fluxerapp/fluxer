@@ -2,12 +2,13 @@
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
 import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
-import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import type {AuthenticatedChannel, AuthenticatedThread} from '@app/api/channel/services/AuthenticatedChannel';
 import {DMPermissionValidator} from '@app/api/channel/services/DMPermissionValidator';
 import {
 	ensurePersonalNotesChannelExists,
 	isPersonalNotesChannelId,
 } from '@app/api/channel/services/PersonalNotesChannelRepair';
+import {assertThreadAllowed} from '@app/api/channel/services/thread/ThreadDenials';
 import {
 	type ContentWarningChannelLike,
 	channelResponseToContentWarningView,
@@ -16,6 +17,15 @@ import {
 	guildResponseToContentWarningView,
 } from '@app/api/channel/utils/EffectiveContentWarning';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import {
+	THREAD_CHANNEL_TYPES,
+	THREAD_FEATURE_CHANNEL_TYPES,
+	THREAD_ONLY_CHANNEL_TYPES,
+	THREAD_PARENT_CHANNEL_TYPES,
+	type ThreadViewer,
+	viewerActive,
+} from '@app/api/experiment/ChannelThreadsGate';
+import {isGuildMemberTimedOut} from '@app/api/guild/GuildModel';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
 import type {GuildChannelAuthContext, IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -25,6 +35,12 @@ import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {
+	canViewThread,
+	isThreadModerator,
+	threadViewPermissions,
+	withImplicitThreadBits,
+} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {CannotSendMessagesToUserError} from '@fluxer/errors/src/domains/channel/CannotSendMessagesToUserError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
@@ -33,6 +49,7 @@ import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildEr
 import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 
 export interface ChannelAuthOptions {
 	errorOnMissingGuild: 'unknown_channel' | 'missing_permissions';
@@ -50,6 +67,13 @@ interface DMSendPermissionsByChannelIdParams {
 }
 
 type DMSendPermissionsParams = DMSendPermissionsByChannelParams | DMSendPermissionsByChannelIdParams;
+
+export interface ThreadPermissionContext {
+	guild: GuildResponse;
+	member: GuildMemberResponse;
+	parentCategory: GuildChannelAuthContext['parentChannel'];
+	thread: AuthenticatedThread;
+}
 
 export abstract class BaseChannelAuthService {
 	protected abstract readonly options: ChannelAuthOptions;
@@ -70,10 +94,12 @@ export abstract class BaseChannelAuthService {
 	async getChannelAuthenticated({
 		userId,
 		channelId,
+		viewer,
 		skipNsfwValidation,
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
+		viewer: ThreadViewer;
 		skipNsfwValidation?: boolean;
 	}): Promise<AuthenticatedChannel> {
 		if (this.isPersonalNotesChannel({userId, channelId})) {
@@ -85,6 +111,12 @@ export abstract class BaseChannelAuthService {
 		}
 		const channel = await this.channelRepository.channelData.findUnique(channelId);
 		if (!channel) throw new UnknownChannelError();
+		if (
+			THREAD_FEATURE_CHANNEL_TYPES.has(channel.type) &&
+			(channel.guildId === null || !viewerActive(viewer, channel.guildId))
+		) {
+			throw new UnknownChannelError();
+		}
 		if (!channel.guildId) {
 			const recipients = await this.userRepository.listUsers(Array.from(channel.recipientIds));
 			return this.getDMChannelAuth({channel, recipients, userId});
@@ -174,6 +206,9 @@ export abstract class BaseChannelAuthService {
 		userId: UserID;
 		skipNsfwValidation?: boolean;
 	}): Promise<AuthenticatedChannel> {
+		if (THREAD_CHANNEL_TYPES.has(channel.type)) {
+			return this.getThreadChannelAuth({channel, userId, skipNsfwValidation});
+		}
 		const guildId = channel.guildId!;
 		const [authContextResult, guildMemberResult] = await Promise.all([
 			this.fetchGuildAuthContextOrThrow({guildId, userId, channelId: this.parentLookupChannelId(channel)}),
@@ -224,8 +259,10 @@ export abstract class BaseChannelAuthService {
 			this.options.validateNsfw &&
 			!skipNsfwValidation &&
 			(channel.type === ChannelTypes.GUILD_TEXT ||
+				channel.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
 				channel.type === ChannelTypes.GUILD_VOICE ||
-				channel.type === ChannelTypes.GUILD_LINK) &&
+				channel.type === ChannelTypes.GUILD_LINK ||
+				THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) &&
 			requiresAgeVerification
 		) {
 			const user = await this.userRepository.findUnique(userId);
@@ -241,6 +278,111 @@ export abstract class BaseChannelAuthService {
 			hasPermission,
 			checkPermission,
 		};
+	}
+
+	async resolveThreadPermissionContext({
+		thread,
+		userId,
+	}: {
+		thread: Channel;
+		userId: UserID;
+	}): Promise<ThreadPermissionContext> {
+		const guildId = thread.guildId;
+		const parentId = thread.parentId;
+		if (guildId === null || parentId === null) throw new UnknownChannelError();
+		const [parent, state, threadMember, guildMemberResult] = await Promise.all([
+			this.channelRepository.channelData.findUnique(parentId),
+			this.channelRepository.threads.getState(thread.id),
+			this.channelRepository.threads.getMember(thread.id, userId),
+			this.fetchGuildMemberOrThrow({guildId, userId}),
+		]);
+		if (!parent || !state || parent.guildId !== guildId || !THREAD_PARENT_CHANNEL_TYPES.has(parent.type)) {
+			throw new UnknownChannelError();
+		}
+		if (!guildMemberResult.success || !guildMemberResult.memberData) {
+			this.throwGuildAccessError();
+		}
+		const [authContextResult, parentPermissions] = await Promise.all([
+			this.fetchGuildAuthContextOrThrow({guildId, userId, channelId: this.parentLookupChannelId(parent)}),
+			this.gatewayService.getUserPermissions({guildId, userId, channelId: parent.id}),
+		]);
+		if (!authContextResult) {
+			this.throwGuildAccessError();
+		}
+		const member = await this.fillMissingMemberTimeout({guildId, userId, memberData: guildMemberResult.memberData});
+		const guild = authContextResult.guild;
+		const enforceMfa = await createGuildMfaEnforcer({userRepository: this.userRepository, guildData: guild, userId});
+		const isOwner = guild.owner_id === userId.toString();
+		const timedOut = isGuildMemberTimedOut(member);
+		const actor = {
+			permissions: parentPermissions,
+			isOwner,
+			timedOut,
+			thread: {
+				type: state.type,
+				archived: state.archived,
+				locked: state.locked,
+				invitable: state.invitable ?? true,
+			},
+			isThreadOwner: thread.ownerId === userId,
+			isMember: threadMember !== null,
+		};
+		return {
+			guild,
+			member,
+			parentCategory: authContextResult.parentChannel,
+			thread: {
+				state,
+				parent,
+				member: threadMember,
+				parentPermissions,
+				actor,
+				isModerator: isThreadModerator(withImplicitThreadBits(parentPermissions), {isOwner, timedOut}),
+				enforceMfa,
+			},
+		};
+	}
+
+	protected async getThreadChannelAuth({
+		channel,
+		userId,
+		skipNsfwValidation,
+	}: {
+		channel: Channel;
+		userId: UserID;
+		skipNsfwValidation?: boolean;
+	}): Promise<AuthenticatedChannel> {
+		const context = await this.resolveThreadPermissionContext({thread: channel, userId});
+		const {guild, member, thread} = context;
+		assertThreadAllowed(canViewThread(thread.actor));
+		const permissions = threadViewPermissions(thread.parentPermissions);
+		const hasPermission = async (permission: bigint): Promise<boolean> => {
+			const allowed = (permissions & permission) === permission;
+			if (allowed) thread.enforceMfa(permission);
+			return allowed;
+		};
+		const checkPermission = async (permission: bigint): Promise<void> => {
+			if (!(await hasPermission(permission))) throw new MissingPermissionsError();
+		};
+		if (this.options.validateNsfw && !skipNsfwValidation && THREAD_PARENT_CHANNEL_TYPES.has(thread.parent.type)) {
+			const parentCategory = await this.getParentCategoryContentWarningView({
+				channel: thread.parent,
+				parentChannel: context.parentCategory,
+			});
+			const requiresAgeVerification = computeEffectiveChannelNsfw(
+				channelToContentWarningView(thread.parent),
+				parentCategory,
+				guildResponseToContentWarningView(guild),
+			);
+			if (requiresAgeVerification) {
+				const user = await this.userRepository.findUnique(userId);
+				if (!user) throw new UnknownUserError();
+				if (!canUserAccessNsfwContent(user)) {
+					throw new NsfwContentRequiresAgeVerificationError();
+				}
+			}
+		}
+		return {channel, guild, member, hasPermission, checkPermission, thread};
 	}
 
 	private parentLookupChannelId(channel: Channel): ChannelID | undefined {

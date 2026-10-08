@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isAccountTransitionAbortError} from '@app/features/platform/state/AccountTransitionAbort';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {IS_DEV} from '@app/features/platform/types/Env';
@@ -34,11 +35,29 @@ const DEFAULT_STYLES = {
 	Error: {color: '#dc3545', fontWeight: 'normal'},
 	Fatal: {color: '#dc3545', fontWeight: 'bold'},
 };
+const ACCOUNT_TRANSITION_ABORT_DESCRIPTION = '(cancelled by an account switch or logout)';
+const hasDOMException = typeof DOMException !== 'undefined';
+const describeLogArgument = (value: unknown): unknown => {
+	if (hasDOMException && value instanceof DOMException) {
+		return `${value.name}: ${value.message}`;
+	}
+	return value;
+};
+const describeAccountTransitionAbort = (value: unknown): unknown =>
+	isAccountTransitionAbortError(value) ? ACCOUNT_TRANSITION_ABORT_DESCRIPTION : value;
 const pad2 = (value: number): string => (value < 10 ? `0${value}` : `${value}`);
 const formatTimestamp = (date: Date): string =>
 	`${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
-const resolveDefaultMinLevel = (): LogLevel =>
-	AppStorage.getItem('debugLoggingEnabled') === 'true' || IS_DEV ? LogLevel.Debug : LogLevel.Info;
+const resolveDefaultMinLevel = (): LogLevel => {
+	if (IS_DEV) {
+		return LogLevel.Debug;
+	}
+	try {
+		return AppStorage.getItem('debugLoggingEnabled') === 'true' ? LogLevel.Debug : LogLevel.Info;
+	} catch {
+		return LogLevel.Info;
+	}
+};
 
 export class Logger {
 	private name: string;
@@ -86,10 +105,18 @@ export class Logger {
 	}
 
 	warn(...args: Array<unknown>): void {
+		if (args.some(isAccountTransitionAbortError)) {
+			this.log(LogLevel.Debug, ...args.map(describeAccountTransitionAbort));
+			return;
+		}
 		this.log(LogLevel.Warn, ...args);
 	}
 
 	error(...args: Array<unknown>): void {
+		if (args.some(isAccountTransitionAbortError)) {
+			this.log(LogLevel.Debug, ...args.map(describeAccountTransitionAbort));
+			return;
+		}
 		if (this.shouldDemoteHttp404(args)) {
 			this.log(LogLevel.Debug, ...args);
 			return;
@@ -113,14 +140,15 @@ export class Logger {
 		const prefix = `[${timestamp}] [${this.name}] [${levelName}]`;
 		const style = DEFAULT_STYLES[levelName as keyof typeof DEFAULT_STYLES];
 		const consoleMethod = this.getConsoleMethod(level);
+		const described = args.map(describeLogArgument);
 		if (style) {
 			console[consoleMethod](
 				`%c${prefix}`,
 				`color:${style.color};font-weight:${style.fontWeight || 'normal'}`,
-				...args,
+				...described,
 			);
 		} else {
-			console[consoleMethod](prefix, ...args);
+			console[consoleMethod](prefix, ...described);
 		}
 	}
 

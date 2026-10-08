@@ -19,14 +19,20 @@ import {
 	type WebAuthnRegistrationOptions,
 } from '@app/api/auth/tests/WebAuthnTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
-import {getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import {
+	getAdminRepository,
+	getInstanceConfigRepository,
+	getUserRepository,
+} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {PremiumFlags, SuspiciousActivityFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
-import {expect} from 'vitest';
+import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {expect, onTestFinished} from 'vitest';
 
 async function loadUser(account: TestAccount): Promise<User> {
 	const user = await getUserRepository().findUnique(createUserID(BigInt(account.userId)));
@@ -305,6 +311,50 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
+		method: 'POST',
+		route: '/admin/users/:user_id/password-reset-link',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const originalSelfHosted = Config.instance.selfHosted;
+			onTestFinished(() => {
+				Config.instance.selfHosted = originalSelfHosted;
+			});
+			Config.instance.selfHosted = true;
+			await getInstanceConfigRepository().setAccountIdentityMode(AccountIdentityModes.USERNAME, 'setup');
+			return {
+				request: {path: `/admin/users/${target.userId}/password-reset-link`},
+				expected: {
+					action: 'create_password_reset_link',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/recovery-kit',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const originalSelfHosted = Config.instance.selfHosted;
+			onTestFinished(() => {
+				Config.instance.selfHosted = originalSelfHosted;
+			});
+			Config.instance.selfHosted = true;
+			await getInstanceConfigRepository().setAccountIdentityMode(AccountIdentityModes.USERNAME, 'setup');
+			return {
+				request: {path: `/admin/users/${target.userId}/recovery-kit`, expectStatus: 204},
+				expected: {
+					action: 'revoke_recovery_kit',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {},
+				},
+			};
+		},
+	},
+	{
 		method: 'PUT',
 		route: '/admin/users/:user_id/ban',
 		async prepare({harness}) {
@@ -318,7 +368,13 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'temp_ban',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {duration_hours: '24', reason: 'Coverage ban', banned_until: expect.any(String)},
+					metadata: {
+						duration_hours: '24',
+						reason: 'Coverage ban',
+						banned_until: expect.any(String),
+						notify_user: 'true',
+						notification_sent: 'true',
+					},
 				},
 			};
 		},
@@ -335,7 +391,35 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'unban',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {},
+					metadata: {notify_user: 'true', notification_sent: 'true', public_reason: 'null'},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
+		route: '/admin/users/:user_id/ban/notes',
+		auditLogReason: 'Coverage ban note',
+		async prepare(context) {
+			const target = await createTestAccount(context.harness);
+			await adminBuilder(context)
+				.put(`/admin/users/${target.userId}/ban`)
+				.body({duration_hours: 24, reason: 'Coverage ban'})
+				.execute();
+			const banLog = (await getAdminRepository().listAllAuditLogsPaginated(1000)).find(
+				(log) => log.action === 'temp_ban' && log.targetId.toString() === target.userId,
+			);
+			return {
+				request: {
+					path: `/admin/users/${target.userId}/ban/notes`,
+					body: {ban_audit_log_id: banLog!.logId.toString(), note: 'Coverage ban note'},
+					expectStatus: 204,
+				},
+				expected: {
+					action: 'annotate_ban',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {ban_audit_log_id: banLog!.logId.toString()},
 				},
 			};
 		},
@@ -354,7 +438,14 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'schedule_deletion',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {days: '30', reason_code: DeletionReasons.USER_REQUESTED.toString()},
+					metadata: {
+						days: '30',
+						reason_code: DeletionReasons.USER_REQUESTED.toString(),
+						pending_deletion_at: expect.any(String),
+						notify_user: 'true',
+						notification_sent: 'true',
+						notification_template: 'account_deletion_scheduled_requested',
+					},
 				},
 			};
 		},
@@ -368,13 +459,24 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 				.put(`/admin/users/${target.userId}/deletion`)
 				.body({reason_code: DeletionReasons.USER_REQUESTED, days_until_deletion: 30})
 				.execute();
+			const pendingDeletionAt = (await loadUser(target)).pendingDeletionAt!.toISOString();
 			return {
-				request: {path: `/admin/users/${target.userId}/deletion`},
+				request: {
+					path: `/admin/users/${target.userId}/deletion`,
+					body: {expected_pending_deletion_at: pendingDeletionAt},
+				},
 				expected: {
 					action: 'cancel_deletion',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {},
+					metadata: {
+						cancelled_pending_deletion_at: pendingDeletionAt,
+						cancelled_scheduled_by: context.admin.userId,
+						cancelled_scheduled_at: expect.any(String),
+						cancelled_reason_code: DeletionReasons.USER_REQUESTED.toString(),
+						notify_user: 'false',
+						notification_sent: 'false',
+					},
 				},
 			};
 		},
@@ -482,34 +584,6 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
-		method: 'PUT',
-		route: '/admin/users/:user_id/phone-verification',
-		async prepare(context) {
-			const target = await createTestAccount(context.harness);
-			const flags = SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL | SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE;
-			await adminBuilder(context)
-				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
-				.body({flags})
-				.execute();
-			return {
-				request: {
-					path: `/admin/users/${target.userId}/phone-verification`,
-					body: {has_verified_phone: true},
-				},
-				expected: {
-					action: 'update_has_verified_phone',
-					targetType: 'user',
-					targetId: target.userId,
-					metadata: {
-						has_verified_phone: 'true',
-						suspicious_activity_flags_before: flags.toString(),
-						suspicious_activity_flags_after: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL.toString(),
-					},
-				},
-			};
-		},
-	},
-	{
 		method: 'PATCH',
 		route: '/admin/users/:user_id/date-of-birth',
 		async prepare({harness}) {
@@ -521,40 +595,6 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					targetType: 'user',
 					targetId: target.userId,
 					metadata: {old_dob: (await loadUser(target)).dateOfBirth!, new_dob: '1995-06-15'},
-				},
-			};
-		},
-	},
-	{
-		method: 'PUT',
-		route: '/admin/users/:user_id/suspicious-activity-flags',
-		async prepare({harness}) {
-			const target = await createTestAccount(harness);
-			const flags = SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL | SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE;
-			return {
-				request: {path: `/admin/users/${target.userId}/suspicious-activity-flags`, body: {flags}},
-				expected: {
-					action: 'update_suspicious_activity_flags',
-					targetType: 'user',
-					targetId: target.userId,
-					metadata: {flags: flags.toString()},
-				},
-			};
-		},
-	},
-	{
-		method: 'PUT',
-		route: '/admin/users/:user_id/suspicious-activity-disablement',
-		async prepare({harness}) {
-			const target = await createTestAccount(harness);
-			const flags = SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE;
-			return {
-				request: {path: `/admin/users/${target.userId}/suspicious-activity-disablement`, body: {flags}},
-				expected: {
-					action: 'disable_suspicious_activity',
-					targetType: 'user',
-					targetId: target.userId,
-					metadata: {flags: flags.toString()},
 				},
 			};
 		},

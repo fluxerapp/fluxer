@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {MS_PER_MINUTE} from '@fluxer/date_utils/src/DateConstants';
 import {makeAutoObservable} from 'mobx';
 
@@ -23,7 +24,7 @@ class VoiceSessionRestore {
 
 	constructor() {
 		makeAutoObservable<this, 'snapshotExpirationTimerId'>(this, {snapshotExpirationTimerId: false}, {autoBind: true});
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {

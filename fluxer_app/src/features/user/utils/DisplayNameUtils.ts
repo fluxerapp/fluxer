@@ -6,6 +6,7 @@ import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import Relationships from '@app/features/relationship/state/Relationships';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import type {User} from '@app/features/user/models/User';
+import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 
 export interface UserDisplayNameLike {
 	username: string;
@@ -28,8 +29,10 @@ export function formatTagForStreamerMode(tag: string): string {
 	return StreamerMode.shouldTruncateUsernames ? truncateStreamerModeName(tag) : tag;
 }
 
-export function formatUserTagForStreamerMode(user: Pick<User, 'tag' | 'username' | 'discriminator'>): string {
-	return formatTagForStreamerMode(user.tag || `${user.username}#${user.discriminator}`);
+export function formatUserTagForStreamerMode(
+	user: Pick<User, 'tag' | 'username' | 'discriminator'> & {bot?: boolean},
+): string {
+	return formatTagForStreamerMode(user.tag || formatUserTag(user));
 }
 
 export function getDisplayName(user: UserDisplayNameLike): string {

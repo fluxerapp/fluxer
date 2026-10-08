@@ -27,6 +27,8 @@ import type {
 	VirtualGuildCandidate,
 	VoiceChannelCandidate,
 } from '@app/features/search/state/QuickSwitcherTypes';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {getSettingsSubtabs, getSettingsTabs} from '@app/features/user/components/settings_utils/SettingsConstants';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
@@ -120,7 +122,33 @@ export function buildChannelCandidate(
 				sortWeight,
 			};
 		}
-		case ChannelTypes.GUILD_TEXT: {
+		case ChannelTypes.ANNOUNCEMENT_THREAD:
+		case ChannelTypes.PUBLIC_THREAD:
+		case ChannelTypes.PRIVATE_THREAD:
+		case ChannelTypes.GUILD_FORUM:
+		case ChannelTypes.GUILD_MEDIA: {
+			if (!channel.guildId || !ThreadGuilds.isActive(channel.guildId)) return null;
+			if (channel.isThread() && !ChannelThreads.getThread(channel.id)) return null;
+			const guild = getGuild(channel.guildId);
+			const parent = channel.isThread() && channel.parentId ? Channels.getChannel(channel.parentId) : undefined;
+			const title = channel.name ? channel.name : i18n._(UNKNOWN_CHANNEL_DESCRIPTOR);
+			const subtitle = parent?.name ? `${parent.name} · ${guild?.name ?? ''}` : guild?.name;
+			const searchValues = [channel.name ?? '', parent?.name ?? '', guild?.name ?? ''].filter(Boolean);
+			const baseWeight = getChannelRecency(channel);
+			const sortWeight = getChannelSortWeight(channel.id, baseWeight);
+			return {
+				type: QuickSwitcherResultTypes.TEXT_CHANNEL,
+				id: channel.id,
+				title,
+				subtitle,
+				channel,
+				guild,
+				searchValues,
+				sortWeight,
+			};
+		}
+		case ChannelTypes.GUILD_TEXT:
+		case ChannelTypes.GUILD_ANNOUNCEMENT: {
 			if (!channel.guildId) return null;
 			const guild = getGuild(channel.guildId);
 			const title = channel.name ? channel.name : i18n._(UNKNOWN_CHANNEL_DESCRIPTOR);

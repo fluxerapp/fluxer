@@ -7,6 +7,7 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {User} from '@app/api/models/User';
+import {isPremiumTieringActive} from '@app/api/stripe/BillingConfigCache';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {NON_SELF_HOSTED_RESERVED_DISCRIMINATORS} from '@fluxer/constants/src/DiscriminatorConstants';
@@ -64,7 +65,7 @@ export class DiscriminatorService implements IDiscriminatorService {
 	) {}
 
 	private async canUseCustomDiscriminator(user?: User | null): Promise<boolean> {
-		if (Config.instance.selfHosted) {
+		if (Config.instance.selfHosted && !isPremiumTieringActive()) {
 			return true;
 		}
 		if (!user) {

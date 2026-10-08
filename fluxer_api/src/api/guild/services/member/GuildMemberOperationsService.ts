@@ -15,6 +15,8 @@ import type {GuildMemberAuthService} from '@app/api/guild/services/member/GuildM
 import type {GuildMemberEventService} from '@app/api/guild/services/member/GuildMemberEventService';
 import type {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
 import type {GuildMemberValidationService} from '@app/api/guild/services/member/GuildMemberValidationService';
+import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
+import type {JoinSource} from '@app/api/infrastructure/activity/Contract.generated';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -25,24 +27,15 @@ import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
-import type {Guild} from '@app/api/models/Guild';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
-import {
-	DEFAULT_PHONE_GATE_MEMBER_THRESHOLD,
-	evaluateDeferredPhoneGate,
-	getDeferredPhoneGateConfig,
-	guildTriggersPhoneGate,
-} from '@app/api/risk/DeferredPhoneGate';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {getEffectiveSuspiciousFlags, isProfileSubstringExempt} from '@app/api/user/UserHelpers';
-import {
-	mapUserGuildSettingsToResponse,
-	mapUserSettingsToResponse,
-	mapUserToPrivateResponse,
-} from '@app/api/user/UserMappers';
+import {dispatchUserGuildSettingsUpdate} from '@app/api/user/UserGuildSettingsThreadView';
+import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
+import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
 import {addGuildToUncategorizedFolder, removeGuildFromUserFolders} from '@app/api/user/utils/GuildFolderUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -54,9 +47,7 @@ import {
 } from '@fluxer/constants/src/GuildConstants';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
-	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
 	type MentionReplyPreference,
-	PHONE_REQUIREMENT_FLAGS,
 	UserNotificationSettings,
 } from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -68,12 +59,10 @@ import {MaxGuildsError} from '@fluxer/errors/src/domains/guild/MaxGuildsError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
 import {CommunicationDisabledError} from '@fluxer/errors/src/domains/moderation/CommunicationDisabledError';
-import {AccountSuspiciousActivityError} from '@fluxer/errors/src/domains/user/AccountSuspiciousActivityError';
 import {UserNotInVoiceError} from '@fluxer/errors/src/domains/user/UserNotInVoiceError';
 import {DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildMemberUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import {ms} from 'itty-time';
 
@@ -133,6 +122,25 @@ function hasSelfProfileCustomizationUpdate(
 	data: GuildMemberUpdateRequest | Omit<GuildMemberUpdateRequest, 'roles'>,
 ): boolean {
 	return EMAIL_VERIFICATION_REQUIRED_SELF_PROFILE_FIELDS.some((field) => data[field] !== undefined);
+}
+
+function joinSourceName(type: JoinSourceType): JoinSource {
+	switch (type) {
+		case JoinSourceTypes.CREATOR:
+			return 'creator';
+		case JoinSourceTypes.INSTANT_INVITE:
+			return 'invite';
+		case JoinSourceTypes.VANITY_URL:
+			return 'vanity';
+		case JoinSourceTypes.BOT_INVITE:
+			return 'bot_invite';
+		case JoinSourceTypes.ADMIN_FORCE_ADD:
+			return 'admin_force_add';
+		case JoinSourceTypes.DISCOVERY:
+			return 'discovery';
+		default:
+			return 'other';
+	}
 }
 
 export class GuildMemberOperationsService {
@@ -405,68 +413,6 @@ export class GuildMemberOperationsService {
 		await this.gatewayService.leaveGuild({userId: targetId, guildId});
 	}
 
-	private async applyDeferredPhoneGate(user: User, guild: Guild): Promise<void> {
-		if (user.hasVerifiedPhone) {
-			return;
-		}
-		const rawFlags = user.suspiciousActivityFlags ?? 0;
-		if ((rawFlags & (DEFERRED_PHONE_ON_COMMUNITY_JOIN | PHONE_REQUIREMENT_FLAGS)) === 0) {
-			return;
-		}
-		const {status, config} = await getDeferredPhoneGateConfig();
-		const logContext = {
-			userId: user.id.toString(),
-			guildId: guild.id.toString(),
-			discoverable: guild.features.has(GuildFeatures.DISCOVERABLE),
-			memberCount: guild.memberCount,
-			accountAgeMs: Date.now() - snowflakeToDate(BigInt(user.id)).getTime(),
-		};
-		if (status !== 'ok') {
-			const undeferredFlags = getEffectiveSuspiciousFlags({
-				...user,
-				suspiciousActivityFlags: rawFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN,
-			} as User);
-			if (
-				(undeferredFlags & PHONE_REQUIREMENT_FLAGS) === 0 ||
-				!guildTriggersPhoneGate(guild, DEFAULT_PHONE_GATE_MEMBER_THRESHOLD)
-			) {
-				return;
-			}
-			Logger.info(logContext, `deferred_phone_gate.enforced_while_${status}`);
-			throw new AccountSuspiciousActivityError(undeferredFlags);
-		}
-		const liveFlags = getEffectiveSuspiciousFlags(user);
-		if ((liveFlags & PHONE_REQUIREMENT_FLAGS) !== 0) {
-			if (!guildTriggersPhoneGate(guild, config.memberThreshold)) {
-				return;
-			}
-			Logger.info(logContext, 'deferred_phone_gate.blocked_unsatisfied_phone_requirement');
-			throw new AccountSuspiciousActivityError(liveFlags);
-		}
-		const outcome = evaluateDeferredPhoneGate(user, guild, config, Date.now());
-		if (!outcome.applies) {
-			Logger.info(logContext, `deferred_phone_gate.skipped_${outcome.reason}`);
-			return;
-		}
-		const promotedFlags = getEffectiveSuspiciousFlags({...user, suspiciousActivityFlags: outcome.flags} as User);
-		if (promotedFlags === 0) {
-			Logger.info(logContext, 'deferred_phone_gate.skipped_unenforceable');
-			return;
-		}
-		const updatedUser = await this.userRepository.patchUpsert(
-			user.id,
-			{suspicious_activity_flags: outcome.flags},
-			user.toRow(),
-		);
-		await this.gatewayService.dispatchPresence({
-			userId: user.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(updatedUser),
-		});
-		Logger.info(logContext, 'deferred_phone_gate.applied');
-		throw new AccountSuspiciousActivityError(promotedFlags);
-	}
-
 	async addUserToGuild(
 		params: {
 			userId: UserID;
@@ -474,7 +420,7 @@ export class GuildMemberOperationsService {
 			sendJoinMessage?: boolean;
 			skipGuildLimitCheck?: boolean;
 			skipBanCheck?: boolean;
-			skipRiskGate?: boolean;
+			skipAccountLimitCheck?: boolean;
 			isTemporary?: boolean;
 			joinSourceType?: JoinSourceType;
 			sourceInviteCode?: InviteCode;
@@ -492,7 +438,7 @@ export class GuildMemberOperationsService {
 				sendJoinMessage = true,
 				skipGuildLimitCheck = false,
 				skipBanCheck = false,
-				skipRiskGate = false,
+				skipAccountLimitCheck = false,
 				isTemporary = false,
 				joinSourceType = JoinSourceTypes.INSTANT_INVITE,
 				sourceInviteCode = null,
@@ -507,15 +453,15 @@ export class GuildMemberOperationsService {
 			assertMutableUserId(userId);
 			const user = await this.userRepository.findUnique(userId);
 			if (!user) throw new UnknownGuildError();
+			if (!skipAccountLimitCheck) {
+				assertAccountNotLimited(user);
+			}
 			if (!skipBanCheck) {
 				await this.validationService.checkUserBanStatus({userId, guildId});
 			}
 			const userGuildsCount = await this.guildRepository.countUserGuilds(userId);
 			if (!skipGuildLimitCheck) {
 				await this.enforceGuildLimit(user, userGuildsCount);
-			}
-			if (!skipRiskGate && !user.isBot) {
-				await this.applyDeferredPhoneGate(user, guild);
 			}
 			const maxGuildMembers = resolveMaxGuildMembersLimit({
 				guildFeatures: guild.features,
@@ -563,6 +509,15 @@ export class GuildMemberOperationsService {
 			if (sendJoinMessage && !(guild.systemChannelFlags & SystemChannelFlags.SUPPRESS_JOIN_NOTIFICATIONS)) {
 				await this.channelService.messages.system.sendJoinSystemMessage({guildId, userId, requestCache});
 			}
+			void emitActivity('guild_joined', userId.toString(), {
+				user_id: userId.toString(),
+				guild_id: guildId.toString(),
+				member_count: guild.memberCount + 1,
+				discoverable: guild.features.has(GuildFeatures.DISCOVERABLE),
+				invite_code: sourceInviteCode,
+				inviter_id: inviterId ? inviterId.toString() : null,
+				join_source: joinSourceName(joinSourceType),
+			});
 			if (user.isBot) {
 				await this.recordGuildAuditLog({
 					guildId,
@@ -758,6 +713,7 @@ export class GuildMemberOperationsService {
 		const {targetId, guildId, targetUser, targetMember, data, updateData, preparedAssets} = params;
 		if (hasSelfProfileCustomizationUpdate(data)) {
 			requireEmailVerified(targetUser, 'profile');
+			assertAccountNotLimited(targetUser);
 		}
 		const ctx = createLimitMatchContext({user: targetUser});
 		const hasGuildProfileCustomization = resolveLimitSafe(
@@ -1018,19 +974,7 @@ export class GuildMemberOperationsService {
 		userId: UserID;
 		settings: UserGuildSettings;
 	}): Promise<void> {
-		const payload = mapUserGuildSettingsToResponse(settings);
-		await this.gatewayService.dispatchPresence({
-			userId,
-			event: 'USER_GUILD_SETTINGS_UPDATE',
-			data: payload,
-		});
-		if (payload.guild_id !== null) {
-			await this.gatewayService.syncPushUserGuildSettings({
-				userId,
-				guildId: settings.guildId,
-				settings: payload,
-			});
-		}
+		await dispatchUserGuildSettingsUpdate(this.gatewayService, userId, settings);
 	}
 
 	private async rollbackPreparedAssets(preparedAssets: PreparedMemberAssets): Promise<void> {

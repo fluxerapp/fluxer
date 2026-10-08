@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {INVALID_STATUS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import styles from '@app/features/premium/components/pages/PremiumCallbackPage.module.css';
 import {msg} from '@lingui/core/macro';
@@ -23,10 +24,6 @@ const MATURE_CONTENT_CHECK_CANCELED_DESCRIPTOR = msg({
 const MATURE_CONTENT_CHECK_CANCELED_BODY_DESCRIPTOR = msg({
 	message: 'The mature content check was canceled. You can close this tab and try again from the app.',
 	comment: 'Body copy on the mature content check callback page after the check was canceled.',
-});
-const INVALID_STATUS_DESCRIPTOR = msg({
-	message: 'Invalid status',
-	comment: 'Title on the mature content check callback page when the callback status is invalid.',
 });
 const INVALID_STATUS_BODY_DESCRIPTOR = msg({
 	message: 'An invalid status was provided. You can close this tab and return to the app.',

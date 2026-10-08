@@ -1,57 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::state::{AppProxyBudgets, AppState};
+use crate::local_files::{LocalFileResponseOptions, LocalFileStore, serve_binary_file};
+use crate::state::AppState;
+use crate::static_asset_policy::{
+    apply_asset_request_headers, apply_asset_response_policy, asset_cache_control,
+    copy_asset_response_headers, guess_mime, is_font_mime,
+};
 use axum::{
     body::Body,
     extract::{Path, State},
-    http::{HeaderMap, HeaderValue, StatusCode, header},
+    http::{HeaderMap, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
 };
-use std::path::{Path as FsPath, PathBuf};
 use std::time::Duration;
 use tokio::sync::{OwnedSemaphorePermit, TryAcquireError};
 
-use super::file_stream::stream_file;
-use super::spa_static::{CORS_ALLOW_ANY_VALUE, asset_cache_control, guess_mime, is_font_mime};
-
 const ASSET_REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
-const PRECOMPRESSED_VARIANTS: &[(&str, &str)] = &[("br", "br"), ("gzip", "gz")];
 const MAX_ASSET_SIZE_BYTES: u64 = 100 * 1024 * 1024;
-const UPSTREAM_FAILURE_CACHE_CONTROL: &str = "no-store";
-const UPSTREAM_FAILURE_STRIPPED_HEADERS: &[&str] = &[
-    "cdn-cache-control",
-    "cloudflare-cdn-cache-control",
-    "surrogate-control",
-    "expires",
-    "age",
-];
-
-const BLOCKED_REQUEST_HEADERS: &[&str] = &[
-    "authorization",
-    "connection",
-    "cookie",
-    "host",
-    "keep-alive",
-    "proxy-authenticate",
-    "proxy-authorization",
-    "te",
-    "trailer",
-    "trailers",
-    "transfer-encoding",
-    "upgrade",
-];
-
-const BLOCKED_RESPONSE_HEADERS: &[&str] = &[
-    "connection",
-    "keep-alive",
-    "proxy-authenticate",
-    "proxy-authorization",
-    "te",
-    "trailer",
-    "trailers",
-    "transfer-encoding",
-    "upgrade",
-];
 
 pub async fn proxy_assets(
     State(state): State<AppState>,
@@ -60,8 +25,7 @@ pub async fn proxy_assets(
 ) -> Response {
     let Some(cdn_endpoint) = &state.config.static_cdn_endpoint else {
         return serve_local_asset(
-            &state.budgets,
-            &state.config.static_dir,
+            &state.local_files,
             &format!("assets/{path}"),
             request.headers(),
             state.csp.asset_header(),
@@ -69,16 +33,14 @@ pub async fn proxy_assets(
         .await;
     };
 
-    let target_url = format!("{}/assets/{path}", cdn_endpoint.as_str());
+    if path
+        .split('/')
+        .any(|segment| matches!(segment, "" | "." | ".."))
+    {
+        return StatusCode::NOT_FOUND.into_response();
+    }
 
-    let upstream_host = cdn_endpoint
-        .as_url()
-        .host_str()
-        .map(|host| match cdn_endpoint.as_url().port() {
-            Some(port) => format!("{host}:{port}"),
-            None => host.to_owned(),
-        })
-        .unwrap_or_else(|| "localhost".to_owned());
+    let target_url = format!("{}/assets/{path}", cdn_endpoint.as_str());
 
     let upstream_slot = match state
         .budgets
@@ -93,19 +55,11 @@ pub async fn proxy_assets(
         }
     };
 
-    let mut request_builder = state
+    let request_builder = state
         .http_client
         .get(&target_url)
         .timeout(ASSET_REQUEST_TIMEOUT);
-
-    for (name, value) in request.headers() {
-        let name_str = name.as_str();
-        if BLOCKED_REQUEST_HEADERS.contains(&name_str) {
-            continue;
-        }
-        request_builder = request_builder.header(name.clone(), value.clone());
-    }
-    request_builder = request_builder.header("host", upstream_host.as_str());
+    let request_builder = apply_asset_request_headers(request_builder, request.headers());
 
     let upstream_response = match request_builder.send().await {
         Ok(resp) => resp,
@@ -129,21 +83,13 @@ pub async fn proxy_assets(
     let status = StatusCode::from_u16(upstream_response.status().as_u16())
         .unwrap_or(StatusCode::BAD_GATEWAY);
     let mut response_headers = axum::http::HeaderMap::new();
-
-    for (name, value) in upstream_response.headers() {
-        let name_str = name.as_str();
-        if BLOCKED_RESPONSE_HEADERS.contains(&name_str) {
-            continue;
-        }
-        response_headers.insert(name.clone(), value.clone());
-    }
-    set_known_asset_content_type(&mut response_headers, &path);
-    set_font_cors(&mut response_headers);
-    set_proxied_cache_control(&mut response_headers, &path, status);
-    set_vary_on_accept_encoding(&mut response_headers);
-
-    response_headers.insert(header::CONTENT_SECURITY_POLICY, state.csp.asset_header());
-    response_headers.remove("content-security-policy-report-only");
+    copy_asset_response_headers(upstream_response.headers(), &mut response_headers);
+    apply_asset_response_policy(
+        &mut response_headers,
+        &path,
+        status,
+        state.csp.asset_header(),
+    );
 
     let body = upstream_asset_body(upstream_response, upstream_slot);
     let mut response = Response::new(body);
@@ -201,259 +147,46 @@ fn upstream_asset_body(
 }
 
 pub(super) async fn serve_local_asset(
-    budgets: &AppProxyBudgets,
-    static_dir: &str,
+    files: &LocalFileStore,
     relative_path: &str,
     request_headers: &HeaderMap,
     csp_asset_header: HeaderValue,
 ) -> Response {
-    let Ok(_read_slot) = budgets.local_read_slots.try_acquire() else {
-        return super::capacity_refused_response();
-    };
-
-    let file_path = FsPath::new(static_dir).join(relative_path);
-
-    let resolved = match tokio::fs::canonicalize(&file_path).await {
-        Ok(path) => path,
-        Err(_) => return StatusCode::NOT_FOUND.into_response(),
-    };
-    let base = match tokio::fs::canonicalize(static_dir).await {
-        Ok(path) => path,
-        Err(_) => return StatusCode::NOT_FOUND.into_response(),
-    };
-    if !resolved.starts_with(&base) {
-        tracing::warn!(path = relative_path, "directory traversal attempt blocked");
-        return StatusCode::NOT_FOUND.into_response();
-    }
-
-    let (served_path, content_encoding) =
-        select_precompressed_variant(&resolved, &base, request_headers).await;
-
-    let entity_tag = tokio::fs::metadata(&served_path)
-        .await
-        .ok()
-        .and_then(|metadata| local_asset_entity_tag(&metadata));
-
-    if let Some(entity_tag) = entity_tag.as_deref()
-        && if_none_match_matches(request_headers, entity_tag)
-    {
-        let mut response = StatusCode::NOT_MODIFIED.into_response();
-        set_local_asset_headers(
-            response.headers_mut(),
-            relative_path,
-            Some(entity_tag),
-            &csp_asset_header,
-        );
-        return response;
-    }
-
-    let mut response = match stream_file(&served_path, request_headers, entity_tag.as_deref()).await
-    {
-        Ok(response) => response,
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-            return StatusCode::NOT_FOUND.into_response();
-        }
-        Err(err) => {
-            tracing::error!(path = relative_path, %err, "failed to read local asset");
-            return (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response();
-        }
-    };
-
     let mime_type = guess_mime(relative_path);
-    if let Ok(value) = HeaderValue::from_str(mime_type) {
-        response.headers_mut().insert(header::CONTENT_TYPE, value);
-    }
-    if let Some(content_encoding) = content_encoding {
-        response.headers_mut().insert(
-            header::CONTENT_ENCODING,
-            HeaderValue::from_static(content_encoding),
-        );
-    }
-    set_local_asset_headers(
+    let mut response = serve_binary_file(
+        files,
+        relative_path,
+        request_headers,
+        LocalFileResponseOptions {
+            content_type: mime_type,
+            cache_control: asset_cache_control(relative_path),
+            allow_cross_origin: is_font_mime(mime_type),
+            max_bytes: MAX_ASSET_SIZE_BYTES as usize,
+        },
+    )
+    .await;
+    let status = response.status();
+    apply_asset_response_policy(
         response.headers_mut(),
         relative_path,
-        entity_tag.as_deref(),
-        &csp_asset_header,
+        status,
+        csp_asset_header,
     );
     response
 }
 
-async fn select_precompressed_variant(
-    resolved: &FsPath,
-    base: &FsPath,
-    request_headers: &HeaderMap,
-) -> (PathBuf, Option<&'static str>) {
-    for &(encoding, extension) in PRECOMPRESSED_VARIANTS {
-        if !accepts_encoding(request_headers, encoding) {
-            continue;
-        }
-        let Some(candidate) = usable_sibling(resolved, base, extension).await else {
-            continue;
-        };
-        return (candidate, Some(encoding));
-    }
-    (resolved.to_path_buf(), None)
-}
-
-async fn usable_sibling(resolved: &FsPath, base: &FsPath, extension: &str) -> Option<PathBuf> {
-    let mut name = resolved.as_os_str().to_owned();
-    name.push(".");
-    name.push(extension);
-
-    let candidate = tokio::fs::canonicalize(PathBuf::from(name)).await.ok()?;
-    if !candidate.starts_with(base) {
-        return None;
-    }
-    tokio::fs::metadata(&candidate)
-        .await
-        .ok()
-        .filter(std::fs::Metadata::is_file)
-        .map(|_| candidate)
-}
-
-fn accepts_encoding(headers: &HeaderMap, encoding: &str) -> bool {
-    let Some(header_value) = headers
-        .get(header::ACCEPT_ENCODING)
-        .and_then(|value| value.to_str().ok())
-    else {
-        return false;
-    };
-    header_value.split(',').any(|candidate| {
-        let mut parts = candidate.split(';').map(str::trim);
-        let Some(name) = parts.next() else {
-            return false;
-        };
-        name.eq_ignore_ascii_case(encoding) && !parts.any(is_zero_quality)
-    })
-}
-
-fn is_zero_quality(parameter: &str) -> bool {
-    let Some((key, value)) = parameter.split_once('=') else {
-        return false;
-    };
-    key.trim().eq_ignore_ascii_case("q")
-        && value
-            .trim()
-            .parse::<f32>()
-            .is_ok_and(|quality| quality <= 0.0)
-}
-
-fn set_local_asset_headers(
-    headers: &mut HeaderMap,
-    relative_path: &str,
-    entity_tag: Option<&str>,
-    csp_asset_header: &HeaderValue,
-) {
-    headers.insert(
-        header::CACHE_CONTROL,
-        HeaderValue::from_static(asset_cache_control(relative_path)),
-    );
-    headers.insert(header::CONTENT_SECURITY_POLICY, csp_asset_header.clone());
-    set_vary_on_accept_encoding(headers);
-    if is_font_mime(guess_mime(relative_path)) {
-        headers.insert(
-            header::ACCESS_CONTROL_ALLOW_ORIGIN,
-            HeaderValue::from_static(CORS_ALLOW_ANY_VALUE),
-        );
-    }
-    if let Some(entity_tag) = entity_tag
-        && let Ok(value) = HeaderValue::from_str(entity_tag)
-    {
-        headers.insert(header::ETAG, value);
-    }
-}
-
-fn local_asset_entity_tag(metadata: &std::fs::Metadata) -> Option<String> {
-    let modified = metadata.modified().ok()?;
-    let nanos = modified
-        .duration_since(std::time::UNIX_EPOCH)
-        .ok()?
-        .as_nanos();
-    Some(format!("\"{nanos:x}-{:x}\"", metadata.len()))
-}
-
-fn if_none_match_matches(headers: &HeaderMap, entity_tag: &str) -> bool {
-    let Some(header_value) = headers
-        .get(header::IF_NONE_MATCH)
-        .and_then(|value| value.to_str().ok())
-    else {
-        return false;
-    };
-    header_value.split(',').any(|candidate| {
-        let candidate = candidate.trim();
-        candidate == "*" || candidate.trim_start_matches("W/") == entity_tag
-    })
-}
-
-fn set_proxied_cache_control(headers: &mut HeaderMap, path: &str, status: StatusCode) {
-    if status.is_success() || status == StatusCode::NOT_MODIFIED {
-        headers.insert(
-            header::CACHE_CONTROL,
-            HeaderValue::from_static(asset_cache_control(path)),
-        );
-        return;
-    }
-    headers.insert(
-        header::CACHE_CONTROL,
-        HeaderValue::from_static(UPSTREAM_FAILURE_CACHE_CONTROL),
-    );
-    for name in UPSTREAM_FAILURE_STRIPPED_HEADERS {
-        headers.remove(*name);
-    }
-}
-
-fn set_vary_on_accept_encoding(headers: &mut HeaderMap) {
-    let already_varies = headers.get_all(header::VARY).iter().any(|value| {
-        value.to_str().is_ok_and(|value| {
-            value.split(',').any(|field| {
-                let field = field.trim();
-                field == "*" || field.eq_ignore_ascii_case("accept-encoding")
-            })
-        })
-    });
-    if !already_varies {
-        headers.append(header::VARY, HeaderValue::from_static("accept-encoding"));
-    }
-}
-
-fn set_font_cors(headers: &mut HeaderMap) {
-    let is_font = headers
-        .get(header::CONTENT_TYPE)
-        .and_then(|value| value.to_str().ok())
-        .map(|value| value.split(';').next().unwrap_or(value).trim())
-        .is_some_and(is_font_mime);
-    if is_font {
-        headers.insert(
-            header::ACCESS_CONTROL_ALLOW_ORIGIN,
-            HeaderValue::from_static(CORS_ALLOW_ANY_VALUE),
-        );
-    }
-}
-
-fn set_known_asset_content_type(headers: &mut HeaderMap, path: &str) {
-    let mime_type = guess_mime(path);
-    if mime_type == "application/octet-stream" {
-        return;
-    }
-    if let Ok(value) = HeaderValue::from_str(mime_type) {
-        headers.insert(header::CONTENT_TYPE, value);
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::super::spa_static::{
-        LONG_LIVED_ASSET_CACHE_CONTROL, REVALIDATED_ASSET_CACHE_CONTROL, is_hashed_asset,
-    };
     use super::*;
     use crate::config::AppProxyConfig;
-    use crate::discovery_cache::DiscoveryCache;
-    use crate::state::build_http_client;
+    use crate::state::{AppProxyBudgets, SpaIndexSource, build_http_client};
+    use crate::static_asset_policy::{
+        CORS_ALLOW_ANY_VALUE, LONG_LIVED_ASSET_CACHE_CONTROL, REVALIDATED_ASSET_CACHE_CONTROL,
+        UPSTREAM_FAILURE_CACHE_CONTROL, is_hashed_asset,
+    };
     use axum::Router;
     use axum::http::Request as HttpRequest;
-    use axum::http::header::HeaderName;
-    use fluxer_common::config::GeoipSourceConfig;
-    use fluxer_common::geoip::{GeoipConfig, GeoipResolver};
+    use axum::http::header::{self, HeaderName};
     use std::sync::Arc;
     use std::sync::atomic::{AtomicU64, Ordering};
     use tower::ServiceExt;
@@ -478,6 +211,7 @@ mod tests {
 
     fn upstream_backed_state(cdn_endpoint: &str) -> AppState {
         let mut config = AppProxyConfig::from_env();
+        config.static_dir = ".".to_owned();
         config.static_cdn_endpoint = Some(
             crate::config::HttpEndpoint::parse("TEST_STATIC_CDN_ENDPOINT", cdn_endpoint).unwrap(),
         );
@@ -496,21 +230,18 @@ mod tests {
             crate::csp::CompiledCspPolicy::from_config(&config)
                 .expect("the test configuration must compile to a valid CSP"),
         );
+        let budgets = AppProxyBudgets::default();
+        let local_files =
+            LocalFileStore::load_blocking(std::path::Path::new(&config.static_dir), &budgets)
+                .expect("the test static directory must exist");
         AppState {
             config: Arc::new(config),
             csp,
             http_client: build_http_client().unwrap(),
-            discovery_cache: Arc::new(DiscoveryCache::new()),
-            geoip: Arc::new(GeoipResolver::from_config(&GeoipConfig {
-                geoip_source: GeoipSourceConfig::Filesystem {
-                    maxmind_db_path: None,
-                },
-                geoip_s3_config: None,
-                trust_client_ip_header: false,
-                client_ip_header_name: "x-forwarded-for".to_owned(),
-            })),
-            index_html: None,
-            budgets: crate::state::AppProxyBudgets::default(),
+            spa_index_source: SpaIndexSource::bundled(""),
+            local_asset_prefixes: None,
+            budgets,
+            local_files,
         }
     }
 
@@ -612,7 +343,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_not_found_carrying_a_long_upstream_lifetime_is_rewritten_to_no_store() {
+    async fn a_not_found_with_a_long_upstream_lifetime_is_rewritten_to_no_store() {
         let response = proxied_asset(
             StatusCode::NOT_FOUND,
             "public, max-age=31536000, immutable",
@@ -629,7 +360,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_bad_gateway_carrying_a_long_upstream_lifetime_is_rewritten_to_no_store() {
+    async fn a_bad_gateway_with_a_long_upstream_lifetime_is_rewritten_to_no_store() {
         let response = proxied_asset(
             StatusCode::BAD_GATEWAY,
             "public, max-age=604800",
@@ -645,7 +376,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_server_error_carrying_a_long_upstream_lifetime_is_rewritten_to_no_store() {
+    async fn a_server_error_with_a_long_upstream_lifetime_is_rewritten_to_no_store() {
         let response = proxied_asset(
             StatusCode::INTERNAL_SERVER_ERROR,
             "public, max-age=86400, immutable",
@@ -660,8 +391,17 @@ mod tests {
         );
     }
 
+    fn apply_test_asset_policy(headers: &mut HeaderMap, path: &str, status: StatusCode) {
+        apply_asset_response_policy(
+            headers,
+            path,
+            status,
+            HeaderValue::from_static("default-src 'none'"),
+        );
+    }
+
     #[test]
-    fn a_failure_drops_the_cdn_lifetimes_a_success_keeps() {
+    fn upstream_cdn_lifetimes_never_reach_the_client() {
         let long_lived = || {
             let mut headers = HeaderMap::new();
             headers.insert(
@@ -679,16 +419,16 @@ mod tests {
             headers
         };
 
-        let mut ok = long_lived();
-        set_proxied_cache_control(&mut ok, "2d715e4730758083.worker.js", StatusCode::OK);
-        assert!(
-            ok.contains_key("cdn-cache-control"),
-            "positive control: a real asset still reaches the cdn with its own long lifetime"
-        );
-        assert!(ok.contains_key(header::EXPIRES));
+        let upstream = long_lived();
+        let mut ok = HeaderMap::new();
+        copy_asset_response_headers(&upstream, &mut ok);
+        apply_test_asset_policy(&mut ok, "2d715e4730758083.worker.js", StatusCode::OK);
+        assert!(!ok.contains_key("cdn-cache-control"));
+        assert!(!ok.contains_key(header::EXPIRES));
 
-        let mut failed = long_lived();
-        set_proxied_cache_control(
+        let mut failed = HeaderMap::new();
+        copy_asset_response_headers(&upstream, &mut failed);
+        apply_test_asset_policy(
             &mut failed,
             "2d715e4730758083.worker.js",
             StatusCode::NOT_FOUND,
@@ -730,6 +470,14 @@ mod tests {
         fn dir(&self) -> &str {
             self.root.to_str().unwrap()
         }
+
+        fn files(&self) -> LocalFileStore {
+            self.files_with(&budgets())
+        }
+
+        fn files_with(&self, budgets: &AppProxyBudgets) -> LocalFileStore {
+            LocalFileStore::load_blocking(&self.root, budgets).unwrap()
+        }
     }
 
     impl Drop for LocalAssetDir {
@@ -770,15 +518,14 @@ mod tests {
         let fixture = LocalAssetDir::with_asset("0018072843a46dc4.woff2", b"wOF2stub");
 
         let first = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/0018072843a46dc4.woff2",
             &HeaderMap::new(),
             test_asset_csp(),
         )
         .await;
         assert_eq!(cors_origin_of(&first), Some(CORS_ALLOW_ANY_VALUE));
-        let entity_tag = entity_tag_of(&first).expect("first response carries a validator");
+        let entity_tag = entity_tag_of(&first).expect("first response has a validator");
 
         let mut conditional = HeaderMap::new();
         conditional.insert(
@@ -786,8 +533,7 @@ mod tests {
             HeaderValue::from_str(&entity_tag).unwrap(),
         );
         let second = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/0018072843a46dc4.woff2",
             &conditional,
             test_asset_csp(),
@@ -807,8 +553,7 @@ mod tests {
         let fixture = LocalAssetDir::with_asset("356aaade04a117b1.js", b"console.log(1)");
 
         let response = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/356aaade04a117b1.js",
             &HeaderMap::new(),
             test_asset_csp(),
@@ -833,8 +578,7 @@ mod tests {
         let mut resumed = HeaderMap::new();
         resumed.insert(header::RANGE, HeaderValue::from_static("bytes=10-"));
         let response = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/fluxer-setup.exe",
             &resumed,
             test_asset_csp(),
@@ -867,14 +611,13 @@ mod tests {
         let fixture = LocalAssetDir::with_asset("f00dcafe12345678.css", b"body{}");
 
         let first = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/f00dcafe12345678.css",
             &HeaderMap::new(),
             test_asset_csp(),
         )
         .await;
-        let entity_tag = entity_tag_of(&first).expect("first response carries a validator");
+        let entity_tag = entity_tag_of(&first).expect("first response has a validator");
 
         let mut conditional = HeaderMap::new();
         conditional.insert(
@@ -882,8 +625,7 @@ mod tests {
             HeaderValue::from_str(&entity_tag).unwrap(),
         );
         let second = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/f00dcafe12345678.css",
             &conditional,
             test_asset_csp(),
@@ -908,8 +650,7 @@ mod tests {
             HeaderValue::from_static("\"stale-from-a-previous-build\""),
         );
         let response = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/voice_engine_bg.wasm",
             &conditional,
             test_asset_csp(),
@@ -932,8 +673,7 @@ mod tests {
         let fixture = LocalAssetDir::with_asset("2d715e4730758083.worker.js", b"self.onmessage=0");
 
         let response = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/2d715e4730758083.worker.js",
             &HeaderMap::new(),
             test_asset_csp(),
@@ -986,8 +726,7 @@ mod tests {
             .and_sibling("356aaade04a117b1.js.br", b"brotli-bytes");
 
         let response = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/356aaade04a117b1.js",
             &accept_encoding("gzip, deflate, br, zstd"),
             test_asset_csp(),
@@ -1016,8 +755,7 @@ mod tests {
         let fixture = LocalAssetDir::with_asset("469e0b8f10c496a1.css", b"body{color:red}");
 
         let response = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/469e0b8f10c496a1.css",
             &accept_encoding("gzip, deflate, br"),
             test_asset_csp(),
@@ -1037,8 +775,7 @@ mod tests {
             .and_sibling("488b87159423ca35.js.gz", b"gzip-bytes");
 
         let gzip_only = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/488b87159423ca35.js",
             &accept_encoding("gzip, deflate"),
             test_asset_csp(),
@@ -1048,8 +785,7 @@ mod tests {
         assert_eq!(body_bytes(gzip_only).await, b"gzip-bytes");
 
         let identity = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/488b87159423ca35.js",
             &HeaderMap::new(),
             test_asset_csp(),
@@ -1069,8 +805,7 @@ mod tests {
             .and_sibling("2d715e4730758083.worker.js.br", b"brotli-bytes");
 
         let response = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/2d715e4730758083.worker.js",
             &accept_encoding("br;q=0, gzip"),
             test_asset_csp(),
@@ -1082,29 +817,27 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_precompressed_variant_carries_its_own_validator() {
+    async fn a_precompressed_variant_has_its_own_validator() {
         let fixture = LocalAssetDir::with_asset("f00dcafe12345678.css", b"body{}")
             .and_sibling("f00dcafe12345678.css.br", b"brotli-bytes-are-longer");
 
         let brotli = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/f00dcafe12345678.css",
             &accept_encoding("br"),
             test_asset_csp(),
         )
         .await;
-        let brotli_tag = entity_tag_of(&brotli).expect("the brotli variant carries a validator");
+        let brotli_tag = entity_tag_of(&brotli).expect("the brotli variant has a validator");
 
         let identity = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/f00dcafe12345678.css",
             &HeaderMap::new(),
             test_asset_csp(),
         )
         .await;
-        let identity_tag = entity_tag_of(&identity).expect("the raw file carries a validator");
+        let identity_tag = entity_tag_of(&identity).expect("the raw file has a validator");
 
         assert_ne!(
             brotli_tag, identity_tag,
@@ -1117,8 +850,7 @@ mod tests {
             HeaderValue::from_str(&brotli_tag).unwrap(),
         );
         let revalidated = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/f00dcafe12345678.css",
             &conditional,
             test_asset_csp(),
@@ -1136,8 +868,7 @@ mod tests {
         let mut ranged = accept_encoding("br");
         ranged.insert(header::RANGE, HeaderValue::from_static("bytes=4-6"));
         let response = serve_local_asset(
-            &budgets(),
-            fixture.dir(),
+            &fixture.files(),
             "assets/356aaade04a117b1.js",
             &ranged,
             test_asset_csp(),
@@ -1164,36 +895,42 @@ mod tests {
         assert_eq!(body_bytes(response).await, b"456");
     }
 
-    async fn spawn_encoded_upstream(content_encoding: &'static str, body: &'static str) -> String {
+    async fn spawn_encoded_upstream(
+        content_encoding: &'static str,
+        body: &'static str,
+    ) -> (String, Arc<std::sync::Mutex<Option<String>>>) {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
-        let router = Router::new().fallback(move |request: HttpRequest<Body>| async move {
-            let echoed = request
-                .headers()
-                .get(header::ACCEPT_ENCODING)
-                .and_then(|value| value.to_str().ok())
-                .unwrap_or("<absent>")
-                .to_owned();
-            let mut response = Response::new(Body::from(body));
-            response.headers_mut().insert(
-                header::CONTENT_ENCODING,
-                HeaderValue::from_static(content_encoding),
-            );
-            response.headers_mut().insert(
-                HeaderName::from_static("x-echoed-accept-encoding"),
-                HeaderValue::from_str(&echoed).unwrap(),
-            );
-            response
+        let observed_accept_encoding: Arc<std::sync::Mutex<Option<String>>> =
+            Arc::new(std::sync::Mutex::new(None));
+        let recorder = Arc::clone(&observed_accept_encoding);
+        let router = Router::new().fallback(move |request: HttpRequest<Body>| {
+            let recorder = Arc::clone(&recorder);
+            async move {
+                let received = request
+                    .headers()
+                    .get(header::ACCEPT_ENCODING)
+                    .and_then(|value| value.to_str().ok())
+                    .map(str::to_owned);
+                *recorder.lock().unwrap() = received;
+                let mut response = Response::new(Body::from(body));
+                response.headers_mut().insert(
+                    header::CONTENT_ENCODING,
+                    HeaderValue::from_static(content_encoding),
+                );
+                response
+            }
         });
         tokio::spawn(async move {
             axum::serve(listener, router).await.unwrap();
         });
-        format!("http://{addr}")
+        (format!("http://{addr}"), observed_accept_encoding)
     }
 
     #[tokio::test]
     async fn a_cdn_backed_asset_streams_the_upstream_encoding_untouched() {
-        let endpoint = spawn_encoded_upstream("br", "already-brotli").await;
+        let (endpoint, observed_accept_encoding) =
+            spawn_encoded_upstream("br", "already-brotli").await;
         let state = upstream_backed_state(&endpoint);
         let request = HttpRequest::builder()
             .uri("/assets/356aaade04a117b1.js")
@@ -1209,10 +946,7 @@ mod tests {
         .await;
 
         assert_eq!(
-            response
-                .headers()
-                .get("x-echoed-accept-encoding")
-                .and_then(|value| value.to_str().ok()),
+            observed_accept_encoding.lock().unwrap().as_deref(),
             Some("gzip, deflate, br"),
             "blocking accept-encoding forces the origin to hand us bytes it already had compressed"
         );
@@ -1227,7 +961,8 @@ mod tests {
 
     #[tokio::test]
     async fn a_cdn_backed_asset_keeps_the_upstream_content_length() {
-        let endpoint = spawn_encoded_upstream("gzip", "0123456789").await;
+        let (endpoint, _observed_accept_encoding) =
+            spawn_encoded_upstream("gzip", "0123456789").await;
         let state = upstream_backed_state(&endpoint);
         let request = HttpRequest::builder()
             .uri("/assets/voice_engine_bg.wasm")
@@ -1282,7 +1017,7 @@ mod tests {
 
     #[tokio::test]
     async fn a_passed_through_cdn_encoding_is_never_recompressed_by_the_layer() {
-        let endpoint = spawn_encoded_upstream(
+        let (endpoint, _observed_accept_encoding) = spawn_encoded_upstream(
             "br",
             "already brotli, and long enough to clear the thirty-two byte floor",
         )
@@ -1304,7 +1039,7 @@ mod tests {
         assert_eq!(
             body_bytes(response).await,
             b"already brotli, and long enough to clear the thirty-two byte floor",
-            "re-encoding upstream bytes that already carry an encoding breaks every browser"
+            "re-encoding upstream bytes that already have an encoding breaks every browser"
         );
     }
 
@@ -1341,7 +1076,7 @@ mod tests {
             HeaderValue::from_static("application/octet-stream"),
         );
 
-        set_known_asset_content_type(&mut headers, "356aaade04a117b1.js");
+        apply_test_asset_policy(&mut headers, "356aaade04a117b1.js", StatusCode::OK);
 
         assert_eq!(
             headers
@@ -1359,7 +1094,7 @@ mod tests {
             HeaderValue::from_static("application/octet-stream"),
         );
 
-        set_known_asset_content_type(&mut headers, "voice_engine_bg.wasm");
+        apply_test_asset_policy(&mut headers, "voice_engine_bg.wasm", StatusCode::OK);
 
         assert_eq!(
             headers
@@ -1377,8 +1112,7 @@ mod tests {
             HeaderValue::from_static("application/octet-stream"),
         );
 
-        set_known_asset_content_type(&mut headers, "0018072843a46dc4.woff2");
-        set_font_cors(&mut headers);
+        apply_test_asset_policy(&mut headers, "0018072843a46dc4.woff2", StatusCode::OK);
 
         assert_eq!(
             headers
@@ -1397,7 +1131,7 @@ mod tests {
             HeaderValue::from_static("https://example.invalid"),
         );
 
-        set_font_cors(&mut headers);
+        apply_test_asset_policy(&mut headers, "0018072843a46dc4.woff2", StatusCode::OK);
 
         assert_eq!(
             headers
@@ -1415,7 +1149,7 @@ mod tests {
             HeaderValue::from_static("font/woff2; charset=binary"),
         );
 
-        set_font_cors(&mut headers);
+        apply_test_asset_policy(&mut headers, "font-download", StatusCode::OK);
 
         assert_eq!(
             headers
@@ -1433,7 +1167,7 @@ mod tests {
             HeaderValue::from_static("application/javascript; charset=utf-8"),
         );
 
-        set_font_cors(&mut headers);
+        apply_test_asset_policy(&mut headers, "356aaade04a117b1.js", StatusCode::OK);
 
         assert!(
             headers.get(header::ACCESS_CONTROL_ALLOW_ORIGIN).is_none(),
@@ -1449,7 +1183,7 @@ mod tests {
             HeaderValue::from_static("application/octet-stream"),
         );
 
-        set_known_asset_content_type(&mut headers, "artifact.unknown-extension");
+        apply_test_asset_policy(&mut headers, "artifact.unknown-extension", StatusCode::OK);
 
         assert_eq!(
             headers
@@ -1463,6 +1197,7 @@ mod tests {
     async fn a_local_asset_is_refused_once_the_read_slots_are_gone() {
         let fixture = LocalAssetDir::with_asset("356aaade04a117b1.js", b"console.log(1)");
         let budgets = AppProxyBudgets::default();
+        let files = fixture.files_with(&budgets);
         let held = budgets
             .local_read_slots
             .clone()
@@ -1472,8 +1207,7 @@ mod tests {
             .expect("a fresh budget holds every local read slot");
 
         let refused = serve_local_asset(
-            &budgets,
-            fixture.dir(),
+            &files,
             "assets/356aaade04a117b1.js",
             &HeaderMap::new(),
             test_asset_csp(),
@@ -1491,8 +1225,7 @@ mod tests {
 
         drop(held);
         let served = serve_local_asset(
-            &budgets,
-            fixture.dir(),
+            &files,
             "assets/356aaade04a117b1.js",
             &HeaderMap::new(),
             test_asset_csp(),
@@ -1505,13 +1238,13 @@ mod tests {
     async fn an_open_local_asset_response_never_holds_a_read_slot() {
         let fixture = LocalAssetDir::with_asset("356aaade04a117b1.js", b"console.log(1)");
         let budgets = AppProxyBudgets::default();
+        let files = fixture.files_with(&budgets);
 
         let mut open = Vec::with_capacity(crate::state::LOCAL_FILE_READS_IN_FLIGHT_MAX + 1);
         for _ in 0..=crate::state::LOCAL_FILE_READS_IN_FLIGHT_MAX {
             open.push(
                 serve_local_asset(
-                    &budgets,
-                    fixture.dir(),
+                    &files,
                     "assets/356aaade04a117b1.js",
                     &HeaderMap::new(),
                     test_asset_csp(),
@@ -1535,7 +1268,7 @@ mod tests {
         assert_eq!(
             body.as_ref(),
             b"console.log(1)",
-            "a response served past the read slot count carried the wrong bytes"
+            "a response served past the read slot count had the wrong bytes"
         );
     }
 }

@@ -82,7 +82,7 @@ describe('AvatarService emoji and sticker size ceilings', () => {
 			{path: 'image', code: ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, variables: {maxSize: 1024}},
 		]);
 	});
-	it('applies a guild-feature-filtered emoji_max_size rule only to a guild that carries the feature', async () => {
+	it('applies a guild-feature-filtered emoji_max_size rule only to a guild that has the feature', async () => {
 		const rules: Array<LimitRule> = [
 			{id: 'big-emoji', filters: {guildFeatures: ['BIG_EMOJI']}, limits: {emoji_max_size: EMOJI_MAX_SIZE * 2}},
 		];

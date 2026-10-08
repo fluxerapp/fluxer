@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {DESKTOP_APP_NAME} from '@electron/common/DesktopIdentity';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
 import {buildTroubleshootingMenuItems} from '@electron/main/Troubleshooting';
@@ -10,8 +10,7 @@ import {type BaseWindow, BrowserWindow, Menu, type MenuItem, type MenuItemConstr
 const MACOS_HELP_MENU_TITLE_AUTODETECT_OPT_OUT = '\u200C';
 
 function buildTemplate(): Array<MenuItemConstructorOptions> {
-	const isCanary = BUILD_CHANNEL === 'canary';
-	const appName = isCanary ? 'Fluxer Canary' : 'Fluxer';
+	const appName = DESKTOP_APP_NAME;
 	const isMac = process.platform === 'darwin';
 	const template: Array<MenuItemConstructorOptions> = [];
 	if (isMac) {
@@ -215,7 +214,7 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 			{
 				label: t('desktop.appMenu.reportIssue'),
 				click: async () => {
-					await openExternalDeduped('https://github.com/fluxerapp/fluxer/issues');
+					await openExternalDeduped('https://feedback.fluxer.com');
 				},
 			},
 			{type: 'separator'},

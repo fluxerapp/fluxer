@@ -16,6 +16,31 @@ const MAIN_SPEC = path.join(REPO_ROOT, 'fluxer_api/src/api/openapi/openapi.json'
 const ADMIN_SPEC = path.join(REPO_ROOT, 'fluxer_admin/openapi-admin.json');
 
 const OBJECT_REFERENCE = /\]\([^)]*#[a-z0-9-]*object\)/u;
+const CHANNEL_THREADS_FIELDS_UNTIL_GA = new Set<string>([
+	'applied_tags',
+	'available_tags',
+	'channel_threads',
+	'default_auto_archive_duration',
+	'default_forum_layout',
+	'default_reaction_emoji',
+	'default_sort_order',
+	'default_tag_setting',
+	'default_thread_rate_limit_per_user',
+	'flags',
+	'member',
+	'member_count',
+	'member_ids_preview',
+	'message_count',
+	'message_send_cooldown_ms',
+	'thread',
+	'thread_create_cooldown_ms',
+	'thread_id',
+	'thread_metadata',
+	'thread_name',
+	'threads',
+	'threads_active',
+	'total_message_sent',
+]);
 
 interface Mismatch {
 	readonly page: string;
@@ -408,6 +433,7 @@ let responsesChecked = 0;
 let responseFieldsFound = 0;
 let typesCompared = 0;
 let optionalityCompared = 0;
+let withheldFields = 0;
 const optionalityAdvisories: Array<string> = [];
 
 for (const page of pages) {
@@ -527,6 +553,10 @@ for (const page of pages) {
 						responseFieldsFound += 1;
 						continue;
 					}
+					if (CHANNEL_THREADS_FIELDS_UNTIL_GA.has(field)) {
+						withheldFields += 1;
+						continue;
+					}
 					mismatches.push({page: relative, operation: key, kind: 'response-missing', detail: field});
 				}
 			}
@@ -608,6 +638,10 @@ for (const page of pages) {
 						referencedElsewhere += 1;
 						continue;
 					}
+					if (CHANNEL_THREADS_FIELDS_UNTIL_GA.has(field)) {
+						withheldFields += 1;
+						continue;
+					}
 					mismatches.push({page: relative, operation: key, kind: 'body-missing', detail: field});
 				}
 			}
@@ -629,6 +663,10 @@ for (const page of pages) {
 					}
 					if (pageFields.has(field)) {
 						referencedElsewhere += 1;
+						continue;
+					}
+					if (CHANNEL_THREADS_FIELDS_UNTIL_GA.has(field)) {
+						withheldFields += 1;
 						continue;
 					}
 					mismatches.push({page: relative, operation: key, kind: 'query-missing', detail: field});
@@ -670,6 +708,7 @@ console.log(`success response schemas checked: ${responsesChecked.toString()}`);
 console.log(`response fields found documented on the page: ${responseFieldsFound.toString()}`);
 console.log(`request and response field types compared: ${typesCompared.toString()}`);
 console.log(`request body optionality compared: ${optionalityCompared.toString()}`);
+console.log(`channel_threads fields withheld until GA: ${withheldFields.toString()}`);
 console.log(`optionality advisories: ${optionalityAdvisories.length.toString()}`);
 if (optionalityAdvisories.length > 0) {
 	for (const entry of optionalityAdvisories) {

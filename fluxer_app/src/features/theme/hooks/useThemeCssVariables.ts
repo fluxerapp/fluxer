@@ -52,17 +52,6 @@ export function useThemeCssVariables({
 		} else {
 			htmlNode.style.removeProperty('--markup-strikethrough-color');
 		}
-		return () => {
-			htmlNode.classList.remove(themeClass);
-			htmlNode.style.removeProperty('--saturation-factor');
-			htmlNode.style.removeProperty('--link-decoration');
-			htmlNode.style.removeProperty('--markup-strikethrough-color');
-			htmlNode.style.removeProperty('--user-select');
-			htmlNode.style.removeProperty('--font-size');
-			htmlNode.style.removeProperty('--chat-horizontal-padding');
-			htmlNode.style.removeProperty('--message-group-spacing');
-			htmlNode.style.removeProperty('dynamic-range-limit');
-		};
 	}, [
 		effectiveTheme,
 		saturationFactor,
@@ -74,4 +63,22 @@ export function useThemeCssVariables({
 		messageGroupSpacing,
 		hdrDisplayMode,
 	]);
+	useLayoutEffect(() => {
+		const htmlNode = document.documentElement;
+		return () => {
+			for (const existingClass of Array.from(htmlNode.classList)) {
+				if (existingClass.startsWith('theme-')) {
+					htmlNode.classList.remove(existingClass);
+				}
+			}
+			htmlNode.style.removeProperty('--saturation-factor');
+			htmlNode.style.removeProperty('--link-decoration');
+			htmlNode.style.removeProperty('--markup-strikethrough-color');
+			htmlNode.style.removeProperty('--user-select');
+			htmlNode.style.removeProperty('--font-size');
+			htmlNode.style.removeProperty('--chat-horizontal-padding');
+			htmlNode.style.removeProperty('--message-group-spacing');
+			htmlNode.style.removeProperty('dynamic-range-limit');
+		};
+	}, []);
 }

@@ -12,15 +12,19 @@
 		"build": "node scripts/build.mjs",
 		"set-channel": "../tools/ci/run.sh build-desktop --step set_build_channel",
 		"test": "pnpm test:main && cargo test --manifest-path native/rust/Cargo.toml",
-		"test:main": "node --test 'src/main/*.test.mjs'",
+		"test:main": "pnpm set-channel && node --test 'src/main/*.test.mjs' 'src/preload/*.test.mjs' 'src/common/*.test.mjs'",
+		"test:native": "cargo test --manifest-path native/rust/Cargo.toml && cargo test --manifest-path native/app-store/Cargo.toml && cargo test --manifest-path native/gateway-socket/Cargo.toml",
 		"typecheck": "pnpm set-channel && tsc --noEmit"
 	},
 	"dependencies": {
+		"@fluxer/constants": "workspace:*",
+		"@fluxer/desktop_ipc": "workspace:*",
+		"@fluxer/instance_bootstrap": "workspace:*",
+		"@fluxer/ip_utils": "workspace:*",
 		"@fluxer/voice_engine_v2": "workspace:*",
 		"@simplewebauthn/browser": "14.0.0",
 		"franc-min": "6.2.0",
 		"hunspell-asm": "4.0.2",
-		"update-electron-app": "3.3.0",
 		"velopack": "1.2.0"
 	},
 	"devDependencies": {
@@ -37,6 +41,8 @@
 		]
 	},
 	"optionalDependencies": {
+		"@fluxer/app-store": "file:./native/app-store",
+		"@fluxer/gateway-socket": "file:./native/gateway-socket",
 		"@fluxer/hardware-encoder": "file:./native/hardware-encoder",
 		"@fluxer/linux-audio-capture": "file:./native/linux-audio-capture",
 		"@fluxer/linux-evdev": "file:./native/linux-evdev",

@@ -4,7 +4,6 @@ import type {AdminRepository} from '@app/api/admin/AdminRepository';
 import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import type {ISessionTerminator} from '@app/api/auth/ISessionTerminator';
 import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
-import {Config} from '@app/api/Config';
 import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
@@ -12,9 +11,11 @@ import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAcco
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
+import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {getAcceptedWebhookSecrets} from '@app/api/stripe/BillingConfigCache';
 import type {ProductRegistry} from '@app/api/stripe/ProductRegistry';
 import type {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
-import type {StripeCheckoutService} from '@app/api/stripe/services/StripeCheckoutService';
 import {StripeCheckoutWebhookHandler} from '@app/api/stripe/services/StripeCheckoutWebhookHandler';
 import {StripeDisputeWebhookHandler} from '@app/api/stripe/services/StripeDisputeWebhookHandler';
 import {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
@@ -45,7 +46,6 @@ export class StripeWebhookService {
 
 	constructor(
 		private stripe: Stripe | null,
-		private checkoutService: StripeCheckoutService,
 		userRepository: IUserRepository,
 		userCacheService: UserCacheService,
 		sessionTerminator: ISessionTerminator,
@@ -63,6 +63,7 @@ export class StripeWebhookService {
 		snowflakeService: ISnowflakeService,
 		private billingRepository: BillingRepository,
 		private refundService: StripeRefundService,
+		storeEntitlementService: StoreEntitlementService | null = null,
 	) {
 		this.checkoutHandler = new StripeCheckoutWebhookHandler(
 			stripe,
@@ -79,8 +80,8 @@ export class StripeWebhookService {
 		const giftReversalHandler = new StripeGiftReversalHandler(
 			userRepository,
 			gatewayService,
-			premiumService,
 			premiumStateReconciliationQueueService,
+			storeEntitlementService,
 		);
 		const auditService = new AdminAuditService(adminRepository, snowflakeService);
 		this.paymentFraudService = new StripePaymentFraudService({
@@ -94,6 +95,7 @@ export class StripeWebhookService {
 			cacheService,
 			auditService,
 			kvDeletionQueue,
+			oauth2Tokens: new OAuth2TokenRepository(),
 		});
 		this.subscriptionHandler = new StripeSubscriptionWebhookHandler(
 			userRepository,
@@ -103,6 +105,7 @@ export class StripeWebhookService {
 			premiumStateReconciliationQueueService,
 			reconciler,
 			billingRepository,
+			storeEntitlementService,
 		);
 		this.disputeHandler = new StripeDisputeWebhookHandler(
 			userRepository,
@@ -116,18 +119,31 @@ export class StripeWebhookService {
 		);
 	}
 
+	private constructVerifiedEvent(
+		stripe: Stripe,
+		body: string,
+		signature: string,
+		webhookSecrets: Array<string>,
+	): Stripe.Event {
+		const SEVEN_DAYS_SECONDS = 7 * 24 * 60 * 60;
+		let lastError: unknown = null;
+		for (const webhookSecret of webhookSecrets) {
+			try {
+				return stripe.webhooks.constructEvent(body, signature, webhookSecret, SEVEN_DAYS_SECONDS);
+			} catch (error: unknown) {
+				lastError = error;
+			}
+		}
+		Logger.error({error: lastError}, 'Invalid webhook signature');
+		throw new StripeWebhookSignatureInvalidError();
+	}
+
 	async handleWebhook({body, signature}: HandleWebhookParams): Promise<void> {
-		if (!this.stripe || !Config.stripe.webhookSecret) {
+		const webhookSecrets = getAcceptedWebhookSecrets();
+		if (!this.stripe || webhookSecrets.length === 0) {
 			throw new StripeWebhookNotAvailableError();
 		}
-		let event: Stripe.Event;
-		try {
-			const SEVEN_DAYS_SECONDS = 7 * 24 * 60 * 60;
-			event = this.stripe.webhooks.constructEvent(body, signature, Config.stripe.webhookSecret, SEVEN_DAYS_SECONDS);
-		} catch (error: unknown) {
-			Logger.error({error}, 'Invalid webhook signature');
-			throw new StripeWebhookSignatureInvalidError();
-		}
+		const event = this.constructVerifiedEvent(this.stripe, body, signature, webhookSecrets);
 		Logger.debug({eventType: event.type, eventId: event.id}, 'Processing Stripe webhook');
 		const claim = await this.billingRepository.webhookEvents.tryClaim(event.id);
 		if (claim === 'already_processed') {
@@ -156,10 +172,6 @@ export class StripeWebhookService {
 				);
 				if (checkoutSession.metadata?.verification_type === 'uk_age_verification' && this.ageVerificationService) {
 					await this.ageVerificationService.completeVerification(checkoutSession);
-					break;
-				}
-				if (checkoutSession.metadata?.setup_type === 'localized_card_preapproval') {
-					await this.checkoutService.completeLocalizedCardPreapproval(checkoutSession);
 					break;
 				}
 				await this.checkoutHandler.handleCheckoutSessionCompleted(checkoutSession);

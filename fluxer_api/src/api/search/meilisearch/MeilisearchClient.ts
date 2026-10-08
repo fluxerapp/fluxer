@@ -17,6 +17,16 @@ export interface MeilisearchTask {
 	};
 }
 
+export class MeilisearchTaskError extends Error {
+	readonly code: string | undefined;
+
+	constructor(message: string, code: string | undefined) {
+		super(message);
+		this.name = 'MeilisearchTaskError';
+		this.code = code;
+	}
+}
+
 export interface MeilisearchClient {
 	request<TResponse>(method: string, path: string, body?: unknown): Promise<TResponse>;
 	waitForTask(taskUid: number): Promise<void>;
@@ -84,7 +94,10 @@ export class MeilisearchHttpClient implements MeilisearchClient {
 				return;
 			}
 			if (task.status === 'failed' || task.status === 'canceled') {
-				throw new Error(task.error?.message ?? `Meilisearch task ${taskUid} ${task.status}`);
+				throw new MeilisearchTaskError(
+					task.error?.message ?? `Meilisearch task ${taskUid} ${task.status}`,
+					task.error?.code,
+				);
 			}
 			await new Promise((resolve) => setTimeout(resolve, TASK_POLL_INTERVAL_MS));
 		}

@@ -123,6 +123,12 @@ fn app_wasm_artifacts(root: &Path) -> Vec<PathBuf> {
         app_dir.join("pkgs/libfluxcore/libfluxcore_bg.wasm"),
         app_dir.join("pkgs/libfluxcore/libfluxcore_bg.wasm.d.ts"),
         app_dir.join("pkgs/libfluxcore/package.json"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp.js"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp.d.ts"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_bg.wasm"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_bg.wasm.d.ts"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_simd_bg.wasm"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_simd_bg.wasm.d.ts"),
         app_dir.join("src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts"),
     ]
 }
@@ -329,9 +335,8 @@ mod tests {
     }
 
     #[test]
-    fn image_dockerfiles_carry_the_release_label_block() {
-        const REQUIRED: [&str; 9] = [
-            "LABEL org.opencontainers.image.licenses=\"AGPL-3.0-or-later\"",
+    fn image_dockerfiles_include_the_release_label_block() {
+        const REQUIRED: [&str; 8] = [
             "LABEL org.opencontainers.image.vendor=\"Fluxer\"",
             "LABEL org.opencontainers.image.url=\"https://fluxer.app\"",
             "LABEL org.opencontainers.image.documentation=\"https://docs.fluxer.app\"",
@@ -420,6 +425,16 @@ mod tests {
             assert!(
                 dockerfile.contains(&format!("LABEL org.opencontainers.image.title=\"{title}\"")),
                 "{name}/Dockerfile must declare the title {title}"
+            );
+            let licenses = match name {
+                "fluxer_static" => "AGPL-3.0-or-later AND CC-BY-SA-4.0 AND CC-BY-4.0",
+                _ => "AGPL-3.0-or-later",
+            };
+            assert!(
+                dockerfile.contains(&format!(
+                    "LABEL org.opencontainers.image.licenses=\"{licenses}\""
+                )),
+                "{name}/Dockerfile must declare the licenses {licenses}"
             );
             for label in REQUIRED {
                 assert!(

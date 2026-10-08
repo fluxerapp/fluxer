@@ -2,3 +2,5 @@
 fluxer_static/** -text -diff
 fluxer_static/**/*.md text diff
 packages/fonts/files/** -text -diff
+fluxer_app/src/features/voice/utils/noise_suppression/deepfilternet3/*.wasm -text -diff
+fluxer_app/src/features/voice/utils/noise_suppression/deepfilternet3/*.tar.gz -text -diff

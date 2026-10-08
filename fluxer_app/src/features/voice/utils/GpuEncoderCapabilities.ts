@@ -2,7 +2,6 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import type {GpuDeviceInfo, GpuInfo} from '@app/types/electron.d';
 import type {VideoCodec} from 'livekit-client';
 
@@ -238,12 +237,6 @@ export const H264_ENCODE_PROBE_CONTENT_TYPES: ReadonlyArray<string> = H264_PROBE
 	(profileLevelId) => `video/H264;level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=${profileLevelId}`,
 );
 
-const CONTROL_H264_PROBE_PROFILE_LEVEL_IDS: ReadonlyArray<string> = ['640028', '4d0028', '420028', '42e028'];
-
-const CONTROL_H264_ENCODE_PROBE_CONTENT_TYPES: ReadonlyArray<string> = CONTROL_H264_PROBE_PROFILE_LEVEL_IDS.map(
-	(profileLevelId) => `video/H264;level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=${profileLevelId}`,
-);
-
 export const WEBRTC_ENCODE_PROBE_CONTENT_TYPES: Record<VideoCodec, ReadonlyArray<string>> = {
 	av1: ['video/AV1'],
 	h265: ['video/H265'],
@@ -415,24 +408,17 @@ export async function probeWebRtcEncodeEfficiency(
 ): Promise<Record<VideoCodec, HardwareEncodeAnswer> | null> {
 	const mediaCapabilities = getMediaCapabilities();
 	if (!mediaCapabilities) return null;
-	const delivery = ScreenShareDeliveryRollout.enabled;
 	const video = resolveEncodeProbeVideoConfig(config);
 	const codecs: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'h264', 'vp9', 'vp8'];
 	const answers = await Promise.all(
 		codecs.map((codec) =>
-			probeContentTypesEncodeEfficiency(
-				mediaCapabilities,
-				codec === 'h264' && !delivery
-					? CONTROL_H264_ENCODE_PROBE_CONTENT_TYPES
-					: WEBRTC_ENCODE_PROBE_CONTENT_TYPES[codec],
-				video,
-			),
+			probeContentTypesEncodeEfficiency(mediaCapabilities, WEBRTC_ENCODE_PROBE_CONTENT_TYPES[codec], video),
 		),
 	);
 	const result = {} as Record<VideoCodec, HardwareEncodeAnswer>;
 	codecs.forEach((codec, index) => {
 		const codecAnswers = answers[index] ?? [];
-		if (delivery && codec === 'h264') recordH264HardwareProfileProbe(codecAnswers, video);
+		if (codec === 'h264') recordH264HardwareProfileProbe(codecAnswers, video);
 		result[codec] = collapseEncodeProbeAnswers(codecAnswers);
 	});
 	return result;
@@ -460,7 +446,6 @@ let pendingPromise: Promise<HardwareEncodeReport | null> | null = null;
 
 function fetchReport(): Promise<HardwareEncodeReport | null> {
 	if (!isDesktop()) {
-		if (!ScreenShareDeliveryRollout.enabled) return Promise.resolve(null);
 		return probeH264HardwareProfiles().then(() => null);
 	}
 	const electron = getElectronAPI();

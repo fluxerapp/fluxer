@@ -22,7 +22,6 @@ finish-args:
   - --talk-name=org.kde.StatusNotifierWatcher
   - --talk-name=org.ayatana.indicator.application
   - --talk-name=com.canonical.indicator.application
-  - --env=ELECTRON_OZONE_PLATFORM_HINT=auto
   - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
 build-options:
   strip: false

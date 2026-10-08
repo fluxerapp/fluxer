@@ -6,9 +6,11 @@ import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import {isSyntheticUserId} from '@app/api/constants/Core';
+import {channelThreadsEnabled} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {Logger} from '@app/api/Logger';
 import {getGuildSearchService, getUserSearchService} from '@app/api/SearchFactory';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {UserSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
@@ -23,7 +25,8 @@ interface RefreshSearchIndexJobPayload extends WorkerJobPayload {
 		| 'channel_messages'
 		| 'favorite_memes'
 		| 'guild_members'
-		| 'discovery';
+		| 'discovery'
+		| 'threads';
 	admin_user_id: string;
 	audit_log_reason: string | null;
 	job_id: string;
@@ -175,7 +178,8 @@ export class AdminSearchService {
 				| 'channel_messages'
 				| 'guild_members'
 				| 'favorite_memes'
-				| 'discovery';
+				| 'discovery'
+				| 'threads';
 			guild_id?: bigint;
 			user_id?: bigint;
 		},
@@ -194,6 +198,15 @@ export class AdminSearchService {
 		if (data.index_type === 'channel_messages') {
 			if (!data.guild_id) {
 				throw InputValidationError.create('guild_id', 'guild_id is required for the channel_messages index type');
+			}
+			payload.guild_id = data.guild_id.toString();
+		}
+		if (data.index_type === 'threads') {
+			if (!channelThreadsEnabled()) {
+				throw InputValidationError.fromCode('index_name', ValidationErrorCodes.INVALID_FORMAT);
+			}
+			if (!data.guild_id) {
+				throw InputValidationError.create('guild_id', 'guild_id is required for the threads index type');
 			}
 			payload.guild_id = data.guild_id.toString();
 		}

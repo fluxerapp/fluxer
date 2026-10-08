@@ -506,6 +506,137 @@ voice_state_update_with_non_map_payload_closes_test() ->
     ),
     ?assertEqual(constants:close_code_to_num(decode_error), CloseCode).
 
+websocket_handle_rejects_compressed_frame_past_max_payload_test() ->
+    {ok, Compressed, _} = gateway_compress:compress(
+        binary:copy(<<"a">>, constants:max_payload_size() * 64),
+        gateway_compress:new_context(zstd_stream)
+    ),
+    ?assert(byte_size(Compressed) =< constants:max_payload_size()),
+    State = (new_json_state())#{compress_ctx => gateway_compress:new_context(zstd_stream)},
+    {[{close, CloseCode, Reason}], _} =
+        gateway_handler:websocket_handle({binary, Compressed}, State),
+    ?assertEqual(constants:close_code_to_num(decode_error), CloseCode),
+    ?assertEqual(<<"Payload too large">>, Reason).
+
+forum_unreads_gate_off_closes_like_an_unknown_opcode_test() ->
+    Previous = persistent_term:get(channel_threads_config, undefined),
+    persistent_term:put(
+        channel_threads_config, (channel_threads_config:default_config())#{config_version => 1}
+    ),
+    try
+        State = (new_json_state())#{session_pid => self()},
+        Unknown = gateway_handler_dispatch:handle_opcode(
+            not_an_opcode, #{<<"d">> => #{}}, State
+        ),
+        ?assertEqual({[{close, 4001, <<"Unknown opcode">>}], State}, Unknown),
+        ?assertEqual(
+            Unknown,
+            gateway_handler_dispatch:handle_opcode(
+                request_forum_unreads,
+                #{<<"d">> => #{<<"guild_id">> => <<"1">>, <<"channel_id">> => <<"2">>}},
+                State
+            )
+        ),
+        ?assertEqual(
+            Unknown, gateway_handler_dispatch:handle_request_forum_unreads(#{}, self(), State)
+        ),
+        ?assertEqual(
+            Unknown, gateway_handler:websocket_info(forum_unreads_unknown_opcode, State)
+        )
+    after
+        case Previous of
+            undefined -> persistent_term:erase(channel_threads_config);
+            _ -> persistent_term:put(channel_threads_config, Previous)
+        end
+    end.
+
+forum_unreads_closes_like_an_unknown_opcode_once_a_default_config_is_pulled_test() ->
+    Key = channel_threads_config,
+    PulledKey = {channel_threads_config, pulled},
+    Previous = persistent_term:get(Key, undefined),
+    PreviousPulled = persistent_term:get(PulledKey, undefined),
+    persistent_term:put(Key, channel_threads_config:default_config()),
+    persistent_term:put(PulledKey, true),
+    try
+        Bot = fake_session(#{user_id => <<"6">>, bot => true, thread_channels_capable => true}),
+        State = (new_json_state())#{session_pid => Bot},
+        Unknown = {[{close, 4001, <<"Unknown opcode">>}], State},
+        ?assertEqual(
+            Unknown,
+            gateway_handler_dispatch:handle_opcode(
+                request_forum_unreads,
+                #{<<"d">> => #{<<"guild_id">> => <<"1">>, <<"channel_id">> => <<"2">>}},
+                State
+            )
+        ),
+        ?assertEqual(
+            Unknown, gateway_handler_dispatch:handle_request_forum_unreads(#{}, Bot, State)
+        ),
+        ?assertNot(received_unknown_opcode())
+    after
+        case Previous of
+            undefined -> persistent_term:erase(Key);
+            _ -> persistent_term:put(Key, Previous)
+        end,
+        case PreviousPulled of
+            undefined -> persistent_term:erase(PulledKey);
+            _ -> persistent_term:put(PulledKey, PreviousPulled)
+        end
+    end.
+
+forum_unreads_gate_on_closes_non_viewers_on_every_path_test() ->
+    with_threads_enabled(fun() ->
+        NonViewer = fake_session(#{user_id => <<"5">>, thread_channels_capable => false}),
+        State = (new_json_state())#{session_pid => NonViewer},
+        {ok, _} = gateway_handler_dispatch:handle_request_forum_unreads(#{}, NonViewer, State),
+        ?assert(received_unknown_opcode()),
+        Full = State#{request_worker_max => 1, request_workers => #{make_ref() => #{}}},
+        {ok, Full} = gateway_handler_dispatch:handle_request_forum_unreads(
+            #{}, NonViewer, Full
+        ),
+        ?assert(received_unknown_opcode()),
+        Dead = spawn(fun() -> ok end),
+        DeadState = State#{session_pid => Dead},
+        {ok, _} = gateway_handler_dispatch:handle_request_forum_unreads(#{}, Dead, DeadState),
+        ?assert(received_unknown_opcode()),
+        Viewer = fake_session(#{user_id => <<"6">>, bot => true}),
+        ViewerFull = Full#{session_pid => Viewer},
+        {ok, ViewerFull} = gateway_handler_dispatch:handle_request_forum_unreads(
+            #{}, Viewer, ViewerFull
+        ),
+        ?assertNot(received_unknown_opcode())
+    end).
+
+with_threads_enabled(Fun) ->
+    Previous = persistent_term:get(channel_threads_config, undefined),
+    persistent_term:put(
+        channel_threads_config, (channel_threads_config:default_config())#{enabled => true}
+    ),
+    try
+        Fun()
+    after
+        case Previous of
+            undefined -> persistent_term:erase(channel_threads_config);
+            _ -> persistent_term:put(channel_threads_config, Previous)
+        end
+    end.
+
+fake_session(SessionState) ->
+    spawn(fun Loop() ->
+        receive
+            {'$gen_call', From, {get_state}} ->
+                gen_server:reply(From, SessionState),
+                Loop()
+        after 2000 -> ok
+        end
+    end).
+
+received_unknown_opcode() ->
+    receive
+        forum_unreads_unknown_opcode -> true
+    after 300 -> false
+    end.
+
 new_json_state() ->
     (gateway_handler:new_state())#{
         version => 1, encoding => json, compress_ctx => gateway_compress:new_context(none)

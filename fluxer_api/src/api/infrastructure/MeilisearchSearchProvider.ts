@@ -7,8 +7,10 @@ import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {ISearchProvider} from '@app/api/search/ISearchProvider';
+import type {IThreadSearchService} from '@app/api/search/IThreadSearchService';
 import type {IUserSearchService} from '@app/api/search/IUserSearchService';
 import {type MeilisearchClientConfig, MeilisearchHttpClient} from '@app/api/search/meilisearch/MeilisearchClient';
+import {MeilisearchThreadAdapter} from '@app/api/search/meilisearch/MeilisearchDomainAdapters';
 import {
 	MeilisearchAuditLogSearchService,
 	MeilisearchGuildMemberSearchService,
@@ -17,6 +19,7 @@ import {
 	MeilisearchReportSearchService,
 	MeilisearchUserSearchService,
 } from '@app/api/search/meilisearch/MeilisearchSearchServices';
+import {ThreadSearchIndex} from '@app/api/search/thread/ThreadSearchIndex';
 
 interface MeilisearchSearchProviderOptions {
 	config: MeilisearchClientConfig;
@@ -32,6 +35,7 @@ export class MeilisearchSearchProvider implements ISearchProvider {
 	private reportService: MeilisearchReportSearchService | null = null;
 	private auditLogService: MeilisearchAuditLogSearchService | null = null;
 	private guildMemberService: MeilisearchGuildMemberSearchService | null = null;
+	private threadService: ThreadSearchIndex | null = null;
 
 	constructor(options: MeilisearchSearchProviderOptions) {
 		this.config = options.config;
@@ -47,6 +51,7 @@ export class MeilisearchSearchProvider implements ISearchProvider {
 		this.reportService = new MeilisearchReportSearchService(client);
 		this.auditLogService = new MeilisearchAuditLogSearchService(client);
 		this.guildMemberService = new MeilisearchGuildMemberSearchService(client);
+		this.threadService = new ThreadSearchIndex(new MeilisearchThreadAdapter({client}));
 		await Promise.all([
 			this.messageService.initialize(),
 			this.guildService.initialize(),
@@ -66,6 +71,7 @@ export class MeilisearchSearchProvider implements ISearchProvider {
 			this.reportService,
 			this.auditLogService,
 			this.guildMemberService,
+			this.threadService,
 		];
 		await Promise.all(services.filter((service) => service != null).map((service) => service.shutdown()));
 		this.messageService = null;
@@ -74,6 +80,7 @@ export class MeilisearchSearchProvider implements ISearchProvider {
 		this.reportService = null;
 		this.auditLogService = null;
 		this.guildMemberService = null;
+		this.threadService = null;
 	}
 
 	getMessageSearchService(): IMessageSearchService | null {
@@ -98,5 +105,9 @@ export class MeilisearchSearchProvider implements ISearchProvider {
 
 	getGuildMemberSearchService(): IGuildMemberSearchService | null {
 		return this.guildMemberService;
+	}
+
+	getThreadSearchService(): IThreadSearchService | null {
+		return this.threadService;
 	}
 }

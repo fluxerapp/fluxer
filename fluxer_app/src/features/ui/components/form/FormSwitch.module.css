@@ -22,9 +22,6 @@
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 0.25rem;
-	border: 0;
-	background: transparent;
-	padding: 0;
 	text-align: left;
 }
 

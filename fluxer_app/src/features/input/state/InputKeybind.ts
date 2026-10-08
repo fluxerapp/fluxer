@@ -1,6 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {HoldAction} from '@app/features/app/keybindings/utils/RuntimeKeybinds';
 import {COPY_TEXT_DESCRIPTOR, DELETE_MESSAGE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import GlobalShortcuts from '@app/features/input/state/GlobalShortcuts';
+import {HoldSources} from '@app/features/input/state/HoldSources';
+import {
+	ACCOUNT_SWITCHER_SLOT_ACTIONS,
+	isKeybindCommand,
+	type KeybindCommand,
+	resolveKeybindCommand,
+} from '@app/features/input/state/input_keybind/KeybindCommands';
+import {
+	clampReleaseDelay,
+	DEFAULT_RELEASE_DELAY_MS,
+	fromSyncedCustomKeybind,
+	generateCustomKeybindId,
+	normalizeTransmitMode,
+	type TransmitMode,
+	toSyncedKeybindSettings,
+} from '@app/features/input/state/input_keybind/KeybindSyncCodec';
 import {
 	ADD_REACTION_DESCRIPTOR,
 	ANSWER_THE_INCOMING_CALL_DESCRIPTOR,
@@ -14,6 +32,7 @@ import {
 	DISCONNECT_FROM_VOICE_DESCRIPTOR,
 	DROP_ITEM_DESCRIPTOR,
 	EDIT_MESSAGE_DESCRIPTOR,
+	EDIT_YOUR_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR,
 	EXPAND_OR_COLLAPSE_COMPACT_CALL_VIEW_DESCRIPTOR,
 	FOCUS_TEXT_AREA_DESCRIPTOR,
 	FOCUS_THE_TEXT_AREA_DESCRIPTOR,
@@ -39,6 +58,7 @@ import {
 	MOVE_BACK_THROUGH_VIEWED_CHANNEL_HISTORY_DESCRIPTOR,
 	MOVE_DESCRIPTOR,
 	MOVE_FORWARD_THROUGH_VIEWED_CHANNEL_HISTORY_DESCRIPTOR,
+	OPEN_ACCOUNT_SWITCHER_DESCRIPTOR,
 	OPEN_HELP_DESCRIPTOR,
 	OPEN_THE_CONTEXT_MENU_DESCRIPTOR,
 	OPEN_THEME_STUDIO_POPOUT_DESCRIPTOR,
@@ -49,6 +69,7 @@ import {
 	PUSH_TO_TALK_PRIORITY_DESCRIPTOR,
 	READ_MESSAGE_ALOUD_DESCRIPTOR,
 	REPLY_TO_MESSAGE_DESCRIPTOR,
+	REPLY_TO_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR,
 	RESET_ZOOM_DESCRIPTOR,
 	SCROLL_CHAT_DOWN_DESCRIPTOR,
 	SCROLL_CHAT_UP_DESCRIPTOR,
@@ -60,6 +81,7 @@ import {
 	START_DRAG_AND_DROP_DESCRIPTOR,
 	SWITCH_BETWEEN_CHANNELS_DESCRIPTOR,
 	SWITCH_BETWEEN_COMMUNITIES_DESCRIPTOR,
+	SWITCH_TO_ACCOUNT_SLOT_DESCRIPTOR,
 	SWITCH_TO_NEXT_COMMUNITY_OR_DMS_DESCRIPTOR,
 	SWITCH_TO_PREVIOUS_COMMUNITY_OR_DMS_DESCRIPTOR,
 	SWITCH_VOICE_CHANNEL_DESCRIPTOR,
@@ -85,6 +107,9 @@ import {
 import {
 	getActiveCombosForResolvedAction,
 	getDisplayKeybindForResolvedAction,
+	isActiveCustomKeybind,
+	isBuiltinDisableMarker,
+	keyComboHasTriggerInput,
 } from '@app/features/input/state/KeybindResolution';
 import {
 	DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
@@ -94,116 +119,19 @@ import {
 } from '@app/features/input/utils/KeyboardShortcutLayoutUtils';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {awaitHydration, makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {VOICE_TOGGLE_DEAFEN_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
-import {create, type MessageInitShape} from '@bufbuild/protobuf';
-import {
-	type CustomKeybindSchema,
-	type KeybindComboSchema,
-	KeybindSettingsSchema,
-	type CustomKeybind as SyncedCustomKeybind,
-	type KeybindCombo as SyncedKeybindCombo,
-} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
+import {create} from '@bufbuild/protobuf';
+import {KeybindSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import type {I18n} from '@lingui/core';
-import {makeAutoObservable, runInAction} from 'mobx';
+import {computed, makeAutoObservable, runInAction} from 'mobx';
 
 const KEYBIND_STORE_NAME = 'Keybind';
-const KEYBIND_COMMAND_VALUES = [
-	'message_edit',
-	'message_delete',
-	'message_pin',
-	'message_react',
-	'message_reply',
-	'message_forward',
-	'message_speak',
-	'message_copy_text',
-	'message_mark_unread',
-	'message_focus_textarea',
-	'nav_guild_prev',
-	'nav_guild_next',
-	'nav_channel_prev',
-	'nav_channel_next',
-	'nav_history_back',
-	'nav_history_forward',
-	'nav_unread_prev',
-	'nav_unread_next',
-	'nav_mention_prev',
-	'nav_mention_next',
-	'nav_current_call',
-	'nav_toggle_last_guild_dms',
-	'nav_guild_tab_prev',
-	'nav_guild_tab_next',
-	'nav_guild_slot_1',
-	'nav_guild_slot_2',
-	'nav_guild_slot_3',
-	'nav_guild_slot_4',
-	'nav_guild_slot_5',
-	'nav_guild_slot_6',
-	'nav_guild_slot_7',
-	'nav_guild_slot_8',
-	'nav_guild_slot_9',
-	'nav_quick_switcher',
-	'nav_add_guild',
-	'dnd_start',
-	'dnd_move_up',
-	'dnd_move_down',
-	'dnd_drop',
-	'dnd_cancel',
-	'chat_mark_guild_read',
-	'chat_mark_channel_read',
-	'chat_new_dm',
-	'chat_toggle_pins',
-	'chat_toggle_inbox',
-	'chat_mark_inbox_read',
-	'chat_mark_all_inbox_read',
-	'chat_toggle_member_list',
-	'chat_toggle_emoji',
-	'chat_toggle_gif',
-	'chat_toggle_sticker',
-	'chat_scroll_up',
-	'chat_scroll_down',
-	'chat_jump_oldest_unread',
-	'chat_focus_textarea',
-	'chat_upload',
-	'chat_copy_channel_link',
-	'voice_toggle_mute',
-	'voice_toggle_deafen',
-	'voice_answer_call',
-	'voice_decline_call',
-	'voice_start_dm_call',
-	'voice_toggle_soundboard',
-	'voice_toggle_compact_call_view',
-	'misc_help',
-	'misc_search',
-	'misc_open_context_menu',
-	'message_bookmark',
-	'message_toggle_embeds',
-	'message_copy_link',
-	'message_copy_id',
-	'chat_toggle_saved_media',
-	'chat_send_voice_message',
-	'voice_push_to_talk',
-	'voice_push_to_talk_priority',
-	'voice_push_to_mute',
-	'voice_priority_vad',
-	'voice_toggle_vad',
-	'voice_toggle_camera',
-	'voice_switch_channel',
-	'voice_disconnect',
-	'system_toggle_settings',
-	'system_toggle_shortcuts_overlay',
-	'system_open_theme_studio_popout',
-	'system_zoom_in',
-	'system_zoom_out',
-	'system_zoom_reset',
-] as const;
 
-export type KeybindCommand = (typeof KEYBIND_COMMAND_VALUES)[number];
-
-const KEYBIND_COMMAND_SET = new Set<string>(KEYBIND_COMMAND_VALUES);
-const isKeybindCommand = (value: unknown): value is KeybindCommand =>
-	typeof value === 'string' && KEYBIND_COMMAND_SET.has(value);
+export type {KeybindCommand};
+export {isKeybindCommand};
 
 export interface KeyCombo {
 	key: string;
@@ -249,19 +177,6 @@ export interface KeybindConfig {
 	editableFocusBehavior?: EditableFocusShortcutBehavior;
 }
 
-const TRANSMIT_MODES = ['voice_activity', 'voice_push_to_talk'] as const;
-
-type TransmitMode = (typeof TRANSMIT_MODES)[number];
-
-const DEFAULT_RELEASE_DELAY_MS = 20;
-const MIN_RELEASE_DELAY_MS = 20;
-const MAX_RELEASE_DELAY_MS = 2000;
-const clampReleaseDelay = (delayMs: number): number =>
-	Math.max(MIN_RELEASE_DELAY_MS, Math.min(MAX_RELEASE_DELAY_MS, Math.round(delayMs)));
-
-type SyncedKeybindComboInit = MessageInitShape<typeof KeybindComboSchema>;
-type SyncedCustomKeybindInit = MessageInitShape<typeof CustomKeybindSchema>;
-type SyncedKeybindSettingsInit = MessageInitShape<typeof KeybindSettingsSchema>;
 type KeybindLabelDescriptor =
 	| string
 	| {
@@ -269,7 +184,7 @@ type KeybindLabelDescriptor =
 			message?: string;
 	  };
 type KeybindLabelI18n = {
-	_(descriptor: KeybindLabelDescriptor): string;
+	_(descriptor: KeybindLabelDescriptor, values?: Record<string, unknown>): string;
 };
 
 const fallbackKeybindLabelI18n: KeybindLabelI18n = {
@@ -283,7 +198,7 @@ const fallbackKeybindLabelI18n: KeybindLabelI18n = {
 
 export interface CustomKeybindEntry {
 	id: string;
-	action: KeybindCommand | null;
+	action: string | null;
 	combo: KeyCombo;
 	enabled: boolean;
 }
@@ -291,72 +206,16 @@ export interface CustomKeybindEntry {
 const STORE_VERSION = 5 as const;
 
 const GLOBAL_KEYBIND_DEFAULT_MIGRATION_KEY = 'Keybind:globalDefaultMigration:v1';
-const generateId = (): string => {
-	if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-		return crypto.randomUUID();
-	}
-	return `cb_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
-};
-const toSyncedKeyCombo = (combo: KeyCombo): SyncedKeybindComboInit => ({
-	key: combo.key ?? '',
-	code: combo.code || undefined,
-	ctrlOrMeta: !!combo.ctrlOrMeta,
-	ctrl: !!combo.ctrl,
-	alt: !!combo.alt,
-	shift: !!combo.shift,
-	meta: !!combo.meta,
-	global: combo.global,
-	enabled: combo.enabled,
-	modifierOnly: !!combo.modifierOnly,
-	bothSides: !!combo.bothSides,
-	mouseButton: combo.mouseButton,
-	gamepadButton: combo.gamepadButton,
-});
-const fromSyncedKeyCombo = (combo: SyncedKeybindCombo | undefined): KeyCombo => {
-	if (!combo) return {key: '', enabled: true, global: true};
-	return {
-		key: combo.key ?? '',
-		code: combo.code || undefined,
-		ctrlOrMeta: combo.ctrlOrMeta || undefined,
-		ctrl: combo.ctrl || undefined,
-		alt: combo.alt || undefined,
-		shift: combo.shift || undefined,
-		meta: combo.meta || undefined,
-		global: combo.global,
-		enabled: combo.enabled,
-		modifierOnly: combo.modifierOnly || undefined,
-		bothSides: combo.bothSides || undefined,
-		mouseButton: combo.mouseButton,
-		gamepadButton: combo.gamepadButton,
-	};
-};
-const toSyncedCustomKeybind = (entry: CustomKeybindEntry): SyncedCustomKeybindInit => ({
-	id: entry.id,
-	action: entry.action ?? undefined,
-	combo: toSyncedKeyCombo(entry.combo),
-	enabled: entry.enabled,
-});
-const fromSyncedCustomKeybind = (entry: SyncedCustomKeybind): CustomKeybindEntry => ({
-	id: entry.id || generateId(),
-	action: isKeybindCommand(entry.action) ? entry.action : null,
-	combo: fromSyncedKeyCombo(entry.combo),
-	enabled: entry.enabled,
-});
-const normalizeTransmitMode = (mode: string | undefined): TransmitMode => {
-	if (mode && TRANSMIT_MODES.includes(mode as TransmitMode)) {
-		return mode as TransmitMode;
-	}
-	return 'voice_activity';
-};
-const toSyncedKeybindSettings = (store: {
-	customKeybinds: Array<CustomKeybindEntry>;
-	transmitMode: TransmitMode;
-	pushToTalkReleaseDelay: number;
-}): SyncedKeybindSettingsInit => ({
-	customKeybinds: store.customKeybinds.map(toSyncedCustomKeybind),
-	transmitMode: store.transmitMode,
-	pushToTalkReleaseDelayMs:
-		store.pushToTalkReleaseDelay === DEFAULT_RELEASE_DELAY_MS ? undefined : store.pushToTalkReleaseDelay,
+const BUILTIN_DISABLE_MARKER_MIGRATION_KEY = 'Keybind:builtinDisableMarkerMigration:v1';
+const createBuiltinDisableMarker = (
+	action: string,
+	global: boolean | undefined,
+	id: string = generateCustomKeybindId(),
+): CustomKeybindEntry => ({
+	id,
+	action,
+	combo: {key: '', enabled: false, global},
+	enabled: true,
 });
 
 const getDefaultKeybinds = (
@@ -408,6 +267,30 @@ const getDefaultKeybinds = (
 			combo: {key: 'r'},
 			requiresKeyboardMode: true,
 			requiresMessageFocus: true,
+			section: 'messages',
+		},
+		{
+			action: 'message_reply_prev',
+			label: i18n._(REPLY_TO_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR),
+			combo: {key: 'ArrowUp', ctrlOrMeta: true},
+			section: 'messages',
+		},
+		{
+			action: 'message_reply_next',
+			label: i18n._(REPLY_TO_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR),
+			combo: {key: 'ArrowDown', ctrlOrMeta: true},
+			section: 'messages',
+		},
+		{
+			action: 'message_edit_prev',
+			label: i18n._(EDIT_YOUR_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR),
+			combo: {key: 'ArrowUp', ctrlOrMeta: true, shift: true},
+			section: 'messages',
+		},
+		{
+			action: 'message_edit_next',
+			label: i18n._(EDIT_YOUR_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR),
+			combo: {key: 'ArrowDown', ctrlOrMeta: true, shift: true},
 			section: 'messages',
 		},
 		{
@@ -982,6 +865,20 @@ const getDefaultKeybinds = (
 			section: 'voice_and_video',
 			hideFromDefaults: true,
 		},
+		{
+			action: 'system_open_account_switcher',
+			label: i18n._(OPEN_ACCOUNT_SWITCHER_DESCRIPTOR),
+			combo: {key: 'o', ctrlOrMeta: true, shift: true},
+			section: 'misc',
+			assignable: true,
+		},
+		...ACCOUNT_SWITCHER_SLOT_ACTIONS.map((action, index) => ({
+			action,
+			label: i18n._(SWITCH_TO_ACCOUNT_SLOT_DESCRIPTOR, {slot: index + 1}),
+			combo: {key: String(index + 1), ctrlOrMeta: true, shift: true},
+			section: 'misc' as const,
+			hideFromDefaults: true,
+		})),
 	] as const;
 
 class Keybind {
@@ -997,10 +894,19 @@ class Keybind {
 	private i18n: I18n | null = null;
 	private initialized = false;
 	private keyboardShortcutsOverlayCombo: KeyCombo = {...DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO};
+	private holdSources = new HoldSources(() => this.pushToTalkReleaseDelay);
 
 	constructor() {
-		makeAutoObservable(this, {}, {autoBind: true});
-		void this.initPersistence();
+		makeAutoObservable<this, 'holdSources' | 'defaultKeybinds' | 'runtimeDispatchDefaults'>(
+			this,
+			{
+				holdSources: false,
+				defaultKeybinds: computed({keepAlive: true}),
+				runtimeDispatchDefaults: computed({keepAlive: true}),
+			},
+			{autoBind: true},
+		);
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -1024,7 +930,14 @@ class Keybind {
 			enabled: () => this.syncAcrossDevices,
 			toMessage: (store) => toSyncedKeybindSettings(store),
 			applyMessage: (store, message) => {
-				store.customKeybinds = message.customKeybinds.map(fromSyncedCustomKeybind);
+				const markerIds = new Set(store.customKeybinds.filter(isBuiltinDisableMarker).map((entry) => entry.id));
+				store.customKeybinds = message.customKeybinds
+					.map(fromSyncedCustomKeybind)
+					.map((entry) =>
+						entry.action != null && markerIds.has(entry.id) && !keyComboHasTriggerInput(entry.combo)
+							? createBuiltinDisableMarker(entry.action, entry.combo.global, entry.id)
+							: entry,
+					);
 				store.transmitMode = normalizeTransmitMode(message.transmitMode);
 				store.pushToTalkReleaseDelay = clampReleaseDelay(message.pushToTalkReleaseDelayMs ?? DEFAULT_RELEASE_DELAY_MS);
 			},
@@ -1034,13 +947,41 @@ class Keybind {
 	private migrateGlobalCapableKeybindsToGlobal(): void {
 		if (AppStorage.getItem(GLOBAL_KEYBIND_DEFAULT_MIGRATION_KEY) === '1') return;
 		for (const entry of this.customKeybinds) {
-			if (entry.action == null) continue;
-			const config = this.getDefaultByAction(entry.action);
+			const action = resolveKeybindCommand(entry.action);
+			if (action === null) continue;
+			const config = this.getDefaultByAction(action);
 			if (config?.allowGlobal && entry.combo.global !== true) {
 				entry.combo = {...entry.combo, global: true};
 			}
 		}
 		AppStorage.setItem(GLOBAL_KEYBIND_DEFAULT_MIGRATION_KEY, '1');
+	}
+
+	private migrateEmptyCustomKeybindsToBuiltinDisableMarkers(): void {
+		if (AppStorage.getItem(BUILTIN_DISABLE_MARKER_MIGRATION_KEY) === '1') return;
+		const activeActions = new Set(this.customKeybinds.filter(isActiveCustomKeybind).map((entry) => entry.action));
+		const markedActions = new Set<KeybindCommand>();
+		const migrated: Array<CustomKeybindEntry> = [];
+		for (const entry of this.customKeybinds) {
+			const action = resolveKeybindCommand(entry.action);
+			const base = action === null ? null : this.getDefaultByAction(action);
+			if (
+				action === null ||
+				keyComboHasTriggerInput(entry.combo) ||
+				activeActions.has(action) ||
+				!base ||
+				base.hideFromDefaults ||
+				!keyComboHasTriggerInput(base.combo)
+			) {
+				migrated.push(entry);
+				continue;
+			}
+			if (markedActions.has(action)) continue;
+			markedActions.add(action);
+			migrated.push(createBuiltinDisableMarker(action, entry.combo.global, entry.id));
+		}
+		if (markedActions.size > 0) this.customKeybinds = migrated;
+		AppStorage.setItem(BUILTIN_DISABLE_MARKER_MIGRATION_KEY, '1');
 	}
 
 	setI18n(i18n: I18n): void {
@@ -1053,6 +994,7 @@ class Keybind {
 					this.customKeybinds = [];
 				}
 				this.migrateGlobalCapableKeybindsToGlobal();
+				this.migrateEmptyCustomKeybindsToBuiltinDisableMarkers();
 				this.initialized = true;
 			});
 		});
@@ -1081,8 +1023,16 @@ class Keybind {
 		});
 	}
 
-	getDefaults(): ReadonlyArray<KeybindConfig> {
+	private get defaultKeybinds(): ReadonlyArray<KeybindConfig> {
 		return getDefaultKeybinds(this.getLabelI18n(), this.keyboardShortcutsOverlayCombo);
+	}
+
+	private get runtimeDispatchDefaults(): ReadonlyArray<KeybindConfig> {
+		return this.defaultKeybinds.filter((c) => !c.informationalOnly);
+	}
+
+	getDefaults(): ReadonlyArray<KeybindConfig> {
+		return this.defaultKeybinds;
 	}
 
 	getDefaultByAction(action: KeybindCommand): KeybindConfig | null {
@@ -1099,8 +1049,8 @@ class Keybind {
 		return this.getActiveCombosForAction(action).length > 0;
 	}
 
-	getDefaultsForRuntimeDispatch(): Array<KeybindConfig> {
-		return this.getDefaults().filter((c) => !c.informationalOnly);
+	getDefaultsForRuntimeDispatch(): ReadonlyArray<KeybindConfig> {
+		return this.runtimeDispatchDefaults;
 	}
 
 	getCustomKeybinds(): ReadonlyArray<CustomKeybindEntry> {
@@ -1109,13 +1059,13 @@ class Keybind {
 
 	addCustomKeybind(): CustomKeybindEntry {
 		const entry: CustomKeybindEntry = {
-			id: generateId(),
+			id: generateCustomKeybindId(),
 			action: null,
 			combo: {key: '', enabled: true, global: true},
 			enabled: true,
 		};
 		runInAction(() => {
-			this.customKeybinds.push(entry);
+			this.customKeybinds = [...this.customKeybinds, entry];
 		});
 		return entry;
 	}
@@ -1138,13 +1088,13 @@ class Keybind {
 
 	addCustomKeybindForAction(action: KeybindCommand): CustomKeybindEntry {
 		const entry: CustomKeybindEntry = {
-			id: generateId(),
+			id: generateCustomKeybindId(),
 			action,
 			combo: {key: '', enabled: true, global: true},
 			enabled: true,
 		};
 		runInAction(() => {
-			this.customKeybinds.push(entry);
+			this.customKeybinds = [...this.customKeybinds, entry];
 		});
 		return entry;
 	}
@@ -1152,6 +1102,26 @@ class Keybind {
 	removeCustomKeybindsForAction(action: KeybindCommand): void {
 		runInAction(() => {
 			this.customKeybinds = this.customKeybinds.filter((entry) => entry.action !== action);
+		});
+	}
+
+	isBuiltinDisabled(action: KeybindCommand): boolean {
+		return this.customKeybinds.some((entry) => entry.action === action && isBuiltinDisableMarker(entry));
+	}
+
+	disableBuiltinForAction(action: KeybindCommand): void {
+		if (this.isBuiltinDisabled(action)) return;
+		const global = this.getDefaultByAction(action)?.combo.global;
+		runInAction(() => {
+			this.customKeybinds = [...this.customKeybinds, createBuiltinDisableMarker(action, global)];
+		});
+	}
+
+	enableBuiltinForAction(action: KeybindCommand): void {
+		runInAction(() => {
+			this.customKeybinds = this.customKeybinds.filter(
+				(entry) => entry.action !== action || !isBuiltinDisableMarker(entry),
+			);
 		});
 	}
 
@@ -1198,7 +1168,7 @@ class Keybind {
 	}
 
 	getPrimaryCustomKeybind(action: KeybindCommand): CustomKeybindEntry | null {
-		return this.customKeybinds.find((c) => c.action === action) ?? null;
+		return this.customKeybinds.find((c) => c.action === action && !isBuiltinDisableMarker(c)) ?? null;
 	}
 
 	setPrimaryCustomKeybindCombo(action: KeybindCommand, combo: KeyCombo): CustomKeybindEntry {
@@ -1208,13 +1178,13 @@ class Keybind {
 			return {...existing, combo};
 		}
 		const created: CustomKeybindEntry = {
-			id: generateId(),
+			id: generateCustomKeybindId(),
 			action,
 			combo: {...combo, enabled: true, global: combo.global ?? true},
 			enabled: true,
 		};
 		runInAction(() => {
-			this.customKeybinds.push(created);
+			this.customKeybinds = [...this.customKeybinds, created];
 		});
 		return created;
 	}
@@ -1255,7 +1225,12 @@ class Keybind {
 	}
 
 	hasPushToTalkKeybind(): boolean {
-		return this.hasActiveBindingFor('voice_push_to_talk') || this.hasActiveBindingFor('voice_push_to_talk_priority');
+		return (
+			this.hasActiveBindingFor('voice_push_to_talk') ||
+			this.hasActiveBindingFor('voice_push_to_talk_priority') ||
+			GlobalShortcuts.isPortalActionAssigned('voice_push_to_talk') ||
+			GlobalShortcuts.isPortalActionAssigned('voice_push_to_talk_priority')
+		);
 	}
 
 	isPushToTalkEffective(): boolean {
@@ -1269,24 +1244,21 @@ class Keybind {
 		});
 	}
 
-	handlePushToTalkPress(): boolean {
-		runInAction(() => {
-			this.pushToTalkHeld = true;
-		});
-		return true;
+	pressHoldSource(action: HoldAction, sourceId: string): boolean {
+		const activated = this.holdSources.press(action, sourceId);
+		this.prioritySpeakerHeld = this.holdSources.prioritySpeakerHeld;
+		return activated;
 	}
 
-	handlePushToTalkRelease(): boolean {
-		runInAction(() => {
-			this.pushToTalkHeld = false;
-		});
-		return true;
+	releaseHoldSource(action: HoldAction, sourceId: string, onReleased?: () => void): void {
+		this.holdSources.release(action, sourceId, onReleased);
+		this.prioritySpeakerHeld = this.holdSources.prioritySpeakerHeld;
 	}
 
 	resetPushToTalkState(): void {
-		runInAction(() => {
-			this.pushToTalkHeld = false;
-		});
+		this.holdSources.resetPushToTalk();
+		this.pushToTalkHeld = false;
+		this.prioritySpeakerHeld = this.holdSources.prioritySpeakerHeld;
 	}
 
 	setPushToMuteHeld(held: boolean): void {
@@ -1296,7 +1268,9 @@ class Keybind {
 	}
 
 	hasPushToMuteKeybind(): boolean {
-		return this.hasActiveBindingFor('voice_push_to_mute');
+		return (
+			this.hasActiveBindingFor('voice_push_to_mute') || GlobalShortcuts.isPortalActionAssigned('voice_push_to_mute')
+		);
 	}
 
 	isPushToMuteEffective(): boolean {
@@ -1304,19 +1278,9 @@ class Keybind {
 	}
 
 	resetPushToMuteState(): void {
-		runInAction(() => {
-			this.pushToMuteHeld = false;
-		});
-	}
-
-	setPrioritySpeakerHeld(held: boolean): void {
-		runInAction(() => {
-			this.prioritySpeakerHeld = held;
-		});
-	}
-
-	resetPrioritySpeakerState(): void {
-		this.setPrioritySpeakerHeld(false);
+		this.holdSources.resetPushToMute();
+		this.pushToMuteHeld = false;
+		this.prioritySpeakerHeld = this.holdSources.prioritySpeakerHeld;
 	}
 
 	muteActions(actions: Iterable<KeybindCommand>): void {

@@ -14,6 +14,7 @@ import styles from '@app/features/channel/components/ChannelMessages.module.css'
 import {ChannelWelcomeSection} from '@app/features/channel/components/ChannelWelcomeSection';
 import {CollapsedMessageVisibilityProvider} from '@app/features/channel/components/CollapsedMessageVisibilityContext';
 import {NewMessagesBar} from '@app/features/channel/components/NewMessagesBar';
+import {usePresentableTypingUsers} from '@app/features/channel/components/TypingUsers';
 import {UploadManager} from '@app/features/channel/components/UploadManager';
 import type {Channel} from '@app/features/channel/models/Channel';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
@@ -39,8 +40,9 @@ import {
 	createChannelStream,
 	getCollapsedMessageGroupKey,
 } from '@app/features/messaging/utils/MessageGroupingUtils';
-import {getMessageSelector} from '@app/features/messaging/utils/MessageNodeSelectors';
+import {findMessageElement, getMessageSelector} from '@app/features/messaging/utils/MessageNodeSelectors';
 import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
+import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
@@ -49,6 +51,7 @@ import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateC
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {shouldAutoAck} from '@app/features/read_state/utils/AutoAckPredicate';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import ActiveComposer from '@app/features/threads/state/ActiveComposer';
 import {Button} from '@app/features/ui/button/Button';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
@@ -159,7 +162,7 @@ function shallowEqual<T extends object>(a: T, b: T): boolean {
 	return true;
 }
 
-export const Messages = observer(function Messages({
+const CachedMessages = observer(function CachedMessages({
 	channel,
 	onBottomBarVisibilityChange,
 	allowAutoAck = true,
@@ -187,6 +190,7 @@ export const Messages = observer(function Messages({
 	const isModalOpen = Modal.hasModalOpen();
 	const isGatewayConnected = GatewayConnection.isConnected;
 	const selectedChannelId = SelectedChannel.currentChannelId;
+	const openThreadPanelId = Navigation.threadId;
 	const placeholderSpecs = useMessageListPlaceholderSpecs({
 		channelId: channel.id,
 		compact: state.messageDisplayCompact,
@@ -280,6 +284,25 @@ export const Messages = observer(function Messages({
 		});
 		lastStateSnapshotRef.current = snapshot;
 	}, [channel.id, state]);
+	const revealMessageNode = useCallback(
+		(targetNode: HTMLElement) => {
+			const scrollerNode = scrollManager.ref.current?.getViewportElement();
+			if (!scrollerNode) return;
+			const targetRect = targetNode.getBoundingClientRect();
+			const scrollerRect = scrollerNode.getBoundingClientRect();
+			const isAbove = targetRect.top < scrollerRect.top;
+			const isBelow = targetRect.bottom > scrollerRect.bottom;
+			if (isAbove || isBelow) {
+				scrollManager.ref.current?.revealElement({
+					node: targetNode,
+					padding: 80,
+					animate: false,
+				});
+				scrollManager.scrollHandle();
+			}
+		},
+		[scrollManager],
+	);
 	const onMessageEdit = useCallback(
 		(targetNode: HTMLElement) => {
 			const scrollerNode = scrollManager.ref.current?.getViewportElement();
@@ -295,20 +318,9 @@ export const Messages = observer(function Messages({
 					return;
 				}
 			}
-			const targetRect = targetNode.getBoundingClientRect();
-			const scrollerRect = scrollerNode.getBoundingClientRect();
-			const isAbove = targetRect.top < scrollerRect.top;
-			const isBelow = targetRect.bottom > scrollerRect.bottom;
-			if (isAbove || isBelow) {
-				scrollManager.ref.current?.revealElement({
-					node: targetNode,
-					padding: 80,
-					animate: false,
-				});
-				scrollManager.scrollHandle();
-			}
+			revealMessageNode(targetNode);
 		},
-		[scrollManager, channel.id],
+		[scrollManager, channel.id, revealMessageNode],
 	);
 	const onReveal = useCallback(
 		(messageId: string | null) => {
@@ -384,11 +396,17 @@ export const Messages = observer(function Messages({
 			UserSettings.subscribe(updateFromState),
 			MessageEdit.subscribe(updateFromState),
 		];
-		const onForceJumpToPresent = () => {
+		const onForceJumpToPresent = (payload?: unknown) => {
+			const data = payload as {channelId?: string} | undefined;
+			if (data?.channelId && data.channelId !== channel.id) return;
 			MessageCommands.jumpToLiveEdge(channel.id, MAX_MESSAGES_PER_CHANNEL);
 		};
-		const onScrollPageUp = () => scrollManager.pageBackward(true);
-		const onScrollPageDown = () => scrollManager.pageForward(true);
+		const onScrollPageUp = () => {
+			if (ActiveComposer.accepts(channel.id)) scrollManager.pageBackward(true);
+		};
+		const onScrollPageDown = () => {
+			if (ActiveComposer.accepts(channel.id)) scrollManager.pageForward(true);
+		};
 		const onLayoutResized = (payload?: unknown) => {
 			const data = payload as {channelId?: string} | undefined;
 			if (data?.channelId && data.channelId !== channel.id) return;
@@ -432,6 +450,22 @@ export const Messages = observer(function Messages({
 		};
 	}, [channel.id, updateFromState, onScrollToPresent, onMessageSent, onEscapePressed, scrollManager]);
 	useEffect(() => {
+		return ComponentBus.subscribe('MESSAGE_REVEAL', (payload?: unknown) => {
+			const data = (payload ?? {}) as {channelId?: string; messageId?: string};
+			if (data.channelId !== channel.id || !data.messageId) return;
+			const messageId = data.messageId;
+			window.requestAnimationFrame(() => {
+				const node = findMessageElement(
+					document,
+					scrollManager.ref.current?.getViewportElement(),
+					channel.id,
+					messageId,
+				);
+				if (node) revealMessageNode(node);
+			});
+		});
+	}, [channel.id, scrollManager, revealMessageNode]);
+	useEffect(() => {
 		const editingMessageId = state.editingMessageId;
 		if (editingMessageId) {
 			scrollManager.editEnter();
@@ -440,7 +474,11 @@ export const Messages = observer(function Messages({
 		}
 	}, [state.editingMessageId, scrollManager]);
 	useEffect(() => {
-		if (!windowNeedsPage || !isGatewayConnected || selectedChannelId !== channel.id) {
+		if (
+			!windowNeedsPage ||
+			!isGatewayConnected ||
+			(selectedChannelId !== channel.id && openThreadPanelId !== channel.id)
+		) {
 			if (recoveryFetchChannelIdRef.current === channel.id) {
 				recoveryFetchChannelIdRef.current = null;
 			}
@@ -455,7 +493,7 @@ export const Messages = observer(function Messages({
 				recoveryFetchChannelIdRef.current = null;
 			}
 		});
-	}, [channel.id, isGatewayConnected, selectedChannelId, windowNeedsPage, state.messageVersion]);
+	}, [channel.id, isGatewayConnected, selectedChannelId, openThreadPanelId, windowNeedsPage, state.messageVersion]);
 	useMessageListKeyboardNavigation({
 		containerRef: scrollManager.ref,
 		channelId: channel.id,
@@ -637,6 +675,7 @@ export const Messages = observer(function Messages({
 		? i18n._(MESSAGE_LIST_FOR_DESCRIPTOR, {channelName: channel.name})
 		: i18n._(MESSAGE_LIST_DESCRIPTOR);
 	const messageListLiveMode = Accessibility.screenReaderAnnounceNewMessages && state.isAtBottom ? 'polite' : 'off';
+	const composerStatusVisible = usePresentableTypingUsers(channel).length > 0 || channel.rateLimitPerUser > 0;
 	const topFillerVisible = selectChannelMessagesFillerVisible({
 		reducedMotion: Accessibility.useReducedMotion,
 		scrollManagerInitialized: scrollManager.lifecycleIsInitialized(),
@@ -719,10 +758,24 @@ export const Messages = observer(function Messages({
 						</div>
 					</div>
 				</Scroller>
+				{composerStatusVisible && (
+					<div
+						className={clsx(
+							styles.bottomFade,
+							state.isAtBottom ? styles.bottomFadeStatusAtBottom : styles.bottomFadeStatusScrolled,
+						)}
+						aria-hidden="true"
+						data-flx="channel.messages.bottom-fade"
+					/>
+				)}
 			</div>
 			{bottomBar}
 		</div>
 	);
+});
+
+export const Messages = observer(function Messages(props: MessagesProps) {
+	return <CachedMessages key={MessagesState.cacheGeneration} {...props} />;
 });
 const JumpToPresentBar = observer(function JumpToPresentBar({
 	loadingMore,

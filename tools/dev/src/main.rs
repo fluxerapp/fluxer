@@ -6,7 +6,8 @@ use fluxer_dev::cassandra::{
     apply_schema, compute_diff, render_target_schema, verify_schema, write_diff_file,
 };
 use fluxer_dev::desktop::{
-    build_desktop, install_desktop, package_desktop, run_desktop, run_desktop_canary,
+    DEFAULT_INSTALL_DIR, DesktopAppOptions, RendererDelivery, build_desktop, desktop_app,
+    install_desktop_app, install_desktop_dependencies, package_desktop, run_desktop,
     typecheck_desktop,
 };
 use fluxer_dev::env::merge_default_env_with_current;
@@ -124,29 +125,48 @@ struct DesktopArgs {
 
 #[derive(Debug, Subcommand)]
 enum DesktopCommand {
-    Install,
+    Deps,
     Build {
+        #[arg(long)]
+        rebuild_renderer: bool,
         #[arg(long)]
         skip_native: bool,
     },
     Typecheck,
+    Pkgs,
     Package {
+        #[arg(long)]
+        rebuild_renderer: bool,
+        #[arg(long)]
+        ad_hoc: bool,
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         builder_args: Vec<String>,
     },
-    Run {
-        #[arg(long, default_value = LOCAL_APP_URL)]
-        app_url: String,
+    Install {
+        #[arg(long, default_value = DEFAULT_INSTALL_DIR)]
+        install_dir: PathBuf,
         #[arg(long)]
-        no_build: bool,
-        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-        extra_args: Vec<String>,
+        launch: bool,
     },
-    Canary {
+    App {
         #[arg(long)]
-        app_url: Option<String>,
+        rebuild_renderer: bool,
+        #[arg(long)]
+        ad_hoc: bool,
+        #[arg(long, default_value = DEFAULT_INSTALL_DIR)]
+        install_dir: PathBuf,
+        #[arg(long)]
+        no_install: bool,
+        #[arg(long)]
+        launch: bool,
+    },
+    Run {
         #[arg(long)]
         no_build: bool,
+        #[arg(long)]
+        rebuild_renderer: bool,
+        #[arg(long)]
+        skip_native: bool,
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         extra_args: Vec<String>,
     },
@@ -262,25 +282,51 @@ async fn main() -> Result<()> {
             CassandraCommand::TargetSchema => print!("{}", render_target_schema("fluxer")),
         },
         Command::Desktop(args) => match args.command {
-            DesktopCommand::Install => install_desktop()?,
-            DesktopCommand::Build { skip_native } => build_desktop(skip_native)?,
+            DesktopCommand::Deps => install_desktop_dependencies()?,
+            DesktopCommand::Build {
+                rebuild_renderer,
+                skip_native,
+            } => drop(build_desktop(
+                rebuild_renderer,
+                skip_native,
+                RendererDelivery::Offline,
+            )?),
+            DesktopCommand::Pkgs => fluxer_dev::desktop_modules::ensure_pkgs_server()?,
             DesktopCommand::Typecheck => typecheck_desktop()?,
-            DesktopCommand::Package { builder_args } => package_desktop(&builder_args)?,
-            DesktopCommand::Run {
-                app_url,
-                no_build,
-                extra_args,
+            DesktopCommand::Package {
+                rebuild_renderer,
+                ad_hoc,
+                builder_args,
             } => {
-                let extra_args: Vec<_> = extra_args.into_iter().filter(|arg| arg != "--").collect();
-                run_desktop(&app_url, &extra_args, !no_build)?;
+                let builder_args: Vec<_> =
+                    builder_args.into_iter().filter(|arg| arg != "--").collect();
+                package_desktop(rebuild_renderer, ad_hoc, &builder_args)?;
             }
-            DesktopCommand::Canary {
-                app_url,
+            DesktopCommand::Install {
+                install_dir,
+                launch,
+            } => drop(install_desktop_app(None, &install_dir, launch)?),
+            DesktopCommand::App {
+                rebuild_renderer,
+                ad_hoc,
+                install_dir,
+                no_install,
+                launch,
+            } => desktop_app(&DesktopAppOptions {
+                rebuild_renderer,
+                ad_hoc,
+                install_dir,
+                install: !no_install,
+                launch,
+            })?,
+            DesktopCommand::Run {
                 no_build,
+                rebuild_renderer,
+                skip_native,
                 extra_args,
             } => {
                 let extra_args: Vec<_> = extra_args.into_iter().filter(|arg| arg != "--").collect();
-                run_desktop_canary(app_url.as_deref(), &extra_args, !no_build).await?;
+                run_desktop(&extra_args, !no_build, rebuild_renderer, skip_native)?;
             }
             DesktopCommand::ExecDisclaimed { program, args } => {
                 fluxer_dev::disclaim::exec_disclaimed(&program, &args)?

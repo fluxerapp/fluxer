@@ -14,11 +14,10 @@ import {buildFluxerAudioExcludePatterns, isFluxerAudioNode} from '@electron/main
 import {getLinuxPortalsMode, getNativeAudioMode} from '@electron/main/LaunchOptions';
 import {
 	isDBusObjectPathSegment,
-	isWaylandSessionEnv,
-	isX11SessionEnv,
 	isX11WindowToken,
 	parseWindowSourceToken,
 } from '@electron/main/LinuxAudioCaptureHelpers';
+import {isWaylandSession, isX11Session} from '@electron/main/LinuxSession';
 import {
 	isValidVirtmicLinkOptions,
 	isValidVirtmicNodeList,
@@ -331,14 +330,6 @@ function startVirtmicSystem(exclude: unknown, options: unknown = {}): boolean {
 		logger.warn('AudioBridge.apply(system) threw', error);
 		return false;
 	}
-}
-
-function isX11Session(): boolean {
-	return isX11SessionEnv(process.env);
-}
-
-function isWaylandSession(): boolean {
-	return isWaylandSessionEnv(process.env);
 }
 
 async function resolveWindowPidViaX11(xid: string): Promise<number | null> {

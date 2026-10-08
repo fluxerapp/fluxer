@@ -16,7 +16,6 @@ import {
 } from '@app/features/voice/engine/VoiceStreamWatchState';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import {ScreenShareWatchErrorCode, ScreenShareWatchFailures} from '@app/features/voice/state/ScreenShareWatchFailures';
 import {monitorScreenShareDecodeHealth} from '@app/features/voice/utils/ScreenShareCodecDiagnostics';
 import {markScreenShareDecodeFailure} from '@app/features/voice/utils/VideoDecoderCapabilities';
@@ -108,30 +107,6 @@ interface ParticipantSpeakingDisposer {
 	dispose: () => void;
 }
 
-type LatencyTunedReceiver = RTCRtpReceiver & {
-	jitterBufferTarget?: number;
-	playoutDelayHint?: number;
-};
-
-function getRemoteTrackReceiver(track: RemoteTrack): LatencyTunedReceiver | undefined {
-	return (track as RemoteTrack & {receiver?: LatencyTunedReceiver}).receiver;
-}
-
-function applyInteractiveReceiverBuffer(track: RemoteTrack, pub: RemoteTrackPublication): void {
-	const receiver = getRemoteTrackReceiver(track);
-	if (!receiver) return;
-	try {
-		if (pub.kind === Track.Kind.Video && pub.source === Track.Source.ScreenShare) {
-			receiver.jitterBufferTarget = 80;
-			receiver.playoutDelayHint = 0.04;
-		} else if (pub.kind === Track.Kind.Audio) {
-			receiver.jitterBufferTarget = 60;
-		}
-	} catch (error) {
-		logger.debug('Failed to apply interactive receiver buffer target', {error, source: pub.source, kind: pub.kind});
-	}
-}
-
 export function bindRoomEvents(
 	room: Room,
 	attemptId: number,
@@ -141,7 +116,6 @@ export function bindRoomEvents(
 	dependencies: RoomEventDependencies,
 ): void {
 	const guard = dependencies.connection.createGuardedHandler;
-	const screenShareDeliveryEnabled = ScreenShareDeliveryRollout.enabled;
 	const participantSpeakingDisposers = new Map<string, ParticipantSpeakingDisposer>();
 	const screenShareDecodeMonitorCancels = new Map<string, () => void>();
 	const remoteTrackLifecycleDisposers = new Map<string, () => void>();
@@ -442,9 +416,6 @@ export function bindRoomEvents(
 					participantIdentity: participant.identity,
 					trackSid: pub.trackSid,
 				});
-			}
-			if (!screenShareDeliveryEnabled) {
-				applyInteractiveReceiverBuffer(track, pub);
 			}
 			monitorDecodeHealth(track, pub);
 			dependencies.remoteSpeaking.attachIfApplicable(participant, pub, track);

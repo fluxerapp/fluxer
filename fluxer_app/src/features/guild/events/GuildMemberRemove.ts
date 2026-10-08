@@ -9,7 +9,7 @@ import UserProfile from '@app/features/user/state/UserProfile';
 import Users from '@app/features/user/state/Users';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
-interface GuildMemberRemovePayload {
+export interface GuildMemberRemovePayload {
 	guild_id: string;
 	user: UserPartial;
 }

@@ -569,7 +569,7 @@ describe('Message Search Filters', () => {
 				}
 			}
 		});
-		test('has: snapshot combined with has: image finds forwards whose snapshot carries an image', async () => {
+		test('has: snapshot combined with has: image finds forwards whose snapshot has an image', async () => {
 			const account = await createTestAccount(harness);
 			const guild = await createGuild(harness, account.token, 'Forward Image Guild');
 			const sourceChannelId = guild.system_channel_id!;

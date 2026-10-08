@@ -20,14 +20,14 @@ An OAuth2 protocol failure raised by the [OAuth2 resource](/http-api/oauth2/) an
 
 ## Supplementary members
 
-The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted. `global` is `true` on a global rate limit denial and `false` on a route one. `required_scope` is the OAuth2 scope the request is missing. `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply.
+The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted. `global` is `true` on a global rate limit denial and `false` on a route one. `required_scope` is the OAuth2 scope the request is missing. `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply. `captcha_provider` and `altcha_challenge` are the challenge described in [CAPTCHA handling](/topics/captcha/).
 
 `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED` have their own members:
 
 - `ip_address` is the normalised client address.
 - `appeal_email` is the address an appeal is sent to.
-- `appeals_supported` is `true` only for the permanent ban.
-- `ban_kind` is `permanent` or `temporary_24h`.
+- `appeals_supported` is `true` for both kinds of ban.
+- `ban_kind` is `permanent` or `temporary_24h`. `temporary_24h` covers every ban that records an expiry, whatever its length.
 - `expires_at` is an ISO 8601 timestamp when the ban records an expiry, and `null` otherwise, including on every permanent ban.
 
 ## Validation failure codes
@@ -110,7 +110,7 @@ Fluxer answers an unrecognised failure with 500 `INTERNAL_SERVER_ERROR` and a ge
 
 ## Client errors as an abuse signal
 
-Repeated invalid requests or credentials can trigger a temporary IP ban. A `4xx` answer to a request with no authenticated user adds to that signal, weighted by status. A 429 weighs 3, a 401 weighs 0.75, a 403 weighs 0.5, and every other 4xx weighs 0.25. One request adds at most one signal, and a request from a private or exempt address adds none. Stop using a rejected credential. Change a rejected request before sending it again, and after a 429 wait `retry_after` before the next attempt.
+Repeated invalid requests or credentials can trigger a temporary IP ban. Stop using a rejected credential. Change a rejected request before sending it again, and after a 429 wait `retry_after` before the next attempt.
 
 :::caution[An automatic ban answers every request for 24 hours]
 A temporary ban lasts 24 hours by default. Requests from the banned address return 403 `GLOBAL_IP_TEMPORARILY_BANNED`. Use `expires_at` from the response when available.
@@ -132,6 +132,14 @@ Several source messages append a further recovery sentence with a template value
 
 You don't have access to this resource or feature
 
+### `ACCOUNT_IDENTITY_LOCKED`
+
+The sign-in method is already set and can't be changed
+
+### `ACCOUNT_LIMITED`
+
+Messaging is paused on your account
+
 ### `ACCOUNT_SUSPENDED_PERMANENTLY`
 
 This account has been permanently suspended
@@ -139,10 +147,6 @@ This account has been permanently suspended
 ### `ACCOUNT_SUSPENDED_TEMPORARILY`
 
 This account has been temporarily suspended
-
-### `ACCOUNT_SUSPICIOUS_ACTIVITY`
-
-Your account is locked due to suspicious activity
 
 ### `ACCOUNT_TOO_NEW_FOR_GUILD`
 
@@ -163,6 +167,10 @@ You've already completed age verification
 ### `ALREADY_FRIENDS`
 
 You're already friends with this user
+
+### `ANNOUNCEMENT_CHANNEL_REQUIRED`
+
+This action is only available in announcement channels
 
 ### `APPLICATION_NOT_OWNED`
 
@@ -286,7 +294,23 @@ Community ownership can't be transferred to a bot
 
 ### `CAPTCHA_REQUIRED`
 
-Captcha is required
+Verification required. Try again
+
+### `CHANNEL_ALREADY_FOLLOWED`
+
+This channel already receives updates from that announcement channel
+
+### `CHANNEL_HAS_FOLLOWED_CHANNELS`
+
+Remove the followed channels posting here before converting it to an announcement channel
+
+### `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED`
+
+Only text and announcement channels can be converted into each other
+
+### `NEW_CONVERSATIONS_LIMITED`
+
+You can't start new conversations right now. Please try again later
 
 ### `COMMUNICATION_DISABLED`
 
@@ -384,6 +408,10 @@ Magic link has already been used
 
 Email service is temporarily unavailable
 
+### `EMAIL_UNAVAILABLE_ON_INSTANCE`
+
+This instance doesn't use email
+
 ### `EMAIL_VERIFICATION_REQUIRED`
 
 Email verification is required for this action
@@ -403,6 +431,14 @@ This feature is temporarily disabled
 ### `FILE_SIZE_TOO_LARGE`
 
 File size is too large
+
+### `FOLLOW_TARGET_CONTENT_WARNING_REQUIRED`
+
+Updates from a channel with a content warning can only go to a channel with a content warning or an age restriction
+
+### `FOLLOW_TARGET_NOT_AGE_RESTRICTED`
+
+Updates from an age-restricted channel can only go to an age-restricted channel
 
 ### `FORBIDDEN`
 
@@ -434,7 +470,7 @@ Your IP address {ipAddress} has been permanently blocked from the Fluxer API by 
 
 ### `GLOBAL_IP_TEMPORARILY_BANNED`
 
-Your IP address {ipAddress} has been temporarily blocked from the Fluxer API for 24 hours because of abusive or unusual access patterns
+Your IP address {ipAddress} has been temporarily blocked from the Fluxer API
 
 ### `GONE`
 
@@ -448,13 +484,13 @@ One or more selected users can't be added to this group DM
 
 Email verification is required for this action
 
+### `GUILD_CREATION_PERMISSION_REQUIRED`
+
+You don't have permission to create communities on this instance
+
 ### `GUILD_EMAIL_VERIFICATION_REQUIRED`
 
 Email verification is required for this action
-
-### `GUILD_PHONE_VERIFICATION_REQUIRED`
-
-You need to add a phone number to send messages in this community
 
 ### `GUILD_TEMPLATE_INVALID`
 
@@ -506,7 +542,7 @@ Invalid bot flag
 
 ### `INVALID_CAPTCHA`
 
-Invalid captcha
+Verification failed. Try again
 
 ### `INVALID_CHANNEL_TYPE`
 
@@ -532,6 +568,10 @@ Invalid DSA verification code
 
 Invalid flags format
 
+### `INVALID_FOLLOW_TARGET_CHANNEL`
+
+Followed channels can only post into text channels
+
 ### `INVALID_FORM_BODY`
 
 Invalid form body
@@ -540,6 +580,14 @@ Invalid form body
 
 Invalid handoff code
 
+### `INVALID_ORIGIN_HANDOFF_NONCE`
+
+This sign-in transfer doesn't match the one you started
+
+### `INVALID_PASSKEY_BRIDGE_NONCE`
+
+This passkey request could not be confirmed
+
 ### `INVALID_PERMISSIONS_INTEGER`
 
 Permissions must be a valid integer
@@ -547,14 +595,6 @@ Permissions must be a valid integer
 ### `INVALID_PERMISSIONS_NEGATIVE`
 
 Permissions must be non-negative
-
-### `INVALID_PHONE_NUMBER`
-
-Invalid phone number
-
-### `INVALID_PHONE_VERIFICATION_CODE`
-
-Invalid phone verification code
 
 ### `INVALID_REQUEST`
 
@@ -567,10 +607,6 @@ Invalid stream key format
 ### `INVALID_STREAM_THUMBNAIL_PAYLOAD`
 
 Invalid stream thumbnail payload
-
-### `INVALID_SUSPICIOUS_FLAGS_FORMAT`
-
-Invalid suspicious flags format
 
 ### `INVALID_SYSTEM_FLAG`
 
@@ -692,6 +728,18 @@ You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}
 
 Media metadata error
 
+### `MESSAGE_ALREADY_CROSSPOSTED`
+
+This message has already been published
+
+### `MESSAGE_CROSSPOST_RATE_LIMITED`
+
+This channel has reached its publishing limit
+
+### `MESSAGE_NOT_CROSSPOSTABLE`
+
+This message cannot be published
+
 ### `METHOD_NOT_ALLOWED`
 
 Method not allowed
@@ -772,50 +820,6 @@ NSFW content is age restricted
 
 Passkey authentication failed
 
-### `PHONE_ADD_NOT_ELIGIBLE`
-
-You are not eligible to add a phone number to your account
-
-### `PHONE_ALREADY_USED`
-
-Phone number is already in use
-
-### `PHONE_COUNTRY_NOT_SUPPORTED`
-
-We don't send verification texts to this country. Use a mobile number from another country, or email support@fluxer.app and a person will review your account
-
-### `PHONE_GATE_ESCAPE_UNAVAILABLE`
-
-This account cannot postpone the phone verification check
-
-### `PHONE_INBOUND_VERIFICATION_REQUIRED`
-
-This number is verified by texting us instead of us texting you. Start phone verification again to get the code and the number to text
-
-### `PHONE_LOOKUP_UNAVAILABLE`
-
-Our phone number check is down right now, so we stopped before sending your code. This is on us, not your number. Wait a few minutes and try the same number again
-
-### `PHONE_NUMBER_NOT_IN_SERVICE`
-
-Your carrier says this number isn't in service. Check the number and try again, or email support@fluxer.app if it's correct
-
-### `PHONE_NUMBER_NOT_MOBILE`
-
-This isn't a mobile number, so it can't receive our text. Use a mobile number, or email support@fluxer.app if you think that's wrong
-
-### `PHONE_RATE_LIMIT_EXCEEDED`
-
-Phone rate limit exceeded
-
-### `PHONE_VERIFICATION_NEEDS_REVIEW`
-
-We couldn't verify this number automatically. Email support@fluxer.app and a person will review your account
-
-### `PHONE_VERIFICATION_REQUIRED`
-
-Phone verification is required
-
 ### `PREMIUM_PURCHASE_BLOCKED`
 
 No active subscription
@@ -831,6 +835,10 @@ We couldn't process the request
 ### `PROFILE_EMAIL_VERIFICATION_REQUIRED`
 
 Email verification is required for this action
+
+### `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED`
+
+This published message has reached its editing limit
 
 ### `PURCHASE_EMAIL_VERIFICATION_REQUIRED`
 
@@ -904,13 +912,29 @@ You cannot leave the community for this instance
 
 Slowmode rate limited
 
-### `SMS_VERIFICATION_UNAVAILABLE`
-
-Service unavailable
-
 ### `SSO_REQUIRED`
 
 Invalid request
+
+### `STORE_BILLING_UNAVAILABLE`
+
+In-app purchases are unavailable right now
+
+### `STORE_NOTIFICATION_UNAUTHORIZED`
+
+The notification signature is invalid
+
+### `STORE_PURCHASE_INVALID`
+
+This purchase could not be verified
+
+### `STORE_PURCHASE_OWNED_BY_OTHER_ACCOUNT`
+
+This purchase is linked to a different account
+
+### `STORE_PURCHASE_SANDBOX_NOT_ENTITLED`
+
+Test purchases cannot be applied to this account
 
 ### `STREAM_KEY_CHANNEL_MISMATCH`
 
@@ -1100,6 +1124,18 @@ Member wasn't found in this community
 
 Message wasn't found
 
+### `UNKNOWN_ORIGIN_HANDOFF`
+
+This sign-in transfer has expired or was already used
+
+### `UNKNOWN_PASSKEY_BRIDGE`
+
+This passkey request has expired
+
+### `UNKNOWN_PASSKEY_MIGRATION`
+
+There is no passkey to update right now
+
 ### `UNKNOWN_REPORT`
 
 Unknown report
@@ -1112,9 +1148,9 @@ Role wasn't found
 
 Unknown sticker
 
-### `UNKNOWN_SUSPICIOUS_FLAG`
+### `UNKNOWN_STORE_PURCHASE`
 
-Unknown suspicious flag
+Unknown store purchase
 
 ### `UNKNOWN_USER`
 
@@ -1147,6 +1183,10 @@ We couldn't update the resource
 ### `USERNAME_NOT_AVAILABLE`
 
 This username is not available
+
+### `USERNAME_SIGN_IN_ONLY`
+
+This is only available on instances where people sign in with a username
 
 ### `USER_BANNED_FROM_GUILD`
 
@@ -1393,6 +1433,10 @@ Discoverable communities must have a verification level of at least Low
 
 `Discriminator must be {min}–{max} digits`
 
+### `DISCRIMINATOR_NOT_SUPPORTED_ON_INSTANCE`
+
+This instance doesn't use tags. Your username is unique on its own
+
 ### `DISCRIMINATOR_OUT_OF_RANGE`
 
 Discriminator must be between {min} and {max}
@@ -1549,6 +1593,10 @@ Community ID is required for channel message and member search indexes
 
 Image size exceeds {maxSize} bytes
 
+### `INSTANCE_ADDRESS_REQUIRED`
+
+This server uses usernames. Enter the username you want followed by @{host}
+
 ### `INTEGER_OUT_OF_INT64_RANGE`
 
 Integer value is out of the valid int64 range
@@ -1617,6 +1665,10 @@ Must be a valid ISO timestamp
 
 Invalid JSON in `payload_json`
 
+### `INVALID_LOGIN_OR_PASSWORD`
+
+Invalid username or password
+
 ### `INVALID_MESSAGE_DATA`
 
 Invalid message data
@@ -1668,6 +1720,10 @@ Invalid email or password
 ### `INVALID_PROOF_TOKEN`
 
 Invalid proof token
+
+### `INVALID_RECOVERY_KEY`
+
+Invalid username or recovery key
 
 ### `INVALID_ROLE_ID`
 
@@ -1849,10 +1905,6 @@ String length must be between {min} and {max} characters
 
 Password isn't set
 
-### `PHONE_NUMBER_INVALID_FORMAT`
-
-Phone number must be in E.164 format (for example, +1234567890)
-
 ### `PRECEDING_CHANNEL_MUST_SHARE_PARENT`
 
 Preceding channel must share the same parent as the moved channel
@@ -1937,6 +1989,10 @@ System channel must be a text channel
 
 This tag is already taken
 
+### `TAG_STYLE_REQUIRES_EMAIL_SIGN_IN`
+
+Tags are only available when people sign in with email
+
 ### `THIS_VANITY_URL_IS_ALREADY_TAKEN`
 
 This vanity URL is already taken
@@ -1992,6 +2048,10 @@ URL must be between {min} and {max} characters
 ### `URL_NOT_PUBLICLY_ROUTABLE`
 
 URL must resolve to a publicly routable address
+
+### `USERNAME_ALREADY_TAKEN`
+
+This username is already taken
 
 ### `USERNAME_CANNOT_CONTAIN_RESERVED_TERMS`
 

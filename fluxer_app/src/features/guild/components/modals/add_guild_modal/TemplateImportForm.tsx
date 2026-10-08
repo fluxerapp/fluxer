@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {
@@ -43,7 +44,11 @@ import {
 	type TemplateJsonFormInputs,
 	THIS_DOESN_T_LOOK_LIKE_A_VALID_TEMPLATE_DESCRIPTOR,
 } from '@app/features/guild/components/modals/add_guild_modal/shared';
-import {getGuildIconDisplayInitials, getInitialsLength} from '@app/features/guild/utils/GuildInitialsUtils';
+import {
+	getGuildIconDisplayInitials,
+	getGuildInitialsFitStyle,
+	getInitialsLength,
+} from '@app/features/guild/utils/GuildInitialsUtils';
 import {
 	CREATE_COMMUNITY_DESCRIPTOR,
 	FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR,
@@ -62,7 +67,6 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Form} from '@app/features/ui/components/form/Form';
 import {Input, Textarea} from '@app/features/ui/components/form/FormInput';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as StringUtils from '@app/lib/strings';
@@ -245,13 +249,12 @@ export const TemplateImportForm = observer(() => {
 	const nameValue = createForm.watch('name');
 	const urlValue = urlForm.watch('url');
 	const jsonValue = jsonForm.watch('json');
-	const rawInitials = useMemo(() => {
+	const initials = useMemo(() => {
 		const raw = (nameValue || '').trim();
 		if (!raw) return '';
-		return StringUtils.getInitialsFromName(raw);
+		return getGuildIconDisplayInitials(StringUtils.getInitialsFromName(raw));
 	}, [nameValue]);
-	const initials = useMemo(() => getGuildIconDisplayInitials(rawInitials), [rawInitials]);
-	const initialsLength = useMemo(() => (rawInitials ? getInitialsLength(rawInitials) : null), [rawInitials]);
+	const initialsLength = initials ? getInitialsLength(initials) : null;
 	const showIconUploadErrorModal = useCallback(
 		(message: string) => {
 			showGuildErrorModal({
@@ -267,7 +270,9 @@ export const TemplateImportForm = observer(() => {
 		const channelTypes = templateData.channels
 			.map((channel) => mapTemplateChannelTypeToFluxer(channel.type))
 			.filter((channelType): channelType is number => channelType !== null);
-		const textChannels = channelTypes.filter((channelType) => channelType === ChannelTypes.GUILD_TEXT).length;
+		const textChannels = channelTypes.filter(
+			(channelType) => channelType === ChannelTypes.GUILD_TEXT || channelType === ChannelTypes.GUILD_ANNOUNCEMENT,
+		).length;
 		const voiceChannels = channelTypes.filter((channelType) => channelType === ChannelTypes.GUILD_VOICE).length;
 		const categories = channelTypes.filter((channelType) => channelType === ChannelTypes.GUILD_CATEGORY).length;
 		const roles = templateData.roles.filter((role) => !isTemplateEveryoneRole(role)).length;
@@ -297,7 +302,6 @@ export const TemplateImportForm = observer(() => {
 					<AssetCropModal
 						assetType={AssetType.GUILD_ICON}
 						imageUrl={base64}
-						sourceMimeType={svg ? 'image/svg+xml' : file.type}
 						onCropComplete={(croppedBlob) => {
 							const reader = new FileReader();
 							reader.onload = () => {
@@ -461,12 +465,15 @@ export const TemplateImportForm = observer(() => {
 					<Button
 						onClick={() =>
 							ModalCommands.push(
-								modal(() => (
-									<UserSettingsModal
-										initialTab="account_security"
-										data-flx="guild.add-guild-modal.template-import-form.user-settings-modal"
-									/>
-								)),
+								modal(
+									() => (
+										<UserSettingsModal
+											initialTab="account_security"
+											data-flx="guild.add-guild-modal.template-import-form.user-settings-modal"
+										/>
+									),
+									'user-settings',
+								),
 							)
 						}
 						data-flx="guild.add-guild-modal.template-import-form.button.push"
@@ -608,6 +615,7 @@ export const TemplateImportForm = observer(() => {
 									{initials ? (
 										<span
 											className={styles.iconInitials}
+											style={getGuildInitialsFitStyle(initials)}
 											data-flx="guild.add-guild-modal.template-import-form.icon-initials"
 										>
 											{initials}

@@ -4,13 +4,19 @@ import fs from 'node:fs';
 import {createRequire} from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
+import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
 import {
 	DESKTOP_APP_NAME,
+	LEGACY_LINUX_DESKTOP_ENTRY_ID,
 	LINUX_DESKTOP_ENTRY_ID,
+	LINUX_ICON_NAME,
 	WINDOWS_APP_USER_MODEL_ID,
 	WINDOWS_LEGACY_APP_USER_MODEL_IDS,
 } from '@electron/common/DesktopIdentity';
 import {isPortableMode} from '@electron/common/UserDataPath';
+import {AUTOSTART_LAUNCH_ARG} from '@electron/main/AutostartLaunch';
+import {getLinuxPortalsMode} from '@electron/main/LaunchOptions';
+import {GENERATED_MARKER} from '@electron/main/LinuxDesktopEntry';
 import {getStableLinuxLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
 import {t} from '@electron/main/MainI18n';
@@ -26,6 +32,7 @@ function getInitializedFilePath(): string {
 }
 
 function isInitialized(): boolean {
+	if (BUILD_CHANNEL === 'development') return true;
 	try {
 		return fs.existsSync(getInitializedFilePath());
 	} catch {
@@ -74,7 +81,7 @@ const isLinux = process.platform === 'linux';
 const APP_NAME = DESKTOP_APP_NAME;
 const LINUX_DESKTOP_FILE_BASENAME = `${LINUX_DESKTOP_ENTRY_ID}.desktop`;
 const LINUX_STARTUP_WM_CLASS = LINUX_DESKTOP_ENTRY_ID;
-const AUTOSTART_LAUNCH_ARG = '--autostart';
+const LEGACY_LINUX_DESKTOP_FILE_BASENAME = `${LEGACY_LINUX_DESKTOP_ENTRY_ID}.desktop`;
 
 interface AutoLaunchConfig {
 	name: string;
@@ -120,7 +127,7 @@ function loadWinShell(): WinShellBinding | null {
 }
 
 function loadLinuxPortals(): LinuxPortalsBinding | null {
-	if (!isLinux) return null;
+	if (!isLinux || getLinuxPortalsMode(process.argv) === 'off') return null;
 	if (cachedLinuxPortalsBinding !== undefined) return cachedLinuxPortalsBinding;
 	try {
 		cachedLinuxPortalsBinding = requireModule('@fluxer/linux-portals') as LinuxPortalsBinding;
@@ -279,17 +286,6 @@ async function isWindowsAutostartEnabled(): Promise<boolean> {
 	return false;
 }
 
-export function isAutostartLaunch(): boolean {
-	if (process.argv.includes(AUTOSTART_LAUNCH_ARG)) {
-		return true;
-	}
-	if (isMac) {
-		const settings = app.getLoginItemSettings();
-		return Boolean(settings.wasOpenedAtLogin);
-	}
-	return false;
-}
-
 function getLinuxAutostartDir(): string {
 	const xdgConfigHome = process.env.XDG_CONFIG_HOME;
 	const base = xdgConfigHome && xdgConfigHome.length > 0 ? xdgConfigHome : path.join(os.homedir(), '.config');
@@ -395,6 +391,7 @@ function buildLinuxDesktopFileContents(): string {
 	const execLine = `${quoteDesktopExecArg(execPath)} ${AUTOSTART_LAUNCH_ARG}`;
 	return [
 		'[Desktop Entry]',
+		GENERATED_MARKER,
 		'Type=Application',
 		`Name=${escapeDesktopEntry(APP_NAME)}`,
 		'Comment=Fluxer',
@@ -411,12 +408,16 @@ function buildLinuxDesktopFileContents(): string {
 }
 
 async function enableLinuxAutostart(): Promise<void> {
+	await writeLinuxAutostartFile(buildLinuxDesktopFileContents());
+}
+
+async function writeLinuxAutostartFile(contents: string): Promise<void> {
 	const dir = getLinuxAutostartDir();
 	const filePath = getLinuxDesktopFilePath();
 	const tempPath = `${filePath}.${process.pid}.tmp`;
 	try {
 		await fs.promises.mkdir(dir, {recursive: true, mode: 0o700});
-		await fs.promises.writeFile(tempPath, buildLinuxDesktopFileContents(), {encoding: 'utf8', mode: 0o644});
+		await fs.promises.writeFile(tempPath, contents, {encoding: 'utf8', mode: 0o644});
 		await fs.promises.rename(tempPath, filePath);
 		log.info('[Autostart] Wrote Linux autostart entry', {filePath});
 	} catch (error) {
@@ -426,10 +427,28 @@ async function enableLinuxAutostart(): Promise<void> {
 	}
 }
 
+function getLegacyLinuxDesktopFilePath(): string {
+	return path.join(getLinuxAutostartDir(), LEGACY_LINUX_DESKTOP_FILE_BASENAME);
+}
+
+function readLegacyGeneratedLinuxAutostartEntry(): Map<string, string> | null {
+	let contents: string;
+	try {
+		contents = fs.readFileSync(getLegacyLinuxDesktopFilePath(), 'utf8');
+	} catch {
+		return null;
+	}
+	const entry = tryParseDesktopEntry(contents);
+	return isLegacyGeneratedLinuxAutostartEntry(contents, entry) ? entry : null;
+}
+
 async function disableLinuxAutostart(): Promise<void> {
 	const filePath = getLinuxDesktopFilePath();
 	try {
 		await fs.promises.rm(filePath, {force: true});
+		if (readLegacyGeneratedLinuxAutostartEntry() !== null) {
+			await fs.promises.rm(getLegacyLinuxDesktopFilePath(), {force: true});
+		}
 		log.info('[Autostart] Removed Linux autostart entry', {filePath});
 	} catch (error) {
 		log.error('[Autostart] Failed to remove Linux autostart entry:', error);
@@ -482,13 +501,13 @@ async function setFlatpakAutostart(enabled: boolean): Promise<void> {
 
 function isLinuxAutostartEnabled(): boolean {
 	if (isFlatpakRuntime()) return readFlatpakAutostartState();
-	let contents: string;
+	let entry: Map<string, string> | null;
 	try {
-		contents = fs.readFileSync(getLinuxDesktopFilePath(), 'utf8');
+		entry = tryParseDesktopEntry(fs.readFileSync(getLinuxDesktopFilePath(), 'utf8'));
 	} catch {
-		return false;
+		entry = readLegacyGeneratedLinuxAutostartEntry();
 	}
-	const entry = tryParseDesktopEntry(contents);
+	if (entry === null) return false;
 	if (desktopEntryBoolean(entry.get('Hidden'))) return false;
 	return linuxDesktopEntryTargetsExistingCommand(entry);
 }
@@ -611,8 +630,63 @@ async function repairLinuxAutostartEntry(): Promise<void> {
 	}
 }
 
+function isLegacyGeneratedLinuxAutostartEntry(contents: string, entry: Map<string, string>): boolean {
+	return contents.includes(GENERATED_MARKER) || entry.get('StartupWMClass')?.trim() === LEGACY_LINUX_DESKTOP_ENTRY_ID;
+}
+
+export function rewriteLegacyLinuxAutostartContents(contents: string, execPath: string, execStale: boolean): string {
+	const replacements = new Map<string, string>([
+		['StartupWMClass', LINUX_STARTUP_WM_CLASS],
+		['Icon', LINUX_ICON_NAME],
+	]);
+	if (execStale) {
+		replacements.set('Exec', escapeDesktopEntry(`${quoteDesktopExecArg(execPath)} ${AUTOSTART_LAUNCH_ARG}`));
+		replacements.set('TryExec', escapeDesktopEntry(execPath));
+	}
+	let inDesktopEntry = false;
+	return contents
+		.split('\n')
+		.map((rawLine) => {
+			const line = rawLine.trim();
+			if (line.startsWith('[') && line.endsWith(']')) {
+				inDesktopEntry = line === '[Desktop Entry]';
+				return rawLine;
+			}
+			const separator = line.indexOf('=');
+			if (!inDesktopEntry || separator <= 0) return rawLine;
+			const replacement = replacements.get(line.slice(0, separator).trim());
+			return replacement === undefined ? rawLine : `${line.slice(0, separator)}=${replacement}`;
+		})
+		.join('\n');
+}
+
+async function migrateLegacyLinuxAutostartEntry(): Promise<void> {
+	if (!isLinux || isFlatpakRuntime() || isPortableMode()) return;
+	const legacyPath = getLegacyLinuxDesktopFilePath();
+	let contents: string;
+	try {
+		contents = await fs.promises.readFile(legacyPath, 'utf8');
+	} catch {
+		return;
+	}
+	const entry = tryParseDesktopEntry(contents);
+	if (!isLegacyGeneratedLinuxAutostartEntry(contents, entry)) return;
+	try {
+		if (!fs.existsSync(getLinuxDesktopFilePath())) {
+			const execStale = !linuxDesktopEntryTargetsExistingCommand(entry);
+			await writeLinuxAutostartFile(
+				rewriteLegacyLinuxAutostartContents(contents, getStableLinuxLaunchPath(), execStale),
+			);
+		}
+		await fs.promises.rm(legacyPath, {force: true});
+		log.info('[Autostart] Migrated the Linux autostart entry to the new desktop id', {legacyPath});
+	} catch (error) {
+		log.warn('[Autostart] Failed to migrate the legacy Linux autostart entry:', error);
+	}
+}
+
 export function registerAutostartHandlers(): void {
-	void repairLinuxAutostartEntry();
+	void migrateLegacyLinuxAutostartEntry().then(repairLinuxAutostartEntry);
 	ipcMain.handle('autostart-enable', async (): Promise<void> => {
 		await enableAutostart();
 	});

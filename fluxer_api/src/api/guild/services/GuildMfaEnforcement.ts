@@ -4,6 +4,7 @@ import type {UserID} from '@app/api/BrandedTypes';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
+import {ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 
@@ -16,7 +17,8 @@ const ELEVATED_MFA_PERMISSIONS =
 	Permissions.MANAGE_MESSAGES |
 	Permissions.MANAGE_ROLES |
 	Permissions.MANAGE_WEBHOOKS |
-	Permissions.MODERATE_MEMBERS;
+	Permissions.MODERATE_MEMBERS |
+	ThreadPermissionFlags.MANAGE_THREADS;
 
 export async function createGuildMfaEnforcer(params: {
 	userRepository: IUserRepository;

@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeyCombo} from '@app/features/input/state/InputKeybind';
-import type {GlobalKeyEvent} from '@app/features/platform/types/Electron';
+import type {
+	GlobalKeyEvent,
+	GlobalShortcutCaptureEvent,
+	GlobalShortcutsApi,
+} from '@app/features/platform/types/Electron';
 
 const GLOBAL_KEY_NAME_ALIASES: Readonly<Record<string, string>> = {
 	Esc: 'Escape',
@@ -198,23 +202,21 @@ const modifierStateToCombo = (
 	};
 };
 
-export const isGlobalKeyEventModifierKey = (event: Pick<GlobalKeyEvent, 'keyName'>): boolean => {
-	const code = codeForGlobalKeyName(event.keyName);
-	return (
-		code === 'ShiftLeft' ||
-		code === 'ShiftRight' ||
-		code === 'ControlLeft' ||
-		code === 'ControlRight' ||
-		code === 'AltLeft' ||
-		code === 'AltRight' ||
-		code === 'MetaLeft' ||
-		code === 'MetaRight'
-	);
-};
+const MODIFIER_CODES: ReadonlySet<string> = new Set([
+	'ShiftLeft',
+	'ShiftRight',
+	'ControlLeft',
+	'ControlRight',
+	'AltLeft',
+	'AltRight',
+	'MetaLeft',
+	'MetaRight',
+]);
+
+export const isModifierKeyCode = (code: string | undefined): boolean => code !== undefined && MODIFIER_CODES.has(code);
 
 export const globalKeyEventToCombo = (
 	event: Pick<GlobalKeyEvent, 'altKey' | 'ctrlKey' | 'keyName' | 'metaKey' | 'shiftKey'>,
-	options: {modifierOnly?: boolean} = {},
 ): KeyCombo | null => {
 	const code = codeForGlobalKeyName(event.keyName);
 	if (!code) return null;
@@ -222,7 +224,56 @@ export const globalKeyEventToCombo = (
 		key: keyForGlobalCode(code, event.shiftKey),
 		code,
 		...modifierStateToCombo(event),
-		modifierOnly: options.modifierOnly || undefined,
+	};
+};
+
+const captureModifierState = (
+	event: GlobalShortcutCaptureEvent,
+): Pick<GlobalKeyEvent, 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'> => ({
+	altKey: event.alt,
+	ctrlKey: event.ctrl,
+	metaKey: event.meta,
+	shiftKey: event.shift,
+});
+
+export const shortcutCaptureKeyToCombo = (event: GlobalShortcutCaptureEvent): KeyCombo | null => {
+	const code = event.code ?? (event.key ? codeForGlobalKeyName(event.key) : null);
+	if (!code) return null;
+	const key = event.key !== null && event.key.length === 1 ? event.key : keyForGlobalCode(code, event.shift);
+	return {key, code, ...modifierStateToCombo(captureModifierState(event))};
+};
+
+export const shortcutCaptureMouseToCombo = (event: GlobalShortcutCaptureEvent): KeyCombo | null => {
+	if (event.button === null) return null;
+	return {key: '', mouseButton: event.button, ...modifierStateToCombo(captureModifierState(event))};
+};
+
+const beginCapture = <E, T>(
+	start: () => Promise<T | null>,
+	stop: (token: T) => Promise<void>,
+	subscribe: (callback: (event: E) => void) => () => void,
+	onEvent: (event: E) => void,
+): (() => void) => {
+	let cancelled = false;
+	let unsubscribe: (() => void) | null = subscribe(onEvent);
+	const releaseSubscription = (): void => {
+		unsubscribe?.();
+		unsubscribe = null;
+	};
+	const started = start().then(
+		(token) => token,
+		() => null,
+	);
+	void started.then((token) => {
+		if (token === null) releaseSubscription();
+	});
+	return () => {
+		if (cancelled) return;
+		cancelled = true;
+		releaseSubscription();
+		void started.then((token) => {
+			if (token !== null) void stop(token);
+		});
 	};
 };
 
@@ -236,29 +287,25 @@ export const beginGlobalKeyCapture = (
 	api: GlobalKeyCaptureApi | null | undefined,
 	onEvent: (event: GlobalKeyEvent) => void,
 ): (() => void) => {
-	if (!api?.globalKeyHookStart || !api.globalKeyHookStop || !api.onGlobalKeyEvent) {
+	const {globalKeyHookStart, globalKeyHookStop, onGlobalKeyEvent} = api ?? {};
+	if (!globalKeyHookStart || !globalKeyHookStop || !onGlobalKeyEvent) {
 		return () => {};
 	}
-	const stopHook = api.globalKeyHookStop;
-	let cancelled = false;
-	let unsubscribe: (() => void) | null = api.onGlobalKeyEvent(onEvent);
-	const releaseSubscription = (): void => {
-		unsubscribe?.();
-		unsubscribe = null;
-	};
-	const started = api.globalKeyHookStart().then(
-		(ok) => ok,
-		() => false,
+	return beginCapture(
+		async () => ((await globalKeyHookStart()) ? true : null),
+		() => globalKeyHookStop(),
+		onGlobalKeyEvent,
+		onEvent,
 	);
-	void started.then((ok) => {
-		if (!ok) releaseSubscription();
-	});
-	return () => {
-		if (cancelled) return;
-		cancelled = true;
-		releaseSubscription();
-		void started.then((ok) => {
-			if (ok) void stopHook();
-		});
-	};
 };
+
+export const beginShortcutCapture = (
+	api: Pick<GlobalShortcutsApi, 'startCapture' | 'stopCapture' | 'onCapture'>,
+	onEvent: (event: GlobalShortcutCaptureEvent) => void,
+): (() => void) =>
+	beginCapture(
+		() => api.startCapture(),
+		(captureId) => api.stopCapture(captureId),
+		(callback) => api.onCapture(callback),
+		onEvent,
+	);

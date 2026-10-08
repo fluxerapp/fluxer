@@ -384,7 +384,7 @@ describe('Message Search Permissions', () => {
 			const guild = await createGuild(harness, owner.token, 'Age Restricted Override Guild');
 			const channel = await createBuilder<{id: string; nsfw_override?: boolean | null}>(harness, owner.token)
 				.post(`/guilds/${guild.id}/channels`)
-				.body({name: 'override-channel', type: ChannelTypes.GUILD_TEXT, nsfw: false})
+				.body({name: 'override-channel', type: ChannelTypes.GUILD_TEXT, nsfw_override: false})
 				.execute();
 			expect(channel.nsfw_override).toBe(false);
 			await sendChannelMessage(harness, owner.token, channel.id, 'age restricted override searchable message');

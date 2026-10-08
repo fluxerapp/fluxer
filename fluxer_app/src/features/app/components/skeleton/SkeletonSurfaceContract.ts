@@ -168,7 +168,11 @@ export const SKELETON_SURFACE_TOKENS = [
 
 export type SkeletonSurfaceToken = (typeof SKELETON_SURFACE_TOKENS)[number];
 
-export const SKELETON_SCOPED_TOKENS = ['--layout-user-area-overlay-height', '--outline-radius'] as const;
+export const SKELETON_SCOPED_TOKENS = [
+	'--layout-user-area-overlay-height',
+	'--outline-radius',
+	'--skeleton-shimmer-delay',
+] as const;
 
 export type SkeletonScopedToken = (typeof SKELETON_SCOPED_TOKENS)[number];
 

@@ -45,7 +45,7 @@ fn cors_mode_parses_every_variant_case_insensitively() {
 
 #[test]
 fn rejects_an_unknown_cors_mode() {
-    for raw in ["strict", "true", "1", ""] {
+    for raw in ["strict", "true", "1"] {
         let err = Config::load_from_iter(env_with(&[
             ("FLUXER_MEDIA_PROXY_CORS_MODE", raw),
             (ORIGINS_KEY, "https://web.fluxer.app"),
@@ -66,6 +66,11 @@ fn allowed_origins_are_normalised_to_their_browser_serialisation() {
         ("https://web.fluxer.app/", vec!["https://web.fluxer.app"]),
         ("https://web.fluxer.app:443", vec!["https://web.fluxer.app"]),
         ("http://localhost:8088", vec!["http://localhost:8088"]),
+        ("fluxer-app://app", vec!["fluxer-app://app"]),
+        (
+            "https://web.fluxer.app,fluxer-app://app,fluxer-app://app",
+            vec!["https://web.fluxer.app", "fluxer-app://app"],
+        ),
         ("http://127.0.0.1:8088", vec!["http://127.0.0.1:8088"]),
         ("http://[::1]:8088", vec!["http://[::1]:8088"]),
         (
@@ -94,7 +99,11 @@ fn rejects_an_allowed_origin_that_is_not_a_bare_http_origin() {
         "web.fluxer.app",
         "ftp://web.fluxer.app",
         "file:///tmp/x",
-        "fluxer-app://app",
+        "fluxer-app://app/",
+        "fluxer-app://evil",
+        "fluxer-app://app:443",
+        "FLUXER-APP://APP",
+        "other-app://app",
         "https://user@web.fluxer.app",
         "https://user:pw@web.fluxer.app",
         "https://web.fluxer.app/app",

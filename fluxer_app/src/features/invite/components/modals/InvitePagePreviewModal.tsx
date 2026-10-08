@@ -123,8 +123,7 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 						className={clsx(styles.background, !shouldShowSplash && authLayoutStyles.patternHost)}
 						splashUrl={splashUrl}
 						splashDimensions={splashDimensions}
-						patternReady={patternReady}
-						patternImageUrl={foodPatternUrl}
+						patternImageUrl={patternReady ? foodPatternUrl : null}
 						splashAlignment={splashAlignment}
 						useFullCover={true}
 						data-flx="invite.invite-page-preview-modal.background"
@@ -141,7 +140,6 @@ export const InvitePagePreviewModal: React.FC<InvitePagePreviewModalProps> = obs
 							<div className={authLayoutStyles.leftSplitWrapper} data-flx="invite.invite-page-preview-modal.div--2">
 								<div className={authLayoutStyles.leftSplitAnimated} data-flx="invite.invite-page-preview-modal.div--3">
 									<AuthCardContainer
-										showLogoSide={true}
 										isInert={true}
 										className={clsx(authLayoutStyles.cardContainer, styles.cardContainer)}
 										data-flx="invite.invite-page-preview-modal.card-container"

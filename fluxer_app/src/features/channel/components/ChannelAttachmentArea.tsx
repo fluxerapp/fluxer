@@ -636,7 +636,7 @@ export const ChannelAttachmentArea = observer(({channelId}: {channelId: string})
 			forceJumpFrameRef.current = null;
 			const messages = Messages.getMessages(channelIdRef.current);
 			if (messages.hasMoreAfter) {
-				ComponentBus.dispatch('FORCE_JUMP_TO_PRESENT');
+				ComponentBus.dispatch('FORCE_JUMP_TO_PRESENT', {channelId: channelIdRef.current});
 			}
 		});
 	}, []);

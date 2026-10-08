@@ -3,6 +3,7 @@
 import * as SoundUtils from '@app/features/notification/utils/SoundUtils';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {SoundSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
@@ -193,7 +194,7 @@ class Sound {
 			},
 			{autoBind: true},
 		);
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 		reaction(
 			() => StreamerMode.shouldDisableSounds,
 			(disabled) => {

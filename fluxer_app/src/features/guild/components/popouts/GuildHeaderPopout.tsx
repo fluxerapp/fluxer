@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GuildSettingsModal, UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {useRovingFocusList} from '@app/features/app/hooks/useRovingFocusList';
 import Authentication from '@app/features/auth/state/Authentication';
 import {CategoryCreateModal} from '@app/features/channel/components/modals/CategoryCreateModal';
@@ -7,7 +8,6 @@ import {ChannelCreateModal} from '@app/features/channel/components/modals/Channe
 import {DELETE_MY_MESSAGES_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import {GuildNotificationSettingsModal} from '@app/features/guild/components/modals/GuildNotificationSettingsModal';
 import {GuildPrivacySettingsModal} from '@app/features/guild/components/modals/GuildPrivacySettingsModal';
-import {GuildSettingsModal} from '@app/features/guild/components/modals/GuildSettingsModal';
 import styles from '@app/features/guild/components/popouts/GuildHeaderPopout.module.css';
 import {useDeleteMyMessagesInGuild} from '@app/features/guild/hooks/useDeleteMyMessagesInGuild';
 import {useLeaveGuild} from '@app/features/guild/hooks/useLeaveGuild';
@@ -31,7 +31,6 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {GUILD_SETTINGS_LABEL_DESCRIPTOR} from '@app/features/user/components/settings_utils/GuildSettingsConstants';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
@@ -63,6 +62,11 @@ const EDIT_COMMUNITY_PROFILE_DESCRIPTOR = msg({
 	message: 'Edit community profile',
 	comment: 'Button or menu action label in the guild header popout. Keep it concise.',
 });
+const releaseHoverFocus = (event: React.MouseEvent<HTMLElement>) => {
+	const item = event.currentTarget;
+	if (document.activeElement !== item) return;
+	item.closest<HTMLElement>('[role="menu"]')?.focus();
+};
 export const GuildHeaderPopoutItem = observer(
 	(props: {title: string; icon: Icon; onClick?: () => void; danger?: boolean}) => {
 		const handleSelect = useCallback(() => {
@@ -80,6 +84,7 @@ export const GuildHeaderPopoutItem = observer(
 					className={clsx(styles.itemButton, props.danger && styles.itemDanger)}
 					onClick={handleSelect}
 					onMouseEnter={handleMouseEnter}
+					onMouseLeave={releaseHoverFocus}
 					data-roving-focus="true"
 					data-flx="guild.guild-header-popout.guild-header-popout-item.item-button.select"
 				>
@@ -113,6 +118,7 @@ export const GuildHeaderPopoutCheckboxItem = observer(
 					onMouseEnter={(event) => {
 						event.currentTarget.focus();
 					}}
+					onMouseLeave={releaseHoverFocus}
 					onClick={handleClick}
 					onKeyDown={(e) => {
 						if (isKeyboardActivationKey(e.key)) {
@@ -218,9 +224,12 @@ export const GuildHeaderPopout = observer(({guild}: {guild: Guild}) => {
 					title={i18n._(GUILD_SETTINGS_LABEL_DESCRIPTOR)}
 					onClick={() =>
 						ModalCommands.push(
-							modal(() => (
-								<GuildSettingsModal guildId={guild.id} data-flx="guild.guild-header-popout.guild-settings-modal" />
-							)),
+							modal(
+								() => (
+									<GuildSettingsModal guildId={guild.id} data-flx="guild.guild-header-popout.guild-settings-modal" />
+								),
+								'guild-settings',
+							),
 						)
 					}
 					data-flx="guild.guild-header-popout.guild-header-popout-item.push--2"
@@ -290,13 +299,16 @@ export const GuildHeaderPopout = observer(({guild}: {guild: Guild}) => {
 					title={i18n._(EDIT_COMMUNITY_PROFILE_DESCRIPTOR)}
 					onClick={() => {
 						ModalCommands.push(
-							modal(() => (
-								<UserSettingsModal
-									initialGuildId={guild.id}
-									initialTab="my_profile"
-									data-flx="guild.guild-header-popout.user-settings-modal"
-								/>
-							)),
+							modal(
+								() => (
+									<UserSettingsModal
+										initialGuildId={guild.id}
+										initialTab="my_profile"
+										data-flx="guild.guild-header-popout.user-settings-modal"
+									/>
+								),
+								'user-settings',
+							),
 						);
 					}}
 					data-flx="guild.guild-header-popout.guild-header-popout-item.push--7"

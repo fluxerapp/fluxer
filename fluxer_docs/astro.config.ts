@@ -161,13 +161,20 @@ export default defineConfig({
 				},
 				{
 					label: 'Self-hosting',
-					items: ['operator/get-started', 'operator/configuration', 'operator/reverse-proxy', 'operator/upgrading'],
+					items: [
+						'operator/get-started',
+						'operator/sign-in',
+						'operator/configuration',
+						'operator/reverse-proxy',
+						'operator/upgrading',
+					],
 				},
 				{
 					label: 'Topics',
 					items: [
 						'http-api/errors',
 						'topics/rate-limits',
+						'topics/announcement-channels',
 						'http-api/permissions',
 						'topics/captcha',
 						'topics/uploads',
@@ -196,7 +203,6 @@ export default defineConfig({
 						'http-api/users/settings-protobuf',
 						'http-api/users/email-and-password',
 						'http-api/users/mfa',
-						'http-api/users/phone-verification',
 						'http-api/users/relationships',
 						'http-api/users/notes',
 						'http-api/users/private-channels',
@@ -237,7 +243,13 @@ export default defineConfig({
 				},
 				{
 					label: 'Commerce',
-					items: ['http-api/billing', 'http-api/premium', 'http-api/gifts', 'http-api/donations'],
+					items: [
+						'http-api/billing',
+						'http-api/premium',
+						'http-api/in-app-purchases',
+						'http-api/gifts',
+						'http-api/donations',
+					],
 				},
 				{
 					label: 'Client surfaces',

@@ -4,8 +4,6 @@ import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {
 	PremiumFlags,
 	PremiumFlagsDescriptions,
-	SuspiciousActivityFlags,
-	SuspiciousActivityFlagsDescriptions,
 	UserFlags,
 	UserFlagsDescriptions,
 } from '@fluxer/constants/src/UserConstants';
@@ -49,7 +47,6 @@ export const UserAdminResponseSchema = z.object({
 	email: z.string().nullable(),
 	email_verified: z.boolean(),
 	email_bounced: z.boolean(),
-	has_verified_phone: z.boolean(),
 	date_of_birth: z.string().nullable(),
 	locale: z.string().nullable(),
 	premium_type: Int32Type.nullable(),
@@ -57,20 +54,19 @@ export const UserAdminResponseSchema = z.object({
 	premium_until: z.string().nullable(),
 	premium_grace_ends_at: z.string().nullable(),
 	premium_lifetime_sequence: Int32Type.nullable(),
-	suspicious_activity_flags: createBitflagInt32Type(
-		SuspiciousActivityFlags,
-		SuspiciousActivityFlagsDescriptions,
-		'Suspicious activity indicators',
-		'SuspiciousActivityFlags',
-	),
-	phone_verification_deferred: z
-		.boolean()
-		.describe('Whether a stored phone requirement is deferred until the user joins a discoverable or large community'),
 	temp_banned_until: z.string().nullable(),
 	pending_deletion_at: z.string().nullable(),
 	pending_bulk_message_deletion_at: z.string().nullable(),
 	deletion_reason_code: Int32Type.nullable(),
 	deletion_public_reason: z.string().nullable(),
+	deletion_audit_log_reason: z
+		.string()
+		.nullable()
+		.describe('Private reason recorded with the pending deletion, null without the audit log view permission'),
+	deletion_scheduled_by: SnowflakeStringType.nullable().describe(
+		'ID of the account that scheduled the pending deletion, null when it was not recorded',
+	),
+	deletion_scheduled_at: z.string().nullable().describe('ISO 8601 timestamp when the pending deletion was scheduled'),
 	acls: z.array(z.string()).max(ADMIN_ACL_COUNT),
 	traits: z.array(z.string()).max(100),
 	has_totp: z.boolean(),
@@ -283,6 +279,13 @@ export const SendPasswordResetRequest = z.object({
 
 export type SendPasswordResetRequest = z.infer<typeof SendPasswordResetRequest>;
 
+export const AdminPasswordResetLinkResponse = z.object({
+	url: z.string().describe('Password reset link to hand to the user. It is shown only once'),
+	expires_at: z.iso.datetime().describe('ISO 8601 timestamp when the link stops working'),
+});
+
+export type AdminPasswordResetLinkResponse = z.infer<typeof AdminPasswordResetLinkResponse>;
+
 export const ChangeUsernameRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to change username for'),
 	username: UsernameType.describe('New username for the user'),
@@ -312,7 +315,11 @@ export const TempBanUserRequest = z.object({
 		.min(0)
 		.max(8760)
 		.describe('Duration of the ban in hours. Use 0 for a permanent ban (until manually unbanned).'),
-	reason: createStringType(0, 512).optional().describe('Reason for the temporary ban'),
+	reason: createStringType(0, 512).optional().describe('Reason shown to the user in the ban email'),
+	notify_user: z
+		.boolean()
+		.default(true)
+		.describe('Whether to email the user about a temporary ban. Permanent bans (duration_hours 0) are never emailed'),
 });
 
 export type TempBanUserRequest = z.infer<typeof TempBanUserRequest>;
@@ -334,6 +341,13 @@ export const ScheduleAccountDeletionRequest = z.object({
 		.max(365)
 		.default(60)
 		.describe('Number of days until the account is deleted'),
+	replace_pending_deletion_at: z.iso
+		.datetime()
+		.optional()
+		.describe(
+			'pending_deletion_at of the deletion this request replaces. Required when a deletion is already scheduled for the account',
+		),
+	notify_user: z.boolean().default(true).describe('Whether to email the user about the scheduled deletion'),
 });
 
 export type ScheduleAccountDeletionRequest = z.infer<typeof ScheduleAccountDeletionRequest>;
@@ -352,13 +366,6 @@ export const SetUserTraitsRequest = z.object({
 
 export type SetUserTraitsRequest = z.infer<typeof SetUserTraitsRequest>;
 
-export const UpdateHasVerifiedPhoneRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to update'),
-	has_verified_phone: z.boolean().describe('Whether the user should be treated as having completed phone verification'),
-});
-
-export type UpdateHasVerifiedPhoneRequest = z.infer<typeof UpdateHasVerifiedPhoneRequest>;
-
 export const ChangeDobRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to change date of birth for'),
 	date_of_birth: createStringType(10, 10)
@@ -367,46 +374,6 @@ export const ChangeDobRequest = z.object({
 });
 
 export type ChangeDobRequest = z.infer<typeof ChangeDobRequest>;
-
-export const UpdateSuspiciousActivityFlagsRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to update suspicious activity flags for'),
-	flags: createBitflagInt32Type(
-		SuspiciousActivityFlags,
-		SuspiciousActivityFlagsDescriptions,
-		'Bitmask of suspicious activity flags',
-		'SuspiciousActivityFlags',
-	),
-});
-
-export type UpdateSuspiciousActivityFlagsRequest = z.infer<typeof UpdateSuspiciousActivityFlagsRequest>;
-
-export const DisableForSuspiciousActivityRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to disable for suspicious activity'),
-	flags: createBitflagInt32Type(
-		SuspiciousActivityFlags,
-		SuspiciousActivityFlagsDescriptions,
-		'Bitmask of suspicious activity flags that triggered the disable',
-		'SuspiciousActivityFlags',
-	),
-});
-
-export type DisableForSuspiciousActivityRequest = z.infer<typeof DisableForSuspiciousActivityRequest>;
-
-export const BulkUpdateSuspiciousActivityFlagsRequest = z.object({
-	user_ids: z.array(SnowflakeType).max(1000).describe('List of user IDs to update'),
-	add_flags: z
-		.array(z.string())
-		.max(32)
-		.default([])
-		.describe('Suspicious activity flag names to add to all specified users'),
-	remove_flags: z
-		.array(z.string())
-		.max(32)
-		.default([])
-		.describe('Suspicious activity flag names to remove from all specified users'),
-});
-
-export type BulkUpdateSuspiciousActivityFlagsRequest = z.infer<typeof BulkUpdateSuspiciousActivityFlagsRequest>;
 
 export const BulkUpdateUserFlagsRequest = z.object({
 	user_ids: z.array(SnowflakeType).max(1000).describe('List of user IDs to update'),
@@ -420,7 +387,10 @@ export const BulkUpdateUserFlagsRequest = z.object({
 
 export type BulkUpdateUserFlagsRequest = z.infer<typeof BulkUpdateUserFlagsRequest>;
 
-export const BulkScheduleUserDeletionRequest = ScheduleAccountDeletionRequest.omit({user_id: true}).extend({
+export const BulkScheduleUserDeletionRequest = ScheduleAccountDeletionRequest.omit({
+	user_id: true,
+	replace_pending_deletion_at: true,
+}).extend({
 	user_ids: z.array(SnowflakeType).max(1000).describe('List of user IDs to schedule deletion for'),
 	days_until_deletion: ScheduleAccountDeletionRequest.shape.days_until_deletion.describe(
 		'Number of days until the accounts are deleted',
@@ -629,6 +599,31 @@ export const AdminUserDeletionScheduleRequest = ScheduleAccountDeletionRequest.o
 
 export type AdminUserDeletionScheduleRequest = z.infer<typeof AdminUserDeletionScheduleRequest>;
 
+export const AdminUserDeletionCancelRequest = z.object({
+	expected_pending_deletion_at: z.iso
+		.datetime()
+		.describe('pending_deletion_at of the deletion being cancelled, as shown on the account'),
+	notify_user: z.boolean().default(false).describe('Whether to email the user that the deletion was cancelled'),
+});
+
+export type AdminUserDeletionCancelRequest = z.infer<typeof AdminUserDeletionCancelRequest>;
+
+export const AdminUserUnbanRequest = z.object({
+	notify_user: z.boolean().default(true).describe('Whether to email the user that the suspension was lifted'),
+	public_reason: createStringType(0, 512)
+		.optional()
+		.describe('Reason shown to the user in the unban email. The audit log reason is never emailed'),
+});
+
+export type AdminUserUnbanRequest = z.infer<typeof AdminUserUnbanRequest>;
+
+export const AdminUserBanNoteRequest = z.object({
+	ban_audit_log_id: SnowflakeType.describe('Audit log entry of the current ban that the note refers to'),
+	note: createStringType(1, 512).describe('Note to append to the ban. Recorded as the reason of a new audit log entry'),
+});
+
+export type AdminUserBanNoteRequest = z.infer<typeof AdminUserBanNoteRequest>;
+
 export const AdminUserAclsRequest = SetUserAclsRequest.omit({user_id: true});
 
 export type AdminUserAclsRequest = z.infer<typeof AdminUserAclsRequest>;
@@ -645,21 +640,9 @@ export const AdminUserPremiumFlagsUpdateRequest = UpdatePremiumFlagsRequest.omit
 
 export type AdminUserPremiumFlagsUpdateRequest = z.infer<typeof AdminUserPremiumFlagsUpdateRequest>;
 
-export const AdminUserPhoneVerificationRequest = UpdateHasVerifiedPhoneRequest.omit({user_id: true});
-
-export type AdminUserPhoneVerificationRequest = z.infer<typeof AdminUserPhoneVerificationRequest>;
-
 export const AdminUserDobUpdateRequest = ChangeDobRequest.omit({user_id: true});
 
 export type AdminUserDobUpdateRequest = z.infer<typeof AdminUserDobUpdateRequest>;
-
-export const AdminUserSuspiciousActivityFlagsRequest = UpdateSuspiciousActivityFlagsRequest.omit({user_id: true});
-
-export type AdminUserSuspiciousActivityFlagsRequest = z.infer<typeof AdminUserSuspiciousActivityFlagsRequest>;
-
-export const AdminUserSuspiciousDisableRequest = DisableForSuspiciousActivityRequest.omit({user_id: true});
-
-export type AdminUserSuspiciousDisableRequest = z.infer<typeof AdminUserSuspiciousDisableRequest>;
 
 export const AdminUserDmChannelListResponse = z.union([ListUserDmChannelsResponse, ListUserGroupDmChannelsResponse]);
 

@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 FROM erlang:28-slim AS build
 
-ARG LOGGER_LEVEL=info
 ARG RUST_TOOLCHAIN=1.98.1
 
 ENV PATH="/root/.cargo/bin:${PATH}"
@@ -15,7 +14,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	gcc \
 	g++ \
 	libc6-dev \
-	gettext-base \
 	ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
@@ -29,7 +27,7 @@ COPY . .
 WORKDIR /usr/src/app/fluxer_gateway
 RUN rebar3 compile --deps_only
 
-RUN LOGGER_LEVEL=${LOGGER_LEVEL} envsubst < config/sys.config.template > config/sys.config && \
+RUN cp config/sys.config.template config/sys.config && \
 	rebar3 as prod release
 
 FROM erlang:28-slim

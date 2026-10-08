@@ -40,6 +40,7 @@ fn generate_admin_api(manifest_dir: &Path, out_dir: &Path) {
     adapt_progenitor_throttled_errors(&mut spec);
     relax_guild_audit_log_schemas(&mut spec);
     relax_progenitor_schema_strictness(&mut spec);
+    relax_integer_enums(&mut spec);
 
     let mut settings = progenitor::GenerationSettings::new();
     settings.with_interface(progenitor::InterfaceStyle::Positional);
@@ -171,6 +172,23 @@ fn relax_guild_audit_log_schemas(spec: &mut openapiv3::OpenAPI) {
                 schema_kind: openapiv3::SchemaKind::Any(openapiv3::AnySchema::default()),
             })),
         );
+    }
+}
+
+const OPEN_INTEGER_ENUMS: &[&str] = &["ChannelType", "MessageType", "WebhookType"];
+
+fn relax_integer_enums(spec: &mut openapiv3::OpenAPI) {
+    let components = spec.components.as_mut().expect("missing API components");
+    for name in OPEN_INTEGER_ENUMS {
+        let Some(openapiv3::ReferenceOr::Item(schema)) = components.schemas.get_mut(*name) else {
+            panic!("missing inline {name} schema");
+        };
+        let openapiv3::SchemaKind::Type(openapiv3::Type::Integer(integer)) =
+            &mut schema.schema_kind
+        else {
+            panic!("{name} must be an integer schema");
+        };
+        integer.enumeration.clear();
     }
 }
 
@@ -582,7 +600,7 @@ fn select_faces(package_dir: &Path) -> Vec<Face> {
             }
             assert!(
                 face["unicodeRange"].is_null(),
-                "{wanted} face {} carries a unicode-range; Latin-core faces must not",
+                "{wanted} face {} has a unicode-range; Latin-core faces must not",
                 face["file"]
             );
             faces.push(Face {

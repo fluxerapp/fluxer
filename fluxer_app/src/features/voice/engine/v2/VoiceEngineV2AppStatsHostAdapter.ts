@@ -105,6 +105,8 @@ export interface PerTrackStats {
 	nackCount?: number;
 	pliCount?: number;
 	firCount?: number;
+	packetsSent?: number;
+	sourceSamplesDurationMs?: number;
 	retransmittedPacketsSent?: number;
 	retransmittedBytesSent?: number;
 	keyFramesEncoded?: number;
@@ -113,10 +115,14 @@ export interface PerTrackStats {
 	powerEfficientDecoder?: boolean;
 	decoderAcceleration?: VideoAccelerationStatus;
 	totalDecodeTimeMs?: number;
+	packetsDiscarded?: number;
 	jitterBufferDelayMs?: number;
+	jitterBufferTargetDelayMs?: number;
 	jitterBufferEmittedCount?: number;
 	concealedSamples?: number;
 	silentConcealedSamples?: number;
+	insertedSamplesForDeceleration?: number;
+	removedSamplesForAcceleration?: number;
 	totalSamplesReceived?: number;
 }
 
@@ -251,10 +257,15 @@ interface RTCStatsEntry {
 	decoderImplementation?: string;
 	powerEfficientDecoder?: boolean;
 	totalDecodeTime?: number;
+	packetsDiscarded?: number;
+	totalSamplesDuration?: number;
 	jitterBufferDelay?: number;
+	jitterBufferTargetDelay?: number;
 	jitterBufferEmittedCount?: number;
 	concealedSamples?: number;
 	silentConcealedSamples?: number;
+	insertedSamplesForDeceleration?: number;
+	removedSamplesForAcceleration?: number;
 	totalSamplesReceived?: number;
 	dtlsCipher?: string;
 	srtpCipher?: string;
@@ -371,9 +382,17 @@ function hasUsableJitterBuffer(report: RTCStatsEntry): boolean {
 	return report.jitterBufferEmittedCount > 0;
 }
 
-function buildOutboundTrackExtras(report: RTCStatsEntry): Partial<PerTrackStats> {
+function buildOutboundTrackExtras(
+	report: RTCStatsEntry,
+	mediaSource: RTCStatsEntry | undefined,
+): Partial<PerTrackStats> {
 	return {
 		active: report.active,
+		packetsSent: report.packetsSent,
+		sourceSamplesDurationMs:
+			typeof mediaSource?.totalSamplesDuration === 'number'
+				? Math.round(mediaSource.totalSamplesDuration * 1000)
+				: undefined,
 		retransmittedPacketsSent: report.retransmittedPacketsSent,
 		retransmittedBytesSent: report.retransmittedBytesSent,
 		keyFramesEncoded: report.keyFramesEncoded,
@@ -397,6 +416,13 @@ function buildInboundTrackExtras(
 		jitterBufferDelayMs: hasUsableJitterBuffer(report)
 			? Math.round((report.jitterBufferDelay! / report.jitterBufferEmittedCount!) * 1000)
 			: undefined,
+		jitterBufferTargetDelayMs:
+			hasUsableJitterBuffer(report) && typeof report.jitterBufferTargetDelay === 'number'
+				? Math.round((report.jitterBufferTargetDelay / report.jitterBufferEmittedCount!) * 1000)
+				: undefined,
+		packetsDiscarded: report.packetsDiscarded,
+		insertedSamplesForDeceleration: report.insertedSamplesForDeceleration,
+		removedSamplesForAcceleration: report.removedSamplesForAcceleration,
 		jitterBufferEmittedCount: report.jitterBufferEmittedCount,
 		concealedSamples: report.concealedSamples,
 		silentConcealedSamples: report.silentConcealedSamples,
@@ -477,7 +503,9 @@ function buildPerTrackStat(args: {
 		nackCount: report.nackCount,
 		pliCount: report.pliCount,
 		firCount: report.firCount,
-		...(isOutbound ? buildOutboundTrackExtras(report) : buildInboundTrackExtras(report, decoderAcceleration)),
+		...(isOutbound
+			? buildOutboundTrackExtras(report, mediaSource)
+			: buildInboundTrackExtras(report, decoderAcceleration)),
 	};
 }
 

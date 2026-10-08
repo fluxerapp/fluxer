@@ -54,6 +54,7 @@ function loadPlatformInfo(platform = 'win32', {nativeGpu = null, electronGpu = n
 		if (specifier === '@electron/main/LinuxSandbox') {
 			return {getFlatpakAppId: () => null, isFlatpakRuntime: () => false};
 		}
+		if (specifier === '@electron/main/LinuxSession') return {isWaylandSession: () => false};
 		throw new Error(`Unexpected import: ${specifier}`);
 	}
 

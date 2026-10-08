@@ -3,14 +3,17 @@
 import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
 import {isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import {THREAD_FEATURE_CHANNEL_TYPES, viewerActive, viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {readStateCapable} from '@app/api/read_state/ReadStateChannelMeta';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {UnclaimedAccountCannotAddReactionsError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotAddReactionsError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {
@@ -53,9 +56,14 @@ export function MessageInteractionController(app: HonoApp) {
 			const requestCache = ctx.get('requestCache');
 			const {limit, before} = ctx.req.valid('query');
 			return ctx.json(
-				await ctx
-					.get('channelService')
-					.interactions.getChannelPins({userId, channelId, requestCache, limit, beforeTimestamp: before}),
+				await ctx.get('channelService').interactions.getChannelPins({
+					viewer: viewerFromCtx(ctx),
+					userId,
+					channelId,
+					requestCache,
+					limit,
+					beforeTimestamp: before,
+				}),
 			);
 		},
 	);
@@ -77,10 +85,32 @@ export function MessageInteractionController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
-			const channel = await ctx.get('channelService').channelData.operations.getChannelSystem(channelId);
+			const channelService = ctx.get('channelService');
+			const channel = await channelService.channelData.operations.getChannelSystem(channelId);
+			if (channel && THREAD_FEATURE_CHANNEL_TYPES.has(channel.type)) {
+				const viewer = viewerFromCtx(ctx);
+				if (channel.guildId === null || !viewerActive(viewer, channel.guildId)) {
+					return ctx.body(null, 204);
+				}
+				if (channel.isThreadOnly()) {
+					throw new InvalidChannelTypeError();
+				}
+				await channelService.channelData.auth.getChannelAuthenticated({
+					userId,
+					channelId,
+					viewer,
+					skipNsfwValidation: true,
+				});
+			}
 			const timestamp = channel?.lastPinTimestamp;
 			if (timestamp != null) {
-				await ctx.get('readStateService').ackPins({userId, channelId, timestamp});
+				await ctx.get('readStateService').ackPins({
+					userId,
+					channelId,
+					timestamp,
+					capable: readStateCapable(ctx),
+					channel,
+				});
 			}
 			return ctx.body(null, 204);
 		},
@@ -108,6 +138,7 @@ export function MessageInteractionController(app: HonoApp) {
 			const requestCache = ctx.get('requestCache');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			await ctx.get('channelService').interactions.pinMessage({
+				viewer: viewerFromCtx(ctx),
 				userId,
 				channelId,
 				messageId,
@@ -140,6 +171,7 @@ export function MessageInteractionController(app: HonoApp) {
 			const requestCache = ctx.get('requestCache');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			await ctx.get('channelService').interactions.unpinMessage({
+				viewer: viewerFromCtx(ctx),
 				userId,
 				channelId,
 				messageId,
@@ -172,9 +204,15 @@ export function MessageInteractionController(app: HonoApp) {
 			const channelId = createChannelID(channel_id);
 			const messageId = createMessageID(message_id);
 			const afterUserId = after ? createUserID(after) : undefined;
-			const result = await ctx
-				.get('channelService')
-				.interactions.getUsersForReaction({userId, channelId, messageId, emoji, limit, after: afterUserId});
+			const result = await ctx.get('channelService').interactions.getUsersForReaction({
+				viewer: viewerFromCtx(ctx),
+				userId,
+				channelId,
+				messageId,
+				emoji,
+				limit,
+				after: afterUserId,
+			});
 			ctx.header('X-Has-More', result.has_more ? 'true' : 'false');
 			if (result.next_after !== null) {
 				ctx.header('X-Next-After', result.next_after);
@@ -205,9 +243,15 @@ export function MessageInteractionController(app: HonoApp) {
 			const channelId = createChannelID(channel_id);
 			const messageId = createMessageID(message_id);
 			const afterUserId = after ? createUserID(after) : undefined;
-			const result = await ctx
-				.get('channelService')
-				.interactions.getUsersForReaction({userId, channelId, messageId, emoji, limit, after: afterUserId});
+			const result = await ctx.get('channelService').interactions.getUsersForReaction({
+				viewer: viewerFromCtx(ctx),
+				userId,
+				channelId,
+				messageId,
+				emoji,
+				limit,
+				after: afterUserId,
+			});
 			return ctx.json(
 				{
 					items: result.users,
@@ -248,6 +292,7 @@ export function MessageInteractionController(app: HonoApp) {
 				throw InputValidationError.fromCode('emoji', ValidationErrorCodes.MUST_START_SESSION_BEFORE_SENDING);
 			}
 			await ctx.get('channelService').interactions.addReaction({
+				viewer: viewerFromCtx(ctx),
 				userId: user.id,
 				sessionId,
 				channelId,
@@ -282,6 +327,7 @@ export function MessageInteractionController(app: HonoApp) {
 			const sessionId = ctx.req.valid('query').session_id;
 			const requestCache = ctx.get('requestCache');
 			await ctx.get('channelService').interactions.removeOwnReaction({
+				viewer: viewerFromCtx(ctx),
 				userId,
 				sessionId,
 				channelId,
@@ -317,6 +363,7 @@ export function MessageInteractionController(app: HonoApp) {
 			const sessionId = ctx.req.valid('query').session_id;
 			const requestCache = ctx.get('requestCache');
 			await ctx.get('channelService').interactions.removeReaction({
+				viewer: viewerFromCtx(ctx),
 				userId,
 				sessionId,
 				channelId,
@@ -348,7 +395,9 @@ export function MessageInteractionController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(channel_id);
 			const messageId = createMessageID(message_id);
-			await ctx.get('channelService').interactions.removeAllReactionsForEmoji({userId, channelId, messageId, emoji});
+			await ctx
+				.get('channelService')
+				.interactions.removeAllReactionsForEmoji({viewer: viewerFromCtx(ctx), userId, channelId, messageId, emoji});
 			return ctx.body(null, 204);
 		},
 	);
@@ -372,7 +421,9 @@ export function MessageInteractionController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(channel_id);
 			const messageId = createMessageID(message_id);
-			await ctx.get('channelService').interactions.removeAllReactions({userId, channelId, messageId});
+			await ctx
+				.get('channelService')
+				.interactions.removeAllReactions({viewer: viewerFromCtx(ctx), userId, channelId, messageId});
 			return ctx.body(null, 204);
 		},
 	);

@@ -102,6 +102,14 @@ class LimitsClass {
 		return LimitResolver.resolveFree(key, fallback);
 	}
 
+	hasStockFeature(key: LimitKey, fallback: boolean): boolean {
+		return this.getStockValue(key, fallback ? 1 : 0) > 0;
+	}
+
+	hasRestrictedFeature(key: LimitKey, fallback: boolean): boolean {
+		return this.getRestrictedValue(key, fallback ? 1 : 0) > 0;
+	}
+
 	getPremiumValue(key: LimitKey, fallback: number): number {
 		return this.getStockValue(key, fallback);
 	}

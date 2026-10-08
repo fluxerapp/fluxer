@@ -62,6 +62,8 @@ describe('DM Privacy Bidirectional Enforcement', () => {
 			const target = await createTestAccount(harness);
 			await ensureSessionStarted(harness, sender.token);
 			await ensureSessionStarted(harness, target.token);
+			await updateUserSettings(harness, sender.token, {default_guilds_restricted: false});
+			await updateUserSettings(harness, target.token, {default_guilds_restricted: false});
 			const guild = await createGuild(harness, sender.token, 'Mutual Community');
 			const systemChannel = await getChannel(harness, sender.token, guild.system_channel_id!);
 			const invite = await createChannelInvite(harness, sender.token, systemChannel.id);
@@ -80,6 +82,8 @@ describe('DM Privacy Bidirectional Enforcement', () => {
 			await ensureSessionStarted(harness, sender.token);
 			await ensureSessionStarted(harness, target.token);
 			await createFriendship(harness, sender, target);
+			await updateUserSettings(harness, sender.token, {default_guilds_restricted: false});
+			await updateUserSettings(harness, target.token, {default_guilds_restricted: false});
 			const guild = await createGuild(harness, sender.token, 'Verified Community');
 			await createBuilder(harness, '')
 				.post(`/test/guilds/${guild.id}/features`)
@@ -94,6 +98,24 @@ describe('DM Privacy Bidirectional Enforcement', () => {
 			await createBuilder(harness, sender.token)
 				.post(`/channels/${channel.id}/messages`)
 				.body({content: 'verified mutual guild'})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+		});
+		it('allows message from a non-friend guild member to a new account by default', async () => {
+			const sender = await createTestAccount(harness);
+			const target = await createTestAccount(harness);
+			await ensureSessionStarted(harness, sender.token);
+			await ensureSessionStarted(harness, target.token);
+			await createFriendship(harness, sender, target);
+			const guild = await createGuild(harness, sender.token, 'Default Community');
+			const systemChannel = await getChannel(harness, sender.token, guild.system_channel_id!);
+			const invite = await createChannelInvite(harness, sender.token, systemChannel.id);
+			await acceptInvite(harness, target.token, invite.code);
+			const channel = await createDmChannel(harness, sender.token, target.userId);
+			await removeRelationship(harness, sender.token, target.userId);
+			await createBuilder(harness, sender.token)
+				.post(`/channels/${channel.id}/messages`)
+				.body({content: 'default open target'})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -175,6 +197,8 @@ describe('DM Privacy Bidirectional Enforcement', () => {
 			const user2 = await createTestAccount(harness);
 			await ensureSessionStarted(harness, user1.token);
 			await ensureSessionStarted(harness, user2.token);
+			await updateUserSettings(harness, user1.token, {default_guilds_restricted: false});
+			await updateUserSettings(harness, user2.token, {default_guilds_restricted: false});
 			const guild = await createGuild(harness, user1.token, 'Shared Community');
 			const systemChannel = await getChannel(harness, user1.token, guild.system_channel_id!);
 			const invite = await createChannelInvite(harness, user1.token, systemChannel.id);

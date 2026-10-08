@@ -20,6 +20,7 @@ import {handleGuildCountsUpdate} from '@app/features/guild/events/GuildCountsUpd
 import {handleGuildCreate} from '@app/features/guild/events/GuildCreate';
 import {handleGuildDelete} from '@app/features/guild/events/GuildDelete';
 import {handleGuildEmojisUpdate} from '@app/features/guild/events/GuildEmojisUpdate';
+import {handleGuildHealthUpdate} from '@app/features/guild/events/GuildHealthUpdate';
 import {handleGuildMemberAdd} from '@app/features/guild/events/GuildMemberAdd';
 import {handleGuildMemberListUpdate} from '@app/features/guild/events/GuildMemberListUpdate';
 import {handleGuildMemberRemove} from '@app/features/guild/events/GuildMemberRemove';
@@ -54,6 +55,14 @@ import {handlePresenceUpdateBulk} from '@app/features/presence/events/PresenceUp
 import {handleRelationshipAdd} from '@app/features/relationship/events/RelationshipAdd';
 import {handleRelationshipRemove} from '@app/features/relationship/events/RelationshipRemove';
 import {handleRelationshipUpdate} from '@app/features/relationship/events/RelationshipUpdate';
+import {handleForumUnreads} from '@app/features/threads/events/ForumUnreads';
+import {handleThreadCreate} from '@app/features/threads/events/ThreadCreate';
+import {handleThreadDelete} from '@app/features/threads/events/ThreadDelete';
+import {handleThreadListSync} from '@app/features/threads/events/ThreadListSync';
+import {handleThreadMemberListUpdate} from '@app/features/threads/events/ThreadMemberListUpdate';
+import {handleThreadMembersUpdate} from '@app/features/threads/events/ThreadMembersUpdate';
+import {handleThreadMemberUpdate} from '@app/features/threads/events/ThreadMemberUpdate';
+import {handleThreadUpdate} from '@app/features/threads/events/ThreadUpdate';
 import {handleAuthSessionChange} from '@app/features/user/events/AuthSessionChange';
 import {handleUserConnectionsUpdate} from '@app/features/user/events/UserConnectionsUpdate';
 import {handleUserGuildSettingsUpdate} from '@app/features/user/events/UserGuildSettingsUpdate';
@@ -77,9 +86,11 @@ export interface GatewayGeoipPayload {
 
 export interface GatewayHandlerContext {
 	socket: GatewaySocket | null;
+	accountKey: string | null;
+	expectedUserId: string | null;
 	previousSessionId: string | null;
 	setPreviousSessionId: (id: string) => void;
-	setReady: () => void;
+	setReady: () => boolean;
 	setConnectionGeoip: (data: GatewayGeoipPayload) => void;
 	markGuildSynced: (guildId: string) => void;
 }
@@ -112,6 +123,7 @@ export function createHandlerRegistry(): GatewayHandlerRegistry {
 	registry.set('GUILD_MEMBERS_CHUNK', handleGuildMembersChunk as GatewayEventHandler);
 	registry.set('GUILD_MEMBER_LIST_UPDATE', handleGuildMemberListUpdate as GatewayEventHandler);
 	registry.set('GUILD_COUNTS_UPDATE', handleGuildCountsUpdate as GatewayEventHandler);
+	registry.set('GUILD_HEALTH_UPDATE', handleGuildHealthUpdate as GatewayEventHandler);
 	registry.set('CHANNEL_MEMBER_COUNTS_UPDATE', handleChannelMemberCountsUpdate as GatewayEventHandler);
 	registry.set('GUILD_ROLE_CREATE', handleGuildRoleCreate as GatewayEventHandler);
 	registry.set('GUILD_ROLE_UPDATE', handleGuildRoleUpdate as GatewayEventHandler);
@@ -121,6 +133,14 @@ export function createHandlerRegistry(): GatewayHandlerRegistry {
 	registry.set('CHANNEL_UPDATE', handleChannelUpdate as GatewayEventHandler);
 	registry.set('CHANNEL_UPDATE_BULK', handleChannelUpdateBulk as GatewayEventHandler);
 	registry.set('CHANNEL_DELETE', handleChannelDelete as GatewayEventHandler);
+	registry.set('THREAD_CREATE', handleThreadCreate as GatewayEventHandler);
+	registry.set('THREAD_UPDATE', handleThreadUpdate as GatewayEventHandler);
+	registry.set('THREAD_DELETE', handleThreadDelete as GatewayEventHandler);
+	registry.set('THREAD_LIST_SYNC', handleThreadListSync as GatewayEventHandler);
+	registry.set('THREAD_MEMBER_UPDATE', handleThreadMemberUpdate as GatewayEventHandler);
+	registry.set('THREAD_MEMBERS_UPDATE', handleThreadMembersUpdate as GatewayEventHandler);
+	registry.set('THREAD_MEMBER_LIST_UPDATE', handleThreadMemberListUpdate as GatewayEventHandler);
+	registry.set('FORUM_UNREADS', handleForumUnreads as GatewayEventHandler);
 	registry.set('PASSIVE_UPDATES', handlePassiveUpdates as GatewayEventHandler);
 	registry.set('CHANNEL_PINS_UPDATE', handleChannelPinsUpdate as GatewayEventHandler);
 	registry.set('CHANNEL_PINS_ACK', handleChannelPinsAck as GatewayEventHandler);

@@ -302,10 +302,8 @@ export class KVClient implements IKVProvider {
 	}
 
 	private createClusterClient(clusterConfig: ResolvedKVClientConfig): Cluster {
-		const {nodes, redisOptions} = resolveKVClusterConnection(clusterConfig.url, clusterConfig.clusterNodes);
-		const natMap = clusterConfig.clusterNatMap;
-		const hasNatMap = Object.keys(natMap).length > 0;
-		return new Cluster(nodes, {
+		const {node, redisOptions} = resolveKVClusterConnection(clusterConfig.url);
+		return new Cluster([node], {
 			clusterRetryStrategy: createRetryStrategy(),
 			redisOptions: {
 				...redisOptions,
@@ -315,7 +313,6 @@ export class KVClient implements IKVProvider {
 				protocol: 2,
 			},
 			scaleReads: 'master',
-			...(hasNatMap ? {natMap} : {}),
 		});
 	}
 
@@ -555,6 +552,14 @@ export class KVClient implements IKVProvider {
 		return await this.execute('llen', async () => this.client.llen(key));
 	}
 
+	async lrange(key: string, start: number, stop: number): Promise<Array<string>> {
+		return await this.execute('lrange', async () => this.client.lrange(key, start, stop));
+	}
+
+	async ltrim(key: string, start: number, stop: number): Promise<void> {
+		await this.execute('ltrim', async () => this.client.ltrim(key, start, stop));
+	}
+
 	async hset(key: string, field: string, value: string): Promise<number> {
 		return await this.execute('hset', async () => this.client.hset(key, field, value));
 	}
@@ -583,7 +588,6 @@ export class KVClient implements IKVProvider {
 		return new KVSubscription({
 			url: this.url,
 			mode: this.config.mode,
-			clusterNodes: this.config.clusterNodes,
 			timeoutMs: this.timeoutMs,
 			logger: this.logger,
 		});

@@ -1,0 +1,89 @@
+image:
+  registry: ghcr.io/fluxerapp
+  tag: v1
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+env:
+  FLUXER_SVC_NATS_URL: nats://nats:4222
+
+extraEnv: []
+
+envFrom:
+  - secretRef:
+      name: fluxer-env
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+
+probes:
+  liveness:
+    httpGet:
+      path: /_healthz
+      port: http
+  readiness:
+    httpGet:
+      path: /_health
+      port: http
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+
+updateStrategy:
+  type: RollingUpdate
+
+topologySpreadConstraints: []
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+port: 8090
+
+router:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 192Mi
+
+shard:
+  replicas: 2
+  probes:
+    startup:
+      httpGet:
+        path: /_healthz
+        port: http
+      periodSeconds: 10
+      failureThreshold: 30
+  resources:
+    requests:
+      cpu: 50m
+      memory: 96Mi
+    limits:
+      memory: 384Mi
+
+services:
+  gifs:
+    shard:
+      env:
+        FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: https://media.example.com
+  messages: {}
+  snowflakes: {}
+  unfurl:
+    shard:
+      env:
+        FLUXER_MEDIA_PROXY_ENDPOINT: http://media-proxy:8080
+  users: {}

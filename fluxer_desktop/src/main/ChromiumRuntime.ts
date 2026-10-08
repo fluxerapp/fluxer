@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fs from 'node:fs';
+import {createRequire} from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
+import type {BuildChannel} from '@electron/common/BuildChannel';
 import {app} from 'electron';
 import log from 'electron-log';
 
@@ -73,9 +75,10 @@ const CHROMIUM_FEATURE_SWITCHES = new Set([
 	'enable-features',
 ]);
 
-const LINUX_FLAGS_CONFIG_FILE_NAMES: Record<'stable' | 'canary', Array<string>> = {
+const LINUX_FLAGS_CONFIG_FILE_NAMES: Record<BuildChannel, Array<string>> = {
 	stable: ['fluxer_desktop-flags.conf', 'fluxer-flags.conf'],
 	canary: ['fluxer_desktop_canary-flags.conf', 'fluxer-canary-flags.conf'],
+	development: ['fluxer_desktop_development-flags.conf', 'fluxer-development-flags.conf'],
 };
 
 export const MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE = 'MiddleClickAutoscroll';
@@ -93,9 +96,16 @@ interface RuntimeCacheState {
 	key?: string;
 }
 
+function statWithoutAsarRedirection(filePath: string): fs.Stats {
+	if (process.versions.electron == null) {
+		return fs.statSync(filePath);
+	}
+	return (createRequire(import.meta.url)('original-fs') as typeof fs).statSync(filePath);
+}
+
 function safeFileFingerprint(filePath: string): {mtimeMs: number | null; size: number | null} {
 	try {
-		const stat = fs.statSync(filePath);
+		const stat = statWithoutAsarRedirection(filePath);
 		return {mtimeMs: Math.trunc(stat.mtimeMs), size: stat.size};
 	} catch {
 		return {mtimeMs: null, size: null};
@@ -259,7 +269,7 @@ export function appendDisabledChromiumFeatures(features: Iterable<string>): void
 	appendChromiumFeatureSwitch('disable-features', features);
 }
 
-export function appendLinuxChromiumFlagsConfig(channel: 'stable' | 'canary'): void {
+export function appendLinuxChromiumFlagsConfig(channel: BuildChannel): void {
 	if (process.platform !== 'linux') return;
 	const configHome = getLinuxConfigHome();
 	if (!configHome) {

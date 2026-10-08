@@ -4,6 +4,7 @@ import {createChannelID, createUserID} from '@app/api/BrandedTypes';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {StreamPreviewService} from '@app/api/channel/services/StreamPreviewService';
 import {StreamService} from '@app/api/channel/services/StreamService';
+import {SYSTEM_THREAD_VIEWER} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {InvalidStreamThumbnailPayloadError} from '@fluxer/errors/src/domains/channel/InvalidStreamThumbnailPayloadError';
@@ -55,6 +56,7 @@ describe('StreamService.uploadPreview', () => {
 
 	const upload = (thumbnail: string) =>
 		streamService.uploadPreview({
+			viewer: SYSTEM_THREAD_VIEWER,
 			userId: USER_ID,
 			streamKey: STREAM_KEY,
 			channelId: CHANNEL_ID,
@@ -72,7 +74,7 @@ describe('StreamService.uploadPreview', () => {
 		expect(uploaded).toHaveLength(0);
 	});
 
-	it('rejects a thumbnail carrying no base64 digits', async () => {
+	it('rejects a thumbnail with no base64 digits', async () => {
 		await expect(upload('====')).rejects.toBeInstanceOf(InvalidStreamThumbnailPayloadError);
 		expect(uploaded).toHaveLength(0);
 	});

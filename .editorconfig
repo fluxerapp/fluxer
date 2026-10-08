@@ -9,6 +9,33 @@ max_line_length = 120
 indent_style = tab
 indent_size = 2
 
+[*.rs]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+[*.{erl,hrl,app.src,escript}]
+indent_style = space
+indent_size = 4
+max_line_length = 96
+
+[fluxer_gateway/{rebar.config,elvis.config,.erlfmt}]
+indent_style = space
+indent_size = 4
+max_line_length = 96
+
+[*.{c,h,py}]
+indent_style = space
+indent_size = 4
+
+[fluxer_app/rust/libfluxwebp/**.{c,h}]
+indent_style = space
+indent_size = 2
+
+[*.{md,mdx,proto,tpl}]
+indent_style = space
+indent_size = 2
+
 [*.{yml,yaml,Dockerfile}]
 indent_style = space
 indent_size = 2

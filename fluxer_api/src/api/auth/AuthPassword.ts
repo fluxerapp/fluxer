@@ -5,15 +5,19 @@ import type {ApiContext} from '@app/api/ApiContext';
 import {createMfaTicketResponse, type LoginMfaResult} from '@app/api/auth/AuthLogin';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {RecoveryKitRepository} from '@app/api/auth/services/RecoveryKitRepository';
 import {resolveWebAuthnSecondFactor} from '@app/api/auth/services/WebAuthnSecondFactor';
 import {createPasswordResetToken} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {Logger} from '@app/api/Logger';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {User} from '@app/api/models/User';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
 import * as FetchUtils from '@app/api/utils/FetchUtils';
 import {hashPassword as hashPasswordUtil, verifyPassword as verifyPasswordUtil} from '@app/api/utils/PasswordUtils';
 import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
+import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {FLUXER_USER_AGENT} from '@fluxer/constants/src/Core';
 import {UserAuthenticatorTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -81,6 +85,19 @@ interface ForgotPasswordParams {
 interface ResetPasswordParams {
 	data: ResetPasswordRequest;
 	request: Request;
+}
+
+interface ApplyPasswordResetParams {
+	user: User;
+	password: string;
+	request: Request;
+	afterPasswordSet?: () => Promise<void>;
+}
+
+interface CommitPasswordResetParams {
+	user: User;
+	passwordHash: string;
+	webauthnIsSecondFactor: boolean;
 }
 
 interface VerifyPasswordParams {
@@ -218,6 +235,14 @@ export async function forgotPassword(ctx: ApiContext, {data, request}: ForgotPas
 	await email.sendPasswordResetEmail(user.email!, user.username, token, user.locale);
 }
 
+async function resetTokenMatchesUser(user: User, tokenEmail: string | null): Promise<boolean> {
+	if (tokenEmail === null) {
+		const mode = await getInstanceConfigRepository().getAccountIdentityMode();
+		return mode === AccountIdentityModes.USERNAME && !user.email;
+	}
+	return !!user.email && user.email.trim().toLowerCase() === tokenEmail.trim().toLowerCase();
+}
+
 export async function validateResetToken(ctx: ApiContext, token: string): Promise<boolean> {
 	const {users} = ctx.services;
 	const tokenData = await users.getPasswordResetToken(token);
@@ -228,11 +253,7 @@ export async function validateResetToken(ctx: ApiContext, token: string): Promis
 	if (!user) {
 		return false;
 	}
-	if (
-		user.flags & UserFlags.DELETED ||
-		!user.email ||
-		user.email.trim().toLowerCase() !== tokenData.email.trim().toLowerCase()
-	) {
+	if (user.flags & UserFlags.DELETED || !(await resetTokenMatchesUser(user, tokenData.email))) {
 		return false;
 	}
 	return true;
@@ -252,22 +273,39 @@ export async function resetPassword(
 		throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_RESET_TOKEN);
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
-	if (
-		user.flags & UserFlags.DELETED ||
-		!user.email ||
-		user.email.trim().toLowerCase() !== tokenData.email.trim().toLowerCase()
-	) {
+	if (user.flags & UserFlags.DELETED || !(await resetTokenMatchesUser(user, tokenData.email))) {
 		throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_RESET_TOKEN);
 	}
-	await AuthUtility.handleBanStatus(ctx, user);
+	const currentUser = await AuthUtility.handleBanStatus(ctx, user);
 	if (await isPasswordPwned(ctx, data.password)) {
 		throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 	}
-	const webauthnIsSecondFactor = await resolveWebAuthnSecondFactor(ctx, user);
-	const hasMfa = user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP) || webauthnIsSecondFactor;
-	const newPasswordHash = await hashPassword(ctx, data.password);
+	if (tokenData.email !== null) {
+		return await applyPasswordReset(ctx, {
+			user,
+			password: data.password,
+			request,
+			afterPasswordSet: () => users.deleteAllPasswordResetTokens(user.id),
+		});
+	}
+	return await applyPasswordReset(ctx, {
+		user: currentUser,
+		password: data.password,
+		request,
+		afterPasswordSet: async () => {
+			await users.deleteAllPasswordResetTokens(currentUser.id);
+			await new RecoveryKitRepository().delete(currentUser.id);
+		},
+	});
+}
+
+export async function commitPasswordReset(
+	ctx: ApiContext,
+	{user, passwordHash, webauthnIsSecondFactor}: CommitPasswordResetParams,
+): Promise<User> {
+	const {users} = ctx.services;
 	const updates: Partial<UserRow> = {
-		password_hash: newPasswordHash,
+		password_hash: passwordHash,
 		password_last_changed_at: new Date(),
 	};
 	if (webauthnIsSecondFactor && !user.authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN)) {
@@ -280,7 +318,18 @@ export async function resetPassword(
 		await ctx.services.botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
 	}
 	await AuthSession.terminateAllUserSessions(ctx, user.id);
-	await users.deletePasswordResetToken(data.token);
+	return updatedUser;
+}
+
+export async function applyPasswordReset(
+	ctx: ApiContext,
+	{user, password, request, afterPasswordSet}: ApplyPasswordResetParams,
+): Promise<ResetPasswordResult> {
+	const webauthnIsSecondFactor = await resolveWebAuthnSecondFactor(ctx, user);
+	const hasMfa = user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP) || webauthnIsSecondFactor;
+	const passwordHash = await hashPassword(ctx, password);
+	const updatedUser = await commitPasswordReset(ctx, {user, passwordHash, webauthnIsSecondFactor});
+	await afterPasswordSet?.();
 	if (hasMfa) {
 		return await createMfaTicketResponse(ctx, updatedUser, webauthnIsSecondFactor);
 	}

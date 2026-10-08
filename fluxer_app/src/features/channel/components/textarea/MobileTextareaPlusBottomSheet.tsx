@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
+import {useCanSendGift} from '@app/features/premium/hooks/useCanSendGift';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {MenuBottomSheet, type MenuGroupType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {msg} from '@lingui/core/macro';
@@ -34,7 +34,7 @@ interface MobileTextareaPlusBottomSheetProps {
 export const MobileTextareaPlusBottomSheet = observer(
 	({isOpen, onClose, onUploadFile, textareaValue, onUploadAsFile}: MobileTextareaPlusBottomSheetProps) => {
 		const {i18n} = useLingui();
-		const isSelfHosted = RuntimeConfig.isSelfHosted();
+		const canSendGift = useCanSendGift(isOpen);
 		const groups: Array<MenuGroupType> = useMemo(() => {
 			const items = [
 				{
@@ -64,7 +64,7 @@ export const MobileTextareaPlusBottomSheet = observer(
 					},
 				});
 			}
-			if (!isSelfHosted) {
+			if (canSendGift) {
 				items.push({
 					icon: <GiftIcon data-flx="channel.textarea.mobile-textarea-plus-bottom-sheet.groups.gift-icon" />,
 					label: i18n._(SEND_GIFT_DESCRIPTOR),
@@ -74,7 +74,7 @@ export const MobileTextareaPlusBottomSheet = observer(
 				});
 			}
 			return [{items}];
-		}, [isSelfHosted, onClose, onUploadFile, textareaValue, onUploadAsFile, i18n.locale]);
+		}, [canSendGift, onClose, onUploadFile, textareaValue, onUploadAsFile, i18n.locale]);
 		return (
 			<MenuBottomSheet
 				isOpen={isOpen}

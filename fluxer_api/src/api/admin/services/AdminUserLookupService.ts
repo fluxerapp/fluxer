@@ -4,7 +4,10 @@ import type {ApiContext} from '@app/api/ApiContext';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import {createUserID} from '@app/api/BrandedTypes';
 import {isSyntheticUserId} from '@app/api/constants/Core';
+import {usesUniqueUsernames} from '@app/api/instance/AccountIdentityModeCache';
 import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {findPersonByLoginHandle, parseLoginHandle} from '@app/api/user/UniqueUsernames';
 import type {LookupUserRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 
 interface AdminUserLookupServiceDeps {
@@ -41,10 +44,17 @@ export class AdminUserLookupService {
 		} else if (query.includes('@')) {
 			user = await userRepository.findByEmail(query);
 		} else {
-			user = await userRepository.findByStripeSubscriptionId(query);
+			user = (await this.findPersonByBareUsername(query)) ?? (await userRepository.findByStripeSubscriptionId(query));
 		}
 		return {
 			users: user ? [await mapUserToAdminResponse(user, cacheService, acls)] : [],
 		};
+	}
+
+	private async findPersonByBareUsername(query: string): Promise<User | null> {
+		if (!usesUniqueUsernames()) return null;
+		const handle = parseLoginHandle(query);
+		if (!handle || handle.discriminator !== null) return null;
+		return await findPersonByLoginHandle(this.deps.apiContext.services.users, handle);
 	}
 }

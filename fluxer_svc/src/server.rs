@@ -81,10 +81,7 @@ fn build_version() -> &'static str {
     static BUILD_VERSION: OnceLock<String> = OnceLock::new();
     BUILD_VERSION
         .get_or_init(|| {
-            std::env::var("BUILD_VERSION")
-                .ok()
-                .filter(|v| !v.trim().is_empty())
-                .unwrap_or_else(|| "dev".to_owned())
+            crate::config::optional_env("BUILD_VERSION").unwrap_or_else(|| "dev".to_owned())
         })
         .as_str()
 }

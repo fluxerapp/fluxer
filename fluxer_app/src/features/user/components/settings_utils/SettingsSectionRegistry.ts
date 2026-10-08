@@ -73,7 +73,11 @@ function toSearchableSettingItem(section: SectionDefinition, i18n: I18n): Search
 		sectionId: section.id,
 		sourceSectionId: section.id,
 		label: i18n._(section.label),
-		keywords: section.keywords.map((keyword) => (typeof keyword === 'string' ? keyword : i18n._(keyword))),
+		keywords: section.keywords.map((keyword) => {
+			if (typeof keyword === 'string') return keyword;
+			if (typeof keyword === 'function') return keyword();
+			return i18n._(keyword);
+		}),
 		description: section.description ? i18n._(section.description) : undefined,
 		audience: getSettingsAudience(section),
 		tags: section.tags,

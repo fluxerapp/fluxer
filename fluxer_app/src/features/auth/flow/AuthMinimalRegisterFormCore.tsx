@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import FormField from '@app/features/auth/flow/AuthFormField';
 import styles from '@app/features/auth/flow/AuthPageStyles.module.css';
@@ -16,6 +16,11 @@ import {
 	EMPTY_AUTH_REGISTER_FORM_DRAFT,
 	useAuthRegisterDraftContext,
 } from '@app/features/auth/state/AuthRegisterDraftContext';
+import {authRequestTargetFromSnapshot} from '@app/features/auth/state/AuthRequestTarget';
+import {
+	DISPLAY_NAME_OPTIONAL_DESCRIPTOR,
+	WHAT_SHOULD_PEOPLE_CALL_YOU_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {Button} from '@app/features/ui/button/Button';
 import type {ThemeType} from '@fluxer/constants/src/UserConstants';
@@ -28,19 +33,13 @@ const DATE_OF_BIRTH_DESCRIPTOR = msg({
 	message: 'Date of birth',
 	comment: 'Short label in the authentication auth minimal register form core. Keep the tone plain and specific.',
 });
-const DISPLAY_NAME_OPTIONAL_DESCRIPTOR = msg({
-	message: 'Display name (optional)',
-	comment: 'Short label in the authentication auth minimal register form core. Keep the tone plain and specific.',
-});
-const WHAT_SHOULD_PEOPLE_CALL_YOU_DESCRIPTOR = msg({
-	message: 'What should people call you?',
-	comment: 'Question prompt in the authentication auth minimal register form core. Keep the tone plain and specific.',
-});
 
 interface AuthMinimalRegisterFormCoreProps {
 	submitLabel: React.ReactNode;
 	redirectPath: string;
+	runtimeSnapshot: RuntimeConfigSnapshot;
 	onRegister?: (response: AuthenticationCommands.TokenResponse) => Promise<void>;
+	onAuthenticated?: () => void;
 	inviteCode?: string;
 	extraContent?: React.ReactNode;
 	theme?: ThemeType;
@@ -49,7 +48,9 @@ interface AuthMinimalRegisterFormCoreProps {
 export const AuthMinimalRegisterFormCore = observer(function AuthMinimalRegisterFormCore({
 	submitLabel,
 	redirectPath,
+	runtimeSnapshot,
 	onRegister,
+	onAuthenticated,
 	inviteCode,
 	extraContent,
 	theme,
@@ -61,8 +62,9 @@ export const AuthMinimalRegisterFormCore = observer(function AuthMinimalRegister
 		const value = new URLSearchParams(location.search).get('registration_url')?.trim();
 		return value || undefined;
 	}, [location.search]);
-	const isPublicRegistrationClosed = RuntimeConfig.registration.mode === 'closed' && !registrationUrlCode;
-	const collectDateOfBirth = RuntimeConfig.collectDateOfBirthOnRegistration;
+	const registrationTarget = useMemo(() => authRequestTargetFromSnapshot(runtimeSnapshot), [runtimeSnapshot]);
+	const isPublicRegistrationClosed = runtimeSnapshot.registration.mode === 'closed' && !registrationUrlCode;
+	const collectDateOfBirth = runtimeSnapshot.appPublic.registration.collect_date_of_birth;
 	const {getRegisterFormDraft, setRegisterFormDraft, clearRegisterFormDraft} = useAuthRegisterDraftContext();
 	const globalNameId = useId();
 	const initialDraft = useMemo<AuthRegisterFormDraft>(() => {
@@ -84,7 +86,7 @@ export const AuthMinimalRegisterFormCore = observer(function AuthMinimalRegister
 	const [selectedYear, setSelectedYearState] = useState(initialDraft.selectedYear);
 	const [consent, setConsentState] = useState(initialDraft.consent);
 	const [pendingApprovalUserId, setPendingApprovalUserId] = useState<string | null>(null);
-	const legalConsentConfig = getRegistrationLegalConsentConfig();
+	const legalConsentConfig = getRegistrationLegalConsentConfig(runtimeSnapshot);
 	const effectiveConsent = legalConsentConfig.requirement ? consent : true;
 	const initialValues: Record<string, string> = {
 		global_name: initialDraft.formValues.global_name ?? '',
@@ -139,14 +141,17 @@ export const AuthMinimalRegisterFormCore = observer(function AuthMinimalRegister
 			collectDateOfBirth && selectedYear && selectedMonth && selectedDay
 				? `${selectedYear}-${selectedMonth.padStart(2, '0')}-${selectedDay.padStart(2, '0')}`
 				: undefined;
-		const response = await AuthenticationCommands.register({
-			global_name: values.global_name || undefined,
-			date_of_birth: dateOfBirth,
-			consent: effectiveConsent,
-			invite_code: inviteCode,
-			registration_url_code: registrationUrlCode,
-			theme,
-		});
+		const response = await AuthenticationCommands.register(
+			{
+				global_name: values.global_name || undefined,
+				date_of_birth: dateOfBirth,
+				consent: effectiveConsent,
+				invite_code: inviteCode,
+				registration_url_code: registrationUrlCode,
+				theme,
+			},
+			registrationTarget,
+		);
 		if (AuthenticationCommands.isRegistrationPendingApprovalResponse(response)) {
 			clearRegisterFormDraft(draftKey);
 			setPendingApprovalUserId(response.user_id);
@@ -160,8 +165,10 @@ export const AuthMinimalRegisterFormCore = observer(function AuthMinimalRegister
 				token: response.token,
 				userId: response.user_id,
 				...(userData ? {userData} : {}),
+				runtimeSnapshot,
 			});
 		}
+		onAuthenticated?.();
 		clearRegisterFormDraft(draftKey);
 		return undefined;
 	};

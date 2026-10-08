@@ -32,6 +32,7 @@ import {
 	getNativeAudioBridgeStats,
 	getNativeAudioCaptureDiagnosticState,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
+import {readVoiceInputDiagnostics} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
 import {getDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
 import {getRecentScreenShares} from '@app/features/voice/utils/ScreenShareLifecycleLog';
 import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
@@ -276,11 +277,7 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		effectiveScreenShareAudioDeviceIdHash: await hashString(VoiceSettings.getEffectiveScreenShareAudioDeviceId()),
 		inputVolume: VoiceSettings.getInputVolume(),
 		outputVolume: VoiceSettings.getOutputVolume(),
-		echoCancellation: VoiceSettings.getEchoCancellation(),
-		noiseSuppression: VoiceSettings.getNoiseSuppression(),
-		autoGainControl: VoiceSettings.getAutoGainControl(),
-		deepFilterNoiseSuppression: VoiceSettings.getDeepFilterNoiseSuppression(),
-		deepFilterNoiseSuppressionLevel: VoiceSettings.getDeepFilterNoiseSuppressionLevel(),
+		...readVoiceInputDiagnostics(),
 		voiceProcessingMode: VoiceSettings.getVoiceProcessingMode(),
 		vadThreshold: VoiceSettings.getVadThreshold(),
 		vadAutoSensitivity: VoiceSettings.getVadAutoSensitivity(),
@@ -495,14 +492,7 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 			voiceServerEndpoint: MediaEngine.voiceServerEndpoint ?? 'n/a',
 			reconnectionCount: MediaEngine.reconnectionCount,
 		},
-		audio: {
-			echoCancellation: VoiceSettings.echoCancellation,
-			noiseSuppression: VoiceSettings.noiseSuppression,
-			autoGainControl: VoiceSettings.autoGainControl,
-			deepFilterNoiseSuppression: VoiceSettings.deepFilterNoiseSuppression,
-			deepFilterNoiseSuppressionLevel: VoiceSettings.deepFilterNoiseSuppressionLevel,
-			processingMode: VoiceSettings.voiceProcessingMode,
-		},
+		audio: readVoiceInputDiagnostics(),
 		screenShareSettings: {
 			resolution: effectiveScreenShareSettings.resolution,
 			frameRate: effectiveScreenShareSettings.frameRate,

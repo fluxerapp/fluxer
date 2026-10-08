@@ -3,19 +3,13 @@
 import {type ChannelID, createChannelID, createMessageID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import {getKvMeta} from '@app/api/database/CassandraMetaRegistry';
 import {fetchOne, setCassandraQueryExecutorForTesting, upsertOne} from '@app/api/database/CassandraQueryExecution';
-import {defineTable} from '@app/api/database/CassandraTableDsl';
 import type {CassandraParams, KvQueryMeta, PreparedQuery} from '@app/api/database/CassandraTypes';
 import type {ReadStateRow} from '@app/api/database/types/ChannelTypes';
-import {READ_STATE_COLUMNS} from '@app/api/database/types/ChannelTypes';
 import {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
+import {ReadStates} from '@app/api/Tables';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-const ReadStates = defineTable<ReadStateRow, 'user_id' | 'channel_id'>({
-	name: 'read_states',
-	columns: READ_STATE_COLUMNS,
-	primaryKey: ['user_id', 'channel_id'],
-});
 const FETCH_READ_STATE = ReadStates.selectCql({
 	where: [ReadStates.where.eq('user_id'), ReadStates.where.eq('channel_id')],
 	limit: 1,
@@ -65,7 +59,7 @@ describe('ReadStateRepository row storage', () => {
 		const channelId = createChannelID(10n);
 		await seedReadState(userId, channelId, 100n, 3);
 		const repository = new ReadStateRepository();
-		const readState = await repository.upsertReadState(userId, channelId, createMessageID(90n), 0);
+		const {readState} = await repository.upsertReadState(userId, channelId, createMessageID(90n), 0);
 		expect(readState.lastMessageId).toBe(createMessageID(100n));
 		expect(await loadReadState(userId, channelId)).toMatchObject({
 			message_id: createMessageID(100n),
@@ -77,7 +71,7 @@ describe('ReadStateRepository row storage', () => {
 		const channelId = createChannelID(10n);
 		await seedReadState(userId, channelId, 100n, 0);
 		const repository = new ReadStateRepository();
-		const readState = await repository.upsertReadState(userId, channelId, createMessageID(90n), 2, undefined, true);
+		const {readState} = await repository.upsertReadState(userId, channelId, createMessageID(90n), 2, undefined, true);
 		expect(readState.lastMessageId).toBe(createMessageID(90n));
 		expect(readState.mentionCount).toBe(2);
 		expect(await loadReadState(userId, channelId)).toMatchObject({

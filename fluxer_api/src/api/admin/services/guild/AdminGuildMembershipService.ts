@@ -44,11 +44,11 @@ export class AdminGuildMembershipService {
 			throw new UnknownUserError();
 		}
 		await guildService.members.addUserToGuild({
-			skipRiskGate: true,
 			userId,
 			guildId,
 			sendJoinMessage,
 			skipBanCheck: true,
+			skipAccountLimitCheck: true,
 			joinSourceType: JoinSourceTypes.ADMIN_FORCE_ADD,
 			requestCache,
 			initiatorId: adminUserId,
@@ -78,6 +78,7 @@ export class AdminGuildMembershipService {
 				reason: data.reason ?? undefined,
 				banDurationSeconds: data.ban_duration_seconds ?? undefined,
 				skipGuildAuditLog: true,
+				by: 'staff',
 			},
 			auditLogReason,
 		);

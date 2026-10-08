@@ -1,0 +1,58 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.pane {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	background-color: var(--composer-surface-color);
+}
+
+.body {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	gap: 1rem;
+	padding: 1rem;
+}
+
+.icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 4rem;
+	height: 4rem;
+	border-radius: 50%;
+	background-color: var(--background-modifier-accent);
+	color: var(--text-primary);
+}
+
+.iconGlyph {
+	width: 2rem;
+	height: 2rem;
+}
+
+.sourcePreview {
+	border-left: 0.25rem solid var(--background-modifier-accent);
+	border-radius: 0.25rem;
+	padding: 0.25rem 0;
+}
+
+.privateToggle {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.cooldown {
+	color: var(--text-tertiary);
+	font-size: 0.8125rem;
+	padding: 0 1rem 0.5rem;
+}
+
+.pane:has(:is(flx-channel-textarea-typing-slot, flx-channel-textarea-slowmode-slot)) > flx-channel-textarea {
+	margin-top: calc(var(--composer-status-row-height) - 0.5rem);
+}

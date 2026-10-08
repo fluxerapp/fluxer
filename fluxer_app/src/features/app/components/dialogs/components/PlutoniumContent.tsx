@@ -18,8 +18,8 @@ import {PricingSection} from '@app/features/app/components/dialogs/components/pl
 import {PurchaseHistorySection} from '@app/features/app/components/dialogs/components/plutonium/PurchaseHistorySection';
 import {SelfServeRefundSection} from '@app/features/app/components/dialogs/components/plutonium/SelfServeRefundSection';
 import {SubscriptionCard} from '@app/features/app/components/dialogs/components/plutonium/SubscriptionCard';
-import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import GeoIP from '@app/features/app/state/GeoIP';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Guilds from '@app/features/guild/state/Guilds';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
@@ -29,6 +29,15 @@ import {
 	FREE_VS_PREMIUM_DESCRIPTOR,
 	VERIFY_EMAIL_TO_PURCHASE_PREMIUM_DESCRIPTOR,
 } from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {
+	areGiftPurchasesAvailable,
+	arePremiumPurchasesAvailable,
+	canServiceStripeSubscriptions,
+	getPremiumProductFullName,
+	getPremiumProductName,
+	shouldShowPremiumFeatures,
+} from '@app/features/premium/utils/PremiumUtils';
+import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -44,6 +53,7 @@ interface PlutoniumContentProps {
 }
 
 export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumContentProps) => {
+	const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 	const {i18n} = useLingui();
 	const currentUser = Users.currentUser;
 	const premiumState = PremiumState.loadedForUserId === currentUser?.id ? PremiumState.state : null;
@@ -52,6 +62,7 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 	const [isGiftMode, setIsGiftMode] = useState(defaultGiftMode);
 	const giftSectionRef = useRef<HTMLDivElement | null>(null);
 	const perksSectionRef = useRef<HTMLDivElement | null>(null);
+	const pricingSectionRef = useRef<HTMLDivElement | null>(null);
 	const countryCode = GeoIP.countryCode;
 	const guilds = Guilds.getGuilds();
 	const visionaryGuild = useMemo(() => {
@@ -84,12 +95,9 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 		handleCancelPendingSubscriptionChange,
 	} = useSubscriptionActions(countryCode);
 	const {loadingRejoinCommunity, handleCommunityButtonClick} = useCommunityActions(visionaryGuild);
-	const {loadingCheckout, handleSelectPlan} = useCheckoutActions(
-		priceIds,
-		countryCode,
-		subscriptionStatus.isGiftSubscription,
-		mobileLayoutState.enabled,
-	);
+	const {loadingCheckout, handleSelectPlan} = useCheckoutActions(priceIds, countryCode, mobileLayoutState.enabled, {
+		hasGiftTime: subscriptionStatus.isGiftSubscription,
+	});
 	useEffect(() => {
 		if (!currentUser?.id) return;
 		void PremiumCommands.refreshPremiumState(countryCode ?? undefined);
@@ -97,9 +105,17 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 	const isClaimed = currentUser?.isClaimed() ?? false;
 	const isEmailVerified = currentUser?.verified === true;
 	const purchaseDisabled = !isClaimed || !isEmailVerified;
+	const userPurchaseDisabled = premiumState?.effective.premium_purchase_disabled === true;
+	const purchasesAvailable = arePremiumPurchasesAvailable(userPurchaseDisabled);
+	const giftPurchasesAvailable = areGiftPurchasesAvailable(priceIds, userPurchaseDisabled);
+	const hasBillingRelationship = subscriptionStatus.hasEverPurchased || premiumState?.billing.subscription != null;
+	const billingUnavailable =
+		!shouldShowPremiumFeatures() ||
+		(!arePremiumPurchasesAvailable() && !(hasBillingRelationship && canServiceStripeSubscriptions()));
+	const canSubscribe = purchasesAvailable && subscriptionStatus.canStartSubscription;
 	const purchaseDisabledTooltip = !isClaimed
-		? i18n._(CLAIM_ACCOUNT_TO_PURCHASE_PREMIUM_DESCRIPTOR, {premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME})
-		: i18n._(VERIFY_EMAIL_TO_PURCHASE_PREMIUM_DESCRIPTOR, {premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME});
+		? i18n._(CLAIM_ACCOUNT_TO_PURCHASE_PREMIUM_DESCRIPTOR, {premiumProductFullName: getPremiumProductFullName()})
+		: i18n._(VERIFY_EMAIL_TO_PURCHASE_PREMIUM_DESCRIPTOR, {premiumProductFullName: getPremiumProductFullName()});
 	const handleSelectPlanGuarded = useCallback(
 		(plan: 'monthly' | 'yearly' | 'gift_1_month' | 'gift_1_year') => {
 			if (purchaseDisabled) return;
@@ -109,6 +125,9 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 	);
 	const scrollToPerks = useCallback(() => {
 		perksSectionRef.current?.scrollIntoView({behavior: 'auto', block: 'start'});
+	}, []);
+	const scrollToPricing = useCallback(() => {
+		pricingSectionRef.current?.scrollIntoView({behavior: 'auto', block: 'start'});
 	}, []);
 	const navigateToRedeemGift = useCallback(() => {
 		ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {tab: 'gift_inventory'});
@@ -120,8 +139,7 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 					title={<Trans>Cancel subscription?</Trans>}
 					description={
 						<Trans>
-							You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep
-							your subscriber history.
+							You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history.
 						</Trans>
 					}
 					primaryText={<Trans>Cancel subscription</Trans>}
@@ -162,20 +180,22 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 		return (
 			<div className={styles.giftModeContainer} data-flx="app.plutonium-content.gift-mode-container">
 				<PlutoniumUpsellBanner data-flx="app.plutonium-content.plutonium-upsell-banner" />
-				<GiftSection
-					giftSectionRef={giftSectionRef}
-					giftMonthlyPrice={giftMonthlyPrice}
-					giftYearlyPrice={giftYearlyPrice}
-					loadingCheckout={loadingCheckout}
-					handleSelectPlan={handleSelectPlanGuarded}
-					purchaseDisabled={purchaseDisabled}
-					purchaseDisabledTooltip={purchaseDisabledTooltip}
-					data-flx="app.plutonium-content.gift-section"
-				/>
+				{giftPurchasesAvailable && (
+					<GiftSection
+						giftSectionRef={giftSectionRef}
+						giftMonthlyPrice={giftMonthlyPrice}
+						giftYearlyPrice={giftYearlyPrice}
+						loadingCheckout={loadingCheckout}
+						handleSelectPlan={handleSelectPlanGuarded}
+						purchaseDisabled={purchaseDisabled}
+						purchaseDisabledTooltip={purchaseDisabledTooltip}
+						data-flx="app.plutonium-content.gift-section"
+					/>
+				)}
 				<div ref={perksSectionRef} data-flx="app.plutonium-content.div">
 					<section className={styles.perksSection} data-flx="app.plutonium-content.perks-section">
 						<SectionHeader
-							title={i18n._(FREE_VS_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+							title={i18n._(FREE_VS_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 							data-flx="app.plutonium-content.section-header"
 						/>
 						<div
@@ -194,7 +214,7 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 			<GiftInventoryBanner currentUser={currentUser} data-flx="app.plutonium-content.gift-inventory-banner" />
 			<div className={styles.header} data-flx="app.plutonium-content.header">
 				<h1 className={styles.title} data-flx="app.plutonium-content.title">
-					{PREMIUM_PRODUCT_FULL_NAME}
+					{getPremiumProductFullName()}
 				</h1>
 				<p className={styles.description} data-flx="app.plutonium-content.description">
 					<Trans>
@@ -209,6 +229,9 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 						isVisionary={subscriptionStatus.isVisionary}
 						perksDisabled={subscriptionStatus.perksDisabled}
 						isGiftSubscription={subscriptionStatus.isGiftSubscription}
+						isGiftGrace={subscriptionStatus.isGiftGrace}
+						canSubscribe={canSubscribe}
+						storeSubscription={subscriptionStatus.storeSubscription}
 						premiumUntil={subscriptionStatus.actualPremiumUntil}
 						billingCycle={subscriptionStatus.billingCycle}
 						monthlyPrice={monthlyPrice}
@@ -237,6 +260,7 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 						loadingRejoinCommunity={loadingRejoinCommunity}
 						scrollToPerks={scrollToPerks}
 						navigateToRedeemGift={navigateToRedeemGift}
+						handleStartSubscription={scrollToPricing}
 						handleOpenCustomerPortal={handleOpenCustomerPortal}
 						handleReactivateSubscription={handleReactivateSubscription}
 						handleCancelSubscription={handleCancelSubscriptionConfirmed}
@@ -246,58 +270,88 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 						handleCommunityButtonClick={handleCommunityButtonClick}
 						purchaseDisabled={purchaseDisabled}
 						purchaseDisabledTooltip={purchaseDisabledTooltip}
+						billingUnavailable={billingUnavailable}
 						data-flx="app.plutonium-content.subscription-card"
 					/>
-					<div className={styles.disclaimerContainer} data-flx="app.plutonium-content.disclaimer-container">
-						<PurchaseDisclaimer align="center" isPremium data-flx="app.plutonium-content.purchase-disclaimer" />
-					</div>
+					{purchasesAvailable && (
+						<div className={styles.disclaimerContainer} data-flx="app.plutonium-content.disclaimer-container">
+							<PurchaseDisclaimer align="center" isPremium data-flx="app.plutonium-content.purchase-disclaimer" />
+						</div>
+					)}
 				</section>
 			)}
-			{subscriptionStatus.hasEverPurchased && (
-				<>
-					<PurchaseHistorySection
-						premiumState={premiumState}
-						loadingPortal={loadingPortal}
-						handleOpenCustomerPortal={handleOpenCustomerPortal}
-						data-flx="app.plutonium-content.purchase-history-section"
+			{subscriptionStatus.hasEverPurchased &&
+				!billingUnavailable &&
+				premiumState?.billing.stripe_customer_id != null && (
+					<>
+						<PurchaseHistorySection
+							premiumState={premiumState}
+							loadingPortal={loadingPortal}
+							handleOpenCustomerPortal={handleOpenCustomerPortal}
+							data-flx="app.plutonium-content.purchase-history-section"
+						/>
+						{!RuntimeConfig.isSelfHosted() && (
+							<SelfServeRefundSection
+								eligibility={premiumState?.billing.refund_eligibility ?? null}
+								refreshPremiumState={() => PremiumCommands.refreshPremiumState(countryCode ?? undefined)}
+								data-flx="app.plutonium-content.self-serve-refund-section"
+							/>
+						)}
+					</>
+				)}
+			{!purchasesAvailable ? (
+				!subscriptionStatus.shouldShowPremiumCard && (
+					<section className={styles.redeemSection} data-flx="app.plutonium-content.redeem-section">
+						<p className={styles.redeemDescription} data-flx="app.plutonium-content.redeem-description">
+							<Trans comment="Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.">
+								Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}.
+							</Trans>
+						</p>
+						<Button
+							variant="primary"
+							small
+							onClick={navigateToRedeemGift}
+							data-flx="app.plutonium-content.redeem-section.button.navigate-to-redeem-gift"
+						>
+							<Trans comment="Billing button for entering a premium gift code.">Redeem gift code</Trans>
+						</Button>
+					</section>
+				)
+			) : canSubscribe ? (
+				<div ref={pricingSectionRef} data-flx="app.plutonium-content.pricing-anchor">
+					<PricingSection
+						isGiftMode={isGiftMode && giftPurchasesAvailable}
+						giftPurchasesAvailable={giftPurchasesAvailable}
+						setIsGiftMode={setIsGiftMode}
+						monthlyPrice={monthlyPrice}
+						yearlyPrice={yearlyPrice}
+						giftMonthlyPrice={giftMonthlyPrice}
+						giftYearlyPrice={giftYearlyPrice}
+						loadingCheckout={loadingCheckout}
+						handleSelectPlan={handleSelectPlanGuarded}
+						purchaseDisabled={purchaseDisabled}
+						purchaseDisabledTooltip={purchaseDisabledTooltip}
+						data-flx="app.plutonium-content.pricing-section"
 					/>
-					<SelfServeRefundSection
-						eligibility={premiumState?.billing.refund_eligibility ?? null}
-						refreshPremiumState={() => PremiumCommands.refreshPremiumState(countryCode ?? undefined)}
-						data-flx="app.plutonium-content.self-serve-refund-section"
-					/>
-				</>
-			)}
-			{!subscriptionStatus.shouldShowPremiumCard ? (
-				<PricingSection
-					isGiftMode={isGiftMode}
-					setIsGiftMode={setIsGiftMode}
-					monthlyPrice={monthlyPrice}
-					yearlyPrice={yearlyPrice}
-					giftMonthlyPrice={giftMonthlyPrice}
-					giftYearlyPrice={giftYearlyPrice}
-					loadingCheckout={loadingCheckout}
-					handleSelectPlan={handleSelectPlanGuarded}
-					purchaseDisabled={purchaseDisabled}
-					purchaseDisabledTooltip={purchaseDisabledTooltip}
-					data-flx="app.plutonium-content.pricing-section"
-				/>
+				</div>
 			) : (
-				<GiftSection
-					giftSectionRef={giftSectionRef}
-					giftMonthlyPrice={giftMonthlyPrice}
-					giftYearlyPrice={giftYearlyPrice}
-					loadingCheckout={loadingCheckout}
-					handleSelectPlan={handleSelectPlanGuarded}
-					purchaseDisabled={purchaseDisabled}
-					purchaseDisabledTooltip={purchaseDisabledTooltip}
-					data-flx="app.plutonium-content.gift-section--2"
-				/>
+				giftPurchasesAvailable && (
+					<GiftSection
+						giftSectionRef={giftSectionRef}
+						giftMonthlyPrice={giftMonthlyPrice}
+						giftYearlyPrice={giftYearlyPrice}
+						loadingCheckout={loadingCheckout}
+						handleSelectPlan={handleSelectPlanGuarded}
+						purchaseDisabled={purchaseDisabled}
+						purchaseDisabledTooltip={purchaseDisabledTooltip}
+						data-flx="app.plutonium-content.gift-section--2"
+					/>
+				)
 			)}
 			<div ref={perksSectionRef} data-flx="app.plutonium-content.div--2">
 				<section className={styles.perksSection} data-flx="app.plutonium-content.perks-section--2">
 					<SectionHeader
-						title={i18n._(FREE_VS_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+						title={i18n._(FREE_VS_PREMIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						data-flx="app.plutonium-content.section-header--2"
 					/>
 					<div
@@ -308,9 +362,9 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 					</div>
 				</section>
 			</div>
-			{!subscriptionStatus.isPremium && (
+			{canSubscribe && (
 				<BottomCTASection
-					isGiftMode={isGiftMode}
+					isGiftMode={isGiftMode && giftPurchasesAvailable}
 					monthlyPrice={monthlyPrice}
 					yearlyPrice={yearlyPrice}
 					giftMonthlyPrice={giftMonthlyPrice}

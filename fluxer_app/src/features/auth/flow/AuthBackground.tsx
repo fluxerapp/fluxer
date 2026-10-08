@@ -20,8 +20,7 @@ export interface AuthBackgroundProps {
 	splashUrl: string | null;
 	splashDimensions?: {width: number; height: number} | null;
 	splashScale?: number | null;
-	patternReady: boolean;
-	patternImageUrl: string;
+	patternImageUrl?: string | null;
 	className?: string;
 	useFullCover?: boolean;
 	splashAlignment?: ValueOf<typeof GuildSplashCardAlignment>;
@@ -31,7 +30,6 @@ export const AuthBackground: React.FC<AuthBackgroundProps> = ({
 	splashUrl,
 	splashDimensions,
 	splashScale,
-	patternReady,
 	patternImageUrl,
 	className,
 	useFullCover = false,
@@ -95,7 +93,7 @@ export const AuthBackground: React.FC<AuthBackgroundProps> = ({
 			</div>
 		);
 	}
-	if (patternReady) {
+	if (patternImageUrl != null) {
 		return (
 			<div
 				className={className || styles.patternHost}

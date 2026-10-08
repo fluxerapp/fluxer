@@ -21,6 +21,7 @@ import type {
 	GuildSettingsTabType,
 } from '@app/features/user/components/settings_utils/GuildSettingsConstants';
 import {getGuildSettingsCategoryLabel} from '@app/features/user/components/settings_utils/GuildSettingsConstants';
+import {getGuildSettingsTabComponent} from '@app/features/user/components/settings_utils/GuildSettingsTabComponents';
 import type {MobileNavigationState} from '@app/features/user/hooks/useMobileNavigation';
 import {useUnsavedChangesFlash} from '@app/features/user/hooks/useUnsavedChangesFlash';
 import {msg} from '@lingui/core/macro';
@@ -70,6 +71,7 @@ const headerFadeVariants = {
 export const MobileGuildSettingsView: React.FC<MobileGuildSettingsViewProps> = observer(
 	({guild, groupedSettingsTabs, currentTab, mobileNav, onBack, onTabSelect}) => {
 		const {i18n} = useLingui();
+		const CurrentTabComponent = currentTab ? getGuildSettingsTabComponent(currentTab.type) : null;
 		const reducedMotion = Accessibility.useReducedMotion;
 		const currentTabId = mobileNav.currentView?.tab;
 		const {showUnsavedBanner, flashBanner, tabData, checkUnsavedChanges} = useUnsavedChangesFlash(currentTabId);
@@ -203,7 +205,7 @@ export const MobileGuildSettingsView: React.FC<MobileGuildSettingsViewProps> = o
 								/>
 							</motion.div>
 						)}
-						{showMobileContent && currentTab && (
+						{showMobileContent && CurrentTabComponent && (
 							<motion.div
 								key={`mobile-content-${mobileNav.currentView?.tab}`}
 								custom={mobileNav.direction}
@@ -221,7 +223,7 @@ export const MobileGuildSettingsView: React.FC<MobileGuildSettingsViewProps> = o
 									data-flx="app.mobile-guild-settings-view.scroller-flex"
 								>
 									<div className={styles.contentContainer} data-flx="app.mobile-guild-settings-view.content-container">
-										<currentTab.component
+										<CurrentTabComponent
 											guildId={guild.id}
 											data-flx="app.mobile-guild-settings-view.current-tab-component"
 										/>

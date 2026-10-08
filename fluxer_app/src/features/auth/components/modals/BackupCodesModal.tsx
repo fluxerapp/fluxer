@@ -76,7 +76,7 @@ export const BackupCodesModal = observer(({backupCodes, user, challenge}: Backup
 								const url = URL.createObjectURL(blob);
 								const a = document.createElement('a');
 								a.href = url;
-								a.download = `fluxer_${user.email}_backup_codes.txt`;
+								a.download = `fluxer_${user.email ?? user.username}_backup_codes.txt`;
 								a.click();
 								URL.revokeObjectURL(url);
 							}}

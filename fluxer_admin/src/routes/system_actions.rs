@@ -6,22 +6,20 @@ use crate::{
         types::{
             AppBrandingConfigUpdateRequest, AppLegalConfigUpdateRequest,
             AppPublicConfigUpdateRequest, AppRegistrationConfigUpdateRequest,
-            AppSetupConfigUpdateRequest, CreateRegistrationUrlRequest,
-            DeferredPhoneGateUpdateRequest, EXPERIMENT_MAX_TARGETED_USERS,
+            AppSetupConfigUpdateRequest, CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE,
+            CaptchaConfigUpdateRequest, CreateRegistrationUrlRequest,
+            DomainMigrationConfigUpdateRequest, EXPERIMENT_MAX_TARGETED_USERS,
             ExperimentDeliveryConfigUpdateRequest, GatewayRolloutConfigUpdateRequest,
             GatewayRolloutMode, InstanceAttachmentDecayUpdateRequest,
             InstanceBlueskyIntegrationUpdateRequest, InstanceBlueskyKeyIntegrationUpdateRequest,
-            InstanceCaptchaIntegrationUpdateRequest, InstanceConfigUpdateRequest,
-            InstanceEmailIntegrationUpdateRequest, InstanceEmailSmtpIntegrationUpdateRequest,
-            InstanceEmailSmtpTestRequest, InstanceGifIntegrationUpdateRequest,
-            InstanceIntegrationsUpdateRequest, InstanceMediaUpdateRequest,
-            InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
-            InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
-            LimitConfigUpdateRequest, LimitRule, LimitRuleFilters, NoiseSuppressionBackend,
-            PremiumMode, PushServiceDeliveryConfigUpdateRequest, RegistrationMode,
-            ScreenShareDeliveryConfigUpdateRequest, SsoConfigUpdateRequest,
-            VOICE_NS_MAX_GUILD_OVERRIDES, VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
-            VoiceNoiseSuppressionGuildOverride,
+            InstanceConfigUpdateRequest, InstanceEmailIntegrationUpdateRequest,
+            InstanceEmailSmtpIntegrationUpdateRequest, InstanceEmailSmtpTestRequest,
+            InstanceGifIntegrationUpdateRequest, InstanceIntegrationsUpdateRequest,
+            InstanceMediaUpdateRequest, InstancePolicyUpdateRequest,
+            InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
+            InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
+            LimitRuleFilters, PremiumMode, PushRelayConfigUpdateRequest, RegistrationMode,
+            SsoConfigUpdateRequest, VoiceE2eeScope,
         },
     },
     config::AdminConfig,
@@ -194,7 +192,9 @@ pub async fn instance_config_post(
         }
         "update_policy" => {
             let update = build_policy_update(&form);
-            instance_config_result(client.update_instance_config(&update).await)
+            let result = client.update_instance_config(&update).await;
+            remember_premium_branding(&state, &result);
+            instance_config_result(result)
         }
         "update_integrations" => {
             let update = build_integrations_update(&form);
@@ -204,15 +204,23 @@ pub async fn instance_config_post(
             let update = build_media_update(&form);
             instance_config_result(client.update_instance_config(&update).await)
         }
-        "update_voice_noise_suppression" => match build_voice_noise_suppression_update(&form) {
+        "update_billing" => match super::billing_actions::build_billing_update(&form) {
+            Ok(update) => {
+                let result = client.update_instance_config(&update).await;
+                remember_premium_branding(&state, &result);
+                super::billing_actions::billing_result(result)
+            }
+            Err(message) => FlashData::error(message),
+        },
+        "update_push_relay" => {
+            let update = build_push_relay_update(&form);
+            instance_config_result(client.update_instance_config(&update).await)
+        }
+        "update_domain_migration" => match build_domain_migration_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
-        "update_screen_share_delivery" => match build_screen_share_delivery_update(&form) {
-            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
-            Err(message) => FlashData::error(message),
-        },
-        "update_push_service_delivery" => match build_push_service_delivery_update(&form) {
+        "update_captcha" => match build_captcha_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -343,6 +351,17 @@ pub async fn instance_config_post(
     redirect_back_with_flash(base, "/instance-config", flash, config.secure_cookies())
 }
 
+fn remember_premium_branding(
+    state: &AppState,
+    result: &Result<crate::api::types::InstanceConfigResponse, crate::api::client::ApiError>,
+) {
+    if let Ok(instance_config) = result {
+        state.remember_premium_branding(crate::api::types::PremiumBranding::from_instance_config(
+            instance_config,
+        ));
+    }
+}
+
 fn render_registration_url_list_response(
     config: &AdminConfig,
     csrf_token: &str,
@@ -457,7 +476,6 @@ fn build_gateway_rollout_update(form: &MultiValueForm) -> InstanceConfigUpdateRe
 }
 
 const EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX: u32 = 10_000;
-const VOICE_NS_SUPPRESSION_STRENGTH_MAX: u32 = 100;
 const EXPERIMENT_MAX_ROLLOUT_SALT_CHARS: usize = 64;
 const EXPERIMENT_MAX_SNOWFLAKE_LENGTH: usize = 20;
 const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS: u64 = 60;
@@ -498,22 +516,13 @@ fn parse_experiment_rollout_salt(
             "Rollout salt must be between 1 and {EXPERIMENT_MAX_ROLLOUT_SALT_CHARS} characters"
         ));
     }
-    Ok(Some(salt.to_owned()))
-}
-
-fn parse_push_service_delivery_rollout_salt(
-    form: &MultiValueForm,
-    key: &str,
-) -> Result<Option<String>, String> {
-    let salt = parse_experiment_rollout_salt(form, key)?;
-    if let Some(value) = salt.as_deref()
-        && !value
-            .bytes()
-            .all(|byte| byte.is_ascii_graphic() || byte == b' ')
+    if !salt
+        .bytes()
+        .all(|byte| byte.is_ascii_graphic() || byte == b' ')
     {
         return Err("Rollout salt must use printable ASCII".to_owned());
     }
-    Ok(salt)
+    Ok(Some(salt.to_owned()))
 }
 
 fn is_experiment_snowflake(value: &str) -> bool {
@@ -548,170 +557,76 @@ fn parse_experiment_user_ids(value: &str, label: &str) -> Result<Vec<String>, St
     Ok(ids)
 }
 
-fn parse_voice_noise_suppression_guild_overrides(
-    value: &str,
-) -> Result<Vec<VoiceNoiseSuppressionGuildOverride>, String> {
-    let mut overrides: Vec<VoiceNoiseSuppressionGuildOverride> = Vec::new();
-    for (index, line) in value.lines().enumerate() {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let line_number = index + 1;
-        let (guild_id, backend) = line.split_once('=').ok_or_else(|| {
-            format!("Guild overrides line {line_number} must use guild_id=backend")
-        })?;
-        let guild_id = guild_id.trim();
-        if !is_experiment_snowflake(guild_id) {
-            return Err(format!(
-                "Guild overrides line {line_number} must use a guild ID with 1 to 20 decimal digits"
-            ));
-        }
-        let backend = backend.trim().parse().map_err(|_| {
-            format!("Guild overrides line {line_number} must name a supported backend")
-        })?;
-        if let Some(existing) = overrides
-            .iter()
-            .find(|existing| existing.guild_id == guild_id)
-        {
-            if existing.backend != backend {
-                return Err(format!(
-                    "Guild overrides line {line_number} conflicts with an earlier rule for guild {guild_id}"
-                ));
-            }
-            continue;
-        }
-        if overrides.len() == VOICE_NS_MAX_GUILD_OVERRIDES {
-            return Err(format!(
-                "Guild overrides must contain at most {VOICE_NS_MAX_GUILD_OVERRIDES} unique guilds"
-            ));
-        }
-        overrides.push(VoiceNoiseSuppressionGuildOverride {
-            guild_id: guild_id.to_owned(),
-            backend,
-        });
+fn build_push_relay_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
+    InstanceConfigUpdateRequest {
+        push_relay: Some(PushRelayConfigUpdateRequest {
+            relay_consent_accepted: Some(form.bool_value("push_relay_consent_accepted")),
+        }),
+        ..Default::default()
     }
-    Ok(overrides)
 }
 
-fn build_voice_noise_suppression_update(
+fn build_domain_migration_update(
     form: &MultiValueForm,
 ) -> Result<InstanceConfigUpdateRequest, String> {
-    let selected: Vec<NoiseSuppressionBackend> = form
-        .list_values_any(&["voice_ns_enabled_backends[]", "voice_ns_enabled_backends"])
-        .into_iter()
-        .map(|value| {
-            value.parse().map_err(|_| {
-                "Enabled backends must name supported noise suppression backends".to_owned()
-            })
-        })
-        .collect::<Result<_, _>>()?;
-    let enabled_backends = NoiseSuppressionBackend::ALL
-        .into_iter()
-        .filter(|backend| selected.contains(backend))
-        .collect();
     Ok(InstanceConfigUpdateRequest {
-        voice_noise_suppression: Some(VoiceNoiseSuppressionConfigUpdateRequest {
-            enabled: Some(form.bool_value("voice_ns_enabled")),
-            default_backend: form
-                .first("voice_ns_default_backend")
-                .map(|value| {
-                    value.parse().map_err(|_| {
-                        "Default backend must name a supported noise suppression backend".to_owned()
-                    })
-                })
-                .transpose()?,
-            enabled_backends: Some(enabled_backends),
-            allow_user_override: Some(form.bool_value("voice_ns_allow_user_override")),
+        domain_migration: Some(DomainMigrationConfigUpdateRequest {
+            enabled: Some(form.bool_value("domain_migration_enabled")),
             rollout_basis_points: parse_form_number(
                 form,
-                "voice_ns_rollout_basis_points",
+                "domain_migration_rollout_basis_points",
                 "Rollout basis points",
                 0,
                 EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
             )?,
-            rollout_salt: parse_experiment_rollout_salt(form, "voice_ns_rollout_salt")?,
+            rollout_salt: parse_experiment_rollout_salt(form, "domain_migration_rollout_salt")?,
             included_user_ids: Some(parse_experiment_user_ids(
-                form.first("voice_ns_included_user_ids").unwrap_or_default(),
+                form.first("domain_migration_included_user_ids")
+                    .unwrap_or_default(),
                 "Included user IDs",
             )?),
+            included_guild_ids: Some(parse_experiment_user_ids(
+                form.first("domain_migration_included_guild_ids")
+                    .unwrap_or_default(),
+                "Included guild IDs",
+            )?),
+            include_premium_users: Some(form.bool_value("domain_migration_include_premium_users")),
             excluded_user_ids: Some(parse_experiment_user_ids(
-                form.first("voice_ns_excluded_user_ids").unwrap_or_default(),
+                form.first("domain_migration_excluded_user_ids")
+                    .unwrap_or_default(),
                 "Excluded user IDs",
             )?),
-            guild_overrides: Some(parse_voice_noise_suppression_guild_overrides(
-                form.first("voice_ns_guild_overrides").unwrap_or_default(),
-            )?),
-            suppression_strength: parse_form_number(
+            anonymous_rollout_basis_points: parse_form_number(
                 form,
-                "voice_ns_suppression_strength",
-                "Suppression strength",
+                "domain_migration_anonymous_rollout_basis_points",
+                "Anonymous rollout basis points",
                 0,
-                VOICE_NS_SUPPRESSION_STRENGTH_MAX,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
             )?,
+            standalone_forwarding: Some(form.bool_value("domain_migration_standalone_forwarding")),
         }),
         ..Default::default()
     })
 }
 
-fn build_screen_share_delivery_update(
-    form: &MultiValueForm,
-) -> Result<InstanceConfigUpdateRequest, String> {
+fn build_captcha_update(form: &MultiValueForm) -> Result<InstanceConfigUpdateRequest, String> {
     Ok(InstanceConfigUpdateRequest {
-        screen_share_delivery: Some(ScreenShareDeliveryConfigUpdateRequest {
-            enabled: Some(form.bool_value("screen_share_delivery_enabled")),
-            rollout_basis_points: parse_form_number(
+        captcha: Some(CaptchaConfigUpdateRequest {
+            enabled: Some(form.bool_value("captcha_enabled")),
+            cost: parse_form_number(
                 form,
-                "screen_share_delivery_rollout_basis_points",
-                "Rollout basis points",
-                0,
-                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+                "captcha_cost",
+                "Cost",
+                *CAPTCHA_COST_RANGE.start(),
+                *CAPTCHA_COST_RANGE.end(),
             )?,
-            rollout_salt: parse_experiment_rollout_salt(
+            max_counter: parse_form_number(
                 form,
-                "screen_share_delivery_rollout_salt",
+                "captcha_max_counter",
+                "Maximum counter",
+                *CAPTCHA_MAX_COUNTER_RANGE.start(),
+                *CAPTCHA_MAX_COUNTER_RANGE.end(),
             )?,
-            included_user_ids: Some(parse_experiment_user_ids(
-                form.first("screen_share_delivery_included_user_ids")
-                    .unwrap_or_default(),
-                "Included user IDs",
-            )?),
-            excluded_user_ids: Some(parse_experiment_user_ids(
-                form.first("screen_share_delivery_excluded_user_ids")
-                    .unwrap_or_default(),
-                "Excluded user IDs",
-            )?),
-        }),
-        ..Default::default()
-    })
-}
-
-fn build_push_service_delivery_update(
-    form: &MultiValueForm,
-) -> Result<InstanceConfigUpdateRequest, String> {
-    Ok(InstanceConfigUpdateRequest {
-        push_service_delivery: Some(PushServiceDeliveryConfigUpdateRequest {
-            enabled: Some(form.bool_value("push_service_delivery_enabled")),
-            rollout_basis_points: parse_form_number(
-                form,
-                "push_service_delivery_rollout_basis_points",
-                "Rollout basis points",
-                0,
-                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
-            )?,
-            rollout_salt: parse_push_service_delivery_rollout_salt(
-                form,
-                "push_service_delivery_rollout_salt",
-            )?,
-            included_user_ids: Some(parse_experiment_user_ids(
-                form.first("push_service_delivery_included_user_ids")
-                    .unwrap_or_default(),
-                "Included user IDs",
-            )?),
-            excluded_user_ids: Some(parse_experiment_user_ids(
-                form.first("push_service_delivery_excluded_user_ids")
-                    .unwrap_or_default(),
-                "Excluded user IDs",
-            )?),
         }),
         ..Default::default()
     })
@@ -773,6 +688,7 @@ fn build_app_public_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest
                 theme_color: optional("app_theme_color"),
                 status_page_url: optional("app_status_page_url"),
                 status_page_incident_history_url: optional("app_status_page_incident_history_url"),
+                ..Default::default()
             }),
             setup: Some(AppSetupConfigUpdateRequest {
                 configured: Some(form.bool_value("app_setup_configured")),
@@ -818,48 +734,26 @@ fn build_policy_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
     let direct_messages_disabled = form
         .first("policy_direct_messages_disabled")
         .map(|value| value == "true");
+    let guild_create_access = form
+        .first("policy_guild_create_access")
+        .map(|value| value == "true");
     let premium_mode = match form.first("policy_premium_mode") {
         Some("mirror") => Some(PremiumMode::Mirror),
         Some("everyone") => Some(PremiumMode::Everyone),
         _ => None,
     };
     let services = build_services_update(form);
-    let deferred_phone_gate = build_deferred_phone_gate_update(form);
     InstanceConfigUpdateRequest {
         policy: Some(InstancePolicyUpdateRequest {
             single_community_enabled: None,
             single_community_name: None,
             direct_messages_disabled,
+            guild_create_access,
             premium_mode,
             services,
-            deferred_phone_gate,
         }),
         ..Default::default()
     }
-}
-
-fn build_deferred_phone_gate_update(
-    form: &MultiValueForm,
-) -> Option<DeferredPhoneGateUpdateRequest> {
-    let enabled = form
-        .first("policy_deferred_phone_gate_enabled")
-        .map(|value| value == "true");
-    let window_hours = form
-        .first("policy_deferred_phone_gate_window_hours")
-        .and_then(|value| value.parse::<f64>().ok())
-        .filter(|value| *value > 0.0);
-    let member_threshold = form
-        .first("policy_deferred_phone_gate_member_threshold")
-        .and_then(|value| value.parse::<i64>().ok())
-        .filter(|value| *value > 0);
-    if enabled.is_none() && window_hours.is_none() && member_threshold.is_none() {
-        return None;
-    }
-    Some(DeferredPhoneGateUpdateRequest {
-        enabled,
-        window_hours,
-        member_threshold,
-    })
 }
 
 fn build_services_update(form: &MultiValueForm) -> Option<InstanceServicesUpdateRequest> {
@@ -905,14 +799,9 @@ fn build_integrations_update(form: &MultiValueForm) -> InstanceConfigUpdateReque
             youtube: Some(InstanceYoutubeIntegrationUpdateRequest {
                 api_key: clean("integration_youtube_api_key"),
             }),
-            captcha: Some(InstanceCaptchaIntegrationUpdateRequest {
-                provider: clean("integration_captcha_provider"),
-                hcaptcha_site_key: clean("integration_hcaptcha_site_key"),
-                hcaptcha_secret_key: clean("integration_hcaptcha_secret_key"),
-                turnstile_site_key: clean("integration_turnstile_site_key"),
-                turnstile_secret_key: clean("integration_turnstile_secret_key"),
-            }),
-            email: Some(InstanceEmailIntegrationUpdateRequest {
+            email: (form.has_key_starting_with("integration_email_")
+                || form.has_key_starting_with("integration_smtp_"))
+            .then(|| InstanceEmailIntegrationUpdateRequest {
                 enabled: Some(form.bool_value("integration_email_enabled")),
                 provider: Some("smtp".to_owned()),
                 from_email: clean("integration_email_from_email"),
@@ -992,11 +881,7 @@ fn build_single_community_update(enabled: bool) -> InstanceConfigUpdateRequest {
     InstanceConfigUpdateRequest {
         policy: Some(InstancePolicyUpdateRequest {
             single_community_enabled: Some(enabled),
-            single_community_name: None,
-            direct_messages_disabled: None,
-            premium_mode: None,
-            services: None,
-            deferred_phone_gate: None,
+            ..Default::default()
         }),
         ..Default::default()
     }
@@ -1274,6 +1159,37 @@ mod tests {
     use super::*;
 
     #[test]
+    fn build_integrations_update_leaves_email_alone_when_its_fields_are_hidden() {
+        let hidden = build_integrations_update(&MultiValueForm::parse(
+            b"integration_klipy_api_key=&integration_youtube_api_key=",
+        ));
+        let integrations = hidden.integrations.expect("integrations update");
+        assert!(integrations.email.is_none());
+        assert!(integrations.gif.is_some());
+
+        let shown = build_integrations_update(&MultiValueForm::parse(
+            b"integration_email_present=1&integration_smtp_host=smtp.example.com",
+        ));
+        let email = shown
+            .integrations
+            .and_then(|integrations| integrations.email)
+            .expect("email update");
+        assert_eq!(email.enabled, Some(false));
+
+        let from_an_older_page = build_integrations_update(&MultiValueForm::parse(
+            b"integration_klipy_api_key=&integration_smtp_host=smtp.example.com",
+        ));
+        let email = from_an_older_page
+            .integrations
+            .and_then(|integrations| integrations.email)
+            .expect("email update from a page without the presence marker");
+        assert_eq!(
+            email.smtp.and_then(|smtp| smtp.host).as_deref(),
+            Some("smtp.example.com")
+        );
+    }
+
+    #[test]
     fn build_sso_update_keeps_repeated_allowed_domains() {
         let form = MultiValueForm::parse(
             b"sso_enabled=true&sso_auto_provision=on&sso_allowed_domains%5B%5D=example.com&sso_allowed_domains%5B%5D=example.org&sso_display_name= Fluxer ",
@@ -1320,75 +1236,6 @@ mod tests {
         assert_eq!(
             filters.guild_features,
             vec!["COMMUNITY".to_owned(), "NEWS".to_owned()]
-        );
-    }
-
-    #[test]
-    fn build_voice_noise_suppression_update_collects_backends_and_validates_numbers() {
-        let form = MultiValueForm::parse(
-            b"voice_ns_enabled=true&voice_ns_allow_user_override=on&voice_ns_default_backend=rnnoise&voice_ns_enabled_backends%5B%5D=deep_filter&voice_ns_enabled_backends%5B%5D=none&voice_ns_enabled_backends%5B%5D=none&voice_ns_rollout_basis_points=10000&voice_ns_suppression_strength=100&voice_ns_rollout_salt=%20voice-ns-v2%20",
-        );
-        let request = build_voice_noise_suppression_update(&form).expect("valid form");
-        let update = request
-            .voice_noise_suppression
-            .expect("voice noise suppression update");
-        assert_eq!(update.enabled, Some(true));
-        assert_eq!(update.allow_user_override, Some(true));
-        assert_eq!(
-            update.default_backend,
-            Some(NoiseSuppressionBackend::Rnnoise)
-        );
-        assert_eq!(
-            update.enabled_backends,
-            Some(vec![
-                NoiseSuppressionBackend::None,
-                NoiseSuppressionBackend::DeepFilter
-            ])
-        );
-        assert_eq!(update.rollout_basis_points, Some(10_000));
-        assert_eq!(update.suppression_strength, Some(100));
-        assert_eq!(update.rollout_salt, Some("voice-ns-v2".to_owned()));
-    }
-
-    #[test]
-    fn build_voice_noise_suppression_update_leaves_the_feature_inert_when_nothing_is_submitted() {
-        let form = MultiValueForm::parse(b"_csrf=token");
-        let request = build_voice_noise_suppression_update(&form).expect("valid form");
-        assert_eq!(
-            serde_json::to_value(request).expect("serializable update"),
-            serde_json::json!({"voice_noise_suppression": {
-                "enabled": false,
-                "allow_user_override": false,
-                "enabled_backends": [],
-                "included_user_ids": [],
-                "excluded_user_ids": [],
-                "guild_overrides": [],
-            }})
-        );
-    }
-
-    #[test]
-    fn build_voice_noise_suppression_update_reads_user_id_textareas() {
-        let form = MultiValueForm::parse(
-            b"voice_ns_included_user_ids=1500000000000000001%0A1500000000000000002&voice_ns_excluded_user_ids=1500000000000000003%2C%201500000000000000004",
-        );
-        let update = build_voice_noise_suppression_update(&form)
-            .expect("valid form")
-            .voice_noise_suppression
-            .expect("voice noise suppression update");
-        assert_eq!(
-            update.included_user_ids,
-            Some(vec![
-                "1500000000000000001".to_owned(),
-                "1500000000000000002".to_owned()
-            ])
-        );
-        assert_eq!(
-            update.excluded_user_ids,
-            Some(vec![
-                "1500000000000000003".to_owned(),
-                "1500000000000000004".to_owned()
-            ])
         );
     }
 
@@ -1452,207 +1299,17 @@ mod tests {
     }
 
     #[test]
-    fn parse_voice_noise_suppression_guild_overrides_rejects_malformed_lines() {
-        for (line, message) in [
-            ("456", "Guild overrides line 3 must use guild_id=backend"),
-            (
-                "=gate",
-                "Guild overrides line 3 must use a guild ID with 1 to 20 decimal digits",
-            ),
-            (
-                "not-a-guild=gate",
-                "Guild overrides line 3 must use a guild ID with 1 to 20 decimal digits",
-            ),
-            (
-                "999999999999999999999=gate",
-                "Guild overrides line 3 must use a guild ID with 1 to 20 decimal digits",
-            ),
-            (
-                "456=unknown_backend",
-                "Guild overrides line 3 must name a supported backend",
-            ),
-            (
-                "456=",
-                "Guild overrides line 3 must name a supported backend",
-            ),
-            (
-                "123=gate",
-                "Guild overrides line 3 conflicts with an earlier rule for guild 123",
-            ),
-        ] {
-            assert_eq!(
-                parse_voice_noise_suppression_guild_overrides(&format!("\n123=rnnoise\n{line}"))
-                    .expect_err("invalid guild rule"),
-                message,
-                "{line}"
-            );
-        }
-    }
-
-    #[test]
-    fn build_voice_noise_suppression_update_rejects_invalid_numbers() {
-        for (key, message, above_max) in [
-            (
-                "voice_ns_rollout_basis_points",
-                "Rollout basis points must be a whole number between 0 and 10000",
-                "10001",
-            ),
-            (
-                "voice_ns_suppression_strength",
-                "Suppression strength must be a whole number between 0 and 100",
-                "101",
-            ),
-        ] {
-            for value in [
-                "",
-                "%20%20",
-                "abc",
-                "-1",
-                "1.5",
-                "9999999999999999999999999",
-                above_max,
-            ] {
-                let form = MultiValueForm::parse(format!("{key}={value}").as_bytes());
-                assert_eq!(
-                    build_voice_noise_suppression_update(&form).expect_err("invalid number"),
-                    message,
-                    "{key}={value}"
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn build_voice_noise_suppression_update_accepts_padded_numbers() {
-        let form = MultiValueForm::parse(b"voice_ns_rollout_basis_points=%20250%20");
-        let update = build_voice_noise_suppression_update(&form)
-            .expect("valid form")
-            .voice_noise_suppression
-            .expect("voice noise suppression update");
-        assert_eq!(update.rollout_basis_points, Some(250));
-    }
-
-    #[test]
-    fn build_voice_noise_suppression_update_rejects_invalid_rollout_salts() {
-        for salt in [
-            String::new(),
-            "   ".to_owned(),
-            "é".repeat(65),
-            "🎲".repeat(33),
-        ] {
-            let form = MultiValueForm::parse(format!("voice_ns_rollout_salt={salt}").as_bytes());
-            assert_eq!(
-                build_voice_noise_suppression_update(&form).expect_err("invalid salt"),
-                "Rollout salt must be between 1 and 64 characters"
-            );
-        }
-    }
-
-    #[test]
-    fn build_voice_noise_suppression_update_preserves_valid_rollout_salts() {
-        for salt in ["x".to_owned(), "é".repeat(64), "🎲".repeat(32)] {
-            let form =
-                MultiValueForm::parse(format!("voice_ns_rollout_salt=%20{salt}%20").as_bytes());
-            let update = build_voice_noise_suppression_update(&form)
-                .expect("valid form")
-                .voice_noise_suppression
-                .expect("voice noise suppression update");
-            assert_eq!(update.rollout_salt, Some(salt));
-        }
-    }
-
-    #[test]
-    fn parse_voice_noise_suppression_guild_overrides_normalizes_identical_rules() {
-        let overrides = parse_voice_noise_suppression_guild_overrides(
-            " 1600000000000000001 = rnnoise \n\n1600000000000000001=rnnoise\n1600000000000000002=speex\n",
-        ).expect("valid guild rules");
-        assert_eq!(
-            overrides,
-            vec![
-                VoiceNoiseSuppressionGuildOverride {
-                    guild_id: "1600000000000000001".to_owned(),
-                    backend: NoiseSuppressionBackend::Rnnoise,
-                },
-                VoiceNoiseSuppressionGuildOverride {
-                    guild_id: "1600000000000000002".to_owned(),
-                    backend: NoiseSuppressionBackend::Speex,
-                },
-            ]
-        );
-    }
-
-    #[test]
-    fn parse_voice_noise_suppression_guild_overrides_rejects_exceeding_the_cap() {
-        let value = (0..VOICE_NS_MAX_GUILD_OVERRIDES)
-            .map(|index| format!("{index}=gate"))
-            .collect::<Vec<_>>()
-            .join("\n");
-        let overrides =
-            parse_voice_noise_suppression_guild_overrides(&format!("{value}\n199=gate"))
-                .expect("valid guild rules at cap");
-        assert_eq!(overrides.len(), VOICE_NS_MAX_GUILD_OVERRIDES);
-        assert_eq!(
-            overrides.last().map(|entry| entry.guild_id.as_str()),
-            Some("199")
-        );
-        assert_eq!(
-            parse_voice_noise_suppression_guild_overrides(&format!("{value}\n200=gate"))
-                .expect_err("too many guild rules"),
-            "Guild overrides must contain at most 200 unique guilds"
-        );
-    }
-
-    #[test]
-    fn build_voice_noise_suppression_update_reports_invalid_targeting_fields() {
-        for (form, message) in [
-            (
-                "voice_ns_default_backend=unknown",
-                "Default backend must name a supported noise suppression backend",
-            ),
-            (
-                "voice_ns_default_backend=",
-                "Default backend must name a supported noise suppression backend",
-            ),
-            (
-                "voice_ns_enabled_backends%5B%5D=rnnoise&voice_ns_enabled_backends%5B%5D=unknown",
-                "Enabled backends must name supported noise suppression backends",
-            ),
-            (
-                "voice_ns_included_user_ids=123%2Cinvalid",
-                "Included user IDs entry 2 must contain 1 to 20 decimal digits",
-            ),
-            (
-                "voice_ns_excluded_user_ids=123%2Cinvalid",
-                "Excluded user IDs entry 2 must contain 1 to 20 decimal digits",
-            ),
-            (
-                "voice_ns_guild_overrides=123%3Dgate%0A123%3Drnnoise",
-                "Guild overrides line 2 conflicts with an earlier rule for guild 123",
-            ),
-        ] {
-            let form = MultiValueForm::parse(form.as_bytes());
-            assert_eq!(
-                build_voice_noise_suppression_update(&form).expect_err("invalid targeting"),
-                message
-            );
-        }
-    }
-
-    #[test]
-    fn build_screen_share_delivery_update_reads_the_rollout_fields() {
+    fn build_domain_migration_update_reads_the_rollout_fields() {
         let form = MultiValueForm::parse(
-            b"screen_share_delivery_enabled=true&screen_share_delivery_rollout_basis_points=%20250%20&screen_share_delivery_rollout_salt=%20screen-share-delivery-v2%20&screen_share_delivery_included_user_ids=1500000000000000001%0A1500000000000000002&screen_share_delivery_excluded_user_ids=1500000000000000003%2C%201500000000000000004",
+            b"domain_migration_enabled=true&domain_migration_rollout_basis_points=%20250%20&domain_migration_rollout_salt=%20domain-migration-v2%20&domain_migration_included_user_ids=1500000000000000001%0A1500000000000000002&domain_migration_excluded_user_ids=1500000000000000003%2C%201500000000000000004&domain_migration_anonymous_rollout_basis_points=%20100%20&domain_migration_standalone_forwarding=true&domain_migration_included_guild_ids=1500000000000000005%0A1500000000000000006%2C1500000000000000005&domain_migration_include_premium_users=true",
         );
-        let update = build_screen_share_delivery_update(&form)
+        let update = build_domain_migration_update(&form)
             .expect("valid form")
-            .screen_share_delivery
-            .expect("screen share delivery update");
+            .domain_migration
+            .expect("domain migration update");
         assert_eq!(update.enabled, Some(true));
         assert_eq!(update.rollout_basis_points, Some(250));
-        assert_eq!(
-            update.rollout_salt,
-            Some("screen-share-delivery-v2".to_owned())
-        );
+        assert_eq!(update.rollout_salt, Some("domain-migration-v2".to_owned()));
         assert_eq!(
             update.included_user_ids,
             Some(vec![
@@ -1667,52 +1324,157 @@ mod tests {
                 "1500000000000000004".to_owned()
             ])
         );
+        assert_eq!(update.anonymous_rollout_basis_points, Some(100));
+        assert_eq!(update.standalone_forwarding, Some(true));
+        assert_eq!(update.include_premium_users, Some(true));
+        assert_eq!(
+            update.included_guild_ids,
+            Some(vec![
+                "1500000000000000005".to_owned(),
+                "1500000000000000006".to_owned()
+            ])
+        );
     }
 
     #[test]
-    fn build_screen_share_delivery_update_leaves_the_feature_inert_when_nothing_is_submitted() {
+    fn build_domain_migration_update_leaves_the_feature_inert_when_nothing_is_submitted() {
         let form = MultiValueForm::parse(b"_csrf=token");
-        let request = build_screen_share_delivery_update(&form).expect("valid form");
+        let request = build_domain_migration_update(&form).expect("valid form");
         assert_eq!(
             serde_json::to_value(request).expect("serializable update"),
-            serde_json::json!({"screen_share_delivery": {
+            serde_json::json!({"domain_migration": {
                 "enabled": false,
                 "included_user_ids": [],
+                "included_guild_ids": [],
+                "include_premium_users": false,
                 "excluded_user_ids": [],
+                "standalone_forwarding": false,
             }})
         );
     }
 
     #[test]
-    fn build_screen_share_delivery_update_rejects_invalid_rollout_fields() {
+    fn build_domain_migration_update_rejects_invalid_rollout_fields() {
         for (form, message) in [
             (
-                "screen_share_delivery_rollout_basis_points=10001",
+                "domain_migration_rollout_basis_points=10001",
                 "Rollout basis points must be a whole number between 0 and 10000",
             ),
             (
-                "screen_share_delivery_rollout_basis_points=abc",
-                "Rollout basis points must be a whole number between 0 and 10000",
+                "domain_migration_anonymous_rollout_basis_points=10001",
+                "Anonymous rollout basis points must be a whole number between 0 and 10000",
             ),
             (
-                "screen_share_delivery_rollout_salt=%20%20",
+                "domain_migration_anonymous_rollout_basis_points=abc",
+                "Anonymous rollout basis points must be a whole number between 0 and 10000",
+            ),
+            (
+                "domain_migration_rollout_salt=%20%20",
                 "Rollout salt must be between 1 and 64 characters",
             ),
             (
-                "screen_share_delivery_included_user_ids=123%2Cinvalid",
+                format!("domain_migration_rollout_salt={}", "x".repeat(65)).as_str(),
+                "Rollout salt must be between 1 and 64 characters",
+            ),
+            (
+                "domain_migration_rollout_salt=caf%C3%A9",
+                "Rollout salt must use printable ASCII",
+            ),
+            (
+                "domain_migration_included_user_ids=123%2Cinvalid",
                 "Included user IDs entry 2 must contain 1 to 20 decimal digits",
             ),
             (
-                "screen_share_delivery_excluded_user_ids=123%2Cinvalid",
+                "domain_migration_excluded_user_ids=123%2Cinvalid",
                 "Excluded user IDs entry 2 must contain 1 to 20 decimal digits",
             ),
         ] {
             let form = MultiValueForm::parse(form.as_bytes());
             assert_eq!(
-                build_screen_share_delivery_update(&form).expect_err("invalid rollout field"),
+                build_domain_migration_update(&form).expect_err("invalid rollout field"),
                 message
             );
         }
+    }
+
+    #[test]
+    fn build_push_relay_update_reads_the_consent_checkbox() {
+        let unchecked = build_push_relay_update(&MultiValueForm::parse(b"_csrf=token"));
+        assert_eq!(
+            serde_json::to_value(&unchecked).expect("serialize update"),
+            serde_json::json!({"push_relay": {"relay_consent_accepted": false}})
+        );
+
+        let checked = build_push_relay_update(&MultiValueForm::parse(
+            b"_csrf=token&push_relay_consent_accepted=true",
+        ));
+        assert_eq!(
+            serde_json::to_value(&checked).expect("serialize update"),
+            serde_json::json!({"push_relay": {"relay_consent_accepted": true}})
+        );
+    }
+
+    #[test]
+    fn build_captcha_update_reads_the_switch_and_difficulty_fields() {
+        let form = MultiValueForm::parse(
+            b"captcha_enabled=true&captcha_cost=%202000%20&captcha_max_counter=400",
+        );
+        let update = build_captcha_update(&form)
+            .expect("valid form")
+            .captcha
+            .expect("captcha update");
+        assert_eq!(update.enabled, Some(true));
+        assert_eq!(update.cost, Some(2000));
+        assert_eq!(update.max_counter, Some(400));
+    }
+
+    #[test]
+    fn build_captcha_update_turns_the_check_off_when_the_box_is_unchecked() {
+        let form = MultiValueForm::parse(b"_csrf=token");
+        let request = build_captcha_update(&form).expect("valid form");
+        assert_eq!(
+            serde_json::to_value(request).expect("serializable update"),
+            serde_json::json!({"captcha": {"enabled": false}})
+        );
+    }
+
+    #[test]
+    fn build_captcha_update_rejects_difficulty_outside_the_supported_range() {
+        for (form, message) in [
+            (
+                "captcha_cost=999",
+                "Cost must be a whole number between 1000 and 20000",
+            ),
+            (
+                "captcha_cost=20001",
+                "Cost must be a whole number between 1000 and 20000",
+            ),
+            (
+                "captcha_max_counter=99",
+                "Maximum counter must be a whole number between 100 and 20000",
+            ),
+            (
+                "captcha_max_counter=20001",
+                "Maximum counter must be a whole number between 100 and 20000",
+            ),
+        ] {
+            let form = MultiValueForm::parse(form.as_bytes());
+            assert_eq!(
+                build_captcha_update(&form).expect_err("invalid field"),
+                message
+            );
+        }
+    }
+
+    #[test]
+    fn domain_migration_update_rejects_an_invalid_included_guild_id() {
+        let form = MultiValueForm::parse(
+            b"domain_migration_included_guild_ids=1500000000000000005%0Anot-a-guild",
+        );
+        assert_eq!(
+            build_domain_migration_update(&form).expect_err("invalid guild id"),
+            "Included guild IDs entry 2 must contain 1 to 20 decimal digits"
+        );
     }
 
     #[test]

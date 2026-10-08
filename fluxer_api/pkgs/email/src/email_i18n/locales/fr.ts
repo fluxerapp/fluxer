@@ -3,9 +3,17 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_FR_MESSAGES = defineEmailI18nLocaleMessages({
-	"account_disabled_suspicious": {
-		"subject": "Votre compte {product_name} a été temporairement désactivé",
-		"body": "Bonjour {username},\n\nNous avons temporairement désactivé votre compte {product_name} après avoir détecté une activité suspecte.\n\n{reason, select, null {} other {Motif : {reason}}}\n\nPour retrouver l’accès à votre compte, réinitialisez votre mot de passe :\n\n{forgotUrl}\n\nVous pourrez ensuite vous connecter à nouveau.\n\nSi vous pensez qu’il s’agit d’une erreur, contactez notre équipe d’assistance.\n\n– L’équipe de sécurité de {product_name}"
+	"account_deletion_cancelled": {
+		"subject": "La suppression de votre compte {product_name} a été annulée",
+		"body": "Bonjour {username},\n\nLa suppression programmée de votre compte {product_name} a été annulée. Votre compte ne sera pas supprimé.\n\nPour toute question, contactez {safety_email}.\n\n– L’équipe {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Votre compte {product_name} sera supprimé pour inactivité",
+		"body": "Bonjour {username},\n\nVotre compte {product_name} est inactif depuis longtemps. Sa suppression définitive est donc prévue le :\n\n{deletionDate, date, full} à {deletionDate, time, short}{reason, select, null {} other {\n\nMotif : {reason}}}\n\nSi vous souhaitez conserver votre compte, contactez {safety_email} depuis cette adresse e-mail avant cette date.\n\n– L’équipe {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "La suppression de votre compte {product_name} est programmée",
+		"body": "Bonjour {username},\n\nComme vous l’avez demandé, la suppression définitive de votre compte {product_name} est prévue le :\n\n{deletionDate, date, full} à {deletionDate, time, short}{reason, select, null {} other {\n\nMotif : {reason}}}\n\nVotre compte est verrouillé d’ici là. Si vous n’êtes pas à l’origine de cette demande, ou si vous souhaitez conserver votre compte, contactez {safety_email} depuis cette adresse e-mail avant cette date.\n\n– L’équipe {product_name}"
 	},
 	"account_scheduled_deletion": {
 		"subject": "Votre compte {product_name} sera définitivement supprimé",
@@ -37,7 +45,7 @@ const EMAIL_I18N_FR_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "Votre adresse e-mail {product_name} a été modifiée",
-		"body": "Bonjour {username},\n\nL’adresse e-mail de votre compte {product_name} a été remplacée par {newEmail}.\n\nSi vous avez effectué ce changement, vous n’avez rien à faire. Sinon, vous pouvez l’annuler et sécuriser votre compte avec ce lien :\n\n{revertUrl}\n\nVotre ancienne adresse e-mail sera rétablie, toutes vos sessions seront fermées, les numéros de téléphone associés seront supprimés et l’authentification multifacteur sera désactivée. Vous devrez aussi définir un nouveau mot de passe.\n\n– L’équipe de sécurité de {product_name}"
+		"body": "Bonjour {username},\n\nL’adresse e-mail de votre compte {product_name} a été remplacée par {newEmail}.\n\nSi vous avez effectué ce changement, vous n’avez rien à faire. Sinon, vous pouvez l’annuler et sécuriser votre compte avec ce lien :\n\n{revertUrl}\n\nVotre ancienne adresse e-mail sera rétablie, toutes vos sessions seront fermées et l’authentification multifacteur sera désactivée. Vous devrez aussi définir un nouveau mot de passe.\n\n– L’équipe de sécurité de {product_name}"
 	},
 	"email_verification": {
 		"subject": "Vérifiez votre adresse e-mail {product_name}",
@@ -65,7 +73,7 @@ const EMAIL_I18N_FR_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Confirmez la modification de votre mot de passe {product_name}",
-		"body": "Bonjour {username},\n\nNous avons reçu une demande de modification du mot de passe de votre compte {product_name}.\n\nPour confirmer ce changement, saisissez ce code dans l’application :\n\n{code}\n\nCe code expire à {expiresAt}.\n\nSi vous n’êtes pas à l’origine de cette demande, quelqu’un a peut-être accès à votre compte. Changez immédiatement votre mot de passe et activez l’authentification à deux facteurs.\n\n– L’équipe {product_name}"
+		"body": "Bonjour {username},\n\nNous avons reçu une demande de modification du mot de passe de votre compte {product_name}.\n\nPour confirmer ce changement, saisissez ce code dans l’application :\n\n{code}\n\nCe code expire le {expiresAt, date, full} à {expiresAt, time, short}.\n\nSi vous n’êtes pas à l’origine de cette demande, quelqu’un a peut-être accès à votre compte. Changez immédiatement votre mot de passe et activez l’authentification à deux facteurs.\n\n– L’équipe {product_name}"
 	},
 	"password_reset": {
 		"subject": "Réinitialiser votre mot de passe {product_name}",

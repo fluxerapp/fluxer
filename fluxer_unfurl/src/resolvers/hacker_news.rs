@@ -13,7 +13,7 @@ use url::Url;
 const HN_API_BASE: &str = "https://hacker-news.firebaseio.com/v0";
 const HN_SITE_BASE: &str = "https://news.ycombinator.com";
 const HN_COLOR: u32 = 0xFF6600;
-const HN_ICON_PATH: &str = "embeds/icons/hn.webp";
+const HN_ICON_URL: &str = "https://fluxer.app/static/img/app-hn-icon.4237980ebe2ba783.webp";
 const MAX_DESCRIPTION: usize = 400;
 
 pub struct HackerNewsResolver;
@@ -89,11 +89,7 @@ impl Resolver for HackerNewsResolver {
                 embed.timestamp = Some(format_unix_timestamp(time));
             }
 
-            embed.footer = Some(EmbedFooter {
-                text: "Hacker News".to_owned(),
-                icon_url: ctx.static_asset_url(HN_ICON_PATH),
-                ..Default::default()
-            });
+            embed.footer = Some(hn_footer(ctx.self_hosted));
 
             let has_title = item
                 .item_type
@@ -122,6 +118,14 @@ impl Resolver for HackerNewsResolver {
                 embeds: vec![embed],
             })
         })
+    }
+}
+
+fn hn_footer(self_hosted: bool) -> EmbedFooter {
+    EmbedFooter {
+        text: "Hacker News".to_owned(),
+        icon_url: (!self_hosted).then(|| HN_ICON_URL.to_owned()),
+        ..Default::default()
     }
 }
 
@@ -275,6 +279,13 @@ mod tests {
         assert!(!r.matches(&u("https://news.ycombinator.com/newest")));
         assert!(!r.matches(&u("https://news.ycombinator.com/user?id=dang")));
         assert!(!r.matches(&u("https://news.ycombinator.com/")));
+    }
+
+    #[test]
+    fn hn_footer_icon_is_hosted_only() {
+        assert_eq!(hn_footer(false).icon_url.as_deref(), Some(HN_ICON_URL));
+        assert_eq!(hn_footer(true).icon_url, None);
+        assert_eq!(hn_footer(true).text, "Hacker News");
     }
 
     #[test]

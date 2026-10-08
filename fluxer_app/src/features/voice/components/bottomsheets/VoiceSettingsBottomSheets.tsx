@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import sharedStyles from '@app/features/app/components/bottomsheets/shared.module.css';
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import {
 	DeafenIcon,
@@ -16,7 +17,6 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import type {MenuGroupType, MenuSheetItem} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {MenuBottomSheet} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {CameraPreviewModalInRoom} from '@app/features/voice/components/modals/CameraPreviewModal';
@@ -109,12 +109,15 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 		const handleOpenVoiceSettings = () => {
 			ModalCommands.pushAfterBottomSheetClose(
 				onClose,
-				modal(() => (
-					<UserSettingsModal
-						initialTab="voice_video"
-						data-flx="voice.voice-settings-bottom-sheets.handle-open-voice-settings.user-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<UserSettingsModal
+							initialTab="voice_video"
+							data-flx="voice.voice-settings-bottom-sheets.handle-open-voice-settings.user-settings-modal"
+						/>
+					),
+					'user-settings',
+				),
 			);
 		};
 		const menuGroups: Array<MenuGroupType> = [];
@@ -130,12 +133,15 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 				onClick: () => {
 					ModalCommands.pushAfterBottomSheetClose(
 						onClose,
-						modal(() => (
-							<UserSettingsModal
-								initialTab="voice_video"
-								data-flx="voice.voice-settings-bottom-sheets.on-click.user-settings-modal"
-							/>
-						)),
+						modal(
+							() => (
+								<UserSettingsModal
+									initialTab="voice_video"
+									data-flx="voice.voice-settings-bottom-sheets.on-click.user-settings-modal"
+								/>
+							),
+							'user-settings',
+						),
 					);
 				},
 			},
@@ -150,12 +156,15 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 				onClick: () => {
 					ModalCommands.pushAfterBottomSheetClose(
 						onClose,
-						modal(() => (
-							<UserSettingsModal
-								initialTab="voice_video"
-								data-flx="voice.voice-settings-bottom-sheets.on-click.user-settings-modal--2"
-							/>
-						)),
+						modal(
+							() => (
+								<UserSettingsModal
+									initialTab="voice_video"
+									data-flx="voice.voice-settings-bottom-sheets.on-click.user-settings-modal--2"
+								/>
+							),
+							'user-settings',
+						),
 					);
 				},
 			},
@@ -262,12 +271,15 @@ export const VoiceCameraSettingsBottomSheet: React.FC<VoiceCameraSettingsBottomS
 		const handleOpenVideoSettings = () => {
 			ModalCommands.pushAfterBottomSheetClose(
 				onClose,
-				modal(() => (
-					<UserSettingsModal
-						initialTab="voice_video"
-						data-flx="voice.voice-settings-bottom-sheets.handle-open-video-settings.user-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<UserSettingsModal
+							initialTab="voice_video"
+							data-flx="voice.voice-settings-bottom-sheets.handle-open-video-settings.user-settings-modal"
+						/>
+					),
+					'user-settings',
+				),
 			);
 		};
 		const menuGroups: Array<MenuGroupType> = [];
@@ -283,12 +295,15 @@ export const VoiceCameraSettingsBottomSheet: React.FC<VoiceCameraSettingsBottomS
 				onClick: () => {
 					ModalCommands.pushAfterBottomSheetClose(
 						onClose,
-						modal(() => (
-							<UserSettingsModal
-								initialTab="voice_video"
-								data-flx="voice.voice-settings-bottom-sheets.on-click.user-settings-modal--3"
-							/>
-						)),
+						modal(
+							() => (
+								<UserSettingsModal
+									initialTab="voice_video"
+									data-flx="voice.voice-settings-bottom-sheets.on-click.user-settings-modal--3"
+								/>
+							),
+							'user-settings',
+						),
 					);
 				},
 			},
@@ -406,12 +421,15 @@ export const VoiceMoreOptionsBottomSheet: React.FC<VoiceMoreOptionsBottomSheetPr
 				onClick: () => {
 					ModalCommands.pushAfterBottomSheetClose(
 						onClose,
-						modal(() => (
-							<UserSettingsModal
-								initialTab="voice_video"
-								data-flx="voice.voice-settings-bottom-sheets.on-click.user-settings-modal--4"
-							/>
-						)),
+						modal(
+							() => (
+								<UserSettingsModal
+									initialTab="voice_video"
+									data-flx="voice.voice-settings-bottom-sheets.on-click.user-settings-modal--4"
+								/>
+							),
+							'user-settings',
+						),
 					);
 				},
 			},

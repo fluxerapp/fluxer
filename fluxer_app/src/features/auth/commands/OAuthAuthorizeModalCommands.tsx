@@ -3,6 +3,7 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {OAuthAuthorizeModal} from '@app/features/auth/components/modals/OAuthAuthorizeModal';
 import Authentication from '@app/features/auth/state/Authentication';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 
@@ -17,7 +18,7 @@ function addEndpointHost(hosts: Set<string>, endpoint: string | null | undefined
 
 function getAllowedOAuthAuthorizeHosts(): ReadonlySet<string> {
 	const hosts = new Set<string>();
-	if (typeof location !== 'undefined') {
+	if (typeof location !== 'undefined' && !isDesktopLocalAppDocument()) {
 		hosts.add(location.host.toLowerCase());
 	}
 	addEndpointHost(hosts, RuntimeConfig.webAppBaseUrl);

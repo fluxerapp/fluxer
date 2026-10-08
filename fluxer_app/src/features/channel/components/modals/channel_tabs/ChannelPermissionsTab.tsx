@@ -22,6 +22,7 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import Permission from '@app/features/permissions/state/Permission';
 import PermissionLayout from '@app/features/permissions/state/PermissionLayout';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -34,6 +35,7 @@ import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {flip, offset, shift, useClick, useDismiss, useFloating, useInteractions, useRole} from '@floating-ui/react';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {THREAD_PERMISSIONS, withImplicitThreadBits} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {matchSorter} from 'match-sorter';
@@ -115,7 +117,7 @@ const ChannelPermissionsTab: React.FC<{channelId: string}> = observer(({channelI
 	}, [isAddOverrideOpen, channelId]);
 	const currentUserPermissions = useMemo(() => {
 		if (!guild || !currentUser || !channel) return 0n;
-		return PermissionUtils.computePermissions(currentUser.id, channel.toJSON());
+		return withImplicitThreadBits(PermissionUtils.computePermissions(currentUser.id, channel.toJSON()));
 	}, [guild, currentUser, channel]);
 	const currentUserMember = useMemo(() => {
 		if (!guild || !currentUser) return null;
@@ -291,6 +293,7 @@ const ChannelPermissionsTab: React.FC<{channelId: string}> = observer(({channelI
 	const handleSave = useCallback(async () => {
 		if (!channel || !canManageChannels || !canManageRoles) return;
 		try {
+			const retiredPermissions = ThreadGuilds.isActive(channel.guildId) ? 0n : THREAD_PERMISSIONS;
 			const updatedOverwrites = overwritesWithUpdates
 				.filter((ow) => !deletedOverwriteIds.has(ow.id))
 				.filter((ow) => {
@@ -302,8 +305,8 @@ const ChannelPermissionsTab: React.FC<{channelId: string}> = observer(({channelI
 				.map((ow): {id: string; type: 0 | 1; allow: string; deny: string} => ({
 					id: ow.id,
 					type: ow.type,
-					allow: ow.allow.toString(),
-					deny: ow.deny.toString(),
+					allow: (ow.allow & ~retiredPermissions).toString(),
+					deny: (ow.deny & ~retiredPermissions).toString(),
 				}));
 			await ChannelCommands.updatePermissionOverwrites(channel.id, updatedOverwrites);
 			setOverwriteUpdates(new Map());
@@ -402,10 +405,11 @@ const ChannelPermissionsTab: React.FC<{channelId: string}> = observer(({channelI
 		},
 		[selectedOverwrite, handleOverwriteUpdate, applyPermissionState],
 	);
+	const threadsActive = ThreadGuilds.isActive(channel?.guildId);
 	const permissionSpecs = useMemo(() => {
 		if (!channel) return [];
-		return PermissionUtils.generateChannelPermissionSpecs(i18n, channel.type);
-	}, [channel, i18n.locale]);
+		return PermissionUtils.generateChannelPermissionSpecs(i18n, channel.type, {threads: threadsActive});
+	}, [channel, i18n.locale, threadsActive]);
 	const filteredPermissionSpecs = useMemo(() => {
 		if (!permissionSearchQuery) return permissionSpecs;
 		return permissionSpecs

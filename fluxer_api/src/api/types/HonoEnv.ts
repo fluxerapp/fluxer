@@ -15,6 +15,7 @@ import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {MessageRequestService} from '@app/api/channel/services/message/MessageRequestService';
 import type {StreamPreviewService} from '@app/api/channel/services/StreamPreviewService';
 import type {StreamService} from '@app/api/channel/services/StreamService';
+import type {ThreadService} from '@app/api/channel/services/thread/ThreadService';
 import type {ConnectionRequestService} from '@app/api/connection/ConnectionRequestService';
 import type {ConnectionService} from '@app/api/connection/ConnectionService';
 import type {NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
@@ -57,6 +58,7 @@ import type {ReportRequestService} from '@app/api/report/ReportRequestService';
 import type {ReportService} from '@app/api/report/ReportService';
 import type {RpcService} from '@app/api/rpc/RpcService';
 import type {SearchService} from '@app/api/search/SearchService';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import type {StripeService} from '@app/api/stripe/StripeService';
 import type {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
 import type {ThemeService} from '@app/api/theme/ThemeService';
@@ -75,6 +77,7 @@ import type {UserContentRequestService} from '@app/api/user/services/UserContent
 import type {UserRelationshipRequestService} from '@app/api/user/services/UserRelationshipRequestService';
 import type {UserService} from '@app/api/user/services/UserService';
 import type {ClientIpResolution} from '@app/api/utils/RequestClientIp';
+import type {ChannelFollowService} from '@app/api/webhook/ChannelFollowService';
 import type {SweegoWebhookService} from '@app/api/webhook/SweegoWebhookService';
 import type {WebhookRequestService} from '@app/api/webhook/WebhookRequestService';
 import type {WebhookService} from '@app/api/webhook/WebhookService';
@@ -105,6 +108,7 @@ export interface HonoEnv {
 		adminUserId: UserID;
 		adminUserAcls: Set<string>;
 		authTokenType?: 'session' | 'bearer' | 'bot' | 'admin_api_key';
+		clientFeatures: ReadonlySet<string>;
 		authViaCookie?: boolean;
 		authToken?: string;
 		authUserId?: string;
@@ -121,6 +125,7 @@ export interface HonoEnv {
 		cacheService: ICacheService;
 		channelService: ChannelService;
 		channelRequestService: ChannelRequestService;
+		threadService: ThreadService;
 		messageRequestService: MessageRequestService;
 		channelRepository: IChannelRepository;
 		connectionService: ConnectionService;
@@ -173,9 +178,11 @@ export interface HonoEnv {
 		userRelationshipRequestService: UserRelationshipRequestService;
 		sweegoWebhookService: SweegoWebhookService;
 		webhookService: WebhookService;
+		channelFollowService: ChannelFollowService;
 		webhookRequestService: WebhookRequestService;
 		workerService: IWorkerService<WorkerTaskName>;
 		stripeService: StripeService;
+		storeEntitlementService: StoreEntitlementService;
 		ageVerificationService: AgeVerificationService;
 		applicationService: ApplicationService;
 		oauth2Service: OAuth2Service;
@@ -185,6 +192,7 @@ export interface HonoEnv {
 		oauth2TokenRepository: IOAuth2TokenRepository;
 		botAuthService: BotAuthService;
 		sudoModeValid: boolean;
+		captchaVerified?: boolean;
 		sudoModeToken: string | null;
 		instanceConfigRepository: InstanceConfigRepository;
 		singleCommunityService: SingleCommunityService;
@@ -192,6 +200,7 @@ export interface HonoEnv {
 		requestLocale: string;
 		errorI18nService: ErrorI18nService;
 		channelUpdateType?: number;
+		channelUpdateGuildId?: string;
 	};
 }
 

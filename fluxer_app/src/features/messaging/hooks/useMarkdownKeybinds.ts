@@ -5,6 +5,7 @@ import Keybind, {
 	type KeybindCommand,
 	type KeyCombo,
 } from '@app/features/input/state/InputKeybind';
+import {resolveKeybindCommand} from '@app/features/input/state/input_keybind/KeybindCommands';
 import {replaceTextRange, setTextSelectionSoon} from '@app/features/messaging/utils/TextInputEditUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import type React from 'react';
@@ -123,11 +124,12 @@ const getConflictingKeybindActions = (options: MarkdownKeybindScopeOptions = {})
 		}
 	}
 	for (const entry of Keybind.getCustomKeybinds() as ReadonlyArray<CustomKeybindEntry>) {
-		if (!entry.action || !entry.enabled) continue;
-		if (shouldPreserveConflictingAction(entry.action, options)) continue;
+		const entryAction = resolveKeybindCommand(entry.action);
+		if (entryAction === null || !entry.enabled) continue;
+		if (shouldPreserveConflictingAction(entryAction, options)) continue;
 		for (const {combo: shortcutCombo} of MARKDOWN_FORMATTING_SHORTCUTS) {
 			if (doesStoredComboMatchShortcut(entry.combo, shortcutCombo)) {
-				actions.add(entry.action);
+				actions.add(entryAction);
 				break;
 			}
 		}

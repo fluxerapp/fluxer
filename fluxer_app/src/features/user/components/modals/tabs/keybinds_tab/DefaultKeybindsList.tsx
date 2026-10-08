@@ -5,6 +5,8 @@ import Keybind, {
 	type KeybindConfig,
 	type KeybindSection,
 } from '@app/features/input/state/InputKeybind';
+import {resolveKeybindCommand} from '@app/features/input/state/input_keybind/KeybindCommands';
+import {isActiveCustomKeybind, isBuiltinDisableMarker} from '@app/features/input/state/KeybindResolution';
 import styles from '@app/features/user/components/modals/tabs/KeybindsTab.module.css';
 import {DefaultShortcutRow} from '@app/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow';
 import {
@@ -52,13 +54,14 @@ export const DefaultKeybindsList: React.FC<{searchQuery: string}> = observer(({s
 	const {i18n} = useLingui();
 	const defaults = Keybind.getDefaults();
 	const customKeybinds = Keybind.getCustomKeybinds();
-	const overriddenActions = useMemo(() => {
-		const set = new Set<KeybindCommand>();
-		for (const entry of customKeybinds) {
-			if (entry.action) set.add(entry.action);
-		}
-		return set;
-	}, [customKeybinds]);
+	const overriddenActions = new Set<KeybindCommand>();
+	const disabledActions = new Set<KeybindCommand>();
+	for (const entry of customKeybinds) {
+		const action = resolveKeybindCommand(entry.action);
+		if (action === null) continue;
+		if (isActiveCustomKeybind(entry)) overriddenActions.add(action);
+		else if (isBuiltinDisableMarker(entry)) disabledActions.add(action);
+	}
 	const normalized = normalizeQuery(searchQuery);
 	const sectionLabels: Record<KeybindSection, string> = {
 		defaults: i18n._(DEFAULT_SHORTCUTS_DESCRIPTOR),
@@ -124,6 +127,7 @@ export const DefaultKeybindsList: React.FC<{searchQuery: string}> = observer(({s
 									key={Array.isArray(row) ? `${row[0].action}-${row[1].action}-${idx}` : `${row.action}-${idx}`}
 									row={row}
 									overriddenActions={overriddenActions}
+									disabledActions={disabledActions}
 									data-flx="user.keybinds-tab.default-keybinds-list.default-shortcut-row"
 								/>
 							))}

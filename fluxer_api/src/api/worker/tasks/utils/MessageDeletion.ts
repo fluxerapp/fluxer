@@ -2,6 +2,8 @@
 
 import {type ChannelID, createChannelID, type MessageID} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {withThreadContext} from '@app/api/channel/services/ChannelGatewayDispatch';
+import {decrementThreadMessageCount} from '@app/api/channel/services/message/MessageHelpers';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 
 interface BulkDeleteDispatcherDeps {
@@ -30,15 +32,16 @@ export function createBulkDeleteDispatcher({channelRepository, gatewayService, b
 			const channelId = createChannelID(BigInt(channelIdStr));
 			const channel = await channelRepository.findUnique(channelId);
 			if (channel) {
+				await decrementThreadMessageCount(channelRepository, channel, messageIdsBatch);
 				const payloadIds = messageIdsBatch.map((id) => id.toString());
 				if (channel.guildId) {
 					await gatewayService.dispatchGuild({
 						guildId: channel.guildId,
 						event: 'MESSAGE_DELETE_BULK',
-						data: {
+						data: withThreadContext(channel, {
 							channel_id: channelIdStr,
 							ids: payloadIds,
-						},
+						}),
 					});
 				} else {
 					for (const recipientId of channel.recipientIds) {

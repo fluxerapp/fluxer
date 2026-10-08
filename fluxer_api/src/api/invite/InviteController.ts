@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID, createGuildID, createInviteCode} from '@app/api/BrandedTypes';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -82,7 +83,7 @@ export function InviteController(app: HonoApp) {
 			const inviteCode = createInviteCode(ctx.req.valid('param').invite_code);
 			const inviteRequestService = ctx.get('inviteRequestService');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
-			await inviteRequestService.deleteInvite({userId, inviteCode, auditLogReason});
+			await inviteRequestService.deleteInvite({viewer: viewerFromCtx(ctx), userId, inviteCode, auditLogReason});
 			return ctx.body(null, 204);
 		},
 	);
@@ -110,6 +111,7 @@ export function InviteController(app: HonoApp) {
 			const requestCache = ctx.get('requestCache');
 			return ctx.json(
 				await inviteRequestService.createChannelInvite({
+					viewer: viewerFromCtx(ctx),
 					inviterId: userId,
 					channelId,
 					requestCache,
@@ -139,7 +141,9 @@ export function InviteController(app: HonoApp) {
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const inviteRequestService = ctx.get('inviteRequestService');
 			const requestCache = ctx.get('requestCache');
-			return ctx.json(await inviteRequestService.listChannelInvites({userId, channelId, requestCache}));
+			return ctx.json(
+				await inviteRequestService.listChannelInvites({viewer: viewerFromCtx(ctx), userId, channelId, requestCache}),
+			);
 		},
 	);
 	app.get(

@@ -24,7 +24,7 @@ enum RequestedRange {
     Unsatisfiable,
 }
 
-pub(super) async fn stream_file(
+pub(crate) async fn stream_file(
     path: &Path,
     request_headers: &HeaderMap,
     entity_tag: Option<&str>,

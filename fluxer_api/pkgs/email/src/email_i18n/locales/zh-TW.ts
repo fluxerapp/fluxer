@@ -3,9 +3,17 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
-	"account_disabled_suspicious": {
-		"subject": "您的 {product_name} 帳號已暫時停用",
-		"body": "哈囉 {username}，\n\n我們偵測到您的 {product_name} 帳號有可疑活動，因此已暫時停用您的帳號。\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n若要重新取得帳號存取權，您需要重設密碼：\n\n{forgotUrl}\n\n重設密碼後，您將可以再次登入。\n\n如果您認為這是誤判，請聯絡我們的支援團隊。\n\n– {product_name} 安全團隊"
+	"account_deletion_cancelled": {
+		"subject": "您的 {product_name} 帳號已取消刪除",
+		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號的排定刪除已取消。您的帳號不會被刪除。\n\n如有任何疑問，請聯絡 {safety_email}。\n\n– {product_name} 團隊"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "您的 {product_name} 帳號將因長期未使用而刪除",
+		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號已長期未使用，因此已排定於以下時間永久刪除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n如果您想保留帳號，請在該日期前使用此電子郵件地址聯絡 {safety_email}。\n\n– {product_name} 團隊"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "您的 {product_name} 帳號已排定刪除",
+		"body": "哈囉 {username}，\n\n依照您的要求，您的 {product_name} 帳號已排定於以下時間永久刪除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n在此之前，您的帳號將被鎖定。如果您沒有提出此要求，或想保留帳號，請在該日期前使用此電子郵件地址聯絡 {safety_email}。\n\n– {product_name} 團隊"
 	},
 	"account_scheduled_deletion": {
 		"subject": "您的 {product_name} 帳號將被永久刪除",
@@ -37,7 +45,7 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "您的 {product_name} 電子郵件已變更",
-		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號電子郵件地址已變更為 {newEmail}。\n\n如果您進行了此變更，則無需採取任何行動。如果您沒有進行此變更，可以使用此連結還原變更並保護您的帳號安全：\n\n{revertUrl}\n\n這將會還原您先前的電子郵件、將您從所有裝置登出、移除連結的電話號碼、停用多重要素驗證，並要求您設定新密碼。\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號電子郵件地址已變更為 {newEmail}。\n\n如果您進行了此變更，則無需採取任何行動。如果您沒有進行此變更，可以使用此連結還原變更並保護您的帳號安全：\n\n{revertUrl}\n\n這將會還原您先前的電子郵件、將您從所有裝置登出、停用多重要素驗證，並要求您設定新密碼。\n\n– {product_name} 安全團隊"
 	},
 	"email_verification": {
 		"subject": "驗證您的 {product_name} 電子郵件地址",
@@ -65,7 +73,7 @@ const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "確認您的 {product_name} 密碼變更",
-		"body": "哈囉 {username}，\n\n我們收到變更您 {product_name} 帳號密碼的請求。\n\n若要確認此變更，請在應用程式中輸入此驗證碼：\n\n{code}\n\n此驗證碼將於 {expiresAt} 失效。\n\n如果您沒有提出此要求，可能有人已取得您帳號的存取權。請立即變更您的密碼並啟用雙重驗證。\n\n– {product_name} 團隊"
+		"body": "哈囉 {username}，\n\n我們收到變更您 {product_name} 帳號密碼的請求。\n\n若要確認此變更，請在應用程式中輸入此驗證碼：\n\n{code}\n\n此驗證碼將於 {expiresAt, date, full} {expiresAt, time, short} 失效。\n\n如果您沒有提出此要求，可能有人已取得您帳號的存取權。請立即變更您的密碼並啟用雙重驗證。\n\n– {product_name} 團隊"
 	},
 	"password_reset": {
 		"subject": "重設您的 {product_name} 密碼",

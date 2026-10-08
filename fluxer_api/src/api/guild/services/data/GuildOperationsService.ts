@@ -3,11 +3,16 @@
 import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createRoleID, guildIdToRoleId} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {
+	type ChannelFollowerRemovalCopyMode,
+	scheduleDeletedChannelFollowerRemoval,
+} from '@app/api/channel/services/ChannelFollowers';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import {BatchBuilder} from '@app/api/database/CassandraQueryExecution';
 import type {PermissionOverwrite} from '@app/api/database/types/ChannelTypes';
 import type {GuildRow} from '@app/api/database/types/GuildTypes';
+import {guildActive, isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import {mapGuildToGuildResponse, mapGuildToPartialResponse} from '@app/api/guild/GuildModel';
 import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
@@ -22,15 +27,18 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getKVThreadAutoArchiveQueue} from '@app/api/middleware/ServiceSingletons';
 import {Guild} from '@app/api/models/Guild';
 import type {User} from '@app/api/models/User';
 import {getGuildSearchService} from '@app/api/SearchFactory';
 import type {GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {deleteThreadSearchDocuments} from '@app/api/search/thread/ThreadSearchService';
 import {Channels, ChannelsByGuild, GuildMembers, GuildMembersByUserId, GuildRoles, Guilds} from '@app/api/Tables';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
 import {addGuildToUncategorizedFolder, removeGuildFromUserFolders} from '@app/api/user/utils/GuildFolderUtils';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ALL_PERMISSIONS, ChannelTypes, DEFAULT_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -50,7 +58,13 @@ import {
 	MAX_GUILD_ROLES,
 	VOICE_CHANNEL_BITRATE_DEFAULT,
 	VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
+	VOICE_CHANNEL_USER_LIMIT_MAX,
 } from '@fluxer/constants/src/LimitConstants';
+import {
+	DEFAULT_THREAD_PERMISSIONS,
+	THREAD_AWARE_ALL_PERMISSIONS,
+	THREAD_PERMISSIONS,
+} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {DEFAULT_GUILD_FOLDER_ICON} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
@@ -161,9 +175,13 @@ function setsEqual(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
 }
 
 const TEMPLATE_AFK_TIMEOUT_MIN_SECONDS = 60;
+const THREAD_PURGE_CONCURRENCY = 8;
 const TEMPLATE_AFK_TIMEOUT_MAX_SECONDS = 3600;
-const THE_OTHER_PLATFORM_GUILD_ANNOUNCEMENT_CHANNEL_TYPE = 5;
 const THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE = 13;
+
+function isSystemChannelType(type: number): boolean {
+	return type === ChannelTypes.GUILD_TEXT || type === ChannelTypes.GUILD_ANNOUNCEMENT;
+}
 
 export class GuildOperationsService {
 	constructor(
@@ -405,6 +423,9 @@ export class GuildOperationsService {
 		);
 		batch.addPrepared(GuildMembersByUserId.insert({user_id: user.id, guild_id: guildId}));
 		await batch.execute();
+		if (guildActive(guildId)) {
+			await this.channelRepository.threads.ensureGuildMarker(guildId, {permsSeededAt: new Date()});
+		}
 		const guild = new Guild(guildData);
 		await this.gatewayService.startGuild(guildId);
 		await this.gatewayService.joinGuild({userId: user.id, guildId});
@@ -525,7 +546,7 @@ export class GuildOperationsService {
 						ValidationErrorCodes.SYSTEM_CHANNEL_MUST_BE_IN_GUILD,
 					);
 				}
-				if (systemChannel.type !== ChannelTypes.GUILD_TEXT) {
+				if (!isSystemChannelType(systemChannel.type)) {
 					throw InputValidationError.fromCode('system_channel_id', ValidationErrorCodes.SYSTEM_CHANNEL_MUST_BE_TEXT);
 				}
 				patch.system_channel_id = systemChannelId;
@@ -735,17 +756,21 @@ export class GuildOperationsService {
 		if (!guildData || guildData.owner_id !== user.id.toString()) {
 			throw new MissingPermissionsError();
 		}
-		await this.performGuildDeletion(guildId);
+		await this.performGuildDeletion(guildId, 'source_deleted');
 	}
 
 	async deleteGuildById(guildId: GuildID): Promise<void> {
-		await this.performGuildDeletion(guildId);
+		await this.performGuildDeletion(guildId, 'purge');
 	}
 
-	private async performGuildDeletion(guildId: GuildID): Promise<void> {
+	private async performGuildDeletion(guildId: GuildID, copyMode: ChannelFollowerRemovalCopyMode): Promise<void> {
 		const guild = await this.guildRepository.findUnique(guildId);
 		if (!guild) {
 			throw new UnknownGuildError();
+		}
+		const channels = await this.channelRepository.listGuildChannels(guildId, 'complete');
+		for (const channel of channels) {
+			await scheduleDeletedChannelFollowerRemoval({channel, crossposts: this.channelRepository.crossposts, copyMode});
 		}
 		const members = await this.guildRepository.listMembers(guildId);
 		await this.gatewayService.dispatchGuild({
@@ -776,15 +801,35 @@ export class GuildOperationsService {
 		await Promise.all(invites.map((invite) => this.inviteRepository.delete(invite.code)));
 		const webhooks = await this.webhookRepository.listByGuild(guildId);
 		await Promise.all(webhooks.map((webhook) => this.webhookRepository.delete(webhook.id)));
-		const channels = await this.channelRepository.listGuildChannels(guildId);
+		const threadIds = await this.channelRepository.threads.listGuildThreadIds(guildId, {parents: channels});
+		for (const channel of channels) {
+			await this.channelService.attachments.purgeChannelAttachments(channel);
+		}
 		await Promise.all(channels.map((channel) => this.channelRepository.deleteAllChannelMessages(channel.id)));
 		await Promise.all(
 			channels.map((channel) => deleteChannelMessageSearchDocuments(channel.id, {context: {source: 'guild_delete'}})),
 		);
-		await Promise.all(channels.map((channel) => this.channelService.attachments.purgeChannelAttachments(channel)));
 		const discoveryRow = await this.discoveryRepository.findByGuildId(guildId);
 		if (discoveryRow) {
 			await this.discoveryRepository.deleteByGuildId(guildId, discoveryRow.status, discoveryRow.applied_at);
+		}
+		if (threadIds.length > 0) {
+			const threadChannels = new Map(
+				(await this.channelRepository.listChannels(threadIds)).map((channel) => [channel.id, channel]),
+			);
+			await mapWithConcurrency(threadIds, THREAD_PURGE_CONCURRENCY, async (threadId) => {
+				const thread = threadChannels.get(threadId);
+				if (thread) {
+					await deleteChannelMessageSearchDocuments(threadId, {context: {source: 'guild_delete'}});
+					await this.channelService.attachments.purgeChannelAttachments(thread);
+				}
+				await this.channelRepository.threads.purgeThread(threadId);
+			});
+			await deleteThreadSearchDocuments(threadIds);
+		}
+		if (await isTainted(guildId, {fresh: true})) {
+			await this.channelRepository.threads.purgeGuild(guildId);
+			await getKVThreadAutoArchiveQueue().removeGuild(guildId);
 		}
 		await this.guildRepository.delete(guildId, guild.ownerId);
 		await this.gatewayService.stopGuild(guildId);
@@ -828,7 +873,7 @@ export class GuildOperationsService {
 					position,
 					owner_id: null,
 					recipient_ids: null,
-					nsfw: false,
+					nsfw: null,
 					content_warning_level: null,
 					content_warning_text: null,
 					rate_limit_per_user: 0,
@@ -886,7 +931,7 @@ export class GuildOperationsService {
 				guild_id: guildId,
 				role_id: guildIdToRoleId(guildId),
 				name: '@everyone',
-				permissions: DEFAULT_PERMISSIONS,
+				permissions: guildActive(guildId) ? DEFAULT_PERMISSIONS | DEFAULT_THREAD_PERMISSIONS : DEFAULT_PERMISSIONS,
 				position: 0,
 				hoist_position: null,
 				color: 0,
@@ -962,9 +1007,19 @@ export class GuildOperationsService {
 				'[GuildOperationsService] Template import skipped unsupported channel types',
 			);
 		}
+		const threadsActive = guildActive(guildId);
+		const permissionMask = threadsActive ? THREAD_AWARE_ALL_PERMISSIONS : ALL_PERMISSIONS;
+		const templateEveryonePermissions =
+			this.parseTemplatePermissionBitfield(
+				everyoneRole?.permissions_new ?? everyoneRole?.permissions,
+				permissionMask,
+			) || DEFAULT_PERMISSIONS;
 		const everyonePermissions =
-			this.parseTemplatePermissionBitfield(everyoneRole?.permissions_new ?? everyoneRole?.permissions) ||
-			DEFAULT_PERMISSIONS;
+			threadsActive &&
+			(templateEveryonePermissions & THREAD_PERMISSIONS) === 0n &&
+			(templateEveryonePermissions & Permissions.SEND_MESSAGES) !== 0n
+				? templateEveryonePermissions | DEFAULT_THREAD_PERMISSIONS
+				: templateEveryonePermissions;
 		batch.addPrepared(
 			GuildRoles.insert({
 				guild_id: guildId,
@@ -992,7 +1047,7 @@ export class GuildOperationsService {
 					guild_id: guildId,
 					role_id: roleId,
 					name: role.name,
-					permissions: this.parseTemplatePermissionBitfield(role.permissions_new ?? role.permissions),
+					permissions: this.parseTemplatePermissionBitfield(role.permissions_new ?? role.permissions, permissionMask),
 					position: nextRolePosition,
 					hoist_position: null,
 					color: role.color ?? 0,
@@ -1020,8 +1075,8 @@ export class GuildOperationsService {
 					if (overwrite.type !== 0) continue;
 					const mappedRoleId = roleIdMap.get(this.getTemplateEntityKey(overwrite.id));
 					if (!mappedRoleId) continue;
-					const allow = this.parseTemplatePermissionBitfield(overwrite.allow);
-					const deny = this.parseTemplatePermissionBitfield(overwrite.deny);
+					const allow = this.parseTemplatePermissionBitfield(overwrite.allow, permissionMask);
+					const deny = this.parseTemplatePermissionBitfield(overwrite.deny, permissionMask);
 					permissionOverwrites.set(mappedRoleId, {
 						type: overwrite.type,
 						allow_: allow,
@@ -1032,7 +1087,7 @@ export class GuildOperationsService {
 					permissionOverwrites = null;
 				}
 			}
-			if (fluxerType === ChannelTypes.GUILD_TEXT && !firstTextChannelId) {
+			if (isSystemChannelType(fluxerType) && !firstTextChannelId) {
 				firstTextChannelId = channelId;
 			}
 			batch.addPrepared(
@@ -1048,12 +1103,12 @@ export class GuildOperationsService {
 					position: channel.position,
 					owner_id: null,
 					recipient_ids: null,
-					nsfw: channel.nsfw ?? false,
+					nsfw: channel.nsfw === true ? true : null,
 					content_warning_level: null,
 					content_warning_text: null,
 					rate_limit_per_user: channel.rate_limit_per_user ?? 0,
 					bitrate: isVoice ? resolveVoiceChannelBitrate(channel.bitrate, null) : null,
-					user_limit: isVoice ? (channel.user_limit ?? 0) : null,
+					user_limit: isVoice ? Math.min(channel.user_limit ?? 0, VOICE_CHANNEL_USER_LIMIT_MAX) : null,
 					voice_connection_limit: isVoice
 						? (channel.voice_connection_limit ?? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT)
 						: null,
@@ -1078,7 +1133,7 @@ export class GuildOperationsService {
 		if (template.system_channel_id != null) {
 			const templateSystemChannelKey = this.getTemplateEntityKey(template.system_channel_id);
 			const templateSystemChannelType = channelTypeMap.get(templateSystemChannelKey);
-			if (templateSystemChannelType === ChannelTypes.GUILD_TEXT) {
+			if (templateSystemChannelType !== undefined && isSystemChannelType(templateSystemChannelType)) {
 				systemChannelId = channelIdMap.get(templateSystemChannelKey) ?? null;
 			}
 		}
@@ -1100,7 +1155,7 @@ export class GuildOperationsService {
 					position: 0,
 					owner_id: null,
 					recipient_ids: null,
-					nsfw: false,
+					nsfw: null,
 					content_warning_level: null,
 					content_warning_text: null,
 					rate_limit_per_user: 0,
@@ -1127,10 +1182,10 @@ export class GuildOperationsService {
 		return {systemChannelId};
 	}
 
-	private parseTemplatePermissionBitfield(value: string | number | undefined): bigint {
+	private parseTemplatePermissionBitfield(value: string | number | undefined, mask: bigint): bigint {
 		const valueToParse = value ?? '0';
 		try {
-			return BigInt(valueToParse) & ALL_PERMISSIONS;
+			return BigInt(valueToParse) & mask;
 		} catch {
 			throw new GuildTemplateInvalidError();
 		}
@@ -1151,13 +1206,11 @@ export class GuildOperationsService {
 	private mapOtherPlatformTemplateChannelTypeToFluxer(channelType: number): number | null {
 		if (
 			channelType === ChannelTypes.GUILD_TEXT ||
+			channelType === ChannelTypes.GUILD_ANNOUNCEMENT ||
 			channelType === ChannelTypes.GUILD_VOICE ||
 			channelType === ChannelTypes.GUILD_CATEGORY
 		) {
 			return channelType;
-		}
-		if (channelType === THE_OTHER_PLATFORM_GUILD_ANNOUNCEMENT_CHANNEL_TYPE) {
-			return ChannelTypes.GUILD_TEXT;
 		}
 		if (channelType === THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE) {
 			return ChannelTypes.GUILD_VOICE;
@@ -1167,7 +1220,12 @@ export class GuildOperationsService {
 
 	private sanitiseTemplateGuildSettings(template?: TemplateSerializedGuild): TemplateGuildSettings {
 		return {
-			verificationLevel: this.clampTemplateSetting(template?.verification_level, 0, 4, 0),
+			verificationLevel: this.clampTemplateSetting(
+				template?.verification_level,
+				GuildVerificationLevel.NONE,
+				GuildVerificationLevel.HIGH,
+				GuildVerificationLevel.NONE,
+			),
 			explicitContentFilter: this.clampTemplateSetting(template?.explicit_content_filter, 0, 2, 0),
 			defaultMessageNotifications: this.clampTemplateSetting(template?.default_message_notifications, 0, 1, 0),
 			systemChannelFlags: (template?.system_channel_flags ?? 0) & SUPPORTED_SYSTEM_CHANNEL_FLAGS,

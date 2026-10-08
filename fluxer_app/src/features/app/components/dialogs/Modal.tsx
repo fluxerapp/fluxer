@@ -2,6 +2,7 @@
 
 import styles from '@app/features/app/components/dialogs/Modal.module.css';
 import {resolveModalBackdropMotionSpec, resolveModalMotionSpec} from '@app/features/app/components/dialogs/ModalMotion';
+import {useModalResizePin, useWindowLiveResize} from '@app/features/app/components/dialogs/useModalResizePin';
 import {useModalBackHandler} from '@app/features/app/hooks/useModalBackHandler';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
@@ -80,6 +81,15 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 			onClose,
 			onAnimationComplete,
 		});
+		const isWindowLiveResizing = useWindowLiveResize();
+		const setResizePinRef = useModalResizePin(isWindowLiveResizing, prefersReducedMotion);
+		const setFocusLockRef = useCallback(
+			(node: HTMLDivElement | null) => {
+				refs.setFloating(node);
+				setResizePinRef(node);
+			},
+			[refs, setResizePinRef],
+		);
 		useModalBackHandler(handleClose, disableHistoryManagement);
 		const isFirstModal = stackIndex === 0;
 		useEffect(() => {
@@ -250,7 +260,6 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 									return [];
 								}
 								const inside: Array<Element> = [];
-								modalDocument.querySelectorAll('iframe[src*="hcaptcha"], .h-captcha').forEach((el) => inside.push(el));
 								const popoutsRoot = modalDocument.querySelector('[data-popouts-root]');
 								if (popoutsRoot) inside.push(popoutsRoot);
 								const mediaViewerPortalRoot = modalDocument.querySelector('[data-media-viewer-portal-root]');
@@ -266,7 +275,7 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 							data-flx="app.modal.floating-focus-manager"
 						>
 							<div
-								ref={refs.setFloating}
+								ref={setFocusLockRef}
 								aria-labelledby={labelledBy}
 								aria-modal={true}
 								className={styles.focusLock}

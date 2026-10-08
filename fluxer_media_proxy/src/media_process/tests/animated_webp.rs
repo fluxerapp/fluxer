@@ -71,7 +71,7 @@ fn animated_webp_transforms_directly_and_falls_through_on_embedded_metadata() {
     assert_eq!(&direct.bytes[8..12], b"WEBP");
     assert!(direct.bytes.windows(4).any(|chunk| chunk == b"ANIM"));
     let (canvas_width, canvas_height, feature_flags) =
-        webp_canvas_size(&direct.bytes).expect("direct output carries a VP8X canvas");
+        webp_canvas_size(&direct.bytes).expect("direct output has a VP8X canvas");
     assert_eq!((16, 16), (canvas_width, canvas_height));
     assert_ne!(0, feature_flags & 0x02);
     let source_frames = webp_chunk_payloads(&source, b"ANMF").len();
@@ -110,12 +110,12 @@ fn animated_webp_transforms_directly_and_falls_through_on_embedded_metadata() {
 }
 
 #[test]
-fn animated_webp_encode_carries_the_source_loop_count() {
+fn animated_webp_encode_keeps_the_source_loop_count() {
     let mut gif = animated_gif_fixture();
     let netscape = gif
         .windows(11)
         .position(|window| window == b"NETSCAPE2.0")
-        .expect("fixture carries a NETSCAPE application extension");
+        .expect("fixture has a NETSCAPE application extension");
     gif[netscape + 13] = 3;
     gif[netscape + 14] = 0;
     assert_eq!(Some(3), gif_loop_count(&gif));

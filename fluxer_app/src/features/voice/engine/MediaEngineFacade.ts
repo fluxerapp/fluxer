@@ -723,16 +723,6 @@ class MediaEngineFacade extends Store {
 		return measured !== null ? measured : this.estimatedLatency;
 	}
 
-	refreshMicrophoneFromSettings(): void {
-		void this.refreshMicrophoneFromCurrentEngine().catch((error) => {
-			logger.warn('Failed to refresh microphone from settings', {error});
-		});
-	}
-
-	private async refreshMicrophoneFromCurrentEngine(): Promise<void> {
-		await voiceEngineV2AppMediaExecutionAdapter.refreshMicrophone(this.room, {forceRepublish: true});
-	}
-
 	refreshCameraBackgroundFromSettings(): void {
 		void this.refreshCameraBackgroundFromCurrentEngine().catch((error) => {
 			logger.warn('Failed to refresh camera background from settings', {error});
@@ -840,6 +830,7 @@ class MediaEngineFacade extends Store {
 			ToastCommands.createToast({
 				type: 'info',
 				children: this.i18n._(RECONNECT_SUCCEEDED_PICK_A_SCREEN_AGAIN_IF_YOU_DESCRIPTOR),
+				timeout: 5000,
 			});
 		}
 	}
@@ -2235,10 +2226,6 @@ class MediaEngineFacade extends Store {
 		voiceEngineV2AppMediaExecutionAdapter.applyAllLocalAudioPreferences(this.room);
 	}
 
-	applyLocalInputVolume(): void {
-		voiceEngineV2AppMediaExecutionAdapter.applyLocalInputVolume(this.room);
-	}
-
 	setLocalVideoDisabled(identity: string, disabled: boolean): void {
 		voiceEngineV2AppMediaExecutionAdapter.setLocalVideoDisabled(identity, disabled, this.room, this.connectionId);
 	}
@@ -2253,8 +2240,12 @@ class MediaEngineFacade extends Store {
 		this.syncVoiceEngineV2AudioControlsFromAppState();
 	}
 
-	handlePushToTalkModeChange(): void {
-		voiceEngineV2AppMediaExecutionAdapter.handlePushToTalkModeChange(this.room, () => this.getCurrentUserVoiceState());
+	handlePushToTalkModeChange(options: {preserveSelfMute?: boolean} = {}): void {
+		voiceEngineV2AppMediaExecutionAdapter.handlePushToTalkModeChange(
+			this.room,
+			() => this.getCurrentUserVoiceState(),
+			options,
+		);
 		this.syncVoiceEngineV2AudioControlsFromAppState();
 	}
 
@@ -2335,11 +2326,15 @@ class MediaEngineFacade extends Store {
 		return bindVoiceEngineV2AppAudioPreferencesSync(
 			room,
 			{
-				refreshMicrophone: async () => this.refreshMicrophoneFromCurrentEngine(),
-				refreshLocalVoiceInputProcessor: async () => {
-					await voiceEngineV2AppMediaExecutionAdapter.refreshLocalVoiceInputProcessor(room);
-				},
-				applyLocalInputVolume: () => voiceEngineV2AppMediaExecutionAdapter.applyLocalInputVolume(room),
+				requestMicrophoneRefresh: (targetRoom, request) =>
+					voiceEngineV2AppMediaExecutionAdapter.requestMicrophoneRefresh(targetRoom, request),
+				configureVoiceInput: (targetRoom) => voiceEngineV2AppMediaExecutionAdapter.configureVoiceInput(targetRoom),
+				handleInputKeybindChange: (targetRoom, options) =>
+					voiceEngineV2AppMediaExecutionAdapter.handlePushToTalkModeChange(
+						targetRoom,
+						() => this.getCurrentUserVoiceState(),
+						options,
+					),
 				applyAllLocalAudioPreferences: () => voiceEngineV2AppMediaExecutionAdapter.applyAllLocalAudioPreferences(room),
 			},
 			logger,

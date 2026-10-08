@@ -13,6 +13,12 @@ import {
 	readStoredSessionUserId,
 } from '@app/features/platform/state/auth_session/AuthSessionStorage';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
+import {
+	readRawStorageItem,
+	writeRawStorageItem,
+	ZOOM_PREBOOT_MIRROR_STORAGE_KEY,
+} from '@app/features/platform/state/PrebootMirror';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {applyAppZoomToDocument} from '@app/features/ui/utils/AppZoomUtils';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
@@ -149,6 +155,18 @@ function readLocalZoomLevel(storage: StartupSettingsStorage = AppStorage): numbe
 		return null;
 	}
 	return typeof parsed === 'number' ? clampZoomLevel(parsed) : null;
+}
+
+function readPrebootZoomFactor(): number | null {
+	if (window.electron == null) {
+		return null;
+	}
+	const raw = readRawStorageItem(ZOOM_PREBOOT_MIRROR_STORAGE_KEY);
+	if (raw === null) {
+		return null;
+	}
+	const zoomPercent = Number.parseInt(raw, 10);
+	return Number.isFinite(zoomPercent) ? clampZoomLevel(zoomPercent / 100) : null;
 }
 
 function readStoredBoolean(storage: StartupSettingsStorage, key: string): boolean | null {
@@ -458,7 +476,7 @@ function readAccessibilityStartupSettings(
 	storage: StartupSettingsStorage = AppStorage,
 	options: AccessibilityStartupSettingsOptions = {},
 ): AccessibilityStartupSettings | null {
-	const localZoomLevel = readLocalZoomLevel(storage);
+	const localZoomLevel = readPrebootZoomFactor() ?? readLocalZoomLevel(storage);
 	const localMotionSettings = readLocalMotionSettings(storage);
 	const legacySettings = readLegacyAccessibilityStartupSettings(storage);
 	const cachedSyncedMotionSettings = localMotionSettings === null ? readCachedSyncedMotionSettings(storage) : null;
@@ -502,6 +520,15 @@ function persistLocalZoomLevel(level: number): void {
 	try {
 		AppStorage.setItem(ACCESSIBILITY_ZOOM_STORAGE_KEY, JSON.stringify(clampZoomLevel(level)));
 	} catch {}
+}
+
+function writeZoomPrebootMirror(level: number, isDesktop: boolean): void {
+	if (!isDesktop) {
+		writeRawStorageItem(ZOOM_PREBOOT_MIRROR_STORAGE_KEY, null);
+		return;
+	}
+	const zoomPercent = Math.max(50, Math.min(200, Math.round(clampZoomLevel(level) * 100)));
+	writeRawStorageItem(ZOOM_PREBOOT_MIRROR_STORAGE_KEY, String(zoomPercent));
 }
 
 function persistLocalMotionSettings(settings: LocalMotionSettings): void {
@@ -779,7 +806,7 @@ class Accessibility {
 		this.initializeShowNekoStorageSync();
 		this.initializeVideoSeekPreviewThumbnailsStorageSync();
 		this.applyStartupPresentationSettings();
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	get isHydrated(): boolean {
@@ -1479,6 +1506,7 @@ class Accessibility {
 	async applyZoom(level: number): Promise<void> {
 		const zoomLevel = clampZoomLevel(level);
 		applyAppZoomToDocument(zoomLevel * 100, window.electron);
+		writeZoomPrebootMirror(zoomLevel, window.electron != null);
 	}
 
 	async applyStoredZoom(): Promise<void> {

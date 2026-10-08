@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/ProductConstants';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {
 	ASSET_FORMAT_POLICY,
 	type AssetKind,
@@ -86,7 +86,7 @@ export function getAssetFormatErrorMessage(i18n: I18n, kind: AssetKind, reason: 
 		}
 		case 'animated_requires_premium': {
 			return i18n._(ANIMATED_UPLOADS_REQUIRE_A_PREMIUM_SUBSCRIPTION_DESCRIPTOR, {
-				premiumProductName: PREMIUM_PRODUCT_NAME,
+				premiumProductName: getPremiumProductName(),
 			});
 		}
 	}

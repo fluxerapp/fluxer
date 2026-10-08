@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelWire} from '@app/features/channel/models/Channel';
 import type {PresenceRecord} from '@app/features/gateway/types/GatewayPresenceTypes';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
 import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
@@ -12,6 +13,7 @@ export type GuildReadyData = Readonly<{
 	id: string;
 	properties: Omit<Guild, 'roles'>;
 	channels: ReadonlyArray<Channel>;
+	threads?: ReadonlyArray<ChannelWire>;
 	emojis: ReadonlyArray<GuildEmoji>;
 	stickers?: ReadonlyArray<GuildSticker>;
 	members: ReadonlyArray<GuildMemberData>;
@@ -23,4 +25,5 @@ export type GuildReadyData = Readonly<{
 	joined_at: string;
 	unavailable?: boolean;
 	unavailable_hidden?: boolean;
+	degraded?: boolean;
 }>;

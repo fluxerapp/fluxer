@@ -7,9 +7,7 @@ export const ERROR_I18N_MESSAGES = {
 	'account.email_verification_required': 'Email verification is required for this action.',
 	'account.guild_verification_required': 'Community verification is required.',
 	'account.ip_authorization_required': 'IP authorization is required.',
-	'account.locked_suspicious_activity': 'Your account is locked due to suspicious activity.',
-	'account.phone_gate_escape_unavailable': 'This account cannot postpone the phone verification check.',
-	'account.phone_required_for_guild': 'You need to add a phone number to send messages in this community.',
+	'account.limited': 'Messaging is paused on your account. Check your email for a quick step to continue.',
 	'account.sensitive_content_filter_age_restricted':
 		"This sensitive content filter isn't available for your age group.",
 	'account.session_timeout': 'Session timed out. Refresh the page and log in again.',
@@ -34,7 +32,6 @@ export const ERROR_I18N_MESSAGES = {
 	'admin_and_system.guild_id_required_for_search_index':
 		'Community ID is required for channel message and member search indexes.',
 	'admin_and_system.invalid_integer_format': 'Invalid integer format.',
-	'admin_and_system.invalid_suspicious_flags_format': 'Invalid suspicious flags format.',
 	'admin_and_system.invalid_system_flag': 'Invalid system flag.',
 	'admin_and_system.invalid_timeout_value': 'Invalid timeout value.',
 	'admin_and_system.invalid_timestamp': 'Invalid timestamp.',
@@ -46,7 +43,6 @@ export const ERROR_I18N_MESSAGES = {
 	'admin_and_system.resource_locked': 'This resource is being modified. Please try again shortly.',
 	'admin_and_system.test_harness_disabled': 'Test harness is disabled.',
 	'admin_and_system.test_harness_forbidden': 'Test harness is forbidden.',
-	'admin_and_system.unknown_suspicious_flag': 'Unknown suspicious flag.',
 	'admin_and_system.update_failed': "We couldn't update the resource. Please try again.",
 	'admin_and_system.user_must_be_bot_for_system_user': 'User must be a bot to be marked as a system user.',
 	'age_verification.already_verified': "You've already completed age verification.",
@@ -118,6 +114,8 @@ export const ERROR_I18N_MESSAGES = {
 	'auth_and_oauth.invalid_token_admin_api_key': 'Invalid admin API key.',
 	'auth_and_oauth.missing_authorization': 'Missing or invalid authorization header.',
 	'auth_and_oauth.must_start_session_before_sending_messages': 'You must start a session before sending messages.',
+	'auth_and_oauth.origin_handoff_nonce_invalid': "This sign-in transfer doesn't match the one you started.",
+	'auth_and_oauth.passkey_bridge_nonce_invalid': 'This passkey request could not be confirmed. Try again.',
 	'auth_and_oauth.registration_closed': 'Registration is closed on this instance.',
 	'auth_and_oauth.registration_pending_approval': 'This registration is waiting for admin approval.',
 	'auth_and_oauth.registration_rejected': 'This registration request was rejected.',
@@ -132,9 +130,19 @@ export const ERROR_I18N_MESSAGES = {
 		"We couldn't allocate a discriminator for your SSO account. Please try again.",
 	'auth_and_oauth.sudo_mode_required': 'Sudo mode is required.',
 	'auth_and_oauth.unknown_application': 'Unknown application.',
+	'auth_and_oauth.unknown_origin_handoff': 'This sign-in transfer has expired or was already used.',
+	'auth_and_oauth.unknown_passkey_bridge': 'This passkey request has expired. Try again.',
+	'auth_and_oauth.unknown_passkey_migration': 'There is no passkey to update right now.',
+	'auth_and_registration.account_identity_locked': "The sign-in method is already set and can't be changed.",
+	'auth_and_registration.instance_address_required':
+		'This instance uses usernames. Enter the username you want followed by @{host}.',
+	'auth_and_registration.invalid_login_or_password': 'Invalid username or password.',
+	'auth_and_registration.invalid_recovery_key': 'Invalid username or recovery key.',
 	'auth_and_registration.password_is_too_common':
 		'Your password is too common. Please choose a less predictable password.',
 	'auth_and_registration.password_not_set': "Password isn't set.",
+	'auth_and_registration.username_sign_in_only':
+		'This is only available on instances where people sign in with a username.',
 	'bots.bot_discriminator_cannot_be_changed': "Bot discriminator can't be changed.",
 	'bots.bot_is_private': 'This bot is private.',
 	'bots.bot_user_generation_failed': 'Bot user generation failed.',
@@ -156,14 +164,26 @@ export const ERROR_I18N_MESSAGES = {
 	'calls_and_voice.voice_message_duration_required': 'Voice message attachments must specify a duration.',
 	'calls_and_voice.voice_message_waveform_required': 'Voice message attachments must include waveform data.',
 	'calls_and_voice.voice_messages_require_single_attachment': 'Voice messages must contain exactly one attachment.',
-	'captcha.invalid': 'Invalid captcha.',
-	'captcha.required': 'Captcha is required.',
+	'captcha.invalid': 'Verification failed. Try again.',
+	'captcha.required': 'Verification required. Try again.',
 	'channels_and_guilds.afk_channel_must_be_in_guild': 'AFK channel must be in this community.',
 	'channels_and_guilds.afk_channel_must_be_voice': 'AFK channel must be a voice channel.',
 	'channels_and_guilds.all_channels_must_belong_to_guild': 'All channels must belong to this community.',
 	'channels_and_guilds.animated_guild_banner_requires_feature':
 		'Animated community banner requires ANIMATED_BANNER feature.',
+	'channels_and_guilds.announcement_channel_required': 'This action is only available in announcement channels.',
 	'channels_and_guilds.bots_cannot_create_guilds': "Bots can't create communities.",
+	'channels_and_guilds.channel_already_followed':
+		'This channel already receives updates from that announcement channel.',
+	'channels_and_guilds.channel_has_followed_channels':
+		'Remove the followed channels posting here before converting it to an announcement channel.',
+	'channels_and_guilds.channel_type_conversion_not_supported':
+		'Only text and announcement channels can be converted into each other.',
+	'channels_and_guilds.follow_target_content_warning_required':
+		'Updates from a channel with a content warning can only go to a channel with a content warning or an age restriction.',
+	'channels_and_guilds.follow_target_not_age_restricted':
+		'Updates from an age-restricted channel can only go to an age-restricted channel.',
+	'channels_and_guilds.invalid_follow_target_channel': 'Followed channels can only post into text channels.',
 	'channels_and_guilds.single_community_cannot_create_guilds':
 		'This instance is a single community, so additional communities cannot be created.',
 	'channels_and_guilds.single_community_cannot_delete': 'The community for this instance cannot be deleted.',
@@ -187,6 +207,8 @@ export const ERROR_I18N_MESSAGES = {
 		'Discoverable communities must have a verification level of at least Low.',
 	'channels_and_guilds.group_dm_recipients_not_addable': "One or more selected users can't be added to this group DM.",
 	'channels_and_guilds.guild_banner_requires_feature': 'Community banner requires BANNER feature.',
+	'channels_and_guilds.guild_creation_permission_required':
+		"You don't have permission to create communities on this instance. Contact your instance administrator to request access.",
 	'channels_and_guilds.guild_feature_not_toggleable': 'This feature cannot be toggled.',
 	'channels_and_guilds.guild_id_must_match_referenced_message':
 		'Community ID must match the community containing the channel the referenced message was fetched from.',
@@ -276,6 +298,7 @@ export const ERROR_I18N_MESSAGES = {
 	'email.original_email_must_be_verified_first': 'Original email must be verified first.',
 	'email.original_verification_not_required': "Original verification isn't required for this flow.",
 	'email.token_expired': 'Email token expired.',
+	'email.unavailable_on_instance': "This instance doesn't use email.",
 	'email.user_has_no_email_address': "This user doesn't have an email address.",
 	'email.user_is_not_pending_verification': "This user isn't pending verification.",
 	'email.verification_code_expired': 'Verification code has expired.',
@@ -290,6 +313,7 @@ export const ERROR_I18N_MESSAGES = {
 	'feature_flags.feature_temporarily_disabled': 'This feature is temporarily disabled.',
 	'friends_and_dms.already_friends': "You're already friends with this user.",
 	'friends_and_dms.direct_messages_disabled': 'Direct messages and friend requests are disabled on this instance.',
+	'friends_and_dms.new_conversations_limited': "You can't start new conversations right now. Please try again later.",
 	'friends_and_dms.at_least_one_recipient_required': 'At least one recipient is required.',
 	'friends_and_dms.at_least_one_recipient_required_to_seed_private_channels':
 		'At least one recipient is required to seed private channels.',
@@ -370,7 +394,9 @@ export const ERROR_I18N_MESSAGES = {
 	'messages.forward_reference_requires_channel_and_message':
 		'Forward message reference must include `channel_id` and `message_id`.',
 	'messages.invalid_message_data': 'Invalid message data.',
+	'messages.message_already_crossposted': 'This message has already been published.',
 	'messages.message_ids_cannot_be_empty': "`message_ids` can't be empty.",
+	'messages.message_not_crosspostable': 'This message cannot be published.',
 	'messages.messages_array_required': '`messages` array is required and must not be empty.',
 	'messages.messages_with_snapshots_cannot_be_edited': "Messages with snapshots can't be edited.",
 	'messages.voice_messages_attachment_must_be_audio': 'Voice message attachments must be audio files.',
@@ -429,7 +455,7 @@ export const ERROR_I18N_MESSAGES = {
 	'permissions.global_ip_banned':
 		'Your IP address {ipAddress} has been permanently blocked from the Fluxer API by platform administrators. If you believe this is a mistake, contact support@fluxer.app to appeal. Include this IP address in your appeal.',
 	'permissions.global_ip_temporarily_banned':
-		'Your IP address {ipAddress} has been temporarily blocked from the Fluxer API for 24 hours because of abusive or unusual access patterns. We usually do not provide appeals for temporary API bans. Change IP addresses or wait for the ban to expire, and review the Fluxer API access patterns coming from your client.',
+		'Your IP address {ipAddress} has been temporarily blocked from the Fluxer API. The block lifts on its own when it expires. If you think this is a mistake, contact support@fluxer.com and include this IP address.',
 	'permissions.missing_access': "You don't have access to this resource or feature.",
 	'permissions.missing_permissions': "You don't have the permissions required to perform this action.",
 	'permissions.user_banned_from_guild': 'This user is banned from this community.',
@@ -437,24 +463,6 @@ export const ERROR_I18N_MESSAGES = {
 	'permissions.user_not_in_channel': "This user isn't in the channel.",
 	'permissions.user_not_in_voice': "This user isn't in voice.",
 	'permissions.user_owns_guilds': 'This user owns communities.',
-	'phone.add_not_eligible': 'You are not eligible to add a phone number to your account.',
-	'phone.country_not_supported':
-		"We don't send verification texts to this country. Use a mobile number from another country, or email support@fluxer.app and a person will review your account.",
-	'phone.inbound_verification_required':
-		'This number is verified by texting us instead of us texting you. Start phone verification again to get the code and the number to text.',
-	'phone.invalid_number': 'Invalid phone number.',
-	'phone.lookup_unavailable':
-		'Our phone number check is down right now, so we stopped before sending your code. This is on us, not your number. Wait a few minutes and try the same number again.',
-	'phone.number_already_used': 'Phone number is already in use.',
-	'phone.number_format_required': 'Phone number must be in E.164 format (for example, +1234567890).',
-	'phone.number_not_in_service':
-		"Your carrier says this number isn't in service. Check the number and try again, or email support@fluxer.app if it's correct.",
-	'phone.number_not_mobile':
-		"This isn't a mobile number, so it can't receive our text. Use a mobile number, or email support@fluxer.app if you think that's wrong.",
-	'phone.verification_code_invalid': 'Invalid phone verification code.',
-	'phone.verification_needs_review':
-		"We couldn't verify this number automatically. Email support@fluxer.app and a person will review your account.",
-	'phone.verification_required': 'Phone verification is required.',
 	'premium_and_plans.animated_avatars_require_premium': 'Animated avatars require Premium.',
 	'premium_and_plans.banners_require_premium': 'Banners require Premium.',
 	'premium_and_plans.bio_requires_premium_for_length': 'A bio longer than {maxLength} characters requires Premium.',
@@ -478,9 +486,12 @@ export const ERROR_I18N_MESSAGES = {
 		"You've changed your bio too often recently. Please try again in {minutes, plural, one {# minute} other {# minutes}}.",
 	'rate_limits.ip_authorization_resend_cooldown': 'IP authorization resend is on cooldown.',
 	'rate_limits.ip_authorization_resend_limit_exceeded': 'IP authorization resend limit exceeded.',
-	'rate_limits.phone_rate_limit_exceeded': 'Phone rate limit exceeded.',
+	'rate_limits.message_crosspost_rate_limited':
+		'This channel has reached its publishing limit. It can publish 10 messages in a row, then one more every 6 minutes.',
 	'rate_limits.pronouns_changed_too_often':
 		"You've changed your pronouns too often recently. Please try again in {minutes, plural, one {# minute} other {# minutes}}.",
+	'rate_limits.published_message_edit_rate_limited':
+		'This published message has reached its editing limit. It allows 3 quick edits, then 1 every 20 minutes.',
 	'rate_limits.rate_limited': "You're being rate limited.",
 	'rate_limits.slowmode_rate_limited': 'Slowmode rate limited.',
 	'rate_limits.username_changed_too_often':
@@ -501,6 +512,12 @@ export const ERROR_I18N_MESSAGES = {
 	'stickers_and_emojis.not_valid_unicode_emoji': 'Not a valid Unicode emoji.',
 	'stickers_and_emojis.unknown_emoji': 'Unknown emoji.',
 	'stickers_and_emojis.unknown_sticker': 'Unknown sticker.',
+	'store_billing.notification_unauthorized': 'The notification signature is invalid.',
+	'store_billing.purchase_invalid': 'This purchase could not be verified.',
+	'store_billing.purchase_owned_by_other_account': 'This purchase is linked to a different account.',
+	'store_billing.purchase_sandbox_not_entitled': 'Test purchases cannot be applied to this account.',
+	'store_billing.unavailable': 'In-app purchases are unavailable right now. Try again later.',
+	'store_billing.unknown_purchase': 'Unknown store purchase.',
 	'stripe.error': 'Payment processing encountered an error. Please try again or contact support.',
 	'stripe.invalid_product_configuration': 'Invalid product configuration.',
 	'stripe.invalid_product_selection': 'Invalid product selection.',
@@ -516,24 +533,44 @@ export const ERROR_I18N_MESSAGES = {
 	'stripe.webhook_not_available': "Webhook processing isn't available.",
 	'stripe.webhook_signature_invalid': 'Stripe webhook signature is invalid.',
 	'stripe.webhook_signature_missing': 'Stripe webhook signature is missing.',
+	'threads.channel_has_threads': "Channels with threads can't be converted to announcement channels.",
+	'threads.forum_tag_names_must_be_unique': 'Tag names must be unique.',
+	'threads.forum_tag_required': 'A tag is required to create a post in this channel.',
+	'threads.hide_media_download_option_media_only': 'Hiding media download options is only available in media channels.',
+	'threads.invalid_thread_notification_settings': 'Invalid thread notification settings.',
+	'threads.max_active_threads_reached': 'This community has reached its active thread limit of {count}.',
+	'threads.max_forum_tags_reached': 'This channel has reached its tag limit of {count}.',
+	'threads.max_pinned_threads_reached': 'This channel has reached its pinned post limit of {count}.',
+	'threads.max_thread_members_reached': 'This thread has reached its member limit of {count}.',
+	'threads.no_tags_available_to_non_moderators':
+		'A tag is required, but only moderators can apply the tags in this channel.',
+	'threads.search_index_not_ready': "The search index isn't ready yet. Try again in a moment.",
+	'threads.thread_already_created_for_message': 'A thread has already been created for this message.',
+	'threads.thread_archived': 'This thread is archived.',
+	'threads.thread_locked': 'This thread is locked.',
 	'tickets.ticket_already_completed': 'This ticket has already been completed.',
 	'tos_and_age.date_of_birth_format_invalid': 'Invalid date of birth format.',
 	'tos_and_age.must_agree_to_tos_and_privacy': 'You must agree to the Terms of service and Privacy policy.',
 	'tos_and_age.must_be_minimum_age':
 		'You must be at least {minAge, plural, one {# year} other {# years}} old to create an account.',
 	'unknown_entities.unknown_channel': "Channel wasn't found.",
+	'unknown_entities.unknown_forum_tag': "Tag wasn't found.",
 	'unknown_entities.unknown_guild': "Community wasn't found.",
 	'unknown_entities.unknown_invite': "Invite wasn't found or is no longer valid.",
 	'unknown_entities.unknown_member': "Member wasn't found in this community.",
 	'unknown_entities.unknown_message': "Message wasn't found.",
 	'unknown_entities.unknown_role': "Role wasn't found.",
 	'unknown_entities.unknown_user': "User wasn't found.",
+	'unknown_entities.unknown_thread_member': "Thread member wasn't found.",
 	'unknown_entities.unknown_user_flag': "The specified user flag isn't recognized.",
 	'urls.invalid_url_format': 'Invalid URL format.',
 	'urls.invalid_url_or_attachment_reference': 'Invalid URL format or attachment reference.',
 	'urls.url_length_invalid': 'URL must be between {min} and {max} characters.',
 	'urls.url_not_publicly_routable': 'URL must resolve to a publicly routable address.',
 	'usernames_and_tags.discriminator_invalid_format': 'Discriminator must be {min}–{max} digits.',
+	'usernames_and_tags.tag_style_requires_email_sign_in': 'Tags are only available when people sign in with email.',
+	'usernames_and_tags.discriminator_not_supported_on_instance':
+		"This instance doesn't use tags. Your username is unique on its own.",
 	'usernames_and_tags.discriminator_out_of_range': 'Discriminator must be between {min} and {max}.',
 	'usernames_and_tags.discriminator_required': 'Discriminator is required.',
 	'usernames_and_tags.display_name_length_invalid': 'Display name must be between {min} and {max} characters.',
@@ -547,6 +584,7 @@ export const ERROR_I18N_MESSAGES = {
 		'There are too many users with this username. Try a different username.',
 	'usernames_and_tags.unclaimed_accounts_can_only_set_email_via_token':
 		'Unclaimed accounts can only set an email address using a token.',
+	'usernames_and_tags.username_already_taken': 'This username is already taken.',
 	'usernames_and_tags.username_invalid_characters':
 		'Username can only contain Latin letters (a-z, A-Z), numbers (0-9), and underscores (_).',
 	'usernames_and_tags.username_length_invalid': 'Username must be between {min} and {max} characters.',
@@ -560,10 +598,15 @@ export const ERROR_I18N_MESSAGES = {
 	'vanity_urls.vanity_url_invalid_characters':
 		'Vanity URL can only contain lowercase letters (a-z), digits (0-9), and hyphens (-).',
 	'webhooks.cannot_modify_system_webhook': "You can't edit system messages.",
+	'webhooks.forum_target_conflict': "You can't specify both `thread_id` and `thread_name`.",
+	'webhooks.forum_target_required': 'Webhooks posting to this channel need a `thread_id` or a `thread_name`.',
 	'webhooks.max_webhooks_per_channel_reached':
 		"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per channel.",
 	'webhooks.max_webhooks_per_guild_reached':
 		"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per community.",
+	'webhooks.service_forum_unsupported':
+		"This webhook service can't post to a forum or media channel without a `thread_id`.",
+	'webhooks.thread_name_requires_forum': '`thread_name` and `applied_tags` only work in forum and media channels.',
 	'webhooks.unknown_webhook': 'Unknown webhook.',
 	'webhooks.webhook_name_length_invalid': 'Webhook name must be between {min} and {max} characters.',
 	'entrance_sounds.invalid_format': 'Entrance sounds must be MP3, OGG, M4A, or WAV audio.',

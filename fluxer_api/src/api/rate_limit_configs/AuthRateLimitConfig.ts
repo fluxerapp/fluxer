@@ -40,6 +40,14 @@ export const AuthRateLimitConfigs = {
 		bucket: 'auth:reset',
 		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	AUTH_RECOVER_ACCOUNT: {
+		bucket: 'auth:recover',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_USERNAME_AVAILABILITY: {
+		bucket: 'auth:username_availability',
+		config: {limit: 30, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	AUTH_VALIDATE_RESET_TOKEN: {
 		bucket: 'auth:reset:validate',
 		config: {limit: 20, windowMs: ms('1 minute')},
@@ -104,13 +112,9 @@ export const AuthRateLimitConfigs = {
 		bucket: 'mfa:webauthn:two_factor',
 		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
-	PHONE_SEND_VERIFICATION: {
-		bucket: 'phone:send_verification',
-		config: {limit: 5, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	PHONE_VERIFY_CODE: {
-		bucket: 'phone:verify_code',
-		config: {limit: 10, windowMs: ms('1 minute')},
+	MFA_WEBAUTHN_MIGRATION: {
+		bucket: 'mfa:webauthn:migration',
+		config: {limit: 20, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 	AUTH_HANDOFF_INITIATE: {
 		bucket: 'auth:handoff:initiate',
@@ -128,9 +132,41 @@ export const AuthRateLimitConfigs = {
 		bucket: 'auth:handoff:status',
 		config: {limit: 60, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	AUTH_HANDOFF_DENY: {
+		bucket: 'auth:handoff:deny',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	AUTH_HANDOFF_CANCEL: {
 		bucket: 'auth:handoff:cancel',
 		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_ORIGIN_HANDOFF_CREATE: {
+		bucket: 'auth:origin_handoff:create',
+		config: {limit: 3, windowMs: ms('10 minutes')},
+	} as RouteRateLimitConfig,
+	AUTH_ORIGIN_HANDOFF_REDEEM: {
+		bucket: 'auth:origin_handoff:redeem',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_PASSKEY_BRIDGE_START: {
+		bucket: 'auth:passkey_bridge:start',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_PASSKEY_BRIDGE_CEREMONY: {
+		bucket: 'auth:passkey_bridge:ceremony',
+		config: {limit: 20, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_PASSKEY_BRIDGE_REDEEM: {
+		bucket: 'auth:passkey_bridge:redeem',
+		config: {limit: 60, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_PASSKEY_BRIDGE_START: {
+		bucket: 'mfa:passkey_bridge:start',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_PASSKEY_BRIDGE_REDEEM: {
+		bucket: 'mfa:passkey_bridge:redeem',
+		config: {limit: 60, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 	SUDO_WEBAUTHN_OPTIONS: {
 		bucket: 'sudo:webauthn:options',

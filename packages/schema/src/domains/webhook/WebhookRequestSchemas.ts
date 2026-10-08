@@ -7,6 +7,11 @@ import {
 	MessageFlagsDescriptions,
 } from '@fluxer/constants/src/ChannelConstants';
 import {AVATAR_MAX_SIZE, MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {
+	MAX_APPLIED_TAGS_PER_THREAD,
+	THREAD_NAME_MAX_LENGTH,
+	THREAD_NAME_MIN_LENGTH,
+} from '@fluxer/constants/src/ThreadConstants';
 import {ClientUploadedAttachmentRequest} from '@fluxer/schema/src/domains/message/AttachmentSchemas';
 import {
 	MessageContentRequest,
@@ -27,6 +32,7 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {URLType} from '@fluxer/schema/src/primitives/UrlValidators';
 import {WebhookNameType} from '@fluxer/schema/src/primitives/UserValidators';
+import {withSchemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
 export const WebhookCreateRequest = z.object({
@@ -108,11 +114,35 @@ const WebhookMessageRequestBase = z
 	})
 	.partial();
 
+const CHANNEL_THREADS_EXPERIMENT = {experiment: 'channel_threads'} as const;
+
+export const WebhookForumPostRequestFields = {
+	thread_name: withSchemaMetadata(
+		createStringType(THREAD_NAME_MIN_LENGTH, THREAD_NAME_MAX_LENGTH).describe(
+			'Name of the post to create when the webhook belongs to a forum or media channel (1-100 characters)',
+		),
+		CHANNEL_THREADS_EXPERIMENT,
+	).optional(),
+	applied_tags: withSchemaMetadata(
+		z
+			.array(SnowflakeType)
+			.max(MAX_APPLIED_TAGS_PER_THREAD)
+			.describe('IDs of the tags to apply to the new post (max 5)'),
+		CHANNEL_THREADS_EXPERIMENT,
+	).optional(),
+};
+
+const WebhookThreadIdQuery = withSchemaMetadata(
+	z.string().describe('ID of a thread in the webhook channel to target instead of the channel itself'),
+	CHANNEL_THREADS_EXPERIMENT,
+).nullish();
+
 export const WebhookMessageRequest = WebhookMessageRequestBase.extend({
 	attachments: z
 		.array(ClientUploadedAttachmentRequest)
 		.optional()
 		.describe('Array of attachments uploaded through the presigned upload endpoint'),
+	...WebhookForumPostRequestFields,
 });
 
 export type WebhookMessageRequest = z.infer<typeof WebhookMessageRequest>;
@@ -122,6 +152,7 @@ export const WebhookMultipartMessageRequest = WebhookMessageRequestBase.extend({
 		.array(WebhookMultipartAttachmentRequest)
 		.optional()
 		.describe('Array of multipart attachment metadata objects'),
+	...WebhookForumPostRequestFields,
 });
 
 export type WebhookMultipartMessageRequest = z.infer<typeof WebhookMultipartMessageRequest>;
@@ -146,9 +177,16 @@ export type WebhookMessageEditRequest = z.infer<typeof WebhookMessageEditRequest
 
 export const WebhookExecuteQueryRequest = z.object({
 	wait: QueryBooleanType.optional().default(false).describe('Whether to wait for the webhook response'),
+	thread_id: WebhookThreadIdQuery,
 });
 
 export type WebhookExecuteQueryRequest = z.infer<typeof WebhookExecuteQueryRequest>;
+
+export const WebhookMessageQueryRequest = z.object({
+	thread_id: WebhookThreadIdQuery,
+});
+
+export type WebhookMessageQueryRequest = z.infer<typeof WebhookMessageQueryRequest>;
 
 const SlackAttachmentFieldSchema = z.object({
 	title: createUnboundedStringType().optional().describe('Title of the field'),

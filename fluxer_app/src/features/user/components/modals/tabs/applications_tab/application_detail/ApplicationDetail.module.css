@@ -331,19 +331,7 @@
 }
 
 .botPermissionList {
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-@media (max-width: 1080px) {
-	.botPermissionList {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-}
-
-@media (max-width: 720px) {
-	.botPermissionList {
-		grid-template-columns: 1fr;
-	}
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
 }
 
 .scopeItem {
@@ -354,9 +342,19 @@
 	min-width: 0;
 }
 
+.scopeCheckbox {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.scopeCheckbox > div,
+.scopeCheckbox > div > div {
+	min-width: 0;
+	max-width: 100%;
+}
+
 .scopeLabel {
-	display: inline-flex;
-	align-items: center;
+	display: block;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;

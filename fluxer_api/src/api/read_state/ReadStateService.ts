@@ -4,7 +4,29 @@ import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {ReadState} from '@app/api/models/ReadState';
-import type {IReadStateRepository} from '@app/api/read_state/IReadStateRepository';
+import type {
+	IReadStateRepository,
+	ReadStateMarker,
+	ReadStateMentionUpdate,
+} from '@app/api/read_state/IReadStateRepository';
+import {type ReadStateChannelHint, resolveReadStateMarker} from '@app/api/read_state/ReadStateChannelMeta';
+import {visibleReadStates} from '@app/api/read_state/ReadStateVisibility';
+
+function threadScope(readState: ReadState | null | undefined): Record<string, unknown> {
+	if (!readState?.isMarked) return {};
+	return {flags: readState.flags ?? 0, __thread_scoped: readState.guildId!.toString()};
+}
+
+function hadUnreadThrough(previous: ReadState | null, messageId: MessageID, unreadThrough: MessageID | null): boolean {
+	const previousMessageId = previous?.lastMessageId ?? null;
+	if (previousMessageId !== null && previousMessageId >= messageId) {
+		return false;
+	}
+	if (previous !== null && previous.mentionCount > 0) {
+		return true;
+	}
+	return unreadThrough !== null && (previousMessageId === null || previousMessageId < unreadThrough);
+}
 
 export class ReadStateService {
 	constructor(
@@ -16,27 +38,41 @@ export class ReadStateService {
 		return await this.repository.listReadStates(userId);
 	}
 
+	async getReadState(userId: UserID, channelId: ChannelID): Promise<ReadState | null> {
+		return await this.repository.getReadState(userId, channelId);
+	}
+
 	async ackMessage(params: {
 		userId: UserID;
 		channelId: ChannelID;
 		messageId: MessageID;
 		mentionCount: number;
 		manual?: boolean;
-		silent?: boolean;
+		implicit?: {unreadThrough: MessageID | null};
 		emitGateway?: boolean;
+		capable?: boolean;
+		channel?: ReadStateChannelHint | null;
 	}): Promise<ReadState> {
-		const {userId, channelId, messageId, mentionCount, manual, silent, emitGateway = true} = params;
-		const readState = await this.repository.upsertReadState(
+		const {userId, channelId, messageId, mentionCount, manual, implicit, emitGateway = true} = params;
+		const marker = await resolveReadStateMarker({
+			userId,
+			channelId,
+			capable: params.capable === true,
+			channel: params.channel,
+		});
+		const {readState, previous} = await this.repository.upsertReadState(
 			userId,
 			channelId,
 			messageId,
 			mentionCount,
 			undefined,
 			manual ?? false,
+			marker,
 		);
-		await this.invalidatePushBadgeCount(userId);
-		if (!silent) {
+		if (!implicit) {
 			await this.clearPushChannelNotifications({userId, channelId, messageId});
+		} else if (hadUnreadThrough(previous, messageId, implicit.unreadThrough)) {
+			void this.clearPushChannelNotifications({userId, channelId, messageId});
 		}
 		if (emitGateway) {
 			await this.dispatchMessageAck({
@@ -46,6 +82,7 @@ export class ReadStateService {
 				mentionCount: readState.mentionCount,
 				manual,
 				version: readState.version,
+				readState,
 			}).catch((error) => {
 				Logger.error(
 					{userId: userId.toString(), channelId: channelId.toString(), error},
@@ -60,6 +97,7 @@ export class ReadStateService {
 	async ackReadStates({
 		userId,
 		readStates,
+		capable = false,
 	}: {
 		userId: UserID;
 		readStates: Array<{
@@ -68,6 +106,7 @@ export class ReadStateService {
 			mentionCount?: number;
 			manual?: boolean;
 		}>;
+		capable?: boolean;
 	}): Promise<Array<ReadState>> {
 		if (readStates.length === 0) {
 			return [];
@@ -76,13 +115,15 @@ export class ReadStateService {
 			(readState) => !readState.manual && (readState.mentionCount == null || readState.mentionCount === 0),
 		);
 		if (canUseBulkAck) {
-			return await this.bulkAckMessages({
+			const acked = await this.bulkAckMessages({
 				userId,
+				capable,
 				readStates: readStates.map((readState) => ({
 					channelId: readState.channelId,
 					messageId: readState.messageId,
 				})),
 			});
+			return visibleReadStates(acked, {userId, capable});
 		}
 		const results: Array<ReadState> = [];
 		for (const readState of readStates) {
@@ -93,29 +134,39 @@ export class ReadStateService {
 					messageId: readState.messageId,
 					mentionCount: readState.mentionCount ?? 0,
 					manual: readState.manual,
+					capable,
 				}),
 			);
 		}
-		return results;
+		return visibleReadStates(results, {userId, capable});
 	}
 
 	async bulkAckMessages({
 		userId,
 		readStates,
+		capable = false,
 	}: {
 		userId: UserID;
 		readStates: Array<{
 			channelId: ChannelID;
 			messageId: MessageID;
 		}>;
+		capable?: boolean;
 	}): Promise<Array<ReadState>> {
 		if (readStates.length === 0) {
 			return [];
 		}
 		try {
-			const updatedReadStates = await this.repository.bulkAckMessages(userId, readStates);
+			const markers: Array<ReadStateMarker | null> = capable
+				? await Promise.all(readStates.map(({channelId}) => resolveReadStateMarker({userId, channelId, capable})))
+				: [];
+			const updatedReadStates = await this.repository.bulkAckMessages(
+				userId,
+				markers.length > 0
+					? readStates.map((readState, index) => ({...readState, marker: markers[index]}))
+					: readStates,
+			);
 			const readStatesByChannel = new Map(updatedReadStates.map((readState) => [readState.channelId, readState]));
-			await this.invalidatePushBadgeCount(userId);
 			await Promise.all(
 				readStates.map(({channelId, messageId}) =>
 					Promise.all([
@@ -125,6 +176,7 @@ export class ReadStateService {
 							messageId: readStatesByChannel.get(channelId)?.lastMessageId ?? messageId,
 							mentionCount: readStatesByChannel.get(channelId)?.mentionCount ?? 0,
 							version: readStatesByChannel.get(channelId)?.version,
+							readState: readStatesByChannel.get(channelId),
 						}).catch((error) => {
 							Logger.error(
 								{userId: userId.toString(), channelId: channelId.toString(), error},
@@ -143,11 +195,6 @@ export class ReadStateService {
 		}
 	}
 
-	async deleteReadState({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<void> {
-		await this.repository.deleteReadState(userId, channelId);
-		await this.invalidatePushBadgeCount(userId);
-	}
-
 	async incrementMentionCount({
 		userId,
 		channelId,
@@ -157,50 +204,37 @@ export class ReadStateService {
 		channelId: ChannelID;
 		messageId: MessageID;
 	}): Promise<void> {
-		const readState = await this.repository.incrementReadStateMentions(userId, channelId, messageId, 1);
-		if (readState == null) {
-			return;
-		}
-		await this.invalidatePushBadgeCount(userId);
+		await this.repository.incrementReadStateMentions(userId, channelId, messageId, 1);
 	}
 
-	async bulkIncrementMentionCounts(
-		updates: Array<{
-			userId: UserID;
-			channelId: ChannelID;
-			messageId: MessageID;
-		}>,
-	): Promise<void> {
+	async bulkIncrementMentionCounts(updates: Array<ReadStateMentionUpdate>): Promise<void> {
 		if (updates.length === 0) {
 			return;
 		}
 		try {
-			const appliedUpdates = await this.repository.bulkIncrementMentionCounts(updates);
-			const uniqueUserIds = Array.from(new Set(appliedUpdates.map((update) => update.userId)));
-			if (uniqueUserIds.length === 0) {
-				return;
-			}
-			await this.gatewayService.invalidatePushBadgeCounts({userIds: uniqueUserIds}).catch((error) => {
-				Logger.error({userCount: uniqueUserIds.length, error}, 'Failed to invalidate push badge counts');
-				return null;
-			});
+			await this.repository.bulkIncrementMentionCounts(updates);
 		} catch (error) {
 			Logger.error({error}, 'Bulk increment mention counts failed');
 			throw error;
 		}
 	}
 
-	async ackPins(params: {userId: UserID; channelId: ChannelID; timestamp: Date}): Promise<void> {
+	async ackPins(params: {
+		userId: UserID;
+		channelId: ChannelID;
+		timestamp: Date;
+		capable?: boolean;
+		channel?: ReadStateChannelHint | null;
+	}): Promise<void> {
 		const {userId, channelId, timestamp} = params;
-		await this.repository.upsertPinAck(userId, channelId, timestamp);
-		await this.dispatchPinsAck({userId, channelId, timestamp});
-	}
-
-	private async invalidatePushBadgeCount(userId: UserID): Promise<void> {
-		await this.gatewayService.invalidatePushBadgeCount({userId}).catch((error) => {
-			Logger.error({userId: userId.toString(), error}, 'Failed to invalidate push badge count');
-			return null;
+		const marker = await resolveReadStateMarker({
+			userId,
+			channelId,
+			capable: params.capable === true,
+			channel: params.channel,
 		});
+		await this.repository.upsertPinAck(userId, channelId, timestamp, marker);
+		await this.dispatchPinsAck({userId, channelId, timestamp, marker});
 	}
 
 	private async dispatchMessageAck(params: {
@@ -210,6 +244,7 @@ export class ReadStateService {
 		mentionCount: number;
 		manual?: boolean;
 		version?: bigint;
+		readState?: ReadState | null;
 	}): Promise<void> {
 		const {userId, channelId, messageId, mentionCount, manual, version} = params;
 		await this.gatewayService.dispatchPresence({
@@ -221,6 +256,7 @@ export class ReadStateService {
 				mention_count: mentionCount,
 				manual,
 				version: version?.toString(),
+				...threadScope(params.readState),
 			},
 		});
 	}
@@ -240,14 +276,20 @@ export class ReadStateService {
 		});
 	}
 
-	private async dispatchPinsAck(params: {userId: UserID; channelId: ChannelID; timestamp: Date}): Promise<void> {
-		const {userId, channelId, timestamp} = params;
+	private async dispatchPinsAck(params: {
+		userId: UserID;
+		channelId: ChannelID;
+		timestamp: Date;
+		marker: ReadStateMarker | null;
+	}): Promise<void> {
+		const {userId, channelId, timestamp, marker} = params;
 		await this.gatewayService.dispatchPresence({
 			userId,
 			event: 'CHANNEL_PINS_ACK',
 			data: {
 				channel_id: channelId.toString(),
 				timestamp: timestamp.toISOString(),
+				...(marker ? {__thread_scoped: marker.guildId.toString()} : {}),
 			},
 		});
 	}

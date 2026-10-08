@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import type {VoiceEngineV2AppScreenShareExecutionAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter';
 import {logger} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
@@ -87,12 +88,8 @@ interface PendingScreenShareStopRequest {
 }
 
 function createScreenShareCaptureId(): string {
-	const cryptoPort = globalThis.crypto;
-	if (!cryptoPort || typeof cryptoPort.randomUUID !== 'function') {
-		throw new Error('Screen-share capture ID generation requires crypto.randomUUID');
-	}
-	const captureId = cryptoPort.randomUUID();
-	assert.ok(captureId.length > 0, 'crypto.randomUUID must return a non-empty capture ID');
+	const captureId = randomUuid();
+	assert.ok(captureId.length > 0, 'randomUuid must return a non-empty capture ID');
 	return captureId;
 }
 

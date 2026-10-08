@@ -159,7 +159,7 @@ describe('VoiceAdminController', () => {
 		expect(deletedRegion.success).toBe(true);
 		expect(await voiceRepository.getRegion(fixture.regionId)).toBeNull();
 	});
-	test('rejects voice server creation when no region carries the identifier', async () => {
+	test('rejects voice server creation when no region has the identifier', async () => {
 		const admin = await createAdminWithAcls(harness, [AdminACLs.VOICE_SERVER_CREATE]);
 		const regionId = 'voice-region-missing-for-server-create';
 		const serverId = 'voice-server-missing-region';

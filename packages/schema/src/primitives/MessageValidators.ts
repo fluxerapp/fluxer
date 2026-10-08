@@ -23,7 +23,18 @@ export const MessageTypeSchema = createInt32EnumType(
 		[MessageTypes.CHANNEL_ICON_CHANGE, 'CHANNEL_ICON_CHANGE', 'A system message indicating the channel icon changed'],
 		[MessageTypes.CHANNEL_PINNED_MESSAGE, 'CHANNEL_PINNED_MESSAGE', 'A system message indicating a message was pinned'],
 		[MessageTypes.USER_JOIN, 'USER_JOIN', 'A system message indicating a user joined'],
+		[
+			MessageTypes.CHANNEL_FOLLOW_ADD,
+			'CHANNEL_FOLLOW_ADD',
+			'System message posted when a channel starts following an announcement channel',
+		],
+		[MessageTypes.THREAD_CREATED, 'THREAD_CREATED', 'A system message indicating a thread was created'],
 		[MessageTypes.REPLY, 'REPLY', 'A reply message'],
+		[
+			MessageTypes.THREAD_STARTER_MESSAGE,
+			'THREAD_STARTER_MESSAGE',
+			'The first message of a thread, pointing at its source',
+		],
 	],
 	'The type of message',
 	'MessageType',

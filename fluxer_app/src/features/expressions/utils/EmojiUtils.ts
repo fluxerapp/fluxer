@@ -12,8 +12,11 @@ const TWEMOJI_URL_CACHE = new Map<string, string>();
 let normalizedEndpointSource = '';
 let normalizedEndpoint = '';
 
-function getStaticOrigin(): string {
-	const endpoint = RuntimeConfig.staticCdnEndpoint;
+function getStaticOrigin(): string | null {
+	const endpoint = RuntimeConfig.getSnapshotOrNull()?.staticCdnEndpoint;
+	if (endpoint == null) {
+		return null;
+	}
 	if (endpoint !== normalizedEndpointSource) {
 		normalizedEndpointSource = endpoint;
 		normalizedEndpoint = endpoint.replace(/\/+$/, '');
@@ -30,6 +33,9 @@ export function getTwemojiURL(codePoints: string): string | null {
 		return null;
 	}
 	const origin = getStaticOrigin();
+	if (origin == null) {
+		return null;
+	}
 	const key = `${origin}:${codePoints}`;
 	const cached = TWEMOJI_URL_CACHE.get(key);
 	if (cached !== undefined) {

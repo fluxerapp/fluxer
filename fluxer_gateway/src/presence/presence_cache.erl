@@ -14,6 +14,7 @@
     delete/1,
     get/1,
     bulk_get/1,
+    bulk_get_map/1,
     get_memory_stats/0,
     pending_handoff_count/0,
     get_pending_handoff_count/0,
@@ -70,6 +71,13 @@ bulk_get(UserIds) when is_list(UserIds) ->
     case persistent_term:get(presence_noop, false) of
         true -> [];
         false -> presence_cache_bulk:bulk_get_inner(UserIds)
+    end.
+
+-spec bulk_get_map([integer()]) -> #{integer() => map()}.
+bulk_get_map(UserIds) when is_list(UserIds) ->
+    case persistent_term:get(presence_noop, false) of
+        true -> #{};
+        false -> presence_cache_bulk:bulk_get_map_inner(UserIds)
     end.
 
 -spec get_memory_stats() -> {ok, map()} | {error, term()}.

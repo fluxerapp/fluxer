@@ -10,23 +10,10 @@
     put_user_guild_settings/4,
     delete_user_guild_settings/2,
     reserve_user_guild_settings/2,
-    get_subscriptions/1,
-    get_subscriptions_many/1,
-    put_subscriptions/3,
-    delete_subscriptions/1,
-    reserve_subscriptions/1,
     get_blocked_ids/1,
     put_blocked_ids/2,
     put_blocked_ids_fetched/3,
     reserve_blocked_ids/1,
-    get_badge_count/1,
-    put_badge_count/4,
-    delete_badge_count/1,
-    reserve_badge_counts/1,
-    get_bearer_token/1,
-    put_bearer_token/3,
-    get_endpoint_verdict/1,
-    put_endpoint_verdict/3,
     release/1,
     rebalance/0,
     rebalance_async/0,
@@ -35,20 +22,12 @@
     table_size/1
 ]).
 
--export_type([fill/0, endpoint_verdict/0]).
+-export_type([fill/0]).
 
 -define(USER_GUILD_SETTINGS, push_user_guild_settings).
--define(SUBSCRIPTIONS, push_subscriptions).
 -define(BLOCKED_IDS, push_blocked_ids).
--define(BADGE_COUNTS, push_badge_counts).
--define(BEARER_TOKENS, push_bearer_tokens).
--define(ENDPOINT_VERDICTS, push_endpoint_verdicts).
 
 -define(MAX_TABLE_ENTRIES, 500000).
--define(MAX_BEARER_TOKENS, 10000).
--define(MAX_ENDPOINT_VERDICTS, 2048).
--define(MAX_ENDPOINT_HOST_BYTES, 253).
--define(ENDPOINT_VERDICT_EVICT_BATCH, 512).
 -define(EVICT_BATCH, 4096).
 -define(MAX_EVICT_RESEEKS, 8).
 -define(RESERVATION_TTL_MS, 120000).
@@ -61,16 +40,11 @@
 ]).
 
 -type fill() :: {atom(), pos_integer(), [term()]}.
--type endpoint_verdict() :: ok | {error, term()}.
 
 -spec init() -> ok.
 init() ->
     ensure_table(?USER_GUILD_SETTINGS),
-    ensure_table(?SUBSCRIPTIONS),
     ensure_table(?BLOCKED_IDS),
-    ensure_table(?BADGE_COUNTS),
-    ensure_table(?BEARER_TOKENS),
-    ensure_table(?ENDPOINT_VERDICTS),
     ok.
 
 -spec get_user_guild_settings(integer(), integer()) -> map() | undefined.
@@ -97,45 +71,6 @@ delete_user_guild_settings(UserId, GuildId) ->
 -spec reserve_user_guild_settings([integer()], integer()) -> fill().
 reserve_user_guild_settings(UserIds, GuildId) ->
     reserve(?USER_GUILD_SETTINGS, [{UserId, GuildId} || UserId <- UserIds]).
-
--spec get_subscriptions(integer()) -> list() | undefined.
-get_subscriptions(UserId) ->
-    try ets:lookup(?SUBSCRIPTIONS, UserId) of
-        [{UserId, Subs}] when is_list(Subs) -> Subs;
-        _ -> undefined
-    catch
-        error:badarg -> undefined
-    end.
-
--spec get_subscriptions_many([integer()]) -> {#{integer() => list()}, [integer()]}.
-get_subscriptions_many(UserIds) ->
-    lists:foldl(
-        fun add_cached_subscriptions/2,
-        {#{}, []},
-        UserIds
-    ).
-
--spec add_cached_subscriptions(integer(), {#{integer() => list()}, [integer()]}) ->
-    {#{integer() => list()}, [integer()]}.
-add_cached_subscriptions(UserId, {CachedAcc, MissingAcc}) ->
-    case get_subscriptions(UserId) of
-        Subscriptions when is_list(Subscriptions) ->
-            {CachedAcc#{UserId => Subscriptions}, MissingAcc};
-        undefined ->
-            {CachedAcc, [UserId | MissingAcc]}
-    end.
-
--spec put_subscriptions(integer(), list(), fill()) -> ok.
-put_subscriptions(UserId, Subscriptions, {?SUBSCRIPTIONS, _, _} = Fill) ->
-    fill(Fill, {UserId, Subscriptions}).
-
--spec delete_subscriptions(integer()) -> ok.
-delete_subscriptions(UserId) ->
-    safe_delete(?SUBSCRIPTIONS, UserId).
-
--spec reserve_subscriptions([integer()]) -> fill().
-reserve_subscriptions(UserIds) ->
-    reserve(?SUBSCRIPTIONS, UserIds).
 
 -spec get_blocked_ids(integer()) -> [integer()] | undefined.
 get_blocked_ids(UserId) ->
@@ -184,91 +119,6 @@ app_pos_integer(Key, Default) ->
         _ -> Default
     end.
 
--spec get_badge_count(integer()) -> {non_neg_integer(), integer()} | undefined.
-get_badge_count(UserId) ->
-    try ets:lookup(?BADGE_COUNTS, UserId) of
-        [{UserId, Count, CachedAt}] when is_integer(Count), Count >= 0, is_integer(CachedAt) ->
-            {Count, CachedAt};
-        _ ->
-            undefined
-    catch
-        error:badarg -> undefined
-    end.
-
--spec put_badge_count(integer(), non_neg_integer(), integer(), fill()) -> ok.
-put_badge_count(UserId, Count, CachedAt, {?BADGE_COUNTS, _, _} = Fill) ->
-    fill(Fill, {UserId, Count, CachedAt}).
-
--spec delete_badge_count(integer()) -> ok.
-delete_badge_count(UserId) ->
-    safe_delete(?BADGE_COUNTS, UserId).
-
--spec reserve_badge_counts([integer()]) -> fill().
-reserve_badge_counts(UserIds) ->
-    reserve(?BADGE_COUNTS, UserIds).
-
--spec get_bearer_token(term()) -> {ok, binary(), integer()} | undefined.
-get_bearer_token(Key) ->
-    try ets:lookup(?BEARER_TOKENS, Key) of
-        [{_, Token, ExpiresAt}] when is_binary(Token), is_integer(ExpiresAt) ->
-            {ok, Token, ExpiresAt};
-        _ ->
-            undefined
-    catch
-        error:badarg -> undefined
-    end.
-
--spec put_bearer_token(term(), binary(), integer()) -> ok.
-put_bearer_token(Key, Token, ExpiresAt) when is_binary(Token), is_integer(ExpiresAt) ->
-    guard_table_size(?BEARER_TOKENS, ?MAX_BEARER_TOKENS),
-    try ets:insert(?BEARER_TOKENS, {Key, Token, ExpiresAt}) of
-        _ -> ok
-    catch
-        error:badarg -> ok
-    end.
-
--spec get_endpoint_verdict(binary()) -> {ok, endpoint_verdict()} | undefined.
-get_endpoint_verdict(Host) when is_binary(Host) ->
-    try ets:lookup(?ENDPOINT_VERDICTS, Host) of
-        [{_, ok, ExpiresAt}] when is_integer(ExpiresAt) ->
-            live_endpoint_verdict(ok, ExpiresAt);
-        [{_, {error, Reason}, ExpiresAt}] when is_integer(ExpiresAt) ->
-            live_endpoint_verdict({error, Reason}, ExpiresAt);
-        _ ->
-            undefined
-    catch
-        error:badarg -> undefined
-    end.
-
--spec live_endpoint_verdict(endpoint_verdict(), integer()) ->
-    {ok, endpoint_verdict()} | undefined.
-live_endpoint_verdict(Verdict, ExpiresAt) ->
-    case erlang:system_time(second) < ExpiresAt of
-        true -> {ok, Verdict};
-        false -> undefined
-    end.
-
--spec put_endpoint_verdict(binary(), endpoint_verdict(), pos_integer()) -> ok.
-put_endpoint_verdict(Host, Verdict, TtlSeconds) when
-    is_binary(Host), is_integer(TtlSeconds), TtlSeconds > 0
-->
-    case byte_size(Host) =< ?MAX_ENDPOINT_HOST_BYTES of
-        true -> insert_endpoint_verdict(Host, Verdict, TtlSeconds);
-        false -> ok
-    end.
-
--spec insert_endpoint_verdict(binary(), endpoint_verdict(), pos_integer()) -> ok.
-insert_endpoint_verdict(Host, Verdict, TtlSeconds) ->
-    guard_table_size(
-        ?ENDPOINT_VERDICTS, ?MAX_ENDPOINT_VERDICTS, ?ENDPOINT_VERDICT_EVICT_BATCH
-    ),
-    ExpiresAt = erlang:system_time(second) + TtlSeconds,
-    try ets:insert(?ENDPOINT_VERDICTS, {Host, Verdict, ExpiresAt}) of
-        _ -> ok
-    catch
-        error:badarg -> ok
-    end.
-
 -spec write(atom(), tuple()) -> ok.
 write(Table, Row) ->
     guard_table_size(Table, ?MAX_TABLE_ENTRIES),
@@ -300,8 +150,6 @@ reserve_key(Table, Key, Token, ReservedAt) ->
 stale_rows(?BLOCKED_IDS, Key) ->
     Now = erlang:system_time(second),
     [{{Key, '_', '$1'}, [{is_integer, '$1'}, {'=<', '$1', Now}], [true]}];
-stale_rows(?BADGE_COUNTS, Key) ->
-    [{{Key, '_', '_'}, [], [true]}];
 stale_rows(_Table, _Key) ->
     [].
 
@@ -330,38 +178,23 @@ rebalance_async() ->
 rebalance() ->
     init(),
     _ = rebalance_table(?USER_GUILD_SETTINGS, fun user_id_from_user_guild_key/1),
-    _ = rebalance_table(?SUBSCRIPTIONS, fun user_id_from_key/1),
     _ = rebalance_table(?BLOCKED_IDS, fun user_id_from_key/1),
-    _ = rebalance_table(?BADGE_COUNTS, fun user_id_from_key/1),
     ok.
 
 -spec cache_stats() -> map().
 cache_stats() ->
     #{
         user_guild_settings_size => table_size(?USER_GUILD_SETTINGS),
-        push_subscriptions_size => table_size(?SUBSCRIPTIONS),
-        blocked_ids_size => table_size(?BLOCKED_IDS),
-        badge_counts_size => table_size(?BADGE_COUNTS),
-        bearer_tokens_size => table_size(?BEARER_TOKENS),
-        endpoint_verdicts_size => table_size(?ENDPOINT_VERDICTS)
+        blocked_ids_size => table_size(?BLOCKED_IDS)
     }.
 
 -spec evict_tables(map()) -> ok.
 evict_tables(MaxEntries) ->
     Now = erlang:system_time(second),
     select_delete(?BLOCKED_IDS, expired_rows(Now)),
-    select_delete(?BEARER_TOKENS, expired_rows(Now)),
-    select_delete(?ENDPOINT_VERDICTS, expired_rows(Now)),
-    lists:foreach(
-        fun expire_reservations/1,
-        [?USER_GUILD_SETTINGS, ?SUBSCRIPTIONS, ?BLOCKED_IDS, ?BADGE_COUNTS]
-    ),
+    lists:foreach(fun expire_reservations/1, [?USER_GUILD_SETTINGS, ?BLOCKED_IDS]),
     evict_table(?USER_GUILD_SETTINGS, maps:get(user_guild_settings, MaxEntries, undefined)),
-    evict_table(?SUBSCRIPTIONS, maps:get(subscriptions, MaxEntries, undefined)),
     evict_table(?BLOCKED_IDS, maps:get(blocked_ids, MaxEntries, undefined)),
-    evict_table(?BADGE_COUNTS, maps:get(badge_counts, MaxEntries, undefined)),
-    evict_table(?BEARER_TOKENS, ?MAX_BEARER_TOKENS),
-    evict_table(?ENDPOINT_VERDICTS, ?MAX_ENDPOINT_VERDICTS),
     ok.
 
 -spec expired_rows(integer()) -> ets:match_spec().
@@ -383,12 +216,8 @@ select_delete(Table, MatchSpec) ->
 
 -spec guard_table_size(atom(), non_neg_integer()) -> ok.
 guard_table_size(Table, MaxEntries) ->
-    guard_table_size(Table, MaxEntries, ?EVICT_BATCH).
-
--spec guard_table_size(atom(), non_neg_integer(), pos_integer()) -> ok.
-guard_table_size(Table, MaxEntries, EvictBatch) ->
     case table_size(Table) >= MaxEntries of
-        true -> evict_table(Table, max(0, MaxEntries - EvictBatch));
+        true -> evict_table(Table, max(0, MaxEntries - ?EVICT_BATCH));
         false -> ok
     end.
 

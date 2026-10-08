@@ -10,7 +10,7 @@ import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder'
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
 import type {User} from '@app/api/models/User';
 import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
-import {canUseProfileTimezone, isProfileSubstringExempt} from '@app/api/user/UserHelpers';
+import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
 import {deriveDominantAvatarColor} from '@app/api/utils/AvatarColorUtils';
 import * as EmojiUtils from '@app/api/utils/EmojiUtils';
 import {MAX_BIO_LENGTH} from '@fluxer/constants/src/LimitConstants';
@@ -56,7 +56,6 @@ export class UserAccountProfileService {
 		const updates: UserFieldUpdates = {
 			avatar_hash: user.avatarHash,
 			banner_hash: user.bannerHash,
-			flags: user.flags,
 		};
 		let preparedAvatarUpload: PreparedAssetUpload | null = null;
 		let preparedBannerUpload: PreparedAssetUpload | null = null;
@@ -83,14 +82,13 @@ export class UserAccountProfileService {
 		if (data.accent_color !== undefined) {
 			await this.processAccentColorUpdate({user, accentColor: data.accent_color, updates});
 		}
-		const canUpdateProfileTimezone = canUseProfileTimezone(user);
-		if (canUpdateProfileTimezone && data.timezone !== undefined) {
+		if (data.timezone !== undefined) {
 			const nextTimezone = this.processTimezoneUpdate({user, timezone: data.timezone, updates});
 			if (nextTimezone !== null && user.timezone === null && data.timezone_privacy_flags === undefined) {
 				updates.timezone_privacy_flags = ProfileFieldPrivacyFlags.EVERYONE;
 			}
 		}
-		if (canUpdateProfileTimezone && data.timezone_privacy_flags !== undefined) {
+		if (data.timezone_privacy_flags !== undefined) {
 			this.processTimezonePrivacyFlagsUpdate({
 				user,
 				privacyFlags: data.timezone_privacy_flags,

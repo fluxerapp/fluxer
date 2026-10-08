@@ -19,6 +19,7 @@ export const SessionState = {
 export type SessionState = ValueOf<typeof SessionState>;
 
 export interface Account {
+	storageKey: string;
 	userId: string;
 	token: string;
 	userData?: UserData;
@@ -31,6 +32,7 @@ export interface Account {
 export interface AuthSessionMachineContext {
 	token: string | null;
 	userId: string | null;
+	accountKey: string | null;
 	accounts: Map<string, Account>;
 	error: Error | null;
 	isInitialized: boolean;
@@ -38,7 +40,7 @@ export interface AuthSessionMachineContext {
 
 export type AuthSessionMachineEvent =
 	| {type: 'initialize.start'}
-	| {type: 'initialize.tokenLoaded'; token: string; userId: string | null}
+	| {type: 'initialize.tokenLoaded'; token: string; userId: string | null; accountKey: string | null}
 	| {type: 'initialize.noToken'}
 	| {type: 'initialize.failed'; error: Error}
 	| {type: 'accounts.loaded'; accounts: ReadonlyArray<Account>}
@@ -47,9 +49,9 @@ export type AuthSessionMachineEvent =
 	| {type: 'account.switch.start'}
 	| {type: 'account.switch.complete'; account: Account}
 	| {type: 'account.switch.failed'}
-	| {type: 'account.markInvalid'; userId: string}
-	| {type: 'account.remove'; userId: string}
-	| {type: 'account.userDataUpdated'; userId: string; userData: UserData}
+	| {type: 'account.markInvalid'; accountKey: string}
+	| {type: 'account.remove'; accountKey: string}
+	| {type: 'account.userDataUpdated'; accountKey: string; userData: UserData}
 	| {type: 'token.set'; token: string | null}
 	| {type: 'userId.set'; userId: string | null}
 	| {type: 'connection.start'}
@@ -65,6 +67,7 @@ export function createInitialAuthSessionContext(): AuthSessionMachineContext {
 	return {
 		token: null,
 		userId: null,
+		accountKey: null,
 		accounts: new Map(),
 		error: null,
 		isInitialized: false,
@@ -76,31 +79,31 @@ function cloneAccounts(accounts: Map<string, Account>): Map<string, Account> {
 }
 
 function accountMapFromAccounts(accounts: ReadonlyArray<Account>): Map<string, Account> {
-	return new Map(accounts.map((account) => [account.userId, account]));
+	return new Map(accounts.map((account) => [account.storageKey, account]));
 }
 
 function upsertAccount(accounts: Map<string, Account>, account: Account): Map<string, Account> {
 	const nextAccounts = cloneAccounts(accounts);
-	nextAccounts.set(account.userId, account);
+	nextAccounts.set(account.storageKey, account);
 	return nextAccounts;
 }
 
 function patchAccount(
 	accounts: Map<string, Account>,
-	userId: string,
+	accountKey: string,
 	patch: (account: Account) => Account,
 ): Map<string, Account> {
-	const account = accounts.get(userId);
+	const account = accounts.get(accountKey);
 	if (!account) return accounts;
 	const nextAccounts = cloneAccounts(accounts);
-	nextAccounts.set(userId, patch(account));
+	nextAccounts.set(accountKey, patch(account));
 	return nextAccounts;
 }
 
-function removeAccount(accounts: Map<string, Account>, userId: string): Map<string, Account> {
-	if (!accounts.has(userId)) return accounts;
+function removeAccount(accounts: Map<string, Account>, accountKey: string): Map<string, Account> {
+	if (!accounts.has(accountKey)) return accounts;
 	const nextAccounts = cloneAccounts(accounts);
-	nextAccounts.delete(userId);
+	nextAccounts.delete(accountKey);
 	return nextAccounts;
 }
 
@@ -123,6 +126,7 @@ export const authSessionStateMachine = setup({
 			return {
 				token: event.token,
 				userId: event.userId,
+				accountKey: event.accountKey,
 				error: null,
 				isInitialized: true,
 			};
@@ -130,6 +134,7 @@ export const authSessionStateMachine = setup({
 		markInitializedWithoutToken: assign(() => ({
 			token: null,
 			userId: null,
+			accountKey: null,
 			error: null,
 			isInitialized: true,
 		})),
@@ -145,6 +150,7 @@ export const authSessionStateMachine = setup({
 			return {
 				token: event.account.token,
 				userId: event.account.userId,
+				accountKey: event.account.storageKey,
 				accounts: upsertAccount(context.accounts, event.account),
 				error: null,
 				isInitialized: true,
@@ -161,6 +167,7 @@ export const authSessionStateMachine = setup({
 			return {
 				token: event.account.token,
 				userId: event.account.userId,
+				accountKey: event.account.storageKey,
 				accounts: upsertAccount(context.accounts, event.account),
 				error: null,
 			};
@@ -169,21 +176,21 @@ export const authSessionStateMachine = setup({
 		markInvalid: assign(({context, event}) => {
 			if (event.type !== 'account.markInvalid') return {};
 			return {
-				accounts: patchAccount(context.accounts, event.userId, (account) => ({...account, isValid: false})),
+				accounts: patchAccount(context.accounts, event.accountKey, (account) => ({...account, isValid: false})),
 			};
 		}),
 		removeAccount: assign(({context, event}) => {
 			if (event.type !== 'account.remove') return {};
-			const isCurrentAccount = context.userId === event.userId;
+			const isCurrentAccount = context.accountKey === event.accountKey;
 			return {
-				accounts: removeAccount(context.accounts, event.userId),
-				...(isCurrentAccount && {token: null, userId: null}),
+				accounts: removeAccount(context.accounts, event.accountKey),
+				...(isCurrentAccount && {token: null, userId: null, accountKey: null}),
 			};
 		}),
 		updateAccountUserData: assign(({context, event}) => {
 			if (event.type !== 'account.userDataUpdated') return {};
 			return {
-				accounts: patchAccount(context.accounts, event.userId, (account) => ({
+				accounts: patchAccount(context.accounts, event.accountKey, (account) => ({
 					...account,
 					userData: event.userData,
 				})),
@@ -200,6 +207,7 @@ export const authSessionStateMachine = setup({
 		invalidateSession: assign(() => ({
 			token: null,
 			userId: null,
+			accountKey: null,
 			error: null,
 		})),
 		reset: assign(() => createInitialAuthSessionContext()),
@@ -224,6 +232,7 @@ export const authSessionStateMachine = setup({
 			on: {
 				'initialize.start': {target: 'initializing'},
 				'initialize.tokenLoaded': {target: 'authenticated', actions: 'loadToken'},
+				'account.switch.start': {target: 'switching'},
 				'logout.start': {target: 'logging_out'},
 			},
 		},
@@ -301,6 +310,10 @@ export function getAuthSessionStateValue(snapshot: AuthSessionSnapshot): Session
 
 export function selectAuthSessionAccounts(snapshot: AuthSessionSnapshot): Array<Account> {
 	return accountList(snapshot.context.accounts);
+}
+
+export function selectAuthSessionAccountKey(snapshot: AuthSessionSnapshot): string | null {
+	return snapshot.context.accountKey;
 }
 
 export function selectAuthSessionCanSwitch(snapshot: AuthSessionSnapshot): boolean {

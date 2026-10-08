@@ -15,3 +15,31 @@
 	flex: 0 0 auto;
 	width: 100%;
 }
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}
+
+.actions > * {
+	flex: 0 0 auto;
+	min-width: fit-content;
+}
+
+:global(html.mobile-layout) .actions {
+	align-items: stretch;
+	flex-direction: column-reverse;
+	justify-content: flex-start;
+}
+
+:global(html.mobile-layout) .actions > * {
+	min-width: 0;
+	width: 100%;
+}
+
+:global(html.mobile-layout) .actions button {
+	width: 100% !important;
+}

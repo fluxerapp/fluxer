@@ -2,6 +2,7 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {trySendAdminNotification} from '@app/api/admin/services/AdminNotification';
 import {
 	type ChannelID,
 	createReportID,
@@ -20,9 +21,11 @@ import {
 	messageResponseAccessForChannel,
 	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
+import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {NcmecAttachmentStatusResponse, NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
+import {SYSTEM_THREAD_VIEWER} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
@@ -33,11 +36,13 @@ import type {User} from '@app/api/models/User';
 import type {IARMessageContext, IARSubmission} from '@app/api/report/IReportRepository';
 import type {ReportService} from '@app/api/report/ReportService';
 import {getReportSearchService} from '@app/api/SearchFactory';
+import {isHiddenPartial} from '@app/api/user/ProfileVisibility';
 import type {UserChannelService} from '@app/api/user/services/UserChannelService';
+import {formatUserTag} from '@app/api/user/UserTag';
 import {assertSafeByteSize} from '@app/api/utils/ByteSizeUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
-import type {SearchReportsRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {SearchReportsRequest, UpdateReportRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
 import {seconds} from 'itty-time';
@@ -54,6 +59,8 @@ interface AdminReportServiceDeps {
 	userChannelService: UserChannelService;
 	ncmecSubmissionService: NcmecSubmissionService;
 }
+
+type StaffReportResolution = NonNullable<UpdateReportRequest['resolution']>;
 
 interface ReportNsfwLookupCache {
 	channelNsfwByChannelId: Map<string, boolean | null>;
@@ -103,10 +110,41 @@ export class AdminReportService {
 		adminUserId: UserID,
 		publicComment: string | null,
 		auditLogReason: string | null,
+		notifyReporter: boolean,
+		resolution?: StaffReportResolution,
 	) {
 		const {reportService, auditService} = this.deps;
 		const {users: userRepository, email: emailService} = this.deps.apiContext.services;
-		const resolvedReport = await reportService.resolveReport(reportId, adminUserId, publicComment, auditLogReason);
+		const resolvedReport = await reportService.resolveReport(reportId, adminUserId, publicComment, auditLogReason, {
+			outcome: resolution,
+			resolvedBy: 'staff',
+		});
+		let reporterDmSent = false;
+		let reporterEmailSent = false;
+		const reporter =
+			notifyReporter && resolvedReport.reporterId ? await userRepository.findUnique(resolvedReport.reporterId) : null;
+		if (reporter) {
+			const commentForTemplate = publicComment ?? '';
+			reporterDmSent = await this.sendResolvedReportSystemDm({
+				reporter,
+				reportId,
+				publicComment: commentForTemplate,
+			});
+			const email = reporter.email;
+			if (email) {
+				reporterEmailSent = await trySendAdminNotification(
+					() =>
+						emailService.sendReportResolvedEmail(
+							email,
+							reporter.username,
+							reportId.toString(),
+							commentForTemplate,
+							reporter.locale,
+						),
+					{action: 'resolve_report', targetId: reportId.toString()},
+				);
+			}
+		}
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'report',
@@ -116,28 +154,12 @@ export class AdminReportService {
 			metadata: new Map([
 				['report_id', reportId.toString()],
 				['report_type', resolvedReport.reportType.toString()],
+				['notify_reporter', notifyReporter ? 'true' : 'false'],
+				['reporter_dm_sent', reporterDmSent ? 'true' : 'false'],
+				['reporter_email_sent', reporterEmailSent ? 'true' : 'false'],
+				...(resolution ? [['resolution', resolution] as [string, string]] : []),
 			]),
 		});
-		if (resolvedReport.reporterId) {
-			const reporter = await userRepository.findUnique(resolvedReport.reporterId);
-			if (reporter) {
-				const commentForTemplate = publicComment ?? '';
-				await this.sendResolvedReportSystemDm({
-					reporter,
-					reportId,
-					publicComment: commentForTemplate,
-				});
-				if (reporter.email) {
-					await emailService.sendReportResolvedEmail(
-						reporter.email,
-						reporter.username,
-						reportId.toString(),
-						commentForTemplate,
-						reporter.locale,
-					);
-				}
-			}
-		}
 		return {
 			report_id: resolvedReport.reportId.toString(),
 			status: resolvedReport.status,
@@ -154,9 +176,8 @@ export class AdminReportService {
 		reporter: User;
 		reportId: ReportID;
 		publicComment: string;
-	}): Promise<void> {
+	}): Promise<boolean> {
 		const {users: userRepository} = this.deps.apiContext.services;
-		const systemUser = await userRepository.findUniqueAssert(SYSTEM_USER_ID);
 		const template = getEmailTemplate('report_resolved', reporter.locale, {
 			username: reporter.username,
 			reportId: reportId.toString(),
@@ -173,10 +194,11 @@ export class AdminReportService {
 				},
 				'Skipping report review system DM because the email template could not be resolved',
 			);
-			return;
+			return false;
 		}
 		const requestCache = createRequestCache();
 		try {
+			const systemUser = await userRepository.findUniqueAssert(SYSTEM_USER_ID);
 			const dmChannel = await this.deps.userChannelService.ensureDmOpenForBothUsers({
 				userId: systemUser.id,
 				recipientId: reporter.id,
@@ -185,17 +207,20 @@ export class AdminReportService {
 			});
 			await this.deps.channelService.messages.send.sendMessage({
 				user: systemUser,
+				viewer: SYSTEM_THREAD_VIEWER,
 				channelId: dmChannel.id,
 				data: {
 					content: template.value.body,
 				},
 				requestCache,
 			});
+			return true;
 		} catch (error) {
 			Logger.warn(
 				{reportId: reportId.toString(), reporterId: reporter.id.toString(), error},
 				'Failed to send report review system DM',
 			);
+			return false;
 		} finally {
 			requestCache.clear();
 		}
@@ -405,7 +430,8 @@ export class AdminReportService {
 
 	private async getMessageResponseAccessForAdmin(channelId: ChannelID): Promise<MessageResponseAccessContext> {
 		const channel = await this.deps.channelRepository.findUnique(channelId);
-		return channel ? messageResponseAccessForChannel(channel) : messageResponseAccessForGuild(null);
+		const access = channel ? messageResponseAccessForChannel(channel) : messageResponseAccessForGuild(null);
+		return {...access, includeHidden: true};
 	}
 
 	private async getMutualDmChannelId(report: IARSubmission): Promise<string | null> {
@@ -500,7 +526,10 @@ export class AdminReportService {
 			return reportNsfwLookupCache.channelNsfwByChannelId.get(channelIdString) ?? null;
 		}
 		const channel = await this.deps.channelRepository.findUnique(channelId);
-		const channelNsfw = channel?.isNsfw ?? null;
+		const scope = channel
+			? await resolveNsfwScopeChannel(channel, (id) => this.deps.channelRepository.findUnique(id))
+			: null;
+		const channelNsfw = scope?.isNsfw ?? null;
 		reportNsfwLookupCache.channelNsfwByChannelId.set(channelIdString, channelNsfw);
 		return channelNsfw;
 	}
@@ -604,10 +633,23 @@ export class AdminReportService {
 			return null;
 		}
 		try {
-			const user = await this.deps.userCacheService.getUserPartialResponse(userId, requestCache);
+			const cached = await this.deps.userCacheService.getUserPartialResponse(userId, requestCache);
+			const stored = isHiddenPartial(cached) ? await this.deps.apiContext.services.users.findUnique(userId) : null;
+			const user = stored
+				? {
+						username: stored.username,
+						global_name: stored.globalName,
+						discriminator: stored.discriminator.toString(),
+						bot: stored.isBot,
+					}
+				: cached;
 			const discriminator = user.discriminator?.padStart(4, '0') ?? '0000';
 			return {
-				tag: `${user.username}#${discriminator}`,
+				tag: formatUserTag({
+					username: user.username,
+					discriminator: Number.parseInt(discriminator, 10),
+					isBot: user.bot ?? false,
+				}),
 				username: user.username,
 				global_name: user.global_name ?? null,
 				discriminator,

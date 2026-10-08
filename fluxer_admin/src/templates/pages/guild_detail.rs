@@ -26,11 +26,13 @@ pub const GUILD_TABS: &[(&str, &str)] = &[
     ("archives", "Archives"),
     ("emojis", "Emojis"),
     ("stickers", "Stickers"),
+    ("threads", "Threads"),
     ("audit_logs", "Admin Audit Logs"),
     ("audit_log", "Guild Audit Log"),
     ("reports", "Reports"),
 ];
 
+#[allow(clippy::too_many_arguments)]
 pub fn guild_detail_with_tab(
     config: &AdminConfig,
     auth: &AuthContext,
@@ -39,9 +41,12 @@ pub fn guild_detail_with_tab(
     active_tab: &str,
     tab_body: Option<Markup>,
     is_htmx: bool,
+    username_sign_in: bool,
 ) -> Markup {
     let content = match guild {
-        Some(guild) => render_guild_detail(config, auth, guild, active_tab, tab_body),
+        Some(guild) => {
+            render_guild_detail(config, auth, guild, active_tab, tab_body, username_sign_in)
+        }
         None => not_found_state("Guild", guild_id, None, None),
     };
     let title = if guild.is_some() {
@@ -62,6 +67,7 @@ pub fn simple_tab_content(
     tab: &str,
     csrf_token: &str,
     admin_acls: &[String],
+    username_sign_in: bool,
 ) -> Markup {
     let guild_info = GuildInfo::from(guild.clone());
     match tab {
@@ -69,9 +75,13 @@ pub fn simple_tab_content(
         "features" => {
             guild_detail_tabs::features::features_tab(config, &guild_info, csrf_token, admin_acls)
         }
-        "settings" => {
-            guild_detail_tabs::settings::settings_tab(config, guild, csrf_token, admin_acls)
-        }
+        "settings" => guild_detail_tabs::settings::settings_tab(
+            config,
+            guild,
+            csrf_token,
+            admin_acls,
+            username_sign_in,
+        ),
         "moderation" => guild_detail_tabs::moderation::moderation_tab(
             config,
             &guild_info,
@@ -92,6 +102,7 @@ fn render_guild_detail(
     guild: &GuildDetailInfo,
     active_tab: &str,
     tab_body: Option<Markup>,
+    username_sign_in: bool,
 ) -> Markup {
     let base = &config.base_path;
     let admin_acls = auth
@@ -111,8 +122,16 @@ fn render_guild_detail(
         effective_tab,
         |tab_id| guild_tab_visible(config, tab_id, admin_acls),
     );
-    let body = tab_body
-        .unwrap_or_else(|| simple_tab_content(config, guild, effective_tab, "", admin_acls));
+    let body = tab_body.unwrap_or_else(|| {
+        simple_tab_content(
+            config,
+            guild,
+            effective_tab,
+            "",
+            admin_acls,
+            username_sign_in,
+        )
+    });
     html! {
         div class="space-y-6" {
             a href={(base) "/guilds"}
@@ -190,6 +209,7 @@ fn guild_tab_visible(_config: &AdminConfig, tab_id: &str, admin_acls: &[String])
         "overview" | "members" | "settings" | "features" | "moderation" => true,
         "reports" => acl::has_permission(admin_acls, acl::REPORT_VIEW),
         "emojis" | "stickers" => acl::has_permission(admin_acls, acl::ASSET_PURGE),
+        "threads" => acl::has_permission(admin_acls, acl::GUILD_LOOKUP),
         "audit_logs" => acl::has_permission(admin_acls, acl::AUDIT_LOG_VIEW),
         "audit_log" => acl::has_permission(admin_acls, acl::GUILD_AUDIT_LOG_VIEW),
         "archives" => acl::has_any_permission(

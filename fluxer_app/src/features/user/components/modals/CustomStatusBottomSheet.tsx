@@ -25,6 +25,7 @@ import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsC
 import styles from '@app/features/user/components/modals/CustomStatusBottomSheet.module.css';
 import {type CustomStatus, normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
 import Users from '@app/features/user/state/Users';
+import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {SmileyIcon, XIcon} from '@phosphor-icons/react';
@@ -159,6 +160,8 @@ export const CustomStatusBottomSheet = observer(({isOpen, onClose}: CustomStatus
 			});
 			await UserSettingsCommands.update({customStatus: statusToSave});
 			onClose();
+		} catch (error) {
+			if (!handleAccountLimitedError(error)) throw error;
 		} finally {
 			setIsSaving(false);
 		}

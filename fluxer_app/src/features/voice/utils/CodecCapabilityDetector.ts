@@ -9,7 +9,6 @@ import {
 	isFirefoxBrowser,
 	type NativePlatform,
 } from '@app/features/ui/utils/NativeUtils';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {getGpuEncoderReportSync, type HardwareEncodeAnswer} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import {
@@ -25,11 +24,8 @@ import {
 	type ScreenShareCodecProfileEntry,
 	type ScreenShareCodecRanking,
 } from '@app/features/voice/utils/ScreenShareCodecSelection';
-import {normaliseStreamingModeForContext} from '@app/features/voice/utils/ScreenShareOptions';
-import {
-	getProbedVideoDecoderExclusionsSync,
-	getVideoDecoderExclusionsSync,
-} from '@app/features/voice/utils/VideoDecoderCapabilities';
+import {isH264SoftwareClamped, normaliseStreamingModeForContext} from '@app/features/voice/utils/ScreenShareOptions';
+import {getProbedVideoDecoderExclusionsSync} from '@app/features/voice/utils/VideoDecoderCapabilities';
 import type {TrackPublishDefaults, TrackPublishOptions} from 'livekit-client';
 import {BackupCodecPolicy, supportsVideoCodec, type VideoCodec, type VideoEncoding} from 'livekit-client';
 
@@ -98,7 +94,6 @@ let cachedReportNativeHardwareEncoderKey: object | null | undefined;
 let cachedReportHardwareAccelerationDisabled: boolean | undefined;
 let cachedReportAv1OptIn: boolean | undefined;
 let cachedReportHevcOptIn: boolean | undefined;
-let cachedReportDelivery: boolean | undefined;
 const runtimeEncodeFailureCodecs = new Set<VideoCodec>();
 const observedSoftwareEncodeCodecs = new Set<VideoCodec>();
 
@@ -187,48 +182,32 @@ function getScreenShareCodecPolicyUnsupported(
 				'H.265 (HEVC) screen sharing is off by default because it may cause compatibility issues for viewers. We’re working on improving this. Turn on H.265 screen sharing in Advanced settings to use it.',
 		};
 	}
-	if (context.firefox) {
-		switch (codec) {
-			case 'av1':
-				return {
-					supported: false,
-					reason: 'unsupported-browser',
-					detail: 'Firefox doesn\u2019t support AV1 encoding for WebRTC yet.',
-				};
-			case 'vp9':
-				return {
-					supported: false,
-					reason: 'unsupported-browser',
-					detail: 'Firefox\u2019s WebRTC stack doesn\u2019t expose VP9 as a publishable codec.',
-				};
-			case 'h265':
-				return {
-					supported: false,
-					reason: 'unsupported-browser',
-					detail: 'Firefox doesn\u2019t support H.265 encoding for WebRTC.',
-				};
-			default:
-				break;
-		}
+	if (context.firefox && codec === 'h265') {
+		return {
+			supported: false,
+			reason: 'unsupported-browser',
+			detail: 'Firefox doesn\u2019t support H.265 encoding for WebRTC.',
+		};
+	}
+	if (context.firefox && context.platform === 'linux' && codec === 'h264') {
+		return {
+			supported: false,
+			reason: 'unsupported-browser',
+			detail: 'The voice server doesn\u2019t accept H.264 from Firefox on Linux or Android.',
+		};
 	}
 	return null;
 }
 
-function hasPublishPathNativeHardwareEncoder(
-	codec: VideoCodec,
-	context: CodecPolicyContext,
-	delivery: boolean,
-): boolean {
+function hasPublishPathNativeHardwareEncoder(codec: VideoCodec, context: CodecPolicyContext): boolean {
 	if (!hasNativeHardwareEncoder(codec)) return false;
 	const backend = getNativeHardwareEncoderCapabilitiesSync()?.backend;
-	if (!delivery) return backend !== 'videotoolbox' && backend !== 'nvenc';
 	if (backend === 'videotoolbox') return true;
 	if (backend === 'nvenc') return context.platform !== 'linux';
 	return false;
 }
 
 function buildReport(): CodecCapabilityReport {
-	const delivery = ScreenShareDeliveryRollout.enabled;
 	const {caps, probedSuccessfully} = probeRawCapabilities();
 	const context = buildScreenShareCodecPolicyContext();
 	const gpuReport = getGpuEncoderReportSync();
@@ -243,17 +222,11 @@ function buildReport(): CodecCapabilityReport {
 		if (observedSoftwareEncodeCodecs.has(codec)) {
 			return 'software';
 		}
-		if (!delivery) {
-			if (hasPublishPathNativeHardwareEncoder(codec, context, delivery)) {
-				return 'hardware';
-			}
-			return gpuReport ? gpuReport[codec] : 'unknown';
-		}
 		const measured = gpuReport ? gpuReport[codec] : 'unknown';
 		if (measured !== 'unknown') {
 			return measured;
 		}
-		return hasPublishPathNativeHardwareEncoder(codec, context, delivery) ? 'hardware' : 'unknown';
+		return hasPublishPathNativeHardwareEncoder(codec, context) ? 'hardware' : 'unknown';
 	}
 	type DescribedUnsupported = Omit<CodecSupportInfo, 'hardwareAccelerated'>;
 	function unsupported(codec: keyof CodecCapabilities, info: DescribedUnsupported): CodecSupportInfo {
@@ -271,8 +244,8 @@ function buildReport(): CodecCapabilityReport {
 				detail: 'This codec failed while publishing during the current session.',
 			});
 		}
-		const supportedByNativeHardware = hasPublishPathNativeHardwareEncoder(codec, context, delivery);
-		if (caps[codec] || (!delivery && supportedByNativeHardware)) {
+		const supportedByNativeHardware = hasPublishPathNativeHardwareEncoder(codec, context);
+		if (caps[codec]) {
 			return {
 				supported: true,
 				reason: 'supported',
@@ -348,10 +321,8 @@ export function getCodecCapabilityReport(): CodecCapabilityReport {
 	const hardwareAccelerationDisabled = isDesktopHardwareAccelerationDisabled();
 	const av1OptIn = VoiceSettings.getScreenShareAv1OptIn();
 	const hevcOptIn = VoiceSettings.getScreenShareHevcOptIn();
-	const delivery = ScreenShareDeliveryRollout.enabled;
 	if (
 		cachedReport &&
-		cachedReportDelivery === delivery &&
 		cachedReportGpuKey === currentGpu &&
 		cachedReportNativeHardwareEncoderKey === currentNativeHardwareEncoder &&
 		cachedReportHardwareAccelerationDisabled === hardwareAccelerationDisabled &&
@@ -365,7 +336,6 @@ export function getCodecCapabilityReport(): CodecCapabilityReport {
 	cachedReportHardwareAccelerationDisabled = hardwareAccelerationDisabled;
 	cachedReportAv1OptIn = av1OptIn;
 	cachedReportHevcOptIn = hevcOptIn;
-	cachedReportDelivery = delivery;
 	return cachedReport;
 }
 
@@ -440,6 +410,7 @@ export function buildScreenShareCodecProfile(): ScreenShareCodecProfile {
 			h265: entry('h265'),
 			av1: entry('av1'),
 		},
+		h264SoftwareClamped: isH264SoftwareClamped(),
 	};
 }
 
@@ -538,9 +509,7 @@ export function getVideoPublishCodecDenial(codec: VideoCodec): VideoPublishCodec
 	if (!supportsVideoCodec(codec)) return 'sender-cannot-encode';
 	if (getScreenShareCodecPolicyUnsupported(codec, buildScreenShareCodecPolicyContext())) return 'policy';
 	if (runtimeEncodeFailureCodecs.has(codec)) return 'runtime-failed';
-	const decoderExclusions = ScreenShareDeliveryRollout.enabled
-		? getProbedVideoDecoderExclusionsSync()
-		: getVideoDecoderExclusionsSync();
+	const decoderExclusions = getProbedVideoDecoderExclusionsSync();
 	if (decoderExclusions?.includes(codec) === true) return 'decoder-excluded';
 	return null;
 }
@@ -701,7 +670,6 @@ export function resetCachedCodecCapabilities(): void {
 	cachedReportHardwareAccelerationDisabled = undefined;
 	cachedReportAv1OptIn = undefined;
 	cachedReportHevcOptIn = undefined;
-	cachedReportDelivery = undefined;
 	runtimeEncodeFailureCodecs.clear();
 	observedSoftwareEncodeCodecs.clear();
 	resetNativeHardwareEncoderCapabilities();

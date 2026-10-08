@@ -1,0 +1,50 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.threadList {
+	--thread-spine-left: 1.5625rem;
+	--thread-spine-width: 0.125rem;
+	--thread-spine-reach: 0.375rem;
+	--thread-spine-radius: 0.375rem;
+	--thread-spine-color: var(--interactive-muted);
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	padding-top: 0.0625rem;
+}
+
+.threadRow {
+	position: relative;
+	padding-top: 0.0625rem;
+	padding-left: 1.75rem;
+}
+
+.spine {
+	position: absolute;
+	top: 0;
+	bottom: calc(1rem - var(--thread-spine-width) / 2);
+	left: var(--thread-spine-left);
+	box-sizing: border-box;
+	width: calc(var(--thread-spine-reach) + var(--thread-spine-width));
+	border-left: var(--thread-spine-width) solid var(--thread-spine-color);
+	border-bottom: var(--thread-spine-width) solid var(--thread-spine-color);
+	border-bottom-left-radius: var(--thread-spine-radius);
+	pointer-events: none;
+}
+
+.spineContinuation {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: var(--thread-spine-left);
+	width: var(--thread-spine-width);
+	background-color: var(--thread-spine-color);
+	pointer-events: none;
+}
+
+.threadRow .threadItem {
+	padding-left: 0.375rem;
+}
+
+.threadRow .threadName {
+	font-size: 0.875rem;
+}

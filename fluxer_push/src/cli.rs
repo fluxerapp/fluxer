@@ -27,7 +27,9 @@ pub enum Command {
 }
 
 pub fn load_config(args: &Args) -> anyhow::Result<Config> {
-    load_config_from_iter(args, std::env::vars())
+    let vars =
+        fluxer_svc::config::resolve_env_files(std::env::vars()).map_err(anyhow::Error::msg)?;
+    load_config_from_iter(args, vars)
 }
 
 fn load_config_from_iter<I, K, V>(args: &Args, vars: I) -> anyhow::Result<Config>

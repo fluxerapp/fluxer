@@ -56,8 +56,8 @@ async function verifySudoMode(
 	const apiContext = ctx.get('apiContext');
 	const credentials = await apiContext.services.users.listWebAuthnCredentials(user.id);
 	const hasPasskeyCredentials = credentials.length > 0;
-	const hasMfa = userHasMfa(user);
 	const hasSudoCapability = userHasSudoCapability(user, hasPasskeyCredentials);
+	const hasUsableMfa = userHasMfa(user) && hasSudoCapability;
 	const issueSudoToken = options.issueSudoToken ?? hasSudoCapability;
 	if (hasSudoCapability && ctx.get('sudoModeValid')) {
 		const sudoToken = ctx.get('sudoModeToken') ?? ctx.req.header(SUDO_MODE_HEADER) ?? undefined;
@@ -82,10 +82,10 @@ async function verifySudoMode(
 		const sudoToken = issueSudoToken ? await sudoModeService.generateSudoToken(user.id) : undefined;
 		return {verified: true, sudoToken, method: 'mfa'};
 	}
-	if (hasNoVerifiableCredential(user, hasMfa, hasPasskeyCredentials)) {
+	if (hasNoVerifiableCredential(user, hasUsableMfa, hasPasskeyCredentials)) {
 		return {verified: true, method: 'password'};
 	}
-	if (body.password && !hasMfa) {
+	if (body.password && !hasUsableMfa) {
 		if (!user.passwordHash) {
 			throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_NOT_SET);
 		}

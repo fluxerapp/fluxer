@@ -157,22 +157,10 @@ has_member_from_guild(GuildId, Pid, Msg) ->
     integer(), integer()
 ) -> {ok, map() | undefined} | {error, guild_not_found} | error.
 get_member_cached_or_rpc(GuildId, UserId) ->
-    case guild_permission_cache:get_member(GuildId, UserId) of
-        {ok, MemberData} when is_map(MemberData) ->
-            maybe_refresh_member(GuildId, UserId, MemberData);
-        {ok, MemberOrUndefined} ->
-            {ok, MemberOrUndefined};
-        {error, not_found} ->
-            get_member_via_rpc(GuildId, UserId)
-    end.
-
--spec maybe_refresh_member(integer(), integer(), map()) ->
-    {ok, map() | undefined} | {error, guild_not_found} | error.
-maybe_refresh_member(GuildId, UserId, MemberData) ->
-    Key = <<"communication_disabled_until">>,
-    case maps:is_key(Key, MemberData) of
-        true -> {ok, MemberData};
-        false -> get_member_via_rpc(GuildId, UserId)
+    case guild_read_model:query(GuildId, {get_guild_member, #{user_id => UserId}}) of
+        {ok, #{success := true, member_data := Member}} -> {ok, Member};
+        {ok, #{success := false}} -> {ok, undefined};
+        miss -> get_member_via_rpc(GuildId, UserId)
     end.
 
 -spec get_member_via_rpc(
@@ -207,12 +195,9 @@ member_from_guild(GuildId, Pid, Msg) ->
     integer(), integer()
 ) -> {ok, [integer()]} | error.
 get_members_with_role_cached_or_rpc(GuildId, RoleId) ->
-    case guild_permission_cache:get_snapshot(GuildId) of
-        {ok, Snapshot} ->
-            Data = maps:get(data, Snapshot, #{}),
-            MemberRoleIndex = guild_data_index:member_role_index(Data),
-            RoleMembers = maps:get(RoleId, MemberRoleIndex, #{}),
-            {ok, lists:sort(maps:keys(RoleMembers))};
+    case guild_permission_cache:get_role_members(GuildId, RoleId) of
+        {ok, UserIds} ->
+            {ok, UserIds};
         {error, not_found} ->
             get_members_with_role_via_rpc(GuildId, RoleId)
     end.

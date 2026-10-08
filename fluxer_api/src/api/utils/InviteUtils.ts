@@ -10,6 +10,11 @@ function getInviteEndpointBase(): string {
 	return `${url.hostname}${url.pathname.replace(/\/+$/, '')}`;
 }
 
+function getWebAppHostsPattern(): string {
+	const hostnames = new Set(Config.endpoints.webAppOrigins.map((origin) => new URL(origin).hostname));
+	return [...hostnames].map((hostname) => RegexUtils.escapeRegex(hostname)).join('|');
+}
+
 function getInvitePattern(): RegExp {
 	if (!_invitePattern) {
 		_invitePattern = new RegExp(
@@ -18,7 +23,7 @@ function getInvitePattern(): RegExp {
 				'(?:',
 				`${RegexUtils.escapeRegex(getInviteEndpointBase())}(?:\\/#)?\\/(?!invite\\/)([a-zA-Z0-9\\-]{2,32})(?![a-zA-Z0-9\\-])`,
 				'|',
-				`${RegexUtils.escapeRegex(new URL(Config.endpoints.webApp).hostname)}(?:\\/#)?\\/invite\\/([a-zA-Z0-9\\-]{2,32})(?![a-zA-Z0-9\\-])`,
+				`(?:${getWebAppHostsPattern()})(?:\\/#)?\\/invite\\/([a-zA-Z0-9\\-]{2,32})(?![a-zA-Z0-9\\-])`,
 				')',
 			].join(''),
 			'gi',
@@ -36,4 +41,17 @@ export function findInvite(content: string | null): string | null {
 		return match[1] || match[2];
 	}
 	return null;
+}
+
+export function findInvites(content: string | null, limit: number): Array<string> {
+	if (!content) return [];
+	const pattern = getInvitePattern();
+	pattern.lastIndex = 0;
+	const codes = new Set<string>();
+	for (const match of content.matchAll(pattern)) {
+		const code = match[1] || match[2];
+		if (code) codes.add(code);
+		if (codes.size >= limit) break;
+	}
+	return [...codes];
 }

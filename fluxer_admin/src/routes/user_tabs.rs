@@ -5,6 +5,7 @@ use crate::{
     api::{
         audit::SearchAuditLogsParams,
         client::{AdminApiClient, ApiResultExt},
+        types::AccountIdentityMode,
     },
     config::AdminConfig,
     templates::{
@@ -26,6 +27,7 @@ pub struct TabQuery {
     pub delete_all_messages_message_count: Option<u64>,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn render(
     client: &AdminApiClient,
     config: &AdminConfig,
@@ -34,6 +36,7 @@ pub async fn render(
     tab: &str,
     query: &TabQuery,
     admin_acls: &[String],
+    account_identity: AccountIdentityMode,
 ) -> Option<maud::Markup> {
     match tab {
         "overview" => {
@@ -60,31 +63,22 @@ pub async fn render(
                 csrf_token,
                 change_log.as_ref(),
                 limit_config.as_ref(),
+                account_identity.is_username(),
             ))
         }
         "account" => {
-            let u = client
-                .get_user_by_id(user_id)
-                .await
-                .log_error("load user account")?;
-            let s = client
-                .list_user_sessions(user_id)
-                .await
-                .map(|r| r.sessions)
-                .map_err(|error| tracing::warn!(%error, user_id, "admin API request failed: list user sessions"))
-                .unwrap_or_default();
-            let webauthn_credentials = client
-                .list_webauthn_credentials(user_id)
-                .await
-                .map_err(|error| tracing::warn!(%error, user_id, "admin API request failed: list webauthn credentials"))
-                .unwrap_or_default();
-            Some(tabs::account::account_tab(
+            render_account(
+                client,
                 config,
-                &u,
-                &s,
-                &webauthn_credentials,
                 csrf_token,
-            ))
+                user_id,
+                &tabs::account::AccountTabOptions {
+                    admin_acls,
+                    account_identity,
+                    password_reset_link: None,
+                },
+            )
+            .await
         }
         "moderation" => {
             let u = client
@@ -111,11 +105,48 @@ pub async fn render(
                 query.delete_all_messages_channel_count.unwrap_or(0),
                 query.delete_all_messages_message_count.unwrap_or(0),
             ));
+            let deletion_scheduler = match u.deletion_scheduled_by.as_deref() {
+                Some(scheduler_id) if u.pending_deletion_at.is_some() && scheduler_id != u.id => {
+                    client
+                        .get_user_by_id(scheduler_id)
+                        .await
+                        .log_error("load deletion scheduler")
+                }
+                _ => None,
+            };
+            let ban_logs = if u.temp_banned_until.is_some()
+                && acl::has_permission(admin_acls, acl::AUDIT_LOG_VIEW)
+            {
+                client
+                    .search_audit_logs(&SearchAuditLogsParams {
+                        query: None,
+                        admin_user_id: None,
+                        target_id: Some(user_id.to_owned()),
+                        target_type: Some("user".to_owned()),
+                        access: Some("write".to_owned()),
+                        sort_by: Some("created_at".to_owned()),
+                        sort_order: Some("desc".to_owned()),
+                        limit: 100,
+                        offset: 0,
+                    })
+                    .await
+                    .log_error("load ban audit logs")
+                    .map(|response| response.logs)
+                    .unwrap_or_default()
+            } else {
+                Vec::new()
+            };
+            let context = tabs::moderation::ModerationContext {
+                deletion_scheduler: deletion_scheduler.as_ref(),
+                current_ban: tabs::moderation::find_current_ban(&u, &ban_logs),
+                username_sign_in: account_identity.is_username(),
+            };
             Some(tabs::moderation::moderation_tab(
                 config,
                 &u,
                 csrf_token,
                 admin_acls,
+                &context,
                 query.message_shred_job_id.as_deref(),
                 message_shred_status.as_ref(),
                 delete_all_messages_dry_run,
@@ -260,6 +291,40 @@ pub async fn render(
         }
         _ => None,
     }
+}
+
+pub async fn render_account(
+    client: &AdminApiClient,
+    config: &AdminConfig,
+    csrf_token: &str,
+    user_id: &str,
+    options: &tabs::account::AccountTabOptions<'_>,
+) -> Option<maud::Markup> {
+    let u = client
+        .get_user_by_id(user_id)
+        .await
+        .log_error("load user account")?;
+    let s = client
+        .list_user_sessions(user_id)
+        .await
+        .map(|r| r.sessions)
+        .map_err(
+            |error| tracing::warn!(%error, user_id, "admin API request failed: list user sessions"),
+        )
+        .unwrap_or_default();
+    let webauthn_credentials = client
+        .list_webauthn_credentials(user_id)
+        .await
+        .map_err(|error| tracing::warn!(%error, user_id, "admin API request failed: list webauthn credentials"))
+        .unwrap_or_default();
+    Some(tabs::account::account_tab(
+        config,
+        &u,
+        &s,
+        &webauthn_credentials,
+        csrf_token,
+        options,
+    ))
 }
 
 fn parse_bool_flag(value: &str) -> Option<bool> {

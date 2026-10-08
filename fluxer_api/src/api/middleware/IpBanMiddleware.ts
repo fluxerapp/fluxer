@@ -2,10 +2,12 @@
 
 import {AdminRepository} from '@app/api/admin/AdminRepository';
 import type {BannedIpEntry, BannedIpKind} from '@app/api/admin/IAdminRepository';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
+import {sharedListHas} from '@app/api/infrastructure/activity/SharedLists';
 import {Logger} from '@app/api/Logger';
-import {isIpBanExempt} from '@app/api/risk/IpBanExemptions';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {readOptionalEnv} from '@app/api/utils/IntegerOptions';
 import {parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
 import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
 import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
@@ -69,7 +71,7 @@ class IpBanCache {
 		channels: [IP_BAN_REFRESH_CHANNEL],
 		refresh: () => this.refresh(),
 		periodicIntervalMs: () => {
-			const intervalMs = Number(process.env.FLUXER_IP_BAN_REFRESH_INTERVAL_MS ?? '300000');
+			const intervalMs = Number(readOptionalEnv('FLUXER_IP_BAN_REFRESH_INTERVAL_MS') ?? '300000');
 			return Number.isFinite(intervalMs) && intervalMs > 0 ? intervalMs : null;
 		},
 		onRefreshError: (err, trigger) => {
@@ -125,7 +127,7 @@ class IpBanCache {
 		const sameIpDecisionKey = getSameIpDecisionKey(parsed.canonical);
 		if (sameIpDecisionKey) {
 			const decisionCount = this.sameIpDecisionBans.get(sameIpDecisionKey);
-			if (decisionCount) {
+			if (decisionCount && this.isActive(decisionCount)) {
 				return {
 					ipAddress: parsed.canonical,
 					matchedEntry: sameIpDecisionKey,
@@ -135,7 +137,7 @@ class IpBanCache {
 		}
 		const singleMap = this.singleIpBans[parsed.family];
 		const single = singleMap.get(parsed.canonical);
-		if (single) {
+		if (single && this.isActive(single.count)) {
 			return {
 				ipAddress: parsed.canonical,
 				matchedEntry: parsed.canonical,
@@ -144,7 +146,7 @@ class IpBanCache {
 		}
 		const rangeMap = this.rangeIpBans[parsed.family];
 		for (const [canonical, range] of rangeMap.entries()) {
-			if (parsed.value >= range.start && parsed.value <= range.end) {
+			if (parsed.value >= range.start && parsed.value <= range.end && this.isActive(range.count)) {
 				return {
 					ipAddress: parsed.canonical,
 					matchedEntry: canonical,
@@ -228,6 +230,13 @@ class IpBanCache {
 			count.temporary -= 1;
 		}
 		return count.permanent <= 0 && count.temporary <= 0;
+	}
+
+	private isActive(count: IpBanCount): boolean {
+		if (count.permanent > 0 || !count.temporaryExpiresAt) {
+			return true;
+		}
+		return count.temporaryExpiresAt.getTime() > Date.now();
 	}
 
 	private resolveCount(count: IpBanCount): {
@@ -327,6 +336,9 @@ export const IpBanMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 			kind: match.kind,
 			expiresAt: match.expiresAt,
 		});
+	}
+	if (clientIp && !isIpBanExempt(clientIp) && sharedListHas('ip_blocked', clientIp)) {
+		throw new IpBannedError({ipAddress: clientIp, kind: 'permanent'});
 	}
 	await next();
 });

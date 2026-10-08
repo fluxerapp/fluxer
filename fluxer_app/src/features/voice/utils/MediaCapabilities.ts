@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {inspectImageFile} from '@app/features/expressions/utils/AnimatedImageUtils';
 import {isSvgMimeType, normalizeImageMimeType} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
+import {AVIF_ALPHA_PROBE_BASE64} from '@app/features/platform/utils/ImageDecoderInterop';
 
 interface CapabilityResult {
 	avif: boolean;
@@ -11,11 +13,10 @@ interface CapabilityResult {
 	uaKey: string;
 }
 
-const AVIF_PROBE =
-	'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADybWV0YQAAAAAAAAAoaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAGxpYmF2aWYAAAAADnBpdG0AAAAAAAEAAAAeaWxvYwAAAABEAAABAAEAAAABAAABGgAAAB0AAAAoaWluZgAAAAAAAQAAABppbmZlAgAAAAABAABhdjAxQ29sb3IAAAAAamlwcnAAAABLaXBjbwAAABRpc3BlAAAAAAAAAAEAAAABAAAAEHBpeGkAAAAAAwgICAAAAAxhdjFDgQAMAAAAABNjb2xybmNseAACAAIABoAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAACVtZGF0EgAKCBgIYAQQUDAJEBQYJlAQUAAAAB1FmDuOmIs=';
+const AVIF_PROBE = `data:image/avif;base64,${AVIF_ALPHA_PROBE_BASE64}`;
 const WEBP_PROBE = 'data:image/webp;base64,UklGRhwAAABXRUJQVlA4TBAAAAAvAAAAAAfQ//73v/+BiOh/AAA=';
 const JXL_PROBE = 'data:image/jxl;base64,/wr6PwH4TWFvLnVMkM4=';
-const STORAGE_KEY = 'fluxer:media_caps:v1';
+const STORAGE_KEY = 'fluxer:media_caps:v2';
 const PROBE_TIMEOUT_MS = 1500;
 
 function buildUaKey(): string {
@@ -106,8 +107,6 @@ export async function canCropFormat(mime: string): Promise<boolean> {
 	}
 	if (isSvgMimeType(m)) return false;
 	if (m === 'application/json' || m === 'application/lottie+json') return false;
-	const {hasNativeBridge} = await import('@app/features/messaging/utils/MediaNativeBridge');
-	if (hasNativeBridge()) return true;
 	const caps = await probeMediaCapabilities();
 	if (m === 'image/webp') return caps.webp;
 	if (m === 'image/avif') return caps.avif;
@@ -116,6 +115,12 @@ export async function canCropFormat(mime: string): Promise<boolean> {
 		return await canDecodeViaImage(`image/heic`);
 	}
 	return false;
+}
+
+export async function canCropFile(file: File): Promise<boolean> {
+	if (await canCropFormat(file.type)) return true;
+	const {format} = await inspectImageFile(file);
+	return format !== 'unknown' && (await canCropFormat(`image/${format}`));
 }
 
 async function canDecodeViaImage(mime: string): Promise<boolean> {

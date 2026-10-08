@@ -6,6 +6,7 @@ import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
 import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {shouldDisableAdaptivePricing} from '@app/api/utils/CurrencyUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {DonationAmountInvalidError} from '@fluxer/errors/src/domains/donation/DonationAmountInvalidError';
@@ -173,6 +174,7 @@ export class DonationCheckoutService {
 					enabled: true,
 				},
 				...(isBusiness ? {billing_address_collection: 'required' as const} : {}),
+				...(shouldDisableAdaptivePricing(params.currency) ? {adaptive_pricing: {enabled: false}} : {}),
 				...(mode === 'payment'
 					? {
 							customer_creation: 'always' as const,

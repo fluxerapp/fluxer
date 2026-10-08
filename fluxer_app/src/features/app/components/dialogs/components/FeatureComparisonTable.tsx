@@ -3,10 +3,11 @@
 import {ComparisonCheckRow} from '@app/features/app/components/dialogs/components/ComparisonCheckRow';
 import {ComparisonRow} from '@app/features/app/components/dialogs/components/ComparisonRow';
 import styles from '@app/features/app/components/dialogs/components/FeatureComparisonTable.module.css';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import {COMMUNITIES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {
 	isBooleanTierPerk,
 	isNumericTierPerk,
@@ -111,7 +112,14 @@ export const FeatureComparisonTable = observer(() => {
 		}),
 		[i18n.locale],
 	);
-	const availablePerks = useMemo(() => LIMIT_TIER_PERKS.filter((perk) => perk.status === 'available'), []);
+	const hideCustomTag = RuntimeConfig.usesUniqueUsernames;
+	const availablePerks = useMemo(
+		() =>
+			LIMIT_TIER_PERKS.filter(
+				(perk) => perk.status === 'available' && !(hideCustomTag && perk.id === 'custom_discriminator'),
+			),
+		[hideCustomTag],
+	);
 	const formatPerkValue = (perk: LimitTierPerk, value: number, isStock: boolean): string => {
 		if (!isNumericTierPerk(perk)) return String(value);
 		const resolvedValue = perk.limitKey
@@ -131,8 +139,10 @@ export const FeatureComparisonTable = observer(() => {
 				<ComparisonCheckRow
 					key={perk.id}
 					feature={label}
-					restrictedHas={perk.restrictedValue}
-					stockHas={perk.stockValue}
+					restrictedHas={
+						perk.limitKey ? Limits.hasRestrictedFeature(perk.limitKey, perk.restrictedValue) : perk.restrictedValue
+					}
+					stockHas={perk.limitKey ? Limits.hasStockFeature(perk.limitKey, perk.stockValue) : perk.stockValue}
 					data-flx="app.feature-comparison-table.render-perk-row.comparison-check-row"
 				/>
 			);
@@ -149,9 +159,11 @@ export const FeatureComparisonTable = observer(() => {
 			);
 		}
 		if (isTextTierPerk(perk)) {
-			const restrictedLabel =
+			const lowLabel =
 				perkLabels[perk.restrictedValueI18nKey as keyof typeof perkLabels] || perk.restrictedValueI18nKey;
-			const stockLabel = perkLabels[perk.stockValueI18nKey as keyof typeof perkLabels] || perk.stockValueI18nKey;
+			const highLabel = perkLabels[perk.stockValueI18nKey as keyof typeof perkLabels] || perk.stockValueI18nKey;
+			const restrictedLabel = perk.limitKey && Limits.hasRestrictedFeature(perk.limitKey, false) ? highLabel : lowLabel;
+			const stockLabel = !perk.limitKey || Limits.hasStockFeature(perk.limitKey, true) ? highLabel : lowLabel;
 			return (
 				<ComparisonRow
 					key={perk.id}
@@ -177,7 +189,7 @@ export const FeatureComparisonTable = observer(() => {
 						<Trans>Free</Trans>
 					</div>
 					<div className={styles.headerStock} data-flx="app.feature-comparison-table.header-stock">
-						{PREMIUM_PRODUCT_NAME}
+						{getPremiumProductName()}
 					</div>
 				</div>
 			</div>

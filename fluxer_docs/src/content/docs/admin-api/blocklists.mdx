@@ -6,51 +6,65 @@ description: The safety blocklists, their value forms, and the operations that m
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Fluxer has nine blocklists for account access and user content. Each defines its accepted values, matching rules and metadata. Fluxer normalises a value when it adds the value and again when it checks the value.
+Fluxer has eight blocklists for account access and user content. Each defines its accepted values, matching rules and metadata. Fluxer normalises a value when it adds the value and again when it checks the value.
 
-Each list has its own [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission. An account holding `ban:ip:add` writes to the `ip` list and to no other. Every operation records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces, and each read produces one entry. An entry about one list has a target type built from the list name with each hyphen written as an underscore, so `url-domain` entries use `url_domain`. `email-domain-suspicious` is the one exception and uses `email_domain`.
+Each list has its own [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission. An account holding `ban:ip:add` writes to the `ip` list and to no other. Every operation records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces, and each read produces one entry. An entry about one list has a target type built from the list name with each hyphen written as an underscore, so `url-domain` entries use `url_domain`.
 
-Fluxer builds each permission name from `ban:`, the list name with each hyphen written as an underscore, and the verb, so the `url-domain` list uses `ban:url_domain:check`, `ban:url_domain:add`, and `ban:url_domain:remove`. The `email-domain-suspicious` list is the one exception and uses `suspicious_email_domain:check`, `suspicious_email_domain:add`, and `suspicious_email_domain:remove`.
-
-:::note[The Admin API exposes no other blocklist]
-Fluxer synchronises disposable email domains from external feeds every six hours when `FLUXER_BLOCKLIST_FEEDS_ENABLED` is on. No operation on this page reads or writes them.
-:::
+Fluxer builds each permission name from `ban:`, the list name with each hyphen written as an underscore, and the verb, so the `url-domain` list uses `ban:url_domain:check`, `ban:url_domain:add`, and `ban:url_domain:remove`.
 
 ## Blocklist types
 
-`ip`, `email`, and `email-domain-suspicious` gate account access and registration. `phrase`, `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring` gate what an account may post, link, upload, or display. `email` and `email-domain-suspicious` store nothing but the value. An `ip` row also stores a ban kind, a reason, an expiry, and its creation time.
+`ip` and `email` gate account access and registration. `phrase`, `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring` gate what an account may post, link, upload, or display. `email` stores nothing but the value. An `ip` row also stores a ban kind, a reason, an expiry, and its creation time. An `ip` row with an expiry stops applying when it expires, and Fluxer then deletes it.
 
 | Value | Description |
 | --- | --- |
 | ip<sup>1</sup> | IPv4 addresses, IPv6 addresses, and CIDR ranges denied service |
 | email<sup>2</sup> | Exact email addresses blocked from registration and from being set on an account |
-| email-domain-suspicious<sup>2</sup> <sup>3</sup> | Email domains that allow registration and require the new account to verify a phone number first |
-| phrase<sup>4</sup> | Phrases blocked from content |
-| url<sup>5</sup> | Absolute `http` and `https` URLs blocked from being posted |
-| url-domain<sup>6</sup> | Domains blocked from being linked |
-| file-sha<sup>7</sup> | SHA-256 hashes blocked from being uploaded |
-| avatar-hash<sup>8</sup> | Avatar hashes blocked from being set |
-| profile-substring<sup>4</sup> <sup>9</sup> | Substrings blocked from one named profile field |
+| phrase<sup>3</sup> | Phrases blocked from content |
+| url<sup>4</sup> | Absolute `http` and `https` URLs blocked from being posted |
+| url-domain<sup>5</sup> | Domains blocked from being linked |
+| file-sha<sup>6</sup> | SHA-256 hashes blocked from being uploaded |
+| avatar-hash<sup>7</sup> | Avatar hashes blocked from being set |
+| profile-substring<sup>3</sup> <sup>8</sup> | Substrings blocked from one named profile field |
 
-<sup>1</sup> Fluxer refuses an address with 400 `IP_BAN_DECLINED` when it is on the instance exemption list, or when IP lookup data shows that a single address is on a mobile carrier network, and records both refusals in the Admin audit log
+<sup>1</sup> Fluxer refuses an address with 400 `IP_BAN_DECLINED` when it is on the instance exemption list, and records the refusal in the Admin audit log
 
 <sup>2</sup> Stored lowercased, so a mixed-case value does not create a second row
 
-<sup>3</sup> Fluxer never shows the list to the account holder, who sees only the verified-phone gate. A domain must match `^[a-zA-Z0-9][a-zA-Z0-9\-.]*\.[a-zA-Z]{2,}$`
+<sup>3</sup> Canonicalised by NFKC normalisation, removal of control, format and variation-selector characters, lowercasing, and trimming. When Fluxer matches a value, it also normalises inserted whitespace, punctuation, and compatibility characters
 
-<sup>4</sup> Canonicalised by NFKC normalisation, removal of control, format and variation-selector characters, lowercasing, and trimming. When Fluxer matches a value, it also normalises inserted whitespace, punctuation, and compatibility characters
+<sup>4</sup> Canonicalised before storage. A value Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url`
 
-<sup>5</sup> Canonicalised before storage. A value Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url`
+<sup>5</sup> Stored lowercased, in ASCII form, and without a trailing dot. A row matches that hostname, and with `match_subdomains` true it also matches every subdomain. A value whose leftmost label has `*` is a [domain pattern](#domain-patterns)
 
-<sup>6</sup> Stored lowercased and matched against the lowercased hostname of a submitted URL. `match_subdomains` is stored on the row and defaults to true, and the hostname match is exact whatever its value
+<sup>6</sup> Stored as lowercase hexadecimal
 
-<sup>7</sup> Stored as lowercase hexadecimal
+<sup>7</sup> Stored as the 8-character hash with any `a_` animation prefix stripped and the rest lowercased, so the animated and static forms of one avatar are the same row
 
-<sup>8</sup> Stored as the 8-character hash with any `a_` animation prefix stripped and the rest lowercased, so the animated and static forms of one avatar are the same row
-
-<sup>9</sup> The only scoped list. Scope and substring together identify a row, so the same substring can be stored once per [scope](#profile-substring-scopes)
+<sup>8</sup> The only scoped list. Scope and substring together identify a row, so the same substring can be stored once per [scope](#profile-substring-scopes)
 
 The fields and the operations a list accepts differ from list to list. Read the `fields` array and the `supports_` flags of a [blocklist object](#blocklist-object) before writing to a list.
+
+## Domain patterns
+
+A `url-domain` value whose leftmost label has `*` is a pattern. Each `*` stands for any run of characters inside that one label, so `*shop*.example.com` matches `shop.example.com` and `my-shop-2.example.com`. The rest of the value is a literal domain, called the suffix.
+
+A pattern only matches the label directly left of its suffix. It never matches the suffix itself, so `*shop*.example.com` does not block `example.com`. With `match_subdomains` true, the pattern also matches every subdomain of a matching host, such as `www.shop.example.com`. Blocking a whole suffix takes a plain domain row.
+
+Fluxer refuses a pattern with 400 `INVALID_FORM_BODY` naming `domain` when:
+
+- `*` appears outside the leftmost label
+- the leftmost label has characters other than `a-z`, `0-9`, `-`, and `*`
+- the leftmost label has more than 3 `*` or fewer than 3 other characters
+- the suffix is not a valid domain or is a public suffix such as `com` or `co.uk`
+
+A domain under a shared hosting suffix, such as `onrender.com` or `github.io`, is a valid suffix. Fluxer folds a run of `*` into one before it stores the pattern.
+
+Fluxer matches a pattern against the ASCII form of a hostname. An internationalised label is compared in its punycode form, so a pattern with a leading or trailing literal can miss it, while `*shop*` still matches it.
+
+## Link matching
+
+Fluxer checks every link in user content against the `url` and `url-domain` lists. This covers bare links, autolinks in angle brackets, the target of a masked link, and the link URLs of rich embeds. Fluxer reads the hostname of each link the way a browser does. It ignores user information and the port, lowercases the hostname, converts it to ASCII, decodes percent escapes, and drops trailing dots.
 
 ## Content blocklist categories
 
@@ -109,9 +123,9 @@ One entry of the blocklist catalogue returned by [List blocklists](#list-blockli
 | supports_bulk_delete<sup>5</sup> | boolean | Whether [Bulk remove blocklist entries](#bulk-remove-blocklist-entries) is accepted |
 | supports_update<sup>6</sup> | boolean | Whether [Update blocklist entry](#update-blocklist-entry) is accepted |
 
-<sup>1</sup> `ip` names `ip`, `email` names `email`, `email-domain-suspicious` and `url-domain` name `domain`, `phrase` names `phrase`, `url` names `url`, `file-sha` names `sha256_hex`, `avatar-hash` names `hashes`, and `profile-substring` names `substrings`
+<sup>1</sup> `ip` names `ip`, `email` names `email`, `url-domain` names `domain`, `phrase` names `phrase`, `url` names `url`, `file-sha` names `sha256_hex`, `avatar-hash` names `hashes`, and `profile-substring` names `substrings`
 
-<sup>2</sup> Empty for `ip`, `email`, `email-domain-suspicious`, and `phrase`. `url` names `category`, `severity`, `source_url`, and `notes`. `url-domain` adds `match_subdomains`, `file-sha` adds `content_type`, and `avatar-hash` adds `reason`. `profile-substring` names `scope`, `reason`, and `notes`
+<sup>2</sup> `ip` names `duration_hours`. Empty for `email` and `phrase`. `url` names `category`, `severity`, `source_url`, and `notes`. `url-domain` adds `match_subdomains`, `file-sha` adds `content_type`, and `avatar-hash` adds `reason`. `profile-substring` names `scope`, `reason`, and `notes`
 
 <sup>3</sup> True only for `profile-substring`
 
@@ -119,14 +133,14 @@ One entry of the blocklist catalogue returned by [List blocklists](#list-blockli
 
 <sup>5</sup> True only for `avatar-hash` and `profile-substring`
 
-<sup>6</sup> True for `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring`, which is exactly the set whose `fields` array is non-empty
+<sup>6</sup> True for `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring`
 
 ### Example
 
 ```json
 {
   "list_type": "url-domain",
-  "description": "Domains blocked from being linked, optionally covering every subdomain rooted at the domain.",
+  "description": "Domains blocked from being linked, optionally covering every subdomain rooted at the domain. A value whose leftmost label contains * is a pattern that matches that one label under a registrable domain.",
   "value_field": "domain",
   "fields": ["match_subdomains", "category", "severity", "source_url", "notes"],
   "scoped": false,
@@ -152,7 +166,7 @@ One stored row of one blocklist. Every field is present on every entry, and a fi
 | source_url<sup>3</sup> | ?string | The feed or evidence URL the row was recorded from |
 | notes<sup>4</sup> | ?string | The internal note stored alongside the row |
 | content_type<sup>5</sup> | ?string | The media type hint recorded alongside a `file-sha` row |
-| match_subdomains<sup>6</sup> | ?boolean | Whether a `url-domain` row is flagged as covering subdomains |
+| match_subdomains<sup>6</sup> | ?boolean | Whether a `url-domain` row also covers subdomains |
 | reason<sup>7</sup> | ?string | The reason stored on the row |
 | expires_at<sup>7</sup> | ?ISO8601 timestamp | When the row expires |
 | created_at<sup>8</sup> | ?ISO8601 timestamp | When the row was added |
@@ -170,9 +184,9 @@ One stored row of one blocklist. Every field is present on every entry, and a fi
 
 <sup>6</sup> Non-null only on `url-domain`
 
-<sup>7</sup> Non-null only on `ip`. An address added through [Add blocklist entry](#add-blocklist-entry) is written as a permanent ban, so it reads back with the reason `platform_admin_enforcement` and a null `expires_at`
+<sup>7</sup> Non-null only on `ip`. An address added through [Add blocklist entry](#add-blocklist-entry) reads back with the reason `platform_admin_enforcement`. Its `expires_at` is null unless it was added with a positive `duration_hours`. A row past its `expires_at` is not listed
 
-<sup>8</sup> Both null on `email`, `email-domain-suspicious`, and `phrase`, which store nothing but the value. `created_by_user_id` is also null on `ip`
+<sup>8</sup> Both null on `email` and `phrase`, which store nothing but the value. `created_by_user_id` is also null on `ip`
 
 :::note[The audit entry records the accepted reason]
 An `avatar-hash` or `profile-substring` write accepts `reason`, and both lists then report `reason` as null in this object.
@@ -207,8 +221,11 @@ The decision [Check blocklist entry](#check-blocklist-entry) returns for one val
 | Field | Type | Description |
 | --- | --- | --- |
 | banned<sup>1</sup> | boolean | Whether the value is currently blocked by the named blocklist |
+| expires_at<sup>2</sup> | ?ISO8601 timestamp | When the matching ban expires |
 
 <sup>1</sup> Reports the decision the enforcement path would make for this value
+
+<sup>2</sup> Non-null only on `ip` when the matching ban has an expiry. Null when the ban is permanent, when nothing matches, and on every other blocklist
 
 :::note[A block and a row are different things]
 A value can be blocked with no row of its own, as a single address covered by a stored CIDR range is. A row can exist while the value reads as not blocked, as an exempt address or an exempt email domain does.
@@ -224,10 +241,9 @@ The body of [Add blocklist entry](#add-blocklist-entry) has one shape per blockl
 | --- | --- | --- |
 | ip | ip | IPv4 address, IPv6 address, or CIDR range of 1 through 45 characters |
 | email | email | Email address of 1 through 254 characters |
-| email-domain-suspicious | domain | Domain of 1 through 253 characters matching `^[a-zA-Z0-9][a-zA-Z0-9\-.]*\.[a-zA-Z]{2,}$` |
 | phrase | phrase | Phrase of 1 through 500 characters |
 | url | url | Absolute `http` or `https` URL of 1 through 2048 characters |
-| url-domain | domain | Domain of 1 through 253 characters |
+| url-domain | domain | Domain or [domain pattern](#domain-patterns) of 1 through 253 characters |
 | file-sha | sha256_hex | Exactly 64 hexadecimal characters |
 | avatar-hash<sup>1</sup> | hashes | 1 through 1000 hashes, each 8 through 10 characters matching `^(a_)?[0-9a-fA-F]{8}$` |
 | profile-substring<sup>1</sup> <sup>2</sup> | substrings | 1 through 1000 substrings, each 1 through 500 characters |
@@ -247,11 +263,12 @@ Each field is a string, except `hashes` and `substrings`, which are `array[strin
 | scope<sup>3</sup> | string | The [profile substring scope](#profile-substring-scopes) to store the rows under |
 | category?<sup>4</sup> | string | The [content blocklist category](#content-blocklist-categories) (1-64 characters, default `manual`) |
 | severity?<sup>4</sup> | integer | The [content blocklist severity](#content-blocklist-severities) (0-3, default 2) |
-| match_subdomains?<sup>5</sup> | boolean | Whether the row is flagged as covering subdomains (default true) |
+| match_subdomains?<sup>5</sup> | boolean | Whether the row also covers subdomains (default true) |
 | content_type?<sup>6</sup> | string | The media type hint (1-128 characters) |
 | source_url?<sup>4</sup> | string | The feed or evidence URL (1-2048 characters) |
 | reason?<sup>7</sup> | string | The reason (1-1024 characters) |
 | notes?<sup>8</sup> | string | The internal note (1-1024 characters) |
+| duration_hours?<sup>9</sup> | integer | Hours until the row expires (0-8760, default 0) |
 
 <sup>3</sup> Required by `profile-substring`. Every other blocklist strips `scope`
 
@@ -264,6 +281,8 @@ Each field is a string, except `hashes` and `substrings`, which are `array[strin
 <sup>7</sup> Accepted only by `avatar-hash` and `profile-substring`, and recorded in the audit entry metadata
 
 <sup>8</sup> Accepted only by `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring`
+
+<sup>9</sup> Accepted only by `ip`. `0` writes a permanent row. A positive value writes a row that stops applying after that many hours, and Fluxer then deletes it. Adding an address again replaces its expiry, so a permanent row can become temporary and a temporary row can become permanent
 
 ## List blocklists
 
@@ -373,17 +392,17 @@ Every write is an upsert on the canonical value. An omitted optional field is wr
 | 204 | empty | Values were written |
 | 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` because the value is not valid for the list, or a field the blocklist does not accept was supplied |
 
-A body field the selected blocklist does not accept is stripped and never produces that 400. A `url` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array.
+A body field the selected blocklist does not accept is stripped and never produces that 400. A `url` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array. A `url-domain` value that is not a valid domain or [domain pattern](#domain-patterns) returns the same 400 naming `domain`.
 
-Fluxer refuses to add an `ip` with 400 `IP_BAN_DECLINED` when the address is on the instance exemption list, and when a single address is classified as a high blast-radius mobile or carrier network. Fluxer runs that carrier network check only for a single address, so the check never refuses a CIDR range. When the IP lookup for the check fails, Fluxer treats the address as low risk and writes it.
+Fluxer refuses to add an `ip` with 400 `IP_BAN_DECLINED` when the address is on the instance exemption list.
 
 The response has no body, so it does not report the canonical form that was stored. Read it back with [List blocklist entries](#list-blocklist-entries).
 
 ### Side effects
 
-Fluxer checks later requests against the written rows. For every list except `email` and `email-domain-suspicious`, other nodes see the rows after a short propagation delay. No Gateway Dispatch is emitted.
+Fluxer checks later requests against the written rows. For every list except `email`, other nodes see the rows after a short propagation delay. No Gateway Dispatch is emitted.
 
-Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written value, with that value in its metadata. It records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt` or `ban_ip_skipped_cgnat`, before it returns the 400.
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written value, with that value in its metadata. An `ip` added with a positive `duration_hours` adds the metadata keys `duration_hours` and `expires_at`. A `url-domain` entry also records `match_subdomains` and `pattern`, which is `true` for a [domain pattern](#domain-patterns). Fluxer records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt`, before it returns the 400.
 
 ### Rate limit
 
@@ -518,10 +537,9 @@ Reports whether one value is currently blocked by the selected blocklist and ret
 | --- | --- |
 | ip<sup>3</sup> <sup>4</sup> | The address itself, any stored CIDR range containing it, and any stored address the instance treats as the same origin |
 | email | Exact match on the lowercased address |
-| email-domain-suspicious<sup>5</sup> | Exact match on the lowercased domain |
 | phrase | Normalised phrase matching, so a disguised form of a stored phrase still reads as blocked |
-| url<sup>6</sup> | Exact match on the canonicalised URL |
-| url-domain | Exact match on the lowercased hostname |
+| url<sup>5</sup> | Exact match on the canonicalised URL |
+| url-domain<sup>6</sup> | The hostname, each parent domain stored with `match_subdomains` true, and each [domain pattern](#domain-patterns) covering the hostname |
 | file-sha | Exact match on the lowercased hexadecimal digest |
 | avatar-hash | Exact match after the `a_` prefix is stripped and the hash is lowercased |
 | profile-substring | Normalised substring matching within the named scope |
@@ -530,9 +548,9 @@ Reports whether one value is currently blocked by the selected blocklist and ret
 
 <sup>4</sup> Two addresses are the same origin when they share a decision key, which is the exact address for IPv4 and the `/64` prefix for IPv6
 
-<sup>5</sup> A domain that the instance account policy marks as exempt from reputation checks reads as not blocked even while a row exists
+<sup>5</sup> This check does not read the `url-domain` list, so a URL that a stored domain blocks reads as not blocked. Check the hostname separately
 
-<sup>6</sup> This check does not read the `url-domain` list, so a URL that a stored domain blocks reads as not blocked. Check the hostname separately
+<sup>6</sup> The value can be a hostname or an absolute `http` or `https` URL. Fluxer normalises the hostname as it does for [link matching](#link-matching)
 
 ### Response
 
@@ -543,7 +561,7 @@ Reports whether one value is currently blocked by the selected blocklist and ret
 
 A value with no row and no covering match returns 200 with `banned` false, so this operation never reports whether a specific row exists. Use [List blocklist entries](#list-blocklist-entries) for that.
 
-For every list except `email` and `email-domain-suspicious`, a row written on another node becomes visible here after a short propagation delay.
+For every list except `email`, a row written on another node becomes visible here after a short propagation delay.
 
 ### Side effects
 
@@ -577,7 +595,7 @@ The body is the creation shape of the selected blocklist with the value field re
 | scope<sup>1</sup> | string | The [profile substring scope](#profile-substring-scopes) to write the row under |
 | category?<sup>2</sup> | string | The [content blocklist category](#content-blocklist-categories) (1-64 characters, default `manual`) |
 | severity?<sup>2</sup> | integer | The [content blocklist severity](#content-blocklist-severities) (0-3, default 2) |
-| match_subdomains?<sup>3</sup> | boolean | Whether the row is flagged as covering subdomains (default true) |
+| match_subdomains?<sup>3</sup> | boolean | Whether the row also covers subdomains (default true) |
 | content_type?<sup>4</sup> | string | The media type hint (1-128 characters) |
 | source_url?<sup>2</sup> | string | The feed or evidence URL (1-2048 characters) |
 | reason?<sup>5</sup> | string | The reason (1-1024 characters) |
@@ -606,7 +624,7 @@ Sending `{"severity": 3}` on a `url` row also resets its category to `manual` an
 | 204 | empty | Row was written |
 | 400 | [error response](/admin-api/#error-response) | The list accepts no update, or the body fails validation, and the request returns `INVALID_FORM_BODY` |
 
-On the `url` blocklist, an `entry_value` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array.
+On the `url` blocklist, an `entry_value` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array. On the `url-domain` blocklist, an `entry_value` that is not a valid domain or [domain pattern](#domain-patterns) returns the same 400 naming `domain`.
 
 The write is an upsert on the canonical value, so a value with no existing row is created. This operation never returns 404. A `url` blocked only by a stored `url-domain` row has no row of its own, and updating it through the URL silently creates a new exact-URL row.
 
@@ -635,7 +653,7 @@ Removes one row from the selected blocklist. Returns 204 with an empty body. Req
 | list_type | string | The [blocklist type](#blocklist-types) |
 | entry_value<sup>1</sup> | string | The percent-encoded canonical value of the row to remove (1-2048 characters) |
 
-<sup>1</sup> Canonicalised the same way it was on the add path and matched exactly, so a `url` blocked only by a broader `url-domain` row cannot be removed through the URL
+<sup>1</sup> Canonicalised the same way it was on the add path and matched exactly, so a `url` blocked only by a broader `url-domain` row cannot be removed through the URL. A `url-domain` value that fails validation is lowercased and removed as written
 
 ### Query parameters
 
@@ -658,7 +676,7 @@ Removal is idempotent. A value with no stored row returns 204 and still records 
 
 ### Side effects
 
-The removed row stops affecting subsequent blocklist decisions. For every list except `email` and `email-domain-suspicious`, other nodes stop applying it after a short propagation delay. A value can remain blocked by another matching row, such as a single address covered by a stored CIDR range. No Gateway Dispatch is emitted.
+The removed row stops affecting subsequent blocklist decisions. For every list except `email`, other nodes stop applying it after a short propagation delay. A value can remain blocked by another matching row, such as a single address covered by a stored CIDR range. No Gateway Dispatch is emitted.
 
 The removal records one [Admin audit entry](/admin-api/#admin-audit-entry-object), with the canonical value in its metadata.
 

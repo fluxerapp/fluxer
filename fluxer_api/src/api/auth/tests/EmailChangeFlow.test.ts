@@ -11,11 +11,10 @@ import {
 	loginUser,
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
-import {setInjectedRegistrationRiskEvaluator} from '@app/api/middleware/ServiceMiddleware';
-import {RecommendedAction, RiskConfidence, RiskDecisionMethod, RiskLevel} from '@app/api/risk/RiskTypes';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 interface EmailChangeStartResponse {
 	ticket: string;
@@ -43,7 +42,6 @@ interface EmailChangeVerifyNewResponse {
 interface UserPrivateResponse {
 	id: string;
 	email: string;
-	phone?: string | null;
 	username: string;
 	discriminator: string;
 	global_name: string;
@@ -52,7 +50,6 @@ interface UserPrivateResponse {
 	mfa_enabled: boolean;
 	authenticator_types: Array<number>;
 	password_last_changed_at?: string;
-	required_actions?: Array<string> | null;
 	has_ever_purchased: boolean;
 }
 
@@ -124,31 +121,6 @@ async function unclaimAccount(harness: ApiTestHarness, userId: string): Promise<
 	await createBuilderWithoutAuth(harness).post(`/test/users/${userId}/unclaim`).body(null).expect(200).execute();
 }
 
-function createForcedRiskEvaluator(onEvaluate?: () => void) {
-	return {
-		async evaluate() {
-			onEvaluate?.();
-			return {
-				assessment: {
-					suspicious: true,
-					level: RiskLevel.High,
-					confidence: RiskConfidence.High,
-					riskScore: 70,
-					reasoning: 'forced test risk result',
-					recommendedAction: RecommendedAction.RequireOutboundPhone,
-					method: RiskDecisionMethod.Deterministic,
-					modelUsed: 'test',
-					rounds: 0,
-					elapsedMs: 0,
-					signals: {},
-				},
-				level: RiskLevel.High,
-				recommendedAction: RecommendedAction.RequireOutboundPhone,
-			};
-		},
-	};
-}
-
 describe('Email change flow', () => {
 	let harness: ApiTestHarness;
 	beforeAll(async () => {
@@ -157,6 +129,9 @@ describe('Email change flow', () => {
 	beforeEach(async () => {
 		await harness.reset();
 		await clearTestEmails(harness);
+	});
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
@@ -370,79 +345,14 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 	});
-	it('allows suspicious accounts to complete email change and clears email-related flags', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilderWithoutAuth(harness)
-			.post(`/test/users/${account.userId}/security-flags`)
-			.body({
-				suspicious_activity_flag_names: ['REQUIRE_REVERIFIED_EMAIL', 'REQUIRE_VERIFIED_PHONE'],
-			})
-			.expect(200)
-			.execute();
-		const login = await loginUser(harness, {email: account.email, password: account.password});
-		if ('mfa' in login) {
-			throw new Error('Expected non-MFA login');
-		}
-		const suspiciousAccount: TestAccount = {...account, token: login.token};
-		const startResp = await startEmailChange(harness, suspiciousAccount, account.password);
-		const emails = await listTestEmails(harness, {recipient: account.email});
-		const originalEmail = findLastTestEmail(emails, 'email_change_original');
-		expect(startResp.require_original).toBe(true);
-		expect(originalEmail?.metadata?.code).toBeDefined();
-		const originalProof = await verifyOriginalEmailChange(
-			harness,
-			suspiciousAccount,
-			startResp.ticket,
-			originalEmail!.metadata!.code!,
-			account.password,
-		);
-		const newEmail = `integration-suspicious-${Date.now()}@example.com`;
-		await requestNewEmailChange(
-			harness,
-			suspiciousAccount,
-			startResp.ticket,
-			newEmail,
-			originalProof,
-			account.password,
-		);
-		const newEmails = await listTestEmails(harness, {recipient: newEmail});
-		const newEmailData = findLastTestEmail(newEmails, 'email_change_new');
-		expect(newEmailData?.metadata?.code).toBeDefined();
-		const token = await verifyNewEmailChange(
-			harness,
-			suspiciousAccount,
-			startResp.ticket,
-			newEmailData!.metadata!.code!,
-			originalProof,
-			account.password,
-		);
-		const updated = await createBuilder<UserPrivateResponse>(harness, suspiciousAccount.token)
-			.patch('/users/@me')
-			.body({
-				email_token: token,
-				password: account.password,
-			})
-			.expect(200)
-			.execute();
-		expect(updated.email).toBe(newEmail);
-		expect(updated.verified).toBe(true);
-		expect(updated.required_actions).toContain('REQUIRE_VERIFIED_PHONE');
-		expect(updated.required_actions).not.toContain('REQUIRE_REVERIFIED_EMAIL');
-	});
-	it('does not add suspicion on email change for users who have ever purchased', async () => {
+	it('applies email changes for users who have ever purchased and syncs their Stripe customer', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)
 			.post(`/test/users/${account.userId}/premium`)
-			.body({has_ever_purchased: true})
+			.body({has_ever_purchased: true, stripe_customer_id: 'cus_email_change_sync'})
 			.expect(200)
 			.execute();
-		await createBuilderWithoutAuth(harness)
-			.post(`/test/users/${account.userId}/security-flags`)
-			.body({
-				suspicious_activity_flag_names: ['REQUIRE_REVERIFIED_EMAIL'],
-			})
-			.expect(200)
-			.execute();
+		const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
 		const startResp = await startEmailChange(harness, account, account.password);
 		let originalProof: string;
 		if (startResp.require_original) {
@@ -482,61 +392,11 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 		expect(updated.has_ever_purchased).toBe(true);
-		expect(updated.required_actions).not.toContain('REQUIRE_REVERIFIED_EMAIL');
-		expect(updated.required_actions).not.toContain('REQUIRE_VERIFIED_PHONE');
+		expect(addJob).toHaveBeenCalledWith('syncStripeCustomerEmail', {userId: account.userId});
 	});
-	it('re-evaluates plus-tagged email changes on claimed accounts', async () => {
+	it('applies ordinary claimed email changes', async () => {
 		const account = await createTestAccount(harness);
-		let evaluateCalls = 0;
-		setInjectedRegistrationRiskEvaluator(
-			createForcedRiskEvaluator(() => {
-				evaluateCalls += 1;
-			}),
-		);
-		const startResp = await startEmailChange(harness, account, account.password);
-		const emails = await listTestEmails(harness, {recipient: account.email});
-		const originalEmail = findLastTestEmail(emails, 'email_change_original');
-		expect(startResp.require_original).toBe(true);
-		expect(originalEmail?.metadata?.code).toBeDefined();
-		const originalProof = await verifyOriginalEmailChange(
-			harness,
-			account,
-			startResp.ticket,
-			originalEmail!.metadata!.code!,
-			account.password,
-		);
-		const newEmail = `integration-plus+${Date.now()}@example.com`;
-		await requestNewEmailChange(harness, account, startResp.ticket, newEmail, originalProof, account.password);
-		const newEmails = await listTestEmails(harness, {recipient: newEmail});
-		const newEmailData = findLastTestEmail(newEmails, 'email_change_new');
-		expect(newEmailData?.metadata?.code).toBeDefined();
-		const token = await verifyNewEmailChange(
-			harness,
-			account,
-			startResp.ticket,
-			newEmailData!.metadata!.code!,
-			originalProof,
-			account.password,
-		);
-		const updated = await createBuilder<UserPrivateResponse>(harness, account.token)
-			.patch('/users/@me')
-			.body({
-				email_token: token,
-				password: account.password,
-			})
-			.expect(200)
-			.execute();
-		expect(evaluateCalls).toBe(1);
-		expect(updated.required_actions).toContain('REQUIRE_VERIFIED_PHONE');
-	});
-	it('does not re-evaluate ordinary claimed email changes', async () => {
-		const account = await createTestAccount(harness);
-		let evaluateCalls = 0;
-		setInjectedRegistrationRiskEvaluator(
-			createForcedRiskEvaluator(() => {
-				evaluateCalls += 1;
-			}),
-		);
+		const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
 		const startResp = await startEmailChange(harness, account, account.password);
 		const emails = await listTestEmails(harness, {recipient: account.email});
 		const originalEmail = findLastTestEmail(emails, 'email_change_original');
@@ -570,8 +430,9 @@ describe('Email change flow', () => {
 			})
 			.expect(200)
 			.execute();
-		expect(evaluateCalls).toBe(0);
-		expect(updated.required_actions ?? []).not.toContain('REQUIRE_VERIFIED_PHONE');
+		expect(updated.email).toBe(newEmail);
+		expect(updated.verified).toBe(true);
+		expect(addJob).not.toHaveBeenCalledWith('syncStripeCustomerEmail', expect.anything());
 	});
 	it('requires MFA (not password) for email_token apply when user has TOTP enabled', async () => {
 		const account = await createTestAccount(harness);
@@ -796,15 +657,9 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 	});
-	it('does not re-evaluate clean unclaimed accounts when they are claimed', async () => {
+	it('claims clean unclaimed accounts', async () => {
 		const account = await createTestAccount(harness);
 		await unclaimAccount(harness, account.userId);
-		let evaluateCalls = 0;
-		setInjectedRegistrationRiskEvaluator(
-			createForcedRiskEvaluator(() => {
-				evaluateCalls += 1;
-			}),
-		);
 		const startResp = await createBuilder<EmailChangeStartResponse>(harness, account.token)
 			.post('/users/@me/email-change/start')
 			.body({})
@@ -833,10 +688,8 @@ describe('Email change flow', () => {
 			})
 			.expect(200)
 			.execute();
-		expect(evaluateCalls).toBe(0);
 		expect(updated.email).toBe(newEmail);
 		expect(updated.verified).toBe(true);
-		expect(updated.required_actions).not.toContain('REQUIRE_VERIFIED_PHONE');
 	});
 	it('e2e: reporter scenario — MFA user with TOTP completes "Use Different Email" recovery without sudo loop', async () => {
 		const account = await createTestAccount(harness);

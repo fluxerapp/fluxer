@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {EmojiID, GuildID, RoleID, StickerID, UserID} from '@app/api/BrandedTypes';
+import {enqueueRemoveThreadMemberships} from '@app/api/channel/threads/ThreadJobs';
 import type {
 	GuildAuditLogRow,
 	GuildBanRow,
@@ -11,6 +12,7 @@ import type {
 	GuildRow,
 	GuildStickerRow,
 } from '@app/api/database/types/GuildTypes';
+import {everEnabled, isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import {GuildContentRepository} from '@app/api/guild/repositories/GuildContentRepository';
 import {GuildDataRepository} from '@app/api/guild/repositories/GuildDataRepository';
 import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
@@ -127,7 +129,10 @@ export class GuildRepository implements IGuildRepositoryAggregate {
 	}
 
 	async deleteMember(guildId: GuildID, userId: UserID): Promise<void> {
-		return await this.memberRepo.deleteMember(guildId, userId);
+		await this.memberRepo.deleteMember(guildId, userId);
+		if (everEnabled() && (await isTainted(guildId, {fresh: true}))) {
+			await enqueueRemoveThreadMemberships(guildId, userId);
+		}
 	}
 
 	async getMembershipMetadata(guildId: GuildID, userId: UserID): Promise<GuildMembershipMetadataRow | null> {

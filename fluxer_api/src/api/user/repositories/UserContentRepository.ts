@@ -66,6 +66,18 @@ export class UserContentRepository implements IUserContentRepository {
 		return this.giftCodeRepository.revokeGiftCode(code);
 	}
 
+	async unrevokeGiftCode(code: string): Promise<void> {
+		return this.giftCodeRepository.unrevokeGiftCode(code);
+	}
+
+	async markGiftPremiumReversed(gift: GiftCode, seconds: number): Promise<boolean> {
+		return this.giftCodeRepository.markGiftPremiumReversed(gift, seconds);
+	}
+
+	async clearGiftPremiumReversed(code: string, seconds: number): Promise<boolean> {
+		return this.giftCodeRepository.clearGiftPremiumReversed(code, seconds);
+	}
+
 	async updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void> {
 		return this.giftCodeRepository.updateGiftCode(code, data);
 	}
@@ -102,6 +114,10 @@ export class UserContentRepository implements IUserContentRepository {
 
 	async getPaymentByCheckoutSession(checkoutSessionId: string): Promise<Payment | null> {
 		return this.paymentRepository.getPaymentByCheckoutSession(checkoutSessionId);
+	}
+
+	async findPaymentsByUserId(userId: UserID): Promise<Array<Payment>> {
+		return this.paymentRepository.findPaymentsByUserId(userId);
 	}
 
 	async getPaymentByPaymentIntent(paymentIntentId: string): Promise<Payment | null> {

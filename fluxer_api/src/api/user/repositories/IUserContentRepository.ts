@@ -39,6 +39,9 @@ export interface IUserContentRepository {
 	redeemGiftCode(code: string, userId: UserID): Promise<void>;
 	unredeemGiftCode(code: string, userId: UserID): Promise<void>;
 	revokeGiftCode(code: string): Promise<void>;
+	unrevokeGiftCode(code: string): Promise<void>;
+	markGiftPremiumReversed(gift: GiftCode, seconds: number): Promise<boolean>;
+	clearGiftPremiumReversed(code: string, seconds: number): Promise<boolean>;
 	updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void>;
 	linkGiftCodeToCheckoutSession(code: string, checkoutSessionId: string): Promise<void>;
 	listPushSubscriptions(userId: UserID): Promise<Array<PushSubscription>>;
@@ -71,6 +74,7 @@ export interface IUserContentRepository {
 			checkout_session_id: string;
 		},
 	): Promise<void>;
+	findPaymentsByUserId(userId: UserID): Promise<Array<Payment>>;
 	getPaymentByCheckoutSession(checkoutSessionId: string): Promise<Payment | null>;
 	getPaymentByPaymentIntent(paymentIntentId: string): Promise<Payment | null>;
 	getSubscriptionInfo(subscriptionId: string): Promise<PaymentBySubscriptionRow | null>;

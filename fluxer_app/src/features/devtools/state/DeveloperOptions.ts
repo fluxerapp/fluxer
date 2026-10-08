@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeAutoObservable} from 'mobx';
 
 export type PremiumScenarioOverride =
@@ -27,11 +28,6 @@ export type DeveloperOptionsState = Readonly<{
 	forceRenderPlaceholders: boolean;
 	forceEmbedSkeletons: boolean;
 	forceMediaLoading: boolean;
-	forceUpdateReady: boolean;
-	forceNativeUpdateReady: boolean;
-	mockNativeUpdateProgress: number | null;
-	forceWebUpdateReady: boolean;
-	mockUpdaterState: 'none' | 'checking' | 'available' | 'downloading' | 'ready' | 'installing' | 'error';
 	showMyselfTyping: boolean;
 	slowAttachmentUpload: boolean;
 	slowMessageLoad: boolean;
@@ -46,7 +42,6 @@ export type DeveloperOptionsState = Readonly<{
 	selfHostedModeOverride: boolean;
 	forceShowVanityURLDisclaimer: boolean;
 	forceShowVoiceConnection: boolean;
-	showProfileTimezoneSettings: boolean;
 	premiumScenarioOverride: PremiumScenarioOverride | null;
 	premiumTypeOverride: number | null;
 	premiumLifetimeSequenceOverride: number | null;
@@ -65,7 +60,7 @@ export type DeveloperOptionsState = Readonly<{
 		| 'unverified_email'
 		| 'account_too_new'
 		| 'not_member_long'
-		| 'no_phone'
+		| 'account_limited'
 		| 'send_message_disabled';
 	mockBarrierTimeRemaining: number | null;
 	mockMatureContentGateReason: 'none' | 'geo_restricted' | 'mature_content_check_required' | 'consent_required';
@@ -73,13 +68,6 @@ export type DeveloperOptionsState = Readonly<{
 	forceMatureMedia: boolean;
 	mockInUK: boolean;
 	mockGeoBlocked: boolean;
-	mockRequiredActionsOverlay: boolean;
-	mockRequiredActionsMode: 'email' | 'phone' | 'email_or_phone';
-	mockRequiredActionsSelectedTab: 'email' | 'phone';
-	mockRequiredActionsPhoneStep: 'phone' | 'code';
-	mockRequiredActionsResending: boolean;
-	mockRequiredActionsResendOutcome: 'success' | 'rate_limited' | 'server_error';
-	mockRequiredActionsReverify: boolean;
 	forceNoSendMessages: boolean;
 	forceNoAttachFiles: boolean;
 	mockSlowmodeActive: boolean;
@@ -110,11 +98,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 	forceRenderPlaceholders = false;
 	forceEmbedSkeletons = false;
 	forceMediaLoading = false;
-	forceUpdateReady = false;
-	forceNativeUpdateReady = false;
-	mockNativeUpdateProgress: number | null = null;
-	forceWebUpdateReady = false;
-	mockUpdaterState: DeveloperOptionsState['mockUpdaterState'] = 'none';
 	showMyselfTyping = false;
 	slowAttachmentUpload = false;
 	slowMessageLoad = false;
@@ -129,7 +112,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 	selfHostedModeOverride = false;
 	forceShowVanityURLDisclaimer = false;
 	forceShowVoiceConnection = false;
-	showProfileTimezoneSettings = false;
 	premiumScenarioOverride: PremiumScenarioOverride | null = null;
 	premiumTypeOverride: number | null = null;
 	premiumLifetimeSequenceOverride: number | null = null;
@@ -148,7 +130,7 @@ class DeveloperOptions implements DeveloperOptionsState {
 		| 'unverified_email'
 		| 'account_too_new'
 		| 'not_member_long'
-		| 'no_phone'
+		| 'account_limited'
 		| 'send_message_disabled' = 'none';
 	mockBarrierTimeRemaining: number | null = null;
 	mockMatureContentGateReason: 'none' | 'geo_restricted' | 'mature_content_check_required' | 'consent_required' =
@@ -157,13 +139,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 	forceMatureMedia = false;
 	mockInUK = false;
 	mockGeoBlocked = false;
-	mockRequiredActionsOverlay = false;
-	mockRequiredActionsMode: 'email' | 'phone' | 'email_or_phone' = 'email';
-	mockRequiredActionsSelectedTab: 'email' | 'phone' = 'email';
-	mockRequiredActionsPhoneStep: 'phone' | 'code' = 'phone';
-	mockRequiredActionsResending = false;
-	mockRequiredActionsResendOutcome: 'success' | 'rate_limited' | 'server_error' = 'success';
-	mockRequiredActionsReverify = false;
 	forceNoSendMessages = false;
 	forceNoAttachFiles = false;
 	mockSlowmodeActive = false;
@@ -184,7 +159,7 @@ class DeveloperOptions implements DeveloperOptionsState {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -196,11 +171,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 			'forceRenderPlaceholders',
 			'forceEmbedSkeletons',
 			'forceMediaLoading',
-			'forceUpdateReady',
-			'forceNativeUpdateReady',
-			'mockNativeUpdateProgress',
-			'forceWebUpdateReady',
-			'mockUpdaterState',
 			'showMyselfTyping',
 			'slowAttachmentUpload',
 			'slowMessageLoad',
@@ -215,7 +185,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 			'selfHostedModeOverride',
 			'forceShowVanityURLDisclaimer',
 			'forceShowVoiceConnection',
-			'showProfileTimezoneSettings',
 			'premiumScenarioOverride',
 			'premiumTypeOverride',
 			'premiumLifetimeSequenceOverride',
@@ -235,13 +204,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 			'forceMatureMedia',
 			'mockInUK',
 			'mockGeoBlocked',
-			'mockRequiredActionsOverlay',
-			'mockRequiredActionsMode',
-			'mockRequiredActionsSelectedTab',
-			'mockRequiredActionsPhoneStep',
-			'mockRequiredActionsResending',
-			'mockRequiredActionsResendOutcome',
-			'mockRequiredActionsReverify',
 			'forceNoSendMessages',
 			'forceNoAttachFiles',
 			'mockSlowmodeActive',

@@ -46,6 +46,12 @@ pub(crate) fn sha256_reader(mut reader: impl Read) -> io::Result<String> {
     Ok(hex::encode(hasher.finalize()))
 }
 
+pub(crate) fn sha256_file(path: &Path) -> Result<String> {
+    let file =
+        fs::File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
+    sha256_reader(file).with_context(|| format!("Failed to read {}", path.display()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

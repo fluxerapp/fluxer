@@ -202,6 +202,11 @@ session_can_view_channel(_SessionData, ChannelId, _State) when
 ->
     false;
 session_can_view_channel(SessionData, ChannelId, State) ->
+    session_can_view_channel_by_permissions(SessionData, ChannelId, State) andalso
+        guild_thread_gate:channel_visible(SessionData, ChannelId, State).
+
+-spec session_can_view_channel_by_permissions(map(), channel_id(), guild_state()) -> boolean().
+session_can_view_channel_by_permissions(SessionData, ChannelId, State) ->
     case
         {
             maps:get(user_id, SessionData, undefined),

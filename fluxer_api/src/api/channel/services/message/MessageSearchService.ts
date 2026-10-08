@@ -8,6 +8,7 @@ import type {IMessageSearchService} from '@app/api/search/IMessageSearchService'
 import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import type {MessageSearchRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
@@ -26,6 +27,10 @@ function getMessageIndexServices(options: MessageSearchIndexOptions = {}): Array
 	return services;
 }
 
+export function isMessageSearchIndexable(message: Message): boolean {
+	return message.type !== MessageTypes.THREAD_CREATED && message.type !== MessageTypes.THREAD_STARTER_MESSAGE;
+}
+
 export class MessageSearchService {
 	constructor(
 		private userRepository: IUserRepository,
@@ -33,6 +38,7 @@ export class MessageSearchService {
 	) {}
 
 	async indexMessage(message: Message, authorIsBot: boolean, options?: MessageSearchIndexOptions): Promise<void> {
+		if (!isMessageSearchIndexable(message)) return;
 		try {
 			const searchServices = getMessageIndexServices(options);
 			if (searchServices.length === 0) {
@@ -54,6 +60,7 @@ export class MessageSearchService {
 	}
 
 	async updateMessageIndex(message: Message, options?: MessageSearchIndexOptions): Promise<void> {
+		if (!isMessageSearchIndexable(message)) return;
 		try {
 			const searchServices = getMessageIndexServices(options);
 			if (searchServices.length === 0) {

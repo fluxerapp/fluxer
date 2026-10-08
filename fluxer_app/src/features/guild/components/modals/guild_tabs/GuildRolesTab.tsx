@@ -29,6 +29,7 @@ import Permission from '@app/features/permissions/state/Permission';
 import PermissionLayout from '@app/features/permissions/state/PermissionLayout';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -37,6 +38,7 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import SettingsSidebar from '@app/features/ui/state/SettingsSidebar';
 import Users from '@app/features/user/state/Users';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {THREAD_PERMISSIONS, withImplicitThreadBits} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {matchSorter} from 'match-sorter';
@@ -166,7 +168,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	}, [guild, currentUserMember]);
 	const currentUserPermissions = useMemo(() => {
 		if (!guild || !currentUser) return 0n;
-		return PermissionUtils.computePermissions(currentUser.id, guild.toJSON());
+		return withImplicitThreadBits(PermissionUtils.computePermissions(currentUser.id, guild.toJSON()));
 	}, [guild, currentUser]);
 	const wouldRemoveOwnPermission = useCallback(
 		(permission: bigint, roleId: string): boolean => {
@@ -218,7 +220,11 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 		if (!selectedRole) return null;
 		return applyRoleUpdate(selectedRole, roleUpdates.get(selectedRole.id));
 	}, [selectedRole, roleUpdates]);
-	const permissionSpecs = useMemo(() => PermissionUtils.generatePermissionSpec(i18n), [i18n.locale]);
+	const threadsActive = ThreadGuilds.isActive(guildId);
+	const permissionSpecs = useMemo(
+		() => PermissionUtils.generatePermissionSpec(i18n, {threads: threadsActive}),
+		[i18n.locale, threadsActive],
+	);
 	const filteredPermissionSpecs = useMemo(() => {
 		if (!permissionSearchQuery) return permissionSpecs;
 		return permissionSpecs
@@ -281,13 +287,16 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					await GuildCommands.setRoleHoistOrder(guild.id, submittableHoistOrder);
 				}
 			}
+			const retiredPermissions = ThreadGuilds.isActive(guild.id) ? 0n : THREAD_PERMISSIONS;
 			for (const [roleId, updates] of roleUpdates.entries()) {
 				const updateData: Record<string, unknown> = {};
 				if (updates.name !== undefined) updateData.name = updates.name;
 				if (updates.color !== undefined) updateData.color = updates.color;
 				if (updates.hoist !== undefined) updateData.hoist = updates.hoist;
 				if (updates.mentionable !== undefined) updateData.mentionable = updates.mentionable;
-				if (updates.permissions !== undefined) updateData.permissions = updates.permissions.toString();
+				if (updates.permissions !== undefined) {
+					updateData.permissions = (updates.permissions & ~retiredPermissions).toString();
+				}
 				await GuildCommands.updateRole(guild.id, roleId, updateData);
 			}
 			setRoleUpdates(new Map());

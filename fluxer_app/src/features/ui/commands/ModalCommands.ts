@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
-import {GuildSettingsModal} from '@app/features/guild/components/modals/GuildSettingsModal';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {closeBottomSheetThen} from '@app/features/ui/bottom_sheet/BottomSheetTransitionUtils';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {getActivePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import Modal from '@app/features/ui/state/Modal';
-import type {ModalRender} from '@app/features/ui/state/ModalRender';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
+import type {ModalRender, ModalType} from '@app/features/ui/state/ModalRender';
 import type React from 'react';
 
 const logger = new Logger('Modal');
@@ -16,9 +13,14 @@ const logger = new Logger('Modal');
 let modalUniqueIdCounter = 0;
 
 const generateModalKey = (): string => `modal${++modalUniqueIdCounter}`;
-const BACKGROUND_MODAL_TYPES = [UserSettingsModal, GuildSettingsModal, ChannelSettingsModal] as const;
-const isBackgroundModal = (element: React.ReactElement): boolean => {
-	return BACKGROUND_MODAL_TYPES.some((type) => element.type === type);
+const BACKGROUND_MODAL_TYPES: ReadonlySet<ModalType> = new Set(['user-settings', 'guild-settings', 'channel-settings']);
+const isBackgroundModal = (modalType: ModalType | undefined): boolean => {
+	return modalType != null && BACKGROUND_MODAL_TYPES.has(modalType);
+};
+const isDuplicateModal = (modalType: ModalType | undefined): boolean => {
+	if (modalType == null || !Modal.hasModalOfModalType(modalType)) return false;
+	logger.debug(`Skipping duplicate modal of type: ${modalType}`);
+	return true;
 };
 const getCommandOwnerDocument = (): Document => getActivePortalHost()?.ownerDocument ?? document;
 const getPushOptions = (isBackground: boolean) => {
@@ -32,47 +34,44 @@ const getPushOptions = (isBackground: boolean) => {
 	};
 };
 
-export function modal(render: () => React.ReactElement): ModalRender {
-	return render as ModalRender;
+interface PushToPortalHostOptions {
+	readonly modal: ModalRender;
+	readonly portalHost: HTMLElement;
+}
+
+interface ExplicitPortalHostPush {
+	readonly portalHost: HTMLElement;
+}
+
+function pushModal(modal: ModalRender, explicitPortalHost?: ExplicitPortalHostPush): void {
+	ContextMenuCommands.close();
+	if (isDuplicateModal(modal.modalType)) return;
+	const isBackground = isBackgroundModal(modal.modalType);
+	const key = generateModalKey();
+	logger.debug(`Pushing modal: ${key} (background=${isBackground})`);
+	const options =
+		explicitPortalHost == null
+			? getPushOptions(isBackground)
+			: {isBackground, portalHost: explicitPortalHost.portalHost};
+	Modal.push(modal, key, options);
+}
+
+export function modal(render: () => React.ReactElement, modalType?: ModalType): ModalRender {
+	return Object.assign(render, {modalType});
 }
 
 export function push(modal: ModalRender): void {
-	ContextMenuCommands.close();
-	const renderedModal = modal();
-	const isBackground = isBackgroundModal(renderedModal);
-	if (renderedModal.type === UserSettingsModal && Modal.hasModalOfType(UserSettingsModal)) {
-		logger.debug('Skipping duplicate UserSettingsModal');
-		return;
-	}
-	if (renderedModal.type === GuildSettingsModal && Modal.hasModalOfType(GuildSettingsModal)) {
-		logger.debug('Skipping duplicate GuildSettingsModal');
-		return;
-	}
-	if (renderedModal.type === ChannelSettingsModal && Modal.hasModalOfType(ChannelSettingsModal)) {
-		logger.debug('Skipping duplicate ChannelSettingsModal');
-		return;
-	}
-	const key = generateModalKey();
-	logger.debug(`Pushing modal: ${key} (background=${isBackground})`);
-	Modal.push(modal, key, getPushOptions(isBackground));
+	pushModal(modal);
+}
+
+export function pushToPortalHost({modal, portalHost}: PushToPortalHostOptions): void {
+	pushModal(modal, {portalHost});
 }
 
 export function pushWithKey(modal: ModalRender, key: string): void {
 	ContextMenuCommands.close();
-	const renderedModal = modal();
-	const isBackground = isBackgroundModal(renderedModal);
-	if (renderedModal.type === UserSettingsModal && Modal.hasModalOfType(UserSettingsModal)) {
-		logger.debug('Skipping duplicate UserSettingsModal');
-		return;
-	}
-	if (renderedModal.type === GuildSettingsModal && Modal.hasModalOfType(GuildSettingsModal)) {
-		logger.debug('Skipping duplicate GuildSettingsModal');
-		return;
-	}
-	if (renderedModal.type === ChannelSettingsModal && Modal.hasModalOfType(ChannelSettingsModal)) {
-		logger.debug('Skipping duplicate ChannelSettingsModal');
-		return;
-	}
+	if (isDuplicateModal(modal.modalType)) return;
+	const isBackground = isBackgroundModal(modal.modalType);
 	if (Modal.hasModal(key)) {
 		logger.debug(`Updating existing modal with key: ${key}`);
 		Modal.update(key, () => modal, isBackground ? getPushOptions(true) : {isBackground});
@@ -117,6 +116,11 @@ export function popWithKey(key: string): void {
 export function popByType<T>(component: React.ComponentType<T>): void {
 	logger.debug(`Popping modal by type: ${component.displayName ?? component.name ?? 'unknown'}`);
 	Modal.popByType(component, getCommandOwnerDocument());
+}
+
+export function popByModalType(modalType: ModalType): void {
+	logger.debug(`Popping modal by modal type: ${modalType}`);
+	Modal.popByModalType(modalType, getCommandOwnerDocument());
 }
 
 export function popAllByType<T>(component: React.ComponentType<T>): void {

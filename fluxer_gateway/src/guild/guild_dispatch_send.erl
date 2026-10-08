@@ -29,6 +29,44 @@
 -spec dispatch_to_sessions([session_pair()], event(), event_data(), guild_state()) ->
     non_neg_integer().
 dispatch_to_sessions(FilteredSessions, Event, FinalData, UpdatedState) ->
+    case guild_thread_gate:needs_variant(UpdatedState) of
+        false ->
+            dispatch_variant(FilteredSessions, Event, FinalData, UpdatedState);
+        true ->
+            dispatch_masked_variants(FilteredSessions, Event, FinalData, UpdatedState)
+    end.
+
+-spec dispatch_masked_variants([session_pair()], event(), event_data(), guild_state()) ->
+    non_neg_integer().
+dispatch_masked_variants(FilteredSessions, Event, FinalData, UpdatedState) ->
+    Masked = guild_thread_gate:mask_payload(Event, FinalData),
+    {Viewers, Others} = lists:partition(
+        fun({_Sid, Session}) -> guild_thread_gate:session_viewer(Session) end, FilteredSessions
+    ),
+    case {Masked =:= FinalData, Viewers, Others} of
+        {true, _, _} ->
+            dispatch_variant(FilteredSessions, Event, FinalData, UpdatedState);
+        {false, _, []} ->
+            dispatch_variant(Viewers, Event, FinalData, UpdatedState);
+        {false, [], _} ->
+            dispatch_masked(Others, Event, Masked, UpdatedState);
+        {false, _, _} ->
+            max(
+                dispatch_variant(Viewers, Event, FinalData, UpdatedState),
+                dispatch_masked(Others, Event, Masked, UpdatedState)
+            )
+    end.
+
+-spec dispatch_masked([session_pair()], event(), event_data(), guild_state()) ->
+    non_neg_integer().
+dispatch_masked(Sessions, Event, Masked, UpdatedState) ->
+    Count = dispatch_variant(Sessions, Event, Masked, UpdatedState),
+    ok = guild_thread_dispatch:count_masked(Event, Count),
+    Count.
+
+-spec dispatch_variant([session_pair()], event(), event_data(), guild_state()) ->
+    non_neg_integer().
+dispatch_variant(FilteredSessions, Event, FinalData, UpdatedState) ->
     GuildId = maps:get(id, UpdatedState),
     case guild_dispatch_filter:is_bulk_update_event(Event) of
         true ->
@@ -125,11 +163,34 @@ dispatch_bulk_groups(Groups, Event, FinalData, GuildId, Dispatched) ->
 -spec filter_indexed_for_session(map(), [{integer() | undefined, map()}], guild_state()) ->
     [map()].
 filter_indexed_for_session(SessionData, IndexedChannels, UpdatedState) ->
+    Visible = filter_permitted_for_session(SessionData, IndexedChannels, UpdatedState),
+    case guild_thread_gate:needs_variant(UpdatedState) of
+        false ->
+            Visible;
+        true ->
+            [
+                Ch
+             || Ch <- Visible,
+                guild_thread_gate:channel_visible(
+                    SessionData,
+                    guild_dispatch_decorate:parse_snowflake(
+                        <<"id">>, maps:get(<<"id">>, Ch, undefined)
+                    ),
+                    UpdatedState
+                )
+            ]
+    end.
+
+-spec filter_permitted_for_session(map(), [{integer() | undefined, map()}], guild_state()) ->
+    [map()].
+filter_permitted_for_session(SessionData, IndexedChannels, UpdatedState) ->
     case maps:get(viewable_channels, SessionData, undefined) of
         ViewableMap when is_map(ViewableMap) ->
             [
                 Ch
-             || {ChId, Ch} <- IndexedChannels, is_integer(ChId), maps:is_key(ChId, ViewableMap)
+             || {ChId, Ch} <- IndexedChannels,
+                is_integer(ChId),
+                maps:is_key(ChId, ViewableMap)
             ];
         _ ->
             UserId = maps:get(user_id, SessionData),

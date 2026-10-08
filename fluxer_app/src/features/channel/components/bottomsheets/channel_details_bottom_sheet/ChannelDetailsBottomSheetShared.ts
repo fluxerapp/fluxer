@@ -139,11 +139,6 @@ export const SEARCH_DESCRIPTOR = msg({
 	comment:
 		'Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).',
 });
-export const MORE_DESCRIPTOR = msg({
-	message: 'More',
-	comment:
-		'Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).',
-});
 export const CHANNEL_DETAILS_SECTIONS_DESCRIPTOR = msg({
 	message: 'Channel details sections',
 	comment:

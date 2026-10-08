@@ -87,7 +87,7 @@ describe('User profile text validation', () => {
 		await createBuilder(harness, account.token)
 			.put(`/users/@me/notes/${target.userId}`)
 			.header('content-type', 'text/plain')
-			.body({note: 'note carrying a blockedphrase value'})
+			.body({note: 'note with a blockedphrase value'})
 			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.CONTENT_BLOCKED)
 			.execute();
 		await createBuilder(harness, account.token)

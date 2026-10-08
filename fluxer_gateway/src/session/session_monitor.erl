@@ -66,23 +66,9 @@ handle_call_or_ignore(Ref, Reason, State, Calls) ->
 -spec handle_socket_down(term(), session_state()) ->
     {noreply, session_state()} | {stop, normal, session_state()}.
 handle_socket_down({shutdown, client_closed}, State) ->
-    end_or_hold_session(enrolled_in_push_delivery(State), State);
+    {stop, normal, State#{socket_pid => undefined, socket_mref => undefined}};
 handle_socket_down(_Reason, State) ->
     hold_session_for_resume(State).
-
--spec end_or_hold_session(boolean(), session_state()) ->
-    {noreply, session_state()} | {stop, normal, session_state()}.
-end_or_hold_session(true, State) ->
-    {stop, normal, State#{socket_pid => undefined, socket_mref => undefined}};
-end_or_hold_session(false, State) ->
-    hold_session_for_resume(State).
-
--spec enrolled_in_push_delivery(session_state()) -> boolean().
-enrolled_in_push_delivery(State) ->
-    case maps:get(user_id, State, undefined) of
-        UserId when is_integer(UserId) -> push_delivery_config:is_enrolled(UserId);
-        _ -> false
-    end.
 
 -spec hold_session_for_resume(session_state()) -> {noreply, session_state()}.
 hold_session_for_resume(State) ->
@@ -307,6 +293,7 @@ build_test_voice_state() ->
         voice_queue => queue:new(),
         voice_queue_timer => undefined,
         debounce_reactions => false,
+        thread_channels_capable => false,
         reaction_buffer => [],
         reaction_buffer_timer => undefined
     }.
@@ -351,6 +338,23 @@ handle_socket_down_delays_session_offline_test() ->
     after 200 ->
         ?assert(false)
     end,
+    SocketPid ! stop.
+
+handle_socket_down_client_closed_stops_the_session_test() ->
+    SocketRef = make_ref(),
+    SocketPid = spawn_test_proc(),
+    State0 = (build_test_session_state(50000, #{}))#{
+        presence_pid => self(),
+        socket_pid => SocketPid,
+        socket_mref => SocketRef
+    },
+    {stop, normal, State1} = handle_process_down(
+        SocketRef, {shutdown, client_closed}, State0
+    ),
+    ?assertEqual(undefined, maps:get(socket_pid, State1)),
+    ?assertEqual(undefined, maps:get(socket_mref, State1)),
+    ?assertEqual(maps:get(resume_timer, State0), maps:get(resume_timer, State1)),
+    ?assertEqual(maps:get(offline_timer, State0), maps:get(offline_timer, State1)),
     SocketPid ! stop.
 
 spawn_test_proc() ->

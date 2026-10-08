@@ -36,6 +36,7 @@ function applyMetadata(schema: core.$ZodType, json: OpenAPISchema): void {
 	if (!metadata) return;
 	if (metadata.format) json.format = metadata.format;
 	if (metadata.bitflagValues) json['x-bitflagValues'] = metadata.bitflagValues;
+	if (metadata.experiment) json['x-fluxer-experiment'] = metadata.experiment;
 	const entries = metadata.enumEntries;
 	if (!entries) return;
 	json['x-enumNames'] = entries.map((entry) => entry.name);

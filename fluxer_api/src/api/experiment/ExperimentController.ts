@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -8,8 +9,8 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {entityTagMatches} from '@app/api/utils/EntityTag';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
-import {resolveScreenShareDeliveryAssignment} from '@fluxer/schema/src/domains/admin/ScreenShareDeliverySchemas';
-import {resolveVoiceNoiseSuppressionAssignment} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+import {resolveChannelThreadsAssignment} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
+import {resolveDomainMigrationAssignment} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 
 export function ExperimentController(app: HonoApp) {
@@ -29,20 +30,26 @@ export function ExperimentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [delivery, voiceConfig, screenShareConfig] = await Promise.all([
+			const [delivery, domainMigrationConfig, channelThreadsConfig] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
-				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
-				instanceConfigRepository.getScreenShareDeliveryConfig(),
+				instanceConfigRepository.getDomainMigrationConfig(),
+				instanceConfigRepository.getCompiledChannelThreadsConfig(),
 			]);
-			const userId = ctx.get('user').id.toString();
+			const user = ctx.get('user');
+			const userId = user.id.toString();
+			const targeting = await resolveExperimentTargeting(user, domainMigrationConfig);
 			const body: ExperimentAssignmentsResponse = {
 				poll_interval_seconds: delivery.poll_interval_seconds,
 				poll_jitter_percent: delivery.poll_jitter_percent,
 				assignments: {
-					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, userId),
-					screen_share_delivery: resolveScreenShareDeliveryAssignment(screenShareConfig, userId),
+					domain_migration: resolveDomainMigrationAssignment(domainMigrationConfig, userId, targeting),
+					plutonium_page: {enabled: true},
 				},
 			};
+			const channelThreads = resolveChannelThreadsAssignment(channelThreadsConfig, userId);
+			if (channelThreads !== undefined) {
+				body.assignments.channel_threads = channelThreads;
+			}
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;
 			ctx.header(HttpHeaders.ETAG, etag);
 			ctx.header(HttpHeaders.CACHE_CONTROL, 'private, no-cache');

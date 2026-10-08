@@ -111,6 +111,7 @@ An instance can enforce single sign-on once it is configured and enabled. While 
 - [Register an account](/http-api/authentication/#register-an-account) and [Log in with a password](/http-api/authentication/#log-in-with-a-password).
 - [Get discoverable WebAuthn options](/http-api/authentication/#get-discoverable-webauthn-options) and [Authenticate with WebAuthn](/http-api/authentication/#authenticate-with-webauthn).
 - [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp), [Get WebAuthn MFA options](/http-api/authentication/#get-webauthn-mfa-options), and [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa).
+- [Start passkey bridge sign-in](/http-api/authentication/#start-passkey-bridge-sign-in) and [Redeem passkey bridge sign-in](/http-api/authentication/#redeem-passkey-bridge-sign-in).
 - [Verify an email address](/http-api/authentication/#verify-an-email-address) and [Resend email verification](/http-api/authentication/#resend-email-verification).
 - [Request password recovery](/http-api/authentication/#request-password-recovery), [Validate a password reset token](/http-api/authentication/#validate-a-password-reset-token), and [Reset a password](/http-api/authentication/#reset-a-password).
 - [Revert an email change](/http-api/authentication/#revert-an-email-change).
@@ -123,24 +124,7 @@ Enforcement applies at those operations only, and does not gate password change 
 
 ## Account state gates
 
-An ordinary authenticated operation rejects an account that has an unmet suspicious activity requirement with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. Each set flag in the response is one requirement the account has not met. A flag no longer appears in the response once the account meets that requirement.
-
-### Account suspicious activity body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| data | object | An object whose `suspicious_activity_flags` member is the integer [suspicious activity flag](/admin-api/users/#suspicious-activity-flags) bitfield still outstanding |
-
-A route that explicitly admits an account with an unmet suspicious activity requirement still accepts its credential. These stay reachable while a requirement is outstanding:
-
-- [Get current user](/http-api/users/current-user/#get-current-user) and [Modify current user](/http-api/users/current-user/#modify-current-user).
-- [Get current user settings](/http-api/users/settings/#get-current-user-settings).
-- The [email change flow](/http-api/users/email-and-password/) with its bounced-address variants, and the email verification resend.
-- The [phone verification](/http-api/users/phone-verification/) flow.
-- Session listing and session termination.
-- The application and authorisation management operations in [Applications](/http-api/applications/) and [OAuth2](/http-api/oauth2/).
-
-An Admin operation applies no suspicious activity gate.
+A [limited account](/http-api/users/#account-limitation) keeps its credentials and sessions. The operations listed there return 403 `ACCOUNT_LIMITED`, and every other operation accepts the account as usual.
 
 No shared gate rejects a deleted or disabled account. Each operation that reads account state applies its own rule, and login, password, and email operations refuse a deleted account outright.
 

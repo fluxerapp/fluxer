@@ -35,12 +35,16 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import {openReportMessageModal} from '@app/features/moderation/utils/ReportActionUtils';
 import Permission from '@app/features/permissions/state/Permission';
+import {openCreateThread} from '@app/features/threads/commands/ThreadNavigation';
+import {CREATE_THREAD_DESCRIPTOR} from '@app/features/threads/utils/ThreadMessageDescriptors';
 import {
 	AddReactionIcon,
 	BookmarkIcon,
 	CopyIdIcon,
 	CopyLinkIcon,
 	CopyMessageTextIcon,
+	CreateThreadIcon,
+	CrosspostIcon,
 	DebugMessageIcon,
 	DeleteIcon,
 	EditMessageIcon,
@@ -78,6 +82,11 @@ const VIEW_REACTIONS_DESCRIPTOR = msg({
 const REMOVE_ALL_REACTIONS_DESCRIPTOR = msg({
 	message: 'Remove all reactions',
 	comment: 'Destructive message context menu item for moderators that clears every reaction on a message.',
+});
+const PUBLISH_MESSAGE_DESCRIPTOR = msg({
+	message: 'Publish',
+	comment:
+		'Message context menu item in an announcement channel. Publishing sends the message to every channel that follows this channel.',
 });
 const FORWARD_DESCRIPTOR = msg({
 	message: 'Forward',
@@ -120,6 +129,8 @@ export const messageActionMenuItemIds = {
 	removeAllReactions: 'remove_all_reactions',
 	reply: 'reply',
 	forward: 'forward',
+	crosspost: 'message_crosspost',
+	createThread: 'create_thread',
 	edit: 'edit',
 	pinMessage: 'message_pin',
 	bookmarkMessage: 'message_bookmark',
@@ -290,6 +301,22 @@ export const useMessageActionMenuData = (
 					shortcut: (
 						<KeybindHint action="message_forward" data-flx="channel.message-action-menu.groups.keybind-hint--4" />
 					),
+				});
+			}
+			if (supportsInteractiveActions && permissions?.canCrosspostMessage && !message.isCrossposted) {
+				interactionActions.push({
+					id: messageActionMenuItemIds.crosspost,
+					icon: <CrosspostIcon size={20} data-flx="channel.message-action-menu.groups.crosspost-icon" />,
+					label: i18n._(PUBLISH_MESSAGE_DESCRIPTOR),
+					onClick: handlers.handleCrosspostMessage,
+				});
+			}
+			if (permissions?.canCreateThread) {
+				interactionActions.push({
+					id: messageActionMenuItemIds.createThread,
+					icon: <CreateThreadIcon size={20} data-flx="channel.message-action-menu.groups.create-thread-icon" />,
+					label: i18n._(CREATE_THREAD_DESCRIPTOR),
+					onClick: () => openCreateThread(permissions.channel, message.id),
 				});
 			}
 			if (message.isCurrentUserAuthor() && message.isUserMessage() && !message.messageSnapshots) {

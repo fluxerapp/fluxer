@@ -2,6 +2,7 @@
 
 import {CONTENT_WARNING_TEXT_MAX_LENGTH} from '@fluxer/constants/src/GuildConstants';
 import {MAX_GROUP_DM_OTHER_RECIPIENTS, MAX_GROUP_DM_RECIPIENTS} from '@fluxer/constants/src/LimitConstants';
+import {ThreadChannelFields, ThreadParentChannelFields} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {ChannelOverwriteTypeSchema, ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
 import {ContentWarningLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
@@ -101,9 +102,15 @@ export const ChannelResponse = z.object({
 		.record(z.string(), createStringType(1, 32))
 		.optional()
 		.describe('Custom nicknames for users in this channel (for group DMs)'),
+	...ThreadChannelFields,
+	...ThreadParentChannelFields,
 });
 
 export type ChannelResponse = z.infer<typeof ChannelResponse>;
+
+export const ThreadChannelResponse = ChannelResponse.extend(ThreadChannelFields);
+
+export type ThreadChannelResponse = z.infer<typeof ThreadChannelResponse>;
 
 export const ChannelNicknameOverrides = z
 	.record(

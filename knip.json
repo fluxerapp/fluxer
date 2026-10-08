@@ -2,17 +2,7 @@
 	"$schema": "https://unpkg.com/knip@6/schema.json",
 	"include": ["files", "exports", "types", "dependencies", "unlisted", "binaries", "catalog"],
 	"ignoreExportsUsedInFile": true,
-	"ignoreDependencies": [
-		"@bufbuild/protoc-gen-es",
-		"@tailwindcss/cli",
-		"@types/events",
-		"events",
-		"fflate",
-		"gifenc",
-		"gifuct-js",
-		"tailwindcss",
-		"upng-js"
-	],
+	"ignoreDependencies": ["@bufbuild/protoc-gen-es", "@tailwindcss/cli", "@types/events", "events", "tailwindcss"],
 	"ignoreFiles": [
 		"fluxer_admin/src/styles/app.css",
 		"fluxer_admin/static/htmx.min.js",
@@ -23,6 +13,7 @@
 		"fluxer_app/scripts/build/Config.tsx": ["exports"],
 		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],
 		"fluxer_app/src/index.tsx": ["unlisted"],
+		"fluxer_api/src/api/infrastructure/activity/Contract.generated.ts": ["exports", "types"],
 		"fluxer_desktop/native/mac-app-audio/index.test.mjs": ["unlisted"],
 		"fluxer_desktop/src/common/DesktopConfig.ts": ["types"],
 		"fluxer_desktop/src/common/Types.ts": ["types"],
@@ -30,9 +21,6 @@
 		"fluxer_desktop/src/main/LinuxDesktopEntry.ts": ["exports"],
 		"fluxer_desktop/src/main/NotificationState.ts": ["exports", "types"],
 		"packages/schema/src/domains/admin/AdminUserSchemas.ts": ["exports"],
-		"packages/schema/src/domains/admin/PushServiceDeliverySchemas.ts": ["exports"],
-		"packages/schema/src/domains/admin/ScreenShareDeliverySchemas.ts": ["exports"],
-		"packages/schema/src/domains/admin/VoiceNoiseSuppressionSchemas.ts": ["exports"],
 		"packages/schema/src/domains/download/DownloadSchemas.ts": ["exports"],
 		"packages/schema/src/domains/geolocation/GeolocationSchemas.ts": ["exports"],
 		"packages/schema/src/domains/guild/GuildAuditLogSchemas.ts": ["exports"],
@@ -45,7 +33,6 @@
 		"fluxer_api": {
 			"ignoreDependencies": [
 				"@elastic/elasticsearch",
-				"@hono/node-server",
 				"@messageformat/core",
 				"@messageformat/parser",
 				"@vvo/tzdb",
@@ -67,6 +54,7 @@
 				"src/main/Bootstrap.ts",
 				"src/main/index.ts",
 				"src/preload/index.ts",
+				"src/preload/LegacyHarvestPreload.ts",
 				"src/main/**/*.test.{ts,mjs}",
 				"native/*/index.{js,d.ts}",
 				"native/*/loader-diagnostics.cjs",
@@ -74,7 +62,7 @@
 				"native/*/test/**/*.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
-			"ignoreBinaries": ["reg.exe", "update-desktop-database"],
+			"ignoreBinaries": ["reg.exe", "update-desktop-database", "xdg-mime"],
 			"ignoreDependencies": ["electron-builder", "electron-builder-squirrel-windows"]
 		},
 		"fluxer_docs": {

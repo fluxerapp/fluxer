@@ -2,6 +2,7 @@
 
 import {isLinkWrappedInAngleBrackets} from '@app/features/messaging/utils/LinkSuppressionUtils';
 import * as RegexUtils from '@app/features/messaging/utils/RegexUtils';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 
 export interface CodeLinkConfig {
 	path: string;
@@ -39,7 +40,7 @@ function createPattern(config: CodeLinkConfig): RegExp {
 			normalizedBases.add(normalized);
 		}
 	}
-	if (typeof location !== 'undefined' && location.host) {
+	if (typeof location !== 'undefined' && location.host && !isDesktopLocalAppDocument()) {
 		normalizedBases.add(`${location.host}/${config.path}`);
 	}
 	const cacheKey = Array.from(normalizedBases).sort().join('|');

@@ -16,6 +16,8 @@ napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols",
 napi-derive = "3.6.7"
 
 [target.'cfg(target_os = "linux")'.dependencies]
+async-channel = "2.5.0"
+async-executor = "1.14.0"
 async-io = "2.6.0"
 futures-lite = "2.6.1"
 x11rb = "0.14.0"

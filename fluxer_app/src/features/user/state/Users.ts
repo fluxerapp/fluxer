@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Authentication from '@app/features/auth/state/Authentication';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
+import SessionManager from '@app/features/platform/state/AuthSession';
 import {User} from '@app/features/user/models/User';
+import {shouldShowDiscriminator} from '@app/features/user/utils/UserTagUtils';
 import type {UserPrivate, User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {makeAutoObservable, reaction, runInAction} from 'mobx';
+import {makeAutoObservable, observableRef, reaction, runInAction} from 'mobx';
 
 const CURRENT_USER_PRIVATE_WIRE_KEYS = [
 	'is_staff',
 	'email',
 	'email_bounced',
+	'account_limited',
 	'mfa_enabled',
-	'phone',
 	'authenticator_types',
 	'verified',
 	'premium_type',
@@ -30,7 +32,6 @@ const CURRENT_USER_PRIVATE_WIRE_KEYS = [
 	'premium_perks_disabled',
 	'password_last_changed_at',
 	'last_voice_activity_sharing_change_at',
-	'required_actions',
 	'nsfw_allowed',
 	'pending_bulk_message_deletion',
 	'has_dismissed_premium_onboarding',
@@ -49,24 +50,45 @@ function isPublicOnlyCurrentUserPayload(user: WireUser): boolean {
 	return !CURRENT_USER_PRIVATE_WIRE_KEYS.some((key) => key in user);
 }
 
+class CurrentUserHydrationMismatchError extends Error {
+	constructor(accountKey: string, userId: string) {
+		super(`Cannot hydrate user ${userId} outside its active account ${accountKey}`);
+		this.name = 'CurrentUserHydrationMismatchError';
+	}
+}
+
 class Users {
 	users: Record<string, User> = {};
 	userCount = 0;
+	viewAccountKey: string | null = null;
+	private hydratedAccountKey: string | null = null;
 
 	constructor() {
-		makeAutoObservable(this, {}, {autoBind: true});
+		makeAutoObservable<Users, 'hydratedAccountKey'>(this, {hydratedAccountKey: observableRef}, {autoBind: true});
 	}
 
 	get currentUser(): User | null {
-		const currentUserId = Authentication.userId;
-		if (!currentUserId) {
+		const currentAccountKey = SessionManager.currentAccountKey;
+		const currentUserId = SessionManager.userId;
+		if (currentAccountKey === null || currentUserId === null || this.hydratedAccountKey !== currentAccountKey) {
 			return null;
 		}
 		return this.users[currentUserId] ?? null;
 	}
 
 	get currentUserId(): string | null {
-		return Authentication.userId;
+		return SessionManager.userId;
+	}
+
+	get isCurrentUserHydrated(): boolean {
+		const currentAccountKey = SessionManager.currentAccountKey;
+		const currentUserId = SessionManager.userId;
+		return (
+			currentAccountKey !== null &&
+			currentUserId !== null &&
+			this.hydratedAccountKey === currentAccountKey &&
+			this.users[currentUserId] !== undefined
+		);
 	}
 
 	get usersList(): ReadonlyArray<User> {
@@ -74,6 +96,9 @@ class Users {
 	}
 
 	getUser(userId: string): User | undefined {
+		if (userId === this.currentUserId) {
+			return this.currentUser ?? undefined;
+		}
 		return this.users[userId];
 	}
 
@@ -82,25 +107,62 @@ class Users {
 	}
 
 	getUserByTag(tag: string): User | undefined {
-		return this.usersList.find((user) => user.tag === tag);
+		const bareName = tag.toLowerCase();
+		return this.usersList.find(
+			(user) =>
+				user.tag === tag ||
+				`${user.username}#${user.discriminator}` === tag ||
+				(!shouldShowDiscriminator(user) && user.username.toLowerCase() === bareName),
+		);
 	}
 
 	getUsers(): ReadonlyArray<User> {
 		return this.usersList;
 	}
 
-	handleGatewayReady(currentUser: UserPrivate): void {
+	handleGatewayReady(accountKey: string, currentUser: UserPrivate): void {
+		this.assertCurrentAccountIdentity(accountKey, currentUser.id);
 		const userRecord = new User(currentUser);
 		this.users = {
 			[currentUser.id]: userRecord,
 		};
 		this.userCount = 1;
+		this.hydratedAccountKey = accountKey;
+		this.viewAccountKey = accountKey;
 		if (!userRecord.isClaimed()) {
 			setTimeout(async () => {
+				if (!this.isActiveUnclaimedAccount(accountKey, currentUser.id)) {
+					return;
+				}
 				const {openClaimAccountModal} = await import('@app/features/auth/components/modals/ClaimAccountModal');
+				if (!this.isActiveUnclaimedAccount(accountKey, currentUser.id)) {
+					return;
+				}
 				openClaimAccountModal();
 			}, 1000);
 		}
+	}
+
+	hydrateFromSnapshot(accountKey: string, currentUser: UserPrivate, users: ReadonlyArray<WireUser>): void {
+		this.assertCurrentAccountIdentity(accountKey, currentUser.id);
+		const hydratedUsers: Record<string, User> = {
+			[currentUser.id]: new User(currentUser),
+		};
+		for (const user of users) {
+			if (user.id !== currentUser.id) {
+				hydratedUsers[user.id] = new User(user);
+			}
+		}
+		this.users = hydratedUsers;
+		this.userCount = Object.keys(hydratedUsers).length;
+		this.hydratedAccountKey = accountKey;
+		this.viewAccountKey = accountKey;
+	}
+
+	resetAccountState(): void {
+		this.users = {};
+		this.userCount = 0;
+		this.hydratedAccountKey = null;
 	}
 
 	handleUserUpdate(
@@ -157,6 +219,25 @@ class Users {
 			{fireImmediately: true},
 		);
 	}
+
+	private assertCurrentAccountIdentity(accountKey: string, userId: string): void {
+		if (SessionManager.currentAccountKey !== accountKey || SessionManager.userId !== userId) {
+			throw new CurrentUserHydrationMismatchError(accountKey, userId);
+		}
+	}
+
+	private isActiveUnclaimedAccount(accountKey: string, userId: string): boolean {
+		const currentUser = this.currentUser;
+		return (
+			this.hydratedAccountKey === accountKey &&
+			SessionManager.currentAccountKey === accountKey &&
+			currentUser?.id === userId &&
+			!currentUser.isClaimed()
+		);
+	}
 }
 
-export default new Users();
+const users = new Users();
+ResettableStates.register(users, users.resetAccountState);
+
+export default users;

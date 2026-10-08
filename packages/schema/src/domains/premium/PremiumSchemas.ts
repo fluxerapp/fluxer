@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {PremiumStoreSubscriptionState} from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';
+import {createStringType, withOpenApiType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {UserPremiumTypesSchema} from '@fluxer/schema/src/primitives/UserSettingsValidators';
 import {z} from 'zod';
 
-export const PremiumCurrency = z.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY']);
+export const PremiumCurrency = z.string().regex(/^[A-Z]{3}$/);
 
 export type PremiumCurrency = z.infer<typeof PremiumCurrency>;
 
@@ -36,7 +37,9 @@ export const PriceIdsResponse = z.object({
 		.describe('Gift 1 month price amount in the currency minor unit'),
 	gift_1_year_amount_minor: z.number().int().nullish().describe('Gift 1 year price amount in the currency minor unit'),
 	currency: PremiumCurrency.describe('Currency for the prices'),
-	gift_currency: PremiumCurrency.describe('Currency for gift prices'),
+	gift_currency: PremiumCurrency.nullable().describe(
+		'Currency for gift prices, null when no gift prices are configured',
+	),
 });
 
 export type PriceIdsResponse = z.infer<typeof PriceIdsResponse>;
@@ -50,40 +53,6 @@ export const PriceIdsQueryRequest = z.object({
 });
 
 export type PriceIdsQueryRequest = z.infer<typeof PriceIdsQueryRequest>;
-
-export const LocalizedCardPreapprovalContinueRequest = z.object({
-	token: createStringType(1, 256).describe('Continuation token for the localized card preapproval flow'),
-});
-
-export type LocalizedCardPreapprovalContinueRequest = z.infer<typeof LocalizedCardPreapprovalContinueRequest>;
-
-const LocalizedCardPreapprovalRejectedReason = z.enum([
-	'country_mismatch',
-	'missing_customer',
-	'missing_payment_method',
-	'missing_setup_intent',
-	'payment_method_not_card',
-	'unknown',
-]);
-export const LocalizedCardPreapprovalContinueResponse = z.discriminatedUnion('status', [
-	z.object({
-		status: z.literal('pending').describe('The preapproval result is still being processed'),
-	}),
-	z.object({
-		status: z.literal('ready').describe('The preapproval succeeded and the paid checkout URL is ready'),
-		url: z.string().describe('The URL to redirect to'),
-	}),
-	z.object({
-		status: z.literal('rejected').describe('The preapproval failed and the paid checkout should not continue'),
-		reason: LocalizedCardPreapprovalRejectedReason.describe('The reason the preapproval was rejected'),
-		actual_country: createStringType(2, 2).nullish().describe('The detected card issuing country when available'),
-	}),
-	z.object({
-		status: z.literal('expired').describe('The preapproval token has expired or is unknown'),
-	}),
-]);
-
-export type LocalizedCardPreapprovalContinueResponse = z.infer<typeof LocalizedCardPreapprovalContinueResponse>;
 
 export const CurrentSubscriptionPriceResponse = z
 	.object({
@@ -360,11 +329,24 @@ export const PremiumPricingState = z.object({
 
 export type PremiumPricingState = z.infer<typeof PremiumPricingState>;
 
+export const PremiumSubscriptionProvider = withOpenApiType(
+	z.enum(['stripe', 'app_store', 'google_play']),
+	'PremiumSubscriptionProvider',
+);
+
+export type PremiumSubscriptionProvider = z.infer<typeof PremiumSubscriptionProvider>;
+
 export const PremiumStateResponse = z.object({
 	actual: PremiumActualState,
 	effective: PremiumEffectiveState,
 	billing: PremiumBillingState,
 	pricing: PremiumPricingState,
+	store: PremiumStoreSubscriptionState.nullish().describe(
+		'Active App Store or Google Play subscription, null when no store subscription is active',
+	),
+	subscription_provider: PremiumSubscriptionProvider.nullable().describe(
+		'Billing platform that owns the current recurring subscription, null for gift, lifetime or no subscription. When a Stripe and a store subscription are both active, the one paid through later',
+	),
 });
 
 export type PremiumStateResponse = z.infer<typeof PremiumStateResponse>;

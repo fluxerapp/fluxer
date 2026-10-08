@@ -2,7 +2,13 @@
 
 import type {ChannelID, GuildID, InviteCode, UserID} from '@app/api/BrandedTypes';
 import {createInviteCode} from '@app/api/BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {
+	BatchBuilder,
+	executeConditional,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {InviteRow} from '@app/api/database/types/ChannelTypes';
 import {IInviteRepository} from '@app/api/invite/IInviteRepository';
@@ -168,17 +174,13 @@ export class InviteRepository extends IInviteRepository {
 
 	async updateInviteUses(code: InviteCode, uses: number, invite: Invite): Promise<void> {
 		if (invite.maxAge > 0) {
-			const remainingTtl = Math.max(
-				Math.floor((invite.createdAt.getTime() + invite.maxAge * 1000 - Date.now()) / 1000),
-				1,
-			);
 			await upsertOne(
 				Invites.patchByPkWithTtl(
 					{code},
 					{
 						uses: Db.set(uses),
 					},
-					remainingTtl,
+					this.remainingTtl(invite),
 				),
 			);
 		} else {
@@ -191,6 +193,21 @@ export class InviteRepository extends IInviteRepository {
 				),
 			);
 		}
+	}
+
+	async compareAndSetInviteUses(invite: Invite, uses: number): Promise<boolean> {
+		const patch = {uses: Db.set(uses)};
+		const expected = {uses: invite.uses};
+		if (invite.maxAge > 0) {
+			return executeConditional(
+				Invites.conditionalPatchByPkWithTtl({code: invite.code}, patch, expected, this.remainingTtl(invite)),
+			);
+		}
+		return executeConditional(Invites.conditionalPatchByPk({code: invite.code}, patch, expected));
+	}
+
+	private remainingTtl(invite: Invite): number {
+		return Math.max(Math.floor((invite.createdAt.getTime() + invite.maxAge * 1000 - Date.now()) / 1000), 1);
 	}
 
 	async delete(code: InviteCode): Promise<void> {

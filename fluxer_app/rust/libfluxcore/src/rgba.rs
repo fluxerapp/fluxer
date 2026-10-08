@@ -22,6 +22,7 @@ pub struct TransformRequest {
 pub enum TransformError {
     InvalidDimensions,
     InvalidRgbaLength,
+    InvalidOutputLength,
     EmptyCrop,
     EmptyTarget,
     ImageTooLarge,
@@ -33,6 +34,7 @@ impl TransformError {
         match self {
             Self::InvalidDimensions => "invalid RGBA dimensions",
             Self::InvalidRgbaLength => "RGBA input length does not match dimensions",
+            Self::InvalidOutputLength => "RGBA output length does not match target dimensions",
             Self::EmptyCrop => "Crop area is empty",
             Self::EmptyTarget => "Target dimensions are empty",
             Self::ImageTooLarge => "Image is too large to crop",
@@ -75,12 +77,7 @@ pub fn crop_rotate_rgba_alloc(
     input: &[u8],
     request: TransformRequest,
 ) -> Result<Vec<u8>, TransformError> {
-    let geometry = output_geometry(request)?;
-    let expected_len = rgba_byte_len(request.src_width, request.src_height, 0)?;
-    if input.len() != expected_len {
-        return Err(TransformError::InvalidRgbaLength);
-    }
-
+    let geometry = checked_geometry(input, request)?;
     let output_len = rgba_byte_len(
         geometry.target_width,
         geometry.target_height,
@@ -89,8 +86,45 @@ pub fn crop_rotate_rgba_alloc(
     let mut output = try_zeroed_vec(output_len)?;
     write_u32_le(&mut output, 0, geometry.target_width);
     write_u32_le(&mut output, 4, geometry.target_height);
+    write_transformed(
+        input,
+        &mut output[RGBA_RESULT_HEADER_BYTES..],
+        request,
+        geometry,
+    );
+    Ok(output)
+}
 
-    let dst = &mut output[RGBA_RESULT_HEADER_BYTES..];
+pub fn crop_rotate_rgba_into(
+    input: &[u8],
+    output: &mut [u8],
+    request: TransformRequest,
+) -> Result<(), TransformError> {
+    let geometry = checked_geometry(input, request)?;
+    if output.len() != rgba_byte_len(geometry.target_width, geometry.target_height, 0)? {
+        return Err(TransformError::InvalidOutputLength);
+    }
+    write_transformed(input, output, request, geometry);
+    Ok(())
+}
+
+fn checked_geometry(
+    input: &[u8],
+    request: TransformRequest,
+) -> Result<OutputGeometry, TransformError> {
+    let geometry = output_geometry(request)?;
+    if input.len() != rgba_byte_len(request.src_width, request.src_height, 0)? {
+        return Err(TransformError::InvalidRgbaLength);
+    }
+    Ok(geometry)
+}
+
+fn write_transformed(
+    input: &[u8],
+    dst: &mut [u8],
+    request: TransformRequest,
+    geometry: OutputGeometry,
+) {
     if geometry.target_width == geometry.base_width
         && geometry.target_height == geometry.base_height
     {
@@ -98,8 +132,6 @@ pub fn crop_rotate_rgba_alloc(
     } else {
         copy_rotated_with_nearest_resize(input, dst, request, geometry);
     }
-
-    Ok(output)
 }
 
 fn output_geometry(request: TransformRequest) -> Result<OutputGeometry, TransformError> {
@@ -461,6 +493,30 @@ mod tests {
         empty_target.resize_width = 0;
         empty_target.resize_height = 1;
         assert!(crop_rotate_rgba_alloc(&rgba(&[1, 2, 3, 4]), empty_target).is_ok());
+    }
+
+    #[test]
+    fn into_writes_the_same_pixels_as_alloc() {
+        let input = rgba(&[1, 2, 3, 4, 5, 6]);
+        for rotation_deg in [0, 90, 180, 270] {
+            let mut transform = request(2, 3);
+            transform.rotation_deg = rotation_deg;
+            transform.resize_width = 5;
+            transform.resize_height = 4;
+            let expected = crop_rotate_rgba_alloc(&input, transform).unwrap();
+            let mut output = vec![0xaa; 5 * 4 * RGBA_BYTES_PER_PIXEL];
+            crop_rotate_rgba_into(&input, &mut output, transform).unwrap();
+            assert_eq!(output, payload(&expected));
+        }
+    }
+
+    #[test]
+    fn into_rejects_an_output_of_the_wrong_length() {
+        let mut output = vec![0; 3 * RGBA_BYTES_PER_PIXEL];
+        assert_eq!(
+            crop_rotate_rgba_into(&rgba(&[1, 2, 3, 4]), &mut output, request(2, 2)).unwrap_err(),
+            TransformError::InvalidOutputLength
+        );
     }
 
     proptest! {

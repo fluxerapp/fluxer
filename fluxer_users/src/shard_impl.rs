@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::types::{ApiUserPartial, User, UserPartial, UserRequest, UserResponse};
+use crate::types::{ApiUserPartial, User, UserPartial, UserRequest, UserResponse, now_ms};
 #[cfg(feature = "scylla")]
 use chrono::{DateTime, NaiveDate, Utc};
+use fluxer_common::user_flags::AccountStanding;
 use fluxer_svc::shard::ShardService;
 use fluxer_svc::{postgres, postgres::KeyPart};
 use futures::stream::{self, StreamExt};
@@ -43,7 +44,7 @@ const FULL_USER_COLUMNS: &str = "\
     premium_will_cancel, premium_onboarding_dismissed_at, \
     has_ever_purchased, stripe_subscription_id, stripe_customer_id, \
     gift_inventory_server_seq, gift_inventory_client_seq, \
-    suspicious_activity_flags, terms_agreed_at, privacy_agreed_at, \
+    terms_agreed_at, privacy_agreed_at, \
     last_active_at, last_active_ip, \
     temp_banned_until, pending_deletion_at, \
     pending_bulk_message_deletion_at, \
@@ -51,16 +52,17 @@ const FULL_USER_COLUMNS: &str = "\
     pending_bulk_message_deletion_message_count, \
     password_last_changed_at, acls, \
     deletion_reason_code, deletion_public_reason, deletion_audit_log_reason, \
-    first_refund_at, version, has_verified_phone, \
+    first_refund_at, version, \
     premium_grace_ends_at, mention_flags, \
     last_voice_activity_sharing_change_at, \
-    timezone, timezone_privacy_flags";
+    timezone, timezone_privacy_flags, content_hidden_since";
 #[cfg(feature = "scylla")]
 const PARTIAL_USER_COLUMNS: &str = "\
     user_id, username, discriminator, global_name, \
     avatar_hash, bot, system, flags, \
     banner_hash, banner_color, accent_color, avatar_color, \
-    mention_flags";
+    mention_flags, temp_banned_until, pending_deletion_at, deletion_reason_code, \
+    content_hidden_since";
 const USER_BATCH_SIZE: usize = 128;
 const USER_BATCH_CONCURRENCY: usize = 8;
 const USER_CACHE_MIN_GENERATION_STRIPES: usize = 4096;
@@ -146,7 +148,6 @@ struct FullUserDbRow {
     stripe_customer_id: Option<String>,
     gift_inventory_server_seq: Option<i32>,
     gift_inventory_client_seq: Option<i32>,
-    suspicious_activity_flags: Option<i32>,
     terms_agreed_at: OptionalTimestamp,
     privacy_agreed_at: OptionalTimestamp,
     last_active_at: OptionalTimestamp,
@@ -163,16 +164,15 @@ struct FullUserDbRow {
     deletion_audit_log_reason: Option<String>,
     first_refund_at: OptionalTimestamp,
     version: Option<i32>,
-    has_verified_phone: Option<bool>,
     premium_grace_ends_at: OptionalTimestamp,
     mention_flags: Option<i32>,
     last_voice_activity_sharing_change_at: OptionalTimestamp,
     timezone: Option<String>,
     timezone_privacy_flags: Option<i32>,
+    content_hidden_since: OptionalTimestamp,
 }
 
 #[derive(Debug, Deserialize)]
-#[cfg_attr(feature = "scylla", derive(DeserializeRow))]
 struct PartialUserDbRow {
     user_id: i64,
     username: String,
@@ -187,6 +187,61 @@ struct PartialUserDbRow {
     accent_color: Option<i32>,
     avatar_color: Option<i32>,
     mention_flags: Option<i32>,
+    #[serde(default)]
+    temp_banned_until: Option<i64>,
+    #[serde(default)]
+    pending_deletion_at: Option<i64>,
+    #[serde(default)]
+    deletion_reason_code: Option<i32>,
+    #[serde(default)]
+    content_hidden_since: Option<i64>,
+}
+
+#[cfg(feature = "scylla")]
+#[derive(Debug, DeserializeRow)]
+struct PartialUserScyllaRow {
+    user_id: i64,
+    username: String,
+    discriminator: i32,
+    global_name: Option<String>,
+    avatar_hash: Option<String>,
+    bot: Option<bool>,
+    system: Option<bool>,
+    flags: Option<i64>,
+    banner_hash: Option<String>,
+    banner_color: Option<i32>,
+    accent_color: Option<i32>,
+    avatar_color: Option<i32>,
+    mention_flags: Option<i32>,
+    temp_banned_until: OptionalTimestamp,
+    pending_deletion_at: OptionalTimestamp,
+    deletion_reason_code: Option<i32>,
+    content_hidden_since: OptionalTimestamp,
+}
+
+#[cfg(feature = "scylla")]
+impl From<PartialUserScyllaRow> for PartialUserDbRow {
+    fn from(row: PartialUserScyllaRow) -> Self {
+        Self {
+            user_id: row.user_id,
+            username: row.username,
+            discriminator: row.discriminator,
+            global_name: row.global_name,
+            avatar_hash: row.avatar_hash,
+            bot: row.bot,
+            system: row.system,
+            flags: row.flags,
+            banner_hash: row.banner_hash,
+            banner_color: row.banner_color,
+            accent_color: row.accent_color,
+            avatar_color: row.avatar_color,
+            mention_flags: row.mention_flags,
+            temp_banned_until: optional_timestamp_millis(row.temp_banned_until),
+            pending_deletion_at: optional_timestamp_millis(row.pending_deletion_at),
+            deletion_reason_code: row.deletion_reason_code,
+            content_hidden_since: optional_timestamp_millis(row.content_hidden_since),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -226,7 +281,6 @@ struct FullUserKvRow {
     stripe_customer_id: Option<String>,
     gift_inventory_server_seq: Option<i32>,
     gift_inventory_client_seq: Option<i32>,
-    suspicious_activity_flags: Option<i32>,
     terms_agreed_at: Option<i64>,
     privacy_agreed_at: Option<i64>,
     last_active_at: Option<i64>,
@@ -243,12 +297,12 @@ struct FullUserKvRow {
     deletion_audit_log_reason: Option<String>,
     first_refund_at: Option<i64>,
     version: Option<i32>,
-    has_verified_phone: Option<bool>,
     premium_grace_ends_at: Option<i64>,
     mention_flags: Option<i32>,
     last_voice_activity_sharing_change_at: Option<i64>,
     timezone: Option<String>,
     timezone_privacy_flags: Option<i32>,
+    content_hidden_since: Option<i64>,
 }
 
 fn generation_stripes(max_entries: u64) -> usize {
@@ -593,7 +647,9 @@ impl ScyllaUsersStorage {
             .execute_unpaged(&self.stmt_partial, (user_id,))
             .await?;
         let rows = result.into_rows_result()?;
-        let partial = rows.maybe_first_row::<PartialUserDbRow>()?.map(Into::into);
+        let partial = rows
+            .maybe_first_row::<PartialUserScyllaRow>()?
+            .map(|row| UserPartial::from(PartialUserDbRow::from(row)));
         Ok(partial)
     }
 
@@ -603,9 +659,13 @@ impl ScyllaUsersStorage {
             .execute_unpaged(&self.stmt_partial_batch, (user_ids,))
             .await?;
         let rows = result.into_rows_result()?;
-        let rows: Vec<PartialUserDbRow> =
-            rows.rows::<PartialUserDbRow>()?.collect::<Result<_, _>>()?;
-        Ok(rows.into_iter().map(UserPartial::from).collect::<Vec<_>>())
+        let rows: Vec<PartialUserScyllaRow> = rows
+            .rows::<PartialUserScyllaRow>()?
+            .collect::<Result<_, _>>()?;
+        Ok(rows
+            .into_iter()
+            .map(|row| UserPartial::from(PartialUserDbRow::from(row)))
+            .collect::<Vec<_>>())
     }
 }
 
@@ -658,7 +718,6 @@ fn fluxer_system_user() -> User {
         stripe_customer_id: None,
         gift_inventory_server_seq: None,
         gift_inventory_client_seq: None,
-        suspicious_activity_flags: None,
         terms_agreed_at: None,
         privacy_agreed_at: None,
         last_active_at: None,
@@ -675,12 +734,12 @@ fn fluxer_system_user() -> User {
         deletion_audit_log_reason: None,
         first_refund_at: None,
         version: 1,
-        has_verified_phone: None,
         premium_grace_ends_at: None,
         mention_flags: None,
         last_voice_activity_sharing_change_at: None,
         timezone: None,
         timezone_privacy_flags: None,
+        content_hidden_since: None,
     }
 }
 
@@ -765,6 +824,12 @@ fn optional_date_string(value: OptionalDate) -> Option<String> {
 
 impl From<PartialUserDbRow> for UserPartial {
     fn from(row: PartialUserDbRow) -> Self {
+        let standing = AccountStanding {
+            flags: row.flags.unwrap_or_default(),
+            temp_banned_until_ms: row.temp_banned_until,
+            pending_deletion_at_ms: row.pending_deletion_at,
+            deletion_reason_code: row.deletion_reason_code,
+        };
         Self {
             user_id: row.user_id,
             username: row.username,
@@ -779,7 +844,9 @@ impl From<PartialUserDbRow> for UserPartial {
             accent_color: row.accent_color,
             avatar_color: row.avatar_color,
             mention_flags: row.mention_flags,
+            content_hidden_since: row.content_hidden_since,
         }
+        .visible_to_others(&standing, now_ms())
     }
 }
 
@@ -832,7 +899,6 @@ impl From<FullUserDbRow> for User {
             stripe_customer_id: row.stripe_customer_id,
             gift_inventory_server_seq: row.gift_inventory_server_seq,
             gift_inventory_client_seq: row.gift_inventory_client_seq,
-            suspicious_activity_flags: row.suspicious_activity_flags,
             terms_agreed_at: optional_timestamp_millis(row.terms_agreed_at),
             privacy_agreed_at: optional_timestamp_millis(row.privacy_agreed_at),
             last_active_at: optional_timestamp_millis(row.last_active_at),
@@ -856,7 +922,6 @@ impl From<FullUserDbRow> for User {
             deletion_audit_log_reason: row.deletion_audit_log_reason,
             first_refund_at: optional_timestamp_millis(row.first_refund_at),
             version: row.version.unwrap_or_default(),
-            has_verified_phone: row.has_verified_phone,
             premium_grace_ends_at: optional_timestamp_millis(row.premium_grace_ends_at),
             mention_flags: row.mention_flags,
             last_voice_activity_sharing_change_at: optional_timestamp_millis(
@@ -864,6 +929,7 @@ impl From<FullUserDbRow> for User {
             ),
             timezone: row.timezone,
             timezone_privacy_flags: row.timezone_privacy_flags,
+            content_hidden_since: optional_timestamp_millis(row.content_hidden_since),
         }
     }
 }
@@ -906,7 +972,6 @@ impl From<FullUserKvRow> for User {
             stripe_customer_id: row.stripe_customer_id,
             gift_inventory_server_seq: row.gift_inventory_server_seq,
             gift_inventory_client_seq: row.gift_inventory_client_seq,
-            suspicious_activity_flags: row.suspicious_activity_flags,
             terms_agreed_at: row.terms_agreed_at,
             privacy_agreed_at: row.privacy_agreed_at,
             last_active_at: row.last_active_at,
@@ -925,12 +990,12 @@ impl From<FullUserKvRow> for User {
             deletion_audit_log_reason: row.deletion_audit_log_reason,
             first_refund_at: row.first_refund_at,
             version: row.version.unwrap_or_default(),
-            has_verified_phone: row.has_verified_phone,
             premium_grace_ends_at: row.premium_grace_ends_at,
             mention_flags: row.mention_flags,
             last_voice_activity_sharing_change_at: row.last_voice_activity_sharing_change_at,
             timezone: row.timezone,
             timezone_privacy_flags: row.timezone_privacy_flags,
+            content_hidden_since: row.content_hidden_since,
         }
     }
 }
@@ -1097,13 +1162,20 @@ mod tests {
             .split(',')
             .map(str::trim)
             .collect::<BTreeSet<_>>();
-        let partial = serde_json::to_value(test_user(42).to_partial()).unwrap();
-        let fields = partial
+        let mut user = test_user(42);
+        user.content_hidden_since = Some(1);
+        let partial = serde_json::to_value(user.to_partial()).unwrap();
+        let mut fields = partial
             .as_object()
             .unwrap()
             .keys()
             .map(String::as_str)
             .collect::<BTreeSet<_>>();
+        fields.extend([
+            "temp_banned_until",
+            "pending_deletion_at",
+            "deletion_reason_code",
+        ]);
         let full_columns = FULL_USER_COLUMNS
             .split(',')
             .map(str::trim)
@@ -1155,5 +1227,171 @@ mod tests {
         assert_eq!(user.date_of_birth.as_deref(), Some("1815-12-10"));
         assert_eq!(user.premium_since, Some(1_781_526_896_789));
         assert_eq!(user.version, 3);
+    }
+
+    const SPAMMER: i64 = 1 << 6;
+    const DISABLED: i64 = 1 << 38;
+    const PROFILE_HIDDEN: i64 = 1 << 7;
+
+    fn styled(user_id: i64, flags: i64) -> User {
+        let mut user = test_user(user_id);
+        user.flags = Some(flags);
+        user.banner_hash = Some("banner_hash".to_owned());
+        user.banner_color = Some(3);
+        user.accent_color = Some(5);
+        user.avatar_color = Some(9);
+        user
+    }
+
+    fn assert_hidden(partial: &UserPartial) {
+        let expected = crate::pseudonym::pseudonym(partial.user_id);
+        assert_eq!(partial.username, expected.username);
+        assert_eq!(partial.discriminator, expected.discriminator);
+        assert_ne!(partial.username, "Ada");
+        assert_eq!(partial.global_name, None);
+        assert_eq!(partial.avatar_hash, None);
+        assert_eq!(partial.avatar_color, None);
+        assert_eq!(partial.banner_hash, None);
+        assert_eq!(partial.banner_color, None);
+        assert_eq!(partial.accent_color, None);
+        let api = partial.to_api_partial();
+        assert_eq!(api.username, expected.username);
+        assert_eq!(api.discriminator, format!("{:04}", expected.discriminator));
+        assert_eq!(api.flags & PROFILE_HIDDEN as i32, 0);
+    }
+
+    #[test]
+    fn a_masked_partial_matches_the_shared_development_vector() {
+        let api = styled(1_174_109_840_998_400_001, SPAMMER)
+            .to_partial()
+            .to_api_partial();
+        assert_eq!(
+            (api.username.as_str(), api.discriminator.as_str()),
+            ("MambaEgret", "6542")
+        );
+        assert_eq!(api.flags & PROFILE_HIDDEN as i32, 0);
+        assert_eq!(api.global_name, None);
+        assert_eq!(api.avatar, None);
+    }
+
+    #[test]
+    fn a_masked_partial_is_stable_across_reads() {
+        let first = styled(53, PROFILE_HIDDEN).to_partial();
+        let second = styled(53, PROFILE_HIDDEN).to_partial();
+        assert_eq!(
+            (first.username, first.discriminator),
+            (second.username, second.discriminator)
+        );
+    }
+
+    #[test]
+    fn hidden_and_enforced_accounts_get_a_neutral_partial_and_keep_their_stored_profile() {
+        let now = now_ms();
+        let mut banned = styled(43, DISABLED);
+        banned.temp_banned_until = Some(now + 60_000);
+        let mut deleting = styled(44, 0);
+        deleting.pending_deletion_at = Some(now + 60_000);
+        deleting.deletion_reason_code = Some(20);
+        for user in [
+            styled(41, PROFILE_HIDDEN),
+            styled(42, SPAMMER),
+            banned,
+            deleting,
+        ] {
+            assert_hidden(&user.to_partial());
+            assert_eq!(user.username, "Ada");
+            assert_eq!(user.avatar_hash.as_deref(), Some("avatar_hash"));
+        }
+    }
+
+    #[test]
+    fn lifted_bans_self_disables_and_normal_accounts_keep_their_partial() {
+        let now = now_ms();
+        let mut expired = styled(45, DISABLED);
+        expired.temp_banned_until = Some(now - 60_000);
+        let mut self_deleting = styled(46, 0);
+        self_deleting.pending_deletion_at = Some(now + 60_000);
+        self_deleting.deletion_reason_code = Some(1);
+        for user in [styled(47, 0), styled(48, DISABLED), expired, self_deleting] {
+            let partial = user.to_partial();
+            assert_eq!(partial.username, "Ada", "{}", user.user_id);
+            assert_eq!(partial.global_name.as_deref(), Some("Ada Lovelace"));
+            assert_eq!(partial.banner_hash.as_deref(), Some("banner_hash"));
+            assert_eq!(partial.discriminator, 7);
+            assert_eq!(partial.flags.unwrap_or_default() & PROFILE_HIDDEN, 0);
+        }
+    }
+
+    #[test]
+    fn postgres_partial_rows_apply_the_mask_from_ban_state() {
+        let until = |ms: i64| {
+            let at = chrono::DateTime::from_timestamp_millis(ms).unwrap();
+            json!({"__fluxer_type": "date", "value": at.to_rfc3339_opts(chrono::SecondsFormat::Millis, true)})
+        };
+        let row = |ms: i64| {
+            json!({
+                "user_id": {"__fluxer_type": "bigint", "value": "42"},
+                "username": "ada",
+                "discriminator": 7,
+                "global_name": "Ada",
+                "avatar_hash": "avatar_hash",
+                "flags": {"__fluxer_type": "bigint", "value": DISABLED.to_string()},
+                "temp_banned_until": until(ms),
+            })
+        };
+        let now = now_ms();
+        assert_hidden(&decode_postgres_user_partial(row(now + 60_000)).unwrap());
+        let lifted = decode_postgres_user_partial(row(now - 60_000)).unwrap();
+        assert_eq!(lifted.username, "ada");
+        assert_eq!(lifted.avatar_hash.as_deref(), Some("avatar_hash"));
+    }
+
+    #[test]
+    fn the_message_hide_window_reaches_the_partial_independently_of_the_profile_mask() {
+        let since = 1_790_000_000_000;
+        let mut hidden = styled(49, 0);
+        hidden.content_hidden_since = Some(since);
+        let partial = hidden.to_partial();
+        assert_eq!(partial.content_hidden_since, Some(since));
+        assert_eq!(partial.username, "Ada");
+        let mut masked = styled(50, PROFILE_HIDDEN);
+        masked.content_hidden_since = Some(since);
+        let partial = masked.to_partial();
+        assert_hidden(&partial);
+        assert_eq!(partial.content_hidden_since, Some(since));
+        assert_eq!(
+            styled(51, PROFILE_HIDDEN).to_partial().content_hidden_since,
+            None
+        );
+        let wire = serde_json::to_value(styled(52, 0).to_partial()).unwrap();
+        assert!(wire.get("content_hidden_since").is_none());
+        assert!(
+            serde_json::to_value(hidden.to_partial().to_api_partial())
+                .unwrap()
+                .get("content_hidden_since")
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn postgres_partial_rows_read_the_message_hide_window() {
+        let since = 1_790_000_000_000_i64;
+        let at = chrono::DateTime::from_timestamp_millis(since).unwrap();
+        let row = json!({
+            "user_id": {"__fluxer_type": "bigint", "value": "42"},
+            "username": "ada",
+            "discriminator": 7,
+            "content_hidden_since": {"__fluxer_type": "date", "value": at.to_rfc3339_opts(chrono::SecondsFormat::Millis, true)},
+        });
+        let partial = decode_postgres_user_partial(row).unwrap();
+        assert_eq!(partial.content_hidden_since, Some(since));
+        assert_eq!(partial.username, "ada");
+        let cleared = decode_postgres_user_partial(json!({
+            "user_id": {"__fluxer_type": "bigint", "value": "42"},
+            "username": "ada",
+            "discriminator": 7,
+        }))
+        .unwrap();
+        assert_eq!(cleared.content_hidden_since, None);
     }
 }

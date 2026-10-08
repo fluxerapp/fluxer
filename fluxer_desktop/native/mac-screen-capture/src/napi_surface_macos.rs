@@ -52,6 +52,9 @@ use crate::foundation;
 use crate::os_version::{
     self, SCK_MIN_MACOS, SupportClassification, classify_support, format_version,
 };
+use crate::permission_probe::{
+    PROBE_TIMEOUT_NS, ShareableContentOutcome, screen_recording_probe_result,
+};
 use crate::sck;
 use fluxer_encoder_ring::EncoderFrameRate;
 
@@ -1940,6 +1943,26 @@ pub async fn get_backend_availability() -> Result<BackendAvailability> {
     })
 }
 
+fn shareable_content_outcome(timeout_ns: u64) -> ShareableContentOutcome {
+    match get_shareable_content(timeout_ns) {
+        Ok(_) => ShareableContentOutcome::Delivered,
+        Err(AsyncError::Timeout) => ShareableContentOutcome::TimedOut,
+        Err(AsyncError::SckErr) => ShareableContentOutcome::Failed,
+    }
+}
+
+#[napi(js_name = "probeScreenRecordingAccess")]
+pub async fn probe_screen_recording_access() -> Result<String> {
+    use objc2::runtime::AnyClass;
+    let sck_available = AnyClass::get(c"SCShareableContent").is_some();
+    let outcome = if sck_available {
+        shareable_content_outcome(PROBE_TIMEOUT_NS)
+    } else {
+        ShareableContentOutcome::Failed
+    };
+    Ok(screen_recording_probe_result(sck_available, outcome).to_owned())
+}
+
 #[napi(object, js_name = "MacScreenCaptureBackendInfo")]
 pub struct MacScreenCaptureBackendInfo {
     pub backend: String,
@@ -2008,7 +2031,7 @@ mod dispatch_queue_tests {
     }
 
     #[test]
-    fn audio_frame_payload_into_input_carries_slot_and_metadata() {
+    fn audio_frame_payload_into_input_keeps_slot_and_metadata() {
         use crate::audio_pool::MacAudioFramePool;
         let pool = MacAudioFramePool::new(2, 64).expect("pool");
         let mut slot = pool.try_acquire().expect("slot");
@@ -2114,7 +2137,7 @@ mod dispatch_queue_tests {
     }
 
     #[test]
-    fn build_capture_config_carries_audio_settings() {
+    fn build_capture_config_includes_audio_settings() {
         let cfg = super::build_capture_config(
             30,
             true,
@@ -2129,7 +2152,7 @@ mod dispatch_queue_tests {
     }
 
     #[test]
-    fn start_options_carry_cursor_color_and_rect_intent() {
+    fn start_options_include_cursor_color_and_rect_intent() {
         let options = super::normalize_start_options(Some(super::ScreenCaptureStartOptions {
             show_cursor_clicks: Some(true),
             capture_rect: Some(super::ScreenCaptureRect {

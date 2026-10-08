@@ -73,26 +73,6 @@ const MEDIA_LOADING_STATE_DESCRIPTOR = msg({
 	message: 'Media loading state',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const ANY_UPDATER_READY_DESCRIPTOR = msg({
-	message: 'Any updater ready',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const NATIVE_UPDATER_READY_DESCRIPTOR = msg({
-	message: 'Native updater ready',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const NATIVE_UPDATE_PROGRESS_DESCRIPTOR = msg({
-	message: 'Native update progress',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const WEB_UPDATER_READY_DESCRIPTOR = msg({
-	message: 'Web updater ready',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const UPDATER_STATE_DESCRIPTOR = msg({
-	message: 'Updater state',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
 const SHOW_MYSELF_TYPING_DESCRIPTOR = msg({
 	message: 'Show myself typing',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
@@ -221,34 +201,6 @@ const GEO_BLOCK_OVERLAY_DESCRIPTOR = msg({
 	message: 'Geo block overlay',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const REQUIRED_ACTIONS_OVERLAY_DESCRIPTOR = msg({
-	message: 'Required actions overlay',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_VARIANT_DESCRIPTOR = msg({
-	message: 'Required action variant',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_DEFAULT_TAB_DESCRIPTOR = msg({
-	message: 'Required action default tab',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_PHONE_STEP_DESCRIPTOR = msg({
-	message: 'Required action phone step',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_RESEND_LOADING_DESCRIPTOR = msg({
-	message: 'Required action resend loading',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_RESEND_OUTCOME_DESCRIPTOR = msg({
-	message: 'Required action resend outcome',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_REVERIFICATION_TEXT_DESCRIPTOR = msg({
-	message: 'Required action reverification text',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
 const NO_SEND_PERMISSION_DESCRIPTOR = msg({
 	message: 'No {sendMessagesPermission} permission',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
@@ -324,12 +276,7 @@ const formatDeveloperOptionValue = <K extends keyof DeveloperOptionsState>(
 		case 'mockVerificationBarrier':
 		case 'mockMatureContentGateReason':
 		case 'mockMatureMediaGateReason':
-		case 'mockRequiredActionsMode':
-		case 'mockRequiredActionsSelectedTab':
-		case 'mockRequiredActionsPhoneStep':
-		case 'mockRequiredActionsResendOutcome':
 		case 'mockTitlebarPlatformOverride':
-		case 'mockUpdaterState':
 			return String(value).replace(/_/g, ' ');
 		case 'premiumSinceOverride':
 		case 'premiumUntilOverride':
@@ -374,16 +321,6 @@ export const getDeveloperOptionLabel = (key: keyof DeveloperOptionsState): Messa
 			return EMBED_SKELETONS_DESCRIPTOR;
 		case 'forceMediaLoading':
 			return MEDIA_LOADING_STATE_DESCRIPTOR;
-		case 'forceUpdateReady':
-			return ANY_UPDATER_READY_DESCRIPTOR;
-		case 'forceNativeUpdateReady':
-			return NATIVE_UPDATER_READY_DESCRIPTOR;
-		case 'mockNativeUpdateProgress':
-			return NATIVE_UPDATE_PROGRESS_DESCRIPTOR;
-		case 'forceWebUpdateReady':
-			return WEB_UPDATER_READY_DESCRIPTOR;
-		case 'mockUpdaterState':
-			return UPDATER_STATE_DESCRIPTOR;
 		case 'showMyselfTyping':
 			return SHOW_MYSELF_TYPING_DESCRIPTOR;
 		case 'slowAttachmentUpload':
@@ -448,20 +385,6 @@ export const getDeveloperOptionLabel = (key: keyof DeveloperOptionsState): Messa
 			return UK_GEO_DESCRIPTOR;
 		case 'mockGeoBlocked':
 			return GEO_BLOCK_OVERLAY_DESCRIPTOR;
-		case 'mockRequiredActionsOverlay':
-			return REQUIRED_ACTIONS_OVERLAY_DESCRIPTOR;
-		case 'mockRequiredActionsMode':
-			return REQUIRED_ACTION_VARIANT_DESCRIPTOR;
-		case 'mockRequiredActionsSelectedTab':
-			return REQUIRED_ACTION_DEFAULT_TAB_DESCRIPTOR;
-		case 'mockRequiredActionsPhoneStep':
-			return REQUIRED_ACTION_PHONE_STEP_DESCRIPTOR;
-		case 'mockRequiredActionsResending':
-			return REQUIRED_ACTION_RESEND_LOADING_DESCRIPTOR;
-		case 'mockRequiredActionsResendOutcome':
-			return REQUIRED_ACTION_RESEND_OUTCOME_DESCRIPTOR;
-		case 'mockRequiredActionsReverify':
-			return REQUIRED_ACTION_REVERIFICATION_TEXT_DESCRIPTOR;
 		case 'forceNoSendMessages':
 			return {...NO_SEND_PERMISSION_DESCRIPTOR, values: {sendMessagesPermission: SEND_MESSAGES_PERMISSION}};
 		case 'forceNoAttachFiles':

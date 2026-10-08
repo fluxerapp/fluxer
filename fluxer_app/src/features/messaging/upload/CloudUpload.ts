@@ -312,6 +312,15 @@ class CloudUploadManager {
 		this.notifyTextareaListeners(channelId);
 	}
 
+	clearAll(): void {
+		for (const channelId of [...this.textareaAttachmentSubjects.keys()]) {
+			this.clearTextarea(channelId);
+		}
+		for (const nonce of [...this.messageUploadSubjects.keys()]) {
+			this.removeMessageUpload(nonce);
+		}
+	}
+
 	reorderAttachments(channelId: string, newOrder: Array<CloudAttachment>): void {
 		this.ensureTextareaSubject(channelId).next([...newOrder]);
 		newOrder.forEach((att) => this.attachmentIndex.set(att.id, att));

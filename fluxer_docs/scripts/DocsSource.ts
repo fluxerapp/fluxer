@@ -1,6 +1,7 @@
 import {readdir, readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {parseFrontmatter} from '@astrojs/markdown-remark';
 
 export const DOCS_ROOT = fileURLToPath(new URL('../src/content/docs/', import.meta.url));
 export const HTTP_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']);
@@ -12,7 +13,7 @@ export interface MarkdownPage {
 	readonly lines: ReadonlyArray<string>;
 }
 
-export async function listMarkdownFiles(directory: string): Promise<Array<string>> {
+async function collectMarkdownFiles(directory: string): Promise<Array<string>> {
 	const files: Array<string> = [];
 	for (const entry of await readdir(directory, {withFileTypes: true})) {
 		if (entry.name === 'node_modules') {
@@ -20,7 +21,7 @@ export async function listMarkdownFiles(directory: string): Promise<Array<string
 		}
 		const resolved = path.join(directory, entry.name);
 		if (entry.isDirectory()) {
-			files.push(...(await listMarkdownFiles(resolved)));
+			files.push(...(await collectMarkdownFiles(resolved)));
 		} else if (entry.isFile() && /\.mdx?$/u.test(entry.name)) {
 			files.push(resolved);
 		}
@@ -28,9 +29,35 @@ export async function listMarkdownFiles(directory: string): Promise<Array<string
 	return files.sort();
 }
 
-export async function readMarkdownPages(directory: string): Promise<Array<MarkdownPage>> {
+function isDraftSource(source: string): boolean {
+	return parseFrontmatter(source).frontmatter.draft === true;
+}
+
+async function partitionMarkdownFiles(directory: string, drafts: boolean): Promise<Array<string>> {
+	const files: Array<string> = [];
+	for (const file of await collectMarkdownFiles(directory)) {
+		if (isDraftSource(await readFile(file, 'utf8')) === drafts) {
+			files.push(file);
+		}
+	}
+	return files;
+}
+
+export async function listMarkdownFiles(directory: string): Promise<Array<string>> {
+	return partitionMarkdownFiles(directory, false);
+}
+
+export async function listDraftMarkdownFiles(directory: string): Promise<Array<string>> {
+	return partitionMarkdownFiles(directory, true);
+}
+
+export async function readMarkdownPages(
+	directory: string,
+	options: {includeDrafts?: boolean} = {},
+): Promise<Array<MarkdownPage>> {
 	const pages: Array<MarkdownPage> = [];
-	for (const file of await listMarkdownFiles(directory)) {
+	const files = options.includeDrafts ? await collectMarkdownFiles(directory) : await listMarkdownFiles(directory);
+	for (const file of files) {
 		const source = await readFile(file, 'utf8');
 		pages.push({
 			file,

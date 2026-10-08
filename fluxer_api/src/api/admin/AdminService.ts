@@ -37,12 +37,10 @@ import {
 } from '@app/api/middleware/ServiceSingletons';
 import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import type {ReportService} from '@app/api/report/ReportService';
-import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
-import type {ISuspiciousIpRepository} from '@app/api/risk/SuspiciousIpRepository';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import type {UserService} from '@app/api/user/services/UserService';
 import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import type {SendSystemDmResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type Stripe from 'stripe';
 
 export class AdminService {
@@ -81,10 +79,8 @@ export class AdminService {
 		private readonly bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService,
 		private readonly applicationRepository: IApplicationRepository,
 		private readonly stripe: Stripe | null = null,
-		private readonly riskHistoryRepository: Pick<IRiskHistoryRepository, 'recordOutcomeForUser'>,
 		private readonly jobLedger: IJobLedgerRepository,
-		private readonly ipInfoService: IpInfoService,
-		private readonly suspiciousIpRepository: ISuspiciousIpRepository,
+		private readonly storeEntitlementService: StoreEntitlementService,
 	) {
 		const {users, gateway, worker, snowflake} = this.apiContext.services;
 		this.auditService = new AdminAuditService(this.adminRepository, snowflake, {
@@ -96,8 +92,6 @@ export class AdminService {
 			apiContext: this.apiContext,
 			adminRepository: this.adminRepository,
 			auditService: this.auditService,
-			ipInfoService: this.ipInfoService,
-			suspiciousIpRepository: this.suspiciousIpRepository,
 		});
 		this.userService = new AdminUserService({
 			apiContext: this.apiContext,
@@ -111,8 +105,8 @@ export class AdminService {
 			kvDeletionQueue: getKVAccountDeletionQueue(),
 			bulkMessageDeletionQueue: this.bulkMessageDeletionQueue,
 			stripe: this.stripe,
-			riskHistoryRepository: this.riskHistoryRepository,
 			reportService: this.reportService,
+			storeEntitlementService: this.storeEntitlementService,
 		});
 		this.guildServiceAggregate = new AdminGuildService({
 			guildRepository: this.guildRepository,
@@ -184,20 +178,20 @@ export class AdminService {
 	}
 
 	async sendSystemDm(
-		data: {content: string; userIds: Array<string>},
+		data: {content: string; recipients: {kind: 'all'} | {kind: 'list'; userIds: Array<string>}},
 		adminUserId: UserID,
 		auditLogReason: string | null,
 	): Promise<SendSystemDmResponse> {
+		const recipientCount = data.recipients.kind === 'all' ? null : data.recipients.userIds.length;
 		await this.apiContext.services.worker.addJob(
 			'sendSystemDm',
-			{
-				content: data.content,
-				user_ids: data.userIds,
-			},
+			data.recipients.kind === 'all'
+				? {content: data.content, all_users: true}
+				: {content: data.content, user_ids: data.recipients.userIds},
 			{requireLedger: true},
 		);
 		const metadata = new Map<string, string>([
-			['recipient_count', data.userIds.length.toString()],
+			['recipient_count', recipientCount === null ? 'all' : recipientCount.toString()],
 			['content_length', data.content.length.toString()],
 		]);
 		await this.auditService.createAuditLog({
@@ -208,6 +202,6 @@ export class AdminService {
 			auditLogReason,
 			metadata,
 		});
-		return {recipient_count: data.userIds.length};
+		return {recipient_count: recipientCount};
 	}
 }

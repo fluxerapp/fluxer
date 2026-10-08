@@ -71,7 +71,35 @@ export interface WebhookRow {
 	creator_id: Nullish<UserID>;
 	name: string;
 	avatar_hash: Nullish<string>;
+	source_guild_id: Nullish<GuildID>;
+	source_channel_id: Nullish<ChannelID>;
 	version: number;
+}
+
+export interface WebhooksBySourceChannelRow {
+	source_channel_id: ChannelID;
+	webhook_id: WebhookID;
+	guild_id: GuildID;
+}
+
+export type CrosspostedMessageState = 'pending' | 'delivered';
+
+export interface CrosspostedMessageRow {
+	source_message_id: MessageID;
+	webhook_id: WebhookID;
+	source_channel_id: ChannelID;
+	target_guild_id: GuildID;
+	target_channel_id: ChannelID;
+	target_message_id: MessageID;
+	state: CrosspostedMessageState;
+	reserved_at: Date;
+	source_fingerprint: Nullish<string>;
+	created_at: Date;
+}
+
+export interface CrosspostSourceByChannelRow {
+	source_channel_id: ChannelID;
+	source_message_id: MessageID;
 }
 
 export interface PrivateChannelRow {
@@ -104,6 +132,8 @@ export interface ReadStateRow {
 	message_id: Nullish<MessageID>;
 	mention_count: number;
 	last_pin_timestamp: Nullish<Date>;
+	flags?: Nullish<number>;
+	guild_id?: Nullish<GuildID>;
 }
 
 export const CHANNEL_COLUMNS = [
@@ -165,14 +195,39 @@ export const WEBHOOK_COLUMNS = [
 	'creator_id',
 	'name',
 	'avatar_hash',
+	'source_guild_id',
+	'source_channel_id',
 	'version',
 ] as const satisfies ReadonlyArray<keyof WebhookRow>;
+export const WEBHOOKS_BY_SOURCE_CHANNEL_COLUMNS = [
+	'source_channel_id',
+	'webhook_id',
+	'guild_id',
+] as const satisfies ReadonlyArray<keyof WebhooksBySourceChannelRow>;
+export const CROSSPOSTED_MESSAGE_COLUMNS = [
+	'source_message_id',
+	'webhook_id',
+	'source_channel_id',
+	'target_guild_id',
+	'target_channel_id',
+	'target_message_id',
+	'state',
+	'reserved_at',
+	'source_fingerprint',
+	'created_at',
+] as const satisfies ReadonlyArray<keyof CrosspostedMessageRow>;
+export const CROSSPOST_SOURCE_BY_CHANNEL_COLUMNS = [
+	'source_channel_id',
+	'source_message_id',
+] as const satisfies ReadonlyArray<keyof CrosspostSourceByChannelRow>;
 export const READ_STATE_COLUMNS = [
 	'user_id',
 	'channel_id',
 	'message_id',
 	'mention_count',
 	'last_pin_timestamp',
+	'flags',
+	'guild_id',
 ] as const satisfies ReadonlyArray<keyof ReadStateRow>;
 export const PRIVATE_CHANNEL_COLUMNS = [
 	'user_id',

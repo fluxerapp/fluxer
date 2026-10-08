@@ -2,9 +2,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
-import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {BUILD_CHANNEL, type BuildChannel} from '@electron/common/BuildChannel';
 import {getDesktopWindowBehaviorSettings} from '@electron/common/DesktopConfig';
+import {DESKTOP_APP_NAME} from '@electron/common/DesktopIdentity';
 import {createChildLogger} from '@electron/common/Logger';
 import type {
 	TrayPresenceStatus as SharedTrayPresenceStatus,
@@ -15,16 +15,25 @@ import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
 import {app, type BrowserWindow, clipboard, Menu, nativeImage, Tray} from 'electron';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const logger = createChildLogger('DesktopTray');
-const isCanary = BUILD_CHANNEL === 'canary';
-const APP_NAME = isCanary ? 'Fluxer Canary' : 'Fluxer';
-const ICON_DIR_NAME = isCanary ? 'icons-canary' : 'icons-stable';
-const TRAY_POSITION_GUID = isCanary ? '1a39981b-b4cc-46a4-8f7e-9fce187110f5' : '11c70c9f-a35d-4328-9040-f722dc5fa0a0';
+const ICON_DIR_NAMES: Record<BuildChannel, string> = {
+	stable: 'icons-stable',
+	canary: 'icons-canary',
+	development: 'icons-development',
+};
+const TRAY_POSITION_GUIDS: Record<BuildChannel, string> = {
+	stable: '11c70c9f-a35d-4328-9040-f722dc5fa0a0',
+	canary: '1a39981b-b4cc-46a4-8f7e-9fce187110f5',
+	development: 'd0070fe2-067b-419c-af26-6fd197700d63',
+};
+const APP_NAME = DESKTOP_APP_NAME;
+const ICON_DIR_NAME = ICON_DIR_NAMES[BUILD_CHANNEL];
+const TRAY_POSITION_GUID = TRAY_POSITION_GUIDS[BUILD_CHANNEL];
 
 interface DesktopTrayController {
 	createWindow: () => BrowserWindow;
 	getMainWindow: () => BrowserWindow | null;
+	isMainWindowTakenOver: () => boolean;
 	hideWindow: () => void;
 	setQuitting: (quitting: boolean) => void;
 	showWindow: () => void;
@@ -162,7 +171,6 @@ function getCandidateIconDirs(): Array<string> {
 		path.join(process.resourcesPath, ICON_DIR_NAME),
 		process.resourcesPath,
 		path.join(app.getAppPath(), 'build_resources', ICON_DIR_NAME),
-		path.resolve(__dirname, '../../build_resources', ICON_DIR_NAME),
 		path.resolve(process.cwd(), 'build_resources', ICON_DIR_NAME),
 		path.resolve(process.cwd(), 'fluxer_desktop', 'build_resources', ICON_DIR_NAME),
 		path.dirname(app.getPath('exe')),
@@ -229,7 +237,7 @@ function createTrayIcon(): Electron.NativeImage | null {
 function ensureMainWindowVisible(): void {
 	if (!controller) return;
 	const mainWindow = controller.getMainWindow();
-	if (!mainWindow || mainWindow.isDestroyed()) {
+	if ((!mainWindow || mainWindow.isDestroyed()) && !controller.isMainWindowTakenOver()) {
 		controller.createWindow();
 	}
 	controller.showWindow();

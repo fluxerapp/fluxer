@@ -25,3 +25,31 @@ resolve_channel_mentions_skips_invalid_channel_ids_test() ->
         #{<<"channels">> => []},
         gateway_rpc_guild_channels:handle(<<"guild.resolve_channel_mentions">>, Params)
     ).
+
+resolve_channel_mentions_from_snapshot_skips_forum_and_media_test() ->
+    GuildId = 7301,
+    ok = guild_permission_cache:put_data(GuildId, #{
+        <<"guild">> => #{<<"owner_id">> => <<"1">>},
+        <<"roles">> => [#{<<"id">> => <<"7301">>, <<"permissions">> => <<"1024">>}],
+        <<"members">> => [],
+        <<"channels">> => [
+            #{<<"id">> => <<"10">>, <<"name">> => <<"text">>, <<"type">> => 0},
+            #{<<"id">> => <<"11">>, <<"name">> => <<"forum">>, <<"type">> => 15},
+            #{<<"id">> => <<"12">>, <<"name">> => <<"media">>, <<"type">> => 16}
+        ]
+    }),
+    try
+        Params = #{
+            <<"guild_id">> => <<"7301">>, <<"channel_ids">> => [<<"10">>, <<"11">>, <<"12">>]
+        },
+        ?assertEqual(
+            #{
+                <<"channels">> => [
+                    #{<<"id">> => <<"10">>, <<"name">> => <<"text">>, <<"type">> => 0}
+                ]
+            },
+            gateway_rpc_guild_channels:handle(<<"guild.resolve_channel_mentions">>, Params)
+        )
+    after
+        guild_permission_cache:delete(GuildId)
+    end.

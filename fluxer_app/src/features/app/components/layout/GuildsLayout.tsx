@@ -86,8 +86,6 @@ import GuildListState, {type OrganizedItem} from '@app/features/guild/state/Guil
 import GuildReadState from '@app/features/guild/state/GuildReadState';
 import HiddenGuildListButtons from '@app/features/guild/state/HiddenGuildListButtons';
 import {PRIMARY_NAVIGATION_LANDMARK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {openMacPermissionsModal} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
-import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {Platform} from '@app/features/platform/types/Platform';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
@@ -1271,6 +1269,7 @@ const SKELETON_NAGBAR_ROW_SHAPES: Record<NagbarType, SkeletonNagbarRowShape> = {
 	[NagbarType.SCHEDULED_MAINTENANCE]: {tone: SkeletonNagbarTone.MAINTENANCE_SCHEDULED, hasActions: true},
 	[NagbarType.UNCLAIMED_ACCOUNT]: {tone: SkeletonNagbarTone.ALERT, hasActions: true},
 	[NagbarType.EMAIL_VERIFICATION]: {tone: SkeletonNagbarTone.ALERT, hasActions: true},
+	[NagbarType.ACCOUNT_LIMITED]: {tone: SkeletonNagbarTone.NEUTRAL, hasActions: false},
 	[NagbarType.DESKTOP_NOTIFICATION]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.PREMIUM_GRACE_PERIOD]: {tone: SkeletonNagbarTone.PREMIUM, hasActions: true},
 	[NagbarType.PREMIUM_EXPIRED]: {tone: SkeletonNagbarTone.DANGER, hasActions: true},
@@ -1279,14 +1278,14 @@ const SKELETON_NAGBAR_ROW_SHAPES: Record<NagbarType, SkeletonNagbarRowShape> = {
 	[NagbarType.LEGACY_PRICE_OPT_IN]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.GIFT_INVENTORY]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.DESKTOP_DOWNLOAD]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
-	[NagbarType.DESKTOP_UPDATE_READY]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.GUILD_MEMBERSHIP_CTA]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.VISIONARY_MFA]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.VOICE_SESSION_RESTORE]: {tone: SkeletonNagbarTone.VOICE, hasActions: true},
 	[NagbarType.TERMS_ACCEPTANCE]: {tone: SkeletonNagbarTone.LEGAL, hasActions: true},
-	[NagbarType.LINUX_INPUT_ACCESS]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
+	[NagbarType.PRIVACY_SETUP]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.SOFTWARE_ENCODER]: {tone: SkeletonNagbarTone.ENCODER, hasActions: true},
 	[NagbarType.STREAMER_MODE]: {tone: SkeletonNagbarTone.STREAMER, hasActions: true},
+	[NagbarType.DOMAIN_MOVED]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 };
 
 const CONNECTION_SKELETON_NAGBAR_TONES: Record<ConnectionNoticeTone, SkeletonNagbarTone> = {
@@ -2237,14 +2236,6 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 		if (!latestEntry) return;
 		if (!WhatsNew.shouldShow(latestEntry.id, latestEntry.date, user.createdAt)) return;
 		openWhatsNewModal();
-	}, [isReady, user]);
-	useEffect(() => {
-		if (!isReady) return;
-		if (!user) return;
-		if (!MacPermissions.shouldShowOnboarding) return;
-		if (MacPermissions.onboardingOpenedThisSession) return;
-		MacPermissions.markOnboardingOpenedThisSession();
-		openMacPermissionsModal();
 	}, [isReady, user]);
 	const shouldShowSidebarDivider = !mobileLayout.enabled;
 	return (

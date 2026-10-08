@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getUnreadChannels, UnreadChannelsContent} from '@app/features/app/components/floating/UnreadChannelsContent';
+import {
+	getMarkableUnreadChannels,
+	UnreadChannelsContent,
+} from '@app/features/app/components/floating/UnreadChannelsContent';
 import {MENTIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InboxCommands from '@app/features/inbox/commands/InboxCommands';
 import Inbox, {type InboxTab} from '@app/features/inbox/state/Inbox';
 import styles from '@app/features/messaging/components/popouts/InboxPopout.module.css';
 import {RecentMentionsContent} from '@app/features/messaging/components/popouts/RecentMentionsContent';
 import {SavedMessagesContent} from '@app/features/messaging/components/popouts/SavedMessagesContent';
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -108,7 +112,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 	const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const {size, getHandleProps} = useResizablePane(containerRef, {
-		storageKey: 'fluxer:ui:inbox-popout-size',
+		storageKey: AppStorageKey.UI_INBOX_POPOUT_SIZE,
 		defaultSize: INBOX_POPOUT_DEFAULT_SIZE,
 		minSize: INBOX_POPOUT_MIN_SIZE,
 		viewportPadding: RESIZABLE_PANE_DEFAULT_VIEWPORT_PADDING,
@@ -117,7 +121,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 	});
 	const readStateVersion = ReadStates.version;
 	const settingsVersion = UserGuildSettings.version;
-	const unreadChannels = useMemo(() => getUnreadChannels(), [readStateVersion, settingsVersion]);
+	const markableUnreadChannels = useMemo(() => getMarkableUnreadChannels(), [readStateVersion, settingsVersion]);
 	const tabs: Array<TabConfig> = [
 		{
 			key: 'unreadChannels',
@@ -279,7 +283,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 										type="button"
 										className={styles.sidebarActionButton}
 										onClick={handleMarkAllRead}
-										disabled={unreadChannels.length === 0}
+										disabled={markableUnreadChannels.length === 0}
 										aria-label={i18n._(MARK_ALL_INBOX_CHANNELS_AS_READ_DESCRIPTOR)}
 										data-flx="messaging.inbox-popout.sidebar-action-button.mark-all-read"
 									>

@@ -1,18 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
+import {GatedJsonValidator} from '@app/api/channel/threads/GatedJsonValidator';
+import {viewerActive, viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {
+	ChannelCreateControlRequest,
 	ChannelCreateRequest,
 	ChannelPositionUpdateRequest,
 } from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import {ChannelListResponse, ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
+
+const THREAD_PARENT_DEFAULT_KEYS = ['default_auto_archive_duration', 'default_thread_rate_limit_per_user'];
+
+function touchesThreadChannelCreate(body: unknown): boolean {
+	if (typeof body !== 'object' || body === null) return false;
+	const record = body as Record<string, unknown>;
+	if (typeof record.type === 'number' && THREAD_ONLY_CHANNEL_TYPES.has(record.type)) return true;
+	return THREAD_PARENT_DEFAULT_KEYS.some((key) => record[key] !== undefined);
+}
 
 export function GuildChannelController(app: HonoApp) {
 	app.get(
@@ -33,7 +46,9 @@ export function GuildChannelController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const requestCache = ctx.get('requestCache');
-			return ctx.json(await ctx.get('guildService').channels.getChannels({userId, guildId, requestCache}));
+			return ctx.json(
+				await ctx.get('guildService').channels.getChannels({userId, guildId, requestCache, viewer: viewerFromCtx(ctx)}),
+			);
 		},
 	);
 	app.post(
@@ -41,10 +56,14 @@ export function GuildChannelController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.GUILD_CHANNEL_CREATE),
 		LoginRequired,
 		Validator('param', GuildIdParam),
-		Validator('json', ChannelCreateRequest),
+		GatedJsonValidator(ChannelCreateControlRequest, ChannelCreateRequest, {
+			touchesGate: touchesThreadChannelCreate,
+			active: (ctx) => viewerActive(viewerFromCtx(ctx), ctx.req.param('guild_id') ?? '0'),
+		}),
 		OpenAPI({
 			operationId: 'create_guild_channel',
 			summary: 'Create guild channel',
+			requestSchema: ChannelCreateRequest,
 			responseSchema: ChannelResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
@@ -59,7 +78,17 @@ export function GuildChannelController(app: HonoApp) {
 			const requestCache = ctx.get('requestCache');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			return ctx.json(
-				await ctx.get('guildService').channels.createChannel({userId, guildId, data, requestCache}, auditLogReason),
+				await ctx.get('guildService').channels.createChannel(
+					{
+						userId,
+						guildId,
+						data,
+						requestCache,
+						clientFeatures: ctx.get('clientFeatures'),
+						viewer: viewerFromCtx(ctx),
+					},
+					auditLogReason,
+				),
 			);
 		},
 	);
@@ -100,6 +129,8 @@ export function GuildChannelController(app: HonoApp) {
 						lockPermissions: item.lock_permissions ?? false,
 					})),
 					requestCache,
+					clientFeatures: ctx.get('clientFeatures'),
+					viewer: viewerFromCtx(ctx),
 				},
 				auditLogReason,
 			);

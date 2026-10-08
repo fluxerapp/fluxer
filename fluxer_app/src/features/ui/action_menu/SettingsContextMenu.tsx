@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import {
 	getSettingsTabs,
 	getSubtabsForTab,
@@ -28,13 +28,16 @@ export const SettingsContextMenu: React.FC<SettingsContextMenuProps> = observer(
 	const handleOpenSettings = useCallback(
 		(tab: SettingsTab, subtab?: SettingsSubtab) => {
 			ModalCommands.push(
-				modal(() => (
-					<UserSettingsModal
-						initialTab={tab.type}
-						initialSubtab={subtab?.type}
-						data-flx="ui.action-menu.settings-context-menu.handle-open-settings.user-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<UserSettingsModal
+							initialTab={tab.type}
+							initialSubtab={subtab?.type}
+							data-flx="ui.action-menu.settings-context-menu.handle-open-settings.user-settings-modal"
+						/>
+					),
+					'user-settings',
+				),
 			);
 			onClose();
 		},

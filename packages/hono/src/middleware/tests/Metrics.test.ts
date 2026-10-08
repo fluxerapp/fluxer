@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createMetricsMiddleware} from '@fluxer/hono/src/middleware/Metrics';
+import {
+	createMetricsMiddleware,
+	createRegisteredMetricsHandler,
+	registerCounter,
+	registerGauge,
+	registerHistogram,
+	registerMetricsSection,
+} from '@fluxer/hono/src/middleware/Metrics';
 import {Hono} from 'hono';
 import {describe, expect, test} from 'vitest';
 
@@ -253,6 +260,56 @@ describe('Metrics Middleware', () => {
 			expect(body).toContain('fluxer_gateway_http_request_duration_seconds');
 			expect(body).toContain('fluxer_gateway_http_errors_total');
 			expect(body).toContain('fluxer_gateway_uptime_seconds');
+		});
+	});
+
+	describe('registered sections', () => {
+		test('appends registered sections until they are unregistered', async () => {
+			const {app} = createTestApp();
+			const unregister = registerMetricsSection(() => '# TYPE fluxer_test_extra gauge\nfluxer_test_extra 7');
+			expect(await (await requestMetrics(app)).text()).toContain('fluxer_test_extra 7');
+			unregister();
+			expect(await (await requestMetrics(app)).text()).not.toContain('fluxer_test_extra');
+		});
+	});
+
+	describe('registered metrics', () => {
+		test('renders registered counters, gauges and histograms after the http metrics', async () => {
+			const counter = registerCounter('fluxer_test_registered_total', 'Registered counter');
+			counter.inc('kind="a"');
+			counter.inc('kind="a"', 2);
+			registerGauge('fluxer_test_registered_gauge', 'Registered gauge', () => 7);
+			registerHistogram('fluxer_test_registered_seconds', 'Registered histogram', [1, 5]).observe(2);
+			const {app} = createTestApp();
+			const body = await (await requestMetrics(app)).text();
+			expect(body).toContain('# TYPE fluxer_test_registered_total counter');
+			expect(body).toContain('fluxer_test_registered_total{kind="a"} 3');
+			expect(body).toContain('fluxer_test_registered_gauge 7');
+			expect(body).toContain('fluxer_test_registered_seconds_bucket{le="5"} 1');
+			expect(body.indexOf('fluxer_test_uptime_seconds')).toBeLessThan(body.indexOf('fluxer_test_registered_total'));
+		});
+
+		test('returns the same metric when registered twice', () => {
+			const first = registerCounter('fluxer_test_registered_twice_total', 'Registered twice');
+			expect(registerCounter('fluxer_test_registered_twice_total', 'Registered twice')).toBe(first);
+		});
+
+		test('refuses to register one name as two types', () => {
+			registerCounter('fluxer_test_registered_clash', 'Clash');
+			expect(() => registerGauge('fluxer_test_registered_clash', 'Clash', () => 0)).toThrow();
+		});
+
+		test('serves only registered metrics from the standalone handler', async () => {
+			registerCounter('fluxer_test_standalone_total', 'Standalone counter').inc();
+			const app = new Hono();
+			app.get('/_metrics', createRegisteredMetricsHandler());
+			const res = await requestMetrics(app);
+			const body = await res.text();
+			expect(res.status).toBe(200);
+			expect(res.headers.get('Content-Type')).toBe('text/plain; version=0.0.4; charset=utf-8');
+			expect(body).toContain('fluxer_test_standalone_total 1');
+			expect(body).not.toContain('_http_requests_total');
+			expect((await requestMetrics(app, '8.8.8.8')).status).toBe(403);
 		});
 	});
 });

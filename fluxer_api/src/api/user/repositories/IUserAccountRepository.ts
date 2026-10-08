@@ -10,6 +10,8 @@ export interface UserDeletionScheduleUpdate {
 	deletion_reason_code?: number | null;
 	deletion_public_reason?: string | null;
 	deletion_audit_log_reason?: string | null;
+	deletion_scheduled_by?: UserID | null;
+	deletion_scheduled_at?: Date | null;
 	temp_banned_until?: Date | null;
 	first_refund_at?: Date | null;
 }
@@ -18,6 +20,8 @@ export interface IUserAccountRepository {
 	create(data: UserRow): Promise<User>;
 	upsert(data: UserRow, oldData?: UserRow | null): Promise<User>;
 	patchUpsert(userId: UserID, patchData: Partial<UserRow>, oldData?: UserRow | null): Promise<User>;
+	compareAndSetFlags(user: User, flags: bigint): Promise<User | null>;
+	updateFlags(userId: UserID, mutate: (flags: bigint) => bigint): Promise<User | null>;
 	updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User>;
 	startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null>;
 	anonymizeForDeletion(user: User, patch: Partial<UserRow>): Promise<User>;
@@ -26,6 +30,7 @@ export interface IUserAccountRepository {
 	findUniqueAssert(userId: UserID): Promise<User>;
 	findByUsernameDiscriminator(username: string, discriminator: number): Promise<User | null>;
 	findDiscriminatorsByUsername(username: string): Promise<Set<number>>;
+	findUsersByUsername(username: string): Promise<Array<User>>;
 	findByEmail(email: string): Promise<User | null>;
 	findByStripeSubscriptionId(stripeSubscriptionId: string): Promise<User | null>;
 	findByStripeCustomerId(stripeCustomerId: string): Promise<User | null>;
@@ -66,6 +71,7 @@ export interface IUserAccountRepository {
 		updates: {
 			premiumWillCancel: boolean;
 			computedPremiumUntil: Date | null;
+			periodStart: Date | null;
 		},
 	): Promise<{
 		finalVersion: number | null;

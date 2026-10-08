@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import InstanceConfig from '@app/features/app/state/InstanceConfig';
+import InstanceSnapshotStore from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {LimitContextInput} from '@app/features/app/utils/LimitContext';
 import {LimitContext} from '@app/features/app/utils/LimitContext';
@@ -19,6 +19,9 @@ class LimitResolverClass {
 	resolve(options: LimitResolveOptions): number {
 		const {key, fallback, context, instanceDomain} = options;
 		const snapshot = this.getSnapshotForInstance(instanceDomain);
+		if (snapshot === null) {
+			return fallback;
+		}
 		const ctx = context ? LimitContext.build(context) : LimitContext.current();
 		const resolved = resolveLimit(snapshot, ctx, key);
 		if (!Number.isFinite(resolved) || resolved < 0) {
@@ -27,14 +30,11 @@ class LimitResolverClass {
 		return Math.floor(resolved);
 	}
 
-	private getSnapshotForInstance(instanceDomain?: string): LimitConfigSnapshot {
-		if (instanceDomain) {
-			const instanceLimits = InstanceConfig.getLimitsForInstance(instanceDomain);
-			if (instanceLimits) {
-				return instanceLimits;
-			}
+	private getSnapshotForInstance(instanceDomain?: string): LimitConfigSnapshot | null {
+		if (instanceDomain !== undefined) {
+			return InstanceSnapshotStore.getLimitsForInstance(instanceDomain);
 		}
-		return RuntimeConfig.limits;
+		return RuntimeConfig.getSnapshotOrNull()?.limits ?? null;
 	}
 
 	resolveMultiple(
@@ -44,6 +44,9 @@ class LimitResolverClass {
 		instanceDomain?: string,
 	): Record<string, number> {
 		const snapshot = this.getSnapshotForInstance(instanceDomain);
+		if (snapshot === null) {
+			return Object.fromEntries(keys.map((key) => [key, fallback]));
+		}
 		const ctx = context ? LimitContext.build(context) : LimitContext.current();
 		const {limits} = resolveLimits(snapshot, ctx);
 		const result: Record<string, number> = {};

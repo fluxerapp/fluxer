@@ -5,6 +5,7 @@ import type {
 	SpellcheckEngine,
 	SpellcheckResolvedEngineInfo,
 } from '@app/features/platform/types/Electron';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {getElectronAPI, isElectron} from '@app/features/ui/utils/NativeUtils';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {SpellcheckSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
@@ -33,7 +34,7 @@ class Spellcheck {
 
 	constructor() {
 		makeAutoObservable(this, {electronDisposers: false as const}, {autoBind: true});
-		void this.initialize();
+		initializeStore(this, () => this.initialize());
 	}
 
 	private normalizeLanguages(langs: Array<string> = []): Array<string> {

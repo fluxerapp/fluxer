@@ -13,7 +13,6 @@ import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQue
 import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {MockStorageService} from '@app/api/test/mocks/MockStorageService';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
-import syncDisposableEmailDomains from '@app/api/worker/tasks/SyncDisposableEmailDomains';
 import syncFileShaBlocklists from '@app/api/worker/tasks/SyncFileShaBlocklists';
 import {
 	clearWorkerDependencies,
@@ -151,24 +150,6 @@ describe.skipIf(!dockerAvailable)('blocklist feeds turned off against postgres',
 		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		await shutdownPostgres().catch(() => {});
 		spawnSync('docker', ['rm', '-f', CONTAINER], {stdio: 'ignore'});
-	});
-
-	it('removes every disposable_email_domains row from the KV table', async () => {
-		const repository = new AdminRepository();
-		for (let i = 0; i < 1200; i++) {
-			await repository.addDisposableEmailDomain(`disposable-${i}.example`);
-		}
-		const seeded = await raw.query<{count: number}>(
-			`SELECT count(*)::int AS count FROM ${KV_TABLE} WHERE table_name = 'disposable_email_domains'`,
-		);
-		expect(seeded.rows[0]?.count).toBe(1200);
-
-		await syncDisposableEmailDomains({}, createHelpers());
-
-		const remaining = await raw.query<{count: number}>(
-			`SELECT count(*)::int AS count FROM ${KV_TABLE} WHERE table_name = 'disposable_email_domains'`,
-		);
-		expect(remaining.rows[0]?.count).toBe(0);
 	});
 
 	it('keeps file-SHA rows with added_by set and removes feed rows stored with a JSON null added_by', async () => {

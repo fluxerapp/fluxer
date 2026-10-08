@@ -56,10 +56,6 @@ const FORCE_LOADING_SKELETON_DESCRIPTOR = msg({
 	message: 'Force loading skeleton',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const FORCE_UPDATE_READY_DESCRIPTOR = msg({
-	message: 'Force update ready',
-	comment: 'Developer option label for simulating an available update.',
-});
 const SHOW_MYSELF_TYPING_DESCRIPTOR = msg({
 	message: 'Show myself typing',
 	comment: 'Developer option label for showing the current user as typing.',
@@ -132,15 +128,6 @@ const FORCE_SHOW_VOICE_CONNECTION_DESCRIPTOR = msg({
 	message: 'Force show voice connection',
 	comment: 'Developer option label for always showing the voice connection status bar.',
 });
-const SHOW_PROFILE_TIMEZONE_SETTINGS_DESCRIPTOR = msg({
-	message: 'Show profile time zone settings',
-	comment: 'Developer option label for exposing the staff-only profile timezone section in profile settings.',
-});
-const SHOW_PROFILE_TIMEZONE_SETTINGS_DESC_DESCRIPTOR = msg({
-	message: 'Expose the staff-only time zone section in profile settings.',
-	comment:
-		'Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.',
-});
 const NO_OP_IN_APP_REPORTS_DESCRIPTOR = msg({
 	message: 'No-op in-app reports',
 	comment:
@@ -170,10 +157,6 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 		items: [
 			{key: 'bypassLoadingSkeleton', label: BYPASS_LOADING_SKELETON_DESCRIPTOR},
 			{key: 'forceLoadingSkeleton', label: FORCE_LOADING_SKELETON_DESCRIPTOR},
-			{
-				key: 'forceUpdateReady',
-				label: FORCE_UPDATE_READY_DESCRIPTOR,
-			},
 			{
 				key: 'showMyselfTyping',
 				label: SHOW_MYSELF_TYPING_DESCRIPTOR,
@@ -254,11 +237,6 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 				key: 'forceShowVoiceConnection',
 				label: FORCE_SHOW_VOICE_CONNECTION_DESCRIPTOR,
 				description: ALWAYS_DISPLAY_THE_VOICE_CONNECTION_STATUS_BAR_IN_DESCRIPTOR,
-			},
-			{
-				key: 'showProfileTimezoneSettings',
-				label: SHOW_PROFILE_TIMEZONE_SETTINGS_DESCRIPTOR,
-				description: SHOW_PROFILE_TIMEZONE_SETTINGS_DESC_DESCRIPTOR,
 			},
 			{
 				key: 'noOpInAppReports',

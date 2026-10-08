@@ -1,44 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createRequire} from 'node:module';
-import {isPortableMode} from '@electron/common/UserDataPath';
+import {checkDesktopUpdateNow} from '@electron/main/DesktopUpdateGate';
+import {MANUAL_DESKTOP_FORMATS, type ManualDesktopFormat} from '@electron/main/ShellDownloadFormats';
+import {resolveShellUpdatePlan, ShellUpdateCapability} from '@electron/main/ShellUpdateCapability';
 import {
-	AppImageChecksumError,
-	AppImageStagingError,
-	type AppImageTarget,
-	applyStagedAppImageUpdate,
-	discardStagedAppImageUpdate,
-	isRunningFromAppImage,
-	resolveAppImageTarget,
-	type StagedAppImageUpdate,
-	stageAppImageUpdate,
-	sweepAbandonedAppImageUpdates,
-} from '@electron/main/AppImageUpdate';
-import {destroyDesktopTray} from '@electron/main/DesktopTray';
-import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
-import {relaunchAndExit} from '@electron/main/Troubleshooting';
-import {
-	clearVelopackApplyAttempt,
-	readVelopackApplyAttempt,
-	recordVelopackApplyAttempt,
-	type VelopackApplyAttempt,
-} from '@electron/main/UpdaterApplyState';
-import {
-	buildManualVersionDownloadUrl,
 	DOWNLOAD_PAGE_URL,
 	getManualDownloadOptions,
 	getManualDownloadUrl,
-	MANUAL_DESKTOP_FORMATS,
-	type ManualDesktopFormat,
 	type ManualLatestFile,
 	type ManualLatestInfo,
 	UPDATE_BASE_URL,
 	type UpdaterDownloadOption,
 } from '@electron/main/UpdaterDownloads';
-import {setQuitting} from '@electron/main/Window';
-import {app, autoUpdater, type BrowserWindow, ipcMain} from 'electron';
+import {app, type BrowserWindow, ipcMain, net} from 'electron';
 import log from 'electron-log';
-import type {UpdateInfo, VelopackAsset} from 'velopack';
 
 type UpdaterContext = 'user' | 'background' | 'focus';
 type UpdaterEvent =
@@ -50,8 +25,6 @@ type UpdaterEvent =
 			type: 'available';
 			context: UpdaterContext;
 			version?: string | null;
-			downloadSize?: number | null;
-			downloadStarted: boolean;
 			downloadUrl?: string;
 			downloadOptions?: Array<UpdaterDownloadOption>;
 	  }
@@ -60,23 +33,9 @@ type UpdaterEvent =
 			context: UpdaterContext;
 	  }
 	| {
-			type: 'downloaded';
-			context: UpdaterContext;
-			version?: string | null;
-	  }
-	| {
-			type: 'progress';
-			context: UpdaterContext;
-			percent: number;
-			transferred: number;
-			total: number;
-			bytesPerSecond: number;
-	  }
-	| {
 			type: 'error';
 			context: UpdaterContext;
 			message: string;
-			phase?: 'check' | 'download' | 'install';
 	  }
 	| {
 			type: 'unsupported';
@@ -84,27 +43,6 @@ type UpdaterEvent =
 			reason: 'platform' | 'unpackaged' | 'managed-package';
 			downloadUrl?: string;
 	  };
-
-const requireModule = createRequire(import.meta.url);
-
-let lastContext: UpdaterContext = 'background';
-type VelopackUpdate = UpdateInfo | VelopackAsset;
-
-let pendingVelopackUpdate: VelopackUpdate | null = null;
-let velopackCheckPromise: Promise<void> | null = null;
-let velopackDownloadPromise: Promise<void> | null = null;
-let velopackInstallStarted = false;
-let pendingAppImageUpdate: PendingAppImageUpdate | null = null;
-let appImageUpdatePromise: Promise<void> | null = null;
-let appImageInstallStarted = false;
-
-const UPDATE_DOWNLOAD_MAX_ATTEMPTS = 5;
-const UPDATE_DOWNLOAD_RETRY_BASE_DELAY_MS = 3000;
-const UPDATE_DOWNLOAD_RETRY_MAX_DELAY_MS = 60000;
-const ELECTRON_DOWNLOAD_MAX_RETRIES = 4;
-const UPDATE_PROGRESS_SAMPLE_INTERVAL_MS = 500;
-
-type PendingAppImageUpdate = {version: string; target: AppImageTarget; staged: StagedAppImageUpdate};
 
 function send(win: BrowserWindow | null, event: UpdaterEvent) {
 	win?.webContents.send('updater-event', event);
@@ -119,372 +57,6 @@ function getErrorMessage(error: unknown): string {
 		return error.message;
 	}
 	return String(error);
-}
-
-function sleep(ms: number): Promise<void> {
-	return new Promise((resolve) => {
-		setTimeout(resolve, ms);
-	});
-}
-
-function backoffDelay(attempt: number): number {
-	const exponential = UPDATE_DOWNLOAD_RETRY_BASE_DELAY_MS * 2 ** Math.max(0, attempt - 1);
-	const capped = Math.min(exponential, UPDATE_DOWNLOAD_RETRY_MAX_DELAY_MS);
-	return Math.round(capped * (0.5 + Math.random() * 0.5));
-}
-
-function getVelopackAsset(update: VelopackUpdate): VelopackAsset {
-	return 'TargetFullRelease' in update ? update.TargetFullRelease : update;
-}
-
-function getVelopackUpdateVersion(update: VelopackUpdate): string | null {
-	return getVelopackAsset(update).Version ?? null;
-}
-
-function getVelopackUpdateSize(update: VelopackUpdate): number | null {
-	const raw = getVelopackAsset(update).Size;
-	if (raw == null) return null;
-	if (typeof raw === 'bigint') {
-		return Number(raw);
-	}
-	return Number(raw);
-}
-
-function createVelopackUpdateManager() {
-	const {UpdateManager} = requireModule('velopack') as typeof import('velopack');
-	return new UpdateManager(UPDATE_BASE_URL);
-}
-
-type VelopackUpdateManager = ReturnType<typeof createVelopackUpdateManager>;
-
-function getInstalledVelopackVersion(updateManager: VelopackUpdateManager): string | null {
-	try {
-		const version = updateManager.getCurrentVersion();
-		return typeof version === 'string' && version.length > 0 ? version : null;
-	} catch (error) {
-		log.warn('Failed to read the installed Velopack version', error);
-		return null;
-	}
-}
-
-function resolveFailedVelopackApply(updateManager: VelopackUpdateManager): VelopackApplyAttempt | null {
-	const attempt = readVelopackApplyAttempt();
-	if (!attempt) {
-		return null;
-	}
-	const installedVersion = getInstalledVelopackVersion(updateManager) ?? app.getVersion();
-	if (compareVersions(installedVersion, attempt.version) >= 0) {
-		clearVelopackApplyAttempt();
-		return null;
-	}
-	return attempt;
-}
-
-async function sendVelopackApplyFailure(
-	context: UpdaterContext,
-	getMainWindow: () => BrowserWindow | null,
-	attempt: VelopackApplyAttempt,
-): Promise<void> {
-	log.error('A downloaded update was never applied, so the installer is offered instead.', attempt);
-	send(getMainWindow(), {
-		type: 'error',
-		context,
-		phase: 'install',
-		message: `Fluxer could not finish installing version ${attempt.version}.`,
-	});
-	try {
-		const latest = await fetchManualLatest({forceRefresh: true});
-		sendManualUpdateAvailable(getMainWindow, context, latest);
-		return;
-	} catch (error) {
-		log.warn('Failed to resolve the installer download after a failed update apply', error);
-	}
-	send(getMainWindow(), {
-		type: 'available',
-		context,
-		version: attempt.version,
-		downloadSize: null,
-		downloadStarted: false,
-		downloadUrl: buildManualVersionDownloadUrl(attempt.version, 'setup'),
-	});
-}
-
-async function checkVelopackForUpdates(
-	context: UpdaterContext,
-	getMainWindow: () => BrowserWindow | null,
-): Promise<void> {
-	if (velopackCheckPromise) {
-		return velopackCheckPromise;
-	}
-	velopackCheckPromise = (async () => {
-		try {
-			send(getMainWindow(), {type: 'checking', context});
-			const updateManager = createVelopackUpdateManager();
-			const failedApply = resolveFailedVelopackApply(updateManager);
-			if (failedApply) {
-				await sendVelopackApplyFailure(context, getMainWindow, failedApply);
-				return;
-			}
-			const pendingUpdate = updateManager.getUpdatePendingRestart();
-			const update = await updateManager.checkForUpdatesAsync();
-			if (!update) {
-				if (pendingUpdate) {
-					pendingVelopackUpdate = pendingUpdate;
-					send(getMainWindow(), {
-						type: 'downloaded',
-						context,
-						version: getVelopackUpdateVersion(pendingUpdate),
-					});
-					return;
-				}
-				pendingVelopackUpdate = null;
-				send(getMainWindow(), {type: 'not-available', context});
-				return;
-			}
-			if (pendingUpdate) {
-				const pendingVersion = getVelopackUpdateVersion(pendingUpdate);
-				const updateVersion = getVelopackUpdateVersion(update);
-				if (pendingVersion && updateVersion && compareVersions(updateVersion, pendingVersion) <= 0) {
-					pendingVelopackUpdate = pendingUpdate;
-					send(getMainWindow(), {
-						type: 'downloaded',
-						context,
-						version: pendingVersion,
-					});
-					return;
-				}
-				log.info('Newer Velopack update found while another update is pending restart.', {
-					pendingVersion,
-					updateVersion,
-				});
-			}
-			pendingVelopackUpdate = update;
-			send(getMainWindow(), {
-				type: 'available',
-				context,
-				version: getVelopackUpdateVersion(update),
-				downloadSize: getVelopackUpdateSize(update),
-				downloadStarted: false,
-			});
-		} catch (error) {
-			send(getMainWindow(), {type: 'error', context, phase: 'check', message: getErrorMessage(error)});
-		}
-	})().finally(() => {
-		velopackCheckPromise = null;
-	});
-	return velopackCheckPromise;
-}
-
-async function downloadVelopackUpdate(
-	context: UpdaterContext,
-	getMainWindow: () => BrowserWindow | null,
-): Promise<void> {
-	if (velopackDownloadPromise) {
-		return velopackDownloadPromise;
-	}
-	const update = pendingVelopackUpdate;
-	if (!update) {
-		send(getMainWindow(), {
-			type: 'error',
-			context,
-			phase: 'download',
-			message: 'No update available to download. Please check for updates first.',
-		});
-		return;
-	}
-	if (!('TargetFullRelease' in update)) {
-		send(getMainWindow(), {type: 'downloaded', context, version: getVelopackUpdateVersion(update)});
-		return;
-	}
-	velopackDownloadPromise = (async () => {
-		const total = getVelopackUpdateSize(update) ?? 0;
-		let lastError: unknown;
-		for (let attempt = 1; attempt <= UPDATE_DOWNLOAD_MAX_ATTEMPTS; attempt += 1) {
-			let lastSampleAt = Date.now();
-			let lastSampleTransferred = 0;
-			let smoothedBytesPerSecond = 0;
-			try {
-				const updateManager = createVelopackUpdateManager();
-				await updateManager.downloadUpdateAsync(update, (percent) => {
-					const transferred = total > 0 ? Math.round((total * percent) / 100) : 0;
-					const now = Date.now();
-					const dtMs = now - lastSampleAt;
-					if (dtMs >= 500 || percent >= 100) {
-						if (dtMs > 0 && transferred >= lastSampleTransferred) {
-							const instant = ((transferred - lastSampleTransferred) * 1000) / dtMs;
-							smoothedBytesPerSecond =
-								smoothedBytesPerSecond === 0 ? instant : smoothedBytesPerSecond * 0.7 + instant * 0.3;
-						}
-						lastSampleAt = now;
-						lastSampleTransferred = transferred;
-						send(getMainWindow(), {
-							type: 'progress',
-							context,
-							percent,
-							transferred,
-							total,
-							bytesPerSecond: Math.round(smoothedBytesPerSecond),
-						});
-					}
-				});
-				send(getMainWindow(), {
-					type: 'downloaded',
-					context,
-					version: getVelopackUpdateVersion(update),
-				});
-				return;
-			} catch (error) {
-				lastError = error;
-				if (attempt >= UPDATE_DOWNLOAD_MAX_ATTEMPTS) {
-					break;
-				}
-				const delay = backoffDelay(attempt);
-				const reason = getErrorMessage(error);
-				const waitSeconds = Math.round(delay / 1000);
-				log.warn(
-					`Velopack update download attempt ${attempt}/${UPDATE_DOWNLOAD_MAX_ATTEMPTS} failed (${reason}); retrying in ${waitSeconds}s`,
-				);
-				await sleep(delay);
-			}
-		}
-		log.error('Velopack update download failed after retries', lastError);
-		send(getMainWindow(), {type: 'error', context, phase: 'download', message: getErrorMessage(lastError)});
-	})().finally(() => {
-		velopackDownloadPromise = null;
-	});
-	return velopackDownloadPromise;
-}
-
-function installVelopackUpdate(): void {
-	if (velopackInstallStarted) {
-		log.warn('Velopack install already in progress; ignoring duplicate request.');
-		return;
-	}
-	const updateManager = createVelopackUpdateManager();
-	const update = pendingVelopackUpdate ?? updateManager.getUpdatePendingRestart();
-	if (!update) {
-		throw new Error('No Velopack update is ready to install.');
-	}
-	if (resolveFailedVelopackApply(updateManager)) {
-		throw new Error('The last update could not be installed. Download the installer to update.');
-	}
-	const updateVersion = getVelopackUpdateVersion(update);
-	if (updateVersion) {
-		recordVelopackApplyAttempt(updateVersion);
-	}
-	velopackInstallStarted = true;
-	setQuitting(true);
-	destroyDesktopTray();
-	updateManager.waitExitThenApplyUpdate(update);
-	setImmediate(() => app.exit(0));
-}
-
-function registerVelopackUpdater(getMainWindow: () => BrowserWindow | null): void {
-	ipcMain.handle('updater-check', async (_e, context: UpdaterContext) => {
-		lastContext = context;
-		await checkVelopackForUpdates(context, getMainWindow);
-	});
-	ipcMain.handle('updater-download', async (_e, context: UpdaterContext) => {
-		lastContext = context;
-		await downloadVelopackUpdate(context, getMainWindow);
-	});
-	ipcMain.handle('updater-install', async () => {
-		installVelopackUpdate();
-	});
-}
-
-function registerElectronUpdater(getMainWindow: () => BrowserWindow | null): void {
-	let electronUpdateDownloading = false;
-	let electronDownloadRetries = 0;
-	let electronUpdateDownloaded = false;
-	let electronDownloadedVersion: string | null = null;
-	const {UpdateSourceType, updateElectronApp} = requireModule(
-		'update-electron-app',
-	) as typeof import('update-electron-app');
-	updateElectronApp({
-		updateSource: {
-			type: UpdateSourceType.StaticStorage,
-			baseUrl: UPDATE_BASE_URL,
-		},
-		updateInterval: '12 hours',
-		logger: log,
-		notifyUser: false,
-	});
-	autoUpdater.on('checking-for-update', () => {
-		send(getMainWindow(), {type: 'checking', context: lastContext});
-	});
-	const sendPendingRestart = () => {
-		send(getMainWindow(), {type: 'downloaded', context: lastContext, version: electronDownloadedVersion});
-	};
-	autoUpdater.on('update-available', () => {
-		if (electronUpdateDownloaded) {
-			sendPendingRestart();
-			return;
-		}
-		electronUpdateDownloading = true;
-		send(getMainWindow(), {
-			type: 'available',
-			context: lastContext,
-			version: null,
-			downloadSize: null,
-			downloadStarted: true,
-		});
-	});
-	autoUpdater.on('update-not-available', () => {
-		if (electronUpdateDownloaded) {
-			sendPendingRestart();
-			return;
-		}
-		send(getMainWindow(), {type: 'not-available', context: lastContext});
-	});
-	autoUpdater.on('update-downloaded', (_event, _releaseNotes, releaseName) => {
-		electronUpdateDownloading = false;
-		electronUpdateDownloaded = true;
-		if (releaseName) {
-			electronDownloadedVersion = releaseName;
-		}
-		sendPendingRestart();
-	});
-	autoUpdater.on('error', (err: Error) => {
-		const message = err?.message ?? String(err);
-		const phase: 'check' | 'download' = electronUpdateDownloading ? 'download' : 'check';
-		if (electronUpdateDownloading && electronDownloadRetries < ELECTRON_DOWNLOAD_MAX_RETRIES) {
-			electronDownloadRetries += 1;
-			electronUpdateDownloading = false;
-			const delay = backoffDelay(electronDownloadRetries);
-			const waitSeconds = Math.round(delay / 1000);
-			log.warn(
-				`Update download failed (attempt ${electronDownloadRetries}/${ELECTRON_DOWNLOAD_MAX_RETRIES}); retrying in ${waitSeconds}s: ${message}`,
-			);
-			setTimeout(() => {
-				try {
-					autoUpdater.checkForUpdates();
-				} catch (retryError) {
-					log.warn('Update retry check failed', retryError);
-				}
-			}, delay);
-			return;
-		}
-		electronUpdateDownloading = false;
-		if (electronUpdateDownloaded) {
-			sendPendingRestart();
-			return;
-		}
-		send(getMainWindow(), {type: 'error', context: lastContext, phase, message});
-	});
-	ipcMain.handle('updater-check', async (_e, context: UpdaterContext) => {
-		lastContext = context;
-		try {
-			autoUpdater.checkForUpdates();
-		} catch (error) {
-			send(getMainWindow(), {type: 'error', context, phase: 'check', message: getErrorMessage(error)});
-		}
-	});
-	ipcMain.handle('updater-download', async () => {});
-	ipcMain.handle('updater-install', async () => {
-		setQuitting(true);
-		autoUpdater.quitAndInstall();
-	});
 }
 
 let manualLatestCache: {at: number; info: ManualLatestInfo} | null = null;
@@ -540,7 +112,7 @@ async function fetchManualLatest(options: {forceRefresh?: boolean} = {}): Promis
 	if (!options.forceRefresh && manualLatestCache && now - manualLatestCache.at < MANUAL_CACHE_TTL_MS) {
 		return manualLatestCache.info;
 	}
-	const response = await fetch(`${UPDATE_BASE_URL}/latest`, {
+	const response = await net.fetch(`${UPDATE_BASE_URL}/latest`, {
 		cache: 'no-store',
 		headers: {
 			Accept: 'application/json',
@@ -574,8 +146,6 @@ function sendManualUpdateAvailable(
 		type: 'available',
 		context,
 		version: latest.version,
-		downloadSize: null,
-		downloadStarted: false,
 		downloadUrl: getManualDownloadUrl(latest),
 		...(downloadOptions.length > 0 ? {downloadOptions} : {}),
 	});
@@ -593,184 +163,22 @@ async function checkManualUpdate(context: UpdaterContext, getMainWindow: () => B
 		}
 	} catch (error) {
 		log.warn('Manual update check failed', error);
-		send(getMainWindow(), {type: 'error', context, phase: 'check', message: getErrorMessage(error)});
+		send(getMainWindow(), {type: 'error', context, message: getErrorMessage(error)});
 	}
 }
 
-async function downloadAppImageUpdate(
-	context: UpdaterContext,
-	getMainWindow: () => BrowserWindow | null,
-	latest: ManualLatestInfo,
-	target: AppImageTarget,
-	expectedSha256: string,
-): Promise<void> {
-	const version = latest.version;
-	const url = buildManualVersionDownloadUrl(version, 'appimage');
-	let lastError: unknown;
-	for (let attempt = 1; attempt <= UPDATE_DOWNLOAD_MAX_ATTEMPTS; attempt += 1) {
-		let lastSampleAt = Date.now();
-		let lastSampleTransferred = 0;
-		let smoothedBytesPerSecond = 0;
-		try {
-			const staged = await stageAppImageUpdate({
-				target,
-				url,
-				expectedSha256,
-				onProgress: ({transferred, total}) => {
-					const now = Date.now();
-					const dtMs = now - lastSampleAt;
-					const complete = total > 0 && transferred >= total;
-					if (dtMs < UPDATE_PROGRESS_SAMPLE_INTERVAL_MS && !complete) {
-						return;
-					}
-					if (dtMs > 0 && transferred >= lastSampleTransferred) {
-						const instant = ((transferred - lastSampleTransferred) * 1000) / dtMs;
-						smoothedBytesPerSecond =
-							smoothedBytesPerSecond === 0 ? instant : smoothedBytesPerSecond * 0.7 + instant * 0.3;
-					}
-					lastSampleAt = now;
-					lastSampleTransferred = transferred;
-					send(getMainWindow(), {
-						type: 'progress',
-						context,
-						percent: total > 0 ? Math.min(100, (transferred / total) * 100) : 0,
-						transferred,
-						total,
-						bytesPerSecond: Math.round(smoothedBytesPerSecond),
-					});
-				},
-			});
-			if (pendingAppImageUpdate) {
-				discardStagedAppImageUpdate(pendingAppImageUpdate.staged);
-			}
-			pendingAppImageUpdate = {version, target, staged};
-			send(getMainWindow(), {type: 'downloaded', context, version});
-			return;
-		} catch (error) {
-			lastError = error;
-			if (
-				error instanceof AppImageChecksumError ||
-				error instanceof AppImageStagingError ||
-				attempt >= UPDATE_DOWNLOAD_MAX_ATTEMPTS
-			) {
-				break;
-			}
-			const delay = backoffDelay(attempt);
-			const reason = getErrorMessage(error);
-			const waitSeconds = Math.round(delay / 1000);
-			log.warn(
-				`AppImage update download attempt ${attempt}/${UPDATE_DOWNLOAD_MAX_ATTEMPTS} failed (${reason}), retrying in ${waitSeconds}s`,
-			);
-			await sleep(delay);
-		}
-	}
-	log.error('AppImage update download failed', lastError);
-	send(getMainWindow(), {type: 'error', context, phase: 'download', message: getErrorMessage(lastError)});
-	sendManualUpdateAvailable(getMainWindow, context, latest);
-}
-
-async function checkAppImageUpdate(
-	context: UpdaterContext,
-	getMainWindow: () => BrowserWindow | null,
-	target: AppImageTarget,
-): Promise<void> {
-	if (appImageUpdatePromise) {
-		return appImageUpdatePromise;
-	}
-	appImageUpdatePromise = (async () => {
-		send(getMainWindow(), {type: 'checking', context});
-		let latest: ManualLatestInfo;
-		try {
-			latest = await fetchManualLatest({forceRefresh: context === 'user'});
-		} catch (error) {
-			log.warn('AppImage update check failed', error);
-			send(getMainWindow(), {type: 'error', context, phase: 'check', message: getErrorMessage(error)});
-			return;
-		}
-		if (pendingAppImageUpdate && compareVersions(latest.version, pendingAppImageUpdate.version) <= 0) {
-			send(getMainWindow(), {type: 'downloaded', context, version: pendingAppImageUpdate.version});
-			return;
-		}
-		if (compareVersions(latest.version, app.getVersion()) <= 0) {
-			send(getMainWindow(), {type: 'not-available', context});
-			return;
-		}
-		const published = latest.files.appimage;
-		const resolved = resolveAppImageTarget(target.installedPath);
-		if (!resolved.ok || !published?.sha256) {
-			log.info('AppImage cannot be replaced in place, so the manual download is offered instead.', {
-				reason: resolved.ok ? 'published-checksum-missing' : resolved.reason,
-			});
-			sendManualUpdateAvailable(getMainWindow, context, latest);
-			return;
-		}
-		send(getMainWindow(), {
-			type: 'available',
-			context,
-			version: latest.version,
-			downloadSize: null,
-			downloadStarted: true,
-		});
-		await downloadAppImageUpdate(context, getMainWindow, latest, resolved.target, published.sha256);
-	})().finally(() => {
-		appImageUpdatePromise = null;
-	});
-	return appImageUpdatePromise;
-}
-
-function installAppImageUpdate(getMainWindow: () => BrowserWindow | null): void {
-	if (appImageInstallStarted) {
-		log.warn('AppImage install already in progress, ignoring the duplicate request.');
-		return;
-	}
-	const pending = pendingAppImageUpdate;
-	if (!pending) {
-		throw new Error('No AppImage update is ready to install.');
-	}
-	try {
-		applyStagedAppImageUpdate(pending.target, pending.staged);
-	} catch (error) {
-		log.error('AppImage update install failed', error);
-		pendingAppImageUpdate = null;
-		send(getMainWindow(), {type: 'error', context: lastContext, phase: 'install', message: getErrorMessage(error)});
-		return;
-	}
-	appImageInstallStarted = true;
-	pendingAppImageUpdate = null;
-	log.info(`Replaced ${pending.target.installedPath} with ${pending.version}, relaunching now.`);
-	relaunchAndExit();
-}
-
-function reclaimAbandonedAppImageUpdates(target: AppImageTarget): void {
-	try {
-		const reclaimed = sweepAbandonedAppImageUpdates(target);
-		if (reclaimed.length > 0) {
-			log.info(`Reclaimed ${reclaimed.length} abandoned AppImage staging directories in ${target.directory}.`);
-		}
-	} catch (error) {
-		log.warn('Failed to reclaim abandoned AppImage staging directories', error);
-	}
-}
-
-function registerAppImageUpdater(getMainWindow: () => BrowserWindow | null, target: AppImageTarget): void {
-	reclaimAbandonedAppImageUpdates(target);
-	app.on('will-quit', () => {
-		if (!pendingAppImageUpdate || appImageInstallStarted) {
-			return;
-		}
-		discardStagedAppImageUpdate(pendingAppImageUpdate.staged);
-		pendingAppImageUpdate = null;
-	});
+function registerSelfUpdater(getMainWindow: () => BrowserWindow | null): void {
 	ipcMain.handle('updater-check', async (_e, context: UpdaterContext) => {
-		lastContext = context;
-		await checkAppImageUpdate(context, getMainWindow, target);
-	});
-	ipcMain.handle('updater-download', async (_e, context: UpdaterContext) => {
-		lastContext = context;
-		await checkAppImageUpdate(context, getMainWindow, target);
-	});
-	ipcMain.handle('updater-install', async () => {
-		installAppImageUpdate(getMainWindow);
+		if (context !== 'user') {
+			return;
+		}
+		try {
+			await checkDesktopUpdateNow();
+			send(getMainWindow(), {type: 'not-available', context});
+		} catch (error) {
+			log.warn('Desktop update check failed', error);
+			send(getMainWindow(), {type: 'error', context, message: getErrorMessage(error)});
+		}
 	});
 }
 
@@ -779,6 +187,13 @@ function registerManualUpdater(
 	reason: 'platform' | 'unpackaged' | 'managed-package',
 ): void {
 	ipcMain.handle('updater-check', async (_e, context: UpdaterContext) => {
+		if (context === 'user') {
+			try {
+				await checkDesktopUpdateNow();
+			} catch (error) {
+				log.warn('Desktop module update check failed', error);
+			}
+		}
 		if (reason !== 'platform') {
 			send(getMainWindow(), {
 				type: 'unsupported',
@@ -790,46 +205,18 @@ function registerManualUpdater(
 		}
 		await checkManualUpdate(context, getMainWindow);
 	});
-	ipcMain.handle('updater-download', async (_e, context: UpdaterContext) => {
-		send(getMainWindow(), {
-			type: 'unsupported',
-			context,
-			reason,
-			...(reason === 'managed-package' ? {} : {downloadUrl: DOWNLOAD_PAGE_URL}),
-		});
-	});
-	ipcMain.handle('updater-install', async () => {
-		throw new Error('In-app updates are not supported on this platform.');
-	});
 }
 
 export function registerUpdater(getMainWindow: () => BrowserWindow | null) {
-	if (!app.isPackaged) {
-		registerManualUpdater(getMainWindow, 'unpackaged');
-		return;
-	}
-	if (isPortableMode()) {
-		registerManualUpdater(getMainWindow, 'platform');
-		return;
-	}
-	if (isFlatpakRuntime()) {
-		registerManualUpdater(getMainWindow, 'managed-package');
-		return;
-	}
-	if (process.platform === 'win32') {
-		registerVelopackUpdater(getMainWindow);
-		return;
-	}
-	if (process.platform === 'darwin') {
-		registerElectronUpdater(getMainWindow);
-		return;
-	}
-	if (process.platform === 'linux' && isRunningFromAppImage()) {
-		const appImage = resolveAppImageTarget();
-		if (appImage.ok) {
-			registerAppImageUpdater(getMainWindow, appImage.target);
+	const plan = resolveShellUpdatePlan();
+	switch (plan.capability) {
+		case ShellUpdateCapability.SELF_UPDATE:
+			registerSelfUpdater(getMainWindow);
 			return;
-		}
+		case ShellUpdateCapability.MANAGED_PACKAGE:
+			registerManualUpdater(getMainWindow, 'managed-package');
+			return;
+		default:
+			registerManualUpdater(getMainWindow, plan.reason);
 	}
-	registerManualUpdater(getMainWindow, 'platform');
 }

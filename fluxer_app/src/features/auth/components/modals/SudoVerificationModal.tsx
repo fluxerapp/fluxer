@@ -2,19 +2,42 @@
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/auth/components/modals/SudoVerificationModal.module.css';
-import SudoPrompt, {SudoVerificationMethod} from '@app/features/auth/state/SudoPrompt';
+import {
+	isPasskeyCeremonyDismissed,
+	PasskeyBridgeSudoLink,
+	runPasskeyBridgeNativeSudo,
+} from '@app/features/auth/passkey_migration/PasskeyLegacyCeremony';
+import PasskeyMigration from '@app/features/auth/passkey_migration/PasskeyMigration';
+import {isPasskeyMigrationOrigin} from '@app/features/auth/passkey_migration/PasskeyMigrationOrigin';
+import Accounts from '@app/features/auth/state/Accounts';
+import Sudo from '@app/features/auth/state/AuthSudo';
+import SudoPrompt, {SUDO_MODAL_KEY, SudoVerificationMethod} from '@app/features/auth/state/SudoPrompt';
 import * as WebAuthnUtils from '@app/features/auth/utils/WebAuthnUtils';
-import {PASSWORD_DESCRIPTOR, VERIFY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	AUTHENTICATOR_CODE_DESCRIPTOR,
+	BACKUP_CODE_DESCRIPTOR,
+	COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR,
+	PASSWORD_DESCRIPTOR,
+	VERIFY_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {Platform} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
+import buttonStyles from '@app/features/ui/button/Button.module.css';
 import {Form} from '@app/features/ui/components/form/Form';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
+import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import WebAuthnCredentials from '@app/features/user/state/WebAuthnCredentials';
 import * as FormUtils from '@app/lib/forms';
+import {PASSKEY_MIGRATION_RP_ID} from '@fluxer/constants/src/PasskeyConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
+import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useEffect, useRef, useState} from 'react';
@@ -25,10 +48,6 @@ const PASSKEYS_REQUIRE_A_SIGNED_MACOS_BUNDLE_WITH_A_DESCRIPTOR = msg({
 		'Passkeys require a signed macOS bundle with a valid application identifier. Install the signed desktop client and retry.',
 	comment:
 		'Sudo (re-auth) modal body shown on unsigned macOS desktop bundles where passkeys cannot work. Direct the user to install the signed client.',
-});
-const COULDN_T_VERIFY_WITH_PASSKEY_PLEASE_TRY_AGAIN_DESCRIPTOR = msg({
-	message: "Couldn't verify with passkey. Try again.",
-	comment: 'Sudo (re-auth) modal toast error shown when passkey verification fails. Keep plain.',
 });
 const ENTER_YOUR_PASSWORD_DESCRIPTOR = msg({
 	message: 'Enter your password.',
@@ -51,20 +70,35 @@ const VERIFY_IT_S_YOU_DESCRIPTOR = msg({
 	message: "Verify it's you",
 	comment: 'Short label in the authentication sudo verification modal. Keep the tone plain and specific.',
 });
-const AUTHENTICATOR_CODE_DESCRIPTOR = msg({
-	message: 'Authenticator code',
-	comment: 'Short label in the authentication sudo verification modal. Keep the tone plain and specific.',
-});
 const MESSAGE_6_DIGIT_CODE_DESCRIPTOR = msg({
 	message: '6-digit code',
 	comment: 'Short label in the authentication sudo verification modal. Keep the tone plain and specific.',
 });
-const BACKUP_CODE_DESCRIPTOR = msg({
-	message: 'Backup code',
-	comment:
-		'Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.',
-});
 const VERIFICATION_FAILED_DESCRIPTOR = msg({message: 'Verification failed'});
+const INCORRECT_PASSWORD_DESCRIPTOR = msg({
+	message: 'Incorrect password.',
+	comment:
+		'Error under the password field when confirming identity on an instance where people sign in with a username.',
+});
+
+function isInvalidPasswordError(body: unknown): boolean {
+	if (typeof body !== 'object' || body === null) return false;
+	const errors = (body as {errors?: unknown}).errors;
+	return (
+		Array.isArray(errors) &&
+		errors.some(
+			(entry) =>
+				typeof entry === 'object' &&
+				entry !== null &&
+				(entry as {code?: unknown}).code === ValidationErrorCodes.INVALID_PASSWORD,
+		)
+	);
+}
+const FINISH_IN_THE_NEW_TAB_DESCRIPTOR = msg({
+	message: 'Finish in the new tab. If you closed it, press Continue with passkey again.',
+	comment:
+		'Sudo (re-auth) modal hint shown after the passkey button opened a new tab to confirm the passkey. "Continue with passkey" is the button label. Keep plain.',
+});
 const logger = new Logger('SudoVerificationModal');
 
 interface FormInputs {
@@ -76,6 +110,10 @@ const isMacAppIdentifierError = (error: unknown): boolean => {
 	const message = error instanceof Error ? error.message : '';
 	return message.toLowerCase().includes('application identifier');
 };
+const holdsPasskeyFor = (matches: (rpId: string) => boolean): boolean =>
+	WebAuthnCredentials.credentials.some((credential) => matches(credential.rp_id));
+const holdsMigratedPasskey = (): boolean => holdsPasskeyFor((rpId) => rpId === PASSKEY_MIGRATION_RP_ID);
+const holdsLegacyPasskey = (): boolean => holdsPasskeyFor((rpId) => rpId !== PASSKEY_MIGRATION_RP_ID);
 const SudoVerificationModal: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const {availableMethods, isVerifying, verificationFailed, rawError, lastUsedMfaMethod} = SudoPrompt;
@@ -83,6 +121,13 @@ const SudoVerificationModal: React.FC = observer(() => {
 	const [webAuthnInFlight, setWebAuthnInFlight] = useState(false);
 	const [webAuthnError, setWebAuthnError] = useState<string | null>(null);
 	const autoTriggeredRef = useRef(false);
+	const [legacyLinkUrl, setLegacyLinkUrl] = useState<string | null>(null);
+	const [legacyLinkActive, setLegacyLinkActive] = useState(false);
+	const [legacyLinkFollowed, setLegacyLinkFollowed] = useState(false);
+	const legacyLinkRef = useRef<PasskeyBridgeSudoLink | null>(null);
+	const preferLegacyRef = useRef(false);
+	const openRef = useRef(true);
+	const userIdAtOpenRef = useRef(Accounts.currentUserId);
 	const showPasskey = availableMethods.webauthn;
 	const showTotp = availableMethods.totp;
 	const backupCodeOnly = !showTotp && availableMethods.backupCodes;
@@ -100,17 +145,67 @@ const SudoVerificationModal: React.FC = observer(() => {
 		const fallback: keyof FormInputs = showCode ? 'totp' : 'password';
 		if (rawError) {
 			FormUtils.handleError(i18n, form, rawError, fallback);
+			if (RuntimeConfig.usesUsernameSignIn && isInvalidPasswordError(rawError.body)) {
+				form.setError('password', {type: 'server', message: i18n._(INCORRECT_PASSWORD_DESCRIPTOR)});
+			}
 		} else if (verificationFailed) {
 			form.setError(fallback, {type: 'server', message: i18n._(VERIFICATION_FAILED_DESCRIPTOR)});
 		}
 		setWebAuthnInFlight(false);
 	}, [form, verificationFailed, rawError, i18n, i18n.locale, showPassword, showCode]);
+	const finishLegacySudo = (sudoToken: string) => {
+		if (!openRef.current || Accounts.currentUserId !== userIdAtOpenRef.current) return;
+		Sudo.setToken(sudoToken);
+		PasskeyMigration.checkAfterSudo(SUDO_MODAL_KEY);
+		SudoPrompt.submit({});
+	};
+	const startLegacyLink = () => {
+		if (legacyLinkRef.current === null) {
+			legacyLinkRef.current = new PasskeyBridgeSudoLink({
+				onLink: (url) => {
+					setLegacyLinkUrl(url);
+					if (url === null) {
+						setLegacyLinkFollowed(false);
+					}
+				},
+				onCompleted: finishLegacySudo,
+				onError: (error) => {
+					logger.error('WebAuthn verification in a new tab failed', error);
+					setWebAuthnError(i18n._(COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR));
+				},
+			});
+		}
+		setLegacyLinkActive(true);
+		void legacyLinkRef.current.start();
+	};
+	useEffect(() => {
+		if (showPasskey && isPasskeyMigrationOrigin() && !Platform.isElectron && !holdsMigratedPasskey()) {
+			startLegacyLink();
+		}
+		return () => {
+			openRef.current = false;
+			legacyLinkRef.current?.dispose();
+		};
+	}, []);
 	const handleWebAuthn = async () => {
 		if (webAuthnInFlight || isVerifying) return;
 		setWebAuthnError(null);
 		form.clearErrors();
 		setWebAuthnInFlight(true);
+		const migrationOrigin = isPasskeyMigrationOrigin();
+		const runsLegacyNatively =
+			migrationOrigin && Platform.isElectron && (preferLegacyRef.current || !holdsMigratedPasskey());
 		try {
+			if (runsLegacyNatively) {
+				preferLegacyRef.current = false;
+				const result = await runPasskeyBridgeNativeSudo();
+				if (result.status === 'completed') {
+					finishLegacySudo(result.sudo_token);
+					return;
+				}
+				setWebAuthnInFlight(false);
+				return;
+			}
 			await WebAuthnUtils.assertWebAuthnSupported();
 			const optionsResponse = await http.post<{challenge: string}>(Endpoints.SUDO_WEBAUTHN_OPTIONS);
 			const credential = await WebAuthnUtils.performAuthentication(optionsResponse.body);
@@ -122,15 +217,22 @@ const SudoVerificationModal: React.FC = observer(() => {
 		} catch (err) {
 			logger.error('WebAuthn verification failed', err);
 			setWebAuthnInFlight(false);
+			if (migrationOrigin && !runsLegacyNatively && isPasskeyCeremonyDismissed(err) && holdsLegacyPasskey()) {
+				if (!Platform.isElectron) {
+					startLegacyLink();
+					return;
+				}
+				preferLegacyRef.current = true;
+			}
 			if (isMacAppIdentifierError(err)) {
 				setWebAuthnError(i18n._(PASSKEYS_REQUIRE_A_SIGNED_MACOS_BUNDLE_WITH_A_DESCRIPTOR));
 				return;
 			}
-			setWebAuthnError(i18n._(COULDN_T_VERIFY_WITH_PASSKEY_PLEASE_TRY_AGAIN_DESCRIPTOR));
+			setWebAuthnError(i18n._(COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR));
 		}
 	};
 	useEffect(() => {
-		if (autoTriggeredRef.current) return;
+		if (autoTriggeredRef.current || legacyLinkRef.current !== null) return;
 		if (!showPasskey || showPassword || showCode) return;
 		if (lastUsedMfaMethod && lastUsedMfaMethod !== 'webauthn') return;
 		autoTriggeredRef.current = true;
@@ -221,7 +323,39 @@ const SudoVerificationModal: React.FC = observer(() => {
 
 								{showPasskey && (
 									<>
-										{webAuthnInFlight ? (
+										{legacyLinkActive && legacyLinkUrl !== null ? (
+											<FocusRing offset={-2} data-flx="auth.sudo-verification-modal.focus-ring.legacy-link">
+												<a
+													href={legacyLinkUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													onClick={() => {
+														setWebAuthnError(null);
+														setLegacyLinkFollowed(true);
+													}}
+													className={clsx(
+														buttonStyles.button,
+														buttonStyles[showCode || showPassword ? 'secondary' : 'primary'],
+														buttonStyles.fitContainer,
+													)}
+													data-flx="auth.sudo-verification-modal.link.web-authn"
+												>
+													<Trans>Continue with passkey</Trans>
+												</a>
+											</FocusRing>
+										) : legacyLinkActive ? (
+											<Button
+												type="button"
+												onClick={startLegacyLink}
+												submitting={webAuthnError === null}
+												disabled={isVerifying}
+												fitContainer
+												variant={showCode || showPassword ? 'secondary' : 'primary'}
+												data-flx="auth.sudo-verification-modal.button.web-authn-starting"
+											>
+												<Trans>Continue with passkey</Trans>
+											</Button>
+										) : webAuthnInFlight ? (
 											<div
 												className={styles.passkeyVerifying}
 												role="status"
@@ -245,6 +379,11 @@ const SudoVerificationModal: React.FC = observer(() => {
 												<Trans>Continue with passkey</Trans>
 											</Button>
 										)}
+										{legacyLinkActive && legacyLinkFollowed && !webAuthnError && (
+											<p className={styles.passkeyHint} data-flx="auth.sudo-verification-modal.passkey-hint">
+												{i18n._(FINISH_IN_THE_NEW_TAB_DESCRIPTOR)}
+											</p>
+										)}
 										{webAuthnError && (
 											<p className={styles.formError} role="alert" data-flx="auth.sudo-verification-modal.form-error">
 												{webAuthnError}
@@ -259,6 +398,7 @@ const SudoVerificationModal: React.FC = observer(() => {
 										{...form.register('password')}
 										label={i18n._(PASSWORD_DESCRIPTOR)}
 										type="password"
+										autoComplete={RuntimeConfig.usesUsernameSignIn ? 'current-password' : undefined}
 										autoFocus={!showPasskey && !showCode}
 										error={form.formState.errors.password?.message}
 									/>

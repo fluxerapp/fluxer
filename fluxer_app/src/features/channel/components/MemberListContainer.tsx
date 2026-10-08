@@ -6,6 +6,7 @@ import {MEMBERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescript
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {useLingui} from '@lingui/react/macro';
+import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import type {UIEvent} from 'react';
@@ -16,6 +17,7 @@ interface MemberListContainerProps {
 	channelId: string;
 	identityKey?: string;
 	children: React.ReactNode;
+	className?: string;
 	scrollerRef?: React.RefObject<ScrollerHandle | null>;
 	estimatedContentSize?: number | null;
 	onScroll?: (event: UIEvent<HTMLDivElement>) => void;
@@ -26,6 +28,7 @@ export const MemberListContainer: React.FC<MemberListContainerProps> = observer(
 	channelId,
 	identityKey,
 	children,
+	className,
 	scrollerRef,
 	estimatedContentSize,
 	onScroll,
@@ -43,7 +46,7 @@ export const MemberListContainer: React.FC<MemberListContainerProps> = observer(
 	return (
 		<aside
 			ref={navigationRef}
-			className={styles.memberListContainer}
+			className={clsx(styles.memberListContainer, className)}
 			aria-label={i18n._(MEMBERS_DESCRIPTOR)}
 			data-flx="channel.member-list-container.member-list-container"
 		>

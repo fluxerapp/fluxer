@@ -3,20 +3,31 @@
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {InvalidPhoneNumberError} from '@fluxer/errors/src/domains/auth/InvalidPhoneNumberError';
-import {PhoneCountryNotSupportedError} from '@fluxer/errors/src/domains/auth/PhoneCountryNotSupportedError';
-import {PhoneInboundVerificationRequiredError} from '@fluxer/errors/src/domains/auth/PhoneInboundVerificationRequiredError';
-import {PhoneLookupUnavailableError} from '@fluxer/errors/src/domains/auth/PhoneLookupUnavailableError';
-import {PhoneNumberNotInServiceError} from '@fluxer/errors/src/domains/auth/PhoneNumberNotInServiceError';
-import {PhoneNumberNotMobileError} from '@fluxer/errors/src/domains/auth/PhoneNumberNotMobileError';
-import {PhoneVerificationNeedsReviewError} from '@fluxer/errors/src/domains/auth/PhoneVerificationNeedsReviewError';
+import {AccountIdentityLockedError} from '@fluxer/errors/src/domains/auth/AccountIdentityLockedError';
+import {EmailUnavailableOnInstanceError} from '@fluxer/errors/src/domains/auth/EmailUnavailableOnInstanceError';
+import {UsernameSignInOnlyError} from '@fluxer/errors/src/domains/auth/UsernameSignInOnlyError';
+import {MaxActiveThreadsError} from '@fluxer/errors/src/domains/channel/MaxActiveThreadsError';
+import {SearchIndexNotReadyError} from '@fluxer/errors/src/domains/channel/SearchIndexNotReadyError';
+import {ThreadArchivedError} from '@fluxer/errors/src/domains/channel/ThreadArchivedError';
+import {ThreadLockedError} from '@fluxer/errors/src/domains/channel/ThreadLockedError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
+import {UnknownThreadMemberError} from '@fluxer/errors/src/domains/channel/UnknownThreadMemberError';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
+import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InternalServerError} from '@fluxer/errors/src/domains/core/InternalServerError';
 import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
+import {PremiumPurchaseBlockedError} from '@fluxer/errors/src/domains/payment/PremiumPurchaseBlockedError';
+import {StoreBillingUnavailableError} from '@fluxer/errors/src/domains/payment/StoreBillingUnavailableError';
+import {StoreNotificationUnauthorizedError} from '@fluxer/errors/src/domains/payment/StoreNotificationUnauthorizedError';
+import {StorePurchaseInvalidError} from '@fluxer/errors/src/domains/payment/StorePurchaseInvalidError';
+import {StorePurchaseOwnedByOtherAccountError} from '@fluxer/errors/src/domains/payment/StorePurchaseOwnedByOtherAccountError';
+import {StorePurchaseSandboxNotEntitledError} from '@fluxer/errors/src/domains/payment/StorePurchaseSandboxNotEntitledError';
+import {UnknownStorePurchaseError} from '@fluxer/errors/src/domains/payment/UnknownStorePurchaseError';
+import {AccountLimitedError} from '@fluxer/errors/src/domains/user/AccountLimitedError';
 import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {describe, expect, it} from 'vitest';
 
@@ -63,25 +74,46 @@ it.each([BadRequestError, ForbiddenError, NotFoundError])(
 );
 
 describe.each([
-	[APIErrorCodes.INVALID_PHONE_NUMBER, InvalidPhoneNumberError, BadRequestError, HttpStatus.BAD_REQUEST],
-	[APIErrorCodes.PHONE_COUNTRY_NOT_SUPPORTED, PhoneCountryNotSupportedError, BadRequestError, HttpStatus.BAD_REQUEST],
+	[APIErrorCodes.ACCOUNT_LIMITED, AccountLimitedError, ForbiddenError, HttpStatus.FORBIDDEN],
+	[APIErrorCodes.ACCOUNT_IDENTITY_LOCKED, AccountIdentityLockedError, ConflictError, HttpStatus.CONFLICT],
 	[
-		APIErrorCodes.PHONE_INBOUND_VERIFICATION_REQUIRED,
-		PhoneInboundVerificationRequiredError,
+		APIErrorCodes.EMAIL_UNAVAILABLE_ON_INSTANCE,
+		EmailUnavailableOnInstanceError,
 		BadRequestError,
 		HttpStatus.BAD_REQUEST,
 	],
-	[APIErrorCodes.PHONE_LOOKUP_UNAVAILABLE, PhoneLookupUnavailableError, BadRequestError, HttpStatus.BAD_REQUEST],
-	[APIErrorCodes.PHONE_NUMBER_NOT_IN_SERVICE, PhoneNumberNotInServiceError, BadRequestError, HttpStatus.BAD_REQUEST],
-	[APIErrorCodes.PHONE_NUMBER_NOT_MOBILE, PhoneNumberNotMobileError, BadRequestError, HttpStatus.BAD_REQUEST],
-	[
-		APIErrorCodes.PHONE_VERIFICATION_NEEDS_REVIEW,
-		PhoneVerificationNeedsReviewError,
-		BadRequestError,
-		HttpStatus.BAD_REQUEST,
-	],
+	[APIErrorCodes.USERNAME_SIGN_IN_ONLY, UsernameSignInOnlyError, BadRequestError, HttpStatus.BAD_REQUEST],
 	[APIErrorCodes.UNKNOWN_CHANNEL, UnknownChannelError, NotFoundError, HttpStatus.NOT_FOUND],
 	[APIErrorCodes.UNKNOWN_MESSAGE, UnknownMessageError, NotFoundError, HttpStatus.NOT_FOUND],
+	[APIErrorCodes.STORE_PURCHASE_INVALID, StorePurchaseInvalidError, BadRequestError, HttpStatus.BAD_REQUEST],
+	[
+		APIErrorCodes.STORE_PURCHASE_OWNED_BY_OTHER_ACCOUNT,
+		StorePurchaseOwnedByOtherAccountError,
+		ForbiddenError,
+		HttpStatus.FORBIDDEN,
+	],
+	[
+		APIErrorCodes.STORE_PURCHASE_SANDBOX_NOT_ENTITLED,
+		StorePurchaseSandboxNotEntitledError,
+		ForbiddenError,
+		HttpStatus.FORBIDDEN,
+	],
+	[
+		APIErrorCodes.STORE_BILLING_UNAVAILABLE,
+		StoreBillingUnavailableError,
+		ServiceUnavailableError,
+		HttpStatus.SERVICE_UNAVAILABLE,
+	],
+	[APIErrorCodes.UNKNOWN_STORE_PURCHASE, UnknownStorePurchaseError, NotFoundError, HttpStatus.NOT_FOUND],
+	[
+		APIErrorCodes.STORE_NOTIFICATION_UNAUTHORIZED,
+		StoreNotificationUnauthorizedError,
+		FluxerError,
+		HttpStatus.UNAUTHORIZED,
+	],
+	[APIErrorCodes.THREAD_ARCHIVED, ThreadArchivedError, BadRequestError, HttpStatus.BAD_REQUEST],
+	[APIErrorCodes.THREAD_LOCKED, ThreadLockedError, BadRequestError, HttpStatus.BAD_REQUEST],
+	[APIErrorCodes.UNKNOWN_THREAD_MEMBER, UnknownThreadMemberError, NotFoundError, HttpStatus.NOT_FOUND],
 ] as const)('%s', (code, ErrorClass, BaseClass, status) => {
 	it('preserves the domain inheritance and response contract', async () => {
 		const error = new ErrorClass();
@@ -95,6 +127,30 @@ describe.each([
 		expect(error.toJSON()).toEqual({code, message: code});
 		expect(response.status).toBe(status);
 		expect(await response.json()).toEqual({code, message: code});
+	});
+});
+
+describe('thread limit and index errors', () => {
+	it('reports the thread limit in data and message variables', async () => {
+		const error = new MaxActiveThreadsError(1000);
+		expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+		expect(error.messageVariables).toEqual({count: 1000});
+		expect(await error.getResponse().json()).toEqual({
+			code: APIErrorCodes.MAX_ACTIVE_THREADS,
+			message: APIErrorCodes.MAX_ACTIVE_THREADS,
+			max_active_threads: 1000,
+		});
+	});
+
+	it('answers an unready search index with 202 and a retry hint', async () => {
+		const response = new SearchIndexNotReadyError(2).getResponse();
+		expect(response.status).toBe(202);
+		expect(await response.json()).toEqual({
+			code: APIErrorCodes.SEARCH_INDEX_NOT_READY,
+			message: APIErrorCodes.SEARCH_INDEX_NOT_READY,
+			documents_indexed: 0,
+			retry_after: 2,
+		});
 	});
 });
 
@@ -159,6 +215,39 @@ describe('InputValidationError', () => {
 					message: ValidationErrorCodes.STRING_LENGTH_INVALID,
 				},
 			],
+		});
+	});
+});
+
+describe('PremiumPurchaseBlockedError', () => {
+	it('keeps the reason and extra data of existing callers', () => {
+		const error = new PremiumPurchaseBlockedError('existing_subscription', {subscription_status: 'active'});
+
+		expect(error.status).toBe(HttpStatus.FORBIDDEN);
+		expect(error.toJSON()).toEqual({
+			code: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			message: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			subscription_status: 'active',
+			reason: 'existing_subscription',
+		});
+	});
+
+	it('includes the blocking provider when one is given', () => {
+		const error = new PremiumPurchaseBlockedError('existing_subscription', {provider: 'app_store'});
+
+		expect(error.toJSON()).toEqual({
+			code: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			message: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			provider: 'app_store',
+			reason: 'existing_subscription',
+		});
+	});
+
+	it('defaults to the purchase_disabled reason with no provider', () => {
+		expect(new PremiumPurchaseBlockedError().toJSON()).toEqual({
+			code: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			message: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			reason: 'purchase_disabled',
 		});
 	});
 });

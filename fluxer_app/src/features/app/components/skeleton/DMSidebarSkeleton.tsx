@@ -10,7 +10,7 @@ import {
 import {SkeletonLine} from '@app/features/app/components/skeleton/SkeletonLine';
 import {createSkeletonRandomFromKey} from '@app/features/app/components/skeleton/SkeletonSeed';
 import {SkeletonEmphasis, SkeletonRadius} from '@app/features/app/components/skeleton/SkeletonStyle';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {flxElementClassName} from '@app/lib/react';
 import {observer} from 'mobx-react-lite';
@@ -66,7 +66,7 @@ function createDMActionSkeletonSpecs(
 	if (layout?.personalNotesVisible ?? true) {
 		specs.push({key: 'personal-notes', labelWidth: PERSONAL_NOTES_ACTION_LABEL_WIDTH});
 	}
-	if (layout?.premiumVisible ?? (!RuntimeConfig.isSelfHosted() && !isMobile)) {
+	if (layout?.premiumVisible ?? (shouldShowPremiumFeatures() && !isMobile)) {
 		specs.push({key: 'premium', labelWidth: PREMIUM_ACTION_LABEL_WIDTH});
 	}
 	return Object.freeze(specs);

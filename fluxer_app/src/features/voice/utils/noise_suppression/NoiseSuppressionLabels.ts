@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import NoiseSuppressionAvailability from '@app/features/voice/utils/noise_suppression/NoiseSuppressionAvailability';
 import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import {
+	readEffectiveNoiseSuppressionBackend,
+	readRequestedNoiseSuppressionBackend,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -47,7 +52,7 @@ const STEREO_MICROPHONE_DESCRIPTOR = msg({
 	comment: 'Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.',
 });
 const STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher.',
+	message: 'Sends both channels of a stereo microphone. Needs all processing off and a channel at 64 kbps or higher.',
 	comment: 'Description for the stereo microphone switch in the voice settings.',
 });
 
@@ -85,6 +90,17 @@ export function getNoiseSuppressionChoiceDescriptionDescriptor(
 	backend: VoiceNoiseSuppressionBackend,
 ): MessageDescriptor {
 	return DESCRIPTIONS[backend];
+}
+
+export function getNoiseSuppressionFallbackMessage(i18n: I18n): string | null {
+	const requested = readRequestedNoiseSuppressionBackend();
+	const fallback = NoiseSuppressionAvailability.getFallback(requested);
+	if (!fallback) return null;
+	const requestedLabel = getNoiseSuppressionChoiceLabel(i18n, requested);
+	const effectiveLabel = getNoiseSuppressionChoiceLabel(i18n, readEffectiveNoiseSuppressionBackend());
+	return fallback === 'loading'
+		? i18n._(msg`Using ${effectiveLabel} until ${requestedLabel} is ready.`)
+		: i18n._(msg`${requestedLabel} could not start. Using ${effectiveLabel} instead.`);
 }
 
 export {STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR, STEREO_MICROPHONE_DESCRIPTOR};

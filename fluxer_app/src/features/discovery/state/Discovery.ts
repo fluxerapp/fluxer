@@ -2,6 +2,7 @@
 
 import type {DiscoveryGuild} from '@app/features/discovery/commands/DiscoveryCommands';
 import * as DiscoveryCommands from '@app/features/discovery/commands/DiscoveryCommands';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 const DEFAULT_DISCOVERY_PAGE_SIZE = 36;
@@ -153,4 +154,8 @@ class Discovery {
 	}
 }
 
-export default new Discovery();
+const discovery = new Discovery();
+
+AccountScopedWork.registerCancellation(() => discovery.reset());
+
+export default discovery;

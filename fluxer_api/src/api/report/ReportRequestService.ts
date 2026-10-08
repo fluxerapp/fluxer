@@ -2,6 +2,7 @@
 
 import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import {createChannelID, createGuildID, createInviteCode, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {User} from '@app/api/models/User';
 import {type ReportStatus, reportStatusToString} from '@app/api/report/IReportRepository';
 import type {ReportService} from '@app/api/report/ReportService';
@@ -36,10 +37,15 @@ interface ReportRecord {
 export class ReportRequestService {
 	constructor(private reportService: ReportService) {}
 
-	async reportMessage({user, data}: ReportUserRequestContext<ReportMessageRequest>): Promise<ReportResponse> {
+	async reportMessage({
+		user,
+		viewer,
+		data,
+	}: ReportUserRequestContext<ReportMessageRequest> & {viewer: ThreadViewer}): Promise<ReportResponse> {
 		this.requireVerifiedAccount(user);
 		const report = await this.reportService.reportMessage(
 			this.createReporter(user),
+			viewer,
 			createChannelID(data.channel_id),
 			createMessageID(data.message_id),
 			data.category,

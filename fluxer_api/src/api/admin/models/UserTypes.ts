@@ -2,8 +2,7 @@
 
 import type {User} from '@app/api/models/User';
 import {getIpAddressReverse, lookupGeoip} from '@app/api/utils/IpUtils';
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {DEFERRED_PHONE_ON_COMMUNITY_JOIN} from '@fluxer/constants/src/UserConstants';
+import {AdminACLs, filterKnownAdminACLs} from '@fluxer/constants/src/AdminACLs';
 import type {UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {formatGeoipLocation} from '@pkgs/geoip/src/GeoipLookup';
@@ -20,6 +19,7 @@ export async function mapUserToAdminResponse(
 	const canViewEmail = !acls || hasAcl(acls, AdminACLs.USER_VIEW_EMAIL);
 	const canViewDob = !acls || hasAcl(acls, AdminACLs.USER_VIEW_DOB);
 	const canViewIp = !acls || hasAcl(acls, AdminACLs.USER_VIEW_IP);
+	const canViewAuditLog = !acls || hasAcl(acls, AdminACLs.AUDIT_LOG_VIEW);
 	const lastActiveIpReverse =
 		canViewIp && user.lastActiveIp ? await getIpAddressReverse(user.lastActiveIp, cacheService) : null;
 	let lastActiveLocation: string | null = null;
@@ -49,7 +49,6 @@ export async function mapUserToAdminResponse(
 		email: canViewEmail ? (user.email ?? null) : null,
 		email_verified: canViewEmail ? user.emailVerified : false,
 		email_bounced: canViewEmail ? user.emailBounced : false,
-		has_verified_phone: user.hasVerifiedPhone,
 		date_of_birth: canViewDob ? user.dateOfBirth : null,
 		locale: user.locale,
 		premium_type: user.premiumType,
@@ -57,15 +56,16 @@ export async function mapUserToAdminResponse(
 		premium_until: user.premiumUntil?.toISOString() ?? null,
 		premium_grace_ends_at: user.premiumGraceEndsAt?.toISOString() ?? null,
 		premium_lifetime_sequence: user.premiumLifetimeSequence ?? null,
-		suspicious_activity_flags: user.suspiciousActivityFlags,
-		phone_verification_deferred: ((user.suspiciousActivityFlags ?? 0) & DEFERRED_PHONE_ON_COMMUNITY_JOIN) !== 0,
 		temp_banned_until:
 			user.tempBannedUntil && user.tempBannedUntil.getTime() > Date.now() ? user.tempBannedUntil.toISOString() : null,
 		pending_deletion_at: user.pendingDeletionAt?.toISOString() ?? null,
 		pending_bulk_message_deletion_at: user.pendingBulkMessageDeletionAt?.toISOString() ?? null,
 		deletion_reason_code: user.deletionReasonCode,
 		deletion_public_reason: user.deletionPublicReason,
-		acls: user.acls ? Array.from(user.acls) : [],
+		deletion_audit_log_reason: canViewAuditLog ? user.deletionAuditLogReason : null,
+		deletion_scheduled_by: user.deletionScheduledBy?.toString() ?? null,
+		deletion_scheduled_at: user.deletionScheduledAt?.toISOString() ?? null,
+		acls: user.acls ? filterKnownAdminACLs(user.acls) : [],
 		traits: Array.from(user.traits).sort(),
 		has_totp: user.totpSecret !== null,
 		authenticator_types: user.authenticatorTypes ? Array.from(user.authenticatorTypes) : [],

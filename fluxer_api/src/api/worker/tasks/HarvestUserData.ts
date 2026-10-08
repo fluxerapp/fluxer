@@ -12,6 +12,7 @@ import {
 	throwIfArchiveTerminallyFailed,
 } from '@app/api/archive/ArchiveTask';
 import {makeDataPackageAttachmentCdnUrl} from '@app/api/attachment/AttachmentUrls';
+import {findRecoveryKitCreatedAt} from '@app/api/auth/AuthRecoveryKit';
 import {
 	type ChannelID,
 	createAttachmentID,
@@ -22,6 +23,7 @@ import {
 	type UserID,
 } from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import type {IThreadRepository} from '@app/api/channel/repositories/IThreadRepository';
 import {
 	isChannelEligible,
 	isTimestampInWindow,
@@ -29,6 +31,8 @@ import {
 	type SelfMessageFilter,
 } from '@app/api/channel/services/message/SelfMessageFilter';
 import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
+import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
+import {everEnabled, isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import type {Application} from '@app/api/models/Application';
@@ -44,10 +48,12 @@ import type {Payment} from '@app/api/models/Payment';
 import type {PushSubscription} from '@app/api/models/PushSubscription';
 import type {Relationship} from '@app/api/models/Relationship';
 import type {SavedMessage} from '@app/api/models/SavedMessage';
+import type {ThreadMember} from '@app/api/models/ThreadMember';
 import type {User} from '@app/api/models/User';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
 import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
+import {mapStorePurchaseToResponse} from '@app/api/store_billing/StoreBillingMappers';
 import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
@@ -124,14 +130,17 @@ interface UserDataJsonParams {
 	userSettings: UserSettings | null;
 	guildMemberships: Array<GuildMembershipEntry>;
 	guildSettings: Array<UserGuildSettings | null>;
+	threadMemberships: Array<ThreadMember>;
 	savedMessages: Array<SavedMessage>;
 	privateChannels: Array<Channel>;
 	favoriteMemes: Array<FavoriteMeme>;
 	pushSubscriptions: Array<PushSubscription>;
 	webAuthnCredentials: Array<WebAuthnCredential>;
 	mfaBackupCodes: Array<MfaBackupCode>;
+	recoveryKitCreatedAt: Date | null;
 	createdGiftCodes: Array<GiftCode>;
 	payments: Array<Payment>;
+	storePurchases: Array<StorePurchaseRow>;
 	oauthClients: Array<Application>;
 	connections: Array<UserConnectionRow>;
 	pinnedDms: Array<{
@@ -407,7 +416,22 @@ export async function harvestMessages(
 	return {channelMessagesMap, totalMessages};
 }
 
-function buildUserDataJson(params: UserDataJsonParams) {
+export async function collectThreadMemberships(
+	threads: Pick<IThreadRepository, 'listJoinedThreadIds' | 'getMember'>,
+	userId: UserID,
+	guildIds: ReadonlyArray<GuildID>,
+): Promise<Array<ThreadMember>> {
+	if (!everEnabled()) return [];
+	const perGuild = await mapWithConcurrency(guildIds, HARVEST_READ_CONCURRENCY, async (guildId) => {
+		if (!(await isTainted(guildId, {fresh: true}))) return [];
+		const threadIds = await threads.listJoinedThreadIds(userId, guildId);
+		const members = await Promise.all(threadIds.map((threadId) => threads.getMember(threadId, userId)));
+		return members.filter((member): member is ThreadMember => member !== null);
+	});
+	return perGuild.flat();
+}
+
+export function buildUserDataJson(params: UserDataJsonParams) {
 	const {
 		user,
 		userId,
@@ -418,14 +442,17 @@ function buildUserDataJson(params: UserDataJsonParams) {
 		userSettings,
 		guildMemberships,
 		guildSettings,
+		threadMemberships,
 		savedMessages,
 		privateChannels,
 		favoriteMemes,
 		pushSubscriptions,
 		webAuthnCredentials,
 		mfaBackupCodes,
+		recoveryKitCreatedAt,
 		createdGiftCodes,
 		payments,
+		storePurchases,
 		oauthClients,
 		connections,
 		pinnedDms,
@@ -442,7 +469,6 @@ function buildUserDataJson(params: UserDataJsonParams) {
 			email: user.email,
 			email_verified: user.emailVerified,
 			email_bounced: user.emailBounced,
-			has_verified_phone: user.hasVerifiedPhone,
 			avatar_hash: user.avatarHash,
 			avatar_url: user.avatarHash
 				? `${Config.endpoints.media}/avatars/${userId}/${user.avatarHash}.${user.avatarHash.startsWith('a_') ? 'gif' : 'png'}`
@@ -543,6 +569,8 @@ function buildUserDataJson(params: UserDataJsonParams) {
 					staff_dm_access_user_ids: Array.from(userSettings.staffDmAccessUserIds).map((id) => id.toString()),
 					synced_preferences: syncedPreferencesToJson(decodeSyncedPreferencesLenient(userSettings.syncedPreferences)),
 					profile_privacy: userSettings.profilePrivacy,
+					privacy_setup_version: userSettings.privacySetupVersion,
+					privacy_setup_completed_at: userSettings.privacySetupCompletedAt?.toISOString() ?? null,
 				}
 			: null,
 		guild_memberships: guildMemberships
@@ -573,6 +601,18 @@ function buildUserDataJson(params: UserDataJsonParams) {
 				suppress_roles: settings!.suppressRoles,
 				hide_muted_channels: settings!.hideMutedChannels,
 			})),
+		...(threadMemberships.length > 0
+			? {
+					thread_memberships: threadMemberships.map((member) => ({
+						thread_id: member.threadId.toString(),
+						guild_id: member.guildId.toString(),
+						parent_id: member.parentId.toString(),
+						join_timestamp: member.joinTimestamp.toISOString(),
+						flags: member.flags,
+						muted: member.muted,
+					})),
+				}
+			: {}),
 		saved_messages: savedMessages.map((msg) => ({
 			channel_id: msg.channelId.toString(),
 			message_id: msg.messageId.toString(),
@@ -619,6 +659,7 @@ function buildUserDataJson(params: UserDataJsonParams) {
 			consumed_count: mfaBackupCodes.filter((code) => code.consumed).length,
 			remaining_count: mfaBackupCodes.filter((code) => !code.consumed).length,
 		},
+		...(recoveryKitCreatedAt ? {recovery_kit: {created_at: recoveryKitCreatedAt.toISOString()}} : {}),
 		gift_codes_created: createdGiftCodes.map((gift) => ({
 			code: gift.code,
 			duration_months: gift.durationMonths,
@@ -630,6 +671,7 @@ function buildUserDataJson(params: UserDataJsonParams) {
 			stripe_payment_intent_id: gift.stripePaymentIntentId,
 		})),
 		payments: payments.map(mapPayment),
+		store_purchases: storePurchases.map(mapStorePurchaseToResponse),
 		oauth_applications: oauthClients.map(mapOAuthApplication),
 		connections: connections.map((connection) => ({
 			id: connection.connection_id,
@@ -775,6 +817,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 		storageService,
 		emailService,
 		instanceConfigRepository,
+		storeEntitlementService,
 	} = dependencies;
 	const adminRequestedBy = validated.adminRequestedBy ? BigInt(validated.adminRequestedBy) : null;
 	const isAdminArchive = adminRequestedBy !== null;
@@ -844,8 +887,10 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			pushSubscriptions,
 			webAuthnCredentials,
 			mfaBackupCodes,
+			recoveryKitCreatedAt,
 			createdGiftCodes,
 			payments,
+			storePurchases,
 			oauthClients,
 			connections,
 			pinnedDms,
@@ -863,8 +908,10 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			userRepository.listPushSubscriptions(userId),
 			userRepository.listWebAuthnCredentials(userId),
 			userRepository.listMfaBackupCodes(userId),
+			findRecoveryKitCreatedAt(userId),
 			userRepository.findGiftCodesByCreator(userId),
 			paymentRepository.findPaymentsByUserId(userId),
+			storeEntitlementService.listStorePurchases(userId),
 			applicationRepository.listApplicationsByOwner(userId),
 			connectionRepository.findByUserId(userId),
 			userRepository.getPinnedDmsWithDetails(userId),
@@ -881,6 +928,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 		const guildSettings = await mapWithConcurrency(guildIds, HARVEST_READ_CONCURRENCY, (guildId) =>
 			userRepository.findGuildSettings(userId, guildId),
 		);
+		const threadMemberships = await collectThreadMemberships(channelRepository.threads, userId, guildIds);
 		const {branding} = await instanceConfigRepository.getAppPublicConfig();
 		const userData = buildUserDataJson({
 			user,
@@ -892,14 +940,17 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			userSettings,
 			guildMemberships,
 			guildSettings,
+			threadMemberships,
 			savedMessages,
 			privateChannels,
 			favoriteMemes,
 			pushSubscriptions,
 			webAuthnCredentials,
 			mfaBackupCodes,
+			recoveryKitCreatedAt,
 			createdGiftCodes,
 			payments,
+			storePurchases,
 			oauthClients,
 			connections,
 			pinnedDms,

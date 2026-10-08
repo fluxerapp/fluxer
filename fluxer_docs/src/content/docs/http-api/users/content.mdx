@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Recent mentions and saved messages are private lists that only the account owning them can read. Further routes delete the messages the caller authored, one filtered and immediate, the other unfiltered and delayed by a day. Data harvests live on [Data harvests](/http-api/users/data-harvest/).
 
-These routes are user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`, and an account that has an outstanding required action with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+These routes are user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`.
 
 Every route except [Delete current user's messages](#delete-current-users-messages) reaches the main Gateway, and a Gateway failure returns 502 `BAD_GATEWAY`, 503 `SERVICE_UNAVAILABLE`, or 504 `GATEWAY_TIMEOUT`. [Save message](#save-message) resolves the channel before it writes, so a failure there stores nothing. The request still returns 204 when a [Saved Message Create](/gateway/events/#saved-message-create), [Saved Message Delete](/gateway/events/#saved-message-delete), or [Recent Mention Delete](/gateway/events/#recent-mention-delete) Dispatch fails to publish after the write.
 

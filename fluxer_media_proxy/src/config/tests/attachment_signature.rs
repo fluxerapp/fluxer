@@ -53,7 +53,7 @@ fn the_signature_mode_parses_every_variant_case_insensitively() {
 
 #[test]
 fn rejects_an_unknown_signature_mode() {
-    for raw in ["strict", "true", "1", "", "deny"] {
+    for raw in ["strict", "true", "1", "deny"] {
         let err =
             Config::load_from_iter(env_with(&[(MODE_KEY, raw), (SECRETS_KEY, FIRST)])).unwrap_err();
         assert_eq!(

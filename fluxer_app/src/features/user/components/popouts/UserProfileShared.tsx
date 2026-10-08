@@ -12,7 +12,7 @@ import {
 import {getCachedDateTimeFormat} from '@app/features/i18n/utils/IntlCache';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
-import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
+import {handleExternalLinkAuxClick, openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
@@ -237,6 +237,7 @@ export const UserProfileTimezoneInfo: React.FC<{profile: Profile}> = observer(({
 	const localTime = getCachedDateTimeFormat(locale, {
 		hour: 'numeric',
 		minute: '2-digit',
+		hour12: DateUtils.shouldUse12HourFormat(locale),
 		timeZone: 'UTC',
 	}).format(getDateAtOffset(now, timezoneOffset));
 	const offsetDifference = timezoneOffset - getViewerOffsetMinutes();
@@ -468,6 +469,7 @@ const ConnectionCard: React.FC<{
 				rel="noopener noreferrer"
 				className={styles.connectionCard}
 				onClick={(e) => onLinkClick(e, url)}
+				onAuxClick={(e) => handleExternalLinkAuxClick(e, url)}
 				data-flx="user.user-profile-shared.connection-card.connection-card.link-click"
 			>
 				{icon}
@@ -493,6 +495,7 @@ const ConnectionCard: React.FC<{
 						rel="noopener noreferrer"
 						className={styles.connectionExternalLink}
 						onClick={(e) => onLinkClick(e, url)}
+						onAuxClick={(e) => handleExternalLinkAuxClick(e, url)}
 						data-flx="user.user-profile-shared.connection-card.connection-external-link.link-click"
 					>
 						<ArrowSquareOutIcon
@@ -576,6 +579,7 @@ export const UserProfileConnections: React.FC<{
 										rel="noopener noreferrer"
 										className={styles.connectionCompactIcon}
 										onClick={(e) => handleConnectionClick(e, url)}
+										onAuxClick={(e) => handleExternalLinkAuxClick(e, url)}
 										data-flx="user.user-profile-shared.user-profile-connections.connection-compact-icon.connection-click"
 									>
 										{connection.type === ConnectionTypes.BLUESKY ? (

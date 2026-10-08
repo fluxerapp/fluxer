@@ -276,3 +276,36 @@ state_for_unavailability_transition_test(GuildId, NonStaffPid, StaffPid) ->
     }.
 
 -endif.
+
+guild_create_resend_carries_threads_only_for_viewers_test() ->
+    Tab = guild_thread_store:new(),
+    try
+        Data = guild_data_index:normalize_map(#{
+            <<"guild">> => #{<<"id">> => <<"77">>, <<"owner_id">> => <<"1">>},
+            <<"roles">> => [#{<<"id">> => <<"77">>, <<"permissions">> => <<"1024">>}],
+            <<"channels">> => [#{<<"id">> => <<"5">>, <<"type">> => 0}],
+            <<"members">> => [#{<<"user">> => #{<<"id">> => <<"9">>}, <<"roles">> => []}],
+            <<"emojis">> => [],
+            <<"stickers">> => []
+        }),
+        State = #{
+            id => 77,
+            data => Data#{thread_store => Tab, thread_gate => #{active => true, version => 1}}
+        },
+        Viewer = #{user_id => 9, pid => self(), thread_viewer => true},
+        ok = guild_availability:send_guild_create_to_session(Viewer, 77, State, []),
+        ?assert(maps:is_key(<<"threads">>, received_guild_create())),
+        ok = guild_availability:send_guild_create_to_session(
+            Viewer#{thread_viewer => false}, 77, State, []
+        ),
+        ?assertNot(maps:is_key(<<"threads">>, received_guild_create()))
+    after
+        guild_thread_store:destroy(Tab)
+    end.
+
+received_guild_create() ->
+    receive
+        {'$gen_cast', {dispatch, guild_create, GuildState}} when is_map(GuildState) ->
+            GuildState
+    after 1000 -> erlang:error(guild_create_not_sent)
+    end.

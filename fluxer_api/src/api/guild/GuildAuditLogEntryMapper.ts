@@ -2,8 +2,10 @@
 
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {AuditLogChange, GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
-import type {GuildAuditLog} from '@app/api/models/GuildAuditLog';
+import {GuildAuditLog} from '@app/api/models/GuildAuditLog';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
+import {THREAD_FEATURE_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import {THREAD_PERMISSIONS, ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
 import type {AuditLogOptions, GuildAuditLogEntryResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import {isValidSnowflake} from '@fluxer/snowflake/src/Snowflake';
 
@@ -69,6 +71,126 @@ const OVERWRITE_ACTIONS: ReadonlySet<AuditLogActionType> = new Set([
 	AuditLogActionType.CHANNEL_OVERWRITE_DELETE,
 ]);
 
+export const THREAD_SCOPED_AUDIT_OPTION = 'thread_scoped';
+
+export const THREAD_AUDIT_LOG_ACTION_TYPES: ReadonlySet<AuditLogActionType> = new Set([
+	AuditLogActionType.THREAD_CREATE,
+	AuditLogActionType.THREAD_UPDATE,
+	AuditLogActionType.THREAD_DELETE,
+]);
+
+const CHANNEL_TARGET_ACTIONS: ReadonlySet<AuditLogActionType> = new Set([
+	AuditLogActionType.CHANNEL_CREATE,
+	AuditLogActionType.CHANNEL_UPDATE,
+	AuditLogActionType.CHANNEL_DELETE,
+	...OVERWRITE_ACTIONS,
+]);
+
+const THREAD_FEATURE_CHANNEL_TYPE_STRINGS: ReadonlySet<string> = new Set(
+	[...THREAD_FEATURE_CHANNEL_TYPES].map((type) => type.toString()),
+);
+
+export function collectAuditLogChannelIds(log: GuildAuditLog): Array<string> {
+	const ids: Array<string> = [];
+	if (CHANNEL_TARGET_ACTIONS.has(log.actionType) && log.targetId) ids.push(log.targetId);
+	const channelId = log.options.get('channel_id');
+	if (channelId) ids.push(channelId);
+	return ids;
+}
+
+export function isThreadScopedAuditLog(log: GuildAuditLog, gatedChannelIds: ReadonlySet<string>): boolean {
+	if (THREAD_AUDIT_LOG_ACTION_TYPES.has(log.actionType) || log.options.has(THREAD_SCOPED_AUDIT_OPTION)) return true;
+	if (
+		(log.actionType === AuditLogActionType.CHANNEL_CREATE ||
+			log.actionType === AuditLogActionType.CHANNEL_UPDATE ||
+			log.actionType === AuditLogActionType.CHANNEL_DELETE) &&
+		THREAD_FEATURE_CHANNEL_TYPE_STRINGS.has(log.options.get('type') ?? '')
+	) {
+		return true;
+	}
+	return collectAuditLogChannelIds(log).some((id) => gatedChannelIds.has(id));
+}
+
+const THREAD_PERMISSION_CHANGE_KEYS: ReadonlyMap<AuditLogActionType, ReadonlySet<string>> = new Map([
+	[AuditLogActionType.ROLE_CREATE, new Set(['permissions'])],
+	[AuditLogActionType.ROLE_UPDATE, new Set(['permissions', 'permissions_diff'])],
+	[AuditLogActionType.ROLE_DELETE, new Set(['permissions'])],
+	...[...OVERWRITE_ACTIONS].map((action) => [action, new Set(['allow', 'deny'])] as const),
+]);
+
+const THREAD_SURFACE_CHANGE_KEYS: ReadonlySet<string> = new Set([
+	'thread_metadata',
+	'applied_tags',
+	'available_tags',
+	'default_auto_archive_duration',
+	'default_thread_rate_limit_per_user',
+	'default_reaction_emoji',
+	'default_sort_order',
+	'default_forum_layout',
+	'default_tag_setting',
+	'message_count',
+	'total_message_sent',
+	'member_ids_preview',
+	'member_count',
+	'flags',
+]);
+
+const CHANNEL_ACTIONS: ReadonlySet<AuditLogActionType> = new Set([
+	AuditLogActionType.CHANNEL_CREATE,
+	AuditLogActionType.CHANNEL_UPDATE,
+	AuditLogActionType.CHANNEL_DELETE,
+]);
+
+const THREAD_PERMISSION_NAMES: ReadonlySet<string> = new Set(Object.keys(ThreadPermissionFlags));
+
+function stripThreadBitsValue(value: unknown): unknown {
+	if (typeof value === 'string' && /^\d{1,20}$/.test(value)) return (BigInt(value) & ~THREAD_PERMISSIONS).toString();
+	if (!isPermissionsDiff(value)) return value;
+	const added = value.added.filter((name) => !THREAD_PERMISSION_NAMES.has(name));
+	const removed = value.removed.filter((name) => !THREAD_PERMISSION_NAMES.has(name));
+	if (added.length === value.added.length && removed.length === value.removed.length) return value;
+	return added.length > 0 || removed.length > 0 ? {added, removed} : undefined;
+}
+
+function isPermissionsDiff(value: unknown): value is {added: Array<string>; removed: Array<string>} {
+	return (
+		typeof value === 'object' &&
+		value !== null &&
+		Array.isArray((value as {added?: unknown}).added) &&
+		Array.isArray((value as {removed?: unknown}).removed)
+	);
+}
+
+export function maskThreadAuditLog(log: GuildAuditLog): GuildAuditLog {
+	if (!log.changes) return log;
+	const permissionKeys = THREAD_PERMISSION_CHANGE_KEYS.get(log.actionType);
+	const surfaceKeys = CHANNEL_ACTIONS.has(log.actionType) ? THREAD_SURFACE_CHANGE_KEYS : null;
+	if (!permissionKeys && !surfaceKeys) return log;
+	let changed = false;
+	const masked: GuildAuditLogChange = [];
+	for (const change of log.changes) {
+		if (surfaceKeys?.has(change.key)) {
+			changed = true;
+			continue;
+		}
+		if (!permissionKeys?.has(change.key)) {
+			masked.push(change);
+			continue;
+		}
+		const next: AuditLogChange = {key: change.key};
+		if ('old_value' in change) next.old_value = stripThreadBitsValue(change.old_value);
+		if ('new_value' in change) next.new_value = stripThreadBitsValue(change.new_value);
+		changed ||= next.old_value !== change.old_value || next.new_value !== change.new_value;
+		if (next.old_value === next.new_value) {
+			changed = true;
+			continue;
+		}
+		masked.push(next);
+	}
+	if (!changed) return log;
+	return new GuildAuditLog({...log.toRow(), changes: masked.length > 0 ? JSON.stringify(masked) : null});
+}
+
 const SNOWFLAKE_PATTERN = /^\d{1,20}$/;
 
 export function isNoopGuildAuditLog(
@@ -91,7 +213,7 @@ export function isNoopGuildAuditLog(
 export function mapGuildAuditLogEntry(log: GuildAuditLog): StoredGuildAuditLogEntryResponse {
 	return {
 		id: log.logId.toString(),
-		action_type: log.actionType,
+		action_type: log.actionType as GuildAuditLogEntryResponse['action_type'],
 		user_id: log.userId.toString(),
 		target_id: log.targetId,
 		reason: resolveEntryReason(log),

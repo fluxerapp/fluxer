@@ -2,6 +2,10 @@
 
 import {createRequire} from 'node:module';
 import {createChildLogger} from '@electron/common/Logger';
+import {getDesktopLocalAppProtocol} from '@electron/main/LocalAppProtocol';
+import {httpOriginSource} from '@electron/main/LocalAppRuntimePlans';
+import {isLocalAppURL} from '@electron/main/LocalAppURL';
+import {isOfficialInstanceHost} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 import type {
 	create as nativeCreateFn,
 	get as nativeGetFn,
@@ -107,9 +111,19 @@ interface PasskeyCeremonyContext {
 
 interface PasskeyRequestContext {
 	pin?: string;
+	instanceKey?: string;
 }
 
 const MAX_PIN_LENGTH = 63;
+const MAX_INSTANCE_KEY_LENGTH = 2048;
+
+const sanitizeInstanceKey = (context: PasskeyRequestContext | undefined): string | null => {
+	const instanceKey = context?.instanceKey;
+	if (typeof instanceKey !== 'string' || instanceKey.length === 0 || instanceKey.length > MAX_INSTANCE_KEY_LENGTH) {
+		return null;
+	}
+	return instanceKey;
+};
 
 const sanitizePin = (context: PasskeyRequestContext | undefined): string | undefined => {
 	const pin = context?.pin;
@@ -136,6 +150,13 @@ interface NativeWebAuthnAddon {
 	get: typeof nativeGetFn;
 	getBackendInfo?: () => unknown;
 	isSupported: typeof nativeIsSupportedFn;
+}
+
+class UntrustedPasskeyCeremonyOriginError extends Error {
+	public constructor(webAppOrigin: string, apiOrigin: string) {
+		super(`Instance web app origin ${webAppOrigin} is not served by its API origin ${apiOrigin}`);
+		this.name = 'UntrustedPasskeyCeremonyOriginError';
+	}
 }
 
 const requireOrigin = (origin: string | undefined): string => {
@@ -212,13 +233,35 @@ function getPasskeyProvider(): PasskeyProvider {
 	return passkeyProvider;
 }
 
-const eventOrigin = (event: IpcMainInvokeEvent): string | undefined => {
-	const frameUrl = event.senderFrame?.url || event.sender.getURL();
-	try {
-		return new URL(frameUrl).origin;
-	} catch {
-		return undefined;
+const sharesInstanceSite = (webAppOrigin: string, apiOrigin: string): boolean => {
+	if (new URL(webAppOrigin).hostname === new URL(apiOrigin).hostname) {
+		return true;
 	}
+	return isOfficialInstanceHost(webAppOrigin) && isOfficialInstanceHost(apiOrigin);
+};
+
+const instanceWebAppOrigin = (instanceKey: string | null): string | null => {
+	const protocol = getDesktopLocalAppProtocol();
+	const plan = instanceKey == null ? protocol.getActivePlan() : protocol.findPlanForRoute(instanceKey);
+	const endpoints = plan?.endpoints;
+	if (endpoints == null) {
+		return null;
+	}
+	const webAppOrigin = httpOriginSource(endpoints.webAppEndpoint);
+	const apiOrigin = httpOriginSource(endpoints.apiEndpoint);
+	if (webAppOrigin == null || apiOrigin == null) {
+		return null;
+	}
+	if (!sharesInstanceSite(webAppOrigin, apiOrigin)) {
+		throw new UntrustedPasskeyCeremonyOriginError(webAppOrigin, apiOrigin);
+	}
+	return webAppOrigin;
+};
+
+const eventOrigin = (event: IpcMainInvokeEvent, instanceKey: string | null): string | undefined => {
+	const frameUrl = event.senderFrame?.url || event.sender.getURL();
+	const origin = isLocalAppURL(frameUrl) ? instanceWebAppOrigin(instanceKey) : httpOriginSource(frameUrl);
+	return origin ?? undefined;
 };
 
 const eventWindowHandle = (event: IpcMainInvokeEvent): Buffer | undefined => {
@@ -234,7 +277,7 @@ const eventCeremonyContext = (
 	event: IpcMainInvokeEvent,
 	requestContext: PasskeyRequestContext | undefined,
 ): PasskeyCeremonyContext => ({
-	origin: eventOrigin(event),
+	origin: eventOrigin(event, sanitizeInstanceKey(requestContext)),
 	windowHandle: eventWindowHandle(event),
 	pin: sanitizePin(requestContext),
 });

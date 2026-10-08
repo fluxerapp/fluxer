@@ -2,9 +2,11 @@
 
 import type {ChannelMoveOperation} from '@app/features/app/components/layout/utils/ChannelMoveOperation';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import type {ChannelWire} from '@app/features/channel/models/Channel';
 import Guilds from '@app/features/guild/state/Guilds';
 import {createRoleHoistOrderPayload, createRoleOrderPayload} from '@app/features/guild/utils/GuildRoleOrderUtils';
 import Invites from '@app/features/invite/state/Invites';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
@@ -38,6 +40,7 @@ interface GuildAuditLogFetchResponse {
 	audit_log_entries: Array<GuildAuditLogEntryResponse>;
 	users: Array<UserPartial>;
 	webhooks: Array<AuditLogWebhookResponse>;
+	threads?: Array<ChannelWire>;
 }
 
 type GuildCreateParams = Pick<Guild, 'name'> & {
@@ -64,6 +67,7 @@ export interface GuildBan {
 		tag: string;
 		discriminator: string;
 		avatar: string | null;
+		bot?: boolean;
 	};
 	reason: string | null;
 	moderator_id: string;
@@ -359,7 +363,7 @@ export async function fetchGuildInvites(guildId: string): Promise<Array<Invite>>
 		Invites.handleGuildInvitesFetchPending(guildId);
 		const response = await http.get<Array<Invite>>(Endpoints.GUILD_INVITES(guildId));
 		const invites = response.body;
-		Invites.handleGuildInvitesFetchSuccess(guildId, invites);
+		Invites.handleGuildInvitesFetchSuccess(guildId, invites, currentInstanceTarget());
 		return invites;
 	} catch (error) {
 		logger.error(`Failed to fetch invites for guild ${guildId}:`, error);

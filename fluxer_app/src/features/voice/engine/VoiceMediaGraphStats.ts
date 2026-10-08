@@ -11,7 +11,6 @@ import {
 	voiceMediaGraphStatsTrackKey,
 } from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
 import type {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2';
 
 const VOICE_MEDIA_GRAPH_STATS_TRACK_LIMIT = 1024;
@@ -77,9 +76,7 @@ function perTrackStatToInfo(track: VoiceEngineV2PerTrackStats): VoiceMediaGraphP
 	if (track.kind !== 'video') return null;
 	const width = track.frameWidth ?? track.sourceFrameWidth;
 	const height = track.frameHeight ?? track.sourceFrameHeight;
-	const fps = ScreenShareDeliveryRollout.enabled
-		? (track.effectiveFramesPerSecond ?? track.framesPerSecond)
-		: (track.effectiveFramesPerSecond ?? track.framesPerSecond ?? track.sourceFramesPerSecond);
+	const fps = track.effectiveFramesPerSecond ?? track.framesPerSecond;
 	const info: VoiceMediaGraphPartialTrackInfo = {};
 	if (isPositiveDimension(width) && isPositiveDimension(height)) {
 		info.width = width;
@@ -193,9 +190,7 @@ function observationToPartialTrackInfo(
 ): VoiceMediaGraphPartialTrackInfo | null {
 	const width = observation.width ?? observation.sourceWidth ?? undefined;
 	const height = observation.height ?? observation.sourceHeight ?? undefined;
-	const fps = ScreenShareDeliveryRollout.enabled
-		? (observation.fps ?? undefined)
-		: (observation.fps ?? observation.sourceFps ?? undefined);
+	const fps = observation.fps ?? undefined;
 	const info: VoiceMediaGraphPartialTrackInfo = {};
 	if (isPositiveDimension(width) && isPositiveDimension(height)) {
 		info.width = width;

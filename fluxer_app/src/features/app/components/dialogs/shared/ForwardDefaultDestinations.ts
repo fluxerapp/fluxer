@@ -29,7 +29,7 @@ interface ForwardOriginChannel {
 interface BuildForwardDefaultDestinationsRequest {
 	readonly frequentIds: ReadonlyArray<string>;
 	readonly history: ReadonlyArray<string>;
-	readonly isValid: (row: ForwardRowIdentity) => boolean;
+	readonly accepts: (row: ForwardRowIdentity) => boolean;
 	readonly mode: ForwardResultType | null;
 	readonly origin: ForwardDestination | null;
 	readonly pinned: ReadonlyArray<ForwardDestination>;
@@ -51,7 +51,7 @@ export function resolveForwardOrigin(
 export function buildForwardDefaultDestinations({
 	frequentIds,
 	history,
-	isValid,
+	accepts,
 	mode,
 	origin,
 	pinned,
@@ -64,7 +64,7 @@ export function buildForwardDefaultDestinations({
 		...history.slice(0, HISTORY_LIMIT).map((channelId) => resolveChannel(channelId)),
 		...frequentIds.slice(0, FREQUENT_LIMIT).map((channelId) => resolveChannel(channelId)),
 	];
-	const rows = candidates.filter((row): row is ForwardRowIdentity => row != null && isValid(row));
+	const rows = candidates.filter((row): row is ForwardRowIdentity => row != null && accepts(row));
 	const originSelected =
 		origin != null && selected.some((destination) => destination.type === origin.type && destination.id === origin.id);
 	const hiddenIds = origin == null || originSelected ? [] : [origin.id];
@@ -79,10 +79,10 @@ export function buildForwardDefaultDestinations({
 
 export function filterForwardSearchRows(
 	results: ReadonlyArray<ForwardRowIdentity>,
-	isValid: (row: ForwardRowIdentity) => boolean,
+	accepts: (row: ForwardRowIdentity) => boolean,
 ): ReadonlyArray<ForwardDestinationRow> {
 	return dedupeRows(
-		results.filter((result) => isValid(result)),
+		results.filter((result) => accepts(result)),
 		[],
 	);
 }

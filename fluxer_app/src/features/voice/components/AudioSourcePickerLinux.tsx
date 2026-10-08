@@ -15,8 +15,10 @@ import {
 	type LinuxAudioSourceFilterOptions,
 	type LinuxAudioSourceItem,
 	linuxAudioSourceItemKey,
+	linuxAudioSourcePatternsEqual,
 	mapLinuxAudioNodeToItems,
 	uniqueLinuxAudioSourceItems,
+	withSelectedLinuxAudioSources,
 } from '@app/features/voice/utils/LinuxAudioSourceRules';
 import {
 	formatScreenShareAudioSummary,
@@ -78,15 +80,8 @@ const EMPTY_SNAPSHOT: AudioSourceSnapshot = {
 	error: null,
 };
 
-function nodesEqual(a: VirtmicNode, b: VirtmicNode): boolean {
-	const keysA = Object.keys(a);
-	const keysB = Object.keys(b);
-	if (keysA.length !== keysB.length) return false;
-	return keysA.every((key) => a[key] === b[key]);
-}
-
 function isItemSelected(value: VirtmicNode, sources: Array<VirtmicNode>): boolean {
-	return sources.some((source) => nodesEqual(source, value));
+	return sources.some((source) => linuxAudioSourcePatternsEqual(source, value));
 }
 
 async function fetchAudioSources(options: LinuxAudioSourceFilterOptions): Promise<AudioSourceSnapshot> {
@@ -188,7 +183,7 @@ export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerL
 		(item: LinuxAudioSourceItem) => {
 			const isSelected = isItemSelected(item.value, includeSources);
 			const nextSources = isSelected
-				? includeSources.filter((source) => !nodesEqual(source, item.value))
+				? includeSources.filter((source) => !linuxAudioSourcePatternsEqual(source, item.value))
 				: [...includeSources, item.value];
 			VoiceSettingsCommands.update({
 				screenShareAudioSourceMode: nextSources.length > 0 ? 'specific' : 'system',
@@ -203,7 +198,7 @@ export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerL
 		(item: LinuxAudioSourceItem) => {
 			const isSelected = isItemSelected(item.value, excludeSources);
 			const nextSources = isSelected
-				? excludeSources.filter((source) => !nodesEqual(source, item.value))
+				? excludeSources.filter((source) => !linuxAudioSourcePatternsEqual(source, item.value))
 				: [...excludeSources, item.value];
 			VoiceSettingsCommands.update({
 				screenShareAudioExcludeSources: nextSources,
@@ -230,6 +225,8 @@ export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerL
 		usesDeviceMicrophone,
 	});
 	const showsWideSourceLists = !offersWindowScope || resolvedScope === 'system';
+	const includeItems = withSelectedLinuxAudioSources(snapshot.items, includeSources);
+	const excludeItems = withSelectedLinuxAudioSources(snapshot.items, excludeSources);
 	const wideSourceIsSelected = isDeviceShare ? usesDeviceMicrophone : sourceMode === 'system';
 	if (!snapshot.available && !snapshot.loading) {
 		return null;
@@ -269,12 +266,12 @@ export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerL
 							</MenuItemRadio>
 						)}
 					</MenuGroup>
-					{showsWideSourceLists && snapshot.items.length > 0 && (
+					{showsWideSourceLists && includeItems.length > 0 && (
 						<MenuGroup data-flx="voice.audio-source-picker-linux.audio-source-picker-linux-submenu.menu-group--2">
 							<MenuGroupLabel data-flx="voice.audio-source-picker-linux.audio-source-picker-linux-submenu.group-label.include-apps">
 								{i18n._(INCLUDE_APPS_DESCRIPTOR)}
 							</MenuGroupLabel>
-							{snapshot.items.map((item) => (
+							{includeItems.map((item) => (
 								<CheckboxItem
 									key={linuxAudioSourceItemKey(item)}
 									checked={isItemSelected(item.value, includeSources)}
@@ -286,12 +283,12 @@ export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerL
 							))}
 						</MenuGroup>
 					)}
-					{!isDeviceShare && showsWideSourceLists && sourceMode === 'system' && snapshot.items.length > 0 && (
+					{!isDeviceShare && showsWideSourceLists && sourceMode === 'system' && excludeItems.length > 0 && (
 						<MenuGroup data-flx="voice.audio-source-picker-linux.audio-source-picker-linux-submenu.menu-group--3">
 							<MenuGroupLabel data-flx="voice.audio-source-picker-linux.audio-source-picker-linux-submenu.group-label.exclude-from-system">
 								{i18n._(EXCLUDE_FROM_SYSTEM_DESCRIPTOR)}
 							</MenuGroupLabel>
-							{snapshot.items.map((item) => (
+							{excludeItems.map((item) => (
 								<CheckboxItem
 									key={`exclude-${linuxAudioSourceItemKey(item)}`}
 									checked={isItemSelected(item.value, excludeSources)}

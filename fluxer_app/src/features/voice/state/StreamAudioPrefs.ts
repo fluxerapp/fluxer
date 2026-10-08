@@ -2,6 +2,7 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {clampVoiceVolumePercent, recalibrateStoredVoiceVolumePercent} from '@app/features/voice/utils/VoiceVolumeUtils';
 import {
 	STREAM_AUDIO_PREFS_PRUNE_INTERVAL_MS,
@@ -39,7 +40,7 @@ class StreamAudioPrefs {
 			},
 			{autoBind: true},
 		);
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {

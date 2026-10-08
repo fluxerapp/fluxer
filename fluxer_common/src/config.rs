@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::{env, path::Path};
+use std::{env, fs, path::Path};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum GeoipSourceConfig {
@@ -9,10 +9,8 @@ pub enum GeoipSourceConfig {
     },
     S3 {
         maxmind_db_path: String,
-        maxmind_asn_db_path: Option<String>,
         s3_bucket: String,
         s3_key: String,
-        s3_asn_key: Option<String>,
     },
 }
 
@@ -36,7 +34,7 @@ pub struct GeoipS3Config {
 }
 
 pub fn read_geoip_s3_config_from_env(source: &GeoipSourceConfig) -> Option<GeoipS3Config> {
-    read_geoip_s3_config(source, |name| env::var(name).ok())
+    read_geoip_s3_config(source, env_value)
 }
 
 fn read_geoip_s3_config<F>(source: &GeoipSourceConfig, mut read_var: F) -> Option<GeoipS3Config>
@@ -82,33 +80,10 @@ fn parse_geoip_s3_source_config(raw_value: &str, service_name: &str) -> GeoipSou
     }
     let maxmind_db_path =
         geoip_runtime_path(&resolve_geoip_download_path(&url, raw_value), service_name);
-    let s3_asn_key = url
-        .query_pairs()
-        .find(|(key, _)| key == "asn_key")
-        .map(|(_, value)| value.into_owned());
-    let maxmind_asn_db_path = s3_asn_key.as_ref().map(|asn_key| {
-        let configured_path = url
-            .query_pairs()
-            .find(|(key, _)| key == "asn_download_path")
-            .map(|(_, value)| require_absolute_path(value.as_ref(), "asn_download_path", raw_value))
-            .unwrap_or_else(|| {
-                let directory = Path::new(&maxmind_db_path)
-                    .parent()
-                    .map(Path::to_path_buf)
-                    .unwrap_or_default();
-                directory
-                    .join(Path::new(asn_key).file_name().unwrap_or_default())
-                    .to_string_lossy()
-                    .into_owned()
-            });
-        geoip_runtime_path(&configured_path, service_name)
-    });
     GeoipSourceConfig::S3 {
         maxmind_db_path,
-        maxmind_asn_db_path,
         s3_bucket,
         s3_key,
-        s3_asn_key,
     }
 }
 
@@ -148,26 +123,75 @@ fn percent_decode(value: &str) -> String {
         .unwrap_or_else(|_| value.to_owned())
 }
 
-pub fn read_env(name: &str, fallback: &str) -> String {
-    env::var(name).unwrap_or_else(|_| fallback.to_owned())
+pub fn env_value(name: &str) -> Option<String> {
+    resolve_env_value(name, |key| env::var(key).ok()).unwrap_or_else(|error| panic!("{error}"))
 }
 
-pub fn read_env_preferred(names: &[&str], fallback: &str) -> String {
-    names
+pub fn resolve_env_value<F>(name: &str, get: F) -> Result<Option<String>, String>
+where
+    F: Fn(&str) -> Option<String>,
+{
+    let non_blank = |value: Option<String>| value.filter(|value| !value.trim().is_empty());
+    let value = non_blank(get(name));
+    let Some(path) = non_blank(get(&format!("{name}_FILE"))) else {
+        return Ok(value);
+    };
+    if value.is_some() {
+        return Err(format!("{name} and {name}_FILE are both set, set only one"));
+    }
+    let contents = fs::read_to_string(&path)
+        .map_err(|error| format!("{name}_FILE could not read {path} ({error})"))?;
+    let contents = contents
+        .strip_suffix('\n')
+        .map_or(contents.as_str(), |rest| {
+            rest.strip_suffix('\r').unwrap_or(rest)
+        });
+    Ok(non_blank(Some(contents.to_owned())))
+}
+
+pub fn resolve_env_files<I>(vars: I) -> Result<Vec<(String, String)>, String>
+where
+    I: IntoIterator<Item = (String, String)>,
+{
+    let vars: Vec<(String, String)> = vars.into_iter().collect();
+    let get = |key: &str| {
+        vars.iter()
+            .find_map(|(name, value)| (name == key).then(|| value.clone()))
+    };
+    let mut resolved = Vec::new();
+    for (key, _) in &vars {
+        let Some(name) = key
+            .strip_suffix("_FILE")
+            .filter(|name| name.starts_with("FLUXER_"))
+        else {
+            continue;
+        };
+        if let Some(value) = resolve_env_value(name, get)? {
+            resolved.push((name.to_owned(), value));
+        }
+    }
+    let rest: Vec<(String, String)> = vars
         .iter()
-        .find_map(|name| env::var(name).ok().filter(|value| !value.trim().is_empty()))
-        .unwrap_or_else(|| fallback.to_owned())
+        .filter(|(key, _)| !resolved.iter().any(|(name, _)| name == key))
+        .cloned()
+        .collect();
+    resolved.extend(rest);
+    Ok(resolved)
+}
+
+pub fn read_env(name: &str, fallback: &str) -> String {
+    env_value(name).unwrap_or_else(|| fallback.to_owned())
 }
 
 pub fn read_first_env(names: &[&str], fallback: &str) -> String {
     names
         .iter()
-        .find_map(|name| env::var(name).ok())
+        .find_map(|name| env_value(name))
         .unwrap_or_else(|| fallback.to_owned())
 }
 
-pub fn read_bool_env(names: &[&str], fallback: bool) -> bool {
-    let Some(value) = names.iter().find_map(|name| env::var(name).ok()) else {
+pub fn read_bool_env(name: &str, fallback: bool) -> bool {
+    let Some(value) = env_value(name) else {
         return fallback;
     };
     matches!(
@@ -176,11 +200,10 @@ pub fn read_bool_env(names: &[&str], fallback: bool) -> bool {
     )
 }
 
-pub fn non_empty_env(name: &str) -> Option<String> {
-    env::var(name)
-        .ok()
-        .map(|v| v.trim().to_owned())
-        .filter(|v| !v.is_empty())
+pub fn env_filter(default: &str) -> tracing_subscriber::EnvFilter {
+    env_value("RUST_LOG")
+        .and_then(|filter| tracing_subscriber::EnvFilter::try_new(filter).ok())
+        .unwrap_or_else(|| tracing_subscriber::EnvFilter::new(default))
 }
 
 pub fn normalize_base_path(value: &str) -> String {
@@ -320,7 +343,7 @@ pub fn normalize_public_endpoint(url: &str, base_domain: &str, public_port: Opti
 }
 
 pub fn try_normalize_public_endpoint_from_env(url: &str) -> anyhow::Result<String> {
-    let (base_domain, public_port) = resolve_public_domain_and_port(|name| env::var(name).ok())?;
+    let (base_domain, public_port) = resolve_public_domain_and_port(env_value)?;
     Ok(normalize_public_endpoint(url, &base_domain, public_port))
 }
 
@@ -357,19 +380,15 @@ mod tests {
     #[test]
     fn parses_s3_geoip_source() {
         let source = parse_geoip_source_config(
-            "s3://geoip/GeoLite2-City.mmdb?download_path=/tmp/city.mmdb&asn_key=GeoLite2-ASN.mmdb",
+            "s3://geoip/GeoLite2-City.mmdb?download_path=/tmp/city.mmdb",
             "test_svc",
         );
         assert_eq!(
             source,
             GeoipSourceConfig::S3 {
                 maxmind_db_path: "/tmp/fluxer/geoip/test_svc/city.mmdb".to_owned(),
-                maxmind_asn_db_path: Some(
-                    "/tmp/fluxer/geoip/test_svc/GeoLite2-ASN.mmdb".to_owned()
-                ),
                 s3_bucket: "geoip".to_owned(),
                 s3_key: "GeoLite2-City.mmdb".to_owned(),
-                s3_asn_key: Some("GeoLite2-ASN.mmdb".to_owned()),
             }
         );
     }
@@ -642,14 +661,14 @@ mod tests {
         let vectors = vectors.as_array().expect("vectors are an array");
         assert!(!vectors.is_empty());
         for vector in vectors {
-            let url = vector["url"].as_str().expect("vector carries a url");
+            let url = vector["url"].as_str().expect("vector has a url");
             let base_domain = vector["base_domain"]
                 .as_str()
-                .expect("vector carries a base domain");
+                .expect("vector has a base domain");
             let public_port = vector["public_port"].as_u64().map(|port| port as u16);
             let expected = vector["normalized"]
                 .as_str()
-                .expect("vector carries a normalized url");
+                .expect("vector has a normalized url");
             assert_eq!(
                 expected,
                 normalize_public_endpoint(url, base_domain, public_port),
@@ -794,6 +813,145 @@ mod tests {
         let (domain, port) = resolve_public_domain_and_port(reader(&[])).expect("empty resolves");
         assert_eq!("", domain);
         assert_eq!(None, port);
+    }
+
+    fn secret_file(dir: &tempfile::TempDir, name: &str, contents: &str) -> String {
+        let path = dir.path().join(name);
+        fs::write(&path, contents).expect("write secret file");
+        path.to_string_lossy().into_owned()
+    }
+
+    fn pairs_reader(pairs: Vec<(String, String)>) -> impl Fn(&str) -> Option<String> {
+        move |key| {
+            pairs
+                .iter()
+                .find_map(|(name, value)| (name == key).then(|| value.clone()))
+        }
+    }
+
+    #[test]
+    fn env_value_reads_name_file_when_name_is_blank() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = secret_file(&dir, "secret", "from-file\r\n");
+        let unset = pairs_reader(vec![("X_FILE".to_owned(), path.clone())]);
+        let blank = pairs_reader(vec![
+            ("X".to_owned(), " ".to_owned()),
+            ("X_FILE".to_owned(), path),
+        ]);
+        assert_eq!(
+            Ok(Some("from-file".to_owned())),
+            resolve_env_value("X", unset)
+        );
+        assert_eq!(
+            Ok(Some("from-file".to_owned())),
+            resolve_env_value("X", blank)
+        );
+    }
+
+    #[test]
+    fn env_value_trims_only_one_trailing_newline() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let pem = secret_file(&dir, "pem", "-----BEGIN-----\nabc\n-----END-----\n\n");
+        let empty = secret_file(&dir, "empty", "\n");
+        assert_eq!(
+            Ok(Some("-----BEGIN-----\nabc\n-----END-----\n".to_owned())),
+            resolve_env_value("X", pairs_reader(vec![("X_FILE".to_owned(), pem)]))
+        );
+        assert_eq!(
+            Ok(None),
+            resolve_env_value("X", pairs_reader(vec![("X_FILE".to_owned(), empty)]))
+        );
+    }
+
+    #[test]
+    fn env_value_rejects_name_and_name_file_together() {
+        let reader = pairs_reader(vec![
+            ("X".to_owned(), "direct".to_owned()),
+            ("X_FILE".to_owned(), "/run/secrets/x".to_owned()),
+        ]);
+        assert_eq!(
+            Err("X and X_FILE are both set, set only one".to_owned()),
+            resolve_env_value("X", reader)
+        );
+    }
+
+    #[test]
+    fn env_value_names_the_file_when_it_is_missing() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("missing").to_string_lossy().into_owned();
+        let error = resolve_env_value("X", pairs_reader(vec![("X_FILE".to_owned(), path.clone())]))
+            .expect_err("missing file fails");
+        assert!(error.starts_with(&format!("X_FILE could not read {path} (")));
+    }
+
+    #[test]
+    fn resolve_env_files_replaces_fluxer_names_with_file_values() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = secret_file(&dir, "secret", "from-file\n");
+        let missing = dir.path().join("missing").to_string_lossy().into_owned();
+        let resolved = resolve_env_files(vec![
+            ("FLUXER_X".to_owned(), String::new()),
+            ("FLUXER_X_FILE".to_owned(), path),
+            ("FLUXER_Y".to_owned(), "plain".to_owned()),
+            ("FLUXER_Y_FILE".to_owned(), String::new()),
+            ("SSL_CERT_FILE".to_owned(), missing),
+        ])
+        .expect("resolves");
+        let values = |key: &str| {
+            resolved
+                .iter()
+                .filter(|(name, _)| name == key)
+                .map(|(_, value)| value.as_str())
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(vec!["from-file"], values("FLUXER_X"));
+        assert_eq!(vec!["plain"], values("FLUXER_Y"));
+        assert!(
+            resolve_env_files(vec![
+                ("FLUXER_X".to_owned(), "direct".to_owned()),
+                ("FLUXER_X_FILE".to_owned(), "/run/secrets/x".to_owned()),
+            ])
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn a_blank_value_reads_as_unset() {
+        unsafe {
+            env::set_var("FLUXER_COMMON_TEST_BLANK_EMPTY", "");
+            env::set_var("FLUXER_COMMON_TEST_BLANK_SPACES", "  \t");
+            env::set_var("FLUXER_COMMON_TEST_BLANK_SET", "value");
+            env::set_var("FLUXER_COMMON_TEST_BLANK_TRUE", "true");
+        }
+        assert_eq!(None, env_value("FLUXER_COMMON_TEST_BLANK_EMPTY"));
+        assert_eq!(None, env_value("FLUXER_COMMON_TEST_BLANK_SPACES"));
+        assert_eq!(None, env_value("FLUXER_COMMON_TEST_BLANK_MISSING"));
+        assert_eq!(
+            "fallback",
+            read_env("FLUXER_COMMON_TEST_BLANK_EMPTY", "fallback")
+        );
+        assert_eq!(
+            "fallback",
+            read_env("FLUXER_COMMON_TEST_BLANK_SPACES", "fallback")
+        );
+        assert_eq!(
+            "value",
+            read_env("FLUXER_COMMON_TEST_BLANK_SET", "fallback")
+        );
+        assert_eq!(
+            "value",
+            read_first_env(
+                &[
+                    "FLUXER_COMMON_TEST_BLANK_EMPTY",
+                    "FLUXER_COMMON_TEST_BLANK_SPACES",
+                    "FLUXER_COMMON_TEST_BLANK_SET",
+                ],
+                "fallback"
+            )
+        );
+        assert!(read_bool_env("FLUXER_COMMON_TEST_BLANK_EMPTY", true));
+        assert!(read_bool_env("FLUXER_COMMON_TEST_BLANK_SPACES", true));
+        assert!(read_bool_env("FLUXER_COMMON_TEST_BLANK_TRUE", false));
     }
 
     #[test]

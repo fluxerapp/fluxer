@@ -11,6 +11,7 @@ import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {PanZoomSurface} from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomSurface';
 import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
+import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {
 	clampMediaTime,
@@ -404,7 +405,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 				<video
 					ref={videoRef}
 					className={styles.video}
-					src={src}
+					src={resolveDesktopCrossOriginMediaURL(src)}
 					autoPlay={initialTime === undefined}
 					playsInline
 					loop={loop}

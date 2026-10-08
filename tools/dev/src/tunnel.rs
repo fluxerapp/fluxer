@@ -99,10 +99,6 @@ pub fn public_url_env(public_url: &str) -> Result<Vec<(String, String)>> {
             format!("{gateway_base}/livekit"),
         ),
         (
-            "FLUXER_LIVEKIT_WEBHOOK_URL".to_owned(),
-            format!("{base}/api/webhooks/livekit"),
-        ),
-        (
             "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT".to_owned(),
             format!("{base}/media"),
         ),
@@ -122,10 +118,6 @@ pub fn public_url_env(public_url: &str) -> Result<Vec<(String, String)>> {
         (
             "FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS".to_owned(),
             format!("{localhost_origins},{base}"),
-        ),
-        (
-            "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT".to_owned(),
-            format!("{base}/api"),
         ),
     ])
 }
@@ -227,7 +219,7 @@ pub fn resolve_cloudflare_public_url(public_url_arg: Option<&str>) -> Result<Str
         }
     }
     bail!(
-        "Missing Cloudflare tunnel public URL. Run `pnpm dev:tunnel:configure -- --public-url https://...` or pass `pnpm dev -- --cloudflare-tunnel --public-url https://...`."
+        "Missing Cloudflare tunnel public URL. Run `pnpm dev:tunnel:configure --public-url https://...` or pass `pnpm dev --cloudflare-tunnel --public-url https://...`."
     );
 }
 

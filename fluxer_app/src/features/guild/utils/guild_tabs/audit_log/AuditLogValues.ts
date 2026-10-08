@@ -142,16 +142,24 @@ export function largestDurationUnit(seconds: number): {unit: 'days' | 'hours' | 
 	return {unit: 'seconds', value: rounded};
 }
 
-export function channelNoun(type: number | null): 'text' | 'voice' | 'link' | 'category' | 'generic' {
+export function channelNoun(
+	type: number | null,
+): 'text' | 'announcement' | 'voice' | 'link' | 'category' | 'forum' | 'media' | 'generic' {
 	switch (type) {
 		case ChannelTypes.GUILD_TEXT:
 			return 'text';
+		case ChannelTypes.GUILD_ANNOUNCEMENT:
+			return 'announcement';
 		case ChannelTypes.GUILD_VOICE:
 			return 'voice';
 		case ChannelTypes.GUILD_LINK:
 			return 'link';
 		case ChannelTypes.GUILD_CATEGORY:
 			return 'category';
+		case ChannelTypes.GUILD_FORUM:
+			return 'forum';
+		case ChannelTypes.GUILD_MEDIA:
+			return 'media';
 		default:
 			return 'generic';
 	}

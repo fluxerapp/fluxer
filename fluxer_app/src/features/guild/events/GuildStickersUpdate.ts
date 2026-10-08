@@ -4,7 +4,7 @@ import Sticker from '@app/features/emoji/state/EmojiSticker';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import type {GuildSticker} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 
-interface GuildStickersUpdatePayload {
+export interface GuildStickersUpdatePayload {
 	guild_id: string;
 	stickers: ReadonlyArray<GuildSticker>;
 }

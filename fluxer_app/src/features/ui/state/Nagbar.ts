@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {NagbarDismissalsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable} from 'mobx';
@@ -24,6 +25,7 @@ export interface NagbarSettings {
 	claimAccountModalShownThisSession: boolean;
 	forceConnectionNotice: boolean;
 	forceEmailVerification: boolean;
+	forceAccountLimited: boolean;
 	forceIOSInstall: boolean;
 	forcePWAInstall: boolean;
 	forcePushNotification: boolean;
@@ -38,12 +40,15 @@ export interface NagbarSettings {
 	forceGuildMembershipCta: boolean;
 	forceVisionaryMfa: boolean;
 	forceTermsAcceptance: boolean;
+	forcePrivacySetup: boolean;
 	forceCorruptedInstallation: boolean;
 	forceScheduledMaintenance: boolean;
 	forceVoiceSessionRestore: boolean;
 	forceGuildMfaRequirement: boolean;
+	forceDomainMoved: boolean;
 	forceHideConnectionNotice: boolean;
 	forceHideEmailVerification: boolean;
+	forceHideAccountLimited: boolean;
 	forceHideIOSInstall: boolean;
 	forceHidePWAInstall: boolean;
 	forceHidePushNotification: boolean;
@@ -58,10 +63,12 @@ export interface NagbarSettings {
 	forceHideGuildMembershipCta: boolean;
 	forceHideVisionaryMfa: boolean;
 	forceHideTermsAcceptance: boolean;
+	forceHidePrivacySetup: boolean;
 	forceHideCorruptedInstallation: boolean;
 	forceHideScheduledMaintenance: boolean;
 	forceHideVoiceSessionRestore: boolean;
 	forceHideGuildMfaRequirement: boolean;
+	forceHideDomainMoved: boolean;
 }
 
 export type NagbarToggleKey = Exclude<
@@ -96,6 +103,7 @@ export class Nagbar implements NagbarSettings {
 	claimAccountModalShownThisSession = false;
 	forceOffline = false;
 	forceEmailVerification = false;
+	forceAccountLimited = false;
 	forceIOSInstall = false;
 	forcePWAInstall = false;
 	forcePushNotification = false;
@@ -110,13 +118,16 @@ export class Nagbar implements NagbarSettings {
 	forceGuildMembershipCta = false;
 	forceVisionaryMfa = false;
 	forceTermsAcceptance = false;
+	forcePrivacySetup = false;
 	forceCorruptedInstallation = false;
 	forceScheduledMaintenance = false;
 	forceVoiceSessionRestore = false;
 	forceGuildMfaRequirement = false;
+	forceDomainMoved = false;
 	forceConnectionNotice = false;
 	forceHideOffline = false;
 	forceHideEmailVerification = false;
+	forceHideAccountLimited = false;
 	forceHideIOSInstall = false;
 	forceHidePWAInstall = false;
 	forceHidePushNotification = false;
@@ -131,15 +142,17 @@ export class Nagbar implements NagbarSettings {
 	forceHideGuildMembershipCta = false;
 	forceHideVisionaryMfa = false;
 	forceHideTermsAcceptance = false;
+	forceHidePrivacySetup = false;
 	forceHideCorruptedInstallation = false;
 	forceHideScheduledMaintenance = false;
 	forceHideVoiceSessionRestore = false;
 	forceHideGuildMfaRequirement = false;
+	forceHideDomainMoved = false;
 	forceHideConnectionNotice = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -412,6 +425,7 @@ export class Nagbar implements NagbarSettings {
 		this.claimAccountModalShownThisSession = false;
 		this.forceOffline = false;
 		this.forceEmailVerification = false;
+		this.forceAccountLimited = false;
 		this.forceIOSInstall = false;
 		this.forcePWAInstall = false;
 		this.forcePushNotification = false;
@@ -426,13 +440,16 @@ export class Nagbar implements NagbarSettings {
 		this.forceGuildMembershipCta = false;
 		this.forceVisionaryMfa = false;
 		this.forceTermsAcceptance = false;
+		this.forcePrivacySetup = false;
 		this.forceCorruptedInstallation = false;
 		this.forceScheduledMaintenance = false;
 		this.forceVoiceSessionRestore = false;
 		this.forceGuildMfaRequirement = false;
+		this.forceDomainMoved = false;
 		this.forceConnectionNotice = false;
 		this.forceHideOffline = false;
 		this.forceHideEmailVerification = false;
+		this.forceHideAccountLimited = false;
 		this.forceHideIOSInstall = false;
 		this.forceHidePWAInstall = false;
 		this.forceHidePushNotification = false;
@@ -447,10 +464,12 @@ export class Nagbar implements NagbarSettings {
 		this.forceHideGuildMembershipCta = false;
 		this.forceHideVisionaryMfa = false;
 		this.forceHideTermsAcceptance = false;
+		this.forceHidePrivacySetup = false;
 		this.forceHideCorruptedInstallation = false;
 		this.forceHideScheduledMaintenance = false;
 		this.forceHideVoiceSessionRestore = false;
 		this.forceHideGuildMfaRequirement = false;
+		this.forceHideDomainMoved = false;
 		this.forceHideConnectionNotice = false;
 	}
 

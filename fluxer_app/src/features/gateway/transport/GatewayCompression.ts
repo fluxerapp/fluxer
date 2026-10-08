@@ -154,10 +154,6 @@ export class GatewayCompression {
 	}
 }
 
-export function getPreferredCompression(): CompressionType {
-	return 'zstd-stream';
-}
-
 export function isCompressionSupported(type: CompressionType): boolean {
 	switch (type) {
 		case 'none':

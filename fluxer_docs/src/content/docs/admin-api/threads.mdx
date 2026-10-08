@@ -1,0 +1,70 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Admin threads
+description: Guild thread lookup and thread deletion.
+draft: true
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+The Admin API reads and deletes [threads](/http-api/threads/) in any guild.
+
+## List guild threads
+
+<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/threads" auditReason />
+
+Returns every thread of a guild, active and archived, newest first. Requires `guild:lookup`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| threads | array[[thread](/http-api/threads/#thread-object) object] | The threads of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Threads were listed |
+
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_guild_threads`, the target type `guild`, and the guild ID as the target. Its metadata key `result_count` is the number of threads returned.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Delete thread
+
+<RouteHeader method="DELETE" path="/v1/admin/channels/{channel_id}" auditReason />
+
+Deletes a thread with its messages and memberships. Requires `message:delete_all`. Returns 204 with no body. Emits a [Thread Delete](/gateway/events/#thread-delete) Gateway event.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the thread |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | None | Thread was deleted |
+| 400 | [error response](/http-api/#error-response) | Channel is not a thread and the request returns `INVALID_CHANNEL_TYPE` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist and the request returns `UNKNOWN_CHANNEL` |
+
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `delete_thread`, the target type `channel`, and the thread ID as the target. Its metadata is `guild_id`, `parent_id`, and `type`. The guild audit log records nothing.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:message:operation` bucket.

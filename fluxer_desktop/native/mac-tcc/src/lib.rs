@@ -62,9 +62,29 @@ pub fn request_input_monitoring() -> String {
     status_string(platform::request_input_monitoring())
 }
 
+#[napi(js_name = "probeInputMonitoringAccess")]
+pub fn probe_input_monitoring_access() -> String {
+    status_string(input_monitoring_status_from_tap(
+        platform::listen_only_key_tap_created(),
+    ))
+}
+
+#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
+const fn input_monitoring_status_from_tap(created: Option<bool>) -> TccStatus {
+    match created {
+        Some(true) => TccStatus::Granted,
+        Some(false) => TccStatus::Denied,
+        None => TccStatus::NotDetermined,
+    }
+}
+
 #[cfg(target_os = "macos")]
 mod platform {
     use core_graphics::access::ScreenCaptureAccess;
+    use core_graphics::event::{
+        CGEventTap, CGEventTapLocation, CGEventTapOptions, CGEventTapPlacement, CGEventType,
+        CallbackResult,
+    };
     use objc2_io_kit::{IOHIDCheckAccess, IOHIDRequestAccess, IOHIDRequestType};
 
     use super::{TccStatus, input_monitoring_status_from_iohid};
@@ -97,6 +117,17 @@ mod platform {
             TccStatus::Denied
         }
     }
+
+    pub(super) fn listen_only_key_tap_created() -> Option<bool> {
+        let tap = CGEventTap::new(
+            CGEventTapLocation::Session,
+            CGEventTapPlacement::TailAppendEventTap,
+            CGEventTapOptions::ListenOnly,
+            vec![CGEventType::KeyDown],
+            |_proxy, _event_type, _event| CallbackResult::Keep,
+        );
+        Some(tap.is_ok())
+    }
 }
 
 #[cfg(not(target_os = "macos"))]
@@ -117,6 +148,10 @@ mod platform {
 
     pub(super) fn request_input_monitoring() -> TccStatus {
         TccStatus::NotDetermined
+    }
+
+    pub(super) fn listen_only_key_tap_created() -> Option<bool> {
+        None
     }
 }
 
@@ -151,6 +186,22 @@ mod tests {
         );
     }
 
+    #[test]
+    fn input_monitoring_maps_tap_probe_results() {
+        assert_eq!(
+            input_monitoring_status_from_tap(Some(true)),
+            TccStatus::Granted
+        );
+        assert_eq!(
+            input_monitoring_status_from_tap(Some(false)),
+            TccStatus::Denied
+        );
+        assert_eq!(
+            input_monitoring_status_from_tap(None),
+            TccStatus::NotDetermined
+        );
+    }
+
     #[cfg(not(target_os = "macos"))]
     #[test]
     fn non_macos_exports_preserve_stub_contract() {
@@ -158,5 +209,6 @@ mod tests {
         assert_eq!(request_screen_recording(), "not-determined");
         assert_eq!(input_monitoring_status(), "not-determined");
         assert_eq!(request_input_monitoring(), "not-determined");
+        assert_eq!(probe_input_monitoring_access(), "not-determined");
     }
 }

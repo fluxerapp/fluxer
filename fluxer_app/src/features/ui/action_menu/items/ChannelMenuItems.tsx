@@ -3,9 +3,9 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {showChannelDeleteFailedModal} from '@app/features/app/components/alerts/ChannelDeleteFailedModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import {createMuteConfig, getMuteDurationOptions} from '@app/features/channel/components/MuteOptions';
-import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {
 	DELETE_CHANNEL_DESCRIPTOR,
@@ -267,7 +267,7 @@ const ResolvedMuteChannelMenuItem: React.FC<GuildChannelMenuItemProps> = observe
 	);
 });
 export const MuteChannelMenuItem: React.FC<ChannelMenuItemProps> = observer(({channel, onClose}) => {
-	const isChannelMuteable = GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type);
+	const isChannelMuteable = GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || channel.isThreadOnly();
 	const guildId = channel.guildId;
 	if (!isChannelMuteable || !guildId) return null;
 	return (
@@ -403,12 +403,15 @@ export const EditChannelMenuItem: React.FC<ChannelMenuItemProps> = observer(({ch
 		Permission.can(Permissions.UPDATE_RTC_REGION, {channelId: channel.id, guildId: channel.guildId});
 	const handleEditChannel = useCallback(() => {
 		ModalCommands.push(
-			modal(() => (
-				<ChannelSettingsModal
-					channelId={channel.id}
-					data-flx="ui.action-menu.items.channel-menu-items.handle-edit-channel.channel-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<ChannelSettingsModal
+						channelId={channel.id}
+						data-flx="ui.action-menu.items.channel-menu-items.handle-edit-channel.channel-settings-modal"
+					/>
+				),
+				'channel-settings',
+			),
 		);
 		onClose();
 	}, [channel.id, onClose]);

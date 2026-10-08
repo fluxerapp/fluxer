@@ -29,6 +29,7 @@ function transform(name) {
 	};
 }
 
+const happyEyeballsSource = transform('DesktopHappyEyeballs.ts');
 const outboundSource = transform('DesktopOutboundHTTP.ts');
 const fileDownloadsSource = transform('FileDownloads.ts');
 
@@ -76,12 +77,20 @@ after(async () => {
 	await new Promise((resolve) => server.close(resolve));
 });
 
-function loadFileDownloads() {
+async function loadFileDownloads({registerOrigin = true} = {}) {
 	const stubs = {
-		'@electron/common/DesktopConfig': {getAppUrl: () => baseUrl},
 		'@electron/common/Logger': {
 			createChildLogger: () => ({debug() {}, info() {}, warn() {}, error() {}}),
 		},
+		'@fluxer/instance_bootstrap/src/NetworkOrigin': {normalizeHTTPNetworkOrigin: (value) => new URL(value).origin},
+		'@electron/main/DesktopSessionHTTP': {
+			isDirectProxyRoute: (route) => route === 'DIRECT',
+			resolveDesktopSessionProxy: async () => 'DIRECT',
+			sendThroughDesktopSession: async () => {
+				throw new Error('a direct route never reaches the session');
+			},
+		},
+		'@electron/main/DesktopTrustedCertificates': {resolveDesktopTrustedCertificates: () => []},
 	};
 	const sandbox = {
 		console,
@@ -94,11 +103,23 @@ function loadFileDownloads() {
 	};
 	const context = vm.createContext(sandbox);
 
+	const happyEyeballsModule = {exports: {}};
+	const happyEyeballsContext = vm.createContext({
+		...sandbox,
+		exports: happyEyeballsModule.exports,
+		module: happyEyeballsModule,
+	});
+	vm.runInContext(happyEyeballsSource.code, happyEyeballsContext, {filename: happyEyeballsSource.path});
+	stubs['@electron/main/DesktopHappyEyeballs'] = happyEyeballsModule.exports;
+
 	const outboundModule = {exports: {}};
 	sandbox.module = outboundModule;
 	sandbox.exports = outboundModule.exports;
 	vm.runInContext(outboundSource.code, context, {filename: outboundSource.path});
 	stubs['@electron/main/DesktopOutboundHTTP'] = outboundModule.exports;
+	if (registerOrigin) {
+		await outboundModule.exports.getDesktopOutboundHTTP().registerAnchoredOrigins({anchorOrigin: baseUrl, origins: []});
+	}
 
 	const fileDownloadsModule = {exports: {}};
 	sandbox.module = fileDownloadsModule;
@@ -113,7 +134,7 @@ function destination() {
 
 describe('downloadFile checksum verification', () => {
 	test('keeps the file when the bytes match the published sha256', async () => {
-		const {downloadFile} = loadFileDownloads();
+		const {downloadFile} = await loadFileDownloads();
 		const destPath = destination();
 
 		await downloadFile(`${baseUrl}/payload`, destPath, {sha256: PAYLOAD_SHA256});
@@ -122,7 +143,7 @@ describe('downloadFile checksum verification', () => {
 	});
 
 	test('accepts an uppercase published sha256', async () => {
-		const {downloadFile} = loadFileDownloads();
+		const {downloadFile} = await loadFileDownloads();
 		const destPath = destination();
 
 		await downloadFile(`${baseUrl}/payload`, destPath, {sha256: PAYLOAD_SHA256.toUpperCase()});
@@ -131,7 +152,7 @@ describe('downloadFile checksum verification', () => {
 	});
 
 	test('verifies the bytes that survive a redirect', async () => {
-		const {downloadFile} = loadFileDownloads();
+		const {downloadFile} = await loadFileDownloads();
 		const destPath = destination();
 
 		await downloadFile(`${baseUrl}/redirect`, destPath, {sha256: PAYLOAD_SHA256});
@@ -140,7 +161,7 @@ describe('downloadFile checksum verification', () => {
 	});
 
 	test('deletes the download and reports both digests when the bytes do not match', async () => {
-		const {downloadFile} = loadFileDownloads();
+		const {downloadFile} = await loadFileDownloads();
 		const destPath = destination();
 
 		await assert.rejects(downloadFile(`${baseUrl}/corrupt`, destPath, {sha256: PAYLOAD_SHA256}), (error) => {
@@ -154,7 +175,7 @@ describe('downloadFile checksum verification', () => {
 	});
 
 	test('leaves nothing behind when an earlier file sits at the destination', async () => {
-		const {downloadFile} = loadFileDownloads();
+		const {downloadFile} = await loadFileDownloads();
 		const destPath = destination();
 		writeFileSync(destPath, Buffer.from('an older download'), {mode: 0o755});
 
@@ -164,7 +185,7 @@ describe('downloadFile checksum verification', () => {
 	});
 
 	test('refuses an empty body when a checksum was published', async () => {
-		const {downloadFile} = loadFileDownloads();
+		const {downloadFile} = await loadFileDownloads();
 		const destPath = destination();
 
 		await assert.rejects(downloadFile(`${baseUrl}/empty`, destPath, {sha256: PAYLOAD_SHA256}), (error) => {
@@ -177,7 +198,7 @@ describe('downloadFile checksum verification', () => {
 	});
 
 	test('refuses a malformed checksum before asking for any bytes', async () => {
-		const {downloadFile} = loadFileDownloads();
+		const {downloadFile} = await loadFileDownloads();
 		const destPath = destination();
 		const requestsBefore = requests;
 
@@ -191,11 +212,22 @@ describe('downloadFile checksum verification', () => {
 	});
 
 	test('downloads without verifying when the feed published no checksum', async () => {
-		const {downloadFile} = loadFileDownloads();
+		const {downloadFile} = await loadFileDownloads();
 		const destPath = destination();
 
 		await downloadFile(`${baseUrl}/corrupt`, destPath, {sha256: null});
 
 		assert.equal(readFileSync(destPath).equals(CORRUPT), true);
+	});
+
+	test('refuses a non-public address that no registered instance vouches for', async () => {
+		const {downloadFile} = await loadFileDownloads({registerOrigin: false});
+		const destPath = destination();
+		const requestsBefore = requests;
+
+		await assert.rejects(downloadFile(`${baseUrl}/payload`, destPath, {sha256: PAYLOAD_SHA256}));
+
+		assert.equal(requests, requestsBefore);
+		assert.equal(existsSync(destPath), false);
 	});
 });

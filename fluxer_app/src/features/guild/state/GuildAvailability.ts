@@ -5,12 +5,14 @@ import {makeAutoObservable, observable} from 'mobx';
 
 class GuildAvailability {
 	unavailableGuilds: Set<string> = observable.set();
+	degradedGuilds: Set<string> = observable.set();
 
 	constructor() {
 		makeAutoObservable(
 			this,
 			{
 				unavailableGuilds: false,
+				degradedGuilds: false,
 			},
 			{autoBind: true},
 		);
@@ -23,8 +25,17 @@ class GuildAvailability {
 	}
 
 	setGuildUnavailable(guildId: string): void {
+		this.degradedGuilds.delete(guildId);
 		if (!this.unavailableGuilds.has(guildId)) {
 			this.unavailableGuilds.add(guildId);
+		}
+	}
+
+	setGuildDegraded(guildId: string, degraded: boolean): void {
+		if (degraded) {
+			this.degradedGuilds.add(guildId);
+		} else {
+			this.degradedGuilds.delete(guildId);
 		}
 	}
 
@@ -38,8 +49,21 @@ class GuildAvailability {
 
 	loadUnavailableGuilds(guilds: ReadonlyArray<GuildReadyData>): void {
 		this.unavailableGuilds.clear();
+		this.degradedGuilds.clear();
 		for (const guild of guilds) {
+			if (guild.degraded && !guild.unavailable) {
+				this.degradedGuilds.add(guild.id);
+			}
 			if (guild.unavailable && !guild.unavailable_hidden) {
+				this.unavailableGuilds.add(guild.id);
+			}
+		}
+	}
+
+	hydrateFromSnapshot(guilds: ReadonlyArray<{readonly id: string; readonly unavailable: boolean}>): void {
+		this.unavailableGuilds.clear();
+		for (const guild of guilds) {
+			if (guild.unavailable) {
 				this.unavailableGuilds.add(guild.id);
 			}
 		}

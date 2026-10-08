@@ -47,7 +47,6 @@ import {
 	BulkBanFileShasRequest,
 	BulkJobResponse,
 	CheckAvatarHashRequest,
-	SuspiciousEmailDomainRequest,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import type {ZodType} from 'zod';
@@ -58,9 +57,9 @@ const BLOCKLIST_CATALOG = [
 	{
 		list_type: 'ip' as const,
 		description:
-			'IPv4/IPv6 addresses and CIDR ranges denied service. Applies to live connections and can be applied retroactively.',
+			'IPv4/IPv6 addresses and CIDR ranges denied service. Applies to live connections and can be applied retroactively. An entry can carry an expiry, after which it stops applying and is removed.',
 		value_field: 'ip',
-		fields: [],
+		fields: ['duration_hours'],
 		scoped: false,
 		supports_bulk_create: false,
 		supports_bulk_delete: false,
@@ -68,19 +67,9 @@ const BLOCKLIST_CATALOG = [
 	},
 	{
 		list_type: 'email' as const,
-		description: 'Email addresses that cannot be used to register or be set on an account.',
-		value_field: 'email',
-		fields: [],
-		scoped: false,
-		supports_bulk_create: false,
-		supports_bulk_delete: false,
-		supports_update: false,
-	},
-	{
-		list_type: 'email-domain-suspicious' as const,
 		description:
-			'Email domains flagged as suspicious. Registration is not blocked, but new accounts using the domain must verify a phone number before they can act on the platform. The list itself is not exposed to users.',
-		value_field: 'domain',
+			'Email addresses that cannot be used to register or be set on an account. An entry written as @example.com covers every address at that domain and its subdomains.',
+		value_field: 'email',
 		fields: [],
 		scoped: false,
 		supports_bulk_create: false,
@@ -110,7 +99,8 @@ const BLOCKLIST_CATALOG = [
 	},
 	{
 		list_type: 'url-domain' as const,
-		description: 'Domains blocked from being linked, optionally covering every subdomain rooted at the domain.',
+		description:
+			'Domains blocked from being linked, optionally covering every subdomain rooted at the domain. A value whose leftmost label contains * is a pattern that matches that one label under a registrable domain.',
 		value_field: 'domain',
 		fields: ['match_subdomains', 'category', 'severity', 'source_url', 'notes'],
 		scoped: false,
@@ -154,11 +144,6 @@ const BLOCKLIST_CATALOG = [
 const BLOCKLIST_TYPE_ACLS: Record<AdminBlocklistListType, {add: string; check: string; remove: string}> = {
 	ip: {add: AdminACLs.BAN_IP_ADD, check: AdminACLs.BAN_IP_CHECK, remove: AdminACLs.BAN_IP_REMOVE},
 	email: {add: AdminACLs.BAN_EMAIL_ADD, check: AdminACLs.BAN_EMAIL_CHECK, remove: AdminACLs.BAN_EMAIL_REMOVE},
-	'email-domain-suspicious': {
-		add: AdminACLs.SUSPICIOUS_EMAIL_DOMAIN_ADD,
-		check: AdminACLs.SUSPICIOUS_EMAIL_DOMAIN_CHECK,
-		remove: AdminACLs.SUSPICIOUS_EMAIL_DOMAIN_REMOVE,
-	},
 	phrase: {add: AdminACLs.BAN_PHRASE_ADD, check: AdminACLs.BAN_PHRASE_CHECK, remove: AdminACLs.BAN_PHRASE_REMOVE},
 	url: {add: AdminACLs.BAN_URL_ADD, check: AdminACLs.BAN_URL_CHECK, remove: AdminACLs.BAN_URL_REMOVE},
 	'url-domain': {
@@ -186,7 +171,6 @@ const BLOCKLIST_TYPE_ACLS: Record<AdminBlocklistListType, {add: string; check: s
 const BLOCKLIST_AUDIT_TARGET_TYPES: Record<AdminBlocklistListType, string> = {
 	ip: 'ip',
 	email: 'email',
-	'email-domain-suspicious': 'email_domain',
 	phrase: 'phrase',
 	url: 'url',
 	'url-domain': 'url_domain',
@@ -249,14 +233,12 @@ async function checkBlocklistEntry(
 	listType: AdminBlocklistListType,
 	entryValue: string,
 	scope: ProfileSubstringScope | undefined,
-): Promise<{banned: boolean}> {
+): Promise<{banned: boolean; expires_at?: string | null}> {
 	switch (listType) {
 		case 'ip':
 			return bans.checkIpBan({ip: entryValue});
 		case 'email':
 			return bans.checkEmailBan({email: entryValue});
-		case 'email-domain-suspicious':
-			return bans.checkSuspiciousEmailDomain({domain: entryValue});
 		case 'phrase':
 			return bans.checkPhraseBan({phrase: entryValue});
 		case 'url':
@@ -288,7 +270,7 @@ export function BanAdminController(app: HonoApp) {
 			security: ['adminApiKey'],
 			tags: ['Admin'],
 			description:
-				'List every blocklist this instance maintains, the request field that carries an entry value, the extra fields its entries accept, and which of the bulk and update operations it supports.',
+				'List every blocklist this instance maintains, the request field that holds an entry value, the extra fields its entries accept, and which of the bulk and update operations it supports.',
 		}),
 		async (ctx) => {
 			await recordAdminRead(ctx, {
@@ -358,7 +340,7 @@ export function BanAdminController(app: HonoApp) {
 			tags: ['Admin'],
 			requestSchema: AdminBlocklistEntryCreateRequest,
 			description:
-				'Add a value to a blocklist. The request body is the shape the blocklist named by list_type accepts, and the value is validated and canonicalized for that blocklist. Adding an IP address that is on the instance exemption list, or that IPInfo reports as a high blast-radius carrier NAT, is refused with 400 IP_BAN_DECLINED and recorded in the audit log.',
+				'Add a value to a blocklist. The request body is the shape the blocklist named by list_type accepts, and the value is validated and canonicalized for that blocklist. Adding an IP address that is on the instance exemption list is refused with 400 IP_BAN_DECLINED and recorded in the audit log.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -374,13 +356,6 @@ export function BanAdminController(app: HonoApp) {
 					break;
 				case 'email':
 					await bans.banEmail(await parseBlocklistBody(BanEmailRequest, raw), adminUserId, auditLogReason);
-					break;
-				case 'email-domain-suspicious':
-					await bans.addSuspiciousEmailDomain(
-						await parseBlocklistBody(SuspiciousEmailDomainRequest, raw),
-						adminUserId,
-						auditLogReason,
-					);
 					break;
 				case 'phrase':
 					await bans.banPhrase(await parseBlocklistBody(BanPhraseRequest, raw), adminUserId, auditLogReason);
@@ -514,7 +489,7 @@ export function BanAdminController(app: HonoApp) {
 			security: ['adminApiKey'],
 			tags: ['Admin'],
 			description:
-				'Report whether a value is currently blocked by a blocklist. The value is percent-encoded in the path. An IP address can still match a broader stored CIDR entry, and a URL can match a banned domain. The profile-substring blocklist requires a scope.',
+				'Report whether a value is currently blocked by a blocklist. The value is percent-encoded in the path. An IP address can still match a broader stored CIDR entry, and a url-domain value can be a hostname or an http(s) URL that a stored domain or pattern covers. The profile-substring blocklist requires a scope.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -533,7 +508,7 @@ export function BanAdminController(app: HonoApp) {
 					banned: result.banned,
 				},
 			});
-			return ctx.json(result);
+			return ctx.json({banned: result.banned, expires_at: result.expires_at ?? null});
 		},
 	);
 	app.patch(
@@ -550,7 +525,7 @@ export function BanAdminController(app: HonoApp) {
 			tags: ['Admin'],
 			requestSchema: AdminBlocklistEntryUpdateRequest,
 			description:
-				'Rewrite the stored fields of a blocklist entry without removing and re-adding it. The stored metadata is replaced by the supplied fields, so fields left out fall back to their defaults. Only blocklists whose entries carry fields accept this operation, reported as supports_update by GET /admin/blocklists.',
+				'Rewrite the stored fields of a blocklist entry without removing and re-adding it. The stored metadata is replaced by the supplied fields, so fields left out fall back to their defaults. Only blocklists whose entries have fields accept this operation, reported as supports_update by GET /admin/blocklists.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -623,9 +598,6 @@ export function BanAdminController(app: HonoApp) {
 					break;
 				case 'email':
 					await bans.unbanEmail({email: entryValue}, adminUserId, auditLogReason);
-					break;
-				case 'email-domain-suspicious':
-					await bans.removeSuspiciousEmailDomain({domain: entryValue}, adminUserId, auditLogReason);
 					break;
 				case 'phrase':
 					await bans.unbanPhrase({phrase: entryValue}, adminUserId, auditLogReason);

@@ -23,7 +23,6 @@ fn deserialize_admin_users_me_response() {
             "email": "hampus@fluxer.com",
             "email_verified": true,
             "email_bounced": false,
-            "has_verified_phone": true,
             "date_of_birth": "2003-02-25",
             "locale": "en-US",
             "premium_type": 2,
@@ -31,12 +30,14 @@ fn deserialize_admin_users_me_response() {
             "premium_until": null,
             "premium_grace_ends_at": null,
             "premium_lifetime_sequence": 1,
-            "suspicious_activity_flags": 0,
             "temp_banned_until": null,
             "pending_deletion_at": null,
             "pending_bulk_message_deletion_at": null,
             "deletion_reason_code": null,
             "deletion_public_reason": null,
+            "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null,
+            "deletion_scheduled_at": null,
             "acls": ["super_admin"],
             "traits": ["beta_tester"],
             "has_totp": true,
@@ -61,9 +62,7 @@ fn deserialize_admin_users_me_response() {
     assert_eq!(user.acls, vec!["super_admin"]);
     assert_eq!(user.traits, vec!["beta_tester"]);
     assert_eq!(user.premium_type, Some(2));
-    assert_eq!(user.suspicious_activity_flags, 0);
     assert!(user.has_totp);
-    assert!(user.has_verified_phone);
     assert_eq!(user.last_active_ip.as_deref(), Some("1.2.3.4"));
 }
 
@@ -76,12 +75,13 @@ fn deserialize_flags_as_string_and_number() {
             "premium_flags": 0, "avatar": null, "banner": null, "bio": null,
             "pronouns": null, "accent_color": null, "email": null,
             "email_verified": false, "email_bounced": false,
-            "has_verified_phone": false, "date_of_birth": null, "locale": null,
+            "date_of_birth": null, "locale": null,
             "premium_type": null, "premium_since": null, "premium_until": null,
             "premium_grace_ends_at": null, "premium_lifetime_sequence": null,
-            "suspicious_activity_flags": 0, "temp_banned_until": null,
+            "temp_banned_until": null,
             "pending_deletion_at": null, "pending_bulk_message_deletion_at": null,
-            "deletion_reason_code": null, "deletion_public_reason": null,
+            "deletion_reason_code": null, "deletion_public_reason": null, "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null, "deletion_scheduled_at": null,
             "acls": [], "traits": [], "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null
@@ -107,13 +107,14 @@ fn deserialize_discriminator_int_and_string() {
             "bot": true, "system": false, "flags": "0", "premium_flags": 0,
             "avatar": null, "banner": null, "bio": null, "pronouns": null,
             "accent_color": null, "email": null, "email_verified": false,
-            "email_bounced": false, "has_verified_phone": false, "date_of_birth": null,
+            "email_bounced": false, "date_of_birth": null,
             "locale": null, "premium_type": null, "premium_since": null,
             "premium_until": null, "premium_grace_ends_at": null,
-            "premium_lifetime_sequence": null, "suspicious_activity_flags": 0,
+            "premium_lifetime_sequence": null,
             "temp_banned_until": null, "pending_deletion_at": null,
             "pending_bulk_message_deletion_at": null, "deletion_reason_code": null,
-            "deletion_public_reason": null, "acls": [], "traits": [],
+            "deletion_public_reason": null, "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null, "deletion_scheduled_at": null, "acls": [], "traits": [],
             "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null
@@ -156,7 +157,6 @@ fn deserialize_search_users_response() {
                 "email": null,
                 "email_verified": false,
                 "email_bounced": false,
-                "has_verified_phone": false,
                 "date_of_birth": null,
                 "locale": null,
                 "premium_type": null,
@@ -164,12 +164,14 @@ fn deserialize_search_users_response() {
                 "premium_until": null,
                 "premium_grace_ends_at": null,
                 "premium_lifetime_sequence": null,
-                "suspicious_activity_flags": 0,
                 "temp_banned_until": null,
                 "pending_deletion_at": null,
                 "pending_bulk_message_deletion_at": null,
                 "deletion_reason_code": null,
                 "deletion_public_reason": null,
+                "deletion_audit_log_reason": null,
+                "deletion_scheduled_by": null,
+                "deletion_scheduled_at": null,
                 "acls": [],
                 "traits": [],
                 "has_totp": false,
@@ -392,39 +394,33 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "voice_e2ee_scope": "guild_feature_only",
             "future_rollout_knob": 3
         },
-        "voice_noise_suppression": {
-            "enabled": true,
-            "config_version": 4,
-            "default_backend": "rnnoise",
-            "enabled_backends": ["none", "standard", "rnnoise"],
-            "allow_user_override": true,
-            "rollout_basis_points": 10000,
-            "rollout_salt": "voice-ns-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": [],
-            "guild_overrides": [],
-            "suppression_strength": 80,
-            "future_presentation_knob": "verbose",
-            "future_knob": 7,
-            "future_object_knob": {"nested": true},
-            "future_list_knob": ["a", "b"]
+        "push_relay": {
+            "relay_consent_accepted": true,
+            "relay_consent_accepted_at": "2026-09-27T10:11:12.000Z",
+            "relay_consent_accepted_by": "1130650140672000000"
         },
-        "screen_share_delivery": {
+        "domain_migration": {
             "enabled": true,
             "config_version": 2,
             "rollout_basis_points": 2500,
-            "rollout_salt": "screen-share-delivery-v1",
+            "rollout_salt": "domain-migration-v1",
             "included_user_ids": ["1500000000000000001"],
-            "future_delivery_knob": 9,
-            "excluded_user_ids": []
+            "excluded_user_ids": [],
+            "included_guild_ids": [],
+            "include_premium_users": false,
+            "future_migration_knob": 9,
+            "future_presentation_knob": "verbose",
+            "future_knob": 7,
+            "future_object_knob": {"nested": true},
+            "future_list_knob": ["a", "b"],
+            "anonymous_rollout_basis_points": 100,
+            "standalone_forwarding": true
         },
-        "push_service_delivery": {
+        "captcha": {
             "enabled": true,
-            "config_version": 3,
-            "rollout_basis_points": 5000,
-            "rollout_salt": "push-service-delivery-v1",
-            "included_user_ids": ["1500000000000000002"],
-            "excluded_user_ids": []
+            "cost": 5000,
+            "max_counter": 1000,
+            "future_captcha_knob": 1
         },
         "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
         "registration": {
@@ -434,6 +430,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "pending_registrations": []
         },
         "self_hosted": false,
+        "account_identity": {"mode": "username", "locked": true, "tag_style": "none"},
         "app_public": {
             "branding": {
                 "product_name": "Fluxer",
@@ -443,7 +440,9 @@ fn deserialize_instance_config_response_with_unknown_keys() {
                 "wordmark_url": "https://cdn.example.com/wordmark.svg",
                 "favicon_url": "https://cdn.example.com/favicon.ico",
                 "theme_color": "#5865f2",
-                "future_asset_url": "https://cdn.example.com/future.png"
+                "future_asset_url": "https://cdn.example.com/future.png",
+                "premium_product_name": "Gold",
+                "premium_info_url": "https://example.com/gold"
             },
             "setup": {"configured": true},
             "legal": {
@@ -457,6 +456,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "single_community_guild_id": null,
             "direct_messages_disabled": false,
             "direct_messages_locked": false,
+            "guild_create_access": false,
             "premium_mode": "mirror",
             "services": {
                 "gif_enabled": true,
@@ -469,25 +469,11 @@ fn deserialize_instance_config_response_with_unknown_keys() {
                 "youtube_enabled": true,
                 "bluesky_enabled": false
             },
-            "services_available": {"gif": true, "youtube": true, "bluesky": false},
-            "deferred_phone_gate": {
-                "enabled": false,
-                "window_hours": 24,
-                "member_threshold": 100
-            }
+            "services_available": {"gif": true, "youtube": true, "bluesky": false}
         },
         "integrations": {
             "gif": {"klipy_api_key_set": true, "effective_available": true},
             "youtube": {"api_key_set": true, "effective_available": true},
-            "captcha": {
-                "provider": "hcaptcha",
-                "effective_provider": "hcaptcha",
-                "hcaptcha_site_key": "site",
-                "hcaptcha_secret_key_set": true,
-                "turnstile_site_key": "",
-                "turnstile_secret_key_set": false,
-                "effective_enabled": true
-            },
             "email": {
                 "enabled": true,
                 "effective_enabled": true,
@@ -541,6 +527,36 @@ fn deserialize_instance_config_response_with_unknown_keys() {
                 }
             }
         },
+        "billing": {
+            "enabled": true,
+            "effective_enabled": true,
+            "stripe_secret_key_set": true,
+            "stripe_webhook_secret_set": false,
+            "stripe_secret_key_stored": true,
+            "stripe_webhook_secret_stored": false,
+            "automatic_tax": null,
+            "tax_id_collection": true,
+            "terms_consent_required": false,
+            "effective_automatic_tax": false,
+            "effective_tax_id_collection": true,
+            "effective_terms_consent_required": false,
+            "default_currency": "GBP",
+            "prices": {
+                "GBP": {
+                    "monthly": "price_1GbpM",
+                    "yearly": "price_1GbpY",
+                    "gift_1_month": null,
+                    "gift_1_year": "price_1GbpG"
+                }
+            },
+            "country_currencies": {"GB": "GBP"},
+            "legacy_prices": {"monthly_GBP": ["price_1OldA"]},
+            "billing_active": true,
+            "stripe_serviceable": true,
+            "catalog_mode": "operator",
+            "webhook_url": "https://api.example.com/stripe/webhook",
+            "future_billing_knob": 1
+        },
         "future_section": {"enabled": true, "rollout_basis_points": 10000},
         "future_flag": 3
     }"##;
@@ -550,30 +566,61 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     );
 
     assert!(!resp.self_hosted);
-    assert!(resp.voice_noise_suppression.enabled);
-    assert_eq!(resp.voice_noise_suppression.config_version, 4);
-    assert_eq!(resp.voice_noise_suppression.rollout_basis_points, 10000);
-    assert_eq!(*resp.voice_noise_suppression.rollout_salt, "voice-ns-v1");
-    assert_eq!(resp.voice_noise_suppression.enabled_backends.len(), 3);
-    assert!(resp.screen_share_delivery.enabled);
-    assert_eq!(resp.screen_share_delivery.config_version, 2);
-    assert_eq!(resp.screen_share_delivery.rollout_basis_points, 2500);
-    assert_eq!(
-        *resp.screen_share_delivery.rollout_salt,
-        "screen-share-delivery-v1"
-    );
-    assert_eq!(resp.screen_share_delivery.included_user_ids.len(), 1);
+    assert!(resp.domain_migration.enabled);
+    assert_eq!(resp.domain_migration.config_version, 2);
+    assert_eq!(resp.domain_migration.rollout_basis_points, 2500);
+    assert_eq!(*resp.domain_migration.rollout_salt, "domain-migration-v1");
+    assert_eq!(resp.domain_migration.included_user_ids.len(), 1);
+    assert_eq!(resp.domain_migration.anonymous_rollout_basis_points, 100);
+    assert!(resp.domain_migration.standalone_forwarding);
+    assert!(resp.push_relay.relay_consent_accepted);
+    assert!(resp.captcha.enabled);
+    assert_eq!(resp.captcha.max_counter, 1000);
     assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));
     assert_eq!(resp.app_public.branding.product_name, "Fluxer");
+    assert_eq!(resp.app_public.branding.premium_product_name, "Gold");
+    assert!(resp.billing.billing_active);
     assert!(resp.media.attachment_decay.effective.enabled);
+    assert!(resp.account_identity.locked);
+
+    let ours: types::InstanceConfigResponse =
+        serde_json::from_str(json).expect("hand-written instance config");
+    assert_eq!(
+        ours.account_identity.mode,
+        types::AccountIdentityMode::Username
+    );
+    assert_eq!(ours.account_identity.locked, Some(true));
+    assert_eq!(ours.app_public.branding.premium_product_name, "Gold");
+    assert!(ours.billing.stripe_secret_key_stored);
+    assert_eq!(ours.billing.tax_id_collection, Some(true));
+    assert!(ours.billing.effective_tax_id_collection);
+    assert_eq!(
+        ours.app_public.branding.premium_info_url.as_deref(),
+        Some("https://example.com/gold")
+    );
+    assert!(ours.billing.billing_active);
+    assert!(ours.billing.stripe_serviceable);
+    assert!(!ours.billing.stripe_webhook_secret_set);
+    assert_eq!(
+        ours.billing.catalog_mode,
+        types::BillingCatalogMode::Operator
+    );
+    assert_eq!(ours.billing.default_currency.as_deref(), Some("GBP"));
+    let gbp = &ours.billing.prices.as_ref().expect("prices")["GBP"];
+    assert_eq!(gbp.gift_1_year.as_deref(), Some("price_1GbpG"));
+    assert_eq!(gbp.gift_1_month, None);
+    assert_eq!(
+        ours.billing.legacy_prices.as_ref().expect("legacy")["monthly_GBP"],
+        vec!["price_1OldA".to_owned()]
+    );
 
     let without_unknown_keys = json
         .replace("\"future_rollout_knob\": 3,", "")
         .replace("\"future_presentation_knob\": \"verbose\",", "")
         .replace("\"future_knob\": 7,", "")
-        .replace("\"future_delivery_knob\": 9,", "")
+        .replace("\"future_migration_knob\": 9,", "")
         .replace("\"future_object_knob\": {\"nested\": true},", "")
         .replace("\"future_list_knob\": [\"a\", \"b\"],", "")
         .replace(
@@ -582,6 +629,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
         )
         .replace("\"future_service_enabled\": true,", "")
         .replace("\"future_curve\": 1.5,", "")
+        .replace(",\n            \"future_billing_knob\": 1", "")
         .replace(
             "\"future_section\": {\"enabled\": true, \"rollout_basis_points\": 10000},",
             "",
@@ -592,6 +640,51 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(
         serde_json::to_value(&baseline).unwrap(),
         serde_json::to_value(&resp).unwrap()
+    );
+}
+
+#[test]
+fn deserialize_push_relay_config() {
+    let accepted: types::PushRelayConfigResponse = serde_json::from_str(
+        r#"{
+        "relay_consent_accepted": true,
+        "relay_consent_accepted_at": "2026-09-27T10:11:12.000Z",
+        "relay_consent_accepted_by": "1130650140672000000"
+    }"#,
+    )
+    .expect("an accepted relay consent must deserialize");
+
+    assert!(accepted.relay_consent_accepted);
+    assert_eq!(
+        accepted.relay_consent_accepted_at.as_deref(),
+        Some("2026-09-27T10:11:12.000Z")
+    );
+    assert_eq!(
+        accepted.relay_consent_accepted_by.as_deref(),
+        Some("1130650140672000000")
+    );
+
+    let empty: types::PushRelayConfigResponse =
+        serde_json::from_str("{}").expect("an empty push relay config must deserialize");
+
+    assert!(!empty.relay_consent_accepted);
+    assert!(empty.relay_consent_accepted_at.is_none());
+    assert!(empty.relay_consent_accepted_by.is_none());
+}
+
+#[test]
+fn serialize_push_relay_update_omits_an_unset_consent() {
+    assert_eq!(
+        serde_json::to_value(types::PushRelayConfigUpdateRequest::default()).unwrap(),
+        serde_json::json!({})
+    );
+
+    let with = types::PushRelayConfigUpdateRequest {
+        relay_consent_accepted: Some(true),
+    };
+    assert_eq!(
+        serde_json::to_value(&with).unwrap(),
+        serde_json::json!({"relay_consent_accepted": true})
     );
 }
 
@@ -755,6 +848,14 @@ fn deserialize_ban_check_response() {
 }
 
 #[test]
+fn deserialize_ban_check_response_with_expiry() {
+    let json = r#"{"banned": true, "expires_at": "2026-10-04T12:00:00.000Z"}"#;
+    let resp: types::BanCheckResult = serde_json::from_str(json).unwrap();
+    assert!(resp.banned);
+    assert_eq!(resp.expires_at.as_deref(), Some("2026-10-04T12:00:00.000Z"));
+}
+
+#[test]
 fn deserialize_codes_response() {
     let json = r#"{"codes": ["ABC-DEF", "GHI-JKL"]}"#;
     let resp: types::CodesResponse = serde_json::from_str(json).unwrap();
@@ -770,12 +871,13 @@ fn deserialize_user_mutation_response() {
             "flags": "1", "premium_flags": 0, "avatar": null, "banner": null,
             "bio": null, "pronouns": null, "accent_color": null, "email": null,
             "email_verified": false, "email_bounced": false,
-            "has_verified_phone": false, "date_of_birth": null, "locale": null,
+            "date_of_birth": null, "locale": null,
             "premium_type": null, "premium_since": null, "premium_until": null,
             "premium_grace_ends_at": null, "premium_lifetime_sequence": null,
-            "suspicious_activity_flags": 0, "temp_banned_until": null,
+            "temp_banned_until": null,
             "pending_deletion_at": null, "pending_bulk_message_deletion_at": null,
-            "deletion_reason_code": null, "deletion_public_reason": null,
+            "deletion_reason_code": null, "deletion_public_reason": null, "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null, "deletion_scheduled_at": null,
             "acls": [], "traits": [], "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null
@@ -869,7 +971,8 @@ fn deserialize_webauthn_credentials_response() {
             "id": "credential-a",
             "name": "YubiKey",
             "created_at": "2026-05-26T12:00:00.000Z",
-            "last_used_at": null
+            "last_used_at": null,
+            "rp_id": "fluxer.com"
         },
         {
             "id": "credential-b",
@@ -953,4 +1056,57 @@ fn deserialize_list_admin_api_key_entry() {
     assert_eq!(resp.key_id, "k_123");
     assert_eq!(resp.created_by_user_id, "1130650140672000000");
     assert_eq!(resp.acls.len(), 2);
+}
+
+#[test]
+fn account_identity_lock_is_unknown_when_the_api_omits_it() {
+    let identity: types::AccountIdentityConfigResponse =
+        serde_json::from_str("{}").expect("empty account identity");
+    assert_eq!(identity.mode, types::AccountIdentityMode::Email);
+    assert_eq!(identity.locked, None);
+}
+
+#[test]
+fn deserialize_guild_threads_response() {
+    let json = r#"{
+        "threads": [
+            {
+                "id": "1600000000000000010",
+                "type": 12,
+                "guild_id": "1600000000000000001",
+                "parent_id": "1600000000000000002",
+                "owner_id": "1500000000000000001",
+                "name": "secret plans",
+                "last_message_id": null,
+                "last_pin_timestamp": null,
+                "rate_limit_per_user": 0,
+                "flags": 0,
+                "thread_metadata": {
+                    "archived": true,
+                    "auto_archive_duration": 4320,
+                    "archive_timestamp": "2026-09-27T12:00:00.000Z",
+                    "locked": false,
+                    "invitable": false,
+                    "create_timestamp": "2026-09-26T12:00:00.000Z"
+                },
+                "message_count": 3,
+                "total_message_sent": 4,
+                "member_count": 2
+            }
+        ]
+    }"#;
+    let generated: generated_types::ListGuildThreadsResponse =
+        serde_json::from_str(json).expect("the generated client must accept the thread list");
+    assert_eq!(generated.threads.len(), 1);
+    let resp: types::ListGuildThreadsResponse = serde_json::from_str(json).unwrap();
+    let thread = &resp.threads[0];
+    assert_eq!(thread.channel_type, 12);
+    assert_eq!(thread.name.as_deref(), Some("secret plans"));
+    assert_eq!(thread.member_count, Some(2));
+    assert!(
+        thread
+            .thread_metadata
+            .as_ref()
+            .is_some_and(|m| m.archived && !m.locked)
+    );
 }

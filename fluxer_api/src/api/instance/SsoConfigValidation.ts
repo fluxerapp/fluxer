@@ -64,10 +64,13 @@ export function isTestSsoProvider(
 	},
 	testModeEnabled: boolean,
 ): boolean {
+	if (!testModeEnabled) {
+		return false;
+	}
 	return (
 		config.authorizationUrl === 'test' ||
 		config.tokenUrl === 'test' ||
-		(testModeEnabled && (config.authorizationUrl?.startsWith('test-') ?? false))
+		(config.authorizationUrl?.startsWith('test-') ?? false)
 	);
 }
 

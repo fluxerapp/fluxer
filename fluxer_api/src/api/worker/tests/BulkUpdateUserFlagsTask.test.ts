@@ -76,7 +76,7 @@ describe('bulkUpdateUserFlags task', () => {
 		clearWorkerDependencies();
 	});
 
-	test('writes a per-user audit row carrying the admin reason and records failed items', async () => {
+	test('writes a per-user audit row with the admin reason and records failed items', async () => {
 		const first = await createTestAccount(harness);
 		const second = await createTestAccount(harness);
 		const result = (await bulkUpdateUserFlags(

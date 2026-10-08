@@ -8,7 +8,7 @@ import {AudioPresets, BackupCodecPolicy, ScreenSharePresets, VideoPresets} from 
 
 export const defaultVideoCodec = 'h264';
 
-export const screenShareDeliveryPublishDefaults: TrackPublishDefaults = {
+export const publishDefaults: TrackPublishDefaults = {
 	audioPreset: AudioPresets.music,
 	dtx: false,
 	red: true,
@@ -20,11 +20,6 @@ export const screenShareDeliveryPublishDefaults: TrackPublishDefaults = {
 	backupCodecPolicy: BackupCodecPolicy.SIMULCAST,
 	preConnectBuffer: false,
 } as const;
-
-export const publishDefaults: TrackPublishDefaults = {
-	...screenShareDeliveryPublishDefaults,
-	degradationPreference: 'maintain-resolution',
-};
 
 export const audioDefaults: AudioCaptureOptions = {
 	deviceId: {ideal: 'default'},

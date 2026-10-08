@@ -6,6 +6,7 @@ import {MessageAvatar} from '@app/features/channel/components/MessageAvatar';
 import {MessageTimeoutIndicator} from '@app/features/channel/components/MessageTimeoutIndicator';
 import {MessageUsername} from '@app/features/channel/components/MessageUsername';
 import {TimestampWithTooltip} from '@app/features/channel/components/TimestampWithTooltip';
+import {isOriginalPoster} from '@app/features/forum/utils/ForumChannelUtils';
 import type {Guild} from '@app/features/guild/models/Guild';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -176,11 +177,19 @@ export function CompactAuthorPrefix({
 			<span className={styles.copyOnly} data-flx="channel.compact-message-layout.compact-author-prefix.copy-only">
 				{' '}
 			</span>
-			{author.bot && (
+			{(author.bot || message.isCrosspostCopy) && (
 				<UserTag
 					className={styles.userTagCompact}
 					system={author.system}
+					variant={message.isCrosspostCopy ? 'community' : undefined}
 					data-flx="channel.compact-message-layout.compact-author-prefix.user-tag-compact"
+				/>
+			)}
+			{isOriginalPoster(message.channelId, author.id) && (
+				<UserTag
+					className={styles.userTagCompact}
+					variant="op"
+					data-flx="channel.compact-message-layout.compact-author-prefix.user-tag-compact--op"
 				/>
 			)}
 			{showAvatar && (

@@ -14,6 +14,7 @@ export class PushSubscription {
 	readonly platform: PushSubscriptionPlatform;
 	readonly appId: string | null;
 	readonly providerEnvironment: string | null;
+	readonly threadChannels: boolean;
 
 	constructor(row: PushSubscriptionRow) {
 		this.userId = row.user_id;
@@ -26,6 +27,7 @@ export class PushSubscription {
 		this.platform = row.platform ?? 'web_push';
 		this.appId = row.app_id ?? null;
 		this.providerEnvironment = row.provider_environment ?? null;
+		this.threadChannels = row.thread_channels === true;
 	}
 
 	toRow(): PushSubscriptionRow {
@@ -40,6 +42,7 @@ export class PushSubscription {
 			platform: this.platform,
 			app_id: this.appId,
 			provider_environment: this.providerEnvironment,
+			...(this.threadChannels ? {thread_channels: true} : {}),
 		};
 	}
 }

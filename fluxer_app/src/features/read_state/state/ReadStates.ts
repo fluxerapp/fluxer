@@ -2,6 +2,7 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Channels from '@app/features/channel/state/Channels';
+import type {SnapshotReadStateRow} from '@app/features/gateway/snapshot/SnapshotEntities';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import AutoAck from '@app/features/notification/state/NotificationAutoAck';
 import {http} from '@app/features/platform/transport/RestTransport';
@@ -38,6 +39,7 @@ import {
 	GUILD_TEXT_BASED_CHANNEL_TYPES,
 	TEXT_BASED_CHANNEL_TYPES,
 } from '@fluxer/constants/src/ChannelConstants';
+import {THREAD_FEATURE_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import type {ChannelId, GuildId} from '@fluxer/schema/src/branded/WireIds';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {decodeReadStateProto} from '@fluxer/schema/src/domains/read_state/ReadStateProtoCodec';
@@ -136,6 +138,7 @@ class ReadStates {
 	}
 
 	private setMentionCount(state: ReadStateEntry, mentionCount: number): void {
+		if (mentionCount > state.mentionCount) this.mentionChannels.delete(state.channelId as ChannelId);
 		state.mentionCount = mentionCount;
 		this.refreshMentionChannel(state.channelId);
 	}
@@ -342,6 +345,16 @@ class ReadStates {
 		return Array.from(this.states.keys());
 	}
 
+	captureMentionCounts(): Map<string, number> {
+		const counts = new Map<string, number>();
+		for (const [channelId, state] of this.states) {
+			if (state.mentionCount > 0) {
+				counts.set(channelId, state.mentionCount);
+			}
+		}
+		return counts;
+	}
+
 	clearStickyUnread(channelId: string): void {
 		const state = this.getIfExists(channelId);
 		if (state != null) {
@@ -388,6 +401,7 @@ class ReadStates {
 		channels: Array<ChannelPayload>;
 	}): void {
 		this.suppressVersionBumps(() => {
+			const preservedAcks = this.capturePendingAcks();
 			this.reset();
 			const readStates = this.decodeReadStateBundle(action.readStateProto, action.readState);
 			const channelsWithReadState = new Set<ChannelId>();
@@ -400,7 +414,7 @@ class ReadStates {
 				state.serverVersion = readState.version ?? null;
 			}
 			for (const channel of action.channels) {
-				if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type)) continue;
+				if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_FEATURE_CHANNEL_TYPES.has(channel.type)) continue;
 				const state = this.get(channel.id);
 				state.lastMessageId = channel.last_message_id ?? null;
 				state.lastPinTimestamp = parseTimestamp(channel.last_pin_timestamp);
@@ -410,6 +424,27 @@ class ReadStates {
 				}
 				this.clearUnreadStateIfRead(state);
 			}
+			this.restorePendingAcks(preservedAcks);
+			this.notifyChange(undefined, {global: true});
+		});
+	}
+
+	hydrateFromSnapshot(readStates: ReadonlyMap<string, SnapshotReadStateRow>): void {
+		this.suppressVersionBumps(() => {
+			const preservedAcks = this.capturePendingAcks();
+			this.reset();
+			for (const [channelId, row] of readStates) {
+				const state = this.get(channelId);
+				this.setMentionCount(state, row.mentionCount);
+				state.ackMessageId = row.ackMessageId;
+				state.acknowledgedPinTimestamp = row.ackPinTimestamp;
+				state.serverVersion = row.serverVersion;
+				state.lastMessageId = row.lastMessageId;
+				state.storedGuildId = row.guildId;
+				state.lastPinTimestamp = Channels.getChannel(channelId)?.lastPinTimestamp?.getTime() ?? 0;
+				this.clearUnreadStateIfRead(state);
+			}
+			this.restorePendingAcks(preservedAcks);
 			this.notifyChange(undefined, {global: true});
 		});
 	}
@@ -418,22 +453,34 @@ class ReadStates {
 		guild: {
 			id: string;
 			channels?: ReadonlyArray<ChannelPayload>;
+			threads?: ReadonlyArray<ChannelPayload>;
 		};
 	}): void {
 		this.suppressVersionBumps(() => {
 			if (action.guild.channels) {
 				for (const channel of action.guild.channels) {
-					if (!GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type)) continue;
-					const state = this.get(channel.id);
-					state.lastMessageId = channel.last_message_id ?? null;
-					state.lastPinTimestamp = parseTimestamp(channel.last_pin_timestamp);
-					state.storedGuildId = action.guild.id;
-					this.clearUnreadStateIfRead(state);
-					this.refreshMentionChannel(channel.id);
+					if (!GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) {
+						continue;
+					}
+					this.seedGuildChannel(action.guild.id, channel);
+				}
+			}
+			if (action.guild.threads) {
+				for (const thread of action.guild.threads) {
+					this.seedGuildChannel(action.guild.id, thread);
 				}
 			}
 			this.notifyChange(undefined, {global: true});
 		});
+	}
+
+	private seedGuildChannel(guildId: string, channel: ChannelPayload): void {
+		const state = this.get(channel.id);
+		state.lastMessageId = channel.last_message_id ?? null;
+		state.lastPinTimestamp = parseTimestamp(channel.last_pin_timestamp);
+		state.storedGuildId = guildId;
+		this.clearUnreadStateIfRead(state);
+		this.refreshMentionChannel(channel.id);
 	}
 
 	handleLoadMessages(action: {channelId: string; isAfter?: boolean; messages: Array<WireMessage>}): void {
@@ -536,11 +583,25 @@ class ReadStates {
 		this.notifyChange(action.channelId);
 	}
 
+	handleForumPostDiscarded(channelId: string, lastMessageId: string | null): void {
+		const state = this.getIfExists(channelId);
+		if (state == null) return;
+		state.lastMessageId = lastMessageId;
+		this.clearUnreadStateIfRead(state);
+		this.notifyChange(channelId);
+	}
+
 	handleChannelCreate(action: {channel: ChannelPayload}): void {
-		if (!TEXT_BASED_CHANNEL_TYPES.has(action.channel.type)) {
+		const isThread = THREAD_FEATURE_CHANNEL_TYPES.has(action.channel.type);
+		if (!TEXT_BASED_CHANNEL_TYPES.has(action.channel.type) && !isThread) {
 			return;
 		}
 		const state = this.get(action.channel.id);
+		if (isThread && !isNewerMessageId(action.channel.last_message_id, state.lastMessageId)) {
+			state.storedGuildId = action.channel.guild_id ?? state.storedGuildId;
+			this.notifyChange(action.channel.id);
+			return;
+		}
 		state.lastMessageId = action.channel.last_message_id ?? null;
 		state.lastPinTimestamp = parseTimestamp(action.channel.last_pin_timestamp);
 		state.storedGuildId = action.channel.guild_id ?? null;
@@ -561,7 +622,9 @@ class ReadStates {
 			if (
 				channel == null ||
 				state == null ||
-				(guildId != null && (channel.guildId !== guildId || !TEXT_BASED_CHANNEL_TYPES.has(channel.type)))
+				(guildId != null &&
+					(channel.guildId !== guildId ||
+						!(TEXT_BASED_CHANNEL_TYPES.has(channel.type) || THREAD_FEATURE_CHANNEL_TYPES.has(channel.type))))
 			) {
 				continue;
 			}
@@ -616,7 +679,11 @@ class ReadStates {
 			this.notifyChange(action.channel.id);
 			return;
 		}
-		if (action.channel.guild_id != null && GUILD_TEXT_BASED_CHANNEL_TYPES.has(action.channel.type ?? -1)) {
+		if (
+			action.channel.guild_id != null &&
+			(GUILD_TEXT_BASED_CHANNEL_TYPES.has(action.channel.type ?? -1) ||
+				THREAD_FEATURE_CHANNEL_TYPES.has(action.channel.type ?? -1))
+		) {
 			this.archiveState(action.channel.id);
 		}
 		this.clear(action.channel.id);
@@ -803,6 +870,26 @@ class ReadStates {
 		await this.flushDueAcks(true);
 	}
 
+	private capturePendingAcks(): Array<PendingAck> {
+		return Array.from(this.pendingAcks.values(), (pending) => ({...pending}));
+	}
+
+	private restorePendingAcks(preserved: ReadonlyArray<PendingAck>): void {
+		const currentUserId = Users.getCurrentUser()?.id ?? null;
+		for (const pending of preserved) {
+			if (pending.userId !== currentUserId) continue;
+			const state = this.getIfExists(pending.channelId);
+			if (state == null) continue;
+			if (compareMessageIds(pending.messageId, state.ackMessageId) <= 0) continue;
+			this.pendingAcks.set(pending.channelId as ChannelId, {...pending, deadline: Date.now()});
+		}
+		if (this.pendingAcks.size === 0) {
+			return;
+		}
+		this.scheduleAckFlush();
+		void this.flushDueAcks(true);
+	}
+
 	private applyAck(state: ReadStateEntry, options: AckOptions): AppliedAck {
 		const {
 			messageId,
@@ -872,6 +959,7 @@ class ReadStates {
 			messageId: existingIsNewer ? existing.messageId : messageId,
 			deadline: existing == null ? deadline : Math.min(existing.deadline, deadline),
 			attempt: existing?.attempt ?? 0,
+			userId: Users.getCurrentUser()?.id ?? null,
 		};
 		this.pendingAcks.set(channelId as ChannelId, pending);
 		const state = this.getIfExists(channelId);

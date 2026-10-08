@@ -2,7 +2,7 @@
 
 import {getRegionDisplayName} from '@fluxer/geo_utils/src/RegionFormatting';
 import {getSameIpDecisionKey, isValidIp, normalizeIpString} from '@fluxer/ip_utils/src/IpAddress';
-import maxmind, {type AsnResponse, type CityResponse, type Reader} from 'maxmind';
+import maxmind, {type CityResponse, type Reader} from 'maxmind';
 
 export interface GeoipResult {
 	countryCode: string | null;
@@ -17,33 +17,17 @@ export interface GeoipResult {
 	timeZone?: string | null;
 }
 
-export interface GeoipAsnResult {
-	normalizedIp: string | null;
-	asn: number | null;
-	asnOrg: string | null;
-	available: boolean;
-}
-
 type CacheEntry = {
 	result: GeoipResult;
-	expiresAt: number;
-};
-
-type AsnCacheEntry = {
-	result: GeoipAsnResult;
 	expiresAt: number;
 };
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const CACHE_MAX_ENTRIES = 10_000;
 const geoipCache = new Map<string, CacheEntry>();
-const asnCache = new Map<string, AsnCacheEntry>();
 
 let maxmindReader: Reader<CityResponse> | null = null;
 let maxmindReaderPromise: Promise<Reader<CityResponse>> | null = null;
-let maxmindAsnReader: Reader<AsnResponse> | null = null;
-let maxmindAsnReaderPromise: Promise<Reader<AsnResponse>> | null = null;
-let maxmindAsnUnavailable = false;
 
 function buildFallbackResult(normalizedIp: string): GeoipResult {
 	return {
@@ -57,15 +41,6 @@ function buildFallbackResult(normalizedIp: string): GeoipResult {
 		longitude: null,
 		accuracyRadiusKm: null,
 		timeZone: null,
-	};
-}
-
-function buildAsnFallbackResult(normalizedIp: string | null): GeoipAsnResult {
-	return {
-		normalizedIp: normalizedIp || null,
-		asn: null,
-		asnOrg: null,
-		available: false,
 	};
 }
 
@@ -84,24 +59,6 @@ async function ensureReader(dbPath: string): Promise<Reader<CityResponse>> {
 			});
 	}
 	return maxmindReaderPromise;
-}
-
-async function ensureAsnReader(dbPath: string): Promise<Reader<AsnResponse>> {
-	if (maxmindAsnReader) return maxmindAsnReader;
-	if (!maxmindAsnReaderPromise) {
-		maxmindAsnReaderPromise = maxmind
-			.open<AsnResponse>(dbPath, {watchForUpdates: true, watchForUpdatesNonPersistent: true})
-			.then((reader) => {
-				maxmindAsnReader = reader;
-				return reader;
-			})
-			.catch((error) => {
-				maxmindAsnReaderPromise = null;
-				maxmindAsnUnavailable = true;
-				throw error;
-			});
-	}
-	return maxmindAsnReaderPromise;
 }
 
 function stateLabel(record?: CityResponse): string | null {
@@ -157,31 +114,6 @@ function setCachedGeoipResult(cacheKey: string, result: GeoipResult): void {
 	geoipCache.set(cacheKey, {result, expiresAt: Date.now() + CACHE_TTL_MS});
 }
 
-function getCachedAsnResult(cacheKey: string, normalizedIp: string): GeoipAsnResult | null {
-	const cached = asnCache.get(cacheKey);
-	if (!cached) {
-		return null;
-	}
-	if (Date.now() >= cached.expiresAt) {
-		asnCache.delete(cacheKey);
-		return null;
-	}
-	asnCache.delete(cacheKey);
-	asnCache.set(cacheKey, cached);
-	return {...cached.result, normalizedIp};
-}
-
-function setCachedAsnResult(cacheKey: string, result: GeoipAsnResult): void {
-	asnCache.delete(cacheKey);
-	if (asnCache.size >= CACHE_MAX_ENTRIES) {
-		const oldestKey = asnCache.keys().next().value;
-		if (oldestKey !== undefined) {
-			asnCache.delete(oldestKey);
-		}
-	}
-	asnCache.set(cacheKey, {result, expiresAt: Date.now() + CACHE_TTL_MS});
-}
-
 async function lookupMaxmind(clean: string, dbPath: string): Promise<GeoipResult> {
 	try {
 		const reader = await ensureReader(dbPath);
@@ -206,24 +138,6 @@ async function lookupMaxmind(clean: string, dbPath: string): Promise<GeoipResult
 	}
 }
 
-async function lookupMaxmindAsn(clean: string, dbPath: string): Promise<GeoipAsnResult> {
-	try {
-		const reader = await ensureAsnReader(dbPath);
-		const record = reader.get(clean);
-		if (!record) {
-			return {normalizedIp: clean, asn: null, asnOrg: null, available: true};
-		}
-		return {
-			normalizedIp: clean,
-			asn: record.autonomous_system_number ?? null,
-			asnOrg: record.autonomous_system_organization ?? null,
-			available: true,
-		};
-	} catch {
-		return buildAsnFallbackResult(clean);
-	}
-}
-
 async function resolveGeoip(clean: string, dbPath: string): Promise<GeoipResult> {
 	const cacheKey = getSameIpDecisionKey(clean) ?? clean;
 	const cached = getCachedGeoipResult(cacheKey, clean);
@@ -232,17 +146,6 @@ async function resolveGeoip(clean: string, dbPath: string): Promise<GeoipResult>
 	}
 	const result = await lookupMaxmind(clean, dbPath);
 	setCachedGeoipResult(cacheKey, result);
-	return result;
-}
-
-async function resolveAsn(clean: string, dbPath: string): Promise<GeoipAsnResult> {
-	const cacheKey = getSameIpDecisionKey(clean) ?? clean;
-	const cached = getCachedAsnResult(cacheKey, clean);
-	if (cached) {
-		return cached;
-	}
-	const result = await lookupMaxmindAsn(clean, dbPath);
-	setCachedAsnResult(cacheKey, result);
 	return result;
 }
 
@@ -257,25 +160,10 @@ export async function lookupGeoipByIp(ip: string, dbPath: string | undefined): P
 	return resolveGeoip(clean, dbPath);
 }
 
-export async function lookupAsnByIp(ip: string, asnDbPath: string | undefined): Promise<GeoipAsnResult> {
-	if (!asnDbPath || maxmindAsnUnavailable) {
-		return buildAsnFallbackResult(null);
-	}
-	const clean = normalizeIpString(ip);
-	if (!isValidIp(clean)) {
-		return buildAsnFallbackResult(clean);
-	}
-	return resolveAsn(clean, asnDbPath);
-}
-
 export function resetGeoipReadersForTesting(): void {
 	maxmindReader = null;
 	maxmindReaderPromise = null;
-	maxmindAsnReader = null;
-	maxmindAsnReaderPromise = null;
-	maxmindAsnUnavailable = false;
 	geoipCache.clear();
-	asnCache.clear();
 }
 
 export function formatGeoipLocation(result: GeoipResult, locale?: string | null): string | null {

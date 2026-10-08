@@ -6,13 +6,13 @@ import {PurchaseDisclaimer} from '@app/features/app/components/dialogs/component
 import styles from '@app/features/app/components/dialogs/components/plutonium/PricingSection.module.css';
 import {PurchaseDisabledWrapper} from '@app/features/app/components/dialogs/components/plutonium/PurchaseDisabledWrapper';
 import {ToggleButton} from '@app/features/app/components/dialogs/components/ToggleButton';
-import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {
 	BUY_GIFT_DESCRIPTOR,
 	CLAIM_ACCOUNT_TO_PURCHASE_PREMIUM_DESCRIPTOR,
 	ONE_TIME_PURCHASE_DESCRIPTOR,
 	VIEW_PREMIUM_PERKS_DESCRIPTOR,
 } from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {getPremiumProductFullName, getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowDownIcon} from '@phosphor-icons/react';
@@ -70,6 +70,7 @@ const MESSAGE_1_MONTH_GIFT_DESCRIPTOR = msg({
 
 interface PricingSectionProps {
 	isGiftMode: boolean;
+	giftPurchasesAvailable?: boolean;
 	setIsGiftMode: (value: boolean) => void;
 	monthlyPrice: string;
 	yearlyPrice: string;
@@ -84,6 +85,7 @@ interface PricingSectionProps {
 export const PricingSection: React.FC<PricingSectionProps> = observer(
 	({
 		isGiftMode,
+		giftPurchasesAvailable = true,
 		setIsGiftMode,
 		monthlyPrice,
 		yearlyPrice,
@@ -97,28 +99,30 @@ export const PricingSection: React.FC<PricingSectionProps> = observer(
 		const {i18n} = useLingui();
 		const tooltipText: React.ReactNode =
 			purchaseDisabledTooltip ??
-			i18n._(CLAIM_ACCOUNT_TO_PURCHASE_PREMIUM_DESCRIPTOR, {premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME});
+			i18n._(CLAIM_ACCOUNT_TO_PURCHASE_PREMIUM_DESCRIPTOR, {premiumProductFullName: getPremiumProductFullName()});
 		return (
 			<section className={styles.section} data-flx="app.plutonium.pricing-section.section">
-				<div
-					className={styles.toggleContainer}
-					role="group"
-					aria-label={i18n._(PURCHASE_MODE_DESCRIPTOR)}
-					data-flx="app.plutonium.pricing-section.toggle-container"
-				>
-					<ToggleButton
-						active={!isGiftMode}
-						onClick={() => setIsGiftMode(false)}
-						label={i18n._(FOR_ME_DESCRIPTOR)}
-						data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode"
-					/>
-					<ToggleButton
-						active={isGiftMode}
-						onClick={() => setIsGiftMode(true)}
-						label={i18n._(AS_A_GIFT_DESCRIPTOR)}
-						data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode--2"
-					/>
-				</div>
+				{giftPurchasesAvailable && (
+					<div
+						className={styles.toggleContainer}
+						role="group"
+						aria-label={i18n._(PURCHASE_MODE_DESCRIPTOR)}
+						data-flx="app.plutonium.pricing-section.toggle-container"
+					>
+						<ToggleButton
+							active={!isGiftMode}
+							onClick={() => setIsGiftMode(false)}
+							label={i18n._(FOR_ME_DESCRIPTOR)}
+							data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode"
+						/>
+						<ToggleButton
+							active={isGiftMode}
+							onClick={() => setIsGiftMode(true)}
+							label={i18n._(AS_A_GIFT_DESCRIPTOR)}
+							data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode--2"
+						/>
+					</div>
+				)}
 				<div className={gridStyles.gridWrapper} data-flx="app.plutonium.pricing-section.div">
 					<div className={gridStyles.gridTwoColumns} data-flx="app.plutonium.pricing-section.div--2">
 						{!isGiftMode ? (
@@ -204,7 +208,7 @@ export const PricingSection: React.FC<PricingSectionProps> = observer(
 						data-flx="app.plutonium.pricing-section.scroll-prompt-container"
 					>
 						<p className={styles.scrollPromptText} data-flx="app.plutonium.pricing-section.scroll-prompt-text">
-							{i18n._(VIEW_PREMIUM_PERKS_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+							{i18n._(VIEW_PREMIUM_PERKS_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 						</p>
 						<ArrowDownIcon
 							className={styles.scrollPromptIcon}

@@ -19,6 +19,8 @@ interface SchemaMetadata {
 	bitflagValues?: Array<BitflagEntry>;
 	format?: string;
 	preserveEmptyValues?: boolean;
+	preserveNullFields?: boolean;
+	experiment?: string;
 }
 
 export const schemaMetadata = z.registry<SchemaMetadata>();

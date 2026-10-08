@@ -57,6 +57,7 @@ import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import type {SearchContext} from '@app/features/member/state/MemberSearch';
 import * as HighlightCommands from '@app/features/messaging/commands/HighlightCommands';
+import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {
@@ -78,6 +79,10 @@ import {
 import {isAutocompleteTriggerAllowed, type TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
 import {toReactionEmoji} from '@app/features/messaging/utils/MessageReactionUtils';
 import {
+	getReactionShortcodeName,
+	getReactionShorthandTargetId,
+} from '@app/features/messaging/utils/ReactionShorthandUtils';
+import {
 	type AutocompleteTrigger,
 	detectAutocompleteTrigger,
 	filterCommandsByQuery,
@@ -86,6 +91,8 @@ import MentionFrecency from '@app/features/notification/state/MentionFrecency';
 import Permission from '@app/features/permissions/state/Permission';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import {formatUserTagForStreamerMode} from '@app/features/user/utils/DisplayNameUtils';
@@ -163,6 +170,18 @@ function buildRecentSpeakerOptions(
 }
 
 export type {TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
+
+function getMentionableGuildChannels(guildId: string): ReadonlyArray<Channel> {
+	const channels = Channels.getGuildChannels(guildId);
+	if (!ThreadGuilds.isActive(guildId)) return channels;
+	const threads = ChannelThreads.getGuildThreads(guildId).filter((thread) => !thread.isArchived);
+	return threads.length === 0 ? channels : [...channels, ...threads];
+}
+
+function mentionSortPosition(channel: Channel): number {
+	if (channel.isThread()) return Number.MAX_SAFE_INTEGER;
+	return channel.position == null ? 0 : channel.position;
+}
 
 export function useLexicalAutocomplete({
 	channel,
@@ -424,19 +443,19 @@ export function useLexicalAutocomplete({
 				if (channel == null) {
 					break;
 				}
-				options = matchSorter(Channels.getGuildChannels(channel.guildId == null ? '' : channel.guildId), matchedText, {
-					keys: ['name'],
-				})
+				options = matchSorter(
+					getMentionableGuildChannels(channel.guildId == null ? '' : channel.guildId),
+					matchedText,
+					{
+						keys: ['name'],
+					},
+				)
 					.filter((candidate) => !candidate.isGuildCategory())
 					.map((candidate) => ({
 						type: 'channel' as const,
 						channel: candidate,
 					}))
-					.sort(
-						(a, b) =>
-							(a.channel.position == null ? 0 : a.channel.position) -
-							(b.channel.position == null ? 0 : b.channel.position),
-					)
+					.sort((a, b) => mentionSortPosition(a.channel) - mentionSortPosition(b.channel))
 					.slice(0, MENTION_RESULT_LIMIT);
 				break;
 			}
@@ -704,14 +723,20 @@ export function useLexicalAutocomplete({
 			const caret = currentTextUpToCursor.length;
 			const matchStart = getComposerAutocompleteReplacementStart(currentTextUpToCursor, trigger.type, trigger.match);
 			if (trigger.type === 'emojiReaction' && isEmoji(option)) {
-				if (channel != null) {
-					const messages = Messages.getMessages(channel.id).toArray();
-					const mostRecent = messages[messages.length - 1];
-					if (mostRecent != null) {
-						ReactionCommands.addReaction(i18n, channel.id, mostRecent.id, toReactionEmoji(option.emoji));
-					}
+				const targetId = channel == null ? null : getReactionShorthandTargetId(channel.id);
+				if (channel != null && targetId !== null) {
+					ReactionCommands.addReaction(i18n, channel.id, targetId, toReactionEmoji(option.emoji));
+					MessageCommands.stopReply(channel.id);
+					handle.clear();
+					return;
 				}
-				handle.clear();
+				applyComposerReplacement(
+					handle,
+					{start: matchStart, end: caret},
+					{kind: 'text', text: `+:${getReactionShortcodeName(option.emoji)}:`},
+					{trailing: true},
+					{maxWireLength: maxActualLength, onExceedMaxLength},
+				);
 				return;
 			}
 			if (isCommand(option)) {

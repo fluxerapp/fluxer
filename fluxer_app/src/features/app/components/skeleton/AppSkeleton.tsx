@@ -45,6 +45,8 @@ import {useLayoutEffect, useRef, useState} from 'react';
 
 const SIDEBAR_WIDTH_VARIABLE = '--layout-sidebar-width';
 const VOICE_CONNECTION_HEIGHT_VARIABLE = '--layout-voice-connection-height';
+const SKELETON_SHIMMER_DELAY_VARIABLE = '--skeleton-shimmer-delay';
+const SKELETON_SHIMMER_DURATION_MS = 3200;
 const GUILD_ID_PATH_INDEX = 2;
 
 function resolveSkeletonGuildId(pathname: string): string | null {
@@ -127,6 +129,7 @@ export const AppSkeleton = observer(({isExiting = false, onTransitionEnd, effect
 		}),
 	);
 	const voicePanelHeightPx = rememberedChrome.voice.panelHeightPx;
+	const [shimmerDelayMs] = useState(() => -(performance.now() % SKELETON_SHIMMER_DURATION_MS));
 	const canFitMemberList = useCanFitMemberList();
 	const frozenChatPresentationRef = useRef<FrozenChatSkeletonPresentation | null>(null);
 	let frozenChatPresentation = frozenChatPresentationRef.current;
@@ -176,6 +179,7 @@ export const AppSkeleton = observer(({isExiting = false, onTransitionEnd, effect
 	const showUserArea = !isMobile && !isVoiceCallFullscreenActive;
 	const sidebarWidth = SidebarWidth.cssValue;
 	const shellStyle: React.CSSProperties = {};
+	Object.assign(shellStyle, {[SKELETON_SHIMMER_DELAY_VARIABLE]: `${shimmerDelayMs}ms`});
 	if (!isMobile && sidebarWidth != null && sidebarWidth !== '') {
 		Object.assign(shellStyle, {[SIDEBAR_WIDTH_VARIABLE]: sidebarWidth});
 	}

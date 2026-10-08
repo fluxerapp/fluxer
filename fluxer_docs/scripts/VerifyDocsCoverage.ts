@@ -38,7 +38,7 @@ const MAIN_SPEC_EXEMPT = new Map<string, {file: string; anchor: string; reason: 
 		{
 			file: 'fluxer_api/src/api/openapi/OpenAPIController.ts',
 			anchor: "app.get('/openapi.json'",
-			reason: 'the handler serves the spec file itself and carries no OpenAPI({...}) block',
+			reason: 'the handler serves the spec file itself and has no OpenAPI({...}) block',
 		},
 	],
 	[
@@ -123,14 +123,6 @@ const OUT_OF_BAND_CREDENTIAL = new Map<string, OutOfBandRoute>([
 		},
 	],
 	[
-		'POST /webhooks/twilio/sms',
-		{
-			reason:
-				'installed only when config.sms.enabled, and then only when the inbound webhook token and public URL are both set, so a default or self-hosted instance never registers it',
-			documentedIn: null,
-		},
-	],
-	[
 		'POST /webhooks/livekit',
 		{
 			reason: 'a LiveKit-signed callback whose shipped target is the internal address http://api:8080/webhooks/livekit',
@@ -146,6 +138,22 @@ const OUT_OF_BAND_CREDENTIAL = new Map<string, OutOfBandRoute>([
 		},
 	],
 	[
+		'POST /webhooks/app-store',
+		{
+			reason:
+				'an App Store Server Notification whose signedPayload must verify against the pinned Apple root before it is queued. The route is hosted-only',
+			documentedIn: {file: 'http-api/in-app-purchases.mdx', anchor: 'POST /webhooks/app-store'},
+		},
+	],
+	[
+		'POST /webhooks/google-play',
+		{
+			reason:
+				'a Pub/Sub push whose Google-signed OIDC token must match the configured audience and service account before it is queued. The route is hosted-only',
+			documentedIn: {file: 'http-api/in-app-purchases.mdx', anchor: 'POST /webhooks/google-play'},
+		},
+	],
+	[
 		'GET /connections/bluesky/callback',
 		{
 			reason:
@@ -157,9 +165,66 @@ const OUT_OF_BAND_CREDENTIAL = new Map<string, OutOfBandRoute>([
 
 const HEALTH_AND_METRICS_PATHS = new Set(['/_health', '/_health/ready', '/_health/drain', '/_healthz', '/_metrics']);
 
+const CHANNEL_THREADS_UNTIL_GA = {
+	routes: new Set<string>([
+		'POST /channels/{}/messages/{}/threads',
+		'POST /channels/{}/threads',
+		'GET /guilds/{}/threads/active',
+		'GET /channels/{}/threads/archived/public',
+		'GET /channels/{}/threads/archived/private',
+		'GET /channels/{}/users/@me/threads/archived/private',
+		'GET /channels/{}/thread-members',
+		'GET /channels/{}/thread-members/{}',
+		'PUT /channels/{}/thread-members/@me',
+		'PUT /channels/{}/thread-members/{}',
+		'DELETE /channels/{}/thread-members/@me',
+		'DELETE /channels/{}/thread-members/{}',
+		'PATCH /channels/{}/thread-members/@me/settings',
+		'GET /channels/{}/threads/search',
+		'POST /channels/{}/post-data',
+		'POST /channels/{}/tags',
+		'PUT /channels/{}/tags/{}',
+		'DELETE /channels/{}/tags/{}',
+		'GET /admin/guilds/{}/threads',
+		'DELETE /admin/channels/{}',
+	]),
+	events: new Set<string>([
+		'THREAD_CREATE',
+		'THREAD_UPDATE',
+		'THREAD_DELETE',
+		'THREAD_LIST_SYNC',
+		'THREAD_MEMBER_UPDATE',
+		'THREAD_MEMBERS_UPDATE',
+	]),
+	opcodes: new Set<number>([28]),
+	errorCodes: new Set<string>([
+		'CHANNEL_HAS_THREADS',
+		'FORUM_TAG_NAMES_MUST_BE_UNIQUE',
+		'FORUM_TAG_REQUIRED',
+		'HIDE_MEDIA_DOWNLOAD_OPTION_MEDIA_ONLY',
+		'INVALID_THREAD_NOTIFICATION_SETTINGS',
+		'MAX_ACTIVE_THREADS',
+		'MAX_FORUM_TAGS',
+		'MAX_PINNED_THREADS_IN_FORUM',
+		'MAX_THREAD_MEMBERS',
+		'NO_TAGS_AVAILABLE_TO_NON_MODERATORS',
+		'SEARCH_INDEX_NOT_READY',
+		'THREAD_ALREADY_CREATED_FOR_MESSAGE',
+		'THREAD_ARCHIVED',
+		'THREAD_LOCKED',
+		'UNKNOWN_FORUM_TAG',
+		'UNKNOWN_THREAD_MEMBER',
+		'WEBHOOK_FORUM_TARGET_CONFLICT',
+		'WEBHOOK_FORUM_TARGET_REQUIRED',
+		'WEBHOOK_SERVICE_FORUM_UNSUPPORTED',
+		'WEBHOOK_THREAD_NAME_REQUIRES_FORUM',
+	]),
+};
+
 interface ExemptionRule {
 	readonly name: string;
 	readonly justification: string;
+	readonly mayCoverNothing?: boolean;
 
 	readonly anchors: ReadonlyArray<{readonly file: string; readonly anchor: string}>;
 	readonly covers: (shape: string, routePath: string) => boolean;
@@ -207,9 +272,22 @@ const EXEMPTION_RULES: ReadonlyArray<ExemptionRule> = [
 	{
 		name: 'out-of-band credential',
 		justification:
-			'no ordinary client holds the credential. Each entry states its guard, and three are covered in prose',
-		anchors: [{file: 'fluxer_api/src/api/app/ControllerRegistry.ts', anchor: 'if (config.sms.enabled) {'}],
+			'no ordinary client holds the credential. Each entry states its guard, and five are covered in prose',
+		anchors: [{file: 'fluxer_api/src/api/app/ControllerRegistry.ts', anchor: 'InternalRpcController(routes);'}],
 		covers: (shape) => OUT_OF_BAND_CREDENTIAL.has(shape),
+	},
+	{
+		name: 'channel_threads',
+		justification:
+			'threads, forum and media channels are behind the channel_threads experiment and ChannelThreadsRouteGuard answers 404 outside it. Their pages are withheld until general availability, which removes this rule',
+		mayCoverNothing: true,
+		anchors: [
+			{
+				file: 'fluxer_api/src/api/channel/threads/ChannelThreadsRouteGuard.ts',
+				anchor: 'export function ChannelThreadsRouteGuard',
+			},
+		],
+		covers: (shape) => CHANNEL_THREADS_UNTIL_GA.routes.has(shape),
 	},
 ];
 
@@ -532,9 +610,9 @@ console.log('main API and admin API (from route registration)');
 		.filter(([shape]) => !registered.has(shape))
 		.map(([shape, route]) => `${shape}  (${route.file}) is documented but fluxer_api registers no such route`)
 		.sort();
-	const deadRules = EXEMPTION_RULES.filter((rule) => (ruleCounts.get(rule.name) ?? 0) === 0).map(
-		(rule) => `the "${rule.name}" rule covers no registered route, so it is either stale or too narrow to matter`,
-	);
+	const deadRules = EXEMPTION_RULES.filter(
+		(rule) => rule.mayCoverNothing !== true && (ruleCounts.get(rule.name) ?? 0) === 0,
+	).map((rule) => `the "${rule.name}" rule covers no registered route, so it is either stale or too narrow to matter`);
 	const staleEntries = [
 		...[...DELIBERATELY_UNDOCUMENTED.keys()].map((shape) => [shape, 'DELIBERATELY_UNDOCUMENTED'] as const),
 		...[...OUT_OF_BAND_CREDENTIAL.keys()].map((shape) => [shape, 'OUT_OF_BAND_CREDENTIAL'] as const),
@@ -584,7 +662,7 @@ failures += section(
 			if (aliasShapes.has(shape)) {
 				return false;
 			}
-			return !DELIBERATELY_UNDOCUMENTED.has(shape);
+			return !DELIBERATELY_UNDOCUMENTED.has(shape) && !CHANNEL_THREADS_UNTIL_GA.routes.has(shape);
 		})
 		.map((operation) => `${operation.method} ${operation.path}  [${operation.tags.join(', ')}]`)
 		.sort(),
@@ -608,6 +686,12 @@ const wronglyDocumented = [...DELIBERATELY_UNDOCUMENTED.entries()]
 	.filter(([shape]) => documentedMain.has(shape))
 	.map(([shape, reason]) => `${shape}  must not be documented: ${reason}`);
 failures += section('documented despite belonging to an unshipped system', wronglyDocumented);
+failures += section(
+	'published despite being withheld until channel_threads general availability',
+	[...CHANNEL_THREADS_UNTIL_GA.routes]
+		.filter((shape) => documentedMain.has(shape) || documentedAdmin.has(shape))
+		.sort(),
+);
 console.log(
 	`  deliberately undocumented and correctly absent: ${(DELIBERATELY_UNDOCUMENTED.size - wronglyDocumented.length).toString()}/${DELIBERATELY_UNDOCUMENTED.size.toString()}`,
 );
@@ -680,13 +764,19 @@ console.log('gateway dispatch events');
 	};
 
 	const fabricated = [...documentedEvents].filter((event) => !isReal(event)).sort();
-	const undocumented = [...apiEvents].filter((event) => !documentedEvents.has(event)).sort();
+	const undocumented = [...apiEvents]
+		.filter((event) => !documentedEvents.has(event) && !CHANNEL_THREADS_UNTIL_GA.events.has(event))
+		.sort();
 	console.log(`  events in the GatewayDispatchEvent union: ${apiEvents.size.toString()}`);
 	console.log(`  events documented in gateway/events.md: ${documentedEvents.size.toString()}`);
 	console.log('  a documented event counts as real if it is in the union, or appears in fluxer_gateway');
 	console.log('  as an uppercase binary or a lowercase atom');
 	failures += section('documented but not emitted by any service', fabricated);
 	failures += section('in the dispatch union but undocumented', undocumented);
+	failures += section(
+		'published despite being withheld until channel_threads general availability',
+		[...CHANNEL_THREADS_UNTIL_GA.events].filter((event) => documentedEvents.has(event)).sort(),
+	);
 }
 
 console.log('gateway opcodes and close codes');
@@ -726,9 +816,13 @@ console.log('gateway opcodes and close codes');
 	failures += section(
 		'opcodes in constants.erl but undocumented',
 		[...realOpcodes]
-			.filter((code) => !docOpcodes.has(code))
+			.filter((code) => !docOpcodes.has(code) && !CHANNEL_THREADS_UNTIL_GA.opcodes.has(code))
 			.sort((a, b) => a - b)
 			.map(String),
+	);
+	failures += section(
+		'opcodes published despite being withheld until channel_threads general availability',
+		[...CHANNEL_THREADS_UNTIL_GA.opcodes].filter((code) => docOpcodes.has(code)).map(String),
 	);
 	failures += section(
 		'close codes documented but absent from constants.erl',
@@ -1146,7 +1240,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		for (const row of shellRows(fn, 'KEYS', label)) {
 			const parsed = row.match(/^([A-Z][A-Z0-9_]*) ([a-z0-9_]+)(?: .*)?$/u);
 			if (parsed == null) {
-				problems.push(`${label} carries the row \`${row}\`, which is not "NAME kind"`);
+				problems.push(`${label} has the row \`${row}\`, which is not "NAME kind"`);
 				continue;
 			}
 			keys.set(parsed[1], parsed[2]);
@@ -1159,7 +1253,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		for (const row of powershellRows(variable, label)) {
 			const parsed = row.match(/^\s*@\{Name = '([A-Z][A-Z0-9_]*)'; Kind = '([a-z0-9_]+)'/u);
 			if (parsed == null) {
-				problems.push(`${label} carries the row \`${row.trim()}\`, which is not an @{Name; Kind} entry`);
+				problems.push(`${label} has the row \`${row.trim()}\`, which is not an @{Name; Kind} entry`);
 				continue;
 			}
 			keys.set(parsed[1], parsed[2]);
@@ -1283,7 +1377,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	for (const row of powershellRows('FluxerStackFiles', 'the install.ps1 download list')) {
 		const parsed = row.match(/^\s*'([^']+)'\s*$/u);
 		if (parsed == null) {
-			problems.push(`the install.ps1 download list carries \`${row.trim()}\`, which is not a quoted file name`);
+			problems.push(`the install.ps1 download list has \`${row.trim()}\`, which is not a quoted file name`);
 			continue;
 		}
 		powershellStackFiles.push(parsed[1]);
@@ -1306,7 +1400,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	for (const row of powershellRows('FluxerComposeNames', 'the install.ps1 compose name list')) {
 		const parsed = row.match(/^\s*'([^']+)'\s*$/u);
 		if (parsed == null) {
-			problems.push(`the install.ps1 compose name list carries \`${row.trim()}\`, which is not a quoted file name`);
+			problems.push(`the install.ps1 compose name list has \`${row.trim()}\`, which is not a quoted file name`);
 			continue;
 		}
 		powershellComposeNames.push(parsed[1]);
@@ -1383,7 +1477,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	for (const [where, text] of digestBearing) {
 		if (/\b[0-9a-f]{64}\b/u.test(text)) {
 			problems.push(
-				`${where} carries a literal 64-character hex digest, which goes stale the next time a script changes`,
+				`${where} contains a literal 64-character hex digest, which goes stale the next time a script changes`,
 			);
 		}
 	}
@@ -1513,7 +1607,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		}
 	}
 
-	const ENV_VALUE_FLOOR = 19;
+	const ENV_VALUE_FLOOR = 17;
 	const ENV_VALUE_UNSET = 'unset';
 	let inEnvValueTable = false;
 	let envEntry: string | null = null;
@@ -1699,7 +1793,7 @@ console.log('unthrottled routes and global bucket claims');
 	failures += section('rate limit prose disagreements', problems);
 }
 
-console.log('error registry and abuse signal weights');
+console.log('error registry');
 {
 	const errorsPage = await readFile(path.join(DOCS_ROOT, 'http-api/errors.md'), 'utf8');
 	const documentedCodes = new Set<string>();
@@ -1727,31 +1821,19 @@ console.log('error registry and abuse signal weights');
 	}
 	const problems: Array<string> = [];
 	for (const code of registryCodes) {
-		if (!documentedCodes.has(code)) {
+		if (!documentedCodes.has(code) && !CHANNEL_THREADS_UNTIL_GA.errorCodes.has(code)) {
 			problems.push(`APIErrorCodes.${code} is not listed in the errors page registry`);
 		}
 	}
 
-	const banner = await readFile(path.join(REPO_ROOT, 'fluxer_api/src/api/middleware/AbusiveIpAutoBanner.ts'), 'utf8');
-	const weights = new Map<string, string>();
-	for (const rule of banner.matchAll(/if \(status === (\d{3})\) return ([\d.]+);/gu)) {
-		weights.set(rule[1], rule[2]);
-	}
-	for (const [status, weight] of weights) {
-		if (status === '404') {
-			continue;
-		}
-		if (!errorsPage.includes(`A ${status} weighs ${weight}`) && !errorsPage.includes(`a ${status} weighs ${weight}`)) {
-			problems.push(`errors.md does not state that a ${status} weighs ${weight}`);
-		}
-	}
-
 	const documentedRegistryCodes = [...registryCodes].filter((c) => documentedCodes.has(c)).length;
+	const withheldRegistryCodes = [...registryCodes].filter((c) => CHANNEL_THREADS_UNTIL_GA.errorCodes.has(c)).length;
 	const UNDOCUMENTED_VALIDATION_CODES = new Set(['EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL']);
-	const expectedEntries = registryCodes.size + validationCodes.size - UNDOCUMENTED_VALIDATION_CODES.size;
+	const expectedEntries =
+		registryCodes.size + validationCodes.size - UNDOCUMENTED_VALIDATION_CODES.size - withheldRegistryCodes;
 	if (documentedEntries < expectedEntries) {
 		problems.push(
-			`errors.md code entries parsed fell to ${documentedEntries.toString()}, expected ${expectedEntries.toString()}, the ${registryCodes.size.toString()} API codes plus the ${validationCodes.size.toString()} validation codes less the ${UNDOCUMENTED_VALIDATION_CODES.size.toString()} named as undocumented. Either a code lost its entry, or the registry parser stopped matching one of the \`| CODE |\` table row and \`### \`CODE\`\` or \`#### \`CODE\`\` heading shapes it reads`,
+			`errors.md code entries parsed fell to ${documentedEntries.toString()}, expected ${expectedEntries.toString()}, the ${registryCodes.size.toString()} API codes plus the ${validationCodes.size.toString()} validation codes less the ${UNDOCUMENTED_VALIDATION_CODES.size.toString()} named as undocumented and the ${withheldRegistryCodes.toString()} withheld until channel_threads general availability. Either a code lost its entry, or the registry parser stopped matching one of the \`| CODE |\` table row and \`### \`CODE\`\` or \`#### \`CODE\`\` heading shapes it reads`,
 		);
 	}
 	for (const code of documentedCodes) {
@@ -1759,13 +1841,20 @@ console.log('error registry and abuse signal weights');
 			problems.push(`errors.md documents ${code}, which is in neither code registry`);
 		}
 	}
-	if (documentedRegistryCodes < registryCodes.size) {
+	if (documentedRegistryCodes < registryCodes.size - withheldRegistryCodes) {
 		problems.push(
-			`errors.md documents ${documentedRegistryCodes.toString()} of the ${registryCodes.size.toString()} registry codes, floor is every one of them`,
+			`errors.md documents ${documentedRegistryCodes.toString()} of the ${registryCodes.size.toString()} registry codes, floor is every one of them less the ${withheldRegistryCodes.toString()} withheld until channel_threads general availability`,
 		);
 	}
+	for (const code of CHANNEL_THREADS_UNTIL_GA.errorCodes) {
+		if (!registryCodes.has(code)) {
+			problems.push(`CHANNEL_THREADS_UNTIL_GA withholds ${code}, which is not in the API code registry`);
+		}
+		if (documentedCodes.has(code)) {
+			problems.push(`errors.md publishes ${code}, which is withheld until channel_threads general availability`);
+		}
+	}
 	console.log(`  registry codes: ${registryCodes.size.toString()}, documented: ${documentedRegistryCodes.toString()}`);
-	console.log(`  abuse signal weights compared: ${weights.size.toString()}`);
 	failures += section('error registry disagreements', problems);
 }
 
@@ -1972,8 +2061,8 @@ console.log('bot capability flag (from the middleware chain)');
 		if (documented == null) {
 			continue;
 		}
-		const anyLogin = route.hasLoginRequired || route.hasLoginRequiredAllowSuspicious;
-		const sourceAcceptsBot = anyLogin && !route.hasDefaultUserOnly;
+		const anyLogin = route.hasLoginRequired;
+		const sourceAcceptsBot = (anyLogin || route.hasBotOnly) && !route.hasDefaultUserOnly;
 		const exemption = BOT_EXEMPT.get(key);
 		if (exemption != null) {
 			if (documented.bot !== exemption.docs) {
@@ -2032,7 +2121,7 @@ console.log('unauthenticated capability flag (from the middleware chain)');
 		if (documented == null) {
 			continue;
 		}
-		const anyLogin = route.hasLoginRequired || route.hasLoginRequiredAllowSuspicious;
+		const anyLogin = route.hasLoginRequired;
 		const sourceIsOpen = !anyLogin && !route.middlewares.some((name) => /OAuth2Scope/u.test(name));
 		const exemption = UNAUTHENTICATED_EXEMPT.get(key);
 		if (exemption != null) {
@@ -2088,11 +2177,12 @@ console.log('spec security field against the middleware chain');
 		}
 		const declaredSchemes = declaredSecurity.schemes;
 		compared += 1;
-		const anyLogin = route.hasLoginRequired || route.hasLoginRequiredAllowSuspicious;
-		const acceptsBot = anyLogin && !route.hasDefaultUserOnly;
+		const anyLogin = route.hasLoginRequired;
+		const acceptsBot = (anyLogin || route.hasBotOnly) && !route.hasDefaultUserOnly;
 		const requiresAuthentication =
 			anyLogin ||
 			route.hasDefaultUserOnly ||
+			route.hasBotOnly ||
 			route.oauth2BearerTokenRequired ||
 			route.middlewares.includes('requireOAuth2Scope');
 		if (requiresAuthentication && declaredSecurity.allowsAnonymous) {
@@ -2111,7 +2201,15 @@ console.log('spec security field against the middleware chain');
 		if (!declaredSchemes.has('botToken') && acceptsBot && declaredSchemes.size > 0) {
 			specBugs.push(`${key} omits botToken, but the middleware chain admits a bot token`);
 		}
-		if (declaredSchemes.size > 0 && !anyLogin && !route.middlewares.some((name) => /Admin|OAuth2Scope/iu.test(name))) {
+		if (route.hasBotOnly && [...declaredSchemes].some((scheme) => scheme !== 'botToken')) {
+			specBugs.push(`${key} declares [${[...declaredSchemes].join(', ')}], but BotOnly admits only a bot token`);
+		}
+		if (
+			declaredSchemes.size > 0 &&
+			!anyLogin &&
+			!route.hasBotOnly &&
+			!route.middlewares.some((name) => /Admin|OAuth2Scope/iu.test(name))
+		) {
 			specBugs.push(`${key} declares [${[...declaredSchemes].join(', ')}], but the chain has no login policy`);
 		}
 	}
@@ -2131,7 +2229,10 @@ const adminTargetOnly = [...documentedAdmin.entries()]
 	.map(([, route]) => `${route.method} ${route.path}  (${route.file})`)
 	.sort();
 const adminLiveOnly = admin
-	.filter((operation) => !documentedAdmin.has(routeShape(operation.method, operation.path)))
+	.filter((operation) => {
+		const shape = routeShape(operation.method, operation.path);
+		return !documentedAdmin.has(shape) && !CHANNEL_THREADS_UNTIL_GA.routes.has(shape);
+	})
 	.map((operation) => `${operation.method} ${operation.path}`)
 	.sort();
 console.log(`  live admin operations: ${admin.length.toString()}`);
@@ -2205,6 +2306,7 @@ async function verifyInstallerExecution(installerRoot: string): Promise<Array<st
 				env: {
 					...process.env,
 					PATH: `${stubBin}${path.delimiter}${process.env.PATH ?? ''}`,
+					FLUXER_INSTALLER_REFRESHED: '1',
 					...(cwd == null ? {} : {PWD: cwd}),
 				},
 			});
@@ -2263,6 +2365,14 @@ async function verifyInstallerExecution(installerRoot: string): Promise<Array<st
 			if (resolved != null && resolved !== expected) {
 				problems.push(`install.sh ${label} plans ref ${resolved}, and the image tag it pairs with wants ${expected}`);
 			}
+		}
+
+		const withoutEmail = INSTALL_ARGS.filter(
+			(arg, index) => arg !== '--email' && INSTALL_ARGS[index - 1] !== '--email',
+		);
+		const withoutEmailPlan = planned('without --email', withoutEmail);
+		if (withoutEmailPlan != null && !/^ {2}email\s+admin@x\.example, derived by compose$/mu.test(withoutEmailPlan)) {
+			problems.push('install.sh without --email does not plan the admin@FLUXER_DOMAIN contact that compose derives');
 		}
 
 		const composeYmlInstance = path.join(sandbox, 'compose-yml-instance');

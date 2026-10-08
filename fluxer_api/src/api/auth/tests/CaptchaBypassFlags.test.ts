@@ -6,25 +6,15 @@ import {
 	createUniqueUsername,
 	registerUser,
 } from '@app/api/auth/tests/AuthTestUtils';
-import {Config} from '@app/api/Config';
+import {getConfig} from '@app/api/Config';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {CAPTCHA_TEST_HEADER, useCheapCaptcha} from '@app/api/test/CaptchaTestUtils';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-
-async function withCaptchaEnabled<T>(run: () => Promise<T>): Promise<T> {
-	const previousEnabled = Config.captcha.enabled;
-	const previousTestModeEnabled = Config.dev.testModeEnabled;
-	Config.captcha.enabled = true;
-	Config.dev.testModeEnabled = true;
-	try {
-		return await run();
-	} finally {
-		Config.captcha.enabled = previousEnabled;
-		Config.dev.testModeEnabled = previousTestModeEnabled;
-	}
-}
 
 async function registerAndFlag(
 	harness: ApiTestHarness,
@@ -56,29 +46,45 @@ describe('Auth Captcha Bypass Flags', () => {
 	});
 	beforeEach(async () => {
 		await harness.reset();
+		await useCheapCaptcha();
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
 	it('lets APP_STORE_REVIEWER accounts log in without solving a captcha', async () => {
 		const account = await registerAndFlag(harness, ['APP_STORE_REVIEWER']);
-		await withCaptchaEnabled(async () => {
-			const resp = await createBuilderWithoutAuth<{token?: string; user_id?: string}>(harness)
-				.post('/auth/login')
-				.body({email: account.email, password: account.password})
-				.execute();
-			expect(resp.token).toBeTruthy();
-			expect(resp.user_id).toBe(account.userId);
-		});
+		const resp = await createBuilderWithoutAuth<{token?: string; user_id?: string}>(harness)
+			.post('/auth/login')
+			.header(CAPTCHA_TEST_HEADER, 'true')
+			.body({email: account.email, password: account.password})
+			.execute();
+		expect(resp.token).toBeTruthy();
+		expect(resp.user_id).toBe(account.userId);
 	});
 	it('still requires a captcha for accounts without the APP_STORE_REVIEWER flag', async () => {
 		const account = await registerAndFlag(harness, []);
-		await withCaptchaEnabled(async () => {
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/login')
+			.header(CAPTCHA_TEST_HEADER, 'true')
+			.body({email: account.email, password: account.password})
+			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.CAPTCHA_REQUIRED)
+			.execute();
+	});
+	it('never looks up the email field for an exemption on a username instance', async () => {
+		const account = await registerAndFlag(harness, ['APP_STORE_REVIEWER']);
+		const config = getConfig();
+		const originalSelfHosted = config.instance.selfHosted;
+		config.instance.selfHosted = true;
+		try {
+			await getInstanceConfigRepository().setAccountIdentityMode(AccountIdentityModes.USERNAME, 'setup');
 			await createBuilderWithoutAuth(harness)
 				.post('/auth/login')
+				.header(CAPTCHA_TEST_HEADER, 'true')
 				.body({email: account.email, password: account.password})
 				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.CAPTCHA_REQUIRED)
 				.execute();
-		});
+		} finally {
+			config.instance.selfHosted = originalSelfHosted;
+		}
 	});
 });

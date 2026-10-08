@@ -215,12 +215,10 @@ mod tests {
             static_cdn_endpoint: String::new(),
             admin_endpoint: admin_endpoint.to_owned(),
             web_app_endpoint: String::new(),
-            kv_url: String::new(),
             oauth_client_id: String::new(),
             oauth_client_secret: String::new(),
             oauth_redirect_uri: String::new(),
             build_version: "test".to_owned(),
-            release_channel: String::new(),
             self_hosted: false,
             proxy: ProxyConfig {
                 trust_client_ip_header: false,

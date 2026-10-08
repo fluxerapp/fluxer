@@ -5,6 +5,7 @@ import {
 	IDLE_DESCRIPTOR,
 	ONLINE_DESCRIPTOR,
 	OPEN_SETTINGS_DESCRIPTOR,
+	TRY_AGAIN_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {onLocaleChange} from '@app/features/i18n/utils/LocaleChangeListener';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -238,10 +239,6 @@ const AUTOSTART_PORTAL_REASON_DESCRIPTOR = msg({
 	comment:
 		'Reason shown by the Linux Flatpak background permission portal when enabling launch-at-login. {appName} is the desktop app name.',
 });
-const TASKS_DESCRIPTOR = msg({
-	message: 'Tasks',
-	comment: 'Windows jump-list category title. Groups quick actions like open settings and new DM.',
-});
 const OPEN_SETTINGS_2_DESCRIPTOR = msg({
 	message: 'Open {appName} settings',
 	comment: 'Windows jump-list task description (tooltip text) for the Open settings action.',
@@ -253,10 +250,6 @@ const NEW_DIRECT_MESSAGE_DESCRIPTOR = msg({
 const COMPOSE_A_NEW_DIRECT_MESSAGE_DESCRIPTOR = msg({
 	message: 'Compose a new direct message',
 	comment: 'Windows jump-list task description (tooltip text) for the New direct message action.',
-});
-const RECENT_DESCRIPTOR = msg({
-	message: 'Recent',
-	comment: 'Windows jump-list category title. Groups recently opened DMs / communities.',
 });
 const OPEN_NOTIFICATION_DESCRIPTOR = msg({
 	message: 'Open',
@@ -271,6 +264,19 @@ const IMPORT_FOLDER_DESCRIPTOR = msg({
 	message: 'Import folder',
 	comment: 'Title of the native folder picker that imports a directory of theme files.',
 });
+const IMPORT_CSS_DESCRIPTOR = msg({
+	message: 'Import CSS',
+	comment:
+		'Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.',
+});
+const LINK_FILE_DESCRIPTOR = msg({
+	message: 'Link file',
+	comment: 'Title of the native file picker that links an existing theme to a CSS file on disk.',
+});
+const CSS_FILES_DESCRIPTOR = msg({
+	message: 'CSS files',
+	comment: 'Name of the file type filter in the native theme file picker, shown next to the *.css pattern.',
+});
 const UNREAD_MESSAGES_DESCRIPTOR = msg({
 	message: 'Unread messages',
 	comment:
@@ -281,10 +287,68 @@ const UNREAD_MESSAGES_COUNT_DESCRIPTOR = msg({
 	comment:
 		'Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.',
 });
+const APP_STORE_UNREADABLE_TITLE_DESCRIPTOR = msg({
+	message: '{appName} cannot open its local data',
+	comment:
+		'Title of the native error dialog shown when the desktop app cannot open the local data store it used before. {appName} is the desktop app name (typically Fluxer).',
+});
+const APP_STORE_UNREADABLE_MESSAGE_DESCRIPTOR = msg({
+	message: '{appName} cannot open the local data it saved on this computer.',
+	comment:
+		'Main message of the native error dialog shown when the desktop app cannot open its local data store. {appName} is the desktop app name (typically Fluxer).',
+});
+const APP_STORE_UNREADABLE_UNCHANGED_DESCRIPTOR = msg({
+	message: 'Your accounts and settings have not been changed or deleted.',
+	comment: 'Detail line in the native dialog shown when the desktop app cannot open its local data store.',
+});
+const APP_STORE_UNREADABLE_ADVICE_DESCRIPTOR = msg({
+	message: 'Quit {appName}, make sure no other copy is running, and open it again.',
+	comment:
+		'Detail line in the native dialog shown when the desktop app cannot open its local data store. {appName} is the desktop app name (typically Fluxer).',
+});
+const APP_STORE_UNREADABLE_DETAILS_DESCRIPTOR = msg({
+	message: 'Details: {reason}',
+	comment:
+		'Detail line in the native dialog shown when the desktop app cannot open its local data store. {reason} is a technical error message.',
+});
+const LOCAL_APP_RENDERER_UNAVAILABLE_DESCRIPTOR = msg({
+	message: '{appName} could not load its app files. Quit and open it again.',
+	comment:
+		'Plain text page shown in the desktop window when the installed app files cannot be found. {appName} is the desktop app name.',
+});
+const LOCAL_APP_RENDERER_FILE_UNAVAILABLE_DESCRIPTOR = msg({
+	message: '{appName} could not read one of its app files. Quit and open it again.',
+	comment:
+		'Plain text page shown in the desktop window when one installed app file cannot be read. {appName} is the desktop app name.',
+});
+const LOCAL_APP_NOT_FOUND_DESCRIPTOR = msg({
+	message: 'Not found',
+	comment: 'Plain text page shown in the desktop window when a requested app file does not exist.',
+});
+const LOCAL_APP_API_UNAVAILABLE_DESCRIPTOR = msg({
+	message: 'No server is selected for this request.',
+	comment:
+		'Plain text body returned by the desktop app when a request has no active server to go to. Rarely seen by users.',
+});
+const SHOW_STORE_FOLDER_DESCRIPTOR = msg({
+	message: 'Show store folder',
+	comment:
+		'Button in the native dialog shown when the desktop app cannot open its local data store. Opens the folder that holds the data file.',
+});
 const FAILED_TO_START_DESCRIPTOR = msg({
 	message: '{appName} failed to start',
 	comment:
 		'Title of the native error dialog shown when the desktop app cannot boot. {appName} is the desktop app name (typically Fluxer).',
+});
+const APP_LOAD_FAILED_TITLE_DESCRIPTOR = msg({
+	message: "Can't connect",
+	comment:
+		'Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.',
+});
+const APP_LOAD_FAILED_MESSAGE_DESCRIPTOR = msg({
+	message: "{appName} can't reach its servers. It will keep trying in the background.",
+	comment:
+		'Body of the native dialog shown when the desktop app has repeatedly failed to load. {appName} is the desktop app name (typically Fluxer). The app keeps retrying on its own while the dialog is open.',
 });
 const LINUX_ENTRY_GENERIC_NAME_DESCRIPTOR = msg({
 	message: 'Instant Messenger',
@@ -364,18 +428,32 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.tray.restart': RESTART_DESCRIPTOR,
 	'desktop.tray.quit': QUIT_DESCRIPTOR,
 	'desktop.autostart.portalReason': AUTOSTART_PORTAL_REASON_DESCRIPTOR,
-	'desktop.jumpList.tasks': TASKS_DESCRIPTOR,
 	'desktop.jumpList.openSettings': OPEN_SETTINGS_DESCRIPTOR,
 	'desktop.jumpList.openSettingsDescription': OPEN_SETTINGS_2_DESCRIPTOR,
 	'desktop.jumpList.newDirectMessage': NEW_DIRECT_MESSAGE_DESCRIPTOR,
 	'desktop.jumpList.newDirectMessageDescription': COMPOSE_A_NEW_DIRECT_MESSAGE_DESCRIPTOR,
-	'desktop.jumpList.recent': RECENT_DESCRIPTOR,
 	'desktop.notifications.open': OPEN_NOTIFICATION_DESCRIPTOR,
 	'desktop.themes.addLocalFiles': ADD_LOCAL_FILES_DESCRIPTOR,
 	'desktop.themes.importFolder': IMPORT_FOLDER_DESCRIPTOR,
+	'desktop.themes.importCss': IMPORT_CSS_DESCRIPTOR,
+	'desktop.themes.linkFile': LINK_FILE_DESCRIPTOR,
+	'desktop.themes.cssFilesFilter': CSS_FILES_DESCRIPTOR,
 	'desktop.badge.unreadMessages': UNREAD_MESSAGES_DESCRIPTOR,
 	'desktop.badge.unreadMessagesCount': UNREAD_MESSAGES_COUNT_DESCRIPTOR,
 	'desktop.startup.failedTitle': FAILED_TO_START_DESCRIPTOR,
+	'desktop.appLoad.failedTitle': APP_LOAD_FAILED_TITLE_DESCRIPTOR,
+	'desktop.appLoad.failedMessage': APP_LOAD_FAILED_MESSAGE_DESCRIPTOR,
+	'desktop.appLoad.retry': TRY_AGAIN_DESCRIPTOR,
+	'desktop.appStore.unreadableTitle': APP_STORE_UNREADABLE_TITLE_DESCRIPTOR,
+	'desktop.appStore.unreadableMessage': APP_STORE_UNREADABLE_MESSAGE_DESCRIPTOR,
+	'desktop.appStore.unreadableUnchanged': APP_STORE_UNREADABLE_UNCHANGED_DESCRIPTOR,
+	'desktop.appStore.unreadableAdvice': APP_STORE_UNREADABLE_ADVICE_DESCRIPTOR,
+	'desktop.appStore.unreadableDetails': APP_STORE_UNREADABLE_DETAILS_DESCRIPTOR,
+	'desktop.appStore.showStoreFolder': SHOW_STORE_FOLDER_DESCRIPTOR,
+	'desktop.localApp.rendererUnavailable': LOCAL_APP_RENDERER_UNAVAILABLE_DESCRIPTOR,
+	'desktop.localApp.rendererFileUnavailable': LOCAL_APP_RENDERER_FILE_UNAVAILABLE_DESCRIPTOR,
+	'desktop.localApp.notFound': LOCAL_APP_NOT_FOUND_DESCRIPTOR,
+	'desktop.localApp.apiUnavailable': LOCAL_APP_API_UNAVAILABLE_DESCRIPTOR,
 	'desktop.linuxEntry.genericName': LINUX_ENTRY_GENERIC_NAME_DESCRIPTOR,
 	'desktop.linuxEntry.comment': LINUX_ENTRY_COMMENT_DESCRIPTOR,
 };

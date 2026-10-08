@@ -3,6 +3,7 @@
 import {createHash, randomBytes, randomInt} from 'node:crypto';
 import type {ChannelID, GuildID, InviteCode, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
 import {
+	createAttachmentID,
 	createChannelID,
 	createGuildID,
 	createInviteCode,
@@ -22,9 +23,14 @@ import {
 	computeEffectiveContentWarning,
 	guildToContentWarningView,
 } from '@app/api/channel/utils/EffectiveContentWarning';
+import {resolveNsfwScopeChannel} from '@app/api/channel/utils/ThreadNsfwScope';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 import type {DSAReportTicketRow} from '@app/api/database/types/ReportTypes';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
+import type {ReportOutcome, ReportTarget, ResolvedBy} from '@app/api/infrastructure/activity/Contract.generated';
+import {emitReportResolved} from '@app/api/infrastructure/activity/ModerationEvents';
 import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
@@ -45,8 +51,9 @@ import type {
 import {ReportStatus, ReportType} from '@app/api/report/IReportRepository';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {isUnderEnforcement} from '@app/api/user/ProfileVisibility';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {InviteTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {InviteTypes, MessageFlags, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -92,6 +99,29 @@ const DSA_CODE_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const DSA_CODE_SEGMENT_LENGTH = 4;
 const DSA_CODE_SEPARATOR = '-';
 const DSA_TICKET_BYTES = 32;
+const DSA_EMAIL_SEND_RECIPIENT_MAX = 3;
+const DSA_EMAIL_SEND_RECIPIENT_WINDOW = ms('1 hour');
+
+async function emitReportFiled(row: IARSubmissionRow, target: ReportTarget): Promise<void> {
+	const key = row.reported_user_id ?? row.reporter_id;
+	if (key === null) return;
+	await emitActivity(
+		'report_filed',
+		key.toString(),
+		{
+			report_id: row.report_id.toString(),
+			reporter_id: (row.reporter_id ?? 0n).toString(),
+			category: row.category,
+			target_type: target,
+			reported_user_id: row.reported_user_id?.toString() ?? null,
+			guild_id: row.reported_guild_id?.toString() ?? null,
+			message_id: row.reported_message_id?.toString() ?? null,
+			channel_id: row.reported_channel_id?.toString() ?? null,
+		},
+		null,
+		row.report_id.toString(),
+	);
+}
 
 export class ReportService {
 	private readonly messageChannelAuthService: MessageChannelAuthService;
@@ -120,6 +150,7 @@ export class ReportService {
 
 	async reportMessage(
 		reporter: ReporterMetadata,
+		viewer: ThreadViewer,
 		channelId: ChannelID,
 		messageId: MessageID,
 		category: string,
@@ -129,10 +160,11 @@ export class ReportService {
 		await this.ensureReportRateLimit(this.createReportRateLimitIdentifier(reporterKey), REPORT_RATE_LIMIT_MAX, false);
 		const {authChannel, channel, message} = await this.getReportableMessageForReporter({
 			reporterId: reporter.id,
+			viewer,
 			channelId,
 			messageId,
 		});
-		const reportedUserId = message.authorId;
+		const reportedUserId = await this.resolveReportedAuthorId(message);
 		if (reportedUserId == null) {
 			throw new UnknownMessageError();
 		}
@@ -141,7 +173,7 @@ export class ReportService {
 		}
 		const [reportedUser, messageContext] = await Promise.all([
 			this.userRepository.findUnique(reportedUserId),
-			this.gatherMessageContext(channelId, messageId, authChannel),
+			this.gatherMessageContext(channelId, messageId, authChannel, reportedUserId),
 		]);
 		if (!reportedUser) {
 			throw new UnknownUserError();
@@ -193,6 +225,7 @@ export class ReportService {
 		try {
 			await this.consumeMessageReportRateLimits({reporter, channel, message});
 			const report = await this.reportRepository.createReport(reportData);
+			await emitReportFiled(reportData, 'message');
 			if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 				await this.reportSearchService.indexReport(report).catch((error) => {
 					Logger.error({error, reportId: report.reportId}, 'Failed to index message report in search');
@@ -262,6 +295,7 @@ export class ReportService {
 		};
 		await this.ensureReportRateLimit(this.createReportRateLimitIdentifier(reporterKey), REPORT_RATE_LIMIT_MAX, true);
 		const report = await this.reportRepository.createReport(reportData);
+		await emitReportFiled(reportData, 'user');
 		if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 			await this.reportSearchService.indexReport(report).catch((error) => {
 				Logger.error({error, reportId: report.reportId}, 'Failed to index user report in search');
@@ -319,6 +353,7 @@ export class ReportService {
 		};
 		await this.ensureReportRateLimit(this.createReportRateLimitIdentifier(reporterKey), REPORT_RATE_LIMIT_MAX, true);
 		const report = await this.reportRepository.createReport(reportData);
+		await emitReportFiled(reportData, 'guild');
 		if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 			await this.reportSearchService.indexReport(report).catch((error) => {
 				Logger.error({error, reportId: report.reportId}, 'Failed to index guild report in search');
@@ -346,6 +381,20 @@ export class ReportService {
 
 	async sendDsaReportVerificationCode(email: string, locale: string | null = null): Promise<void> {
 		const normalizedEmail = this.normalizeEmail(email);
+		const recipientLimit = await this.rateLimitService.checkLimit({
+			identifier: `dsa:report:email:send:recipient:${normalizedEmail}`,
+			maxAttempts: DSA_EMAIL_SEND_RECIPIENT_MAX,
+			windowMs: DSA_EMAIL_SEND_RECIPIENT_WINDOW,
+		});
+		if (!recipientLimit.allowed) {
+			throw new RateLimitError({
+				retryAfter: recipientLimit.retryAfter,
+				retryAfterDecimal: recipientLimit.retryAfterDecimal,
+				limit: recipientLimit.limit,
+				resetTime: recipientLimit.resetTime,
+				resetAfterDecimal: recipientLimit.resetAfterDecimal,
+			});
+		}
 		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(normalizedEmail);
 		if (!hasValidDns) {
 			throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
@@ -397,6 +446,7 @@ export class ReportService {
 		await this.ensureReportRateLimit(this.createReportRateLimitIdentifier(reporterKey), REPORT_RATE_LIMIT_MAX, true);
 		await this.reportRepository.deleteDsaTicket(report.ticket);
 		const createdReport = await this.reportRepository.createReport(reportRow);
+		await emitReportFiled(reportRow, 'dsa');
 		if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 			await this.reportSearchService.indexReport(createdReport).catch((error) => {
 				Logger.error({error, reportId: createdReport.reportId}, 'Failed to index DSA report in search');
@@ -437,20 +487,21 @@ export class ReportService {
 		if (!channel) throw new UnknownChannelError();
 		const message = await this.channelRepository.getMessage(channelId, messageId);
 		if (!message) throw new UnknownMessageError();
-		if (message.authorId == null) {
+		const reportedAuthorId = await this.resolveReportedAuthorId(message);
+		if (reportedAuthorId == null) {
 			throw new UnknownUserError();
 		}
 		if (report.reported_user_tag) {
 			const tagged = await this.findUserByTag(report.reported_user_tag);
-			if (tagged.id !== message.authorId) {
+			if (tagged.id !== reportedAuthorId) {
 				throw new InvalidDsaReportTargetError();
 			}
 		}
-		const reportedUser = await this.userRepository.findUnique(message.authorId);
+		const reportedUser = await this.userRepository.findUnique(reportedAuthorId);
 		if (!reportedUser) {
 			throw new UnknownUserError();
 		}
-		const messageContext = await this.gatherMessageContext(channelId, messageId);
+		const messageContext = await this.gatherMessageContext(channelId, messageId, undefined, reportedAuthorId);
 		const guild = channel.guildId ? await this.guildRepository.findUnique(channel.guildId) : null;
 		const contentWarningSnapshot = await this.buildContentWarningSnapshot(guild, channel);
 		return {
@@ -464,7 +515,7 @@ export class ReportService {
 			report_type: ReportType.MESSAGE,
 			category: report.category,
 			additional_info: report.additional_info ?? null,
-			reported_user_id: message.authorId,
+			reported_user_id: reportedAuthorId,
 			reported_user_avatar_hash: reportedUser.avatarHash || null,
 			reported_guild_id: channel.guildId || null,
 			reported_guild_name: guild?.name ?? null,
@@ -581,10 +632,12 @@ export class ReportService {
 
 	private async getReportableMessageForReporter({
 		reporterId,
+		viewer,
 		channelId,
 		messageId,
 	}: {
 		reporterId: UserID | null;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
 	}): Promise<{
@@ -595,7 +648,11 @@ export class ReportService {
 		if (!reporterId) {
 			throw new UnknownChannelError();
 		}
-		const authChannel = await this.messageChannelAuthService.getChannelAuthenticated({userId: reporterId, channelId});
+		const authChannel = await this.messageChannelAuthService.getChannelAuthenticated({
+			userId: reporterId,
+			channelId,
+			viewer,
+		});
 		if (!(await this.canAccessMessage(authChannel, messageId))) {
 			throw new UnknownMessageError();
 		}
@@ -608,6 +665,24 @@ export class ReportService {
 			channel: authChannel.channel,
 			message,
 		};
+	}
+
+	private async resolveReportedAuthorId(message: Message): Promise<UserID | null> {
+		if ((message.flags & MessageFlags.IS_CROSSPOST) === 0) {
+			return message.authorId;
+		}
+		if ((message.flags & MessageFlags.SOURCE_MESSAGE_DELETED) !== 0) {
+			return null;
+		}
+		const reference = message.reference;
+		if (!reference?.messageId) {
+			return null;
+		}
+		const source = await this.channelRepository.getMessage(reference.channelId, reference.messageId);
+		if (!source || (source.flags & MessageFlags.IS_CROSSPOST) !== 0) {
+			return null;
+		}
+		return source.authorId;
 	}
 
 	private async canAccessMessage(authChannel: AuthenticatedChannel, messageId: MessageID): Promise<boolean> {
@@ -655,9 +730,12 @@ export class ReportService {
 			};
 		}
 		const guildView = guildToContentWarningView(guild);
+		const scope = channel
+			? await resolveNsfwScopeChannel(channel, (channelId) => this.channelRepository.findUnique(channelId))
+			: null;
 		let parentCategoryView: ContentWarningChannelLike | null = null;
-		if (channel?.parentId) {
-			const parent = await this.channelRepository.findUnique(channel.parentId);
+		if (scope?.parentId) {
+			const parent = await this.channelRepository.findUnique(scope.parentId);
 			if (parent) {
 				parentCategoryView = channelToContentWarningView(parent);
 			}
@@ -665,8 +743,8 @@ export class ReportService {
 		let effectiveNsfw: boolean | null = null;
 		let effectiveLevel: number | null = null;
 		let effectiveText: string | null = null;
-		if (channel) {
-			const channelView = channelToContentWarningView(channel);
+		if (scope) {
+			const channelView = channelToContentWarningView(scope);
 			effectiveNsfw = computeEffectiveChannelNsfw(channelView, parentCategoryView, guildView);
 			const effective = computeEffectiveContentWarning(channelView, parentCategoryView, guildView);
 			effectiveLevel = effective.level;
@@ -838,6 +916,7 @@ export class ReportService {
 		adminUserId: UserID,
 		publicComment: string | null,
 		auditLogReason: string | null,
+		resolution: {outcome?: ReportOutcome; resolvedBy?: ResolvedBy} = {},
 	): Promise<IARSubmission> {
 		const report = await this.reportRepository.resolveReport(reportId, adminUserId, publicComment, auditLogReason);
 		if (this.reportSearchService && 'updateReport' in this.reportSearchService) {
@@ -845,13 +924,27 @@ export class ReportService {
 				Logger.error({error, reportId: report.reportId}, 'Failed to update report in search index');
 			});
 		}
+		const outcome = resolution.outcome ?? (await this.observedOutcome(report));
+		await emitReportResolved(report, outcome, resolution.resolvedBy ?? 'staff');
 		return report;
+	}
+
+	private async observedOutcome(report: IARSubmission): Promise<ReportOutcome> {
+		if (!report.reportedUserId) return 'unspecified';
+		try {
+			const reported = await this.userRepository.findUnique(report.reportedUserId);
+			return reported && isUnderEnforcement(reported) ? 'actioned' : 'unspecified';
+		} catch (error) {
+			Logger.warn({error, reportId: report.reportId}, 'Could not read the reported account for a resolved report');
+			return 'unspecified';
+		}
 	}
 
 	private async gatherMessageContext(
 		channelId: ChannelID,
 		targetMessageId: MessageID,
 		authChannel?: AuthenticatedChannel,
+		targetAuthorId?: UserID,
 	): Promise<Array<IARMessageContextRow>> {
 		const messagesBefore = await this.channelRepository.listMessages(
 			channelId,
@@ -873,10 +966,13 @@ export class ReportService {
 			[...messagesBefore, targetMessage, ...messagesAfter],
 			authChannel,
 		);
+		const contextAuthorId = (msg: Message): UserID | null =>
+			msg.authorId ?? (msg.id === targetMessageId ? (targetAuthorId ?? null) : null);
 		const userIds = new Set<UserID>();
 		for (const msg of allMessages) {
-			if (msg.authorId) {
-				userIds.add(msg.authorId);
+			const authorId = contextAuthorId(msg);
+			if (authorId) {
+				userIds.add(authorId);
 			}
 		}
 		const users = new Map<UserID, User>();
@@ -888,15 +984,23 @@ export class ReportService {
 		}
 		const context: Array<IARMessageContextRow> = [];
 		for (const message of allMessages) {
-			const author = message.authorId != null ? users.get(message.authorId) : null;
-			if (!author) continue;
-			const clonedAttachments = message.attachments
-				? await this.cloneAttachmentsForReport(message.attachments, channelId)
-				: [];
+			const authorId = contextAuthorId(message);
+			const author = authorId != null ? users.get(authorId) : null;
+			if (!author || authorId == null) continue;
+			const clonedAttachments = [
+				...(message.attachments
+					? await this.cloneAttachmentsForReport(
+							message.attachments,
+							MessageHelpers.attachmentStorageChannelId(message),
+							channelId,
+						)
+					: []),
+				...(await this.cloneOwnedEmbedAttachmentsForReport(message, channelId)),
+			];
 			context.push({
 				message_id: message.id,
 				channel_id: channelId,
-				author_id: message.authorId!,
+				author_id: authorId,
 				author_username: author.username,
 				author_discriminator: author.discriminator,
 				author_avatar_hash: author.avatarHash || null,
@@ -939,6 +1043,7 @@ export class ReportService {
 	private async cloneAttachmentsForReport(
 		attachments: Array<Attachment>,
 		sourceChannelId: ChannelID,
+		reportedChannelId: ChannelID,
 	): Promise<Array<MessageAttachment>> {
 		const clonedAttachments: Array<MessageAttachment> = [];
 		for (const attachment of attachments) {
@@ -948,7 +1053,7 @@ export class ReportService {
 					sourceBucket: Config.s3.buckets.cdn,
 					sourceKey,
 					destinationBucket: Config.s3.buckets.reports,
-					destinationKey: sourceKey,
+					destinationKey: MessageHelpers.makeAttachmentCdnKey(reportedChannelId, attachment.id, attachment.filename),
 					newContentType: attachment.contentType,
 				});
 				const clonedAttachment: MessageAttachment = {
@@ -973,6 +1078,49 @@ export class ReportService {
 					{error, attachmentId: attachment.id, filename: attachment.filename, sourceChannelId},
 					'Failed to clone attachment for report',
 				);
+			}
+		}
+		return clonedAttachments;
+	}
+
+	private async cloneOwnedEmbedAttachmentsForReport(
+		message: Message,
+		reportedChannelId: ChannelID,
+	): Promise<Array<MessageAttachment>> {
+		const clonedAttachments: Array<MessageAttachment> = [];
+		for (const {key, media} of MessageHelpers.collectOwnedEmbedAttachments(message)) {
+			const [, , attachmentId, ...filenameParts] = key.split('/');
+			const filename = filenameParts.join('/');
+			try {
+				const metadata = await this.storageService.getObjectMetadata(Config.s3.buckets.cdn, key);
+				if (!metadata) continue;
+				const id = createAttachmentID(BigInt(attachmentId!));
+				const contentType = media.content_type ?? metadata.contentType;
+				await this.storageService.copyObject({
+					sourceBucket: Config.s3.buckets.cdn,
+					sourceKey: key,
+					destinationBucket: Config.s3.buckets.reports,
+					destinationKey: MessageHelpers.makeAttachmentCdnKey(reportedChannelId, id, filename),
+					newContentType: contentType,
+				});
+				clonedAttachments.push({
+					attachment_id: id,
+					filename,
+					size: BigInt(metadata.contentLength),
+					title: null,
+					description: media.description,
+					width: media.width,
+					height: media.height,
+					content_type: contentType,
+					content_hash: media.content_hash,
+					placeholder: media.placeholder,
+					flags: media.flags & ~MessageHelpers.EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
+					duration: media.duration,
+					nsfw: null,
+					waveform: null,
+				});
+			} catch (error) {
+				Logger.error({error, key, reportedChannelId}, 'Failed to clone embed attachment for report');
 			}
 		}
 		return clonedAttachments;

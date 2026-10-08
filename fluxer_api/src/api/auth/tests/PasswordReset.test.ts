@@ -65,6 +65,45 @@ describe('Password reset flow', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
 	});
+	it('invalidates every outstanding reset token once a reset completes', async () => {
+		const account = await createTestAccount(harness);
+		for (let i = 0; i < 2; i++) {
+			await createBuilderWithoutAuth(harness)
+				.post('/auth/forgot')
+				.body({email: account.email})
+				.expect(HTTP_STATUS.NO_CONTENT)
+				.execute();
+		}
+		const emails = await listTestEmails(harness, {recipient: account.email});
+		const tokens = [
+			...new Set(
+				emails
+					.filter((email) => email.type === 'password_reset')
+					.map((email) => email.metadata?.token)
+					.filter((token): token is string => typeof token === 'string'),
+			),
+		];
+		expect(tokens).toHaveLength(2);
+		const [earlierToken, laterToken] = tokens;
+		const newPassword = generateUniquePassword();
+		const resetResp = await createBuilderWithoutAuth<LoginSuccessResponse>(harness)
+			.post('/auth/reset')
+			.body({token: laterToken, password: newPassword})
+			.execute();
+		expect(resetResp.token.length).toBeGreaterThan(0);
+		const check = await createBuilderWithoutAuth<{valid: boolean}>(harness)
+			.get(`/auth/reset/${earlierToken}`)
+			.execute();
+		expect(check.valid).toBe(false);
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/reset')
+			.body({token: earlierToken, password: generateUniquePassword()})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+		await createBuilder(harness, resetResp.token).get('/users/@me').expect(HTTP_STATUS.OK).execute();
+		const login = await loginUser(harness, {email: account.email, password: newPassword});
+		expect('token' in login && login.token.length > 0).toBe(true);
+	});
 	it('rejects invalid reset token', async () => {
 		await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)

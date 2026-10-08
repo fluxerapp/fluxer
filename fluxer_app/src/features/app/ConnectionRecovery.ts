@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import AccountManager from '@app/features/auth/state/AccountManager';
+import {Routes} from '@app/app/Routes';
+import Accounts from '@app/features/auth/state/Accounts';
+import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import SessionManager from '@app/features/platform/state/AuthSession';
 
 class StalledConnectionAccountSwitchUnavailableError extends Error {
@@ -14,13 +16,21 @@ export function canSwitchAccountFromStalledConnection(): boolean {
 	return SessionManager.canSwitchAccount() || SessionManager.isConnecting;
 }
 
-export async function switchAccountFromStalledConnection(userId: string): Promise<void> {
+export async function switchAccountFromStalledConnection(accountKey: string): Promise<void> {
 	if (!canSwitchAccountFromStalledConnection()) {
 		throw new StalledConnectionAccountSwitchUnavailableError();
 	}
-	SessionManager.requireAccountOnCurrentInstance(userId);
+	SessionManager.requireSwitchableAccount(accountKey);
 	if (SessionManager.isConnecting) {
 		SessionManager.handleConnectionFailed();
 	}
-	await AccountManager.switchToAccount(userId, null);
+	await Accounts.switchToAccount(accountKey, Routes.ME);
+}
+
+export function retryStalledConnection(): void {
+	const accountKey = SessionManager.currentAccountKey;
+	if (accountKey === null) {
+		return;
+	}
+	GatewayConnection.recoverForegroundSession(accountKey);
 }

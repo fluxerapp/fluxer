@@ -8,8 +8,10 @@ import type {TrackBitrateInfo} from './PCTransport.ts';
 import {
 	applyVideoStartBitrate,
 	collectStereoMids,
+	conformBundledCodecFmtp,
 	ensureAudioNackAndStereo,
 	ensureOpusFmtp,
+	ensureOpusStereoReception,
 	ensureVideoDDExtension,
 	placeholderMidsFromTransceivers,
 	videoSectionCanReceiveAV1,
@@ -73,66 +75,34 @@ describe('applyVideoStartBitrate', () => {
 	}
 
 	it('adds a start bitrate to a non-SVC codec section', () => {
-		for (const screenShareDelivery of [false, true]) {
-			const media = videoMedia('camera-track', [
-				{payload: 96, config: 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f'},
-			]);
-			expect(applyVideoStartBitrate(media, 'camera-track', 'H264', 1000, false, screenShareDelivery)).toBe(96);
-			expect(media.fmtp[0]?.config).toBe(
-				'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f;x-google-start-bitrate=900',
-			);
-		}
-	});
-
-	it('caps camera start bitrates but not screen share start bitrates while screen share delivery is off', () => {
-		const camera = videoMedia('camera-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(camera, 'camera-track', 'H264', 3000);
-		expect(camera.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=1000');
-
-		const screen = videoMedia('screen-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(screen, 'screen-track', 'H264', 6000, true);
-		expect(screen.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=5400');
+		const media = videoMedia('camera-track', [
+			{payload: 96, config: 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f'},
+		]);
+		expect(applyVideoStartBitrate(media, 'camera-track', 'H264', 1000, false)).toBe(96);
+		expect(media.fmtp[0]?.config).toBe(
+			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f;x-google-start-bitrate=900',
+		);
 	});
 
 	it('caps camera and screen share start bitrates at their own ceilings', () => {
 		const camera = videoMedia('camera-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(camera, 'camera-track', 'H264', 3000, false, true);
+		applyVideoStartBitrate(camera, 'camera-track', 'H264', 3000, false);
 		expect(camera.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=1000');
 
 		const screen = videoMedia('screen-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(screen, 'screen-track', 'H264', 6000, true, true);
+		applyVideoStartBitrate(screen, 'screen-track', 'H264', 6000, true);
 		expect(screen.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=1500');
-	});
-
-	it('leaves a small screen share start bitrate on the floor while screen share delivery is off', () => {
-		const screen = videoMedia('screen-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(screen, 'screen-track', 'H264', 300, true);
-		expect(screen.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=270');
 	});
 
 	it('keeps a screen share start bitrate above the frame dropper cliff', () => {
 		const screen = videoMedia('screen-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(screen, 'screen-track', 'H264', 300, true, true);
+		applyVideoStartBitrate(screen, 'screen-track', 'H264', 300, true);
 		expect(screen.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=600');
-	});
-
-	it('stamps only the lead payload type while screen share delivery is off', () => {
-		const media = multiPayloadScreenMedia();
-		expect(applyVideoStartBitrate(media, 'screen-track', 'H264', 6000, true)).toBe(116);
-		expect(media.fmtp.find((fmtp) => fmtp.payload === 116)?.config).toBe(
-			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=4d001f;x-google-start-bitrate=5400',
-		);
-		expect(media.fmtp.find((fmtp) => fmtp.payload === 102)?.config).toBe(
-			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f',
-		);
-		expect(media.fmtp.find((fmtp) => fmtp.payload === 108)?.config).toBe(
-			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
-		);
 	});
 
 	it('stamps every payload type the codec is offered under, not only the lead one', () => {
 		const media = multiPayloadScreenMedia();
-		expect(applyVideoStartBitrate(media, 'screen-track', 'H264', 6000, true, true)).toBe(116);
+		expect(applyVideoStartBitrate(media, 'screen-track', 'H264', 6000, true)).toBe(116);
 		for (const fmtp of media.fmtp) {
 			expect(fmtp.config).toContain('x-google-start-bitrate=1500');
 		}
@@ -140,47 +110,35 @@ describe('applyVideoStartBitrate', () => {
 	});
 
 	it('only touches the fmtp line for the matching payload', () => {
-		for (const screenShareDelivery of [false, true]) {
-			const media = videoMedia(
-				'screen-track',
-				[
-					{payload: 96, config: 'profile-level-id=42e01f'},
-					{payload: 98, config: 'profile-id=0'},
-				],
-				[
-					{payload: 96, codec: 'H264'},
-					{payload: 98, codec: 'VP9'},
-				],
-			);
-			applyVideoStartBitrate(media, 'screen-track', 'VP9', 1500, true, screenShareDelivery);
-			expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f');
-			expect(media.fmtp[1]?.config).toBe('profile-id=0;x-google-start-bitrate=1350');
-		}
-	});
-
-	it('never appends a second start bitrate while screen share delivery is off', () => {
-		const media = videoMedia('camera-track', [
-			{payload: 96, config: 'profile-level-id=42e01f;x-google-start-bitrate=900'},
-		]);
-		applyVideoStartBitrate(media, 'camera-track', 'H264', 2000);
-		expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=900');
+		const media = videoMedia(
+			'screen-track',
+			[
+				{payload: 96, config: 'profile-level-id=42e01f'},
+				{payload: 98, config: 'profile-id=0'},
+			],
+			[
+				{payload: 96, codec: 'H264'},
+				{payload: 98, codec: 'VP9'},
+			],
+		);
+		applyVideoStartBitrate(media, 'screen-track', 'VP9', 1500, true);
+		expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f');
+		expect(media.fmtp[1]?.config).toBe('profile-id=0;x-google-start-bitrate=1350');
 	});
 
 	it('replaces a start bitrate an earlier offer wrote instead of keeping it', () => {
 		const media = videoMedia('camera-track', [
 			{payload: 96, config: 'profile-level-id=42e01f;x-google-start-bitrate=900'},
 		]);
-		applyVideoStartBitrate(media, 'camera-track', 'H264', 2000, false, true);
+		applyVideoStartBitrate(media, 'camera-track', 'H264', 2000, false);
 		expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=1000');
 	});
 
 	it('leaves other tracks and missing codecs alone', () => {
-		for (const screenShareDelivery of [false, true]) {
-			const media = videoMedia('camera-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-			expect(applyVideoStartBitrate(media, 'other-track', 'H264', 2000, false, screenShareDelivery)).toBeUndefined();
-			expect(applyVideoStartBitrate(media, 'camera-track', 'AV1', 2000, false, screenShareDelivery)).toBe(0);
-			expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f');
-		}
+		const media = videoMedia('camera-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
+		expect(applyVideoStartBitrate(media, 'other-track', 'H264', 2000, false)).toBeUndefined();
+		expect(applyVideoStartBitrate(media, 'camera-track', 'AV1', 2000, false)).toBe(0);
+		expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f');
 	});
 });
 
@@ -222,6 +180,45 @@ describe('ensureAudioNackAndStereo', () => {
 		ensureAudioNackAndStereo(stereo as never, ['1'], []);
 		expect(opusConfig(stereo)).toContain('stereo=1');
 		expect(opusConfig(stereo)).toContain('sprop-stereo=1');
+	});
+});
+
+describe('ensureOpusStereoReception', () => {
+	it.each(['recvonly', 'sendrecv'] as const)(
+		'receives stereo in a %s section without declaring stereo capture',
+		(direction) => {
+			const media = opusMedia('useinbandfec=1;stereo=0;sprop-stereo=0;maxaveragebitrate=48000');
+			media.direction = direction;
+			ensureOpusStereoReception(media);
+			expect(opusConfig(media)).toBe('useinbandfec=1;sprop-stereo=0;maxaveragebitrate=48000;stereo=1');
+		},
+	);
+
+	it('uses the default sendrecv direction when no direction is present', () => {
+		const media = opusMedia('useinbandfec=1');
+		ensureOpusStereoReception(media);
+		expect(opusConfig(media)).toBe('useinbandfec=1;stereo=1');
+	});
+
+	it.each(['sendonly', 'inactive'] as const)('preserves a %s section', (direction) => {
+		const media = opusMedia('useinbandfec=1;stereo=0;sprop-stereo=0');
+		media.direction = direction;
+		ensureOpusStereoReception(media);
+		expect(opusConfig(media)).toBe('useinbandfec=1;stereo=0;sprop-stereo=0');
+	});
+
+	it('preserves rejected sections and other media or codecs', () => {
+		const rejected = opusMedia('useinbandfec=1');
+		rejected.port = 0;
+		ensureOpusStereoReception(rejected);
+		expect(opusConfig(rejected)).toBe('useinbandfec=1');
+		const video = videoMedia('camera', [{payload: 96, config: 'profile-level-id=42e01f'}]);
+		ensureOpusStereoReception(video);
+		expect(video.fmtp[0]?.config).toBe('profile-level-id=42e01f');
+		const pcm = opusMedia('useinbandfec=1');
+		pcm.rtp[0]!.codec = 'PCMU';
+		ensureOpusStereoReception(pcm);
+		expect(opusConfig(pcm)).toBe('useinbandfec=1');
 	});
 });
 
@@ -310,7 +307,7 @@ describe('ensureVideoDDExtension', () => {
 		expect(ddOf(sdp, '1')).toBe(13);
 	});
 
-	it('leaves a section that already carries the extension alone', () => {
+	it('leaves a section that already has the extension alone', () => {
 		const sdp = parse(`${singlePcOffer}\na=extmap:3 ${ddExtensionURI}`);
 		expect(ensureVideoDDExtension(sectionOf(sdp, '2'), sdp, 0)).toBe(3);
 		expect(sectionOf(sdp, '2').ext).toHaveLength(2);
@@ -326,15 +323,63 @@ describe('placeholderMidsFromTransceivers', () => {
 		return {mid, currentDirection, sender: {track}} as unknown as RTCRtpTransceiver;
 	}
 
-	it('keeps the trackless recvonly sections that still hold an m-line', () => {
+	it('keeps unused trackless sections that still hold an m-line', () => {
 		const mids = placeholderMidsFromTransceivers([
-			transceiver('3', null, 'recvonly'),
+			transceiver('3', null, 'inactive'),
+			transceiver('4', null, null),
 			transceiver('7', {} as MediaStreamTrack, 'sendonly'),
 		]);
-		expect(mids).toEqual(new Set(['3']));
+		expect(mids).toEqual(new Set(['3', '4']));
 	});
 
 	it('drops a transceiver that unpublish stopped so its recycled m-section is not fmtp-conformed', () => {
 		expect(placeholderMidsFromTransceivers([transceiver('7', null, 'stopped')])).toEqual(new Set());
+	});
+
+	it.each(['recvonly', 'sendrecv'] as const)(
+		'preserves a negotiated %s receiver without a local sender',
+		(direction) => {
+			expect(placeholderMidsFromTransceivers([transceiver('0', null, direction)])).toEqual(new Set());
+		},
+	);
+
+	it.each(['sendonly', 'sendrecv', undefined] as const)(
+		'preserves a receiver activated by a remote %s answer before currentDirection updates',
+		(direction) => {
+			const incoming = opusMedia('useinbandfec=1');
+			incoming.direction = direction;
+			expect(placeholderMidsFromTransceivers([transceiver('0', null, null)], [incoming])).toEqual(new Set());
+		},
+	);
+
+	it('keeps inactive and rejected remote sections eligible for placeholder conformance', () => {
+		const inactive = opusMedia('useinbandfec=1', '0');
+		inactive.direction = 'inactive';
+		const rejected = opusMedia('useinbandfec=1', '1');
+		rejected.direction = 'sendonly';
+		rejected.port = 0;
+		expect(
+			placeholderMidsFromTransceivers(
+				[transceiver('0', null, 'inactive'), transceiver('1', null, null)],
+				[inactive, rejected],
+			),
+		).toEqual(new Set(['0', '1']));
+	});
+
+	it('starting a stereo share preserves incoming microphone fmtp while conforming unused placeholders', () => {
+		const microphone = opusMedia('useinbandfec=1;maxaveragebitrate=64000', '0');
+		const placeholder = opusMedia('useinbandfec=1;usedtx=1', '1');
+		const screenShare = opusMedia('useinbandfec=1', '2');
+		ensureOpusFmtp(screenShare, 128000, true);
+		const microphoneConfig = opusConfig(microphone);
+		const mids = placeholderMidsFromTransceivers([
+			transceiver('0', null, 'recvonly'),
+			transceiver('1', null, 'inactive'),
+			transceiver('2', {} as MediaStreamTrack, 'sendonly'),
+		]);
+		conformBundledCodecFmtp([microphone, placeholder, screenShare], (media) => mids.has(String(media.mid)));
+		expect(opusConfig(microphone)).toBe(microphoneConfig);
+		expect(opusConfig(screenShare)).toContain('stereo=1');
+		expect(opusConfig(placeholder)).toBe(opusConfig(screenShare));
 	});
 });

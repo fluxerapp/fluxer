@@ -3,6 +3,7 @@
 pub mod bootstrap;
 pub mod cassandra;
 pub mod desktop;
+pub mod desktop_modules;
 pub mod dev;
 pub mod disclaim;
 pub mod env;

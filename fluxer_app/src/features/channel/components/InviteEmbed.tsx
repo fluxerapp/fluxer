@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/InviteEmbed.module.css';
 import {
@@ -42,6 +42,7 @@ import cardStyles from '@app/features/messaging/components/embeds/embed_card/Emb
 import {useEmbedSkeletonOverride} from '@app/features/messaging/components/embeds/embed_card/useEmbedSkeletonOverride';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {InviteEmbedContextMenu} from '@app/features/ui/action_menu/InviteEmbedContextMenu';
@@ -153,7 +154,8 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 	onDelete,
 }: InviteEmbedProps) {
 	const {i18n} = useLingui();
-	const inviteState = Invites.invites.get(code) ?? null;
+	const instanceTarget = useMemo(currentInstanceTarget, []);
+	const inviteState = Invites.getInvite(code, instanceTarget);
 	const shouldForceSkeleton = useEmbedSkeletonOverride();
 	const invite = inviteState?.data ?? null;
 	const isGuildInviteType = invite != null && isGuildInvite(invite);
@@ -182,9 +184,9 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 	}, [isLoading, currentChannelId]);
 	useEffect(() => {
 		if (!inviteState) {
-			void InviteCommands.fetchWithCoalescing(code).catch(() => {});
+			void InviteCommands.fetchWithCoalescing(code, instanceTarget).catch(() => {});
 		}
-	}, [code, inviteState]);
+	}, [code, instanceTarget, inviteState]);
 	const memberGuildId = isGuildInviteType && Guilds.getGuild(guildFromInvite?.id ?? '') ? guild!.id : null;
 	useEffect(() => {
 		if (memberGuildId) {
@@ -200,7 +202,7 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 		const inviter = Users.getUser(invite.inviter?.id ?? '');
 		const groupDMTitle = getGroupDMTitle(invite.channel, i18n._(UNNAMED_GROUP_DESCRIPTOR));
 		const groupDMPath = Routes.dmChannel(invite.channel.id);
-		const handleAcceptInvite = () => InviteCommands.acceptAndTransitionToChannel(invite.code, i18n);
+		const handleAcceptInvite = () => InviteCommands.acceptAndTransitionToChannel(invite.code, i18n, instanceTarget);
 		const handleNavigateToGroup = () => RouterUtils.transitionTo(groupDMPath);
 		const groupDMCounts = getGroupDmInviteCounts({
 			channelId: invite.channel.id,
@@ -279,7 +281,7 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 		const splashAspectRatio = getGuildEmbedSplashAspectRatio(guild);
 		const renderedPresenceCount = formatInviteCount(presenceCount);
 		const renderedMemberCount = formatInviteCount(memberCount);
-		const handleAcceptInvite = () => InviteCommands.acceptAndTransitionToChannel(invite.code, i18n);
+		const handleAcceptInvite = () => InviteCommands.acceptAndTransitionToChannel(invite.code, i18n, instanceTarget);
 		const guildPath = Routes.guildChannel(guild.id, invite.channel.id);
 		const handleNavigateToGuild = () => RouterUtils.transitionTo(guildPath);
 		const actionType = getGuildInvitePrimaryAction(guildActionState);
@@ -362,7 +364,9 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 						{actionType === GuildInvitePrimaryAction.InvitesDisabled && (
 							<p className={styles.statText} data-flx="channel.invite-embed.stat-text--4">
 								{guildActionState.isRaidDetected
-									? i18n._(DETECTED_A_POTENTIAL_RAID_SO_NEW_USERS_CAN_DESCRIPTOR, {productName: PRODUCT_NAME})
+									? i18n._(DETECTED_A_POTENTIAL_RAID_SO_NEW_USERS_CAN_DESCRIPTOR, {
+											productName: getActiveInstanceProductName(),
+										})
 									: i18n._(INVITES_ARE_CURRENTLY_PAUSED_FOR_THIS_COMMUNITY_DESCRIPTOR)}
 							</p>
 						)}

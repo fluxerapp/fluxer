@@ -236,7 +236,6 @@ A reporter without `READ_MESSAGE_HISTORY` can report only a message at or after 
 | 400 | [error response](/http-api/#error-response) | The account is unclaimed and the request returns `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, or the reporter is the message author and the request returns `CANNOT_REPORT_OWN_MESSAGE` |
 | 403 | [error response](/http-api/#error-response) | A body string is blocked and the request returns `CONTENT_BLOCKED` |
 | 403 | [error response](/http-api/#error-response) | The credential is a bot token or OAuth2 bearer and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | Its email is unverified and the request returns `REPORT_EMAIL_VERIFICATION_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | The account is report banned and the request returns `REPORT_BANNED` |
 | 403 | [error response](/http-api/#error-response) | The reporter is not a guild member or lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS` |
@@ -293,7 +292,6 @@ Creates and returns a [report object](#report-object) for another user, optional
 | 400 | [error response](/http-api/#error-response) | The account is unclaimed and the request returns `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, or the reporter is the reported user and the request returns `CANNOT_REPORT_YOURSELF` |
 | 403 | [error response](/http-api/#error-response) | A body string is blocked and the request returns `CONTENT_BLOCKED` |
 | 403 | [error response](/http-api/#error-response) | The credential is a bot token or OAuth2 bearer and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | Its email is unverified and the request returns `REPORT_EMAIL_VERIFICATION_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | The account is report banned and the request returns `REPORT_BANNED` |
 | 404 | [error response](/http-api/#error-response) | The reported user does not exist and the request returns `UNKNOWN_USER` |
@@ -348,7 +346,6 @@ This route reads the bare code and accepts no invite URL. A code that resolves t
 | 400 | [error response](/http-api/#error-response) | The account is unclaimed and the request returns `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, or the reporter owns the guild and the request returns `CANNOT_REPORT_OWN_GUILD` |
 | 403 | [error response](/http-api/#error-response) | A body string is blocked and the request returns `CONTENT_BLOCKED` |
 | 403 | [error response](/http-api/#error-response) | The credential is a bot token or OAuth2 bearer and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | Its email is unverified and the request returns `REPORT_EMAIL_VERIFICATION_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | The account is report banned and the request returns `REPORT_BANNED` |
 | 403 | [error response](/http-api/#error-response) | Access to the guild cannot be established and the request returns `CANNOT_REPORT_GUILD` |
@@ -369,6 +366,8 @@ One reporter creates at most 5 reports each hour across all report types.
 <RouteHeader method="POST" path="/v1/reports/dsa/email/send" unauthenticated />
 
 Issues a Digital Services Act verification code for an email address and returns a [success object](#success-object).
+
+An instance where members sign in with a username sends no email, and returns 400 `EMAIL_UNAVAILABLE_ON_INSTANCE` before it issues a code.
 
 The address must be deliverable. A domain with no MX, A, or AAAA record returns 400 `INVALID_FORM_BODY` with `INVALID_EMAIL_ADDRESS` on `email`. A temporary DNS failure does not reject the address.
 
@@ -405,7 +404,7 @@ The response is 200 when the provider accepts the message and when it refuses it
 
 <RouteHeader method="POST" path="/v1/reports/dsa/email/verify" unauthenticated />
 
-Consumes a verification code and returns the [ticket object](#ticket-object) that [Create DSA report](#create-dsa-report) requires.
+Consumes a verification code and returns the [ticket object](#ticket-object) that [Create DSA report](#create-dsa-report) requires. An instance where members sign in with a username returns 400 `EMAIL_UNAVAILABLE_ON_INSTANCE`.
 
 ### JSON body
 

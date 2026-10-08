@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {wrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import Sound from '@app/features/ui/state/Sound';
@@ -66,7 +67,7 @@ class EntranceSoundPlaybackEngine {
 		const ctx = this.ensureContext();
 		if (!ctx) return null;
 		try {
-			const response = await fetch(url, {cache: 'force-cache'});
+			const response = await fetch(wrapDesktopLocalResourceURL(url), {cache: 'force-cache'});
 			if (!response.ok) {
 				logger.warn('Entrance sound fetch failed', {url, status: response.status});
 				return null;

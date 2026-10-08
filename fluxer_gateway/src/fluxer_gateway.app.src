@@ -11,7 +11,6 @@
         public_key,
         ssl,
         inets,
-        jose,
         ranch,
         cowboy,
         ezstd,

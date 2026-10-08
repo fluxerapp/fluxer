@@ -12,7 +12,16 @@ import type {ValidationError} from '@fluxer/errors/src/domains/core/ValidationEr
 import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import type {Context, Env, Input, MiddlewareHandler, TypedResponse, ValidationTargets} from 'hono';
 import {getCookie} from 'hono/cookie';
-import {type core, type input, type output, ZodObject, ZodOptional, type ZodSafeParseResult, type ZodType} from 'zod';
+import {
+	type core,
+	type input,
+	type output,
+	ZodNullable,
+	ZodObject,
+	ZodOptional,
+	type ZodSafeParseResult,
+	type ZodType,
+} from 'zod';
 
 initializeFluxerErrorMap();
 
@@ -46,8 +55,9 @@ function extractVariablesFromIssue(issue: core.$ZodIssue): Record<string, unknow
 }
 
 function convertEmptyValuesToNull(obj: unknown, schema?: core.$ZodType, isRoot = true): unknown {
-	while (schema instanceof ZodOptional) schema = schema.unwrap();
-	if (schema && schemaMetadata.get(schema)?.preserveEmptyValues) return obj;
+	while (schema instanceof ZodOptional || schema instanceof ZodNullable) schema = schema.unwrap();
+	const metadata = schema ? schemaMetadata.get(schema) : undefined;
+	if (metadata?.preserveEmptyValues) return obj;
 	if (typeof obj === 'string' && obj === '') return null;
 	if (Array.isArray(obj)) return obj.map((item) => convertEmptyValuesToNull(item, undefined, false));
 	if (obj !== null && typeof obj === 'object') {
@@ -59,7 +69,9 @@ function convertEmptyValuesToNull(obj: unknown, schema?: core.$ZodType, isRoot =
 				convertEmptyValuesToNull(value, shape && Object.hasOwn(shape, key) ? shape[key] : undefined, false),
 			]),
 		);
-		if (!isRoot && Object.values(processed).every((value) => value === null)) return null;
+		if (!isRoot && !metadata?.preserveNullFields && Object.values(processed).every((value) => value === null)) {
+			return null;
+		}
 		return processed;
 	}
 	return obj;
@@ -84,6 +96,9 @@ type PreHook<E extends Env, P extends string, Target extends keyof ValidationTar
 	c: Context<E, P, V>,
 	target: Target,
 ) => unknown | Promise<unknown>;
+type SchemaSelector<T extends ZodType, E extends Env, P extends string, V extends Input> = (
+	c: Context<E, P, V>,
+) => ZodType<output<T>> | null | Promise<ZodType<output<T>> | null>;
 type ValidatorOptions<
 	T extends ZodType,
 	E extends Env,
@@ -92,6 +107,7 @@ type ValidatorOptions<
 	V extends Input,
 > = {
 	pre?: PreHook<E, P, Target, V>;
+	schemaFor?: SchemaSelector<T, E, P, V>;
 	post?: Hook<T, E, P, Target, V>;
 };
 
@@ -199,8 +215,9 @@ export const Validator = <
 		if (options.pre) {
 			value = await options.pre(value, c, target);
 		}
-		const transformedValue = convertEmptyValuesToNull(value, schema);
-		const result = await schema.safeParseAsync(transformedValue);
+		const activeSchema = (await options.schemaFor?.(c)) ?? (schema as ZodType<output<T>>);
+		const transformedValue = convertEmptyValuesToNull(value, activeSchema);
+		const result = await activeSchema.safeParseAsync(transformedValue);
 		if (options.post) {
 			const hookResult = await options.post({...result, target}, c);
 			if (hookResult) {

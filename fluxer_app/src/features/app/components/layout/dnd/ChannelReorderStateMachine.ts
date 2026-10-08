@@ -77,7 +77,13 @@ function isVoiceType(channelType: number): boolean {
 }
 
 function isTextType(channelType: number): boolean {
-	return channelType === ChannelTypes.GUILD_TEXT || channelType === ChannelTypes.GUILD_LINK;
+	return (
+		channelType === ChannelTypes.GUILD_TEXT ||
+		channelType === ChannelTypes.GUILD_ANNOUNCEMENT ||
+		channelType === ChannelTypes.GUILD_LINK ||
+		channelType === ChannelTypes.GUILD_FORUM ||
+		channelType === ChannelTypes.GUILD_MEDIA
+	);
 }
 
 function createIndicator(

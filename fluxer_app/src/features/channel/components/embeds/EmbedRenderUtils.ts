@@ -20,6 +20,10 @@ export function hasRichEmbedContent(embed: RichEmbedContentFields): boolean {
 	);
 }
 
+export function embedAllowsMarkdown(embed: Pick<MessageEmbed, 'type'>): boolean {
+	return embed.type === MessageEmbedTypes.RICH || embed.type === MessageEmbedTypes.BLUESKY;
+}
+
 type MediaOnlyEmbedFields = RichEmbedContentFields & Pick<MessageEmbed, 'image' | 'thumbnail' | 'video' | 'audio'>;
 
 export function isMediaOnlyEmbed(embed: MediaOnlyEmbedFields): boolean {

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import type {ToastProps} from '@app/features/ui/toast';
 import {makeAutoObservable, observableRef} from 'mobx';
 
@@ -25,7 +26,7 @@ class Toast {
 	}
 
 	createToast(data: ToastProps): string {
-		const id = crypto.randomUUID();
+		const id = randomUuid();
 		logger.debug(`Creating toast: ${id}, type: ${data.type}`);
 		this.currentToast = {id, data};
 		return id;

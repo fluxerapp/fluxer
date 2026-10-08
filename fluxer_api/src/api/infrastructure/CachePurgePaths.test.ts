@@ -51,7 +51,7 @@ describe('canonicalizePurgeUrl', () => {
 		]);
 	});
 
-	it('keeps a base path when the media endpoint carries one', () => {
+	it('keeps a base path when the media endpoint has one', () => {
 		Config.endpoints.media = `${MEDIA}/media`;
 		expect(canonicalizePurgeUrl(`${MEDIA}/media/avatars/1/b35cc3d3`)).toEqual([
 			'media.test/media/avatars/1/b35cc3d3',

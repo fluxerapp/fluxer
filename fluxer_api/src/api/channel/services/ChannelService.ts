@@ -5,6 +5,7 @@ import type {ChannelID} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import {AttachmentUploadService} from '@app/api/channel/services/AttachmentUploadService';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {CallService} from '@app/api/channel/services/CallService';
 import {ChannelDataService} from '@app/api/channel/services/ChannelDataService';
 import {GroupDmOperationsService} from '@app/api/channel/services/group_dm/GroupDmOperationsService';
@@ -12,6 +13,7 @@ import {MessageInteractionService} from '@app/api/channel/services/MessageIntera
 import {MessageService} from '@app/api/channel/services/MessageService';
 import {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
+import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
@@ -27,12 +29,17 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {User} from '@app/api/models/User';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {createDirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
 import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {TEXT_THREAD_PARENT_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
+
+interface TypingCooldown {
+	message_send_cooldown_ms?: number;
+	thread_create_cooldown_ms?: number;
+}
 
 interface SlowmodeState {
 	rateLimitPerUser: number;
@@ -87,6 +94,7 @@ export class ChannelService {
 			gatewayService,
 			storageService,
 			purgeQueue,
+			workerService,
 		});
 		const messagePersistenceService = new MessagePersistenceService(
 			channelRepository,
@@ -101,7 +109,6 @@ export class ChannelService {
 			readStateService,
 			limitConfigService,
 		);
-		const directMessageSpamMitigationService = createDirectMessageSpamMitigationService(apiContext, userRepository);
 		this.channelData = new ChannelDataService(
 			channelRepository,
 			userRepository,
@@ -121,6 +128,7 @@ export class ChannelService {
 			webhookRepository,
 			limitConfigService,
 			rateLimitService,
+			cacheService,
 		);
 		this.messages = new MessageService(
 			channelRepository,
@@ -141,7 +149,6 @@ export class ChannelService {
 			messagePersistenceService,
 			attachmentUploadTraceRepository,
 			limitConfigService,
-			directMessageSpamMitigationService,
 		);
 		this.interactions = new MessageInteractionService(
 			channelRepository,
@@ -173,6 +180,8 @@ export class ChannelService {
 			snowflakeService,
 			this.messages.persistence,
 			limitConfigService,
+			voiceRoomStore,
+			liveKitService,
 		);
 		this.calls = new CallService(
 			channelRepository,
@@ -187,8 +196,51 @@ export class ChannelService {
 		);
 	}
 
-	async getSlowmodeState({user, channelId}: {user: User; channelId: ChannelID}): Promise<SlowmodeState> {
-		const auth = await this.channelData.auth.getChannelAuthenticated({userId: user.id, channelId});
+	async getTypingCooldown({
+		user,
+		viewer,
+		auth,
+	}: {
+		user: User;
+		viewer: ThreadViewer;
+		auth: AuthenticatedChannel;
+	}): Promise<TypingCooldown | null> {
+		const {channel, guild} = auth;
+		if (!guild || user.isBot || !viewerActive(viewer, guild.id)) return null;
+		const createsThreads = TEXT_THREAD_PARENT_CHANNEL_TYPES.has(channel.type);
+		if (channel.rateLimitPerUser <= 0 || (await auth.hasPermission(Permissions.BYPASS_SLOWMODE))) return null;
+		const windowMs = channel.rateLimitPerUser * 1000;
+		const [messageSendCooldownMs, threadCreateCooldownMs] = await Promise.all([
+			this.peekSlowmode(`slowmode:${channel.id}:${user.id}`, windowMs),
+			createsThreads ? this.peekSlowmode(`slowmode-thread:${channel.id}:${user.id}`, windowMs) : Promise.resolve(0),
+		]);
+		if (messageSendCooldownMs <= 0 && threadCreateCooldownMs <= 0) return null;
+		return {
+			...(messageSendCooldownMs > 0 ? {message_send_cooldown_ms: messageSendCooldownMs} : {}),
+			...(threadCreateCooldownMs > 0 ? {thread_create_cooldown_ms: threadCreateCooldownMs} : {}),
+		};
+	}
+
+	private async peekSlowmode(identifier: string, windowMs: number): Promise<number> {
+		const peek = await this.rateLimitService.peekLimit({
+			identifier,
+			maxAttempts: 1,
+			windowMs,
+			algorithm: 'leaky_bucket',
+		});
+		return Math.max(0, peek.resetTime.getTime() - Date.now());
+	}
+
+	async getSlowmodeState({
+		user,
+		channelId,
+		viewer,
+	}: {
+		user: User;
+		viewer: ThreadViewer;
+		channelId: ChannelID;
+	}): Promise<SlowmodeState> {
+		const auth = await this.channelData.auth.getChannelAuthenticated({userId: user.id, channelId, viewer});
 		const rateLimitPerUser = auth.channel.rateLimitPerUser ?? 0;
 		if (!auth.guild || rateLimitPerUser <= 0 || user.isBot) {
 			return {rateLimitPerUser, retryAfterMs: 0, nextSendAllowedAt: null, canBypass: false};
@@ -197,8 +249,9 @@ export class ChannelService {
 		if (canBypass) {
 			return {rateLimitPerUser, retryAfterMs: 0, nextSendAllowedAt: null, canBypass: true};
 		}
+		const bucket = auth.channel.isThreadOnly() ? 'slowmode-thread' : 'slowmode';
 		const peek = await this.rateLimitService.peekLimit({
-			identifier: `slowmode:${channelId}:${user.id}`,
+			identifier: `${bucket}:${channelId}:${user.id}`,
 			maxAttempts: 1,
 			windowMs: rateLimitPerUser * 1000,
 			algorithm: 'leaky_bucket',

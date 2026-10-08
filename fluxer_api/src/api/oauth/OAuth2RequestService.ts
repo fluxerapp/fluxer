@@ -5,7 +5,9 @@ import type {SudoVerificationBody} from '@app/api/auth/services/SudoVerification
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {createApplicationID, createChannelID, createGuildID, createRoleID, type UserID} from '@app/api/BrandedTypes';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {guildActive, type ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildService} from '@app/api/guild/services/GuildService';
+import {resolveProtectedBitActor, stripThreadPermissionBits} from '@app/api/guild/services/ThreadPermissionBits';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {ApplicationService} from '@app/api/oauth/ApplicationService';
@@ -22,10 +24,13 @@ import {ACCESS_TOKEN_TTL_SECONDS, type OAuth2Service} from '@app/api/oauth/OAuth
 import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import type {IOAuth2TokenRepository} from '@app/api/oauth/repositories/IOAuth2TokenRepository';
 import {parseClientCredentials} from '@app/api/oauth/utils/ParseClientCredentials';
+import {isSignInRefused} from '@app/api/user/UserHelpers';
 import {mapUserToOAuthResponse, mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {verifyPassword} from '@app/api/utils/PasswordUtils';
 import {canAuthorizeBotInvite, normalizeBotInvitePermissions} from '@fluxer/constants/src/BotPermissionUtils';
+import {ALL_PERMISSIONS} from '@fluxer/constants/src/ChannelConstants';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
+import {THREAD_AWARE_ALL_PERMISSIONS, withImplicitThreadBits} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InvalidPermissionsIntegerError} from '@fluxer/errors/src/domains/core/InvalidPermissionsIntegerError';
@@ -195,6 +200,8 @@ export class OAuth2RequestService {
 	async authorizeConsent(params: {
 		body: AuthorizeConsentRequest;
 		userId: UserID;
+		clientFeatures: ReadonlySet<string>;
+		viewer: ThreadViewer;
 		requestCache: RequestCache;
 	}): Promise<OAuth2ConsentResponse> {
 		const scopeStr = params.body.scope;
@@ -206,6 +213,7 @@ export class OAuth2RequestService {
 		if (guildId && channelId) {
 			throw InputValidationError.create('channel_id', 'channel_id cannot be used with guild_id');
 		}
+		const botPermissionMask = guildId && guildActive(guildId) ? THREAD_AWARE_ALL_PERMISSIONS : ALL_PERMISSIONS;
 		let requestedPermissions: bigint | null = null;
 		if (params.body.permissions !== undefined) {
 			try {
@@ -216,7 +224,17 @@ export class OAuth2RequestService {
 			if (requestedPermissions < 0) {
 				throw new InvalidPermissionsNegativeError();
 			}
-			requestedPermissions = normalizeBotInvitePermissions(requestedPermissions);
+			requestedPermissions = normalizeBotInvitePermissions(requestedPermissions, botPermissionMask);
+			if (guildId && botPermissionMask !== ALL_PERMISSIONS) {
+				const actor = await resolveProtectedBitActor({
+					guildId,
+					userId: params.userId,
+					clientFeatures: params.clientFeatures,
+					viewer: params.viewer,
+					isBot: async () => false,
+				});
+				if (!actor.threadBits?.writer) requestedPermissions = stripThreadPermissionBits(requestedPermissions);
+			}
 		}
 		if (!isBotOnly && responseType !== 'code') {
 			throw new InvalidResponseTypeForNonBotError();
@@ -257,8 +275,10 @@ export class OAuth2RequestService {
 					});
 					if (
 						!canAuthorizeBotInvite({
-							userPermissions,
+							userPermissions:
+								botPermissionMask === ALL_PERMISSIONS ? userPermissions : withImplicitThreadBits(userPermissions),
 							requestedPermissions,
+							mask: botPermissionMask,
 						})
 					) {
 						throw new MissingPermissionsError();
@@ -277,11 +297,11 @@ export class OAuth2RequestService {
 						}
 					}
 					await this.guildService.members.addUserToGuild({
-						skipRiskGate: true,
 						userId: botUserId,
 						guildId,
 						skipGuildLimitCheck: true,
 						skipBanCheck: true,
+						skipAccountLimitCheck: true,
 						joinSourceType: JoinSourceTypes.BOT_INVITE,
 						inviterId: params.userId,
 						requestCache: params.requestCache,
@@ -356,9 +376,12 @@ export class OAuth2RequestService {
 				scopes,
 				expires: expiresAt.toISOString(),
 			};
-			if (tokenData.userId && tokenData.scope.has('identify')) {
+			if (tokenData.userId) {
 				const user = await this.apiContext.services.users.findUnique(tokenData.userId);
-				if (user) {
+				if (user && isSignInRefused(user)) {
+					throw new InvalidTokenError();
+				}
+				if (user && tokenData.scope.has('identify')) {
 					response.user = mapUserToOAuthResponse(user, {includeEmail: tokenData.scope.has('email')});
 				}
 			}

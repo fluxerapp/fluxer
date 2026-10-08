@@ -4,18 +4,19 @@ import {
 	type MediaPermissionBlockedKind,
 	MediaPermissionBlockedModal,
 } from '@app/features/permissions/system/components/MediaPermissionBlockedModal';
-import {MacPermissionsModal} from '@app/features/permissions/system/components/modals/MacPermissionsModal';
-import MacPermissions, {type MacPermissionKind} from '@app/features/permissions/system/state/MacPermissions';
+import {
+	MAC_PERMISSIONS_MODAL_KEY,
+	MacPermissionsModal,
+} from '@app/features/permissions/system/components/modals/MacPermissionsModal';
+import type {MacPermissionKind} from '@app/features/permissions/system/state/MacPermissions';
 import {modal, push, pushWithKey} from '@app/features/ui/commands/ModalCommands';
 import {getNativePlatformSync, isDesktop} from '@app/features/ui/utils/NativeUtils';
 
-const MAC_PERMISSIONS_MODAL_KEY = 'mac-permissions';
-
-export function openMacPermissionsModal(options: {focus?: MacPermissionKind} = {}): void {
+export function openMacPermissionsModal(focus: MacPermissionKind): void {
 	pushWithKey(
 		modal(() => (
 			<MacPermissionsModal
-				focus={options.focus}
+				focus={focus}
 				data-flx="permissions.system.mac-permissions-modal-commands.open-mac-permissions-modal.mac-permissions-modal"
 			/>
 		)),
@@ -25,8 +26,7 @@ export function openMacPermissionsModal(options: {focus?: MacPermissionKind} = {
 
 export function handleMediaPermissionBlocked(kind: MediaPermissionBlockedKind): void {
 	if (isDesktop() && getNativePlatformSync() === 'macos') {
-		if (MacPermissions.hasDeclined(kind)) return;
-		openMacPermissionsModal({focus: kind});
+		openMacPermissionsModal(kind);
 		return;
 	}
 	push(

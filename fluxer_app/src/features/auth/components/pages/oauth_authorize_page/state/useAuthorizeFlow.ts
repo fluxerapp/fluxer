@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import {useAuthorizeParams} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useAuthorizeParams';
 import {
 	type BotInviteDestinationOption,
 	createBotInviteDestinationKey,
 	parseBotInviteDestinationKey,
 	useBotInviteDestinations,
-} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useBotGuilds';
+} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useBotInviteDestinations';
 import {useOAuthPublicApp} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useOAuthPublicApp';
 import {usePermissionSelection} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/usePermissionSelection';
 import {useScopeSelection} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useScopeSelection';
@@ -26,9 +26,13 @@ import {
 	selectAuthorizePhase,
 	transitionAuthorizeSnapshot,
 } from '@app/features/auth/components/pages/oauth_authorize_page/state/authorizeMachine';
+import Accounts from '@app/features/auth/state/Accounts';
+import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
 import type {BotPermissionOption} from '@app/features/permissions/utils/PermissionUtils';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {HttpError} from '@app/features/platform/types/EndpointError';
 import {failureMessage} from '@app/features/platform/utils/ResponseInspection';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
@@ -144,7 +148,7 @@ function getCurrentInviteDestinationKey(): string | null {
 	if (guildId === '@me') {
 		return channelId ? createBotInviteDestinationKey('group_dm', channelId) : null;
 	}
-	if (guildId !== '@favorites' && guildId !== '@discover') {
+	if (guildId !== '@favorites' && guildId !== '@discover' && guildId !== '@premium') {
 		return createBotInviteDestinationKey('guild', guildId);
 	}
 	return null;
@@ -181,8 +185,15 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 	const initialMissingClientId = !params;
 	const publicAppState = useOAuthPublicApp(params?.clientId ?? null);
 	const scopeSelection = useScopeSelection(scopes);
-	const permissionSelection = usePermissionSelection(params?.permissions ?? null);
-	const destinations = useBotInviteDestinations(hasBotScope, permissionSelection.requestedBitfield);
+	const destinations = useBotInviteDestinations(hasBotScope, params?.permissions ?? null);
+	const selectedDestinationTarget = parseBotInviteDestinationKey(selectedDestinationKey);
+	const selectedGuildId = selectedDestinationTarget?.kind === 'guild' ? selectedDestinationTarget.id : null;
+	const permissionSelection = usePermissionSelection(
+		params?.permissions ?? null,
+		selectedGuildId != null &&
+			(ThreadGuilds.isActive(selectedGuildId) ||
+				destinations.guilds.some((guild) => guild.id === selectedGuildId && guild.threadsActive)),
+	);
 	const initialReviewStep: ReviewStep = includeAccountStep ? 'account' : 'scopes';
 	const preFetchValidationError = useMemo(() => {
 		if (!params) return i18n._(MISSING_CLIENT_ID_DESCRIPTOR);
@@ -257,14 +268,23 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 	]);
 	useEffect(() => {
 		if (phase.kind !== 'session_expired') return;
-		void import('@app/features/platform/state/AuthSession').then(({default: SessionManager}) => {
+		void import('@app/features/platform/state/AuthSession').then(async ({default: SessionManager}) => {
 			const expiredUserId = SessionManager.userId;
 			if (expiredUserId) SessionManager.markAccountInvalid(expiredUserId);
-			SessionManager.handleConnectionClosed(4004);
-			window.location.replace(getLoginRedirectPath());
+			try {
+				await SessionManager.handleConnectionClosed(4004);
+				window.location.replace(getLoginRedirectPath());
+			} catch (error) {
+				logger.error('Failed to complete the expired session transition', error);
+			}
 		});
 	}, [phase.kind]);
+	const currentAccountKey = Accounts.currentAccountKey;
 	const destinationInitRef = useRef(false);
+	useEffect(() => {
+		destinationInitRef.current = false;
+		setSelectedDestinationKey(null);
+	}, [currentAccountKey]);
 	useEffect(() => {
 		if (!hasBotScope) {
 			destinationInitRef.current = false;
@@ -305,7 +325,7 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 		() => destinations.options.find((option) => option.value === selectedDestinationKey) ?? null,
 		[destinations.options, selectedDestinationKey],
 	);
-	const cannotSubmit = hasBotScope && !selectedDestination;
+	const cannotSubmit = scopeSelection.selected.size === 0 || (hasBotScope && !selectedDestination);
 	const needsPermissionsStep =
 		hasBotScope && selectedDestination?.kind !== 'group_dm' && permissionSelection.requestedKeys.length > 0;
 	const hasRequestedBotPermissions =
@@ -349,9 +369,9 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 		setSubmitError(null);
 		setSubmitting('approve');
 		try {
-			const scopeToSend = scopeSelection.toScopeString() || params.scope;
+			const scopeToSend = scopeSelection.toScopeString();
 			const sendsBotScope = scopeToSend.split(/[\s+]+/).includes('bot');
-			if (sendsBotScope && !selectedDestination) {
+			if (!scopeToSend || (sendsBotScope && !selectedDestination)) {
 				setSubmitting(null);
 				return;
 			}
@@ -387,6 +407,12 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 			setSubmitting(null);
 			setSubmitError(i18n._(AUTHORIZATION_FAILED_DESCRIPTOR));
 		} catch (err) {
+			if (err instanceof HttpError && err.status === 401) {
+				logger.warn('OAuth consent returned 401', err);
+				setSubmitting(null);
+				dispatch({type: 'INIT_SESSION_EXPIRED'});
+				return;
+			}
 			logger.error('Authorization failed', err);
 			setSubmitting(null);
 			setSubmitError(failureMessage(err) ?? i18n._(AUTHORIZATION_FAILED_DESCRIPTOR));
@@ -425,7 +451,7 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 				window.location.href = url.toString();
 				return;
 			}
-			window.location.href = '/';
+			window.location.href = getDefaultLandingPath();
 		} catch (err) {
 			logger.error('Failed to redirect on cancel', err);
 			setSubmitting(null);
@@ -433,7 +459,8 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 		}
 	}, [params, onCancelOverride, publicAppState.data, i18n]);
 	const sessionExpiredMessage = useMemo(
-		() => i18n._(YOUR_PRODUCT_SESSION_EXPIRED_SIGN_IN_AGAIN_TO_DESCRIPTOR, {productName: PRODUCT_NAME}),
+		() =>
+			i18n._(YOUR_PRODUCT_SESSION_EXPIRED_SIGN_IN_AGAIN_TO_DESCRIPTOR, {productName: getActiveInstanceProductName()}),
 		[i18n.locale],
 	);
 	return {
