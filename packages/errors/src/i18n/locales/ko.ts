@@ -42,6 +42,7 @@ const ERROR_I18N_KO_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "테스트 하네스가 비활성화되었어요.",
 	"admin_and_system.test_harness_forbidden": "테스트 하네스 사용이 금지되어 있어요.",
 	"admin_and_system.update_failed": "리소스를 업데이트하지 못했어요. 다시 시도해 주세요.",
+	"admin_and_system.user_must_be_bot_for_system_user": "시스템 사용자로 표시하려면 봇이어야 해요.",
 	"age_verification.already_verified": "연령 인증을 이미 완료했어요.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id`, `expires_at`이 모두 필요해요.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id`, `message_id`는 모두 유효한 정수여야 해요.",

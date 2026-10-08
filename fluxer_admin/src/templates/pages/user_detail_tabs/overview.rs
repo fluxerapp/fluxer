@@ -437,6 +437,11 @@ fn acls_card(
                                 (flag_checkbox("acls[]", item.to_string(), item, checked, true))
                             }
                         }
+                        @for item in &user.acls {
+                            @if !acl::ALL_ACLS.iter().any(|known| known == &item.as_str()) {
+                                input type="hidden" name="acls[]" value=(item);
+                            }
+                        }
                         (form_actions(html! {
                             (submit_button("Save ACLs"))
                         }))

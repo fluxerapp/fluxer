@@ -38,6 +38,7 @@
 	"admin_and_system.test_harness_disabled": "测试工具已禁用。",
 	"admin_and_system.test_harness_forbidden": "禁止使用测试工具。",
 	"admin_and_system.update_failed": "无法更新资源。请重试。",
+	"admin_and_system.user_must_be_bot_for_system_user": "用户必须是机器人才能被标记为系统用户。",
 	"age_verification.already_verified": "你已完成年龄验证。",
 	"attachments_and_uploads.attachment_fields_required": "需要提供 `attachment_id`、`channel_id`、`message_id` 和 `expires_at`。",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`、`channel_id` 和 `message_id` 必须是有效的整数。",

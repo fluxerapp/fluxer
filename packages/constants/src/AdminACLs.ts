@@ -91,6 +91,7 @@ export const AdminACLs = {
 	USER_VIEW_EMAIL: 'user:view:email',
 	USER_VIEW_IP: 'user:view:ip',
 	USER_TEMP_BAN: 'user:temp_ban',
+	USER_UPDATE_BOT_STATUS: 'user:update:bot_status',
 	USER_UPDATE_DOB: 'user:update:dob',
 	USER_UPDATE_EMAIL: 'user:update:email',
 	USER_UPDATE_FLAGS: 'user:update:flags',

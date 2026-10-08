@@ -42,6 +42,7 @@ const ERROR_I18N_TR_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Test altyapısı devre dışı.",
 	"admin_and_system.test_harness_forbidden": "Test altyapısı yasak.",
 	"admin_and_system.update_failed": "Kaynağı güncelleyemedik. Tekrar dene.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Kullanıcı, sistem kullanıcısı olarak işaretlenmek için bot olmalı.",
 	"age_verification.already_verified": "Yaş doğrulamasını zaten tamamladın.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` ve `expires_at` gerekli.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` ve `message_id` geçerli tam sayı olmalı.",

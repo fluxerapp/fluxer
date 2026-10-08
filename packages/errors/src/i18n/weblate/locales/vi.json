@@ -38,6 +38,7 @@
 	"admin_and_system.test_harness_disabled": "Tính năng test harness đã bị tắt.",
 	"admin_and_system.test_harness_forbidden": "Tính năng test harness bị cấm.",
 	"admin_and_system.update_failed": "Không thể cập nhật tài nguyên. Vui lòng thử lại.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Người dùng phải là bot mới được đánh dấu là người dùng hệ thống.",
 	"age_verification.already_verified": "Bạn đã hoàn tất xác minh tuổi.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` và `expires_at` là bắt buộc.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` và `message_id` phải là các số nguyên hợp lệ.",

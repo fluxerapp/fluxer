@@ -247,6 +247,20 @@ export const ClearUserFieldsRequest = z.object({
 
 export type ClearUserFieldsRequest = z.infer<typeof ClearUserFieldsRequest>;
 
+export const SetUserBotStatusRequest = z.object({
+	user_id: SnowflakeType.describe('ID of the user to update'),
+	bot: z.boolean().describe('Whether the user should be marked as a bot'),
+});
+
+export type SetUserBotStatusRequest = z.infer<typeof SetUserBotStatusRequest>;
+
+export const SetUserSystemStatusRequest = z.object({
+	user_id: SnowflakeType.describe('ID of the user to update'),
+	system: z.boolean().describe('Whether the user should be marked as a system user'),
+});
+
+export type SetUserSystemStatusRequest = z.infer<typeof SetUserSystemStatusRequest>;
+
 export const VerifyUserEmailRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to verify email for'),
 });
@@ -560,6 +574,14 @@ export type AdminUserWebAuthnCredentialParam = z.infer<typeof AdminUserWebAuthnC
 export const AdminUserClearFieldsRequest = ClearUserFieldsRequest.omit({user_id: true});
 
 export type AdminUserClearFieldsRequest = z.infer<typeof AdminUserClearFieldsRequest>;
+
+export const AdminUserBotStatusRequest = SetUserBotStatusRequest.omit({user_id: true});
+
+export type AdminUserBotStatusRequest = z.infer<typeof AdminUserBotStatusRequest>;
+
+export const AdminUserSystemStatusRequest = SetUserSystemStatusRequest.omit({user_id: true});
+
+export type AdminUserSystemStatusRequest = z.infer<typeof AdminUserSystemStatusRequest>;
 
 export const AdminUserUsernameUpdateRequest = ChangeUsernameRequest.omit({user_id: true});
 

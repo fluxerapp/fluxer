@@ -38,6 +38,7 @@
 	"admin_and_system.test_harness_disabled": "Testovací prostředí je vypnuté.",
 	"admin_and_system.test_harness_forbidden": "Přístup k testovacímu prostředí je zakázán.",
 	"admin_and_system.update_failed": "Nepodařilo se aktualizovat zdroj. Zkuste to znovu.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Uživatel musí být bot, aby mohl být označen jako systémový uživatel.",
 	"age_verification.already_verified": "Ověření věku už bylo dokončeno.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` a `expires_at` jsou povinné.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` a `message_id` musí být platné celočíselné hodnoty.",

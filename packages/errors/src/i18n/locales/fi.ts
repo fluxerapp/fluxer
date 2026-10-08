@@ -42,6 +42,7 @@ const ERROR_I18N_FI_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Testausympäristö on poistettu käytöstä.",
 	"admin_and_system.test_harness_forbidden": "Testausympäristö on kielletty.",
 	"admin_and_system.update_failed": "Resurssia ei voitu päivittää. Yritä uudelleen.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Käyttäjän on oltava botti, jotta sen voi merkitä järjestelmäkäyttäjäksi.",
 	"age_verification.already_verified": "Olet jo suorittanut iän vahvistuksen.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` ja `expires_at` ovat pakollisia.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "Seuraavien kenttien arvojen on oltava kelvollisia kokonaislukuja: `attachment_id`, `channel_id` ja `message_id`.",

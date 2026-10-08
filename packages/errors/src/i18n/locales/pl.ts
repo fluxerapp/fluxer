@@ -42,6 +42,7 @@ const ERROR_I18N_PL_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Środowisko testowe wyłączone.",
 	"admin_and_system.test_harness_forbidden": "Środowisko testowe zabronione.",
 	"admin_and_system.update_failed": "Nie udało się zaktualizować zasobu. Spróbuj jeszcze raz.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Użytkownik musi być botem, aby mógł być oznaczony jako użytkownik systemowy.",
 	"age_verification.already_verified": "Weryfikacja wieku została już zakończona.",
 	"attachments_and_uploads.attachment_fields_required": "Wymagane: `attachment_id`, `channel_id`, `message_id` i `expires_at`.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` i `message_id` muszą być prawidłowymi liczbami całkowitymi.",

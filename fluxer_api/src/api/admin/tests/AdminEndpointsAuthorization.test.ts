@@ -78,6 +78,7 @@ const adminEndpoints: Array<AdminEndpointCase> = [
 	{method: 'GET', path: '/admin/users/1/webauthn-credentials', requiredACL: 'user:update:mfa'},
 	{method: 'DELETE', path: '/admin/users/1/webauthn-credentials/credential', requiredACL: 'user:update:mfa'},
 	{method: 'DELETE', path: '/admin/users/1/profile-fields', requiredACL: 'user:update:profile'},
+	{method: 'PUT', path: '/admin/users/1/bot-status', requiredACL: 'user:update:bot_status'},
 	{method: 'PUT', path: '/admin/users/1/acls', requiredACL: 'acl:set:user'},
 	{method: 'PUT', path: '/admin/users/1/deletion', requiredACL: 'user:delete'},
 	{method: 'POST', path: '/admin/users/1/avatar-block', requiredACL: 'ban:avatar_hash:add'},

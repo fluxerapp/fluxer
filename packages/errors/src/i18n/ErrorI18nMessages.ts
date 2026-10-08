@@ -44,6 +44,7 @@ export const ERROR_I18N_MESSAGES = {
 	'admin_and_system.test_harness_disabled': 'Test harness is disabled.',
 	'admin_and_system.test_harness_forbidden': 'Test harness is forbidden.',
 	'admin_and_system.update_failed': "We couldn't update the resource. Please try again.",
+	'admin_and_system.user_must_be_bot_for_system_user': 'User must be a bot to be marked as a system user.',
 	'age_verification.already_verified': "You've already completed age verification.",
 	'attachments_and_uploads.attachment_fields_required':
 		'`attachment_id`, `channel_id`, `message_id`, and `expires_at` are required.',

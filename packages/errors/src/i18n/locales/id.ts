@@ -42,6 +42,7 @@ const ERROR_I18N_ID_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Test harness dinonaktifkan.",
 	"admin_and_system.test_harness_forbidden": "Test harness dilarang.",
 	"admin_and_system.update_failed": "Tidak bisa memperbarui sumber daya. Coba lagi.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Pengguna harus bot untuk ditandai sebagai pengguna sistem.",
 	"age_verification.already_verified": "Kamu sudah menyelesaikan verifikasi usia.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id`, dan `expires_at` diperlukan.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id`, dan `message_id` harus berupa bilangan bulat yang valid.",

@@ -42,6 +42,7 @@ const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Testni sustav je onemogućen.",
 	"admin_and_system.test_harness_forbidden": "Testni sustav je zabranjen.",
 	"admin_and_system.update_failed": "Nismo mogli ažurirati resurs. Pokušaj ponovno.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Korisnik mora biti bot da bi bio označen kao sistemski korisnik.",
 	"age_verification.already_verified": "Provjera dobi je već završena.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` i `expires_at` su obavezni.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` i `message_id` moraju biti valjani cijeli brojevi.",

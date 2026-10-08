@@ -38,6 +38,7 @@
 	"admin_and_system.test_harness_disabled": "Test harness डिसेबल है।",
 	"admin_and_system.test_harness_forbidden": "Test harness की अनुमति नहीं है।",
 	"admin_and_system.update_failed": "रिसोर्स अपडेट नहीं किया जा सका। कृपया फिर से कोशिश करें।",
+	"admin_and_system.user_must_be_bot_for_system_user": "सिस्टम यूज़र के रूप में मार्क किए जाने के लिए यूज़र का बॉट होना ज़रूरी है।",
 	"age_verification.already_verified": "आपने पहले ही एज वेरिफ़िकेशन पूरा कर लिया है।",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id`, और `expires_at` ज़रूरी हैं।",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id`, और `message_id` मान्य इंटीजर होने चाहिए।",

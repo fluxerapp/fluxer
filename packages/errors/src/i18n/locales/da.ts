@@ -42,6 +42,7 @@ const ERROR_I18N_DA_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Testmiljøet er deaktiveret.",
 	"admin_and_system.test_harness_forbidden": "Adgang til testmiljøet er ikke tilladt.",
 	"admin_and_system.update_failed": "Ressourcen kunne ikke opdateres. Prøv igen.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Brugeren skal være en bot for at kunne markeres som systembruger.",
 	"age_verification.already_verified": "Du har allerede gennemført aldersbekræftelse.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` og `expires_at` er påkrævet.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` og `message_id` skal være gyldige heltal.",

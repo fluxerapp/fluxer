@@ -38,6 +38,7 @@
 	"admin_and_system.test_harness_disabled": "Testverktyget är inaktiverat.",
 	"admin_and_system.test_harness_forbidden": "Testverktyget är inte tillåtet.",
 	"admin_and_system.update_failed": "Det gick inte att uppdatera resursen. Försök igen.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Användaren måste vara en bot för att markeras som en systemanvändare.",
 	"age_verification.already_verified": "Du har redan slutfört åldersverifieringen.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` och `expires_at` krävs.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` och `message_id` måste vara giltiga heltal.",

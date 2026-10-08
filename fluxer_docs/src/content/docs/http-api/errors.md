@@ -2081,6 +2081,10 @@ This user doesn't have an email address
 
 This user isn't banned
 
+### `USER_MUST_BE_A_BOT_TO_BE_MARKED_AS_A_SYSTEM_USER`
+
+User must be a bot to be marked as a system user
+
 ### `USER_NOT_IN_CHANNEL`
 
 This user isn't in the channel

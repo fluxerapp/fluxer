@@ -6266,6 +6266,72 @@
 				}
 			}
 		},
+		"/admin/users/{user_id}/bot-status": {
+			"put": {
+				"operationId": "set_admin_user_bot_status",
+				"summary": "Set user bot status",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Mark or unmark a user account as a bot. Controls bot badge visibility and API permissions. Creates audit log entry. Requires USER_UPDATE_BOT_STATUS permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserBotStatusRequest"}}}
+				}
+			}
+		},
 		"/admin/users/{user_id}/change-log": {
 			"get": {
 				"operationId": "list_admin_user_change_log",
@@ -7967,6 +8033,72 @@
 				]
 			}
 		},
+		"/admin/users/{user_id}/system-status": {
+			"put": {
+				"operationId": "set_admin_user_system_status",
+				"summary": "Set user system status",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Mark or unmark a user as a system account. System accounts have special permissions for automated operations. Creates audit log entry. Requires USER_UPDATE_BOT_STATUS permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserSystemStatusRequest"}}}
+				}
+			}
+		},
 		"/admin/users/{user_id}/traits": {
 			"put": {
 				"operationId": "set_admin_user_traits",
@@ -9413,6 +9545,13 @@
 				},
 				"required": ["traits"]
 			},
+			"AdminUserSystemStatusRequest": {
+				"type": "object",
+				"properties": {
+					"system": {"type": "boolean", "description": "Whether the user should be marked as a system user"}
+				},
+				"required": ["system"]
+			},
 			"AdminStorePurchaseListResponse": {
 				"type": "object",
 				"properties": {
@@ -9877,6 +10016,11 @@
 				"required": ["entries", "next_page_token"],
 				"additionalProperties": false
 			},
+			"AdminUserBotStatusRequest": {
+				"type": "object",
+				"properties": {"bot": {"type": "boolean", "description": "Whether the user should be marked as a bot"}},
+				"required": ["bot"]
+			},
 			"AdminUserBanNoteRequest": {
 				"type": "object",
 				"properties": {
@@ -9991,7 +10135,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions to assign"
@@ -12892,7 +13036,7 @@
 					},
 					"acls": {
 						"description": "Replacement list of access control permissions for the key",
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"}
 					}
@@ -12910,7 +13054,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -12940,7 +13084,7 @@
 						"maximum": 365
 					},
 					"acls": {
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions for the key"
@@ -12961,7 +13105,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -12974,7 +13118,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"type": "string", "minLength": 1, "maxLength": 64},
 						"description": "Every admin access control permission the admin API recognises"
@@ -13076,6 +13220,7 @@
 					"user:view:email",
 					"user:view:ip",
 					"user:temp_ban",
+					"user:update:bot_status",
 					"user:update:dob",
 					"user:update:email",
 					"user:update:flags",
@@ -16123,7 +16268,7 @@
 						"description": "ISO 8601 timestamp when the pending deletion was scheduled",
 						"type": "string"
 					},
-					"acls": {"maxItems": 105, "type": "array", "items": {"type": "string"}},
+					"acls": {"maxItems": 106, "type": "array", "items": {"type": "string"}},
 					"traits": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"maxItems": 10, "type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}},

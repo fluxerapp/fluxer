@@ -38,6 +38,7 @@
 	"admin_and_system.test_harness_disabled": "テストハーネスは無効です。",
 	"admin_and_system.test_harness_forbidden": "テストハーネスは禁止されています。",
 	"admin_and_system.update_failed": "リソースを更新できませんでした。もう一度お試しください。",
+	"admin_and_system.user_must_be_bot_for_system_user": "システムユーザーとしてマークするには、ユーザーはボットである必要があります。",
 	"age_verification.already_verified": "年齢確認はすでに完了しています。",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`、`channel_id`、`message_id`、`expires_at`は必須です。",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`、`channel_id`、`message_id`は有効な整数である必要があります。",

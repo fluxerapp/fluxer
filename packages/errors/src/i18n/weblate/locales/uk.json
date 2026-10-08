@@ -38,6 +38,7 @@
 	"admin_and_system.test_harness_disabled": "Тестову систему вимкнено.",
 	"admin_and_system.test_harness_forbidden": "Тестову систему заборонено.",
 	"admin_and_system.update_failed": "Не вдалося оновити ресурс. Спробуй ще раз.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Користувач має бути ботом, щоб його можна було позначити як системного користувача.",
 	"age_verification.already_verified": "Перевірку віку вже пройдено.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` та `expires_at` є обов'язковими.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` та `message_id` мають бути дійсними цілими числами.",

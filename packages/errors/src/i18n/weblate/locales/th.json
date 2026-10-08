@@ -38,6 +38,7 @@
 	"admin_and_system.test_harness_disabled": "ปิดใช้งาน test harness แล้ว",
 	"admin_and_system.test_harness_forbidden": "ไม่อนุญาตให้ใช้ test harness",
 	"admin_and_system.update_failed": "ไม่สามารถอัปเดตทรัพยากรได้ โปรดลองอีกครั้ง",
+	"admin_and_system.user_must_be_bot_for_system_user": "ผู้ใช้ต้องเป็นบอทจึงจะสามารถระบุว่าเป็นผู้ใช้ระบบได้",
 	"age_verification.already_verified": "คุณยืนยันอายุเรียบร้อยแล้ว",
 	"attachments_and_uploads.attachment_fields_required": "ต้องระบุ `attachment_id`, `channel_id`, `message_id` และ `expires_at`",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` และ `message_id` ต้องเป็นจำนวนเต็มที่ถูกต้อง",

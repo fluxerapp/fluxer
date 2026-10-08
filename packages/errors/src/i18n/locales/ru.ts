@@ -42,6 +42,7 @@ const ERROR_I18N_RU_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Тестовый стенд отключён.",
 	"admin_and_system.test_harness_forbidden": "Тестовый стенд запрещён.",
 	"admin_and_system.update_failed": "Не удалось обновить ресурс. Попробуй ещё раз.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Пользователь должен быть ботом, чтобы отметить его как системного пользователя.",
 	"age_verification.already_verified": "Возраст уже подтверждён.",
 	"attachments_and_uploads.attachment_fields_required": "Необходимо указать `attachment_id`, `channel_id`, `message_id` и `expires_at`.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` и `message_id` должны быть действительными целыми числами.",

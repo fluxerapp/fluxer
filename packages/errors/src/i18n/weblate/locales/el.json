@@ -38,6 +38,7 @@
 	"admin_and_system.test_harness_disabled": "Το test harness είναι απενεργοποιημένο.",
 	"admin_and_system.test_harness_forbidden": "Το test harness απαγορεύεται.",
 	"admin_and_system.update_failed": "Δεν μπορέσαμε να ενημερώσουμε τον πόρο. Δοκίμασε ξανά.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Ο χρήστης πρέπει να είναι bot για να οριστεί ως χρήστης συστήματος.",
 	"age_verification.already_verified": "Έχεις ήδη ολοκληρώσει την επαλήθευση ηλικίας.",
 	"attachments_and_uploads.attachment_fields_required": "Τα `attachment_id`, `channel_id`, `message_id` και `expires_at` είναι υποχρεωτικά.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "Τα `attachment_id`, `channel_id` και `message_id` πρέπει να είναι έγκυροι ακέραιοι αριθμοί.",

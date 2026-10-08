@@ -42,6 +42,7 @@ const ERROR_I18N_BG_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Тестовата система е деактивирана.",
 	"admin_and_system.test_harness_forbidden": "Тестовата система е забранена.",
 	"admin_and_system.update_failed": "Не успяхме да актуализираме ресурса. Опитай отново.",
+	"admin_and_system.user_must_be_bot_for_system_user": "Потребителят трябва да бъде бот, за да бъде маркиран като системен потребител.",
 	"age_verification.already_verified": "Вече премина проверката за възраст.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` и `expires_at` са задължителни.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` и `message_id` трябва да са валидни цели числа.",
