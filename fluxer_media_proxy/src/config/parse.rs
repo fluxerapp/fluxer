@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::{BucketStyle, DeploymentMode, PolicyMode, StorageBackend};
-use crate::secret::SecretBytes;
+use crate::{constants::DESKTOP_APP_ORIGIN, secret::SecretBytes};
 use base64::{Engine as _, engine::general_purpose};
 use http::HeaderValue;
 
@@ -120,6 +120,9 @@ pub(super) fn parse_allowed_origins(
 fn parse_origin(entry: &str) -> Option<HeaderValue> {
     if !entry.is_ascii() {
         return None;
+    }
+    if entry == DESKTOP_APP_ORIGIN {
+        return Some(HeaderValue::from_static(DESKTOP_APP_ORIGIN));
     }
     let url = url::Url::parse(entry).ok()?;
     let bare = matches!(url.scheme(), "http" | "https")

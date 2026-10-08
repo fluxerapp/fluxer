@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::{request_log, server::response::error::text_with_source};
+use crate::{
+    constants::DESKTOP_APP_ORIGIN, http_headers, request_log,
+    server::response::error::text_with_source,
+};
 use axum::{
+    body::Body,
     http::{HeaderMap, HeaderValue, Method, StatusCode, header},
     response::Response,
 };
 
 const VARY_ON_ORIGIN: &str = "Accept-Encoding, Origin";
+const VARY_ON_PREFLIGHT: &str =
+    "Origin, Access-Control-Request-Method, Access-Control-Request-Headers";
+const PREFLIGHT_ALLOW_METHODS: &str = "GET, HEAD, OPTIONS";
+const PREFLIGHT_ALLOW_HEADERS: &str = "Range";
+const PREFLIGHT_MAX_AGE_SECONDS: &str = "600";
+const ANY_ORIGIN: &str = "*";
 const ORIGIN_LOG_BYTES_MAX: usize = 256;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -23,6 +33,9 @@ pub(in crate::server) fn check_origin(allowed: &[HeaderValue], request: &HeaderM
     };
     if origins.next().is_some() {
         return OriginCheck::Refused;
+    }
+    if origin.as_bytes() == DESKTOP_APP_ORIGIN.as_bytes() {
+        return OriginCheck::Allowed(HeaderValue::from_static(DESKTOP_APP_ORIGIN));
     }
     allowed
         .iter()
@@ -42,6 +55,38 @@ pub(in crate::server) fn refused_response(request: &HeaderMap) -> Response {
     response
         .headers_mut()
         .insert(header::VARY, HeaderValue::from_static(VARY_ON_ORIGIN));
+    response
+}
+
+pub(in crate::server) fn is_preflight(method: &Method, request: &HeaderMap) -> bool {
+    method == Method::OPTIONS
+        && request.contains_key(header::ORIGIN)
+        && request.contains_key(header::ACCESS_CONTROL_REQUEST_METHOD)
+}
+
+pub(in crate::server) fn preflight_response(check: &OriginCheck) -> Response {
+    let mut response = Response::new(Body::empty());
+    *response.status_mut() = StatusCode::NO_CONTENT;
+    let headers = response.headers_mut();
+    http_headers::add_security_headers(headers);
+    let allow_origin = match check {
+        OriginCheck::Allowed(origin) => origin.clone(),
+        OriginCheck::Absent | OriginCheck::Refused => HeaderValue::from_static(ANY_ORIGIN),
+    };
+    headers.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, allow_origin);
+    headers.insert(
+        header::ACCESS_CONTROL_ALLOW_METHODS,
+        HeaderValue::from_static(PREFLIGHT_ALLOW_METHODS),
+    );
+    headers.insert(
+        header::ACCESS_CONTROL_ALLOW_HEADERS,
+        HeaderValue::from_static(PREFLIGHT_ALLOW_HEADERS),
+    );
+    headers.insert(
+        header::ACCESS_CONTROL_MAX_AGE,
+        HeaderValue::from_static(PREFLIGHT_MAX_AGE_SECONDS),
+    );
+    headers.insert(header::VARY, HeaderValue::from_static(VARY_ON_PREFLIGHT));
     response
 }
 
