@@ -73,6 +73,7 @@ const FALLBACK_STRINGS: Readonly<Record<string, string>> = Object.freeze({
 	'desktop.appMenu.checkForUpdates': 'Check for updates...',
 	'desktop.update.availableMessage': 'An update for {appName} is available.',
 	'desktop.update.availableDetail': '{appName} will close, install the update and open again.',
+	'desktop.update.reloadDetail': '{appName} will reload to finish updating.',
 	'desktop.update.install': 'Update now',
 	'desktop.update.later': 'Later',
 	'desktop.update.ok': 'OK',

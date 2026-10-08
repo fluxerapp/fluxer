@@ -456,6 +456,14 @@ pub fn build_desktop(
     let dist_renderer = DESKTOP_DIR.join("dist/renderer");
     remove_path(&dist_renderer)?;
     copy_tree(&renderer, &dist_renderer, &|_| false)?;
+    if delivery == RendererDelivery::Modules {
+        let version_file = dist_renderer.join("version.json");
+        fs::write(
+            &version_file,
+            serde_json::to_vec(&serde_json::json!({ "version": version }))?,
+        )
+        .with_context(|| format!("failed to write {}", version_file.display()))?;
+    }
     {
         let _guard = BuildChannelFileGuard::capture();
         run_command(
@@ -575,7 +583,7 @@ pub fn electron_builder_args(
         "-c.mac.notarize=false".to_owned(),
     ];
     if *signing == MacSigning::AdHoc {
-        args.push("-c.mac.identity=-".to_owned());
+        args.push("-c.mac.sign.identity=-".to_owned());
     }
     if !extra_args
         .iter()
@@ -1217,9 +1225,9 @@ mod tests {
         assert!(args.contains(&"-c.mac.notarize=false".to_owned()));
         assert!(args.contains(&"-c.directories.output=/tmp/out".to_owned()));
         assert!(args.contains(&"--arm64".to_owned()));
-        assert!(!args.iter().any(|arg| arg.starts_with("-c.mac.identity")));
+        assert!(!args.iter().any(|arg| arg.starts_with("-c.mac.sign.identity")));
         let ad_hoc = electron_builder_args(Path::new("/tmp/out"), "x64", &MacSigning::AdHoc, &[]);
-        assert!(ad_hoc.contains(&"-c.mac.identity=-".to_owned()));
+        assert!(ad_hoc.contains(&"-c.mac.sign.identity=-".to_owned()));
         assert!(ad_hoc.contains(&"--x64".to_owned()));
         let linux = electron_builder_args(
             Path::new("/tmp/out"),

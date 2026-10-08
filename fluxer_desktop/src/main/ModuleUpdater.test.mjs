@@ -1031,4 +1031,41 @@ describe('ModuleUpdater with a renderer bundled in the shell', () => {
 		assert.equal((await updater.selectServedModules(outcome.committed)).renderer.source, 'bundled');
 		assert.deepEqual(store.getCommitted(), {});
 	});
+
+	test('a Linux launch never waits on a shell download, a required security update still does', async () => {
+		const attempts = [];
+		const selfUpdateShellFirst = async (latestVersion) => {
+			attempts.push(latestVersion);
+		};
+		const store = await openStore(createUserData());
+		const {updater} = createUpdater(
+			store,
+			{},
+			{
+				bundledRendererVersion: SHELL_VERSION,
+				platform: 'linux',
+				forceStartupUpdate: true,
+				shellLatest: '2026.900.1',
+				shellMinimum: '0.0.0',
+				selfUpdateShellFirst,
+			},
+		);
+
+		assert.equal((await updater.run()).status, 'launching');
+		assert.deepEqual(attempts, []);
+
+		const mac = createUpdater(
+			await openStore(createUserData()),
+			{},
+			{
+				bundledRendererVersion: SHELL_VERSION,
+				forceStartupUpdate: true,
+				shellLatest: '2026.900.1',
+				shellMinimum: '0.0.0',
+				selfUpdateShellFirst,
+			},
+		);
+		await mac.updater.run();
+		assert.deepEqual(attempts, ['2026.900.1']);
+	});
 });
