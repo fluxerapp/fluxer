@@ -43,7 +43,6 @@ const DISALLOWED_INPUT_TYPES = new Set([
 	'submit',
 	'time',
 	'week',
-	'password',
 ]);
 const CONTEXT_TARGET_MAX_AGE_MS = 5000;
 const createSyntheticEvent = (

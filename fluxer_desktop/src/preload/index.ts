@@ -870,16 +870,6 @@ const api: ElectronAPI = {
 	} satisfies VoiceEngineV2BridgeHardwareEncoderApi,
 };
 
-window.addEventListener(
-	'contextmenu',
-	(event) => {
-		const target = event.target as HTMLElement | null;
-		const isTextarea = Boolean(target?.closest?.('textarea'));
-		ipcRenderer.send('spellcheck-context-target', {isTextarea});
-	},
-	true,
-);
-
 let spellcheckAutodetectTimer: NodeJS.Timeout | null = null;
 let spellcheckAutodetectContextSequence = 0;
 const SPELLCHECK_AUTODETECT_DEBOUNCE_MS = 750;

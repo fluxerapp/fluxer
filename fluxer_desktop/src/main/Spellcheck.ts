@@ -140,13 +140,6 @@ let factoryPromise: Promise<HunspellFactory> | null = null;
 let ipcRegistered = false;
 let launchModeLogged = false;
 
-const contextSourceByWebContents = new WeakMap<
-	WebContents,
-	{
-		isTextarea: boolean;
-		ts: number;
-	}
->();
 const norm = (code: string): string => code.toLowerCase();
 const beginSessionApply = (session: Session): number => {
 	const generation = (sessionApplyGeneration.get(session) ?? 0) + 1;
@@ -972,20 +965,6 @@ const ensureSharedIpc = () => {
 	if (ipcRegistered) return;
 	ipcRegistered = true;
 	ipcMain.on(
-		'spellcheck-context-target',
-		(
-			event,
-			payload: {
-				isTextarea?: boolean;
-			},
-		) => {
-			contextSourceByWebContents.set(event.sender, {
-				isTextarea: Boolean(payload?.isTextarea),
-				ts: Date.now(),
-			});
-		},
-	);
-	ipcMain.on(
 		'spellcheck:update-autodetect-text',
 		(
 			event,
@@ -1015,31 +994,6 @@ const ensureSharedIpc = () => {
 		if (typeof word !== 'string' || word.length === 0) return [];
 		return suggestWord(event.sender.session, word);
 	});
-};
-const shouldHandleContextMenu = (webContents: WebContents, params: Electron.ContextMenuParams): boolean => {
-	if (!params['isEditable']) return false;
-	const inputFieldType = (
-		params as {
-			inputFieldType?: string;
-		}
-	).inputFieldType;
-	const isPassword =
-		(
-			params as {
-				isPassword?: boolean;
-			}
-		).isPassword === true ||
-		inputFieldType === 'password' ||
-		(
-			params as {
-				formControlType?: string;
-			}
-		).formControlType === 'password';
-	if (isPassword) return false;
-	const target = contextSourceByWebContents.get(webContents);
-	const targetRecent = target && Date.now() - target.ts < 5000;
-	const isTextLike = inputFieldType === 'plainText' || inputFieldType === 'textarea' || inputFieldType === undefined;
-	return Boolean((targetRecent && target.isTextarea) || isTextLike);
 };
 let rendererSpellcheckHandlersRegistered = false;
 
@@ -1117,7 +1071,7 @@ export const registerSpellcheck = (webContents: WebContents): void => {
 		});
 	}
 	webContents.on('context-menu', (event, params) => {
-		if (!shouldHandleContextMenu(webContents, params)) return;
+		if (!params.isEditable) return;
 		event.preventDefault();
 		const cur = sessionState.get(session) ?? {...defaultState};
 		const resolved = sessionResolvedEngine.get(session) ?? resolveEngine(cur, session);
