@@ -1135,7 +1135,7 @@ msgstr "{count, plural, one {# medlem} other {# medlemmer}}"
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:203
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {# besked} other {# beskeder}}"
 
@@ -2399,7 +2399,7 @@ msgstr "1 dag"
 #. Fixed duration label for a one-hour interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:15
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
 msgid "1 hour"
 msgstr "1 time"
 
@@ -2446,7 +2446,7 @@ msgstr "1 bruger"
 #. Fixed duration label for a one-week interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:36
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
 msgid "1 week"
 msgstr "1 uge"
 
@@ -2544,7 +2544,7 @@ msgid "2–32 characters: letters, numbers, and underscores."
 msgstr "2–32 tegn: bogstaver, tal og understregningstegn."
 
 #. Thread auto archive duration option.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
 msgid "24 hours"
 msgstr "24 timer"
 
@@ -2577,7 +2577,7 @@ msgstr "Krav om 2FA"
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
 #. Thread auto archive duration option.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:42
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
 msgid "3 days"
 msgstr "3 dage"
 
@@ -3042,7 +3042,7 @@ msgstr "Handlinger"
 #. Tab in the thread browser that lists active threads.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
 msgstr "Aktiv"
@@ -3878,7 +3878,7 @@ msgstr "Alle sprog"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:20
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:352
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:21
 msgid "All messages"
 msgstr "Alle beskeder"
@@ -3931,7 +3931,7 @@ msgid "Allow {productName} under Screen Recording in System Settings. If it is a
 msgstr "Tillad {productName} under Skærmoptagelse i Systemindstillinger. Hvis det allerede er tilladt, genstart {productName2}, så macOS anvender det."
 
 #. Private thread setting that lets non-moderators add other members.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
 msgid "Allow anyone to invite"
 msgstr "Tillad alle at invitere"
 
@@ -8770,7 +8770,7 @@ msgstr "Vil du lukke din direkte samtale med {username}? Du kan åbne den igen n
 #. Registration mode option that disables public registration.
 #. Tab in the thread browser that lists archived threads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:256
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:181
 msgid "Closed"
 msgstr "Lukket"
 
@@ -8785,7 +8785,7 @@ msgid "Closed DMs"
 msgstr "Lukkede direkte beskeder"
 
 #. Tab in the thread browser that lists closed private threads. Keep it short, it shares a row with Active and Closed.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:185
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:193
 msgid "Closed private"
 msgstr "Lukket privat"
 
@@ -10343,7 +10343,7 @@ msgid "Could not start the screen share. The selected source may no longer be av
 msgstr "Kunne ikke starte skærmdelingen. Den valgte kilde er muligvis ikke længere tilgængelig eller har blokeret optagelse. Prøv at dele hele skærmen i stedet for et bestemt vindue."
 
 #. Toast when creating a thread failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
 msgid "Could not start the thread: {detail}"
 msgstr "Kunne ikke starte tråden: {detail}"
 
@@ -10786,7 +10786,7 @@ msgid "Couldn't save the tag: {detail}"
 msgstr "Kunne ikke gemme tagget: {detail}"
 
 #. Error state of the thread browser search.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:294
 msgid "Couldn't search threads. Try again later."
 msgstr "Kunne ikke søge i tråde. Prøv igen senere."
 
@@ -11964,7 +11964,7 @@ msgid "Debug message"
 msgstr "Fejlfind besked"
 
 #. Developer-mode action that opens the thread debug modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
 msgid "Debug thread"
 msgstr "Debugér tråd"
 
@@ -12036,7 +12036,7 @@ msgid "Default emoji"
 msgstr "Standard-emoji"
 
 #. Label of the default auto archive duration for new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
 msgid "Default hide after inactivity"
 msgstr "Skjul som standard efter inaktivitet"
 
@@ -12094,7 +12094,7 @@ msgid "Default sort order"
 msgstr "Standard sortering"
 
 #. Label of the slowmode copied onto new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
 msgid "Default thread slowmode"
 msgstr "Standard langsom tilstand for tråd"
 
@@ -17982,7 +17982,7 @@ msgid "Hide {premiumProductName} purchase date ({dateUtilsGetFormattedShortDateP
 msgstr "Skjul købsdato for {premiumProductName} ({dateUtilsGetFormattedShortDatePremiumSince})"
 
 #. Label of the thread auto archive duration setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
 msgid "Hide after inactivity"
 msgstr "Skjul efter inaktivitet"
 
@@ -19757,7 +19757,7 @@ msgid "Join the call"
 msgstr "Deltag i opkaldet"
 
 #. Notice above the composer when the user is not a member of the thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
 msgid "Join this thread to follow it in your channel list and get notifications."
 msgstr "Deltag i denne tråd for at følge den i din kanalliste og få notifikationer."
 
@@ -19808,7 +19808,7 @@ msgid "Join voice channels and hear others."
 msgstr "Deltag i talekanaler og hør andre."
 
 #. Section header in the thread browser for threads the user joined.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:185
 msgid "Joined"
 msgstr "Tilmeldt"
 
@@ -20794,7 +20794,7 @@ msgid "Live region"
 msgstr "Live-område"
 
 #. Button that loads the next page of archived threads.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
 msgid "Load more"
 msgstr "Indlæs mere"
 
@@ -23551,7 +23551,7 @@ msgid "New thread"
 msgstr "Ny tråd"
 
 #. Help text for the default thread auto archive duration setting on a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
 msgid "New threads will stop showing in the channel list after this period of inactivity."
 msgstr "Nye tråde vises ikke længere på kanallisten efter denne periode med inaktivitet."
 
@@ -24204,7 +24204,7 @@ msgid "No themes saved yet."
 msgstr "Ingen temaer er gemt endnu."
 
 #. Empty state of the thread browser while searching.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "No threads match"
 msgstr "Ingen tråde matcher"
 
@@ -24462,7 +24462,7 @@ msgstr "Note (kun synlig for dig)"
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #. Thread notification option that never notifies.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:362
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
 msgid "Nothing"
 msgstr "Ingen"
 
@@ -24512,7 +24512,7 @@ msgstr "Tilpassede notifikationer"
 #. Submenu / section header that groups per-channel or per-community notification preferences.
 #. Submenu label for the thread notification options.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:344
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
 msgid "Notification settings"
 msgstr "Notifikationsindstillinger"
 
@@ -24760,7 +24760,7 @@ msgid "Only {count, plural, one {# community} other {# communities}}"
 msgstr "Kun {count, plural, one {# fællesskab} other {# fællesskaber}}"
 
 #. Thread notification option that notifies only for mentions.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
 msgid "Only @mentions"
 msgstr "Kun @nævnelser"
 
@@ -25573,7 +25573,7 @@ msgid "Original message was deleted"
 msgstr "Oprindelig besked blev slettet"
 
 #. Shown at the top of a thread when the message it was started from was deleted.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
 msgid "Original message was deleted."
 msgstr "Original besked blev slettet."
 
@@ -25602,7 +25602,7 @@ msgid "Other"
 msgstr "Andet"
 
 #. Section header in the thread browser for active threads the user did not join.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:181
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:189
 msgid "Other active threads"
 msgstr "Andre aktive tråde"
 
@@ -29483,7 +29483,7 @@ msgstr "Genoptog invitationer"
 #. Button that retries loading forum posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/platform/components/loadable/LoadableComponent.tsx:98
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:294
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:302
 msgid "Retry"
 msgstr "Prøv igen"
 
@@ -29903,7 +29903,7 @@ msgstr "Mætning"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
@@ -30445,7 +30445,7 @@ msgstr "Søg i"
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:167
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:290
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:298
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "Søgning gøres klar til dette community. Prøver igen om lidt..."
 
@@ -30605,7 +30605,7 @@ msgid "Search themes…"
 msgstr "Søg efter temaer …"
 
 #. Placeholder and label of the search box at the top of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Search threads"
 msgstr "Søg i tråde"
 
@@ -30762,7 +30762,7 @@ msgid "Security key PIN form"
 msgstr "Formular til sikkerhedsnøglens pinkode"
 
 #. Link in the thread created system message that opens the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
 msgid "See all threads"
 msgstr "Se alle tråde"
 
@@ -33077,7 +33077,7 @@ msgid "Something went wrong while starting checkout. Please try again in a momen
 msgstr "Der opstod en fejl under start af betaling. Prøv venligst igen om et øjeblik."
 
 #. Toast when a thread action failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
 msgid "Something went wrong: {detail}"
 msgstr "Der gik noget galt: {detail}"
 
@@ -33620,12 +33620,12 @@ msgid "Start with computer"
 msgstr "Start sammen med computeren"
 
 #. Fragment of the thread created system message. Appears after the author name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
 msgid "started a thread"
 msgstr "startede en tråd"
 
 #. Subtitle at the top of a thread. name is the display name of the member who started it.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
 msgid "Started by {name}"
 msgstr "Startet af {name}"
 
@@ -33673,7 +33673,7 @@ msgid "Status:"
 msgstr "Status:"
 
 #. Empty state explanation in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
 msgid "Stay focused on a conversation with a thread, a temporary text channel."
 msgstr "Hold fokus på en samtale med en tråd, en midlertidig tekstkanal."
 
@@ -35419,7 +35419,7 @@ msgid "There are no posts yet"
 msgstr "Der er ingen opslag endnu"
 
 #. Preview text on a thread chip when the thread has no messages yet.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
 msgid "There are no recent messages in this thread."
 msgstr "Der er ingen nylige beskeder i denne tråd."
 
@@ -35428,7 +35428,7 @@ msgid "There are no roles to assign in this community at this time, but you can 
 msgstr "Der er ingen roller at tildele i dette fællesskab lige nu, men du kan oprette en ny rolle under <0>{rolesSettingsPath}</0>."
 
 #. Empty state of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
 msgid "There are no threads"
 msgstr "Der er ingen tråde"
 
@@ -36221,12 +36221,12 @@ msgid "This theme may have been removed or the link is invalid."
 msgstr "Dette tema er muligvis blevet fjernet, eller også er linket ugyldigt."
 
 #. Notice above the composer of an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "This thread is closed. Sending a message will open it again."
 msgstr "Denne tråd er lukket. Hvis du sender en besked, åbnes den igen."
 
 #. Barrier shown instead of the composer in a locked thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
 msgid "This thread is locked. Only moderators can send messages."
 msgstr "Denne tråd er låst. Kun moderatorer kan sende beskeder."
 
@@ -36375,7 +36375,7 @@ msgid "Thread created"
 msgstr "Tråd oprettet"
 
 #. Title of the developer-mode thread debug modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
 msgid "Thread debug"
 msgstr "Tråddetaljer"
 
@@ -36387,12 +36387,12 @@ msgid "Thread deleted"
 msgstr "Tråd slettet"
 
 #. Toast after the thread link was copied.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
 msgid "Thread link copied"
 msgstr "Trådens link blev kopieret"
 
 #. Title of the thread member list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
 msgid "Thread members"
 msgstr "Trådens medlemmer"
 
@@ -36402,7 +36402,7 @@ msgid "Thread name"
 msgstr "Trådens navn"
 
 #. Title of the thread settings modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
 msgid "Thread settings"
 msgstr "Trådim impostninger"
 
@@ -36948,7 +36948,7 @@ msgid "Trusted domains cleared."
 msgstr "Betroede domæner er ryddet."
 
 #. Hint under the empty search state in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:290
 msgid "Try a different name or check the other tab."
 msgstr "Prøv et andet navn eller tjek den anden fane."
 
@@ -38692,7 +38692,7 @@ msgid "Use category default"
 msgstr "Brug kategoriens standardindstilling"
 
 #. Thread notification option that follows the parent channel setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
 msgid "Use channel default"
 msgstr "Brug kanalens standard"
 
@@ -41184,7 +41184,7 @@ msgid "You can sign back in at any time."
 msgstr "Du kan logge ind igen når som helst."
 
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
 msgstr "Du kan starte en ny tråd om {seconds, plural, one {# sekund} other {# sekunder}}."
 

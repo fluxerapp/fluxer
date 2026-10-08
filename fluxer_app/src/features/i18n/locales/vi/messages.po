@@ -1135,7 +1135,7 @@ msgstr "{count, plural, one {# thành viên} other {# thành viên}}"
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:203
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {# tin nhắn} other {# tin nhắn}}"
 
@@ -2399,7 +2399,7 @@ msgstr "1 ngày"
 #. Fixed duration label for a one-hour interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:15
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
 msgid "1 hour"
 msgstr "1 giờ"
 
@@ -2446,7 +2446,7 @@ msgstr "1 người dùng"
 #. Fixed duration label for a one-week interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:36
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
 msgid "1 week"
 msgstr "1 tuần"
 
@@ -2544,7 +2544,7 @@ msgid "2–32 characters: letters, numbers, and underscores."
 msgstr "2-32 ký tự: chữ cái, số và dấu gạch dưới."
 
 #. Thread auto archive duration option.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
 msgid "24 hours"
 msgstr "24 giờ"
 
@@ -2577,7 +2577,7 @@ msgstr "Yêu cầu 2FA"
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
 #. Thread auto archive duration option.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:42
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
 msgid "3 days"
 msgstr "3 ngày"
 
@@ -3042,7 +3042,7 @@ msgstr "Thao tác"
 #. Tab in the thread browser that lists active threads.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
 msgstr "Đang hoạt động"
@@ -3878,7 +3878,7 @@ msgstr "Tất cả ngôn ngữ"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:20
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:352
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:21
 msgid "All messages"
 msgstr "Tất cả tin nhắn"
@@ -3931,7 +3931,7 @@ msgid "Allow {productName} under Screen Recording in System Settings. If it is a
 msgstr "Cho phép {productName} trong mục Ghi màn hình trên Cài đặt hệ thống. Nếu đã được phép, hãy khởi chạy lại {productName2} để macOS áp dụng."
 
 #. Private thread setting that lets non-moderators add other members.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
 msgid "Allow anyone to invite"
 msgstr "Cho phép mọi người mời"
 
@@ -8770,7 +8770,7 @@ msgstr "Đóng tin nhắn trực tiếp với {username}? Bạn có thể mở l
 #. Registration mode option that disables public registration.
 #. Tab in the thread browser that lists archived threads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:256
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:181
 msgid "Closed"
 msgstr "Đã đóng"
 
@@ -8785,7 +8785,7 @@ msgid "Closed DMs"
 msgstr "Tin nhắn trực tiếp đã đóng"
 
 #. Tab in the thread browser that lists closed private threads. Keep it short, it shares a row with Active and Closed.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:185
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:193
 msgid "Closed private"
 msgstr "Riêng tư đã đóng"
 
@@ -10343,7 +10343,7 @@ msgid "Could not start the screen share. The selected source may no longer be av
 msgstr "Không thể bắt đầu chia sẻ màn hình. Nguồn đã chọn có thể không còn khả dụng hoặc đã chặn chụp màn hình. Hãy thử chia sẻ toàn bộ màn hình thay vì một cửa sổ cụ thể."
 
 #. Toast when creating a thread failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
 msgid "Could not start the thread: {detail}"
 msgstr "Không thể tạo luồng: {detail}"
 
@@ -10786,7 +10786,7 @@ msgid "Couldn't save the tag: {detail}"
 msgstr "Không thể lưu thẻ: {detail}"
 
 #. Error state of the thread browser search.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:294
 msgid "Couldn't search threads. Try again later."
 msgstr "Không thể tìm kiếm các luồng. Vui lòng thử lại sau."
 
@@ -11964,7 +11964,7 @@ msgid "Debug message"
 msgstr "Gỡ lỗi tin nhắn"
 
 #. Developer-mode action that opens the thread debug modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
 msgid "Debug thread"
 msgstr "Gỡ lỗi luồng"
 
@@ -12036,7 +12036,7 @@ msgid "Default emoji"
 msgstr "Biểu tượng cảm xúc mặc định"
 
 #. Label of the default auto archive duration for new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
 msgid "Default hide after inactivity"
 msgstr "Ẩn mặc định sau khi không hoạt động"
 
@@ -12094,7 +12094,7 @@ msgid "Default sort order"
 msgstr "Thứ tự sắp xếp mặc định"
 
 #. Label of the slowmode copied onto new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
 msgid "Default thread slowmode"
 msgstr "Chế độ chậm mặc định của luồng"
 
@@ -17982,7 +17982,7 @@ msgid "Hide {premiumProductName} purchase date ({dateUtilsGetFormattedShortDateP
 msgstr "Ẩn ngày mua {premiumProductName} ({dateUtilsGetFormattedShortDatePremiumSince})"
 
 #. Label of the thread auto archive duration setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
 msgid "Hide after inactivity"
 msgstr "Ẩn sau thời gian không hoạt động"
 
@@ -19757,7 +19757,7 @@ msgid "Join the call"
 msgstr "Tham gia cuộc gọi"
 
 #. Notice above the composer when the user is not a member of the thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
 msgid "Join this thread to follow it in your channel list and get notifications."
 msgstr "Tham gia luồng này để theo dõi trong danh sách kênh của bạn và nhận thông báo."
 
@@ -19808,7 +19808,7 @@ msgid "Join voice channels and hear others."
 msgstr "Tham gia các kênh thoại và nghe người khác."
 
 #. Section header in the thread browser for threads the user joined.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:185
 msgid "Joined"
 msgstr "Đã tham gia"
 
@@ -20794,7 +20794,7 @@ msgid "Live region"
 msgstr "Vùng nội dung động"
 
 #. Button that loads the next page of archived threads.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
 msgid "Load more"
 msgstr "Tải thêm"
 
@@ -23551,7 +23551,7 @@ msgid "New thread"
 msgstr "Chủ đề mới"
 
 #. Help text for the default thread auto archive duration setting on a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
 msgid "New threads will stop showing in the channel list after this period of inactivity."
 msgstr "Luồng mới sẽ ngừng hiển thị trong danh sách kênh sau khoảng thời gian không hoạt động này."
 
@@ -24204,7 +24204,7 @@ msgid "No themes saved yet."
 msgstr "Chưa có chủ đề nào được lưu."
 
 #. Empty state of the thread browser while searching.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "No threads match"
 msgstr "Không có luồng nào khớp"
 
@@ -24462,7 +24462,7 @@ msgstr "Ghi chú (chỉ mình bạn thấy)"
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #. Thread notification option that never notifies.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:362
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
 msgid "Nothing"
 msgstr "Không có gì"
 
@@ -24512,7 +24512,7 @@ msgstr "Tùy chỉnh thông báo"
 #. Submenu / section header that groups per-channel or per-community notification preferences.
 #. Submenu label for the thread notification options.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:344
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
 msgid "Notification settings"
 msgstr "Cài đặt thông báo"
 
@@ -24760,7 +24760,7 @@ msgid "Only {count, plural, one {# community} other {# communities}}"
 msgstr "Chỉ {count, plural, one {# cộng đồng} other {# cộng đồng}}"
 
 #. Thread notification option that notifies only for mentions.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
 msgid "Only @mentions"
 msgstr "Chỉ @nhắc đến"
 
@@ -25573,7 +25573,7 @@ msgid "Original message was deleted"
 msgstr "Tin nhắn gốc đã bị xóa"
 
 #. Shown at the top of a thread when the message it was started from was deleted.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
 msgid "Original message was deleted."
 msgstr "Tin nhắn gốc đã bị xóa."
 
@@ -25602,7 +25602,7 @@ msgid "Other"
 msgstr "Khác"
 
 #. Section header in the thread browser for active threads the user did not join.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:181
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:189
 msgid "Other active threads"
 msgstr "Các luồng hoạt động khác"
 
@@ -29483,7 +29483,7 @@ msgstr "Đã bật lại lời mời"
 #. Button that retries loading forum posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/platform/components/loadable/LoadableComponent.tsx:98
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:294
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:302
 msgid "Retry"
 msgstr "Thử lại"
 
@@ -29903,7 +29903,7 @@ msgstr "Độ bão hòa"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
@@ -30445,7 +30445,7 @@ msgstr "Tìm kiếm trong"
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:167
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:290
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:298
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "Tìm kiếm đang chuẩn bị cho cộng đồng này. Thử lại sau..."
 
@@ -30605,7 +30605,7 @@ msgid "Search themes…"
 msgstr "Tìm kiếm giao diện…"
 
 #. Placeholder and label of the search box at the top of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Search threads"
 msgstr "Tìm kiếm cuộc trò chuyện"
 
@@ -30762,7 +30762,7 @@ msgid "Security key PIN form"
 msgstr "Biểu mẫu mã PIN khóa bảo mật"
 
 #. Link in the thread created system message that opens the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
 msgid "See all threads"
 msgstr "Xem tất cả các luồng"
 
@@ -33077,7 +33077,7 @@ msgid "Something went wrong while starting checkout. Please try again in a momen
 msgstr "Đã xảy ra lỗi khi bắt đầu thanh toán. Vui lòng thử lại sau giây lát."
 
 #. Toast when a thread action failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
 msgid "Something went wrong: {detail}"
 msgstr "Đã xảy ra lỗi: {detail}"
 
@@ -33620,12 +33620,12 @@ msgid "Start with computer"
 msgstr "Khởi động cùng máy tính"
 
 #. Fragment of the thread created system message. Appears after the author name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
 msgid "started a thread"
 msgstr "đã bắt đầu một luồng"
 
 #. Subtitle at the top of a thread. name is the display name of the member who started it.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
 msgid "Started by {name}"
 msgstr "Bắt đầu bởi {name}"
 
@@ -33673,7 +33673,7 @@ msgid "Status:"
 msgstr "Trạng thái:"
 
 #. Empty state explanation in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
 msgid "Stay focused on a conversation with a thread, a temporary text channel."
 msgstr "Luôn tập trung vào cuộc trò chuyện với một luồng, một kênh văn bản tạm thời."
 
@@ -35419,7 +35419,7 @@ msgid "There are no posts yet"
 msgstr "Chưa có bài đăng nào"
 
 #. Preview text on a thread chip when the thread has no messages yet.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
 msgid "There are no recent messages in this thread."
 msgstr "Chưa có tin nhắn nào gần đây trong luồng này."
 
@@ -35428,7 +35428,7 @@ msgid "There are no roles to assign in this community at this time, but you can 
 msgstr "Hiện tại không có vai trò nào để gán trong cộng đồng này, nhưng bạn có thể tạo vai trò mới trong <0>{rolesSettingsPath}</0>."
 
 #. Empty state of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
 msgid "There are no threads"
 msgstr "Không có luồng nào"
 
@@ -36221,12 +36221,12 @@ msgid "This theme may have been removed or the link is invalid."
 msgstr "Chủ đề này có thể đã bị gỡ hoặc liên kết không hợp lệ."
 
 #. Notice above the composer of an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "This thread is closed. Sending a message will open it again."
 msgstr "Chủ đề này đã đóng. Gửi tin nhắn sẽ mở lại chủ đề."
 
 #. Barrier shown instead of the composer in a locked thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
 msgid "This thread is locked. Only moderators can send messages."
 msgstr "Chủ đề này đã bị khóa. Chỉ quản trị viên mới có thể gửi tin nhắn."
 
@@ -36375,7 +36375,7 @@ msgid "Thread created"
 msgstr "Luồng được tạo"
 
 #. Title of the developer-mode thread debug modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
 msgid "Thread debug"
 msgstr "Gỡ lỗi luồng"
 
@@ -36387,12 +36387,12 @@ msgid "Thread deleted"
 msgstr "Chủ đề đã bị xóa"
 
 #. Toast after the thread link was copied.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
 msgid "Thread link copied"
 msgstr "Đã sao chép liên kết luồng"
 
 #. Title of the thread member list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
 msgid "Thread members"
 msgstr "Thành viên luồng"
 
@@ -36402,7 +36402,7 @@ msgid "Thread name"
 msgstr "Tên chủ đề"
 
 #. Title of the thread settings modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
 msgid "Thread settings"
 msgstr "Cài đặt luồng"
 
@@ -36948,7 +36948,7 @@ msgid "Trusted domains cleared."
 msgstr "Đã xóa các miền tin cậy."
 
 #. Hint under the empty search state in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:290
 msgid "Try a different name or check the other tab."
 msgstr "Thử một tên khác hoặc kiểm tra tab khác."
 
@@ -38692,7 +38692,7 @@ msgid "Use category default"
 msgstr "Dùng cài đặt mặc định của danh mục"
 
 #. Thread notification option that follows the parent channel setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
 msgid "Use channel default"
 msgstr "Sử dụng mặc định của kênh"
 
@@ -41184,7 +41184,7 @@ msgid "You can sign back in at any time."
 msgstr "Bạn có thể đăng nhập lại bất cứ lúc nào."
 
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
 msgstr "Bạn có thể bắt đầu một chủ đề khác trong {seconds, plural, one {# giây} other {# giây}}."
 
