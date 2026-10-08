@@ -278,6 +278,7 @@ interface ModuleUpdaterOptions {
 	readonly packageOrigin?: string;
 	readonly hasOfflineRenderer?: boolean;
 	readonly bundledRendererVersion?: string | null;
+	readonly preferUnversionedBundle?: boolean;
 	readonly forceStartupUpdate?: boolean;
 	readonly selfUpdateShellFirst?: (latestVersion: string, requiredSecurityUpdate: boolean) => Promise<void>;
 	readonly onState?: (state: ModuleUpdaterSplashState) => void;
@@ -339,6 +340,7 @@ export class ModuleUpdater {
 			this.shellVersion,
 			this.hasOfflineRenderer,
 			parseBundledRendererVersion(options.bundledRendererVersion ?? null),
+			options.preferUnversionedBundle ?? false,
 		);
 		this.onState = options.onState ?? (() => {});
 		this.reporter = options.report ?? (() => {});
@@ -415,9 +417,10 @@ export class ModuleUpdater {
 	}
 
 	public async run(): Promise<ModuleUpdaterOutcome> {
-		let attempt = await this.store.beginBootAttempt();
-		await this.backfillFloorBuildVersion();
-		if (await this.retireRendererCoveredByBundle()) {
+		let attempt = await this.store.beginBootAttempt({bundled: this.planner.bundledModules()});
+		const retiredRenderer = await this.retireRendererCoveredByBundle();
+		const retiredMissing = await this.retireUninstalledModules();
+		if (retiredRenderer || retiredMissing) {
 			attempt = {...attempt, committed: this.store.getCommitted()};
 		}
 		await this.restoreCachedUpdatePolicy();
@@ -602,24 +605,19 @@ export class ModuleUpdater {
 		return true;
 	}
 
-	private async backfillFloorBuildVersion(): Promise<void> {
-		const state = this.store.getState();
-		const floorSha256 = state.floor[DESKTOP_RENDERER_MODULE_NAME];
-		if (state.floor_build_version != null || floorSha256 == null || !this.planner.hasBundledRenderer()) {
-			return;
-		}
-		try {
-			const document = await this.manifestRepository.readCached();
-			if (document == null) {
-				return;
+	private async retireUninstalledModules(): Promise<boolean> {
+		let retired = false;
+		for (const moduleName of await this.planner.uninstalledCommittedModules()) {
+			if (await this.store.retireModule(moduleName)) {
+				retired = true;
+				this.report({
+					type: ModuleUpdaterReportType.PACKAGE_MISSING,
+					module: moduleName,
+					message: 'dropped a committed module whose files are gone, the bundled renderer does not need it to launch',
+				});
 			}
-			const manifest = this.manifestRepository.parse(document);
-			if (manifest.modules[DESKTOP_RENDERER_MODULE_NAME]?.sha256 === floorSha256) {
-				await this.store.recordFloorBuildVersion(manifest.buildVersion.source);
-			}
-		} catch (error) {
-			this.reportFailure(error);
 		}
+		return retired;
 	}
 
 	private async resolveManifestForEnsure(): Promise<DesktopModuleUpdateManifest> {
@@ -1022,7 +1020,6 @@ export class ModuleUpdater {
 			fetchedAt: new Date(this.now()).toISOString(),
 			manifest: observation,
 			floor,
-			floorBuildVersion: manifest.buildVersion.source,
 			linuxSecurityMinimum,
 			advertised,
 		});
