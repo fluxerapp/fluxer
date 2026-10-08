@@ -110,6 +110,7 @@ export interface UserSettings {
 	groupDmAddPermissionFlags: number;
 	profilePrivacy: ProfilePrivacyLevel;
 	defaultShareVoiceActivity: boolean;
+	privacySetupVersion: number | null;
 	guildFolders: Array<GuildFolder>;
 	customStatus: CustomStatus | null;
 	afkTimeout: number;
@@ -298,6 +299,7 @@ class UserSettingsState {
 	groupDmAddPermissionFlags: number = 0;
 	profilePrivacy: ProfilePrivacyLevel = ProfilePrivacyLevels.ALL_GUILDS;
 	defaultShareVoiceActivity: boolean = true;
+	privacySetupVersion: number | null = null;
 	guildFolders: Array<GuildFolder> = [];
 	customStatus: CustomStatus | null = null;
 	afkTimeout: number = 600;
@@ -516,6 +518,10 @@ class UserSettingsState {
 
 	getDefaultShareVoiceActivity(): boolean {
 		return this.defaultShareVoiceActivity;
+	}
+
+	getPrivacySetupVersion(): number | null {
+		return this.privacySetupVersion;
 	}
 
 	getGuildFolders(): ReadonlyArray<GuildFolder> {
@@ -738,6 +744,7 @@ class UserSettingsState {
 		if (camelCaseSettings.defaultShareVoiceActivity !== undefined) {
 			this.defaultShareVoiceActivity = camelCaseSettings.defaultShareVoiceActivity;
 		}
+		this.privacySetupVersion = camelCaseSettings.privacySetupVersion ?? null;
 		this.guildFolders = camelCaseSettings.guildFolders.map((folder) => ({
 			...folder,
 			flags: folder.flags ?? 0,
@@ -829,6 +836,7 @@ class UserSettingsState {
 			groupDmAddPermissionFlags: this.groupDmAddPermissionFlags,
 			profilePrivacy: this.profilePrivacy,
 			defaultShareVoiceActivity: this.defaultShareVoiceActivity,
+			privacySetupVersion: this.privacySetupVersion,
 			guildFolders: this.guildFolders.map((folder) => ({
 				...folder,
 				guildIds: [...folder.guildIds],

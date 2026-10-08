@@ -1093,9 +1093,14 @@ msgstr "{count, plural, one {# قناة تتابع} other {# قناة تتابع
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, zero {لم يُعثر على أي مجتمع} one {تم العثور على مجتمع واحد} two {تم العثور على مجتمعين} few {تم العثور على # مجتمعات} many {تم العثور على # مجتمعًا} other {تم العثور على # مجتمع}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1951
+#: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, zero {# مجتمع غير متاح مؤقتًا بسبب عطل في مكثف التدفق.} one {مجتمع واحد غير متاح مؤقتًا بسبب عطل في مكثف التدفق.} two {مجتمعان غير متاحين مؤقتًا بسبب عطل في مكثف التدفق.} few {# مجتمعات غير متاحة مؤقتًا بسبب عطل في مكثف التدفق.} many {# مجتمعًا غير متاح مؤقتًا بسبب عطل في مكثف التدفق.} other {# مجتمع غير متاح مؤقتًا بسبب عطل في مكثف التدفق.}}"
+
+#. Heading above the list of communities whose direct message setting differs from the choice in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:55
+msgid "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
+msgstr "{count, plural, one {# مجتمع يستخدم إعدادًا مختلفًا} other {# مجتمعات تستخدم إعدادًا مختلفًا}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:46
@@ -4634,6 +4639,11 @@ msgstr "يمكن لأي شخص إنشاء حساب."
 msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "يمكن لأي شخص طلب حساب، ولكن يجب على المسؤول الموافقة عليه."
 
+#. Privacy setup option. People who share a community with the user can send them direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Anyone in my communities"
+msgstr "أي شخص في مجتمعاتي"
+
 #. Warning under the recovery key in the recovery kit modal.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:59
 msgid "Anyone with this key can reset your password. Never share it."
@@ -4797,6 +4807,11 @@ msgstr "تطبيق السمة"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "تطبيق على جميع المجتمعات"
+
+#. Checkbox in the privacy setup modal. When checked, the chosen setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:60
+msgid "Apply to these communities too"
+msgstr "تطبيق على هذه المجتمعات أيضًا"
 
 #. Registration mode option requiring admin approval.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
@@ -8196,6 +8211,11 @@ msgstr "اختر من يمكنه رؤية هذا الاتصال في ملفك ا
 msgid "Choose who can see your profile details"
 msgstr "اختر من يمكنه رؤية تفاصيل ملفك الشخصي"
 
+#. Nagbar body asking the user to review who can send them direct messages.
+#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
+msgid "Choose who can send you direct messages."
+msgstr "اختر من يمكنه إرسال رسائل مباشرة إليك."
+
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
 msgid "Choose your defaults"
@@ -9187,7 +9207,7 @@ msgid "Community message notifications"
 msgstr "إشعارات رسائل المجتمع"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:82
+#: src/features/devtools/components/NagbarControls.ts:86
 msgid "Community MFA requirement nagbar"
 msgstr "شريط تذكير بمتطلبات المصادقة متعددة العوامل للمجتمع"
 
@@ -11406,12 +11426,12 @@ msgid "Current uses:"
 msgstr "الاستخدامات الحالية:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:115
+#: src/features/devtools/components/NagbarControls.ts:119
 msgid "Currently dismissed"
 msgstr "مُغلق حاليًا"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:119
+#: src/features/devtools/components/NagbarControls.ts:123
 msgid "Currently showing"
 msgstr "معروض حاليًا"
 
@@ -13461,7 +13481,7 @@ msgid "Domain"
 msgstr "النطاق"
 
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
-#: src/features/devtools/components/NagbarControls.ts:77
+#: src/features/devtools/components/NagbarControls.ts:81
 msgid "Domain moved nagbar"
 msgstr "شريط تنبيه نقل النطاق"
 
@@ -16402,12 +16422,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "حفاظًا على أمانك، أكّد هويتك للمتابعة."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:103
+#: src/features/devtools/components/NagbarControls.ts:107
 msgid "Force disabled"
 msgstr "معطل قسريًا"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:99
+#: src/features/devtools/components/NagbarControls.ts:103
 msgid "Force enabled"
 msgstr "مفعل قسريًا"
 
@@ -16730,12 +16750,19 @@ msgstr "يمكن للأصدقاء والمجموعات المحددة الاتص
 msgid "Friends and small communities only"
 msgstr "الأصدقاء والمجتمعات الصغيرة فقط"
 
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:26
+msgid "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
+msgstr "يمكن للأصدقاء دائمًا إرسال رسائل مباشرة إليك. اختر ما إذا كان الأشخاص الذين تشاركهم مجتمعًا معهم يمكنهم مراسلتك دون إرسال طلب صداقة أولاً."
+
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:460
 msgid "Friends of friends"
 msgstr "أصدقاء الأصدقاء"
 
 #. Privacy > Profile privacy: radio option label restricting the profile to friends only.
+#. Privacy setup option. Only friends can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:37
 msgid "Friends only"
 msgstr "الأصدقاء فقط"
@@ -19580,7 +19607,7 @@ msgid "Invites disabled"
 msgstr "الدعوات معطلة"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:73
+#: src/features/devtools/components/NagbarControls.ts:77
 msgid "Invites disabled nagbar"
 msgstr "شريط تنبيه تعطيل الدعوات"
 
@@ -26068,6 +26095,11 @@ msgstr "بنسلفانيا"
 msgid "People"
 msgstr "الأشخاص"
 
+#. Description under the "Friends only" privacy setup option.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "People need to be your friend before they can message you. They can still send you a friend request."
+msgstr "يحتاج الأشخاص إلى أن يكونوا أصدقاء لك قبل أن يتمكنوا من إرسال رسائل إليك. لا يزال بإمكانهم إرسال طلب صداقة إليك."
+
 #. Description for the username sign-in option in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:78
 msgid "People sign in with a username and password. No email address is collected. Each person can save a recovery kit in case they forget their password."
@@ -26077,6 +26109,11 @@ msgstr "يسجل الأشخاص الدخول باستخدام اسم مستخد�
 #: src/features/app/components/setup/SetupWizardSteps.tsx:91
 msgid "People sign in with an email address and password. Password resets and verification need email delivery, which you can set up later."
 msgstr "يسجل الأشخاص الدخول باستخدام عنوان بريد إلكتروني وكلمة مرور. تتطلب عمليات إعادة تعيين كلمة المرور والتحقق تسليم البريد الإلكتروني، والذي يمكنك إعداده لاحقًا."
+
+#. Description under the "Anyone in my communities" privacy setup option.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People who share a community with you can message you directly."
+msgstr "يمكن للأشخاص الذين يشاركونك مجتمعًا مراسلتك مباشرة."
 
 #. Helper text for the voice channel connection limit field.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:30
@@ -27054,6 +27091,11 @@ msgstr "سياسة الخصوصية"
 #. Generic section heading / button label for the privacy settings area.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:673
 msgid "Privacy settings"
+msgstr "إعدادات الخصوصية"
+
+#. Developer control label for the privacy setup banner.
+#: src/features/devtools/components/NagbarControls.ts:69
+msgid "Privacy setup nagbar"
 msgstr "إعدادات الخصوصية"
 
 #. Label for Bluesky OAuth privacy URL input.
@@ -29562,6 +29604,11 @@ msgstr "راجع التطبيقات التي يمكنها الوصول إلى ح
 msgid "Review past purchases and refund options"
 msgstr "مراجعة المشتريات السابقة وخيارات استرداد الأموال"
 
+#. Button label on the privacy setup nagbar. Opens the privacy setup modal.
+#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:19
+msgid "Review privacy settings"
+msgstr "مراجعة إعدادات الخصوصية"
+
 #. Security settings row description for linked devices.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
@@ -29883,6 +29930,7 @@ msgstr "التشبع"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Button that saves the forum tag editor or tag picker.
 #. Confirm button on the alert shown before saving an edit to a published announcement message.
+#. Primary button in the privacy setup modal. Saves the chosen direct message setting.
 #. Save button in the community-folder settings modal footer.
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
@@ -29907,6 +29955,7 @@ msgstr "التشبع"
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
+#: src/features/user/components/modals/PrivacySetupModal.tsx:51
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "حفظ"
@@ -39145,27 +39194,27 @@ msgid "Using {effectiveLabel} until {requestedLabel} is ready."
 msgstr "استخدام {effectiveLabel} حتى يصبح {requestedLabel} جاهزًا."
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:107
+#: src/features/devtools/components/NagbarControls.ts:111
 msgid "Using actual account state"
 msgstr "يستخدم حالة الحساب الفعلية"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:127
+#: src/features/devtools/components/NagbarControls.ts:131
 msgid "Using actual gift inventory state"
 msgstr "يستخدم حالة مخزون الهدايا الفعلية"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:123
+#: src/features/devtools/components/NagbarControls.ts:127
 msgid "Using actual premium state"
 msgstr "يستخدم حالة Premium الفعلية"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:131
+#: src/features/devtools/components/NagbarControls.ts:135
 msgid "Using actual state"
 msgstr "يستخدم الحالة الفعلية"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:111
+#: src/features/devtools/components/NagbarControls.ts:115
 msgid "Using actual verification state"
 msgstr "يستخدم حالة التحقق الفعلية"
 
@@ -40102,7 +40151,7 @@ msgid "Voice region"
 msgstr "منطقة الصوت"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:69
+#: src/features/devtools/components/NagbarControls.ts:73
 msgid "Voice session restore nagbar"
 msgstr "شريط تذكير استعادة الجلسة الصوتية"
 
@@ -40821,6 +40870,16 @@ msgstr "من يمكنه إرسال طلبات الصداقة"
 msgid "Who can join"
 msgstr "من يمكنه الانضمام"
 
+#. Accessible label for the group of options in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:65
+msgid "Who can message you"
+msgstr "من يمكنه إرسال رسائل إليك"
+
+#. Title of the privacy setup modal that asks who can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:22
+msgid "Who can message you?"
+msgstr "من يمكنه إرسال رسائل إليك؟"
+
 #. Privacy > Profile privacy: section title.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:17
 msgid "Who can see your full profile"
@@ -41137,6 +41196,11 @@ msgstr "يمكنك أيضًا إنشاء تجاوزات أذونات لكل فئ
 #: src/features/auth/components/modals/AccountDeleteModal.tsx:50
 msgid "You can cancel the deletion process within 14 days"
 msgstr "يمكنك إلغاء عملية الحذف خلال 14 يومًا"
+
+#. Small note at the bottom of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "You can change this anytime in your privacy settings, including for each community."
+msgstr "يمكنك تغيير هذا في أي وقت في إعدادات الخصوصية الخاصة بك، بما في ذلك لكل مجتمع."
 
 #. Informational text in the favorite GIF import modal while import is running.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:42

@@ -1,0 +1,46 @@
+.outliers {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	border-radius: var(--radius-sm);
+	background-color: var(--background-secondary);
+}
+
+.outliersTitle {
+	margin: 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.outlierList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	max-height: 9rem;
+	margin: 0;
+	padding: 0;
+	overflow-y: auto;
+	list-style: none;
+}
+
+.outlierItem {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+}
+
+.outlierName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.applyLabel {
+	font-size: 0.875rem;
+	color: var(--text-primary);
+}

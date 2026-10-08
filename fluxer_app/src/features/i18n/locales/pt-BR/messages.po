@@ -1093,9 +1093,14 @@ msgstr "{count, plural, one {# canal segue} other {# canais seguem}} este canal.
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, =0 {# comunidades encontradas} one {# comunidade encontrada} other {# comunidades encontradas}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1951
+#: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, =0 {# comunidades estão temporariamente indisponíveis devido a um defeito no capacitor de fluxo.} one {# comunidade está temporariamente indisponível devido a um defeito no capacitor de fluxo.} other {# comunidades estão temporariamente indisponíveis devido a um defeito no capacitor de fluxo.}}"
+
+#. Heading above the list of communities whose direct message setting differs from the choice in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:55
+msgid "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
+msgstr "{count, plural, one {# comunidade usa uma configuração diferente} other {# comunidades usam uma configuração diferente}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:46
@@ -4634,6 +4639,11 @@ msgstr "Qualquer pessoa pode criar uma conta."
 msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "Qualquer pessoa pode solicitar uma conta, mas um administrador precisa aprová-la."
 
+#. Privacy setup option. People who share a community with the user can send them direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Anyone in my communities"
+msgstr "Qualquer pessoa nas minhas comunidades"
+
 #. Warning under the recovery key in the recovery kit modal.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:59
 msgid "Anyone with this key can reset your password. Never share it."
@@ -4797,6 +4807,11 @@ msgstr "Aplicar tema"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "Aplicar a todas as comunidades"
+
+#. Checkbox in the privacy setup modal. When checked, the chosen setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:60
+msgid "Apply to these communities too"
+msgstr "Aplicar a estas comunidades também"
 
 #. Registration mode option requiring admin approval.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
@@ -8196,6 +8211,11 @@ msgstr "Escolha quem pode ver esta conexão no seu perfil."
 msgid "Choose who can see your profile details"
 msgstr "Escolha quem pode ver os detalhes do seu perfil"
 
+#. Nagbar body asking the user to review who can send them direct messages.
+#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
+msgid "Choose who can send you direct messages."
+msgstr "Escolha quem pode te enviar mensagens diretas."
+
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
 msgid "Choose your defaults"
@@ -9187,7 +9207,7 @@ msgid "Community message notifications"
 msgstr "Notificações de mensagens da comunidade"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:82
+#: src/features/devtools/components/NagbarControls.ts:86
 msgid "Community MFA requirement nagbar"
 msgstr "Barra de aviso de exigência de MFA na comunidade"
 
@@ -11406,12 +11426,12 @@ msgid "Current uses:"
 msgstr "Usos atuais:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:115
+#: src/features/devtools/components/NagbarControls.ts:119
 msgid "Currently dismissed"
 msgstr "Atualmente dispensado"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:119
+#: src/features/devtools/components/NagbarControls.ts:123
 msgid "Currently showing"
 msgstr "Exibindo agora"
 
@@ -13461,7 +13481,7 @@ msgid "Domain"
 msgstr "Domínio"
 
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
-#: src/features/devtools/components/NagbarControls.ts:77
+#: src/features/devtools/components/NagbarControls.ts:81
 msgid "Domain moved nagbar"
 msgstr "Barra de notificação de domínio alterado"
 
@@ -16402,12 +16422,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "Para sua segurança, confirme que é você para continuar."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:103
+#: src/features/devtools/components/NagbarControls.ts:107
 msgid "Force disabled"
 msgstr "Forçar desativação"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:99
+#: src/features/devtools/components/NagbarControls.ts:103
 msgid "Force enabled"
 msgstr "Forçar ativação"
 
@@ -16730,12 +16750,19 @@ msgstr "Amigos e grupos selecionados podem ligar para você"
 msgid "Friends and small communities only"
 msgstr "Apenas amigos e comunidades pequenas"
 
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:26
+msgid "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
+msgstr "Amigos sempre podem te enviar mensagens diretas. Escolha se pessoas que compartilham uma comunidade com você podem te mandar mensagem sem precisar enviar um pedido de amizade primeiro."
+
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:460
 msgid "Friends of friends"
 msgstr "Amigos de amigos"
 
 #. Privacy > Profile privacy: radio option label restricting the profile to friends only.
+#. Privacy setup option. Only friends can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:37
 msgid "Friends only"
 msgstr "Apenas amigos"
@@ -19580,7 +19607,7 @@ msgid "Invites disabled"
 msgstr "Convites desativados"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:73
+#: src/features/devtools/components/NagbarControls.ts:77
 msgid "Invites disabled nagbar"
 msgstr "Barra de convites desativados"
 
@@ -26068,6 +26095,11 @@ msgstr "Pensilvânia"
 msgid "People"
 msgstr "Pessoas"
 
+#. Description under the "Friends only" privacy setup option.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "People need to be your friend before they can message you. They can still send you a friend request."
+msgstr "As pessoas precisam ser suas amigas antes de poderem te enviar mensagens. Elas ainda podem te enviar um pedido de amizade."
+
 #. Description for the username sign-in option in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:78
 msgid "People sign in with a username and password. No email address is collected. Each person can save a recovery kit in case they forget their password."
@@ -26077,6 +26109,11 @@ msgstr "As pessoas fazem login com um nome de usuário e senha. Nenhum endereço
 #: src/features/app/components/setup/SetupWizardSteps.tsx:91
 msgid "People sign in with an email address and password. Password resets and verification need email delivery, which you can set up later."
 msgstr "As pessoas fazem login com um endereço de e-mail e senha. Redefinições de senha e verificação precisam de entrega por e-mail, que você pode configurar mais tarde."
+
+#. Description under the "Anyone in my communities" privacy setup option.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People who share a community with you can message you directly."
+msgstr "Pessoas que compartilham uma comunidade com você podem te enviar mensagens diretamente."
 
 #. Helper text for the voice channel connection limit field.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:30
@@ -27055,6 +27092,11 @@ msgstr "Política de privacidade"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:673
 msgid "Privacy settings"
 msgstr "Configurações de privacidade"
+
+#. Developer control label for the privacy setup banner.
+#: src/features/devtools/components/NagbarControls.ts:69
+msgid "Privacy setup nagbar"
+msgstr "Configuração de privacidade"
 
 #. Label for Bluesky OAuth privacy URL input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1157
@@ -29562,6 +29604,11 @@ msgstr "Analise os aplicativos que podem acessar sua conta."
 msgid "Review past purchases and refund options"
 msgstr "Ver compras anteriores e opções de reembolso"
 
+#. Button label on the privacy setup nagbar. Opens the privacy setup modal.
+#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:19
+msgid "Review privacy settings"
+msgstr "Revisar configurações de privacidade"
+
 #. Security settings row description for linked devices.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
@@ -29883,6 +29930,7 @@ msgstr "Saturação"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Button that saves the forum tag editor or tag picker.
 #. Confirm button on the alert shown before saving an edit to a published announcement message.
+#. Primary button in the privacy setup modal. Saves the chosen direct message setting.
 #. Save button in the community-folder settings modal footer.
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
@@ -29907,6 +29955,7 @@ msgstr "Saturação"
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
+#: src/features/user/components/modals/PrivacySetupModal.tsx:51
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "Salvar"
@@ -39145,27 +39194,27 @@ msgid "Using {effectiveLabel} until {requestedLabel} is ready."
 msgstr "Usando {effectiveLabel} até que {requestedLabel} esteja pronto."
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:107
+#: src/features/devtools/components/NagbarControls.ts:111
 msgid "Using actual account state"
 msgstr "Usando o estado real da conta"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:127
+#: src/features/devtools/components/NagbarControls.ts:131
 msgid "Using actual gift inventory state"
 msgstr "Usando o status real do inventário de presentes"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:123
+#: src/features/devtools/components/NagbarControls.ts:127
 msgid "Using actual premium state"
 msgstr "Usando o status premium real"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:131
+#: src/features/devtools/components/NagbarControls.ts:135
 msgid "Using actual state"
 msgstr "Usando o estado real"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:111
+#: src/features/devtools/components/NagbarControls.ts:115
 msgid "Using actual verification state"
 msgstr "Usando o estado de verificação real"
 
@@ -40102,7 +40151,7 @@ msgid "Voice region"
 msgstr "Região de voz"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:69
+#: src/features/devtools/components/NagbarControls.ts:73
 msgid "Voice session restore nagbar"
 msgstr "Barra de notificação de restauração de sessão de voz"
 
@@ -40821,6 +40870,16 @@ msgstr "Quem pode enviar pedidos de amizade"
 msgid "Who can join"
 msgstr "Quem pode entrar"
 
+#. Accessible label for the group of options in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:65
+msgid "Who can message you"
+msgstr "Quem pode te enviar mensagens"
+
+#. Title of the privacy setup modal that asks who can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:22
+msgid "Who can message you?"
+msgstr "Quem pode te enviar mensagens?"
+
 #. Privacy > Profile privacy: section title.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:17
 msgid "Who can see your full profile"
@@ -41137,6 +41196,11 @@ msgstr "Você também pode definir permissões específicas por categoria ou can
 #: src/features/auth/components/modals/AccountDeleteModal.tsx:50
 msgid "You can cancel the deletion process within 14 days"
 msgstr "Você pode cancelar o processo de exclusão em até 14 dias"
+
+#. Small note at the bottom of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "You can change this anytime in your privacy settings, including for each community."
+msgstr "Você pode alterar isso a qualquer momento nas suas configurações de privacidade, inclusive para cada comunidade."
 
 #. Informational text in the favorite GIF import modal while import is running.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:42

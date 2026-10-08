@@ -2618,6 +2618,9 @@
         "msgid": "Anyone can request an account, but an administrator must approve it."
       },
       {
+        "msgid": "Anyone in my communities"
+      },
+      {
         "msgid": "Anyone with this key can reset your password. Never share it."
       },
       {
@@ -2643,6 +2646,9 @@
       },
       {
         "msgid": "Applied a server mute."
+      },
+      {
+        "msgid": "Apply to these communities too"
       },
       {
         "msgid": "Approval required"
@@ -2955,6 +2961,9 @@
       },
       {
         "msgid": "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
+      },
+      {
+        "msgid": "Choose who can send you direct messages."
       },
       {
         "msgid": "Choose your defaults"
@@ -3579,6 +3588,9 @@
       },
       {
         "msgid": "Forum channel"
+      },
+      {
+        "msgid": "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
       },
       {
         "msgid": "From {sourceGuildName}"
@@ -4319,10 +4331,16 @@
         "msgid": "Pay once and get a gift link to share. Gifts never renew."
       },
       {
+        "msgid": "People need to be your friend before they can message you. They can still send you a friend request."
+      },
+      {
         "msgid": "People sign in with a username and password. No email address is collected. Each person can save a recovery kit in case they forget their password."
       },
       {
         "msgid": "People sign in with an email address and password. Password resets and verification need email delivery, which you can set up later."
+      },
+      {
+        "msgid": "People who share a community with you can message you directly."
       },
       {
         "msgid": "Per-device volume"
@@ -4449,6 +4467,9 @@
       },
       {
         "msgid": "Print"
+      },
+      {
+        "msgid": "Privacy setup nagbar"
       },
       {
         "msgid": "Private"
@@ -4830,6 +4851,9 @@
       },
       {
         "msgid": "Review microphone, camera, screen recording, and Input Monitoring access."
+      },
+      {
+        "msgid": "Review privacy settings"
       },
       {
         "msgid": "Review the permissions {productName} uses for voice, video, screen sharing, and shortcuts."
@@ -6032,6 +6056,12 @@
         "msgid": "Who can join"
       },
       {
+        "msgid": "Who can message you"
+      },
+      {
+        "msgid": "Who can message you?"
+      },
+      {
         "msgid": "With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and profile banners, and unlock many other {PREMIUM_PRODUCT_NAME} perks."
       },
       {
@@ -6819,6 +6849,9 @@
       },
       {
         "msgid": "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
+      },
+      {
+        "msgid": "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
       },
       {
         "msgid": "{count, plural, one {# file} other {# files}}"
