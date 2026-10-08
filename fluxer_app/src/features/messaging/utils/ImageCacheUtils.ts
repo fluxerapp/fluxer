@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {retainImage} from '@app/features/messaging/utils/ImageRetention';
 import {LRUCache} from 'lru-cache';
 
 export interface CachedImageSize {
@@ -127,6 +128,7 @@ function failEntry(entry: ImageCacheEntry): void {
 }
 
 function settleLoaded(entry: ImageCacheEntry, image: HTMLImageElement): void {
+	retainImage(image);
 	clearRetryState(entry);
 	detachImageLoad(entry);
 	entry.loaded = true;

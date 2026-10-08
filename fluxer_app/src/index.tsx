@@ -16,6 +16,7 @@ import '@app/features/theme/styles/preflight.css';
 import {resolveDomainMigrationSide} from '@app/features/app/domain_migration/DomainMigrationCore';
 import {runDomainMigrationPreMount} from '@app/features/app/domain_migration/DomainMigrationPreMount';
 import {installRuntimeConfigEffects} from '@app/features/app/state/RuntimeConfigEffects';
+import {installImageRetention} from '@app/features/messaging/utils/ImageRetention';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import {installUnhandledRejectionReporter} from '@app/features/platform/utils/UnhandledRejectionReporter';
@@ -35,6 +36,7 @@ function loadAppBootstrap() {
 
 async function bootstrap(): Promise<void> {
 	installRuntimeConfigEffects();
+	installImageRetention(document);
 	const passkeyBridgeSide =
 		window.location.pathname === PASSKEY_BRIDGE_PATH ? resolveDomainMigrationSide(window.location.origin) : null;
 	if (passkeyBridgeSide !== null) {
