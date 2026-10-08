@@ -4,6 +4,7 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {
 	buildMediaProxyURL,
+	buildMediaProxyURLForInstance,
 	LARGEST_MEDIA_PROXY_IMAGE_SIZE,
 	MEDIA_PROXY_IMAGE_SIZE_LADDER,
 	snapMediaProxyImageSize,
@@ -99,6 +100,7 @@ type MediaURLParams = {
 	format: string;
 	animated?: boolean;
 	endpoint?: string;
+	instanceKey?: string;
 };
 
 const parseMediaHashForRequest = (value: string, animated = false) => {
@@ -109,7 +111,7 @@ const parseMediaHashForRequest = (value: string, animated = false) => {
 		animated: shouldAnimate ? true : undefined,
 	};
 };
-const getMediaURL = ({path, id, hash, size, format, animated, endpoint}: MediaURLParams) => {
+const getMediaURL = ({path, id, hash, size, format, animated, endpoint, instanceKey}: MediaURLParams) => {
 	if (DeveloperOptions.forceRenderPlaceholders) {
 		return '';
 	}
@@ -120,7 +122,10 @@ const getMediaURL = ({path, id, hash, size, format, animated, endpoint}: MediaUR
 	const basePath = `${path}/${id}/${hash}.${format}`;
 	const url = size ? setPathQueryParams(basePath, {size}) : basePath;
 	const proxyOptions = animated === undefined ? undefined : {animated};
-	return buildMediaProxyURL(`${normalizeEndpoint(baseEndpoint)}/${url}`, proxyOptions);
+	const target = `${normalizeEndpoint(baseEndpoint)}/${url}`;
+	return instanceKey === undefined
+		? buildMediaProxyURL(target, proxyOptions)
+		: buildMediaProxyURLForInstance(target, instanceKey, proxyOptions);
 };
 
 type GuildMemberMediaURLParams = {
@@ -252,6 +257,8 @@ export function getUserBannerURL({id, banner}: BannerOptions, animated = false, 
 	});
 }
 
+const mediaURLCacheScope = (): string => `${RuntimeConfig.apiEndpoint} ${RuntimeConfig.mediaEndpoint}`;
+
 const SOUNDBOARD_SOUND_URL_CACHE = new Map<string, string>();
 const SOUNDBOARD_SOUND_URL_CACHE_LIMIT = 4096;
 
@@ -259,7 +266,7 @@ export function getSoundboardSoundURL(soundId: string): string {
 	if (DeveloperOptions.forceRenderPlaceholders) {
 		return '';
 	}
-	const key = `${RuntimeConfig.mediaEndpoint}:${soundId}`;
+	const key = `${mediaURLCacheScope()}:${soundId}`;
 	const cached = SOUNDBOARD_SOUND_URL_CACHE.get(key);
 	if (cached !== undefined) return cached;
 	const result = mediaUrl(`${SOUNDBOARD_SOUND_PATH_PREFIX}/${soundId}`);
@@ -423,16 +430,17 @@ export function getGuildMemberBannerURL({
 	return '';
 }
 
-export function getUserAvatarURLWithProxy(
-	options: AvatarOptions,
-	endpoint: string,
+export interface AvatarMediaInstance {
+	readonly mediaEndpoint: string;
+	readonly instanceKey: string;
+}
+
+export function getUserAvatarURLForInstance(
+	{id, avatar}: AvatarOptions,
+	instance: AvatarMediaInstance,
 	animated = false,
 	size: MediaProxyImageSize = MEDIA_PROXY_AVATAR_SIZE_DEFAULT,
 ) {
-	if (!endpoint) {
-		return getUserAvatarURL(options, animated, size);
-	}
-	const {id, avatar} = options;
 	if (!avatar) {
 		return getDefaultAvatarURLForIndex(getDefaultAvatarIndex(id));
 	}
@@ -443,7 +451,8 @@ export function getUserAvatarURLWithProxy(
 		hash,
 		size: snapIconImageSize(size),
 		animated: shouldAnimate,
-		endpoint,
+		endpoint: instance.mediaEndpoint,
+		instanceKey: instance.instanceKey,
 	});
 }
 
@@ -499,7 +508,7 @@ export function getEmojiURL({id, animated, isAnimatable}: {id: string; animated?
 		return '';
 	}
 	const animatedFlag = isAnimatable === false ? false : animated === true;
-	const key = `${RuntimeConfig.mediaEndpoint}:${animatedFlag ? 'a' : 's'}:${id}`;
+	const key = `${mediaURLCacheScope()}:${animatedFlag ? 'a' : 's'}:${id}`;
 	const cached = EMOJI_URL_CACHE.get(key);
 	if (cached !== undefined) return cached;
 	const result = mediaUrl(`emojis/${id}.webp`, {animated: animatedFlag});
@@ -529,7 +538,7 @@ export function getStickerURL({
 	}
 	const animatedFlag = isAnimatable === false ? false : animated === true;
 	const safeSize: StickerSize = size === 320 ? 320 : 160;
-	const key = `${RuntimeConfig.mediaEndpoint}:${animatedFlag ? 'a' : 's'}:${safeSize}:${id}`;
+	const key = `${mediaURLCacheScope()}:${animatedFlag ? 'a' : 's'}:${safeSize}:${id}`;
 	const cached = STICKER_URL_CACHE.get(key);
 	if (cached !== undefined) return cached;
 	const result = mediaUrl(setPathQueryParams(`stickers/${id}.webp`, {size: safeSize}), {animated: animatedFlag});

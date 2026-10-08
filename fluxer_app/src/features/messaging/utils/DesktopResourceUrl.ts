@@ -21,7 +21,6 @@ const UPLOAD_RELAY_MULTIPART_PARAMETERS: ReadonlySet<string> = new Set(['uploadI
 const UPLOAD_RELAY_BASE_PATH_PATTERN = /(?:^|\/)relay(?:\/|$)/u;
 const UPLOAD_RELAY_BASE_SUFFIX_PATTERN = /\/v1\/relay$/u;
 const TRAILING_SLASHES_PATTERN = /\/+$/u;
-const LOOPBACK_IPV4_PATTERN = /^127(?:\.\d{1,3}){3}$/u;
 
 class DesktopUploadRelayUrlError extends Error {
 	constructor(message: string) {
@@ -87,12 +86,11 @@ function parseDisplayTarget(value: string): URL | null {
 
 function isDirectlyDisplayableTarget(target: URL): boolean {
 	if (target.protocol === 'https:') return true;
-	return target.protocol === 'http:' && isLoopbackHostname(target.hostname);
+	return target.protocol === 'http:' && isDocumentAllowedCleartextHost(target.hostname);
 }
 
-function isLoopbackHostname(hostname: string): boolean {
-	if (hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '[::1]') return true;
-	return LOOPBACK_IPV4_PATTERN.test(hostname);
+function isDocumentAllowedCleartextHost(hostname: string): boolean {
+	return hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '127.0.0.1';
 }
 
 export function updateDesktopLocalResourceURLTarget(value: string, updateTarget: (target: URL) => boolean): string {
