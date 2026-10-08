@@ -38,6 +38,7 @@ const IMAGE_RETRY_INITIAL_DELAY_MS = 1000;
 const IMAGE_RETRY_MAX_DELAY_MS = IMAGE_RETRY_INITIAL_DELAY_MS * 10;
 const IMAGE_FAILURE_INITIAL_COOLDOWN_MS = 2000;
 const IMAGE_FAILURE_COOLDOWN_MS = 60_000;
+const IMAGE_RECOVERY_ATTENTION_WAKE_INTERVAL_MS = 15_000;
 
 interface ImageRecovery {
 	readonly src: string;
@@ -48,6 +49,7 @@ interface ImageRecovery {
 
 const recoveries = new Map<string, ImageRecovery>();
 let recoveryWakeListenersInstalled = false;
+let lastAttentionWakeAt = Number.NEGATIVE_INFINITY;
 
 const imageCache = new LRUCache<string, ImageCacheEntry>({
 	max: MAX_CACHE_ENTRIES,
@@ -399,13 +401,20 @@ function wakeRecoveries(): void {
 	}
 }
 
+function wakeRecoveriesOnAttention(): void {
+	const now = Date.now();
+	if (now - lastAttentionWakeAt < IMAGE_RECOVERY_ATTENTION_WAKE_INTERVAL_MS) return;
+	lastAttentionWakeAt = now;
+	wakeRecoveries();
+}
+
 function installRecoveryWakeListeners(): void {
 	if (recoveryWakeListenersInstalled || typeof window === 'undefined') return;
 	recoveryWakeListenersInstalled = true;
 	window.addEventListener('online', wakeRecoveries);
-	window.addEventListener('focus', wakeRecoveries);
+	window.addEventListener('focus', wakeRecoveriesOnAttention);
 	document.addEventListener('visibilitychange', () => {
-		if (document.visibilityState === 'visible') wakeRecoveries();
+		if (document.visibilityState === 'visible') wakeRecoveriesOnAttention();
 	});
 }
 
@@ -420,4 +429,5 @@ export function warmImage(src: string | null | undefined): void {
 export function _clearForTests(): void {
 	for (const recovery of [...recoveries.values()]) stopRecovery(recovery);
 	imageCache.clear();
+	lastAttentionWakeAt = Number.NEGATIVE_INFINITY;
 }

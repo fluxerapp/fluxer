@@ -186,6 +186,23 @@ describe('self-hosted media that failed during an outage loads again on the same
 		await harness.act(async () => harness.root.unmount());
 	});
 
+	test('refocusing the window during an outage does not retry in a burst', async () => {
+		const harness = await loadHarness();
+		network.up = false;
+		await harness.render([harness.avatar]);
+		await harness.failAvatarElement();
+		await harness.advance(10 * 60_000, 5000);
+		const before = network.requests.length;
+		for (let i = 0; i < 20; i++) {
+			await harness.act(async () => {
+				window.dispatchEvent(new Event('focus'));
+			});
+			await harness.advance(500, 10);
+		}
+		expect(network.requests.length - before).toBeLessThanOrEqual(3);
+		await harness.act(async () => harness.root.unmount());
+	});
+
 	test('an unmounted avatar stops retrying', async () => {
 		const harness = await loadHarness();
 		network.up = false;
