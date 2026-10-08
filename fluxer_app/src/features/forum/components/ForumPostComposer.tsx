@@ -18,6 +18,7 @@ import {MarkdownContext} from '@app/features/messaging/components/markdown/rende
 import {useTextareaAttachments} from '@app/features/messaging/hooks/useCloudUpload';
 import type {SendMessageFunction} from '@app/features/messaging/hooks/useMessageSubmission';
 import Drafts from '@app/features/messaging/state/MessagingDrafts';
+import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
 import {hasVisibleMessageContent} from '@app/features/messaging/utils/VisibleMessageContent';
 import Permission from '@app/features/permissions/state/Permission';
@@ -95,7 +96,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 	const bypassesSlowmode = Permission.can(Permissions.BYPASS_SLOWMODE, forum);
 	const cooldownSeconds = useCooldownSeconds(bypassesSlowmode ? 0 : ThreadPanel.getCreateCooldownUntil(forum.id));
 	const handleSubmit: SendMessageFunction = useCallback(
-		(content, hasAttachments, stickersOrTts, favoriteMemeIdOrStickers, maybeFavoriteMemeId) => {
+		(content, _hasAttachments, stickersOrTts, favoriteMemeIdOrStickers, maybeFavoriteMemeId) => {
 			const {stickers, favoriteMemeId} = resolvePostArgs(stickersOrTts, favoriteMemeIdOrStickers, maybeFavoriteMemeId);
 			if (favoriteMemeId) {
 				setError(i18n._(D.POST_FAVORITE_MEDIA_UNSUPPORTED_DESCRIPTOR));
@@ -110,6 +111,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 				setError(i18n._(D.POST_TAG_REQUIRED_DESCRIPTOR));
 				return false;
 			}
+			const hasAttachments = CloudUpload.getTextareaAttachments(draftKey).length > 0;
 			if (media && !hasAttachments) {
 				setError(i18n._(D.POST_MEDIA_REQUIRED_DESCRIPTOR));
 				return false;
