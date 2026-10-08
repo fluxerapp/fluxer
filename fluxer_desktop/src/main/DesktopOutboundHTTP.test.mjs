@@ -678,6 +678,99 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 		}
 	});
 
+	test('the pinned lookup offers every validated address for happy eyeballs', async () => {
+		const lookup = createPinnedHostLookup('dual.example', [
+			{address: '2606:4700:4700::1111', family: 6},
+			{address: '93.184.216.34', family: 4},
+		]);
+		const all = await new Promise((resolve) =>
+			lookup('dual.example', {all: true}, (error, addresses) => resolve({addresses, error})),
+		);
+		assert.equal(all.error, null);
+		assert.deepEqual(all.addresses, [
+			{address: '2606:4700:4700::1111', family: 6},
+			{address: '93.184.216.34', family: 4},
+		]);
+		const single = await new Promise((resolve) =>
+			lookup('dual.example', {}, (error, address, family) => resolve({address, error, family})),
+		);
+		assert.equal(single.address, '2606:4700:4700::1111');
+		assert.equal(single.family, 6);
+	});
+
+	test('a registered origin whose IPv6 address refuses connects over IPv4 without waiting', async () => {
+		const {port, requested, server} = await startServer({
+			'/ping': (_request, response) => sendImage(response, 'text/plain', 'ok'),
+		});
+		try {
+			const outboundHTTP = new DesktopOutboundHTTP({
+				resolveHostAddresses: stubResolver({'dual.example': ['::1', '127.0.0.1']}),
+			});
+			await outboundHTTP.registerAnchoredOrigins({anchorOrigin: `http://dual.example:${port}`, origins: []});
+			const startedAt = Date.now();
+			const response = await outboundHTTP.request({
+				body: null,
+				expectedOrigin: `http://dual.example:${port}`,
+				headers: null,
+				method: 'GET',
+				originTrust: DesktopOriginTrust.REGISTERED,
+				serviceName: 'test',
+				signal: null,
+				timeoutMs: 2000,
+				url: `http://dual.example:${port}/ping`,
+			});
+			response.message.resume();
+			assert.equal(response.status, 200, 'the refused IPv6 address must fall back to the IPv4 one like Chromium does');
+			assert.ok(Date.now() - startedAt < 1000);
+			assert.deepEqual(requested, ['/ping']);
+			outboundHTTP.cleanup();
+		} finally {
+			server.close();
+		}
+	});
+
+	test('a registered origin whose first address never answers is reached on the next one', async () => {
+		const {port, requested, server} = await startServer({
+			'/ping': (_request, response) => sendImage(response, 'text/plain', 'ok'),
+		});
+		try {
+			const outboundHTTP = new DesktopOutboundHTTP({
+				resolveHostAddresses: stubResolver({'multi.example': ['127.0.0.2', '127.0.0.1']}),
+			});
+			await outboundHTTP.registerAnchoredOrigins({anchorOrigin: `http://multi.example:${port}`, origins: []});
+			const startedAt = Date.now();
+			const response = await outboundHTTP.request({
+				body: null,
+				expectedOrigin: `http://multi.example:${port}`,
+				headers: null,
+				method: 'GET',
+				originTrust: DesktopOriginTrust.REGISTERED,
+				serviceName: 'test',
+				signal: null,
+				timeoutMs: 3000,
+				url: `http://multi.example:${port}/ping`,
+			});
+			response.message.resume();
+			assert.equal(response.status, 200, 'a dead first address must not stop the connection from trying the others');
+			assert.ok(Date.now() - startedAt < 1500);
+			assert.deepEqual(requested, ['/ping']);
+			outboundHTTP.cleanup();
+		} finally {
+			server.close();
+		}
+	});
+
+	test('a public requirement still refuses an answer that includes a private address', async () => {
+		const outboundHTTP = new DesktopOutboundHTTP({
+			resolveHostAddresses: stubResolver({'mixed.example': ['2606:4700:4700::1111', '127.0.0.1']}),
+		});
+		const client = new DesktopSelectedInstanceClient(outboundHTTP);
+		await assert.rejects(
+			client.fetch({expectedOrigin: 'https://mixed.example', timeoutMs: 2000, url: 'https://mixed.example/ping'}),
+		);
+		outboundHTTP.cleanup();
+	});
+
 	test('the pinned lookup refuses a hostname it was not created for', async () => {
 		const lookup = createPinnedHostLookup('pinned.example', {address: '127.0.0.1', family: 4});
 		const mismatch = await new Promise((resolve) => lookup('rebound.example', {}, resolve));

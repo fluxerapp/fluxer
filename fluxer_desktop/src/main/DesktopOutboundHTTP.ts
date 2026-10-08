@@ -87,6 +87,11 @@ export const DesktopOriginTrust = Object.freeze({
 
 export type DesktopOriginTrust = (typeof DesktopOriginTrust)[keyof typeof DesktopOriginTrust];
 
+const HAPPY_EYEBALLS_CONNECT_OPTIONS = Object.freeze({
+	autoSelectFamily: true,
+	autoSelectFamilyAttemptTimeout: 250,
+});
+
 interface PinnedAddress {
 	readonly address: string;
 	readonly family: 4 | 6;
@@ -96,6 +101,7 @@ type DesktopHostAddressResolver = (hostname: string) => Promise<ReadonlyArray<st
 
 interface DesktopOriginAddressBinding {
 	readonly address: PinnedAddress;
+	readonly addresses: ReadonlyArray<PinnedAddress>;
 	readonly origin: string;
 	readonly scope: DesktopOriginAddressScope;
 	readonly unreachable: boolean;
@@ -515,8 +521,13 @@ function absoluteLookupHostname(hostname: string): string {
 	return hostname;
 }
 
-export function createPinnedHostLookup(hostname: string, pinned: PinnedAddress): LookupFunction {
+export function createPinnedHostLookup(
+	hostname: string,
+	pinned: PinnedAddress | ReadonlyArray<PinnedAddress>,
+): LookupFunction {
 	const expected = normalizeLookupHostname(hostname);
+	const addresses: ReadonlyArray<PinnedAddress> = Array.isArray(pinned) ? pinned : [pinned as PinnedAddress];
+	const primary = addresses[0];
 	return (requestedHostname, options, callback) => {
 		process.nextTick(() => {
 			if (normalizeLookupHostname(requestedHostname) !== expected) {
@@ -524,10 +535,10 @@ export function createPinnedHostLookup(hostname: string, pinned: PinnedAddress):
 				return;
 			}
 			if (options.all === true) {
-				(callback as unknown as (error: null, addresses: ReadonlyArray<PinnedAddress>) => void)(null, [pinned]);
+				(callback as unknown as (error: null, addresses: ReadonlyArray<PinnedAddress>) => void)(null, addresses);
 				return;
 			}
-			callback(null, pinned.address, pinned.family);
+			callback(null, primary.address, primary.family);
 		});
 	};
 }
@@ -594,12 +605,17 @@ async function lookupAllAddresses(hostname: string): Promise<ReadonlyArray<strin
 	return records.map((record) => record.address);
 }
 
-function selectPinnedAddress(candidates: ReadonlyArray<PinnedAddress>): PinnedAddress | null {
-	const nonPublic = candidates.filter((candidate) => !isPublicPinnedAddress(candidate));
+function selectPinnedAddresses(candidates: ReadonlyArray<PinnedAddress>): ReadonlyArray<PinnedAddress> {
+	const unique = candidates.filter(
+		(candidate, index) =>
+			candidates.findIndex((other) => other.address === candidate.address && other.family === candidate.family) ===
+			index,
+	);
+	const nonPublic = unique.filter((candidate) => !isPublicPinnedAddress(candidate));
 	if (nonPublic.length === 0) {
-		return candidates[0] ?? null;
+		return unique;
 	}
-	return nonPublic.find((candidate) => candidate.family === 4) ?? nonPublic[0];
+	return nonPublic;
 }
 
 function addressScope(address: PinnedAddress): DesktopOriginAddressScope {
@@ -892,7 +908,7 @@ export class DesktopOutboundHTTP {
 		if (binding.scope === DesktopOriginAddressScope.PUBLIC) {
 			throw new DesktopOutboundHTTPInsecureTransportError(canonical);
 		}
-		return binding.address.address;
+		return (binding.addresses.find((address) => address.family === 4) ?? binding.address).address;
 	}
 
 	public cleanup(): void {
@@ -1014,13 +1030,13 @@ export class DesktopOutboundHTTP {
 		hostname: string,
 		requirement: DesktopAddressRequirement,
 		context: string,
-	): Promise<PinnedAddress> {
+	): Promise<ReadonlyArray<PinnedAddress>> {
 		const literal = parseIPAddress(hostname);
 		if (literal != null) {
 			if (requirement === DesktopAddressRequirement.PUBLIC && !isPublicPinnedAddress(literal)) {
 				throw blocked(DesktopOutboundBlockReason.NON_PUBLIC_ADDRESS, context, hostname);
 			}
-			return literal;
+			return [literal];
 		}
 		let addresses: ReadonlyArray<string>;
 		try {
@@ -1033,11 +1049,11 @@ export class DesktopOutboundHTTP {
 			throw blocked(reason, context, hostname);
 		}
 		const candidates = addresses.map((address) => parseIPAddress(address)).filter((value) => value != null);
-		const pinned = selectPinnedAddress(candidates);
-		if (pinned == null) {
+		const pinned = selectPinnedAddresses(candidates);
+		if (pinned.length === 0) {
 			throw blocked(DesktopOutboundBlockReason.NO_USABLE_ADDRESS, context, hostname);
 		}
-		if (requirement === DesktopAddressRequirement.PUBLIC && !isPublicPinnedAddress(pinned)) {
+		if (requirement === DesktopAddressRequirement.PUBLIC && pinned.some((address) => !isPublicPinnedAddress(address))) {
 			throw blocked(DesktopOutboundBlockReason.NON_PUBLIC_ADDRESS, context, hostname);
 		}
 		return pinned;
@@ -1058,7 +1074,7 @@ export class DesktopOutboundHTTP {
 
 	private issue(
 		request: DesktopOutboundGETRequest,
-		pinned: PinnedAddress,
+		pinned: ReadonlyArray<PinnedAddress>,
 		release: () => void,
 	): Promise<DesktopOutboundHTTPMessage> {
 		return new Promise<DesktopOutboundHTTPMessage>((resolve, reject) => {
@@ -1067,6 +1083,7 @@ export class DesktopOutboundHTTP {
 			const clientRequest = transport.request(request.url, {
 				agent: secure ? this.httpsAgent : this.httpAgent,
 				lookup: createPinnedHostLookup(request.url.hostname, pinned),
+				...HAPPY_EYEBALLS_CONNECT_OPTIONS,
 				method: 'GET',
 			});
 			const deadline = setTimeout(() => {
@@ -1167,15 +1184,16 @@ export class DesktopOutboundHTTP {
 		const hostname = new URL(origin).hostname;
 		const literal = parseIPAddress(hostname);
 		if (literal != null) {
-			return {address: literal, origin, scope: addressScope(literal), unreachable: false};
+			return {address: literal, addresses: [literal], origin, scope: addressScope(literal), unreachable: false};
 		}
 		const rawAddresses = await this.resolveOriginHost(absoluteLookupHostname(hostname), origin);
 		const candidates = rawAddresses.map((address) => parseIPAddress(address)).filter((value) => value != null);
-		const pinned = selectPinnedAddress(candidates);
-		if (pinned == null) {
+		const addresses = selectPinnedAddresses(candidates);
+		const primary = addresses[0];
+		if (primary == null) {
 			throw new DesktopOutboundHTTPEmptyResolutionError(origin);
 		}
-		return {address: pinned, origin, scope: addressScope(pinned), unreachable: false};
+		return {address: primary, addresses, origin, scope: addressScope(primary), unreachable: false};
 	}
 
 	private markBindingUnreachable(binding: DesktopOriginAddressBinding): void {
@@ -1274,7 +1292,8 @@ export class DesktopOutboundHTTP {
 				const clientRequest = transport.request(target, {
 					agent: target.protocol === 'https:' ? this.originRequestHttpsAgent : this.originRequestHttpAgent,
 					headers: requestHeaders(request.headers),
-					lookup: createPinnedHostLookup(target.hostname, binding.address),
+					lookup: createPinnedHostLookup(target.hostname, binding.addresses),
+					...HAPPY_EYEBALLS_CONNECT_OPTIONS,
 					method: request.method,
 				});
 				active = clientRequest;
