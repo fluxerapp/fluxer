@@ -269,8 +269,16 @@ schedule_availability_recheck_available_no_timer_test() ->
 
 schedule_availability_recheck_unavailable_sets_timer_test() ->
     State = #{data => #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}},
-    Result = schedule_availability_recheck(State),
-    ?assertEqual(State, Result).
+    Parent = self(),
+    {Pid, MonitorRef} = spawn_monitor(fun() ->
+        Parent ! {scheduled, self(), schedule_availability_recheck(State)}
+    end),
+    receive
+        {scheduled, Pid, Result} -> ?assertEqual(State, Result)
+    end,
+    receive
+        {'DOWN', MonitorRef, process, Pid, normal} -> ok
+    end.
 
 handle_recheck_transition_clears_cache_on_recovery_test() ->
     GuildId = 99001,

@@ -777,7 +777,7 @@ reference_update_member_subscriptions(SessionId, MemberIds, State) ->
 
 drain_mailbox(Acc) ->
     receive
-        Msg -> drain_mailbox([Msg | Acc])
+        {'$gen_cast', _} = Msg -> drain_mailbox([Msg | Acc])
     after 50 -> lists:reverse(Acc)
     end.
 
