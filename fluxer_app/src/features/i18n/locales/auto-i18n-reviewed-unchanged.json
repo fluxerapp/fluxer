@@ -10767,6 +10767,9 @@
         "msgid": "Debug"
       },
       {
+        "msgid": "Debug thread"
+      },
+      {
         "msgid": "Desktop"
       },
       {
@@ -11913,6 +11916,9 @@
       },
       {
         "msgid": "Cyprus"
+      },
+      {
+        "msgid": "Debug thread"
       },
       {
         "msgid": "Desktop"

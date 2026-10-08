@@ -1135,7 +1135,7 @@ msgstr "{count, plural, one {#명} other {#명}}"
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:203
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {#개의 메시지} other {#개의 메시지}}"
 
@@ -2399,7 +2399,7 @@ msgstr "1일"
 #. Fixed duration label for a one-hour interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:15
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
 msgid "1 hour"
 msgstr "1시간"
 
@@ -2446,7 +2446,7 @@ msgstr "사용자 1명"
 #. Fixed duration label for a one-week interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:36
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
 msgid "1 week"
 msgstr "1주"
 
@@ -2544,7 +2544,7 @@ msgid "2–32 characters: letters, numbers, and underscores."
 msgstr "2~32자: 문자, 숫자, 밑줄."
 
 #. Thread auto archive duration option.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
 msgid "24 hours"
 msgstr "24시간"
 
@@ -2577,7 +2577,7 @@ msgstr "2단계 인증 필수"
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
 #. Thread auto archive duration option.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:42
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
 msgid "3 days"
 msgstr "3일"
 
@@ -3050,7 +3050,7 @@ msgstr "작업"
 #. Tab in the thread browser that lists active threads.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
 msgstr "활성"
@@ -3886,7 +3886,7 @@ msgstr "모든 언어"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:20
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:352
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:21
 msgid "All messages"
 msgstr "모든 메시지"
@@ -3939,7 +3939,7 @@ msgid "Allow {productName} under Screen Recording in System Settings. If it is a
 msgstr "{productName}을(를) 시스템 설정의 '스크린 타임'에서 허용해 주세요. 이미 허용된 경우, macOS가 적용하도록 {productName2}을(를) 다시 시작하세요."
 
 #. Private thread setting that lets non-moderators add other members.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
 msgid "Allow anyone to invite"
 msgstr "누구나 초대할 수 있도록 허용"
 
@@ -5168,7 +5168,7 @@ msgid "Audio packet loss:"
 msgstr "오디오 패킷 손실률:"
 
 #. Aria label for the inline audio attachment player container.
-#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:35
+#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:36
 msgid "Audio player"
 msgstr "오디오 플레이어"
 
@@ -5208,7 +5208,7 @@ msgid "Audio processing (focused voice)"
 msgstr "오디오 처리(음성 포커스)"
 
 #. Aria label on the playback progress slider in the inline audio attachment player.
-#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:39
+#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:40
 msgid "Audio progress"
 msgstr "오디오 진행률"
 
@@ -6867,7 +6867,7 @@ msgstr "여기에 파일을 올릴 수 없습니다"
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
 #: src/features/messaging/components/modals/ForwardModal.tsx:603
-#: src/features/messaging/components/modals/ImageCropModal.tsx:1025
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1026
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:266
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
@@ -8782,7 +8782,7 @@ msgstr "{username}님과의 DM을 닫으시겠어요? 언제든지 다시 열 �
 #. Registration mode option that disables public registration.
 #. Tab in the thread browser that lists archived threads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:256
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
 msgid "Closed"
 msgstr "비공개"
 
@@ -8797,7 +8797,7 @@ msgid "Closed DMs"
 msgstr "닫은 DM"
 
 #. Tab in the thread browser that lists closed private threads. Keep it short, it shares a row with Active and Closed.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:185
 msgid "Closed private"
 msgstr "비공개 종료"
 
@@ -9385,7 +9385,7 @@ msgid "Composer focus"
 msgstr "입력창 자동 활성화"
 
 #. Progress label on the save button while a cropped animated image is compressed. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:67
+#: src/features/messaging/components/modals/ImageCropModal.tsx:68
 msgid "Compressing"
 msgstr "압축 중"
 
@@ -10347,7 +10347,7 @@ msgid "Could not start the screen share. The selected source may no longer be av
 msgstr "화면 공유를 시작할 수 없습니다. 선택한 소스를 더 이상 사용할 수 없거나 캡처가 차단되었을 수 있습니다. 특정 창 대신 전체 화면 또는 모니터를 공유해 보세요."
 
 #. Toast when creating a thread failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
 msgid "Could not start the thread: {detail}"
 msgstr "스레드를 시작할 수 없습니다: {detail}"
 
@@ -10502,7 +10502,7 @@ msgid "Couldn't create your recovery kit. You can create one later in your accou
 msgstr "복구 키트를 만들 수 없습니다. 나중에 계정 설정에서 만들 수 있습니다."
 
 #. Title of the error modal shown when image cropping fails.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:32
+#: src/features/messaging/components/modals/ImageCropModal.tsx:33
 msgid "Couldn't crop image"
 msgstr "이미지를 자를 수 없습니다"
 
@@ -10790,7 +10790,7 @@ msgid "Couldn't save the tag: {detail}"
 msgstr "태그를 저장할 수 없습니다: {detail}"
 
 #. Error state of the thread browser search.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "Couldn't search threads. Try again later."
 msgstr "스레드를 검색할 수 없습니다. 나중에 다시 시도해 주세요."
 
@@ -11331,7 +11331,7 @@ msgid "Crop invite background"
 msgstr "초대 배경 자르기"
 
 #. Short label in the image crop modal. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:24
+#: src/features/messaging/components/modals/ImageCropModal.tsx:25
 msgid "Crop preview"
 msgstr "자르기 미리보기"
 
@@ -11343,12 +11343,12 @@ msgstr "프로필 배너 자르기"
 #. Error modal body shown when a cropped community image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #. Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:47
-#: src/features/messaging/components/modals/ImageCropModal.tsx:36
+#: src/features/messaging/components/modals/ImageCropModal.tsx:37
 msgid "Cropped image is too large. Choose a smaller area or a smaller file (max {maxSizeLabel})."
 msgstr "자른 이미지가 너무 큽니다. 더 작은 영역을 선택하거나 더 작은 파일을 선택하세요(최대 {maxSizeLabel})."
 
 #. Progress label on the save button while animated image frames are cropped. {percent} is a whole number. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:62
+#: src/features/messaging/components/modals/ImageCropModal.tsx:63
 msgid "Cropping {percent}%"
 msgstr "{percent}% 잘라내는 중"
 
@@ -11967,6 +11967,11 @@ msgstr "멤버 디버그"
 msgid "Debug message"
 msgstr "메시지 디버그"
 
+#. Developer-mode action that opens the thread debug modal.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
+msgid "Debug thread"
+msgstr "스레드 디버그"
+
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Developer-mode action that opens a user debug panel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:162
@@ -12035,7 +12040,7 @@ msgid "Default emoji"
 msgstr "기본 이모티콘"
 
 #. Label of the default auto archive duration for new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
 msgid "Default hide after inactivity"
 msgstr "비활성 시 기본 숨김"
 
@@ -12093,7 +12098,7 @@ msgid "Default sort order"
 msgstr "기본 정렬 순서"
 
 #. Label of the slowmode copied onto new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
 msgid "Default thread slowmode"
 msgstr "기본 스레드 슬로우 모드"
 
@@ -16597,7 +16602,7 @@ msgid "Forward"
 msgstr "전달"
 
 #. Tooltip / aria label on the forward / fast-forward button in the standalone audio player. {defaultSeekAmount} is an integer second count.
-#: src/features/voice/components/media_player/components/AudioPlayer.tsx:32
+#: src/features/voice/components/media_player/components/AudioPlayer.tsx:33
 msgid "Forward {defaultSeekAmount} seconds"
 msgstr "{defaultSeekAmount}초 앞으로 감기"
 
@@ -17892,7 +17897,7 @@ msgstr "하트"
 msgid "Hebrew"
 msgstr "히브리어"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:958
+#: src/features/messaging/components/modals/ImageCropModal.tsx:959
 msgid "Height"
 msgstr "높이"
 
@@ -18027,7 +18032,7 @@ msgid "Hide {premiumProductName} purchase date ({dateUtilsGetFormattedShortDateP
 msgstr "{premiumProductName} 구매 날짜({dateUtilsGetFormattedShortDatePremiumSince}) 숨기기"
 
 #. Label of the thread auto archive duration setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
 msgid "Hide after inactivity"
 msgstr "비활성 시 숨기기"
 
@@ -19817,7 +19822,7 @@ msgid "Join the call"
 msgstr "통화 참여하기"
 
 #. Notice above the composer when the user is not a member of the thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "Join this thread to follow it in your channel list and get notifications."
 msgstr "이 스레드에 참여하여 채널 목록에서 팔로우하고 알림을 받으세요."
 
@@ -19868,7 +19873,7 @@ msgid "Join voice channels and hear others."
 msgstr "음성 채널에 참여하고 다른 사람들의 소리를 들을 수 있습니다."
 
 #. Section header in the thread browser for threads the user joined.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
 msgid "Joined"
 msgstr "참여함"
 
@@ -20844,7 +20849,7 @@ msgid "Live region"
 msgstr "라이브 영역"
 
 #. Button that loads the next page of archived threads.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
 msgid "Load more"
 msgstr "더 불러오기"
 
@@ -22888,13 +22893,13 @@ msgstr "알림 끄기"
 #. Mute toggle button label in the mobile video viewer (currently unmuted).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice menu checkbox label. Locally mutes another participant only for the current user.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:73
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:74
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:42
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:74
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:147
 #: src/features/voice/components/media_player/components/MediaVerticalVolumeControl.tsx:25
 #: src/features/voice/components/media_player/components/MediaVolumeControl.tsx:25
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:45
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:46
 msgctxt "playback-control-action"
 msgid "Mute"
 msgstr "음소거"
@@ -23606,7 +23611,7 @@ msgid "New thread"
 msgstr "새 스레드"
 
 #. Help text for the default thread auto archive duration setting on a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
 msgid "New threads will stop showing in the channel list after this period of inactivity."
 msgstr "새로운 스레드는 이 기간 동안 활동이 없으면 채널 목록에 표시되지 않습니다."
 
@@ -24259,7 +24264,7 @@ msgid "No themes saved yet."
 msgstr "저장된 테마가 아직 없습니다."
 
 #. Empty state of the thread browser while searching.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
 msgid "No threads match"
 msgstr "일치하는 스레드가 없습니다"
 
@@ -24517,7 +24522,7 @@ msgstr "메모 (나에게만 보임)"
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #. Thread notification option that never notifies.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:362
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
 msgid "Nothing"
 msgstr "없음"
 
@@ -24567,7 +24572,7 @@ msgstr "개별 알림 설정"
 #. Submenu / section header that groups per-channel or per-community notification preferences.
 #. Submenu label for the thread notification options.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:344
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
 msgid "Notification settings"
 msgstr "알림 설정"
 
@@ -24810,7 +24815,7 @@ msgid "Only {count, plural, one {# community} other {# communities}}"
 msgstr "{count, plural, one {#개 커뮤니티만} other {#개 커뮤니티만}}"
 
 #. Thread notification option that notifies only for mentions.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
 msgid "Only @mentions"
 msgstr "멘션만"
 
@@ -25448,7 +25453,7 @@ msgid "Open user menu for {displayName}"
 msgstr "{displayName}님의 사용자 메뉴 열기"
 
 #. Button or menu action label in the channel and chat embed video. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:51
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:52
 msgid "Open video"
 msgstr "동영상 열기"
 
@@ -25614,7 +25619,7 @@ msgid "Original message was deleted"
 msgstr "원래 메시지가 삭제되었습니다"
 
 #. Shown at the top of a thread when the message it was started from was deleted.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
 msgid "Original message was deleted."
 msgstr "원본 메시지가 삭제되었습니다."
 
@@ -25643,7 +25648,7 @@ msgid "Other"
 msgstr "기타"
 
 #. Section header in the thread browser for active threads the user did not join.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:181
 msgid "Other active threads"
 msgstr "다른 활성 스레드"
 
@@ -26558,9 +26563,9 @@ msgstr "선택 영역 재생"
 #. Play-button label on the inline video player thumbnail before playback starts.
 #. Short label in the channel and chat embed video. Keep it concise.
 #. Short label in the channel and chat embed you tube. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:64
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:65
 #: src/features/channel/components/embeds/media/EmbedYouTube.tsx:29
-#: src/features/voice/components/media_player/components/VideoPlayer.tsx:62
+#: src/features/voice/components/media_player/components/VideoPlayer.tsx:63
 msgid "Play video"
 msgstr "동영상 재생"
 
@@ -26834,7 +26839,7 @@ msgid "Premium until date"
 msgstr "프리미엄 종료일"
 
 #. Progress label on the save button while an animated image crop starts. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:58
+#: src/features/messaging/components/modals/ImageCropModal.tsx:59
 msgid "Preparing"
 msgstr "준비 중"
 
@@ -29142,7 +29147,7 @@ msgstr "다시 보냄"
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:51
 #: src/features/app/components/floating/ColorPickerPopover.tsx:190
 #: src/features/input/components/KeybindRecorder.tsx:499
-#: src/features/messaging/components/modals/ImageCropModal.tsx:1022
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1023
 msgid "Reset"
 msgstr "초기화"
 
@@ -29544,7 +29549,7 @@ msgstr "초대를 다시 시작했습니다"
 #. Button that retries loading forum posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/platform/components/loadable/LoadableComponent.tsx:98
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:294
 msgid "Retry"
 msgstr "다시 시도"
 
@@ -29717,7 +29722,7 @@ msgid "Revoked ban for {0}"
 msgstr "{0}님에 대한 차단이 해제되었습니다"
 
 #. Tooltip / aria label on the rewind button in the standalone audio player. {defaultSeekAmount} is an integer second count.
-#: src/features/voice/components/media_player/components/AudioPlayer.tsx:27
+#: src/features/voice/components/media_player/components/AudioPlayer.tsx:28
 msgid "Rewind {defaultSeekAmount} seconds"
 msgstr "{defaultSeekAmount}초 뒤로 감기"
 
@@ -29866,7 +29871,7 @@ msgstr "루마니아어"
 
 #. Short label in the image crop modal. Keep it concise.
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:28
+#: src/features/messaging/components/modals/ImageCropModal.tsx:29
 #: src/features/messaging/components/modals/media_modal/shared.ts:93
 msgid "Rotate clockwise"
 msgstr "시계 방향으로 회전"
@@ -29964,7 +29969,7 @@ msgstr "채도"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
@@ -30506,7 +30511,7 @@ msgstr "검색 범위"
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:167
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:290
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "커뮤니티 검색 준비 중입니다. 곧 다시 시도합니다..."
 
@@ -30666,7 +30671,7 @@ msgid "Search themes…"
 msgstr "테마 검색…"
 
 #. Placeholder and label of the search box at the top of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
 msgid "Search threads"
 msgstr "스레드 검색"
 
@@ -30823,7 +30828,7 @@ msgid "Security key PIN form"
 msgstr "보안 키 PIN 입력 양식"
 
 #. Link in the thread created system message that opens the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
 msgid "See all threads"
 msgstr "모든 스레드 보기"
 
@@ -32675,7 +32680,7 @@ msgstr "건너뛰기"
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "\"모두 읽음\" 확인 건너뛰기"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:1034
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1035
 msgid "Skip cropping"
 msgstr "자르기 건너뛰기"
 
@@ -33109,7 +33114,7 @@ msgid "Something went wrong while starting checkout. Please try again in a momen
 msgstr "결제를 시작하는 중에 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
 
 #. Toast when a thread action failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
 msgid "Something went wrong: {detail}"
 msgstr "오류가 발생했습니다: {detail}"
 
@@ -33650,12 +33655,12 @@ msgid "Start with computer"
 msgstr "컴퓨터 시작 시 실행"
 
 #. Fragment of the thread created system message. Appears after the author name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
 msgid "started a thread"
 msgstr "스레드를 시작했습니다"
 
 #. Subtitle at the top of a thread. name is the display name of the member who started it.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
 msgid "Started by {name}"
 msgstr "{name}님이 시작했습니다."
 
@@ -33703,7 +33708,7 @@ msgid "Status:"
 msgstr "상태:"
 
 #. Empty state explanation in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:186
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
 msgid "Stay focused on a conversation with a thread, a temporary text channel."
 msgstr "스레드로 대화에 집중하세요. 스레드는 임시 텍스트 채널입니다."
 
@@ -35433,7 +35438,7 @@ msgid "There are no posts yet"
 msgstr "아직 게시물이 없습니다"
 
 #. Preview text on a thread chip when the thread has no messages yet.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
 msgid "There are no recent messages in this thread."
 msgstr "이 스레드에 최근 메시지가 없습니다."
 
@@ -35442,7 +35447,7 @@ msgid "There are no roles to assign in this community at this time, but you can 
 msgstr "현재 이 커뮤니티에 할당할 역할이 없습니다. <0>{rolesSettingsPath}</0>에서 새 역할을 만들 수 있습니다."
 
 #. Empty state of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:182
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
 msgid "There are no threads"
 msgstr "스레드가 없습니다"
 
@@ -35523,7 +35528,7 @@ msgid "This action cannot be undone. All associated data, including the bot user
 msgstr "이 작업은 되돌릴 수 없습니다. 봇 사용자를 포함한 모든 관련 데이터가 영구적으로 삭제됩니다."
 
 #. Error modal body shown when an animated image has too many frames or pixels to crop in the browser.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:41
+#: src/features/messaging/components/modals/ImageCropModal.tsx:42
 msgid "This animation is too long or too large to crop. Try a shorter or smaller file."
 msgstr "이 애니메이션은 너무 길거나 커서 자를 수 없습니다. 더 짧거나 작은 파일을 사용해 보세요."
 
@@ -35549,7 +35554,7 @@ msgstr "이 봇은 관리자 권한을 요청합니다. 개발자를 완전히 �
 #. Error modal body shown when the browser cannot decode animated AVIF for cropping. {avifFormatLabel} is the AVIF format name.
 #. Modal body shown when an animated AVIF upload is rejected because this browser cannot crop it.
 #: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:14
-#: src/features/messaging/components/modals/ImageCropModal.tsx:49
+#: src/features/messaging/components/modals/ImageCropModal.tsx:50
 msgid "This browser can't crop animated {avifFormatLabel} files. Upload a GIF or WebP instead."
 msgstr "이 브라우저에서는 애니메이션 {avifFormatLabel} 파일을 편집할 수 없습니다. 대신 GIF 또는 WebP 파일을 업로드하세요."
 
@@ -35559,7 +35564,7 @@ msgid "This browser console is a developer tool."
 msgstr "이 브라우저 콘솔은 개발자 도구입니다."
 
 #. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:54
+#: src/features/messaging/components/modals/ImageCropModal.tsx:55
 msgid "This browser has WebAssembly turned off, so animated images can't be cropped."
 msgstr "이 브라우저에서는 WebAssembly가 꺼져 있어 애니메이션 이미지를 자를 수 없습니다."
 
@@ -35877,7 +35882,7 @@ msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "이 핸드오프 코드가 만료되었습니다. 계속하려면 새 코드를 생성하세요."
 
 #. Error modal body shown when an animated image fails to decode during cropping.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:45
+#: src/features/messaging/components/modals/ImageCropModal.tsx:46
 msgid "This image couldn't be read. It may be damaged."
 msgstr "이 이미지를 읽을 수 없습니다. 손상되었을 수 있습니다."
 
@@ -36230,12 +36235,12 @@ msgid "This theme may have been removed or the link is invalid."
 msgstr "테마가 삭제되었거나 링크가 유효하지 않습니다."
 
 #. Notice above the composer of an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
 msgid "This thread is closed. Sending a message will open it again."
 msgstr "이 스레드는 닫혔습니다. 메시지를 보내면 다시 열립니다."
 
 #. Barrier shown instead of the composer in a locked thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
 msgid "This thread is locked. Only moderators can send messages."
 msgstr "이 스레드는 잠겼습니다. 메시지는 관리자만 보낼 수 있습니다."
 
@@ -36383,6 +36388,11 @@ msgstr "스레드"
 msgid "Thread created"
 msgstr "스레드 생성됨"
 
+#. Title of the developer-mode thread debug modal.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
+msgid "Thread debug"
+msgstr "스레드 디버그"
+
 #. Activity log action filter option for threads that were deleted.
 #. Toast after a thread was deleted.
 #: src/features/app/config/AuditLogConstants.ts:383
@@ -36391,12 +36401,12 @@ msgid "Thread deleted"
 msgstr "스레드 삭제됨"
 
 #. Toast after the thread link was copied.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
 msgid "Thread link copied"
 msgstr "스레드 링크가 복사되었습니다."
 
 #. Title of the thread member list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
 msgid "Thread members"
 msgstr "스레드 멤버"
 
@@ -36406,7 +36416,7 @@ msgid "Thread name"
 msgstr "스레드 이름"
 
 #. Title of the thread settings modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
 msgid "Thread settings"
 msgstr "스레드 설정"
 
@@ -36446,7 +36456,7 @@ msgid "Threshold date cannot be in the future"
 msgstr "기준일은 미래일 수 없습니다"
 
 #. Short label in the channel and chat embed video. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:55
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:56
 msgid "Thumbnail for {title}"
 msgstr "{title} 썸네일"
 
@@ -36620,7 +36630,7 @@ msgid "Toggle camera"
 msgstr "카메라 켜기/끄기"
 
 #. Aria label on the tap-to-toggle area of the mobile video viewer. Shows or hides the playback controls.
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:36
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:37
 msgid "Toggle controls"
 msgstr "컨트롤 표시/숨기기"
 
@@ -36952,7 +36962,7 @@ msgid "Trusted domains cleared."
 msgstr "신뢰하는 도메인이 삭제되었습니다."
 
 #. Hint under the empty search state in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Try a different name or check the other tab."
 msgstr "다른 이름을 시도하거나 다른 탭을 확인해 보세요."
 
@@ -37893,10 +37903,10 @@ msgstr "알림 켜기"
 #. Mute toggle button label in the media player volume control (currently muted).
 #. Mute toggle button label in the media player volume control (currently muted).
 #. Mute toggle button label in the mobile video viewer (currently muted).
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:68
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:69
 #: src/features/voice/components/media_player/components/MediaVerticalVolumeControl.tsx:20
 #: src/features/voice/components/media_player/components/MediaVolumeControl.tsx:20
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:40
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:41
 msgctxt "playback-control-action"
 msgid "Unmute"
 msgstr "음소거 해제"
@@ -38686,7 +38696,7 @@ msgid "Use category default"
 msgstr "카테고리 기본값 사용"
 
 #. Thread notification option that follows the parent channel setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
 msgid "Use channel default"
 msgstr "채널 기본값 사용"
 
@@ -39438,7 +39448,7 @@ msgstr "선명도"
 #: src/features/user/components/modals/tabs/VoiceVideoTab.tsx:15
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:113
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:170
-#: src/features/voice/components/media_player/components/VideoPlayer.tsx:58
+#: src/features/voice/components/media_player/components/VideoPlayer.tsx:59
 msgid "Video"
 msgstr "비디오"
 
@@ -39508,7 +39518,7 @@ msgid "Video preview"
 msgstr "동영상 미리보기"
 
 #. Aria label on the video scrubber / progress slider in the mobile video viewer.
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:50
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:51
 msgid "Video progress"
 msgstr "동영상 진행률"
 
@@ -39540,7 +39550,7 @@ msgid "Video settings"
 msgstr "비디오 설정"
 
 #. Short label in the channel and chat embed video. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:60
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:61
 #: src/features/channel/components/embeds/media/EmbedYouTube.tsx:27
 msgid "Video thumbnail"
 msgstr "동영상 썸네일"
@@ -40060,7 +40070,7 @@ msgid "Voice message"
 msgstr "음성 메시지"
 
 #. Short label in the channel and chat voice message player. Keep it concise.
-#: src/features/channel/components/embeds/media/VoiceMessagePlayer.tsx:31
+#: src/features/channel/components/embeds/media/VoiceMessagePlayer.tsx:32
 msgid "Voice message player"
 msgstr "음성 메시지 플레이어"
 
@@ -41199,7 +41209,7 @@ msgid "You can sign back in at any time."
 msgstr "언제든지 다시 로그인할 수 있습니다."
 
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
 msgstr "{seconds, plural, one {1초 후에 다른 스레드를 시작할 수 있습니다} other {#초 후에 다른 스레드를 시작할 수 있습니다}}."
 
@@ -42447,7 +42457,7 @@ msgid "YubiKey"
 msgstr "유비키"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:917
+#: src/features/messaging/components/modals/ImageCropModal.tsx:918
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:182
 msgid "Zoom"
 msgstr "확대/축소"

@@ -1135,7 +1135,7 @@ msgstr "{count, plural, one {# membre} other {# membres}}"
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:203
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {# message} other {# messages}}"
 
@@ -2399,7 +2399,7 @@ msgstr "1 jour"
 #. Fixed duration label for a one-hour interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:15
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
 msgid "1 hour"
 msgstr "1 heure"
 
@@ -2446,7 +2446,7 @@ msgstr "1 utilisateur"
 #. Fixed duration label for a one-week interval. Used as a standalone label in duration text or option lists.
 #. Thread auto archive duration option.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:36
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
 msgid "1 week"
 msgstr "1 semaine"
 
@@ -2544,7 +2544,7 @@ msgid "2–32 characters: letters, numbers, and underscores."
 msgstr "2 à 32 caractères, lettres, chiffres, tirets bas."
 
 #. Thread auto archive duration option.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:238
 msgid "24 hours"
 msgstr "24 heures"
 
@@ -2577,7 +2577,7 @@ msgstr "Exigence de la 2FA"
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
 #. Thread auto archive duration option.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:42
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:234
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
 msgid "3 days"
 msgstr "3 jours"
 
@@ -3050,7 +3050,7 @@ msgstr "Actions"
 #. Tab in the thread browser that lists active threads.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:161
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
 msgstr "Actif"
@@ -3886,7 +3886,7 @@ msgstr "Toutes les langues"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:20
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:352
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:21
 msgid "All messages"
 msgstr "Tous les messages"
@@ -3939,7 +3939,7 @@ msgid "Allow {productName} under Screen Recording in System Settings. If it is a
 msgstr "Autoriser {productName} dans « Enregistrement de l’écran » dans les Réglages Système. S’il est déjà autorisé, relancez {productName2} pour que macOS l’applique."
 
 #. Private thread setting that lets non-moderators add other members.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:230
 msgid "Allow anyone to invite"
 msgstr "Autoriser tout le monde à inviter"
 
@@ -5168,7 +5168,7 @@ msgid "Audio packet loss:"
 msgstr "Perte de paquets audio :"
 
 #. Aria label for the inline audio attachment player container.
-#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:35
+#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:36
 msgid "Audio player"
 msgstr "Lecteur audio"
 
@@ -5208,7 +5208,7 @@ msgid "Audio processing (focused voice)"
 msgstr "Traitement audio (voix isolée)"
 
 #. Aria label on the playback progress slider in the inline audio attachment player.
-#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:39
+#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:40
 msgid "Audio progress"
 msgstr "Progression audio"
 
@@ -6867,7 +6867,7 @@ msgstr "Impossible d’envoyer des fichiers ici"
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
 #: src/features/messaging/components/modals/ForwardModal.tsx:603
-#: src/features/messaging/components/modals/ImageCropModal.tsx:1025
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1026
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:266
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
@@ -8782,7 +8782,7 @@ msgstr "Fermer votre conversation privée avec {username} ? Vous pourrez la rouv
 #. Registration mode option that disables public registration.
 #. Tab in the thread browser that lists archived threads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:256
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
 msgid "Closed"
 msgstr "Fermé"
 
@@ -8797,7 +8797,7 @@ msgid "Closed DMs"
 msgstr "MP fermés"
 
 #. Tab in the thread browser that lists closed private threads. Keep it short, it shares a row with Active and Closed.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:185
 msgid "Closed private"
 msgstr "Privées fermées"
 
@@ -9385,7 +9385,7 @@ msgid "Composer focus"
 msgstr "Focus de la zone de rédaction"
 
 #. Progress label on the save button while a cropped animated image is compressed. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:67
+#: src/features/messaging/components/modals/ImageCropModal.tsx:68
 msgid "Compressing"
 msgstr "Compression en cours"
 
@@ -10347,7 +10347,7 @@ msgid "Could not start the screen share. The selected source may no longer be av
 msgstr "Impossible de démarrer le partage d’écran. La source sélectionnée n’est peut-être plus disponible ou la capture a pu être bloquée. Essayez plutôt de partager l’intégralité de votre écran ou de votre moniteur au lieu d’une fenêtre spécifique."
 
 #. Toast when creating a thread failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
 msgid "Could not start the thread: {detail}"
 msgstr "Impossible de créer le fil de discussion : {detail}"
 
@@ -10502,7 +10502,7 @@ msgid "Couldn't create your recovery kit. You can create one later in your accou
 msgstr "Impossible de créer votre kit de récupération. Vous pourrez en créer un plus tard dans les paramètres de votre compte."
 
 #. Title of the error modal shown when image cropping fails.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:32
+#: src/features/messaging/components/modals/ImageCropModal.tsx:33
 msgid "Couldn't crop image"
 msgstr "Impossible de recadrer l’image"
 
@@ -10790,7 +10790,7 @@ msgid "Couldn't save the tag: {detail}"
 msgstr "Impossible de sauvegarder le tag : {detail}"
 
 #. Error state of the thread browser search.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "Couldn't search threads. Try again later."
 msgstr "Impossible de rechercher dans les fils de discussion. Réessayez plus tard."
 
@@ -11331,7 +11331,7 @@ msgid "Crop invite background"
 msgstr "Recadrer l'arrière-plan de l'invitation"
 
 #. Short label in the image crop modal. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:24
+#: src/features/messaging/components/modals/ImageCropModal.tsx:25
 msgid "Crop preview"
 msgstr "Aperçu du recadrage"
 
@@ -11343,12 +11343,12 @@ msgstr "Recadrer la bannière de profil"
 #. Error modal body shown when a cropped community image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #. Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:47
-#: src/features/messaging/components/modals/ImageCropModal.tsx:36
+#: src/features/messaging/components/modals/ImageCropModal.tsx:37
 msgid "Cropped image is too large. Choose a smaller area or a smaller file (max {maxSizeLabel})."
 msgstr "L'image recadrée est trop grande. Choisissez une zone plus petite ou un fichier plus petit (max. {maxSizeLabel})."
 
 #. Progress label on the save button while animated image frames are cropped. {percent} is a whole number. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:62
+#: src/features/messaging/components/modals/ImageCropModal.tsx:63
 msgid "Cropping {percent}%"
 msgstr "Recadrage de {percent}%"
 
@@ -11967,6 +11967,11 @@ msgstr "Déboguer le membre"
 msgid "Debug message"
 msgstr "Déboguer le message"
 
+#. Developer-mode action that opens the thread debug modal.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
+msgid "Debug thread"
+msgstr "Déboguer le fil"
+
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Developer-mode action that opens a user debug panel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:162
@@ -12035,7 +12040,7 @@ msgid "Default emoji"
 msgstr "Emoji par défaut"
 
 #. Label of the default auto archive duration for new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:222
 msgid "Default hide after inactivity"
 msgstr "Masquer par défaut après inactivité"
 
@@ -12093,7 +12098,7 @@ msgid "Default sort order"
 msgstr "Ordre de tri par défaut"
 
 #. Label of the slowmode copied onto new threads in a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:226
 msgid "Default thread slowmode"
 msgstr "Mode lent par défaut"
 
@@ -16597,7 +16602,7 @@ msgid "Forward"
 msgstr "Transférer"
 
 #. Tooltip / aria label on the forward / fast-forward button in the standalone audio player. {defaultSeekAmount} is an integer second count.
-#: src/features/voice/components/media_player/components/AudioPlayer.tsx:32
+#: src/features/voice/components/media_player/components/AudioPlayer.tsx:33
 msgid "Forward {defaultSeekAmount} seconds"
 msgstr "Avancer de {defaultSeekAmount} secondes"
 
@@ -17892,7 +17897,7 @@ msgstr "Cœur"
 msgid "Hebrew"
 msgstr "Hébreu"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:958
+#: src/features/messaging/components/modals/ImageCropModal.tsx:959
 msgid "Height"
 msgstr "Hauteur"
 
@@ -18027,7 +18032,7 @@ msgid "Hide {premiumProductName} purchase date ({dateUtilsGetFormattedShortDateP
 msgstr "Masquer la date d'achat de {premiumProductName} ({dateUtilsGetFormattedShortDatePremiumSince})"
 
 #. Label of the thread auto archive duration setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:214
 msgid "Hide after inactivity"
 msgstr "Masquer après inactivité"
 
@@ -19817,7 +19822,7 @@ msgid "Join the call"
 msgstr "Rejoindre l'appel"
 
 #. Notice above the composer when the user is not a member of the thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "Join this thread to follow it in your channel list and get notifications."
 msgstr "Rejoignez ce fil pour le suivre dans votre liste de canaux et recevoir des notifications."
 
@@ -19868,7 +19873,7 @@ msgid "Join voice channels and hear others."
 msgstr "Rejoindre les salons vocaux et entendre les autres."
 
 #. Section header in the thread browser for threads the user joined.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:169
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:177
 msgid "Joined"
 msgstr "Rejoint"
 
@@ -20844,7 +20849,7 @@ msgid "Live region"
 msgstr "Zone dynamique"
 
 #. Button that loads the next page of archived threads.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
 msgid "Load more"
 msgstr "Charger plus"
 
@@ -22888,13 +22893,13 @@ msgstr "Mettre en sourdine"
 #. Mute toggle button label in the mobile video viewer (currently unmuted).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice menu checkbox label. Locally mutes another participant only for the current user.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:73
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:74
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:42
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:74
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:147
 #: src/features/voice/components/media_player/components/MediaVerticalVolumeControl.tsx:25
 #: src/features/voice/components/media_player/components/MediaVolumeControl.tsx:25
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:45
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:46
 msgctxt "playback-control-action"
 msgid "Mute"
 msgstr "Couper le son"
@@ -23606,7 +23611,7 @@ msgid "New thread"
 msgstr "Nouveau fil"
 
 #. Help text for the default thread auto archive duration setting on a text channel.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:218
 msgid "New threads will stop showing in the channel list after this period of inactivity."
 msgstr "Les nouveaux fils de discussion ne s'afficheront plus dans la liste des canaux après cette période d'inactivité."
 
@@ -24259,7 +24264,7 @@ msgid "No themes saved yet."
 msgstr "Aucun thème enregistré pour l'instant."
 
 #. Empty state of the thread browser while searching.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:278
 msgid "No threads match"
 msgstr "Aucun fil de discussion ne correspond"
 
@@ -24517,7 +24522,7 @@ msgstr "Note (visible uniquement par vous)"
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #. Thread notification option that never notifies.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:362
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:129
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
 msgid "Nothing"
 msgstr "Aucun"
 
@@ -24567,7 +24572,7 @@ msgstr "Réglages de notification spécifiques"
 #. Submenu / section header that groups per-channel or per-community notification preferences.
 #. Submenu label for the thread notification options.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:344
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
 msgid "Notification settings"
 msgstr "Paramètres de notification"
 
@@ -24810,7 +24815,7 @@ msgid "Only {count, plural, one {# community} other {# communities}}"
 msgstr "Seulement {count, plural, one {# communauté} other {# communautés}}"
 
 #. Thread notification option that notifies only for mentions.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:133
 msgid "Only @mentions"
 msgstr "Uniquement les @mentions"
 
@@ -25448,7 +25453,7 @@ msgid "Open user menu for {displayName}"
 msgstr "Ouvrir le menu utilisateur pour {displayName}"
 
 #. Button or menu action label in the channel and chat embed video. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:51
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:52
 msgid "Open video"
 msgstr "Ouvrir la vidéo"
 
@@ -25614,7 +25619,7 @@ msgid "Original message was deleted"
 msgstr "Le message original a été supprimé"
 
 #. Shown at the top of a thread when the message it was started from was deleted.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:210
 msgid "Original message was deleted."
 msgstr "Message d'origine supprimé."
 
@@ -25643,7 +25648,7 @@ msgid "Other"
 msgstr "Autre"
 
 #. Section header in the thread browser for active threads the user did not join.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:173
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:181
 msgid "Other active threads"
 msgstr "Autres fils actifs"
 
@@ -26558,9 +26563,9 @@ msgstr "Écouter la sélection"
 #. Play-button label on the inline video player thumbnail before playback starts.
 #. Short label in the channel and chat embed video. Keep it concise.
 #. Short label in the channel and chat embed you tube. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:64
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:65
 #: src/features/channel/components/embeds/media/EmbedYouTube.tsx:29
-#: src/features/voice/components/media_player/components/VideoPlayer.tsx:62
+#: src/features/voice/components/media_player/components/VideoPlayer.tsx:63
 msgid "Play video"
 msgstr "Lire la vidéo"
 
@@ -26834,7 +26839,7 @@ msgid "Premium until date"
 msgstr "Date de fin Premium"
 
 #. Progress label on the save button while an animated image crop starts. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:58
+#: src/features/messaging/components/modals/ImageCropModal.tsx:59
 msgid "Preparing"
 msgstr "Préparation"
 
@@ -29142,7 +29147,7 @@ msgstr "Renvoyé"
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:51
 #: src/features/app/components/floating/ColorPickerPopover.tsx:190
 #: src/features/input/components/KeybindRecorder.tsx:499
-#: src/features/messaging/components/modals/ImageCropModal.tsx:1022
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1023
 msgid "Reset"
 msgstr "Réinitialiser"
 
@@ -29544,7 +29549,7 @@ msgstr "Invitations rétablies"
 #. Button that retries loading forum posts.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/platform/components/loadable/LoadableComponent.tsx:98
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:286
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:294
 msgid "Retry"
 msgstr "Réessayer"
 
@@ -29717,7 +29722,7 @@ msgid "Revoked ban for {0}"
 msgstr "A levé le bannissement de {0}"
 
 #. Tooltip / aria label on the rewind button in the standalone audio player. {defaultSeekAmount} is an integer second count.
-#: src/features/voice/components/media_player/components/AudioPlayer.tsx:27
+#: src/features/voice/components/media_player/components/AudioPlayer.tsx:28
 msgid "Rewind {defaultSeekAmount} seconds"
 msgstr "Rembobiner de {defaultSeekAmount} secondes"
 
@@ -29866,7 +29871,7 @@ msgstr "Roumain"
 
 #. Short label in the image crop modal. Keep it concise.
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:28
+#: src/features/messaging/components/modals/ImageCropModal.tsx:29
 #: src/features/messaging/components/modals/media_modal/shared.ts:93
 msgid "Rotate clockwise"
 msgstr "Pivoter dans le sens des aiguilles d'une montre"
@@ -29964,7 +29969,7 @@ msgstr "Saturation"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:246
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:254
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
@@ -30506,7 +30511,7 @@ msgstr "Rechercher dans"
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:167
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:290
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "La recherche se prépare pour cette communauté. Réessai dans peu..."
 
@@ -30666,7 +30671,7 @@ msgid "Search themes…"
 msgstr "Rechercher des thèmes…"
 
 #. Placeholder and label of the search box at the top of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
 msgid "Search threads"
 msgstr "Rechercher dans les conversations"
 
@@ -30823,7 +30828,7 @@ msgid "Security key PIN form"
 msgstr "Formulaire de saisie du code PIN de la clé de sécurité"
 
 #. Link in the thread created system message that opens the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:198
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:206
 msgid "See all threads"
 msgstr "Voir tous les fils"
 
@@ -32675,7 +32680,7 @@ msgstr "Passer"
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "Passer la confirmation « Tout marquer comme lu »"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:1034
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1035
 msgid "Skip cropping"
 msgstr "Ignorer le recadrage"
 
@@ -33109,7 +33114,7 @@ msgid "Something went wrong while starting checkout. Please try again in a momen
 msgstr "Un problème est survenu lors du démarrage du paiement. Veuillez réessayer dans un instant."
 
 #. Toast when a thread action failed. detail is the server error message.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:266
 msgid "Something went wrong: {detail}"
 msgstr "Une erreur est survenue : {detail}"
 
@@ -33650,12 +33655,12 @@ msgid "Start with computer"
 msgstr "Démarrer avec l'ordinateur"
 
 #. Fragment of the thread created system message. Appears after the author name.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:202
 msgid "started a thread"
 msgstr "a démarré un fil"
 
 #. Subtitle at the top of a thread. name is the display name of the member who started it.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:262
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:270
 msgid "Started by {name}"
 msgstr "Commencé par {name}"
 
@@ -33703,7 +33708,7 @@ msgid "Status:"
 msgstr "Statut :"
 
 #. Empty state explanation in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:186
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:194
 msgid "Stay focused on a conversation with a thread, a temporary text channel."
 msgstr "Restez concentré sur une conversation avec un fil de discussion, un canal textuel temporaire."
 
@@ -35433,7 +35438,7 @@ msgid "There are no posts yet"
 msgstr "Il n’y a encore aucun message"
 
 #. Preview text on a thread chip when the thread has no messages yet.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:165
 msgid "There are no recent messages in this thread."
 msgstr "Il n’y a pas de messages récents dans ce fil."
 
@@ -35442,7 +35447,7 @@ msgid "There are no roles to assign in this community at this time, but you can 
 msgstr "Il n'y a aucun rôle à attribuer dans cette communauté pour le moment, mais vous pouvez en créer un nouveau dans <0>{rolesSettingsPath}</0>."
 
 #. Empty state of the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:182
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:190
 msgid "There are no threads"
 msgstr "Il n’y a aucun fil de discussion"
 
@@ -35523,7 +35528,7 @@ msgid "This action cannot be undone. All associated data, including the bot user
 msgstr "Cette action est irréversible. Toutes les données associées, y compris l'utilisateur du bot, seront définitivement supprimées."
 
 #. Error modal body shown when an animated image has too many frames or pixels to crop in the browser.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:41
+#: src/features/messaging/components/modals/ImageCropModal.tsx:42
 msgid "This animation is too long or too large to crop. Try a shorter or smaller file."
 msgstr "Cette animation est trop longue ou trop volumineuse pour être rognée. Essayez un fichier plus court ou plus petit."
 
@@ -35549,7 +35554,7 @@ msgstr "Ce bot demande la permission d'administrateur. Ne l'accordez que si vous
 #. Error modal body shown when the browser cannot decode animated AVIF for cropping. {avifFormatLabel} is the AVIF format name.
 #. Modal body shown when an animated AVIF upload is rejected because this browser cannot crop it.
 #: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:14
-#: src/features/messaging/components/modals/ImageCropModal.tsx:49
+#: src/features/messaging/components/modals/ImageCropModal.tsx:50
 msgid "This browser can't crop animated {avifFormatLabel} files. Upload a GIF or WebP instead."
 msgstr "Ce navigateur ne peut pas recadrer les fichiers {avifFormatLabel} animés. Téléchargez plutôt un GIF ou un WebP."
 
@@ -35559,7 +35564,7 @@ msgid "This browser console is a developer tool."
 msgstr "Cette console de navigateur est un outil de développement."
 
 #. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:54
+#: src/features/messaging/components/modals/ImageCropModal.tsx:55
 msgid "This browser has WebAssembly turned off, so animated images can't be cropped."
 msgstr "Ce navigateur a WebAssembly désactivé, les images animées ne peuvent donc pas être recadrées."
 
@@ -35877,7 +35882,7 @@ msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "Ce code de transfert a expiré. Générez-en un nouveau pour continuer."
 
 #. Error modal body shown when an animated image fails to decode during cropping.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:45
+#: src/features/messaging/components/modals/ImageCropModal.tsx:46
 msgid "This image couldn't be read. It may be damaged."
 msgstr "Cette image n'a pas pu être lue. Elle est peut-être endommagée."
 
@@ -36230,12 +36235,12 @@ msgid "This theme may have been removed or the link is invalid."
 msgstr "Ce thème a peut-être été supprimé ou le lien est invalide."
 
 #. Notice above the composer of an archived thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:137
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:145
 msgid "This thread is closed. Sending a message will open it again."
 msgstr "Ce fil de discussion est fermé. Envoyer un message le rouvrira."
 
 #. Barrier shown instead of the composer in a locked thread.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:141
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
 msgid "This thread is locked. Only moderators can send messages."
 msgstr "Ce fil de discussion est verrouillé. Seuls les modérateurs peuvent envoyer des messages."
 
@@ -36383,6 +36388,11 @@ msgstr "Fil"
 msgid "Thread created"
 msgstr "Thread créé"
 
+#. Title of the developer-mode thread debug modal.
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
+msgid "Thread debug"
+msgstr "Débogage du fil"
+
 #. Activity log action filter option for threads that were deleted.
 #. Toast after a thread was deleted.
 #: src/features/app/config/AuditLogConstants.ts:383
@@ -36391,12 +36401,12 @@ msgid "Thread deleted"
 msgstr "Fil supprimé"
 
 #. Toast after the thread link was copied.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:113
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:121
 msgid "Thread link copied"
 msgstr "Lien du fil copié"
 
 #. Title of the thread member list.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:149
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:157
 msgid "Thread members"
 msgstr "Membres du fil"
 
@@ -36406,7 +36416,7 @@ msgid "Thread name"
 msgstr "Nom du fil"
 
 #. Title of the thread settings modal.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:242
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
 msgid "Thread settings"
 msgstr "Paramètres du fil"
 
@@ -36446,7 +36456,7 @@ msgid "Threshold date cannot be in the future"
 msgstr "La date limite ne peut pas être dans le futur"
 
 #. Short label in the channel and chat embed video. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:55
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:56
 msgid "Thumbnail for {title}"
 msgstr "Miniature pour {title}"
 
@@ -36620,7 +36630,7 @@ msgid "Toggle camera"
 msgstr "Activer/désactiver la caméra"
 
 #. Aria label on the tap-to-toggle area of the mobile video viewer. Shows or hides the playback controls.
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:36
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:37
 msgid "Toggle controls"
 msgstr "Afficher/masquer les commandes"
 
@@ -36952,7 +36962,7 @@ msgid "Trusted domains cleared."
 msgstr "Domaines de confiance effacés."
 
 #. Hint under the empty search state in the thread browser.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:274
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Try a different name or check the other tab."
 msgstr "Essayez un autre nom ou consultez l'autre onglet."
 
@@ -37893,10 +37903,10 @@ msgstr "Annuler la mise en sourdine"
 #. Mute toggle button label in the media player volume control (currently muted).
 #. Mute toggle button label in the media player volume control (currently muted).
 #. Mute toggle button label in the mobile video viewer (currently muted).
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:68
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:69
 #: src/features/voice/components/media_player/components/MediaVerticalVolumeControl.tsx:20
 #: src/features/voice/components/media_player/components/MediaVolumeControl.tsx:20
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:40
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:41
 msgctxt "playback-control-action"
 msgid "Unmute"
 msgstr "Réactiver le son"
@@ -38686,7 +38696,7 @@ msgid "Use category default"
 msgstr "Utiliser les paramètres par défaut de la catégorie"
 
 #. Thread notification option that follows the parent channel setting.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:117
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:125
 msgid "Use channel default"
 msgstr "Utiliser le défaut du canal"
 
@@ -39438,7 +39448,7 @@ msgstr "Vibrance"
 #: src/features/user/components/modals/tabs/VoiceVideoTab.tsx:15
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:113
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:170
-#: src/features/voice/components/media_player/components/VideoPlayer.tsx:58
+#: src/features/voice/components/media_player/components/VideoPlayer.tsx:59
 msgid "Video"
 msgstr "Vidéo"
 
@@ -39508,7 +39518,7 @@ msgid "Video preview"
 msgstr "Aperçu vidéo"
 
 #. Aria label on the video scrubber / progress slider in the mobile video viewer.
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:50
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:51
 msgid "Video progress"
 msgstr "Progression de la vidéo"
 
@@ -39540,7 +39550,7 @@ msgid "Video settings"
 msgstr "Paramètres vidéo"
 
 #. Short label in the channel and chat embed video. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:60
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:61
 #: src/features/channel/components/embeds/media/EmbedYouTube.tsx:27
 msgid "Video thumbnail"
 msgstr "Miniature vidéo"
@@ -40060,7 +40070,7 @@ msgid "Voice message"
 msgstr "Message vocal"
 
 #. Short label in the channel and chat voice message player. Keep it concise.
-#: src/features/channel/components/embeds/media/VoiceMessagePlayer.tsx:31
+#: src/features/channel/components/embeds/media/VoiceMessagePlayer.tsx:32
 msgid "Voice message player"
 msgstr "Lecteur de message vocal"
 
@@ -41199,7 +41209,7 @@ msgid "You can sign back in at any time."
 msgstr "Vous pouvez vous reconnecter à tout moment."
 
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
-#: src/features/threads/utils/ThreadMessageDescriptors.ts:250
+#: src/features/threads/utils/ThreadMessageDescriptors.ts:258
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
 msgstr "Vous pouvez démarrer un autre fil de discussion dans {seconds, plural, one {# seconde} other {# secondes}}."
 
@@ -42447,7 +42457,7 @@ msgid "YubiKey"
 msgstr "YubiKey"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:917
+#: src/features/messaging/components/modals/ImageCropModal.tsx:918
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:182
 msgid "Zoom"
 msgstr "Zoom"
