@@ -147,7 +147,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(user.premium_will_cancel).toBe(true);
 			expect(user.premium_until).not.toBeNull();
 		});
-		test('preserves gifted extension when updating subscription', async () => {
+		test('moves the gifted extension along when the subscription period moves forward', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
 			const subscriptionId = 'sub_test_gifted';
@@ -207,7 +207,9 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(premiumUntil.getTime()).toBeGreaterThan(new Date(currentPeriodEnd * 1000).getTime());
 			const updatedUser = await userRepository.findUnique(userId);
 			expect(updatedUser?.premiumUntil?.toISOString()).toBe(new Date(currentPeriodEnd * 1000).toISOString());
-			expect(updatedUser?.premiumGiftExtensionEndsAt?.toISOString()).toBe(giftExtensionEndsAt.toISOString());
+			expect(updatedUser?.premiumGiftExtensionEndsAt?.getTime()).toBe(
+				giftExtensionEndsAt.getTime() + (currentPeriodEnd * 1000 - initialPremiumUntil.getTime()),
+			);
 		});
 		test('does not grant unpaid future time for past_due subscriptions and disables grace', async () => {
 			const account = await createTestAccount(harness);

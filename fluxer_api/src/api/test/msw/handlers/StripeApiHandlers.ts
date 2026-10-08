@@ -6,6 +6,9 @@ import {HttpResponse, http, type RequestHandler} from 'msw';
 const STRIPE_API_BASE = 'https://api.stripe.com';
 
 interface CheckoutSessionParams {
+	adaptive_pricing?: {
+		enabled?: string;
+	};
 	billing_address_collection?: string;
 	customer?: string;
 	customer_email?: string;
@@ -322,6 +325,7 @@ interface MockStripeSubscriptionState {
 	latest_invoice: string | null;
 	status: 'active' | 'canceled' | 'incomplete' | 'past_due' | 'trialing';
 	schedule_id: string | null;
+	metadata: Record<string, string>;
 }
 
 interface MockStripeSubscriptionSchedule {
@@ -355,7 +359,12 @@ interface MockStripeSubscriptionSchedule {
 
 const PRICE_ID_CURRENCY_MARKERS = ['eur', 'brl', 'dkk', 'inr', 'nok', 'pln', 'sek', 'try'] as const;
 
+const ISK_PRICE_ID_PATTERN = /(?:^|_)isk(?:_|$)/;
+
 function inferPriceIdCurrency(normalizedPriceId: string): string {
+	if (ISK_PRICE_ID_PATTERN.test(normalizedPriceId)) {
+		return 'isk';
+	}
 	return PRICE_ID_CURRENCY_MARKERS.find((marker) => normalizedPriceId.includes(marker)) ?? 'usd';
 }
 
@@ -610,6 +619,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			subscriptionStore.set(subscriptionId, {
 				...createDefaultSubscriptionState(),
 				...overrides,
+				metadata: {...overrides.metadata},
 			});
 		}
 	}
@@ -829,6 +839,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			latest_invoice: null,
 			status: 'active',
 			schedule_id: null,
+			metadata: {},
 		};
 	}
 	function getOrCreateSubscriptionState(subscriptionId: string): MockStripeSubscriptionState {
@@ -893,7 +904,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 				? getPaymentMethod(subState.default_payment_method)
 				: null,
 			livemode: false,
-			metadata: {},
+			metadata: {...subState.metadata},
 			schedule: subState.schedule_id,
 			start_date: Math.floor(Date.now() / 1000) - 90 * 24 * 60 * 60,
 		};
@@ -1389,7 +1400,12 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			}
 			spies.updatedSubscriptions.push({id: id as string, params: updateParams});
 			const subState = getOrCreateSubscriptionState(id as string);
-			if (updateParams.trial_end) {
+			if (updateParams.trial_end === 'now') {
+				const nowUnix = Math.floor(Date.now() / 1000);
+				subState.trial_end = null;
+				subState.current_period_start = nowUnix;
+				subState.current_period_end = nowUnix + (subState.interval === 'year' ? 365 : 30) * 24 * 60 * 60;
+			} else if (updateParams.trial_end) {
 				subState.trial_end = Number(updateParams.trial_end);
 			}
 			if ('cancel_at' in updateParams) {
@@ -1403,6 +1419,15 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			}
 			if (typeof updateParams.default_payment_method === 'string') {
 				subState.default_payment_method = updateParams.default_payment_method;
+			}
+			if (updateParams.metadata && typeof updateParams.metadata === 'object') {
+				for (const [key, value] of Object.entries(updateParams.metadata as Record<string, string>)) {
+					if (value === '') {
+						delete subState.metadata[key];
+					} else {
+						subState.metadata[key] = value;
+					}
+				}
 			}
 			const updatedItem = Array.isArray(updateParams.items) ? updateParams.items[0] : null;
 			if (updatedItem && typeof updatedItem === 'object') {
@@ -1421,10 +1446,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 				}
 			}
 			subscriptionStore.set(id as string, subState);
-			return HttpResponse.json({
-				...mapSubscriptionStateToStripeSubscription(id as string, subState),
-				metadata: updateParams.metadata || {},
-			});
+			return HttpResponse.json(mapSubscriptionStateToStripeSubscription(id as string, subState));
 		}),
 		http.delete(`${STRIPE_API_BASE}/v1/subscriptions/:id`, ({params}) => {
 			const {id} = params;

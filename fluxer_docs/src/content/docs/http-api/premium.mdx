@@ -48,6 +48,8 @@ Every route except [get price IDs](#get-price-ids) is user-only. A [self-hosted 
 
 Every amount field is in the minor unit of the currency field its description names, and two amounts in one object can have different currencies.
 
+ISK has no minor unit in ISO 4217, but its amounts still use two decimals, so divide them by 100. ISK 590 is `59000`.
+
 A hosted deployment uses the currencies below. A self-hosted deployment whose operator sets its own prices uses the three-letter ISO 4217 codes the operator configured.
 
 | Value | Description |
@@ -57,6 +59,7 @@ A hosted deployment uses the currencies below. A self-hosted deployment whose op
 | BRL | Brazilian real |
 | DKK | Danish krone |
 | INR | Indian rupee |
+| ISK | Icelandic krona |
 | NOK | Norwegian krone |
 | PLN | Polish zloty |
 | SEK | Swedish krona |

@@ -10,6 +10,7 @@ import {addGiftCodeDuration} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import type {ProductInfo, RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
+import {buildGiftTrialMetadata, getGiftTrialPaidUntil} from '@app/api/stripe/StripeGiftTrialMetadata';
 import {
 	getPrimarySubscriptionItem,
 	getSubscriptionEntitlementPeriodEndUnix,
@@ -233,12 +234,15 @@ export class StripeSubscriptionService {
 				premium_grace_ends_at: null,
 			};
 			if (user.premiumType !== UserPremiumTypes.LIFETIME) {
-				const hasActiveGift =
-					user.premiumGiftExtensionEndsAt != null && user.premiumGiftExtensionEndsAt.getTime() > Date.now();
+				const now = new Date();
+				const paidUntil = getGiftTrialPaidUntil(canceledSubscription, now.getTime()) ?? user.premiumUntil;
+				const giftEnd = this.pullGiftExtensionBackToNow(user.premiumGiftExtensionEndsAt, paidUntil, now);
+				const hasActiveGift = giftEnd != null && giftEnd.getTime() > now.getTime();
 				Object.assign(patch, {
 					premium_type: hasActiveGift ? user.premiumType : UserPremiumTypes.NONE,
 					premium_since: hasActiveGift ? user.premiumSince : null,
-					premium_until: new Date(),
+					premium_until: now,
+					premium_gift_extension_ends_at: giftEnd,
 				});
 			}
 			const updatedUser = await this.userRepository.patchUpsert(userId, patch, user.toRow());
@@ -253,6 +257,13 @@ export class StripeSubscriptionService {
 			throw new StripeError(message);
 		}
 		await this.storeEntitlementService?.reapplyAfterStripeChange(userId);
+	}
+
+	private pullGiftExtensionBackToNow(giftEnd: Date | null, paidUntil: Date | null, now: Date): Date | null {
+		if (!giftEnd || !paidUntil || paidUntil.getTime() <= now.getTime() || giftEnd.getTime() < paidUntil.getTime()) {
+			return giftEnd;
+		}
+		return new Date(giftEnd.getTime() - (paidUntil.getTime() - now.getTime()));
 	}
 
 	async reactivateSubscription(userId: UserID): Promise<void> {
@@ -1215,7 +1226,7 @@ export class StripeSubscriptionService {
 		durationType: GiftCodeDurationType,
 		durationQuantity: number,
 		idempotencyKey: string,
-	): Promise<void> {
+	): Promise<Stripe.Subscription | null> {
 		if (!this.stripe || !user.stripeSubscriptionId) {
 			Logger.debug(
 				{
@@ -1246,11 +1257,11 @@ export class StripeSubscriptionService {
 		);
 		if (await this.cacheService.get<boolean>(appliedKey)) {
 			Logger.debug({userId: user.id, idempotencyKey}, 'Gift trial extension already applied (idempotent hit)');
-			return;
+			return null;
 		}
 		if (await this.cacheService.get<boolean>(inflightKey)) {
 			Logger.debug({userId: user.id, idempotencyKey}, 'Gift trial extension in-flight; skipping duplicate');
-			return;
+			return null;
 		}
 		await this.cacheService.set(inflightKey, true, seconds('1 minute'));
 		Logger.debug({userId: user.id, idempotencyKey, inflightKey}, 'Gift trial inflight sentinel set');
@@ -1268,7 +1279,7 @@ export class StripeSubscriptionService {
 		try {
 			if (await this.cacheService.get<boolean>(appliedKey)) {
 				Logger.debug({userId: user.id, idempotencyKey}, 'Gift trial extension already applied after lock acquisition');
-				return;
+				return null;
 			}
 			const subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId);
 			Logger.debug(
@@ -1320,6 +1331,7 @@ export class StripeSubscriptionService {
 				{
 					trial_end: newTrialEndUnix,
 					proration_behavior: 'none',
+					metadata: buildGiftTrialMetadata(subscription, idempotencyKey, baseUnix, newTrialEndUnix, Date.now()),
 				},
 				{idempotencyKey: stripeIdempotencyKey},
 			);
@@ -1357,6 +1369,7 @@ export class StripeSubscriptionService {
 				},
 				'Extended subscription with gift trial period',
 			);
+			return trialExtendedSubscription;
 		} catch (error: unknown) {
 			Logger.error(
 				{error, userId: user.id, subscriptionId: user.stripeSubscriptionId, idempotencyKey},

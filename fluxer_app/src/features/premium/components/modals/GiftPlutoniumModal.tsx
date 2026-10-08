@@ -70,7 +70,7 @@ export const GiftPlutoniumModal = observer(() => {
 	const premiumState = PremiumState.loadedForUserId === currentUser?.id ? PremiumState.state : null;
 	const countryCode = GeoIP.countryCode;
 	const {priceIds, giftMonthlyPrice, giftYearlyPrice} = usePremiumData({premiumState});
-	const {loadingCheckout, handleSelectPlan} = useCheckoutActions(priceIds, countryCode, false, MobileLayout.enabled);
+	const {loadingCheckout, handleSelectPlan} = useCheckoutActions(priceIds, countryCode, MobileLayout.enabled);
 	const [plan, setPlan] = useState<GiftPlan>('gift_1_year');
 	useEffect(() => {
 		if (!currentUser?.id) return;

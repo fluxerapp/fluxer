@@ -1759,7 +1759,7 @@ msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPr
 msgstr "{premiumProductName} вече струва по-малко. Премини от {currentPrice} към {newPrice} годишно от {effectiveDate} и днес няма да ти бъде начислено нищо."
 
 #. Accessible label of the Plutonium page region. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:252
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:265
 msgid "{premiumProductName} page"
 msgstr "Страница {premiumProductName}"
 
@@ -2734,7 +2734,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "Налична е актуализация за настолното приложение на Linux. Избери формата на пакета за тази система и {productName} ще я запази локално."
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:738
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:760
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "Предлага се по-ниска цена. Преминаването влиза в сила на <0>{listPriceEffectiveDate}</0> и не променя нищо друго."
 
@@ -2754,7 +2754,7 @@ msgid "a poll"
 msgstr "анкета"
 
 #. Plutonium page perk card title about profile customization.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:91
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:96
 msgid "A profile that stands out"
 msgstr "Профил, който се откроява"
 
@@ -2773,7 +2773,7 @@ msgid "a rich embed or link preview (not an uploaded file)"
 msgstr "вграден елемент или визуализация на линк (не качен файл)"
 
 #. Plutonium page comparison row label for per-community profiles.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:178
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:191
 msgid "A separate profile for each community"
 msgstr "Отделен профил за всяка общност"
 
@@ -3048,7 +3048,7 @@ msgstr "Действия"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning the paid subscription is active.
 #. Tab in the thread browser that lists active threads.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:448
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:161
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
@@ -3800,19 +3800,19 @@ msgstr "Контролите за подравняване са налични �
 msgid "All"
 msgstr "Всички"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:578
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:600
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "Всички <0/> за <1>{effectiveMonthlyPrice}/месец</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:600
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:622
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "Всички <0/> за <1>{effectiveYearlyPrice}/година</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:621
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:643
 msgid "All <0/> included with your subscription."
 msgstr "Всички <0/> са включени в абонамента ти."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:568
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:590
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "Всички <0/>, завинаги. Без таксуване и подновявания."
 
@@ -4357,7 +4357,7 @@ msgid "Animated {avifFormatLabel} not supported"
 msgstr "Анимираният формат {avifFormatLabel} не се поддържа"
 
 #. Plutonium page comparison row label for animated avatars and banners.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:230
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:243
 msgid "Animated avatar and profile banner"
 msgstr "Анимиран аватар и банер на профила"
 
@@ -5550,7 +5550,7 @@ msgstr "AV1 (изисква активиране)"
 
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:135
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
 #: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "Available"
 msgstr "Налична"
@@ -5631,7 +5631,7 @@ msgstr "В момента ме няма"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:398
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:256
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
 msgid "Back"
 msgstr "Назад"
 
@@ -5963,12 +5963,12 @@ msgid "Between 1 and 32 characters"
 msgstr "Между 1 и 32 знака"
 
 #. Plutonium subscription card text for an App Store or Google Play subscription. {storeName} is the store brand name, App Store or Google Play, and must not be translated.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:531
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:553
 msgid "Billed through {storeName}."
 msgstr "Таксува се чрез {storeName}."
 
 #. Plutonium subscription card text for an App Store or Google Play subscription that will not renew. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {endDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:521
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:543
 msgid "Billed through {storeName}. Ends on <0>{endDate}</0>."
 msgstr "Таксува се чрез {storeName}. Приключва на <0>{endDate}</0>."
 
@@ -6382,7 +6382,7 @@ msgid "Brightness"
 msgstr "Яркост"
 
 #. Plutonium page perk card body about global emojis and stickers.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:87
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:92
 msgid "Bring custom emojis and stickers from any of your communities into every chat and community you're in."
 msgstr "Добавете персонализирани емотикони и стикери от всяка ваша общност във всеки чат и общност, в които участвате."
 
@@ -6909,7 +6909,7 @@ msgid "Cancel import"
 msgstr "Отказ на импортирането"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:888
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:957
 msgid "Cancel price change"
 msgstr "Отказ на промяната на цената"
 
@@ -6924,26 +6924,26 @@ msgid "Cancel request"
 msgstr "Отмяна на поканата"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:896
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:965
 msgid "Cancel scheduled switch"
 msgstr "Отказ на планираната промяна"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:911
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:247
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:980
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Отказ от абонамент"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:241
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
 msgid "Cancel subscription?"
 msgstr "Да откажеш ли абонамента?"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:701
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:723
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "Отмени планираната промяна, за да преминеш към текущата цена вместо това."
 
@@ -6953,7 +6953,7 @@ msgid "Cancel upload"
 msgstr "Отказ на качването"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:892
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:961
 msgid "Cancel yearly upgrade"
 msgstr "Отказ на годишното надграждане"
 
@@ -6963,7 +6963,7 @@ msgid "Cancel your friend request to {displayName}?"
 msgstr "Да отмениш ли поканата за приятелство до {displayName}?"
 
 #. Subscription status badge meaning cancellation is scheduled for the renewal date.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:436
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:442
 msgid "Canceling"
 msgstr "Анулиране"
 
@@ -6972,7 +6972,7 @@ msgstr "Анулиране"
 msgid "Cancellation"
 msgstr "Потискане на ехото"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:555
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "Анулира се на <0>{cancelDate}</0>. <1/> остават активни дотогава."
 
@@ -7239,7 +7239,7 @@ msgid "Change password form"
 msgstr "Формуляр за смяна на парола"
 
 #. Subscription status badge meaning a future billing plan change is scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:440
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:446
 msgid "Change scheduled"
 msgstr "Планирана промяна"
 
@@ -7771,7 +7771,7 @@ msgid "Character limit exceeded by {remaining}"
 msgstr "Лимитът за знаци е превишен с {remaining}"
 
 #. Plutonium page comparison row label for the message length limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:194
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:207
 msgid "Characters in a single message"
 msgstr "Символи в едно съобщение"
 
@@ -8101,7 +8101,7 @@ msgid "Choose one of the methods below to prove domain ownership. You only need 
 msgstr "Избери един от методите по-долу, за да докажеш собствеността върху домейна. Трябва да изпълниш само един."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:158
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:166
 msgid "Choose payment method"
 msgstr "Избери начин на плащане"
 
@@ -8281,7 +8281,7 @@ msgid "Claim your account to access security features like two-factor authentica
 msgstr "Заяви акаунта си, за да получиш достъп до функции за сигурност като двуфакторно удостоверяване и ключове за достъп."
 
 #. Plutonium page note under disabled buttons for unclaimed accounts. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:242
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:255
 msgid "Claim your account to buy {premiumProductName}."
 msgstr "Заяви акаунта си, за да купиш {premiumProductName}."
 
@@ -9072,7 +9072,7 @@ msgid "Communities with over 250 people are forced onto the \"mentions only\" se
 msgstr "Общности с над 250 души се превключват на настройката „само споменавания“. Първоначалната ти настройка се запазва и ще бъде възстановена, ако общността спадне под 250 членове."
 
 #. Plutonium page comparison row label for the community limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:190
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:203
 msgid "Communities you can join"
 msgstr "Общности, към които можете да се присъедините"
 
@@ -9323,7 +9323,7 @@ msgid "Compact mode"
 msgstr "Компактен режим"
 
 #. Heading of the comparison table on the Plutonium page. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:123
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:128
 msgid "Compare Free and {premiumProductName}"
 msgstr "Сравни безплатно и {premiumProductName}"
 
@@ -9338,7 +9338,7 @@ msgid "Complete mature content check"
 msgstr "Завършване на проверката за съдържание за възрастни"
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:149
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:157
 msgid "Complete payment"
 msgstr "Завършване на плащането"
 
@@ -9794,6 +9794,11 @@ msgstr "Контекстните менюта могат да се отваря�
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
 msgstr "Продължи"
+
+#. Button in the gift time confirmation that proceeds to subscription checkout.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
+msgid "Continue to checkout"
+msgstr "Продължи към плащане"
 
 #. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/utils/ReportActionUtils.tsx:37
@@ -11591,7 +11596,7 @@ msgid "Custom themes"
 msgstr "Персонализирани теми"
 
 #. Plutonium page comparison row label for custom themes.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:238
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:251
 msgid "Custom themes for the app"
 msgstr "Персонализирани теми за приложението"
 
@@ -11644,7 +11649,7 @@ msgstr "По избор…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:817
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:884
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "Клиентски портал"
@@ -13897,7 +13902,7 @@ msgstr "Всяко публикувано съобщение позволява 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #. Plutonium page comparison row label for early access.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:76
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:234
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:247
 msgid "Early access to new features"
 msgstr "Ранен достъп до нови функции"
 
@@ -14767,17 +14772,17 @@ msgid "End date"
 msgstr "Крайна дата"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:923
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:992
 msgid "End grace now"
 msgstr "Прекратяване сега"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:269
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
 msgid "End grace period"
 msgstr "Край на гратисния период"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:262
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
 msgid "End grace period now?"
 msgstr "Да се прекрати ли гратисният период сега?"
 
@@ -15358,7 +15363,7 @@ msgstr "Изтича след"
 #. Error message in the invite list item.
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:426
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:432
 #: src/features/auth/components/accounts/AccountRow.tsx:18
 #: src/features/invite/components/InviteListItem.tsx:32
 msgid "Expired"
@@ -15394,7 +15399,7 @@ msgstr "Изтече на {date}"
 msgid "Expired on {earliest}"
 msgstr "Изтече на {earliest}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:457
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:463
 msgid "Expired on <0>{expiredDate}</0>. <1/> are no longer active. You can resubscribe at any time."
 msgstr "Изтече на <0>{expiredDate}</0>. <1/> вече не са активни. Можеш да се абонираш отново по всяко време."
 
@@ -15950,7 +15955,7 @@ msgstr "Любими"
 
 #. Column header for perk names in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:180
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:127
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:132
 msgid "Feature"
 msgstr "Функция"
 
@@ -16362,7 +16367,7 @@ msgid "Food & drink"
 msgstr "Храна и напитки"
 
 #. Screen reader label for the asterisk that jumps to the custom tag footnote on the Plutonium page.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:153
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:158
 msgid "Footnote about custom tags"
 msgstr "Бележка под линия за персонализирани етикети"
 
@@ -16651,7 +16656,7 @@ msgstr "Франция"
 
 #. Column header for the free tier in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:185
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:131
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:136
 msgid "Free"
 msgstr "Безплатно"
 
@@ -17069,12 +17074,12 @@ msgid "Get {premiumProductName} to customize your tag or keep it when changing y
 msgstr "Вземи {premiumProductName}, за да персонализираш своя таг или да го запазиш при промяна на потребителското си име"
 
 #. Plutonium page perk card body about profile perks, shown on instances where people sign in with a username and have no tag.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:95
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:100
 msgid "Get an animated avatar and banner, a subscriber badge and a separate profile for each community."
 msgstr "Вземете анимиран аватар и банер, значка на абонат и отделен профил за всяка общност."
 
 #. Plutonium page perk card body about profile perks. footnote is a clickable asterisk that points to a footnote about tags. Keep it directly after the word for username.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:100
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:105
 msgid "Get an animated avatar and banner, a subscriber badge, the four-digit tag you want after your username{footnote}, and a separate profile for each community."
 msgstr "Получете анимиран аватар и банер, значка на абонат, четирицифрен таг по ваш избор след потребителското ви име{footnote} и отделен профил за всяка общност."
 
@@ -17167,7 +17172,7 @@ msgstr "GIF файловете не можаха да се заредят"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning premium access came from a gift.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:446
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:452
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:296
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:79
 msgid "Gift"
@@ -17181,7 +17186,7 @@ msgid "Gift {premiumProductName}"
 msgstr "Подари {premiumProductName}"
 
 #. Body of the closing call to action on the Plutonium page for members. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:169
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:182
 msgid "Gift {premiumProductName} to a friend for a month or a whole year. Gifts never renew."
 msgstr "Подари {premiumProductName} на приятел за месец или цяла година. Подаръците никога не се подновяват."
 
@@ -17319,7 +17324,7 @@ msgstr "Подарък: изтича скоро"
 msgid "Gift: grace period (still have access)"
 msgstr "Подарък: гратисен период (все още имаш достъп)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:540
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:562
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "Подарено <0/> до <1>{giftEndDate}</1>. Не се подновява автоматично. Осребри още кодове за подарък, за да удължиш."
 
@@ -17526,7 +17531,7 @@ msgid "Got it!"
 msgstr "Разбрано!"
 
 #. Subscription status badge meaning access remains briefly after subscription end.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:428
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:434
 msgid "Grace period"
 msgstr "Гратисен период"
 
@@ -17820,12 +17825,12 @@ msgid "Hate speech"
 msgstr "Език на омразата"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:301
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Имате код за подарък? Осребрете го, за да отключите {PREMIUM_PRODUCT_NAME}."
 
 #. Plutonium page hero text on an instance where the paid tier cannot be bought, only redeemed. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:74
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:79
 msgid "Have a gift code? Redeem it to unlock {premiumProductName}."
 msgstr "Имате код за подарък? Осребрете го, за да отключите {premiumProductName}."
 
@@ -20034,8 +20039,8 @@ msgstr "Запазване на прикачени файлове при изч�
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Запазете безплатни и премиум нива. Можете да персонализирате нивата, да продавате премиум чрез Stripe или по-късно да раздавате кодове за подаръци от административния панел."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:271
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:169
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
 msgid "Keep grace period"
 msgstr "Запазване на гратисния период"
 
@@ -20049,8 +20054,8 @@ msgstr "Спиране на движението на Неко"
 msgid "Keep running"
 msgstr "Работа във фонов режим"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:249
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:147
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
 msgid "Keep subscription"
 msgstr "Запазване на абонамента"
 
@@ -20073,6 +20078,11 @@ msgstr "Продължава да предава за кратко след от
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:139
 msgid "Keep window dimensions and placement between reloads"
 msgstr "Запазване на размера и позицията на прозореца при презареждане"
+
+#. Heading of the closing call to action on the Plutonium page for members on gifted time who can subscribe.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:170
+msgid "Keep your perks going"
+msgstr "Запазете предимствата си"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:93
@@ -20212,7 +20222,7 @@ msgid "Large file threshold (MB)"
 msgstr "Праг за големи файлове (MB)"
 
 #. Plutonium page comparison row label for the upload size limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:202
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:215
 msgid "Largest file you can upload"
 msgstr "Най-големият файл, който можете да качите"
 
@@ -20310,7 +20320,7 @@ msgid "Learn more"
 msgstr "Научи повече"
 
 #. Link text in the Plutonium page tag footnote. Opens the Visionary help article.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:149
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:154
 msgid "Learn more about Visionary"
 msgstr "Научете повече за Visionary"
 
@@ -20419,8 +20429,8 @@ msgstr "Ляв бутон на мишката"
 msgid "Left tooltip"
 msgstr "Подсказка отляво"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:593
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:615
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:637
 msgid "Legacy rate"
 msgstr "Стара цена"
 
@@ -20551,7 +20561,7 @@ msgstr "Библиотека: {count} от {max}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Subscription status badge meaning permanent premium access.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:444
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:450
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:21
 msgid "Lifetime"
 msgstr "Доживотен"
@@ -21648,7 +21658,7 @@ msgid "Media filter"
 msgstr "Филтър за медия"
 
 #. Plutonium page comparison row label for the saved media limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:206
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:219
 msgid "Media items you can save for later"
 msgstr "Медийни елементи, които можете да запазите за по-късно"
 
@@ -22279,7 +22289,7 @@ msgid "Messages published in these announcement channels are copied into your ch
 msgstr "Съобщенията, публикувани в тези канали за излъчване, се копират във вашите канали."
 
 #. Plutonium page comparison row label for the bookmark limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:198
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:211
 msgid "Messages you can bookmark"
 msgstr "Съобщения, които можете да запазите"
 
@@ -22620,11 +22630,11 @@ msgstr "Месечно"
 msgid "Monthly {monthlyPrice}"
 msgstr "Месечно {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:685
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:707
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "Месечното таксуване започва на <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:678
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:700
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "Месечното таксуване започва на <0>{pendingChangeDate}</0>. Първа месечна такса: {pendingInitialPriceLabel}. Бъдещи месечни подновявания: {pendingRecurringPriceLabel}/месец."
 
@@ -23566,12 +23576,12 @@ msgid "New post in #{forumName}"
 msgstr "Нов пост в #{forumName}"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:649
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:671
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Нова цена е насрочена за <0>{pendingChangeDate}</0>."
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:643
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:665
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "Нова цена е насрочена за <0>{pendingChangeDate}</0>. След това подновяванията ще бъдат {pendingTargetPriceLabel}."
 
@@ -24421,7 +24431,7 @@ msgstr "Не е зададено"
 #. Fallback value when a saved billing payment method has no expiration date.
 #. Screen reader text for a cross in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/plutonium/PaymentMethodList.tsx:18
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:139
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:144
 msgid "Not available"
 msgstr "Не е налично"
 
@@ -24734,7 +24744,7 @@ msgid "On"
 msgstr "Вкл"
 
 #. Billing confirmation body for moving an active subscription down to the current price. {listPriceEffectiveDate} is a date, and {listPriceCurrentLabel} and {listPriceNewLabel} are currency amounts, all already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:375
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:381
 msgid "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
 msgstr "На <0>{listPriceEffectiveDate}</0> абонаментът ти ще се промени от {listPriceCurrentLabel} на {listPriceNewLabel}. Днес не се таксува нищо и останалата част от абонамента ти остава непроменена."
 
@@ -26162,7 +26172,7 @@ msgid "Perks"
 msgstr "Предимства"
 
 #. Subscription status badge meaning premium is paid but perks are temporarily disabled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:432
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:438
 msgid "Perks paused"
 msgstr "Предимствата са на пауза"
 
@@ -26265,7 +26275,7 @@ msgid "Photo"
 msgstr "Снимка"
 
 #. Body of the closing call to action on the Plutonium page for people without the paid tier.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:161
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:166
 msgid "Pick a plan and your perks switch on the moment checkout finishes."
 msgstr "Изберете план и вашите предимства ще се активират веднага след завършване на плащането."
 
@@ -26315,7 +26325,7 @@ msgid "Pick one or more dictionaries. Words from any selected dictionary are acc
 msgstr "Избери един или повече речници. Приемат се думи от всеки избран речник, което е полезно за многоезични чатове."
 
 #. Plutonium page comparison row label for the custom username tag perk.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:174
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:187
 msgid "Pick the 4-digit number after your username"
 msgstr "Избери 4-цифреното число след потребителското си име"
 
@@ -27006,7 +27016,7 @@ msgid "Pricing"
 msgstr "Цени"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:141
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:149
 msgid "Pricing is still loading."
 msgstr "Цените все още се зареждат."
 
@@ -27748,7 +27758,7 @@ msgstr "Реакции"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:813
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:880
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "Активиране отново"
@@ -27816,7 +27826,7 @@ msgstr "Готов ли си да купиш подарък?"
 
 #. Heading of the closing call to action on the Plutonium page for people without the paid tier.
 #: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:50
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:157
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:162
 msgid "Ready to upgrade?"
 msgstr "Готов ли си за надграждане?"
 
@@ -27996,8 +28006,8 @@ msgstr "Осребри за себе си"
 
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:786
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:311
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:827
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:316
 msgid "Redeem gift code"
 msgstr "Осребряване на код за подарък"
 
@@ -28807,7 +28817,7 @@ msgstr "Праг на подновяване (дни)"
 msgid "Renew window (days)"
 msgstr "Период за подновяване (дни)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:758
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:780
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "Подновява се на <0>{renewalDate}.</0>"
 
@@ -29517,9 +29527,11 @@ msgid "Restore window"
 msgstr "Възстановяване на прозореца"
 
 #. Billing button for restarting a subscription during the grace period.
+#. Billing button for starting a new subscription after premium ended.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:805
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:809
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:846
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:872
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:876
 msgid "Resubscribe"
 msgstr "Абониране отново"
 
@@ -31150,7 +31162,7 @@ msgid "Send file messages in order"
 msgstr "Изпращане на съобщенията с файлове по ред"
 
 #. Plutonium page perk card title about upload size. size is a formatted size such as 500 MB.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:114
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:119
 msgid "Send files up to {size}"
 msgstr "Изпращайте файлове до {size}"
 
@@ -31663,7 +31675,7 @@ msgid "Share active theme"
 msgstr "Споделяне на активна тема"
 
 #. Plutonium page perk card body about upload size. freeSize is a formatted size such as 25 MB.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:118
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:123
 msgid "Share full-length videos and big files without shrinking them first. Free accounts can send up to {freeSize}."
 msgstr "Споделяйте видеоклипове с пълна дължина и големи файлове, без да ги смалявате предварително. Безплатните акаунти могат да изпращат до {freeSize}."
 
@@ -31688,7 +31700,7 @@ msgid "Share the {premiumProductName} experience with your friends by purchasing
 msgstr "Сподели изживяването {premiumProductName} с приятелите си, като закупиш подаръчен абонамент."
 
 #. Heading of the closing call to action on the Plutonium page for members.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:165
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:178
 msgid "Share the perks"
 msgstr "Сподели предимствата"
 
@@ -31724,7 +31736,7 @@ msgid "Share your screen in high definition (1080p), quad HD (1440p), or native 
 msgstr "Споделяй екрана си с висока разделителна способност (1080p), Quad HD (1440p) или оригиналната разделителна способност на източника, при до 60 FPS."
 
 #. Plutonium page perk card body about stream quality.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:110
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:115
 msgid "Share your screen or camera in up to 4K at 60 frames per second. Free accounts stream in up to 720p at 30."
 msgstr "Споделяйте екрана или камерата си в резолюция до 4K при 60 кадъра в секунда. Безплатните акаунти стриймват до 720p при 30."
 
@@ -34052,7 +34064,7 @@ msgid "Stream hidden"
 msgstr "Потокът е скрит"
 
 #. Plutonium page perk card title about stream quality.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:106
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:111
 msgid "Stream in 4K at 60 FPS"
 msgstr "Стриймвай в 4K при 60 FPS"
 
@@ -34172,8 +34184,20 @@ msgstr "Изпращане на заявление"
 msgid "Submitting"
 msgstr "Изпращане"
 
+#. Billing button that starts a recurring subscription for someone on gifted premium time.
+#. Billing button that starts a recurring subscription for someone on gifted premium time.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:811
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:850
+msgid "Subscribe"
+msgstr "Абониране"
+
+#. Body of the closing call to action on the Plutonium page for members on gifted time who can subscribe.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:174
+msgid "Subscribe now. Your remaining gift time is added after your paid period."
+msgstr "Абонирай се сега. Оставащото ти безплатно време ще бъде добавено след платената ти версия."
+
 #. Plutonium page comparison row label for the subscriber badge.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:182
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:195
 msgid "Subscriber badge on your profile"
 msgstr "Значка на абонат в профила ви"
 
@@ -34236,7 +34260,7 @@ msgid "Summary"
 msgstr "Резюме"
 
 #. Plutonium page hero subtitle for people without the paid tier.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:70
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:75
 msgid "Support an independent communication platform and unlock some sweet perks."
 msgstr "Подкрепете независима комуникационна платформа и отключете страхотни екстри."
 
@@ -34347,7 +34371,7 @@ msgid "Switch price"
 msgstr "Смяна на цена"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:873
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:942
 msgid "Switch to {listPriceNewLabel}"
 msgstr "Премини към {listPriceNewLabel}"
 
@@ -34377,7 +34401,7 @@ msgstr "Превключване към директен вход"
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:56
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:925
 msgid "Switch to monthly"
 msgstr "Премини към месечно таксуване"
 
@@ -34442,7 +34466,7 @@ msgstr "Превключване към две колони"
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:52
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:852
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:921
 msgid "Switch to yearly"
 msgstr "Премини към годишно таксуване"
 
@@ -34716,23 +34740,23 @@ msgstr "Етикетите помагат на хората да намират 
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "Етикетите трябва да са от 2 до {maxLength} знака и да съдържат само букви и цифри."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:294
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "Влиза в сила при следващото ти подновяване. Ще приложим кредит от {creditLabel} от текущото ти месечно плащане, така че първата ти годишна такса ще бъде <0>{firstRenewalPriceLabel}</0>. Бъдещите годишни подновявания ще бъдат {renewalPrice}/година."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:303
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:309
 msgid "Takes effect at your next renewal. Your subscription stays monthly until then, and your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "Влиза в сила при следващото ти подновяване. Абонаментът ти остава месечен дотогава, а следващото ти подновяване ще бъде <0>{renewalPrice}/година</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:312
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:318
 msgid "Takes effect at your next renewal. Your subscription stays yearly until then, and your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "Влиза в сила при следващото ти подновяване. Абонаментът ти остава годишен дотогава, а следващото ти подновяване ще бъде <0>{renewalPrice}/месец</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:331
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:337
 msgid "Takes effect immediately. A prorated adjustment may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "Влиза в сила веднага. Възможно е да бъде приложена пропорционална корекция чрез {PAYMENT_PROVIDER_NAME}. Следващото ти подновяване ще бъде <0>{renewalPrice}/месец</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:322
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:328
 msgid "Takes effect immediately. A prorated charge may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "Влиза в сила веднага. Възможно е да бъде приложена пропорционална такса чрез {PAYMENT_PROVIDER_NAME}. Следващото ти подновяване ще бъде <0>{renewalPrice}/година</0>."
 
@@ -36102,7 +36126,7 @@ msgid "This picker is only available in the desktop app."
 msgstr "Този инструмент за избор е наличен само в настолното приложение."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:153
 msgid "This plan isn't available. Contact support."
 msgstr "Този план не е наличен. Свържи се с поддръжката."
 
@@ -37835,7 +37859,7 @@ msgstr "Отключи персонализирани емоджита в DM с 
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Отключи споделяне на екран в HD с {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:218
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:220
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Отключи по-високи лимити и ексклузивни функции, докато подкрепяш независима комуникационна платформа."
 
@@ -38214,7 +38238,7 @@ msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They sho
 msgstr "До {DISCOVERY_MAX_TAGS} етикета помагат на хората да открият общността ти. Те се показват при търсене в Откриване."
 
 #. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:226
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:239
 msgid "Up to 4K at 60 FPS"
 msgstr "До 4K при 60 FPS"
 
@@ -38224,7 +38248,7 @@ msgid "Up to 4K/60fps"
 msgstr "До 4K/60fps"
 
 #. Plutonium page comparison value for free video quality. Keep 720p and FPS as written.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:222
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:235
 msgid "Up to 720p at 30 FPS"
 msgstr "До 720p при 30 FPS"
 
@@ -38635,7 +38659,7 @@ msgid "Use animated emojis"
 msgstr "Използване на анимирани емоджита"
 
 #. Plutonium page comparison row label for animated emoji use.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:210
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:223
 msgid "Use animated emojis in messages"
 msgstr "Използвай анимирани емотикони в съобщенията"
 
@@ -38652,7 +38676,7 @@ msgid "Use browser locale for time format"
 msgstr "Използване на езиковите настройки на браузъра за формат на часа"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:162
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
 msgid "Use card"
 msgstr "Използвай карта"
 
@@ -38672,7 +38696,7 @@ msgid "Use coal theme (pitch-black surfaces)"
 msgstr "Използване на въгленова тема (наситено черни повърхности)"
 
 #. Plutonium page comparison row label for global emojis and stickers.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:214
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:227
 msgid "Use custom emojis and stickers in any community"
 msgstr "Използвай персонализирани емотикони и стикери във всяка общност"
 
@@ -39343,7 +39367,7 @@ msgid "Verify your email first"
 msgstr "Първо потвърди имейла си"
 
 #. Plutonium page note under disabled buttons for unverified accounts. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:247
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:260
 msgid "Verify your email to buy {premiumProductName}."
 msgstr "Потвърдете имейла си, за да закупите {premiumProductName}."
 
@@ -39435,12 +39459,12 @@ msgid "Video call"
 msgstr "Видеообаждане"
 
 #. Plutonium page comparison row label for video quality.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:218
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:231
 msgid "Video call and screen share quality"
 msgstr "Качество на видео разговори и споделяне на екран"
 
 #. Plutonium page comparison row label for saved video call backgrounds.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:186
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:199
 msgid "Video call backgrounds you can save"
 msgstr "Видео фонове за видео разговори, които можете да запазите"
 
@@ -39803,7 +39827,7 @@ msgstr "Вирджиния"
 msgid "Visibility"
 msgstr "Видимост"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:419
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
 msgid "Visionary"
 msgstr "Визионер"
 
@@ -40998,15 +41022,15 @@ msgstr "Годишно {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "Годишен подарък"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:672
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:694
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Годишно надграждане, насрочено за <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:657
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:679
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Годишно надграждане, насрочено за <0>{pendingChangeDate}</0>. Първо годишно таксуване: {pendingInitialPriceLabel} след кредит от {pendingCreditPriceLabel}. Бъдещи годишни подновявания: {pendingRecurringPriceLabel}/година."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:664
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:686
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Годишно надграждане, насрочено за <0>{pendingChangeDate}</0>. Първо годишно таксуване: {pendingInitialPriceLabel}. Бъдещи годишни подновявания: {pendingRecurringPriceLabel}/година."
 
@@ -41079,7 +41103,7 @@ msgid "You are now a developer!"
 msgstr "Вече си разработчик!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:153
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "Прехвърляме те към {paymentProviderName}, за да завършиш плащането. Върни се във {productName}, след като приключиш."
 
@@ -41153,7 +41177,7 @@ msgid "You can only have one custom background on the free tier. Picking a new o
 msgstr "Можеш да имаш само един персонализиран фон в безплатния план. Избирането на нов ще замени текущия."
 
 #. Footnote on the Plutonium page about custom username tags. Keep Mina#4821, mina#4821 and #0000 unchanged. visionaryLink is a link whose text is "Learn more about Visionary".
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:143
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:148
 msgid "You can only pick a tag that nobody else with the same username already has. Usernames aren't case sensitive, so Mina#4821 and mina#4821 count as the same. The #0000 tag is reserved for {productName} Visionary members. {visionaryLink}."
 msgstr "Можете да изберете само таг, който никой друг с същото потребителско име вече няма. Потребителските имена не зависят от регистъра, така че Mina#4821 и mina#4821 се броят за едно и също. Тагът #0000 е запазен за членове Visionary на {productName}. {visionaryLink}."
 
@@ -41494,13 +41518,13 @@ msgstr "Все още нямаш блокирани потребители."
 msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {productName} without a mouse."
 msgstr "Току-що натисна Tab. Режимът за навигация с клавиатура вече е включен, за да можеш да използваш {productName} без мишка."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:243
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Запазваш предимствата си до следващата дата на подновяване. Активирай абонамента отново преди това, за да запазиш историята си като абонат."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Веднага губиш всички предимства на {PREMIUM_PRODUCT_NAME} и историята ти като абонат се нулира. Това не може да бъде отменено."
 
@@ -41656,6 +41680,11 @@ msgstr "Няма да получаваш известия на компютър�
 msgid "You'll appear offline"
 msgstr "Ще изглеждаш офлайн"
 
+#. Body of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription. The subscription is charged immediately and the unused gift time is appended after the paid period.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+msgid "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost."
+msgstr "Ще бъдете таксувани сега. Остатъчното ви безплатно време ще бъде добавено след платената ви услуга, така че няма да загубите нищо."
+
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:476
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "Ще трябва да влезеш отново на всички устройства, от които излезеш"
@@ -41738,11 +41767,6 @@ msgstr "Наложена ти е забрана"
 #: src/features/app/components/alerts/RateLimitedConfirmModal.tsx:19
 msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "Достигна лимита за заявки. Изчакай {duration}, преди да опиташ отново."
-
-#. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
-msgid "You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends."
-msgstr "В момента ползваш абонамент подарък. Той няма да се поднови. Можеш да осребриш още кодове за подарък, за да го удължиш. Можеш да започнеш редовен абонамент, след като подареното време изтече."
 
 #. Modal title shown when a push-to-talk shortcut is pressed while the user is deafened.
 #: src/features/app/keybindings/keybind_manager/shared.ts:18
@@ -41943,7 +41967,7 @@ msgid "Your {productName} session expired. Sign in again to continue authorizing
 msgstr "Сесията ти в {productName} изтече. Влез отново, за да продължиш с оторизацията на това приложение."
 
 #. Plutonium subscription card text shown while a failed App Store or Google Play renewal payment is being retried. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:472
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:478
 msgid "Your {storeName} renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your {storeName} payment method before then to keep your subscription."
 msgstr "Плащането за подновяване чрез {storeName} не успя, но <0/> остават активни до <1>{graceDate}</1>. Обнови начина си на плащане в {storeName} преди тази дата, за да запазиш абонамента си."
 
@@ -42077,7 +42101,7 @@ msgid "Your email has been verified. You can now sign in to your account."
 msgstr "Имейл адресът ти е потвърден. Вече можеш да влезеш в акаунта си."
 
 #. Plutonium page perk card title about using custom emojis and stickers in every community.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:83
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:88
 msgid "Your emojis, everywhere"
 msgstr "Вашите емотикони навсякъде"
 
@@ -42135,6 +42159,21 @@ msgstr "Пълният ти профил е видим за приятелите
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:25
 msgid "Your full profile is visible to friends and to anyone in your communities"
 msgstr "Пълният ти профил е видим за приятелите ти и за всички в общностите ти"
+
+#. Plutonium subscription card text shown in the short grace period after gifted premium time ends. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:510
+msgid "Your gift time ended but <0/> stay active until <1>{graceDate}</1>. Subscribe before then to keep them."
+msgstr "Вашето време за подарък изтече, но <0/> остава активно до <1>{graceDate}</1>. Абонирайте се преди това, за да ги запазите."
+
+#. Plutonium page hero subtitle while gifted premium time is in its short grace period after ending. premiumProductName is the paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:70
+msgid "Your gift time has ended. Subscribe to keep {premiumProductName}."
+msgstr "Времето на подаръка ви изтече. Абонирайте се, за да запазите {premiumProductName}."
+
+#. Title of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
+msgid "Your gift time is kept"
+msgstr "Подаръчното ви време се запазва"
 
 #. Helper text shown under a codec option indicating the local GPU has a hardware encoder for it.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:32
@@ -42273,7 +42312,7 @@ msgid "your region"
 msgstr "твоя регион"
 
 #. Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:488
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:494
 msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
 msgstr "Плащането за подновяване не успя, но <0/> остават активни до <1>{graceDate}</1>. Обнови начина си на плащане преди тази дата, за да запазиш абонамента си."
 
@@ -42294,7 +42333,7 @@ msgid "Your stream is still live"
 msgstr "Потокът ти все още е на живо"
 
 #. Heading of the subscription management panel on the Plutonium page.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:79
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:84
 msgid "Your subscription"
 msgstr "Вашият абонамент"
 
@@ -42303,7 +42342,7 @@ msgstr "Вашият абонамент"
 msgid "Your subscription can't move to the new price right now."
 msgstr "Абонаментът ти не може да премине към новата цена в момента."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:504
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:526
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "Абонаментът ти приключи, но <0/> остават активни до <1>{graceDate}</1>. Абонирай се отново преди тази дата, за да запазиш историята си като абонат."
 
@@ -42332,7 +42371,7 @@ msgstr "Абонаментът ти е превключен към месечн�
 msgid "Your subscription has been switched to yearly billing."
 msgstr "Абонаментът ти е превключен към годишно таксуване."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:566
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:588
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "Абонаментът ти е активен, но предимствата са временно на пауза."
 
@@ -42352,7 +42391,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "Абонаментът ти преминава към новата цена на {effectiveDate}."
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:720
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "Абонаментът ти все още приключва на <0>{cancelDate}</0>. Текущата цена вече е {listPriceNewLabel}. Ако го активираш отново, можеш да преминеш към нея оттук."
 

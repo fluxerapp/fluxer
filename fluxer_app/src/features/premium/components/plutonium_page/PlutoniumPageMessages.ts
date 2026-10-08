@@ -67,6 +67,11 @@ export const GRACE_DESCRIPTOR = msg({
 	message: 'We could not renew your subscription. Update your payment method to keep your perks.',
 	comment: 'Plutonium page hero subtitle while a failed renewal is in its grace period.',
 });
+export const GIFT_GRACE_DESCRIPTOR = msg({
+	message: 'Your gift time has ended. Subscribe to keep {premiumProductName}.',
+	comment:
+		'Plutonium page hero subtitle while gifted premium time is in its short grace period after ending. premiumProductName is the paid tier name.',
+});
 export const HERO_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Support an independent communication platform and unlock some sweet perks.',
 	comment: 'Plutonium page hero subtitle for people without the paid tier.',
@@ -161,6 +166,14 @@ export const CLOSING_TITLE_DESCRIPTOR = msg({
 export const CLOSING_BODY_DESCRIPTOR = msg({
 	message: 'Pick a plan and your perks switch on the moment checkout finishes.',
 	comment: 'Body of the closing call to action on the Plutonium page for people without the paid tier.',
+});
+export const CLOSING_GIFT_TITLE_DESCRIPTOR = msg({
+	message: 'Keep your perks going',
+	comment: 'Heading of the closing call to action on the Plutonium page for members on gifted time who can subscribe.',
+});
+export const CLOSING_GIFT_BODY_DESCRIPTOR = msg({
+	message: 'Subscribe now. Your remaining gift time is added after your paid period.',
+	comment: 'Body of the closing call to action on the Plutonium page for members on gifted time who can subscribe.',
 });
 export const CLOSING_MEMBER_TITLE_DESCRIPTOR = msg({
 	message: 'Share the perks',

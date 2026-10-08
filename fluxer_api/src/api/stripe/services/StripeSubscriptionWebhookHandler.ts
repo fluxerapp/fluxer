@@ -20,7 +20,9 @@ import {
 } from '@app/api/stripe/StripeSubscriptionAccessPolicy';
 import {
 	getInvoiceLatestLinePeriodEnd,
+	getInvoiceLatestLinePeriodStart,
 	getPrimarySubscriptionItem,
+	getSubscriptionCurrentPeriodStart,
 	getSubscriptionItemPeriodEnd,
 	getSubscriptionPremiumPeriodEnd,
 	getSubscriptionStartDate,
@@ -28,6 +30,7 @@ import {
 import {extractId} from '@app/api/stripe/StripeUtils';
 import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import type {StripeSubscriptionReconciler} from '@app/api/stripe/services/StripeSubscriptionReconciler';
+import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import {getPremiumPaymentRecoveryGraceMs} from '@app/api/user/UserHelpers';
@@ -151,6 +154,8 @@ export class StripeSubscriptionWebhookHandler {
 				renewalContext.productInfo.billingCycle || null,
 				true,
 				premiumSinceAnchor,
+				(subscriptionSnapshot ? getSubscriptionCurrentPeriodStart(subscriptionSnapshot) : null) ??
+					getInvoiceLatestLinePeriodStart(invoice),
 			);
 		} catch (error) {
 			const latestUser = await this.userRepository.findUnique(renewalContext.userId);
@@ -223,6 +228,15 @@ export class StripeSubscriptionWebhookHandler {
 		}
 		if (premiumUntil && user.premiumUntil?.getTime() !== premiumUntil.getTime()) {
 			patch.premium_until = premiumUntil;
+			const giftEnd = shiftGiftExtensionPastPremiumUntil(
+				{premiumUntil: user.premiumUntil, giftEnd: user.premiumGiftExtensionEndsAt},
+				premiumUntil,
+				new Date(),
+				getSubscriptionCurrentPeriodStart(subscription),
+			);
+			if (giftEnd !== user.premiumGiftExtensionEndsAt) {
+				patch.premium_gift_extension_ends_at = giftEnd;
+			}
 		}
 		if (user.premiumWillCancel !== willCancel) {
 			patch.premium_will_cancel = willCancel;
@@ -556,6 +570,7 @@ export class StripeSubscriptionWebhookHandler {
 		const result = await this.userRepository.updateSubscriptionStatus(targetUser.id, {
 			premiumWillCancel: willCancel,
 			computedPremiumUntil,
+			periodStart: getSubscriptionCurrentPeriodStart(canonicalSubscription),
 		});
 		if (result.finalVersion === null) {
 			Logger.error(

@@ -13,12 +13,18 @@ import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {addGiftCodeDuration} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
+import {
+	getSubscriptionCurrentPeriodStart,
+	getSubscriptionPremiumPeriodEnd,
+} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {clearPerksSanitizedFlag, createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
+import type Stripe from 'stripe';
 
 export class StripePremiumService {
 	constructor(
@@ -35,6 +41,7 @@ export class StripePremiumService {
 		billingCycle: string | null = null,
 		hasEverPurchased: boolean = false,
 		premiumSinceAnchor: Date | null = null,
+		periodStart: Date | null = null,
 	): Promise<void> {
 		const user = await this.userRepository.findUnique(userId);
 		if (!user) {
@@ -42,14 +49,15 @@ export class StripePremiumService {
 		}
 		const now = new Date();
 		let visionarySequence: number | null = user.premiumLifetimeSequence;
-		if (premiumType === UserPremiumTypes.LIFETIME && !visionarySequence) {
+		if (premiumType === UserPremiumTypes.LIFETIME && visionarySequence == null) {
 			visionarySequence = await this.allocateVisionarySequence(userId);
 		}
-		const shiftMs = user.premiumUntil ? periodEnd.getTime() - user.premiumUntil.getTime() : 0;
-		const adjustedGiftEnd =
-			user.premiumGiftExtensionEndsAt && shiftMs > 0
-				? new Date(user.premiumGiftExtensionEndsAt.getTime() + shiftMs)
-				: user.premiumGiftExtensionEndsAt;
+		const adjustedGiftEnd = shiftGiftExtensionPastPremiumUntil(
+			{premiumUntil: user.premiumUntil, giftEnd: user.premiumGiftExtensionEndsAt},
+			periodEnd,
+			now,
+			periodStart,
+		);
 		const updatedUser = await this.userRepository.patchUpsert(
 			userId,
 			{
@@ -68,7 +76,7 @@ export class StripePremiumService {
 		);
 		await this.dispatchUser(updatedUser);
 		Logger.debug(
-			{userId, premiumType, periodEnd, shiftMs, adjustedGiftEnd, billingCycle},
+			{userId, premiumType, periodEnd, adjustedGiftEnd, billingCycle},
 			'Premium set from subscription period',
 		);
 	}
@@ -138,6 +146,39 @@ export class StripePremiumService {
 		const updatedUser = await this.userRepository.patchUpsert(userId, patch, user.toRow());
 		await this.dispatchUser(updatedUser);
 		Logger.debug({userId, premiumType, durationType, durationQuantity, newGiftEnd}, 'Premium extended by gift');
+	}
+
+	async recordGiftTrialExtension(userId: UserID, subscription: Stripe.Subscription): Promise<void> {
+		const user = await this.userRepository.findUnique(userId);
+		if (!user) {
+			throw new StripeError('User not found for premium grant');
+		}
+		const now = new Date();
+		const periodEnd = getSubscriptionPremiumPeriodEnd(subscription);
+		const premiumUntil =
+			periodEnd && (!user.premiumUntil || periodEnd > user.premiumUntil) ? periodEnd : user.premiumUntil;
+		const shiftedGiftEnd = premiumUntil
+			? shiftGiftExtensionPastPremiumUntil(
+					{premiumUntil: user.premiumUntil, giftEnd: user.premiumGiftExtensionEndsAt},
+					premiumUntil,
+					now,
+					getSubscriptionCurrentPeriodStart(subscription),
+				)
+			: user.premiumGiftExtensionEndsAt;
+		const trialEnd = subscription.trial_end ? new Date(subscription.trial_end * 1000) : null;
+		const giftEnd = trialEnd && (!shiftedGiftEnd || trialEnd > shiftedGiftEnd) ? trialEnd : shiftedGiftEnd;
+		const updatedUser = await this.userRepository.patchUpsert(
+			userId,
+			{
+				premium_until: premiumUntil,
+				premium_gift_extension_ends_at: giftEnd,
+				premium_grace_ends_at: null,
+				has_ever_purchased: true,
+			},
+			user.toRow(),
+		);
+		await this.dispatchUser(updatedUser);
+		Logger.debug({userId, premiumUntil, giftEnd}, 'Premium extended by gift stacked onto Stripe trial');
 	}
 
 	async grantPremiumFromGiftWithDuration(

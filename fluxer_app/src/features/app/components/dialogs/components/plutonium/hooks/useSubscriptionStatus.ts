@@ -2,6 +2,7 @@
 
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {getPremiumGraceEndDate} from '@app/features/premium/utils/PremiumGrace';
+import {classifyPremiumSubscription} from '@app/features/premium/utils/PremiumSubscriptionClassification';
 import {getStoreOwnedSubscription} from '@app/features/premium/utils/PremiumUtils';
 import type {User} from '@app/features/user/models/User';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -27,6 +28,8 @@ export interface SubscriptionStatusInfo {
 	billingCycle: string | null;
 	actualPremiumUntil: Date | null;
 	isGiftSubscription: boolean;
+	isGiftGrace: boolean;
+	canStartSubscription: boolean;
 	storeSubscription: PremiumStoreSubscriptionState | null;
 	gracePeriodInfo: GracePeriodInfo;
 	shouldShowPremiumCard: boolean;
@@ -91,7 +94,6 @@ export const useSubscriptionStatus = (
 			: storeSubscription
 				? storeSubscription.billing_cycle
 				: (actual?.premium_billing_cycle ?? currentUser?.premiumBillingCycle ?? null);
-	const isGiftSubscription = Boolean(!billingCycle && hasPaidPremium && !isVisionary && premiumUntil);
 	const isStoreGrace = storeSubscription?.state === 'grace' && premiumGraceEndsAt != null;
 	const gracePeriodInfo = useMemo((): GracePeriodInfo => {
 		if (isVisionary) {
@@ -125,6 +127,18 @@ export const useSubscriptionStatus = (
 		return {isInGracePeriod, isExpired, graceEndDate, showExpiredState, isPaymentRecovery};
 	}, [premiumUntil, premiumGraceEndsAt, isVisionary, billingCycle, isStoreGrace]);
 	const {isInGracePeriod, isExpired: isFullyExpired, showExpiredState} = gracePeriodInfo;
+	const {isGiftSubscription, isGiftGrace, canStartSubscription} = classifyPremiumSubscription({
+		hasPaidPremium,
+		isVisionary,
+		hasStoreSubscription: storeSubscription != null,
+		billingCycle,
+		premiumUntil,
+		isInGracePeriod,
+		isFullyExpired,
+		billingKnown: !useScenarioOverride && premiumState != null,
+		storeOwnershipKnown: useScenarioOverride || premiumState != null,
+		billingSubscription: useScenarioOverride ? null : (premiumState?.billing.subscription ?? null),
+	});
 	const isPremium = useDeveloperOverride
 		? hasPaidPremium && !isFullyExpired && !perksDisabled
 		: (effective?.is_premium ?? currentUser?.isPremium() ?? false);
@@ -163,6 +177,8 @@ export const useSubscriptionStatus = (
 		billingCycle,
 		actualPremiumUntil: premiumUntil,
 		isGiftSubscription,
+		isGiftGrace,
+		canStartSubscription,
 		storeSubscription,
 		gracePeriodInfo,
 		shouldShowPremiumCard,

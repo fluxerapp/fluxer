@@ -121,6 +121,7 @@ describe('ProductRegistry - legacy prices', () => {
 					monthly_brl: ['legacy_brl'],
 					monthly_dkk: ['legacy_dkk'],
 					monthly_inr: ['legacy_inr'],
+					monthly_isk: ['legacy_isk'],
 					monthly_nok: ['legacy_nok'],
 					monthly_pln: ['legacy_pln'],
 					monthly_sek: ['legacy_sek'],
@@ -132,6 +133,7 @@ describe('ProductRegistry - legacy prices', () => {
 			expect(registry.getProduct('legacy_brl')?.currency).toBe('BRL');
 			expect(registry.getProduct('legacy_dkk')?.currency).toBe('DKK');
 			expect(registry.getProduct('legacy_inr')?.currency).toBe('INR');
+			expect(registry.getProduct('legacy_isk')?.currency).toBe('ISK');
 			expect(registry.getProduct('legacy_nok')?.currency).toBe('NOK');
 			expect(registry.getProduct('legacy_pln')?.currency).toBe('PLN');
 			expect(registry.getProduct('legacy_sek')?.currency).toBe('SEK');
@@ -211,7 +213,7 @@ describe('ProductRegistry - legacy prices', () => {
 		test('no legacy price id is ever returned by either price getter, for any cycle or currency', () => {
 			const registry = buildRegistry(MOCK_PRICES, MOCK_LEGACY_PRICES);
 			const legacyIds = new Set(Object.values(MOCK_LEGACY_PRICES).flatMap((ids) => ids ?? []));
-			const currencies = ['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'];
+			const currencies = ['USD', 'EUR', 'BRL', 'DKK', 'INR', 'ISK', 'NOK', 'PLN', 'SEK', 'TRY'];
 
 			const offered: Array<string> = [];
 			for (const currency of currencies) {

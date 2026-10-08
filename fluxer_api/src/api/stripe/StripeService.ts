@@ -192,7 +192,7 @@ export class StripeService {
 		durationType: GiftCodeDurationType,
 		durationQuantity: number,
 		idempotencyKey: string,
-	): Promise<void> {
+	): Promise<Stripe.Subscription | null> {
 		return this.subscriptionService.extendSubscriptionWithGiftTrialDuration(
 			user,
 			durationType,

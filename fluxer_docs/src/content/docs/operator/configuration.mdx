@@ -984,9 +984,11 @@ Default empty. The webhook signing secret. Compose forwards it from `.env`.
 
 Default `{}`. Every price ID at once. JSON object. Compose forwards it from `.env`.
 
-Individual price variables also exist, one per product and currency: `FLUXER_STRIPE_PRICE_MONTHLY_`, `FLUXER_STRIPE_PRICE_YEARLY_`, `FLUXER_STRIPE_PRICE_GIFT_1_MONTH_` and `FLUXER_STRIPE_PRICE_GIFT_1_YEAR_` in USD, EUR, BRL, DKK, INR, NOK, PLN, SEK, and TRY. Each overrides the matching price in this object. Compose does not forward them, so a self-hosted instance sets prices with this variable or in the admin dashboard.
+Individual price variables also exist, one per product and currency: `FLUXER_STRIPE_PRICE_MONTHLY_`, `FLUXER_STRIPE_PRICE_YEARLY_`, `FLUXER_STRIPE_PRICE_GIFT_1_MONTH_` and `FLUXER_STRIPE_PRICE_GIFT_1_YEAR_` in USD, EUR, BRL, DKK, INR, ISK, NOK, PLN, SEK, and TRY. Each overrides the matching price in this object. Compose does not forward them, so a self-hosted instance sets prices with this variable or in the admin dashboard.
 
 Prices saved in the dashboard replace this catalogue entirely. They take any three-letter currency code. A buyer gets the currency mapped to their country, then the default currency, then the first configured one. Fluxer's country checks for localised currencies apply only to prices set by these variables.
+
+A self-hosted instance never sets Stripe Adaptive Pricing on its Checkout Sessions, so the setting in the Stripe Dashboard applies. The hosted service turns it off for SEK, NOK, DKK and ISK sessions so buyers pay the native price.
 
 #### `FLUXER_STRIPE_LEGACY_PRICES`
 

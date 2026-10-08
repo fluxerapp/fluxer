@@ -64,6 +64,7 @@ const LEGACY_SLOT_CURRENCIES: Record<string, Currency | undefined> = {
 	brl: 'BRL',
 	dkk: 'DKK',
 	inr: 'INR',
+	isk: 'ISK',
 	nok: 'NOK',
 	pln: 'PLN',
 	sek: 'SEK',

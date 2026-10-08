@@ -1759,7 +1759,7 @@ msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPr
 msgstr "{premiumProductName} ราคาถูกลงแล้ว เปลี่ยนจาก {currentPrice} เป็น {newPrice} ต่อปี เริ่มตั้งแต่วันที่ {effectiveDate} และจะไม่มีการเรียกเก็บเงินในวันนี้"
 
 #. Accessible label of the Plutonium page region. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:252
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:265
 msgid "{premiumProductName} page"
 msgstr "หน้า {premiumProductName}"
 
@@ -2734,7 +2734,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "มีการอัปเดตเดสก์ท็อปสำหรับ Linux แล้ว เลือกรูปแบบแพ็กเกจสำหรับระบบนี้ แล้ว {productName} จะบันทึกไฟล์ไว้ในเครื่อง"
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:738
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:760
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "มีราคาที่ถูกกว่า การเปลี่ยนจะมีผลในวันที่ <0>{listPriceEffectiveDate}</0> และจะไม่เปลี่ยนแปลงสิ่งอื่นใด"
 
@@ -2754,7 +2754,7 @@ msgid "a poll"
 msgstr "โพล"
 
 #. Plutonium page perk card title about profile customization.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:91
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:96
 msgid "A profile that stands out"
 msgstr "โปรไฟล์ที่โดดเด่น"
 
@@ -2773,7 +2773,7 @@ msgid "a rich embed or link preview (not an uploaded file)"
 msgstr "การฝังเนื้อหาแบบสมบูรณ์หรือตัวอย่างลิงก์ (ไม่ใช่ไฟล์ที่อัปโหลด)"
 
 #. Plutonium page comparison row label for per-community profiles.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:178
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:191
 msgid "A separate profile for each community"
 msgstr "โปรไฟล์แยกสำหรับแต่ละชุมชน"
 
@@ -3048,7 +3048,7 @@ msgstr "การดำเนินการ"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning the paid subscription is active.
 #. Tab in the thread browser that lists active threads.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:448
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:161
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
@@ -3800,19 +3800,19 @@ msgstr "การควบคุมการจัดเรียงมีให
 msgid "All"
 msgstr "ทั้งหมด"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:578
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:600
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "<0/> ทั้งหมดในราคา <1>{effectiveMonthlyPrice}/เดือน</1>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:600
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:622
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "<0/> ทั้งหมดในราคา <1>{effectiveYearlyPrice}/ปี</1>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:621
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:643
 msgid "All <0/> included with your subscription."
 msgstr "<0/> ทั้งหมดรวมอยู่ในการสมัครสมาชิกของคุณ"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:568
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:590
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "<0/> ทั้งหมด ตลอดไป ไม่มีการเรียกเก็บเงิน ไม่มีการต่ออายุ"
 
@@ -4357,7 +4357,7 @@ msgid "Animated {avifFormatLabel} not supported"
 msgstr "ไม่รองรับ {avifFormatLabel} แบบเคลื่อนไหว"
 
 #. Plutonium page comparison row label for animated avatars and banners.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:230
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:243
 msgid "Animated avatar and profile banner"
 msgstr "อวาตาร์เคลื่อนไหวและแบนเนอร์โปรไฟล์"
 
@@ -5550,7 +5550,7 @@ msgstr "AV1 (ต้องเปิดใช้งานก่อน)"
 
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:135
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
 #: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "Available"
 msgstr "พร้อมใช้งาน"
@@ -5631,7 +5631,7 @@ msgstr "ไม่อยู่ตอนนี้"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:398
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:256
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
 msgid "Back"
 msgstr "ย้อนกลับ"
 
@@ -5963,12 +5963,12 @@ msgid "Between 1 and 32 characters"
 msgstr "ระหว่าง 1 ถึง 32 ตัวอักษร"
 
 #. Plutonium subscription card text for an App Store or Google Play subscription. {storeName} is the store brand name, App Store or Google Play, and must not be translated.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:531
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:553
 msgid "Billed through {storeName}."
 msgstr "เรียกเก็บเงินผ่าน {storeName}"
 
 #. Plutonium subscription card text for an App Store or Google Play subscription that will not renew. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {endDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:521
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:543
 msgid "Billed through {storeName}. Ends on <0>{endDate}</0>."
 msgstr "เรียกเก็บเงินผ่าน {storeName} สิ้นสุดในวันที่ <0>{endDate}</0>"
 
@@ -6382,7 +6382,7 @@ msgid "Brightness"
 msgstr "ความสว่าง"
 
 #. Plutonium page perk card body about global emojis and stickers.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:87
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:92
 msgid "Bring custom emojis and stickers from any of your communities into every chat and community you're in."
 msgstr "นำอิโมจิและสติกเกอร์ที่กำหนดเองจากชุมชนใดก็ได้ของคุณมาใช้ในทุกแชทและทุกชุมชนที่คุณอยู่"
 
@@ -6909,7 +6909,7 @@ msgid "Cancel import"
 msgstr "ยกเลิกการนำเข้า"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:888
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:957
 msgid "Cancel price change"
 msgstr "ยกเลิกการเปลี่ยนแปลงราคา"
 
@@ -6924,26 +6924,26 @@ msgid "Cancel request"
 msgstr "ยกเลิกคำขอ"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:896
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:965
 msgid "Cancel scheduled switch"
 msgstr "ยกเลิกการเปลี่ยนที่กำหนดเวลาไว้"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:911
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:247
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:980
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "ยกเลิกการสมัครสมาชิก"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:241
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
 msgid "Cancel subscription?"
 msgstr "ยกเลิกการสมัครสมาชิกใช่หรือไม่"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:701
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:723
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "ยกเลิกการเปลี่ยนแปลงที่กำหนดไว้เพื่อเปลี่ยนไปใช้ราคาปัจจุบันแทน"
 
@@ -6953,7 +6953,7 @@ msgid "Cancel upload"
 msgstr "ยกเลิกการอัปโหลด"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:892
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:961
 msgid "Cancel yearly upgrade"
 msgstr "ยกเลิกการอัปเกรดรายปี"
 
@@ -6963,7 +6963,7 @@ msgid "Cancel your friend request to {displayName}?"
 msgstr "ยกเลิกคำขอเป็นเพื่อนที่ส่งถึง {displayName} ใช่หรือไม่"
 
 #. Subscription status badge meaning cancellation is scheduled for the renewal date.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:436
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:442
 msgid "Canceling"
 msgstr "กำลังยกเลิก"
 
@@ -6972,7 +6972,7 @@ msgstr "กำลังยกเลิก"
 msgid "Cancellation"
 msgstr "การตัดเสียงสะท้อน"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:555
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "จะยกเลิกในวันที่ <0>{cancelDate}</0> <1/> ยังคงใช้งานได้จนถึงวันนั้น"
 
@@ -7239,7 +7239,7 @@ msgid "Change password form"
 msgstr "แบบฟอร์มเปลี่ยนรหัสผ่าน"
 
 #. Subscription status badge meaning a future billing plan change is scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:440
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:446
 msgid "Change scheduled"
 msgstr "กำหนดการเปลี่ยนแปลงแล้ว"
 
@@ -7771,7 +7771,7 @@ msgid "Character limit exceeded by {remaining}"
 msgstr "เกินขีดจำกัดไป {remaining} ตัวอักษร"
 
 #. Plutonium page comparison row label for the message length limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:194
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:207
 msgid "Characters in a single message"
 msgstr "อักขระในข้อความเดียว"
 
@@ -8101,7 +8101,7 @@ msgid "Choose one of the methods below to prove domain ownership. You only need 
 msgstr "เลือกวิธีใดวิธีหนึ่งด้านล่างเพื่อยืนยันความเป็นเจ้าของโดเมน คุณต้องทำเพียงวิธีเดียวเท่านั้น"
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:158
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:166
 msgid "Choose payment method"
 msgstr "เลือกช่องทางการชำระเงิน"
 
@@ -8281,7 +8281,7 @@ msgid "Claim your account to access security features like two-factor authentica
 msgstr "ยืนยันบัญชีของคุณเพื่อเข้าถึงฟีเจอร์ความปลอดภัย เช่น การยืนยันตัวตนแบบสองชั้นและพาสคีย์"
 
 #. Plutonium page note under disabled buttons for unclaimed accounts. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:242
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:255
 msgid "Claim your account to buy {premiumProductName}."
 msgstr "รับสิทธิ์บัญชีของคุณเพื่อซื้อ {premiumProductName}"
 
@@ -9072,7 +9072,7 @@ msgid "Communities with over 250 people are forced onto the \"mentions only\" se
 msgstr "คอมมูนิตี้ที่มีสมาชิกมากกว่า 250 คนจะถูกตั้งค่าเป็น \"เฉพาะเมื่อถูกกล่าวถึง\" โดยอัตโนมัติ การตั้งค่าเดิมของคุณจะยังคงอยู่และจะกลับมาใช้เมื่อจำนวนสมาชิกในคอมมูนิตี้ลดลงต่ำกว่า 250 คน"
 
 #. Plutonium page comparison row label for the community limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:190
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:203
 msgid "Communities you can join"
 msgstr "ชุมชนที่คุณเข้าร่วมได้"
 
@@ -9323,7 +9323,7 @@ msgid "Compact mode"
 msgstr "โหมดกะทัดรัด"
 
 #. Heading of the comparison table on the Plutonium page. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:123
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:128
 msgid "Compare Free and {premiumProductName}"
 msgstr "เปรียบเทียบฟรีกับ {premiumProductName}"
 
@@ -9338,7 +9338,7 @@ msgid "Complete mature content check"
 msgstr "ดำเนินการตรวจสอบเนื้อหาสำหรับผู้ใหญ่ให้เสร็จสิ้น"
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:149
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:157
 msgid "Complete payment"
 msgstr "ชำระเงินให้เสร็จสมบูรณ์"
 
@@ -9794,6 +9794,11 @@ msgstr "เมนูบริบทสามารถเปิดได้ด้
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
 msgstr "ดำเนินการต่อ"
+
+#. Button in the gift time confirmation that proceeds to subscription checkout.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
+msgid "Continue to checkout"
+msgstr "ดำเนินการต่อเพื่อชำระเงิน"
 
 #. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/utils/ReportActionUtils.tsx:37
@@ -11591,7 +11596,7 @@ msgid "Custom themes"
 msgstr "ธีมที่กำหนดเอง"
 
 #. Plutonium page comparison row label for custom themes.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:238
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:251
 msgid "Custom themes for the app"
 msgstr "ธีมแบบกำหนดเองสำหรับแอป"
 
@@ -11644,7 +11649,7 @@ msgstr "กำหนดเอง…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:817
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:884
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "พอร์ทัลลูกค้า"
@@ -13897,7 +13902,7 @@ msgstr "แต่ละข้อความที่เผยแพร่สา
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #. Plutonium page comparison row label for early access.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:76
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:234
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:247
 msgid "Early access to new features"
 msgstr "เข้าถึงฟีเจอร์ใหม่ก่อนใคร"
 
@@ -14767,17 +14772,17 @@ msgid "End date"
 msgstr "วันที่สิ้นสุด"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:923
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:992
 msgid "End grace now"
 msgstr "สิ้นสุดช่วงผ่อนผันตอนนี้"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:269
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
 msgid "End grace period"
 msgstr "สิ้นสุดช่วงผ่อนผัน"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:262
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
 msgid "End grace period now?"
 msgstr "สิ้นสุดช่วงผ่อนผันตอนนี้ใช่ไหม"
 
@@ -15358,7 +15363,7 @@ msgstr "หมดอายุใน"
 #. Error message in the invite list item.
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:426
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:432
 #: src/features/auth/components/accounts/AccountRow.tsx:18
 #: src/features/invite/components/InviteListItem.tsx:32
 msgid "Expired"
@@ -15394,7 +15399,7 @@ msgstr "หมดอายุเมื่อ {date}"
 msgid "Expired on {earliest}"
 msgstr "หมดอายุเมื่อ {earliest}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:457
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:463
 msgid "Expired on <0>{expiredDate}</0>. <1/> are no longer active. You can resubscribe at any time."
 msgstr "หมดอายุเมื่อ <0>{expiredDate}</0> <1/> ใช้งานไม่ได้แล้ว คุณสามารถสมัครใหม่ได้ทุกเมื่อ"
 
@@ -15950,7 +15955,7 @@ msgstr "รายการโปรด"
 
 #. Column header for perk names in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:180
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:127
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:132
 msgid "Feature"
 msgstr "ฟีเจอร์"
 
@@ -16362,7 +16367,7 @@ msgid "Food & drink"
 msgstr "อาหารและเครื่องดื่ม"
 
 #. Screen reader label for the asterisk that jumps to the custom tag footnote on the Plutonium page.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:153
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:158
 msgid "Footnote about custom tags"
 msgstr "เชิงอรรถเกี่ยวกับแท็กที่กำหนดเอง"
 
@@ -16651,7 +16656,7 @@ msgstr "ฝรั่งเศส"
 
 #. Column header for the free tier in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:185
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:131
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:136
 msgid "Free"
 msgstr "ฟรี"
 
@@ -17069,12 +17074,12 @@ msgid "Get {premiumProductName} to customize your tag or keep it when changing y
 msgstr "รับ {premiumProductName} เพื่อปรับแต่งแท็กของคุณ หรือเก็บแท็กเดิมไว้เมื่อเปลี่ยนชื่อผู้ใช้"
 
 #. Plutonium page perk card body about profile perks, shown on instances where people sign in with a username and have no tag.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:95
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:100
 msgid "Get an animated avatar and banner, a subscriber badge and a separate profile for each community."
 msgstr "รับอวาตาร์และแบนเนอร์แบบเคลื่อนไหว, ป้ายสัญลักษณ์ผู้ติดตาม และโปรไฟล์แยกสำหรับแต่ละชุมชน"
 
 #. Plutonium page perk card body about profile perks. footnote is a clickable asterisk that points to a footnote about tags. Keep it directly after the word for username.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:100
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:105
 msgid "Get an animated avatar and banner, a subscriber badge, the four-digit tag you want after your username{footnote}, and a separate profile for each community."
 msgstr "รับอวาตาร์และแบนเนอร์แบบเคลื่อนไหว, ป้ายสัญลักษณ์สมาชิก, แท็กสี่หลักที่คุณต้องการต่อท้ายชื่อผู้ใช้ของคุณ{footnote}, และโปรไฟล์แยกสำหรับแต่ละชุมชน"
 
@@ -17167,7 +17172,7 @@ msgstr "ไม่สามารถโหลด GIF ได้"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning premium access came from a gift.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:446
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:452
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:296
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:79
 msgid "Gift"
@@ -17181,7 +17186,7 @@ msgid "Gift {premiumProductName}"
 msgstr "มอบ {premiumProductName} เป็นของขวัญ"
 
 #. Body of the closing call to action on the Plutonium page for members. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:169
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:182
 msgid "Gift {premiumProductName} to a friend for a month or a whole year. Gifts never renew."
 msgstr "มอบ {premiumProductName} ให้เพื่อนเป็นเวลาหนึ่งเดือนหรือหนึ่งปีเต็ม การให้ของขวัญจะไม่มีการต่ออายุ"
 
@@ -17319,7 +17324,7 @@ msgstr "ของขวัญ: กำลังจะหมดอายุ"
 msgid "Gift: grace period (still have access)"
 msgstr "ของขวัญ: ช่วงผ่อนผัน (ยังคงเข้าถึงได้)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:540
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:562
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "ได้รับของขวัญ <0/> จนถึง <1>{giftEndDate}</1> จะไม่ต่ออายุอัตโนมัติ แลกใช้รหัสของขวัญเพิ่มเพื่อขยายเวลา"
 
@@ -17526,7 +17531,7 @@ msgid "Got it!"
 msgstr "เข้าใจแล้ว!"
 
 #. Subscription status badge meaning access remains briefly after subscription end.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:428
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:434
 msgid "Grace period"
 msgstr "ช่วงผ่อนผัน"
 
@@ -17820,12 +17825,12 @@ msgid "Hate speech"
 msgstr "คำพูดที่สร้างความเกลียดชัง"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:301
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "มีรหัสของขวัญไหม? ใช้แลกรับ {PREMIUM_PRODUCT_NAME}"
 
 #. Plutonium page hero text on an instance where the paid tier cannot be bought, only redeemed. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:74
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:79
 msgid "Have a gift code? Redeem it to unlock {premiumProductName}."
 msgstr "มีรหัสของขวัญไหม? ใช้เพื่อปลดล็อก {premiumProductName}"
 
@@ -20034,8 +20039,8 @@ msgstr "เก็บไฟล์แนบเมื่อล้างการแ
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "คงระดับฟรีและระดับพรีเมียมไว้ คุณสามารถปรับแต่งระดับต่างๆ ขายแบบพรีเมียมผ่าน Stripe หรือแจกโค้ดของขวัญในภายหลังจากแผงผู้ดูแลระบบ"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:271
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:169
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
 msgid "Keep grace period"
 msgstr "คงช่วงผ่อนผัน"
 
@@ -20049,8 +20054,8 @@ msgstr "ตรึง Neko ไว้"
 msgid "Keep running"
 msgstr "ทำงานเบื้องหลัง"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:249
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:147
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
 msgid "Keep subscription"
 msgstr "คงการสมัครสมาชิก"
 
@@ -20073,6 +20078,11 @@ msgstr "ยังคงส่งสัญญาณต่อสักครู่
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:139
 msgid "Keep window dimensions and placement between reloads"
 msgstr "คงขนาดและตำแหน่งหน้าต่างไว้เมื่อเปิดใหม่"
+
+#. Heading of the closing call to action on the Plutonium page for members on gifted time who can subscribe.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:170
+msgid "Keep your perks going"
+msgstr "รับสิทธิประโยชน์ของคุณต่อไป"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:93
@@ -20212,7 +20222,7 @@ msgid "Large file threshold (MB)"
 msgstr "เกณฑ์ไฟล์ขนาดใหญ่ (MB)"
 
 #. Plutonium page comparison row label for the upload size limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:202
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:215
 msgid "Largest file you can upload"
 msgstr "ไฟล์ที่ใหญ่ที่สุดที่คุณสามารถอัปโหลดได้"
 
@@ -20310,7 +20320,7 @@ msgid "Learn more"
 msgstr "ดูเพิ่มเติม"
 
 #. Link text in the Plutonium page tag footnote. Opens the Visionary help article.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:149
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:154
 msgid "Learn more about Visionary"
 msgstr "เรียนรู้เพิ่มเติมเกี่ยวกับ Visionary"
 
@@ -20419,8 +20429,8 @@ msgstr "ปุ่มซ้ายของเมาส์"
 msgid "Left tooltip"
 msgstr "คำแนะนำด้านซ้าย"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:593
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:615
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:637
 msgid "Legacy rate"
 msgstr "เรทราคาเดิม"
 
@@ -20551,7 +20561,7 @@ msgstr "คลัง: {count} จาก {max}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Subscription status badge meaning permanent premium access.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:444
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:450
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:21
 msgid "Lifetime"
 msgstr "ตลอดชีพ"
@@ -21648,7 +21658,7 @@ msgid "Media filter"
 msgstr "ตัวกรองสื่อ"
 
 #. Plutonium page comparison row label for the saved media limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:206
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:219
 msgid "Media items you can save for later"
 msgstr "รายการสื่อที่คุณสามารถบันทึกไว้ดูภายหลังได้"
 
@@ -22279,7 +22289,7 @@ msgid "Messages published in these announcement channels are copied into your ch
 msgstr "ข้อความที่โพสต์ในช่องประกาศเหล่านี้จะถูกคัดลอกไปยังช่องของคุณ"
 
 #. Plutonium page comparison row label for the bookmark limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:198
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:211
 msgid "Messages you can bookmark"
 msgstr "ข้อความที่คุณสามารถบุ๊กมาร์กได้"
 
@@ -22620,11 +22630,11 @@ msgstr "รายเดือน"
 msgid "Monthly {monthlyPrice}"
 msgstr "รายเดือน {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:685
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:707
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "การเรียกเก็บเงินรายเดือนจะเริ่มในวันที่ <0>{pendingChangeDate}</0>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:678
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:700
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "การเรียกเก็บเงินรายเดือนจะเริ่มในวันที่ <0>{pendingChangeDate}</0> ค่าบริการรายเดือนครั้งแรก: {pendingInitialPriceLabel} การต่ออายุรายเดือนในอนาคต: {pendingRecurringPriceLabel}/เดือน"
 
@@ -23566,12 +23576,12 @@ msgid "New post in #{forumName}"
 msgstr "โพสต์ใหม่ใน #{forumName}"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:649
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:671
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "ราคาใหม่จะเริ่มใช้ในวันที่ <0>{pendingChangeDate}</0>"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:643
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:665
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "ราคาใหม่มีผลในวันที่ <0>{pendingChangeDate}</0> การต่ออายุจะเป็น {pendingTargetPriceLabel} ตั้งแต่นั้นเป็นต้นไป"
 
@@ -24421,7 +24431,7 @@ msgstr "ไม่ได้กำหนด"
 #. Fallback value when a saved billing payment method has no expiration date.
 #. Screen reader text for a cross in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/plutonium/PaymentMethodList.tsx:18
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:139
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:144
 msgid "Not available"
 msgstr "ไม่พร้อมใช้งาน"
 
@@ -24734,7 +24744,7 @@ msgid "On"
 msgstr "เปิด"
 
 #. Billing confirmation body for moving an active subscription down to the current price. {listPriceEffectiveDate} is a date, and {listPriceCurrentLabel} and {listPriceNewLabel} are currency amounts, all already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:375
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:381
 msgid "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
 msgstr "ในวันที่ <0>{listPriceEffectiveDate}</0> การสมัครสมาชิกของคุณจะเปลี่ยนจาก {listPriceCurrentLabel} เป็น {listPriceNewLabel} จะยังไม่มีการเรียกเก็บเงินใดๆ ในวันนี้ และส่วนที่เหลือของการสมัครสมาชิกของคุณจะยังคงเหมือนเดิมทุกประการ"
 
@@ -26162,7 +26172,7 @@ msgid "Perks"
 msgstr "สิทธิประโยชน์"
 
 #. Subscription status badge meaning premium is paid but perks are temporarily disabled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:432
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:438
 msgid "Perks paused"
 msgstr "สิทธิประโยชน์ถูกพักชั่วคราว"
 
@@ -26265,7 +26275,7 @@ msgid "Photo"
 msgstr "รูปภาพ"
 
 #. Body of the closing call to action on the Plutonium page for people without the paid tier.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:161
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:166
 msgid "Pick a plan and your perks switch on the moment checkout finishes."
 msgstr "เลือกแผนและสิทธิประโยชน์ของคุณจะเปิดใช้งานทันทีที่การชำระเงินเสร็จสมบูรณ์"
 
@@ -26315,7 +26325,7 @@ msgid "Pick one or more dictionaries. Words from any selected dictionary are acc
 msgstr "เลือกพจนานุกรมอย่างน้อยหนึ่งรายการ คำจากพจนานุกรมที่เลือกจะได้รับการยอมรับ ซึ่งมีประโยชน์สำหรับการแชทหลายภาษา"
 
 #. Plutonium page comparison row label for the custom username tag perk.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:174
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:187
 msgid "Pick the 4-digit number after your username"
 msgstr "เลือกตัวเลข 4 หลักต่อท้ายชื่อผู้ใช้ของคุณ"
 
@@ -27006,7 +27016,7 @@ msgid "Pricing"
 msgstr "ราคา"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:141
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:149
 msgid "Pricing is still loading."
 msgstr "กำลังโหลดราคา"
 
@@ -27748,7 +27758,7 @@ msgstr "รีแอ็กชัน"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:813
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:880
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "เปิดใช้งานอีกครั้ง"
@@ -27816,7 +27826,7 @@ msgstr "พร้อมซื้อของขวัญหรือยัง?"
 
 #. Heading of the closing call to action on the Plutonium page for people without the paid tier.
 #: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:50
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:157
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:162
 msgid "Ready to upgrade?"
 msgstr "พร้อมจะอัปเกรดหรือยัง?"
 
@@ -27996,8 +28006,8 @@ msgstr "แลกให้ตัวเอง"
 
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:786
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:311
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:827
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:316
 msgid "Redeem gift code"
 msgstr "แลกรหัสของขวัญ"
 
@@ -28807,7 +28817,7 @@ msgstr "เกณฑ์การต่ออายุ (วัน)"
 msgid "Renew window (days)"
 msgstr "ช่วงเวลาต่ออายุ (วัน)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:758
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:780
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "ต่ออายุในวันที่ <0>{renewalDate}</0>"
 
@@ -29517,9 +29527,11 @@ msgid "Restore window"
 msgstr "กู้คืนหน้าต่าง"
 
 #. Billing button for restarting a subscription during the grace period.
+#. Billing button for starting a new subscription after premium ended.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:805
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:809
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:846
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:872
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:876
 msgid "Resubscribe"
 msgstr "สมัครใหม่"
 
@@ -31150,7 +31162,7 @@ msgid "Send file messages in order"
 msgstr "ส่งข้อความไฟล์ตามลำดับ"
 
 #. Plutonium page perk card title about upload size. size is a formatted size such as 500 MB.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:114
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:119
 msgid "Send files up to {size}"
 msgstr "ส่งไฟล์ได้สูงสุด {size}"
 
@@ -31663,7 +31675,7 @@ msgid "Share active theme"
 msgstr "แชร์ธีมที่ใช้งานอยู่"
 
 #. Plutonium page perk card body about upload size. freeSize is a formatted size such as 25 MB.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:118
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:123
 msgid "Share full-length videos and big files without shrinking them first. Free accounts can send up to {freeSize}."
 msgstr "แชร์วิดีโอความยาวเต็มและไฟล์ขนาดใหญ่โดยไม่ต้องย่อขนาดก่อน บัญชีฟรีส่งได้สูงสุด {freeSize}"
 
@@ -31688,7 +31700,7 @@ msgid "Share the {premiumProductName} experience with your friends by purchasing
 msgstr "มอบประสบการณ์ {premiumProductName} ให้เพื่อนของคุณด้วยการซื้อการสมัครสมาชิกแบบของขวัญ"
 
 #. Heading of the closing call to action on the Plutonium page for members.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:165
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:178
 msgid "Share the perks"
 msgstr "แชร์สิทธิประโยชน์"
 
@@ -31724,7 +31736,7 @@ msgid "Share your screen in high definition (1080p), quad HD (1440p), or native 
 msgstr "แชร์หน้าจอของคุณแบบความละเอียดสูง (1080p) quad HD (1440p) หรือความละเอียดเดิมของแหล่งที่มา ที่เฟรมเรตสูงสุด 60 FPS"
 
 #. Plutonium page perk card body about stream quality.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:110
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:115
 msgid "Share your screen or camera in up to 4K at 60 frames per second. Free accounts stream in up to 720p at 30."
 msgstr "แชร์หน้าจอหรือกล้องของคุณด้วยคุณภาพสูงสุด 4K ที่ 60 เฟรมต่อวินาที บัญชีฟรีสตรีมด้วยคุณภาพสูงสุด 720p ที่ 30"
 
@@ -34052,7 +34064,7 @@ msgid "Stream hidden"
 msgstr "ซ่อนสตรีมแล้ว"
 
 #. Plutonium page perk card title about stream quality.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:106
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:111
 msgid "Stream in 4K at 60 FPS"
 msgstr "สตรีมด้วยคุณภาพ 4K ที่ 60 FPS"
 
@@ -34172,8 +34184,20 @@ msgstr "ส่งใบสมัคร"
 msgid "Submitting"
 msgstr "กำลังส่ง"
 
+#. Billing button that starts a recurring subscription for someone on gifted premium time.
+#. Billing button that starts a recurring subscription for someone on gifted premium time.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:811
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:850
+msgid "Subscribe"
+msgstr "สมัครสมาชิก"
+
+#. Body of the closing call to action on the Plutonium page for members on gifted time who can subscribe.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:174
+msgid "Subscribe now. Your remaining gift time is added after your paid period."
+msgstr "สมัครเลย เวลาของขวัญที่เหลือของคุณจะถูกเพิ่มต่อจากช่วงเวลาที่ชำระเงิน"
+
 #. Plutonium page comparison row label for the subscriber badge.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:182
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:195
 msgid "Subscriber badge on your profile"
 msgstr "ป้ายสมาชิกบนโปรไฟล์ของคุณ"
 
@@ -34236,7 +34260,7 @@ msgid "Summary"
 msgstr "สรุป"
 
 #. Plutonium page hero subtitle for people without the paid tier.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:70
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:75
 msgid "Support an independent communication platform and unlock some sweet perks."
 msgstr "สนับสนุนแพลตฟอร์มการสื่อสารอิสระและปลดล็อกสิทธิประโยชน์สุดเจ๋ง"
 
@@ -34347,7 +34371,7 @@ msgid "Switch price"
 msgstr "เปลี่ยนราคา"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:873
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:942
 msgid "Switch to {listPriceNewLabel}"
 msgstr "เปลี่ยนเป็น {listPriceNewLabel}"
 
@@ -34377,7 +34401,7 @@ msgstr "เปลี่ยนเป็นอินพุตโดยตรง"
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:56
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:925
 msgid "Switch to monthly"
 msgstr "เปลี่ยนเป็นรายเดือน"
 
@@ -34442,7 +34466,7 @@ msgstr "เปลี่ยนเป็นสองคอลัมน์"
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:52
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:852
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:921
 msgid "Switch to yearly"
 msgstr "เปลี่ยนเป็นรายปี"
 
@@ -34716,23 +34740,23 @@ msgstr "แท็กช่วยให้ผู้คนค้นหาโพส
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "แท็กต้องมีความยาว 2 ถึง {maxLength} ตัวอักษร และเป็นตัวอักษรหรือตัวเลขเท่านั้น"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:294
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "มีผลเมื่อถึงรอบการต่ออายุครั้งถัดไป เราจะใช้เครดิต {creditLabel} จากการชำระเงินรายเดือนปัจจุบันของคุณ ดังนั้นค่าบริการรายปีครั้งแรกของคุณจะอยู่ที่ <0>{firstRenewalPriceLabel}</0> การต่ออายุรายปีในอนาคตจะอยู่ที่ {renewalPrice}/ปี"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:303
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:309
 msgid "Takes effect at your next renewal. Your subscription stays monthly until then, and your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "มีผลเมื่อถึงรอบการต่ออายุครั้งถัดไป การสมัครสมาชิกของคุณจะยังคงเป็นรายเดือนจนถึงตอนนั้น และการต่ออายุครั้งถัดไปของคุณจะอยู่ที่ <0>{renewalPrice}/ปี</0>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:312
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:318
 msgid "Takes effect at your next renewal. Your subscription stays yearly until then, and your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "มีผลเมื่อถึงรอบการต่ออายุครั้งถัดไป การสมัครสมาชิกของคุณจะยังคงเป็นรายปีจนถึงตอนนั้น และการต่ออายุครั้งถัดไปของคุณจะอยู่ที่ <0>{renewalPrice}/เดือน</0>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:331
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:337
 msgid "Takes effect immediately. A prorated adjustment may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "มีผลทันที อาจมีการปรับเปลี่ยนตามสัดส่วนผ่าน {PAYMENT_PROVIDER_NAME} การต่ออายุครั้งถัดไปของคุณจะอยู่ที่ <0>{renewalPrice}/เดือน</0>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:322
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:328
 msgid "Takes effect immediately. A prorated charge may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "มีผลทันที อาจมีการเรียกเก็บเงินตามสัดส่วนผ่าน {PAYMENT_PROVIDER_NAME} การต่ออายุครั้งถัดไปของคุณจะอยู่ที่ <0>{renewalPrice}/ปี</0>"
 
@@ -36102,7 +36126,7 @@ msgid "This picker is only available in the desktop app."
 msgstr "ตัวเลือกนี้ใช้ได้เฉพาะในแอปเดสก์ท็อปเท่านั้น"
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:153
 msgid "This plan isn't available. Contact support."
 msgstr "แพ็กเกจนี้ไม่พร้อมใช้งาน โปรดติดต่อฝ่ายสนับสนุน"
 
@@ -37835,7 +37859,7 @@ msgstr "ปลดล็อกอิโมจิแบบกำหนดเอง
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "ปลดล็อกการแชร์หน้าจอแบบ HD ด้วย {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:218
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:220
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "ปลดล็อกขีดจำกัดที่สูงขึ้นและฟีเจอร์พิเศษ พร้อมสนับสนุนแพลตฟอร์มการสื่อสารอิสระ"
 
@@ -38214,7 +38238,7 @@ msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They sho
 msgstr "เพิ่มแท็กได้สูงสุด {DISCOVERY_MAX_TAGS} แท็กเพื่อให้คนอื่นค้นหาคอมมูนิตี้ของคุณเจอ แท็กจะแสดงในการค้นหาของ Discovery"
 
 #. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:226
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:239
 msgid "Up to 4K at 60 FPS"
 msgstr "สูงสุด 4K ที่ 60 FPS"
 
@@ -38224,7 +38248,7 @@ msgid "Up to 4K/60fps"
 msgstr "สูงสุด 4K/60fps"
 
 #. Plutonium page comparison value for free video quality. Keep 720p and FPS as written.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:222
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:235
 msgid "Up to 720p at 30 FPS"
 msgstr "สูงสุด 720p ที่ 30 FPS"
 
@@ -38635,7 +38659,7 @@ msgid "Use animated emojis"
 msgstr "ใช้อิโมจิเคลื่อนไหว"
 
 #. Plutonium page comparison row label for animated emoji use.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:210
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:223
 msgid "Use animated emojis in messages"
 msgstr "ใช้อีโมจิเคลื่อนไหวในข้อความ"
 
@@ -38652,7 +38676,7 @@ msgid "Use browser locale for time format"
 msgstr "ใช้รูปแบบเวลาตามภาษาของเบราว์เซอร์"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:162
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
 msgid "Use card"
 msgstr "ใช้บัตร"
 
@@ -38672,7 +38696,7 @@ msgid "Use coal theme (pitch-black surfaces)"
 msgstr "ใช้ธีมถ่านหิน (พื้นผิวสีดำสนิท)"
 
 #. Plutonium page comparison row label for global emojis and stickers.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:214
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:227
 msgid "Use custom emojis and stickers in any community"
 msgstr "ใช้ อิโมจิและสติกเกอร์แบบกำหนดเองในทุกชุมชน"
 
@@ -39343,7 +39367,7 @@ msgid "Verify your email first"
 msgstr "ยืนยันอีเมลของคุณก่อน"
 
 #. Plutonium page note under disabled buttons for unverified accounts. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:247
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:260
 msgid "Verify your email to buy {premiumProductName}."
 msgstr "ยืนยันอีเมลของคุณเพื่อซื้อ {premiumProductName}"
 
@@ -39435,12 +39459,12 @@ msgid "Video call"
 msgstr "โทรวิดีโอ"
 
 #. Plutonium page comparison row label for video quality.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:218
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:231
 msgid "Video call and screen share quality"
 msgstr "คุณภาพการโทรวิดีโอและการแชร์หน้าจอ"
 
 #. Plutonium page comparison row label for saved video call backgrounds.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:186
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:199
 msgid "Video call backgrounds you can save"
 msgstr "วิดีโอคอลพื้นหลังที่คุณบันทึกได้"
 
@@ -39803,7 +39827,7 @@ msgstr "เวอร์จิเนีย"
 msgid "Visibility"
 msgstr "การมองเห็น"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:419
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
 msgid "Visionary"
 msgstr "Visionary"
 
@@ -40998,15 +41022,15 @@ msgstr "รายปี {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "ของขวัญรายปี"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:672
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:694
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "กำหนดอัปเกรดเป็นรายปีในวันที่ <0>{pendingChangeDate}</0>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:657
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:679
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "กำหนดอัปเกรดเป็นรายปีในวันที่ <0>{pendingChangeDate}</0> ค่าบริการรายปีครั้งแรก: {pendingInitialPriceLabel} หลังหักเครดิต {pendingCreditPriceLabel} การต่ออายุรายปีครั้งถัดไป: {pendingRecurringPriceLabel}/ปี"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:664
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:686
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "กำหนดอัปเกรดเป็นรายปีในวันที่ <0>{pendingChangeDate}</0> ค่าบริการรายปีครั้งแรก: {pendingInitialPriceLabel} การต่ออายุรายปีครั้งถัดไป: {pendingRecurringPriceLabel}/ปี"
 
@@ -41079,7 +41103,7 @@ msgid "You are now a developer!"
 msgstr "ตอนนี้คุณเป็นนักพัฒนาแล้ว!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:153
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "คุณกำลังจะไปยัง {paymentProviderName} เพื่อดำเนินการชำระเงินให้เสร็จสมบูรณ์ โปรดกลับมาที่ {productName} เมื่อคุณชำระเงินเรียบร้อยแล้ว"
 
@@ -41153,7 +41177,7 @@ msgid "You can only have one custom background on the free tier. Picking a new o
 msgstr "คุณสามารถตั้งค่าพื้นหลังแบบกำหนดเองได้เพียงหนึ่งภาพในเวอร์ชันฟรี การเลือกภาพใหม่จะแทนที่ภาพพื้นหลังเดิมของคุณ"
 
 #. Footnote on the Plutonium page about custom username tags. Keep Mina#4821, mina#4821 and #0000 unchanged. visionaryLink is a link whose text is "Learn more about Visionary".
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:143
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:148
 msgid "You can only pick a tag that nobody else with the same username already has. Usernames aren't case sensitive, so Mina#4821 and mina#4821 count as the same. The #0000 tag is reserved for {productName} Visionary members. {visionaryLink}."
 msgstr "คุณสามารถเลือกแท็กที่ไม่มีใครใช้ชื่อผู้ใช้เดียวกันแล้วเท่านั้น ชื่อผู้ใช้ไม่คำนึงถึงตัวพิมพ์เล็ก/ใหญ่ ดังนั้น Mina#4821 และ mina#4821 จึงนับว่าเป็นชื่อเดียวกัน แท็ก #0000 สงวนไว้สำหรับสมาชิก Visionary ของ {productName} {visionaryLink}"
 
@@ -41494,13 +41518,13 @@ msgstr "คุณยังไม่ได้บล็อกใครเลย"
 msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {productName} without a mouse."
 msgstr "คุณเพิ่งกด Tab ตอนนี้เปิดโหมดแป้นพิมพ์แล้ว คุณจึงสามารถไปยังส่วนต่างๆ ของ {productName} ได้โดยไม่ต้องใช้เมาส์"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:243
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "คุณจะยังคงได้รับสิทธิประโยชน์จนถึงวันต่ออายุครั้งถัดไป เปิดใช้งานการสมัครสมาชิกอีกครั้งก่อนวันดังกล่าวเพื่อรักษาประวัติการเป็นสมาชิกของคุณไว้"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "คุณจะสูญเสียสิทธิประโยชน์ทั้งหมดของ {PREMIUM_PRODUCT_NAME} ทันที และประวัติการเป็นสมาชิกของคุณจะถูกรีเซ็ต การดำเนินการนี้ไม่สามารถยกเลิกได้"
 
@@ -41656,6 +41680,11 @@ msgstr "คุณจะไม่ได้รับการแจ้งเตื
 msgid "You'll appear offline"
 msgstr "คุณจะแสดงสถานะเป็นออฟไลน์"
 
+#. Body of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription. The subscription is charged immediately and the unused gift time is appended after the paid period.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+msgid "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost."
+msgstr "คุณจะถูกเรียกเก็บเงินทันที เวลาของขวัญที่เหลือของคุณจะถูกเพิ่มหลังจากช่วงเวลาที่ชำระเงินของคุณ ดังนั้นจะไม่มีการสูญเสีย"
+
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:476
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "คุณจะต้องลงชื่อเข้าใช้อีกครั้งบนอุปกรณ์ทั้งหมดที่ลงชื่อออกไปแล้ว"
@@ -41738,11 +41767,6 @@ msgstr "คุณถูกแบน"
 #: src/features/app/components/alerts/RateLimitedConfirmModal.tsx:19
 msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "คุณถูกจำกัดอัตราการใช้งาน โปรดรอ {duration} ก่อนลองอีกครั้ง"
-
-#. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
-msgid "You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends."
-msgstr "คุณกำลังใช้การสมัครสมาชิกแบบของขวัญ ซึ่งจะไม่มีการต่ออายุ คุณสามารถแลกรหัสของขวัญเพิ่มเพื่อขยายระยะเวลาได้ การสมัครสมาชิกแบบต่ออายุอัตโนมัติจะสามารถเริ่มต้นได้หลังจากระยะเวลาของขวัญของคุณสิ้นสุดลง"
 
 #. Modal title shown when a push-to-talk shortcut is pressed while the user is deafened.
 #: src/features/app/keybindings/keybind_manager/shared.ts:18
@@ -41943,7 +41967,7 @@ msgid "Your {productName} session expired. Sign in again to continue authorizing
 msgstr "เซสชัน {productName} ของคุณหมดอายุแล้ว โปรดลงชื่อเข้าใช้อีกครั้งเพื่อดำเนินการให้สิทธิ์แอปพลิเคชันนี้ต่อ"
 
 #. Plutonium subscription card text shown while a failed App Store or Google Play renewal payment is being retried. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:472
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:478
 msgid "Your {storeName} renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your {storeName} payment method before then to keep your subscription."
 msgstr "การชำระเงินต่ออายุผ่าน {storeName} ของคุณไม่สำเร็จ แต่ <0/> ยังคงใช้งานได้จนถึง <1>{graceDate}</1> โปรดอัปเดตวิธีการชำระเงินใน {storeName} ก่อนวันดังกล่าวเพื่อรักษาการสมัครของคุณไว้"
 
@@ -42077,7 +42101,7 @@ msgid "Your email has been verified. You can now sign in to your account."
 msgstr "ยืนยันอีเมลของคุณแล้ว ตอนนี้คุณสามารถลงชื่อเข้าใช้บัญชีของคุณได้"
 
 #. Plutonium page perk card title about using custom emojis and stickers in every community.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:83
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:88
 msgid "Your emojis, everywhere"
 msgstr "อิโมจิของคุณ ใช้ได้ทุกที่"
 
@@ -42135,6 +42159,21 @@ msgstr "โปรไฟล์แบบเต็มของคุณจะแส
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:25
 msgid "Your full profile is visible to friends and to anyone in your communities"
 msgstr "โปรไฟล์แบบเต็มของคุณจะแสดงให้เพื่อนและทุกคนในคอมมูนิตี้ของคุณเห็น"
+
+#. Plutonium subscription card text shown in the short grace period after gifted premium time ends. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:510
+msgid "Your gift time ended but <0/> stay active until <1>{graceDate}</1>. Subscribe before then to keep them."
+msgstr "เวลาของขวัญของคุณหมดลงแล้ว แต่ <0/> จะยังคงใช้งานได้จนถึง <1>{graceDate}</1> สมัครสมาชิกก่อนวันนั้นเพื่อรักษาไว้"
+
+#. Plutonium page hero subtitle while gifted premium time is in its short grace period after ending. premiumProductName is the paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:70
+msgid "Your gift time has ended. Subscribe to keep {premiumProductName}."
+msgstr "เวลาของขวัญของคุณหมดแล้ว สมัครสมาชิกเพื่อรับ {premiumProductName} ต่อไป"
+
+#. Title of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
+msgid "Your gift time is kept"
+msgstr "เวลาของขวัญของคุณจะถูกเก็บไว้"
 
 #. Helper text shown under a codec option indicating the local GPU has a hardware encoder for it.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:32
@@ -42273,7 +42312,7 @@ msgid "your region"
 msgstr "ภูมิภาคของคุณ"
 
 #. Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:488
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:494
 msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
 msgstr "การชำระเงินต่ออายุของคุณไม่สำเร็จ แต่ <0/> ยังคงใช้งานได้จนถึง <1>{graceDate}</1> โปรดอัปเดตวิธีการชำระเงินก่อนวันดังกล่าวเพื่อรักษาการสมัครของคุณไว้"
 
@@ -42294,7 +42333,7 @@ msgid "Your stream is still live"
 msgstr "สตรีมของคุณยังคงถ่ายทอดสดอยู่"
 
 #. Heading of the subscription management panel on the Plutonium page.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:79
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:84
 msgid "Your subscription"
 msgstr "การสมัครสมาชิกของคุณ"
 
@@ -42303,7 +42342,7 @@ msgstr "การสมัครสมาชิกของคุณ"
 msgid "Your subscription can't move to the new price right now."
 msgstr "ขณะนี้การสมัครใช้งานของคุณไม่สามารถเปลี่ยนเป็นราคาใหม่ได้"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:504
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:526
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "การสมัครของคุณสิ้นสุดลงแล้ว แต่ <0/> ยังคงใช้งานได้จนถึง <1>{graceDate}</1> สมัครใหม่ก่อนถึงวันดังกล่าวเพื่อรักษาประวัติการเป็นสมาชิกของคุณ"
 
@@ -42332,7 +42371,7 @@ msgstr "เปลี่ยนการเรียกเก็บเงินเ
 msgid "Your subscription has been switched to yearly billing."
 msgstr "เปลี่ยนการเรียกเก็บเงินเป็นรายปีแล้ว"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:566
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:588
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "การสมัครของคุณใช้งานอยู่ แต่สิทธิประโยชน์ถูกระงับชั่วคราว"
 
@@ -42352,7 +42391,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "การสมัครใช้งานของคุณจะเปลี่ยนไปใช้ราคาใหม่ในวันที่ {effectiveDate}"
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:720
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "การสมัครของคุณจะสิ้นสุดในวันที่ <0>{cancelDate}</0> ขณะนี้ราคาอยู่ที่ {listPriceNewLabel} หากคุณเปิดใช้งานอีกครั้ง คุณสามารถเปลี่ยนไปใช้ราคานี้ได้จากที่นี่"
 

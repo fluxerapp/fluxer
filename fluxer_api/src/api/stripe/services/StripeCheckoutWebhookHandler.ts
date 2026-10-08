@@ -14,6 +14,7 @@ import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry
 import {
 	getFirstInvoicePaymentIntentId,
 	getPrimarySubscriptionItem,
+	getSubscriptionCurrentPeriodStart,
 	getSubscriptionItemPeriodEnd,
 	getSubscriptionPremiumPeriodEnd,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
@@ -370,14 +371,16 @@ export class StripeCheckoutWebhookHandler {
 			return 'granted';
 		}
 		if (this.productRegistry.isRecurringSubscription(productInfo)) {
-			const periodEnd = await this.resolveCheckoutSubscriptionPeriodEnd(session, productInfo);
-			recovery.expectedPremiumUntil = periodEnd;
+			const period = await this.resolveCheckoutSubscriptionPeriod(session, productInfo);
+			recovery.expectedPremiumUntil = period.end;
 			await this.premiumService.setPremiumFromSubscriptionPeriod(
 				payment.userId,
 				productInfo.premiumType,
-				periodEnd,
+				period.end,
 				productInfo.billingCycle || null,
 				true,
+				null,
+				period.start,
 			);
 			return 'granted';
 		}
@@ -522,17 +525,17 @@ export class StripeCheckoutWebhookHandler {
 		}
 	}
 
-	private async resolveCheckoutSubscriptionPeriodEnd(
+	private async resolveCheckoutSubscriptionPeriod(
 		session: Stripe.Checkout.Session,
 		productInfo: ProductInfo,
-	): Promise<Date> {
+	): Promise<{start: Date | null; end: Date}> {
 		const subscriptionId = extractId(session.subscription);
 		if (subscriptionId && this.stripe) {
 			try {
 				const subscription = await this.stripe.subscriptions.retrieve(subscriptionId);
 				const candidate = getSubscriptionPremiumPeriodEnd(subscription);
 				if (candidate) {
-					return candidate;
+					return {start: getSubscriptionCurrentPeriodStart(subscription), end: candidate};
 				}
 			} catch (error) {
 				Logger.warn(
@@ -546,7 +549,7 @@ export class StripeCheckoutWebhookHandler {
 			{sessionId: session.id, subscriptionId, durationMonths: productInfo.durationMonths},
 			'Using product duration fallback for subscription period_end on checkout fulfilment',
 		);
-		return fallback;
+		return {start: null, end: fallback};
 	}
 
 	private didCheckoutPremiumGrantApply(

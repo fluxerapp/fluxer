@@ -131,6 +131,8 @@ describe('POST /donations/checkout', () => {
 			  }
 			| undefined;
 		expect(lineItem?.price_data?.currency).toBe(currency);
+		const nordic = ['sek', 'dkk', 'nok'].includes(currency);
+		expect(session?.adaptive_pricing).toEqual(nordic ? {enabled: 'false'} : undefined);
 	});
 	test('accepts monthly interval', async () => {
 		const response = await createDonationCheckoutBuilder(harness)

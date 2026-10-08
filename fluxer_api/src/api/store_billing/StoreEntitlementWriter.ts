@@ -10,6 +10,7 @@ import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
 import {selectActiveStoreSubscription} from '@app/api/store_billing/StoreBillingMappers';
 import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
+import {shiftGiftExtensionEnd} from '@app/api/user/GiftExtensionShift';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {clearPerksSanitizedFlag} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
@@ -77,9 +78,7 @@ function buildGrantPatch(user: User, row: StorePurchaseRow, now: Date): Partial<
 		user.premiumGraceEndsAt.getTime() > now.getTime();
 	const anchorMs = inStoreGrace ? oldUntil.getTime() : Math.max(now.getTime(), oldUntil?.getTime() ?? 0);
 	const giftEnd = user.premiumGiftExtensionEndsAt;
-	const shiftMs = expiresAt.getTime() - anchorMs;
-	const shiftedGiftEnd =
-		giftEnd && shiftMs > 0 && giftEnd.getTime() > anchorMs ? new Date(giftEnd.getTime() + shiftMs) : giftEnd;
+	const shiftedGiftEnd = shiftGiftExtensionEnd(giftEnd, anchorMs, expiresAt);
 	const startedAt = row.started_at ?? now;
 	const premiumSince = user.premiumSince && user.premiumSince <= startedAt ? user.premiumSince : startedAt;
 	setIfChanged(patch, 'premium_type', user.premiumType, UserPremiumTypes.SUBSCRIPTION);

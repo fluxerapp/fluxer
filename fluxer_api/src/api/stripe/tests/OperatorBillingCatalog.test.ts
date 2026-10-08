@@ -37,7 +37,7 @@ import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {HttpResponse, http} from 'msw';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
-const ENV_CURRENCIES = ['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'] as const;
+const ENV_CURRENCIES = ['USD', 'EUR', 'BRL', 'DKK', 'INR', 'ISK', 'NOK', 'PLN', 'SEK', 'TRY'] as const;
 
 function buildFullEnvPrices(): NonNullable<typeof Config.stripe.prices> {
 	const prices: Record<string, string> = {};
@@ -477,6 +477,18 @@ describe('operator billing catalog', () => {
 				.body({price_id: 'price_opgbpmonthly'})
 				.expect(HTTP_STATUS.OK)
 				.execute();
+		});
+
+		test('leaves adaptive pricing unset for an operator SEK checkout', async () => {
+			const token = await createPurchaser();
+			await createBuilder<{url: string}>(harness, token)
+				.post('/stripe/checkout/subscription')
+				.body({price_id: 'price_opsekmonthly', country_code: 'SE'})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const session = stripeHandlers.spies.createdCheckoutSessions[0];
+			expect(session?.line_items?.[0]?.price).toBe('price_opsekmonthly');
+			expect(session?.adaptive_pricing).toBeUndefined();
 		});
 
 		test('accepts an operator price that does not match the buyer country', async () => {

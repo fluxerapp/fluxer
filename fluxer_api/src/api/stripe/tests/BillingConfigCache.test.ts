@@ -38,6 +38,10 @@ const ENV_PRICES = {
 	yearlyInr: 'price_yearly_inr',
 	gift1MonthInr: 'price_gift_month_inr',
 	gift1YearInr: 'price_gift_year_inr',
+	monthlyIsk: 'price_monthly_isk',
+	yearlyIsk: 'price_yearly_isk',
+	gift1MonthIsk: 'price_gift_month_isk',
+	gift1YearIsk: 'price_gift_year_isk',
 	monthlyNok: 'price_monthly_nok',
 	yearlyNok: 'price_yearly_nok',
 	gift1MonthNok: 'price_gift_month_nok',
@@ -58,7 +62,7 @@ const ENV_PRICES = {
 
 function expectedEnvCatalog(): Record<string, Record<string, string>> {
 	const catalog: Record<string, Record<string, string>> = {};
-	for (const currency of ['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY']) {
+	for (const currency of ['USD', 'EUR', 'BRL', 'DKK', 'INR', 'ISK', 'NOK', 'PLN', 'SEK', 'TRY']) {
 		const suffix = currency.toLowerCase();
 		catalog[currency] = {
 			monthly: `price_monthly_${suffix}`,

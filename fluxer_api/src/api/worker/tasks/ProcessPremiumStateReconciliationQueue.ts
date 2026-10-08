@@ -11,9 +11,11 @@ import {canProvisionPremiumFromSubscriptionStatus} from '@app/api/stripe/StripeS
 import {
 	getInvoiceLatestLinePeriodEnd,
 	getPrimarySubscriptionItem,
+	getSubscriptionCurrentPeriodStart,
 	getSubscriptionPremiumPeriodEnd,
 	getSubscriptionStartDate,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
+import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
 import {clearPerksSanitizedFlag, createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
@@ -71,6 +73,15 @@ function buildStripePremiumRepairPatch(user: User, subscription: Stripe.Subscrip
 	}
 	if (premiumUntil && user.premiumUntil?.getTime() !== premiumUntil.getTime()) {
 		patch.premium_until = premiumUntil;
+		const giftEnd = shiftGiftExtensionPastPremiumUntil(
+			{premiumUntil: user.premiumUntil, giftEnd: user.premiumGiftExtensionEndsAt},
+			premiumUntil,
+			new Date(),
+			getSubscriptionCurrentPeriodStart(subscription),
+		);
+		if (giftEnd !== user.premiumGiftExtensionEndsAt) {
+			patch.premium_gift_extension_ends_at = giftEnd;
+		}
 	}
 	if (user.premiumWillCancel !== premiumWillCancel) {
 		patch.premium_will_cancel = premiumWillCancel;

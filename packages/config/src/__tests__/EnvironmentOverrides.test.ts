@@ -222,6 +222,22 @@ describe('buildNamedFluxerEnvOverrides', () => {
 		});
 	});
 
+	test('maps the four ISK Stripe price variables', () => {
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_STRIPE_PRICE_MONTHLY_ISK: 'price_monthly_isk',
+			FLUXER_STRIPE_PRICE_YEARLY_ISK: 'price_yearly_isk',
+			FLUXER_STRIPE_PRICE_GIFT_1_MONTH_ISK: 'price_gift_1_month_isk',
+			FLUXER_STRIPE_PRICE_GIFT_1_YEAR_ISK: 'price_gift_1_year_isk',
+		});
+
+		expect((overrides.integrations as {stripe: {prices: unknown}}).stripe.prices).toEqual({
+			monthly_isk: 'price_monthly_isk',
+			yearly_isk: 'price_yearly_isk',
+			gift_1_month_isk: 'price_gift_1_month_isk',
+			gift_1_year_isk: 'price_gift_1_year_isk',
+		});
+	});
+
 	test('the Stripe price blob applies on its own when no individual price var is set', () => {
 		const overrides = buildNamedFluxerEnvOverrides({
 			FLUXER_STRIPE_PRICES: '{"monthly_brl":"price_blob_monthly_brl","yearly_brl":"price_blob_yearly_brl"}',

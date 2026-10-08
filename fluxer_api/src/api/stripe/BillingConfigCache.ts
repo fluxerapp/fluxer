@@ -75,6 +75,13 @@ const ENV_CATALOG: ReadonlyArray<{
 		gift_1_year: 'gift1YearInr',
 	},
 	{
+		currency: 'ISK',
+		monthly: 'monthlyIsk',
+		yearly: 'yearlyIsk',
+		gift_1_month: 'gift1MonthIsk',
+		gift_1_year: 'gift1YearIsk',
+	},
+	{
 		currency: 'NOK',
 		monthly: 'monthlyNok',
 		yearly: 'yearlyNok',

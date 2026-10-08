@@ -19,16 +19,19 @@ import {
 } from '@app/api/stripe/StripeSubscriptionAccessPolicy';
 import {
 	getPrimarySubscriptionItem,
+	getSubscriptionCurrentPeriodStart,
 	getSubscriptionPremiumPeriodEnd,
 	getSubscriptionStartDate,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
 import {extractId} from '@app/api/stripe/StripeUtils';
+import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {
 	type Currency,
 	getCurrencyPreferences,
 	getGiftCurrencyPreferences,
 	isLocalizedCurrency,
+	shouldDisableAdaptivePricing,
 } from '@app/api/utils/CurrencyUtils';
 import {isEuEeaCountryCode} from '@fluxer/constants/src/EuropeanEconomicArea';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -232,6 +235,7 @@ export class StripeCheckoutService {
 			},
 			billing_address_collection: isBusiness ? 'required' : 'auto',
 			allow_promotion_codes: true,
+			...(shouldDisableAdaptivePricing(productInfo.currency) ? {adaptive_pricing: {enabled: false}} : {}),
 			...(checkoutMode === 'subscription'
 				? {
 						subscription_data: {
@@ -539,6 +543,15 @@ export class StripeCheckoutService {
 		}
 		if (premiumUntil && user.premiumUntil?.getTime() !== premiumUntil.getTime()) {
 			patch.premium_until = premiumUntil;
+			const giftEnd = shiftGiftExtensionPastPremiumUntil(
+				{premiumUntil: user.premiumUntil, giftEnd: user.premiumGiftExtensionEndsAt},
+				premiumUntil,
+				new Date(),
+				getSubscriptionCurrentPeriodStart(subscription),
+			);
+			if (giftEnd !== user.premiumGiftExtensionEndsAt) {
+				patch.premium_gift_extension_ends_at = giftEnd;
+			}
 		}
 		if (user.premiumWillCancel !== premiumWillCancel) {
 			patch.premium_will_cancel = premiumWillCancel;

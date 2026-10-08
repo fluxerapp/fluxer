@@ -140,23 +140,19 @@ export class StripeGiftService {
 					);
 					await this.cancelStripeSubscriptionImmediately(user);
 				}
-				let stackedOntoStripeSubscription = false;
-				if (premiumType === UserPremiumTypes.SUBSCRIPTION) {
-					stackedOntoStripeSubscription = await this.tryStackSubscriptionGiftOntoStripeSubscription(
-						user,
-						giftCode,
-						code,
-					);
-				}
+				const stackedSubscription =
+					premiumType === UserPremiumTypes.SUBSCRIPTION
+						? await this.tryStackSubscriptionGiftOntoStripeSubscription(user, giftCode, code)
+						: null;
 				Logger.debug(
 					{
 						userId,
 						giftCode: code,
-						stackedOntoStripeSubscription,
+						stackedOntoStripeSubscription: stackedSubscription !== null,
 					},
 					'Gift redemption stacking decision completed',
 				);
-				if (stackedOntoStripeSubscription) {
+				if (stackedSubscription) {
 					Logger.debug(
 						{
 							userId,
@@ -166,13 +162,9 @@ export class StripeGiftService {
 						},
 						'Recording gift extension in gift bucket alongside Stripe trial stacking',
 					);
-					await this.premiumService.extendPremiumByGift(
-						userId,
-						premiumType,
-						giftCode.durationType,
-						giftCode.durationQuantity,
-						true,
-					);
+					if (stackedSubscription.subscription) {
+						await this.premiumService.recordGiftTrialExtension(userId, stackedSubscription.subscription);
+					}
 				} else if (premiumType === UserPremiumTypes.LIFETIME && giftCode.visionarySequenceNumber != null) {
 					const GIFT_CODE_SENTINEL_USER_ID = createUserID(-1n);
 					Logger.debug(
@@ -368,7 +360,7 @@ export class StripeGiftService {
 		user: User,
 		giftCode: GiftCode,
 		code: string,
-	): Promise<boolean> {
+	): Promise<{subscription: Stripe.Subscription | null} | null> {
 		const hasCurrentSubscriptionState = this.hasCurrentSubscriptionState(user);
 		if (!hasCurrentSubscriptionState || !user.stripeSubscriptionId || !this.stripe) {
 			Logger.debug(
@@ -381,7 +373,7 @@ export class StripeGiftService {
 				},
 				'Skipping Stripe subscription stacking for gift redemption',
 			);
-			return false;
+			return null;
 		}
 		Logger.debug(
 			{
@@ -394,14 +386,14 @@ export class StripeGiftService {
 			'Attempting to stack gift duration onto active Stripe subscription',
 		);
 		try {
-			await this.subscriptionService.extendSubscriptionWithGiftTrialDuration(
+			const subscription = await this.subscriptionService.extendSubscriptionWithGiftTrialDuration(
 				user,
 				giftCode.durationType,
 				giftCode.durationQuantity,
 				code,
 			);
 			Logger.debug({userId: user.id, giftCode: code}, 'Stacked gift duration onto Stripe subscription');
-			return true;
+			return {subscription};
 		} catch (error: unknown) {
 			if (!this.shouldFallbackToPremiumFieldGrant(error)) {
 				Logger.error(
@@ -431,7 +423,7 @@ export class StripeGiftService {
 				},
 				'Falling back to premium-field gift grant after missing or inactive Stripe subscription',
 			);
-			return false;
+			return null;
 		}
 	}
 

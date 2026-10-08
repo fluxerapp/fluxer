@@ -9,6 +9,7 @@ import {createGuild, createRole, getMember} from '@app/api/guild/tests/GuildTest
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -158,6 +159,31 @@ describe('StripePremiumService', () => {
 				.execute();
 			expect(me.premium_type).toBe(UserPremiumTypes.LIFETIME);
 			expect(me.premium_lifetime_sequence).toBe(5);
+		});
+		test('keeps Visionary number 0 when a lifetime grant comes from a subscription period', async () => {
+			const account = await createTestAccount(harness);
+			await createBuilder(harness, account.token)
+				.post(`/test/users/${account.userId}/premium`)
+				.body({
+					premium_type: UserPremiumTypes.LIFETIME,
+					premium_lifetime_sequence: 0,
+				})
+				.execute();
+			const premiumService = new StripePremiumService(
+				new UserRepository(),
+				new NoopGatewayService(),
+				{} as IGuildRepositoryAggregate,
+				{} as GuildService,
+			);
+			await premiumService.setPremiumFromSubscriptionPeriod(
+				createUserID(BigInt(account.userId)),
+				UserPremiumTypes.LIFETIME,
+				new Date(Date.now() + 86_400_000),
+			);
+			const me = await createBuilder<{premium_lifetime_sequence: number | null}>(harness, account.token)
+				.get('/users/@me')
+				.execute();
+			expect(me.premium_lifetime_sequence).toBe(0);
 		});
 	});
 });

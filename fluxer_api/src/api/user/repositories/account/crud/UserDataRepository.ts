@@ -10,6 +10,7 @@ import {EMPTY_USER_ROW, USER_COLUMNS} from '@app/api/database/types/UserTypes';
 import {emitAccountChangedIfRelevant} from '@app/api/infrastructure/activity/AccountChangeEvents';
 import {User} from '@app/api/models/User';
 import {Users} from '@app/api/Tables';
+import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
 import {isPendingDeletionBlocked} from '@app/api/user/services/PendingDeletionCoordinator';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DELETED_USER_ID, UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -320,6 +321,7 @@ export class UserDataRepository {
 		updates: {
 			premiumWillCancel: boolean;
 			computedPremiumUntil: Date | null;
+			periodStart: Date | null;
 		},
 	): Promise<{
 		finalVersion: number | null;
@@ -329,12 +331,24 @@ export class UserDataRepository {
 			async () => {
 				return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});
 			},
-			(_current) => {
+			(current) => {
 				const computedPremiumUntil = updates.computedPremiumUntil;
 				const patch: UserPatch = {
 					premium_will_cancel: Db.set(updates.premiumWillCancel),
 					premium_until: computedPremiumUntil ? Db.set(computedPremiumUntil) : Db.clear(),
 				};
+				const giftEnd = current?.premium_gift_extension_ends_at ?? null;
+				if (computedPremiumUntil && giftEnd) {
+					const shiftedGiftEnd = shiftGiftExtensionPastPremiumUntil(
+						{premiumUntil: current?.premium_until, giftEnd},
+						computedPremiumUntil,
+						new Date(),
+						updates.periodStart,
+					);
+					if (shiftedGiftEnd && shiftedGiftEnd.getTime() !== giftEnd.getTime()) {
+						patch.premium_gift_extension_ends_at = Db.set(shiftedGiftEnd);
+					}
+				}
 				return {
 					pk: {user_id: userId},
 					patch,

@@ -3056,6 +3056,9 @@
         "msgid": "Connection volume controls"
       },
       {
+        "msgid": "Continue to checkout"
+      },
+      {
         "msgid": "Convert"
       },
       {
@@ -3798,6 +3801,9 @@
       },
       {
         "msgid": "Keep this page somewhere safe. If you forget your password, you can use it to get back into your account. Anyone with this recovery key can reset your password, so never share it."
+      },
+      {
+        "msgid": "Keep your perks going"
       },
       {
         "msgid": "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
@@ -5330,6 +5336,12 @@
         "msgid": "Strongest neural filter for speech, limits audio to the speech range."
       },
       {
+        "msgid": "Subscribe"
+      },
+      {
+        "msgid": "Subscribe now. Your remaining gift time is added after your paid period."
+      },
+      {
         "msgid": "Subscriber badge on your profile"
       },
       {
@@ -5954,6 +5966,9 @@
         "msgid": "You don't have a recovery kit yet"
       },
       {
+        "msgid": "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost."
+      },
+      {
         "msgid": "You're a Visionary. Your perks never expire, and gifts for friends are always available."
       },
       {
@@ -6036,6 +6051,15 @@
       },
       {
         "msgid": "Your export from {requestedAt} is ready. The download expires on {expiresAt}."
+      },
+      {
+        "msgid": "Your gift time ended but <0/> stay active until <1>{graceDate}</1>. Subscribe before then to keep them."
+      },
+      {
+        "msgid": "Your gift time has ended. Subscribe to keep {premiumProductName}."
+      },
+      {
+        "msgid": "Your gift time is kept"
       },
       {
         "msgid": "Your new nickname, or leave blank to reset it."

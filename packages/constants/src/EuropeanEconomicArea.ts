@@ -31,6 +31,7 @@ const EU_EEA_COUNTRY_CODES = [
 	'IS',
 	'LI',
 	'NO',
+	'AX',
 ] as const;
 const EU_EEA_COUNTRY_CODE_SET: ReadonlySet<string> = new Set(EU_EEA_COUNTRY_CODES);
 

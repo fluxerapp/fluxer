@@ -188,6 +188,7 @@ export class UserAccountRepository implements IUserAccountRepository {
 		updates: {
 			premiumWillCancel: boolean;
 			computedPremiumUntil: Date | null;
+			periodStart: Date | null;
 		},
 	): Promise<{
 		finalVersion: number | null;

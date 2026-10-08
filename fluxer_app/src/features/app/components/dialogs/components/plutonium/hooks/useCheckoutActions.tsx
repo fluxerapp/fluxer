@@ -132,11 +132,19 @@ const CHECKOUT_START_FAILED_BODY_DESCRIPTOR = msg({
 	message: 'Something went wrong while starting checkout. Please try again in a moment.',
 	comment: 'Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.',
 });
-const GIFT_SUBSCRIPTION_BLOCKS_RECURRING_TOAST_DESCRIPTOR = msg({
-	message:
-		"You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends.",
+const GIFT_TIME_KEPT_TITLE_DESCRIPTOR = msg({
+	message: 'Your gift time is kept',
 	comment:
-		'Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.',
+		'Title of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription.',
+});
+const GIFT_TIME_KEPT_BODY_DESCRIPTOR = msg({
+	message: "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost.",
+	comment:
+		'Body of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription. The subscription is charged immediately and the unused gift time is appended after the paid period.',
+});
+const CONTINUE_TO_CHECKOUT_DESCRIPTOR = msg({
+	message: 'Continue to checkout',
+	comment: 'Button in the gift time confirmation that proceeds to subscription checkout.',
 });
 const PRICING_NOT_LOADED_TOAST_DESCRIPTOR = msg({
 	message: 'Pricing is still loading.',
@@ -208,8 +216,8 @@ function alternativePaymentMethodForCurrency(
 export const useCheckoutActions = (
 	priceIds: PriceIds | null,
 	countryCode: string | null,
-	isGiftSubscription: boolean,
 	mobileEnabled: boolean,
+	{hasGiftTime = false}: {hasGiftTime?: boolean} = {},
 ) => {
 	const {i18n} = useLingui();
 	const [loadingCheckout, setLoadingCheckout] = useState(false);
@@ -398,7 +406,7 @@ export const useCheckoutActions = (
 	const handleSelectPlan = useCallback(
 		async (plan: Plan) => {
 			if (loadingCheckout) return;
-			logger.info('Plan selected', {plan, isGiftSubscription});
+			logger.info('Plan selected', {plan, hasGiftTime});
 			const showCheckoutPlanErrorModal = (message: string, flxKey: string) => {
 				ModalCommands.push(
 					modal(() => (
@@ -410,13 +418,6 @@ export const useCheckoutActions = (
 					)),
 				);
 			};
-			if (isGiftSubscription && (plan === 'monthly' || plan === 'yearly')) {
-				showCheckoutPlanErrorModal(
-					i18n._(GIFT_SUBSCRIPTION_BLOCKS_RECURRING_TOAST_DESCRIPTOR),
-					'app.plutonium.use-checkout-actions.gift-subscription-blocked.generic-error-modal',
-				);
-				return;
-			}
 			if (!priceIds) {
 				logger.error('Price IDs not loaded yet');
 				showCheckoutPlanErrorModal(
@@ -498,34 +499,55 @@ export const useCheckoutActions = (
 					setLoadingCheckout(false);
 				}
 			};
-			const altPaymentMethod = alternativePaymentMethodForCurrency(priceIds.currency, isGift, plan);
-			if (altPaymentMethod && MANDATORY_LOCAL_PAYMENT_CURRENCIES.has(priceIds.currency ?? '')) {
-				await startCheckout({paymentMethod: altPaymentMethod});
-				return;
-			}
-			if (altPaymentMethod) {
-				const altPrompt = getAlternativePaymentMethodPrompt(priceIds.currency, altPaymentMethod);
+			const proceedToCheckout = async ({afterConfirm = false}: {afterConfirm?: boolean} = {}) => {
+				const altPaymentMethod = alternativePaymentMethodForCurrency(priceIds.currency, isGift, plan);
+				if (altPaymentMethod && MANDATORY_LOCAL_PAYMENT_CURRENCIES.has(priceIds.currency ?? '')) {
+					await startCheckout({skipMobilePrompt: afterConfirm, paymentMethod: altPaymentMethod});
+					return;
+				}
+				if (altPaymentMethod) {
+					const altPrompt = getAlternativePaymentMethodPrompt(priceIds.currency, altPaymentMethod);
+					ModalCommands.push(
+						modal(() => (
+							<ConfirmModal
+								title={i18n._(CHOOSE_PAYMENT_METHOD_MODAL_TITLE_DESCRIPTOR)}
+								description={altPrompt.description}
+								primaryText={altPrompt.primaryText}
+								primaryVariant="primary"
+								secondaryText={i18n._(USE_CARD_BUTTON_DESCRIPTOR)}
+								onPrimary={() => {
+									void startCheckout({skipMobilePrompt: true, paymentMethod: altPaymentMethod});
+								}}
+								onSecondary={() => {
+									void startCheckout({skipMobilePrompt: true});
+								}}
+								data-flx="app.plutonium.use-checkout-actions.handle-select-plan.confirm-modal--2"
+							/>
+						)),
+					);
+					return;
+				}
+				await startCheckout({skipMobilePrompt: afterConfirm});
+			};
+			if (hasGiftTime && !isGift) {
 				ModalCommands.push(
 					modal(() => (
 						<ConfirmModal
-							title={i18n._(CHOOSE_PAYMENT_METHOD_MODAL_TITLE_DESCRIPTOR)}
-							description={altPrompt.description}
-							primaryText={altPrompt.primaryText}
+							title={i18n._(GIFT_TIME_KEPT_TITLE_DESCRIPTOR)}
+							description={i18n._(GIFT_TIME_KEPT_BODY_DESCRIPTOR)}
+							primaryText={i18n._(CONTINUE_TO_CHECKOUT_DESCRIPTOR)}
 							primaryVariant="primary"
-							secondaryText={i18n._(USE_CARD_BUTTON_DESCRIPTOR)}
+							secondaryText={i18n._(CANCEL_DESCRIPTOR)}
 							onPrimary={() => {
-								void startCheckout({skipMobilePrompt: true, paymentMethod: altPaymentMethod});
+								void proceedToCheckout({afterConfirm: true});
 							}}
-							onSecondary={() => {
-								void startCheckout({skipMobilePrompt: true});
-							}}
-							data-flx="app.plutonium.use-checkout-actions.handle-select-plan.confirm-modal--2"
+							data-flx="app.plutonium.use-checkout-actions.handle-select-plan.gift-time-confirm-modal"
 						/>
 					)),
 				);
 				return;
 			}
-			await startCheckout();
+			await proceedToCheckout();
 		},
 		[
 			handleCheckoutError,
@@ -533,7 +555,7 @@ export const useCheckoutActions = (
 			priceIds,
 			countryCode,
 			getAlternativePaymentMethodPrompt,
-			isGiftSubscription,
+			hasGiftTime,
 			mobileEnabled,
 			i18n,
 		],

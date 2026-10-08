@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
 import {
 	type EffectiveBillingConfig,
 	getEffectiveBillingConfig,
@@ -32,13 +33,16 @@ function getEnvCurrencyPreferences(countryCode: string | null | undefined): Arra
 	if (upperCode === 'BR') {
 		return ['BRL', 'USD', 'EUR'];
 	}
-	if (upperCode === 'DK') {
+	if (upperCode === 'DK' || upperCode === 'FO' || upperCode === 'GL') {
 		return ['DKK', 'EUR', 'USD'];
 	}
 	if (upperCode === 'IN') {
 		return ['INR', 'USD', 'EUR'];
 	}
-	if (upperCode === 'NO') {
+	if (upperCode === 'IS') {
+		return ['ISK', 'EUR', 'USD'];
+	}
+	if (upperCode === 'NO' || upperCode === 'SJ') {
 		return ['NOK', 'EUR', 'USD'];
 	}
 	if (upperCode === 'PL') {
@@ -56,9 +60,22 @@ function getEnvCurrencyPreferences(countryCode: string | null | undefined): Arra
 	return ['USD', 'EUR'];
 }
 
-const GIFT_ELIGIBLE_LOCALIZED_CURRENCIES = new Set<Currency>(['DKK', 'NOK', 'SEK']);
+const GIFT_ELIGIBLE_LOCALIZED_CURRENCIES = new Set<Currency>(['DKK', 'ISK', 'NOK', 'SEK']);
 
-const ENV_CATALOG_CURRENCIES = new Set<Currency>(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY']);
+const ADAPTIVE_PRICING_DISABLED_CURRENCIES = new Set<Currency>(['DKK', 'ISK', 'NOK', 'SEK']);
+
+const ENV_CATALOG_CURRENCIES = new Set<Currency>([
+	'USD',
+	'EUR',
+	'BRL',
+	'DKK',
+	'INR',
+	'ISK',
+	'NOK',
+	'PLN',
+	'SEK',
+	'TRY',
+]);
 
 const OPERATOR_CURRENCY_PATTERN = /^[A-Z]{3}$/;
 
@@ -75,6 +92,10 @@ export function getGiftCurrencyPreferences(
 	return getEnvCurrencyPreferences(countryCode).filter(
 		(currency) => currency === 'USD' || currency === 'EUR' || GIFT_ELIGIBLE_LOCALIZED_CURRENCIES.has(currency),
 	);
+}
+
+export function shouldDisableAdaptivePricing(currency: string): boolean {
+	return !Config.instance.selfHosted && ADAPTIVE_PRICING_DISABLED_CURRENCIES.has(currency.toUpperCase());
 }
 
 export function isLocalizedCurrency(

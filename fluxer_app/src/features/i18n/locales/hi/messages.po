@@ -1759,7 +1759,7 @@ msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPr
 msgstr "{premiumProductName} अब कम कीमत पर उपलब्ध है। {effectiveDate} से {currentPrice} प्रति वर्ष के बजाय {newPrice} प्रति वर्ष पर स्विच करें, और आज कोई शुल्क नहीं लिया जाएगा।"
 
 #. Accessible label of the Plutonium page region. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:252
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:265
 msgid "{premiumProductName} page"
 msgstr "{premiumProductName} पेज"
 
@@ -2734,7 +2734,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "लिनक्स डेस्कटॉप के लिए एक अपडेट उपलब्ध है। इस सिस्टम के लिए पैकेज फ़ॉर्मैट चुनें और {productName} उसे आपके डिवाइस पर सेव कर लेगा।"
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:738
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:760
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "कम कीमत उपलब्ध है। स्विच <0>{listPriceEffectiveDate}</0> से लागू होगा और इससे कुछ और नहीं बदलेगा।"
 
@@ -2754,7 +2754,7 @@ msgid "a poll"
 msgstr "एक पोल"
 
 #. Plutonium page perk card title about profile customization.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:91
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:96
 msgid "A profile that stands out"
 msgstr "एक प्रोफ़ाइल जो सबसे अलग दिखे"
 
@@ -2773,7 +2773,7 @@ msgid "a rich embed or link preview (not an uploaded file)"
 msgstr "एक रिच एम्बेड या लिंक प्रीव्यू (अपलोड की गई फ़ाइल नहीं)"
 
 #. Plutonium page comparison row label for per-community profiles.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:178
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:191
 msgid "A separate profile for each community"
 msgstr "हर समुदाय के लिए एक अलग प्रोफ़ाइल"
 
@@ -3048,7 +3048,7 @@ msgstr "कार्रवाइयाँ"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning the paid subscription is active.
 #. Tab in the thread browser that lists active threads.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:448
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:161
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
@@ -3800,19 +3800,19 @@ msgstr "अलाइनमेंट कंट्रोल केवल चौड
 msgid "All"
 msgstr "सभी"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:578
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:600
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "सभी <0/> <1>{effectiveMonthlyPrice}/माह</1> में।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:600
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:622
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "सभी <0/> <1>{effectiveYearlyPrice}/साल</1> में।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:621
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:643
 msgid "All <0/> included with your subscription."
 msgstr "आपकी सदस्यता के साथ सभी <0/> शामिल हैं।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:568
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:590
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "सभी <0/>, हमेशा के लिए। कोई बिलिंग नहीं, कोई नवीनीकरण नहीं।"
 
@@ -4357,7 +4357,7 @@ msgid "Animated {avifFormatLabel} not supported"
 msgstr "एनिमेटेड {avifFormatLabel} समर्थित नहीं है"
 
 #. Plutonium page comparison row label for animated avatars and banners.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:230
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:243
 msgid "Animated avatar and profile banner"
 msgstr "एनिमेटेड अवतार और प्रोफ़ाइल बैनर"
 
@@ -5550,7 +5550,7 @@ msgstr "AV1 (ऑप्ट-इन आवश्यक)"
 
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:135
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
 #: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "Available"
 msgstr "उपलब्ध"
@@ -5631,7 +5631,7 @@ msgstr "अभी दूर हूँ"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:398
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:256
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
 msgid "Back"
 msgstr "वापस"
 
@@ -5963,12 +5963,12 @@ msgid "Between 1 and 32 characters"
 msgstr "1 से 32 वर्णों के बीच"
 
 #. Plutonium subscription card text for an App Store or Google Play subscription. {storeName} is the store brand name, App Store or Google Play, and must not be translated.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:531
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:553
 msgid "Billed through {storeName}."
 msgstr "बिलिंग {storeName} के ज़रिए होती है।"
 
 #. Plutonium subscription card text for an App Store or Google Play subscription that will not renew. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {endDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:521
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:543
 msgid "Billed through {storeName}. Ends on <0>{endDate}</0>."
 msgstr "बिलिंग {storeName} के ज़रिए होती है। <0>{endDate}</0> को समाप्त होगा।"
 
@@ -6382,7 +6382,7 @@ msgid "Brightness"
 msgstr "ब्राइटनेस"
 
 #. Plutonium page perk card body about global emojis and stickers.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:87
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:92
 msgid "Bring custom emojis and stickers from any of your communities into every chat and community you're in."
 msgstr "अपने किसी भी समुदाय के कस्टम इमोजी और स्टिकर को अपने हर चैट और समुदाय में लाएं।"
 
@@ -6909,7 +6909,7 @@ msgid "Cancel import"
 msgstr "इंपोर्ट रद्द करें"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:888
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:957
 msgid "Cancel price change"
 msgstr "कीमत बदलना रद्द करें"
 
@@ -6924,26 +6924,26 @@ msgid "Cancel request"
 msgstr "अनुरोध रद्द करें"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:896
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:965
 msgid "Cancel scheduled switch"
 msgstr "निर्धारित स्विच रद्द करें"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:911
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:247
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:980
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "सदस्यता रद्द करें"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:241
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
 msgid "Cancel subscription?"
 msgstr "सदस्यता रद्द करें?"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:701
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:723
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "निर्धारित बदलाव को रद्द करें और इसके बजाय वर्तमान मूल्य पर जाएँ।"
 
@@ -6953,7 +6953,7 @@ msgid "Cancel upload"
 msgstr "अपलोड रद्द करें"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:892
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:961
 msgid "Cancel yearly upgrade"
 msgstr "सालाना अपग्रेड रद्द करें"
 
@@ -6963,7 +6963,7 @@ msgid "Cancel your friend request to {displayName}?"
 msgstr "क्या आप {displayName} को भेजी गई अपनी फ्रेंड रिक्वेस्ट रद्द करना चाहते हैं?"
 
 #. Subscription status badge meaning cancellation is scheduled for the renewal date.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:436
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:442
 msgid "Canceling"
 msgstr "रद्द किया जा रहा है"
 
@@ -6972,7 +6972,7 @@ msgstr "रद्द किया जा रहा है"
 msgid "Cancellation"
 msgstr "इको कैंसलेशन"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:555
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "<0>{cancelDate}</0> को रद्द हो जाएगा। <1/> तब तक सक्रिय रहेंगे।"
 
@@ -7239,7 +7239,7 @@ msgid "Change password form"
 msgstr "पासवर्ड बदलने का फ़ॉर्म"
 
 #. Subscription status badge meaning a future billing plan change is scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:440
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:446
 msgid "Change scheduled"
 msgstr "बदलाव शेड्यूल किया गया है"
 
@@ -7771,7 +7771,7 @@ msgid "Character limit exceeded by {remaining}"
 msgstr "सीमा से {remaining} अक्षर ज़्यादा"
 
 #. Plutonium page comparison row label for the message length limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:194
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:207
 msgid "Characters in a single message"
 msgstr "एक संदेश में अक्षर"
 
@@ -8101,7 +8101,7 @@ msgid "Choose one of the methods below to prove domain ownership. You only need 
 msgstr "डोमेन का मालिकाना हक साबित करने के लिए नीचे दिए गए तरीकों में से कोई एक चुनें। आपको सिर्फ़ एक ही पूरा करना होगा।"
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:158
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:166
 msgid "Choose payment method"
 msgstr "भुगतान का तरीका चुनें"
 
@@ -8281,7 +8281,7 @@ msgid "Claim your account to access security features like two-factor authentica
 msgstr "दो-कारक प्रमाणीकरण और पासकी जैसे सुरक्षा फ़ीचर एक्सेस करने के लिए अपना अकाउंट क्लेम करें।"
 
 #. Plutonium page note under disabled buttons for unclaimed accounts. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:242
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:255
 msgid "Claim your account to buy {premiumProductName}."
 msgstr "अपना खाता क्लेम करें {premiumProductName} खरीदने के लिए।"
 
@@ -9072,7 +9072,7 @@ msgid "Communities with over 250 people are forced onto the \"mentions only\" se
 msgstr "250 से ज़्यादा लोगों वाली कम्युनिटी पर \"सिर्फ़ मेंशन\" सेटिंग लागू कर दी जाती है। आपकी मूल सेटिंग सुरक्षित रहती है और कम्युनिटी के सदस्य 250 से कम होने पर वह वापस लागू कर दी जाएगी।"
 
 #. Plutonium page comparison row label for the community limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:190
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:203
 msgid "Communities you can join"
 msgstr "आप जिन समुदायों से जुड़ सकते हैं"
 
@@ -9323,7 +9323,7 @@ msgid "Compact mode"
 msgstr "कॉम्पैक्ट मोड"
 
 #. Heading of the comparison table on the Plutonium page. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:123
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:128
 msgid "Compare Free and {premiumProductName}"
 msgstr "मुफ़्त और {premiumProductName} की तुलना करें"
 
@@ -9338,7 +9338,7 @@ msgid "Complete mature content check"
 msgstr "वयस्क सामग्री की जाँच पूरी करें"
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:149
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:157
 msgid "Complete payment"
 msgstr "भुगतान पूरा करें"
 
@@ -9794,6 +9794,11 @@ msgstr "कॉन्टेक्स्ट मेन्यू को लेफ्
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
 msgstr "जारी रखें"
+
+#. Button in the gift time confirmation that proceeds to subscription checkout.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
+msgid "Continue to checkout"
+msgstr "चेकआउट जारी रखें"
 
 #. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/utils/ReportActionUtils.tsx:37
@@ -11591,7 +11596,7 @@ msgid "Custom themes"
 msgstr "कस्टम थीम"
 
 #. Plutonium page comparison row label for custom themes.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:238
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:251
 msgid "Custom themes for the app"
 msgstr "ऐप के लिए कस्टम थीम"
 
@@ -11644,7 +11649,7 @@ msgstr "कस्टम…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:817
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:884
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "ग्राहक पोर्टल"
@@ -13897,7 +13902,7 @@ msgstr "हर प्रकाशित संदेश में 3 त्वर
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #. Plutonium page comparison row label for early access.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:76
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:234
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:247
 msgid "Early access to new features"
 msgstr "नई सुविधाओं का अर्ली एक्सेस"
 
@@ -14767,17 +14772,17 @@ msgid "End date"
 msgstr "अंतिम तिथि"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:923
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:992
 msgid "End grace now"
 msgstr "ग्रेस पीरियड अभी खत्म करें"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:269
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
 msgid "End grace period"
 msgstr "ग्रेस पीरियड खत्म करें"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:262
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
 msgid "End grace period now?"
 msgstr "ग्रेस पीरियड अभी खत्म करें?"
 
@@ -15358,7 +15363,7 @@ msgstr "इसके बाद समाप्त होगा"
 #. Error message in the invite list item.
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:426
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:432
 #: src/features/auth/components/accounts/AccountRow.tsx:18
 #: src/features/invite/components/InviteListItem.tsx:32
 msgid "Expired"
@@ -15394,7 +15399,7 @@ msgstr "{date} को समाप्त हो गया"
 msgid "Expired on {earliest}"
 msgstr "{earliest} को समाप्त हो गया"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:457
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:463
 msgid "Expired on <0>{expiredDate}</0>. <1/> are no longer active. You can resubscribe at any time."
 msgstr "<0>{expiredDate}</0> को समाप्त हो गया। <1/> अब सक्रिय नहीं हैं। आप किसी भी समय फिर से सदस्यता ले सकते हैं।"
 
@@ -15950,7 +15955,7 @@ msgstr "पसंदीदा"
 
 #. Column header for perk names in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:180
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:127
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:132
 msgid "Feature"
 msgstr "सुविधा"
 
@@ -16362,7 +16367,7 @@ msgid "Food & drink"
 msgstr "खाना और पेय"
 
 #. Screen reader label for the asterisk that jumps to the custom tag footnote on the Plutonium page.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:153
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:158
 msgid "Footnote about custom tags"
 msgstr "कस्टम टैग के बारे में फ़ुटनोट"
 
@@ -16651,7 +16656,7 @@ msgstr "फ़्रांस"
 
 #. Column header for the free tier in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:185
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:131
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:136
 msgid "Free"
 msgstr "मुफ़्त"
 
@@ -17069,12 +17074,12 @@ msgid "Get {premiumProductName} to customize your tag or keep it when changing y
 msgstr "अपना टैग कस्टमाइज़ करने या यूज़रनेम बदलते समय उसे बनाए रखने के लिए {premiumProductName} पाएँ"
 
 #. Plutonium page perk card body about profile perks, shown on instances where people sign in with a username and have no tag.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:95
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:100
 msgid "Get an animated avatar and banner, a subscriber badge and a separate profile for each community."
 msgstr "एक एनिमेटेड अवतार और बैनर, एक सब्सक्राइबर बैज और हर समुदाय के लिए एक अलग प्रोफ़ाइल प्राप्त करें।"
 
 #. Plutonium page perk card body about profile perks. footnote is a clickable asterisk that points to a footnote about tags. Keep it directly after the word for username.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:100
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:105
 msgid "Get an animated avatar and banner, a subscriber badge, the four-digit tag you want after your username{footnote}, and a separate profile for each community."
 msgstr "एक एनिमेटेड अवतार और बैनर, एक सब्सक्राइबर बैज, अपने यूज़रनेम के बाद अपना मनचाहा चार अंकों का टैग {footnote}, और हर कम्युनिटी के लिए एक अलग प्रोफ़ाइल पाएं।"
 
@@ -17167,7 +17172,7 @@ msgstr "GIF लोड नहीं हो पाए"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning premium access came from a gift.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:446
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:452
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:296
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:79
 msgid "Gift"
@@ -17181,7 +17186,7 @@ msgid "Gift {premiumProductName}"
 msgstr "{premiumProductName} उपहार में दें"
 
 #. Body of the closing call to action on the Plutonium page for members. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:169
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:182
 msgid "Gift {premiumProductName} to a friend for a month or a whole year. Gifts never renew."
 msgstr "अपने दोस्त को {premiumProductName} एक महीने या पूरे साल के लिए उपहार में दें। उपहार कभी भी स्वतः नवीनीकृत नहीं होते हैं।"
 
@@ -17319,7 +17324,7 @@ msgstr "उपहार: जल्द समाप्त होगा"
 msgid "Gift: grace period (still have access)"
 msgstr "उपहार: ग्रेस पीरियड (अभी भी एक्सेस है)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:540
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:562
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "<1>{giftEndDate}</1> तक <0/> उपहार में मिला है। अपने आप रिन्यू नहीं होगा। अवधि बढ़ाने के लिए और उपहार कोड रिडीम करें।"
 
@@ -17526,7 +17531,7 @@ msgid "Got it!"
 msgstr "ठीक है!"
 
 #. Subscription status badge meaning access remains briefly after subscription end.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:428
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:434
 msgid "Grace period"
 msgstr "ग्रेस पीरियड"
 
@@ -17820,12 +17825,12 @@ msgid "Hate speech"
 msgstr "नफ़रत फैलाने वाला भाषण"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:301
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "गिफ्ट कोड है? {PREMIUM_PRODUCT_NAME} को अनलॉक करने के लिए इसे रिडीम करें।"
 
 #. Plutonium page hero text on an instance where the paid tier cannot be bought, only redeemed. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:74
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:79
 msgid "Have a gift code? Redeem it to unlock {premiumProductName}."
 msgstr "गिफ्ट कोड है? {premiumProductName} को अनलॉक करने के लिए इसे रिडीम करें।"
 
@@ -20034,8 +20039,8 @@ msgstr "एडिट साफ़ करते समय अटैचमें�
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "मुफ़्त और प्रीमियम टियर रखें। आप टियर को कस्टमाइज़ कर सकते हैं, स्ट्राइप के ज़रिए प्रीमियम बेच सकते हैं, या बाद में एडमिन पैनल से गिफ्ट कोड दे सकते हैं।"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:167
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:271
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:169
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
 msgid "Keep grace period"
 msgstr "ग्रेस पीरियड रखें"
 
@@ -20049,8 +20054,8 @@ msgstr "नेको को स्थिर रखें"
 msgid "Keep running"
 msgstr "चालू रखें"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:145
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:249
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:147
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
 msgid "Keep subscription"
 msgstr "सदस्यता रखें"
 
@@ -20073,6 +20078,11 @@ msgstr "रिलीज़ करने के बाद भी थोड़ी 
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:139
 msgid "Keep window dimensions and placement between reloads"
 msgstr "रीलोड के बीच विंडो के डाइमेंशन और प्लेसमेंट को बनाए रखें"
+
+#. Heading of the closing call to action on the Plutonium page for members on gifted time who can subscribe.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:170
+msgid "Keep your perks going"
+msgstr "अपने लाभ जारी रखें"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:93
@@ -20212,7 +20222,7 @@ msgid "Large file threshold (MB)"
 msgstr "बड़ी फ़ाइल सीमा (MB)"
 
 #. Plutonium page comparison row label for the upload size limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:202
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:215
 msgid "Largest file you can upload"
 msgstr "अपलोड करने के लिए सबसे बड़ी फ़ाइल"
 
@@ -20310,7 +20320,7 @@ msgid "Learn more"
 msgstr "और जानें"
 
 #. Link text in the Plutonium page tag footnote. Opens the Visionary help article.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:149
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:154
 msgid "Learn more about Visionary"
 msgstr "Visionary के बारे में ज़्यादा जानें"
 
@@ -20419,8 +20429,8 @@ msgstr "माउस का बायाँ बटन"
 msgid "Left tooltip"
 msgstr "बायां टूलटिप"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:593
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:615
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:637
 msgid "Legacy rate"
 msgstr "पुरानी दर"
 
@@ -20551,7 +20561,7 @@ msgstr "लाइब्रेरी: {max} में से {count}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Subscription status badge meaning permanent premium access.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:444
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:450
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:21
 msgid "Lifetime"
 msgstr "लाइफ़टाइम"
@@ -21648,7 +21658,7 @@ msgid "Media filter"
 msgstr "मीडिया फ़िल्टर"
 
 #. Plutonium page comparison row label for the saved media limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:206
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:219
 msgid "Media items you can save for later"
 msgstr "बाद में सहेजने के लिए मीडिया आइटम"
 
@@ -22279,7 +22289,7 @@ msgid "Messages published in these announcement channels are copied into your ch
 msgstr "इन घोषणा चैनलों में प्रकाशित संदेश आपके चैनलों में कॉपी किए जाते हैं।"
 
 #. Plutonium page comparison row label for the bookmark limit.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:198
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:211
 msgid "Messages you can bookmark"
 msgstr "बुकमार्क करने लायक संदेश"
 
@@ -22620,11 +22630,11 @@ msgstr "मासिक"
 msgid "Monthly {monthlyPrice}"
 msgstr "मासिक {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:685
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:707
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "<0>{pendingChangeDate}</0> से मासिक बिलिंग शुरू होगी।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:678
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:700
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "<0>{pendingChangeDate}</0> से मासिक बिलिंग शुरू होगी। पहला मासिक शुल्क: {pendingInitialPriceLabel}। भविष्य के मासिक नवीनीकरण: {pendingRecurringPriceLabel}/माह।"
 
@@ -23566,12 +23576,12 @@ msgid "New post in #{forumName}"
 msgstr "#{forumName} में नई पोस्ट"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:649
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:671
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "नई कीमत <0>{pendingChangeDate}</0> के लिए शेड्यूल की गई है।"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:643
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:665
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "नई कीमत <0>{pendingChangeDate}</0> के लिए शेड्यूल की गई है। उसके बाद हर नवीनीकरण {pendingTargetPriceLabel} का होगा।"
 
@@ -24421,7 +24431,7 @@ msgstr "असाइन नहीं किया गया"
 #. Fallback value when a saved billing payment method has no expiration date.
 #. Screen reader text for a cross in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/plutonium/PaymentMethodList.tsx:18
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:139
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:144
 msgid "Not available"
 msgstr "उपलब्ध नहीं है"
 
@@ -24734,7 +24744,7 @@ msgid "On"
 msgstr "चालू"
 
 #. Billing confirmation body for moving an active subscription down to the current price. {listPriceEffectiveDate} is a date, and {listPriceCurrentLabel} and {listPriceNewLabel} are currency amounts, all already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:375
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:381
 msgid "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
 msgstr "<0>{listPriceEffectiveDate}</0> को आपकी सदस्यता {listPriceCurrentLabel} से {listPriceNewLabel} पर आ जाएगी। आज कोई शुल्क नहीं लिया जाएगा, और आपकी बाकी सदस्यता बिल्कुल वैसी ही रहेगी।"
 
@@ -26162,7 +26172,7 @@ msgid "Perks"
 msgstr "पर्क"
 
 #. Subscription status badge meaning premium is paid but perks are temporarily disabled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:432
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:438
 msgid "Perks paused"
 msgstr "पर्क रोके गए"
 
@@ -26265,7 +26275,7 @@ msgid "Photo"
 msgstr "फ़ोटो"
 
 #. Body of the closing call to action on the Plutonium page for people without the paid tier.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:161
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:166
 msgid "Pick a plan and your perks switch on the moment checkout finishes."
 msgstr "कोई प्लान चुनें और चेकआउट पूरा होते ही आपके फायदे चालू हो जाएँगे।"
 
@@ -26315,7 +26325,7 @@ msgid "Pick one or more dictionaries. Words from any selected dictionary are acc
 msgstr "एक या ज़्यादा शब्दकोश चुनें। किसी भी चुने गए शब्दकोश के शब्द स्वीकार किए जाते हैं, जो बहुभाषी चैट के लिए उपयोगी है।"
 
 #. Plutonium page comparison row label for the custom username tag perk.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:174
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:187
 msgid "Pick the 4-digit number after your username"
 msgstr "अपने यूज़रनेम के बाद 4-अंकीय संख्या चुनें"
 
@@ -27006,7 +27016,7 @@ msgid "Pricing"
 msgstr "कीमत"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:141
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:149
 msgid "Pricing is still loading."
 msgstr "कीमत अभी भी लोड हो रही है।"
 
@@ -27748,7 +27758,7 @@ msgstr "रिएक्शन"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:813
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:880
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "फिर से सक्रिय करें"
@@ -27816,7 +27826,7 @@ msgstr "उपहार खरीदने के लिए तैयार ह�
 
 #. Heading of the closing call to action on the Plutonium page for people without the paid tier.
 #: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:50
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:157
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:162
 msgid "Ready to upgrade?"
 msgstr "अपग्रेड करने के लिए तैयार हैं?"
 
@@ -27996,8 +28006,8 @@ msgstr "अपने लिए रिडीम करें"
 
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:786
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:311
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:827
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:316
 msgid "Redeem gift code"
 msgstr "उपहार कोड रिडीम करें"
 
@@ -28807,7 +28817,7 @@ msgstr "नवीनीकरण सीमा (दिन)"
 msgid "Renew window (days)"
 msgstr "नवीनीकरण विंडो (दिन)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:758
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:780
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "<0>{renewalDate}</0> को रिन्यू होगा।"
 
@@ -29517,9 +29527,11 @@ msgid "Restore window"
 msgstr "विंडो को पहले जैसा करें"
 
 #. Billing button for restarting a subscription during the grace period.
+#. Billing button for starting a new subscription after premium ended.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:805
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:809
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:846
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:872
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:876
 msgid "Resubscribe"
 msgstr "फिर से सदस्यता लें"
 
@@ -31150,7 +31162,7 @@ msgid "Send file messages in order"
 msgstr "फ़ाइल मैसेज क्रम में भेजें"
 
 #. Plutonium page perk card title about upload size. size is a formatted size such as 500 MB.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:114
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:119
 msgid "Send files up to {size}"
 msgstr "{size} तक की फ़ाइलें भेजें"
 
@@ -31663,7 +31675,7 @@ msgid "Share active theme"
 msgstr "सक्रिय थीम शेयर करें"
 
 #. Plutonium page perk card body about upload size. freeSize is a formatted size such as 25 MB.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:118
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:123
 msgid "Share full-length videos and big files without shrinking them first. Free accounts can send up to {freeSize}."
 msgstr "वीडियो और बड़ी फ़ाइलें बिना छोटा किए भेजें। मुफ़्त खाते {freeSize} तक भेज सकते हैं।"
 
@@ -31688,7 +31700,7 @@ msgid "Share the {premiumProductName} experience with your friends by purchasing
 msgstr "अपने दोस्तों के साथ {premiumProductName} का अनुभव शेयर करने के लिए उपहार सदस्यता खरीदें।"
 
 #. Heading of the closing call to action on the Plutonium page for members.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:165
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:178
 msgid "Share the perks"
 msgstr "सुविधाएं साझा करें"
 
@@ -31724,7 +31736,7 @@ msgid "Share your screen in high definition (1080p), quad HD (1440p), or native 
 msgstr "अपनी स्क्रीन को हाई डेफ़िनिशन (1080p), क्वाड HD (1440p) या नेटिव सोर्स रिज़ॉल्यूशन में, 60 FPS तक शेयर करें।"
 
 #. Plutonium page perk card body about stream quality.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:110
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:115
 msgid "Share your screen or camera in up to 4K at 60 frames per second. Free accounts stream in up to 720p at 30."
 msgstr "अपनी स्क्रीन या कैमरा 4K 60fps तक स्ट्रीम करें। मुफ़्त खाते 720p 30fps तक स्ट्रीम करते हैं।"
 
@@ -34052,7 +34064,7 @@ msgid "Stream hidden"
 msgstr "स्ट्रीम छिपी हुई है"
 
 #. Plutonium page perk card title about stream quality.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:106
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:111
 msgid "Stream in 4K at 60 FPS"
 msgstr "60 FPS पर 4K में स्ट्रीम करें"
 
@@ -34172,8 +34184,20 @@ msgstr "आवेदन जमा करें"
 msgid "Submitting"
 msgstr "सबमिट किया जा रहा है"
 
+#. Billing button that starts a recurring subscription for someone on gifted premium time.
+#. Billing button that starts a recurring subscription for someone on gifted premium time.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:811
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:850
+msgid "Subscribe"
+msgstr "सब्सक्राइब करें"
+
+#. Body of the closing call to action on the Plutonium page for members on gifted time who can subscribe.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:174
+msgid "Subscribe now. Your remaining gift time is added after your paid period."
+msgstr "अभी सब्सक्राइब करें। आपका शेष उपहार समय आपके भुगतान की अवधि के बाद जोड़ा जाएगा।"
+
 #. Plutonium page comparison row label for the subscriber badge.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:182
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:195
 msgid "Subscriber badge on your profile"
 msgstr "आपकी प्रोफ़ाइल पर सब्सक्राइबर बैज"
 
@@ -34236,7 +34260,7 @@ msgid "Summary"
 msgstr "सारांश"
 
 #. Plutonium page hero subtitle for people without the paid tier.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:70
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:75
 msgid "Support an independent communication platform and unlock some sweet perks."
 msgstr "एक स्वतंत्र संचार प्लेटफ़ॉर्म का समर्थन करें और कुछ शानदार लाभ अनलॉक करें।"
 
@@ -34347,7 +34371,7 @@ msgid "Switch price"
 msgstr "कीमत बदलें"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:873
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:942
 msgid "Switch to {listPriceNewLabel}"
 msgstr "{listPriceNewLabel} पर स्विच करें"
 
@@ -34377,7 +34401,7 @@ msgstr "सीधे इनपुट पर स्विच करें"
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:56
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:925
 msgid "Switch to monthly"
 msgstr "मासिक पर स्विच करें"
 
@@ -34442,7 +34466,7 @@ msgstr "दो कॉलम पर स्विच करें"
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:52
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:852
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:921
 msgid "Switch to yearly"
 msgstr "सालाना पर स्विच करें"
 
@@ -34716,23 +34740,23 @@ msgstr "टैग लोगों को पोस्ट खोजने मे�
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "टैग 2 से {maxLength} वर्ण के होने चाहिए और उनमें सिर्फ़ अक्षर और अंक हो सकते हैं।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:294
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "यह आपके अगले रिन्यूअल पर लागू होगा। हम आपके मौजूदा मासिक भुगतान से {creditLabel} क्रेडिट लागू करेंगे, इसलिए आपका पहला वार्षिक शुल्क <0>{firstRenewalPriceLabel}</0> होगा। भविष्य के वार्षिक रिन्यूअल {renewalPrice}/वर्ष होंगे।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:303
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:309
 msgid "Takes effect at your next renewal. Your subscription stays monthly until then, and your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "यह आपके अगले रिन्यूअल पर लागू होगा। तब तक आपकी सदस्यता मासिक रहेगी और आपका अगला रिन्यूअल <0>{renewalPrice}/साल</0> होगा।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:312
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:318
 msgid "Takes effect at your next renewal. Your subscription stays yearly until then, and your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "यह आपके अगले रिन्यूअल पर लागू होगा। तब तक आपकी सदस्यता वार्षिक रहेगी, और आपका अगला रिन्यूअल <0>{renewalPrice}/माह</0> होगा।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:331
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:337
 msgid "Takes effect immediately. A prorated adjustment may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "यह तुरंत प्रभावी होगा। {PAYMENT_PROVIDER_NAME} के ज़रिए आनुपातिक समायोजन लागू हो सकता है। आपका अगला रिन्यूअल <0>{renewalPrice}/माह</0> होगा।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:322
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:328
 msgid "Takes effect immediately. A prorated charge may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "यह तुरंत प्रभावी होगा। {PAYMENT_PROVIDER_NAME} के ज़रिए आनुपातिक शुल्क लागू हो सकता है। आपका अगला रिन्यूअल <0>{renewalPrice}/वर्ष</0> होगा।"
 
@@ -36102,7 +36126,7 @@ msgid "This picker is only available in the desktop app."
 msgstr "यह पिकर सिर्फ़ डेस्कटॉप ऐप में उपलब्ध है।"
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:153
 msgid "This plan isn't available. Contact support."
 msgstr "यह प्लान उपलब्ध नहीं है। सहायता से संपर्क करें।"
 
@@ -37835,7 +37859,7 @@ msgstr "{premiumProductName} के साथ DM में कस्टम इ�
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "{premiumProductName} के साथ HD स्क्रीन शेयर अनलॉक करें"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:218
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:220
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "एक स्वतंत्र संचार प्लेटफ़ॉर्म को सपोर्ट करते हुए ज़्यादा बड़ी सीमाएँ और खास सुविधाएँ अनलॉक करें।"
 
@@ -38214,7 +38238,7 @@ msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They sho
 msgstr "ज़्यादा से ज़्यादा {DISCOVERY_MAX_TAGS} टैग लोगों को आपकी कम्युनिटी ढूंढने में मदद करते हैं। वे डिस्कवरी सर्च में दिखते हैं।"
 
 #. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:226
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:239
 msgid "Up to 4K at 60 FPS"
 msgstr "60 FPS पर 4K तक"
 
@@ -38224,7 +38248,7 @@ msgid "Up to 4K/60fps"
 msgstr "4K/60fps तक"
 
 #. Plutonium page comparison value for free video quality. Keep 720p and FPS as written.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:222
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:235
 msgid "Up to 720p at 30 FPS"
 msgstr "30 FPS पर 720p तक"
 
@@ -38635,7 +38659,7 @@ msgid "Use animated emojis"
 msgstr "एनिमेटेड इमोजी इस्तेमाल करें"
 
 #. Plutonium page comparison row label for animated emoji use.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:210
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:223
 msgid "Use animated emojis in messages"
 msgstr "संदेशों में एनिमेटेड इमोजी का उपयोग करें"
 
@@ -38652,7 +38676,7 @@ msgid "Use browser locale for time format"
 msgstr "समय फ़ॉर्मैट के लिए ब्राउज़र का लोकेल इस्तेमाल करें"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:162
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
 msgid "Use card"
 msgstr "कार्ड का उपयोग करें"
 
@@ -38672,7 +38696,7 @@ msgid "Use coal theme (pitch-black surfaces)"
 msgstr "कोल थीम इस्तेमाल करें (पूरी तरह से काले रंग की सतहें)"
 
 #. Plutonium page comparison row label for global emojis and stickers.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:214
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:227
 msgid "Use custom emojis and stickers in any community"
 msgstr "किसी भी समुदाय में कस्टम इमोजी और स्टिकर का उपयोग करें"
 
@@ -39343,7 +39367,7 @@ msgid "Verify your email first"
 msgstr "पहले अपना ईमेल वेरिफ़ाई करें"
 
 #. Plutonium page note under disabled buttons for unverified accounts. premiumProductName is the paid tier name.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:247
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:260
 msgid "Verify your email to buy {premiumProductName}."
 msgstr "अपना ईमेल सत्यापित करें {premiumProductName} खरीदने के लिए।"
 
@@ -39435,12 +39459,12 @@ msgid "Video call"
 msgstr "वीडियो कॉल"
 
 #. Plutonium page comparison row label for video quality.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:218
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:231
 msgid "Video call and screen share quality"
 msgstr "वीडियो कॉल और स्क्रीन शेयर की क्वालिटी"
 
 #. Plutonium page comparison row label for saved video call backgrounds.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:186
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:199
 msgid "Video call backgrounds you can save"
 msgstr "सहेजे जा सकने वाले वीडियो कॉल बैकग्राउंड"
 
@@ -39803,7 +39827,7 @@ msgstr "वर्जीनिया"
 msgid "Visibility"
 msgstr "विज़िबिलिटी"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:419
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
 msgid "Visionary"
 msgstr "विजनरी"
 
@@ -40998,15 +41022,15 @@ msgstr "सालाना {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "सालाना उपहार"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:672
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:694
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "<0>{pendingChangeDate}</0> के लिए सालाना अपग्रेड शेड्यूल किया गया है।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:657
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:679
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "<0>{pendingChangeDate}</0> के लिए सालाना अपग्रेड शेड्यूल किया गया है। पहला सालाना शुल्क: {pendingCreditPriceLabel} क्रेडिट के बाद {pendingInitialPriceLabel}। आगे के सालाना रिन्यूअल: {pendingRecurringPriceLabel}/वर्ष।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:664
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:686
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "<0>{pendingChangeDate}</0> के लिए सालाना अपग्रेड शेड्यूल किया गया है। पहला सालाना शुल्क: {pendingInitialPriceLabel}। आगे के सालाना रिन्यूअल: {pendingRecurringPriceLabel}/वर्ष।"
 
@@ -41079,7 +41103,7 @@ msgid "You are now a developer!"
 msgstr "अब आप एक डेवलपर हैं!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:153
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:161
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "आप भुगतान पूरा करने के लिए अब {paymentProviderName} पर जा रहे हैं। इसे पूरा करने के बाद {productName} पर वापस आएं।"
 
@@ -41153,7 +41177,7 @@ msgid "You can only have one custom background on the free tier. Picking a new o
 msgstr "मुफ़्त टियर पर आप सिर्फ़ एक कस्टम बैकग्राउंड रख सकते हैं। नया चुनने पर आपका मौजूदा बैकग्राउंड बदल जाएगा।"
 
 #. Footnote on the Plutonium page about custom username tags. Keep Mina#4821, mina#4821 and #0000 unchanged. visionaryLink is a link whose text is "Learn more about Visionary".
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:143
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:148
 msgid "You can only pick a tag that nobody else with the same username already has. Usernames aren't case sensitive, so Mina#4821 and mina#4821 count as the same. The #0000 tag is reserved for {productName} Visionary members. {visionaryLink}."
 msgstr "आप केवल वही टैग चुन सकते हैं जो किसी अन्य उपयोगकर्ता के पास समान उपयोगकर्ता नाम के साथ पहले से मौजूद न हो। उपयोगकर्ता नाम केस-संवेदी नहीं होते हैं, इसलिए Mina#4821 और mina#4821 एक ही माने जाते हैं। #0000 टैग {productName} विज़नरी सदस्यों के लिए आरक्षित है। {visionaryLink}."
 
@@ -41494,13 +41518,13 @@ msgstr "आपने अभी तक किसी को ब्लॉक नह
 msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {productName} without a mouse."
 msgstr "आपने अभी Tab दबाया है। कीबोर्ड मोड अब चालू है, ताकि आप माउस के बिना {productName} को नेविगेट कर सकें।"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:139
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:243
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "आपके पर्क आपकी अगली रिन्यूअल तारीख तक बने रहेंगे। अपनी सब्सक्राइबर हिस्ट्री बनाए रखने के लिए उससे पहले सदस्यता फिर से सक्रिय करें।"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "आप तुरंत सभी {PREMIUM_PRODUCT_NAME} पर्क खो देंगे और आपकी सब्सक्राइबर हिस्ट्री रीसेट हो जाएगी। इसे पूर्ववत नहीं किया जा सकता।"
 
@@ -41656,6 +41680,11 @@ msgstr "आपको डेस्कटॉप पर सूचनाएं न�
 msgid "You'll appear offline"
 msgstr "आप ऑफ़लाइन दिखेंगे"
 
+#. Body of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription. The subscription is charged immediately and the unused gift time is appended after the paid period.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+msgid "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost."
+msgstr "आपको अभी शुल्क लिया जाएगा। आपके उपहार का शेष समय आपके भुगतान की अवधि के बाद जोड़ा जाएगा, इसलिए इसमें से कुछ भी व्यर्थ नहीं जाएगा।"
+
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:476
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "आपको सभी साइन-आउट किए गए डिवाइस पर फिर से साइन इन करना होगा"
@@ -41738,11 +41767,6 @@ msgstr "आपको बैन कर दिया गया है"
 #: src/features/app/components/alerts/RateLimitedConfirmModal.tsx:19
 msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "आप पर रेट लिमिट लगी है। दोबारा कोशिश करने से पहले {duration} इंतज़ार करें।"
-
-#. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
-msgid "You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends."
-msgstr "आप अभी उपहार सदस्यता पर हैं। यह अपने-आप रिन्यू नहीं होगी। आप इसे बढ़ाने के लिए और उपहार कोड रिडीम कर सकते हैं। उपहार की अवधि खत्म होने के बाद आप रिकरिंग सदस्यता शुरू कर सकते हैं।"
 
 #. Modal title shown when a push-to-talk shortcut is pressed while the user is deafened.
 #: src/features/app/keybindings/keybind_manager/shared.ts:18
@@ -41943,7 +41967,7 @@ msgid "Your {productName} session expired. Sign in again to continue authorizing
 msgstr "आपका {productName} सेशन समाप्त हो गया है। इस ऐप्लिकेशन को अधिकृत करना जारी रखने के लिए फिर से साइन इन करें।"
 
 #. Plutonium subscription card text shown while a failed App Store or Google Play renewal payment is being retried. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:472
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:478
 msgid "Your {storeName} renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your {storeName} payment method before then to keep your subscription."
 msgstr "आपका {storeName} नवीनीकरण भुगतान विफल हो गया, लेकिन <0/> <1>{graceDate}</1> तक सक्रिय रहेगी। अपनी सदस्यता बनाए रखने के लिए इससे पहले {storeName} में अपना भुगतान का तरीका अपडेट करें।"
 
@@ -42077,7 +42101,7 @@ msgid "Your email has been verified. You can now sign in to your account."
 msgstr "आपका ईमेल वेरिफ़ाई हो गया है। अब आप अपने अकाउंट में साइन इन कर सकते हैं।"
 
 #. Plutonium page perk card title about using custom emojis and stickers in every community.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:83
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:88
 msgid "Your emojis, everywhere"
 msgstr "आपके इमोजी, हर जगह"
 
@@ -42135,6 +42159,21 @@ msgstr "आपकी पूरी प्रोफ़ाइल आपके द�
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:25
 msgid "Your full profile is visible to friends and to anyone in your communities"
 msgstr "आपकी पूरी प्रोफ़ाइल दोस्तों और आपकी कम्युनिटी में मौजूद किसी भी व्यक्ति को दिखाई देती है"
+
+#. Plutonium subscription card text shown in the short grace period after gifted premium time ends. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:510
+msgid "Your gift time ended but <0/> stay active until <1>{graceDate}</1>. Subscribe before then to keep them."
+msgstr "आपका गिफ़्ट टाइम समाप्त हो गया है, लेकिन <0/> <1>{graceDate}</1> तक सक्रिय रहेंगे। उन्हें बनाए रखने के लिए उससे पहले सब्सक्राइब करें।"
+
+#. Plutonium page hero subtitle while gifted premium time is in its short grace period after ending. premiumProductName is the paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:70
+msgid "Your gift time has ended. Subscribe to keep {premiumProductName}."
+msgstr "आपका उपहार समय समाप्त हो गया है। {premiumProductName} जारी रखने के लिए सब्सक्राइब करें।"
+
+#. Title of the confirmation shown before checkout when a user with gifted premium time starts a recurring subscription.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
+msgid "Your gift time is kept"
+msgstr "आपका गिफ़्ट टाइम सुरक्षित रखा गया है"
 
 #. Helper text shown under a codec option indicating the local GPU has a hardware encoder for it.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:32
@@ -42273,7 +42312,7 @@ msgid "your region"
 msgstr "आपका क्षेत्र"
 
 #. Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:488
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:494
 msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
 msgstr "आपका नवीनीकरण भुगतान विफल हो गया, लेकिन <0/> <1>{graceDate}</1> तक सक्रिय रहेगी। अपनी सदस्यता बनाए रखने के लिए इससे पहले अपना भुगतान का तरीका अपडेट करें।"
 
@@ -42294,7 +42333,7 @@ msgid "Your stream is still live"
 msgstr "आपकी स्ट्रीम अभी भी लाइव है"
 
 #. Heading of the subscription management panel on the Plutonium page.
-#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:79
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:84
 msgid "Your subscription"
 msgstr "आपकी सदस्यता"
 
@@ -42303,7 +42342,7 @@ msgstr "आपकी सदस्यता"
 msgid "Your subscription can't move to the new price right now."
 msgstr "आपकी सदस्यता अभी नई कीमत पर नहीं जा सकती।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:504
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:526
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "आपकी सदस्यता समाप्त हो गई है, लेकिन <0/> <1>{graceDate}</1> तक सक्रिय रहेगी। अपनी सब्सक्राइबर हिस्ट्री बनाए रखने के लिए इससे पहले फिर से सदस्यता लें।"
 
@@ -42332,7 +42371,7 @@ msgstr "आपकी सदस्यता मासिक बिलिंग �
 msgid "Your subscription has been switched to yearly billing."
 msgstr "आपकी सदस्यता सालाना बिलिंग पर स्विच कर दी गई है।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:566
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:588
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "आपकी सदस्यता सक्रिय है, लेकिन पर्क कुछ समय के लिए रोक दिए गए हैं।"
 
@@ -42352,7 +42391,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "आपकी सदस्यता {effectiveDate} को नई कीमत पर चली जाएगी।"
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:720
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "आपकी सदस्यता अब भी <0>{cancelDate}</0> को खत्म होगी। मौजूदा कीमत अब {listPriceNewLabel} है। अगर आप इसे फिर से सक्रिय करते हैं, तो यहीं से उस पर स्विच कर सकते हैं।"
 
