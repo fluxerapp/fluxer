@@ -89,6 +89,7 @@ async function loadFileDownloads({registerOrigin = true} = {}) {
 				throw new Error('a direct route never reaches the session');
 			},
 		},
+		'@electron/main/DesktopTrustedCertificates': {resolveDesktopTrustedCertificates: () => []},
 	};
 	const sandbox = {
 		console,

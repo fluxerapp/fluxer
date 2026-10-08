@@ -15,6 +15,7 @@ import {
 	resolveDesktopSessionProxy,
 	sendThroughDesktopSession,
 } from '@electron/main/DesktopSessionHTTP';
+import {resolveDesktopTrustedCertificates} from '@electron/main/DesktopTrustedCertificates';
 import {normalizeHTTPNetworkOrigin} from '@fluxer/instance_bootstrap/src/NetworkOrigin';
 
 const logger = createChildLogger('DesktopOutboundHTTP');
@@ -135,6 +136,7 @@ interface DesktopOutboundHTTPOptions {
 	readonly resolveHostAddresses?: DesktopHostAddressResolver;
 	readonly resolveProxy?: DesktopProxyResolver;
 	readonly sendThroughSession?: DesktopSessionHTTPSender;
+	readonly trustedCertificates?: ReadonlyArray<string>;
 }
 
 interface DesktopOutboundGETRequest {
@@ -725,15 +727,12 @@ interface DesktopProxiedSend {
 
 export class DesktopOutboundHTTP {
 	private readonly httpAgent = new http.Agent({keepAlive: true, maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS});
-	private readonly httpsAgent = new https.Agent({keepAlive: true, maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS});
+	private readonly httpsAgent: https.Agent;
 	private readonly originRequestHttpAgent = new http.Agent({
 		keepAlive: true,
 		maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_IN_FLIGHT_PER_SERVICE,
 	});
-	private readonly originRequestHttpsAgent = new https.Agent({
-		keepAlive: true,
-		maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_IN_FLIGHT_PER_SERVICE,
-	});
+	private readonly originRequestHttpsAgent: https.Agent;
 	private readonly bindings = new Map<string, DesktopOriginAddressBinding>();
 	private readonly pendingBindings = new Map<string, DesktopPendingOriginBinding>();
 	private readonly registeredRequirements = new Map<string, DesktopAddressRequirement>();
@@ -750,6 +749,14 @@ export class DesktopOutboundHTTP {
 		this.resolveHostAddresses = options.resolveHostAddresses ?? lookupAllAddresses;
 		this.resolveProxy = options.resolveProxy ?? resolveDesktopSessionProxy;
 		this.sendThroughSession = options.sendThroughSession ?? sendThroughDesktopSession;
+		const certificates = options.trustedCertificates ?? resolveDesktopTrustedCertificates();
+		const trust = certificates.length > 0 ? {ca: [...certificates]} : {};
+		this.httpsAgent = new https.Agent({keepAlive: true, maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS, ...trust});
+		this.originRequestHttpsAgent = new https.Agent({
+			keepAlive: true,
+			maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_IN_FLIGHT_PER_SERVICE,
+			...trust,
+		});
 	}
 
 	public async get(request: DesktopOutboundGETRequest): Promise<DesktopOutboundHTTPMessage> {
