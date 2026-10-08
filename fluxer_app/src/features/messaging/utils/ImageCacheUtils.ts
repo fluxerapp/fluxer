@@ -26,6 +26,8 @@ interface ImageCacheEntry {
 	failedUntil: number;
 	loadTimeoutId: number;
 	retryTimeoutId: number;
+	retryResume: (() => void) | null;
+	retryOnSettle: boolean;
 	connectivityListener: (() => void) | null;
 }
 
@@ -96,6 +98,7 @@ function clearRetryState(entry: ImageCacheEntry): void {
 		window.clearTimeout(entry.retryTimeoutId);
 		entry.retryTimeoutId = 0;
 	}
+	entry.retryResume = null;
 	if (entry.connectivityListener != null) {
 		window.removeEventListener('online', entry.connectivityListener);
 		entry.connectivityListener = null;
@@ -148,6 +151,7 @@ function failEntry(entry: ImageCacheEntry): void {
 	entry.failedCycles += 1;
 	entry.retryDelayMs = IMAGE_RETRY_INITIAL_DELAY_MS;
 	entry.failedUntil = Date.now() + failureCooldownMs(entry.failedCycles);
+	entry.retryOnSettle = false;
 	abandonEntry(entry);
 }
 
@@ -162,6 +166,7 @@ function settleLoaded(entry: ImageCacheEntry, image: HTMLImageElement): void {
 	entry.failedCycles = 0;
 	entry.retryDelayMs = IMAGE_RETRY_INITIAL_DELAY_MS;
 	entry.failedUntil = 0;
+	entry.retryOnSettle = false;
 	try {
 		notifySubscribers(entry, true);
 	} finally {
@@ -217,7 +222,21 @@ function scheduleRetryOrFail(entry: ImageCacheEntry): void {
 		window.addEventListener('online', resume, {once: true});
 		return;
 	}
+	if (entry.retryOnSettle) {
+		entry.retryOnSettle = false;
+		resume();
+		return;
+	}
+	entry.retryResume = resume;
 	entry.retryTimeoutId = window.setTimeout(resume, retryDelayForAttempt(entry));
+}
+
+function expediteRetry(entry: ImageCacheEntry): void {
+	if (entry.retryResume != null) {
+		entry.retryResume();
+		return;
+	}
+	if (entry.image != null) entry.retryOnSettle = true;
 }
 
 function createEntry(src: string): ImageCacheEntry {
@@ -234,6 +253,8 @@ function createEntry(src: string): ImageCacheEntry {
 		failedUntil: 0,
 		loadTimeoutId: 0,
 		retryTimeoutId: 0,
+		retryResume: null,
+		retryOnSettle: false,
 		connectivityListener: null,
 	};
 	imageCache.set(src, entry);
@@ -394,8 +415,11 @@ function attemptRecovery(recovery: ImageRecovery): void {
 
 function wakeRecoveries(): void {
 	for (const recovery of [...recoveries.values()]) {
-		if (recovery.cancelLoad != null) continue;
 		const entry = imageCache.peek(recovery.src);
+		if (recovery.cancelLoad != null) {
+			if (entry != null) expediteRetry(entry);
+			continue;
+		}
 		if (entry != null && !isLoadInFlight(entry)) entry.failedUntil = 0;
 		attemptRecovery(recovery);
 	}
