@@ -3,7 +3,7 @@
 import {type RuntimeConfigSnapshot, runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as CodeLinkUtils from '@app/features/messaging/utils/CodeLinkUtils';
-import {buildMediaProxyURLForInstance} from '@app/features/messaging/utils/MediaProxyUtils';
+import {wrapDesktopLocalResourceURLForInstance} from '@app/features/messaging/utils/DesktopResourceUrl';
 
 const OFFICIAL_THEME_URL_BASES = Object.freeze([
 	'https://fluxer.app/theme',
@@ -47,12 +47,12 @@ function buildThemeCssUrl(endpoint: string | null | undefined, themeId: string):
 	return `${base}/themes/${themeId}.css`;
 }
 
-export function buildThemeCssProxyUrl(snapshot: RuntimeConfigSnapshot, themeId: string): string | null {
+export function buildThemeCssFetchUrl(snapshot: RuntimeConfigSnapshot, themeId: string): string | null {
 	const rawUrl = buildThemeCssUrl(snapshot.mediaEndpoint, themeId);
 	if (!rawUrl) return null;
 	const instanceKey = runtimeInstanceKey(snapshot);
 	if (instanceKey == null) {
 		throw new Error(`Theme runtime has no usable instance key (apiEndpoint: "${snapshot.apiEndpoint}")`);
 	}
-	return buildMediaProxyURLForInstance(rawUrl, instanceKey);
+	return wrapDesktopLocalResourceURLForInstance(rawUrl, instanceKey);
 }

@@ -8,7 +8,7 @@ import {useArboriumHighlightedHtml} from '@app/features/code_highlighting/utils/
 import {COPY_CODE_DESCRIPTOR, SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import styles from '@app/features/theme/components/modals/ThemeAcceptModal.module.css';
-import {buildThemeCssProxyUrl} from '@app/features/theme/utils/ThemeUtils';
+import {buildThemeCssFetchUrl} from '@app/features/theme/utils/ThemeUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -56,7 +56,7 @@ export const ThemeAcceptModal = observer(function ThemeAcceptModal({themeId, run
 			setFetchStatus('loading');
 			setFetchError(null);
 			try {
-				const themeUrl = buildThemeCssProxyUrl(runtimeSnapshot, themeId);
+				const themeUrl = buildThemeCssFetchUrl(runtimeSnapshot, themeId);
 				if (!themeUrl) {
 					throw new Error('Media endpoint not configured');
 				}

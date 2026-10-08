@@ -2,7 +2,7 @@
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {buildThemeCssProxyUrl} from '@app/features/theme/utils/ThemeUtils';
+import {buildThemeCssFetchUrl} from '@app/features/theme/utils/ThemeUtils';
 import {useEffect, useState} from 'react';
 
 const logger = new Logger('useThemeExists');
@@ -15,7 +15,7 @@ export const useThemeExists = (themeId: string, runtimeSnapshot: RuntimeConfigSn
 		let cancelled = false;
 		const checkThemeExists = async () => {
 			try {
-				const themeUrl = buildThemeCssProxyUrl(runtimeSnapshot, themeId);
+				const themeUrl = buildThemeCssFetchUrl(runtimeSnapshot, themeId);
 				if (themeUrl == null) throw new Error('Media endpoint not configured');
 				const response = await fetch(themeUrl, {method: 'HEAD'});
 				if (!response.ok) throw new Error('Theme not found');
