@@ -2158,7 +2158,7 @@ msgid "{textChannelCount, plural, one {# text channel} other {# text channels}},
 msgstr "{textChannelCount, plural, other {텍스트 채널 #개}}, {voiceChannelCount, plural, other {음성 채널 #개}}, {categoryCount, plural, other {카테고리 #개}}, {roleCount, plural, other {역할 #개}}"
 
 #. Name given to the copy created by the Duplicate button in the Theme Studio theme library. {themeName} is the name of the theme being duplicated.
-#: src/features/theme/state/ThemeLibrary.ts:35
+#: src/features/theme/state/ThemeLibrary.ts:37
 msgid "{themeName} Copy"
 msgstr "{themeName} 복사본"
 

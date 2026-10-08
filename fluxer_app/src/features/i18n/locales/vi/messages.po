@@ -2158,7 +2158,7 @@ msgid "{textChannelCount, plural, one {# text channel} other {# text channels}},
 msgstr "{textChannelCount, plural, other {# kênh văn bản}}, {voiceChannelCount, plural, other {# kênh thoại}}, {categoryCount, plural, other {# danh mục}}, {roleCount, plural, other {# vai trò}}"
 
 #. Name given to the copy created by the Duplicate button in the Theme Studio theme library. {themeName} is the name of the theme being duplicated.
-#: src/features/theme/state/ThemeLibrary.ts:35
+#: src/features/theme/state/ThemeLibrary.ts:37
 msgid "{themeName} Copy"
 msgstr "Bản sao của {themeName}"
 
