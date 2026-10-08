@@ -15,7 +15,7 @@ import {useCallback} from 'react';
 const UPDATE_AVAILABLE_DESCRIPTOR = msg({
 	message: 'Update available',
 	comment:
-		'Tooltip and accessible label on the channel header updater icon in the desktop app. Clicking it closes the window and opens the updater, which downloads and installs the update.',
+		'Tooltip and accessible label on the channel header updater icon in the desktop app. Clicking it downloads the update, then either reloads the window or, when the desktop app itself updates, closes it and opens the updater.',
 });
 const UPDATING_DESCRIPTOR = msg({
 	message: 'Updating…',

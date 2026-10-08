@@ -242,7 +242,13 @@ const UPDATE_AVAILABLE_MESSAGE_DESCRIPTOR = msg({
 });
 const UPDATE_AVAILABLE_DETAIL_DESCRIPTOR = msg({
 	message: '{appName} will close, install the update and open again.',
-	comment: 'Native desktop dialog body under the update available headline. Explains what Update now does.',
+	comment:
+		'Native desktop dialog body under the update available headline when the desktop app itself updates. Explains what Update now does.',
+});
+const UPDATE_RELOAD_DETAIL_DESCRIPTOR = msg({
+	message: '{appName} will reload to finish updating.',
+	comment:
+		'Native desktop dialog body under the update available headline when only the app files update. The window reloads and the app itself keeps running.',
 });
 const UPDATE_NOW_DESCRIPTOR = msg({
 	message: 'Update now',
@@ -500,6 +506,7 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.appMenu.checkForUpdates': CHECK_FOR_UPDATES_MENU_DESCRIPTOR,
 	'desktop.update.availableMessage': UPDATE_AVAILABLE_MESSAGE_DESCRIPTOR,
 	'desktop.update.availableDetail': UPDATE_AVAILABLE_DETAIL_DESCRIPTOR,
+	'desktop.update.reloadDetail': UPDATE_RELOAD_DETAIL_DESCRIPTOR,
 	'desktop.update.install': UPDATE_NOW_DESCRIPTOR,
 	'desktop.update.later': UPDATE_LATER_DESCRIPTOR,
 	'desktop.update.ok': UPDATE_OK_DESCRIPTOR,
