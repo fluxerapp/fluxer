@@ -1884,8 +1884,13 @@ msgstr "O {productName} não pode iniciar uma rota isolada segura para o áudio 
 msgid "{productName} cannot use a hardware encoder for this, so it will use your CPU."
 msgstr "O {productName} não pode usar um codificador de hardware para isso e usará o seu processador."
 
+#. Desktop updater modal body after a manual update check finds an update. Confirming closes the app window and opens the updater. productName is the app name.
+#: src/features/updater/commands/UpdaterModalCommands.tsx:37
+msgid "{productName} closes, installs the update and opens again."
+msgstr "{productName} fecha, instala a atualização e abre novamente."
+
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:91
+#: src/features/updater/commands/UpdaterModalCommands.tsx:100
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "{productName} não conseguiu acessar o serviço de atualização. Verifique sua conexão e tente novamente."
 
@@ -2724,7 +2729,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "um nome de host, por exemplo, {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:113
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "Há uma atualização do aplicativo para Linux. Escolha o formato do pacote para este sistema e o {productName} salvará o arquivo localmente."
 
@@ -5541,7 +5546,7 @@ msgstr "AV1 (requer ativação)"
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
-#: src/features/updater/commands/UpdaterModalCommands.tsx:114
+#: src/features/updater/commands/UpdaterModalCommands.tsx:123
 msgid "Available"
 msgstr "Disponível"
 
@@ -10407,7 +10412,7 @@ msgid "Couldn't change your price"
 msgstr "Não foi possível alterar seu preço"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:87
+#: src/features/updater/commands/UpdaterModalCommands.tsx:96
 msgid "Couldn't check for updates"
 msgstr "Não foi possível buscar atualizações"
 
@@ -10539,7 +10544,7 @@ msgid "Couldn't delete your messages"
 msgstr "Não foi possível excluir suas mensagens"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:95
+#: src/features/updater/commands/UpdaterModalCommands.tsx:104
 msgid "Couldn't download the desktop update"
 msgstr "Não foi possível baixar a atualização para computador"
 
@@ -11915,7 +11920,7 @@ msgid "Deafened by moderators"
 msgstr "Áudio desativado pelos moderadores"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:134
+#: src/features/updater/commands/UpdaterModalCommands.tsx:143
 msgid "DEB package"
 msgstr "Pacote DEB"
 
@@ -12573,7 +12578,7 @@ msgid "Desktop app"
 msgstr "Aplicativo para computador"
 
 #. Modal title shown after a manual desktop update check finds no update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:41
+#: src/features/updater/commands/UpdaterModalCommands.tsx:50
 msgid "Desktop app is up to date"
 msgstr "O aplicativo para computador está atualizado"
 
@@ -12738,7 +12743,7 @@ msgid "Developer tools unavailable"
 msgstr "Ferramentas de desenvolvedor indisponíveis"
 
 #. Modal title when the desktop app is running unpackaged during development.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:57
+#: src/features/updater/commands/UpdaterModalCommands.tsx:66
 msgid "Development build"
 msgstr "Versão de desenvolvimento"
 
@@ -19153,12 +19158,12 @@ msgid "Install the new app"
 msgstr "Instalar o novo app"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:110
+#: src/features/updater/commands/UpdaterModalCommands.tsx:119
 msgid "Installed"
 msgstr "Instalado"
 
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:45
+#: src/features/updater/commands/UpdaterModalCommands.tsx:54
 msgid "Installed version: {currentVersion}."
 msgstr "Versão instalada: {currentVersion}."
 
@@ -20175,7 +20180,7 @@ msgstr "Gráfico de latência"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
-#: src/features/updater/commands/UpdaterModalCommands.tsx:37
+#: src/features/updater/commands/UpdaterModalCommands.tsx:46
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:74
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
@@ -20716,7 +20721,7 @@ msgid "Linux default"
 msgstr "Dispositivo de áudio padrão do Linux"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:126
+#: src/features/updater/commands/UpdaterModalCommands.tsx:135
 msgid "Linux package"
 msgstr "Pacote Linux"
 
@@ -21182,7 +21187,7 @@ msgid "Manage your subscription"
 msgstr "Gerenciar sua assinatura"
 
 #. Modal title when automatic in-app desktop updates cannot be used.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:53
+#: src/features/updater/commands/UpdaterModalCommands.tsx:62
 msgid "Manual desktop update"
 msgstr "Atualização manual do aplicativo para computador"
 
@@ -23526,7 +23531,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "Novos usuários não podem entrar agora. Você ainda pode criar uma conta ou fazer login e tentar este link novamente mais tarde."
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:122
+#: src/features/updater/commands/UpdaterModalCommands.tsx:131
 msgid "New version"
 msgstr "Nova versão"
 
@@ -23782,7 +23787,7 @@ msgid "No description."
 msgstr "Sem descrição."
 
 #. Desktop updater modal body when no installed version string is available.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:49
+#: src/features/updater/commands/UpdaterModalCommands.tsx:58
 msgid "No desktop update is available."
 msgstr "Nenhuma atualização do aplicativo para computador está disponível."
 
@@ -25061,7 +25066,7 @@ msgid "Open date picker"
 msgstr "Abrir seletor de data"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:83
+#: src/features/updater/commands/UpdaterModalCommands.tsx:92
 msgid "Open desktop downloads"
 msgstr "Abrir downloads para computador"
 
@@ -25258,7 +25263,7 @@ msgid "Open settings"
 msgstr "Abrir configurações"
 
 #. Button label that opens the software center via appstream protocol.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:79
+#: src/features/updater/commands/UpdaterModalCommands.tsx:88
 msgid "Open software center"
 msgstr "Abrir central de software"
 
@@ -29779,7 +29784,7 @@ msgid "Rows per page"
 msgstr "Linhas por página"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:139
+#: src/features/updater/commands/UpdaterModalCommands.tsx:148
 msgid "RPM package"
 msgstr "Pacote RPM"
 
@@ -34545,7 +34550,7 @@ msgid "System tray"
 msgstr "Bandeja do sistema"
 
 #. Modal title when the desktop app is installed through a system package manager such as Flatpak.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:61
+#: src/features/updater/commands/UpdaterModalCommands.tsx:70
 msgid "System-managed install"
 msgstr "Instalação gerenciada pelo sistema"
 
@@ -34671,7 +34676,7 @@ msgid "Tap to add a note"
 msgstr "Toque para adicionar uma nota"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:144
+#: src/features/updater/commands/UpdaterModalCommands.tsx:153
 msgid "tar.gz archive"
 msgstr "Arquivo tar.gz"
 
@@ -35020,12 +35025,12 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "A comunidade que você procura pode ter sido excluída ou você não tem acesso a ela."
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:99
+#: src/features/updater/commands/UpdaterModalCommands.tsx:108
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "Não foi possível baixar a atualização para computador. Tente novamente no botão de atualização quando sua conexão estiver estável."
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:130
+#: src/features/updater/commands/UpdaterModalCommands.tsx:139
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "O arquivo baixado é salvo no seu computador. Instale-o com seu gerenciador de pacotes normal."
 
@@ -35640,7 +35645,7 @@ msgid "This conversation is no longer available."
 msgstr "Esta conversa não está mais disponível."
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:69
+#: src/features/updater/commands/UpdaterModalCommands.tsx:78
 msgid "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 msgstr "Esta versão para computador não pode instalar atualizações dentro do {productName}. Baixe o instalador mais recente em vez disso."
 
@@ -35655,7 +35660,7 @@ msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work wh
 msgstr "Este ambiente gráfico não oferece atalhos globais. Os atalhos continuam funcionando enquanto o {productName} estiver em foco."
 
 #. Desktop updater modal body for development or unpackaged builds.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:65
+#: src/features/updater/commands/UpdaterModalCommands.tsx:74
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
 msgstr "Esta versão de desenvolvimento não pode se atualizar. Baixe um instalador para computador para testar o fluxo de atualização."
 
@@ -35767,7 +35772,7 @@ msgid "This image couldn't be read. It may be damaged."
 msgstr "Esta imagem não pôde ser lida. Ela pode estar danificada."
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:75
+#: src/features/updater/commands/UpdaterModalCommands.tsx:84
 msgid "This install is managed by your system. Update {productName} from your software center or package manager."
 msgstr "Esta instalação é gerenciada pelo seu sistema. Atualize o {productName} a partir da sua central de softwares ou gerenciador de pacotes."
 
@@ -37574,7 +37579,7 @@ msgstr "Alternativa universal. Qualidade mais baixa, mas funciona em qualquer lu
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:770
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:115
-#: src/features/updater/commands/UpdaterModalCommands.tsx:118
+#: src/features/updater/commands/UpdaterModalCommands.tsx:127
 msgid "Unknown"
 msgstr "Desconhecido"
 
@@ -38160,6 +38165,11 @@ msgstr "Atualização disponível"
 #: src/features/user/components/modals/CustomStatusModal.tsx:424
 msgid "Update my status"
 msgstr "Atualizar meu status"
+
+#. Button label that closes the desktop app and opens the updater to install an available update.
+#: src/features/updater/commands/UpdaterModalCommands.tsx:42
+msgid "Update now"
+msgstr "Atualizar agora"
 
 #. Primary button in the modal that saves an updated passkey.
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:39

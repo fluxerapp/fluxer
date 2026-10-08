@@ -372,7 +372,7 @@ export interface DisplayMediaRequestInfo {
 export type DisplayMediaPortalSurfacePreference = 'window' | 'monitor';
 
 export interface UpdaterEvent {
-	type: 'checking' | 'available' | 'not-available' | 'error' | 'unsupported';
+	type: 'checking' | 'available' | 'not-available' | 'downloaded' | 'progress' | 'error' | 'unsupported';
 	context?: 'user' | 'background' | 'focus';
 	version?: string | null;
 	message?: string;
@@ -480,6 +480,8 @@ export interface ElectronAPI {
 	downloadFile(url: string, suggestedName: string, sha256?: string | null): Promise<DownloadResult>;
 	onUpdaterEvent(callback: (event: UpdaterEvent) => void): () => void;
 	updaterCheck(context: 'user' | 'background'): Promise<void>;
+	updaterDownload?(context: 'user' | 'background'): Promise<void>;
+	updaterInstall?(): Promise<void>;
 	getDesktopSources(
 		types: Array<'screen' | 'window'>,
 		requestId?: string,

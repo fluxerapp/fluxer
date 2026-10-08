@@ -156,6 +156,7 @@ let lastRestorableMainWindowMaximized = false;
 let mainWindowRendererGone = false;
 let closingMainWindowForUpdate = false;
 let mainWindowTakeover: (() => void) | null = null;
+const takeoverEndedListeners = new Set<() => void>();
 let pendingMainWindowReveal: {readonly window: BrowserWindow; readonly requestShow: () => void} | null = null;
 
 const maximizeChangeForwarders = new WeakSet<BrowserWindow>();
@@ -1192,17 +1193,42 @@ export function beginMainWindowTakeover(focus: () => void): void {
 }
 
 export function endMainWindowTakeover(): void {
+	if (mainWindowTakeover == null) return;
 	mainWindowTakeover = null;
+	for (const listener of Array.from(takeoverEndedListeners)) {
+		try {
+			listener();
+		} catch (error) {
+			logger.error('A main window takeover listener threw', error);
+		}
+	}
+}
+
+export function onMainWindowTakeoverEnded(listener: () => void): () => void {
+	takeoverEndedListeners.add(listener);
+	return () => {
+		takeoverEndedListeners.delete(listener);
+	};
 }
 
 export function isMainWindowTakenOver(): boolean {
 	return mainWindowTakeover != null;
 }
 
-export function hideAppWindowsForUpdate(keep: BrowserWindow): void {
+export function hideAppWindowsForUpdate(keep: BrowserWindow): ReadonlyArray<BrowserWindow> {
+	const hidden: Array<BrowserWindow> = [];
 	for (const window of BrowserWindow.getAllWindows()) {
 		if (window === keep || window.isDestroyed() || !window.isVisible()) continue;
 		window.hide();
+		hidden.push(window);
+	}
+	return hidden;
+}
+
+export function restoreAppWindowsAfterUpdate(hidden: ReadonlyArray<BrowserWindow>): void {
+	for (const window of hidden) {
+		if (window.isDestroyed()) continue;
+		window.show();
 	}
 }
 
@@ -1214,15 +1240,20 @@ export async function closeAppWindowsForUpdate(keep: BrowserWindow): Promise<voi
 			closing.map(
 				(window) =>
 					new Promise<void>((resolve) => {
-						const deadline = setTimeout(() => {
+						let deadline: NodeJS.Timeout | null = null;
+						window.once('closed', () => {
+							if (deadline != null) clearTimeout(deadline);
+							resolve();
+						});
+						if (!window.isClosable()) {
+							window.destroy();
+							return;
+						}
+						deadline = setTimeout(() => {
 							logger.warn('A window did not close for the update in time, destroying it');
 							if (!window.isDestroyed()) window.destroy();
 						}, CLOSE_FOR_UPDATE_TIMEOUT_MS);
-						window.once('closed', () => {
-							clearTimeout(deadline);
-							resolve();
-						});
-						window.webContents.on('will-prevent-unload', (event) => {
+						window.webContents.once('will-prevent-unload', (event) => {
 							event.preventDefault();
 						});
 						window.close();

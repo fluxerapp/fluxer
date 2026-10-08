@@ -256,7 +256,7 @@ describe('Updater on a shell that cannot update itself', () => {
 
 		await updater.check('user');
 
-		assert.equal(updater.gate.checks, 0);
+		assert.equal(updater.gate.checks, 1, 'the renderer module can update even when the shell cannot');
 		assert.deepEqual(types(updater.events), ['checking', 'available']);
 		const available = updater.events.at(-1);
 		assert.equal(available.version, PUBLISHED_VERSION);

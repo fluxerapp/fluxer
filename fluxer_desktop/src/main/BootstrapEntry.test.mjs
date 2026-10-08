@@ -269,27 +269,29 @@ describe('Bootstrap entry point', () => {
 		);
 	});
 
-	test('the update click takes the window over before anything downloads', () => {
-		const update = source.slice(source.indexOf('const runDesktopUpdate = async'));
-		const order = [
-			'const splash = openSplashWindow();',
-			'beginMainWindowTakeover(focusSplashWindow);',
-			'hideAppWindowsForUpdate(splash);',
-			'await closeAppWindowsForUpdate(splash);',
-			'const check = await checkForDesktopUpdate();',
-			'await updater.prefetch();',
-			'await runShellSelfUpdateOnSplash(false);',
-			'launchAttempt = await updater.installPending();',
-			'reopenMainWindow(launchAttempt);',
-		].map((needle) => {
-			const index = update.indexOf(needle);
-			assert.notEqual(index, -1, needle);
-			return index;
-		});
-		assert.deepEqual(
-			order,
-			[...order].sort((left, right) => left - right),
-			'The splash opens and the window goes away first, the shell update runs before the module install so a restart never strands a committed module set, and the window only comes back once the modules are served.',
+	test('a user check works from the first window, a click only after the renderer confirmed its launch', () => {
+		const bootstrap = source.slice(source.indexOf('async function runModuleBootstrap()'));
+		const arm = bootstrap.indexOf(
+			'armDesktopUpdate({check: () => desktopUpdate.check(), start: () => desktopUpdate.start()});',
+		);
+		assert.notEqual(arm, -1);
+		assert.ok(arm < bootstrap.indexOf('await launchMainApp(permit, logger);'));
+		assert.match(bootstrap, /\.finally\(onLaunchSettled\)/);
+		assert.match(bootstrap, /desktopUpdate\.markLaunchSettled\(\);/);
+	});
+
+	test('the update splash hides the app only once it is on screen, in its own theme', () => {
+		const bootstrap = source.slice(source.indexOf('async function runModuleBootstrap()'));
+		assert.match(bootstrap, /openSplashWindow\(\{darkThemeOnShow: true\}\)/);
+		assert.match(
+			bootstrap,
+			/focusSplashWindow\(\);\n\t+takeoverHidden = windows\.hideAppWindowsForUpdate\(splash\);/,
+			'A deadline that wins before the splash preload reports ready would otherwise hide the app with nothing on screen.',
+		);
+		assert.match(
+			bootstrap,
+			/splashOpenedAt = Date\.now\(\);/,
+			'Copy diagnostics counts from the update, not from boot.',
 		);
 	});
 

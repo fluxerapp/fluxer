@@ -496,7 +496,7 @@ describe('ModuleUpdater checks without downloading and installs only when asked'
 
 		const check = await updater.checkForUpdate();
 
-		assert.deepEqual(check, {shellNewer: false, modulesChanged: true});
+		assert.deepEqual(check, {shellLatestVersion: SHELL_VERSION, shellNewer: false, modulesChanged: true});
 		assert.deepEqual(
 			requests.map((url) => String(url).split('/').pop()),
 			['modules.json'],
@@ -512,7 +512,11 @@ describe('ModuleUpdater checks without downloading and installs only when asked'
 		const {store} = await storeOnRenderer();
 		const {updater} = createUpdater(store, {fluxer_renderer: RENDERER_SHA}, {shellLatest: '2026.824.1'});
 
-		assert.deepEqual(await updater.checkForUpdate(), {shellNewer: true, modulesChanged: false});
+		assert.deepEqual(await updater.checkForUpdate(), {
+			shellLatestVersion: '2026.824.1',
+			shellNewer: true,
+			modulesChanged: false,
+		});
 	});
 
 	test('a module that needs the next shell reads as a shell update, not as a module update', async () => {
@@ -523,7 +527,11 @@ describe('ModuleUpdater checks without downloading and installs only when asked'
 			{shellLatest: '2026.824.1', bounds: {fluxer_renderer: {minimum_shell_version: '2026.824.1'}}},
 		);
 
-		assert.deepEqual(await updater.checkForUpdate(), {shellNewer: true, modulesChanged: false});
+		assert.deepEqual(await updater.checkForUpdate(), {
+			shellLatestVersion: '2026.824.1',
+			shellNewer: true,
+			modulesChanged: false,
+		});
 	});
 
 	test('the click installs the new set, reports progress and arms a launch attempt for the next window', async () => {
@@ -715,6 +723,29 @@ describe('ModuleUpdater checks without downloading and installs only when asked'
 		assert.equal(outcome.status, 'launching');
 		assert.deepEqual(outcome.committed, {fluxer_renderer: NEXT_RENDERER_SHA});
 		assert.ok(requests.some((url) => String(url).endsWith('/modules.json')));
+	});
+
+	test('a Linux boot forced only by a shell change launches the installed set at once when the download fails', async () => {
+		const {store} = await storeOnRenderer();
+		const {updater, sleeps} = createUpdater(
+			store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{
+				platform: 'linux',
+				forceStartupUpdate: true,
+				respond: async (url) => (String(url).endsWith('package.br') ? new Response('', {status: 503}) : null),
+			},
+		);
+
+		const outcome = await updater.run();
+
+		assert.equal(outcome.status, 'unreachable-launch');
+		assert.deepEqual(outcome.committed, {fluxer_renderer: RENDERER_SHA});
+		assert.deepEqual(
+			sleeps,
+			[],
+			'a package or deb upgrade never waits through the backoff for a module it can live without',
+		);
 	});
 });
 

@@ -1884,8 +1884,13 @@ msgstr "{productName} 無法為此應用程式的音訊啟動安全的獨立路�
 msgid "{productName} cannot use a hardware encoder for this, so it will use your CPU."
 msgstr "{productName} 無法為此使用硬體編碼器，因此會改用您的 CPU。"
 
+#. Desktop updater modal body after a manual update check finds an update. Confirming closes the app window and opens the updater. productName is the app name.
+#: src/features/updater/commands/UpdaterModalCommands.tsx:37
+msgid "{productName} closes, installs the update and opens again."
+msgstr "{productName} 會關閉、安裝更新並重新開啟。"
+
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:91
+#: src/features/updater/commands/UpdaterModalCommands.tsx:100
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "{productName} 無法連線到更新服務。請檢查您的網路連線，然後再試一次。"
 
@@ -2724,7 +2729,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "主機名稱，例如 {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:113
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "有可用的 Linux 桌面版更新。請選擇此系統適用的套件格式，{productName} 會將檔案儲存在本機。"
 
@@ -5541,7 +5546,7 @@ msgstr "AV1（需先啟用）"
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
-#: src/features/updater/commands/UpdaterModalCommands.tsx:114
+#: src/features/updater/commands/UpdaterModalCommands.tsx:123
 msgid "Available"
 msgstr "可用版本"
 
@@ -10407,7 +10412,7 @@ msgid "Couldn't change your price"
 msgstr "無法變更您的價格"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:87
+#: src/features/updater/commands/UpdaterModalCommands.tsx:96
 msgid "Couldn't check for updates"
 msgstr "無法檢查更新"
 
@@ -10539,7 +10544,7 @@ msgid "Couldn't delete your messages"
 msgstr "無法刪除您的訊息"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:95
+#: src/features/updater/commands/UpdaterModalCommands.tsx:104
 msgid "Couldn't download the desktop update"
 msgstr "無法下載桌面版更新"
 
@@ -11915,7 +11920,7 @@ msgid "Deafened by moderators"
 msgstr "遭管理員設為耳機靜音"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:134
+#: src/features/updater/commands/UpdaterModalCommands.tsx:143
 msgid "DEB package"
 msgstr "DEB 套件"
 
@@ -12573,7 +12578,7 @@ msgid "Desktop app"
 msgstr "桌面應用程式"
 
 #. Modal title shown after a manual desktop update check finds no update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:41
+#: src/features/updater/commands/UpdaterModalCommands.tsx:50
 msgid "Desktop app is up to date"
 msgstr "桌面版應用程式已是最新版本"
 
@@ -12738,7 +12743,7 @@ msgid "Developer tools unavailable"
 msgstr "開發人員工具無法使用"
 
 #. Modal title when the desktop app is running unpackaged during development.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:57
+#: src/features/updater/commands/UpdaterModalCommands.tsx:66
 msgid "Development build"
 msgstr "開發版本"
 
@@ -19153,12 +19158,12 @@ msgid "Install the new app"
 msgstr "安裝新版應用程式"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:110
+#: src/features/updater/commands/UpdaterModalCommands.tsx:119
 msgid "Installed"
 msgstr "已安裝"
 
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:45
+#: src/features/updater/commands/UpdaterModalCommands.tsx:54
 msgid "Installed version: {currentVersion}."
 msgstr "已安裝版本：{currentVersion}。"
 
@@ -20175,7 +20180,7 @@ msgstr "延遲圖表"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
-#: src/features/updater/commands/UpdaterModalCommands.tsx:37
+#: src/features/updater/commands/UpdaterModalCommands.tsx:46
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:74
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
@@ -20716,7 +20721,7 @@ msgid "Linux default"
 msgstr "Linux 預設值"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:126
+#: src/features/updater/commands/UpdaterModalCommands.tsx:135
 msgid "Linux package"
 msgstr "Linux 套件"
 
@@ -21182,7 +21187,7 @@ msgid "Manage your subscription"
 msgstr "管理您的訂閱"
 
 #. Modal title when automatic in-app desktop updates cannot be used.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:53
+#: src/features/updater/commands/UpdaterModalCommands.tsx:62
 msgid "Manual desktop update"
 msgstr "手動更新桌面版"
 
@@ -23526,7 +23531,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "新使用者目前無法加入。您仍然可以建立帳號或登入，稍後再試一次此連結。"
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:122
+#: src/features/updater/commands/UpdaterModalCommands.tsx:131
 msgid "New version"
 msgstr "新版本"
 
@@ -23782,7 +23787,7 @@ msgid "No description."
 msgstr "沒有說明。"
 
 #. Desktop updater modal body when no installed version string is available.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:49
+#: src/features/updater/commands/UpdaterModalCommands.tsx:58
 msgid "No desktop update is available."
 msgstr "沒有可用的桌面版更新。"
 
@@ -25061,7 +25066,7 @@ msgid "Open date picker"
 msgstr "開啟日期選擇器"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:83
+#: src/features/updater/commands/UpdaterModalCommands.tsx:92
 msgid "Open desktop downloads"
 msgstr "開啟桌面版下載頁面"
 
@@ -25258,7 +25263,7 @@ msgid "Open settings"
 msgstr "開啟設定"
 
 #. Button label that opens the software center via appstream protocol.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:79
+#: src/features/updater/commands/UpdaterModalCommands.tsx:88
 msgid "Open software center"
 msgstr "開啟軟體中心"
 
@@ -29779,7 +29784,7 @@ msgid "Rows per page"
 msgstr "每頁列數"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:139
+#: src/features/updater/commands/UpdaterModalCommands.tsx:148
 msgid "RPM package"
 msgstr "RPM 套件"
 
@@ -34545,7 +34550,7 @@ msgid "System tray"
 msgstr "系統匣"
 
 #. Modal title when the desktop app is installed through a system package manager such as Flatpak.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:61
+#: src/features/updater/commands/UpdaterModalCommands.tsx:70
 msgid "System-managed install"
 msgstr "由系統管理的安裝"
 
@@ -34671,7 +34676,7 @@ msgid "Tap to add a note"
 msgstr "輕觸以新增記事"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:144
+#: src/features/updater/commands/UpdaterModalCommands.tsx:153
 msgid "tar.gz archive"
 msgstr "tar.gz 封存檔"
 
@@ -35020,12 +35025,12 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "您要找的社群可能已被刪除，或是您沒有權限存取。"
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:99
+#: src/features/updater/commands/UpdaterModalCommands.tsx:108
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "無法下載桌面版更新。請在網路連線穩定後，從更新按鈕重試。"
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:130
+#: src/features/updater/commands/UpdaterModalCommands.tsx:139
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "下載的檔案已儲存到您的電腦。請使用您慣用的套件管理員進行安裝。"
 
@@ -35640,7 +35645,7 @@ msgid "This conversation is no longer available."
 msgstr "此對話已無法使用。"
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:69
+#: src/features/updater/commands/UpdaterModalCommands.tsx:78
 msgid "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 msgstr "這個桌面版本無法在 {productName} 內安裝更新。請改為下載最新的桌面安裝程式。"
 
@@ -35655,7 +35660,7 @@ msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work wh
 msgstr "此桌面環境不支援全系統快速鍵。快速鍵在 {productName} 處於焦點時仍可使用。"
 
 #. Desktop updater modal body for development or unpackaged builds.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:65
+#: src/features/updater/commands/UpdaterModalCommands.tsx:74
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
 msgstr "此開發版本無法自行更新。請下載桌面安裝程式以測試更新流程。"
 
@@ -35767,7 +35772,7 @@ msgid "This image couldn't be read. It may be damaged."
 msgstr "這張圖片無法讀取，可能已損毀。"
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:75
+#: src/features/updater/commands/UpdaterModalCommands.tsx:84
 msgid "This install is managed by your system. Update {productName} from your software center or package manager."
 msgstr "這個安裝是由您的系統管理。請從您的軟體中心或套件管理器更新 {productName}。"
 
@@ -37574,7 +37579,7 @@ msgstr "通用備用方案。畫質最低，但隨處可用。"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:770
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:115
-#: src/features/updater/commands/UpdaterModalCommands.tsx:118
+#: src/features/updater/commands/UpdaterModalCommands.tsx:127
 msgid "Unknown"
 msgstr "不明"
 
@@ -38160,6 +38165,11 @@ msgstr "有可用的更新"
 #: src/features/user/components/modals/CustomStatusModal.tsx:424
 msgid "Update my status"
 msgstr "更新我的狀態"
+
+#. Button label that closes the desktop app and opens the updater to install an available update.
+#: src/features/updater/commands/UpdaterModalCommands.tsx:42
+msgid "Update now"
+msgstr "立即更新"
 
 #. Primary button in the modal that saves an updated passkey.
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:39

@@ -187,6 +187,13 @@ function registerManualUpdater(
 	reason: 'platform' | 'unpackaged' | 'managed-package',
 ): void {
 	ipcMain.handle('updater-check', async (_e, context: UpdaterContext) => {
+		if (context === 'user') {
+			try {
+				await checkDesktopUpdateNow();
+			} catch (error) {
+				log.warn('Desktop module update check failed', error);
+			}
+		}
 		if (reason !== 'platform') {
 			send(getMainWindow(), {
 				type: 'unsupported',

@@ -65,10 +65,6 @@ export function publishDesktopUpdateCheck(check: DesktopUpdateCheck): void {
 	notify();
 }
 
-export function getLastDesktopUpdateCheck(): DesktopUpdateCheck | null {
-	return gateState.lastCheck;
-}
-
 export async function checkDesktopUpdateNow(): Promise<DesktopUpdateState> {
 	const controller = gateState.controller;
 	if (controller == null || gateState.running != null) {

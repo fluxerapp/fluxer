@@ -17,6 +17,7 @@ import {
 	openExternalUrl,
 } from '@app/features/ui/utils/NativeUtils';
 import {
+	pushDesktopUpdateAvailableModal,
 	pushDesktopUpdateDownloadFailedModal,
 	pushManualUpdateAvailableModal,
 	pushUnsupportedUpdateModal,
@@ -101,6 +102,10 @@ function normalizeUpdaterEvent(event: NativeUpdaterEvent): UpdaterEvent | null {
 			};
 		case 'not-available':
 			return {type: 'not-available', context};
+		case 'downloaded':
+			return {type: 'downloaded', context};
+		case 'progress':
+			return null;
 		case 'error':
 			return {
 				type: 'error',
@@ -131,7 +136,10 @@ class Updater {
 	private backgroundCheckCleanups: Array<() => void> = [];
 	private unsubscribeNativeEvents: (() => void) | null = null;
 	private unsubscribeDesktopUpdate: (() => void) | null = null;
-	desktopUpdateAvailable = false;
+	private desktopUpdateReported = false;
+	private olderShellModuleUpdateReady = false;
+	private olderShellUpdateDownloaded = false;
+	private olderShellInstallWhenDownloaded = false;
 	private desktopUpdateStarting = false;
 	private pendingManualDownloadRefreshes = 0;
 	private checkInProgress = false;
@@ -175,6 +183,18 @@ class Updater {
 
 	private get manualNativeDownloadInFlight(): boolean {
 		return this.snapshot.context.manualNativeDownloadInFlight;
+	}
+
+	get desktopUpdateAvailable(): boolean {
+		return this.desktopUpdateReported || this.olderShellModuleUpdateReady || this.olderShellUpdateAvailable;
+	}
+
+	private get olderShellUpdateAvailable(): boolean {
+		const electronApi = getElectronAPI();
+		if (electronApi == null || electronApi.desktopUpdate != null || electronApi.updaterInstall == null) {
+			return false;
+		}
+		return this.olderShellUpdateDownloaded || (this.updateInfo.native.available && !this.hasManualNativeDownload);
 	}
 
 	get hasUpdate(): boolean {
@@ -234,14 +254,38 @@ class Updater {
 	}
 
 	private async bootstrapDesktopUpdate(): Promise<void> {
-		const desktopUpdate = getElectronAPI()?.desktopUpdate;
-		if (desktopUpdate == null) return;
+		const electronApi = getElectronAPI();
+		const desktopUpdate = electronApi?.desktopUpdate;
+		if (desktopUpdate == null) {
+			await this.bootstrapOlderShellModuleUpdate();
+			return;
+		}
 		this.unsubscribeDesktopUpdate = desktopUpdate.onStateChanged((state) => {
 			runInAction(() => {
-				this.desktopUpdateAvailable = state.available;
+				this.desktopUpdateReported = state.available;
 			});
 		});
 		await this.refreshDesktopUpdateState();
+	}
+
+	private async bootstrapOlderShellModuleUpdate(): Promise<void> {
+		const desktopModules = getElectronAPI()?.desktopModules;
+		const onPendingUpdateChanged = desktopModules?.onPendingUpdateChanged;
+		const pendingUpdate = desktopModules?.pendingUpdate;
+		if (onPendingUpdateChanged == null || pendingUpdate == null) return;
+		this.unsubscribeDesktopUpdate = onPendingUpdateChanged((pending) => {
+			runInAction(() => {
+				this.olderShellModuleUpdateReady = pending != null;
+			});
+		});
+		try {
+			const pending = await pendingUpdate();
+			runInAction(() => {
+				this.olderShellModuleUpdateReady = pending != null;
+			});
+		} catch (error) {
+			logger.warn('Failed to read the pending desktop module update', error);
+		}
 	}
 
 	private async refreshDesktopUpdateState(): Promise<void> {
@@ -250,7 +294,7 @@ class Updater {
 		try {
 			const state = await desktopUpdate.state();
 			runInAction(() => {
-				this.desktopUpdateAvailable = state.available;
+				this.desktopUpdateReported = state.available;
 			});
 		} catch (error) {
 			logger.warn('Failed to read the desktop update state', error);
@@ -258,17 +302,38 @@ class Updater {
 	}
 
 	private async startDesktopUpdate(): Promise<void> {
-		const desktopUpdate = getElectronAPI()?.desktopUpdate;
-		if (desktopUpdate == null || this.desktopUpdateStarting) return;
+		const electronApi = getElectronAPI();
+		if (electronApi == null || this.desktopUpdateStarting) return;
 		this.desktopUpdateStarting = true;
 		try {
 			flushPendingPersistWrites();
-			await desktopUpdate.start();
+			if (electronApi.desktopUpdate != null) {
+				await electronApi.desktopUpdate.start();
+			} else if (this.olderShellModuleUpdateReady) {
+				await electronApi.desktopModules?.applyPendingUpdate?.();
+			} else if (this.olderShellUpdateDownloaded) {
+				await electronApi.updaterInstall?.();
+			} else {
+				this.olderShellInstallWhenDownloaded = true;
+				await electronApi.updaterDownload?.('user');
+			}
 		} catch (error) {
+			this.olderShellInstallWhenDownloaded = false;
 			logger.warn('Failed to start the desktop update', error);
 		} finally {
 			this.desktopUpdateStarting = false;
 		}
+	}
+
+	private handleOlderShellUpdateDownloaded(): void {
+		this.olderShellUpdateDownloaded = true;
+		if (!this.olderShellInstallWhenDownloaded) return;
+		this.olderShellInstallWhenDownloaded = false;
+		void getElectronAPI()
+			?.updaterInstall?.()
+			.catch((error: unknown) => {
+				logger.warn('Failed to install the downloaded desktop update', error);
+			});
 	}
 
 	private subscribeToNativeEvents(): void {
@@ -277,7 +342,9 @@ class Updater {
 		this.unsubscribeNativeEvents = electronApi.onUpdaterEvent((event) => {
 			const updaterEvent = normalizeUpdaterEvent(event);
 			if (!updaterEvent) {
-				logger.warn('Ignored malformed native updater event', {event});
+				if (event.type !== 'progress') {
+					logger.warn('Ignored malformed native updater event', {event});
+				}
 				return;
 			}
 			this.handleNativeEvent(updaterEvent);
@@ -320,7 +387,11 @@ class Updater {
 					this.showCurrentUpdateState();
 				}
 				break;
+			case 'downloaded':
+				this.handleOlderShellUpdateDownloaded();
+				break;
 			case 'error':
+				this.olderShellInstallWhenDownloaded = false;
 				if (isUserCheck) {
 					logger.warn('Update check error:', event.message);
 				} else {
@@ -338,7 +409,7 @@ class Updater {
 					downloadUrl: event.downloadUrl ?? null,
 					now: Date.now(),
 				});
-				if (isUserCheck) {
+				if (shouldShowImmediateUserResult) {
 					pushUnsupportedUpdateModal(event.reason ?? 'platform', event.downloadUrl ?? null);
 				}
 				break;
@@ -533,7 +604,7 @@ class Updater {
 
 	private showCurrentUpdateState(): void {
 		if (this.desktopUpdateAvailable) {
-			void this.startDesktopUpdate();
+			pushDesktopUpdateAvailableModal(() => this.startDesktopUpdate());
 			return;
 		}
 		if (this.nativeManualUpdateAvailable) {
@@ -656,7 +727,10 @@ class Updater {
 			this.unsubscribeDesktopUpdate();
 			this.unsubscribeDesktopUpdate = null;
 		}
-		this.desktopUpdateAvailable = false;
+		this.desktopUpdateReported = false;
+		this.olderShellModuleUpdateReady = false;
+		this.olderShellUpdateDownloaded = false;
+		this.olderShellInstallWhenDownloaded = false;
 		if (this.backgroundCheckInterval != null) {
 			window.clearInterval(this.backgroundCheckInterval);
 			this.backgroundCheckInterval = null;

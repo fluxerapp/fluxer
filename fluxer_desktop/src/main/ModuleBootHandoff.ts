@@ -177,10 +177,6 @@ export function getMainWindowFactory(): MainWindowFactory | null {
 	return handoffState.mainWindowFactory;
 }
 
-export function getSecondInstanceSink(): SecondInstanceSink | null {
-	return handoffState.secondInstanceSink;
-}
-
 export function signalMainWindowCreated(window: BrowserWindow | null): void {
 	handoffState.liveMainWindow = window;
 	if (!handoffState.mainWindowSignalled) {

@@ -10,7 +10,8 @@ import {
 	ModuleSystemLaunchDecision,
 	resolveModuleSystemLaunch,
 } from '@electron/common/ModuleSystem';
-import {checkDesktopUpdateNow, type DesktopUpdateCheck} from '@electron/main/DesktopUpdateGate';
+import {checkDesktopUpdateNow} from '@electron/main/DesktopUpdateGate';
+import {DesktopUpdateRun, type DesktopUpdateTakeover} from '@electron/main/DesktopUpdateRun';
 import {armOpenUrlForwarding, observeRendererLaunchConfirmed} from '@electron/main/ModuleBootHandoff';
 import type {ModuleLaunchAttempt, ModuleStore as ModuleStoreInstance} from '@electron/main/ModuleStore';
 import type {
@@ -21,7 +22,7 @@ import type {
 } from '@electron/main/ModuleUpdater';
 import type {SplashState, SplashStatus} from '@electron/main/SplashWindow';
 import {repairWindowsShortcuts} from '@electron/main/WindowsShortcuts';
-import {app as electronApp} from 'electron';
+import {type BrowserWindow, app as electronApp} from 'electron';
 
 declare const __FLUXER_MAIN_APP_OUTPUT_FILE__: string;
 
@@ -201,16 +202,13 @@ async function runModuleBootstrap(): Promise<void> {
 	const {
 		armSecondInstanceForwarding,
 		getMainWindowFactory,
-		getSecondInstanceSink,
 		onMainWindowCreated,
 		onMainWindowReady,
 		setCommittedModuleFiles,
 		setOnDemandModuleInstaller,
 		setSecondInstanceSink,
 	} = await import('@electron/main/ModuleBootHandoff');
-	const {armDesktopUpdate, getLastDesktopUpdateCheck, publishDesktopUpdateCheck} = await import(
-		'@electron/main/DesktopUpdateGate'
-	);
+	const {armDesktopUpdate, publishDesktopUpdateCheck} = await import('@electron/main/DesktopUpdateGate');
 	const {instanceTurnedModulesOff} = await import('@electron/main/InstanceModulePreference');
 	const {createOnDemandModuleInstaller} = await import('@electron/main/ModuleOnDemand');
 	const {getModuleStoreRoot, ModuleStore} = await import('@electron/main/ModuleStore');
@@ -310,7 +308,7 @@ async function runModuleBootstrap(): Promise<void> {
 		}
 	}
 
-	const splashOpenedAt = Date.now();
+	let splashOpenedAt = Date.now();
 	let diagnosticsSource: {
 		readonly store: ModuleStoreInstance;
 		readonly updater: ModuleUpdaterInstance;
@@ -603,15 +601,6 @@ async function runModuleBootstrap(): Promise<void> {
 			});
 		};
 
-		let shellSelfUpdateFailed = false;
-		const checkForDesktopUpdate = async (): Promise<DesktopUpdateCheck> => {
-			const check = await updater.checkForUpdate();
-			return {
-				shellNewer: check.shellNewer && shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE,
-				modulesChanged: check.modulesChanged,
-			};
-		};
-
 		const reopenMainWindow = (launchAttempt: ModuleLaunchAttempt | null): void => {
 			const createMainWindow = getMainWindowFactory();
 			if (createMainWindow == null) {
@@ -637,84 +626,72 @@ async function runModuleBootstrap(): Promise<void> {
 			window.once('closed', closeSplashWindow);
 		};
 
-		const runDesktopUpdate = async (): Promise<void> => {
-			const {DOWNLOAD_PAGE_URL} = await import('@electron/main/UpdaterDownloads');
-			if (shellSelfUpdateFailed && getLastDesktopUpdateCheck()?.modulesChanged !== true) {
-				logger.warn('The shell self update already failed this session, opening the downloads page instead');
-				await shell.openExternal(DOWNLOAD_PAGE_URL);
-				return;
-			}
-			const {beginMainWindowTakeover, closeAppWindowsForUpdate, endMainWindowTakeover, hideAppWindowsForUpdate} =
-				await import('@electron/main/Window');
-			const startedAt = Date.now();
-			logger.info('Starting the desktop update');
-			const splash = openSplashWindow();
-			setSplashState({status: 'checking-for-updates'});
-			armSplashActions();
-			beginMainWindowTakeover(focusSplashWindow);
-			const previousSecondInstanceSink = getSecondInstanceSink();
-			setSecondInstanceSink(() => {
-				focusSplashWindow();
-			});
-			await new Promise<void>((resolve) => {
-				let settled = false;
-				const hide = (): void => {
-					if (settled) return;
-					settled = true;
-					stopWaitingForSplash();
-					clearTimeout(deadline);
-					hideAppWindowsForUpdate(splash);
-					logger.info('Hid the app windows for the update', {elapsedMs: Date.now() - startedAt});
-					resolve();
-				};
-				const stopWaitingForSplash = onSplashReady(hide);
-				const deadline = setTimeout(hide, UPDATE_TAKEOVER_SPLASH_WAIT_MS);
-			});
-			await closeAppWindowsForUpdate(splash);
-			logger.info('Closed the app windows for the update', {elapsedMs: Date.now() - startedAt});
-			let launchAttempt: ModuleLaunchAttempt | null = null;
-			let remaining: DesktopUpdateCheck = {shellNewer: false, modulesChanged: false};
-			try {
-				const check = await checkForDesktopUpdate();
-				logger.info('Checked for the desktop update', {...check, elapsedMs: Date.now() - startedAt});
-				remaining = check;
-				if (check.shellNewer) {
-					if (check.modulesChanged) {
-						try {
-							await updater.prefetch();
-						} catch (error) {
-							logger.warn('Failed to fetch the modules ahead of the shell update', error);
-						}
-					}
-					const failure = await runShellSelfUpdateOnSplash(false);
-					if (failure.reason !== 'no-update') {
-						shellSelfUpdateFailed = true;
-					}
-					logger.warn('The shell self update did not restart the app, continuing with the modules', failure);
-					remaining = {shellNewer: shellSelfUpdateFailed, modulesChanged: check.modulesChanged};
+		let takeoverWindows: typeof import('@electron/main/Window') | null = null;
+		let takeoverSplash: BrowserWindow | null = null;
+		let takeoverHidden: ReadonlyArray<BrowserWindow> = [];
+		const updateTakeover: DesktopUpdateTakeover = {
+			begin: async () => {
+				const windows = await import('@electron/main/Window');
+				takeoverWindows = windows;
+				splashOpenedAt = Date.now();
+				const splash = openSplashWindow({darkThemeOnShow: true});
+				takeoverSplash = splash;
+				setSplashState({status: 'checking-for-updates'});
+				armSplashActions();
+				windows.beginMainWindowTakeover(focusSplashWindow);
+				await new Promise<void>((resolve) => {
+					let settled = false;
+					const takeOver = (): void => {
+						if (settled) return;
+						settled = true;
+						stopWaitingForSplash();
+						clearTimeout(deadline);
+						focusSplashWindow();
+						takeoverHidden = windows.hideAppWindowsForUpdate(splash);
+						resolve();
+					};
+					const stopWaitingForSplash = onSplashReady(takeOver);
+					const deadline = setTimeout(takeOver, UPDATE_TAKEOVER_SPLASH_WAIT_MS);
+				});
+			},
+			restore: () => {
+				takeoverWindows?.endMainWindowTakeover();
+				takeoverWindows?.restoreAppWindowsAfterUpdate(takeoverHidden);
+				takeoverHidden = [];
+				closeSplashWindow();
+			},
+			closeApp: async () => {
+				if (takeoverSplash != null) {
+					await takeoverWindows?.closeAppWindowsForUpdate(takeoverSplash);
 				}
-				if (check.modulesChanged) {
-					launchAttempt = await updater.installPending();
-					if (launchAttempt != null) {
-						await refreshModuleRoots(launchAttempt.committed);
-					}
-					remaining = {shellNewer: remaining.shellNewer, modulesChanged: false};
-					logger.info('Installed the module update', {
-						activated: launchAttempt != null,
-						elapsedMs: Date.now() - startedAt,
-					});
-				}
-			} catch (error) {
-				logger.error('The desktop update failed, reopening the app on the installed modules', error);
-			} finally {
-				endMainWindowTakeover();
-				if (previousSecondInstanceSink != null) {
-					setSecondInstanceSink(previousSecondInstanceSink);
-				}
-				publishDesktopUpdateCheck(remaining);
+				takeoverHidden = [];
+			},
+			reopen: (launchAttempt) => {
+				takeoverWindows?.endMainWindowTakeover();
 				reopenMainWindow(launchAttempt);
-			}
+			},
 		};
+
+		const desktopUpdate = new DesktopUpdateRun({
+			probe: () => updater.checkForUpdate(),
+			canSelfUpdateShell: shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE,
+			prefetchModules: () => updater.prefetch(),
+			runShellSelfUpdate: () => runShellSelfUpdateOnSplash(false),
+			installModules: async () => {
+				const launchAttempt = await updater.installPending();
+				if (launchAttempt != null) {
+					await refreshModuleRoots(launchAttempt.committed);
+				}
+				return launchAttempt;
+			},
+			takeover: updateTakeover,
+			publish: publishDesktopUpdateCheck,
+			openDownloadsPage: async () => {
+				const {DOWNLOAD_PAGE_URL} = await import('@electron/main/UpdaterDownloads');
+				await shell.openExternal(DOWNLOAD_PAGE_URL);
+			},
+			logger,
+		});
 
 		const permit = await runModuleUpdateLoop();
 		localNetworkHint.disarm();
@@ -729,8 +706,9 @@ async function runModuleBootstrap(): Promise<void> {
 			}),
 		);
 		markSplashLaunching();
+		armDesktopUpdate({check: () => desktopUpdate.check(), start: () => desktopUpdate.start()});
 		armMainWindowHandoff(updater, permit.launchAttempt, () => {
-			armDesktopUpdate({check: checkForDesktopUpdate, start: runDesktopUpdate});
+			desktopUpdate.markLaunchSettled();
 			armModulePoll(resolveModulePollPlan(readDevModulePollInterval()), logger);
 		});
 		app.once('before-quit', () => {

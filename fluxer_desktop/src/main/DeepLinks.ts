@@ -3,7 +3,7 @@
 import {APP_PROTOCOL} from '@electron/common/Constants';
 import {parseJumpListTaskFromArgv} from '@electron/main/JumpList';
 import {recordRecentDeepLink} from '@electron/main/RecentDocuments';
-import {getMainWindow, showWindow} from '@electron/main/Window';
+import {getMainWindow, isMainWindowTakenOver, onMainWindowTakeoverEnded, showWindow} from '@electron/main/Window';
 import {app, ipcMain} from 'electron';
 import log from 'electron-log';
 
@@ -125,6 +125,14 @@ export function initializeDeepLinks(): void {
 	registerInitialDeepLinkHandler();
 }
 
+function deliverDeepLinkHeldByTakeover(): void {
+	const mainWindow = getMainWindow();
+	if (initialDeepLink == null || mainWindow == null || mainWindow.isDestroyed()) return;
+	const url = initialDeepLink;
+	initialDeepLink = null;
+	mainWindow.webContents.send('deep-link', url);
+}
+
 function registerInitialDeepLinkHandler(): void {
 	const deepLinkArg = extractDeepLinkFromArgv(process.argv);
 	if (deepLinkArg) {
@@ -134,6 +142,7 @@ function registerInitialDeepLinkHandler(): void {
 			shouldSuppressAsDuplicate(normalized);
 		}
 	}
+	onMainWindowTakeoverEnded(deliverDeepLinkHeldByTakeover);
 	ipcMain.handle('get-initial-deep-link', (): string | null => {
 		const url = initialDeepLink;
 		initialDeepLink = null;
@@ -145,6 +154,11 @@ function dispatchDeepLink(url: string): void {
 	const normalized = normalizeDeepLinkForRenderer(url);
 	if (!normalized || shouldSuppressAsDuplicate(normalized)) return;
 	recordRecentDeepLink(url);
+	if (isMainWindowTakenOver()) {
+		initialDeepLink = normalized;
+		showWindow();
+		return;
+	}
 	const mainWindow = getMainWindow();
 	if (mainWindow && !mainWindow.isDestroyed()) {
 		mainWindow.webContents.send('deep-link', normalized);

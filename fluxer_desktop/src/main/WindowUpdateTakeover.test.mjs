@@ -8,15 +8,16 @@ import {installElectronStub} from './LocalAppTestSupport.test.mjs';
 const openWindows = [];
 
 class FakeWindow {
-	constructor(name, {vetoUnload = false} = {}) {
+	constructor(name, {vetoUnload = false, closable = true} = {}) {
 		this.name = name;
 		this.vetoUnload = vetoUnload;
+		this.closable = closable;
 		this.visible = true;
 		this.destroyed = false;
 		this.listeners = new Map();
 		this.unloadListeners = [];
 		this.webContents = {
-			on: (event, listener) => {
+			once: (event, listener) => {
 				if (event === 'will-prevent-unload') this.unloadListeners.push(listener);
 			},
 		};
@@ -35,11 +36,20 @@ class FakeWindow {
 		return this.visible;
 	}
 
+	isClosable() {
+		return this.closable;
+	}
+
 	hide() {
 		this.visible = false;
 	}
 
+	show() {
+		this.visible = true;
+	}
+
 	close() {
+		if (!this.closable) return;
 		if (this.vetoUnload) {
 			let prevented = false;
 			for (const listener of this.unloadListeners) {
@@ -146,6 +156,8 @@ const {
 	closeAppWindowsForUpdate,
 	endMainWindowTakeover,
 	hideAppWindowsForUpdate,
+	onMainWindowTakeoverEnded,
+	restoreAppWindowsAfterUpdate,
 	isMainWindowTakenOver,
 	showWindow,
 } = await import('@electron/main/Window');
@@ -162,6 +174,46 @@ describe('the update takes the app windows over', () => {
 		assert.equal(splash.isVisible(), true);
 		assert.equal(main.isVisible(), false);
 		assert.equal(popout.isVisible(), false);
+	});
+
+	test('a check that finds nothing gives back exactly the windows it hid', () => {
+		openWindows.length = 0;
+		const splash = new FakeWindow('splash');
+		const main = new FakeWindow('main');
+		const trayHidden = new FakeWindow('hidden popout');
+		trayHidden.hide();
+
+		const hidden = hideAppWindowsForUpdate(splash);
+		restoreAppWindowsAfterUpdate(hidden);
+
+		assert.deepEqual(hidden, [main]);
+		assert.equal(main.isVisible(), true);
+		assert.equal(trayHidden.isVisible(), false, 'a window the user had hidden stays hidden');
+	});
+
+	test('a window that cannot be closed is destroyed at once instead of holding the update back', async () => {
+		openWindows.length = 0;
+		const splash = new FakeWindow('splash');
+		const guard = new FakeWindow('screen capture guard', {closable: false});
+		const startedAt = Date.now();
+
+		await closeAppWindowsForUpdate(splash);
+
+		assert.equal(guard.isDestroyed(), true);
+		assert.ok(Date.now() - startedAt < 1000, 'the 5 second close deadline never came into it');
+	});
+
+	test('ending the takeover tells its listeners once', () => {
+		let ended = 0;
+		const stop = onMainWindowTakeoverEnded(() => {
+			ended += 1;
+		});
+		beginMainWindowTakeover(() => undefined);
+		endMainWindowTakeover();
+		endMainWindowTakeover();
+		stop();
+
+		assert.equal(ended, 1);
 	});
 
 	test('the windows really close, past a renderer that would veto the unload', async () => {

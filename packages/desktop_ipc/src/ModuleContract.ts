@@ -46,8 +46,15 @@ export interface DesktopModuleEnsureResult {
 	readonly status: DesktopModuleEnsureStatus;
 }
 
+export interface DesktopPendingModuleUpdate {
+	readonly modules: ReadonlyArray<string>;
+}
+
 export interface DesktopModuleAPI {
 	ensure: (moduleName: string) => Promise<DesktopModuleEnsureResult>;
+	pendingUpdate?: () => Promise<DesktopPendingModuleUpdate | null>;
+	applyPendingUpdate?: () => Promise<boolean>;
+	onPendingUpdateChanged?: (listener: (pending: DesktopPendingModuleUpdate | null) => void) => () => void;
 	confirmLaunch?: () => Promise<void>;
 }
 

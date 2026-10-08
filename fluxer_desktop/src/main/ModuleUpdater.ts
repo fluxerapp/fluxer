@@ -2,7 +2,7 @@
 
 import {createHash} from 'node:crypto';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
-import type {DesktopUpdateCheck} from '@electron/main/DesktopUpdateGate';
+import type {DesktopUpdateProbe} from '@electron/main/DesktopUpdateRun';
 import {ModuleDownloadRate} from '@electron/main/ModuleDownloadRate';
 import {
 	blockingModuleNames,
@@ -418,6 +418,9 @@ export class ModuleUpdater {
 				if (!startupUpdateRequired) {
 					return await this.launchIfAtFloor();
 				}
+				if (this.planner.shellUpdateRequired(manifest) && (await this.onlyForcedByShellChange())) {
+					return await this.launchIfAtFloor();
+				}
 				if (this.planner.shellUpdateRequired(manifest)) {
 					this.emit(ModuleUpdaterStatus.BLOCKED_SHELL_UPDATE);
 					return {
@@ -460,7 +463,8 @@ export class ModuleUpdater {
 					backoff.reset();
 				}
 				const delayMs = backoff.fail();
-				const exhausted = backoff.reachedCeiling || isRejectedManifestError(error);
+				const exhausted =
+					backoff.reachedCeiling || isRejectedManifestError(error) || (await this.onlyForcedByShellChange());
 				if (exhausted || !fetched) {
 					const decision = await this.planner.evaluateUnreachableLaunch(
 						this.isStartupUpdateEnforced(),
@@ -553,13 +557,18 @@ export class ModuleUpdater {
 		return this.observeManifest(await this.manifestRepository.resolveMemoizedDocument());
 	}
 
-	public async checkForUpdate(): Promise<DesktopUpdateCheck> {
+	public async checkForUpdate(): Promise<DesktopUpdateProbe> {
 		const manifest = await this.fetchFreshManifest(ModuleManifestObservationMode.READ_ONLY);
+		const shellLatestVersion = manifest.shell.latestVersion.source;
 		const shellNewer = compareModuleVersions(manifest.shell.latestVersion, this.shellVersion) > 0;
 		if (this.planner.shellUpdateRequired(manifest)) {
-			return {shellNewer, modulesChanged: false};
+			return {shellLatestVersion, shellNewer, modulesChanged: false};
 		}
-		return {shellNewer, modulesChanged: (await this.collectPendingItems(manifest, this.planner)).length > 0};
+		return {
+			shellLatestVersion,
+			shellNewer,
+			modulesChanged: (await this.collectPendingItems(manifest, this.planner)).length > 0,
+		};
 	}
 
 	public async installPending(): Promise<ModuleLaunchAttempt | null> {
@@ -681,6 +690,7 @@ export class ModuleUpdater {
 				'no module is committed and this build carries no offline renderer',
 			);
 		}
+		await this.store.recordShellVersionConverged();
 		const launchAttempt = await this.store.recordLaunchAttempt();
 		this.emit(ModuleUpdaterStatus.LAUNCHING);
 		return {
@@ -851,6 +861,12 @@ export class ModuleUpdater {
 			() => undefined,
 		);
 		return observed;
+	}
+
+	private async onlyForcedByShellChange(): Promise<boolean> {
+		return (
+			this.forceStartupUpdate && !this.isStartupUpdateEnforced() && (await this.planner.canLaunchCommittedModules())
+		);
 	}
 
 	private async startupUpdateRequired(): Promise<boolean> {

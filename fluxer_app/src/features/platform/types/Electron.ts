@@ -196,6 +196,10 @@ export type UpdaterEvent =
 			context: UpdaterContext;
 	  }
 	| {
+			type: 'downloaded';
+			context: UpdaterContext;
+	  }
+	| {
 			type: 'error';
 			context: UpdaterContext;
 			message: string;
@@ -345,6 +349,8 @@ export interface ElectronAPI {
 	deleteVoiceBackgroundMedia: (id: string) => Promise<void>;
 	onUpdaterEvent: (callback: (event: UpdaterEvent) => void) => () => void;
 	updaterCheck: (context: UpdaterContext) => Promise<void>;
+	updaterDownload?: (context: UpdaterContext) => Promise<void>;
+	updaterInstall?: () => Promise<void>;
 	windowMinimize: () => void;
 	windowMaximize: () => void;
 	windowClose: () => void;

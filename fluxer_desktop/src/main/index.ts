@@ -623,6 +623,10 @@ if (launchConfigurationError) {
 				log.info('[Shutdown] All windows closed before startup created the main window, keeping app alive');
 				return;
 			}
+			if (isMainWindowTakenOver()) {
+				log.info('[Shutdown] The update splash closed mid update, keeping app alive to reopen the main window');
+				return;
+			}
 			const settings = getDesktopWindowBehaviorSettings();
 			if (process.platform !== 'darwin' && !(hasActiveDesktopTray() && settings.showTrayIcon && settings.closeToTray)) {
 				app.quit();

@@ -142,6 +142,7 @@ let affordanceLatched = false;
 let lastSerializedState: SerializedSplashState | null = null;
 let readyWatchdog: NodeJS.Timeout | null = null;
 let themeSourceBeforeSplash: typeof nativeTheme.themeSource | null = null;
+let darkThemePendingShow = false;
 
 function toSplashCount(value: number | null | undefined): number | null {
 	if (typeof value !== 'number' || !Number.isFinite(value)) return null;
@@ -278,6 +279,7 @@ function showSplashWindow(reason: 'ready' | 'watchdog'): void {
 	if (reason === 'watchdog') {
 		logger.warn('The splash preload never reported ready, showing the window anyway');
 	}
+	applySplashTheme();
 	window.showInactive();
 }
 
@@ -334,11 +336,11 @@ function registerSplashDiagnostics(window: BrowserWindow): void {
 	});
 }
 
-export function openSplashWindow(): BrowserWindow {
+export function openSplashWindow(options: {readonly darkThemeOnShow?: boolean} = {}): BrowserWindow {
 	if (splashWindow != null && !splashWindow.isDestroyed()) return splashWindow;
 	registerSplashIpc();
-	if (themeSourceBeforeSplash == null) themeSourceBeforeSplash = nativeTheme.themeSource;
-	nativeTheme.themeSource = 'dark';
+	darkThemePendingShow = true;
+	if (options.darkThemeOnShow !== true) applySplashTheme();
 	const window = new BrowserWindow({
 		width: SPLASH_WINDOW_WIDTH,
 		height: getSplashWindowHeight(process.platform),
@@ -392,11 +394,20 @@ export function focusSplashWindow(): void {
 	if (window.isMinimized()) {
 		window.restore();
 	}
+	applySplashTheme();
 	window.show();
 	window.focus();
 }
 
+function applySplashTheme(): void {
+	if (!darkThemePendingShow) return;
+	darkThemePendingShow = false;
+	if (themeSourceBeforeSplash == null) themeSourceBeforeSplash = nativeTheme.themeSource;
+	nativeTheme.themeSource = 'dark';
+}
+
 function restoreThemeSource(): void {
+	darkThemePendingShow = false;
 	if (themeSourceBeforeSplash == null) return;
 	nativeTheme.themeSource = themeSourceBeforeSplash;
 	themeSourceBeforeSplash = null;

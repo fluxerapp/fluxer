@@ -5753,6 +5753,9 @@
         "msgid": "Update available"
       },
       {
+        "msgid": "Update now"
+      },
+      {
         "msgid": "Update passkey"
       },
       {
@@ -6804,6 +6807,9 @@
       },
       {
         "msgid": "{productName} cannot start a safe isolated route for this app's audio."
+      },
+      {
+        "msgid": "{productName} closes, installs the update and opens again."
       },
       {
         "msgid": "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."

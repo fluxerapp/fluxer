@@ -1884,8 +1884,13 @@ msgstr "Το {productName} δεν μπορεί να ξεκινήσει μια α
 msgid "{productName} cannot use a hardware encoder for this, so it will use your CPU."
 msgstr "Το {productName} δεν μπορεί να χρησιμοποιήσει κωδικοποιητή υλικού για αυτό, οπότε θα χρησιμοποιήσει την CPU σας."
 
+#. Desktop updater modal body after a manual update check finds an update. Confirming closes the app window and opens the updater. productName is the app name.
+#: src/features/updater/commands/UpdaterModalCommands.tsx:37
+msgid "{productName} closes, installs the update and opens again."
+msgstr "Το {productName} κλείνει, εγκαθιστά την ενημέρωση και ανοίγει ξανά."
+
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:91
+#: src/features/updater/commands/UpdaterModalCommands.tsx:100
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "Το {productName} δεν μπόρεσε να επικοινωνήσει με την υπηρεσία ενημερώσεων. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά."
 
@@ -2724,7 +2729,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "ένα όνομα κεντρικού υπολογιστή, π.χ. {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:113
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "Υπάρχει διαθέσιμη ενημέρωση της εφαρμογής για Linux. Επιλέξτε τη μορφή πακέτου για αυτό το σύστημα και το {productName} θα την αποθηκεύσει τοπικά."
 
@@ -5541,7 +5546,7 @@ msgstr "AV1 (απαιτείται ενεργοποίηση)"
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
-#: src/features/updater/commands/UpdaterModalCommands.tsx:114
+#: src/features/updater/commands/UpdaterModalCommands.tsx:123
 msgid "Available"
 msgstr "Διαθέσιμο"
 
@@ -10407,7 +10412,7 @@ msgid "Couldn't change your price"
 msgstr "Δεν ήταν δυνατή η αλλαγή της τιμής σας"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:87
+#: src/features/updater/commands/UpdaterModalCommands.tsx:96
 msgid "Couldn't check for updates"
 msgstr "Δεν ήταν δυνατός ο έλεγχος για ενημερώσεις"
 
@@ -10539,7 +10544,7 @@ msgid "Couldn't delete your messages"
 msgstr "Δεν ήταν δυνατή η διαγραφή των μηνυμάτων σας"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:95
+#: src/features/updater/commands/UpdaterModalCommands.tsx:104
 msgid "Couldn't download the desktop update"
 msgstr "Δεν ήταν δυνατή η λήψη της ενημέρωσης για υπολογιστές"
 
@@ -11915,7 +11920,7 @@ msgid "Deafened by moderators"
 msgstr "Σε σίγαση ήχου από συντονιστές"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:134
+#: src/features/updater/commands/UpdaterModalCommands.tsx:143
 msgid "DEB package"
 msgstr "Πακέτο DEB"
 
@@ -12573,7 +12578,7 @@ msgid "Desktop app"
 msgstr "Εφαρμογή υπολογιστή"
 
 #. Modal title shown after a manual desktop update check finds no update.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:41
+#: src/features/updater/commands/UpdaterModalCommands.tsx:50
 msgid "Desktop app is up to date"
 msgstr "Η εφαρμογή υπολογιστή είναι ενημερωμένη"
 
@@ -12738,7 +12743,7 @@ msgid "Developer tools unavailable"
 msgstr "Τα εργαλεία προγραμματιστή δεν είναι διαθέσιμα"
 
 #. Modal title when the desktop app is running unpackaged during development.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:57
+#: src/features/updater/commands/UpdaterModalCommands.tsx:66
 msgid "Development build"
 msgstr "Έκδοση ανάπτυξης"
 
@@ -19153,12 +19158,12 @@ msgid "Install the new app"
 msgstr "Εγκατάσταση της νέας εφαρμογής"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:110
+#: src/features/updater/commands/UpdaterModalCommands.tsx:119
 msgid "Installed"
 msgstr "Εγκατεστημένο"
 
 #. Desktop updater modal body. The currentVersion placeholder is the installed app version.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:45
+#: src/features/updater/commands/UpdaterModalCommands.tsx:54
 msgid "Installed version: {currentVersion}."
 msgstr "Εγκατεστημένη έκδοση: {currentVersion}."
 
@@ -20175,7 +20180,7 @@ msgstr "Γράφημα καθυστέρησης"
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
-#: src/features/updater/commands/UpdaterModalCommands.tsx:37
+#: src/features/updater/commands/UpdaterModalCommands.tsx:46
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls.tsx:74
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:48
@@ -20716,7 +20721,7 @@ msgid "Linux default"
 msgstr "Προεπιλεγμένη συσκευή Linux"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:126
+#: src/features/updater/commands/UpdaterModalCommands.tsx:135
 msgid "Linux package"
 msgstr "Πακέτο Linux"
 
@@ -21182,7 +21187,7 @@ msgid "Manage your subscription"
 msgstr "Διαχείριση συνδρομής"
 
 #. Modal title when automatic in-app desktop updates cannot be used.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:53
+#: src/features/updater/commands/UpdaterModalCommands.tsx:62
 msgid "Manual desktop update"
 msgstr "Μη αυτόματη ενημέρωση εφαρμογής υπολογιστή"
 
@@ -23526,7 +23531,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "Οι νέοι χρήστες δεν μπορούν να εγγραφούν αυτήν τη στιγμή. Μπορείτε να δημιουργήσετε έναν λογαριασμό ή να συνδεθείτε και να δοκιμάσετε ξανά αυτόν τον σύνδεσμο αργότερα."
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:122
+#: src/features/updater/commands/UpdaterModalCommands.tsx:131
 msgid "New version"
 msgstr "Νέα έκδοση"
 
@@ -23782,7 +23787,7 @@ msgid "No description."
 msgstr "Χωρίς περιγραφή."
 
 #. Desktop updater modal body when no installed version string is available.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:49
+#: src/features/updater/commands/UpdaterModalCommands.tsx:58
 msgid "No desktop update is available."
 msgstr "Δεν υπάρχει διαθέσιμη ενημέρωση για την εφαρμογή υπολογιστή."
 
@@ -25061,7 +25066,7 @@ msgid "Open date picker"
 msgstr "Άνοιγμα επιλογέα ημερομηνίας"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:83
+#: src/features/updater/commands/UpdaterModalCommands.tsx:92
 msgid "Open desktop downloads"
 msgstr "Άνοιγμα λήψεων για υπολογιστή"
 
@@ -25258,7 +25263,7 @@ msgid "Open settings"
 msgstr "Άνοιγμα ρυθμίσεων"
 
 #. Button label that opens the software center via appstream protocol.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:79
+#: src/features/updater/commands/UpdaterModalCommands.tsx:88
 msgid "Open software center"
 msgstr "Άνοιγμα κέντρου λογισμικού"
 
@@ -29779,7 +29784,7 @@ msgid "Rows per page"
 msgstr "Σειρές ανά σελίδα"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:139
+#: src/features/updater/commands/UpdaterModalCommands.tsx:148
 msgid "RPM package"
 msgstr "Πακέτο RPM"
 
@@ -34545,7 +34550,7 @@ msgid "System tray"
 msgstr "Περιοχή ειδοποιήσεων"
 
 #. Modal title when the desktop app is installed through a system package manager such as Flatpak.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:61
+#: src/features/updater/commands/UpdaterModalCommands.tsx:70
 msgid "System-managed install"
 msgstr "Εγκατάσταση διαχειριζόμενη από το σύστημα"
 
@@ -34671,7 +34676,7 @@ msgid "Tap to add a note"
 msgstr "Πατήστε για προσθήκη σημείωσης"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:144
+#: src/features/updater/commands/UpdaterModalCommands.tsx:153
 msgid "tar.gz archive"
 msgstr "Αρχείο tar.gz"
 
@@ -35020,12 +35025,12 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "Η κοινότητα που ψάχνετε μπορεί να έχει διαγραφεί ή να μην έχετε πρόσβαση σε αυτήν."
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:99
+#: src/features/updater/commands/UpdaterModalCommands.tsx:108
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "Δεν ήταν δυνατή η λήψη της ενημέρωσης για την εφαρμογή υπολογιστή. Δοκιμάστε ξανά από το κουμπί ενημέρωσης όταν η σύνδεσή σας είναι σταθερή."
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:130
+#: src/features/updater/commands/UpdaterModalCommands.tsx:139
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "Το αρχείο που κατεβάσατε έχει αποθηκευτεί στον υπολογιστή σας. Εγκαταστήστε το με τον συνηθισμένο διαχειριστή πακέτων σας."
 
@@ -35640,7 +35645,7 @@ msgid "This conversation is no longer available."
 msgstr "Αυτή η συνομιλία δεν είναι πλέον διαθέσιμη."
 
 #. Desktop updater modal body for platforms that do not support in-app installation. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:69
+#: src/features/updater/commands/UpdaterModalCommands.tsx:78
 msgid "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 msgstr "Αυτή η έκδοση για υπολογιστές δεν μπορεί να εγκαταστήσει ενημερώσεις μέσα από το {productName}. Κατεβάστε το πιο πρόσφατο πρόγραμμα εγκατάστασης για υπολογιστές."
 
@@ -35655,7 +35660,7 @@ msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work wh
 msgstr "Αυτή η επιφάνεια εργασίας δεν προσφέρει συντομεύσεις σε όλο το σύστημα. Οι συντομεύσεις εξακολουθούν να λειτουργούν όσο το {productName} έχει την εστίαση."
 
 #. Desktop updater modal body for development or unpackaged builds.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:65
+#: src/features/updater/commands/UpdaterModalCommands.tsx:74
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
 msgstr "Αυτή η έκδοση ανάπτυξης δεν μπορεί να ενημερωθεί αυτόματα. Κατεβάστε ένα πρόγραμμα εγκατάστασης για υπολογιστές για να δοκιμάσετε τη ροή ενημέρωσης."
 
@@ -35767,7 +35772,7 @@ msgid "This image couldn't be read. It may be damaged."
 msgstr "Αυτή η εικόνα δεν διαβάστηκε. Μπορεί να είναι κατεστραμμένη."
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:75
+#: src/features/updater/commands/UpdaterModalCommands.tsx:84
 msgid "This install is managed by your system. Update {productName} from your software center or package manager."
 msgstr "Αυτή η εγκατάσταση ελέγχεται από το σύστημά σας. Ενημερώστε το {productName} από το κέντρο λογισμικού ή τον διαχειριστή πακέτων σας."
 
@@ -37574,7 +37579,7 @@ msgstr "Καθολική εφεδρική επιλογή. Η χαμηλότερ�
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:770
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:115
-#: src/features/updater/commands/UpdaterModalCommands.tsx:118
+#: src/features/updater/commands/UpdaterModalCommands.tsx:127
 msgid "Unknown"
 msgstr "Άγνωστο"
 
@@ -38160,6 +38165,11 @@ msgstr "Διαθέσιμη ενημέρωση"
 #: src/features/user/components/modals/CustomStatusModal.tsx:424
 msgid "Update my status"
 msgstr "Ενημέρωση της κατάστασής μου"
+
+#. Button label that closes the desktop app and opens the updater to install an available update.
+#: src/features/updater/commands/UpdaterModalCommands.tsx:42
+msgid "Update now"
+msgstr "Ενημέρωση τώρα"
 
 #. Primary button in the modal that saves an updated passkey.
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:39

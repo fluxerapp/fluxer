@@ -227,8 +227,27 @@ describe('ModuleStore', () => {
 		});
 
 		assert.equal(upgraded.shellVersionChanged, true);
+		assert.notEqual(
+			readState(userDataPath).shell_version,
+			'2026.824.1',
+			'a quit or crash before the modules converge has to force the update again on the next boot',
+		);
+		const reopened = await ModuleStore.open({
+			root: getModuleStoreRoot(userDataPath),
+			shellVersion: '2026.824.1',
+			releaseChannel: RELEASE_CHANNEL,
+		});
+		assert.equal(reopened.shellVersionChanged, true);
+
+		await reopened.recordShellVersionConverged();
+
 		assert.equal(readState(userDataPath).shell_version, '2026.824.1');
-		assert.equal((await openStore(userDataPath)).shellVersionChanged, true);
+		const converged = await ModuleStore.open({
+			root: getModuleStoreRoot(userDataPath),
+			shellVersion: '2026.824.1',
+			releaseChannel: RELEASE_CHANNEL,
+		});
+		assert.equal(converged.shellVersionChanged, false);
 	});
 
 	test('writes state.json atomically and leaves no temporary behind', async () => {
