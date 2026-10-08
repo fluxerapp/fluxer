@@ -281,11 +281,17 @@
 	box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 0.28);
 }
 
-.instanceBadge svg,
-.instanceBadge img {
+.instanceBadge svg {
 	display: block;
 	width: 72%;
 	height: 72%;
+	object-fit: cover;
+}
+
+.instanceBadge img {
+	display: block;
+	width: 100%;
+	height: 100%;
 	object-fit: cover;
 }
 

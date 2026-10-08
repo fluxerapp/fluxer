@@ -31,6 +31,25 @@
 	line-height: 0.875rem;
 }
 
+.instanceHeadingMark {
+	display: inline-flex;
+	flex: 0 0 auto;
+	width: 0.75rem;
+	height: 0.75rem;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	border-radius: 0.1875rem;
+}
+
+.instanceHeadingMark svg,
+.instanceHeadingMark img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
 .instanceHeadingLabel {
 	min-width: 0;
 	overflow: hidden;

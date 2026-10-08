@@ -5,8 +5,8 @@ import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActi
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
@@ -834,7 +834,7 @@ export function showDeleteConfirmation(
 						<Switch
 							value={false}
 							onChange={() => {}}
-							label={i18n._(ALSO_REPORT_TO_SAFETY_TEAM_DESCRIPTOR, {productName: PRODUCT_NAME})}
+							label={i18n._(ALSO_REPORT_TO_SAFETY_TEAM_DESCRIPTOR, {productName: getActiveInstanceProductName()})}
 							compact
 							data-flx="messaging.message-commands.show-delete-confirmation.switch"
 						/>

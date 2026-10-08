@@ -45,6 +45,14 @@
 	object-fit: contain;
 }
 
+.browserInstanceLogo img {
+	display: block;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 0.25rem;
+	object-fit: cover;
+}
+
 .browserInstanceMeta {
 	display: grid;
 	gap: 0.125rem;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import styles from '@app/features/channel/components/barriers/BarrierComponents.module.css';
 import {openChannelFollowModal} from '@app/features/channel/components/modals/ChannelFollowModal';
@@ -359,7 +359,7 @@ export const SystemDmBarrier = observer(() => {
 	const {i18n} = useLingui();
 	return (
 		<BarrierBase
-			message={i18n._(SYSTEM_ANNOUNCEMENTS_FROM_STAFF_DESCRIPTOR, {productName: PRODUCT_NAME})}
+			message={i18n._(SYSTEM_ANNOUNCEMENTS_FROM_STAFF_DESCRIPTOR, {productName: getActiveInstanceProductName()})}
 			icon={
 				<InfoIcon
 					size={remFromPx(18)}

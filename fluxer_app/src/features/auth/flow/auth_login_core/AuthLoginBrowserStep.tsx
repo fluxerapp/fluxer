@@ -2,6 +2,7 @@
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import {resolveSnapshotInstanceDomain} from '@app/features/auth/AccountDisplayUtils';
+import {InstanceBrandMark} from '@app/features/auth/components/InstanceBrandMark';
 import loginStyles from '@app/features/auth/components/pages/LoginPage.module.css';
 import styles from '@app/features/auth/flow/auth_login_core/AuthLoginBrowserStep.module.css';
 import {
@@ -15,6 +16,7 @@ import {
 	resolveInstanceLabel,
 } from '@app/features/auth/flow/instance_selector/InstanceDirectoryStorage';
 import {useKnownInstances} from '@app/features/auth/flow/instance_selector/useKnownInstances';
+import {resolveInstanceBrandIconUrl} from '@app/features/auth/InstanceBranding';
 import type {LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
 import {
 	BACK_DESCRIPTOR,
@@ -33,7 +35,6 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {SteppedCarousel, SteppedCarouselActions} from '@app/features/ui/stepped_carousel/SteppedCarousel';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {flxElementClassName} from '@app/lib/react';
-import FluxerLogoAsset from '@app/media/images/fluxer-logo-color.svg?react';
 import {DesktopHandoffReturnMethod} from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
 import {isOfficialInstanceHost, OFFICIAL_INSTANCE_NAME} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 import {msg} from '@lingui/core/macro';
@@ -44,7 +45,6 @@ import {
 	ArrowSquareOutIcon,
 	CheckCircleIcon,
 	ClipboardIcon,
-	GlobeIcon,
 	WarningCircleIcon,
 } from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
@@ -94,6 +94,7 @@ interface BrowserInstanceIdentity {
 	readonly domain: string;
 	readonly isOfficial: boolean;
 	readonly name: string;
+	readonly iconUrl: string | null;
 }
 
 function findKnownInstanceName(domain: string, knownInstances: ReadonlyArray<InstanceInfo>): string | null {
@@ -118,13 +119,19 @@ function resolveBrowserInstanceIdentity({
 	const domain = resolveSnapshotInstanceDomain(snapshot) ?? apiEndpoint;
 	const isOfficial = isOfficialInstanceHost(apiEndpoint);
 	if (isOfficial) {
-		return {domain, isOfficial, name: OFFICIAL_INSTANCE_NAME};
+		return {domain, isOfficial, name: OFFICIAL_INSTANCE_NAME, iconUrl: null};
 	}
+	const iconUrl = resolveInstanceBrandIconUrl(snapshot);
 	const productLabel = resolveInstanceLabel(snapshot.appPublic?.branding?.product_name, domain);
 	if (productLabel !== instanceDomainHost(domain)) {
-		return {domain, isOfficial, name: productLabel};
+		return {domain, isOfficial, name: productLabel, iconUrl};
 	}
-	return {domain, isOfficial, name: resolveInstanceLabel(findKnownInstanceName(domain, knownInstances), domain)};
+	return {
+		domain,
+		isOfficial,
+		name: resolveInstanceLabel(findKnownInstanceName(domain, knownInstances), domain),
+		iconUrl,
+	};
 }
 
 function resolveSignInAddress(webAppEndpoint: string): string {
@@ -558,19 +565,12 @@ export const AuthLoginBrowserStep = observer(function AuthLoginBrowserStep({
 							className={styles.browserInstanceLogo}
 							data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-instance-logo"
 						>
-							{instanceIdentity.isOfficial ? (
-								<FluxerLogoAsset
-									role="img"
-									aria-label={OFFICIAL_INSTANCE_NAME}
-									data-flx="auth.flow.auth-login-core.auth-login-browser-step.img"
-								/>
-							) : (
-								<GlobeIcon
-									size={remFromPx(20)}
-									weight="regular"
-									data-flx="auth.flow.auth-login-core.auth-login-browser-step.globe-icon"
-								/>
-							)}
+							<InstanceBrandMark
+								isOfficial={instanceIdentity.isOfficial}
+								iconUrl={instanceIdentity.iconUrl}
+								size={20}
+								data-flx="auth.flow.auth-login-core.auth-login-browser-step.instance-brand-mark"
+							/>
 						</span>
 						<span
 							className={styles.browserInstanceMeta}

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CheckCircleIcon} from '@phosphor-icons/react';
@@ -29,7 +29,7 @@ export const ReportStepComplete: React.FC<Props> = ({onStartOver}) => {
 		<StatusSlate
 			Icon={FilledCheckCircleIcon}
 			title={<Trans>Report sent</Trans>}
-			description={i18n._(REPORT_COMPLETE_DESCRIPTION_DESCRIPTOR, {productName: PRODUCT_NAME})}
+			description={i18n._(REPORT_COMPLETE_DESCRIPTION_DESCRIPTOR, {productName: getActiveInstanceProductName()})}
 			iconStyle={{color: 'var(--status-online)'}}
 			actions={[
 				{

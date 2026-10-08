@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/InviteEmbed.module.css';
 import {
@@ -364,7 +364,9 @@ const InviteEmbedInner = observer(function InviteEmbedInner({
 						{actionType === GuildInvitePrimaryAction.InvitesDisabled && (
 							<p className={styles.statText} data-flx="channel.invite-embed.stat-text--4">
 								{guildActionState.isRaidDetected
-									? i18n._(DETECTED_A_POTENTIAL_RAID_SO_NEW_USERS_CAN_DESCRIPTOR, {productName: PRODUCT_NAME})
+									? i18n._(DETECTED_A_POTENTIAL_RAID_SO_NEW_USERS_CAN_DESCRIPTOR, {
+											productName: getActiveInstanceProductName(),
+										})
 									: i18n._(INVITES_ARE_CURRENTLY_PAUSED_FOR_THIS_COMMUNITY_DESCRIPTOR)}
 							</p>
 						)}

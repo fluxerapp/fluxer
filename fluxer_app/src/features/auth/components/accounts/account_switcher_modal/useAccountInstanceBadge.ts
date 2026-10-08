@@ -6,6 +6,7 @@ import {
 	normalizeInstanceName,
 	resolveInstanceLabel,
 } from '@app/features/auth/flow/instance_selector/InstanceDirectoryStorage';
+import {resolveInstanceBrandIconUrl} from '@app/features/auth/InstanceBranding';
 import type {Account} from '@app/features/platform/state/AuthSession';
 import {isOfficialInstanceHost, OFFICIAL_INSTANCE_NAME} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 import {useMemo} from 'react';
@@ -14,6 +15,7 @@ export interface AccountInstanceBadgeInfo {
 	readonly label: string;
 	readonly title: string;
 	readonly isOfficial: boolean;
+	readonly iconUrl: string | null;
 }
 
 function findKnownInstance(instanceKey: string, knownInstances: ReadonlyArray<InstanceInfo>): InstanceInfo | null {
@@ -44,10 +46,15 @@ function getAccountInstanceBadgeInfo(
 	}
 	const isOfficial = isOfficialInstanceHost(instanceKey);
 	if (isOfficial) {
-		return {label: OFFICIAL_INSTANCE_NAME, title: domain, isOfficial};
+		return {label: OFFICIAL_INSTANCE_NAME, title: domain, isOfficial, iconUrl: null};
 	}
 	const knownInstance = findKnownInstance(instanceKey, knownInstances);
-	return {label: resolveInstanceName(account, knownInstance, domain), title: domain, isOfficial};
+	return {
+		label: resolveInstanceName(account, knownInstance, domain),
+		title: domain,
+		isOfficial,
+		iconUrl: resolveInstanceBrandIconUrl(account.instance),
+	};
 }
 
 export function useAccountInstanceBadge(

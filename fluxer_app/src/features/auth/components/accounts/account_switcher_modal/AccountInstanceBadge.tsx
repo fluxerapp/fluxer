@@ -2,11 +2,10 @@
 
 import styles from '@app/features/auth/components/accounts/account_switcher_modal/AccountProfilePicker.module.css';
 import type {AccountInstanceBadgeInfo} from '@app/features/auth/components/accounts/account_switcher_modal/useAccountInstanceBadge';
-import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {InstanceBrandMark} from '@app/features/auth/components/InstanceBrandMark';
+import {instanceDomainHost} from '@app/features/auth/flow/instance_selector/InstanceDirectoryStorage';
 import {VerifiedConnectionIcon} from '@app/features/ui/components/icons/VerifiedConnectionIcon';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import FluxerLogoAsset from '@app/media/images/fluxer-logo-color.svg?react';
-import {GlobeIcon} from '@phosphor-icons/react';
 import type React from 'react';
 
 interface AccountInstanceBadgeProps {
@@ -22,11 +21,15 @@ export function AccountInstanceBadge({
 }: AccountInstanceBadgeProps): React.ReactElement {
 	let domainLabel = fallbackLabel;
 	let isOfficial = false;
+	let iconUrl: string | null = null;
+	let instanceName: string | null = null;
 	if (badge != null) {
 		domainLabel = badge.title;
 		isOfficial = badge.isOfficial;
+		iconUrl = badge.iconUrl;
+		instanceName = badge.label !== instanceDomainHost(badge.title) ? badge.label : null;
 	}
-	const ariaLabels = [domainLabel];
+	const ariaLabels = instanceName == null ? [domainLabel] : [instanceName, domainLabel];
 	if (isOfficial) {
 		ariaLabels.push(officialLabel);
 	}
@@ -39,7 +42,7 @@ export function AccountInstanceBadge({
 				className={styles.instanceTooltipLabel}
 				data-flx="auth.accounts.account-switcher-modal.account-instance-badge.render-tooltip.instance-tooltip-label"
 			>
-				{domainLabel}
+				{instanceName == null ? domainLabel : `${instanceName} (${domainLabel})`}
 			</span>
 			{isOfficial && (
 				<span
@@ -69,15 +72,13 @@ export function AccountInstanceBadge({
 				aria-label={ariaLabels.join(', ')}
 				data-flx="auth.accounts.account-switcher-modal.account-instance-badge.instance-badge"
 			>
-				{isOfficial ? (
-					<FluxerLogoAsset data-flx="auth.accounts.account-switcher-modal.account-instance-badge.fluxer-logo-asset" />
-				) : (
-					<GlobeIcon
-						size={remFromPx(15)}
-						weight="bold"
-						data-flx="auth.accounts.account-switcher-modal.account-instance-badge.globe-icon"
-					/>
-				)}
+				<InstanceBrandMark
+					isOfficial={isOfficial}
+					iconUrl={iconUrl}
+					size={15}
+					globeWeight="bold"
+					data-flx="auth.accounts.account-switcher-modal.account-instance-badge.instance-brand-mark"
+				/>
 			</span>
 		</Tooltip>
 	);

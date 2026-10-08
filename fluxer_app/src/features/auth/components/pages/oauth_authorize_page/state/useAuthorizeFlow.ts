@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import {useAuthorizeParams} from '@app/features/auth/components/pages/oauth_authorize_page/hooks/useAuthorizeParams';
 import {
 	type BotInviteDestinationOption,
@@ -459,7 +459,8 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 		}
 	}, [params, onCancelOverride, publicAppState.data, i18n]);
 	const sessionExpiredMessage = useMemo(
-		() => i18n._(YOUR_PRODUCT_SESSION_EXPIRED_SIGN_IN_AGAIN_TO_DESCRIPTOR, {productName: PRODUCT_NAME}),
+		() =>
+			i18n._(YOUR_PRODUCT_SESSION_EXPIRED_SIGN_IN_AGAIN_TO_DESCRIPTOR, {productName: getActiveInstanceProductName()}),
 		[i18n.locale],
 	);
 	return {

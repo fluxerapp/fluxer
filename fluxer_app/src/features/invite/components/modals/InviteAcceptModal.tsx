@@ -2,7 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import {getAccountDisplayLabels, resolveAccountInstanceLabel} from '@app/features/auth/AccountDisplayUtils';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
@@ -229,7 +229,7 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code, targ
 				{isJoinDisabled ? (
 					<p className={styles.disabledText} data-flx="invite.invite-accept-modal.render-body.disabled-text">
 						{guildActionState.isRaidDetected
-							? i18n._(RAID_INVITES_PAUSED_SHORT_DESCRIPTOR, {productName: PRODUCT_NAME})
+							? i18n._(RAID_INVITES_PAUSED_SHORT_DESCRIPTOR, {productName: getActiveInstanceProductName()})
 							: i18n._(INVITES_PAUSED_TRY_AGAIN_DESCRIPTOR)}
 					</p>
 				) : null}

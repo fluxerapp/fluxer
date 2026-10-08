@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
@@ -197,7 +197,7 @@ const InviteLoginPageContent = observer(function InviteLoginPageContent({
 				>
 					<p className={sharedStyles.disabledText} data-flx="invite.invite-login-page.invite-login-page-container.p">
 						{isRaidDetected
-							? i18n._(RAID_INVITES_PAUSED_DESCRIPTOR, {productName: PRODUCT_NAME})
+							? i18n._(RAID_INVITES_PAUSED_DESCRIPTOR, {productName: getActiveInstanceProductName()})
 							: i18n._(INVITES_PAUSED_DESCRIPTOR)}
 					</p>
 					<p

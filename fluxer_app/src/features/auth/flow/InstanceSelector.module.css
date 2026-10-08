@@ -162,6 +162,14 @@
 	object-fit: contain;
 }
 
+.instanceLogo img {
+	display: block;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 0.25rem;
+	object-fit: cover;
+}
+
 .instanceMeta {
 	display: grid;
 	gap: 0.125rem;
