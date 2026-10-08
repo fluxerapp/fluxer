@@ -258,7 +258,13 @@ export class BackgroundReadStateReducer implements BackgroundSnapshotSink {
 				this.storeMentionCount(channelId, mentionCount);
 			}
 		}
-		this.observeMentionCounts(new Map(this.mentionCounts), BackgroundMentionCountMode.REPLACE);
+		const visible = new Map<string, number>();
+		for (const [channelId, mentionCount] of this.mentionCounts) {
+			if (this.channelDetails.has(channelId)) {
+				visible.set(channelId, mentionCount);
+			}
+		}
+		this.observeMentionCounts(visible, BackgroundMentionCountMode.REPLACE);
 	}
 
 	applyDispatch(type: string, data: unknown): void {
@@ -339,21 +345,20 @@ export class BackgroundReadStateReducer implements BackgroundSnapshotSink {
 			return;
 		}
 		this.storeGuildDetails(guild);
-		for (const entry of asArray(guild.channels)) {
+		const revealed = new Map<string, number>();
+		for (const entry of [...asArray(guild.channels), ...asArray(guild.threads)]) {
 			const channel = asRecord(entry);
 			const channelId = asString(channel?.id);
 			if (channel !== null && channelId !== null) {
 				this.linkChannel(guildId, channelId);
-				this.storeChannelDetails(channelId, channel);
+				const mentionCount = this.storeChannelDetails(channelId, channel);
+				if (mentionCount > 0) {
+					revealed.set(channelId, mentionCount);
+				}
 			}
 		}
-		for (const entry of asArray(guild.threads)) {
-			const thread = asRecord(entry);
-			const threadId = asString(thread?.id);
-			if (thread !== null && threadId !== null) {
-				this.linkChannel(guildId, threadId);
-				this.storeChannelDetails(threadId, thread);
-			}
+		if (revealed.size > 0) {
+			this.observeMentionCounts(revealed, BackgroundMentionCountMode.MERGE);
 		}
 		for (const entry of asArray(guild.members)) {
 			const member = asRecord(entry);
@@ -402,12 +407,21 @@ export class BackgroundReadStateReducer implements BackgroundSnapshotSink {
 		if (guildId !== null) {
 			this.linkChannel(guildId, channelId);
 		}
-		this.storeChannelDetails(channelId, channel);
+		this.revealChannel(channelId, channel);
 	}
 
-	private storeChannelDetails(channelId: string, channel: Record<string, unknown>): void {
+	private revealChannel(channelId: string, channel: Record<string, unknown>): void {
+		const mentionCount = this.storeChannelDetails(channelId, channel);
+		if (mentionCount > 0) {
+			this.observeMentionCounts(new Map([[channelId, mentionCount]]), BackgroundMentionCountMode.MERGE);
+		}
+	}
+
+	private storeChannelDetails(channelId: string, channel: Record<string, unknown>): number {
 		this.assertChannelCapacity(this.channelDetails, channelId);
+		const known = this.channelDetails.has(channelId);
 		this.channelDetails.set(channelId, readChannelDetails(channel));
+		return known ? 0 : (this.mentionCounts.get(channelId) ?? 0);
 	}
 
 	private storeRelationship(value: unknown): void {
@@ -447,6 +461,9 @@ export class BackgroundReadStateReducer implements BackgroundSnapshotSink {
 		const guildId = asString(message.guild_id);
 		if (guildId !== null) {
 			this.linkChannel(guildId, channelId);
+		}
+		if (!this.channelDetails.has(channelId)) {
+			this.revealChannel(channelId, {});
 		}
 		const muted = this.isGuildOrChannelMuted(guildId, channelId);
 		const authorBlocked = authorId !== null && this.blockedUserIds.has(authorId);
@@ -636,6 +653,9 @@ export class BackgroundReadStateReducer implements BackgroundSnapshotSink {
 			this.storeMentionCount(channelId, mentionCount);
 		} else {
 			this.mentionCounts.delete(channelId);
+		}
+		if (mentionCount > 0 && !this.channelDetails.has(channelId)) {
+			return;
 		}
 		this.observeMentionCounts(new Map([[channelId, mentionCount]]), BackgroundMentionCountMode.MERGE);
 	}

@@ -97,6 +97,51 @@ describe('background read state reducer', () => {
 		expect(recorder.total).toBe(1);
 	});
 
+	test('a leftover mention in a channel the account can no longer see is not counted, as in the foreground', () => {
+		reducer.applyReady(
+			readyPayload({
+				private_channels: [{id: 'dm-open', type: ChannelTypes.DM}],
+				read_states: [
+					{id: 'dm-closed', mention_count: 1},
+					{id: 'left-guild-channel', mention_count: 1},
+					{id: 'dm-open', mention_count: 2},
+				],
+			}),
+		);
+
+		expect([...recorder.counts]).toEqual([['dm-open', 2]]);
+	});
+
+	test('a leftover mention appears once its guild arrives and its channel is known', () => {
+		reducer.applyReady(
+			readyPayload({
+				guilds: [{id: 'guild-9', unavailable: true}],
+				read_states: [{id: 'late-1', mention_count: 2}],
+			}),
+		);
+		expect(recorder.total).toBe(0);
+
+		reducer.applyDispatch('GUILD_CREATE', {id: 'guild-9', channels: [{id: 'late-1'}], members: []});
+
+		expect(recorder.counts.get('late-1')).toBe(2);
+	});
+
+	test('a reopened direct message brings its leftover mention back', () => {
+		reducer.applyReady(readyPayload({read_states: [{id: 'dm-closed', mention_count: 1}]}));
+
+		reducer.applyDispatch('CHANNEL_CREATE', {id: 'dm-closed', type: ChannelTypes.DM});
+
+		expect(recorder.counts.get('dm-closed')).toBe(1);
+	});
+
+	test('an acknowledgement for a channel the account cannot see is not counted', () => {
+		reducer.applyReady(readyPayload());
+
+		reducer.applyDispatch('MESSAGE_ACK', {channel_id: 'gone', message_id: 'm', mention_count: 1});
+
+		expect(recorder.total).toBe(0);
+	});
+
 	test('a muted guild still contributes an explicit mention, exactly as the foreground badge does', () => {
 		reducer.applyReady(readyPayload({user_guild_settings: [{guild_id: 'guild-1', muted: true}]}));
 
