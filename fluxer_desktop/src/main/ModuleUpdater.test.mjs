@@ -880,7 +880,6 @@ describe('ModuleUpdater with a renderer bundled in the shell', () => {
 				manifestSha256: 'c'.repeat(64),
 			},
 			floor: {fluxer_renderer: NEXT_RENDERER_SHA},
-			floorBuildVersion: SHELL_VERSION,
 		});
 		return store;
 	}
@@ -948,5 +947,88 @@ describe('ModuleUpdater with a renderer bundled in the shell', () => {
 			requests.some((url) => String(url).endsWith(`${NEXT_RENDERER_SHA}/package.br`)),
 			true,
 		);
+	});
+
+	test('a renderer module that keeps failing to boot is dropped for the bundle, never relaunched forever', async () => {
+		const store = await openStore(createUserData());
+		installModuleOnDisk(store.root, 'fluxer_renderer', NEXT_RENDERER_SHA, [['index.html', 'broken']], '2026.900.1');
+		await store.commit({fluxer_renderer: NEXT_RENDERER_SHA});
+		const served = [];
+		for (let launch = 0; launch < 4; launch += 1) {
+			const {updater} = createUpdater(
+				store,
+				{},
+				{bundledRendererVersion: SHELL_VERSION, platform: 'linux', respond: unreachableFeed()},
+			);
+			const outcome = await updater.run();
+			served.push((await updater.selectServedModules(outcome.committed)).renderer.source);
+		}
+
+		assert.deepEqual(served, ['module', 'module', 'bundled', 'bundled']);
+		assert.equal(store.isRejected('fluxer_renderer', NEXT_RENDERER_SHA), true);
+	});
+
+	test('a committed on-demand module whose files are gone never blocks an offline launch', async () => {
+		for (const platform of ['darwin', 'linux']) {
+			const store = await openStore(createUserData());
+			const directory = installModuleOnDisk(store.root, 'fluxer_fonts_jp', OVERLAY_SHA, [['a.woff2', 'font']], '0.0.0');
+			await store.commit({fluxer_fonts_jp: OVERLAY_SHA});
+			await rm(directory, {recursive: true, force: true});
+			const {updater} = createUpdater(
+				store,
+				{},
+				{bundledRendererVersion: SHELL_VERSION, platform, respond: unreachableFeed()},
+			);
+
+			const outcome = await updater.run();
+
+			assert.equal(outcome.status, platform === 'linux' ? 'launching' : 'unreachable-launch', platform);
+			assert.deepEqual(outcome.committed, {}, platform);
+		}
+	});
+
+	test('a newer feed renderer whose package is missing launches the bundle instead of blocking', async () => {
+		const store = await openStore(createUserData());
+		const {updater} = createUpdater(
+			store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{bundledRendererVersion: OLDER_VERSION, respond: missingPackages()},
+		);
+
+		const outcome = await updater.run();
+
+		assert.equal(outcome.status, 'launching');
+		assert.deepEqual(outcome.committed, {});
+		assert.deepEqual(await updater.checkForUpdate(), {
+			shellLatestVersion: SHELL_VERSION,
+			shellNewer: false,
+			modulesChanged: true,
+		});
+	});
+
+	test('a packaged bundle with no readable version still outranks an installed module', async () => {
+		const store = await openStore(createUserData());
+		installModuleOnDisk(store.root, 'fluxer_renderer', RENDERER_SHA, [['index.html', 'old']], OLDER_VERSION);
+		await store.commit({fluxer_renderer: RENDERER_SHA});
+		const updater = new ModuleUpdater({
+			store,
+			shellVersion: SHELL_VERSION,
+			releaseChannel: RELEASE_CHANNEL,
+			platform: 'linux',
+			arch: ARCH,
+			packageOrigin: PACKAGE_ORIGIN,
+			hasOfflineRenderer: true,
+			bundledRendererVersion: 'dev',
+			preferUnversionedBundle: true,
+			fetch: unreachableFeed(),
+			sleep: async () => {},
+			random: () => 0,
+			now: () => NOW,
+		});
+
+		const outcome = await updater.run();
+
+		assert.equal((await updater.selectServedModules(outcome.committed)).renderer.source, 'bundled');
+		assert.deepEqual(store.getCommitted(), {});
 	});
 });

@@ -169,7 +169,6 @@ interface ModuleStoreState {
 	readonly previous: Readonly<Record<string, string>>;
 	readonly rejected: Readonly<Record<string, string>>;
 	readonly floor: Readonly<Record<string, string>>;
-	readonly floor_build_version: string | null;
 	readonly linux_security_minimum: LinuxModuleSecurityMinimum | null;
 	readonly manifest_high_water: ReadonlyArray<ModuleManifestHighWater>;
 	readonly last_manifest_etag: string | null;
@@ -1100,9 +1099,7 @@ function parseModuleStoreState(bytes: Buffer, statePath: string): ModuleStoreSta
 	}
 	const lastManifestEtag = parseOptionalString(record['last_manifest_etag']);
 	const lastManifestFetch = parseOptionalString(record['last_manifest_fetch']);
-	const floorBuildVersion =
-		record['floor_build_version'] === undefined ? null : parseOptionalString(record['floor_build_version']);
-	if (lastManifestEtag === undefined || lastManifestFetch === undefined || floorBuildVersion === undefined) {
+	if (lastManifestEtag === undefined || lastManifestFetch === undefined) {
 		throw new ModuleStoreStateCorruptError(statePath, 'manifest fetch metadata is invalid');
 	}
 	const bootAttempt = record['boot_attempt'];
@@ -1117,7 +1114,6 @@ function parseModuleStoreState(bytes: Buffer, statePath: string): ModuleStoreSta
 		previous,
 		rejected,
 		floor,
-		floor_build_version: floorBuildVersion,
 		linux_security_minimum: linuxSecurityMinimum,
 		manifest_high_water: manifestHighWater,
 		last_manifest_etag: lastManifestEtag,
@@ -1135,7 +1131,6 @@ function createInitialModuleStoreState(shellVersion: string, releaseChannel: str
 		previous: {},
 		rejected: {},
 		floor: {},
-		floor_build_version: null,
 		linux_security_minimum: null,
 		manifest_high_water: [],
 		last_manifest_etag: null,
@@ -1154,7 +1149,6 @@ function serializeModuleStoreState(state: ModuleStoreState): string {
 			previous: sortModuleMap(state.previous),
 			rejected: sortModuleMap(state.rejected),
 			floor: sortModuleMap(state.floor),
-			floor_build_version: state.floor_build_version,
 			linux_security_minimum:
 				state.linux_security_minimum == null
 					? null
@@ -1544,14 +1538,6 @@ export class ModuleStore {
 		});
 	}
 
-	public async recordFloorBuildVersion(floorBuildVersion: string): Promise<void> {
-		await this.withStateLock(async () => {
-			if (this.state.floor_build_version !== floorBuildVersion) {
-				await this.writeState({...this.state, floor_build_version: floorBuildVersion});
-			}
-		});
-	}
-
 	public async mergeCommitted(entries: Readonly<Record<string, string>>): Promise<ModuleStoreState> {
 		return await this.withStateLock(async () => {
 			const added = await this.resolveInstalled(entries);
@@ -1613,7 +1599,6 @@ export class ModuleStore {
 		fetchedAt,
 		manifest,
 		floor,
-		floorBuildVersion,
 		linuxSecurityMinimum,
 		advertised,
 	}: {
@@ -1621,7 +1606,6 @@ export class ModuleStore {
 		readonly fetchedAt: string;
 		readonly manifest: ModuleManifestFeedObservation;
 		readonly floor?: Readonly<Record<string, string>>;
-		readonly floorBuildVersion?: string;
 		readonly linuxSecurityMinimum?: LinuxModuleSecurityMinimum;
 		readonly advertised?: Readonly<Record<string, string>>;
 	}): Promise<ModuleStoreState> {
@@ -1633,7 +1617,6 @@ export class ModuleStore {
 				last_manifest_etag: etag,
 				last_manifest_fetch: fetchedAt,
 				floor: floor == null ? this.state.floor : sortModuleMap(floor),
-				floor_build_version: floor == null ? this.state.floor_build_version : (floorBuildVersion ?? null),
 				linux_security_minimum:
 					linuxSecurityMinimum == null
 						? this.state.linux_security_minimum
@@ -1643,13 +1626,20 @@ export class ModuleStore {
 		});
 	}
 
-	public async beginBootAttempt(): Promise<ModuleBootAttempt> {
+	public async beginBootAttempt({
+		bundled = [],
+	}: {
+		readonly bundled?: ReadonlyArray<string>;
+	} = {}): Promise<ModuleBootAttempt> {
 		return await this.withStateLock(async () => {
 			if (this.state.boot_attempt < MODULE_BOOT_ATTEMPT_ROLLBACK_THRESHOLD) {
 				return {rolledBack: false, bootAttempt: this.state.boot_attempt, committed: this.state.committed};
 			}
-			const revertedCommitted =
+			const previousCommitted =
 				Object.keys(this.state.previous).length === 0 ? this.state.committed : sortModuleMap(this.state.previous);
+			const revertedCommitted = sameModuleMap(this.state.committed, previousCommitted)
+				? Object.fromEntries(Object.entries(previousCommitted).filter(([moduleName]) => !bundled.includes(moduleName)))
+				: previousCommitted;
 			const rolledBack = !sameModuleMap(this.state.committed, revertedCommitted);
 			const rejected: Record<string, string> = {...this.state.rejected};
 			if (rolledBack) {
@@ -1662,10 +1652,46 @@ export class ModuleStore {
 			const reverted = await this.writeState({
 				...this.state,
 				committed: revertedCommitted,
+				previous: rolledBack ? revertedCommitted : this.state.previous,
 				rejected,
 				boot_attempt: 0,
 			});
 			return {rolledBack, bootAttempt: reverted.boot_attempt, committed: reverted.committed};
+		});
+	}
+
+	public async revertLaunchAttempt(
+		attempt: ModuleLaunchAttempt,
+		bundled: ReadonlyArray<string> = [],
+	): Promise<Readonly<Record<string, string>> | null> {
+		return await this.withStateLock(async () => {
+			if (this.activeLaunchAttempt !== attempt) {
+				return null;
+			}
+			const rejected: Record<string, string> = {...this.state.rejected};
+			const committed: Record<string, string> = {};
+			for (const [moduleName, sha256] of Object.entries(this.state.previous)) {
+				if (await this.isInstalled(moduleName, sha256)) {
+					committed[moduleName] = sha256;
+				}
+			}
+			for (const [moduleName, sha256] of Object.entries(this.state.committed)) {
+				if (committed[moduleName] === sha256) continue;
+				rejected[moduleName] = sha256;
+				if (committed[moduleName] === undefined && !bundled.includes(moduleName)) {
+					committed[moduleName] = sha256;
+					delete rejected[moduleName];
+				}
+			}
+			this.activeLaunchAttempt = null;
+			const reverted = await this.writeState({
+				...this.state,
+				committed,
+				previous: committed,
+				rejected,
+				boot_attempt: 0,
+			});
+			return reverted.committed;
 		});
 	}
 

@@ -69,17 +69,20 @@ export class ModuleUpdatePlanner {
 	private readonly shellVersion: ModuleVersion;
 	private readonly hasOfflineRenderer: boolean;
 	private readonly bundledRendererVersion: ModuleVersion | null;
+	private readonly bundleOutranksEveryModule: boolean;
 
 	public constructor(
 		store: ModuleStore,
 		shellVersion: ModuleVersion,
 		hasOfflineRenderer: boolean,
 		bundledRendererVersion: ModuleVersion | null = null,
+		preferUnversionedBundle = false,
 	) {
 		this.store = store;
 		this.shellVersion = shellVersion;
 		this.hasOfflineRenderer = hasOfflineRenderer;
 		this.bundledRendererVersion = hasOfflineRenderer ? bundledRendererVersion : null;
+		this.bundleOutranksEveryModule = hasOfflineRenderer && bundledRendererVersion == null && preferUnversionedBundle;
 	}
 
 	public hasSomethingToRender(committed: Readonly<Record<string, string>>): boolean {
@@ -87,11 +90,31 @@ export class ModuleUpdatePlanner {
 	}
 
 	public hasBundledRenderer(): boolean {
-		return this.bundledRendererVersion != null;
+		return this.bundledRendererVersion != null || this.bundleOutranksEveryModule;
+	}
+
+	public bundledModules(): ReadonlyArray<string> {
+		return this.hasBundledRenderer() ? [DESKTOP_RENDERER_MODULE_NAME] : [];
 	}
 
 	public bundleCoversRendererAt(version: ModuleVersion): boolean {
+		if (this.bundleOutranksEveryModule) {
+			return true;
+		}
 		return this.bundledRendererVersion != null && compareModuleVersions(version, this.bundledRendererVersion) <= 0;
+	}
+
+	public async uninstalledCommittedModules(): Promise<ReadonlyArray<string>> {
+		if (!this.hasBundledRenderer()) {
+			return [];
+		}
+		const missing: Array<string> = [];
+		for (const [moduleName, sha256] of Object.entries(this.store.getCommitted())) {
+			if (!(await this.isInstalled(moduleName, sha256))) {
+				missing.push(moduleName);
+			}
+		}
+		return missing;
 	}
 
 	public bundleCoversModule(moduleName: string, manifest: DesktopModuleUpdateManifest): boolean {
@@ -111,7 +134,7 @@ export class ModuleUpdatePlanner {
 	}
 
 	public async staleRendererModule(): Promise<string | null> {
-		if (this.bundledRendererVersion == null) {
+		if (!this.hasBundledRenderer()) {
 			return null;
 		}
 		const sha256 = this.store.getCommitted()[DESKTOP_RENDERER_MODULE_NAME];
@@ -136,10 +159,7 @@ export class ModuleUpdatePlanner {
 			};
 		}
 		const installedVersion = await this.installedRendererVersion(sha256);
-		if (
-			this.bundledRendererVersion != null &&
-			(installedVersion == null || this.bundleCoversRendererAt(installedVersion))
-		) {
+		if (this.hasBundledRenderer() && (installedVersion == null || this.bundleCoversRendererAt(installedVersion))) {
 			const served = {...modules};
 			delete served[DESKTOP_RENDERER_MODULE_NAME];
 			return {
@@ -238,7 +258,10 @@ export class ModuleUpdatePlanner {
 			items.push({
 				module: moduleName,
 				entry,
-				requirement: blocking.has(moduleName) ? ModulePlanItemRequirement.REQUIRED : ModulePlanItemRequirement.OPTIONAL,
+				requirement:
+					blocking.has(moduleName) && !this.bundledModules().includes(moduleName)
+						? ModulePlanItemRequirement.REQUIRED
+						: ModulePlanItemRequirement.OPTIONAL,
 			});
 		}
 		return {items, base};
@@ -261,7 +284,7 @@ export class ModuleUpdatePlanner {
 			if (state.rejected[moduleName] === sha256) {
 				continue;
 			}
-			if (moduleName === DESKTOP_RENDERER_MODULE_NAME && (await this.bundleCoversFloor(sha256))) {
+			if (this.bundledModules().includes(moduleName)) {
 				continue;
 			}
 			if (state.committed[moduleName] !== sha256 || !(await this.isInstalled(moduleName, sha256))) {
@@ -269,29 +292,6 @@ export class ModuleUpdatePlanner {
 			}
 		}
 		return below;
-	}
-
-	private async bundleCoversFloor(sha256: string): Promise<boolean> {
-		if (this.bundledRendererVersion == null) {
-			return false;
-		}
-		const recorded = this.store.getState().floor_build_version;
-		if (recorded != null) {
-			try {
-				return this.bundleCoversRendererAt(parseModuleVersion(recorded, 'recorded floor build version'));
-			} catch {
-				return false;
-			}
-		}
-		const installed = await this.store.getInstalledManifest(DESKTOP_RENDERER_MODULE_NAME, sha256);
-		if (installed == null) {
-			return true;
-		}
-		try {
-			return this.bundleCoversRendererAt(parseModuleVersion(installed.build_version, 'installed floor build version'));
-		} catch {
-			return false;
-		}
 	}
 
 	public async canLaunchCommittedModules(): Promise<boolean> {

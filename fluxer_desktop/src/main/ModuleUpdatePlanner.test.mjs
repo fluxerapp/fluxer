@@ -58,7 +58,6 @@ function manifest({shellMinimum = SHELL_VERSION, modules = {}, required = null} 
 function createStore({
 	committed = {},
 	floor = {},
-	floorBuildVersion = null,
 	rejected = {},
 	lastManifestFetch = FETCHED_AT,
 	bootAttempt = 0,
@@ -70,7 +69,6 @@ function createStore({
 		getState: () => ({
 			committed,
 			floor,
-			floor_build_version: floorBuildVersion,
 			rejected,
 			last_manifest_fetch: lastManifestFetch,
 			boot_attempt: bootAttempt,
@@ -360,7 +358,7 @@ describe('ModuleUpdatePlanner with a renderer bundled in the shell', () => {
 		assert.deepEqual(await planner.plan(feed), {items: [], base: {}});
 	});
 
-	test('a feed renderer newer than the bundle is still a required download', async () => {
+	test('a feed renderer newer than the bundle is downloaded but never required to launch', async () => {
 		const planner = bundledPlanner(createStore(), OLDER);
 		const feed = manifest({modules: {fluxer_renderer: {sha256: RENDERER_SHA}}});
 
@@ -368,7 +366,7 @@ describe('ModuleUpdatePlanner with a renderer bundled in the shell', () => {
 		const plan = await planner.plan(feed);
 		assert.deepEqual(
 			plan.items.map((item) => [item.module, item.requirement]),
-			[['fluxer_renderer', 'required']],
+			[['fluxer_renderer', 'optional']],
 		);
 	});
 
@@ -432,16 +430,10 @@ describe('ModuleUpdatePlanner with a renderer bundled in the shell', () => {
 		});
 	});
 
-	test('a floor the bundle already satisfies does not hold the launch', async () => {
-		const planner = bundledPlanner(createStore({floor: {fluxer_renderer: RENDERER_SHA}, floorBuildVersion: OLDER}));
+	test('a renderer floor never holds the launch of a shell that bundles its renderer', async () => {
+		const planner = bundledPlanner(createStore({floor: {fluxer_renderer: RENDERER_SHA, fluxer_overlay: OVERLAY_SHA}}));
 
-		assert.deepEqual(await planner.modulesBelowFloor(true), []);
-	});
-
-	test('a floor newer than the bundle still holds the launch', async () => {
-		const planner = bundledPlanner(createStore({floor: {fluxer_renderer: RENDERER_SHA}, floorBuildVersion: NEWER}));
-
-		assert.deepEqual(await planner.modulesBelowFloor(true), ['fluxer_renderer']);
+		assert.deepEqual(await planner.modulesBelowFloor(true), ['fluxer_overlay']);
 	});
 
 	test('a fresh install that never reached the feed launches the bundled renderer', async () => {
