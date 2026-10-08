@@ -150,8 +150,6 @@ export function supportsDesktopScreenShareAudioCapture(): boolean {
 	return electronApi.platform === 'win32' || electronApi.platform === 'linux' || electronApi.platform === 'darwin';
 }
 
-let externalLinkHandlerAttached = false;
-
 const BLOCKED_EXTERNAL_URL_PROTOCOLS = new Set([
 	'file:',
 	'javascript:',
@@ -165,7 +163,7 @@ const BLOCKED_EXTERNAL_URL_PROTOCOLS = new Set([
 ]);
 const EXPLICIT_URL_PROTOCOL_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 
-const getSafeExternalUrl = (href: string | null): string | null => {
+export function getSafeExternalUrl(href: string | null): string | null {
 	if (!href) return null;
 	const trimmed = unwrapDesktopLocalResourceURL(href.trim());
 	if (!EXPLICIT_URL_PROTOCOL_PATTERN.test(trimmed)) return null;
@@ -176,7 +174,7 @@ const getSafeExternalUrl = (href: string | null): string | null => {
 	} catch {
 		return null;
 	}
-};
+}
 
 export async function navigateToExternalURL(url: string): Promise<void> {
 	const safeUrl = getSafeExternalUrl(url);
@@ -235,40 +233,6 @@ export function handleExternalLinkClick(
 		event.stopPropagation();
 	}
 	void openExternalUrl(url);
-}
-
-export function attachExternalLinkInterceptor() {
-	if (!isDesktop() || externalLinkHandlerAttached) return () => undefined;
-	const handler = (event: MouseEvent) => {
-		if (event.defaultPrevented) return;
-		if (event.button !== 0) return;
-		const target = event.target as HTMLElement | null;
-		const anchor = target?.closest?.('a[target="_blank"]') as HTMLAnchorElement | null;
-		if (!anchor) return;
-		const href = anchor.getAttribute('href');
-		if (!getSafeExternalUrl(href)) return;
-		event.preventDefault();
-		void openExternalUrl(href ?? '');
-	};
-	const auxHandler = (event: MouseEvent) => {
-		if (event.defaultPrevented) return;
-		if (event.button !== 1) return;
-		const target = event.target as HTMLElement | null;
-		const anchor = target?.closest?.('a[target="_blank"]') as HTMLAnchorElement | null;
-		if (!anchor) return;
-		const href = anchor.getAttribute('href');
-		if (!getSafeExternalUrl(href)) return;
-		event.preventDefault();
-		void openExternalUrl(href ?? '');
-	};
-	document.addEventListener('click', handler);
-	document.addEventListener('auxclick', auxHandler);
-	externalLinkHandlerAttached = true;
-	return () => {
-		document.removeEventListener('click', handler);
-		document.removeEventListener('auxclick', auxHandler);
-		externalLinkHandlerAttached = false;
-	};
 }
 
 export type NativeDownloadOutcome = 'success' | 'canceled' | 'checksum-mismatch' | 'failed' | 'unavailable';

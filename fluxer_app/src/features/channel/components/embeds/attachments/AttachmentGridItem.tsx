@@ -366,7 +366,6 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 						onClick={handleClick}
 						onMouseEnter={scheduleViewerWarm}
 						onMouseLeave={cancelViewerWarm}
-						onMouseDown={openInBrowser.onMouseDown}
 						onAuxClick={openInBrowser.onAuxClick}
 						onKeyDown={handleClick}
 						aria-label={ariaLabel}

@@ -343,7 +343,6 @@ const ImagePreviewHandler: FC<ImagePreviewHandlerProps> = observer(
 				className={styles.imagePreviewHandler}
 				aria-label={ariaLabel}
 				onClick={openImagePreview}
-				onMouseDown={openInBrowser.onMouseDown}
 				onAuxClick={openInBrowser.onAuxClick}
 				onKeyDown={openImagePreview}
 				onMouseEnter={onViewerWarmEnter}
