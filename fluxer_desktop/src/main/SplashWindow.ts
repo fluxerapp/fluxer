@@ -22,6 +22,7 @@ export const SPLASH_READY_WATCHDOG_MS = 3000;
 export const SPLASH_CLOSE_DELAY_MS = 100;
 
 export const DESKTOP_SPLASH_STATE_CHANNEL = 'desktop-splash:state';
+export const DESKTOP_SPLASH_REVEALED_CHANNEL = 'desktop-splash:revealed';
 export const DESKTOP_SPLASH_READY_CHANNEL = 'desktop-splash:ready';
 export const DESKTOP_SPLASH_RETRY_NOW_CHANNEL = 'desktop-splash:retry-now';
 export const DESKTOP_SPLASH_QUIT_CHANNEL = 'desktop-splash:quit';
@@ -363,6 +364,7 @@ export function revealPreloadedSplashWindow(): BrowserWindow | null {
 	if (!splashHeldHidden || !splashDocumentReady || window == null || window.isDestroyed()) return null;
 	splashHeldHidden = false;
 	window.setSkipTaskbar(false);
+	window.webContents.send(DESKTOP_SPLASH_REVEALED_CHANNEL);
 	applySplashTheme();
 	window.show();
 	window.focus();
@@ -421,8 +423,9 @@ function createSplashWindow(darkThemeOnShow: boolean, heldHidden: boolean): Brow
 		}, SPLASH_READY_WATCHDOG_MS);
 		readyWatchdog.unref();
 	}
-	const documentUrl = pathToFileURL(getDesktopDistributionPath('splash', 'index.html')).href;
-	window.loadURL(documentUrl).catch((error) => {
+	const documentUrl = pathToFileURL(getDesktopDistributionPath('splash', 'index.html'));
+	if (heldHidden) documentUrl.searchParams.set('held', '1');
+	window.loadURL(documentUrl.href).catch((error) => {
 		logger.error('Failed to load the splash document', error);
 	});
 	return window;

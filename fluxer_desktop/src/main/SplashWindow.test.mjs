@@ -1116,7 +1116,7 @@ class StubNode {
 	}
 }
 
-function createPreloadHarness() {
+function createPreloadHarness(options = {}) {
 	const sent = [];
 	const ipcListeners = new Map();
 	const windowListeners = new Map();
@@ -1173,6 +1173,7 @@ function createPreloadHarness() {
 			}
 		},
 		window: {
+			location: {search: options.search ?? ''},
 			addEventListener: (eventName, listener) => {
 				windowListeners.set(eventName, listener);
 			},
@@ -1198,6 +1199,7 @@ function createPreloadHarness() {
 			select.dispatch('change');
 		},
 		sendState: (payload) => ipcListeners.get('desktop-splash:state')({}, payload),
+		reveal: () => ipcListeners.get('desktop-splash:revealed')({}),
 		sent,
 		channels: () => sent.map((entry) => entry.channel),
 		frames,
@@ -1229,6 +1231,21 @@ function styleRule(selector) {
 }
 
 describe('splash preload rendering', () => {
+	test('a held splash waits for its reveal before timing the diagnostics links', async () => {
+		const diagnosticsTimers = (harness) =>
+			harness.timeouts.filter((timer) => timer.delayMs === 30000 && !timer.cleared);
+		const shown = createPreloadHarness();
+		await shown.start();
+		assert.equal(diagnosticsTimers(shown).length, 1);
+
+		const held = createPreloadHarness({search: '?held=1'});
+		await held.start();
+		assert.equal(diagnosticsTimers(held).length, 0);
+
+		held.reveal();
+		assert.equal(diagnosticsTimers(held).length, 1);
+	});
+
 	test('renders before it reports ready, so the first paint is never a blank frame', async () => {
 		const harness = createPreloadHarness();
 
