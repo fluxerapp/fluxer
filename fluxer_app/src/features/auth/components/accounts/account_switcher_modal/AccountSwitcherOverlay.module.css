@@ -59,7 +59,19 @@
 }
 
 .accountsStage {
+	position: relative;
 	min-width: 0;
+	pointer-events: none;
+}
+
+.shortcutTitle {
+	position: absolute;
+	bottom: 100%;
+	left: 0;
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	padding-bottom: 0.625rem;
 	pointer-events: none;
 }
 

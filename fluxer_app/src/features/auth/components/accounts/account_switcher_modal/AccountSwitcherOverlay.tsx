@@ -7,9 +7,11 @@ import {
 } from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherModalTypes';
 import styles from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherOverlay.module.css';
 import {AccountSwitcherViewTransition} from '@app/features/auth/components/accounts/account_switcher_modal/AccountSwitcherViewTransition';
+import type {KeybindCommand} from '@app/features/input/state/InputKeybind';
 import type {Account} from '@app/features/platform/state/AuthSession';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import {usePrefersReducedMotion} from '@app/features/ui/hooks/usePrefersReducedMotion';
+import {KeybindHint} from '@app/features/ui/keybind_hint/KeybindHint';
 import {AnimeButton, type AnimeTarget, createAnimeFlxElement} from '@app/features/ui/motion/AnimeElement';
 import LayerManager, {LayerType} from '@app/features/ui/state/LayerManager';
 import {getZIndexForStack} from '@app/features/ui/state/Modal';
@@ -23,6 +25,8 @@ import {useCallback, useContext, useEffect, useId, useRef} from 'react';
 
 const AccountSwitcherAnimatedRoot = createAnimeFlxElement('flx-auth-account-switcher-overlay');
 const AccountSwitcherAnimatedShell = createAnimeFlxElement('flx-auth-account-switcher-overlay-shell');
+
+const SYSTEM_OPEN_ACCOUNT_SWITCHER_ACTION: KeybindCommand = 'system_open_account_switcher';
 
 const CLOSE_ACCOUNT_SWITCHER_DESCRIPTOR = msg({
 	message: 'Close account switcher',
@@ -73,6 +77,9 @@ function AccountSwitcherStage({
 			className={flxElementClassName(styles.accountsStage)}
 			data-flx="auth.accounts.account-switcher-modal.account-switcher-overlay.account-switcher-stage.accounts-stage"
 		>
+			<div className={styles.shortcutTitle}>
+				<KeybindHint action={SYSTEM_OPEN_ACCOUNT_SWITCHER_ACTION} />
+			</div>
 			{accounts.length === 0 ? (
 				<flx-auth-account-switcher-overlay-empty
 					className={flxElementClassName(styles.noAccounts)}
