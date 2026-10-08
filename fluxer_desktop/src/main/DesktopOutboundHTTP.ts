@@ -1356,6 +1356,9 @@ export class DesktopOutboundHTTP {
 			clientRequest.end(Buffer.from(body));
 			return;
 		}
+		if (!clientRequest.hasHeader('content-length') && !clientRequest.hasHeader('transfer-encoding')) {
+			clientRequest.setHeader('Transfer-Encoding', 'chunked');
+		}
 		const source = Readable.fromWeb(body as unknown as NodeReadableStream<Uint8Array>);
 		const limit = createRequestBodyLimit(
 			request.maximumRequestBodyBytes ?? DESKTOP_OUTBOUND_HTTP_MAX_REQUEST_BODY_BYTES,

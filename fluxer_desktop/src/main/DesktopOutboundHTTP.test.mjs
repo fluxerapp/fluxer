@@ -302,6 +302,58 @@ describe('DesktopOutboundHTTP origin anchoring', () => {
 		}
 	});
 
+	test('a streamed request body reaches the server for every method that carries one', async () => {
+		const received = [];
+		const {port, server} = await startServer({
+			'/api/v1/oauth2/applications/1': (request, response) => {
+				let body = '';
+				request.setEncoding('utf8');
+				request.on('data', (chunk) => {
+					body += chunk;
+				});
+				request.on('end', () => {
+					received.push({body, method: request.method, sudo: request.headers['x-fluxer-sudo-mode-jwt'] ?? null});
+					response.writeHead(204, {'x-fluxer-sudo-mode-jwt': 'granted'});
+					response.end();
+				});
+			},
+		});
+		try {
+			const outboundHTTP = new DesktopOutboundHTTP({
+				resolveHostAddresses: stubResolver({'lan.example': ['127.0.0.1']}),
+			});
+			await outboundHTTP.registerAnchoredOrigins({anchorOrigin: `http://lan.example:${port}`, origins: []});
+			const payload = JSON.stringify({mfa_method: 'totp', mfa_code: '123456'});
+			for (const method of ['DELETE', 'POST', 'PATCH', 'PUT']) {
+				const message = await outboundHTTP.request({
+					body: Readable.toWeb(Readable.from([Buffer.from(payload)])),
+					expectedOrigin: `http://lan.example:${port}`,
+					headers: {'content-type': 'application/json', 'x-fluxer-sudo-mode-jwt': 'previous'},
+					method,
+					originTrust: DesktopOriginTrust.REGISTERED,
+					serviceName: 'test',
+					signal: null,
+					timeoutMs: 2000,
+					url: `http://lan.example:${port}/api/v1/oauth2/applications/1`,
+				});
+				assert.equal(message.status, 204);
+				assert.equal(message.headers['x-fluxer-sudo-mode-jwt'], 'granted');
+				message.message.resume();
+			}
+			assert.deepEqual(
+				received.map((entry) => entry.method),
+				['DELETE', 'POST', 'PATCH', 'PUT'],
+			);
+			for (const entry of received) {
+				assert.equal(entry.body, payload);
+				assert.equal(entry.sudo, 'previous');
+			}
+			outboundHTTP.cleanup();
+		} finally {
+			server.close();
+		}
+	});
+
 	test('a private literal anchor binds and registers without a public requirement', async () => {
 		const outboundHTTP = new DesktopOutboundHTTP({resolveHostAddresses: stubResolver({})});
 		await outboundHTTP.registerAnchoredOrigins({anchorOrigin: 'http://192.168.1.10', origins: []});
