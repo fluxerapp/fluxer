@@ -94,9 +94,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		() => ({variant: layoutVariant, setVariant: setLayoutVariant}),
 		[layoutVariant],
 	);
-	const popouts = Popout.getPopouts();
-	const topPopout = popouts.length ? popouts[popouts.length - 1] : null;
-	const topPopoutRequiresBackdrop = Boolean(topPopout && !topPopout.disableBackdrop);
+	const topPopoutRequiresBackdrop = Popout.requiresBackdrop();
 	const hasBlockingModal = Modal.hasModalOpen();
 	const room = MediaEngine.room;
 	const ringsContainerRef = useRef<HTMLDivElement>(null);

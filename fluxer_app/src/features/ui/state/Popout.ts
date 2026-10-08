@@ -218,6 +218,11 @@ class Popout {
 			);
 	}
 
+	requiresBackdrop(ownerDocument: Document = document): boolean {
+		const owner = this.getPopouts(ownerDocument).findLast((popout) => !this.isClosing(popout.key));
+		return owner != null && !owner.disableBackdrop;
+	}
+
 	private getParentPopoutChain(dependsOnKey: string): Record<string, PopoutDefinition> {
 		const result: Record<string, PopoutDefinition> = {};
 		let currentKey: string | undefined = dependsOnKey;

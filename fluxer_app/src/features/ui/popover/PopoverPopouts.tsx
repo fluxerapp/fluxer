@@ -240,11 +240,21 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 				setTargetInDOM(true);
 			}
 		}, [target, ownerDocument, keepOpenOnTargetUnmount, beginClose]);
+		const wasClosingRequestedRef = useRef(isClosingRequested);
 		useEffect(() => {
+			const wasClosingRequested = wasClosingRequestedRef.current;
+			wasClosingRequestedRef.current = isClosingRequested;
 			if (isClosingRequested) {
 				beginClose();
+				return;
 			}
-		}, [isClosingRequested, beginClose]);
+			if (!wasClosingRequested) return;
+			if (closeTimerRef.current != null && ownerWindow != null) {
+				ownerWindow.clearTimeout(closeTimerRef.current);
+				closeTimerRef.current = null;
+			}
+			setIsVisible(true);
+		}, [isClosingRequested, beginClose, ownerWindow]);
 		useEffect(() => {
 			return () => {
 				if (closeTimerRef.current != null && ownerWindow != null) {
@@ -460,7 +470,7 @@ export const Popouts: React.FC<PopoutsProps> = observer(({ownerDocument}) => {
 	const portalHost = scopePortalHostToDocument(activePortalHost, scopeDocument);
 	const popouts = PopoutState.getPopouts(scopeDocument);
 	const topPopout = popouts.length ? popouts[popouts.length - 1] : null;
-	const needsBackdrop = Boolean(topPopout && !topPopout.disableBackdrop);
+	const needsBackdrop = PopoutState.requiresBackdrop(scopeDocument);
 	useEffect(() => {
 		const currentKeys = new Set(popouts.map((popout) => popout.key.toString()));
 		const prevKeys = prevPopoutKeysRef.current;

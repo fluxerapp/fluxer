@@ -309,7 +309,7 @@ export const Popout = React.forwardRef<HTMLElement, PopoutProps>((props, ref) =>
 	);
 	const toggle = useCallback(
 		(clickPos?: number) => {
-			if (PopoutState.isOpen(state.id)) {
+			if (PopoutState.isOpen(state.id) && !PopoutState.isClosing(state.id)) {
 				if (props.hoverDelay != null && openModeRef.current === 'hover') {
 					clearTimers();
 					open(clickPos, 'click');
