@@ -14,7 +14,7 @@ import {useThreadMenuData} from '@app/features/threads/hooks/useThreadMenuData';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
-import {isThreadMuted} from '@app/features/threads/utils/ThreadNotificationUtils';
+import {isThreadMutedInSidebar} from '@app/features/threads/utils/ThreadNotificationUtils';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {MentionBadge} from '@app/features/ui/components/MentionBadge';
 import {MenuBottomSheet} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
@@ -46,7 +46,7 @@ const ThreadMenuSheet = observer(({thread, onClose}: {thread: Channel; onClose: 
 const SidebarThreadRow = observer(({thread, isLast, isSelected}: SidebarThreadRowProps) => {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const joined = ThreadMemberships.isMember(thread.id);
-	const muted = isThreadMuted(thread);
+	const muted = isThreadMutedInSidebar(thread);
 	const mentionCount = ReadStates.getMentionCount(thread.id);
 	const isUnread = joined && !muted && ReadStates.hasUnread(thread.id);
 	const handleClick = useCallback(() => openThreadFullView(thread), [thread]);
