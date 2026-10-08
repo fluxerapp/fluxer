@@ -216,7 +216,6 @@ export function useThreadMenuData(thread: Channel, {onClose}: {onClose: () => vo
 		manageItems.push({
 			icon: <LeaveIcon size={20} data-flx="threads.use-thread-menu-data.leave-icon" />,
 			label: i18n._(D.LEAVE_THREAD_DESCRIPTOR),
-			danger: true,
 			onClick: () => {
 				run(i18n, () => ThreadCommands.leaveThread(thread));
 				onClose();
