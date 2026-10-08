@@ -53,7 +53,9 @@ installTestModuleStub(
 	}`,
 );
 
-const {resolveDesktopRuntimePlan} = await import('@electron/main/DesktopRuntimeDiscovery');
+const {resolveDesktopRuntimePlan, restoreRememberedRuntimePlan} = await import(
+	'@electron/main/DesktopRuntimeDiscovery'
+);
 const {DEPLOYED_OFFICIAL_DOCUMENT} = await import('@fluxer/instance_bootstrap/src/__tests__/DiscoveryFixtures');
 const {DESKTOP_RUNTIME_DISCOVERY_UNREACHABLE_ERROR_NAME} = await import(
 	'@fluxer/desktop_ipc/src/LocalAppRuntimeContract'
@@ -181,5 +183,35 @@ describe('desktop discovery while the instance is unreachable', () => {
 		storage.refuseWrites = true;
 		assert.equal((await resolve()).instanceKey, API_ENDPOINT);
 		assert.equal(markers.size, 0);
+	});
+});
+
+describe('a media or API route for a saved instance after a cold start', () => {
+	beforeEach(() => {
+		markers.clear();
+		storage.refuseWrites = false;
+		network.fetched.length = 0;
+		network.resolvable = true;
+		network.registrations.length = 0;
+		network.respond = served(DEPLOYED_OFFICIAL_DOCUMENT);
+	});
+
+	test('restores the plan of an instance this app was served before without fetching discovery', async () => {
+		const online = await resolve();
+		network.fetched.length = 0;
+		network.registrations.length = 0;
+		const restored = await restoreRememberedRuntimePlan(online.instanceKey);
+		assert.equal(restored?.instanceKey, online.instanceKey);
+		assert.deepEqual(restored?.endpoints, online.endpoints);
+		assert.deepEqual(network.fetched, []);
+		assert.equal(network.registrations.length, 1);
+		assert.equal(network.registrations[0].unresolvedAnchorRequirement, 'public');
+	});
+
+	test('never invents a plan for an instance this app was not served', async () => {
+		assert.equal(await restoreRememberedRuntimePlan('https://unknown.example'), null);
+		assert.equal(await restoreRememberedRuntimePlan('not a url'), null);
+		assert.deepEqual(network.fetched, []);
+		assert.deepEqual(network.registrations, []);
 	});
 });

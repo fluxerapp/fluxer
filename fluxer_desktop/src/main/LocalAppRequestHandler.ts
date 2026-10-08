@@ -30,14 +30,15 @@ const BLOCKED_PROXY_DOCUMENT_DESTINATIONS: ReadonlySet<string> = new Set([
 ]);
 
 interface LocalAppRequestRuntimePlans {
-	findPlanForRoute(runtimeKey: string): LocalAppRuntimePlan | null;
+	planForRoute(runtimeKey: string): Promise<LocalAppRuntimePlan | null>;
 }
 
 interface DesktopLocalAppRequestHandlerDependencies {
 	readonly authorization: DesktopLocalAppAuthorization;
 	readonly files: DesktopLocalAppFiles;
 	readonly indexContext: () => LocalAppIndexContext;
-	readonly proxyClient: DesktopLocalAppProxyClient;
+	readonly apiProxyClient: DesktopLocalAppProxyClient;
+	readonly resourceProxyClient: DesktopLocalAppProxyClient;
 	readonly runtimePlans: LocalAppRequestRuntimePlans;
 	readonly shutdownSignal: AbortSignal;
 }
@@ -67,11 +68,11 @@ export class DesktopLocalAppRequestHandler {
 		this.authorization = dependencies.authorization;
 		this.shutdownSignal = dependencies.shutdownSignal;
 		this.apiProxyRequestHandler = new DesktopLocalAppAPIProxyRequestHandler({
-			proxyClient: dependencies.proxyClient,
+			proxyClient: dependencies.apiProxyClient,
 			runtimePlans: dependencies.runtimePlans,
 		});
 		this.remoteResourceRequestHandler = new DesktopLocalAppRemoteResourceRequestHandler({
-			proxyClient: dependencies.proxyClient,
+			proxyClient: dependencies.resourceProxyClient,
 			runtimePlans: dependencies.runtimePlans,
 		});
 		this.fileRequestHandler = new DesktopLocalAppFileRequestHandler({

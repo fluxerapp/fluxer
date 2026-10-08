@@ -24,7 +24,7 @@ import {LOCAL_APP_REMOTE_PROXY_PATH_PREFIX} from '@fluxer/desktop_ipc/src/LocalA
 const log = createChildLogger('LocalAppRemoteResourceProxy');
 
 interface LocalAppRemoteResourceRuntimePlans {
-	findPlanForRoute(runtimeKey: string): LocalAppRuntimePlan | null;
+	planForRoute(runtimeKey: string): Promise<LocalAppRuntimePlan | null>;
 }
 
 interface DesktopLocalAppRemoteResourceRequestHandlerDependencies {
@@ -69,7 +69,7 @@ export class DesktopLocalAppRemoteResourceRequestHandler {
 				headers: LOCAL_APP_PROXY_TEXT_RESPONSE_HEADERS,
 			});
 		}
-		const plan = this.runtimePlans.findPlanForRoute(route.runtimeKey);
+		const plan = await this.runtimePlans.planForRoute(route.runtimeKey);
 		if (plan == null) {
 			return localAppProxyNotFoundResponse('Unknown local app resource runtime');
 		}

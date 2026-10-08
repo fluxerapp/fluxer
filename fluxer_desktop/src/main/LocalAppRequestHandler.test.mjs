@@ -68,8 +68,9 @@ function createHandler(options = {}) {
 		},
 		files: new DesktopLocalAppFiles({rendererRoot}),
 		indexContext: () => ({prebootTheme: null}),
-		proxyClient: createProxyClient(),
-		runtimePlans: {findPlanForRoute: (key) => (key === INSTANCE_KEY ? PLAN : null)},
+		apiProxyClient: createProxyClient(),
+		resourceProxyClient: createProxyClient(),
+		runtimePlans: {planForRoute: async (key) => (key === INSTANCE_KEY ? PLAN : null)},
 		shutdownSignal: new AbortController().signal,
 		...options,
 	});

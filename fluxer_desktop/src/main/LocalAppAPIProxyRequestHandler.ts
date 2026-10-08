@@ -30,7 +30,7 @@ import {LOCAL_APP_API_PATH_PREFIX} from '@fluxer/desktop_ipc/src/LocalAppRouteCo
 const log = createChildLogger('LocalAppAPIProxy');
 
 interface LocalAppAPIProxyRuntimePlans {
-	findPlanForRoute(runtimeKey: string): LocalAppRuntimePlan | null;
+	planForRoute(runtimeKey: string): Promise<LocalAppRuntimePlan | null>;
 }
 
 interface DesktopLocalAppAPIProxyRequestHandlerDependencies {
@@ -62,7 +62,7 @@ export class DesktopLocalAppAPIProxyRequestHandler {
 		if (route == null) {
 			return localAppProxyNotFoundResponse('Unknown local app API runtime');
 		}
-		const plan = this.runtimePlans.findPlanForRoute(route.runtimeKey);
+		const plan = await this.runtimePlans.planForRoute(route.runtimeKey);
 		if (plan == null) {
 			return localAppProxyNotFoundResponse('Unknown local app API runtime');
 		}

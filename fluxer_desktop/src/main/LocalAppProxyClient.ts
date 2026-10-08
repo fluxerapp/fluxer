@@ -19,7 +19,7 @@ const LOCAL_APP_PROXY_DEADLINE_MS = 5 * 60 * 1000;
 const LOCAL_APP_PROXY_REQUEST_BODY_MAX_BYTES = 100 * 1024 * 1024;
 export const LOCAL_APP_PROXY_ACCEPT_ENCODING = 'gzip, br';
 
-const LOCAL_APP_PROXY_SERVICE_NAME = 'desktop_local_app_proxy';
+const LOCAL_APP_PROXY_RESOURCE_RESPONSE_HEADERS_DEADLINE_MS = 30_000;
 const LOCAL_APP_PROXY_MAX_CONCURRENT_REQUESTS = 32;
 const LOCAL_APP_PROXY_MAX_QUEUED_REQUESTS = 4096;
 const UPLOAD_PROGRESS_MIN_BYTES = 64 * 1024;
@@ -27,6 +27,20 @@ const UPLOAD_PROGRESS_MIN_INTERVAL_MS = 100;
 const MINIMUM_RESPONSE_STATUS = 200;
 const MAXIMUM_RESPONSE_STATUS = 599;
 const NULL_BODY_STATUSES: ReadonlySet<number> = new Set([204, 205, 304]);
+
+export const LocalAppProxyTraffic = Object.freeze({
+	API: 'desktop_local_app_proxy',
+	REMOTE_RESOURCE: 'desktop_local_app_resource_proxy',
+} as const);
+
+export type LocalAppProxyTraffic = (typeof LocalAppProxyTraffic)[keyof typeof LocalAppProxyTraffic];
+
+class LocalAppProxyResponseHeadersDeadlineError extends Error {
+	public constructor(timeoutMs: number) {
+		super(`Local app proxy upstream sent no response headers within ${timeoutMs} ms`);
+		this.name = 'LocalAppProxyResponseHeadersDeadlineError';
+	}
+}
 
 class LocalAppProxyQueueOverflowError extends Error {
 	public constructor() {
@@ -78,6 +92,11 @@ class LocalAppProxyResponseBodyLease {
 class LocalAppProxyConcurrencyGate {
 	private active = 0;
 	private readonly waiting: Array<{readonly admit: () => void}> = [];
+	private readonly newestFirst: boolean;
+
+	public constructor(newestFirst: boolean) {
+		this.newestFirst = newestFirst;
+	}
 
 	public acquire(signal: AbortSignal): Promise<LocalAppProxyConcurrencyPermit> {
 		signal.throwIfAborted();
@@ -109,7 +128,7 @@ class LocalAppProxyConcurrencyGate {
 	}
 
 	private release(): void {
-		const next = this.waiting.shift();
+		const next = this.newestFirst ? this.waiting.pop() : this.waiting.shift();
 		if (next != null) {
 			next.admit();
 			return;
@@ -120,6 +139,7 @@ class LocalAppProxyConcurrencyGate {
 
 interface DesktopLocalAppProxyClientDependencies {
 	readonly outboundHTTP: DesktopOutboundHTTP;
+	readonly traffic: LocalAppProxyTraffic;
 }
 
 interface LocalAppProxyFetchRequest {
@@ -206,20 +226,46 @@ function emitLocalAppUploadProgress(progress: DesktopLocalAppUploadProgress): vo
 
 export class DesktopLocalAppProxyClient {
 	private readonly outboundHTTP: DesktopOutboundHTTP;
+	private readonly traffic: LocalAppProxyTraffic;
+	private readonly concurrency: LocalAppProxyConcurrencyGate;
+	private readonly responseHeadersDeadlineMs: number | null;
 
 	public constructor(dependencies: DesktopLocalAppProxyClientDependencies) {
 		this.outboundHTTP = dependencies.outboundHTTP;
+		this.traffic = dependencies.traffic;
+		const remoteResource = dependencies.traffic === LocalAppProxyTraffic.REMOTE_RESOURCE;
+		this.concurrency = new LocalAppProxyConcurrencyGate(remoteResource);
+		this.responseHeadersDeadlineMs = remoteResource ? LOCAL_APP_PROXY_RESOURCE_RESPONSE_HEADERS_DEADLINE_MS : null;
 	}
-
-	private readonly concurrency = new LocalAppProxyConcurrencyGate();
 
 	public async fetch(request: LocalAppProxyFetchRequest): Promise<Response> {
 		const permit = await this.concurrency.acquire(request.signal);
 		try {
-			return await this.runFetch(request, permit);
+			return await this.runFetchWithinHeadersDeadline(request, permit);
 		} catch (error) {
 			permit.release();
 			throw error;
+		}
+	}
+
+	private async runFetchWithinHeadersDeadline(
+		request: LocalAppProxyFetchRequest,
+		permit: LocalAppProxyConcurrencyPermit,
+	): Promise<Response> {
+		const deadlineMs = this.responseHeadersDeadlineMs;
+		if (deadlineMs == null || requestHasBody(request.method)) {
+			return await this.runFetch(request, permit);
+		}
+		const deadline = new AbortController();
+		const timer = setTimeout(
+			() => deadline.abort(new LocalAppProxyResponseHeadersDeadlineError(deadlineMs)),
+			deadlineMs,
+		);
+		timer.unref();
+		try {
+			return await this.runFetch({...request, signal: AbortSignal.any([request.signal, deadline.signal])}, permit);
+		} finally {
+			clearTimeout(timer);
 		}
 	}
 
@@ -236,7 +282,7 @@ export class DesktopLocalAppProxyClient {
 			maximumRequestBodyBytes: LOCAL_APP_PROXY_REQUEST_BODY_MAX_BYTES,
 			method: request.method,
 			originTrust: DesktopOriginTrust.REGISTERED,
-			serviceName: LOCAL_APP_PROXY_SERVICE_NAME,
+			serviceName: this.traffic,
 			signal: request.signal,
 			timeoutMs: LOCAL_APP_PROXY_DEADLINE_MS,
 			url: target.href,

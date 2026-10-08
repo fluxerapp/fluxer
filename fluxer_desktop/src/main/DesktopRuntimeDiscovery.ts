@@ -120,6 +120,25 @@ export async function resolveDesktopRuntimePlan({
 	return resolved.plan;
 }
 
+export async function restoreRememberedRuntimePlan(instanceKey: string): Promise<LocalAppRuntimePlan | null> {
+	let apiEndpoint: string;
+	try {
+		apiEndpoint = requireDesktopRuntimeAPIEndpoint(instanceKey);
+	} catch {
+		return null;
+	}
+	const remembered = await readLastServedDiscovery(apiEndpoint);
+	if (remembered === null || remembered.plan.instanceKey !== instanceKey) {
+		return null;
+	}
+	await getDesktopOutboundHTTP().registerAnchoredOrigins({
+		anchorOrigin: requireDesktopHTTPOrigin(new URL(apiEndpoint).origin),
+		origins: runtimePlanTrustedHTTPOrigins(remembered.plan),
+		unresolvedAnchorRequirement: remembered.anchorRequirement,
+	});
+	return remembered.plan;
+}
+
 export function desktopRuntimeInitialInput(): string | null {
 	return getLaunchInstanceEndpointOverride();
 }
