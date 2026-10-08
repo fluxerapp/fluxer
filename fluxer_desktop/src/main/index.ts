@@ -58,6 +58,7 @@ import {
 import {recordDesktopLastRoute} from '@electron/main/DesktopLastRoute';
 import {cleanupDesktopOutboundHTTP} from '@electron/main/DesktopOutboundHTTP';
 import {registerDesktopRuntimeConfigHandlers} from '@electron/main/DesktopRuntimeConfigIpc';
+import {installDesktopSystemTrustVerifier} from '@electron/main/DesktopSystemTrustVerifier';
 import {destroyDesktopTray, hasActiveDesktopTray, initializeDesktopTray} from '@electron/main/DesktopTray';
 import {registerDisplayMediaHandlers} from '@electron/main/DisplayMedia';
 import {initializeDockMenu} from '@electron/main/DockMenu';
@@ -119,7 +120,7 @@ import {
 	DesktopLegacyImportPhase,
 	readDesktopLegacyImportPhase,
 } from '@fluxer/desktop_ipc/src/StorageContract';
-import {app, dialog, ipcMain, netLog, shell} from 'electron';
+import {app, dialog, ipcMain, netLog, session, shell} from 'electron';
 import log from 'electron-log';
 
 log.transports.file.level = 'info';
@@ -395,6 +396,11 @@ if (launchConfigurationError) {
 					log.error('[Init] Failed to configure the host resolver:', error);
 				}
 				await runStartupPhaseAsync('launch-net-log', startLaunchNetLog);
+				try {
+					runStartupPhase('system-trust', () => installDesktopSystemTrustVerifier(session.defaultSession));
+				} catch (error) {
+					log.error('[Init] Failed to install the system trust verifier:', error);
+				}
 				try {
 					await runStartupPhaseAsync('desktop-debug-info', async () => {
 						logDesktopDebugInfo(await getDesktopDebugInfo(userDataConfig.base, {nativeProbes: false}));
