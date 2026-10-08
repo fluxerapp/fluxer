@@ -6,6 +6,7 @@ import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHo
 import {useHover} from '@app/features/app/hooks/useHover';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {useRecoveringBackgroundImageURL} from '@app/features/messaging/hooks/useImageRecovery';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {GuildContextMenu} from '@app/features/ui/action_menu/GuildContextMenu';
@@ -48,8 +49,8 @@ function resolveDisplayedGuildIconURL(query: DisplayedGuildIconURLQuery): string
 	return query.iconURL;
 }
 
-function resolveGuildIconBackgroundImage(iconURL: string, displayedIconURL: string): string | null {
-	if (iconURL.length === 0) {
+function resolveGuildIconBackgroundImage(paintableIconURL: string | null, displayedIconURL: string): string | null {
+	if (paintableIconURL == null) {
 		return null;
 	}
 	return `url(${displayedIconURL})`;
@@ -75,7 +76,7 @@ export function useGuildListItemInteraction({
 	const isAnimatableIcon = hoverIconURL !== iconURL;
 	const [loadedAnimatedURL, setLoadedAnimatedURL] = useState<string | null>(null);
 	const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
-	useEffect(() => ImageCacheUtils.pinImage(iconURL), [iconURL]);
+	const paintableIconURL = useRecoveringBackgroundImageURL(iconURL);
 	useEffect(() => {
 		if (!isAnimatableIcon) return;
 		if (!isHovering && !contextMenuOpen) return;
@@ -121,7 +122,7 @@ export function useGuildListItemInteraction({
 	const handleCloseBottomSheet = useCallback(() => setBottomSheetOpen(false), []);
 	const shouldPlayAnimated = isAnimatableIcon && (isHovering || contextMenuOpen) && loadedAnimatedURL === hoverIconURL;
 	const displayedIconURL = resolveDisplayedGuildIconURL({hoverIconURL, iconURL, shouldPlayAnimated});
-	const backgroundImage = resolveGuildIconBackgroundImage(iconURL, displayedIconURL);
+	const backgroundImage = resolveGuildIconBackgroundImage(paintableIconURL, displayedIconURL);
 	return {
 		hoverRef,
 		isHovering,

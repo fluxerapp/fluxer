@@ -16,6 +16,7 @@ import {GuildHeaderBottomSheet} from '@app/features/guild/components/bottomsheet
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import {GuildHeaderPopout} from '@app/features/guild/components/popouts/GuildHeaderPopout';
 import type {Guild} from '@app/features/guild/models/Guild';
+import {useRecoveringBackgroundImageURL} from '@app/features/messaging/hooks/useImageRecovery';
 import {GuildContextMenu} from '@app/features/ui/action_menu/GuildContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -74,6 +75,7 @@ export const GuildHeader = observer(({guild, banner}: {guild: Guild; banner: Gui
 		[guild],
 	);
 	const guildNameRef = useRef<HTMLSpanElement | null>(null);
+	const bannerImageURL = useRecoveringBackgroundImageURL(banner.imageUrl ?? '');
 	const badgeVisible = resolveGuildBadgeVisible(guild.features);
 	const bannerPlacement = resolveSkeletonBannerPlacement(banner.hasBanner, banner.isDetached);
 	useSkeletonLayoutReport(() => {
@@ -98,7 +100,7 @@ export const GuildHeader = observer(({guild, banner}: {guild: Guild; banner: Gui
 						style={{
 							height: banner.bannerHeight,
 							y: banner.imageShift,
-							backgroundImage: `url(${banner.imageUrl})`,
+							backgroundImage: bannerImageURL == null ? undefined : `url(${bannerImageURL})`,
 						}}
 						data-flx="app.guild-header.banner-image"
 					/>

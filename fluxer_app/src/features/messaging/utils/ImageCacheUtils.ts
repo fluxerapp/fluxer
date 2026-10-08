@@ -21,6 +21,7 @@ interface ImageCacheEntry {
 	image: HTMLImageElement | null;
 	subscribers: Set<ImageSubscriber>;
 	failedAttempts: number;
+	failedCycles: number;
 	retryDelayMs: number;
 	failedUntil: number;
 	loadTimeoutId: number;
@@ -35,7 +36,18 @@ const IMAGE_LOAD_TIMEOUT_MS = 30_000;
 const IMAGE_RETRY_ATTEMPT_LIMIT = 2;
 const IMAGE_RETRY_INITIAL_DELAY_MS = 1000;
 const IMAGE_RETRY_MAX_DELAY_MS = IMAGE_RETRY_INITIAL_DELAY_MS * 10;
+const IMAGE_FAILURE_INITIAL_COOLDOWN_MS = 2000;
 const IMAGE_FAILURE_COOLDOWN_MS = 60_000;
+
+interface ImageRecovery {
+	readonly src: string;
+	readonly waiters: Set<() => void>;
+	timeoutId: number;
+	cancelLoad: (() => void) | null;
+}
+
+const recoveries = new Map<string, ImageRecovery>();
+let recoveryWakeListenersInstalled = false;
 
 const imageCache = new LRUCache<string, ImageCacheEntry>({
 	max: MAX_CACHE_ENTRIES,
@@ -71,6 +83,12 @@ const ownsCacheKey = (entry: ImageCacheEntry): boolean => imageCache.peek(entry.
 
 const isCoolingDown = (entry: ImageCacheEntry): boolean => entry.failedUntil > Date.now();
 
+const isLoadInFlight = (entry: ImageCacheEntry): boolean =>
+	entry.image != null || entry.retryTimeoutId !== 0 || entry.connectivityListener != null;
+
+const failureCooldownMs = (failedCycles: number): number =>
+	Math.min(IMAGE_FAILURE_COOLDOWN_MS, IMAGE_FAILURE_INITIAL_COOLDOWN_MS * 2 ** Math.max(0, failedCycles - 1));
+
 function clearRetryState(entry: ImageCacheEntry): void {
 	if (entry.retryTimeoutId !== 0) {
 		window.clearTimeout(entry.retryTimeoutId);
@@ -94,19 +112,22 @@ function detachImageLoad(entry: ImageCacheEntry): void {
 	}
 }
 
-function notifySubscribers(entry: ImageCacheEntry, loaded: boolean): void {
-	const subscribers = [...entry.subscribers];
-	entry.subscribers.clear();
+function runCallbacks(callbacks: ReadonlyArray<() => void>): void {
 	const failures: Array<unknown> = [];
-	for (const subscriber of subscribers) {
+	for (const callback of callbacks) {
 		try {
-			if (loaded) subscriber.onLoad();
-			else if (subscriber.onError) subscriber.onError();
+			callback();
 		} catch (error) {
 			failures.push(error);
 		}
 	}
 	if (failures.length > 0) throw new AggregateError(failures, 'Image load callbacks failed');
+}
+
+function notifySubscribers(entry: ImageCacheEntry, loaded: boolean): void {
+	const subscribers = [...entry.subscribers];
+	entry.subscribers.clear();
+	runCallbacks(subscribers.map((subscriber) => (loaded ? subscriber.onLoad : (subscriber.onError ?? (() => {})))));
 }
 
 function abandonEntry(entry: ImageCacheEntry): void {
@@ -122,8 +143,9 @@ function dropEntry(entry: ImageCacheEntry): void {
 
 function failEntry(entry: ImageCacheEntry): void {
 	entry.failedAttempts = 0;
+	entry.failedCycles += 1;
 	entry.retryDelayMs = IMAGE_RETRY_INITIAL_DELAY_MS;
-	entry.failedUntil = Date.now() + IMAGE_FAILURE_COOLDOWN_MS;
+	entry.failedUntil = Date.now() + failureCooldownMs(entry.failedCycles);
 	abandonEntry(entry);
 }
 
@@ -135,9 +157,14 @@ function settleLoaded(entry: ImageCacheEntry, image: HTMLImageElement): void {
 	entry.width = image.naturalWidth;
 	entry.height = image.naturalHeight;
 	entry.failedAttempts = 0;
+	entry.failedCycles = 0;
 	entry.retryDelayMs = IMAGE_RETRY_INITIAL_DELAY_MS;
 	entry.failedUntil = 0;
-	notifySubscribers(entry, true);
+	try {
+		notifySubscribers(entry, true);
+	} finally {
+		resolveRecovery(entry.src);
+	}
 }
 
 function retryDelayForAttempt(entry: ImageCacheEntry): number {
@@ -200,6 +227,7 @@ function createEntry(src: string): ImageCacheEntry {
 		image: null,
 		subscribers: new Set(),
 		failedAttempts: 0,
+		failedCycles: 0,
 		retryDelayMs: IMAGE_RETRY_INITIAL_DELAY_MS,
 		failedUntil: 0,
 		loadTimeoutId: 0,
@@ -260,13 +288,125 @@ export function loadImage(src: string | null | undefined, onLoad: () => void, on
 	const entry = cached ?? createEntry(src);
 	const subscriber: ImageSubscriber = {onLoad, onError};
 	entry.subscribers.add(subscriber);
-	if (cached == null || cached.failedUntil !== 0) {
+	if (!isLoadInFlight(entry)) {
 		entry.failedUntil = 0;
 		startImageLoad(entry);
 	}
 	return () => {
 		entry.subscribers.delete(subscriber);
 	};
+}
+
+export function reportImageError(src: string | null | undefined): void {
+	if (!acceptsImageSource(src)) return;
+	const entry = imageCache.get(src) ?? createEntry(src);
+	if (isLoadInFlight(entry) || isCoolingDown(entry)) return;
+	entry.loaded = false;
+	entry.width = 0;
+	entry.height = 0;
+	failEntry(entry);
+}
+
+export function awaitImage(src: string | null | undefined, onLoad: () => void): () => void {
+	if (!acceptsImageSource(src)) return () => {};
+	if (hasImage(src)) {
+		onLoad();
+		return () => {};
+	}
+	const recovery = recoveries.get(src) ?? createRecovery(src);
+	const waiter = (): void => onLoad();
+	recovery.waiters.add(waiter);
+	if (recovery.timeoutId === 0 && recovery.cancelLoad == null) attemptRecovery(recovery);
+	return () => {
+		recovery.waiters.delete(waiter);
+		if (recovery.waiters.size === 0) stopRecovery(recovery);
+	};
+}
+
+function createRecovery(src: string): ImageRecovery {
+	installRecoveryWakeListeners();
+	const recovery: ImageRecovery = {src, waiters: new Set(), timeoutId: 0, cancelLoad: null};
+	recoveries.set(src, recovery);
+	return recovery;
+}
+
+function clearRecoveryWork(recovery: ImageRecovery): void {
+	if (recovery.timeoutId !== 0) {
+		window.clearTimeout(recovery.timeoutId);
+		recovery.timeoutId = 0;
+	}
+	const cancelLoad = recovery.cancelLoad;
+	recovery.cancelLoad = null;
+	cancelLoad?.();
+}
+
+function stopRecovery(recovery: ImageRecovery): void {
+	clearRecoveryWork(recovery);
+	if (recoveries.get(recovery.src) === recovery) recoveries.delete(recovery.src);
+}
+
+function resolveRecovery(src: string): void {
+	const recovery = recoveries.get(src);
+	if (recovery == null) return;
+	const waiters = [...recovery.waiters];
+	recovery.waiters.clear();
+	stopRecovery(recovery);
+	runCallbacks(waiters);
+}
+
+function scheduleRecovery(recovery: ImageRecovery): void {
+	if (recoveries.get(recovery.src) !== recovery) return;
+	const entry = imageCache.peek(recovery.src);
+	const delay = entry != null && isCoolingDown(entry) ? entry.failedUntil - Date.now() : IMAGE_RETRY_INITIAL_DELAY_MS;
+	recovery.timeoutId = window.setTimeout(() => {
+		recovery.timeoutId = 0;
+		attemptRecovery(recovery);
+	}, delay);
+}
+
+function attemptRecovery(recovery: ImageRecovery): void {
+	clearRecoveryWork(recovery);
+	if (hasImage(recovery.src)) {
+		resolveRecovery(recovery.src);
+		return;
+	}
+	const entry = imageCache.peek(recovery.src);
+	if (entry != null && isCoolingDown(entry)) {
+		scheduleRecovery(recovery);
+		return;
+	}
+	let settled = false;
+	const cancelLoad = loadImage(
+		recovery.src,
+		() => {
+			settled = true;
+		},
+		() => {
+			settled = true;
+			recovery.cancelLoad = null;
+			scheduleRecovery(recovery);
+		},
+	);
+	if (!settled) recovery.cancelLoad = cancelLoad;
+}
+
+function wakeRecoveries(): void {
+	for (const recovery of [...recoveries.values()]) {
+		if (recovery.cancelLoad != null) continue;
+		const entry = imageCache.peek(recovery.src);
+		if (entry != null && !isLoadInFlight(entry)) entry.failedUntil = 0;
+		attemptRecovery(recovery);
+	}
+}
+
+function installRecoveryWakeListeners(): void {
+	if (recoveryWakeListenersInstalled || typeof window === 'undefined') return;
+	recoveryWakeListenersInstalled = true;
+	window.addEventListener('online', wakeRecoveries);
+	window.addEventListener('focus', wakeRecoveries);
+	document.addEventListener('visibilitychange', () => {
+		if (document.visibilityState === 'visible') wakeRecoveries();
+	});
 }
 
 export function pinImage(src: string | null | undefined): () => void {
@@ -278,5 +418,6 @@ export function warmImage(src: string | null | undefined): void {
 }
 
 export function _clearForTests(): void {
+	for (const recovery of [...recoveries.values()]) stopRecovery(recovery);
 	imageCache.clear();
 }
