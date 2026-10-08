@@ -10,10 +10,10 @@ use crate::common::{
 use crate::functions::{sha256_file, write_json_pretty};
 use crate::release::{
     DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION, DesktopReleaseAsset, DesktopReleaseDescriptor,
-    desktop_module_manifest_release_asset_name, desktop_module_manifest_storage_key,
-    desktop_module_package_release_asset_name, desktop_module_package_storage_key,
-    desktop_release_asset_name, desktop_release_coordinates, desktop_release_descriptor_filename,
-    desktop_release_product, desktop_release_shipped_formats,
+    DesktopReleaseKind, RELEASE_REPOSITORY, desktop_module_manifest_release_asset_name,
+    desktop_module_manifest_storage_key, desktop_module_package_release_asset_name,
+    desktop_module_package_storage_key, desktop_release_asset_name, desktop_release_coordinates,
+    desktop_release_descriptor_filename, desktop_release_product, desktop_release_shipped_formats,
     desktop_release_update_payload_suffix, desktop_release_updater_feeds,
     validate_desktop_release_descriptor, validate_desktop_release_module_files,
 };
@@ -166,6 +166,9 @@ enum DesktopStep {
     BuildModuleManifest,
     PrepareReleaseAssets,
     BuildSummary,
+    CheckShellDrift,
+    BuildModulesOnlyManifest,
+    PrepareModulesReleaseAssets,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -286,6 +289,9 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         DesktopStep::BuildModuleManifest => build_module_manifest_step(),
         DesktopStep::PrepareReleaseAssets => prepare_release_assets_step(),
         DesktopStep::BuildSummary => build_summary_step(),
+        DesktopStep::CheckShellDrift => check_shell_drift_step().await,
+        DesktopStep::BuildModulesOnlyManifest => build_modules_only_manifest_step(),
+        DesktopStep::PrepareModulesReleaseAssets => prepare_modules_release_assets_step(),
     }
 }
 
@@ -4595,6 +4601,7 @@ fn prepare_release_assets_step() -> Result<()> {
     descriptor_modules.sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
     let descriptor = DesktopReleaseDescriptor {
         schema_version: DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
+        kind: DesktopReleaseKind::Full,
         channel: channel.clone(),
         version: version.clone(),
         release_tag: format!("fluxer-desktop-{channel}@{version}"),
@@ -5314,13 +5321,20 @@ fn desktop_channel_manifest_path(
 }
 
 fn write_desktop_channel_manifest(path: &Path, manifest: &DesktopChannelManifest) -> Result<()> {
-    let mut bytes = serde_json::to_vec(manifest)?;
+    let bytes = serde_json::to_vec(manifest)?;
+    write_desktop_channel_manifest_bytes(path, &manifest.platform, &manifest.arch, bytes)
+}
+
+fn write_desktop_channel_manifest_bytes(
+    path: &Path,
+    platform: &str,
+    arch: &str,
+    mut bytes: Vec<u8>,
+) -> Result<()> {
     bytes.push(b'\n');
     ensure!(
         bytes.len() <= DESKTOP_CHANNEL_MANIFEST_MAX_BYTES,
-        "The module manifest for {} {} is {} bytes, above the {DESKTOP_CHANNEL_MANIFEST_MAX_BYTES} byte client limit",
-        manifest.platform,
-        manifest.arch,
+        "The module manifest for {platform} {arch} is {} bytes, above the {DESKTOP_CHANNEL_MANIFEST_MAX_BYTES} byte client limit",
         bytes.len()
     );
     if let Some(parent) = path.parent() {
@@ -5407,6 +5421,340 @@ fn build_module_manifest_step() -> Result<()> {
         targets.len()
     );
     Ok(())
+}
+
+const DESKTOP_ALLOW_SHELL_DRIFT_ENV: &str = "ALLOW_SHELL_DRIFT";
+const DESKTOP_LIVE_SHELL_FILE: &str = "live-shell.json";
+const DESKTOP_LIVE_MANIFEST_TIMEOUT: Duration = Duration::from_secs(30);
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+struct DesktopLiveShell {
+    channel: String,
+    shell_version: String,
+    shell_sha: String,
+    manifests: BTreeMap<String, Value>,
+}
+
+fn desktop_coordinate_key(platform: &str, arch: &str) -> String {
+    format!("{platform}/{arch}")
+}
+
+fn desktop_live_manifest_url(channel: &str, platform: &str, arch: &str) -> String {
+    format!(
+        "{}/{DESKTOP_PAYLOAD_PREFIX}/{channel}/{platform}/{arch}/{DESKTOP_CHANNEL_MANIFEST_NAME}",
+        package_origin_base()
+    )
+}
+
+async fn fetch_live_channel_manifests(channel: &str) -> Result<BTreeMap<String, Value>> {
+    let client = reqwest::Client::builder()
+        .timeout(DESKTOP_LIVE_MANIFEST_TIMEOUT)
+        .build()
+        .context("Failed to build the HTTP client")?;
+    let mut manifests = BTreeMap::new();
+    for (platform, arch) in desktop_release_coordinates() {
+        let url = desktop_live_manifest_url(channel, platform, arch);
+        let manifest: Value = client
+            .get(&url)
+            .send()
+            .await
+            .with_context(|| format!("Failed to fetch {url}"))?
+            .error_for_status()
+            .with_context(|| format!("{url} did not serve a module manifest"))?
+            .json()
+            .await
+            .with_context(|| format!("{url} is not JSON"))?;
+        ensure!(
+            manifest["release_channel"] == channel
+                && manifest["platform"] == platform
+                && manifest["arch"] == arch,
+            "{url} describes another channel or coordinate"
+        );
+        manifests.insert(desktop_coordinate_key(platform, arch), manifest);
+    }
+    Ok(manifests)
+}
+
+fn live_shell_version(manifest: &Value) -> Option<&str> {
+    manifest["shell"]["latest_version"].as_str()
+}
+
+fn common_live_shell_version(manifests: &BTreeMap<String, Value>) -> Result<String> {
+    let versions = manifests
+        .iter()
+        .map(|(coordinate, manifest)| {
+            live_shell_version(manifest)
+                .map(str::to_string)
+                .with_context(|| format!("The live {coordinate} manifest names no shell version"))
+        })
+        .collect::<Result<BTreeSet<_>>>()?;
+    let mut iter = versions.iter();
+    let first = iter
+        .next()
+        .context("No live module manifest was fetched")?
+        .clone();
+    ensure!(
+        iter.next().is_none(),
+        "The live feeds disagree on the shell version ({}), finish publishing the last full desktop release before a modules-only release",
+        versions.iter().cloned().collect::<Vec<_>>().join(", ")
+    );
+    crate::common::parse_version_instant(&first)
+        .with_context(|| format!("The live shell version {first:?} is not a CalVer"))?;
+    Ok(first)
+}
+
+fn desktop_shell_source_roots(repo_root: &Path) -> Result<Vec<String>> {
+    let package_path = repo_root.join("fluxer_desktop").join("package.json");
+    let package: Value = serde_json::from_slice(
+        &fs::read(&package_path)
+            .with_context(|| format!("Failed to read {}", package_path.display()))?,
+    )
+    .with_context(|| format!("Failed to parse {}", package_path.display()))?;
+    let workspace_dependencies = package["dependencies"]
+        .as_object()
+        .into_iter()
+        .flatten()
+        .filter(|(_, spec)| {
+            spec.as_str()
+                .is_some_and(|spec| spec.starts_with("workspace:"))
+        })
+        .map(|(name, _)| name.clone())
+        .collect::<BTreeSet<_>>();
+    let mut roots = vec!["fluxer_desktop/".to_string()];
+    for package_dir in sorted_child_directories(&repo_root.join("packages"))? {
+        let manifest_path = package_dir.join("package.json");
+        if !manifest_path.is_file() {
+            continue;
+        }
+        let manifest: Value = serde_json::from_slice(&fs::read(&manifest_path)?)
+            .with_context(|| format!("Failed to parse {}", manifest_path.display()))?;
+        if manifest["name"]
+            .as_str()
+            .is_some_and(|name| workspace_dependencies.contains(name))
+        {
+            roots.push(format!("packages/{}/", file_name_string(&package_dir)?));
+        }
+    }
+    Ok(roots)
+}
+
+fn is_shell_irrelevant_path(path: &str) -> bool {
+    path.contains(".test.")
+        || path.contains("/__tests__/")
+        || path.contains("/__fixtures__/")
+        || path.ends_with(".md")
+}
+
+fn desktop_shell_drift(changed: &[String], roots: &[String]) -> Vec<String> {
+    changed
+        .iter()
+        .filter(|path| roots.iter().any(|root| path.starts_with(root.as_str())))
+        .filter(|path| !is_shell_irrelevant_path(path))
+        .cloned()
+        .collect()
+}
+
+async fn check_shell_drift_step() -> Result<()> {
+    let channel = require_env("CHANNEL")?;
+    let source_sha = require_env("SOURCE_SHA")?;
+    let manifests = fetch_live_channel_manifests(&channel).await?;
+    let shell_version = common_live_shell_version(&manifests)?;
+    let tag = format!("fluxer-desktop-{channel}@{shell_version}");
+    let shell_sha = output_text(CommandSpec::new("gh").args([
+        "api",
+        &format!("repos/{RELEASE_REPOSITORY}/commits/{tag}"),
+        "--jq",
+        ".sha",
+    ]))
+    .with_context(|| format!("Failed to resolve the live shell release {tag}"))?
+    .trim()
+    .to_string();
+    ensure!(
+        shell_sha.len() == 40 && shell_sha.bytes().all(|byte| byte.is_ascii_hexdigit()),
+        "{tag} resolved to an invalid commit {shell_sha:?}"
+    );
+    let repo_root = env::current_dir().context("Failed to resolve the repository root")?;
+    let roots = desktop_shell_source_roots(&repo_root)?;
+    let changed =
+        output_text(CommandSpec::new("git").args(["diff", "--name-only", &shell_sha, &source_sha]))
+            .with_context(|| format!("Failed to diff {shell_sha} against {source_sha}"))?
+            .lines()
+            .map(str::to_string)
+            .collect::<Vec<_>>();
+    let drift = desktop_shell_drift(&changed, &roots);
+    if !drift.is_empty() {
+        let listed = drift.join("\n  ");
+        ensure!(
+            env_bool(DESKTOP_ALLOW_SHELL_DRIFT_ENV),
+            "The live {channel} shell {shell_version} was built from {shell_sha}, and these shell sources changed since then:\n  {listed}\nShip a full desktop release, or set {DESKTOP_ALLOW_SHELL_DRIFT_ENV}=true if the renderer does not depend on these changes"
+        );
+        println!(
+            "{DESKTOP_ALLOW_SHELL_DRIFT_ENV} is set, publishing modules although these shell sources changed since {shell_sha}:\n  {listed}"
+        );
+    }
+    let live = DesktopLiveShell {
+        channel: channel.clone(),
+        shell_version: shell_version.clone(),
+        shell_sha: shell_sha.clone(),
+        manifests,
+    };
+    let modules_dir = desktop_modules_dir();
+    fs::create_dir_all(&modules_dir)
+        .with_context(|| format!("Failed to create {}", modules_dir.display()))?;
+    write_json_pretty(&modules_dir.join(DESKTOP_LIVE_SHELL_FILE), &live)?;
+    println!(
+        "The live {channel} shell is {shell_version} from {shell_sha}, the modules from {source_sha} run on it"
+    );
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn modules_only_channel_manifest(
+    live: &Value,
+    channel: &str,
+    platform: &str,
+    arch: &str,
+    build_version: &str,
+    pub_date: &str,
+    metadata_version: u64,
+    packed: &[DesktopPackedModule],
+) -> Result<Value> {
+    let mut manifest = live
+        .as_object()
+        .cloned()
+        .with_context(|| format!("The live {platform} {arch} manifest is not an object"))?;
+    let shell_version = live_shell_version(live)
+        .with_context(|| format!("The live {platform} {arch} manifest names no shell version"))?
+        .to_string();
+    let modules = desktop_channel_manifest_entries(channel, packed)
+        .into_iter()
+        .map(|(module, mut entry)| {
+            entry.minimum_shell_version = shell_version.clone();
+            (module, entry)
+        })
+        .collect::<BTreeMap<_, _>>();
+    manifest.insert(
+        "manifest_version".to_string(),
+        json!(DESKTOP_CHANNEL_MANIFEST_VERSION),
+    );
+    manifest.insert("release_channel".to_string(), json!(channel));
+    manifest.insert("platform".to_string(), json!(platform));
+    manifest.insert("arch".to_string(), json!(arch));
+    manifest.insert("build_version".to_string(), json!(build_version));
+    manifest.insert("pub_date".to_string(), json!(pub_date));
+    manifest.insert("metadata_version".to_string(), json!(metadata_version));
+    manifest.insert("modules".to_string(), serde_json::to_value(modules)?);
+    manifest.insert(
+        "required_modules".to_string(),
+        json!(DESKTOP_REQUIRED_MODULES),
+    );
+    Ok(Value::Object(manifest))
+}
+
+fn build_modules_only_manifest_step() -> Result<()> {
+    let channel = require_env("CHANNEL")?;
+    let build_version = require_env("VERSION")?;
+    let pub_date = require_env("PUB_DATE")?;
+    let modules_dir = desktop_modules_dir();
+    let live_path = modules_dir.join(DESKTOP_LIVE_SHELL_FILE);
+    let live: DesktopLiveShell =
+        serde_json::from_slice(&fs::read(&live_path).with_context(|| {
+            format!(
+                "Failed to read {}, run the check_shell_drift step first",
+                live_path.display()
+            )
+        })?)
+        .with_context(|| format!("Failed to parse {}", live_path.display()))?;
+    ensure!(
+        live.channel == channel,
+        "{} describes the {} channel, not {channel}",
+        live_path.display(),
+        live.channel
+    );
+    let payload_root = Path::new("payload_tree").join(DESKTOP_PAYLOAD_PREFIX);
+    remove_dir_if_exists(Path::new("payload_tree"))?;
+    fs::create_dir_all(&payload_root)
+        .with_context(|| format!("Failed to create {}", payload_root.display()))?;
+    let packed = read_packed_desktop_modules(&modules_dir, &channel, &build_version)?;
+    let metadata_version = desktop_module_metadata_version(&pub_date)?;
+    stage_desktop_module_packages(&payload_root, &channel, &packed)?;
+    for (platform, arch) in desktop_release_coordinates() {
+        let key = desktop_coordinate_key(platform, arch);
+        let live_manifest = live
+            .manifests
+            .get(&key)
+            .with_context(|| format!("{} holds no live {key} manifest", live_path.display()))?;
+        let manifest = modules_only_channel_manifest(
+            live_manifest,
+            &channel,
+            platform,
+            arch,
+            &build_version,
+            &pub_date,
+            metadata_version,
+            &packed,
+        )?;
+        let manifest_path = desktop_channel_manifest_path(&payload_root, &channel, platform, arch);
+        if let Some(parent) = manifest_path.parent() {
+            fs::create_dir_all(parent)
+                .with_context(|| format!("Failed to create {}", parent.display()))?;
+        }
+        write_desktop_channel_manifest_bytes(
+            &manifest_path,
+            platform,
+            arch,
+            serde_json::to_vec(&manifest)?,
+        )?;
+        println!(
+            "Wrote the {platform} {arch} modules-only manifest for shell {}",
+            live.shell_version
+        );
+    }
+    println!(
+        "Staged {} module(s) for {build_version} on the live {channel} shell {}",
+        packed.len(),
+        live.shell_version
+    );
+    Ok(())
+}
+
+fn prepare_modules_release_assets_step() -> Result<()> {
+    let channel = require_env("CHANNEL")?;
+    let version = require_env("VERSION")?;
+    let source_sha = require_env("SOURCE_SHA")?;
+    let product = desktop_release_product(&channel)?;
+    let payload_root = Path::new("payload_tree")
+        .join(DESKTOP_PAYLOAD_PREFIX)
+        .join(&channel);
+    let release_assets = Path::new("release_assets");
+    remove_dir_if_exists(release_assets)?;
+    fs::create_dir_all(release_assets)?;
+    let mut release_builder =
+        DesktopReleaseAssetBuilder::new(&channel, &version, product, release_assets);
+    add_desktop_module_release_assets(&mut release_builder, &payload_root)?;
+    let (descriptor_assets, mut descriptor_modules) = release_builder.finish();
+    ensure!(
+        descriptor_assets.is_empty(),
+        "A modules-only release staged shell assets"
+    );
+    descriptor_modules.sort_by(|left, right| left.storage_key.cmp(&right.storage_key));
+    let descriptor = DesktopReleaseDescriptor {
+        schema_version: DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
+        kind: DesktopReleaseKind::Modules,
+        channel: channel.clone(),
+        version: version.clone(),
+        release_tag: format!("fluxer-desktop-{channel}@{version}"),
+        source_sha,
+        assets: Vec::new(),
+        modules: descriptor_modules,
+    };
+    validate_desktop_release_descriptor(&descriptor, &channel, &version, &descriptor.source_sha)?;
+    validate_desktop_release_module_files(&descriptor, release_assets)?;
+    let descriptor_path =
+        release_assets.join(desktop_release_descriptor_filename(&channel, &version)?);
+    write_json_pretty(&descriptor_path, &descriptor)?;
+    println!("GitHub release asset tree:");
+    print_tree(release_assets, 2)
 }
 
 fn build_summary_step() -> Result<()> {
@@ -5590,6 +5938,136 @@ mod tests {
         Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
             .single()
             .unwrap()
+    }
+
+    fn live_manifest(platform: &str, arch: &str, shell: &str) -> Value {
+        json!({
+            "manifest_version": 1,
+            "release_channel": "canary",
+            "platform": platform,
+            "arch": arch,
+            "build_version": shell,
+            "pub_date": "2026-10-08T03:23:23Z",
+            "metadata_version": 1791433225,
+            "shell": {"latest_version": shell, "minimum_version": "0.0.0"},
+            "linux_security_minimum": {"version": "2026.1001.1", "required_modules": ["fluxer_renderer"]},
+            "modules": {},
+            "required_modules": ["fluxer_renderer"],
+        })
+    }
+
+    #[test]
+    fn live_shell_version_must_agree_across_coordinates() {
+        let mut manifests = BTreeMap::new();
+        for (platform, arch) in desktop_release_coordinates() {
+            manifests.insert(
+                desktop_coordinate_key(platform, arch),
+                live_manifest(platform, arch, "2026.1008.32323"),
+            );
+        }
+        assert_eq!(
+            common_live_shell_version(&manifests).unwrap(),
+            "2026.1008.32323"
+        );
+        manifests.insert(
+            "linux/arm64".to_string(),
+            live_manifest("linux", "arm64", "2026.1008.12411"),
+        );
+        let error = common_live_shell_version(&manifests)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("disagree"), "{error}");
+        manifests.insert("linux/arm64".to_string(), json!({"shell": {}}));
+        assert!(common_live_shell_version(&manifests).is_err());
+    }
+
+    #[test]
+    fn shell_drift_counts_only_shell_sources() {
+        let roots = vec![
+            "fluxer_desktop/".to_string(),
+            "packages/desktop_ipc/".to_string(),
+        ];
+        let changed = [
+            "fluxer_app/src/App.tsx",
+            "fluxer_desktop/src/main/Updater.ts",
+            "fluxer_desktop/src/main/Updater.test.mjs",
+            "packages/desktop_ipc/src/Channels.ts",
+            "packages/desktop_ipc/README.md",
+            "packages/schema/src/Thing.ts",
+        ]
+        .map(str::to_string);
+        assert_eq!(
+            desktop_shell_drift(&changed, &roots),
+            vec![
+                "fluxer_desktop/src/main/Updater.ts".to_string(),
+                "packages/desktop_ipc/src/Channels.ts".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn shell_source_roots_follow_the_desktop_workspace_dependencies() {
+        let repo = tempfile::tempdir().unwrap();
+        let root = repo.path();
+        fs::create_dir_all(root.join("fluxer_desktop")).unwrap();
+        fs::write(
+            root.join("fluxer_desktop/package.json"),
+            r#"{"dependencies":{"@fluxer/desktop_ipc":"workspace:*","electron-log":"5.0.0"}}"#,
+        )
+        .unwrap();
+        for (dir, name) in [
+            ("desktop_ipc", "@fluxer/desktop_ipc"),
+            ("schema", "@fluxer/schema"),
+        ] {
+            fs::create_dir_all(root.join("packages").join(dir)).unwrap();
+            fs::write(
+                root.join("packages").join(dir).join("package.json"),
+                format!(r#"{{"name":"{name}"}}"#),
+            )
+            .unwrap();
+        }
+        assert_eq!(
+            desktop_shell_source_roots(root).unwrap(),
+            vec![
+                "fluxer_desktop/".to_string(),
+                "packages/desktop_ipc/".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn modules_only_manifest_keeps_the_live_shell_and_pins_modules_to_it() {
+        let live = live_manifest("darwin", "arm64", "2026.1008.32323");
+        let packed = vec![DesktopPackedModule {
+            module: "fluxer_renderer".to_string(),
+            sha256: "a".repeat(64),
+            bytes: 42,
+            directory: PathBuf::from("unused"),
+        }];
+        let manifest = modules_only_channel_manifest(
+            &live,
+            "canary",
+            "darwin",
+            "arm64",
+            "2026.1008.90000",
+            "2026-10-08T09:00:00Z",
+            1791450000,
+            &packed,
+        )
+        .unwrap();
+        assert_eq!(manifest["shell"], live["shell"]);
+        assert_eq!(
+            manifest["linux_security_minimum"],
+            live["linux_security_minimum"]
+        );
+        assert_eq!(manifest["build_version"], "2026.1008.90000");
+        assert_eq!(manifest["metadata_version"], 1791450000);
+        let renderer = &manifest["modules"]["fluxer_renderer"];
+        assert_eq!(renderer["sha256"], "a".repeat(64));
+        assert_eq!(renderer["minimum_shell_version"], "2026.1008.32323");
+        assert!(renderer["maximum_shell_version"].is_null());
+        let parsed: DesktopChannelManifest = serde_json::from_value(manifest).unwrap();
+        assert_eq!(parsed.shell.latest_version, "2026.1008.32323");
     }
 
     #[test]
@@ -6476,6 +6954,7 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
         assert_eq!(on_disk, names);
         let descriptor = DesktopReleaseDescriptor {
             schema_version: DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
+            kind: DesktopReleaseKind::Full,
             channel: "canary".to_string(),
             version: LAYOUT_VERSION.to_string(),
             release_tag: format!("fluxer-desktop-canary@{LAYOUT_VERSION}"),

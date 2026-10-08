@@ -148,9 +148,25 @@ pub(crate) struct DesktopReleaseAsset {
     pub(crate) size: u64,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, Default, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum DesktopReleaseKind {
+    #[default]
+    Full,
+    Modules,
+}
+
+impl DesktopReleaseKind {
+    pub(crate) fn is_full(&self) -> bool {
+        *self == Self::Full
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub(crate) struct DesktopReleaseDescriptor {
     pub(crate) schema_version: u8,
+    #[serde(default, skip_serializing_if = "DesktopReleaseKind::is_full")]
+    pub(crate) kind: DesktopReleaseKind,
     pub(crate) channel: String,
     pub(crate) version: String,
     pub(crate) release_tag: String,
@@ -334,6 +350,24 @@ pub(crate) fn validate_desktop_release_descriptor(
     );
     parse_version_instant(version)
         .with_context(|| format!("Invalid desktop release descriptor version {version:?}"))?;
+    if descriptor.kind == DesktopReleaseKind::Modules {
+        ensure!(
+            descriptor.assets.is_empty(),
+            "A modules-only desktop release descriptor must not list shell assets, found {}",
+            descriptor.assets.len()
+        );
+        let descriptor_name = desktop_release_descriptor_filename(channel, version)?;
+        let mut release_asset_names = BTreeMap::from([(
+            descriptor_name.to_ascii_lowercase(),
+            descriptor_name.as_str(),
+        )]);
+        return validate_desktop_release_modules(
+            descriptor,
+            channel,
+            version,
+            &mut release_asset_names,
+        );
+    }
     let route_count = desktop_release_route_count();
     ensure!(
         descriptor.assets.len() == route_count,
@@ -1465,6 +1499,7 @@ mod tests {
         }
         DesktopReleaseDescriptor {
             schema_version: DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
+            kind: DesktopReleaseKind::Full,
             channel: SAMPLE_CHANNEL.to_string(),
             version: SAMPLE_VERSION.to_string(),
             release_tag: format!("fluxer-desktop-{SAMPLE_CHANNEL}@{SAMPLE_VERSION}"),
@@ -1554,6 +1589,50 @@ mod tests {
             });
         }
         descriptor
+    }
+
+    fn sample_modules_only_descriptor() -> DesktopReleaseDescriptor {
+        let mut descriptor = sample_descriptor();
+        descriptor.kind = DesktopReleaseKind::Modules;
+        descriptor.assets.clear();
+        descriptor
+    }
+
+    #[test]
+    fn modules_only_descriptor_validates_without_shell_assets() {
+        validate_sample(&sample_modules_only_descriptor()).unwrap();
+    }
+
+    #[test]
+    fn modules_only_descriptor_rejects_shell_assets() {
+        let mut descriptor = sample_modules_only_descriptor();
+        descriptor.assets = sample_descriptor().assets;
+        let error = validate_sample(&descriptor).unwrap_err().to_string();
+        assert!(error.contains("must not list shell assets"), "{error}");
+    }
+
+    #[test]
+    fn modules_only_descriptor_still_requires_every_coordinate_and_the_renderer() {
+        let mut descriptor = sample_modules_only_descriptor();
+        descriptor
+            .modules
+            .retain(|entry| !entry.storage_key.contains("/fluxer_renderer/"));
+        assert!(validate_sample(&descriptor).is_err());
+        let mut descriptor = sample_modules_only_descriptor();
+        descriptor
+            .modules
+            .retain(|entry| !entry.storage_key.starts_with("desktop/canary/linux/arm64/"));
+        assert!(validate_sample(&descriptor).is_err());
+    }
+
+    #[test]
+    fn full_descriptor_omits_the_kind_and_modules_only_carries_it() {
+        let full = serde_json::to_value(sample_descriptor()).unwrap();
+        assert!(full.get("kind").is_none());
+        let modules_only = serde_json::to_value(sample_modules_only_descriptor()).unwrap();
+        assert_eq!(modules_only["kind"], "modules");
+        let parsed: DesktopReleaseDescriptor = serde_json::from_value(full).unwrap();
+        assert_eq!(parsed.kind, DesktopReleaseKind::Full);
     }
 
     fn validate_sample(descriptor: &DesktopReleaseDescriptor) -> Result<()> {
