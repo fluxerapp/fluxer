@@ -2076,7 +2076,7 @@ msgstr "Liko {remainingSlotCount}"
 #: src/features/channel/components/CrosspostCommunityCard.tsx:247
 #: src/features/channel/components/InviteEmbed.tsx:250
 #: src/features/channel/components/InviteEmbed.tsx:358
-#: src/features/channel/components/InviteEmbed.tsx:627
+#: src/features/channel/components/InviteEmbed.tsx:629
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, one {narys} few {nariai} many {nario} other {narių}}"
 
@@ -3280,8 +3280,8 @@ msgid "Add another custom shortcut"
 msgstr "Pridėti kitą pasirinktinį spartųjį klavišą"
 
 #. Button label that opens the self-hosted instance URL step.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:33
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:261
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:36
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:268
 msgid "Add another instance"
 msgstr "Pridėti kitą instanciją"
 
@@ -9787,7 +9787,7 @@ msgid "Continue"
 msgstr "Tęsti"
 
 #. Title in the desktop app while it waits for the user to sign in on the browser page it opened.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:177
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:184
 msgid "Continue in your browser"
 msgstr "Tęsti naršyklėje"
 
@@ -14962,7 +14962,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "Įveskite savo saugos rakto PIN kodą, kad tęstumėte."
 
 #. Title in the desktop app above the code the user types into a browser on another device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:228
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:235
 msgid "Enter this code in your browser"
 msgstr "Įveskite šį kodą savo naršyklėje"
 
@@ -15369,7 +15369,7 @@ msgstr "Baigia galioti tarp {earliest} ir {latest}"
 msgid "Expires in {remaining}s"
 msgstr "Baigs galioti po {remaining} s"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:250
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:257
 msgid "Expires in {remainingSeconds}s"
 msgstr "Baigiasi po {remainingSeconds}s"
 
@@ -21088,7 +21088,7 @@ msgid "Manage"
 msgstr "Tvarkyti"
 
 #. Accessible label for the account switcher surface that lists every saved account.
-#: src/features/app/components/floating/UserAreaAccountSwitchMenu.tsx:257
+#: src/features/app/components/floating/UserAreaAccountSwitchMenu.tsx:289
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:35
 msgid "Manage accounts"
 msgstr "Tvarkyti paskyras"
@@ -24685,7 +24685,7 @@ msgid "On click"
 msgstr "Spustelėjus"
 
 #. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:236
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:243
 msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
 msgstr "Kitame įrenginyje prisijunkite adresu {signInAddress} ir įveskite šį kodą, kai būsite paprašyti."
 
@@ -28369,7 +28369,7 @@ msgid "Remove from group"
 msgstr "Pašalinti iš grupės"
 
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:37
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:40
 msgid "Remove from recent instances"
 msgstr "Panaikinti iš neseniai naudotų instancijų"
 
@@ -32349,12 +32349,12 @@ msgid "Sign in again as {accountLabel}"
 msgstr "Prisijunkite dar kartą kaip {accountLabel}"
 
 #. Shown in the desktop app while it waits for the browser. instanceName is the server name, such as Fluxer.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:193
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:200
 msgid "Sign in to {instanceName} in your browser and confirm. This app finishes signing in on its own."
 msgstr "Prisijunkite prie {instanceName} naršyklėje ir patvirtinkite. Ši programa baigs prisijungimą pati."
 
 #. Shown in the desktop app above the code when the browser cannot return the sign-in automatically. instanceName is the server name, such as Fluxer.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:189
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:196
 msgid "Sign in to {instanceName} in your browser, and check that it shows this code:"
 msgstr "Prisijunkite prie {instanceName} savo naršyklėje ir patikrinkite, ar rodomas šis kodas:"
 
@@ -32503,7 +32503,7 @@ msgid "Signing in as {name}"
 msgstr "Prisijungiama kaip {name}"
 
 #. Text button in the desktop app that shows a code to type into a browser on a different device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:207
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:214
 msgid "Signing in on another device?"
 msgstr "Prisijungiate kitame įrenginyje?"
 
@@ -38574,7 +38574,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "Naudoti {everyoneMention}/{hereMention} ir {rolesMention}"
 
 #. Accessible label for a known authentication instance option. Preserve {name} and {domain}. Code inserts them.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:28
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:31
 msgid "Use {name} on {domain}"
 msgstr "Naudoti {name} adresu {domain}"
 
@@ -38612,7 +38612,7 @@ msgstr "Atskirame lange nustatykite žinučių istorijos ribinę datą nariams, 
 msgid "Use a different account"
 msgstr "Naudoti kitą paskyrą"
 
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:267
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:274
 msgid "Use a self-hosted instance URL"
 msgstr "Naudokite savo prieglobos instancijos URL"
 
@@ -38814,7 +38814,7 @@ msgid "Use system locale for time format"
 msgstr "Naudoti sistemos lokalę laiko formatui"
 
 #. Accessible label for the official Fluxer instance option.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:24
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:27
 msgid "Use the official Fluxer instance"
 msgstr "Naudoti oficialų „Fluxer“ serverį"
 

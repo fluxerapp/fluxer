@@ -2076,7 +2076,7 @@ msgstr "{remainingSlotCount} maradt"
 #: src/features/channel/components/CrosspostCommunityCard.tsx:247
 #: src/features/channel/components/InviteEmbed.tsx:250
 #: src/features/channel/components/InviteEmbed.tsx:358
-#: src/features/channel/components/InviteEmbed.tsx:627
+#: src/features/channel/components/InviteEmbed.tsx:629
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, one {tag} other {tag}}"
 
@@ -3280,8 +3280,8 @@ msgid "Add another custom shortcut"
 msgstr "Újabb egyéni billentyűparancs hozzáadása"
 
 #. Button label that opens the self-hosted instance URL step.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:33
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:261
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:36
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:268
 msgid "Add another instance"
 msgstr "Egy másik példány hozzáadása"
 
@@ -9787,7 +9787,7 @@ msgid "Continue"
 msgstr "Folytatás"
 
 #. Title in the desktop app while it waits for the user to sign in on the browser page it opened.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:177
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:184
 msgid "Continue in your browser"
 msgstr "Folytatás a böngészőben"
 
@@ -14962,7 +14962,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "A folytatáshoz add meg a biztonsági kulcsod PIN-kódját."
 
 #. Title in the desktop app above the code the user types into a browser on another device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:228
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:235
 msgid "Enter this code in your browser"
 msgstr "Írd be ezt a kódot a böngészőbe"
 
@@ -15369,7 +15369,7 @@ msgstr "Lejárati idő: {earliest} és {latest} között"
 msgid "Expires in {remaining}s"
 msgstr "Lejár {remaining} mp múlva"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:250
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:257
 msgid "Expires in {remainingSeconds}s"
 msgstr "Lejár: {remainingSeconds} mp múlva"
 
@@ -21087,7 +21087,7 @@ msgid "Manage"
 msgstr "Kezelés"
 
 #. Accessible label for the account switcher surface that lists every saved account.
-#: src/features/app/components/floating/UserAreaAccountSwitchMenu.tsx:257
+#: src/features/app/components/floating/UserAreaAccountSwitchMenu.tsx:289
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:35
 msgid "Manage accounts"
 msgstr "Fiókok kezelése"
@@ -24684,7 +24684,7 @@ msgid "On click"
 msgstr "Kattintásra"
 
 #. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:236
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:243
 msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
 msgstr "A másik eszközödön jelentkezz be a(z) {signInAddress} címen, és add meg ezt a kódot, amikor a rendszer kéri."
 
@@ -28368,7 +28368,7 @@ msgid "Remove from group"
 msgstr "Eltávolítás a csoportból"
 
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:37
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:40
 msgid "Remove from recent instances"
 msgstr "Eltávolítás a legutóbbi példányok közül"
 
@@ -32348,12 +32348,12 @@ msgid "Sign in again as {accountLabel}"
 msgstr "Jelentkezz be újra mint {accountLabel}"
 
 #. Shown in the desktop app while it waits for the browser. instanceName is the server name, such as Fluxer.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:193
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:200
 msgid "Sign in to {instanceName} in your browser and confirm. This app finishes signing in on its own."
 msgstr "Jelentkezz be a böngésződben a(z) {instanceName} szolgáltatásba, és erősítsd meg. Az alkalmazás önállóan befejezi a bejelentkezést."
 
 #. Shown in the desktop app above the code when the browser cannot return the sign-in automatically. instanceName is the server name, such as Fluxer.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:189
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:196
 msgid "Sign in to {instanceName} in your browser, and check that it shows this code:"
 msgstr "Jelentkezz be a böngésződben a(z) {instanceName} szolgáltatásba, és ellenőrizd, hogy ez a kód jelenik-e meg:"
 
@@ -32502,7 +32502,7 @@ msgid "Signing in as {name}"
 msgstr "Bejelentkezés ekként: {name}"
 
 #. Text button in the desktop app that shows a code to type into a browser on a different device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:207
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:214
 msgid "Signing in on another device?"
 msgstr "Bejelentkezel egy másik eszközön?"
 
@@ -38573,7 +38573,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "{everyoneMention}/{hereMention} és {rolesMention} használata"
 
 #. Accessible label for a known authentication instance option. Preserve {name} and {domain}. Code inserts them.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:28
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:31
 msgid "Use {name} on {domain}"
 msgstr "Használja a(z) {name} szolgáltatást a(z) {domain} címen"
 
@@ -38611,7 +38611,7 @@ msgstr "Külön ablakban állíthatod be az üzenetelőzmények küszöbdátumá
 msgid "Use a different account"
 msgstr "Használj másik fiókot"
 
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:267
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:274
 msgid "Use a self-hosted instance URL"
 msgstr "Használj egy saját üzemeltetésű példány URL-címét"
 
@@ -38813,7 +38813,7 @@ msgid "Use system locale for time format"
 msgstr "Rendszer területi beállításainak használata az időformátumhoz"
 
 #. Accessible label for the official Fluxer instance option.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:24
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:27
 msgid "Use the official Fluxer instance"
 msgstr "Használja a hivatalos Fluxer példányt"
 

@@ -2076,7 +2076,7 @@ msgstr "还剩 {remainingSlotCount} 个"
 #: src/features/channel/components/CrosspostCommunityCard.tsx:247
 #: src/features/channel/components/InviteEmbed.tsx:250
 #: src/features/channel/components/InviteEmbed.tsx:358
-#: src/features/channel/components/InviteEmbed.tsx:627
+#: src/features/channel/components/InviteEmbed.tsx:629
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, other {位成员}}"
 
@@ -3280,8 +3280,8 @@ msgid "Add another custom shortcut"
 msgstr "再添加一个自定义快捷键"
 
 #. Button label that opens the self-hosted instance URL step.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:33
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:261
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:36
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:268
 msgid "Add another instance"
 msgstr "添加另一个实例"
 
@@ -9787,7 +9787,7 @@ msgid "Continue"
 msgstr "继续"
 
 #. Title in the desktop app while it waits for the user to sign in on the browser page it opened.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:177
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:184
 msgid "Continue in your browser"
 msgstr "在浏览器中继续"
 
@@ -14962,7 +14962,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "输入你的安全密钥 PIN 码以继续。"
 
 #. Title in the desktop app above the code the user types into a browser on another device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:228
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:235
 msgid "Enter this code in your browser"
 msgstr "在浏览器中输入此代码"
 
@@ -15369,7 +15369,7 @@ msgstr "将于 {earliest} 至 {latest} 之间过期"
 msgid "Expires in {remaining}s"
 msgstr "{remaining} 秒后过期"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:250
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:257
 msgid "Expires in {remainingSeconds}s"
 msgstr "将在 {remainingSeconds} 秒后过期"
 
@@ -21087,7 +21087,7 @@ msgid "Manage"
 msgstr "管理"
 
 #. Accessible label for the account switcher surface that lists every saved account.
-#: src/features/app/components/floating/UserAreaAccountSwitchMenu.tsx:257
+#: src/features/app/components/floating/UserAreaAccountSwitchMenu.tsx:289
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:35
 msgid "Manage accounts"
 msgstr "管理账号"
@@ -24684,7 +24684,7 @@ msgid "On click"
 msgstr "点击时"
 
 #. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:236
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:243
 msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
 msgstr "在您的另一台设备上，请前往 {signInAddress} 登录，并在需要时输入此代码。"
 
@@ -28368,7 +28368,7 @@ msgid "Remove from group"
 msgstr "移出群聊"
 
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:37
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:40
 msgid "Remove from recent instances"
 msgstr "从最近的实例中移除"
 
@@ -32348,12 +32348,12 @@ msgid "Sign in again as {accountLabel}"
 msgstr "再次登录 {accountLabel}"
 
 #. Shown in the desktop app while it waits for the browser. instanceName is the server name, such as Fluxer.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:193
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:200
 msgid "Sign in to {instanceName} in your browser and confirm. This app finishes signing in on its own."
 msgstr "在浏览器中登录 {instanceName} 并确认。此应用将自行完成登录。"
 
 #. Shown in the desktop app above the code when the browser cannot return the sign-in automatically. instanceName is the server name, such as Fluxer.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:189
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:196
 msgid "Sign in to {instanceName} in your browser, and check that it shows this code:"
 msgstr "在浏览器中登录 {instanceName}，并检查是否显示此代码："
 
@@ -32502,7 +32502,7 @@ msgid "Signing in as {name}"
 msgstr "以 {name} 身份登录"
 
 #. Text button in the desktop app that shows a code to type into a browser on a different device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:207
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:214
 msgid "Signing in on another device?"
 msgstr "在另一台设备上登录？"
 
@@ -38573,7 +38573,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "使用 {everyoneMention}/{hereMention} 和 {rolesMention}"
 
 #. Accessible label for a known authentication instance option. Preserve {name} and {domain}. Code inserts them.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:28
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:31
 msgid "Use {name} on {domain}"
 msgstr "在 {domain} 上使用 {name}"
 
@@ -38611,7 +38611,7 @@ msgstr "使用专用弹窗，为没有 {readMessageHistoryPermissionLabel} 权�
 msgid "Use a different account"
 msgstr "使用其他账号"
 
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:267
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:274
 msgid "Use a self-hosted instance URL"
 msgstr "使用自托管实例网址"
 
@@ -38813,7 +38813,7 @@ msgid "Use system locale for time format"
 msgstr "使用系统区域设置的时间格式"
 
 #. Accessible label for the official Fluxer instance option.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:24
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:27
 msgid "Use the official Fluxer instance"
 msgstr "使用官方 Fluxer 实例"
 

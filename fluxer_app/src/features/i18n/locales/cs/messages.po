@@ -2076,7 +2076,7 @@ msgstr "Zbývá: {remainingSlotCount}"
 #: src/features/channel/components/CrosspostCommunityCard.tsx:247
 #: src/features/channel/components/InviteEmbed.tsx:250
 #: src/features/channel/components/InviteEmbed.tsx:358
-#: src/features/channel/components/InviteEmbed.tsx:627
+#: src/features/channel/components/InviteEmbed.tsx:629
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, one {člen} few {členové} many {člena} other {členů}}"
 
@@ -3280,8 +3280,8 @@ msgid "Add another custom shortcut"
 msgstr "Přidat další vlastní zkratku"
 
 #. Button label that opens the self-hosted instance URL step.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:33
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:261
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:36
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:268
 msgid "Add another instance"
 msgstr "Přidat další instanci"
 
@@ -9787,7 +9787,7 @@ msgid "Continue"
 msgstr "Pokračovat"
 
 #. Title in the desktop app while it waits for the user to sign in on the browser page it opened.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:177
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:184
 msgid "Continue in your browser"
 msgstr "Pokračovat v prohlížeči"
 
@@ -14962,7 +14962,7 @@ msgid "Enter the PIN for your security key to continue."
 msgstr "Zadejte PIN pro váš bezpečnostní klíč a pokračujte."
 
 #. Title in the desktop app above the code the user types into a browser on another device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:228
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:235
 msgid "Enter this code in your browser"
 msgstr "Zadejte tento kód do prohlížeče"
 
@@ -15369,7 +15369,7 @@ msgstr "Platnost vyprší mezi {earliest} a {latest}"
 msgid "Expires in {remaining}s"
 msgstr "Vyprší za {remaining} s"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:250
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:257
 msgid "Expires in {remainingSeconds}s"
 msgstr "Vyprší za {remainingSeconds} s"
 
@@ -21087,7 +21087,7 @@ msgid "Manage"
 msgstr "Spravovat"
 
 #. Accessible label for the account switcher surface that lists every saved account.
-#: src/features/app/components/floating/UserAreaAccountSwitchMenu.tsx:257
+#: src/features/app/components/floating/UserAreaAccountSwitchMenu.tsx:289
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:35
 msgid "Manage accounts"
 msgstr "Spravovat účty"
@@ -24684,7 +24684,7 @@ msgid "On click"
 msgstr "Při kliknutí"
 
 #. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:236
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:243
 msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
 msgstr "Na jiném zařízení se přihlaste na adrese {signInAddress} a na vyžádání zadejte tento kód."
 
@@ -28368,7 +28368,7 @@ msgid "Remove from group"
 msgstr "Odebrat ze skupiny"
 
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:37
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:40
 msgid "Remove from recent instances"
 msgstr "Odebrat z posledních instancí"
 
@@ -32348,12 +32348,12 @@ msgid "Sign in again as {accountLabel}"
 msgstr "Znovu se přihlaste jako {accountLabel}"
 
 #. Shown in the desktop app while it waits for the browser. instanceName is the server name, such as Fluxer.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:193
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:200
 msgid "Sign in to {instanceName} in your browser and confirm. This app finishes signing in on its own."
 msgstr "Přihlaste se do {instanceName} v prohlížeči a potvrďte. Tato aplikace dokončí přihlášení sama."
 
 #. Shown in the desktop app above the code when the browser cannot return the sign-in automatically. instanceName is the server name, such as Fluxer.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:189
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:196
 msgid "Sign in to {instanceName} in your browser, and check that it shows this code:"
 msgstr "Přihlaste se do {instanceName} ve svém prohlížeči a zkontrolujte, zda se zobrazuje tento kód:"
 
@@ -32502,7 +32502,7 @@ msgid "Signing in as {name}"
 msgstr "Přihlášení jako {name}"
 
 #. Text button in the desktop app that shows a code to type into a browser on a different device.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:207
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:214
 msgid "Signing in on another device?"
 msgstr "Přihlašujete se na jiném zařízení?"
 
@@ -38573,7 +38573,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "Používat {everyoneMention}/{hereMention} a {rolesMention}"
 
 #. Accessible label for a known authentication instance option. Preserve {name} and {domain}. Code inserts them.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:28
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:31
 msgid "Use {name} on {domain}"
 msgstr "Použít {name} na {domain}"
 
@@ -38611,7 +38611,7 @@ msgstr "Použijte speciální okno k nastavení data, od kterého se bude zobraz
 msgid "Use a different account"
 msgstr "Použít jiný účet"
 
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:267
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:274
 msgid "Use a self-hosted instance URL"
 msgstr "Použijte adresu URL instance hostované vámi"
 
@@ -38813,7 +38813,7 @@ msgid "Use system locale for time format"
 msgstr "Použít systémové nastavení pro formát času"
 
 #. Accessible label for the official Fluxer instance option.
-#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:24
+#: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:27
 msgid "Use the official Fluxer instance"
 msgstr "Použít oficiální instanci Fluxeru"
 
