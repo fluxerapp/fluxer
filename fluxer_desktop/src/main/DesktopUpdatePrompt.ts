@@ -45,6 +45,10 @@ async function runUpdateCheck(): Promise<void> {
 		let manualVersion: string | null = null;
 		try {
 			const state = await checkDesktopUpdateNow();
+			if (state.updating === true) {
+				logger.info('A desktop update is already running, leaving it to finish');
+				return;
+			}
 			if (state.available) {
 				await offerDesktopUpdate();
 				return;
