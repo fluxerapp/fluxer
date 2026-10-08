@@ -160,12 +160,7 @@
 	align-items: flex-end;
 	padding: 0 var(--footer-box-inset-inline) var(--user-area-box-inset-block-end);
 	background-color: var(--background-secondary);
-	pointer-events: none;
 	z-index: var(--z-index-elevated-1);
-}
-
-.userAreaWrapper > * {
-	pointer-events: auto;
 }
 
 .guildListItem {
