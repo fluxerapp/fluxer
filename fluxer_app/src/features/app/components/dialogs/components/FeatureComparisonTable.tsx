@@ -139,8 +139,10 @@ export const FeatureComparisonTable = observer(() => {
 				<ComparisonCheckRow
 					key={perk.id}
 					feature={label}
-					restrictedHas={perk.restrictedValue}
-					stockHas={perk.stockValue}
+					restrictedHas={
+						perk.limitKey ? Limits.hasRestrictedFeature(perk.limitKey, perk.restrictedValue) : perk.restrictedValue
+					}
+					stockHas={perk.limitKey ? Limits.hasStockFeature(perk.limitKey, perk.stockValue) : perk.stockValue}
 					data-flx="app.feature-comparison-table.render-perk-row.comparison-check-row"
 				/>
 			);
@@ -157,9 +159,11 @@ export const FeatureComparisonTable = observer(() => {
 			);
 		}
 		if (isTextTierPerk(perk)) {
-			const restrictedLabel =
+			const lowLabel =
 				perkLabels[perk.restrictedValueI18nKey as keyof typeof perkLabels] || perk.restrictedValueI18nKey;
-			const stockLabel = perkLabels[perk.stockValueI18nKey as keyof typeof perkLabels] || perk.stockValueI18nKey;
+			const highLabel = perkLabels[perk.stockValueI18nKey as keyof typeof perkLabels] || perk.stockValueI18nKey;
+			const restrictedLabel = perk.limitKey && Limits.hasRestrictedFeature(perk.limitKey, false) ? highLabel : lowLabel;
+			const stockLabel = !perk.limitKey || Limits.hasStockFeature(perk.limitKey, true) ? highLabel : lowLabel;
 			return (
 				<ComparisonRow
 					key={perk.id}

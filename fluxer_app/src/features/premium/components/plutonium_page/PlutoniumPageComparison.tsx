@@ -127,8 +127,16 @@ function buildRows(locale: string, translate: (descriptor: MessageDescriptor) =>
 				id: perk.id,
 				icon: definition.icon,
 				label: definition.label,
-				free: {kind: 'boolean', value: perk.restrictedValue},
-				premium: {kind: 'boolean', value: perk.stockValue},
+				free: {
+					kind: 'boolean',
+					value: perk.limitKey
+						? Limits.hasRestrictedFeature(perk.limitKey, perk.restrictedValue)
+						: perk.restrictedValue,
+				},
+				premium: {
+					kind: 'boolean',
+					value: perk.limitKey ? Limits.hasStockFeature(perk.limitKey, perk.stockValue) : perk.stockValue,
+				},
 			});
 			continue;
 		}
@@ -142,12 +150,24 @@ function buildRows(locale: string, translate: (descriptor: MessageDescriptor) =>
 			});
 			continue;
 		}
+		const freeHasHighQuality = perk.limitKey ? Limits.hasRestrictedFeature(perk.limitKey, false) : false;
+		const premiumHasHighQuality = perk.limitKey ? Limits.hasStockFeature(perk.limitKey, true) : true;
 		rows.push({
 			id: perk.id,
 			icon: definition.icon,
 			label: definition.label,
-			free: {kind: 'text', value: translate(PERK_VIDEO_QUALITY_FREE_DESCRIPTOR)},
-			premium: {kind: 'text', value: translate(PERK_VIDEO_QUALITY_PREMIUM_DESCRIPTOR)},
+			free: {
+				kind: 'text',
+				value: translate(
+					freeHasHighQuality ? PERK_VIDEO_QUALITY_PREMIUM_DESCRIPTOR : PERK_VIDEO_QUALITY_FREE_DESCRIPTOR,
+				),
+			},
+			premium: {
+				kind: 'text',
+				value: translate(
+					premiumHasHighQuality ? PERK_VIDEO_QUALITY_PREMIUM_DESCRIPTOR : PERK_VIDEO_QUALITY_FREE_DESCRIPTOR,
+				),
+			},
 		});
 	}
 	return rows;
