@@ -76,10 +76,9 @@ import type {
 } from '@fluxer/schema/src/domains/channel/ForumRequestSchemas';
 import type {ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 
-const THREAD_CREATED_MESSAGE_MIN_SOURCE_AGE_MS = 5 * 60 * 1000;
+const THREAD_CREATED_MESSAGE_RECENT_WINDOW = 5;
 
 function slowmodeThreadKey(parentId: ChannelID, userId: UserID): string {
 	return `slowmode-thread:${parentId}:${userId}`;
@@ -159,11 +158,20 @@ export class ThreadCreationService {
 		}
 		const starter = await this.buildStarterEvent(params.viewer, params.user.id, view, params.requestCache);
 		if (starter) events.push(starter);
-		if (Date.now() - snowflakeToDate(source.id).getTime() >= THREAD_CREATED_MESSAGE_MIN_SOURCE_AGE_MS) {
+		if (!(await this.isAmongRecentMessages(parentAuth.channel.id, source.id))) {
 			events.push(await this.createThreadCreatedMessage(parentAuth.channel, view, params.user.id));
 		}
 		await dispatchThreadEvents(this.ctx.gatewayService, view.state.guildId, events);
 		return mapThreadToResponse(view);
+	}
+
+	private async isAmongRecentMessages(channelId: ChannelID, messageId: MessageID): Promise<boolean> {
+		const recent = await this.ctx.channelRepository.messages.listMessages(
+			channelId,
+			undefined,
+			THREAD_CREATED_MESSAGE_RECENT_WINDOW,
+		);
+		return recent.some((message) => message.id === messageId);
 	}
 
 	async authenticateParent(viewer: ThreadViewer, userId: UserID, channelId: ChannelID): Promise<AuthenticatedChannel> {

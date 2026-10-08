@@ -268,25 +268,28 @@ describe('thread routes', () => {
 			expect(member?.flags).toBe(ThreadMemberFlags.HAS_INTERACTED);
 		});
 
-		it('announces threads started from older messages in the parent without moving its last message', async () => {
+		it('announces threads started from messages above the latest five without moving its last message', async () => {
 			const s = await setup();
-			const message = await sendMessage(harness, s.owner.token, s.channelId, 'old news');
-			const now = Date.now();
-			vi.spyOn(Date, 'now').mockReturnValue(now + 6 * 60 * 1000);
+			const pushedUp = await sendMessage(harness, s.owner.token, s.channelId, 'old news');
+			const nearBottom = await sendMessage(harness, s.owner.token, s.channelId, 'recent news');
+			let latest = nearBottom;
+			for (let i = 0; i < 4; i++) latest = await sendMessage(harness, s.owner.token, s.channelId, `filler ${i}`);
 			const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
-			await threadsRequest(harness, s.owner.token)
-				.post(`/channels/${s.channelId}/messages/${message.id}/threads`)
-				.body({name: 'Later'})
-				.expect(201)
-				.execute();
+			for (const message of [nearBottom, pushedUp]) {
+				await threadsRequest(harness, s.owner.token)
+					.post(`/channels/${s.channelId}/messages/${message.id}/threads`)
+					.body({name: message.content})
+					.expect(201)
+					.execute();
+			}
 			const announced = dispatch.mock.calls
 				.map(([params]) => params.data as MessageResponse)
 				.filter((data) => data.type === MessageTypes.THREAD_CREATED);
 			expect(announced).toHaveLength(1);
-			expect(announced[0]).toMatchObject({channel_id: s.channelId, content: 'Later'});
-			expect(announced[0]!.message_reference?.channel_id).toBe(message.id);
+			expect(announced[0]).toMatchObject({channel_id: s.channelId, content: 'old news'});
+			expect(announced[0]!.message_reference?.channel_id).toBe(pushedUp.id);
 			const parent = await repository.findUnique(createChannelID(BigInt(s.channelId)));
-			expect(parent?.lastMessageId?.toString()).toBe(message.id);
+			expect(parent?.lastMessageId?.toString()).toBe(latest.id);
 		});
 
 		it('refuses a second thread on the same message', async () => {
