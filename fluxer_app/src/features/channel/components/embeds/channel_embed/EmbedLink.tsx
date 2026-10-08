@@ -8,6 +8,7 @@ import {
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {SUPPRESS_EMBEDS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
+import {useOpenInBrowserOnMiddleClick} from '@app/features/messaging/hooks/useOpenInBrowserOnMiddleClick';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
@@ -31,6 +32,7 @@ export const EmbedLink: FC<LinkComponentProps> = observer(({url, children, class
 			logger.warn('Invalid URL in embed link:', url);
 		}
 	};
+	const openInBrowser = useOpenInBrowserOnMiddleClick(url);
 	return (
 		<FocusRing data-flx="channel.embeds.embed.link-component.focus-ring">
 			<a
@@ -39,6 +41,7 @@ export const EmbedLink: FC<LinkComponentProps> = observer(({url, children, class
 				rel="noopener noreferrer"
 				target="_blank"
 				onClick={handleClick}
+				onAuxClick={openInBrowser.onAuxClick}
 				data-flx="channel.embeds.embed.link-component.a"
 			>
 				{children}
