@@ -8,6 +8,7 @@ import {
 } from '@electron/main/ModuleManifest';
 import {MODULE_BOOT_ATTEMPT_ROLLBACK_THRESHOLD, type ModuleStore} from '@electron/main/ModuleStore';
 import {compareModuleVersions, type ModuleVersion, parseModuleVersion} from '@electron/main/ModuleVersion';
+import {DESKTOP_RENDERER_MODULE_NAME} from '@fluxer/desktop_ipc/src/ModuleContract';
 
 export const ModuleUpdaterBlockReason = Object.freeze({
 	REQUIRED_MODULE_UNAVAILABLE: 'required-module-unavailable',
@@ -46,19 +47,114 @@ export type ModuleUnreachableLaunchDecision =
 	| {readonly kind: typeof ModuleUnreachableLaunchDecision.LAUNCH}
 	| {readonly kind: typeof ModuleUnreachableLaunchDecision.BLOCK; readonly reason: ModuleUpdaterBlockReason};
 
+export const ServedRendererSource = Object.freeze({
+	BUNDLED: 'bundled',
+	MODULE: 'module',
+	NONE: 'none',
+} as const);
+
+export type ServedRendererSource = (typeof ServedRendererSource)[keyof typeof ServedRendererSource];
+
+export interface ServedModuleSelection {
+	readonly modules: Readonly<Record<string, string>>;
+	readonly renderer: {
+		readonly source: ServedRendererSource;
+		readonly version: string | null;
+		readonly bundledVersion: string | null;
+	};
+}
+
 export class ModuleUpdatePlanner {
 	private readonly store: ModuleStore;
 	private readonly shellVersion: ModuleVersion;
 	private readonly hasOfflineRenderer: boolean;
+	private readonly bundledRendererVersion: ModuleVersion | null;
 
-	public constructor(store: ModuleStore, shellVersion: ModuleVersion, hasOfflineRenderer: boolean) {
+	public constructor(
+		store: ModuleStore,
+		shellVersion: ModuleVersion,
+		hasOfflineRenderer: boolean,
+		bundledRendererVersion: ModuleVersion | null = null,
+	) {
 		this.store = store;
 		this.shellVersion = shellVersion;
 		this.hasOfflineRenderer = hasOfflineRenderer;
+		this.bundledRendererVersion = hasOfflineRenderer ? bundledRendererVersion : null;
 	}
 
 	public hasSomethingToRender(committed: Readonly<Record<string, string>>): boolean {
 		return this.hasOfflineRenderer || Object.keys(committed).length > 0;
+	}
+
+	public hasBundledRenderer(): boolean {
+		return this.bundledRendererVersion != null;
+	}
+
+	public bundleCoversRendererAt(version: ModuleVersion): boolean {
+		return this.bundledRendererVersion != null && compareModuleVersions(version, this.bundledRendererVersion) <= 0;
+	}
+
+	public bundleCoversModule(moduleName: string, manifest: DesktopModuleUpdateManifest): boolean {
+		return moduleName === DESKTOP_RENDERER_MODULE_NAME && this.bundleCoversRendererAt(manifest.buildVersion);
+	}
+
+	private async installedRendererVersion(sha256: string): Promise<ModuleVersion | null> {
+		const installed = await this.store.getInstalledManifest(DESKTOP_RENDERER_MODULE_NAME, sha256);
+		if (installed == null) {
+			return null;
+		}
+		try {
+			return parseModuleVersion(installed.build_version, 'installed renderer build version');
+		} catch {
+			return null;
+		}
+	}
+
+	public async staleRendererModule(): Promise<string | null> {
+		if (this.bundledRendererVersion == null) {
+			return null;
+		}
+		const sha256 = this.store.getCommitted()[DESKTOP_RENDERER_MODULE_NAME];
+		if (sha256 == null) {
+			return null;
+		}
+		const installedVersion = await this.installedRendererVersion(sha256);
+		return installedVersion == null || this.bundleCoversRendererAt(installedVersion) ? sha256 : null;
+	}
+
+	public async selectServedModules(modules: Readonly<Record<string, string>>): Promise<ServedModuleSelection> {
+		const bundledVersion = this.bundledRendererVersion?.source ?? null;
+		const sha256 = modules[DESKTOP_RENDERER_MODULE_NAME];
+		if (sha256 == null) {
+			return {
+				modules,
+				renderer: {
+					source: this.hasOfflineRenderer ? ServedRendererSource.BUNDLED : ServedRendererSource.NONE,
+					version: bundledVersion,
+					bundledVersion,
+				},
+			};
+		}
+		const installedVersion = await this.installedRendererVersion(sha256);
+		if (
+			this.bundledRendererVersion != null &&
+			(installedVersion == null || this.bundleCoversRendererAt(installedVersion))
+		) {
+			const served = {...modules};
+			delete served[DESKTOP_RENDERER_MODULE_NAME];
+			return {
+				modules: served,
+				renderer: {source: ServedRendererSource.BUNDLED, version: bundledVersion, bundledVersion},
+			};
+		}
+		return {
+			modules,
+			renderer: {
+				source: ServedRendererSource.MODULE,
+				version: installedVersion?.source ?? null,
+				bundledVersion,
+			},
+		};
 	}
 
 	public isShellCompatible(entry: DesktopModuleManifestEntry): boolean {
@@ -90,6 +186,9 @@ export class ModuleUpdatePlanner {
 		}
 		const committed = this.store.getCommitted();
 		for (const moduleName of minimum.requiredModules) {
+			if (moduleName === DESKTOP_RENDERER_MODULE_NAME && this.bundleCoversRendererAt(minimum.version)) {
+				continue;
+			}
 			const sha256 = committed[moduleName];
 			if (sha256 == null) {
 				return true;
@@ -124,7 +223,7 @@ export class ModuleUpdatePlanner {
 			if (entry == null) {
 				continue;
 			}
-			if (!this.isShellCompatible(entry)) {
+			if (!this.isShellCompatible(entry) || this.bundleCoversModule(moduleName, manifest)) {
 				await this.retainCommitted(base, moduleName);
 				continue;
 			}
@@ -162,11 +261,37 @@ export class ModuleUpdatePlanner {
 			if (state.rejected[moduleName] === sha256) {
 				continue;
 			}
+			if (moduleName === DESKTOP_RENDERER_MODULE_NAME && (await this.bundleCoversFloor(sha256))) {
+				continue;
+			}
 			if (state.committed[moduleName] !== sha256 || !(await this.isInstalled(moduleName, sha256))) {
 				below.push(moduleName);
 			}
 		}
 		return below;
+	}
+
+	private async bundleCoversFloor(sha256: string): Promise<boolean> {
+		if (this.bundledRendererVersion == null) {
+			return false;
+		}
+		const recorded = this.store.getState().floor_build_version;
+		if (recorded != null) {
+			try {
+				return this.bundleCoversRendererAt(parseModuleVersion(recorded, 'recorded floor build version'));
+			} catch {
+				return false;
+			}
+		}
+		const installed = await this.store.getInstalledManifest(DESKTOP_RENDERER_MODULE_NAME, sha256);
+		if (installed == null) {
+			return true;
+		}
+		try {
+			return this.bundleCoversRendererAt(parseModuleVersion(installed.build_version, 'installed floor build version'));
+		} catch {
+			return false;
+		}
 	}
 
 	public async canLaunchCommittedModules(): Promise<boolean> {
@@ -187,7 +312,10 @@ export class ModuleUpdatePlanner {
 		securityUpdateRequired: boolean,
 	): Promise<ModuleUnreachableLaunchDecision> {
 		const state = this.store.getState();
-		if (state.last_manifest_fetch == null || !this.hasSomethingToRender(state.committed)) {
+		if (
+			(state.last_manifest_fetch == null && !this.hasBundledRenderer()) ||
+			!this.hasSomethingToRender(state.committed)
+		) {
 			return {kind: ModuleUnreachableLaunchDecision.BLOCK, reason: ModuleUpdaterBlockReason.NOTHING_INSTALLED};
 		}
 		if (state.boot_attempt >= MODULE_BOOT_ATTEMPT_ROLLBACK_THRESHOLD) {

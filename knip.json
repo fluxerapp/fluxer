@@ -65,6 +65,7 @@
 				"src/preload/index.ts",
 				"src/preload/LegacyHarvestPreload.ts",
 				"src/main/**/*.test.{ts,mjs}",
+				"scripts/release-check.mjs",
 				"native/*/index.{js,d.ts}",
 				"native/*/loader-diagnostics.cjs",
 				"native/*/*.test.mjs",

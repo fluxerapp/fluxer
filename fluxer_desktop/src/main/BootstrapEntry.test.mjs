@@ -271,11 +271,11 @@ describe('Bootstrap entry point', () => {
 
 	test('a user check works from the first window, a click only after the renderer confirmed its launch', () => {
 		const bootstrap = source.slice(source.indexOf('async function runModuleBootstrap()'));
-		const arm = bootstrap.indexOf(
-			'armDesktopUpdate({check: () => desktopUpdate.check(), start: () => desktopUpdate.start()});',
-		);
+		const arm = bootstrap.indexOf('armDesktopUpdate({');
 		assert.notEqual(arm, -1);
 		assert.ok(arm < bootstrap.indexOf('await launchMainApp(permit, logger);'));
+		assert.match(bootstrap.slice(arm), /const check = await desktopUpdate\.check\(\);/);
+		assert.match(bootstrap.slice(arm), /start: \(\) => desktopUpdate\.start\(\),/);
 		assert.match(bootstrap, /\.finally\(onLaunchSettled\)/);
 		assert.match(bootstrap, /desktopUpdate\.markLaunchSettled\(\);/);
 	});

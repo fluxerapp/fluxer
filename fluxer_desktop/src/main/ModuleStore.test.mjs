@@ -1227,3 +1227,66 @@ describe('ModuleStore boot checks without rehashing', () => {
 		assert.equal(await store.isInstalled('fluxer_renderer', RENDERER_V1.sha256), false);
 	});
 });
+
+describe('ModuleStore beside a renderer bundled in the shell', () => {
+	test('an unreadable state file is set aside and the store starts clean', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		const statePath = path.join(getModuleStoreRoot(userDataPath), MODULE_STATE_FILE_NAME);
+		for (const contents of ['{not json', JSON.stringify({state_version: 1})]) {
+			writeFileSync(statePath, contents);
+
+			const recovered = await openStore(userDataPath);
+
+			assert.equal(recovered.recoveredUnreadableState, `${statePath}.unreadable`);
+			assert.equal(readFileSync(`${statePath}.unreadable`, 'utf8'), contents);
+			assert.deepEqual(recovered.getCommitted(), {});
+			assert.equal(readState(userDataPath).state_version, MODULE_STATE_VERSION);
+		}
+		assert.equal(store.recoveredUnreadableState, null);
+	});
+
+	test('retiring a module drops it from the committed and previous sets so it can be collected', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		const first = await install(store, RENDERER_V1);
+		const second = await install(store, RENDERER_V2);
+		await install(store, GRAMMARS_V1);
+		await store.commit({fluxer_renderer: RENDERER_V1.sha256, fluxer_grammars: GRAMMARS_V1.sha256});
+		await store.commit({fluxer_renderer: RENDERER_V2.sha256, fluxer_grammars: GRAMMARS_V1.sha256});
+
+		assert.equal(await store.retireModule('fluxer_renderer'), true);
+		assert.equal(await store.retireModule('fluxer_renderer'), false);
+
+		assert.deepEqual(readState(userDataPath).committed, {fluxer_grammars: GRAMMARS_V1.sha256});
+		assert.deepEqual(readState(userDataPath).previous, {fluxer_grammars: GRAMMARS_V1.sha256});
+		await markLaunched(store);
+		await store.collectGarbage();
+		assert.equal(existsSync(first.directory), false);
+		assert.equal(existsSync(second.directory), false);
+		assert.equal(await store.isInstalled('fluxer_grammars', GRAMMARS_V1.sha256), true);
+	});
+
+	test('the build version behind the floor survives a reopen and follows each manifest', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		assert.equal(store.getState().floor_build_version, null);
+
+		await store.recordManifestFetch({
+			etag: null,
+			fetchedAt: MANIFEST_FETCHED_AT,
+			manifest: manifestObservation(1, 'c'.repeat(64)),
+			floor: {fluxer_renderer: RENDERER_V1.sha256},
+			floorBuildVersion: SHELL_VERSION,
+		});
+
+		assert.equal((await openStore(userDataPath)).getState().floor_build_version, SHELL_VERSION);
+		await store.recordManifestFetch({
+			etag: null,
+			fetchedAt: MANIFEST_FETCHED_AT,
+			manifest: manifestObservation(2, 'd'.repeat(64)),
+			floor: {},
+		});
+		assert.equal(store.getState().floor_build_version, null);
+	});
+});

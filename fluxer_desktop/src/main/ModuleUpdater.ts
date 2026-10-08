@@ -44,11 +44,12 @@ import {
 	ModuleUnreachableLaunchDecision,
 	ModuleUpdatePlanner,
 	ModuleUpdaterBlockReason,
+	type ServedModuleSelection,
 } from '@electron/main/ModuleUpdatePlanner';
 import {compareModuleVersions, type ModuleVersion, parseModuleVersion} from '@electron/main/ModuleVersion';
 import {resolveDesktopPackageOrigin} from '@electron/main/ShellDownloadFormats';
 import type {DesktopModuleEnsureResult} from '@fluxer/desktop_ipc/src/ModuleContract';
-import {DesktopModuleEnsureStatus} from '@fluxer/desktop_ipc/src/ModuleContract';
+import {DESKTOP_RENDERER_MODULE_NAME, DesktopModuleEnsureStatus} from '@fluxer/desktop_ipc/src/ModuleContract';
 
 const MODULE_UPDATER_BACKOFF_BASE_MS = 1000;
 const MODULE_UPDATER_BACKOFF_CAP_MS = 30000;
@@ -82,6 +83,7 @@ const ModuleUpdaterReportType = Object.freeze({
 	STORAGE_ERROR: 'storage-error',
 	ROLLBACK: 'rollback',
 	ROLLBACK_FLOOR_BYPASS: 'rollback-floor-bypass',
+	BUNDLED_RENDERER_PREFERRED: 'bundled-renderer-preferred',
 	BLOCKED: 'blocked',
 } as const);
 
@@ -97,6 +99,7 @@ const MODULE_UPDATER_REPORT_SAMPLE_RATES: Readonly<Record<ModuleUpdaterReportTyp
 	[ModuleUpdaterReportType.STORAGE_ERROR]: 1,
 	[ModuleUpdaterReportType.ROLLBACK]: 1,
 	[ModuleUpdaterReportType.ROLLBACK_FLOOR_BYPASS]: 1,
+	[ModuleUpdaterReportType.BUNDLED_RENDERER_PREFERRED]: 1,
 	[ModuleUpdaterReportType.BLOCKED]: 1,
 });
 
@@ -198,6 +201,17 @@ function isUpdateServerUnreachable(error: unknown): boolean {
 	return false;
 }
 
+function parseBundledRendererVersion(source: string | null): ModuleVersion | null {
+	if (source == null) {
+		return null;
+	}
+	try {
+		return parseModuleVersion(source, 'bundled renderer version');
+	} catch {
+		return null;
+	}
+}
+
 function defaultSleep(ms: number): Promise<void> {
 	return new Promise((resolve) => {
 		setTimeout(resolve, ms);
@@ -263,6 +277,7 @@ interface ModuleUpdaterOptions {
 	readonly arch?: NodeJS.Architecture;
 	readonly packageOrigin?: string;
 	readonly hasOfflineRenderer?: boolean;
+	readonly bundledRendererVersion?: string | null;
 	readonly forceStartupUpdate?: boolean;
 	readonly selfUpdateShellFirst?: (latestVersion: string, requiredSecurityUpdate: boolean) => Promise<void>;
 	readonly onState?: (state: ModuleUpdaterSplashState) => void;
@@ -319,7 +334,12 @@ export class ModuleUpdater {
 		this.manifestFeed = {releaseChannel, platform: this.platform, arch};
 		const packageOrigin = (options.packageOrigin ?? resolveDesktopPackageOrigin()).replace(/\/+$/u, '');
 		this.packageOrigin = packageOrigin;
-		this.planner = new ModuleUpdatePlanner(this.store, this.shellVersion, this.hasOfflineRenderer);
+		this.planner = new ModuleUpdatePlanner(
+			this.store,
+			this.shellVersion,
+			this.hasOfflineRenderer,
+			parseBundledRendererVersion(options.bundledRendererVersion ?? null),
+		);
 		this.onState = options.onState ?? (() => {});
 		this.reporter = options.report ?? (() => {});
 		this.sleep = options.sleep ?? defaultSleep;
@@ -395,7 +415,11 @@ export class ModuleUpdater {
 	}
 
 	public async run(): Promise<ModuleUpdaterOutcome> {
-		const attempt = await this.store.beginBootAttempt();
+		let attempt = await this.store.beginBootAttempt();
+		await this.backfillFloorBuildVersion();
+		if (await this.retireRendererCoveredByBundle()) {
+			attempt = {...attempt, committed: this.store.getCommitted()};
+		}
 		await this.restoreCachedUpdatePolicy();
 		if (attempt.rolledBack) {
 			this.report({
@@ -562,6 +586,42 @@ export class ModuleUpdater {
 		return {module: moduleName, status: DesktopModuleEnsureStatus.INSTALLED};
 	}
 
+	private async retireRendererCoveredByBundle(): Promise<boolean> {
+		const stale = await this.planner.staleRendererModule();
+		if (stale == null) {
+			return false;
+		}
+		if (!(await this.store.retireModule(DESKTOP_RENDERER_MODULE_NAME))) {
+			return false;
+		}
+		this.report({
+			type: ModuleUpdaterReportType.BUNDLED_RENDERER_PREFERRED,
+			module: DESKTOP_RENDERER_MODULE_NAME,
+			message: `retired installed renderer ${stale} because the renderer bundled with this shell is at least as new`,
+		});
+		return true;
+	}
+
+	private async backfillFloorBuildVersion(): Promise<void> {
+		const state = this.store.getState();
+		const floorSha256 = state.floor[DESKTOP_RENDERER_MODULE_NAME];
+		if (state.floor_build_version != null || floorSha256 == null || !this.planner.hasBundledRenderer()) {
+			return;
+		}
+		try {
+			const document = await this.manifestRepository.readCached();
+			if (document == null) {
+				return;
+			}
+			const manifest = this.manifestRepository.parse(document);
+			if (manifest.modules[DESKTOP_RENDERER_MODULE_NAME]?.sha256 === floorSha256) {
+				await this.store.recordFloorBuildVersion(manifest.buildVersion.source);
+			}
+		} catch (error) {
+			this.reportFailure(error);
+		}
+	}
+
 	private async resolveManifestForEnsure(): Promise<DesktopModuleUpdateManifest> {
 		return this.observeManifest(await this.manifestRepository.resolveMemoizedDocument());
 	}
@@ -623,7 +683,7 @@ export class ModuleUpdater {
 		const wanted: Array<ModulePlanItem> = [];
 		for (const moduleName of Array.from(names).sort()) {
 			const entry = manifest.modules[moduleName];
-			if (entry == null || !planner.isShellCompatible(entry)) {
+			if (entry == null || !planner.isShellCompatible(entry) || planner.bundleCoversModule(moduleName, manifest)) {
 				continue;
 			}
 			if (committed[moduleName] === entry.sha256 && (await planner.isInstalled(moduleName, entry.sha256))) {
@@ -666,6 +726,10 @@ export class ModuleUpdater {
 			installed[item.module] = item.entry.sha256;
 		}
 		return {installed, unresolved};
+	}
+
+	public async selectServedModules(modules: Readonly<Record<string, string>>): Promise<ServedModuleSelection> {
+		return await this.planner.selectServedModules(modules);
 	}
 
 	public async markLaunchSucceeded(attempt: ModuleLaunchAttempt): Promise<void> {
@@ -946,6 +1010,9 @@ export class ModuleUpdater {
 			}
 		} else {
 			for (const moduleName of blockingModuleNames(manifest)) {
+				if (this.planner.bundleCoversModule(moduleName, manifest)) {
+					continue;
+				}
 				floor[moduleName] = manifest.modules[moduleName].sha256;
 			}
 		}
@@ -955,6 +1022,7 @@ export class ModuleUpdater {
 			fetchedAt: new Date(this.now()).toISOString(),
 			manifest: observation,
 			floor,
+			floorBuildVersion: manifest.buildVersion.source,
 			linuxSecurityMinimum,
 			advertised,
 		});
