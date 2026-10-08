@@ -3,6 +3,7 @@
 import {spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {createServer} from 'node:net';
+import {Config} from '@app/api/Config';
 import type {CassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import type {PreparedQuery} from '@app/api/database/CassandraTypes';
@@ -220,6 +221,55 @@ describe('InstanceConfigRepository', () => {
 		const config = await repository.getAppPublicConfig();
 		expect(config.setup.configured).toBe(false);
 		expect(config.branding.product_name).toBe('Kept');
+	});
+
+	it('stores uploaded branding assets as references and resolves them against the current media endpoint', async () => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
+		const media = Config.endpoints.media;
+		const foreign = 'https://cdn.example.com/favicon.ico';
+
+		await repository.setAppPublicConfig({
+			branding: {favicon_url: `${media}/branding/0/0123abcd.png`, logo_url: foreign},
+		});
+
+		const stored = JSON.parse((await repository.getConfig(APP_PUBLIC_CONFIG_KEY)) ?? '{}');
+		expect(stored.branding.favicon_url).toBe('branding/0/0123abcd.png');
+		expect(stored.branding.logo_url).toBe(foreign);
+		Config.endpoints.media = 'https://media.moved.example';
+		try {
+			const config = await repository.getAppPublicConfig();
+			expect(config.branding.favicon_url).toBe('https://media.moved.example/branding/0/0123abcd.png');
+			expect(config.branding.logo_url).toBe(foreign);
+		} finally {
+			Config.endpoints.media = media;
+		}
+	});
+
+	it('normalises legacy branding URLs from an old domain only when the object is ours', async () => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
+		await repository.setConfig(
+			APP_PUBLIC_CONFIG_KEY,
+			JSON.stringify({
+				branding: {
+					favicon_url: 'https://old.example/media/branding/0/a_0123abcd.gif',
+					icon_url: 'https://other.example/branding/0/89abcdef.png',
+				},
+			}),
+		);
+		const storage = {
+			getObjectMetadata: vi.fn(async (_bucket: string, key: string) =>
+				key === 'branding/0/0123abcd' ? {contentLength: 1, contentType: 'image/gif'} : null,
+			),
+		};
+
+		expect(await repository.normalizeStoredBrandingAssets(storage as never)).toBe(1);
+		expect(await repository.normalizeStoredBrandingAssets(storage as never)).toBe(0);
+
+		const config = await repository.getAppPublicConfig();
+		expect(config.branding.favicon_url).toBe(`${Config.endpoints.media}/branding/0/a_0123abcd.gif`);
+		expect(config.branding.icon_url).toBe('https://other.example/branding/0/89abcdef.png');
 	});
 
 	it('keeps valid stored instance policy flags when one field is invalid', async () => {

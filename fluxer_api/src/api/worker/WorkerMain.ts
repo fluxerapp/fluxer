@@ -294,6 +294,14 @@ export async function startWorkerMain(): Promise<void> {
 		await startContentBlocklistCaches({kvClient: dependencies.kvClient, storageService: dependencies.storageService});
 		Logger.info('Content blocklist caches initialised for worker backend');
 		await queueBlocklistFeedStartupJobs(dependencies.kvClient, workerService, Config.blocklistFeeds.enabled);
+		try {
+			const normalized = await getInstanceConfigRepository().normalizeStoredBrandingAssets(dependencies.storageService);
+			if (normalized > 0) {
+				Logger.info({normalized}, 'Normalised stored instance branding assets to references');
+			}
+		} catch (error) {
+			Logger.warn({err: error}, 'Failed to normalise stored instance branding assets');
+		}
 		setActivityProcessChannel('worker');
 		await startActivityEvents({
 			publisher: jetStreamActivityPublisher(jsConnectionManager.getJetStreamClient()),
