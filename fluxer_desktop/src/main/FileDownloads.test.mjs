@@ -29,6 +29,7 @@ function transform(name) {
 	};
 }
 
+const happyEyeballsSource = transform('DesktopHappyEyeballs.ts');
 const outboundSource = transform('DesktopOutboundHTTP.ts');
 const fileDownloadsSource = transform('FileDownloads.ts');
 
@@ -101,6 +102,15 @@ async function loadFileDownloads({registerOrigin = true} = {}) {
 		require: (specifier) => stubs[specifier] ?? require(specifier),
 	};
 	const context = vm.createContext(sandbox);
+
+	const happyEyeballsModule = {exports: {}};
+	const happyEyeballsContext = vm.createContext({
+		...sandbox,
+		exports: happyEyeballsModule.exports,
+		module: happyEyeballsModule,
+	});
+	vm.runInContext(happyEyeballsSource.code, happyEyeballsContext, {filename: happyEyeballsSource.path});
+	stubs['@electron/main/DesktopHappyEyeballs'] = happyEyeballsModule.exports;
 
 	const outboundModule = {exports: {}};
 	sandbox.module = outboundModule;

@@ -8,6 +8,7 @@ import {isIPv4, isIPv6, type LookupFunction} from 'node:net';
 import {Readable, Transform} from 'node:stream';
 import type {ReadableStream as NodeReadableStream} from 'node:stream/web';
 import {createChildLogger} from '@electron/common/Logger';
+import {HappyEyeballsHttpAgent, HappyEyeballsHttpsAgent} from '@electron/main/DesktopHappyEyeballs';
 import {
 	type DesktopProxyResolver,
 	type DesktopSessionHTTPSender,
@@ -87,11 +88,6 @@ export const DesktopOriginTrust = Object.freeze({
 } as const);
 
 export type DesktopOriginTrust = (typeof DesktopOriginTrust)[keyof typeof DesktopOriginTrust];
-
-const HAPPY_EYEBALLS_CONNECT_OPTIONS = Object.freeze({
-	autoSelectFamily: true,
-	autoSelectFamilyAttemptTimeout: 250,
-});
 
 interface PinnedAddress {
 	readonly address: string;
@@ -710,9 +706,12 @@ interface DesktopProxiedSend {
 }
 
 export class DesktopOutboundHTTP {
-	private readonly httpAgent = new http.Agent({keepAlive: true, maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS});
+	private readonly httpAgent = new HappyEyeballsHttpAgent({
+		keepAlive: true,
+		maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS,
+	});
 	private readonly httpsAgent: https.Agent;
-	private readonly originRequestHttpAgent = new http.Agent({
+	private readonly originRequestHttpAgent = new HappyEyeballsHttpAgent({
 		keepAlive: true,
 		maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_IN_FLIGHT_PER_SERVICE,
 	});
@@ -735,8 +734,12 @@ export class DesktopOutboundHTTP {
 		this.sendThroughSession = options.sendThroughSession ?? sendThroughDesktopSession;
 		const certificates = options.trustedCertificates ?? resolveDesktopTrustedCertificates();
 		const trust = certificates.length > 0 ? {ca: [...certificates]} : {};
-		this.httpsAgent = new https.Agent({keepAlive: true, maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS, ...trust});
-		this.originRequestHttpsAgent = new https.Agent({
+		this.httpsAgent = new HappyEyeballsHttpsAgent({
+			keepAlive: true,
+			maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_SOCKETS,
+			...trust,
+		});
+		this.originRequestHttpsAgent = new HappyEyeballsHttpsAgent({
 			keepAlive: true,
 			maxSockets: DESKTOP_OUTBOUND_HTTP_MAX_IN_FLIGHT_PER_SERVICE,
 			...trust,
@@ -1074,7 +1077,6 @@ export class DesktopOutboundHTTP {
 			const clientRequest = transport.request(request.url, {
 				agent: secure ? this.httpsAgent : this.httpAgent,
 				lookup: createPinnedHostLookup(request.url.hostname, pinned),
-				...HAPPY_EYEBALLS_CONNECT_OPTIONS,
 				method: 'GET',
 			});
 			const deadline = setTimeout(() => {
@@ -1291,7 +1293,6 @@ export class DesktopOutboundHTTP {
 					agent: target.protocol === 'https:' ? this.originRequestHttpsAgent : this.originRequestHttpAgent,
 					headers: requestHeaders(request.headers),
 					lookup: createPinnedHostLookup(target.hostname, binding.addresses),
-					...HAPPY_EYEBALLS_CONNECT_OPTIONS,
 					method: request.method,
 				});
 				active = clientRequest;
