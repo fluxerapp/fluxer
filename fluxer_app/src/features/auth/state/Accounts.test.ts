@@ -36,7 +36,12 @@ const mocks = vi.hoisted(() => ({
 	retireForAccountTransition: vi.fn<(reason: string) => Promise<void>>(() => Promise.resolve()),
 	gatewayLogout: vi.fn<() => void>(),
 	sendInvisiblePresence: vi.fn<() => void>(),
-	replaceWith: vi.fn<(path: string) => void>(),
+	replaceWith: vi.fn<(path: string) => void>((path) => {
+		mocks.currentPath = path;
+		mocks.commitRouterPath(path);
+	}),
+	readRouterPath: (): string => '',
+	commitRouterPath: (_path: string): void => undefined,
 	abandonUnreachableLastLocation: vi.fn<() => void>(),
 	currentPath: '',
 	lastLocation: null as string | null,
@@ -79,6 +84,20 @@ vi.mock('@app/features/navigation/utils/RouterUtils', () => ({
 	getHistory: () => null,
 	history: null,
 }));
+
+vi.mock('@app/features/navigation/state/Navigation', async () => {
+	const {observable, runInAction} = await import('mobx');
+	const routerPath = observable.box('');
+	mocks.readRouterPath = () => routerPath.get();
+	mocks.commitRouterPath = (path) => runInAction(() => routerPath.set(path));
+	return {
+		default: {
+			get pathname() {
+				return mocks.readRouterPath();
+			},
+		},
+	};
+});
 
 vi.mock('@app/features/ui/state/Location', () => ({
 	default: {getLastLocation: () => mocks.lastLocation, saveLocation: mocks.saveLocation},
@@ -203,9 +222,11 @@ function gatewayOutage(accountKey: string): InstanceType<typeof ForegroundGatewa
 
 beforeEach(async () => {
 	mocks.currentPath = '';
+	mocks.commitRouterPath('');
 	mocks.lastLocation = null;
 	mocks.replaceWith.mockImplementation((path) => {
 		mocks.currentPath = path;
+		mocks.commitRouterPath(path);
 	});
 	mocks.foregroundAccountKey = null;
 	mocks.hydrateForegroundStores(null);
@@ -490,9 +511,11 @@ describe('Accounts view handover between accounts that share a guild', () => {
 		mocks.currentPath = GENERAL_ROUTE;
 		mocks.lastLocation = GENERAL_ROUTE;
 		runInAction(() => routedPath.set(GENERAL_ROUTE));
+		mocks.commitRouterPath(GENERAL_ROUTE);
 		mocks.replaceWith.mockImplementation((path) => {
 			mocks.currentPath = path;
 			runInAction(() => routedPath.set(path));
+			mocks.commitRouterPath(path);
 			redirectUnknownSharedGuildChannel(path);
 		});
 		mocks.saveLocation.mockImplementation((path) => {
@@ -579,6 +602,36 @@ describe('Accounts view handover between accounts that share a guild', () => {
 			{accountKey: accountB, path: PRIVATE_ROUTE, hydrated: accountB, live: true},
 		]);
 		expect(rendered.filter((entry) => !entry.live).every((entry) => entry.path === GENERAL_ROUTE)).toBe(true);
+	});
+
+	test('the target view stays held until the router commits the target route', async () => {
+		mocks.replaceWith.mockImplementation((path) => {
+			mocks.currentPath = path;
+			setTimeout(() => {
+				runInAction(() => routedPath.set(path));
+				mocks.commitRouterPath(path);
+			}, 0);
+		});
+		const rendered: Array<{accountKey: string | null; path: string; live: boolean}> = [];
+		const ViewRecorder = observer(() => {
+			rendered.push({accountKey: SessionManager.currentAccountKey, path: routedPath.get(), live: Accounts.isViewLive});
+			return null;
+		});
+		const container = document.createElement('div');
+		const root = createRoot(container);
+		(globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true;
+		act(() => root.render(createElement(ViewRecorder)));
+		disposers.push(() => act(() => root.unmount()));
+
+		await act(async () => {
+			await Accounts.switchToAccount(accountB);
+			await new Promise((resolve) => setTimeout(resolve, 10));
+		});
+
+		expect(
+			rendered.filter((entry) => entry.live && entry.accountKey === accountB && entry.path !== PRIVATE_ROUTE),
+		).toEqual([]);
+		expect(rendered.at(-1)).toEqual({accountKey: accountB, path: PRIVATE_ROUTE, live: true});
 	});
 
 	test('the target route is in place in the same tick as its state, before the gateway handshake settles', async () => {

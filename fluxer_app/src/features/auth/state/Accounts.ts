@@ -17,6 +17,7 @@ import {getAccountKey, parseAccountStorageKey} from '@app/features/auth/state/Ac
 import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import {ForegroundGatewayConnectionRecoverableError} from '@app/features/gateway/transport/ForegroundGatewayConnectionFailure';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import Navigation from '@app/features/navigation/state/Navigation';
 import {abandonUnreachableLastLocation} from '@app/features/navigation/utils/ChannelRouteReachability';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
@@ -103,7 +104,10 @@ interface AccountReplacementCommitRequest {
 
 type AccountViewReplacement =
 	| {readonly kind: 'activation'; readonly redirectPath: string | null}
-	| {readonly kind: 'rollback'; readonly previousRoute: string};
+	| {readonly kind: 'rollback'; readonly previousRoute: string}
+	| {readonly kind: 'navigating'; readonly stalePath: string};
+
+const VIEW_NAVIGATION_COMMIT_TIMEOUT_MS = 2000;
 
 type AccountActivationOutcome =
 	| {readonly kind: 'ready'}
@@ -478,7 +482,9 @@ class Accounts {
 			throw activationError;
 		} finally {
 			stopAwaitingLiveView();
-			this.viewReplacement = null;
+			if (this.viewReplacement?.kind !== 'navigating') {
+				this.viewReplacement = null;
+			}
 		}
 	}
 
@@ -612,17 +618,44 @@ class Accounts {
 
 	private revealReplacementView(): void {
 		const replacement = this.viewReplacement;
-		if (replacement === null) {
+		if (replacement === null || replacement.kind === 'navigating') {
 			return;
 		}
 		const path = this.resolveReplacementViewPath(replacement);
-		if (path !== null && path !== RouterUtils.getCurrentPath()) {
-			RouterUtils.replaceWith(path);
+		const stalePath = Navigation.pathname;
+		if (path === null || path === RouterUtils.getCurrentPath()) {
+			this.viewReplacement = null;
+			return;
 		}
-		this.viewReplacement = null;
+		RouterUtils.replaceWith(path);
+		this.holdViewUntilNavigationCommits(stalePath);
 	}
 
-	private resolveReplacementViewPath(replacement: AccountViewReplacement): string | null {
+	private holdViewUntilNavigationCommits(stalePath: string): void {
+		if (Navigation.pathname !== stalePath) {
+			this.viewReplacement = null;
+			return;
+		}
+		const marker: AccountViewReplacement = {kind: 'navigating', stalePath};
+		this.viewReplacement = marker;
+		const release = () => {
+			if (this.viewReplacement === marker) {
+				this.viewReplacement = null;
+			}
+		};
+		const timeout = setTimeout(release, VIEW_NAVIGATION_COMMIT_TIMEOUT_MS);
+		when(
+			() => this.viewReplacement !== marker || Navigation.pathname !== stalePath,
+			() => {
+				clearTimeout(timeout);
+				release();
+			},
+		);
+	}
+
+	private resolveReplacementViewPath(
+		replacement: Exclude<AccountViewReplacement, {readonly kind: 'navigating'}>,
+	): string | null {
 		if (replacement.kind === 'rollback') {
 			return replacement.previousRoute === '' ? null : replacement.previousRoute;
 		}
