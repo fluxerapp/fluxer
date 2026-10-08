@@ -591,6 +591,16 @@ jobs:
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step build_app_linux
 
+      - name: Verify the packaged shell boots its bundled renderer (Linux)
+        if: matrix.platform == 'linux' && matrix.arch == 'x64'
+        working-directory: ${{ env.WORKDIR }}/fluxer_desktop
+        env:
+          BUILD_CHANNEL: ${{ env.BUILD_CHANNEL }}
+          BUILD_VERSION: ${{ env.VERSION }}
+        run: >-
+          cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
+          --step verify_bundled_renderer_linux
+
       - name: Verify signed Windows artifacts
         if: matrix.platform == 'windows'
         working-directory: ${{ env.WORKDIR }}/fluxer_desktop

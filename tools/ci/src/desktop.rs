@@ -143,6 +143,7 @@ enum DesktopStep {
     SplitModules,
     PackModules,
     PruneShellRenderer,
+    VerifyBundledRendererLinux,
     BuildElectronMain,
     InstallVelopackCli,
     BuildAppMacos,
@@ -254,6 +255,7 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         DesktopStep::SplitModules => split_modules_step(),
         DesktopStep::PackModules => pack_modules_step(),
         DesktopStep::PruneShellRenderer => prune_shell_renderer_step(),
+        DesktopStep::VerifyBundledRendererLinux => verify_bundled_renderer_linux_step(),
         DesktopStep::BuildElectronMain => build_electron_main_step(),
         DesktopStep::InstallVelopackCli => install_velopack_cli_step(),
         DesktopStep::BuildAppMacos => build_app_step(DesktopBuildPlatform::Macos),
@@ -828,6 +830,7 @@ DPkg::Lock::Timeout "120";
         "libclang-dev",
         "clang",
         "libpulse-dev",
+        "xvfb",
     ])?;
     install_linux_pipewire_headers().await?;
     install_linux_libfido2().await?;
@@ -1945,6 +1948,42 @@ fn prune_shell_renderer_step() -> Result<()> {
         "Pruned {total_files} on-demand module file(s), {total_bytes} bytes from {}, the shell bundles renderer {bundled_version} in {} file(s)",
         renderer_dir.display(),
         count_files(&renderer_dir)?
+    );
+    Ok(())
+}
+
+fn verify_bundled_renderer_linux_step() -> Result<()> {
+    let channel = require_env("BUILD_CHANNEL")?;
+    let version = require_env("BUILD_VERSION")?;
+    let dist = Path::new("dist-electron");
+    let unpacked = sorted_child_directories(dist)?
+        .into_iter()
+        .find(|entry| {
+            file_name_string(entry)
+                .is_ok_and(|name| name.starts_with("linux") && name.ends_with("unpacked"))
+        })
+        .with_context(|| format!("No unpacked Linux app found in {}", dist.display()))?;
+    run_command(
+        CommandSpec::new("xvfb-run")
+            .args(["-a", "node", "scripts/release-check.mjs", "--app"])
+            .arg(unpacked.as_os_str())
+            .args([
+                "--channel",
+                channel.as_str(),
+                "--expect-renderer",
+                version.as_str(),
+                "--expect-source",
+                "bundled",
+                "--package-origin",
+                "http://127.0.0.1:9",
+                "--app-arg=--no-sandbox",
+                "--app-arg=--disable-gpu",
+                "--timeout-seconds",
+                "180",
+            ]),
+    )?;
+    println!(
+        "The packaged {channel} shell {version} boots its bundled renderer with no package feed"
     );
     Ok(())
 }
