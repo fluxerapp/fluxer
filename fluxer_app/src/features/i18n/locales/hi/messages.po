@@ -1573,7 +1573,7 @@ msgid "{imageCount, plural, one {# image} other {# images}}, {videoCount, plural
 msgstr "{imageCount, plural, one {# इमेज} other {# इमेज}}, {videoCount, plural, one {# वीडियो} other {# वीडियो}}"
 
 #. Explanation shown when the selected instance advertises no web app endpoint. Instance name is interpolated.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:76
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:61
 msgid "{instanceName} does not publish a web address, so sign-in cannot be handed to a browser."
 msgstr "{instanceName} कोई वेब पता प्रकाशित नहीं करता है, इसलिए साइन-इन को ब्राउज़र को नहीं सौंपा जा सकता है।"
 
@@ -2776,14 +2776,6 @@ msgstr "एक रिच एम्बेड या लिंक प्रीव�
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:191
 msgid "A separate profile for each community"
 msgstr "हर समुदाय के लिए एक अलग प्रोफ़ाइल"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:164
-msgid "A sign-in request was made for your account. Only approve if you initiated it."
-msgstr "आपके अकाउंट के लिए साइन-इन का अनुरोध किया गया था। मंज़ूरी तभी दें जब यह अनुरोध आपने किया हो।"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:162
-msgid "A sign-in request was made from the following device. Only approve if you recognize it."
-msgstr "नीचे दिए गए डिवाइस से साइन-इन का अनुरोध किया गया था। मंज़ूरी तभी दें जब आप इसे पहचानते हों।"
 
 #. Description for has:sticker. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:51
@@ -4810,10 +4802,6 @@ msgstr "सभी कम्युनिटी पर लागू करें"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
 msgid "Approval required"
 msgstr "मंज़ूरी ज़रूरी"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:206
-msgid "Approve"
-msgstr "स्वीकृत करें"
 
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:101
@@ -7873,6 +7861,11 @@ msgstr "एक्सेस जाँचा जा रहा है..."
 msgid "Checking screen recording permission..."
 msgstr "स्क्रीन रिकॉर्डिंग अनुमति की जाँच की जा रही है..."
 
+#. Title while the browser looks up the sign-in request from the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:224
+msgid "Checking the sign-in request…"
+msgstr "साइन-इन अनुरोध की जाँच हो रही है…"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
 msgid "Checkout"
@@ -8847,6 +8840,11 @@ msgstr "कोड ब्लॉक"
 msgid "Code expired"
 msgstr "कोड की समय-सीमा समाप्त हो गई"
 
+#. Label of the field in the browser where the user types the 12-character code shown in the desktop or mobile app. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:28
+msgid "Code from the {productName} app"
+msgstr "{productName} ऐप से कोड"
+
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Success toast on the verification step of the DSA report flow after resending the email verification code.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
@@ -9348,7 +9346,6 @@ msgstr "अपने {premiumProductName} बैज को दूसरे य�
 
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:256
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:322
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:216
 msgid "Completing sign-in…"
 msgstr "साइन-इन पूरा हो रहा है…"
 
@@ -9782,13 +9779,17 @@ msgstr "कॉन्टेक्स्ट मेन्यू को लेफ्
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:77
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:36
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:99
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:726
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:413
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
 msgstr "जारी रखें"
+
+#. Title in the desktop app while it waits for the user to sign in on the browser page it opened.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:177
+msgid "Continue in your browser"
+msgstr "अपने ब्राउज़र में जारी रखें"
 
 #. Button in the gift time confirmation that proceeds to subscription checkout.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
@@ -10437,7 +10438,7 @@ msgid "Couldn't close DM"
 msgstr "DM बंद नहीं कर पाए"
 
 #. Desktop handoff flow error shown when finalizing the sign-in fails after a valid code.
-#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:21
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:34
 msgid "Couldn't complete sign-in. Try again."
 msgstr "साइन-इन पूरा नहीं हो सका। फिर से कोशिश करें।"
 
@@ -10831,6 +10832,11 @@ msgstr "{blueskyProviderName} ऑथराइज़ेशन शुरू नह
 msgid "Couldn't start checkout"
 msgstr "चेकआउट शुरू नहीं किया जा सका"
 
+#. Shown in the desktop app when the browser sign-in request could not be created.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:66
+msgid "Couldn't start signing in with your browser."
+msgstr "आपके ब्राउज़र से साइन इन शुरू नहीं हो सका।"
+
 #. Toast error shown when creating a new account connection fails.
 #: src/features/connection/commands/ConnectionCommands.ts:27
 msgid "Couldn't start the connection"
@@ -10942,7 +10948,7 @@ msgid "Couldn't upload banner"
 msgstr "बैनर अपलोड नहीं किया जा सका"
 
 #. Desktop handoff flow error shown when verifying the pairing code fails for an unexpected reason.
-#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:17
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:30
 msgid "Couldn't verify that code. Try again."
 msgstr "उस कोड को सत्यापित नहीं किया जा सका। फिर से कोशिश करें।"
 
@@ -12503,7 +12509,6 @@ msgstr "सघन लेआउट"
 
 #. Short label in the settings dialog permission components. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/shared/PermissionComponents.tsx:16
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:203
 msgid "Deny"
 msgstr "अस्वीकार करें"
 
@@ -14910,14 +14915,15 @@ msgstr "अपने ऑथेंटिकेटर ऐप से {digitCount} �
 msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "अपने ऑथेंटिकेटर ऐप से {digitCount} अंकों वाला कोड डालें।"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:108
-msgid "Enter the code"
-msgstr "कोड डालें"
-
 #. Inline validation error on the verification step of the DSA report flow when the code field is empty.
 #: src/features/moderation/components/pages/ReportPage.tsx:74
 msgid "Enter the code before continuing."
 msgstr "जारी रखने से पहले कोड डालें।"
+
+#. Title of the browser page where the user types the 12-character code the app shows under Signing in on another device. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:182
+msgid "Enter the code from the {PRODUCT_NAME} app"
+msgstr "{PRODUCT_NAME} ऐप से कोड दर्ज करें"
 
 #. Body text in the authentication sudo verification modal. Keep the tone plain and specific.
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:56
@@ -14932,10 +14938,6 @@ msgstr "आपके मौजूदा ईमेल पर भेजा गय�
 #: src/features/user/components/modals/PasswordChangeModal.tsx:165
 msgid "Enter the code sent to your email address."
 msgstr "आपके ईमेल पते पर भेजा गया कोड डालें।"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:111
-msgid "Enter the code shown in the app to continue."
-msgstr "जारी रखने के लिए ऐप में दिखाया गया कोड डालें।"
 
 #: src/features/user/components/modals/BouncedEmailChangeModal.tsx:157
 #: src/features/user/components/modals/EmailChangeModal.tsx:244
@@ -14958,6 +14960,11 @@ msgstr "वह नया ईमेल डालें जिसका आप उ
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:29
 msgid "Enter the PIN for your security key to continue."
 msgstr "जारी रखने के लिए अपनी सुरक्षा कुंजी का पिन डालें।"
+
+#. Title in the desktop app above the code the user types into a browser on another device.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:228
+msgid "Enter this code in your browser"
+msgstr "अपने ब्राउज़र में यह कोड दर्ज करें"
 
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:132
 msgid "Enter this code in your browser to complete sign-in."
@@ -15362,7 +15369,7 @@ msgstr "{earliest} और {latest} के बीच समाप्त होग
 msgid "Expires in {remaining}s"
 msgstr "{remaining} सेकंड में समाप्त होगा"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:374
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:250
 msgid "Expires in {remainingSeconds}s"
 msgstr "{remainingSeconds}s में समाप्त हो रहा है"
 
@@ -16165,7 +16172,7 @@ msgid "Fluxer"
 msgstr "Fluxer"
 
 #. Status shown when browser sign-in status polling gives up after repeated failures.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:72
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:57
 msgid "Fluxer stopped checking whether the browser approved this sign-in. It didn't lose your code."
 msgstr "Fluxer ने यह जांचना बंद कर दिया कि ब्राउज़र ने इस साइन-इन को मंजूरी दी है या नहीं। इसने आपका कोड नहीं खोया है।"
 
@@ -16952,8 +16959,6 @@ msgstr "शेयर करने लायक लिंक जनरेट क�
 msgid "Generate invite link"
 msgstr "इनवाइट लिंक जनरेट करें"
 
-#. Button label that replaces an expired browser sign-in code with a fresh one.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:64
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:117
 msgid "Generate new code"
 msgstr "नया कोड जनरेट करें"
@@ -17347,6 +17352,16 @@ msgstr "वापस जाएं और मान्य ईमेल पता 
 #: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:52
 msgid "Go back to {productName} to continue."
 msgstr "जारी रखने के लिए {productName} पर वापस जाएँ।"
+
+#. Shown after approving a sign-in for an app on another device, which signs in by itself shortly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
+msgid "Go back to the {PRODUCT_NAME} app. It finishes signing in on its own."
+msgstr "{PRODUCT_NAME} ऐप पर वापस जाएं। यह अपने आप साइन इन हो जाएगा।"
+
+#. Shown after approving, when the browser has already handed the sign-in back to the desktop app. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:288
+msgid "Go back to the {PRODUCT_NAME} app. You can close this tab."
+msgstr "{PRODUCT_NAME} ऐप पर वापस जाएं। आप इस टैब को बंद कर सकते हैं।"
 
 #. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:89
@@ -19295,11 +19310,6 @@ msgstr "अमान्य JSON। ऊपर दिए गए यूआरएल
 msgid "Invalid or expired code"
 msgstr "कोड अमान्य है या उसकी समय-सीमा समाप्त हो चुकी है"
 
-#. Desktop handoff flow error shown when the entered pairing code is invalid or expired.
-#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:13
-msgid "Invalid or expired code. Try again."
-msgstr "कोड अमान्य है या उसकी समय-सीमा समाप्त हो चुकी है। फिर से कोशिश करें।"
-
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
 msgid "Invalid redirect_uri"
@@ -20876,7 +20886,7 @@ msgstr "स्थानीय समय फ़ॉर्मैट"
 msgid "Localization"
 msgstr "लोकलाइज़ेशन"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:192
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:152
 msgid "Location"
 msgstr "जगह"
@@ -21033,6 +21043,11 @@ msgstr "क्या आप {userName} को ग्रुप का माल�
 #: src/features/ui/action_menu/UserContextMenu.tsx:117
 msgid "Make group owner"
 msgstr "ग्रुप का मालिक बनाएं"
+
+#. Shown above the code on the browser approval page when the app cannot be signed in automatically. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:253
+msgid "Make sure this code matches the one in the {PRODUCT_NAME} app."
+msgstr "सुनिश्चित करें कि यह कोड {PRODUCT_NAME} ऐप में मौजूद कोड से मेल खाता है।"
 
 #. Setup wizard branding step title.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:166
@@ -24668,6 +24683,11 @@ msgstr "<0>{listPriceEffectiveDate}</0> को आपकी सदस्यत�
 msgid "On click"
 msgstr "क्लिक करने पर"
 
+#. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:236
+msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
+msgstr "अपने दूसरे डिवाइस पर, {signInAddress} पर साइन इन करें और पूछे जाने पर यह कोड दर्ज करें।"
+
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:715
 msgid "Once deleted, the application and its credentials are permanently removed."
 msgstr "एक बार डिलीट होने के बाद, ऐप्लिकेशन और उसके क्रेडेंशियल हमेशा के लिए हटा दिए जाते हैं।"
@@ -24732,6 +24752,11 @@ msgstr "सिर्फ़ @उल्लेख"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:119
 msgid "Only applies on wide screens."
 msgstr "केवल चौड़ी स्क्रीन पर लागू होता है।"
+
+#. Warning under the title of the browser approval page, so people do not approve a sign-in someone else started.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:245
+msgid "Only continue if you started this sign-in on a device you control."
+msgstr "तभी जारी रखें यदि आपने यह साइन-इन उस डिवाइस पर शुरू किया है जिसे आप नियंत्रित करते हैं।"
 
 #. Body copy in the mature content check modal.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:32
@@ -24921,6 +24946,11 @@ msgstr "{landmarkName} खोलें"
 msgid "Open {premiumProductFullName}"
 msgstr "{premiumProductFullName} खोलें"
 
+#. Button on the browser page after approving that opens the desktop app again if it did not come to the front. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:304
+msgid "Open {PRODUCT_NAME}"
+msgstr "{PRODUCT_NAME} खोलें"
+
 #. Button label that opens the desktop app. productName is the app name.
 #. Button that hands SSO sign-in back to the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:47
@@ -25011,11 +25041,14 @@ msgstr "बैनर विकल्प खोलें"
 msgid "Open bookmarks"
 msgstr "बुकमार्क खोलें"
 
-#. Button label that opens the browser sign-in handoff page.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:56
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:184
 msgid "Open browser"
 msgstr "ब्राउज़र खोलें"
+
+#. Button in the desktop app that reopens the browser sign-in page while the app waits for the browser.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:53
+msgid "Open browser again"
+msgstr "ब्राउज़र फिर से खोलें"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:209
@@ -25392,10 +25425,6 @@ msgstr "वॉइस और वीडियो सेटिंग्स खो�
 msgid "Open with {accountName} on {instanceName}"
 msgstr "{accountName} पर {instanceName} के साथ खोलें"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:414
-msgid "Open your browser to finish signing in."
-msgstr "साइन इन पूरा करने के लिए अपना ब्राउज़र खोलें।"
-
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:137
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "अपना ब्राउज़र खोलें, साइन इन करें, फिर अपना अकाउंट लिंक करने के लिए नीचे दिया गया कोड डालें।"
@@ -25421,7 +25450,7 @@ msgstr "सदस्य पेज खोलता है। खोलने क�
 
 #. Short label in the language tab. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:182
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:99
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:79
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:110
 msgid "Operating system"
@@ -26439,7 +26468,7 @@ msgstr "प्लान"
 msgid "Plans, perks, gifts and your subscription all live on one page."
 msgstr "योजनाएं, लाभ, उपहार और आपकी सदस्यता - सब एक ही पेज पर उपलब्ध हैं।"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:172
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:89
 msgid "Platform"
 msgstr "प्लेटफ़ॉर्म"
 
@@ -31859,11 +31888,6 @@ msgstr "चैट दिखाएं"
 msgid "Show chat with {count, plural, one {# unread message} other {# unread messages}}"
 msgstr "{count, plural, one {# अपठित मैसेज के साथ चैट दिखाएं} other {# अपठित मैसेज के साथ चैट दिखाएं}}"
 
-#. Button label that opens the manual browser handoff code fallback.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:60
-msgid "Show code"
-msgstr "कोड दिखाएँ"
-
 #. Developer voice status menu option for displaying the voice connection identifier.
 #: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:76
 msgid "Show connection ID"
@@ -32306,7 +32330,9 @@ msgstr "कम्युनिटी हेडर के नीचे बैन�
 msgid "Sidebar"
 msgstr "साइडबार"
 
+#. Button in the browser that approves signing in to the desktop or mobile app that asked for it.
 #. Generic authentication action label. Use for buttons, links, page titles, and accessible labels.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:33
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:79
 msgid "Sign in"
 msgstr "साइन इन करें"
@@ -32321,9 +32347,34 @@ msgstr "फिर से साइन इन करें"
 msgid "Sign in again as {accountLabel}"
 msgstr "{accountLabel} के तौर पर फिर से साइन इन करें"
 
+#. Shown in the desktop app while it waits for the browser. instanceName is the server name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:193
+msgid "Sign in to {instanceName} in your browser and confirm. This app finishes signing in on its own."
+msgstr "अपने ब्राउज़र में {instanceName} में साइन इन करें और पुष्टि करें। यह ऐप अपने आप साइन इन पूरा कर लेगा।"
+
+#. Shown in the desktop app above the code when the browser cannot return the sign-in automatically. instanceName is the server name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:189
+msgid "Sign in to {instanceName} in your browser, and check that it shows this code:"
+msgstr "अपने ब्राउज़र में {instanceName} में साइन इन करें, और जांचें कि यह कोड दिखाता है:"
+
 #: src/features/auth/flow/GiftHeader.tsx:33
 msgid "Sign in to claim your gift"
 msgstr "अपना उपहार पाने के लिए साइन इन करें"
+
+#. Title of the browser page where the user approves signing in to an app that asked for it. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:71
+msgid "Sign in to the {PRODUCT_NAME} app"
+msgstr "{PRODUCT_NAME} ऐप में साइन इन करें"
+
+#. Title of the browser page where the user approves signing in to the desktop app that opened it. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:58
+msgid "Sign in to the {PRODUCT_NAME} desktop app"
+msgstr "{PRODUCT_NAME} डेस्कटॉप ऐप में साइन इन करें"
+
+#. Title of the browser page where the user approves signing in to the mobile app that asked for it. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:65
+msgid "Sign in to the {PRODUCT_NAME} mobile app"
+msgstr "{PRODUCT_NAME} मोबाइल ऐप में साइन इन करें"
 
 #. Action label that starts passkey authentication.
 #: src/features/auth/AuthMessageDescriptors.ts:13
@@ -32403,14 +32454,10 @@ msgstr "अपने अकाउंट से दूसरे डिवाइ�
 msgid "Sign out?"
 msgstr "साइन आउट करें?"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:234
-msgid "Sign-in approved"
-msgstr "साइन-इन मंज़ूर किया गया"
-
-#. Short label in the authentication handoff approval flow. Keep the tone plain and specific.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:26
-msgid "Sign-in code"
-msgstr "साइन-इन कोड"
+#. Title of the browser page after the user cancelled the sign-in request from the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:322
+msgid "Sign-in cancelled"
+msgstr "साइन-इन रद्द किया गया"
 
 #. Section title for email address and password controls in the account security tab. Keep it concise.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountSecuritySections.tsx:23
@@ -32433,10 +32480,6 @@ msgstr "साइन-इन फ़्लो"
 msgid "Sign-in method"
 msgstr "साइन-इन विधि"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:84
-msgid "Sign-in request"
-msgstr "साइन-इन अनुरोध"
-
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx:16
 msgid "Signal strength loading"
@@ -32452,6 +32495,21 @@ msgstr "साइन इन किया गया"
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:34
 msgid "Signed-in devices"
 msgstr "साइन इन किए गए डिवाइस"
+
+#. Shown on the browser approval page above the buttons. name is the display name of the account that will be signed in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:137
+msgid "Signing in as {name}"
+msgstr "{name} के तौर पर साइन इन हो रहा है"
+
+#. Text button in the desktop app that shows a code to type into a browser on a different device.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:207
+msgid "Signing in on another device?"
+msgstr "किसी दूसरे डिवाइस पर साइन इन कर रहे हैं?"
+
+#. Title while the browser approves the sign-in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:228
+msgid "Signing in…"
+msgstr "साइन इन हो रहा है…"
 
 #. Label for Bluesky OAuth signing key ID input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1161
@@ -33504,6 +33562,8 @@ msgstr "माइक्रोफ़ोन की जाँच शुरू क�
 msgid "Start minimized"
 msgstr "मिनिमाइज़ करके शुरू करें"
 
+#. Button on the browser page after cancelling that goes back to choosing an account.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:337
 #: src/features/moderation/components/report/ReportStepDetails.tsx:326
 #: src/features/moderation/components/report/ReportStepEmail.tsx:97
 #: src/features/moderation/components/report/ReportStepVerification.tsx:134
@@ -34910,6 +34970,11 @@ msgstr "थाई"
 msgid "Thank you for helping keep {productName} safe. We'll review your report as soon as possible."
 msgstr "{productName} को सुरक्षित रखने में मदद करने के लिए धन्यवाद। हम जल्द से जल्द आपकी रिपोर्ट की समीक्षा करेंगे।"
 
+#. Error in the browser when a code typed from the app is not found. instanceHost is the server the browser checked, such as api.fluxer.app. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:25
+msgid "That code is not valid on {instanceHost}. Check the code in the {productName} app and try again."
+msgstr "वह कोड {instanceHost} पर मान्य नहीं है। कृपया कोड को {productName} ऐप में देखें और पुनः प्रयास करें।"
+
 #. Body of the passkey page after the passkey prompt failed or was dismissed. Keep plain.
 #: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:36
 msgid "That didn't work. Try again or cancel."
@@ -34953,17 +35018,27 @@ msgstr "वह मैसेज डिलीट नहीं हो सका"
 msgid "That message is gone, or you lost access to the conversation."
 msgstr "वह मैसेज अब मौजूद नहीं है, या उस बातचीत का आपका एक्सेस चला गया है।"
 
-#. Error shown when a browser sign-in handoff code expires before it is approved.
-#: src/features/auth/flow/browser_handoff/BrowserHandoffDescriptors.ts:9
-msgid "That sign-in code expired. Try again."
-msgstr "वह साइन-इन कोड समाप्त हो गया। पुनः प्रयास करें।"
-
 #. End-of-list line in the saved messages popout after every bookmark has been shown.
 #. End-of-list line on the saved messages page after every bookmark has been shown.
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:35
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:42
 msgid "That's all of them."
 msgstr "बस इतना ही था।"
+
+#. Warning on the browser approval page when the app asked for a different account than the one chosen. requestedIdentifier is the email or username the app asked for, name is the chosen account's display name.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:131
+msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
+msgstr "{PRODUCT_NAME} ऐप ने {requestedIdentifier} के रूप में साइन इन करने के लिए कहा, लेकिन आपने {name} को चुना।"
+
+#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:187
+msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
+msgstr "आपके दूसरे डिवाइस पर {PRODUCT_NAME} ऐप इसे \"किसी दूसरे डिवाइस पर साइन इन करना\" के तहत दिखाता है। केवल उसी डिवाइस से कोड दर्ज करें जिसे आप नियंत्रित करते हैं।"
+
+#. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:327
+msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
+msgstr "{PRODUCT_NAME} ऐप में साइन इन नहीं किया गया था। आप इस टैब को बंद कर सकते हैं।"
 
 #. Description text in the FluxerTag change modal.
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:70
@@ -34982,10 +35057,6 @@ msgstr "ऐप क्रैश हो गया"
 #: src/features/app/components/ErrorFallback.tsx:134
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "ऐप क्रैश हो गया है। ऐसे अपडेट देखे जा रहे हैं जिनसे यह समस्या ठीक हो सकती है…"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:237
-msgid "The app should now be signed in to your account."
-msgstr "अब ऐप आपके अकाउंट में साइन इन हो जाना चाहिए।"
 
 #. Activity log detail line under a lifted ban, for a temporary ban that had already ended on its own before it was lifted. A ban is the community ban, not the feature that blocks a user. {date} is when the ban ended, shown as a formatted date and time.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:55
@@ -35183,6 +35254,16 @@ msgstr "रोल ने {permissions} प्रदान कीं"
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "स्क्रीन शेयर स्रोत ने वीडियो भेजना बंद कर दिया है, इसलिए आपका स्क्रीन शेयर रोक दिया गया।"
+
+#. Error shown in the desktop app when a browser sign-in request expires before it is approved in the browser.
+#: src/features/auth/flow/browser_handoff/BrowserHandoffDescriptors.ts:9
+msgid "The sign-in request expired before your browser approved it."
+msgstr "आपके ब्राउज़र द्वारा अप्रूव किए जाने से पहले साइन-इन अनुरोध की समय सीमा समाप्त हो गई।"
+
+#. Error shown in the desktop app when the user pressed Cancel on the browser sign-in page.
+#: src/features/auth/flow/browser_handoff/BrowserHandoffDescriptors.ts:14
+msgid "The sign-in was cancelled in your browser."
+msgstr "आपके ब्राउज़र में साइन-इन रद्द कर दिया गया था।"
 
 #. Activity log detail line under a deleted sticker, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the sticker, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:100
@@ -35408,6 +35489,11 @@ msgstr "थर्ड पार्टी"
 msgid "This account can't be blocked."
 msgstr "इस अकाउंट को ब्लॉक नहीं किया जा सकता।"
 
+#. Error in the browser when the chosen account belongs to a different server than the app that asked to sign in. accountHost and requestHost are server addresses. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:38
+msgid "This account is on {accountHost}, but the {productName} app is signing in to {requestHost}. Choose an account on {requestHost}."
+msgstr "यह खाता {accountHost} पर है, लेकिन {productName} ऐप {requestHost} में साइन इन कर रहा है। {requestHost} पर एक खाता चुनें।"
+
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:418
 msgid "This action cannot be undone. All associated data, including the bot user, will be permanently deleted."
 msgstr "यह कार्रवाई पूर्ववत नहीं की जा सकती। बॉट यूज़र सहित सभी संबंधित डेटा स्थायी रूप से हटा दिया जाएगा।"
@@ -35550,11 +35636,6 @@ msgstr "यह आपकी बैकएंड प्रीमियम स्�
 #: src/features/gift/commands/GiftCommands.tsx:45
 msgid "This code doesn't exist."
 msgstr "यह कोड मौजूद नहीं है।"
-
-#. Status shown under the browser sign-in code once its countdown reaches zero.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:68
-msgid "This code expired."
-msgstr "यह कोड समाप्त हो गया है।"
 
 #. Gift redemption error modal body for an invalid or already used code.
 #: src/features/gift/commands/GiftCommands.tsx:37
@@ -36074,6 +36155,11 @@ msgstr "यह रीसेट लिंक समाप्त हो गया 
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:37
 msgid "This shows how links appear: {linkPreviewExampleUrl}"
 msgstr "यह दिखाता है कि लिंक कैसे दिखते हैं: {linkPreviewExampleUrl}"
+
+#. Error in the browser when the sign-in request from the desktop app no longer exists, because it expired or the app cancelled it. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:20
+msgid "This sign-in request expired or was cancelled in the {productName} app. Start again from the app."
+msgstr "यह साइन-इन अनुरोध {productName} ऐप में समाप्त हो गया या रद्द कर दिया गया। ऐप से पुनः आरंभ करें।"
 
 #. Label above the community a sticker comes from in the sticker info card.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:75
@@ -38520,6 +38606,11 @@ msgstr "जहाँ इमेज यूआरएल डालना है, व
 msgid "Use a dedicated modal to set a message history threshold date for members who don't have the {readMessageHistoryPermissionLabel} permission."
 msgstr "जिन सदस्यों के पास {readMessageHistoryPermissionLabel} अनुमति नहीं है, उनके लिए मैसेज हिस्ट्री थ्रेशोल्ड की तारीख एक अलग डायलॉग में सेट करें।"
 
+#. Text button on the browser approval page that goes back to choosing which account signs in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:149
+msgid "Use a different account"
+msgstr "कोई दूसरा खाता इस्तेमाल करें"
+
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:267
 msgid "Use a self-hosted instance URL"
 msgstr "एक स्व-होस्टेड इंस्टेंस यूआरएल का उपयोग करें"
@@ -39296,10 +39387,6 @@ msgstr "{premiumProductFullName} खरीदने के लिए अपन�
 msgid "Verify your email to start DMs."
 msgstr "DM शुरू करने के लिए अपना ईमेल वेरिफ़ाई करें।"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:142
-msgid "Verifying code…"
-msgstr "कोड वेरिफ़ाई किया जा रहा है…"
-
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:145
 msgid "Verifying your reset link…"
 msgstr "आपका रीसेट लिंक वेरिफ़ाई किया जा रहा है…"
@@ -40073,10 +40160,6 @@ msgstr "और मैसेज डिलीट करने से पहले 
 msgid "Wait between messages. Members with \"{bypassSlowmodePermissionLabel}\" can bypass this."
 msgstr "मैसेज के बीच इंतज़ार करें। जिन सदस्यों के पास \"{bypassSlowmodePermissionLabel}\" अनुमति है, वे इसे बायपास कर सकते हैं।"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:445
-msgid "Waiting for browser approval."
-msgstr "ब्राउज़र से मंज़ूरी की प्रतीक्षा हो रही है।"
-
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
 msgid "Waiting for connection..."
@@ -40117,10 +40200,6 @@ msgstr "जगाएँ"
 #: src/features/messaging/utils/markdown/Plaintext.ts:64
 msgid "Warning"
 msgstr "चेतावनी"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:158
-msgid "Was this you?"
-msgstr "क्या यह आप थे?"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:243
@@ -40959,10 +41038,6 @@ msgstr "आपके पास पहले से ही आजीवन {premi
 msgid "You already have this connection."
 msgstr "यह कनेक्शन आपके पास पहले से है।"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:87
-msgid "You are about to authorize an app to sign in to your account. Only continue if you initiated this request from a device you control."
-msgstr "आप एक ऐप को अपने अकाउंट में साइन इन करने के लिए अधिकृत करने वाले हैं। अगर आपने यह अनुरोध अपने नियंत्रण वाले डिवाइस से शुरू किया है, तभी जारी रखें।"
-
 #. External link warning title. productName is the Fluxer product name.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:22
 msgid "You are about to leave {productName}"
@@ -41731,6 +41806,11 @@ msgstr "आप पुरानी दर पर हैं। इस प्ला
 #: src/features/messaging/components/alerts/MessageSendTooQuickModal.tsx:8
 msgid "You're sending messages too quickly"
 msgstr "आप बहुत तेज़ी से मैसेज भेज रहे हैं"
+
+#. Title of the browser page after the user approved signing in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:282
+msgid "You're signed in"
+msgstr "आप साइन इन हो गए हैं"
 
 #. Status text on the screen-share hover popout shown to the local streamer. Lightly playful tone.
 #: src/features/voice/components/StreamWatchHoverPopout.tsx:43

@@ -8,10 +8,18 @@ export const DESKTOP_HANDOFF_CHANNELS = Object.freeze({
 export const DesktopHandoffStatus = Object.freeze({
 	PENDING: 'pending',
 	EXPIRED: 'expired',
+	DENIED: 'denied',
 	COMPLETED: 'completed',
 } as const);
 
 export type DesktopHandoffStatus = (typeof DesktopHandoffStatus)[keyof typeof DesktopHandoffStatus];
+
+export const DesktopHandoffReturnMethod = Object.freeze({
+	DEEP_LINK: 'deep_link',
+	CODE: 'code',
+} as const);
+
+export type DesktopHandoffReturnMethod = (typeof DesktopHandoffReturnMethod)[keyof typeof DesktopHandoffReturnMethod];
 
 export interface DesktopHandoffInstance {
 	readonly apiEndpoint: string;
@@ -23,6 +31,7 @@ export interface DesktopHandoffSession {
 	readonly instance: DesktopHandoffInstance;
 	readonly code: string;
 	readonly expiresAt: string;
+	readonly returnMethod: DesktopHandoffReturnMethod;
 }
 
 export interface DesktopHandoffUser {
@@ -34,7 +43,10 @@ export interface DesktopHandoffUser {
 }
 
 export interface DesktopHandoffIncompleteResult {
-	readonly status: typeof DesktopHandoffStatus.PENDING | typeof DesktopHandoffStatus.EXPIRED;
+	readonly status:
+		| typeof DesktopHandoffStatus.PENDING
+		| typeof DesktopHandoffStatus.EXPIRED
+		| typeof DesktopHandoffStatus.DENIED;
 }
 
 export interface DesktopHandoffCompletedResult {

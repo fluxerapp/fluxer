@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DESKTOP_APP_ORIGIN, DESKTOP_PREBOOT_THEME_CHANNEL} from '@electron/common/Constants';
+import {APP_PROTOCOL, DESKTOP_APP_ORIGIN, DESKTOP_PREBOOT_THEME_CHANNEL} from '@electron/common/Constants';
 import {
 	type DesktopTroubleshootingSettings,
 	type DesktopWindowBehaviorSettings,
@@ -16,6 +16,7 @@ import type {
 } from '@electron/common/Types';
 import {DesktopBrowserHandoff} from '@electron/main/BrowserHandoff';
 import {hasEnabledBlinkFeature, MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE} from '@electron/main/ChromiumRuntime';
+import {setHandoffReturnLinkSink} from '@electron/main/DeepLinks';
 import {getDesktopAppStorage} from '@electron/main/DesktopAppStorage';
 import {createDesktopAppStorageIpcRoutes} from '@electron/main/DesktopAppStorageIpc';
 import {getLaunchDesktopTroubleshootingSettings} from '@electron/main/DesktopDebugInfo';
@@ -611,12 +612,15 @@ function registerBrowserHandoffHandlers(): void {
 	if (browserHandoff !== null) {
 		return;
 	}
-	browserHandoff = new DesktopBrowserHandoff({
+	const handoff = new DesktopBrowserHandoff({
 		logger: log,
 		rendererDocumentOwners: createPrivilegedRendererDocumentOwners('BrowserHandoff'),
 		selectedInstanceClient: getDesktopSelectedInstanceClient(),
+		returnUri: () => (app.isDefaultProtocolClient(APP_PROTOCOL) ? `${APP_PROTOCOL}://handoff` : null),
 	});
-	for (const [channel, handler] of Object.entries(browserHandoff.ipcRoutes())) {
+	browserHandoff = handoff;
+	setHandoffReturnLinkSink((url) => handoff.acceptReturnLink(url));
+	for (const [channel, handler] of Object.entries(handoff.ipcRoutes())) {
 		ipcMain.handle(channel, handler);
 	}
 }
@@ -646,6 +650,7 @@ export function cleanupIpcHandlers(_options: {quitting?: boolean} = {}): void {
 	cleanupDesktopRuntimeConfigHandlers();
 	browserHandoff?.cleanup();
 	browserHandoff = null;
+	setHandoffReturnLinkSink(null);
 	if (linuxAppearanceSubscription) {
 		try {
 			linuxAppearanceSubscription.close();

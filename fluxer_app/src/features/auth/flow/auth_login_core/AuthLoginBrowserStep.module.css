@@ -100,6 +100,13 @@
 	text-align: center;
 }
 
+.browserStatusTitle {
+	color: var(--text-primary);
+	font-size: 1rem;
+	font-weight: 700;
+	line-height: 1.25rem;
+}
+
 .browserStatusText {
 	color: var(--text-secondary);
 	font-size: 0.875rem;
@@ -116,7 +123,7 @@
 	padding: 1rem 0.75rem;
 }
 
-.browserManualCode {
+.browserCode {
 	max-width: 100%;
 	padding: 0.75rem 0.875rem;
 	border: 0.0625rem solid var(--background-modifier-accent);
@@ -140,10 +147,25 @@
 	font-variant-numeric: tabular-nums;
 }
 
-.browserTimerExpired {
-	color: var(--status-danger);
-	font-size: 0.8125rem;
+.browserTextButton {
+	padding: 0.125rem 0.25rem;
+	border: none;
+	border-radius: 0.25rem;
+	background: none;
+	color: var(--text-link);
+	font: inherit;
+	font-size: 0.875rem;
 	font-weight: 600;
+	cursor: pointer;
+}
+
+.browserTextButton:hover:not(:disabled) {
+	text-decoration: underline;
+}
+
+.browserTextButton:disabled {
+	cursor: default;
+	opacity: 0.5;
 }
 
 .browserFooter {

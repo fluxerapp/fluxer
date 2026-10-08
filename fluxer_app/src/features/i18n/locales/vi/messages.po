@@ -1573,7 +1573,7 @@ msgid "{imageCount, plural, one {# image} other {# images}}, {videoCount, plural
 msgstr "{imageCount, plural, one {# ảnh} other {# ảnh}}, {videoCount, plural, one {# video} other {# video}}"
 
 #. Explanation shown when the selected instance advertises no web app endpoint. Instance name is interpolated.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:76
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:61
 msgid "{instanceName} does not publish a web address, so sign-in cannot be handed to a browser."
 msgstr "{instanceName} không cung cấp địa chỉ web, vì vậy không thể chuyển hướng đăng nhập sang trình duyệt."
 
@@ -2776,14 +2776,6 @@ msgstr "một bản nhúng đa phương tiện hoặc bản xem trước liên k
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:191
 msgid "A separate profile for each community"
 msgstr "Một hồ sơ riêng cho mỗi cộng đồng"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:164
-msgid "A sign-in request was made for your account. Only approve if you initiated it."
-msgstr "Đã có yêu cầu đăng nhập vào tài khoản của bạn. Chỉ chấp thuận nếu bạn đã thực hiện yêu cầu này."
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:162
-msgid "A sign-in request was made from the following device. Only approve if you recognize it."
-msgstr "Đã có yêu cầu đăng nhập từ thiết bị sau. Chỉ chấp thuận nếu bạn nhận ra thiết bị này."
 
 #. Description for has:sticker. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:51
@@ -4810,10 +4802,6 @@ msgstr "Áp dụng cho tất cả cộng đồng"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
 msgid "Approval required"
 msgstr "Cần phê duyệt"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:206
-msgid "Approve"
-msgstr "Duyệt"
 
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:101
@@ -7873,6 +7861,11 @@ msgstr "Đang kiểm tra quyền truy cập..."
 msgid "Checking screen recording permission..."
 msgstr "Đang kiểm tra quyền ghi màn hình..."
 
+#. Title while the browser looks up the sign-in request from the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:224
+msgid "Checking the sign-in request…"
+msgstr "Đang kiểm tra yêu cầu đăng nhập…"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
 msgid "Checkout"
@@ -8847,6 +8840,11 @@ msgstr "Khối mã"
 msgid "Code expired"
 msgstr "Mã đã hết hạn"
 
+#. Label of the field in the browser where the user types the 12-character code shown in the desktop or mobile app. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:28
+msgid "Code from the {productName} app"
+msgstr "Mã từ ứng dụng {productName}"
+
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Success toast on the verification step of the DSA report flow after resending the email verification code.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
@@ -9348,7 +9346,6 @@ msgstr "Ẩn hoàn toàn huy hiệu {premiumProductName} của bạn với nhữ
 
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:256
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:322
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:216
 msgid "Completing sign-in…"
 msgstr "Đang hoàn tất đăng nhập…"
 
@@ -9782,13 +9779,17 @@ msgstr "Bạn có thể mở menu ngữ cảnh bằng cách nhấp chuột trái
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:77
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:36
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:99
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:726
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:413
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
 msgstr "Tiếp tục"
+
+#. Title in the desktop app while it waits for the user to sign in on the browser page it opened.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:177
+msgid "Continue in your browser"
+msgstr "Tiếp tục trên trình duyệt của bạn"
 
 #. Button in the gift time confirmation that proceeds to subscription checkout.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
@@ -10437,7 +10438,7 @@ msgid "Couldn't close DM"
 msgstr "Không thể đóng tin nhắn trực tiếp"
 
 #. Desktop handoff flow error shown when finalizing the sign-in fails after a valid code.
-#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:21
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:34
 msgid "Couldn't complete sign-in. Try again."
 msgstr "Không thể hoàn tất đăng nhập. Vui lòng thử lại."
 
@@ -10831,6 +10832,11 @@ msgstr "Không thể bắt đầu ủy quyền {blueskyProviderName}"
 msgid "Couldn't start checkout"
 msgstr "Không thể bắt đầu thanh toán"
 
+#. Shown in the desktop app when the browser sign-in request could not be created.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:66
+msgid "Couldn't start signing in with your browser."
+msgstr "Không thể bắt đầu đăng nhập bằng trình duyệt của bạn."
+
 #. Toast error shown when creating a new account connection fails.
 #: src/features/connection/commands/ConnectionCommands.ts:27
 msgid "Couldn't start the connection"
@@ -10942,7 +10948,7 @@ msgid "Couldn't upload banner"
 msgstr "Không thể tải ảnh bìa lên"
 
 #. Desktop handoff flow error shown when verifying the pairing code fails for an unexpected reason.
-#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:17
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:30
 msgid "Couldn't verify that code. Try again."
 msgstr "Không thể xác minh mã. Vui lòng thử lại."
 
@@ -12503,7 +12509,6 @@ msgstr "Bố cục dày đặc"
 
 #. Short label in the settings dialog permission components. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/shared/PermissionComponents.tsx:16
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:203
 msgid "Deny"
 msgstr "Từ chối"
 
@@ -14910,14 +14915,15 @@ msgstr "Nhập mã gồm {digitCount} chữ số từ ứng dụng xác thực h
 msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "Nhập mã gồm {digitCount} chữ số từ ứng dụng xác thực của bạn."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:108
-msgid "Enter the code"
-msgstr "Nhập mã"
-
 #. Inline validation error on the verification step of the DSA report flow when the code field is empty.
 #: src/features/moderation/components/pages/ReportPage.tsx:74
 msgid "Enter the code before continuing."
 msgstr "Nhập mã trước khi tiếp tục."
+
+#. Title of the browser page where the user types the 12-character code the app shows under Signing in on another device. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:182
+msgid "Enter the code from the {PRODUCT_NAME} app"
+msgstr "Nhập mã từ ứng dụng {PRODUCT_NAME}"
 
 #. Body text in the authentication sudo verification modal. Keep the tone plain and specific.
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:56
@@ -14932,10 +14938,6 @@ msgstr "Nhập mã đã gửi đến email hiện tại của bạn."
 #: src/features/user/components/modals/PasswordChangeModal.tsx:165
 msgid "Enter the code sent to your email address."
 msgstr "Nhập mã đã gửi đến email của bạn."
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:111
-msgid "Enter the code shown in the app to continue."
-msgstr "Nhập mã hiển thị trong ứng dụng để tiếp tục."
 
 #: src/features/user/components/modals/BouncedEmailChangeModal.tsx:157
 #: src/features/user/components/modals/EmailChangeModal.tsx:244
@@ -14958,6 +14960,11 @@ msgstr "Nhập email mới bạn muốn dùng. Chúng tôi sẽ gửi mã xác n
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:29
 msgid "Enter the PIN for your security key to continue."
 msgstr "Nhập mã PIN cho khóa bảo mật của bạn để tiếp tục."
+
+#. Title in the desktop app above the code the user types into a browser on another device.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:228
+msgid "Enter this code in your browser"
+msgstr "Nhập mã này vào trình duyệt của bạn"
 
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:132
 msgid "Enter this code in your browser to complete sign-in."
@@ -15362,7 +15369,7 @@ msgstr "Hết hạn từ {earliest} đến {latest}"
 msgid "Expires in {remaining}s"
 msgstr "Hết hạn sau {remaining} giây"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:374
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:250
 msgid "Expires in {remainingSeconds}s"
 msgstr "Hết hạn sau {remainingSeconds} giây"
 
@@ -16165,7 +16172,7 @@ msgid "Fluxer"
 msgstr "Fluxer"
 
 #. Status shown when browser sign-in status polling gives up after repeated failures.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:72
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:57
 msgid "Fluxer stopped checking whether the browser approved this sign-in. It didn't lose your code."
 msgstr "Fluxer đã ngừng kiểm tra xem trình duyệt có phê duyệt đăng nhập này không. Mã của bạn vẫn còn nguyên."
 
@@ -16952,8 +16959,6 @@ msgstr "Tạo liên kết có thể chia sẻ hoặc sao chép CSS tùy chỉnh 
 msgid "Generate invite link"
 msgstr "Tạo liên kết mời"
 
-#. Button label that replaces an expired browser sign-in code with a fresh one.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:64
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:117
 msgid "Generate new code"
 msgstr "Tạo mã mới"
@@ -17347,6 +17352,16 @@ msgstr "Quay lại và nhập một email hợp lệ."
 #: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:52
 msgid "Go back to {productName} to continue."
 msgstr "Quay lại {productName} để tiếp tục."
+
+#. Shown after approving a sign-in for an app on another device, which signs in by itself shortly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
+msgid "Go back to the {PRODUCT_NAME} app. It finishes signing in on its own."
+msgstr "Quay lại ứng dụng {PRODUCT_NAME}. Ứng dụng sẽ tự hoàn tất đăng nhập."
+
+#. Shown after approving, when the browser has already handed the sign-in back to the desktop app. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:288
+msgid "Go back to the {PRODUCT_NAME} app. You can close this tab."
+msgstr "Quay lại ứng dụng {PRODUCT_NAME}. Bạn có thể đóng tab này."
 
 #. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:89
@@ -19295,11 +19310,6 @@ msgstr "JSON không hợp lệ. Dán toàn bộ phản hồi từ URL trên."
 msgid "Invalid or expired code"
 msgstr "Mã không hợp lệ hoặc đã hết hạn"
 
-#. Desktop handoff flow error shown when the entered pairing code is invalid or expired.
-#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:13
-msgid "Invalid or expired code. Try again."
-msgstr "Mã không hợp lệ hoặc đã hết hạn. Hãy thử lại."
-
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
 msgid "Invalid redirect_uri"
@@ -20876,7 +20886,7 @@ msgstr "Định dạng thời gian theo vùng"
 msgid "Localization"
 msgstr "Bản địa hóa"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:192
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:152
 msgid "Location"
 msgstr "Vị trí"
@@ -21033,6 +21043,11 @@ msgstr "Đặt {userName} làm chủ nhóm? Bạn sẽ mất đặc quyền ch�
 #: src/features/ui/action_menu/UserContextMenu.tsx:117
 msgid "Make group owner"
 msgstr "Đặt làm chủ nhóm"
+
+#. Shown above the code on the browser approval page when the app cannot be signed in automatically. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:253
+msgid "Make sure this code matches the one in the {PRODUCT_NAME} app."
+msgstr "Hãy đảm bảo mã này khớp với mã trong ứng dụng {PRODUCT_NAME}."
 
 #. Setup wizard branding step title.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:166
@@ -24668,6 +24683,11 @@ msgstr "Vào <0>{listPriceEffectiveDate}</0>, gói đăng ký của bạn sẽ c
 msgid "On click"
 msgstr "Khi nhấp"
 
+#. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:236
+msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
+msgstr "Trên thiết bị khác của bạn, hãy đăng nhập tại {signInAddress} và nhập mã này khi được yêu cầu."
+
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:715
 msgid "Once deleted, the application and its credentials are permanently removed."
 msgstr "Sau khi xóa, ứng dụng và thông tin đăng nhập của ứng dụng sẽ bị gỡ vĩnh viễn."
@@ -24732,6 +24752,11 @@ msgstr "Chỉ @nhắc đến"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:119
 msgid "Only applies on wide screens."
 msgstr "Chỉ áp dụng trên màn hình rộng."
+
+#. Warning under the title of the browser approval page, so people do not approve a sign-in someone else started.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:245
+msgid "Only continue if you started this sign-in on a device you control."
+msgstr "Chỉ tiếp tục nếu bạn đã bắt đầu đăng nhập này trên một thiết bị mà bạn kiểm soát."
 
 #. Body copy in the mature content check modal.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:32
@@ -24921,6 +24946,11 @@ msgstr "Mở {landmarkName}"
 msgid "Open {premiumProductFullName}"
 msgstr "Mở {premiumProductFullName}"
 
+#. Button on the browser page after approving that opens the desktop app again if it did not come to the front. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:304
+msgid "Open {PRODUCT_NAME}"
+msgstr "Mở {PRODUCT_NAME}"
+
 #. Button label that opens the desktop app. productName is the app name.
 #. Button that hands SSO sign-in back to the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:47
@@ -25011,11 +25041,14 @@ msgstr "Mở tùy chọn ảnh bìa"
 msgid "Open bookmarks"
 msgstr "Mở tin nhắn đã lưu"
 
-#. Button label that opens the browser sign-in handoff page.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:56
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:184
 msgid "Open browser"
 msgstr "Mở trình duyệt"
+
+#. Button in the desktop app that reopens the browser sign-in page while the app waits for the browser.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:53
+msgid "Open browser again"
+msgstr "Mở lại trình duyệt"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:209
@@ -25392,10 +25425,6 @@ msgstr "Mở cài đặt âm thanh & video"
 msgid "Open with {accountName} on {instanceName}"
 msgstr "Mở bằng {accountName} trên {instanceName}"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:414
-msgid "Open your browser to finish signing in."
-msgstr "Mở trình duyệt của bạn để hoàn tất đăng nhập."
-
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:137
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Mở trình duyệt, đăng nhập, sau đó nhập mã bên dưới để liên kết tài khoản của bạn."
@@ -25421,7 +25450,7 @@ msgstr "Mở trang Thành viên. Nhấn phím Cách hoặc Enter để mở."
 
 #. Short label in the language tab. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:182
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:99
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:79
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:110
 msgid "Operating system"
@@ -26439,7 +26468,7 @@ msgstr "Gói dịch vụ"
 msgid "Plans, perks, gifts and your subscription all live on one page."
 msgstr "Các gói, đặc quyền, quà tặng và gói đăng ký của bạn đều nằm trên một trang."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:172
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:89
 msgid "Platform"
 msgstr "Nền tảng"
 
@@ -31859,11 +31888,6 @@ msgstr "Hiện trò chuyện"
 msgid "Show chat with {count, plural, one {# unread message} other {# unread messages}}"
 msgstr "Hiện trò chuyện có {count, plural, one {# tin nhắn chưa đọc} other {# tin nhắn chưa đọc}}"
 
-#. Button label that opens the manual browser handoff code fallback.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:60
-msgid "Show code"
-msgstr "Hiển thị mã"
-
 #. Developer voice status menu option for displaying the voice connection identifier.
 #: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:76
 msgid "Show connection ID"
@@ -32306,7 +32330,9 @@ msgstr "Hiển thị ảnh bìa trong phần riêng bên dưới tiêu đề c�
 msgid "Sidebar"
 msgstr "Thanh bên"
 
+#. Button in the browser that approves signing in to the desktop or mobile app that asked for it.
 #. Generic authentication action label. Use for buttons, links, page titles, and accessible labels.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:33
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:79
 msgid "Sign in"
 msgstr "Đăng nhập"
@@ -32321,9 +32347,34 @@ msgstr "Đăng nhập lại"
 msgid "Sign in again as {accountLabel}"
 msgstr "Đăng nhập lại với tư cách {accountLabel}"
 
+#. Shown in the desktop app while it waits for the browser. instanceName is the server name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:193
+msgid "Sign in to {instanceName} in your browser and confirm. This app finishes signing in on its own."
+msgstr "Đăng nhập vào {instanceName} trên trình duyệt của bạn và xác nhận. Ứng dụng này sẽ tự hoàn tất đăng nhập."
+
+#. Shown in the desktop app above the code when the browser cannot return the sign-in automatically. instanceName is the server name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:189
+msgid "Sign in to {instanceName} in your browser, and check that it shows this code:"
+msgstr "Đăng nhập vào {instanceName} trên trình duyệt của bạn và kiểm tra xem mã này có hiển thị không:"
+
 #: src/features/auth/flow/GiftHeader.tsx:33
 msgid "Sign in to claim your gift"
 msgstr "Đăng nhập để nhận quà"
+
+#. Title of the browser page where the user approves signing in to an app that asked for it. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:71
+msgid "Sign in to the {PRODUCT_NAME} app"
+msgstr "Đăng nhập vào ứng dụng {PRODUCT_NAME}"
+
+#. Title of the browser page where the user approves signing in to the desktop app that opened it. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:58
+msgid "Sign in to the {PRODUCT_NAME} desktop app"
+msgstr "Đăng nhập vào ứng dụng máy tính để bàn {PRODUCT_NAME}"
+
+#. Title of the browser page where the user approves signing in to the mobile app that asked for it. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:65
+msgid "Sign in to the {PRODUCT_NAME} mobile app"
+msgstr "Đăng nhập vào ứng dụng di động {PRODUCT_NAME}"
 
 #. Action label that starts passkey authentication.
 #: src/features/auth/AuthMessageDescriptors.ts:13
@@ -32403,14 +32454,10 @@ msgstr "Đăng xuất các thiết bị khác khỏi tài khoản của bạn"
 msgid "Sign out?"
 msgstr "Đăng xuất?"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:234
-msgid "Sign-in approved"
-msgstr "Đăng nhập đã được duyệt"
-
-#. Short label in the authentication handoff approval flow. Keep the tone plain and specific.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:26
-msgid "Sign-in code"
-msgstr "Mã đăng nhập"
+#. Title of the browser page after the user cancelled the sign-in request from the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:322
+msgid "Sign-in cancelled"
+msgstr "Đã hủy đăng nhập"
 
 #. Section title for email address and password controls in the account security tab. Keep it concise.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountSecuritySections.tsx:23
@@ -32433,10 +32480,6 @@ msgstr "Quy trình đăng nhập"
 msgid "Sign-in method"
 msgstr "Phương thức đăng nhập"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:84
-msgid "Sign-in request"
-msgstr "Yêu cầu đăng nhập"
-
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx:16
 msgid "Signal strength loading"
@@ -32452,6 +32495,21 @@ msgstr "Đã đăng nhập"
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:34
 msgid "Signed-in devices"
 msgstr "Thiết bị đã đăng nhập"
+
+#. Shown on the browser approval page above the buttons. name is the display name of the account that will be signed in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:137
+msgid "Signing in as {name}"
+msgstr "Đăng nhập với tư cách {name}"
+
+#. Text button in the desktop app that shows a code to type into a browser on a different device.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:207
+msgid "Signing in on another device?"
+msgstr "Đăng nhập trên thiết bị khác?"
+
+#. Title while the browser approves the sign-in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:228
+msgid "Signing in…"
+msgstr "Đang đăng nhập…"
 
 #. Label for Bluesky OAuth signing key ID input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1161
@@ -33504,6 +33562,8 @@ msgstr "Bắt đầu kiểm tra micrô"
 msgid "Start minimized"
 msgstr "Bắt đầu thu nhỏ"
 
+#. Button on the browser page after cancelling that goes back to choosing an account.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:337
 #: src/features/moderation/components/report/ReportStepDetails.tsx:326
 #: src/features/moderation/components/report/ReportStepEmail.tsx:97
 #: src/features/moderation/components/report/ReportStepVerification.tsx:134
@@ -34910,6 +34970,11 @@ msgstr "Tiếng Thái"
 msgid "Thank you for helping keep {productName} safe. We'll review your report as soon as possible."
 msgstr "Cảm ơn bạn đã giúp giữ cho {productName} an toàn. Chúng tôi sẽ xem xét báo cáo của bạn sớm nhất có thể."
 
+#. Error in the browser when a code typed from the app is not found. instanceHost is the server the browser checked, such as api.fluxer.app. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:25
+msgid "That code is not valid on {instanceHost}. Check the code in the {productName} app and try again."
+msgstr "Mã đó không hợp lệ trên {instanceHost}. Hãy kiểm tra mã trong ứng dụng {productName} và thử lại."
+
 #. Body of the passkey page after the passkey prompt failed or was dismissed. Keep plain.
 #: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:36
 msgid "That didn't work. Try again or cancel."
@@ -34953,17 +35018,27 @@ msgstr "Không xóa được tin nhắn này"
 msgid "That message is gone, or you lost access to the conversation."
 msgstr "Tin nhắn đó không còn tồn tại hoặc bạn đã mất quyền truy cập vào cuộc trò chuyện."
 
-#. Error shown when a browser sign-in handoff code expires before it is approved.
-#: src/features/auth/flow/browser_handoff/BrowserHandoffDescriptors.ts:9
-msgid "That sign-in code expired. Try again."
-msgstr "Mã đăng nhập đó đã hết hạn. Thử lại."
-
 #. End-of-list line in the saved messages popout after every bookmark has been shown.
 #. End-of-list line on the saved messages page after every bookmark has been shown.
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:35
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:42
 msgid "That's all of them."
 msgstr "Đã hết tin nhắn đã lưu."
+
+#. Warning on the browser approval page when the app asked for a different account than the one chosen. requestedIdentifier is the email or username the app asked for, name is the chosen account's display name.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:131
+msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
+msgstr "Ứng dụng {PRODUCT_NAME} yêu cầu đăng nhập với tư cách {requestedIdentifier}, nhưng bạn đã chọn {name}."
+
+#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:187
+msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
+msgstr "Ứng dụng {PRODUCT_NAME} trên thiết bị kia của bạn hiển thị mục đó trong phần Đăng nhập trên thiết bị khác. Chỉ nhập mã từ thiết bị bạn kiểm soát."
+
+#. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:327
+msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
+msgstr "Ứng dụng {PRODUCT_NAME} chưa đăng nhập. Bạn có thể đóng tab này."
 
 #. Description text in the FluxerTag change modal.
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:70
@@ -34982,10 +35057,6 @@ msgstr "Ứng dụng đã gặp sự cố"
 #: src/features/app/components/ErrorFallback.tsx:134
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "Ứng dụng đã gặp sự cố. Đang kiểm tra bản cập nhật có thể khắc phục vấn đề này…"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:237
-msgid "The app should now be signed in to your account."
-msgstr "Ứng dụng giờ đã đăng nhập vào tài khoản của bạn."
 
 #. Activity log detail line under a lifted ban, for a temporary ban that had already ended on its own before it was lifted. A ban is the community ban, not the feature that blocks a user. {date} is when the ban ended, shown as a formatted date and time.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:55
@@ -35183,6 +35254,16 @@ msgstr "Vai trò đã cấp {permissions}"
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Nguồn chia sẻ màn hình đã ngừng gửi video, vì vậy quá trình chia sẻ màn hình của bạn đã dừng."
+
+#. Error shown in the desktop app when a browser sign-in request expires before it is approved in the browser.
+#: src/features/auth/flow/browser_handoff/BrowserHandoffDescriptors.ts:9
+msgid "The sign-in request expired before your browser approved it."
+msgstr "Yêu cầu đăng nhập đã hết hạn trước khi trình duyệt của bạn phê duyệt."
+
+#. Error shown in the desktop app when the user pressed Cancel on the browser sign-in page.
+#: src/features/auth/flow/browser_handoff/BrowserHandoffDescriptors.ts:14
+msgid "The sign-in was cancelled in your browser."
+msgstr "Đã hủy đăng nhập trên trình duyệt của bạn."
 
 #. Activity log detail line under a deleted sticker, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the sticker, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:100
@@ -35408,6 +35489,11 @@ msgstr "Bên thứ ba"
 msgid "This account can't be blocked."
 msgstr "Không thể chặn tài khoản này."
 
+#. Error in the browser when the chosen account belongs to a different server than the app that asked to sign in. accountHost and requestHost are server addresses. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:38
+msgid "This account is on {accountHost}, but the {productName} app is signing in to {requestHost}. Choose an account on {requestHost}."
+msgstr "Tài khoản này thuộc về {accountHost}, nhưng ứng dụng {productName} đang đăng nhập vào {requestHost}. Vui lòng chọn một tài khoản trên {requestHost}."
+
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:418
 msgid "This action cannot be undone. All associated data, including the bot user, will be permanently deleted."
 msgstr "Thao tác này không thể hoàn tác. Toàn bộ dữ liệu liên quan, bao gồm cả người dùng bot, sẽ bị xóa vĩnh viễn."
@@ -35550,11 +35636,6 @@ msgstr "Thao tác này sẽ xóa hoàn toàn trạng thái premium của bạn t
 #: src/features/gift/commands/GiftCommands.tsx:45
 msgid "This code doesn't exist."
 msgstr "Mã này không tồn tại."
-
-#. Status shown under the browser sign-in code once its countdown reaches zero.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:68
-msgid "This code expired."
-msgstr "Mã này đã hết hạn."
 
 #. Gift redemption error modal body for an invalid or already used code.
 #: src/features/gift/commands/GiftCommands.tsx:37
@@ -36074,6 +36155,11 @@ msgstr "Liên kết đặt lại này đã hết hạn. Liên kết đặt lại
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:37
 msgid "This shows how links appear: {linkPreviewExampleUrl}"
 msgstr "Đây là cách các liên kết xuất hiện: {linkPreviewExampleUrl}"
+
+#. Error in the browser when the sign-in request from the desktop app no longer exists, because it expired or the app cancelled it. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:20
+msgid "This sign-in request expired or was cancelled in the {productName} app. Start again from the app."
+msgstr "Yêu cầu đăng nhập này đã hết hạn hoặc bị hủy trong ứng dụng {productName}. Vui lòng thử lại từ ứng dụng."
 
 #. Label above the community a sticker comes from in the sticker info card.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:75
@@ -38520,6 +38606,11 @@ msgstr "Sử dụng {url} tại vị trí cần chèn URL hình ảnh."
 msgid "Use a dedicated modal to set a message history threshold date for members who don't have the {readMessageHistoryPermissionLabel} permission."
 msgstr "Dùng một cửa sổ riêng để đặt ngày giới hạn lịch sử tin nhắn cho những thành viên không có quyền {readMessageHistoryPermissionLabel}."
 
+#. Text button on the browser approval page that goes back to choosing which account signs in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:149
+msgid "Use a different account"
+msgstr "Sử dụng tài khoản khác"
+
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:267
 msgid "Use a self-hosted instance URL"
 msgstr "Sử dụng URL của một phiên bản tự lưu trữ"
@@ -39296,10 +39387,6 @@ msgstr "Xác minh email của bạn để mua {premiumProductFullName}."
 msgid "Verify your email to start DMs."
 msgstr "Xác minh email của bạn để bắt đầu tin nhắn trực tiếp."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:142
-msgid "Verifying code…"
-msgstr "Đang xác minh mã…"
-
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:145
 msgid "Verifying your reset link…"
 msgstr "Đang xác minh liên kết đặt lại của bạn…"
@@ -40073,10 +40160,6 @@ msgstr "Đợi một lát trước khi xóa thêm tin nhắn."
 msgid "Wait between messages. Members with \"{bypassSlowmodePermissionLabel}\" can bypass this."
 msgstr "Chờ giữa các tin nhắn. Thành viên có quyền \"{bypassSlowmodePermissionLabel}\" có thể bỏ qua giới hạn này."
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:445
-msgid "Waiting for browser approval."
-msgstr "Đang chờ phê duyệt từ trình duyệt."
-
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
 msgid "Waiting for connection..."
@@ -40117,10 +40200,6 @@ msgstr "Đánh thức"
 #: src/features/messaging/utils/markdown/Plaintext.ts:64
 msgid "Warning"
 msgstr "Cảnh báo"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:158
-msgid "Was this you?"
-msgstr "Có phải bạn không?"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:243
@@ -40959,10 +41038,6 @@ msgstr "Bạn đã có {premiumProductName} trọn đời"
 msgid "You already have this connection."
 msgstr "Bạn đã có kết nối này rồi."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:87
-msgid "You are about to authorize an app to sign in to your account. Only continue if you initiated this request from a device you control."
-msgstr "Bạn sắp cấp quyền cho một ứng dụng đăng nhập vào tài khoản của mình. Chỉ tiếp tục nếu bạn đã thực hiện yêu cầu này từ một thiết bị mà bạn kiểm soát."
-
 #. External link warning title. productName is the Fluxer product name.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:22
 msgid "You are about to leave {productName}"
@@ -41731,6 +41806,11 @@ msgstr "Bạn đang dùng mức giá cũ. Giá hiện tại cho gói này là {c
 #: src/features/messaging/components/alerts/MessageSendTooQuickModal.tsx:8
 msgid "You're sending messages too quickly"
 msgstr "Bạn đang gửi tin nhắn quá nhanh"
+
+#. Title of the browser page after the user approved signing in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:282
+msgid "You're signed in"
+msgstr "Bạn đã đăng nhập"
 
 #. Status text on the screen-share hover popout shown to the local streamer. Lightly playful tone.
 #: src/features/voice/components/StreamWatchHoverPopout.tsx:43

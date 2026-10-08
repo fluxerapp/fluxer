@@ -5,12 +5,8 @@ import {resolveSnapshotInstanceDomain} from '@app/features/auth/AccountDisplayUt
 import loginStyles from '@app/features/auth/components/pages/LoginPage.module.css';
 import styles from '@app/features/auth/flow/auth_login_core/AuthLoginBrowserStep.module.css';
 import {
-	DESKTOP_HANDOFF_EXPIRED_DESCRIPTOR,
-	DESKTOP_HANDOFF_UNAVAILABLE_DESCRIPTOR,
-} from '@app/features/auth/flow/browser_handoff/BrowserHandoffDescriptors';
-import {
 	BrowserLoginHandoffAction,
-	type BrowserLoginHandoffPendingAction,
+	type BrowserLoginHandoffController,
 	useBrowserLoginHandoff,
 } from '@app/features/auth/flow/browser_handoff/useBrowserLoginHandoff';
 import {
@@ -22,6 +18,7 @@ import {useKnownInstances} from '@app/features/auth/flow/instance_selector/useKn
 import type {LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
 import {
 	BACK_DESCRIPTOR,
+	CANCEL_DESCRIPTOR,
 	CHANGE_INSTANCE_DESCRIPTOR,
 	COPIED_DESCRIPTOR,
 	COPY_CODE_DESCRIPTOR,
@@ -32,12 +29,13 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button, ButtonVariant} from '@app/features/ui/button/Button';
 import {VerifiedConnectionIcon} from '@app/features/ui/components/icons/VerifiedConnectionIcon';
 import {Spinner, SpinnerSize} from '@app/features/ui/components/Spinner';
+import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {SteppedCarousel, SteppedCarouselActions} from '@app/features/ui/stepped_carousel/SteppedCarousel';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {flxElementClassName} from '@app/lib/react';
 import FluxerLogoAsset from '@app/media/images/fluxer-logo-color.svg?react';
+import {DesktopHandoffReturnMethod} from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
 import {isOfficialInstanceHost, OFFICIAL_INSTANCE_NAME} from '@fluxer/instance_bootstrap/src/OfficialInstance';
-import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {
@@ -47,27 +45,14 @@ import {
 	CheckCircleIcon,
 	ClipboardIcon,
 	GlobeIcon,
-	PasswordIcon,
 	WarningCircleIcon,
 } from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
-import {type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useState} from 'react';
+import {type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState} from 'react';
 
-const OPEN_BROWSER_DESCRIPTOR = msg({
-	message: 'Open browser',
-	comment: 'Button label that opens the browser sign-in handoff page.',
-});
-const SHOW_CODE_DESCRIPTOR = msg({
-	message: 'Show code',
-	comment: 'Button label that opens the manual browser handoff code fallback.',
-});
-const GENERATE_NEW_CODE_DESCRIPTOR = msg({
-	message: 'Generate new code',
-	comment: 'Button label that replaces an expired browser sign-in code with a fresh one.',
-});
-const BROWSER_CODE_EXPIRED_DESCRIPTOR = msg({
-	message: 'This code expired.',
-	comment: 'Status shown under the browser sign-in code once its countdown reaches zero.',
+const OPEN_BROWSER_AGAIN_DESCRIPTOR = msg({
+	message: 'Open browser again',
+	comment: 'Button in the desktop app that reopens the browser sign-in page while the app waits for the browser.',
 });
 const BROWSER_WAIT_STOPPED_DESCRIPTOR = msg({
 	message: "Fluxer stopped checking whether the browser approved this sign-in. It didn't lose your code.",
@@ -78,6 +63,10 @@ const BROWSER_HANDOFF_UNSUPPORTED_INSTANCE_DESCRIPTOR = msg({
 	comment:
 		'Explanation shown when the selected instance advertises no web app endpoint. Instance name is interpolated.',
 });
+const BROWSER_HANDOFF_FAILED_DESCRIPTOR = msg({
+	message: "Couldn't start signing in with your browser.",
+	comment: 'Shown in the desktop app when the browser sign-in request could not be created.',
+});
 
 const logger = new Logger('AuthLoginBrowserStep');
 
@@ -86,20 +75,20 @@ export function resolveShouldOfferBrowserStep(): boolean {
 }
 
 export const BrowserHandoffStep = Object.freeze({
-	READY: 'ready',
 	WAITING: 'waiting',
-	MANUAL: 'manual',
+	OTHER_DEVICE: 'other_device',
+	PROBLEM: 'problem',
 } as const);
 
 export type BrowserHandoffStep = (typeof BrowserHandoffStep)[keyof typeof BrowserHandoffStep];
 
 const BROWSER_STEPS: ReadonlyArray<BrowserHandoffStep> = Object.freeze([
-	BrowserHandoffStep.READY,
 	BrowserHandoffStep.WAITING,
-	BrowserHandoffStep.MANUAL,
+	BrowserHandoffStep.OTHER_DEVICE,
+	BrowserHandoffStep.PROBLEM,
 ]);
 
-type ManualReturnStep = typeof BrowserHandoffStep.READY | typeof BrowserHandoffStep.WAITING;
+type RetryStep = typeof BrowserHandoffStep.WAITING | typeof BrowserHandoffStep.OTHER_DEVICE;
 
 interface BrowserInstanceIdentity {
 	readonly domain: string;
@@ -138,329 +127,177 @@ function resolveBrowserInstanceIdentity({
 	return {domain, isOfficial, name: resolveInstanceLabel(findKnownInstanceName(domain, knownInstances), domain)};
 }
 
-function resolveManualReturnStep(step: BrowserHandoffStep): ManualReturnStep {
-	if (step === BrowserHandoffStep.WAITING) {
-		return BrowserHandoffStep.WAITING;
+function resolveSignInAddress(webAppEndpoint: string): string {
+	try {
+		const url = new URL(webAppEndpoint);
+		return `${url.host}${url.pathname.replace(/\/+$/u, '')}/login?handoff=1`;
+	} catch {
+		return `${webAppEndpoint}/login?handoff=1`;
 	}
-	return BrowserHandoffStep.READY;
 }
 
-function renderCopyCodeIcon(copied: boolean): ReactNode {
-	if (copied) {
-		return (
-			<CheckCircleIcon
-				size={remFromPx(16)}
-				weight="bold"
-				data-flx="auth.flow.auth-login-core.auth-login-browser-step.render-copy-code-icon.check-circle-icon"
-			/>
-		);
-	}
+function HandoffCode({code}: {code: string}): ReactElement {
 	return (
-		<ClipboardIcon
-			size={remFromPx(16)}
-			weight="bold"
-			data-flx="auth.flow.auth-login-core.auth-login-browser-step.render-copy-code-icon.clipboard-icon"
-		/>
+		<flx-auth-login-browser-step-code
+			className={flxElementClassName(styles.browserCode)}
+			data-flx="auth.flow.auth-login-core.auth-login-browser-step.code"
+		>
+			{code}
+		</flx-auth-login-browser-step-code>
 	);
 }
 
-function resolveCopyCodeLabel(i18n: I18n, copied: boolean): string {
-	if (copied) {
-		return i18n._(COPIED_DESCRIPTOR);
-	}
-	return i18n._(COPY_CODE_DESCRIPTOR);
-}
-
-interface BrowserStepActionsProps {
-	readonly activeBackAction: () => void;
-	readonly canStart: boolean;
-	readonly copied: boolean;
-	readonly copyCode: () => void;
-	readonly hasCode: boolean;
-	readonly hasStoppedWaiting: boolean;
-	readonly isExpired: boolean;
-	readonly isGenerating: boolean;
-	readonly onOpenBrowser: () => void;
-	readonly onRegenerateCode: () => void;
-	readonly onResumeWaiting: () => void;
-	readonly onShowCode: () => void;
-	readonly pendingAction: BrowserLoginHandoffPendingAction;
-	readonly showBackButton: boolean;
-	readonly step: BrowserHandoffStep;
-}
-
-function BrowserStepActions({
-	activeBackAction,
-	canStart,
-	copied,
-	copyCode,
-	hasCode,
-	hasStoppedWaiting,
-	isExpired,
-	isGenerating,
-	onOpenBrowser,
-	onRegenerateCode,
-	onResumeWaiting,
-	onShowCode,
-	pendingAction,
-	showBackButton,
-	step,
-}: BrowserStepActionsProps): ReactElement {
-	const {i18n} = useLingui();
-	const handoffButtonState = (action: BrowserLoginHandoffAction): {disabled: boolean; submitting: boolean} => ({
-		disabled: !canStart || (isGenerating && pendingAction !== action),
-		submitting: isGenerating && pendingAction === action,
-	});
-	const regenerateButton = (
-		<Button
-			onClick={onRegenerateCode}
-			{...handoffButtonState(BrowserLoginHandoffAction.SHOW_CODE)}
-			leftIcon={
-				<ArrowClockwiseIcon
-					size={remFromPx(16)}
-					weight="bold"
-					data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-actions.arrow-clockwise-icon"
-				/>
-			}
-			data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.generate-new-code"
-		>
-			{i18n._(GENERATE_NEW_CODE_DESCRIPTOR)}
-		</Button>
-	);
-	const showCodeButton = (
-		<Button
-			variant={ButtonVariant.SECONDARY}
-			onClick={onShowCode}
-			{...handoffButtonState(BrowserLoginHandoffAction.SHOW_CODE)}
-			leftIcon={
-				<PasswordIcon
-					size={remFromPx(16)}
-					weight="bold"
-					data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-actions.password-icon"
-				/>
-			}
-			data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.show-code"
-		>
-			{i18n._(SHOW_CODE_DESCRIPTOR)}
-		</Button>
-	);
-	const resumeButton = hasStoppedWaiting ? (
-		<Button
-			onClick={onResumeWaiting}
-			leftIcon={
-				<ArrowClockwiseIcon
-					size={remFromPx(16)}
-					weight="bold"
-					data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-actions.resume-icon"
-				/>
-			}
-			data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.resume-waiting"
-		>
-			{i18n._(TRY_AGAIN_DESCRIPTOR)}
-		</Button>
-	) : null;
-	let primaryActions: ReactNode;
-	if (step === BrowserHandoffStep.MANUAL) {
-		primaryActions = (
-			<>
-				{isExpired ? (
-					regenerateButton
-				) : (
-					<Button
-						onClick={copyCode}
-						disabled={!hasCode}
-						leftIcon={renderCopyCodeIcon(copied)}
-						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.copy-code"
-					>
-						{resolveCopyCodeLabel(i18n, copied)}
-					</Button>
-				)}
-				{resumeButton}
-			</>
-		);
-	} else if (step === BrowserHandoffStep.WAITING) {
-		primaryActions = (
-			<>
-				{showCodeButton}
-				{resumeButton}
-			</>
-		);
-	} else {
-		primaryActions = (
-			<>
-				{showCodeButton}
-				<Button
-					onClick={onOpenBrowser}
-					{...handoffButtonState(BrowserLoginHandoffAction.OPEN_BROWSER)}
-					leftIcon={
-						<ArrowSquareOutIcon
-							size={remFromPx(16)}
-							weight="bold"
-							data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-actions.arrow-square-out-icon"
-						/>
-					}
-					data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.open-browser"
-				>
-					{i18n._(OPEN_BROWSER_DESCRIPTOR)}
-				</Button>
-			</>
-		);
-	}
-	const renderBackAction = (): ReactNode => {
-		if (!showBackButton) {
-			return null;
-		}
-		return (
-			<Button
-				type="button"
-				variant={ButtonVariant.SECONDARY}
-				leftIcon={
-					<ArrowLeftIcon
-						size={remFromPx(16)}
-						weight="bold"
-						data-flx="auth.flow.auth-login-core.auth-login-browser-step.render-back-action.arrow-left-icon"
-					/>
-				}
-				onClick={activeBackAction}
-				disabled={isGenerating}
-				data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.back"
-			>
-				{i18n._(BACK_DESCRIPTOR)}
-			</Button>
-		);
-	};
-	return (
-		<SteppedCarouselActions
-			className={styles.browserFooter}
-			data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-actions.browser-footer"
-		>
-			{renderBackAction()}
-			{primaryActions}
-		</SteppedCarouselActions>
-	);
-}
-
-interface BrowserStepContentProps {
-	readonly canStart: boolean;
-	readonly displayCode: string;
-	readonly hasStoppedWaiting: boolean;
+interface WaitingContentProps {
+	readonly handoff: BrowserLoginHandoffController;
 	readonly instanceName: string;
-	readonly isExpired: boolean;
-	readonly remainingSeconds: number | null;
-	readonly step: BrowserHandoffStep;
+	readonly onOtherDevice: () => void;
 }
 
-function renderManualCodeTimer(i18n: I18n, isExpired: boolean, remainingSeconds: number | null): ReactNode {
-	if (remainingSeconds == null) {
-		return null;
-	}
-	if (isExpired) {
-		return (
-			<flx-auth-login-browser-step-timer
-				className={flxElementClassName(styles.browserTimerExpired)}
-				role="status"
-				data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.browser-timer-expired"
-			>
-				{i18n._(BROWSER_CODE_EXPIRED_DESCRIPTOR)}
-			</flx-auth-login-browser-step-timer>
-		);
-	}
+function WaitingContent({handoff, instanceName, onOtherDevice}: WaitingContentProps): ReactElement {
+	const {i18n} = useLingui();
+	const showCode = handoff.returnMethod === DesktopHandoffReturnMethod.CODE && handoff.hasCode;
 	return (
-		<flx-auth-login-browser-step-timer
-			className={flxElementClassName(styles.browserTimer)}
-			aria-live="off"
-			data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.browser-timer"
+		<flx-auth-login-browser-step-status-panel
+			className={flxElementClassName(styles.browserStatusPanel)}
+			data-flx="auth.flow.auth-login-core.auth-login-browser-step.waiting-panel"
 		>
-			<Trans>Expires in {remainingSeconds}s</Trans>
-		</flx-auth-login-browser-step-timer>
+			{handoff.hasStoppedWaiting ? (
+				<WarningCircleIcon
+					size={remFromPx(28)}
+					weight="regular"
+					data-flx="auth.flow.auth-login-core.auth-login-browser-step.stopped-waiting-icon"
+				/>
+			) : (
+				<Spinner size={SpinnerSize.MEDIUM} data-flx="auth.flow.auth-login-core.auth-login-browser-step.spinner" />
+			)}
+			<flx-auth-login-browser-step-status-title
+				className={flxElementClassName(styles.browserStatusTitle)}
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.waiting-title"
+			>
+				<Trans comment="Title in the desktop app while it waits for the user to sign in on the browser page it opened.">
+					Continue in your browser
+				</Trans>
+			</flx-auth-login-browser-step-status-title>
+			<flx-auth-login-browser-step-status-text
+				className={flxElementClassName(styles.browserStatusText)}
+				role="status"
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.waiting-text"
+			>
+				{handoff.hasStoppedWaiting ? (
+					i18n._(BROWSER_WAIT_STOPPED_DESCRIPTOR)
+				) : showCode ? (
+					<Trans comment="Shown in the desktop app above the code when the browser cannot return the sign-in automatically. instanceName is the server name, such as Fluxer.">
+						Sign in to {instanceName} in your browser, and check that it shows this code:
+					</Trans>
+				) : (
+					<Trans comment="Shown in the desktop app while it waits for the browser. instanceName is the server name, such as Fluxer.">
+						Sign in to {instanceName} in your browser and confirm. This app finishes signing in on its own.
+					</Trans>
+				)}
+			</flx-auth-login-browser-step-status-text>
+			{showCode && !handoff.hasStoppedWaiting ? <HandoffCode code={handoff.displayCode} /> : null}
+			<FocusRing offset={-2} data-flx="auth.flow.auth-login-core.auth-login-browser-step.focus-ring.other-device">
+				<button
+					type="button"
+					className={styles.browserTextButton}
+					onClick={onOtherDevice}
+					disabled={!handoff.canStart}
+					data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.other-device"
+				>
+					<Trans comment="Text button in the desktop app that shows a code to type into a browser on a different device.">
+						Signing in on another device?
+					</Trans>
+				</button>
+			</FocusRing>
+		</flx-auth-login-browser-step-status-panel>
 	);
 }
 
-function BrowserStepContent({
-	canStart,
-	displayCode,
-	hasStoppedWaiting,
-	instanceName,
-	isExpired,
-	remainingSeconds,
-	step,
-}: BrowserStepContentProps): ReactElement {
+function OtherDeviceContent({handoff, signInAddress}: {handoff: BrowserLoginHandoffController; signInAddress: string}) {
 	const {i18n} = useLingui();
-	if (step === BrowserHandoffStep.READY) {
-		return (
-			<flx-auth-login-browser-step-status-panel
-				className={flxElementClassName(styles.browserStatusPanel)}
-				data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.browser-status-panel"
-			>
-				{canStart ? (
-					<ArrowSquareOutIcon
-						size={remFromPx(28)}
-						weight="regular"
-						data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.arrow-square-out-icon"
-					/>
-				) : (
-					<WarningCircleIcon
-						size={remFromPx(28)}
-						weight="regular"
-						data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.warning-circle-icon"
-					/>
-				)}
-				<flx-auth-login-browser-step-status-text
-					className={flxElementClassName(styles.browserStatusText)}
-					role="status"
-					data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.browser-status-text"
-				>
-					{canStart ? (
-						<Trans>Open your browser to finish signing in.</Trans>
-					) : (
-						i18n._(BROWSER_HANDOFF_UNSUPPORTED_INSTANCE_DESCRIPTOR, {instanceName})
-					)}
-				</flx-auth-login-browser-step-status-text>
-			</flx-auth-login-browser-step-status-panel>
-		);
-	}
-	if (step === BrowserHandoffStep.WAITING) {
-		return (
-			<flx-auth-login-browser-step-status-panel
-				className={flxElementClassName(styles.browserStatusPanel)}
-				data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.browser-status-panel--2"
-			>
-				{hasStoppedWaiting ? (
-					<WarningCircleIcon
-						size={remFromPx(28)}
-						weight="regular"
-						data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.stopped-waiting-icon"
-					/>
-				) : (
-					<Spinner
-						size={SpinnerSize.MEDIUM}
-						data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.spinner"
-					/>
-				)}
-				<flx-auth-login-browser-step-status-text
-					className={flxElementClassName(styles.browserStatusText)}
-					role="status"
-					data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.browser-status-text--2"
-				>
-					{hasStoppedWaiting ? i18n._(BROWSER_WAIT_STOPPED_DESCRIPTOR) : <Trans>Waiting for browser approval.</Trans>}
-				</flx-auth-login-browser-step-status-text>
-			</flx-auth-login-browser-step-status-panel>
-		);
-	}
+	const remainingSeconds = handoff.remainingSeconds;
 	return (
 		<flx-auth-login-browser-step-manual-panel
 			className={flxElementClassName(styles.browserManualPanel)}
-			data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.browser-manual-panel"
+			data-flx="auth.flow.auth-login-core.auth-login-browser-step.other-device-panel"
 		>
-			<flx-auth-login-browser-step-manual-code
-				className={flxElementClassName(styles.browserManualCode)}
-				data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content.browser-manual-code"
+			<flx-auth-login-browser-step-status-title
+				className={flxElementClassName(styles.browserStatusTitle)}
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.other-device-title"
 			>
-				{displayCode}
-			</flx-auth-login-browser-step-manual-code>
-			{renderManualCodeTimer(i18n, isExpired, remainingSeconds)}
+				<Trans comment="Title in the desktop app above the code the user types into a browser on another device.">
+					Enter this code in your browser
+				</Trans>
+			</flx-auth-login-browser-step-status-title>
+			<flx-auth-login-browser-step-status-text
+				className={flxElementClassName(styles.browserStatusText)}
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.other-device-text"
+			>
+				<Trans comment="One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.">
+					On your other device, sign in at {signInAddress} and enter this code when asked.
+				</Trans>
+			</flx-auth-login-browser-step-status-text>
+			{handoff.hasCode ? (
+				<HandoffCode code={handoff.displayCode} />
+			) : (
+				<Spinner size={SpinnerSize.MEDIUM} data-flx="auth.flow.auth-login-core.auth-login-browser-step.code-spinner" />
+			)}
+			<flx-auth-login-browser-step-timer
+				className={flxElementClassName(styles.browserTimer)}
+				aria-live="off"
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.timer"
+			>
+				{remainingSeconds == null ? ' ' : <Trans>Expires in {remainingSeconds}s</Trans>}
+			</flx-auth-login-browser-step-timer>
+			{handoff.hasStoppedWaiting ? (
+				<flx-auth-login-browser-step-status-text
+					className={flxElementClassName(styles.browserStatusText)}
+					role="status"
+					data-flx="auth.flow.auth-login-core.auth-login-browser-step.other-device-stopped"
+				>
+					{i18n._(BROWSER_WAIT_STOPPED_DESCRIPTOR)}
+				</flx-auth-login-browser-step-status-text>
+			) : null}
 		</flx-auth-login-browser-step-manual-panel>
 	);
+}
+
+function ProblemContent({message}: {message: string}): ReactElement {
+	return (
+		<flx-auth-login-browser-step-status-panel
+			className={flxElementClassName(styles.browserStatusPanel)}
+			data-flx="auth.flow.auth-login-core.auth-login-browser-step.problem-panel"
+		>
+			<WarningCircleIcon
+				size={remFromPx(28)}
+				weight="regular"
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.problem-icon"
+			/>
+			<flx-auth-login-browser-step-status-text
+				className={flxElementClassName(styles.browserStatusText)}
+				role="alert"
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.problem-text"
+			>
+				{message}
+			</flx-auth-login-browser-step-status-text>
+		</flx-auth-login-browser-step-status-panel>
+	);
+}
+
+function ButtonIcon({icon}: {icon: 'open' | 'retry' | 'back' | 'copy' | 'copied'}): ReactElement {
+	const props = {size: remFromPx(16), weight: 'bold' as const};
+	switch (icon) {
+		case 'open':
+			return <ArrowSquareOutIcon {...props} data-flx="auth.flow.auth-login-core.auth-login-browser-step.icon.open" />;
+		case 'retry':
+			return <ArrowClockwiseIcon {...props} data-flx="auth.flow.auth-login-core.auth-login-browser-step.icon.retry" />;
+		case 'back':
+			return <ArrowLeftIcon {...props} data-flx="auth.flow.auth-login-core.auth-login-browser-step.icon.back" />;
+		case 'copy':
+			return <ClipboardIcon {...props} data-flx="auth.flow.auth-login-core.auth-login-browser-step.icon.copy" />;
+		case 'copied':
+			return <CheckCircleIcon {...props} data-flx="auth.flow.auth-login-core.auth-login-browser-step.icon.copied" />;
+	}
 }
 
 interface AuthLoginBrowserStepProps {
@@ -489,89 +326,86 @@ export const AuthLoginBrowserStep = observer(function AuthLoginBrowserStep({
 	showBackButton = true,
 }: AuthLoginBrowserStepProps) {
 	const {i18n} = useLingui();
-	const [step, setStep] = useState<BrowserHandoffStep>(BrowserHandoffStep.READY);
-	const [manualReturnStep, setManualReturnStep] = useState<ManualReturnStep>(BrowserHandoffStep.READY);
+	const [step, setStep] = useState<BrowserHandoffStep>(BrowserHandoffStep.WAITING);
+	const [retryStep, setRetryStep] = useState<RetryStep>(BrowserHandoffStep.WAITING);
 	const knownInstances = useKnownInstances();
 	const instanceIdentity = resolveBrowserInstanceIdentity({snapshot: runtimeSnapshot, knownInstances});
-	const handoffMessages = useMemo(
-		() => ({
-			desktopHandoffUnavailable: DESKTOP_HANDOFF_UNAVAILABLE_DESCRIPTOR,
-			expired: DESKTOP_HANDOFF_EXPIRED_DESCRIPTOR,
-		}),
-		[],
-	);
-	const handleExpired = useCallback(() => {
-		setManualReturnStep(BrowserHandoffStep.READY);
-		setStep(BrowserHandoffStep.READY);
+	const handleEnded = useCallback(() => {
+		setStep(BrowserHandoffStep.PROBLEM);
 	}, []);
-	const {
-		canStart,
-		copied,
-		copyCode,
-		displayCode,
-		error,
-		expireCurrentSession,
-		hasCode,
-		hasStoppedWaiting,
-		isCurrentSessionExpired,
-		isExpired,
-		isGenerating,
-		openBrowser,
-		pendingAction,
-		regenerateCode,
-		remainingSeconds,
-		resumeWaiting,
-		showManualCode,
-	} = useBrowserLoginHandoff({
+	const handoff = useBrowserLoginHandoff({
 		runtimeSnapshot,
 		prefillIdentifier,
-		messages: handoffMessages,
-		onExpired: handleExpired,
+		onEnded: handleEnded,
 		onSuccess,
 	});
+	const {canStart, openBrowser, regenerateCode, reset, showManualCode} = handoff;
+	const showProblem = useCallback((from: RetryStep) => {
+		setRetryStep(from);
+		setStep(BrowserHandoffStep.PROBLEM);
+	}, []);
 	const handleOpenBrowser = useCallback(() => {
+		setStep(BrowserHandoffStep.WAITING);
 		openBrowser()
 			.then((opened) => {
-				if (opened) {
-					setStep(BrowserHandoffStep.WAITING);
+				if (!opened) {
+					showProblem(BrowserHandoffStep.WAITING);
 				}
 			})
 			.catch((caught) => {
 				logger.error('Failed to open the browser sign-in page', caught);
 			});
-	}, [openBrowser]);
-	const handleShowCode = useCallback(() => {
-		const returnStep = resolveManualReturnStep(step);
+	}, [openBrowser, showProblem]);
+	const handleOtherDevice = useCallback(() => {
+		setRetryStep(BrowserHandoffStep.OTHER_DEVICE);
+		setStep(BrowserHandoffStep.OTHER_DEVICE);
 		showManualCode()
 			.then((shown) => {
-				if (shown) {
-					setManualReturnStep(returnStep);
-					setStep(BrowserHandoffStep.MANUAL);
+				if (!shown) {
+					showProblem(BrowserHandoffStep.OTHER_DEVICE);
 				}
 			})
 			.catch((caught) => {
-				logger.error('Failed to reveal the browser sign-in code', caught);
+				logger.error('Failed to show the browser sign-in code', caught);
 			});
-	}, [showManualCode, step]);
-	const handleRegenerateCode = useCallback(() => {
-		regenerateCode()
-			.then((generated) => {
-				if (!generated) {
-					setStep(BrowserHandoffStep.READY);
-				}
-			})
-			.catch((caught) => {
-				logger.error('Failed to regenerate the browser sign-in code', caught);
-			});
-	}, [regenerateCode]);
-	const handleBackFromManualCode = useCallback(() => {
-		if (isCurrentSessionExpired()) {
-			expireCurrentSession();
+	}, [showManualCode, showProblem]);
+	const handleRetry = useCallback(() => {
+		if (retryStep === BrowserHandoffStep.OTHER_DEVICE) {
+			setStep(BrowserHandoffStep.OTHER_DEVICE);
+			regenerateCode()
+				.then((generated) => {
+					if (!generated) {
+						showProblem(BrowserHandoffStep.OTHER_DEVICE);
+					}
+				})
+				.catch((caught) => {
+					logger.error('Failed to create a new browser sign-in code', caught);
+				});
 			return;
 		}
-		setStep(manualReturnStep);
-	}, [expireCurrentSession, isCurrentSessionExpired, manualReturnStep]);
-	const activeBackAction = step === BrowserHandoffStep.MANUAL ? handleBackFromManualCode : onBack;
+		handleOpenBrowser();
+	}, [handleOpenBrowser, regenerateCode, retryStep, showProblem]);
+	const handleCancel = useCallback(() => {
+		reset();
+		onBack();
+	}, [onBack, reset]);
+	const handleBackToWaiting = useCallback(() => {
+		setRetryStep(BrowserHandoffStep.WAITING);
+		setStep(BrowserHandoffStep.WAITING);
+	}, []);
+	const startedRef = useRef(false);
+	useEffect(() => {
+		if (startedRef.current) {
+			return;
+		}
+		startedRef.current = true;
+		if (canStart) {
+			handleOpenBrowser();
+		} else {
+			setStep(BrowserHandoffStep.PROBLEM);
+		}
+	}, [canStart, handleOpenBrowser]);
+	const activeBackAction = step === BrowserHandoffStep.OTHER_DEVICE ? handleBackToWaiting : handleCancel;
 	useEffect(() => {
 		if (onBackActionChange == null) {
 			return;
@@ -579,6 +413,124 @@ export const AuthLoginBrowserStep = observer(function AuthLoginBrowserStep({
 		onBackActionChange(activeBackAction);
 		return () => onBackActionChange(null);
 	}, [activeBackAction, onBackActionChange]);
+	const problemMessage = canStart
+		? (handoff.error ?? i18n._(BROWSER_HANDOFF_FAILED_DESCRIPTOR))
+		: i18n._(BROWSER_HANDOFF_UNSUPPORTED_INSTANCE_DESCRIPTOR, {instanceName: instanceIdentity.name});
+	const isOpening = handoff.isGenerating && handoff.pendingAction === BrowserLoginHandoffAction.OPEN_BROWSER;
+	const isMakingCode = handoff.isGenerating && handoff.pendingAction === BrowserLoginHandoffAction.SHOW_CODE;
+	let content: ReactNode;
+	let actions: ReactNode;
+	if (step === BrowserHandoffStep.OTHER_DEVICE) {
+		content = (
+			<OtherDeviceContent
+				handoff={handoff}
+				signInAddress={resolveSignInAddress(runtimeSnapshot.webAppEndpoint)}
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.other-device-content"
+			/>
+		);
+		actions = (
+			<>
+				{showBackButton ? (
+					<Button
+						variant={ButtonVariant.SECONDARY}
+						leftIcon={<ButtonIcon icon="back" />}
+						onClick={handleBackToWaiting}
+						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.back-to-waiting"
+					>
+						{i18n._(BACK_DESCRIPTOR)}
+					</Button>
+				) : null}
+				{handoff.hasStoppedWaiting ? (
+					<Button
+						leftIcon={<ButtonIcon icon="retry" />}
+						onClick={handoff.resumeWaiting}
+						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.resume-waiting"
+					>
+						{i18n._(TRY_AGAIN_DESCRIPTOR)}
+					</Button>
+				) : (
+					<Button
+						leftIcon={<ButtonIcon icon={handoff.copied ? 'copied' : 'copy'} />}
+						onClick={handoff.copyCode}
+						disabled={!handoff.hasCode}
+						submitting={isMakingCode}
+						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.copy-code"
+					>
+						{i18n._(handoff.copied ? COPIED_DESCRIPTOR : COPY_CODE_DESCRIPTOR)}
+					</Button>
+				)}
+			</>
+		);
+	} else if (step === BrowserHandoffStep.PROBLEM) {
+		content = (
+			<ProblemContent
+				message={problemMessage}
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.problem-content"
+			/>
+		);
+		actions = (
+			<>
+				{showBackButton ? (
+					<Button
+						variant={ButtonVariant.SECONDARY}
+						leftIcon={<ButtonIcon icon="back" />}
+						onClick={handleCancel}
+						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.back"
+					>
+						{i18n._(BACK_DESCRIPTOR)}
+					</Button>
+				) : null}
+				{canStart ? (
+					<Button
+						leftIcon={<ButtonIcon icon="retry" />}
+						onClick={handleRetry}
+						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.retry"
+					>
+						{i18n._(TRY_AGAIN_DESCRIPTOR)}
+					</Button>
+				) : null}
+			</>
+		);
+	} else {
+		content = (
+			<WaitingContent
+				handoff={handoff}
+				instanceName={instanceIdentity.name}
+				onOtherDevice={handleOtherDevice}
+				data-flx="auth.flow.auth-login-core.auth-login-browser-step.waiting-content"
+			/>
+		);
+		actions = (
+			<>
+				<Button
+					variant={ButtonVariant.SECONDARY}
+					onClick={handleCancel}
+					data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.cancel"
+				>
+					{i18n._(CANCEL_DESCRIPTOR)}
+				</Button>
+				{handoff.hasStoppedWaiting ? (
+					<Button
+						leftIcon={<ButtonIcon icon="retry" />}
+						onClick={handoff.resumeWaiting}
+						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.resume-waiting"
+					>
+						{i18n._(TRY_AGAIN_DESCRIPTOR)}
+					</Button>
+				) : (
+					<Button
+						leftIcon={<ButtonIcon icon="open" />}
+						onClick={handleOpenBrowser}
+						submitting={isOpening}
+						disabled={!canStart}
+						data-flx="auth.flow.auth-login-core.auth-login-browser-step.button.open-browser"
+					>
+						{i18n._(OPEN_BROWSER_AGAIN_DESCRIPTOR)}
+					</Button>
+				)}
+			</>
+		);
+	}
 	return (
 		<flx-auth-login-browser-step
 			className="flx-element"
@@ -673,49 +625,19 @@ export const AuthLoginBrowserStep = observer(function AuthLoginBrowserStep({
 						</Button>
 					)}
 				</flx-auth-login-browser-step-instance-row>
-				{error != null && error.length > 0 ? (
-					<div
-						className={loginStyles.loginNotice}
-						role="alert"
-						data-flx="auth.flow.auth-login-core.auth-login-browser-step.alert"
-					>
-						{error}
-					</div>
-				) : null}
 				<SteppedCarousel
 					step={step}
 					steps={BROWSER_STEPS}
 					focusOnStepChange
 					data-flx="auth.flow.auth-login-core.auth-login-browser-step.carousel"
 				>
-					<BrowserStepContent
-						canStart={canStart}
-						displayCode={displayCode}
-						hasStoppedWaiting={hasStoppedWaiting}
-						instanceName={instanceIdentity.name}
-						isExpired={isExpired}
-						remainingSeconds={remainingSeconds}
-						step={step}
-						data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-content"
-					/>
-					<BrowserStepActions
-						activeBackAction={activeBackAction}
-						canStart={canStart}
-						copied={copied}
-						copyCode={copyCode}
-						hasCode={hasCode}
-						hasStoppedWaiting={hasStoppedWaiting}
-						isExpired={isExpired}
-						isGenerating={isGenerating}
-						onOpenBrowser={handleOpenBrowser}
-						onRegenerateCode={handleRegenerateCode}
-						onResumeWaiting={resumeWaiting}
-						onShowCode={handleShowCode}
-						pendingAction={pendingAction}
-						showBackButton={showBackButton}
-						step={step}
-						data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-step-actions"
-					/>
+					{content}
+					<SteppedCarouselActions
+						className={styles.browserFooter}
+						data-flx="auth.flow.auth-login-core.auth-login-browser-step.browser-footer"
+					>
+						{actions}
+					</SteppedCarouselActions>
 				</SteppedCarousel>
 			</flx-auth-login-browser-step-pane>
 		</flx-auth-login-browser-step>

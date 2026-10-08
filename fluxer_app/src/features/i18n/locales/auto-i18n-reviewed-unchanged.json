@@ -2921,6 +2921,9 @@
         "msgid": "Check again"
       },
       {
+        "msgid": "Checking the sign-in request…"
+      },
+      {
         "msgid": "Checkout is blocked for this account."
       },
       {
@@ -3008,6 +3011,9 @@
         "msgid": "Closed the thread"
       },
       {
+        "msgid": "Code from the {productName} app"
+      },
+      {
         "msgid": "Codec negotiation testing"
       },
       {
@@ -3054,6 +3060,9 @@
       },
       {
         "msgid": "Connection volume controls"
+      },
+      {
+        "msgid": "Continue in your browser"
       },
       {
         "msgid": "Continue to checkout"
@@ -3156,6 +3165,9 @@
       },
       {
         "msgid": "Couldn't search threads. Try again later."
+      },
+      {
+        "msgid": "Couldn't start signing in with your browser."
       },
       {
         "msgid": "Couldn't unfollow this channel"
@@ -3458,6 +3470,12 @@
         "msgid": "Enter the PIN for your security key to continue."
       },
       {
+        "msgid": "Enter the code from the {PRODUCT_NAME} app"
+      },
+      {
+        "msgid": "Enter this code in your browser"
+      },
+      {
         "msgid": "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
       },
       {
@@ -3612,6 +3630,12 @@
       },
       {
         "msgid": "Global shortcut"
+      },
+      {
+        "msgid": "Go back to the {PRODUCT_NAME} app. It finishes signing in on its own."
+      },
+      {
+        "msgid": "Go back to the {PRODUCT_NAME} app. You can close this tab."
       },
       {
         "msgid": "Go back to {productName} to continue."
@@ -3926,6 +3950,9 @@
         "msgid": "Made the channel inherit its mature content setting."
       },
       {
+        "msgid": "Make sure this code matches the one in the {PRODUCT_NAME} app."
+      },
+      {
         "msgid": "Make the instance yours"
       },
       {
@@ -4151,7 +4178,13 @@
         "msgid": "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
       },
       {
+        "msgid": "On your other device, sign in at {signInAddress} and enter this code when asked."
+      },
+      {
         "msgid": "Only @mentions"
+      },
+      {
+        "msgid": "Only continue if you started this sign-in on a device you control."
       },
       {
         "msgid": "Only moderators can apply this tag."
@@ -4184,6 +4217,9 @@
         "msgid": "Open an application window, then try again."
       },
       {
+        "msgid": "Open browser again"
+      },
+      {
         "msgid": "Open in full view"
       },
       {
@@ -4209,6 +4245,9 @@
       },
       {
         "msgid": "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
+      },
+      {
+        "msgid": "Open {PRODUCT_NAME}"
       },
       {
         "msgid": "Open {host} in Safari."
@@ -5144,6 +5183,21 @@
         "msgid": "Sign in again as {accountLabel}"
       },
       {
+        "msgid": "Sign in to the {PRODUCT_NAME} app"
+      },
+      {
+        "msgid": "Sign in to the {PRODUCT_NAME} desktop app"
+      },
+      {
+        "msgid": "Sign in to the {PRODUCT_NAME} mobile app"
+      },
+      {
+        "msgid": "Sign in to {instanceName} in your browser and confirm. This app finishes signing in on its own."
+      },
+      {
+        "msgid": "Sign in to {instanceName} in your browser, and check that it shows this code:"
+      },
+      {
         "msgid": "Sign in with email"
       },
       {
@@ -5162,10 +5216,22 @@
         "msgid": "Sign out {accountTag}"
       },
       {
+        "msgid": "Sign-in cancelled"
+      },
+      {
         "msgid": "Sign-in details"
       },
       {
         "msgid": "Sign-in method"
+      },
+      {
+        "msgid": "Signing in as {name}"
+      },
+      {
+        "msgid": "Signing in on another device?"
+      },
+      {
+        "msgid": "Signing in…"
       },
       {
         "msgid": "Silent when the capture device has no audio input of its own"
@@ -5393,6 +5459,9 @@
         "msgid": "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
       },
       {
+        "msgid": "That code is not valid on {instanceHost}. Check the code in the {productName} app and try again."
+      },
+      {
         "msgid": "That doesn't look like an instance address. Try a domain such as {exampleInstanceDomain}."
       },
       {
@@ -5471,6 +5540,12 @@
         "msgid": "The role granted {permissions}."
       },
       {
+        "msgid": "The sign-in request expired before your browser approved it."
+      },
+      {
+        "msgid": "The sign-in was cancelled in your browser."
+      },
+      {
         "msgid": "The sticker was uploaded by {user}."
       },
       {
@@ -5481,6 +5556,15 @@
       },
       {
         "msgid": "The webhook was created by {user}."
+      },
+      {
+        "msgid": "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
+      },
+      {
+        "msgid": "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
+      },
+      {
+        "msgid": "The {PRODUCT_NAME} app was not signed in. You can close this tab."
       },
       {
         "msgid": "There are no posts yet"
@@ -5496,6 +5580,9 @@
       },
       {
         "msgid": "These options change how people use the instance. Some can only be chosen during setup."
+      },
+      {
+        "msgid": "This account is on {accountHost}, but the {productName} app is signing in to {requestHost}. Choose an account on {requestHost}."
       },
       {
         "msgid": "This animation is too long or too large to crop. Try a shorter or smaller file."
@@ -5601,6 +5688,9 @@
       },
       {
         "msgid": "This reset link has expired. Reset links last 1 hour. Please request a new one."
+      },
+      {
+        "msgid": "This sign-in request expired or was cancelled in the {productName} app. Start again from the app."
       },
       {
         "msgid": "This sticker is from"
@@ -5775,6 +5865,9 @@
       },
       {
         "msgid": "Upload files and media in this channel."
+      },
+      {
+        "msgid": "Use a different account"
       },
       {
         "msgid": "Use a self-hosted instance URL"
@@ -5979,6 +6072,9 @@
       },
       {
         "msgid": "You're a {premiumProductName} member. Thanks for supporting an independent communication platform."
+      },
+      {
+        "msgid": "You're signed in"
       },
       {
         "msgid": "YouTube enrichment"
@@ -12093,6 +12189,9 @@
       },
       {
         "msgid": "Open thread"
+      },
+      {
+        "msgid": "Open {PRODUCT_NAME}"
       },
       {
         "msgid": "Open {contextName}"

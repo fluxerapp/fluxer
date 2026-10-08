@@ -2,6 +2,7 @@
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
 import {
+	DESKTOP_HANDOFF_DENIED_DESCRIPTOR,
 	DESKTOP_HANDOFF_EXPIRED_DESCRIPTOR,
 	DESKTOP_HANDOFF_UNAVAILABLE_DESCRIPTOR,
 } from '@app/features/auth/flow/browser_handoff/BrowserHandoffDescriptors';
@@ -17,9 +18,8 @@ import {instanceTargetFromSnapshot} from '@app/features/platform/transport/Insta
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import {navigateToExternalURL} from '@app/features/ui/utils/NativeUtils';
-import {DesktopHandoffStatus} from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
+import {DesktopHandoffReturnMethod, DesktopHandoffStatus} from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
 import {formatDesktopHandoffCode} from '@fluxer/schema/src/domains/auth/DesktopHandoffCode';
-import type {I18n, MessageDescriptor} from '@lingui/core';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
@@ -38,16 +38,10 @@ export const BrowserLoginHandoffAction = Object.freeze({
 export type BrowserLoginHandoffAction = (typeof BrowserLoginHandoffAction)[keyof typeof BrowserLoginHandoffAction];
 export type BrowserLoginHandoffPendingAction = BrowserLoginHandoffAction | null;
 
-export interface BrowserLoginHandoffMessages {
-	readonly desktopHandoffUnavailable?: MessageDescriptor;
-	readonly expired?: MessageDescriptor;
-}
-
 export interface UseBrowserLoginHandoffOptions {
 	readonly runtimeSnapshot: RuntimeConfigSnapshot;
 	readonly prefillIdentifier?: string | null;
-	readonly messages?: BrowserLoginHandoffMessages;
-	readonly onExpired: () => void;
+	readonly onEnded: () => void;
 	readonly onSuccess: (payload: LoginSuccessPayload) => Promise<void> | void;
 }
 
@@ -63,10 +57,9 @@ export interface BrowserLoginHandoffController {
 	readonly isGenerating: boolean;
 	readonly pendingAction: BrowserLoginHandoffPendingAction;
 	readonly remainingSeconds: number | null;
+	readonly returnMethod: DesktopHandoffReturnMethod;
 	readonly session: BrowserLoginHandoffSession | null;
 	readonly copyCode: () => void;
-	readonly expireCurrentSession: () => void;
-	readonly isCurrentSessionExpired: () => boolean;
 	readonly openBrowser: () => Promise<boolean>;
 	readonly regenerateCode: () => Promise<boolean>;
 	readonly reset: () => void;
@@ -97,7 +90,11 @@ function buildBrowserLoginHandoffURL({
 	prefillIdentifier,
 	prefillField,
 }: BrowserLoginHandoffURLRequest): string {
-	const params = new URLSearchParams({handoff: '1', code: session.code});
+	const params = new URLSearchParams({
+		handoff: '1',
+		code: session.code,
+		api: new URL(session.target.instance.apiEndpoint).origin,
+	});
 	if (prefillIdentifier != null && prefillIdentifier.length > 0) {
 		params.set(prefillField, prefillIdentifier);
 	}
@@ -131,15 +128,10 @@ function useBrowserLoginHandoffCountdown(expiresAt: string | null): number | nul
 	return remaining;
 }
 
-function resolveMessage(i18n: I18n, descriptor: MessageDescriptor | undefined, fallback: MessageDescriptor): string {
-	return i18n._(descriptor ?? fallback);
-}
-
 export function useBrowserLoginHandoff({
 	runtimeSnapshot,
 	prefillIdentifier,
-	messages,
-	onExpired,
+	onEnded,
 	onSuccess,
 }: UseBrowserLoginHandoffOptions): BrowserLoginHandoffController {
 	const {i18n} = useLingui();
@@ -155,10 +147,10 @@ export function useBrowserLoginHandoff({
 	const completedRef = useRef(false);
 	const copyResetRef = useRef<number | null>(null);
 	const onSuccessRef = useRef(onSuccess);
-	const onExpiredRef = useRef(onExpired);
+	const onEndedRef = useRef(onEnded);
 	const i18nRef = useRef(i18n);
 	onSuccessRef.current = onSuccess;
-	onExpiredRef.current = onExpired;
+	onEndedRef.current = onEnded;
 	i18nRef.current = i18n;
 	const target = resolveHandoffTarget(runtimeSnapshot);
 	const targetKey = `${target.instance.apiEndpoint}|${target.webAppEndpoint}`;
@@ -205,9 +197,7 @@ export function useBrowserLoginHandoff({
 		const requestTarget = targetRef.current;
 		try {
 			if (requestTarget.webAppEndpoint.length === 0) {
-				throw new BrowserLoginHandoffUnavailableError(
-					resolveMessage(i18n, messages?.desktopHandoffUnavailable, DESKTOP_HANDOFF_UNAVAILABLE_DESCRIPTOR),
-				);
+				throw new BrowserLoginHandoffUnavailableError(i18n._(DESKTOP_HANDOFF_UNAVAILABLE_DESCRIPTOR));
 			}
 			const nextSession = await transport.initiate(requestTarget);
 			if (generation !== generationRef.current) {
@@ -225,7 +215,7 @@ export function useBrowserLoginHandoff({
 				setIsGenerating(false);
 			}
 		}
-	}, [clearCopyFeedbackTimer, i18n, messages?.desktopHandoffUnavailable, transport]);
+	}, [clearCopyFeedbackTimer, i18n, transport]);
 	const getCurrentSession = useCallback(async (): Promise<BrowserLoginHandoffSession | null> => {
 		if (session != null && Date.parse(session.expiresAt) > Date.now()) {
 			return session;
@@ -233,17 +223,17 @@ export function useBrowserLoginHandoff({
 		return generateSession();
 	}, [generateSession, session]);
 	const expireCurrentSession = useCallback(() => {
-		clearHandoffSession(resolveMessage(i18n, messages?.expired, DESKTOP_HANDOFF_EXPIRED_DESCRIPTOR));
-		onExpiredRef.current();
-	}, [clearHandoffSession, i18n, messages?.expired]);
+		clearHandoffSession(i18n._(DESKTOP_HANDOFF_EXPIRED_DESCRIPTOR));
+		onEndedRef.current();
+	}, [clearHandoffSession, i18n]);
 	const expireCurrentSessionRef = useRef(expireCurrentSession);
 	expireCurrentSessionRef.current = expireCurrentSession;
-	const isCurrentSessionExpired = useCallback(() => {
-		if (session == null) {
-			return false;
-		}
-		return Date.parse(session.expiresAt) <= Date.now();
-	}, [session]);
+	const endDeniedSession = useCallback(() => {
+		clearHandoffSession(i18n._(DESKTOP_HANDOFF_DENIED_DESCRIPTOR));
+		onEndedRef.current();
+	}, [clearHandoffSession, i18n]);
+	const endDeniedSessionRef = useRef(endDeniedSession);
+	endDeniedSessionRef.current = endDeniedSession;
 	const openBrowser = useCallback(async (): Promise<boolean> => {
 		setPendingAction(BrowserLoginHandoffAction.OPEN_BROWSER);
 		try {
@@ -362,6 +352,10 @@ export function useBrowserLoginHandoff({
 					keepPolling = false;
 					expireCurrentSessionRef.current();
 				}
+				if (result.status === DesktopHandoffStatus.DENIED) {
+					keepPolling = false;
+					endDeniedSessionRef.current();
+				}
 			} catch (caught) {
 				consecutiveErrors += 1;
 				if (!disposed) {
@@ -402,10 +396,9 @@ export function useBrowserLoginHandoff({
 		isGenerating,
 		pendingAction,
 		remainingSeconds,
+		returnMethod: session?.returnMethod ?? DesktopHandoffReturnMethod.CODE,
 		session,
 		copyCode,
-		expireCurrentSession,
-		isCurrentSessionExpired,
 		openBrowser,
 		regenerateCode,
 		reset,

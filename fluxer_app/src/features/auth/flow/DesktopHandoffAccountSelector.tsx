@@ -50,7 +50,7 @@ const DesktopHandoffAccountSelector = observer(function DesktopHandoffAccountSel
 				if (!token) {
 					throw new Error('Failed to generate token');
 				}
-				onAccountSelected({token, userId, runtimeSnapshot});
+				onAccountSelected({token, userId, runtimeSnapshot, userData: account.userData});
 			} catch (err) {
 				if (err instanceof SessionExpiredError) {
 					onReLoginAccount(Accounts.getAccount(account.storageKey) ?? account);

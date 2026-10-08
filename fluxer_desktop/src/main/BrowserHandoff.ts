@@ -18,7 +18,11 @@ import type {
 	DesktopHandoffStatusResult,
 	DesktopHandoffUser,
 } from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
-import {DESKTOP_HANDOFF_CHANNELS, DesktopHandoffStatus} from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
+import {
+	DESKTOP_HANDOFF_CHANNELS,
+	DesktopHandoffReturnMethod,
+	DesktopHandoffStatus,
+} from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
 
 const RENDERER_CONTEXT = 'Browser sign-in handoff';
 const INITIATION_CONTEXT = 'Desktop handoff initiation';
@@ -32,6 +36,7 @@ const HANDOFF_TOKEN_MAX_LENGTH = 4096;
 const HANDOFF_API_VERSION_MAX = 1000;
 const HANDOFF_CODE_PATTERN = /^[A-Za-z0-9-]{1,64}$/u;
 const HANDOFF_POLL_SECRET_PATTERN = /^[A-Za-z0-9_-]{1,256}$/u;
+const HANDOFF_CODE_SEPARATOR_PATTERN = /[^A-Za-z0-9]/gu;
 const TRAILING_SLASH_PATTERN = /\/+$/u;
 
 interface BrowserHandoffLogger {
@@ -42,6 +47,7 @@ interface DesktopBrowserHandoffDependencies {
 	readonly logger: BrowserHandoffLogger;
 	readonly rendererDocumentOwners: RendererDocumentOwnerFactory;
 	readonly selectedInstanceClient: DesktopSelectedInstanceClient;
+	readonly returnUri: () => string | null;
 }
 
 interface ActiveHandoffSession {
@@ -53,6 +59,7 @@ interface ActiveHandoffSession {
 	readonly watcher: RendererDocumentOwnerWatcher;
 	inFlight: Promise<DesktopHandoffStatusResult> | null;
 	pollSecret: string | null;
+	grant: string | null;
 }
 
 interface HandoffJSONRequest {
@@ -144,6 +151,10 @@ function requireHandoffCode(value: unknown): string {
 	return value;
 }
 
+function normalizeHandoffCode(value: string): string {
+	return value.replace(HANDOFF_CODE_SEPARATOR_PATTERN, '').toUpperCase();
+}
+
 function readHandoffUser(value: unknown): DesktopHandoffUser | null {
 	if (!isRecord(value)) {
 		return null;
@@ -172,6 +183,9 @@ function readHandoffStatusResult(payload: Record<string, unknown> | null): Deskt
 	if (payload.status === DesktopHandoffStatus.EXPIRED) {
 		return {status: DesktopHandoffStatus.EXPIRED};
 	}
+	if (payload.status === DesktopHandoffStatus.DENIED) {
+		return {status: DesktopHandoffStatus.DENIED};
+	}
 	if (payload.status !== DesktopHandoffStatus.COMPLETED) {
 		return {status: DesktopHandoffStatus.PENDING};
 	}
@@ -198,6 +212,26 @@ export class DesktopBrowserHandoff {
 		});
 	}
 
+	public acceptReturnLink(url: URL): void {
+		const code = url.searchParams.get('code');
+		const grant = url.searchParams.get('grant');
+		if (code == null || !HANDOFF_CODE_PATTERN.test(code) || grant == null || !HANDOFF_POLL_SECRET_PATTERN.test(grant)) {
+			this.dependencies.logger.warn('[BrowserHandoff] Ignored a malformed sign-in return link');
+			return;
+		}
+		const normalizedCode = normalizeHandoffCode(code);
+		const session = [...this.sessions.values()].find(
+			(candidate) => normalizeHandoffCode(candidate.code) === normalizedCode,
+		);
+		if (session == null || session.pollSecret == null) {
+			this.dependencies.logger.warn(
+				'[BrowserHandoff] Ignored a sign-in return link for a request this app is not waiting on',
+			);
+			return;
+		}
+		session.grant = grant;
+	}
+
 	public cleanup(): void {
 		for (const frame of [...this.sessions.keys()]) {
 			this.releaseFrame(frame);
@@ -208,7 +242,14 @@ export class DesktopBrowserHandoff {
 		const owner = this.dependencies.rendererDocumentOwners.capture(event, RENDERER_CONTEXT);
 		const instance = requireDesktopHandoffInstance(request);
 		const origin = requireDesktopHTTPOrigin(new URL(instance.apiEndpoint).origin);
-		const response = await this.requestJSON({instance, origin, method: 'POST', path: HANDOFF_INITIATE_PATH});
+		const returnUri = this.dependencies.returnUri();
+		const response = await this.requestJSON({
+			...(returnUri == null ? {} : {body: {return_uri: returnUri}}),
+			instance,
+			origin,
+			method: 'POST',
+			path: HANDOFF_INITIATE_PATH,
+		});
 		if (response.status !== HttpStatus.OK && response.status !== HttpStatus.CREATED) {
 			throw new DesktopHandoffHTTPStatusError(INITIATION_CONTEXT, response.status);
 		}
@@ -223,9 +264,15 @@ export class DesktopBrowserHandoff {
 		}
 		const pollSecret = boundedString(response.payload.poll_secret, HANDOFF_FIELD_MAX_LENGTH);
 		const usablePollSecret = pollSecret != null && HANDOFF_POLL_SECRET_PATTERN.test(pollSecret) ? pollSecret : null;
+		const returnMethod =
+			returnUri != null &&
+			usablePollSecret != null &&
+			response.payload.return_method === DesktopHandoffReturnMethod.DEEP_LINK
+				? DesktopHandoffReturnMethod.DEEP_LINK
+				: DesktopHandoffReturnMethod.CODE;
 		owner.requireCurrent(RENDERER_CONTEXT);
-		this.rememberSession(owner, {code, expiresAtMs, instance, origin, pollSecret: usablePollSecret});
-		return {instance, code, expiresAt};
+		this.rememberSession(owner, {code, expiresAtMs, instance, origin, pollSecret: usablePollSecret, grant: null});
+		return {instance, code, expiresAt, returnMethod};
 	}
 
 	private async status(event: RendererDocumentIpcEvent, codeValue: unknown): Promise<DesktopHandoffStatusResult> {
@@ -261,7 +308,10 @@ export class DesktopBrowserHandoff {
 		let response: HandoffJSONResponse | null = null;
 		if (session.pollSecret != null) {
 			const attempt = await this.requestJSON({
-				body: {poll_secret: session.pollSecret},
+				body:
+					session.grant == null
+						? {poll_secret: session.pollSecret}
+						: {poll_secret: session.pollSecret, grant: session.grant},
 				instance: session.instance,
 				method: 'POST',
 				origin: session.origin,

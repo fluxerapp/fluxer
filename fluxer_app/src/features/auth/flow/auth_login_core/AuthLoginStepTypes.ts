@@ -6,12 +6,12 @@ export const DesktopHandoffMode = Object.freeze({
 	IDLE: 'idle',
 	SELECTING: 'selecting',
 	LOGIN: 'login',
-	WARNING: 'warning',
 	CODE_INPUT: 'code_input',
 	FETCHING_INFO: 'fetching_info',
 	APPROVING: 'approving',
 	COMPLETING: 'completing',
 	DONE: 'done',
+	DENIED: 'denied',
 	ERROR: 'error',
 } as const);
 
@@ -19,12 +19,12 @@ export type DesktopHandoffMode = (typeof DesktopHandoffMode)[keyof typeof Deskto
 
 export function isApprovalFlowMode(mode: DesktopHandoffMode): boolean {
 	switch (mode) {
-		case DesktopHandoffMode.WARNING:
 		case DesktopHandoffMode.CODE_INPUT:
 		case DesktopHandoffMode.FETCHING_INFO:
 		case DesktopHandoffMode.APPROVING:
 		case DesktopHandoffMode.COMPLETING:
 		case DesktopHandoffMode.DONE:
+		case DesktopHandoffMode.DENIED:
 		case DesktopHandoffMode.ERROR:
 			return true;
 		case DesktopHandoffMode.IDLE:

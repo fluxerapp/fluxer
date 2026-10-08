@@ -199,6 +199,12 @@ describe('the main window only ever loads the local app document', () => {
 		}
 	});
 
+	test('a sign-in return link never reaches the renderer with its grant', async () => {
+		ipcHandlers.delete('get-initial-deep-link');
+		withArgv(['fluxer://handoff?code=ABCDEF-GHJKMN&grant=secret-grant'], () => initializeDeepLinks());
+		assert.equal(await ipcHandlers.get('get-initial-deep-link')(), null);
+	});
+
 	test('a deep link that names a site is not forwarded as one', async () => {
 		ipcHandlers.delete('get-initial-deep-link');
 		withArgv(['https://evil.example/channels/@me'], () => initializeDeepLinks());

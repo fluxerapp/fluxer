@@ -88,6 +88,7 @@ function createDesktopHandoffAPI(): DesktopHandoffAPI & {
 				instance,
 				code: CODE,
 				expiresAt: new Date(Date.now() + 300_000).toISOString(),
+				returnMethod: 'deep_link',
 			};
 			return session;
 		},
@@ -107,17 +108,17 @@ let root: Root;
 let controller: Controller | null = null;
 
 function Probe({
-	onExpired,
+	onEnded,
 	onSuccess,
 	runtimeSnapshot,
 }: {
-	onExpired: () => void;
+	onEnded: () => void;
 	onSuccess: (payload: {token: string; userId: string}) => Promise<void> | void;
 	runtimeSnapshot: typeof RUNTIME_SNAPSHOT;
 }) {
 	controller = useBrowserLoginHandoff({
 		runtimeSnapshot,
-		onExpired,
+		onEnded,
 		onSuccess,
 	});
 	return null;
@@ -133,10 +134,10 @@ function requireController(): Controller {
 async function mountProbe(
 	onSuccess: (payload: {token: string; userId: string}) => Promise<void> | void,
 	runtimeSnapshot: typeof RUNTIME_SNAPSHOT = RUNTIME_SNAPSHOT,
-	onExpired: () => void = () => {},
+	onEnded: () => void = () => {},
 ): Promise<void> {
 	await act(async () => {
-		root.render(createElement(Probe, {onExpired, onSuccess, runtimeSnapshot}));
+		root.render(createElement(Probe, {onEnded, onSuccess, runtimeSnapshot}));
 	});
 }
 
@@ -217,7 +218,7 @@ describe('browser sign-in against a deployed desktop shell', () => {
 		expect(harness.initiateDesktopHandoff).toHaveBeenCalledTimes(1);
 		expect(harness.navigateToExternalURL).toHaveBeenCalledTimes(1);
 		expect(harness.navigateToExternalURL.mock.calls[0]?.[0]).toBe(
-			`https://self.hosted.example/login?handoff=1&code=${encodeURIComponent(CODE)}`,
+			`https://self.hosted.example/login?handoff=1&code=${encodeURIComponent(CODE)}&api=${encodeURIComponent('https://self.hosted.example')}`,
 		);
 
 		await advancePollInterval();
@@ -491,7 +492,7 @@ describe('when the instance reports the code as dead', () => {
 		expect(harness.pollDesktopHandoffStatus).toHaveBeenCalledTimes(1);
 		expect(requireController().session).toBeNull();
 		expect(requireController().code).toBeNull();
-		expect(requireController().error).toBe('That sign-in code expired. Try again.');
+		expect(requireController().error).toBe('The sign-in request expired before your browser approved it.');
 
 		await advancePollInterval();
 		await advancePollInterval();

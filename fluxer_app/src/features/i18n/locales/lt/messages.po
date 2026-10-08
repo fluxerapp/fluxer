@@ -1573,7 +1573,7 @@ msgid "{imageCount, plural, one {# image} other {# images}}, {videoCount, plural
 msgstr "{imageCount, plural, one {# vaizdas} few {# vaizdai} many {# vaizdo} other {# vaizdų}}, {videoCount, plural, one {# vaizdo įrašas} few {# vaizdo įrašai} many {# vaizdo įrašo} other {# vaizdo įrašų}}"
 
 #. Explanation shown when the selected instance advertises no web app endpoint. Instance name is interpolated.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:76
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:61
 msgid "{instanceName} does not publish a web address, so sign-in cannot be handed to a browser."
 msgstr "{instanceName} neskelbia žiniatinklio adreso, todėl prisijungimo negalima perduoti naršyklei."
 
@@ -2776,14 +2776,6 @@ msgstr "raiškusis įterptasis elementas arba nuorodos peržiūra (ne įkeltas f
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:191
 msgid "A separate profile for each community"
 msgstr "Atskiras profilis kiekvienai bendruomenei"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:164
-msgid "A sign-in request was made for your account. Only approve if you initiated it."
-msgstr "Buvo pateikta prisijungimo užklausa jūsų paskyrai. Patvirtinkite tik tuo atveju, jei ją inicijavote."
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:162
-msgid "A sign-in request was made from the following device. Only approve if you recognize it."
-msgstr "Prisijungimo užklausa gauta iš šio įrenginio. Patvirtinkite tik tuo atveju, jei jį atpažįstate."
 
 #. Description for has:sticker. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:51
@@ -4810,10 +4802,6 @@ msgstr "Taikyti visoms bendruomenėms"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
 msgid "Approval required"
 msgstr "Reikalingas patvirtinimas"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:206
-msgid "Approve"
-msgstr "Patvirtinti"
 
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:101
@@ -7873,6 +7861,11 @@ msgstr "Tikrinama prieiga..."
 msgid "Checking screen recording permission..."
 msgstr "Tikrinamas ekrano įrašymo leidimas…"
 
+#. Title while the browser looks up the sign-in request from the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:224
+msgid "Checking the sign-in request…"
+msgstr "Tikrinamas prisijungimo prašymas…"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
 msgid "Checkout"
@@ -8847,6 +8840,11 @@ msgstr "Kodo blokai"
 msgid "Code expired"
 msgstr "Kodas baigė galioti"
 
+#. Label of the field in the browser where the user types the 12-character code shown in the desktop or mobile app. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:28
+msgid "Code from the {productName} app"
+msgstr "Kodas iš „{productName}“ programėlės"
+
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Success toast on the verification step of the DSA report flow after resending the email verification code.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
@@ -9348,7 +9346,6 @@ msgstr "Visiškai paslėpti savo {premiumProductName} ženklelį nuo kitų naudo
 
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:256
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:322
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:216
 msgid "Completing sign-in…"
 msgstr "Prisijungiama…"
 
@@ -9782,13 +9779,17 @@ msgstr "Kontekstiniai meniu atidaromi kairiuoju pelės mygtuku (ant mygtukų) ar
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:77
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:36
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:99
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:726
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:413
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
 msgstr "Tęsti"
+
+#. Title in the desktop app while it waits for the user to sign in on the browser page it opened.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:177
+msgid "Continue in your browser"
+msgstr "Tęsti naršyklėje"
 
 #. Button in the gift time confirmation that proceeds to subscription checkout.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:145
@@ -10437,7 +10438,7 @@ msgid "Couldn't close DM"
 msgstr "Nepavyko uždaryti tiesioginio pokalbio"
 
 #. Desktop handoff flow error shown when finalizing the sign-in fails after a valid code.
-#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:21
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:34
 msgid "Couldn't complete sign-in. Try again."
 msgstr "Nepavyko prisijungti. Bandykite dar kartą."
 
@@ -10831,6 +10832,11 @@ msgstr "Nepavyko pradėti „{blueskyProviderName}“ autorizavimo"
 msgid "Couldn't start checkout"
 msgstr "Nepavyko pradėti atsiskaitymo"
 
+#. Shown in the desktop app when the browser sign-in request could not be created.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:66
+msgid "Couldn't start signing in with your browser."
+msgstr "Nepavyko pradėti prisijungimo per naršyklę."
+
 #. Toast error shown when creating a new account connection fails.
 #: src/features/connection/commands/ConnectionCommands.ts:27
 msgid "Couldn't start the connection"
@@ -10942,7 +10948,7 @@ msgid "Couldn't upload banner"
 msgstr "Nepavyko įkelti reklamjuostės"
 
 #. Desktop handoff flow error shown when verifying the pairing code fails for an unexpected reason.
-#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:17
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:30
 msgid "Couldn't verify that code. Try again."
 msgstr "Nepavyko patvirtinti kodo. Bandykite dar kartą."
 
@@ -12503,7 +12509,6 @@ msgstr "Tankus išdėstymas"
 
 #. Short label in the settings dialog permission components. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/shared/PermissionComponents.tsx:16
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:203
 msgid "Deny"
 msgstr "Neleisti"
 
@@ -14910,14 +14915,15 @@ msgstr "Įveskite {digitCount} skaitmenų kodą iš autentifikavimo programėlė
 msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "Įveskite {digitCount} skaitmenų kodą iš savo autentifikavimo programėlės."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:108
-msgid "Enter the code"
-msgstr "Įveskite kodą"
-
 #. Inline validation error on the verification step of the DSA report flow when the code field is empty.
 #: src/features/moderation/components/pages/ReportPage.tsx:74
 msgid "Enter the code before continuing."
 msgstr "Įveskite kodą prieš tęsdami."
+
+#. Title of the browser page where the user types the 12-character code the app shows under Signing in on another device. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:182
+msgid "Enter the code from the {PRODUCT_NAME} app"
+msgstr "Įveskite kodą iš „{PRODUCT_NAME}“ programėlės"
 
 #. Body text in the authentication sudo verification modal. Keep the tone plain and specific.
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:56
@@ -14932,10 +14938,6 @@ msgstr "Įveskite kodą, išsiųstą jūsų dabartiniu el. paštu."
 #: src/features/user/components/modals/PasswordChangeModal.tsx:165
 msgid "Enter the code sent to your email address."
 msgstr "Įveskite į el. paštą išsiųstą kodą."
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:111
-msgid "Enter the code shown in the app to continue."
-msgstr "Norėdami tęsti, įveskite programėlėje rodomą kodą."
 
 #: src/features/user/components/modals/BouncedEmailChangeModal.tsx:157
 #: src/features/user/components/modals/EmailChangeModal.tsx:244
@@ -14958,6 +14960,11 @@ msgstr "Įveskite naują el. pašto adresą, kurį norite naudoti. Ten atsiųsim
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:29
 msgid "Enter the PIN for your security key to continue."
 msgstr "Įveskite savo saugos rakto PIN kodą, kad tęstumėte."
+
+#. Title in the desktop app above the code the user types into a browser on another device.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:228
+msgid "Enter this code in your browser"
+msgstr "Įveskite šį kodą savo naršyklėje"
 
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:132
 msgid "Enter this code in your browser to complete sign-in."
@@ -15362,7 +15369,7 @@ msgstr "Baigia galioti tarp {earliest} ir {latest}"
 msgid "Expires in {remaining}s"
 msgstr "Baigs galioti po {remaining} s"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:374
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:250
 msgid "Expires in {remainingSeconds}s"
 msgstr "Baigiasi po {remainingSeconds}s"
 
@@ -16165,7 +16172,7 @@ msgid "Fluxer"
 msgstr "Fluxer"
 
 #. Status shown when browser sign-in status polling gives up after repeated failures.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:72
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:57
 msgid "Fluxer stopped checking whether the browser approved this sign-in. It didn't lose your code."
 msgstr "Fluxer nustojo tikrinti, ar naršyklė patvirtino šį prisijungimą. Ji neprarado jūsų kodo."
 
@@ -16952,8 +16959,6 @@ msgstr "Sugeneruokite bendrinamą nuorodą arba nukopijuokite sujungtą tinkint�
 msgid "Generate invite link"
 msgstr "Generuoti kvietimo nuorodą"
 
-#. Button label that replaces an expired browser sign-in code with a fresh one.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:64
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:117
 msgid "Generate new code"
 msgstr "Generuoti naują kodą"
@@ -17347,6 +17352,16 @@ msgstr "Grįžkite ir įveskite galiojantį el. pašto adresą."
 #: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:52
 msgid "Go back to {productName} to continue."
 msgstr "Grįžkite į {productName}, kad tęstumėte."
+
+#. Shown after approving a sign-in for an app on another device, which signs in by itself shortly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:292
+msgid "Go back to the {PRODUCT_NAME} app. It finishes signing in on its own."
+msgstr "Grįžkite į {PRODUCT_NAME} programėlę. Ji baigs prisijungti pati."
+
+#. Shown after approving, when the browser has already handed the sign-in back to the desktop app. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:288
+msgid "Go back to the {PRODUCT_NAME} app. You can close this tab."
+msgstr "Grįžkite į „{PRODUCT_NAME}“ programėlę. Galite uždaryti šią kortelę."
 
 #. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:89
@@ -19296,11 +19311,6 @@ msgstr "Neteisingas JSON. Įklijuokite visą atsakymą iš aukščiau esančio U
 msgid "Invalid or expired code"
 msgstr "Neteisingas arba pasibaigęs kodas"
 
-#. Desktop handoff flow error shown when the entered pairing code is invalid or expired.
-#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:13
-msgid "Invalid or expired code. Try again."
-msgstr "Neteisingas arba pasibaigęs kodas. Bandykite dar kartą."
-
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
 msgid "Invalid redirect_uri"
@@ -20877,7 +20887,7 @@ msgstr "Vietinis laiko formatas"
 msgid "Localization"
 msgstr "Lokalizacija"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:192
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:152
 msgid "Location"
 msgstr "Vieta"
@@ -21034,6 +21044,11 @@ msgstr "Padaryti {userName} grupės savininku? Prarasite savininko teises."
 #: src/features/ui/action_menu/UserContextMenu.tsx:117
 msgid "Make group owner"
 msgstr "Padaryti grupės savininku"
+
+#. Shown above the code on the browser approval page when the app cannot be signed in automatically. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:253
+msgid "Make sure this code matches the one in the {PRODUCT_NAME} app."
+msgstr "Įsitikinkite, kad šis kodas sutampa su kodu programėlėje {PRODUCT_NAME}."
 
 #. Setup wizard branding step title.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:166
@@ -24669,6 +24684,11 @@ msgstr "Nuo <0>{listPriceEffectiveDate}</0> jūsų prenumeratos kaina pasikeis i
 msgid "On click"
 msgstr "Spustelėjus"
 
+#. One line explanation in the desktop app above the code. signInAddress is the web address of the sign-in page, such as web.fluxer.app/login?handoff=1.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:236
+msgid "On your other device, sign in at {signInAddress} and enter this code when asked."
+msgstr "Kitame įrenginyje prisijunkite adresu {signInAddress} ir įveskite šį kodą, kai būsite paprašyti."
+
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:715
 msgid "Once deleted, the application and its credentials are permanently removed."
 msgstr "Ištrynus programą, ji ir jos prisijungimo duomenys bus visam laikui pašalinti."
@@ -24733,6 +24753,11 @@ msgstr "Tik @paminėjimai"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:119
 msgid "Only applies on wide screens."
 msgstr "Taikoma tik plačiuose ekranuose."
+
+#. Warning under the title of the browser approval page, so people do not approve a sign-in someone else started.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:245
+msgid "Only continue if you started this sign-in on a device you control."
+msgstr "Tęskite tik tuo atveju, jei šį prisijungimą pradėjote valdydami savo įrenginį."
 
 #. Body copy in the mature content check modal.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:32
@@ -24922,6 +24947,11 @@ msgstr "Atidaryti „{landmarkName}“"
 msgid "Open {premiumProductFullName}"
 msgstr "Atidarykite {premiumProductFullName}"
 
+#. Button on the browser page after approving that opens the desktop app again if it did not come to the front. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:304
+msgid "Open {PRODUCT_NAME}"
+msgstr "Atidarykite {PRODUCT_NAME}"
+
 #. Button label that opens the desktop app. productName is the app name.
 #. Button that hands SSO sign-in back to the mobile app. productName is the app name.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx:47
@@ -25012,11 +25042,14 @@ msgstr "Atidaryti reklamjuostės parinktis"
 msgid "Open bookmarks"
 msgstr "Atidaryti žymes"
 
-#. Button label that opens the browser sign-in handoff page.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:56
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:184
 msgid "Open browser"
 msgstr "Atidaryti naršyklę"
+
+#. Button in the desktop app that reopens the browser sign-in page while the app waits for the browser.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:53
+msgid "Open browser again"
+msgstr "Atidaryti naršyklę iš naujo"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:209
@@ -25393,10 +25426,6 @@ msgstr "Atidaryti balso ir vaizdo nustatymus"
 msgid "Open with {accountName} on {instanceName}"
 msgstr "Atidaryti su {accountName} per {instanceName}"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:414
-msgid "Open your browser to finish signing in."
-msgstr "Atidarykite naršyklę, kad užbaigtumėte prisijungimą."
-
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:137
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Atidarykite naršyklę, prisijunkite, tada įveskite toliau pateiktą kodą, kad susietumėte paskyrą."
@@ -25422,7 +25451,7 @@ msgstr "Atidaro narių puslapį. Paspauskite tarpą arba Enter, kad atidarytumė
 
 #. Short label in the language tab. Keep it concise.
 #. Spellcheck engine option in the textarea spellcheck submenu. Uses the host operating system spellchecker.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:182
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:99
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:79
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:110
 msgid "Operating system"
@@ -26440,7 +26469,7 @@ msgstr "Planas"
 msgid "Plans, perks, gifts and your subscription all live on one page."
 msgstr "Planai, privilegijos, dovanos ir jūsų prenumerata – viskas vienoje vietoje."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:172
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:89
 msgid "Platform"
 msgstr "Platforma"
 
@@ -31860,11 +31889,6 @@ msgstr "Rodyti pokalbį"
 msgid "Show chat with {count, plural, one {# unread message} other {# unread messages}}"
 msgstr "Rodyti pokalbį (yra {count, plural, one {# neperskaityta žinutė} few {# neperskaitytos žinutės} other {# neperskaitytų žinučių}})"
 
-#. Button label that opens the manual browser handoff code fallback.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:60
-msgid "Show code"
-msgstr "Rodyti kodą"
-
 #. Developer voice status menu option for displaying the voice connection identifier.
 #: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:76
 msgid "Show connection ID"
@@ -32307,7 +32331,9 @@ msgstr "Reklamjuostė rodoma atskiroje skiltyje po bendruomenės antrašte."
 msgid "Sidebar"
 msgstr "Šoninė juosta"
 
+#. Button in the browser that approves signing in to the desktop or mobile app that asked for it.
 #. Generic authentication action label. Use for buttons, links, page titles, and accessible labels.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:33
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:79
 msgid "Sign in"
 msgstr "Prisijungti"
@@ -32322,9 +32348,34 @@ msgstr "Prisijungti iš naujo"
 msgid "Sign in again as {accountLabel}"
 msgstr "Prisijunkite dar kartą kaip {accountLabel}"
 
+#. Shown in the desktop app while it waits for the browser. instanceName is the server name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:193
+msgid "Sign in to {instanceName} in your browser and confirm. This app finishes signing in on its own."
+msgstr "Prisijunkite prie {instanceName} naršyklėje ir patvirtinkite. Ši programa baigs prisijungimą pati."
+
+#. Shown in the desktop app above the code when the browser cannot return the sign-in automatically. instanceName is the server name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:189
+msgid "Sign in to {instanceName} in your browser, and check that it shows this code:"
+msgstr "Prisijunkite prie {instanceName} savo naršyklėje ir patikrinkite, ar rodomas šis kodas:"
+
 #: src/features/auth/flow/GiftHeader.tsx:33
 msgid "Sign in to claim your gift"
 msgstr "Prisijunkite, kad atsiimtumėte dovaną"
+
+#. Title of the browser page where the user approves signing in to an app that asked for it. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:71
+msgid "Sign in to the {PRODUCT_NAME} app"
+msgstr "Prisijunkite prie {PRODUCT_NAME} programėlės"
+
+#. Title of the browser page where the user approves signing in to the desktop app that opened it. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:58
+msgid "Sign in to the {PRODUCT_NAME} desktop app"
+msgstr "Prisijunkite prie „{PRODUCT_NAME}“ darbalaukio programos"
+
+#. Title of the browser page where the user approves signing in to the mobile app that asked for it. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:65
+msgid "Sign in to the {PRODUCT_NAME} mobile app"
+msgstr "Prisijunkite prie „{PRODUCT_NAME}“ mobiliosios programėlės"
 
 #. Action label that starts passkey authentication.
 #: src/features/auth/AuthMessageDescriptors.ts:13
@@ -32404,14 +32455,10 @@ msgstr "Atsijungti nuo kitų įrenginių"
 msgid "Sign out?"
 msgstr "Atsijungti?"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:234
-msgid "Sign-in approved"
-msgstr "Prisijungimas patvirtintas"
-
-#. Short label in the authentication handoff approval flow. Keep the tone plain and specific.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:26
-msgid "Sign-in code"
-msgstr "Prisijungimo kodas"
+#. Title of the browser page after the user cancelled the sign-in request from the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:322
+msgid "Sign-in cancelled"
+msgstr "Prisijungimas atšauktas"
 
 #. Section title for email address and password controls in the account security tab. Keep it concise.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountSecuritySections.tsx:23
@@ -32434,10 +32481,6 @@ msgstr "Prisijungimo eiga"
 msgid "Sign-in method"
 msgstr "Prisijungimo būdas"
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:84
-msgid "Sign-in request"
-msgstr "Prisijungimo užklausa"
-
 #. Aria label on the signal-strength icon shown while the first latency sample is still pending.
 #: src/features/voice/components/SignalStrengthIcon.tsx:16
 msgid "Signal strength loading"
@@ -32453,6 +32496,21 @@ msgstr "Prisijungta"
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:34
 msgid "Signed-in devices"
 msgstr "Prisijungę įrenginiai"
+
+#. Shown on the browser approval page above the buttons. name is the display name of the account that will be signed in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:137
+msgid "Signing in as {name}"
+msgstr "Prisijungiama kaip {name}"
+
+#. Text button in the desktop app that shows a code to type into a browser on a different device.
+#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:207
+msgid "Signing in on another device?"
+msgstr "Prisijungiate kitame įrenginyje?"
+
+#. Title while the browser approves the sign-in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:228
+msgid "Signing in…"
+msgstr "Prisijungiama…"
 
 #. Label for Bluesky OAuth signing key ID input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1161
@@ -33505,6 +33563,8 @@ msgstr "Pradėti mikrofono testą"
 msgid "Start minimized"
 msgstr "Pradėti sumažintą"
 
+#. Button on the browser page after cancelling that goes back to choosing an account.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:337
 #: src/features/moderation/components/report/ReportStepDetails.tsx:326
 #: src/features/moderation/components/report/ReportStepEmail.tsx:97
 #: src/features/moderation/components/report/ReportStepVerification.tsx:134
@@ -34911,6 +34971,11 @@ msgstr "tajų"
 msgid "Thank you for helping keep {productName} safe. We'll review your report as soon as possible."
 msgstr "Dėkojame, kad padedate užtikrinti „{productName}“ saugumą. Jūsų pranešimą peržiūrėsime kuo greičiau."
 
+#. Error in the browser when a code typed from the app is not found. instanceHost is the server the browser checked, such as api.fluxer.app. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:25
+msgid "That code is not valid on {instanceHost}. Check the code in the {productName} app and try again."
+msgstr "Šis kodas netinkamas {instanceHost}. Patikrinkite kodą programėlėje {productName} ir bandykite dar kartą."
+
 #. Body of the passkey page after the passkey prompt failed or was dismissed. Keep plain.
 #: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:36
 msgid "That didn't work. Try again or cancel."
@@ -34954,17 +35019,27 @@ msgstr "Nepavyko ištrinti žinutės"
 msgid "That message is gone, or you lost access to the conversation."
 msgstr "Ši žinutė dingo arba praradote prieigą prie pokalbio."
 
-#. Error shown when a browser sign-in handoff code expires before it is approved.
-#: src/features/auth/flow/browser_handoff/BrowserHandoffDescriptors.ts:9
-msgid "That sign-in code expired. Try again."
-msgstr "Tas prisijungimo kodas baigėsi. Pabandykite dar kartą."
-
 #. End-of-list line in the saved messages popout after every bookmark has been shown.
 #. End-of-list line on the saved messages page after every bookmark has been shown.
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:35
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:42
 msgid "That's all of them."
 msgstr "Tai viskas."
+
+#. Warning on the browser approval page when the app asked for a different account than the one chosen. requestedIdentifier is the email or username the app asked for, name is the chosen account's display name.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:131
+msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
+msgstr "„{PRODUCT_NAME}“ programa paprašė prisijungti kaip {requestedIdentifier}, bet pasirinkote {name}."
+
+#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:187
+msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
+msgstr "„{PRODUCT_NAME}“ programa jūsų kitame įrenginyje rodoma skiltyje „Prisijungimas kitu įrenginiu“. Įveskite kodą tik iš įrenginio, kurį kontroliuojate."
+
+#. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:327
+msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
+msgstr "„{PRODUCT_NAME}“ programa nebuvo prisijungta. Galite uždaryti šią skirtuką."
 
 #. Description text in the FluxerTag change modal.
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:70
@@ -34983,10 +35058,6 @@ msgstr "Programa nulūžo"
 #: src/features/app/components/ErrorFallback.tsx:134
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "Programa nulūžo. Tikrinama, ar yra naujinimų, kurie galėtų išspręsti šią problemą…"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:237
-msgid "The app should now be signed in to your account."
-msgstr "Dabar turėtumėte būti prisijungę prie savo paskyros programėlėje."
 
 #. Activity log detail line under a lifted ban, for a temporary ban that had already ended on its own before it was lifted. A ban is the community ban, not the feature that blocks a user. {date} is when the ban ended, shown as a formatted date and time.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:55
@@ -35184,6 +35255,16 @@ msgstr "Šis vaidmuo suteikė {permissions}"
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Ekrano bendrinimo šaltinis nustojo siųsti vaizdą, todėl ekrano bendrinimas buvo sustabdytas."
+
+#. Error shown in the desktop app when a browser sign-in request expires before it is approved in the browser.
+#: src/features/auth/flow/browser_handoff/BrowserHandoffDescriptors.ts:9
+msgid "The sign-in request expired before your browser approved it."
+msgstr "Prašymas prisijungti baigėsi, kol jūsų naršyklė jo nepatvirtino."
+
+#. Error shown in the desktop app when the user pressed Cancel on the browser sign-in page.
+#: src/features/auth/flow/browser_handoff/BrowserHandoffDescriptors.ts:14
+msgid "The sign-in was cancelled in your browser."
+msgstr "Prisijungimas jūsų naršyklėje buvo atšauktas."
 
 #. Activity log detail line under a deleted sticker, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the sticker, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:100
@@ -35409,6 +35490,11 @@ msgstr "Trečioji šalis"
 msgid "This account can't be blocked."
 msgstr "Šios paskyros negalima užblokuoti."
 
+#. Error in the browser when the chosen account belongs to a different server than the app that asked to sign in. accountHost and requestHost are server addresses. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:38
+msgid "This account is on {accountHost}, but the {productName} app is signing in to {requestHost}. Choose an account on {requestHost}."
+msgstr "Ši paskyra yra serveryje {accountHost}, bet programa {productName} jungiasi prie {requestHost}. Pasirinkite paskyrą iš serverio {requestHost}."
+
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:418
 msgid "This action cannot be undone. All associated data, including the bot user, will be permanently deleted."
 msgstr "Šio veiksmo anuliuoti negalima. Visi susiję duomenys, įskaitant boto naudotoją, bus visam laikui ištrinti."
@@ -35551,11 +35637,6 @@ msgstr "Tai visiškai išvalo jūsų premium būseną serveryje, įskaitant prem
 #: src/features/gift/commands/GiftCommands.tsx:45
 msgid "This code doesn't exist."
 msgstr "Šio kodo nėra."
-
-#. Status shown under the browser sign-in code once its countdown reaches zero.
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:68
-msgid "This code expired."
-msgstr "Šis kodas nebegalioja."
 
 #. Gift redemption error modal body for an invalid or already used code.
 #: src/features/gift/commands/GiftCommands.tsx:37
@@ -36075,6 +36156,11 @@ msgstr "Ši naujo slaptažodžio nuoroda nebegalioja. Nuorodos galioja 1 valand�
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:37
 msgid "This shows how links appear: {linkPreviewExampleUrl}"
 msgstr "Taip atrodo nuorodos: {linkPreviewExampleUrl}"
+
+#. Error in the browser when the sign-in request from the desktop app no longer exists, because it expired or the app cancelled it. productName is the app name, such as Fluxer.
+#: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:20
+msgid "This sign-in request expired or was cancelled in the {productName} app. Start again from the app."
+msgstr "Šis prisijungimo prašymas baigėsi arba buvo atšauktas programėlėje {productName}. Pabandykite dar kartą iš programėlės."
 
 #. Label above the community a sticker comes from in the sticker info card.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:75
@@ -38521,6 +38607,11 @@ msgstr "Naudokite {url} ten, kur turėtų būti įterptas paveikslėlio URL."
 msgid "Use a dedicated modal to set a message history threshold date for members who don't have the {readMessageHistoryPermissionLabel} permission."
 msgstr "Atskirame lange nustatykite žinučių istorijos ribinę datą nariams, kurie neturi {readMessageHistoryPermissionLabel} leidimo."
 
+#. Text button on the browser approval page that goes back to choosing which account signs in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:149
+msgid "Use a different account"
+msgstr "Naudoti kitą paskyrą"
+
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx:267
 msgid "Use a self-hosted instance URL"
 msgstr "Naudokite savo prieglobos instancijos URL"
@@ -39297,10 +39388,6 @@ msgstr "Patvirtinkite savo el. pašto adresą, kad įsigytumėte {premiumProduct
 msgid "Verify your email to start DMs."
 msgstr "Patvirtinkite el. paštą, kad galėtumėte pradėti tiesioginius pokalbius."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:142
-msgid "Verifying code…"
-msgstr "Tikrinamas kodas…"
-
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:145
 msgid "Verifying your reset link…"
 msgstr "Tikrinama nuoroda slaptažodžiui nustatyti iš naujo…"
@@ -40074,10 +40161,6 @@ msgstr "Palaukite akimirką, prieš trindami daugiau žinučių."
 msgid "Wait between messages. Members with \"{bypassSlowmodePermissionLabel}\" can bypass this."
 msgstr "Laikas tarp žinučių. Nariai, turintys leidimą „{bypassSlowmodePermissionLabel}“, gali jį apeiti."
 
-#: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx:445
-msgid "Waiting for browser approval."
-msgstr "Laukiama naršyklės patvirtinimo."
-
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
 msgid "Waiting for connection..."
@@ -40118,10 +40201,6 @@ msgstr "Pažadinti"
 #: src/features/messaging/utils/markdown/Plaintext.ts:64
 msgid "Warning"
 msgstr "Įspėjimas"
-
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:158
-msgid "Was this you?"
-msgstr "Ar tai buvote jūs?"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:243
@@ -40960,10 +41039,6 @@ msgstr "Jau turite {premiumProductName} visam laikui"
 msgid "You already have this connection."
 msgstr "Jau turite šį ryšį."
 
-#: src/features/auth/flow/HandoffApprovalFlow.tsx:87
-msgid "You are about to authorize an app to sign in to your account. Only continue if you initiated this request from a device you control."
-msgstr "Ketinate suteikti programėlei leidimą prisijungti prie jūsų paskyros. Tęskite tik tuo atveju, jei šį prašymą inicijavote iš įrenginio, kurį valdote."
-
 #. External link warning title. productName is the Fluxer product name.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:22
 msgid "You are about to leave {productName}"
@@ -41732,6 +41807,11 @@ msgstr "Jums taikomas senas tarifas. Dabartinė šio plano kaina yra {currentSub
 #: src/features/messaging/components/alerts/MessageSendTooQuickModal.tsx:8
 msgid "You're sending messages too quickly"
 msgstr "Žinutes siunčiate per greitai"
+
+#. Title of the browser page after the user approved signing in to the app.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx:282
+msgid "You're signed in"
+msgstr "Esate prisijungę"
 
 #. Status text on the screen-share hover popout shown to the local streamer. Lightly playful tone.
 #: src/features/voice/components/StreamWatchHoverPopout.tsx:43

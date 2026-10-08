@@ -131,14 +131,17 @@ interface RecoveryKitIssued {
 
 export type RecoverAccountResponse = (AuthTokenResponse | MfaLoginResponse) & RecoveryKitIssued;
 
+export type DesktopHandoffReturnMethod = 'deep_link' | 'code';
+
 interface DesktopHandoffInitiateResponse {
 	code: string;
 	expires_at: string;
 	poll_secret?: string;
+	return_method?: DesktopHandoffReturnMethod;
 }
 
 interface DesktopHandoffStatusResponse {
-	status: 'pending' | 'completed' | 'expired';
+	status: 'pending' | 'completed' | 'denied' | 'expired';
 	token?: string;
 	user_id?: string;
 	user?: AuthResponseUser | null;
@@ -147,6 +150,7 @@ interface DesktopHandoffStatusResponse {
 interface DesktopHandoffInfoClientInfo {
 	platform?: string | null;
 	os?: string | null;
+	device?: 'mobile' | 'desktop';
 	location?: {
 		city?: string | null;
 		region?: string | null;
@@ -157,6 +161,11 @@ interface DesktopHandoffInfoClientInfo {
 export interface DesktopHandoffInfoResponse {
 	status: 'pending' | 'expired';
 	client_info?: DesktopHandoffInfoClientInfo | null;
+	return_method?: DesktopHandoffReturnMethod;
+}
+
+interface DesktopHandoffCompleteResponse {
+	return_url?: string;
 }
 
 export type LoginIdentifier = {email: string; login?: undefined} | {login: string; email?: undefined};
@@ -730,19 +739,32 @@ export async function completeDesktopHandoff({
 	code,
 	token,
 	userId,
+	returnMethod,
 	target,
 }: {
 	code: string;
 	token: string;
 	userId: string;
+	returnMethod: DesktopHandoffReturnMethod;
 	target: InstanceHTTPTarget;
-}): Promise<void> {
-	await instanceRequest({
+}): Promise<string | null> {
+	const response = await instanceRequest<DesktopHandoffCompleteResponse | null>({
 		method: 'POST',
 		path: Endpoints.AUTH_HANDOFF_COMPLETE,
 		target,
-		body: {code, user_id: userId},
+		body: {code, user_id: userId, return_method: returnMethod},
 		headers: withAuthLocaleHeader({Authorization: token}),
+		auth: 'none',
+	});
+	return response.body?.return_url ?? null;
+}
+
+export async function denyDesktopHandoff({code, target}: {code: string; target: InstanceHTTPTarget}): Promise<void> {
+	await instanceRequest({
+		method: 'POST',
+		path: Endpoints.AUTH_HANDOFF_DENY(code),
+		target,
+		headers: withAuthLocaleHeader(),
 		auth: 'none',
 	});
 }

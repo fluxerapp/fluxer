@@ -22,6 +22,7 @@ export const Endpoints = {
 	AUTH_HANDOFF_INFO: (code: string) => `/auth/handoff/${code}/info`,
 	AUTH_HANDOFF_STATUS: (code: string) => `/auth/handoff/${code}/status`,
 	AUTH_HANDOFF_CANCEL: (code: string) => `/auth/handoff/${code}`,
+	AUTH_HANDOFF_DENY: (code: string) => `/auth/handoff/${code}/deny`,
 	AUTH_PASSKEY_BRIDGE: '/auth/passkey-bridge',
 	AUTH_PASSKEY_BRIDGE_OPTIONS: (ceremonyId: string) => `/auth/passkey-bridge/${ceremonyId}/options`,
 	AUTH_PASSKEY_BRIDGE_COMPLETE: (ceremonyId: string) => `/auth/passkey-bridge/${ceremonyId}/complete`,

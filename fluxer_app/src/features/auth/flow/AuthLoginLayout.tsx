@@ -44,7 +44,7 @@ import {AuthClientPreferencesStep} from '@app/features/auth/flow/client_intro/Au
 import {AuthClientWelcomeStep} from '@app/features/auth/flow/client_intro/AuthClientWelcomeStep';
 import {useDesktopClientIntroFlow} from '@app/features/auth/flow/client_intro/useDesktopClientIntroFlow';
 import DesktopHandoffAccountSelector from '@app/features/auth/flow/DesktopHandoffAccountSelector';
-import {ConnectedHandoffApprovalFlow} from '@app/features/auth/flow/HandoffApprovalFlow';
+import {HandoffApprovalFlow} from '@app/features/auth/flow/HandoffApprovalFlow';
 import IpAuthorizationScreen from '@app/features/auth/flow/IpAuthorizationScreen';
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
 import {getAuthErrorMessage} from '@app/features/auth/hooks/useAuthForm';
@@ -992,12 +992,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 			);
 		}
 		if (authLoginStep === AuthLoginStep.DESKTOP_HANDOFF_APPROVAL) {
-			return (
-				<ConnectedHandoffApprovalFlow
-					handoff={handoff}
-					data-flx="auth.flow.auth-login-layout.connected-handoff-approval-flow"
-				/>
-			);
+			return <HandoffApprovalFlow handoff={handoff} data-flx="auth.flow.auth-login-layout.handoff-approval-flow" />;
 		}
 		if (authLoginStep === AuthLoginStep.IP_AUTHORIZATION && ipAuthChallenge != null) {
 			const runtimeSnapshot = requireAuthInstanceSnapshot(resolvedAuthRuntimeSnapshot);

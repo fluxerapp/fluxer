@@ -74,13 +74,7 @@ export const DesktopHandoffMfaStep = observer(function DesktopHandoffMfaStep({
 	if (isHandoff && isApprovalFlowMode(handoff.mode)) {
 		return (
 			<HandoffApprovalFlow
-				mode={handoff.mode}
-				error={handoff.error}
-				clientInfo={handoff.clientInfo}
-				onProceedToCodeInput={handoff.proceedToCodeInput}
-				onSubmitCode={handoff.submitCode}
-				onApprove={handoff.approve}
-				onDeny={handoff.deny}
+				handoff={handoff}
 				onRetry={handleHandoffRetry}
 				data-flx="auth.flow.desktop-handoff-mfa-step.handoff-approval-flow"
 			/>

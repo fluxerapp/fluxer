@@ -97,7 +97,7 @@ function createInstanceClient(routes) {
 	};
 }
 
-function createHandoff(routes, {privileged = true} = {}) {
+function createHandoff(routes, {privileged = true, returnUri = null} = {}) {
 	const document = createDocument({privileged});
 	const instance = createInstanceClient(routes);
 	const warnings = [];
@@ -108,6 +108,7 @@ function createHandoff(routes, {privileged = true} = {}) {
 			onWatcherFailure: (error, reason) => warnings.push({message: reason, args: [error]}),
 		}),
 		selectedInstanceClient: instance.client,
+		returnUri: () => returnUri,
 	});
 	return {document, handoff, requests: instance.requests, routes: handoff.ipcRoutes(), warnings};
 }
@@ -115,9 +116,18 @@ function createHandoff(routes, {privileged = true} = {}) {
 const INITIATE_PATH = '/api/v1/auth/handoff/initiate';
 const STATUS_PATH = `/api/v1/auth/handoff/${encodeURIComponent(CODE)}/status`;
 
-function initiateRoute({pollSecret = 'poll-secret-value'} = {}) {
-	return () => jsonResponse(200, {code: CODE, expires_at: futureTimestamp(), poll_secret: pollSecret});
+function initiateRoute({pollSecret = 'poll-secret-value', returnMethod} = {}) {
+	return () =>
+		jsonResponse(200, {
+			code: CODE,
+			expires_at: futureTimestamp(),
+			poll_secret: pollSecret,
+			...(returnMethod == null ? {} : {return_method: returnMethod}),
+		});
 }
+
+const RETURN_URI = 'fluxer://handoff';
+const GRANT = 'grant-value_42';
 
 function completedStatus() {
 	return jsonResponse(200, {status: 'completed', token: 'token-42', user_id: '42', user: COMPLETED_USER});
@@ -312,6 +322,85 @@ describe('the main-process browser handoff transport', () => {
 		handoff.cleanup();
 
 		assert.equal(document.sender.listenerCount('did-start-navigation'), 0);
+		await assert.rejects(
+			() => routes[DESKTOP_HANDOFF_CHANNELS.status](document.event, session.code),
+			/not active for this renderer document/,
+		);
+	});
+});
+
+describe('the main-process handoff return through the deep link', () => {
+	test('asks for a deep link return only when the app can receive one', async () => {
+		const registered = createHandoff(
+			{[`POST ${INITIATE_PATH}`]: initiateRoute({returnMethod: 'deep_link'})},
+			{returnUri: RETURN_URI},
+		);
+		const unregistered = createHandoff({[`POST ${INITIATE_PATH}`]: initiateRoute({returnMethod: 'code'})});
+
+		const linked = await registered.routes[DESKTOP_HANDOFF_CHANNELS.initiate](registered.document.event, INSTANCE);
+		const typed = await unregistered.routes[DESKTOP_HANDOFF_CHANNELS.initiate](unregistered.document.event, INSTANCE);
+
+		assert.deepEqual(registered.requests[0].body, {return_uri: RETURN_URI});
+		assert.equal(linked.returnMethod, 'deep_link');
+		assert.equal(unregistered.requests[0].body, null);
+		assert.equal(typed.returnMethod, 'code');
+	});
+
+	test('falls back to the code when the instance does not confirm the deep link return', async () => {
+		const {document, routes} = createHandoff({[`POST ${INITIATE_PATH}`]: initiateRoute()}, {returnUri: RETURN_URI});
+
+		const session = await routes[DESKTOP_HANDOFF_CHANNELS.initiate](document.event, INSTANCE);
+
+		assert.equal(session.returnMethod, 'code');
+	});
+
+	test('presents the grant from the return link with the poll secret and never hands it to the renderer', async () => {
+		const {document, handoff, routes, requests} = createHandoff(
+			{
+				[`POST ${INITIATE_PATH}`]: initiateRoute({returnMethod: 'deep_link'}),
+				[`POST ${STATUS_PATH}`]: (call) => (call === 2 ? jsonResponse(200, {status: 'pending'}) : completedStatus()),
+			},
+			{returnUri: RETURN_URI},
+		);
+
+		const session = await routes[DESKTOP_HANDOFF_CHANNELS.initiate](document.event, INSTANCE);
+		assert.deepEqual(await routes[DESKTOP_HANDOFF_CHANNELS.status](document.event, session.code), {status: 'pending'});
+		handoff.acceptReturnLink(new URL(`${RETURN_URI}?code=${CODE.toLowerCase()}&grant=${GRANT}`));
+		const result = await routes[DESKTOP_HANDOFF_CHANNELS.status](document.event, session.code);
+
+		assert.equal(result.status, 'completed');
+		assert.deepEqual(requests[1].body, {poll_secret: 'poll-secret-value'});
+		assert.deepEqual(requests[2].body, {poll_secret: 'poll-secret-value', grant: GRANT});
+		assert.equal(JSON.stringify(result).includes(GRANT), false);
+	});
+
+	test('ignores a return link for a request this app is not waiting on', async () => {
+		const {document, handoff, routes, requests, warnings} = createHandoff(
+			{
+				[`POST ${INITIATE_PATH}`]: initiateRoute({returnMethod: 'deep_link'}),
+				[`POST ${STATUS_PATH}`]: () => jsonResponse(200, {status: 'pending'}),
+			},
+			{returnUri: RETURN_URI},
+		);
+
+		const session = await routes[DESKTOP_HANDOFF_CHANNELS.initiate](document.event, INSTANCE);
+		handoff.acceptReturnLink(new URL(`${RETURN_URI}?code=ZZZZZZ-999999&grant=${GRANT}`));
+		handoff.acceptReturnLink(new URL(`${RETURN_URI}?code=${CODE}&grant=not%20valid`));
+		await routes[DESKTOP_HANDOFF_CHANNELS.status](document.event, session.code);
+
+		assert.deepEqual(requests[1].body, {poll_secret: 'poll-secret-value'});
+		assert.equal(warnings.length, 2);
+	});
+
+	test('reports a request the browser declined and releases the session', async () => {
+		const {document, routes} = createHandoff({
+			[`POST ${INITIATE_PATH}`]: initiateRoute(),
+			[`POST ${STATUS_PATH}`]: () => jsonResponse(200, {status: 'denied'}),
+		});
+
+		const session = await routes[DESKTOP_HANDOFF_CHANNELS.initiate](document.event, INSTANCE);
+		assert.deepEqual(await routes[DESKTOP_HANDOFF_CHANNELS.status](document.event, session.code), {status: 'denied'});
+
 		await assert.rejects(
 			() => routes[DESKTOP_HANDOFF_CHANNELS.status](document.event, session.code),
 			/not active for this renderer document/,
