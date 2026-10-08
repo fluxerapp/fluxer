@@ -23,8 +23,6 @@ const HANGUL = /[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7FF]/;
 
 const HAN = /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]|[\uD840-\uD87F][\uDC00-\uDFFF]/;
 
-const CJK_ADJACENT = /[\u2E80-\u2EFF\u2F00-\u2FDF\u2FF0-\u303F\u3190-\u31EF\u3200-\u33FF\uFF00-\uFF65\uFF9E-\uFFEF]/;
-
 const requested = new Set<ScriptChunk>();
 const inFlight = new Set<Promise<void>>();
 
@@ -59,22 +57,48 @@ function request(chunk: ScriptChunk): void {
 	inFlight.add(load);
 }
 
-function hanChunkForLanguage(language: string | null | undefined): ScriptChunk {
+const HAN_CHUNKS: ReadonlyArray<ScriptChunk> = ['jp', 'sc', 'tc', 'kr'];
+
+function cjkChunkForLanguage(language: string | null | undefined): ScriptChunk | null {
 	const tag = (language ?? '').toLowerCase();
 	if (tag === 'ja' || tag.startsWith('ja-')) return 'jp';
-	if (tag.startsWith('zh')) {
+	if (tag === 'ko' || tag.startsWith('ko-')) return 'kr';
+	if (tag === 'zh' || tag.startsWith('zh-')) {
 		if (/(^|-)(tw|hk|mo|hant)(-|$)/.test(tag)) return 'tc';
 		return 'sc';
+	}
+	return null;
+}
+
+function preferredLanguages(): ReadonlyArray<string> {
+	if (typeof navigator === 'undefined') return [];
+	return navigator.languages ?? (navigator.language ? [navigator.language] : []);
+}
+
+function hanChunkForLanguage(
+	language: string | null | undefined,
+	systemLanguages: ReadonlyArray<string> = preferredLanguages(),
+	alreadyRequested: ReadonlySet<ScriptChunk> = requested,
+): ScriptChunk {
+	const fromLocale = cjkChunkForLanguage(language);
+	if (fromLocale) return fromLocale;
+	const loaded = HAN_CHUNKS.find((chunk) => alreadyRequested.has(chunk));
+	if (loaded) return loaded;
+	for (const systemLanguage of systemLanguages) {
+		const fromSystem = cjkChunkForLanguage(systemLanguage);
+		if (fromSystem) return fromSystem;
 	}
 	return 'sc';
 }
 
-function bootChunkForLanguage(language: string | null | undefined): ScriptChunk | null {
-	const tag = (language ?? '').toLowerCase();
-	if (tag === 'ja' || tag.startsWith('ja-')) return 'jp';
-	if (tag === 'ko' || tag.startsWith('ko-')) return 'kr';
-	if (tag.startsWith('zh')) return hanChunkForLanguage(tag);
-	return null;
+function chunksForText(text: string, language: string | null | undefined = documentLanguage()): Array<ScriptChunk> {
+	const chunks: Array<ScriptChunk> = [];
+	const kana = KANA.test(text);
+	const hangul = HANGUL.test(text);
+	if (kana) chunks.push('jp');
+	if (hangul) chunks.push('kr');
+	if (!kana && !hangul && HAN.test(text)) chunks.push(hanChunkForLanguage(language));
+	return chunks;
 }
 
 function documentLanguage(): string | null {
@@ -84,14 +108,11 @@ function documentLanguage(): string | null {
 
 export function noteText(text: string | null | undefined): void {
 	if (!text) return;
-	if (requested.has('jp') && requested.has('kr') && requested.has('sc') && requested.has('tc')) return;
-	if (KANA.test(text)) request('jp');
-	if (HANGUL.test(text)) request('kr');
-	if (HAN.test(text) || CJK_ADJACENT.test(text)) request(hanChunkForLanguage(documentLanguage()));
+	for (const chunk of chunksForText(text)) request(chunk);
 }
 
 export function noteLocale(language: string | null | undefined = documentLanguage()): void {
-	const chunk = bootChunkForLanguage(language);
+	const chunk = cjkChunkForLanguage(language);
 	if (chunk) request(chunk);
 }
 
