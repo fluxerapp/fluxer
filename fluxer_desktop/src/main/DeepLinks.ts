@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APP_PROTOCOL} from '@electron/common/Constants';
+import {updateFromCommandLine} from '@electron/main/DesktopUpdatePrompt';
 import {parseJumpListTaskFromArgv} from '@electron/main/JumpList';
+import {isDesktopUpdateRequested} from '@electron/main/LaunchOptions';
 import {recordRecentDeepLink} from '@electron/main/RecentDocuments';
 import {getMainWindow, isMainWindowTakenOver, onMainWindowTakeoverEnded, showWindow} from '@electron/main/Window';
 import {app, ipcMain} from 'electron';
@@ -215,6 +217,10 @@ function isSquirrelOrSyntheticArg(arg: string): boolean {
 }
 
 export function handleSecondInstance(argv: Array<string>): void {
+	if (isDesktopUpdateRequested(argv)) {
+		void updateFromCommandLine();
+		return;
+	}
 	const task = parseJumpListTaskFromArgv(argv);
 	if (task) {
 		dispatchJumpListTask(task);

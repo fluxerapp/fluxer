@@ -9,6 +9,7 @@ import {
 	WINDOWS_APP_USER_MODEL_ID,
 	WINDOWS_TOAST_ACTIVATOR_CLSID,
 } from '@electron/common/DesktopIdentity';
+import {writeLogFilesUnder} from '@electron/common/Logger';
 import {configureUserDataPath} from '@electron/common/UserDataPath';
 import {
 	APP_STORE_ADDON_PACKAGE,
@@ -151,8 +152,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const userDataConfig = configureUserDataPath();
 if (userDataConfig.portable) {
-	const portableLogsPath = app.getPath('logs');
-	log.transports.file.resolvePathFn = (variables) => path.join(portableLogsPath, variables.fileName ?? 'main.log');
+	writeLogFilesUnder(app.getPath('logs'));
 }
 armNativeProbeCache(userDataConfig.base);
 const processConfiguredAt = Date.now();

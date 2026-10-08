@@ -58,6 +58,7 @@ function manifest({shellMinimum = SHELL_VERSION, modules = {}, required = null} 
 function createStore({
 	committed = {},
 	floor = {},
+	floorBuildVersion = null,
 	rejected = {},
 	lastManifestFetch = FETCHED_AT,
 	bootAttempt = 0,
@@ -69,6 +70,7 @@ function createStore({
 		getState: () => ({
 			committed,
 			floor,
+			floor_build_version: floorBuildVersion,
 			rejected,
 			last_manifest_fetch: lastManifestFetch,
 			boot_attempt: bootAttempt,
@@ -80,8 +82,24 @@ function createStore({
 	};
 }
 
-function createPlanner(store, {shellVersion = SHELL_VERSION, hasOfflineRenderer = false} = {}) {
-	return new ModuleUpdatePlanner(store, parseModuleVersion(shellVersion, 'desktop shell version'), hasOfflineRenderer);
+function createPlanner(
+	store,
+	{shellVersion = SHELL_VERSION, hasOfflineRenderer = false, bundledRendererVersion = null} = {},
+) {
+	return new ModuleUpdatePlanner(
+		store,
+		parseModuleVersion(shellVersion, 'desktop shell version'),
+		hasOfflineRenderer,
+		bundledRendererVersion == null ? null : parseModuleVersion(bundledRendererVersion, 'bundled renderer version'),
+	);
+}
+
+function bundledPlanner(store, bundledRendererVersion = SHELL_VERSION) {
+	return createPlanner(store, {hasOfflineRenderer: true, bundledRendererVersion});
+}
+
+function installedRenderer(sha256, buildVersion) {
+	return {[`fluxer_renderer:${sha256}`]: {build_version: buildVersion}};
 }
 
 describe('ModuleUpdatePlanner.isShellCompatible', () => {
@@ -327,5 +345,122 @@ describe('ModuleUpdatePlanner.evaluateUnreachableLaunch', () => {
 		assert.deepEqual(await planner.evaluateUnreachableLaunch(true, false), {
 			kind: ModuleUnreachableLaunchDecision.LAUNCH,
 		});
+	});
+});
+
+describe('ModuleUpdatePlanner with a renderer bundled in the shell', () => {
+	const OLDER = '2026.822.9';
+	const NEWER = '2026.824.1';
+
+	test('a feed renderer no newer than the bundle is never planned or pending', async () => {
+		const planner = bundledPlanner(createStore());
+		const feed = manifest({modules: {fluxer_renderer: {sha256: RENDERER_SHA}}});
+
+		assert.equal(planner.bundleCoversModule('fluxer_renderer', feed), true);
+		assert.deepEqual(await planner.plan(feed), {items: [], base: {}});
+	});
+
+	test('a feed renderer newer than the bundle is still a required download', async () => {
+		const planner = bundledPlanner(createStore(), OLDER);
+		const feed = manifest({modules: {fluxer_renderer: {sha256: RENDERER_SHA}}});
+
+		assert.equal(planner.bundleCoversModule('fluxer_renderer', feed), false);
+		const plan = await planner.plan(feed);
+		assert.deepEqual(
+			plan.items.map((item) => [item.module, item.requirement]),
+			[['fluxer_renderer', 'required']],
+		);
+	});
+
+	test('the bundle only ever stands in for the renderer module', async () => {
+		const planner = bundledPlanner(createStore());
+		const feed = manifest({modules: {fluxer_overlay: {sha256: OVERLAY_SHA}}});
+
+		assert.equal(planner.bundleCoversModule('fluxer_overlay', feed), false);
+		assert.equal((await planner.plan(feed)).items.length, 1);
+	});
+
+	test('a committed renderer older than or equal to the bundle is stale, a newer one is not', async () => {
+		for (const [installedVersion, stale] of [
+			[OLDER, true],
+			[SHELL_VERSION, true],
+			[NEWER, false],
+		]) {
+			const planner = bundledPlanner(
+				createStore({
+					committed: {fluxer_renderer: RENDERER_SHA},
+					installedManifests: installedRenderer(RENDERER_SHA, installedVersion),
+				}),
+			);
+			assert.equal(await planner.staleRendererModule(), stale ? RENDERER_SHA : null, installedVersion);
+		}
+	});
+
+	test('a committed renderer whose installation is unreadable is stale', async () => {
+		const planner = bundledPlanner(createStore({committed: {fluxer_renderer: RENDERER_SHA}}));
+
+		assert.equal(await planner.staleRendererModule(), RENDERER_SHA);
+	});
+
+	test('without a bundle no committed renderer is ever stale', async () => {
+		const planner = createPlanner(
+			createStore({
+				committed: {fluxer_renderer: RENDERER_SHA},
+				installedManifests: installedRenderer(RENDERER_SHA, OLDER),
+			}),
+		);
+
+		assert.equal(await planner.staleRendererModule(), null);
+	});
+
+	test('serving drops an older renderer module and keeps every other module', async () => {
+		const planner = bundledPlanner(createStore({installedManifests: installedRenderer(RENDERER_SHA, OLDER)}));
+
+		assert.deepEqual(await planner.selectServedModules({fluxer_renderer: RENDERER_SHA, fluxer_overlay: OVERLAY_SHA}), {
+			modules: {fluxer_overlay: OVERLAY_SHA},
+			renderer: {source: 'bundled', version: SHELL_VERSION, bundledVersion: SHELL_VERSION},
+		});
+	});
+
+	test('serving keeps a renderer module newer than the bundle', async () => {
+		const planner = bundledPlanner(createStore({installedManifests: installedRenderer(RENDERER_SHA, NEWER)}));
+		const modules = {fluxer_renderer: RENDERER_SHA};
+
+		assert.deepEqual(await planner.selectServedModules(modules), {
+			modules,
+			renderer: {source: 'module', version: NEWER, bundledVersion: SHELL_VERSION},
+		});
+	});
+
+	test('a floor the bundle already satisfies does not hold the launch', async () => {
+		const planner = bundledPlanner(createStore({floor: {fluxer_renderer: RENDERER_SHA}, floorBuildVersion: OLDER}));
+
+		assert.deepEqual(await planner.modulesBelowFloor(true), []);
+	});
+
+	test('a floor newer than the bundle still holds the launch', async () => {
+		const planner = bundledPlanner(createStore({floor: {fluxer_renderer: RENDERER_SHA}, floorBuildVersion: NEWER}));
+
+		assert.deepEqual(await planner.modulesBelowFloor(true), ['fluxer_renderer']);
+	});
+
+	test('a fresh install that never reached the feed launches the bundled renderer', async () => {
+		const planner = bundledPlanner(createStore({lastManifestFetch: null}));
+
+		assert.deepEqual(await planner.evaluateUnreachableLaunch(true, false), {
+			kind: ModuleUnreachableLaunchDecision.LAUNCH,
+		});
+	});
+
+	test('the bundle meets a Linux security minimum it is at least as new as', async () => {
+		const planner = bundledPlanner(createStore());
+
+		assert.equal(
+			await planner.securityUpdateRequired({
+				version: parseModuleVersion(SHELL_VERSION, 'minimum'),
+				requiredModules: ['fluxer_renderer'],
+			}),
+			false,
+		);
 	});
 });

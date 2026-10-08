@@ -149,6 +149,7 @@ installElectronStub({
 
 const {
 	getElectronUpdateFeedUrl,
+	resetElectronUpdateSessionForTests,
 	runShellSelfUpdate,
 	SHELL_SELF_UPDATE_CHECK_TIMEOUT_MS,
 	SHELL_SELF_UPDATE_TOTAL_TIMEOUT_MS,
@@ -242,6 +243,7 @@ beforeEach(() => {
 	rmSync(applyStatePath, {force: true});
 	velopack.constructedWith.length = 0;
 	autoUpdater.handlers.clear();
+	resetElectronUpdateSessionForTests();
 	autoUpdater.feedUrls.length = 0;
 	autoUpdater.checks = 0;
 	autoUpdater.installs = 0;
@@ -443,6 +445,34 @@ describe('velopack self update', () => {
 	);
 });
 
+describe('velopack self update across repeated clicks', () => {
+	selfUpdateTest(
+		'a second run for the same version joins the download already in flight',
+		async ({start, fireTimer}) => {
+			velopack.checkResult = {id: 'v3', TargetFullRelease: {Version: '2026.900.0'}};
+			let finishDownload = () => {};
+			velopack.downloadPromise = new Promise((resolve) => {
+				finishDownload = resolve;
+			});
+			const first = start('velopack', createHooks().hooks);
+			await settle();
+			fireTimer(SHELL_SELF_UPDATE_TOTAL_TIMEOUT_MS);
+			assert.deepEqual(await first, {reason: 'timed-out', detail: 'the update did not finish'});
+
+			const {calls, hooks} = createHooks();
+			void start('velopack', hooks);
+			await settle();
+			finishDownload();
+			await settle();
+			await settle();
+
+			assert.equal(velopack.calls.filter((call) => call === 'downloadUpdateAsync').length, 1);
+			assert.deepEqual(calls, [{hook: 'downloading', progress: 0}, {hook: 'restarting'}]);
+			assert.deepEqual(quits, ['quit']);
+		},
+	);
+});
+
 describe('electron self update', () => {
 	selfUpdateTest('points squirrel at the json feed with an identifying user agent', async ({start}) => {
 		const {hooks} = createHooks();
@@ -461,7 +491,7 @@ describe('electron self update', () => {
 		assert.equal(autoUpdater.checks, 1);
 	});
 
-	selfUpdateTest('nothing newer resolves and takes every listener with it', async ({start}) => {
+	selfUpdateTest('nothing newer resolves and later runs reuse the same four listeners', async ({start}) => {
 		const {calls, hooks} = createHooks();
 		const promise = start('electron', hooks);
 
@@ -471,7 +501,13 @@ describe('electron self update', () => {
 
 		assert.deepEqual(await promise, {reason: 'no-update', detail: null});
 		assert.deepEqual(calls, []);
-		assert.equal(autoUpdater.totalListenerCount(), 0);
+
+		const again = start('electron', createHooks().hooks);
+		autoUpdater.emit('update-not-available');
+		await again;
+
+		assert.equal(autoUpdater.totalListenerCount(), 4);
+		assert.equal(autoUpdater.checks, 2);
 	});
 
 	selfUpdateTest(
@@ -481,7 +517,12 @@ describe('electron self update', () => {
 			const {hooks} = createHooks();
 
 			assert.deepEqual(await start('electron', hooks), {reason: 'check-failed', detail: 'Update URL is not set'});
-			assert.equal(autoUpdater.totalListenerCount(), 0);
+
+			autoUpdater.checkError = null;
+			const retry = start('electron', createHooks().hooks);
+			autoUpdater.emit('update-not-available');
+			assert.deepEqual(await retry, {reason: 'no-update', detail: null});
+			assert.equal(autoUpdater.checks, 2);
 		},
 	);
 
@@ -535,23 +576,68 @@ describe('electron self update', () => {
 			autoUpdater.emit('update-downloaded');
 
 			assert.deepEqual(await promise, {reason: 'install-failed', detail: 'the app is on a read only mount'});
-			assert.equal(autoUpdater.totalListenerCount(), 0);
 		},
 	);
 
-	selfUpdateTest('a silent squirrel hits the check deadline and drops every listener', async ({start, fireTimer}) => {
-		const {hooks} = createHooks();
-		const promise = start('electron', hooks);
+	selfUpdateTest(
+		'a silent squirrel hits the check deadline and a late download installs on the next run',
+		async ({start, fireTimer, stillPending}) => {
+			const {hooks} = createHooks();
+			const promise = start('electron', hooks);
 
-		fireTimer(SHELL_SELF_UPDATE_CHECK_TIMEOUT_MS);
+			fireTimer(SHELL_SELF_UPDATE_CHECK_TIMEOUT_MS);
 
-		assert.deepEqual(await promise, {reason: 'timed-out', detail: 'the update check produced no answer'});
-		assert.equal(autoUpdater.totalListenerCount(), 0);
+			assert.deepEqual(await promise, {reason: 'timed-out', detail: 'the update check produced no answer'});
 
-		autoUpdater.emit('update-downloaded');
+			autoUpdater.emit('update-downloaded');
 
-		assert.equal(autoUpdater.installs, 0);
-	});
+			assert.equal(autoUpdater.installs, 0);
+
+			const {calls, hooks: nextHooks} = createHooks();
+			const next = start('electron', nextHooks);
+
+			assert.deepEqual(calls, [{hook: 'restarting'}]);
+			assert.equal(autoUpdater.installs, 1);
+			assert.equal(autoUpdater.checks, 1);
+			assert.equal(await stillPending(next), true);
+		},
+	);
+
+	selfUpdateTest(
+		'a second run while squirrel is still downloading joins it instead of asking squirrel again',
+		async ({start, fireTimer, stillPending}) => {
+			const first = start('electron', createHooks().hooks);
+			autoUpdater.emit('update-available');
+			fireTimer(SHELL_SELF_UPDATE_TOTAL_TIMEOUT_MS);
+			assert.deepEqual(await first, {reason: 'timed-out', detail: 'the update did not finish'});
+
+			const {calls, hooks} = createHooks();
+			const second = start('electron', hooks);
+
+			assert.equal(autoUpdater.checks, 1);
+			assert.deepEqual(calls, [{hook: 'downloading', progress: null}]);
+			assert.equal(await stillPending(second), true);
+
+			autoUpdater.emit('update-downloaded');
+
+			assert.deepEqual(calls, [{hook: 'downloading', progress: null}, {hook: 'restarting'}]);
+			assert.equal(autoUpdater.installs, 1);
+		},
+	);
+
+	selfUpdateTest(
+		'two runs in flight both settle on one squirrel answer and squirrel is asked once',
+		async ({start}) => {
+			const first = start('electron', createHooks().hooks);
+			const second = start('electron', createHooks().hooks);
+
+			autoUpdater.emit('error', new Error('dns'));
+
+			assert.deepEqual(await first, {reason: 'check-failed', detail: 'dns'});
+			assert.deepEqual(await second, {reason: 'check-failed', detail: 'dns'});
+			assert.equal(autoUpdater.checks, 1);
+		},
+	);
 
 	selfUpdateTest('a download that never finishes hits the total deadline', async ({start, fireTimer}) => {
 		const {hooks} = createHooks();
@@ -561,6 +647,5 @@ describe('electron self update', () => {
 		fireTimer(SHELL_SELF_UPDATE_TOTAL_TIMEOUT_MS);
 
 		assert.deepEqual(await promise, {reason: 'timed-out', detail: 'the update did not finish'});
-		assert.equal(autoUpdater.totalListenerCount(), 0);
 	});
 });

@@ -21,6 +21,7 @@ import {isDesktopModuleName} from '@fluxer/desktop_ipc/src/ModuleContract';
 const MODULE_STORE_DIRECTORY_NAME = 'modules';
 export const MODULE_STATE_FILE_NAME = 'state.json';
 export const MODULE_STATE_VERSION = 3;
+const MODULE_UNREADABLE_STATE_SUFFIX = '.unreadable';
 const MODULE_DOWNLOAD_DIRECTORY_NAME = 'download';
 const MODULE_DOWNLOAD_INCOMING_DIRECTORY_NAME = 'incoming';
 const MODULE_STORE_TREE_DIRECTORY_NAME = 'store';
@@ -168,6 +169,7 @@ interface ModuleStoreState {
 	readonly previous: Readonly<Record<string, string>>;
 	readonly rejected: Readonly<Record<string, string>>;
 	readonly floor: Readonly<Record<string, string>>;
+	readonly floor_build_version: string | null;
 	readonly linux_security_minimum: LinuxModuleSecurityMinimum | null;
 	readonly manifest_high_water: ReadonlyArray<ModuleManifestHighWater>;
 	readonly last_manifest_etag: string | null;
@@ -1098,7 +1100,9 @@ function parseModuleStoreState(bytes: Buffer, statePath: string): ModuleStoreSta
 	}
 	const lastManifestEtag = parseOptionalString(record['last_manifest_etag']);
 	const lastManifestFetch = parseOptionalString(record['last_manifest_fetch']);
-	if (lastManifestEtag === undefined || lastManifestFetch === undefined) {
+	const floorBuildVersion =
+		record['floor_build_version'] === undefined ? null : parseOptionalString(record['floor_build_version']);
+	if (lastManifestEtag === undefined || lastManifestFetch === undefined || floorBuildVersion === undefined) {
 		throw new ModuleStoreStateCorruptError(statePath, 'manifest fetch metadata is invalid');
 	}
 	const bootAttempt = record['boot_attempt'];
@@ -1113,6 +1117,7 @@ function parseModuleStoreState(bytes: Buffer, statePath: string): ModuleStoreSta
 		previous,
 		rejected,
 		floor,
+		floor_build_version: floorBuildVersion,
 		linux_security_minimum: linuxSecurityMinimum,
 		manifest_high_water: manifestHighWater,
 		last_manifest_etag: lastManifestEtag,
@@ -1130,6 +1135,7 @@ function createInitialModuleStoreState(shellVersion: string, releaseChannel: str
 		previous: {},
 		rejected: {},
 		floor: {},
+		floor_build_version: null,
 		linux_security_minimum: null,
 		manifest_high_water: [],
 		last_manifest_etag: null,
@@ -1148,6 +1154,7 @@ function serializeModuleStoreState(state: ModuleStoreState): string {
 			previous: sortModuleMap(state.previous),
 			rejected: sortModuleMap(state.rejected),
 			floor: sortModuleMap(state.floor),
+			floor_build_version: state.floor_build_version,
 			linux_security_minimum:
 				state.linux_security_minimum == null
 					? null
@@ -1179,6 +1186,7 @@ export class ModuleStore {
 	public readonly storeRoot: string;
 	private state: ModuleStoreState;
 	private convergingShellVersion: string | null = null;
+	private unreadableStatePath: string | null = null;
 	private launchSucceeded = false;
 	private activeLaunchAttempt: ModuleLaunchAttempt | null = null;
 	private readonly installCoordinator = new ModuleInstallCoordinator<ModuleInstallation>();
@@ -1211,9 +1219,26 @@ export class ModuleStore {
 		await createDirectory(resolved);
 		await createDirectory(path.join(resolved, MODULE_DOWNLOAD_DIRECTORY_NAME, MODULE_DOWNLOAD_INCOMING_DIRECTORY_NAME));
 		await createDirectory(path.join(resolved, MODULE_STORE_TREE_DIRECTORY_NAME));
-		const stateFile = await ModuleStore.readState(path.join(resolved, MODULE_STATE_FILE_NAME));
+		const statePath = path.join(resolved, MODULE_STATE_FILE_NAME);
+		let stateFile: ModuleStoreStateFile;
+		let unreadableState: string | null = null;
+		try {
+			stateFile = await ModuleStore.readState(statePath);
+		} catch (error) {
+			if (
+				!(error instanceof ModuleStoreStateCorruptError) &&
+				!(error instanceof ModuleStoreStateUnsupportedVersionError)
+			) {
+				throw error;
+			}
+			unreadableState = `${statePath}${MODULE_UNREADABLE_STATE_SUFFIX}`;
+			await removeTree(unreadableState);
+			await renameWithRetry(statePath, unreadableState);
+			stateFile = {status: ModuleStoreStateFileStatus.MISSING};
+		}
 		if (stateFile.status === ModuleStoreStateFileStatus.MISSING) {
 			const store = new ModuleStore(resolved, createInitialModuleStoreState(shellVersion, releaseChannel));
+			store.unreadableStatePath = unreadableState;
 			await store.writeState(store.state);
 			return store;
 		}
@@ -1267,6 +1292,10 @@ export class ModuleStore {
 		} finally {
 			await handle.close();
 		}
+	}
+
+	public get recoveredUnreadableState(): string | null {
+		return this.unreadableStatePath;
 	}
 
 	public get shellVersionChanged(): boolean {
@@ -1500,6 +1529,29 @@ export class ModuleStore {
 		});
 	}
 
+	public async retireModule(moduleName: string): Promise<boolean> {
+		assertModuleName(moduleName);
+		return await this.withStateLock(async () => {
+			if (this.state.committed[moduleName] === undefined && this.state.previous[moduleName] === undefined) {
+				return false;
+			}
+			const committed = {...this.state.committed};
+			const previous = {...this.state.previous};
+			delete committed[moduleName];
+			delete previous[moduleName];
+			await this.writeState({...this.state, committed, previous});
+			return true;
+		});
+	}
+
+	public async recordFloorBuildVersion(floorBuildVersion: string): Promise<void> {
+		await this.withStateLock(async () => {
+			if (this.state.floor_build_version !== floorBuildVersion) {
+				await this.writeState({...this.state, floor_build_version: floorBuildVersion});
+			}
+		});
+	}
+
 	public async mergeCommitted(entries: Readonly<Record<string, string>>): Promise<ModuleStoreState> {
 		return await this.withStateLock(async () => {
 			const added = await this.resolveInstalled(entries);
@@ -1561,6 +1613,7 @@ export class ModuleStore {
 		fetchedAt,
 		manifest,
 		floor,
+		floorBuildVersion,
 		linuxSecurityMinimum,
 		advertised,
 	}: {
@@ -1568,6 +1621,7 @@ export class ModuleStore {
 		readonly fetchedAt: string;
 		readonly manifest: ModuleManifestFeedObservation;
 		readonly floor?: Readonly<Record<string, string>>;
+		readonly floorBuildVersion?: string;
 		readonly linuxSecurityMinimum?: LinuxModuleSecurityMinimum;
 		readonly advertised?: Readonly<Record<string, string>>;
 	}): Promise<ModuleStoreState> {
@@ -1579,6 +1633,7 @@ export class ModuleStore {
 				last_manifest_etag: etag,
 				last_manifest_fetch: fetchedAt,
 				floor: floor == null ? this.state.floor : sortModuleMap(floor),
+				floor_build_version: floor == null ? this.state.floor_build_version : (floorBuildVersion ?? null),
 				linux_security_minimum:
 					linuxSecurityMinimum == null
 						? this.state.linux_security_minimum

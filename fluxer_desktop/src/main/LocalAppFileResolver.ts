@@ -4,6 +4,7 @@ import {Buffer} from 'node:buffer';
 import fs from 'node:fs';
 import path from 'node:path';
 import {Readable} from 'node:stream';
+import {resolveAsarUnpackedPath} from '@electron/common/ModuleSystem';
 import {isServedLocalAppExtension, localAppCacheControl, localAppContentType} from '@electron/main/LocalAppMime';
 import {isLocalAppURL} from '@electron/main/LocalAppURL';
 import {app} from 'electron';
@@ -429,7 +430,10 @@ export class DesktopLocalAppFiles {
 	}
 
 	private rendererRootPath(): string {
-		return this.configuredRendererRoot ?? path.join(app.getAppPath(), ...RENDERER_DIRECTORY_SEGMENTS);
+		return (
+			this.configuredRendererRoot ??
+			resolveAsarUnpackedPath(path.join(app.getAppPath(), ...RENDERER_DIRECTORY_SEGMENTS))
+		);
 	}
 
 	private resolveRendererRoot(): Promise<string | null> {

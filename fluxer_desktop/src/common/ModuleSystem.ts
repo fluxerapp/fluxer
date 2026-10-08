@@ -8,6 +8,8 @@ export const MODULE_SYSTEM_BUILD_ENABLED = process.env.FLUXER_MODULES === '1';
 
 const OFFLINE_RENDERER_DIRECTORY_SEGMENTS: ReadonlyArray<string> = Object.freeze(['..', 'renderer']);
 const OFFLINE_RENDERER_INDEX_NAME = 'index.html';
+const OFFLINE_RENDERER_VERSION_NAME = 'version.json';
+const OFFLINE_RENDERER_VERSION_MAX_BYTES = 4096;
 
 const MODULE_SYSTEM_ENV = 'FLUXER_MODULE_SYSTEM';
 const MODULE_SYSTEM_DISABLE_ARGUMENT = '--fluxer-no-module-system';
@@ -84,8 +86,22 @@ export function resolveModuleSystemLaunch({
 	}
 }
 
+const ASAR_ARCHIVE_SEGMENT = `.asar${path.sep}`;
+const ASAR_UNPACKED_SEGMENT = `.asar.unpacked${path.sep}`;
+
+export function resolveAsarUnpackedPath(target: string): string {
+	const index = target.lastIndexOf(ASAR_ARCHIVE_SEGMENT);
+	if (index < 0) {
+		return target;
+	}
+	const unpacked = `${target.slice(0, index)}${ASAR_UNPACKED_SEGMENT}${target.slice(index + ASAR_ARCHIVE_SEGMENT.length)}`;
+	return fs.existsSync(unpacked) ? unpacked : target;
+}
+
 export function getOfflineRendererRoot(mainModuleUrl: string): string {
-	return path.join(path.dirname(fileURLToPath(mainModuleUrl)), ...OFFLINE_RENDERER_DIRECTORY_SEGMENTS);
+	return resolveAsarUnpackedPath(
+		path.join(path.dirname(fileURLToPath(mainModuleUrl)), ...OFFLINE_RENDERER_DIRECTORY_SEGMENTS),
+	);
 }
 
 export function hasOfflineRenderer(mainModuleUrl: string): boolean {
@@ -97,4 +113,28 @@ export function hasOfflineRenderer(mainModuleUrl: string): boolean {
 		}
 		throw error;
 	}
+}
+
+export function readBundledRendererVersion(mainModuleUrl: string): string | null {
+	let raw: string;
+	try {
+		const target = path.join(getOfflineRendererRoot(mainModuleUrl), OFFLINE_RENDERER_VERSION_NAME);
+		if (fs.statSync(target).size > OFFLINE_RENDERER_VERSION_MAX_BYTES) {
+			return null;
+		}
+		raw = fs.readFileSync(target, 'utf8');
+	} catch {
+		return null;
+	}
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(raw);
+	} catch {
+		return null;
+	}
+	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+		return null;
+	}
+	const version = (parsed as Record<string, unknown>)['version'];
+	return typeof version === 'string' && version.length > 0 ? version : null;
 }

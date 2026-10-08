@@ -5,7 +5,6 @@ import {createChildLogger} from '@electron/common/Logger';
 import {
 	type AppImageTarget,
 	applyStagedAppImageUpdate,
-	discardStagedAppImageUpdate,
 	type StagedAppImageUpdate,
 	stageAppImageUpdate,
 } from '@electron/main/AppImageUpdate';
@@ -89,6 +88,37 @@ function getStagedVelopackVersion(staged: UpdateInfo | VelopackAsset): string | 
 	return asset.Version ?? null;
 }
 
+let velopackDownload: {
+	readonly version: string;
+	readonly settled: Promise<void>;
+	readonly observers: Set<(percent: number) => void>;
+} | null = null;
+
+function downloadVelopackUpdateOnce(
+	manager: VelopackUpdateManager,
+	available: UpdateInfo,
+	onProgress: (percent: number) => void,
+): Promise<void> {
+	const version = getStagedVelopackVersion(available);
+	if (version == null) {
+		return manager.downloadUpdateAsync(available, onProgress);
+	}
+	if (velopackDownload != null && velopackDownload.version === version) {
+		velopackDownload.observers.add(onProgress);
+		return velopackDownload.settled;
+	}
+	const observers = new Set([onProgress]);
+	const settled = manager
+		.downloadUpdateAsync(available, (percent) => {
+			for (const observer of Array.from(observers)) observer(percent);
+		})
+		.finally(() => {
+			if (velopackDownload?.settled === settled) velopackDownload = null;
+		});
+	velopackDownload = {version, settled, observers};
+	return settled;
+}
+
 async function runVelopackSelfUpdate(control: SelfUpdateControl, hooks: ShellSelfUpdateHooks): Promise<void> {
 	const {UpdateManager} = requireModule('velopack') as typeof import('velopack');
 	const manager = new UpdateManager(getUpdateBaseUrl());
@@ -120,7 +150,7 @@ async function runVelopackSelfUpdate(control: SelfUpdateControl, hooks: ShellSel
 		control.clearCheckDeadline();
 		hooks.onDownloading(0);
 		try {
-			await manager.downloadUpdateAsync(available, (percent) => {
+			await downloadVelopackUpdateOnce(manager, available, (percent) => {
 				if (control.isSettled()) return;
 				hooks.onDownloading(percent);
 			});
@@ -162,6 +192,46 @@ async function fetchPublishedAppImage(): Promise<{version: string; sha256: strin
 	return {version: payload.version, sha256: typeof sha256 === 'string' ? sha256 : null};
 }
 
+let appImageStaging: {
+	readonly version: string;
+	readonly staged: Promise<StagedAppImageUpdate>;
+	readonly observers: Set<(percent: number) => void>;
+} | null = null;
+
+async function stageAppImageUpdateOnce(
+	target: AppImageTarget,
+	version: string,
+	expectedSha256: string,
+	onProgress: (percent: number) => void,
+): Promise<StagedAppImageUpdate> {
+	if (appImageStaging == null || appImageStaging.version !== version) {
+		const observers = new Set<(percent: number) => void>();
+		const staged = stageAppImageUpdate({
+			target,
+			url: `${getUpdateBaseUrl()}/${version}/appimage`,
+			expectedSha256,
+			fetchImpl: moduleNetworkFetch,
+			onProgress: ({transferred, total}) => {
+				if (total <= 0) return;
+				const percent = Math.min(100, (transferred / total) * 100);
+				for (const observer of Array.from(observers)) observer(percent);
+			},
+		});
+		const staging = {version, staged, observers};
+		appImageStaging = staging;
+		staged.catch(() => {
+			if (appImageStaging === staging) appImageStaging = null;
+		});
+	}
+	const staging = appImageStaging;
+	staging.observers.add(onProgress);
+	try {
+		return await staging.staged;
+	} finally {
+		staging.observers.delete(onProgress);
+	}
+}
+
 async function runAppImageSelfUpdate(
 	control: SelfUpdateControl,
 	hooks: ShellSelfUpdateHooks,
@@ -194,25 +264,19 @@ async function runAppImageSelfUpdate(
 	hooks.onDownloading(0);
 	let staged: StagedAppImageUpdate;
 	try {
-		staged = await stageAppImageUpdate({
-			target,
-			url: `${getUpdateBaseUrl()}/${published.version}/appimage`,
-			expectedSha256: published.sha256,
-			fetchImpl: moduleNetworkFetch,
-			onProgress: ({transferred, total}) => {
-				if (control.isSettled() || total <= 0) return;
-				hooks.onDownloading(Math.min(100, (transferred / total) * 100));
-			},
+		staged = await stageAppImageUpdateOnce(target, published.version, published.sha256, (percent) => {
+			if (control.isSettled()) return;
+			hooks.onDownloading(percent);
 		});
 	} catch (error) {
 		control.settle({reason: 'download-failed', detail: errorDetail(error)});
 		return;
 	}
 	if (control.isSettled()) {
-		discardStagedAppImageUpdate(staged);
 		return;
 	}
 	hooks.onRestarting();
+	appImageStaging = null;
 	try {
 		applyStagedAppImageUpdate(target, staged);
 	} catch (error) {
@@ -223,17 +287,75 @@ async function runAppImageSelfUpdate(
 	app.quit();
 }
 
+const ElectronUpdatePhase = Object.freeze({
+	IDLE: 'idle',
+	CHECKING: 'checking',
+	DOWNLOADING: 'downloading',
+	DOWNLOADED: 'downloaded',
+} as const);
+
+type ElectronUpdatePhase = (typeof ElectronUpdatePhase)[keyof typeof ElectronUpdatePhase];
+
+type ElectronUpdateEvent =
+	| {readonly type: 'available'}
+	| {readonly type: 'not-available'}
+	| {readonly type: 'downloaded'}
+	| {readonly type: 'error'; readonly error: Error; readonly phase: ElectronUpdatePhase};
+
+const electronUpdateSession: {
+	phase: ElectronUpdatePhase;
+	armed: boolean;
+	readonly observers: Set<(event: ElectronUpdateEvent) => void>;
+} = {
+	phase: ElectronUpdatePhase.IDLE,
+	armed: false,
+	observers: new Set(),
+};
+
+function publishElectronUpdateEvent(event: ElectronUpdateEvent): void {
+	for (const observer of Array.from(electronUpdateSession.observers)) {
+		try {
+			observer(event);
+		} catch (error) {
+			logger.error('A shell self update observer threw', error);
+		}
+	}
+}
+
+function armElectronUpdateSession(): void {
+	if (electronUpdateSession.armed) return;
+	electronUpdateSession.armed = true;
+	autoUpdater.on('update-available', () => {
+		electronUpdateSession.phase = ElectronUpdatePhase.DOWNLOADING;
+		publishElectronUpdateEvent({type: 'available'});
+	});
+	autoUpdater.on('update-not-available', () => {
+		electronUpdateSession.phase = ElectronUpdatePhase.IDLE;
+		publishElectronUpdateEvent({type: 'not-available'});
+	});
+	autoUpdater.on('update-downloaded', () => {
+		electronUpdateSession.phase = ElectronUpdatePhase.DOWNLOADED;
+		logger.info('The shell update finished downloading');
+		publishElectronUpdateEvent({type: 'downloaded'});
+	});
+	autoUpdater.on('error', (error: Error) => {
+		const phase = electronUpdateSession.phase;
+		if (phase !== ElectronUpdatePhase.DOWNLOADED) {
+			electronUpdateSession.phase = ElectronUpdatePhase.IDLE;
+		}
+		publishElectronUpdateEvent({type: 'error', error, phase});
+	});
+}
+
+export function resetElectronUpdateSessionForTests(): void {
+	electronUpdateSession.phase = ElectronUpdatePhase.IDLE;
+	electronUpdateSession.armed = false;
+	electronUpdateSession.observers.clear();
+}
+
 function runElectronSelfUpdate(control: SelfUpdateControl, hooks: ShellSelfUpdateHooks): void {
-	let downloading = false;
-	const onUpdateAvailable = (): void => {
-		downloading = true;
-		control.clearCheckDeadline();
-		hooks.onDownloading(null);
-	};
-	const onUpdateNotAvailable = (): void => {
-		control.settle({reason: 'no-update', detail: null});
-	};
-	const onUpdateDownloaded = (): void => {
+	armElectronUpdateSession();
+	const install = (): void => {
 		control.clearCheckDeadline();
 		hooks.onRestarting();
 		try {
@@ -242,20 +364,48 @@ function runElectronSelfUpdate(control: SelfUpdateControl, hooks: ShellSelfUpdat
 			control.settle({reason: 'install-failed', detail: errorDetail(error)});
 		}
 	};
-	const onError = (error: Error): void => {
-		control.settle({reason: downloading ? 'download-failed' : 'check-failed', detail: errorDetail(error)});
+	const observer = (event: ElectronUpdateEvent): void => {
+		switch (event.type) {
+			case 'available':
+				control.clearCheckDeadline();
+				hooks.onDownloading(null);
+				return;
+			case 'not-available':
+				control.settle({reason: 'no-update', detail: null});
+				return;
+			case 'downloaded':
+				install();
+				return;
+			case 'error':
+				control.settle({
+					reason: event.phase === ElectronUpdatePhase.DOWNLOADING ? 'download-failed' : 'check-failed',
+					detail: errorDetail(event.error),
+				});
+				return;
+		}
 	};
-	autoUpdater.on('update-available', onUpdateAvailable);
-	autoUpdater.on('update-not-available', onUpdateNotAvailable);
-	autoUpdater.on('update-downloaded', onUpdateDownloaded);
-	autoUpdater.on('error', onError);
+	electronUpdateSession.observers.add(observer);
 	control.addCleanup(() => {
-		autoUpdater.removeListener('update-available', onUpdateAvailable);
-		autoUpdater.removeListener('update-not-available', onUpdateNotAvailable);
-		autoUpdater.removeListener('update-downloaded', onUpdateDownloaded);
-		autoUpdater.removeListener('error', onError);
+		electronUpdateSession.observers.delete(observer);
 	});
+	switch (electronUpdateSession.phase) {
+		case ElectronUpdatePhase.DOWNLOADED:
+			logger.info('The shell update was already downloaded this session, installing it');
+			install();
+			return;
+		case ElectronUpdatePhase.DOWNLOADING:
+			logger.info('The shell update is already downloading this session, waiting for it');
+			control.clearCheckDeadline();
+			hooks.onDownloading(null);
+			return;
+		case ElectronUpdatePhase.CHECKING:
+			logger.info('The shell update check is already running this session, waiting for it');
+			return;
+		case ElectronUpdatePhase.IDLE:
+			break;
+	}
 	try {
+		electronUpdateSession.phase = ElectronUpdatePhase.CHECKING;
 		autoUpdater.setFeedURL({
 			url: getElectronUpdateFeedUrl(),
 			serverType: 'json',
@@ -263,6 +413,7 @@ function runElectronSelfUpdate(control: SelfUpdateControl, hooks: ShellSelfUpdat
 		});
 		autoUpdater.checkForUpdates();
 	} catch (error) {
+		electronUpdateSession.phase = ElectronUpdatePhase.IDLE;
 		control.settle({reason: 'check-failed', detail: errorDetail(error)});
 	}
 }
