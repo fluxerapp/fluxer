@@ -77,10 +77,15 @@ function applyDocumentBranding(productName: string, faviconUrl: string | null, t
 	}
 }
 
+export function getDocumentFaviconUrl(appPublic: InstanceAppPublic | null): string | null {
+	if (appPublic === null) return DEFAULT_APP_SHELL_BRANDING.faviconUrl;
+	return appPublic.branding.favicon_url ?? appPublic.branding.icon_url;
+}
+
 export function applyRuntimeDocumentBranding(appPublic: InstanceAppPublic): void {
 	applyDocumentBranding(
 		appPublic.branding.product_name,
-		appPublic.branding.favicon_url ?? appPublic.branding.icon_url,
+		getDocumentFaviconUrl(appPublic),
 		appPublic.branding.theme_color,
 	);
 }
@@ -88,7 +93,7 @@ export function applyRuntimeDocumentBranding(appPublic: InstanceAppPublic): void
 export function applyDefaultAppShellDocumentBranding(): void {
 	applyDocumentBranding(
 		DEFAULT_APP_SHELL_BRANDING.productName,
-		DEFAULT_APP_SHELL_BRANDING.faviconUrl,
+		getDocumentFaviconUrl(null),
 		DEFAULT_APP_SHELL_BRANDING.themeColor,
 	);
 }
