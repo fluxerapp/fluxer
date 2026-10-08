@@ -1041,6 +1041,8 @@ const shouldHandleContextMenu = (webContents: WebContents, params: Electron.Cont
 	const isTextLike = inputFieldType === 'plainText' || inputFieldType === 'textarea' || inputFieldType === undefined;
 	return Boolean((targetRecent && target.isTextarea) || isTextLike);
 };
+let rendererSpellcheckHandlersRegistered = false;
+
 export const registerSpellcheck = (webContents: WebContents): void => {
 	ensureSharedIpc();
 	if (!launchModeLogged) {
@@ -1074,7 +1076,8 @@ export const registerSpellcheck = (webContents: WebContents): void => {
 	webContents.on('did-finish-load', () => {
 		void applyStateToWebContents(webContents, sessionState.get(session) ?? state, {broadcastResolved: true});
 	});
-	if (!ipcMain.eventNames().includes('spellcheck-get-state')) {
+	if (!rendererSpellcheckHandlersRegistered) {
+		rendererSpellcheckHandlersRegistered = true;
 		ipcMain.handle('spellcheck-get-state', (event) => {
 			const targetSession = event.sender.session;
 			const next = applyLaunchSpellcheckMode(sessionState.get(targetSession) ?? {...defaultState});
