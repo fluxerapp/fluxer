@@ -1596,6 +1596,7 @@ module.exports = {
 		smartUnpack: false,
 		unpack: [
 			'**/*.node',
+			'dist/renderer/**/*',
 			'node_modules/@fluxer/win-process-loopback/*.node',
 			...winGameCaptureTargetArchs.map(
 				(arch) => `node_modules/@fluxer/win-game-capture/win-game-capture.win32-${arch}-msvc.node`,
