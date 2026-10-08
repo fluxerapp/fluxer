@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import {CHANNEL_TEXTAREA_SELECTOR} from '@app/features/app/keybindings/utils/EditableElement';
+import {
+	CHANNEL_TEXTAREA_SELECTOR,
+	isChannelTextareaElement,
+	isEditableElement,
+} from '@app/features/app/keybindings/utils/EditableElement';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import FocusRingManager from '@app/features/ui/focus_ring/FocusRingManager';
@@ -29,6 +33,7 @@ const canRedirectTabToComposer = (composer: HTMLTextAreaElement | null): compose
 	if (composer == null || composer.disabled || composer.getAttribute('aria-disabled') === 'true') return false;
 	if (isElementInert(composer)) return false;
 	const active = document.activeElement;
+	if (isEditableElement(active) && !isChannelTextareaElement(active)) return false;
 	return !(active instanceof Element && active.closest(FOCUS_TRAPPING_OVERLAY_SELECTOR) != null);
 };
 

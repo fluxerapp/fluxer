@@ -11,6 +11,7 @@ import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
 import {formatUploadingAttachmentSummary} from '@app/features/messaging/utils/UploadingAttachmentLabelUtils';
 import Permission from '@app/features/permissions/state/Permission';
+import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/AutofocusUtils';
 import * as ThreadCommands from '@app/features/threads/commands/ThreadCommands';
 import {openThread} from '@app/features/threads/commands/ThreadNavigation';
 import styles from '@app/features/threads/components/ThreadCreatePane.module.css';
@@ -71,6 +72,23 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 	const [isPrivate, setIsPrivate] = useState(false);
 	const nameRef = useRef(name);
 	nameRef.current = name;
+	const nameInputRef = useRef<HTMLInputElement>(null);
+	useEffect(() => {
+		const input = nameInputRef.current;
+		if (!input || shouldDisableAutofocusOnMobile()) return;
+		const inertRoot = input.closest('[inert]');
+		if (!inertRoot) {
+			input.focus();
+			return;
+		}
+		const observer = new MutationObserver(() => {
+			if (input.closest('[inert]')) return;
+			observer.disconnect();
+			input.focus();
+		});
+		observer.observe(inertRoot, {attributes: true, attributeFilter: ['inert']});
+		return () => observer.disconnect();
+	}, []);
 	const sourceMessage = messageId ? Messages.getMessage(parent.id, messageId) : undefined;
 	const draftKey = `thread-create:${parent.id}`;
 	const accountKey = Users.viewAccountKey;
@@ -138,6 +156,7 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 					<ChatsIcon className={styles.iconGlyph} data-flx="threads.thread-create-pane.icon-glyph" />
 				</div>
 				<Input
+					ref={nameInputRef}
 					value={name}
 					onChange={(event) => {
 						setName(event.target.value);
@@ -146,7 +165,6 @@ export const ThreadCreatePane = observer(({parent, messageId}: ThreadCreatePaneP
 					label={i18n._(D.THREAD_NAME_DESCRIPTOR)}
 					placeholder={sourceMessage?.content.slice(0, THREAD_NAME_MAX_LENGTH) || i18n._(D.NEW_THREAD_DESCRIPTOR)}
 					maxLength={THREAD_NAME_MAX_LENGTH}
-					autoFocus
 					autoComplete="off"
 					error={nameError}
 					data-flx="threads.thread-create-pane.input.name"
