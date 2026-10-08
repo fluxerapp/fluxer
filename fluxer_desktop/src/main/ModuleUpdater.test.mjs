@@ -123,6 +123,7 @@ function createUpdater(store, modules, options = {}) {
 		packageOrigin: PACKAGE_ORIGIN,
 		hasOfflineRenderer: false,
 		forceStartupUpdate: options.forceStartupUpdate ?? false,
+		selfUpdateShellFirst: options.selfUpdateShellFirst,
 		onState: options.onState,
 		fetch: async (url, init) => {
 			requests.push(url);
@@ -682,24 +683,48 @@ describe('ModuleUpdater checks without downloading and installs only when asked'
 		assert.deepEqual(store.getCommitted(), {fluxer_overlay: OVERLAY_SHA, fluxer_renderer: RENDERER_SHA});
 	});
 
-	test('the prefetch before a shell update installs what the next shell needs and commits nothing', async () => {
+	test('a boot with a newer shell updates the shell before downloading any module', async () => {
 		const {store, storeRoot} = await storeOnRenderer();
 		installModuleOnDisk(storeRoot, 'fluxer_renderer', NEXT_RENDERER_SHA, [['index.js', 'renderer-two']]);
 		seedCachedPackage(store, NEXT_RENDERER_SHA);
-		const before = store.getState();
-		const installs = [];
+		const steps = [];
 		const {updater} = createUpdater(
-			recordInstalls(store, installs),
+			recordInstalls(store, steps),
 			{fluxer_renderer: NEXT_RENDERER_SHA},
-			{shellLatest: '2026.824.1', bounds: {fluxer_renderer: {minimum_shell_version: '2026.824.1'}}},
+			{
+				shellLatest: '2026.824.1',
+				forceStartupUpdate: true,
+				selfUpdateShellFirst: async (latestVersion) => {
+					steps.push(`shell ${latestVersion}`);
+				},
+			},
 		);
 
-		await updater.prefetch();
+		const outcome = await updater.run();
 
-		assert.deepEqual(installs, ['fluxer_renderer']);
-		assert.deepEqual(store.getCommitted(), {fluxer_renderer: RENDERER_SHA});
-		assert.equal(store.getState().boot_attempt, before.boot_attempt);
-		assert.deepEqual(store.getState().floor, before.floor);
+		assert.equal(outcome.status, 'launching');
+		assert.deepEqual(steps, ['shell 2026.824.1', 'fluxer_renderer']);
+	});
+
+	test('a boot with the newest shell never runs the shell update', async () => {
+		const {store, storeRoot} = await storeOnRenderer();
+		installModuleOnDisk(storeRoot, 'fluxer_renderer', NEXT_RENDERER_SHA, [['index.js', 'renderer-two']]);
+		seedCachedPackage(store, NEXT_RENDERER_SHA);
+		const steps = [];
+		const {updater} = createUpdater(
+			recordInstalls(store, steps),
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{
+				forceStartupUpdate: true,
+				selfUpdateShellFirst: async (latestVersion) => {
+					steps.push(`shell ${latestVersion}`);
+				},
+			},
+		);
+
+		await updater.run();
+
+		assert.deepEqual(steps, ['fluxer_renderer']);
 	});
 
 	test('a Linux boot right after a shell update fetches the modules instead of launching the old set', async () => {

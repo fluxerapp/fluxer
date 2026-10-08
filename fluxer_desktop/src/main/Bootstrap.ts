@@ -66,6 +66,7 @@ const MODULE_SYSTEM_LAUNCH = resolveModuleSystemLaunch({hasOfflineRenderer: HAS_
 const MODULE_LAUNCH_PERMIT = Symbol('fluxer.desktop.moduleLaunchPermit');
 
 const UPDATE_TAKEOVER_SPLASH_WAIT_MS = 250;
+const UPDATE_SPLASH_PRELOAD_DELAY_MS = 5000;
 
 const UPDATE_SERVER_UNREACHABLE_MESSAGE =
 	"Fluxer couldn't reach its update server to download app files. Check your internet connection, proxy or firewall. Fluxer keeps retrying.";
@@ -231,7 +232,9 @@ async function runModuleBootstrap(): Promise<void> {
 		onSplashReady,
 		onSplashRetry,
 		openSplashWindow,
+		preloadSplashWindow,
 		releaseSplashAffordance,
+		revealPreloadedSplashWindow,
 		setSplashState,
 		SplashAction,
 	} = await import('@electron/main/SplashWindow');
@@ -448,6 +451,17 @@ async function runModuleBootstrap(): Promise<void> {
 			shellVersion: app.getVersion(),
 			hasOfflineRenderer: HAS_OFFLINE_RENDERER,
 			forceStartupUpdate: store.shellVersionChanged,
+			selfUpdateShellFirst:
+				shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE
+					? async (latestVersion, requiredSecurityUpdate) => {
+							logger.info('A newer shell is available, updating it before the modules', {latestVersion});
+							const result = await runShellSelfUpdateOnSplash(requiredSecurityUpdate);
+							logger.warn('The shell self update did not restart the app, converging the modules for this shell', {
+								latestVersion,
+								...result,
+							});
+						}
+					: undefined,
 			fetch: moduleNetworkFetch,
 			sleep: updateServerRetry.sleep,
 			onState: (state) => {
@@ -629,15 +643,35 @@ async function runModuleBootstrap(): Promise<void> {
 		let takeoverWindows: typeof import('@electron/main/Window') | null = null;
 		let takeoverSplash: BrowserWindow | null = null;
 		let takeoverHidden: ReadonlyArray<BrowserWindow> = [];
+		let takeoverActive = false;
+		const preloadUpdateSplash = (): void => {
+			const timer = setTimeout(() => {
+				if (takeoverActive) return;
+				void import('@electron/main/Window').then((windows) => {
+					takeoverWindows = windows;
+					if (!takeoverActive) preloadSplashWindow();
+				});
+			}, UPDATE_SPLASH_PRELOAD_DELAY_MS);
+			timer.unref();
+		};
 		const updateTakeover: DesktopUpdateTakeover = {
 			begin: async () => {
-				const windows = await import('@electron/main/Window');
+				takeoverActive = true;
+				const windows = takeoverWindows ?? (await import('@electron/main/Window'));
 				takeoverWindows = windows;
 				splashOpenedAt = Date.now();
-				const splash = openSplashWindow({darkThemeOnShow: true});
-				takeoverSplash = splash;
 				setSplashState({status: 'checking-for-updates'});
 				armSplashActions();
+				const preloaded = revealPreloadedSplashWindow();
+				if (preloaded != null) {
+					takeoverSplash = preloaded;
+					takeoverHidden = windows.hideAppWindowsForUpdate(preloaded);
+					windows.beginMainWindowTakeover(focusSplashWindow);
+					logger.info('Revealed the preloaded update splash and hid the app windows in the same tick');
+					return;
+				}
+				const splash = openSplashWindow({darkThemeOnShow: true});
+				takeoverSplash = splash;
 				windows.beginMainWindowTakeover(focusSplashWindow);
 				await new Promise<void>((resolve) => {
 					let settled = false;
@@ -659,6 +693,8 @@ async function runModuleBootstrap(): Promise<void> {
 				takeoverWindows?.restoreAppWindowsAfterUpdate(takeoverHidden);
 				takeoverHidden = [];
 				closeSplashWindow();
+				takeoverActive = false;
+				preloadUpdateSplash();
 			},
 			closeApp: async () => {
 				if (takeoverSplash != null) {
@@ -668,14 +704,15 @@ async function runModuleBootstrap(): Promise<void> {
 			},
 			reopen: (launchAttempt) => {
 				takeoverWindows?.endMainWindowTakeover();
+				takeoverActive = false;
 				reopenMainWindow(launchAttempt);
+				preloadUpdateSplash();
 			},
 		};
 
 		const desktopUpdate = new DesktopUpdateRun({
 			probe: () => updater.checkForUpdate(),
 			canSelfUpdateShell: shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE,
-			prefetchModules: () => updater.prefetch(),
 			runShellSelfUpdate: () => runShellSelfUpdateOnSplash(false),
 			installModules: async () => {
 				const launchAttempt = await updater.installPending();
@@ -709,6 +746,7 @@ async function runModuleBootstrap(): Promise<void> {
 		armDesktopUpdate({check: () => desktopUpdate.check(), start: () => desktopUpdate.start()});
 		armMainWindowHandoff(updater, permit.launchAttempt, () => {
 			desktopUpdate.markLaunchSettled();
+			preloadUpdateSplash();
 			armModulePoll(resolveModulePollPlan(readDevModulePollInterval()), logger);
 		});
 		app.once('before-quit', () => {

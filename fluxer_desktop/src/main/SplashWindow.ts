@@ -143,6 +143,8 @@ let lastSerializedState: SerializedSplashState | null = null;
 let readyWatchdog: NodeJS.Timeout | null = null;
 let themeSourceBeforeSplash: typeof nativeTheme.themeSource | null = null;
 let darkThemePendingShow = false;
+let splashHeldHidden = false;
+let splashDocumentReady = false;
 
 function toSplashCount(value: number | null | undefined): number | null {
 	if (typeof value !== 'number' || !Number.isFinite(value)) return null;
@@ -274,6 +276,7 @@ function showSplashWindow(reason: 'ready' | 'watchdog'): void {
 		clearTimeout(readyWatchdog);
 		readyWatchdog = null;
 	}
+	if (splashHeldHidden) return;
 	const window = splashWindow;
 	if (window == null || window.isDestroyed() || window.isVisible()) return;
 	if (reason === 'watchdog') {
@@ -288,6 +291,7 @@ function registerSplashIpc(): void {
 	splashIpcRegistered = true;
 	ipcMain.on(DESKTOP_SPLASH_READY_CHANNEL, (event) => {
 		if (!isSplashSender(event)) return;
+		splashDocumentReady = true;
 		showSplashWindow('ready');
 		if (lastSerializedState != null) {
 			event.sender.send(DESKTOP_SPLASH_STATE_CHANNEL, lastSerializedState);
@@ -337,10 +341,40 @@ function registerSplashDiagnostics(window: BrowserWindow): void {
 }
 
 export function openSplashWindow(options: {readonly darkThemeOnShow?: boolean} = {}): BrowserWindow {
-	if (splashWindow != null && !splashWindow.isDestroyed()) return splashWindow;
+	const existing = splashWindow;
+	if (existing != null && !existing.isDestroyed()) {
+		if (splashHeldHidden) {
+			splashHeldHidden = false;
+			existing.setSkipTaskbar(false);
+			if (splashDocumentReady) showSplashWindow('ready');
+		}
+		return existing;
+	}
+	return createSplashWindow(options.darkThemeOnShow === true, false);
+}
+
+export function preloadSplashWindow(): void {
+	if (splashWindow != null && !splashWindow.isDestroyed()) return;
+	createSplashWindow(true, true);
+}
+
+export function revealPreloadedSplashWindow(): BrowserWindow | null {
+	const window = splashWindow;
+	if (!splashHeldHidden || !splashDocumentReady || window == null || window.isDestroyed()) return null;
+	splashHeldHidden = false;
+	window.setSkipTaskbar(false);
+	applySplashTheme();
+	window.show();
+	window.focus();
+	return window;
+}
+
+function createSplashWindow(darkThemeOnShow: boolean, heldHidden: boolean): BrowserWindow {
 	registerSplashIpc();
 	darkThemePendingShow = true;
-	if (options.darkThemeOnShow !== true) applySplashTheme();
+	splashHeldHidden = heldHidden;
+	splashDocumentReady = false;
+	if (!darkThemeOnShow) applySplashTheme();
 	const window = new BrowserWindow({
 		width: SPLASH_WINDOW_WIDTH,
 		height: getSplashWindowHeight(process.platform),
@@ -370,17 +404,23 @@ export function openSplashWindow(options: {readonly darkThemeOnShow?: boolean} =
 	window.on('closed', () => {
 		if (splashWindow === window) {
 			splashWindow = null;
+			splashHeldHidden = false;
+			splashDocumentReady = false;
 		}
 		restoreThemeSource();
 		if (!shouldQuitOnSplashClosed(process.platform, launchLatched)) return;
 		logger.info('The splash window closed before launch, quitting');
 		app.quit();
 	});
-	readyWatchdog = setTimeout(() => {
-		readyWatchdog = null;
-		showSplashWindow('watchdog');
-	}, SPLASH_READY_WATCHDOG_MS);
-	readyWatchdog.unref();
+	if (heldHidden) {
+		window.setSkipTaskbar(true);
+	} else {
+		readyWatchdog = setTimeout(() => {
+			readyWatchdog = null;
+			showSplashWindow('watchdog');
+		}, SPLASH_READY_WATCHDOG_MS);
+		readyWatchdog.unref();
+	}
 	const documentUrl = pathToFileURL(getDesktopDistributionPath('splash', 'index.html')).href;
 	window.loadURL(documentUrl).catch((error) => {
 		logger.error('Failed to load the splash document', error);
@@ -416,6 +456,8 @@ function restoreThemeSource(): void {
 export function closeSplashWindow(): void {
 	const window = splashWindow;
 	splashWindow = null;
+	splashHeldHidden = false;
+	splashDocumentReady = false;
 	restoreThemeSource();
 	lastSerializedState = null;
 	affordanceLatched = false;

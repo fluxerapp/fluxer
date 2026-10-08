@@ -31,9 +31,6 @@ function harness({
 			return next;
 		},
 		canSelfUpdateShell,
-		prefetchModules: async () => {
-			steps.push('prefetch');
-		},
 		runShellSelfUpdate: async () => {
 			steps.push('shell-update');
 			const result = shellResults[Math.min(shellIndex, shellResults.length - 1)];
@@ -110,7 +107,7 @@ describe('DesktopUpdateRun', () => {
 		assert.deepEqual(published, [{shellNewer: false, modulesChanged: false}]);
 	});
 
-	test('a shell update fetches the modules for the next shell first, so the next boot has nothing left to download', async () => {
+	test('a shell update runs before any module download, and modules install only when the shell did not restart', async () => {
 		const {run, steps} = harness({
 			probes: [{shellLatestVersion: '2026.1008.2', shellNewer: true, modulesChanged: true}],
 			shellResults: [{reason: 'install-failed', detail: 'nope'}],
@@ -118,7 +115,7 @@ describe('DesktopUpdateRun', () => {
 
 		await run.start();
 
-		assert.deepEqual(steps, ['probe', 'takeover', 'close', 'prefetch', 'shell-update', 'install', 'reopen-updated']);
+		assert.deepEqual(steps, ['probe', 'takeover', 'close', 'shell-update', 'install', 'reopen-updated']);
 	});
 
 	test('a shell feed that lags the manifest stops offering the shell until the manifest moves on', async () => {

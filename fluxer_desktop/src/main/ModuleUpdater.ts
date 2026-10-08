@@ -264,6 +264,7 @@ interface ModuleUpdaterOptions {
 	readonly packageOrigin?: string;
 	readonly hasOfflineRenderer?: boolean;
 	readonly forceStartupUpdate?: boolean;
+	readonly selfUpdateShellFirst?: (latestVersion: string, requiredSecurityUpdate: boolean) => Promise<void>;
 	readonly onState?: (state: ModuleUpdaterSplashState) => void;
 	readonly report?: (report: ModuleUpdaterReport) => void;
 	readonly fetch: typeof globalThis.fetch;
@@ -282,6 +283,10 @@ export class ModuleUpdater {
 	private readonly shellVersion: ModuleVersion;
 	private readonly hasOfflineRenderer: boolean;
 	private readonly forceStartupUpdate: boolean;
+	private readonly selfUpdateShellFirst:
+		| ((latestVersion: string, requiredSecurityUpdate: boolean) => Promise<void>)
+		| null;
+	private readonly shellFirstAttempted = new Set<string>();
 	private readonly manifestFeed: ModuleManifestFeedIdentity;
 	private readonly manifestRepository: ModuleManifestRepository;
 	private readonly planner: ModuleUpdatePlanner;
@@ -307,6 +312,7 @@ export class ModuleUpdater {
 		this.shellVersion = parseModuleVersion(options.shellVersion, 'desktop shell version');
 		this.hasOfflineRenderer = options.hasOfflineRenderer ?? false;
 		this.forceStartupUpdate = options.forceStartupUpdate ?? false;
+		this.selfUpdateShellFirst = options.selfUpdateShellFirst ?? null;
 		const releaseChannel = options.releaseChannel ?? BUILD_CHANNEL;
 		this.platform = options.platform ?? process.platform;
 		const arch = resolveDesktopModuleArchitecture(options.arch ?? process.arch);
@@ -429,6 +435,9 @@ export class ModuleUpdater {
 						minimumVersion: manifest.shell.minimumVersion.source,
 						requiredSecurityUpdate: this.isSecurityUpdateRequired(),
 					};
+				}
+				if (await this.updateShellFirst(manifest)) {
+					this.emit(ModuleUpdaterStatus.CHECKING);
 				}
 				const plan = await this.planner.plan(manifest);
 				if (plan.items.length === 0) {
@@ -557,6 +566,20 @@ export class ModuleUpdater {
 		return this.observeManifest(await this.manifestRepository.resolveMemoizedDocument());
 	}
 
+	private async updateShellFirst(manifest: DesktopModuleUpdateManifest): Promise<boolean> {
+		const latestVersion = manifest.shell.latestVersion.source;
+		if (
+			this.selfUpdateShellFirst == null ||
+			compareModuleVersions(manifest.shell.latestVersion, this.shellVersion) <= 0 ||
+			this.shellFirstAttempted.has(latestVersion)
+		) {
+			return false;
+		}
+		this.shellFirstAttempted.add(latestVersion);
+		await this.selfUpdateShellFirst(latestVersion, this.isSecurityUpdateRequired());
+		return true;
+	}
+
 	public async checkForUpdate(): Promise<DesktopUpdateProbe> {
 		const manifest = await this.fetchFreshManifest(ModuleManifestObservationMode.READ_ONLY);
 		const shellLatestVersion = manifest.shell.latestVersion.source;
@@ -584,14 +607,6 @@ export class ModuleUpdater {
 			this.emit(ModuleUpdaterStatus.VERIFYING, {current: items.length, total: items.length});
 		}
 		return await this.store.activateMergedForRendererReload(installed, unresolved);
-	}
-
-	public async prefetch(): Promise<void> {
-		this.emit(ModuleUpdaterStatus.CHECKING);
-		this.downloadRate.reset();
-		const manifest = await this.fetchFreshManifest(ModuleManifestObservationMode.READ_ONLY);
-		const nextShellPlanner = new ModuleUpdatePlanner(this.store, manifest.shell.latestVersion, this.hasOfflineRenderer);
-		await this.installItems(await this.collectPendingItems(manifest, nextShellPlanner));
 	}
 
 	private async fetchFreshManifest(mode: ModuleManifestObservationMode): Promise<DesktopModuleUpdateManifest> {

@@ -30,7 +30,6 @@ interface DesktopUpdateLogger {
 interface DesktopUpdateRunOptions {
 	readonly probe: () => Promise<DesktopUpdateProbe>;
 	readonly canSelfUpdateShell: boolean;
-	readonly prefetchModules: () => Promise<void>;
 	readonly runShellSelfUpdate: () => Promise<ShellSelfUpdateResult>;
 	readonly installModules: () => Promise<ModuleLaunchAttempt | null>;
 	readonly takeover: DesktopUpdateTakeover;
@@ -124,13 +123,6 @@ export class DesktopUpdateRun {
 
 	private async updateShell(probe: FilteredProbe): Promise<DesktopUpdateCheck> {
 		const {logger} = this.options;
-		if (probe.check.modulesChanged) {
-			try {
-				await this.options.prefetchModules();
-			} catch (error) {
-				logger.warn('Failed to fetch the modules ahead of the shell update', error);
-			}
-		}
 		const result = await this.options.runShellSelfUpdate();
 		logger.warn('The shell self update did not restart the app', result);
 		if (result.reason === 'no-update') {

@@ -58,7 +58,10 @@ class FakeWebContents {
 }
 
 class FakeBrowserWindow {
+	static last = null;
+
 	constructor(options) {
+		FakeBrowserWindow.last = this;
 		this.options = options;
 		this.webContents = new FakeWebContents();
 		this.listeners = new Map();
@@ -391,6 +394,25 @@ describe('splash window configuration', () => {
 
 		assert.equal(window.visible, true);
 		assert.equal(window.shownInactive, 1);
+	});
+
+	test('a preloaded splash loads hidden, stays hidden once ready, and reveals on demand', async () => {
+		const {preloadSplashWindow, revealPreloadedSplashWindow} = await loadSplashWindow('preload');
+
+		const {timers} = withPlatformTimers('darwin', () => preloadSplashWindow());
+		const splash = FakeBrowserWindow.last;
+		assert.equal(timers.length, 0);
+		assert.equal(splash.visible, false);
+		assert.equal(splash.skipTaskbar, true);
+		assert.equal(revealPreloadedSplashWindow(), null);
+
+		emitIpc('desktop-splash:ready', {sender: splash.webContents});
+		assert.equal(splash.visible, false);
+
+		assert.equal(revealPreloadedSplashWindow(), splash);
+		assert.equal(splash.visible, true);
+		assert.equal(splash.skipTaskbar, false);
+		assert.equal(revealPreloadedSplashWindow(), null);
 	});
 
 	test('a preload that never reports ready still gets shown by the watchdog', async () => {

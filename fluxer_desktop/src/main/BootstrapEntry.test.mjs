@@ -228,7 +228,7 @@ describe('Bootstrap entry point', () => {
 		assert.match(poll, /void checkDesktopUpdateNow\(\)/);
 		assert.doesNotMatch(
 			poll,
-			/installPending|prefetch|reloadIgnoringCache|refreshModuleRoots|activateMergedForRendererReload/,
+			/installPending|reloadIgnoringCache|refreshModuleRoots|activateMergedForRendererReload/,
 			'A background poll that downloads the renderer and commits it makes the update look like it already happened, then the click reloads in place while the shell update still waits. The poll only publishes whether an update exists.',
 		);
 		assert.doesNotMatch(source, /reloadIgnoringCache/);
