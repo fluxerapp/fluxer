@@ -1225,7 +1225,11 @@ mod tests {
         assert!(args.contains(&"-c.mac.notarize=false".to_owned()));
         assert!(args.contains(&"-c.directories.output=/tmp/out".to_owned()));
         assert!(args.contains(&"--arm64".to_owned()));
-        assert!(!args.iter().any(|arg| arg.starts_with("-c.mac.sign.identity")));
+        assert!(
+            !args
+                .iter()
+                .any(|arg| arg.starts_with("-c.mac.sign.identity"))
+        );
         let ad_hoc = electron_builder_args(Path::new("/tmp/out"), "x64", &MacSigning::AdHoc, &[]);
         assert!(ad_hoc.contains(&"-c.mac.sign.identity=-".to_owned()));
         assert!(ad_hoc.contains(&"--x64".to_owned()));
