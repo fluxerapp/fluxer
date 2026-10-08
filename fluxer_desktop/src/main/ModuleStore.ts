@@ -1178,6 +1178,7 @@ export class ModuleStore {
 	public readonly incomingDownloadRoot: string;
 	public readonly storeRoot: string;
 	private state: ModuleStoreState;
+	private openedAfterShellChange = false;
 	private launchSucceeded = false;
 	private activeLaunchAttempt: ModuleLaunchAttempt | null = null;
 	private readonly installCoordinator = new ModuleInstallCoordinator<ModuleInstallation>();
@@ -1217,7 +1218,8 @@ export class ModuleStore {
 			return store;
 		}
 		const store = new ModuleStore(resolved, stateFile.state);
-		if (stateFile.state.shell_version !== shellVersion || stateFile.state.release_channel !== releaseChannel) {
+		store.openedAfterShellChange = stateFile.state.shell_version !== shellVersion;
+		if (store.openedAfterShellChange || stateFile.state.release_channel !== releaseChannel) {
 			await store.writeState({...store.state, shell_version: shellVersion, release_channel: releaseChannel});
 		}
 		return store;
@@ -1263,6 +1265,10 @@ export class ModuleStore {
 		} finally {
 			await handle.close();
 		}
+	}
+
+	public get shellVersionChanged(): boolean {
+		return this.openedAfterShellChange;
 	}
 
 	public getState(): ModuleStoreState {

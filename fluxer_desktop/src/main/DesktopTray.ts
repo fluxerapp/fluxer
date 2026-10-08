@@ -33,6 +33,7 @@ const TRAY_POSITION_GUID = TRAY_POSITION_GUIDS[BUILD_CHANNEL];
 interface DesktopTrayController {
 	createWindow: () => BrowserWindow;
 	getMainWindow: () => BrowserWindow | null;
+	isMainWindowTakenOver: () => boolean;
 	hideWindow: () => void;
 	setQuitting: (quitting: boolean) => void;
 	showWindow: () => void;
@@ -236,7 +237,7 @@ function createTrayIcon(): Electron.NativeImage | null {
 function ensureMainWindowVisible(): void {
 	if (!controller) return;
 	const mainWindow = controller.getMainWindow();
-	if (!mainWindow || mainWindow.isDestroyed()) {
+	if ((!mainWindow || mainWindow.isDestroyed()) && !controller.isMainWindowTakenOver()) {
 		controller.createWindow();
 	}
 	controller.showWindow();

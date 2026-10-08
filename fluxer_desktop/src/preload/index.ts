@@ -463,8 +463,6 @@ const api: ElectronAPI = {
 		return () => ipcRenderer.removeListener('updater-event', handler);
 	},
 	updaterCheck: (context: UpdaterContext): Promise<void> => ipcRenderer.invoke('updater-check', context),
-	updaterDownload: (context: UpdaterContext): Promise<void> => ipcRenderer.invoke('updater-download', context),
-	updaterInstall: () => ipcRenderer.invoke('updater-install'),
 	windowMinimize: (): void => {
 		ipcRenderer.send('window-minimize');
 	},

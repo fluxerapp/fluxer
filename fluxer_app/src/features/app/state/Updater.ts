@@ -2,15 +2,12 @@
 
 import Config from '@app/features/app/config/Config';
 import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
-import {
-	shouldShowNativeDesktopUpdateDownloadProgress,
-	shouldShowNativeDesktopUpdateInApp,
-} from '@app/features/app/utils/UpdaterPlatformUtils';
 import {WORKER_NAVIGATION_CACHE_PREFIX} from '@app/features/platform/service_worker/WorkerCacheCleanup';
 import {getProtectedCacheStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import type {UpdaterContext, UpdaterDownloadOption, UpdaterEvent} from '@app/features/platform/types/Electron';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getClientInfo} from '@app/features/platform/utils/ClientInfo';
+import {flushPendingPersistWrites} from '@app/features/platform/utils/MobXPersistence';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {
 	downloadWithNative,
@@ -21,12 +18,10 @@ import {
 } from '@app/features/ui/utils/NativeUtils';
 import {
 	pushDesktopUpdateDownloadFailedModal,
-	pushDesktopUpdateInstallFailedModal,
 	pushManualUpdateAvailableModal,
 	pushUnsupportedUpdateModal,
 	pushUpdateAvailableModal,
 	pushUpdateCheckFailedModal,
-	pushUpdateReadyModal,
 	pushUpToDateModal,
 } from '@app/features/updater/commands/UpdaterModalCommands';
 import {
@@ -35,7 +30,6 @@ import {
 	getUpdaterMachineStateValue,
 	getUpdaterUpdateType,
 	hasManualNativeDownload,
-	type NativeDownloadProgress,
 	type NativeUpdateInfo,
 	transitionUpdaterMachineSnapshot,
 	type UpdateInfo,
@@ -47,16 +41,9 @@ import {
 } from '@app/features/updater/state/UpdaterStateMachine';
 import {buildLinuxManualUpdateOptions} from '@app/features/updater/utils/LinuxManualUpdateOptions';
 import type {UpdaterEvent as NativeUpdaterEvent} from '@app/types/electron.d';
-import type {DesktopPendingModuleUpdate} from '@fluxer/desktop_ipc/src/ModuleContract';
-import {msg} from '@lingui/core/macro';
 import {makeAutoObservable, runInAction} from 'mobx';
 
-export type {NativeDownloadProgress, NativeUpdateInfo, UpdateInfo, UpdaterState, UpdateType, WebUpdateInfo};
-
-export const DOWNLOADING_UPDATE_DESCRIPTOR = msg({
-	message: 'Downloading desktop update…',
-	comment: 'Short desktop updater status label.',
-});
+export type {NativeUpdateInfo, UpdateInfo, UpdaterState, UpdateType, WebUpdateInfo};
 
 const logger = new Logger('Updater');
 const CHECK_INTERVAL_MS = 5 * 60 * 1000;
@@ -109,32 +96,11 @@ function normalizeUpdaterEvent(event: NativeUpdaterEvent): UpdaterEvent | null {
 				type: 'available',
 				context,
 				version: event.version ?? null,
-				downloadSize: event.downloadSize ?? null,
-				downloadStarted: event.downloadStarted ?? true,
 				downloadUrl: event.downloadUrl,
 				downloadOptions: event.downloadOptions,
 			};
 		case 'not-available':
 			return {type: 'not-available', context};
-		case 'downloaded':
-			return {type: 'downloaded', context, version: event.version ?? null};
-		case 'progress':
-			if (
-				typeof event.percent !== 'number' ||
-				typeof event.transferred !== 'number' ||
-				typeof event.total !== 'number' ||
-				typeof event.bytesPerSecond !== 'number'
-			) {
-				return null;
-			}
-			return {
-				type: 'progress',
-				context,
-				percent: event.percent,
-				transferred: event.transferred,
-				total: event.total,
-				bytesPerSecond: event.bytesPerSecond,
-			};
 		case 'error':
 			return {
 				type: 'error',
@@ -164,9 +130,9 @@ class Updater {
 	private backgroundCheckInterval: number | null = null;
 	private backgroundCheckCleanups: Array<() => void> = [];
 	private unsubscribeNativeEvents: (() => void) | null = null;
-	private unsubscribeModuleUpdates: (() => void) | null = null;
-	moduleUpdate: DesktopPendingModuleUpdate | null = null;
-	private updateReadyNagbarDismissedVersion: string | null = null;
+	private unsubscribeDesktopUpdate: (() => void) | null = null;
+	desktopUpdateAvailable = false;
+	private desktopUpdateStarting = false;
 	private pendingManualDownloadRefreshes = 0;
 	private checkInProgress = false;
 
@@ -182,10 +148,6 @@ class Updater {
 
 	get updateInfo(): UpdateInfo {
 		return this.snapshot.context.updateInfo;
-	}
-
-	get downloadProgress(): NativeDownloadProgress | null {
-		return this.snapshot.context.downloadProgress;
 	}
 
 	get lastCheckedAt(): number | null {
@@ -216,59 +178,15 @@ class Updater {
 	}
 
 	get hasUpdate(): boolean {
-		return this.moduleUpdateReady || this.updateInfo.native.available || this.updateInfo.web.available;
-	}
-
-	get moduleUpdateReady(): boolean {
-		return this.moduleUpdate != null;
-	}
-
-	get nativeUpdatePending(): boolean {
-		return this.updateInfo.native.available && !this.updateInfo.native.downloaded;
-	}
-
-	get nativeUpdateReady(): boolean {
-		return this.updateInfo.native.available && this.updateInfo.native.downloaded;
-	}
-
-	get shouldShowUpdateReadyNagbar(): boolean {
-		return (
-			this.nativeUpdateReady &&
-			!this.updateInfo.native.installing &&
-			this.updateReadyNagbarDismissedVersion !== this.updateReadyNagbarVersionKey
-		);
-	}
-
-	private get updateReadyNagbarVersionKey(): string {
-		return this.updateInfo.native.version ?? 'unknown';
-	}
-
-	get nativeDownloadInFlight(): boolean {
-		return this.updateInfo.native.downloading && !this.updateInfo.native.downloaded;
-	}
-
-	get nativeDownloadProgressSupported(): boolean {
-		return shouldShowNativeDesktopUpdateDownloadProgress(getElectronAPI()?.platform);
+		return this.desktopUpdateAvailable || this.updateInfo.native.available || this.updateInfo.web.available;
 	}
 
 	get hasManualNativeDownload(): boolean {
 		return hasManualNativeDownload(this.snapshot);
 	}
 
-	get nativeAwaitingDownload(): boolean {
-		if (this.hasManualNativeDownload) return false;
-		return (
-			this.updateInfo.native.available && !this.updateInfo.native.downloaded && !this.updateInfo.native.downloading
-		);
-	}
-
 	get nativeManualUpdateAvailable(): boolean {
-		return (
-			this.updateInfo.native.available &&
-			!this.updateInfo.native.downloaded &&
-			!this.updateInfo.native.downloading &&
-			this.hasManualNativeDownload
-		);
+		return this.updateInfo.native.available && this.hasManualNativeDownload;
 	}
 
 	get state(): UpdaterState {
@@ -295,7 +213,7 @@ class Updater {
 		}
 		if (this.isNative) {
 			await this.bootstrapNative();
-			await this.bootstrapModuleUpdates();
+			await this.bootstrapDesktopUpdate();
 		}
 		this.startBackgroundChecks();
 		void this.checkForUpdates(false);
@@ -315,33 +233,41 @@ class Updater {
 		this.subscribeToNativeEvents();
 	}
 
-	private async bootstrapModuleUpdates(): Promise<void> {
-		const desktopModules = getElectronAPI()?.desktopModules;
-		const onPendingUpdateChanged = desktopModules?.onPendingUpdateChanged;
-		const pendingUpdate = desktopModules?.pendingUpdate;
-		if (onPendingUpdateChanged == null || pendingUpdate == null) return;
-		this.unsubscribeModuleUpdates = onPendingUpdateChanged((pending) => {
+	private async bootstrapDesktopUpdate(): Promise<void> {
+		const desktopUpdate = getElectronAPI()?.desktopUpdate;
+		if (desktopUpdate == null) return;
+		this.unsubscribeDesktopUpdate = desktopUpdate.onStateChanged((state) => {
 			runInAction(() => {
-				this.moduleUpdate = pending;
+				this.desktopUpdateAvailable = state.available;
 			});
 		});
+		await this.refreshDesktopUpdateState();
+	}
+
+	private async refreshDesktopUpdateState(): Promise<void> {
+		const desktopUpdate = getElectronAPI()?.desktopUpdate;
+		if (desktopUpdate == null) return;
 		try {
-			const pending = await pendingUpdate();
+			const state = await desktopUpdate.state();
 			runInAction(() => {
-				this.moduleUpdate = pending;
+				this.desktopUpdateAvailable = state.available;
 			});
 		} catch (error) {
-			logger.warn('Failed to read the pending desktop module update', error);
+			logger.warn('Failed to read the desktop update state', error);
 		}
 	}
 
-	private async applyModuleUpdate(): Promise<void> {
-		const applyPendingUpdate = getElectronAPI()?.desktopModules?.applyPendingUpdate;
-		if (applyPendingUpdate == null) return;
+	private async startDesktopUpdate(): Promise<void> {
+		const desktopUpdate = getElectronAPI()?.desktopUpdate;
+		if (desktopUpdate == null || this.desktopUpdateStarting) return;
+		this.desktopUpdateStarting = true;
 		try {
-			await applyPendingUpdate();
+			flushPendingPersistWrites();
+			await desktopUpdate.start();
 		} catch (error) {
-			logger.warn('Failed to apply the pending desktop module update', error);
+			logger.warn('Failed to start the desktop update', error);
+		} finally {
+			this.desktopUpdateStarting = false;
 		}
 	}
 
@@ -370,35 +296,17 @@ class Updater {
 			this.pendingManualDownloadRefreshes -= 1;
 		}
 		const isUserCheck = event.context === 'user' && !isManualDownloadRefreshResult;
-		const isBackgroundOrFocusCheck = event.context === 'background' || event.context === 'focus';
-		const shouldSurfaceNativeDesktopUpdate = this.shouldSurfaceNativeDesktopUpdate();
 		const shouldShowImmediateUserResult = isUserCheck && !this.checkInProgress;
 		switch (event.type) {
 			case 'checking':
 				this.transition({type: 'check.started'});
 				break;
 			case 'available': {
-				const downloadStarted = event.downloadStarted ?? true;
 				const manualDownloadOptions = this.resolveManualNativeDownloadOptions(event, event.downloadOptions ?? []);
-				const manualDownloadUrl = manualDownloadOptions[0]?.url ?? event.downloadUrl ?? null;
-				if (!shouldSurfaceNativeDesktopUpdate) {
-					this.transition({
-						type: 'native.hidden',
-						reason: 'platform',
-						downloadUrl: manualDownloadUrl,
-						now: Date.now(),
-					});
-					if (isUserCheck) {
-						pushUnsupportedUpdateModal('platform', manualDownloadUrl ?? DESKTOP_DOWNLOAD_URL);
-					}
-					break;
-				}
 				this.transition({
 					type: 'native.available',
 					version: event.version ?? null,
-					downloadSize: event.downloadSize ?? null,
-					downloadStarted,
-					downloadUrl: manualDownloadUrl,
+					downloadUrl: manualDownloadOptions[0]?.url ?? event.downloadUrl ?? null,
 					downloadOptions: manualDownloadOptions,
 				});
 				if (shouldShowImmediateUserResult) {
@@ -408,54 +316,20 @@ class Updater {
 			}
 			case 'not-available':
 				this.transition({type: 'native.notAvailable', now: Date.now()});
-				if (isUserCheck && !this.checkInProgress) {
+				if (shouldShowImmediateUserResult) {
 					this.showCurrentUpdateState();
 				}
 				break;
-			case 'error': {
-				const phase = event.phase ?? 'check';
-				if (isBackgroundOrFocusCheck) {
-					logger.debug('Background update failed silently:', event.message);
+			case 'error':
+				if (isUserCheck) {
+					logger.warn('Update check error:', event.message);
 				} else {
-					logger.warn(`Update ${phase} error:`, event.message);
+					logger.debug('Background update check failed silently:', event.message);
 				}
 				this.transition({type: 'native.error'});
 				if (isUserCheck) {
-					if (phase === 'download') {
-						pushDesktopUpdateDownloadFailedModal();
-					} else if (phase === 'install') {
-						pushDesktopUpdateInstallFailedModal();
-					} else {
-						pushUpdateCheckFailedModal();
-					}
+					pushUpdateCheckFailedModal();
 				}
-				break;
-			}
-			case 'downloaded':
-				if (!shouldSurfaceNativeDesktopUpdate) {
-					this.transition({
-						type: 'native.hidden',
-						reason: 'platform',
-						downloadUrl: null,
-						now: Date.now(),
-					});
-					break;
-				}
-				this.transition({type: 'native.downloaded', version: event.version ?? null});
-				break;
-			case 'progress':
-				if (!shouldSurfaceNativeDesktopUpdate || !this.nativeDownloadProgressSupported) {
-					break;
-				}
-				this.transition({
-					type: 'native.progress',
-					progress: {
-						percent: event.percent,
-						transferred: event.transferred,
-						total: event.total,
-						bytesPerSecond: event.bytesPerSecond,
-					},
-				});
 				break;
 			case 'unsupported':
 				this.transition({
@@ -475,7 +349,7 @@ class Updater {
 		event: Extract<UpdaterEvent, {type: 'available'}>,
 		options: ReadonlyArray<UpdaterDownloadOption>,
 	): ReadonlyArray<UpdaterDownloadOption> {
-		if ((event.downloadStarted ?? true) || getElectronAPI()?.platform !== 'linux') {
+		if (getElectronAPI()?.platform !== 'linux') {
 			return options;
 		}
 		return buildLinuxManualUpdateOptions({
@@ -521,13 +395,8 @@ class Updater {
 	private shouldRunNativeCheck(userInitiated: boolean): boolean {
 		if (!this.isNative) return false;
 		if (this.nativeUnsupported && !userInitiated) return false;
-		if (this.nativeDownloadInFlight || this.updateInfo.native.installing) return false;
 		if (userInitiated) return true;
 		return !this.updateInfo.native.available;
-	}
-
-	private shouldSurfaceNativeDesktopUpdate(): boolean {
-		return shouldShowNativeDesktopUpdateInApp(getElectronAPI()?.platform);
 	}
 
 	async checkForUpdates(force = false, userInitiated = false): Promise<void> {
@@ -554,6 +423,9 @@ class Updater {
 			]);
 			if (webResult) {
 				this.transition({type: 'web.checked', available: webResult.available, version: webResult.version});
+			}
+			if (userInitiated && shouldCheckNative) {
+				await this.refreshDesktopUpdateState();
 			}
 			if (userInitiated && (!shouldCheckNative || (!this.isChecking && !this.nativeCheckFailed))) {
 				this.showCurrentUpdateState();
@@ -628,32 +500,8 @@ class Updater {
 
 	async applyUpdate(): Promise<void> {
 		if (!this.hasUpdate) return;
-		if (this.moduleUpdateReady) {
-			await this.applyModuleUpdate();
-			return;
-		}
-		const electronApi = getElectronAPI();
-		if (this.isNative && this.updateInfo.native.downloaded && electronApi) {
-			if (this.updateInfo.native.installing) {
-				logger.debug('Install already in progress; ignoring duplicate click.');
-				return;
-			}
-			this.transition({type: 'native.install.started'});
-			logger.info('Installing downloaded native update...');
-			try {
-				await electronApi.updaterInstall();
-			} catch (error) {
-				logger.warn('Native update install failed', error);
-				this.transition({type: 'native.install.failed'});
-				pushDesktopUpdateInstallFailedModal();
-			}
-			return;
-		}
-		if (this.isNative && this.nativeAwaitingDownload && electronApi?.updaterDownload) {
-			await this.startNativeDownload();
-			return;
-		}
-		if (this.isNative && this.nativeDownloadInFlight) {
+		if (this.desktopUpdateAvailable) {
+			await this.startDesktopUpdate();
 			return;
 		}
 		if (this.isNative && this.nativeUnsupported?.reason === 'managed-package' && !this.updateInfo.web.available) {
@@ -683,34 +531,13 @@ class Updater {
 		}
 	}
 
-	async startNativeDownload(userInitiated = true): Promise<void> {
-		const electronApi = getElectronAPI();
-		if (!electronApi?.updaterDownload) return;
-		if (!this.updateInfo.native.available) return;
-		if (this.updateInfo.native.downloading || this.updateInfo.native.downloaded) return;
-		this.transition({
-			type: 'native.download.started',
-			progressSupported: this.nativeDownloadProgressSupported,
-			total: this.updateInfo.native.downloadSize,
-		});
-		try {
-			await electronApi.updaterDownload(userInitiated ? 'user' : 'background');
-		} catch (error) {
-			logger.warn('Native update download failed', error);
-			this.transition({type: 'native.download.failed'});
-			if (userInitiated) {
-				pushDesktopUpdateDownloadFailedModal();
-			}
-		}
-	}
-
 	private showCurrentUpdateState(): void {
-		if (this.nativeManualUpdateAvailable) {
-			this.showManualNativeUpdateModal();
+		if (this.desktopUpdateAvailable) {
+			void this.startDesktopUpdate();
 			return;
 		}
-		if (this.nativeUpdateReady) {
-			pushUpdateReadyModal(this.updateInfo.native.version, this.applyUpdate);
+		if (this.nativeManualUpdateAvailable) {
+			this.showManualNativeUpdateModal();
 			return;
 		}
 		if (this.hasUpdate) {
@@ -816,10 +643,6 @@ class Updater {
 		}
 	}
 
-	dismissUpdateReadyNagbar(): void {
-		this.updateReadyNagbarDismissedVersion = this.updateReadyNagbarVersionKey;
-	}
-
 	reset(): void {
 		this.transition({type: 'reset'});
 	}
@@ -829,11 +652,11 @@ class Updater {
 			this.unsubscribeNativeEvents();
 			this.unsubscribeNativeEvents = null;
 		}
-		if (this.unsubscribeModuleUpdates) {
-			this.unsubscribeModuleUpdates();
-			this.unsubscribeModuleUpdates = null;
+		if (this.unsubscribeDesktopUpdate) {
+			this.unsubscribeDesktopUpdate();
+			this.unsubscribeDesktopUpdate = null;
 		}
-		this.moduleUpdate = null;
+		this.desktopUpdateAvailable = false;
 		if (this.backgroundCheckInterval != null) {
 			window.clearInterval(this.backgroundCheckInterval);
 			this.backgroundCheckInterval = null;

@@ -405,10 +405,6 @@ const bundledDependencyExcludes = [
 	'!node_modules/xmlbuilder/**/*',
 ];
 const platformNativeRuntimeExcludes = platformNativeExcludes(targetPlatform, targetNativeArch);
-const platformRuntimeDependencyExcludes =
-	targetPlatform === 'darwin'
-		? []
-		: ['!node_modules/github-url-to-object/**/*', '!node_modules/ms/**/*', '!node_modules/update-electron-app/**/*'];
 const linuxDesktopEntry = {
 	Name: productName,
 	GenericName: 'Instant Messenger',
@@ -1572,7 +1568,6 @@ module.exports = {
 		...packagedRuntimeArtifactExcludes,
 		...bundledDependencyExcludes,
 		...platformNativeRuntimeExcludes,
-		...platformRuntimeDependencyExcludes,
 	],
 	extraMetadata: {
 		main: 'dist/main/index.js',

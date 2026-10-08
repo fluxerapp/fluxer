@@ -129,7 +129,7 @@ class FakeAutoUpdater {
 }
 
 const autoUpdater = new FakeAutoUpdater();
-const exitCodes = [];
+const quits = [];
 const userDataPath = mkdtempSync(path.join(tmpdir(), 'fluxer-shell-self-update-'));
 const applyStatePath = path.join(userDataPath, 'update-apply-state.json');
 process.on('exit', () => {
@@ -140,8 +140,8 @@ installElectronStub({
 	app: {
 		getVersion: () => '2026.800.0',
 		getPath: () => userDataPath,
-		exit: (code) => {
-			exitCodes.push(code);
+		quit: () => {
+			quits.push('quit');
 		},
 	},
 	autoUpdater,
@@ -247,7 +247,7 @@ beforeEach(() => {
 	autoUpdater.installs = 0;
 	autoUpdater.checkError = null;
 	autoUpdater.installError = null;
-	exitCodes.length = 0;
+	quits.length = 0;
 });
 
 describe('velopack self update', () => {
@@ -322,7 +322,11 @@ describe('velopack self update', () => {
 				'downloadUpdateAsync',
 				'waitExitThenApplyUpdate:v2:true:true',
 			]);
-			assert.deepEqual(exitCodes, [0]);
+			assert.deepEqual(
+				quits,
+				['quit'],
+				'the restart goes through app.quit so the will-quit cleanup checkpoints the app store',
+			);
 		},
 	);
 
@@ -346,7 +350,7 @@ describe('velopack self update', () => {
 		});
 		assert.deepEqual(calls, []);
 		assert.deepEqual(velopack.calls, []);
-		assert.deepEqual(exitCodes, []);
+		assert.deepEqual(quits, []);
 	});
 
 	selfUpdateTest('an apply that landed is forgotten and the next one is recorded', async ({start, stillPending}) => {
@@ -370,7 +374,7 @@ describe('velopack self update', () => {
 				reason: 'install-failed',
 				detail: 'the updater binary is missing',
 			});
-			assert.deepEqual(exitCodes, []);
+			assert.deepEqual(quits, []);
 		},
 	);
 

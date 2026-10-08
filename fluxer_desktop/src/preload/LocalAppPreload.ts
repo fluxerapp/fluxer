@@ -25,9 +25,14 @@ import {DESKTOP_RUNTIME_CONFIG_CHANNELS} from '@fluxer/desktop_ipc/src/LocalAppR
 import type {
 	DesktopModuleAPI,
 	DesktopModuleEnsureResult,
-	DesktopPendingModuleUpdate,
+	DesktopUpdateAPI,
+	DesktopUpdateState,
 } from '@fluxer/desktop_ipc/src/ModuleContract';
-import {DESKTOP_MODULE_CHANNELS, DESKTOP_MODULE_EVENTS} from '@fluxer/desktop_ipc/src/ModuleContract';
+import {
+	DESKTOP_MODULE_CHANNELS,
+	DESKTOP_UPDATE_CHANNELS,
+	DESKTOP_UPDATE_EVENTS,
+} from '@fluxer/desktop_ipc/src/ModuleContract';
 
 interface LocalAppPreloadRenderer {
 	invoke: (channel: string, ...args: Array<unknown>) => Promise<unknown>;
@@ -49,6 +54,7 @@ interface DesktopLocalAppUploadPreloadAPI {
 interface LocalAppPreloadAPI {
 	readonly desktopLegacyHarvest: DesktopLegacyHarvestPreloadAPI;
 	readonly desktopModules: DesktopModuleAPI;
+	readonly desktopUpdate: DesktopUpdateAPI;
 	readonly desktopRuntimeConfig: DesktopRuntimeConfigAPI;
 	readonly localAppUpload: DesktopLocalAppUploadPreloadAPI;
 }
@@ -64,15 +70,13 @@ export function createLocalAppPreloadAPI(renderer: LocalAppPreloadRenderer): Loc
 		}),
 		desktopModules: Object.freeze<DesktopModuleAPI>({
 			ensure: (moduleName: string) => invoke<DesktopModuleEnsureResult>(DESKTOP_MODULE_CHANNELS.ensure, moduleName),
-			pendingUpdate: () => invoke<DesktopPendingModuleUpdate | null>(DESKTOP_MODULE_CHANNELS.pendingUpdate),
-			applyPendingUpdate: () => invoke<boolean>(DESKTOP_MODULE_CHANNELS.applyPendingUpdate),
-			onPendingUpdateChanged: (listener: (pending: DesktopPendingModuleUpdate | null) => void) =>
-				subscribeToChannel<DesktopPendingModuleUpdate | null>(
-					renderer,
-					DESKTOP_MODULE_EVENTS.pendingUpdateChanged,
-					listener,
-				),
 			confirmLaunch: () => invoke<void>(DESKTOP_MODULE_CHANNELS.confirmLaunch),
+		}),
+		desktopUpdate: Object.freeze<DesktopUpdateAPI>({
+			state: () => invoke<DesktopUpdateState>(DESKTOP_UPDATE_CHANNELS.state),
+			start: () => invoke<void>(DESKTOP_UPDATE_CHANNELS.start),
+			onStateChanged: (listener: (state: DesktopUpdateState) => void) =>
+				subscribeToChannel<DesktopUpdateState>(renderer, DESKTOP_UPDATE_EVENTS.stateChanged, listener),
 		}),
 		desktopRuntimeConfig: Object.freeze<DesktopRuntimeConfigAPI>({
 			initialInput: () => invoke<string | null>(DESKTOP_RUNTIME_CONFIG_CHANNELS.initialInput),

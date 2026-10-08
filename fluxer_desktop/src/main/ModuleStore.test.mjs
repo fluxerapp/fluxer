@@ -215,6 +215,22 @@ describe('ModuleStore', () => {
 		assert.equal(existsSync(path.join(userDataPath, 'desktop-app-store.sqlite3')), false);
 	});
 
+	test('says when the shell changed version since the store was last opened', async () => {
+		const userDataPath = createUserData();
+		assert.equal((await openStore(userDataPath)).shellVersionChanged, false);
+		assert.equal((await openStore(userDataPath)).shellVersionChanged, false);
+
+		const upgraded = await ModuleStore.open({
+			root: getModuleStoreRoot(userDataPath),
+			shellVersion: '2026.824.1',
+			releaseChannel: RELEASE_CHANNEL,
+		});
+
+		assert.equal(upgraded.shellVersionChanged, true);
+		assert.equal(readState(userDataPath).shell_version, '2026.824.1');
+		assert.equal((await openStore(userDataPath)).shellVersionChanged, true);
+	});
+
 	test('writes state.json atomically and leaves no temporary behind', async () => {
 		const userDataPath = createUserData();
 		const store = await openStore(userDataPath);

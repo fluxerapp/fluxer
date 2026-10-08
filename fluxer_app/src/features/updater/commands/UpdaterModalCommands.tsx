@@ -84,23 +84,6 @@ const OPEN_DESKTOP_DOWNLOADS_DESCRIPTOR = msg({
 	message: 'Open desktop downloads',
 	comment: 'Button label that opens the Fluxer desktop downloads page in a browser.',
 });
-const DESKTOP_UPDATE_READY_DESCRIPTOR = msg({
-	message: 'Desktop update ready',
-	comment: 'Modal title shown when a desktop app update has finished downloading.',
-});
-export const DESKTOP_VERSION_HAS_BEEN_DOWNLOADED_DESCRIPTOR = msg({
-	message: 'Desktop version {version} has been downloaded. Restart {productName} to finish installing.',
-	comment:
-		'Desktop updater modal body. The version placeholder is the downloaded app version; productName is the app name.',
-});
-export const THE_DESKTOP_UPDATE_HAS_BEEN_DOWNLOADED_DESCRIPTOR = msg({
-	message: 'The desktop update has been downloaded. Restart {productName} to finish installing.',
-	comment: 'Desktop updater modal body when the downloaded version is unknown. productName is the app name.',
-});
-export const RESTART_FLUXER_DESCRIPTOR = msg({
-	message: 'Restart {productName}',
-	comment: 'Button label that restarts the app to apply a desktop update. productName is the app name.',
-});
 const UPDATE_CHECK_FAILED_DESCRIPTOR = msg({
 	message: "Couldn't check for updates",
 	comment: 'Modal title shown when a user-initiated update check fails.',
@@ -117,15 +100,6 @@ const DESKTOP_UPDATE_DOWNLOAD_FAILED_BODY_DESCRIPTOR = msg({
 	message:
 		'The desktop update could not be downloaded. Try again from the update button when your connection is stable.',
 	comment: 'Modal body shown when a desktop update download fails.',
-});
-const DESKTOP_UPDATE_INSTALL_FAILED_DESCRIPTOR = msg({
-	message: "Couldn't start the desktop update",
-	comment: 'Modal title shown when starting installation of a downloaded desktop update fails.',
-});
-const DESKTOP_UPDATE_INSTALL_FAILED_BODY_DESCRIPTOR = msg({
-	message: '{productName} could not restart into the downloaded update. Try again from the update button.',
-	comment:
-		'Modal body shown when starting installation of a downloaded desktop update fails. productName is the app name.',
 });
 const LINUX_PACKAGE_UPDATE_INTRO_DESCRIPTOR = msg({
 	message:
@@ -356,28 +330,6 @@ export function pushUnsupportedUpdateModal(
 	);
 }
 
-export function pushUpdateReadyModal(version: string | null, onInstall: () => void | Promise<void>): void {
-	ModalCommands.pushWithKey(
-		modal(() => (
-			<ConfirmModal
-				title={i18n._(DESKTOP_UPDATE_READY_DESCRIPTOR)}
-				description={
-					version
-						? i18n._(DESKTOP_VERSION_HAS_BEEN_DOWNLOADED_DESCRIPTOR, {version, productName: PRODUCT_NAME})
-						: i18n._(THE_DESKTOP_UPDATE_HAS_BEEN_DOWNLOADED_DESCRIPTOR, {productName: PRODUCT_NAME})
-				}
-				primaryText={i18n._(RESTART_FLUXER_DESCRIPTOR, {productName: PRODUCT_NAME})}
-				secondaryText={i18n._(LATER_DESCRIPTOR)}
-				onPrimary={async () => {
-					await onInstall();
-				}}
-				data-flx="updater.updater-modal-commands.push-update-ready-modal.confirm-modal"
-			/>
-		)),
-		'updater-ready',
-	);
-}
-
 function pushUpdaterErrorModal(getTitle: () => string, getDescription: () => string): void {
 	ModalCommands.pushWithKey(
 		modal(() => (
@@ -403,12 +355,5 @@ export function pushDesktopUpdateDownloadFailedModal(): void {
 	pushUpdaterErrorModal(
 		() => i18n._(DESKTOP_UPDATE_DOWNLOAD_FAILED_DESCRIPTOR),
 		() => i18n._(DESKTOP_UPDATE_DOWNLOAD_FAILED_BODY_DESCRIPTOR),
-	);
-}
-
-export function pushDesktopUpdateInstallFailedModal(): void {
-	pushUpdaterErrorModal(
-		() => i18n._(DESKTOP_UPDATE_INSTALL_FAILED_DESCRIPTOR),
-		() => i18n._(DESKTOP_UPDATE_INSTALL_FAILED_BODY_DESCRIPTOR, {productName: PRODUCT_NAME}),
 	);
 }

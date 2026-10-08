@@ -65,13 +65,20 @@ function installModuleOnDisk(storeRoot, moduleName, digest, entries) {
 
 function manifestBytes(
 	modules,
-	{shellLatest = SHELL_VERSION, shellMinimum = SHELL_VERSION, required = null, bounds = {}, metadataVersion = 1} = {},
+	{
+		shellLatest = SHELL_VERSION,
+		shellMinimum = SHELL_VERSION,
+		required = null,
+		bounds = {},
+		metadataVersion = 1,
+		platform = PLATFORM,
+	} = {},
 ) {
 	return Buffer.from(
 		JSON.stringify({
 			manifest_version: 1,
 			release_channel: RELEASE_CHANNEL,
-			platform: PLATFORM,
+			platform,
 			arch: ARCH,
 			build_version: SHELL_VERSION,
 			pub_date: '2026-08-23T00:00:00.000Z',
@@ -111,10 +118,12 @@ function createUpdater(store, modules, options = {}) {
 		store,
 		shellVersion: SHELL_VERSION,
 		releaseChannel: RELEASE_CHANNEL,
-		platform: PLATFORM,
+		platform: options.platform ?? PLATFORM,
 		arch: ARCH,
 		packageOrigin: PACKAGE_ORIGIN,
 		hasOfflineRenderer: false,
+		forceStartupUpdate: options.forceStartupUpdate ?? false,
+		onState: options.onState,
 		fetch: async (url, init) => {
 			requests.push(url);
 			const response = options.respond == null ? null : await options.respond(url, init);
@@ -212,6 +221,24 @@ function mergeDuringInstall(store, entries) {
 					merged = true;
 					await target.mergeCommitted(entries);
 				}
+				return await value.call(target, request);
+			};
+		},
+	});
+}
+
+function recordInstalls(store, installs) {
+	return new Proxy(store, {
+		get(target, property) {
+			const value = Reflect.get(target, property, target);
+			if (typeof value !== 'function') {
+				return value;
+			}
+			if (property !== 'installModule') {
+				return value.bind(target);
+			}
+			return async (request) => {
+				installs.push(request.module);
 				return await value.call(target, request);
 			};
 		},
@@ -451,37 +478,78 @@ describe('ModuleUpdater.run', () => {
 	});
 });
 
-describe('ModuleUpdater.refreshInstalledModules', () => {
-	test('an activated set that never reaches the renderer strands the poll until the launch is abandoned', async () => {
+describe('ModuleUpdater checks without downloading and installs only when asked', () => {
+	async function storeOnRenderer() {
 		const userDataPath = createUserData();
 		const storeRoot = getModuleStoreRoot(userDataPath);
 		const store = await openStore(userDataPath);
 		installModuleOnDisk(storeRoot, 'fluxer_renderer', RENDERER_SHA, [['index.js', 'renderer']]);
 		await store.commit({fluxer_renderer: RENDERER_SHA});
-		installModuleOnDisk(storeRoot, 'fluxer_renderer', NEXT_RENDERER_SHA, [['index.js', 'renderer-two']]);
-		seedCachedPackage(store, NEXT_RENDERER_SHA);
-		const {updater, requests} = createUpdater(store, {fluxer_renderer: NEXT_RENDERER_SHA});
+		return {store, storeRoot};
+	}
 
-		const activated = await updater.refreshInstalledModules();
-		assert.equal(activated.status, 'activated');
-		assert.deepEqual(activated.modules, ['fluxer_renderer']);
-		assert.equal(requests.length, 1);
+	test('a check reads only the manifest and leaves the committed set, the floor and the boot attempt alone', async () => {
+		const {store} = await storeOnRenderer();
+		const before = store.getState();
+		const installs = [];
+		const {updater, requests} = createUpdater(recordInstalls(store, installs), {fluxer_renderer: NEXT_RENDERER_SHA});
 
-		assert.equal((await updater.refreshInstalledModules()).status, 'awaiting-renderer');
-		assert.equal(requests.length, 1, 'a pending launch short circuits the poll before it even reaches the manifest');
+		const check = await updater.checkForUpdate();
 
-		updater.abandonPendingLaunch(activated.launchAttempt);
-
-		assert.equal((await updater.refreshInstalledModules()).status, 'unchanged');
-		assert.equal(requests.length, 2, 'abandoning the launch the renderer never took must let the poll run again');
+		assert.deepEqual(check, {shellNewer: false, modulesChanged: true});
+		assert.deepEqual(
+			requests.map((url) => String(url).split('/').pop()),
+			['modules.json'],
+		);
+		assert.deepEqual(installs, []);
+		assert.deepEqual(store.getCommitted(), {fluxer_renderer: RENDERER_SHA});
+		assert.equal(store.getState().boot_attempt, before.boot_attempt);
+		assert.deepEqual(store.getState().floor, before.floor);
+		assert.equal(store.getState().last_manifest_fetch, before.last_manifest_fetch);
 	});
 
-	test('keeps a module installed on demand while the poll was downloading', async () => {
-		const userDataPath = createUserData();
-		const storeRoot = getModuleStoreRoot(userDataPath);
-		const store = await openStore(userDataPath);
-		installModuleOnDisk(storeRoot, 'fluxer_renderer', RENDERER_SHA, [['index.js', 'renderer']]);
-		await store.commit({fluxer_renderer: RENDERER_SHA});
+	test('a check reports a newer shell and an unchanged module set', async () => {
+		const {store} = await storeOnRenderer();
+		const {updater} = createUpdater(store, {fluxer_renderer: RENDERER_SHA}, {shellLatest: '2026.824.1'});
+
+		assert.deepEqual(await updater.checkForUpdate(), {shellNewer: true, modulesChanged: false});
+	});
+
+	test('a module that needs the next shell reads as a shell update, not as a module update', async () => {
+		const {store} = await storeOnRenderer();
+		const {updater} = createUpdater(
+			store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{shellLatest: '2026.824.1', bounds: {fluxer_renderer: {minimum_shell_version: '2026.824.1'}}},
+		);
+
+		assert.deepEqual(await updater.checkForUpdate(), {shellNewer: true, modulesChanged: false});
+	});
+
+	test('the click installs the new set, reports progress and arms a launch attempt for the next window', async () => {
+		const {store, storeRoot} = await storeOnRenderer();
+		installModuleOnDisk(storeRoot, 'fluxer_renderer', NEXT_RENDERER_SHA, [['index.js', 'renderer-two']]);
+		seedCachedPackage(store, NEXT_RENDERER_SHA);
+		const statuses = [];
+		const {updater} = createUpdater(
+			store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{onState: (state) => statuses.push(state.status)},
+		);
+
+		const attempt = await updater.installPending();
+
+		assert.deepEqual(attempt?.committed, {fluxer_renderer: NEXT_RENDERER_SHA});
+		assert.deepEqual(store.getCommitted(), {fluxer_renderer: NEXT_RENDERER_SHA});
+		assert.equal(store.getState().boot_attempt, 1);
+		assert.equal(statuses[0], 'checking');
+		assert.equal(statuses.at(-1), 'verifying');
+		await updater.markLaunchSucceeded(attempt);
+		assert.equal(store.getState().boot_attempt, 0);
+	});
+
+	test('the click keeps a module installed on demand while it was downloading', async () => {
+		const {store, storeRoot} = await storeOnRenderer();
 		installModuleOnDisk(storeRoot, 'fluxer_renderer', NEXT_RENDERER_SHA, [['index.js', 'renderer-two']]);
 		installModuleOnDisk(storeRoot, 'fluxer_overlay', OVERLAY_SHA, [['index.js', 'overlay']]);
 		seedCachedPackage(store, NEXT_RENDERER_SHA);
@@ -489,35 +557,27 @@ describe('ModuleUpdater.refreshInstalledModules', () => {
 			fluxer_renderer: NEXT_RENDERER_SHA,
 		});
 
-		const activated = await updater.refreshInstalledModules();
+		const attempt = await updater.installPending();
 
-		assert.equal(activated.status, 'activated');
-		assert.deepEqual(activated.launchAttempt.committed, {
-			fluxer_overlay: OVERLAY_SHA,
-			fluxer_renderer: NEXT_RENDERER_SHA,
-		});
+		assert.deepEqual(attempt?.committed, {fluxer_overlay: OVERLAY_SHA, fluxer_renderer: NEXT_RENDERER_SHA});
 		assert.deepEqual(store.getCommitted(), {fluxer_overlay: OVERLAY_SHA, fluxer_renderer: NEXT_RENDERER_SHA});
 	});
 
-	test('abandoning an attempt that is not the pending one leaves the pending launch alone', async () => {
-		const userDataPath = createUserData();
-		const storeRoot = getModuleStoreRoot(userDataPath);
-		const store = await openStore(userDataPath);
-		installModuleOnDisk(storeRoot, 'fluxer_renderer', RENDERER_SHA, [['index.js', 'renderer']]);
-		await store.commit({fluxer_renderer: RENDERER_SHA});
-		installModuleOnDisk(storeRoot, 'fluxer_renderer', NEXT_RENDERER_SHA, [['index.js', 'renderer-two']]);
-		seedCachedPackage(store, NEXT_RENDERER_SHA);
-		const {updater} = createUpdater(store, {fluxer_renderer: NEXT_RENDERER_SHA});
+	test('the click installs nothing when the manifest now needs a newer shell', async () => {
+		const {store} = await storeOnRenderer();
+		const installs = [];
+		const {updater} = createUpdater(
+			recordInstalls(store, installs),
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{shellLatest: '2026.824.1', shellMinimum: '2026.824.1'},
+		);
 
-		const activated = await updater.refreshInstalledModules();
-		assert.equal(activated.status, 'activated');
-
-		updater.abandonPendingLaunch({...activated.launchAttempt});
-
-		assert.equal((await updater.refreshInstalledModules()).status, 'awaiting-renderer');
+		assert.equal(await updater.installPending(), null);
+		assert.deepEqual(installs, []);
+		assert.deepEqual(store.getCommitted(), {fluxer_renderer: RENDERER_SHA});
 	});
 
-	test('a module the manifest advertises but the CDN never got does not strand the rest of the poll', async () => {
+	test('a module the manifest advertises but the CDN never got does not strand the rest of the update', async () => {
 		const userDataPath = createUserData();
 		const storeRoot = getModuleStoreRoot(userDataPath);
 		const store = await openStore(userDataPath);
@@ -536,11 +596,9 @@ describe('ModuleUpdater.refreshInstalledModules', () => {
 			},
 		);
 
-		const activated = await updater.refreshInstalledModules();
+		const attempt = await updater.installPending();
 
-		assert.equal(activated.status, 'activated');
-		assert.deepEqual(activated.modules, ['fluxer_renderer']);
-		assert.deepEqual(store.getCommitted(), {fluxer_overlay: OVERLAY_SHA, fluxer_renderer: NEXT_RENDERER_SHA});
+		assert.deepEqual(attempt?.committed, {fluxer_overlay: OVERLAY_SHA, fluxer_renderer: NEXT_RENDERER_SHA});
 		assert.deepEqual(
 			[...new Set(reports.filter((report) => report.type === 'package-missing').map((report) => report.module))],
 			['fluxer_overlay'],
@@ -566,14 +624,12 @@ describe('ModuleUpdater.refreshInstalledModules', () => {
 			},
 		);
 
-		const activated = await updater.refreshInstalledModules();
+		await updater.installPending();
 
-		assert.equal(activated.status, 'activated');
-		assert.deepEqual(activated.modules, ['fluxer_renderer']);
 		assert.deepEqual(store.getCommitted(), {fluxer_renderer: NEXT_RENDERER_SHA});
 	});
 
-	test('a package failure with no deterministic cause still abandons the whole poll', async () => {
+	test('a package failure with no deterministic cause rejects the click and keeps the installed set', async () => {
 		const userDataPath = createUserData();
 		const storeRoot = getModuleStoreRoot(userDataPath);
 		const store = await openStore(userDataPath);
@@ -592,12 +648,12 @@ describe('ModuleUpdater.refreshInstalledModules', () => {
 			},
 		);
 
-		await assert.rejects(updater.refreshInstalledModules(), /failed to download module fluxer_renderer/u);
+		await assert.rejects(updater.installPending(), /failed to download module fluxer_renderer/u);
 
 		assert.deepEqual(store.getCommitted(), {fluxer_overlay: OVERLAY_SHA, fluxer_renderer: RENDERER_SHA});
 	});
 
-	test('a poll that runs out of disk space aborts instead of activating the part that fit', async () => {
+	test('a click that runs out of disk space aborts instead of activating the part that fit', async () => {
 		const userDataPath = createUserData();
 		const storeRoot = getModuleStoreRoot(userDataPath);
 		const store = await openStore(userDataPath);
@@ -613,9 +669,52 @@ describe('ModuleUpdater.refreshInstalledModules', () => {
 			{required: ['fluxer_renderer']},
 		);
 
-		await assert.rejects(updater.refreshInstalledModules(), /no space left on device/u);
+		await assert.rejects(updater.installPending(), /no space left on device/u);
 
 		assert.deepEqual(store.getCommitted(), {fluxer_overlay: OVERLAY_SHA, fluxer_renderer: RENDERER_SHA});
+	});
+
+	test('the prefetch before a shell update installs what the next shell needs and commits nothing', async () => {
+		const {store, storeRoot} = await storeOnRenderer();
+		installModuleOnDisk(storeRoot, 'fluxer_renderer', NEXT_RENDERER_SHA, [['index.js', 'renderer-two']]);
+		seedCachedPackage(store, NEXT_RENDERER_SHA);
+		const before = store.getState();
+		const installs = [];
+		const {updater} = createUpdater(
+			recordInstalls(store, installs),
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{shellLatest: '2026.824.1', bounds: {fluxer_renderer: {minimum_shell_version: '2026.824.1'}}},
+		);
+
+		await updater.prefetch();
+
+		assert.deepEqual(installs, ['fluxer_renderer']);
+		assert.deepEqual(store.getCommitted(), {fluxer_renderer: RENDERER_SHA});
+		assert.equal(store.getState().boot_attempt, before.boot_attempt);
+		assert.deepEqual(store.getState().floor, before.floor);
+	});
+
+	test('a Linux boot right after a shell update fetches the modules instead of launching the old set', async () => {
+		const optional = await storeOnRenderer();
+		const quiet = createUpdater(optional.store, {fluxer_renderer: NEXT_RENDERER_SHA}, {platform: 'linux'});
+		const skipped = await quiet.updater.run();
+		assert.equal(skipped.status, 'launching');
+		assert.deepEqual(skipped.committed, {fluxer_renderer: RENDERER_SHA});
+		assert.deepEqual(quiet.requests, []);
+
+		const forced = await storeOnRenderer();
+		installModuleOnDisk(forced.storeRoot, 'fluxer_renderer', NEXT_RENDERER_SHA, [['index.js', 'renderer-two']]);
+		seedCachedPackage(forced.store, NEXT_RENDERER_SHA);
+		const {updater, requests} = createUpdater(
+			forced.store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{platform: 'linux', forceStartupUpdate: true},
+		);
+		const outcome = await updater.run();
+
+		assert.equal(outcome.status, 'launching');
+		assert.deepEqual(outcome.committed, {fluxer_renderer: NEXT_RENDERER_SHA});
+		assert.ok(requests.some((url) => String(url).endsWith('/modules.json')));
 	});
 });
 

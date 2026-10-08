@@ -1093,7 +1093,7 @@ msgstr "{count, plural, one {# канал підписаний} few {# кана�
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {Знайдено # спільноту} few {Знайдено # спільноти} many {Знайдено # спільнот} other {Знайдено # спільноти}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1952
+#: src/features/app/components/layout/GuildsLayout.tsx:1951
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# спільнота тимчасово недоступна через несправність потокового конденсатора.} few {# спільноти тимчасово недоступні через несправність потокового конденсатора.} many {# спільнот тимчасово недоступні через несправність потокового конденсатора.} other {# спільнот тимчасово недоступні через несправність потокового конденсатора.}}"
 
@@ -1885,14 +1885,9 @@ msgid "{productName} cannot use a hardware encoder for this, so it will use your
 msgstr "{productName} не може задіяти для цього апаратний кодер, тому використовуватиме ваш процесор."
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:108
+#: src/features/updater/commands/UpdaterModalCommands.tsx:91
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "{productName} не зміг підключитися до служби оновлень. Перевірте з'єднання та спробуйте ще раз."
-
-#. Modal body shown when starting installation of a downloaded desktop update fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:125
-msgid "{productName} could not restart into the downloaded update. Try again from the update button."
-msgstr "Не вдалося перезапустити {productName}, щоб установити завантажене оновлення. Спробуйте ще раз через кнопку оновлення."
 
 #. Invite page notice shown when automated raid protection pauses invites. productName is the Fluxer product name.
 #: src/features/invite/utils/InviteMessageDescriptors.ts:17
@@ -2729,7 +2724,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "ім'я хоста, наприклад, {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:130
+#: src/features/updater/commands/UpdaterModalCommands.tsx:104
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "Доступне оновлення для комп'ютера в Linux. Оберіть формат пакета для цієї системи, і {productName} збереже його локально."
 
@@ -4597,11 +4592,6 @@ msgstr "Відповісти на вхідний дзвінок"
 msgid "Any key"
 msgstr "Будь-яка клавіша"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:76
-msgid "Any updater ready"
-msgstr "Будь-який оновлювач готовий"
-
 #. Description for has:file. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:35
 msgid "any uploaded attachment"
@@ -5168,7 +5158,7 @@ msgid "Audio packet loss:"
 msgstr "Втрата аудіопакетів:"
 
 #. Aria label for the inline audio attachment player container.
-#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:35
+#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:36
 msgid "Audio player"
 msgstr "Аудіоплеєр"
 
@@ -5208,7 +5198,7 @@ msgid "Audio processing (focused voice)"
 msgstr "Обробка аудіо (фокусований голос)"
 
 #. Aria label on the playback progress slider in the inline audio attachment player.
-#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:39
+#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:40
 msgid "Audio progress"
 msgstr "Прогрес відтворення аудіо"
 
@@ -5551,7 +5541,7 @@ msgstr "AV1 (потрібно увімкнути)"
 #. Label for the available desktop version in the Linux update modal.
 #. Screen reader text for a check mark in the Plutonium page comparison table.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:140
-#: src/features/updater/commands/UpdaterModalCommands.tsx:140
+#: src/features/updater/commands/UpdaterModalCommands.tsx:114
 msgid "Available"
 msgstr "Доступно"
 
@@ -5905,7 +5895,7 @@ msgid "Bans"
 msgstr "Блокування"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:200
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:180
 msgid "Barrier countdown"
 msgstr "Відлік бар'єра"
 
@@ -5979,7 +5969,7 @@ msgid "Billing"
 msgstr "Оплата"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:168
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:148
 msgid "Billing cycle"
 msgstr "Платіжний цикл"
 
@@ -6867,7 +6857,7 @@ msgstr "Сюди не можна завантажити файли"
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
 #: src/features/messaging/components/modals/ForwardModal.tsx:603
-#: src/features/messaging/components/modals/ImageCropModal.tsx:1025
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1026
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:266
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
@@ -8807,7 +8797,7 @@ msgid "Closed the thread"
 msgstr "Закрито гілку"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:128
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:108
 msgid "Cloud upload"
 msgstr "Завантаження в хмару"
 
@@ -9385,7 +9375,7 @@ msgid "Composer focus"
 msgstr "Фокус на полі введення"
 
 #. Progress label on the save button while a cropped animated image is compressed. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:67
+#: src/features/messaging/components/modals/ImageCropModal.tsx:68
 msgid "Compressing"
 msgstr "Стискаємо"
 
@@ -10417,7 +10407,7 @@ msgid "Couldn't change your price"
 msgstr "Не вдалося змінити вашу ціну"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:87
 msgid "Couldn't check for updates"
 msgstr "Не вдалося перевірити наявність оновлень"
 
@@ -10502,7 +10492,7 @@ msgid "Couldn't create your recovery kit. You can create one later in your accou
 msgstr "Не вдалося створити ваш комплект відновлення. Ви можете створити його пізніше в налаштуваннях облікового запису."
 
 #. Title of the error modal shown when image cropping fails.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:32
+#: src/features/messaging/components/modals/ImageCropModal.tsx:33
 msgid "Couldn't crop image"
 msgstr "Не вдалося обрізати зображення"
 
@@ -10549,7 +10539,7 @@ msgid "Couldn't delete your messages"
 msgstr "Не вдалося видалити ваші повідомлення"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:112
+#: src/features/updater/commands/UpdaterModalCommands.tsx:95
 msgid "Couldn't download the desktop update"
 msgstr "Не вдалося завантажити оновлення для комп'ютера"
 
@@ -10840,11 +10830,6 @@ msgstr "Не вдалося розпочати оформлення замовл
 #: src/features/connection/commands/ConnectionCommands.ts:27
 msgid "Couldn't start the connection"
 msgstr "Не вдалося створити підключення"
-
-#. Modal title shown when starting installation of a downloaded desktop update fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:121
-msgid "Couldn't start the desktop update"
-msgstr "Не вдалося запустити оновлення для комп'ютера"
 
 #. Title of the generic fallback error modal shown when opening or creating a DM fails.
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:68
@@ -11331,7 +11316,7 @@ msgid "Crop invite background"
 msgstr "Обрізати фон запрошення"
 
 #. Short label in the image crop modal. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:24
+#: src/features/messaging/components/modals/ImageCropModal.tsx:25
 msgid "Crop preview"
 msgstr "Попередній перегляд обрізання"
 
@@ -11343,12 +11328,12 @@ msgstr "Обрізати банер профілю"
 #. Error modal body shown when a cropped community image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #. Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:47
-#: src/features/messaging/components/modals/ImageCropModal.tsx:36
+#: src/features/messaging/components/modals/ImageCropModal.tsx:37
 msgid "Cropped image is too large. Choose a smaller area or a smaller file (max {maxSizeLabel})."
 msgstr "Обрізане зображення завелике. Виберіть меншу область або менший файл (макс. {maxSizeLabel})."
 
 #. Progress label on the save button while animated image frames are cropped. {percent} is a whole number. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:62
+#: src/features/messaging/components/modals/ImageCropModal.tsx:63
 msgid "Cropping {percent}%"
 msgstr "Обрізання {percent}%"
 
@@ -11930,7 +11915,7 @@ msgid "Deafened by moderators"
 msgstr "Звук вимкнено модераторами"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "DEB" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:160
+#: src/features/updater/commands/UpdaterModalCommands.tsx:134
 msgid "DEB package"
 msgstr "Пакет DEB"
 
@@ -12642,7 +12627,7 @@ msgid "Desktop startup"
 msgstr "Запуск на комп'ютері"
 
 #. Tooltip on the updater icon for a Linux desktop update that requires choosing a package format.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:58
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:20
 msgid "Desktop update {version} available. Choose a Linux package."
 msgstr "Доступне оновлення для комп'ютера {version}. Виберіть пакет Linux."
 
@@ -12652,19 +12637,9 @@ msgid "Desktop update available"
 msgstr "Доступне оновлення для комп'ютера"
 
 #. Tooltip on the updater icon for a Linux desktop update that requires choosing a package format and no version is known.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:62
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:24
 msgid "Desktop update available. Choose a Linux package."
 msgstr "Доступне оновлення для комп'ютера. Виберіть пакет Linux."
-
-#. Modal title shown when a desktop app update has finished downloading.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:87
-msgid "Desktop update ready"
-msgstr "Оновлення для комп'ютера готове"
-
-#. Desktop updater modal body. The version placeholder is the downloaded app version; productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:91
-msgid "Desktop version {version} has been downloaded. Restart {productName} to finish installing."
-msgstr "Комп'ютерну версію {version} завантажено. Перезапустіть {productName}, щоб завершити встановлення."
 
 #. Desktop updater modal body. The version placeholder is the target app version; productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:20
@@ -12736,7 +12711,7 @@ msgid "Developer mode"
 msgstr "Режим розробника"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:256
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:236
 msgid "Developer option"
 msgstr "Параметр розробника"
 
@@ -13604,26 +13579,6 @@ msgstr "Кнопка завантаження"
 msgid "Download desktop app"
 msgstr "Завантажити десктопний застосунок"
 
-#. Tooltip on the channel header updater icon prompting download of an update with no version or size info.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:54
-msgid "Download desktop update"
-msgstr "Завантажити оновлення для комп'ютера"
-
-#. Tooltip on the channel header updater icon prompting download of an update of known size but unknown version.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:45
-msgid "Download desktop update ({formatBytes})"
-msgstr "Завантажити оновлення для комп'ютера ({formatBytes})"
-
-#. Tooltip on the channel header updater icon prompting download of a versioned update with unknown size.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:50
-msgid "Download desktop update {version}"
-msgstr "Завантажити оновлення для комп'ютера {version}"
-
-#. Tooltip on the channel header updater icon prompting download of a versioned update with known size.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:41
-msgid "Download desktop update {version} ({formatBytes})"
-msgstr "Завантажити оновлення для комп'ютера {version} ({formatBytes})"
-
 #: src/features/user/components/modals/tabs/privacy_safety_tab/DataExportTab.tsx:94
 msgid "Download export"
 msgstr "Завантажити експорт"
@@ -13687,26 +13642,6 @@ msgstr "Завантажувати вихідні карти, щоб трасу�
 #: src/features/ui/action_menu/items/MediaMenuData.tsx:123
 msgid "Download video"
 msgstr "Завантажити відео"
-
-#. Tooltip on the channel header updater icon while downloading a versioned update without throughput info.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:33
-msgid "Downloading desktop update {version}: {percent}%"
-msgstr "Завантаження оновлення для комп'ютера {version}: {percent}%"
-
-#. Tooltip on the channel header updater icon while downloading an update with only percent available.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:37
-msgid "Downloading desktop update: {percent}%"
-msgstr "Завантаження оновлення для комп'ютера: {percent}%"
-
-#. Tooltip on the channel header updater icon while downloading an update. Shows percent, bytes downloaded, total bytes, and bytes per second.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:28
-msgid "Downloading desktop update: {percent}% ({formatBytes} / {formatBytes2} at {formatBytes3}/s)"
-msgstr "Завантаження оновлення для комп'ютера: {percent}% ({formatBytes} / {formatBytes2} зі швидкістю {formatBytes3}/с)"
-
-#. Short desktop updater status label.
-#: src/features/app/state/Updater.ts:56
-msgid "Downloading desktop update…"
-msgstr "Завантаження оновлення для комп'ютера…"
 
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:290
@@ -14261,7 +14196,7 @@ msgid "Email verification required"
 msgstr "Потрібне підтвердження електронної пошти"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:188
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:168
 msgid "Email verified"
 msgstr "Електронну пошту підтверджено"
 
@@ -15966,7 +15901,7 @@ msgstr "Функцію тимчасово вимкнено"
 
 #. Developer options group for feature behavior overrides.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:123
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:119
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:137
 msgid "Features"
 msgstr "Функції"
@@ -16460,17 +16395,17 @@ msgid "Force enabled"
 msgstr "Примусово ввімкнено"
 
 #. Developer option label for simulating failed message loads.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:119
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:115
 msgid "Force failed message loads"
 msgstr "Примусові помилки завантаження повідомлень"
 
 #. Developer option label for simulating failed message sends.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:115
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:111
 msgid "Force failed message sends"
 msgstr "Примусові помилки надсилання повідомлень"
 
 #. Developer option label for simulating a loading GIF picker.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:75
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:71
 msgid "Force GIF picker loading"
 msgstr "Примусово показувати завантаження добірки GIF"
 
@@ -16487,7 +16422,7 @@ msgid "Force loading skeleton"
 msgstr "Примусово показувати скелет завантаження"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:212
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:192
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:190
 msgid "Force mature media"
 msgstr "Примусово показувати медіа для дорослих"
@@ -16502,12 +16437,12 @@ msgid "Force no {permissionName} permission"
 msgstr "Примусово вимкнути дозвіл «{permissionName}»"
 
 #. Developer option label for always showing profile data warnings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:111
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:107
 msgid "Force profile data warning"
 msgstr "Примусово показувати попередження про дані профілю"
 
 #. Developer option label for forcing user profile loading skeletons.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:107
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:103
 msgid "Force profile skeletons"
 msgstr "Примусово показувати скелети профілів"
 
@@ -16522,12 +16457,12 @@ msgid "Force show"
 msgstr "Примусово показати"
 
 #. Developer option label for always showing a community settings warning.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:79
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:75
 msgid "Force show vanity URL disclaimer"
 msgstr "Завжди показувати попередження про персоналізовану URL-адресу"
 
 #. Developer option label for always showing the voice connection status bar.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:131
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:127
 msgid "Force show voice connection"
 msgstr "Завжди показувати голосове з'єднання"
 
@@ -16536,14 +16471,9 @@ msgid "Force slowmode active"
 msgstr "Примусово ввімкнути повільний режим"
 
 #. Developer option label for rendering messages as unknown message types.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:127
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:123
 msgid "Force unknown message type"
 msgstr "Примусово показувати невідомий тип повідомлення"
-
-#. Developer option label for simulating an available update.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:59
-msgid "Force update ready"
-msgstr "Примусово показувати готове оновлення"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:25
@@ -16597,7 +16527,7 @@ msgid "Forward"
 msgstr "Переслати"
 
 #. Tooltip / aria label on the forward / fast-forward button in the standalone audio player. {defaultSeekAmount} is an integer second count.
-#: src/features/voice/components/media_player/components/AudioPlayer.tsx:32
+#: src/features/voice/components/media_player/components/AudioPlayer.tsx:33
 msgid "Forward {defaultSeekAmount} seconds"
 msgstr "Перемотати вперед на {defaultSeekAmount} секунд"
 
@@ -17028,7 +16958,7 @@ msgid "Generating code…"
 msgstr "Генерування коду…"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:220
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:200
 msgid "Geo block overlay"
 msgstr "Накладання географічного блокування"
 
@@ -17141,7 +17071,7 @@ msgid "GIF options"
 msgstr "Параметри GIF"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:132
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:112
 msgid "GIF picker loading"
 msgstr "Завантаження добірки GIF"
 
@@ -17226,14 +17156,14 @@ msgstr "Коди подарунків"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:244
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:224
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:74
 msgid "Gift duration"
 msgstr "Тривалість подарунка"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:240
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:220
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:42
 msgid "Gift inventory"
 msgstr "Інвентар подарунків"
@@ -17266,7 +17196,7 @@ msgid "Gift not found"
 msgstr "Подарунок не знайдено"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:248
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:228
 msgid "Gift redeemed"
 msgstr "Подарунок активовано"
 
@@ -17809,7 +17739,7 @@ msgid "Has"
 msgstr "Містить"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:176
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:156
 msgid "Has ever purchased"
 msgstr "Коли-небудь купував"
 
@@ -17892,7 +17822,7 @@ msgstr "Серце"
 msgid "Hebrew"
 msgstr "Іврит"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:958
+#: src/features/messaging/components/modals/ImageCropModal.tsx:959
 msgid "Height"
 msgstr "Висота"
 
@@ -19223,7 +19153,7 @@ msgid "Install the new app"
 msgstr "Встановити новий застосунок"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:136
+#: src/features/updater/commands/UpdaterModalCommands.tsx:110
 msgid "Installed"
 msgstr "Встановлено"
 
@@ -19231,16 +19161,6 @@ msgstr "Встановлено"
 #: src/features/updater/commands/UpdaterModalCommands.tsx:45
 msgid "Installed version: {currentVersion}."
 msgstr "Встановлена версія: {currentVersion}."
-
-#. Tooltip on the channel header updater icon while a Fluxer Desktop update is being installed. version is the target version. Trailing horizontal ellipsis is intentional.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:18
-msgid "Installing desktop update {version}…"
-msgstr "Встановлення оновлення для комп'ютера {version}…"
-
-#. Tooltip on the channel header updater icon while a Fluxer Desktop update is being installed when version is not known. Trailing horizontal ellipsis is intentional.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:23
-msgid "Installing desktop update…"
-msgstr "Встановлення оновлення для комп'ютера…"
 
 #. Label for the server address in the printed or downloaded recovery kit.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:76
@@ -20796,7 +20716,7 @@ msgid "Linux default"
 msgstr "Стандартний аудіопристрій Linux"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:152
+#: src/features/updater/commands/UpdaterModalCommands.tsx:126
 msgid "Linux package"
 msgstr "Пакет для Linux"
 
@@ -21474,7 +21394,7 @@ msgid "Mature content & content warnings"
 msgstr "Контент для дорослих і попередження про вміст"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:204
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:184
 msgid "Mature content channel gate"
 msgstr "Блокування каналу з контентом для дорослих"
 
@@ -21500,7 +21420,7 @@ msgid "Mature content checks are currently available only in the UK."
 msgstr "Перевірка контенту для дорослих наразі доступна лише у Великій Британії."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:208
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:188
 msgid "Mature content media gate"
 msgstr "Блокування медіа з контентом для дорослих"
 
@@ -22888,13 +22808,13 @@ msgstr "Вимкнути сповіщення"
 #. Mute toggle button label in the mobile video viewer (currently unmuted).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice menu checkbox label. Locally mutes another participant only for the current user.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:73
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:74
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:42
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:74
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:147
 #: src/features/voice/components/media_player/components/MediaVerticalVolumeControl.tsx:25
 #: src/features/voice/components/media_player/components/MediaVolumeControl.tsx:25
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:45
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:46
 msgctxt "playback-control-action"
 msgid "Mute"
 msgstr "Вимкнути звук"
@@ -23316,16 +23236,6 @@ msgstr "Озвучення"
 msgid "Native title bar"
 msgstr "Стандартний рядок заголовка"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:84
-msgid "Native update progress"
-msgstr "Прогрес оновлення застосунку"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:80
-msgid "Native updater ready"
-msgstr "Нативний оновлювач готовий"
-
 #. Unicode emoji category label.
 #: src/features/expressions/utils/UnicodeEmojis.ts:26
 msgid "Nature"
@@ -23402,7 +23312,7 @@ msgid "Network error"
 msgstr "Помилка мережі"
 
 #. Developer options group for simulated slow or failed operations.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:83
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:79
 msgid "Networking and performance"
 msgstr "Мережа та продуктивність"
 
@@ -23616,7 +23526,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "Нові користувачі зараз не можуть приєднатися. Ви все ще можете створити обліковий запис або ввійти, а потім скористатися цим посиланням пізніше."
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:148
+#: src/features/updater/commands/UpdaterModalCommands.tsx:122
 msgid "New version"
 msgstr "Нова версія"
 
@@ -23683,12 +23593,12 @@ msgid "No"
 msgstr "Ні"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:228
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:208
 msgid "No {attachFilesPermission} permission"
 msgstr "Немає дозволу {attachFilesPermission}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:224
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:204
 msgid "No {sendMessagesPermission} permission"
 msgstr "Немає дозволу {sendMessagesPermission}"
 
@@ -24315,7 +24225,7 @@ msgid "No webhooks"
 msgstr "Вебхуків немає"
 
 #. Developer option label for short-circuiting the in-app reporting (IAR) flow. When enabled, submitting a report skips the network call.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:135
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:131
 msgid "No-op in-app reports"
 msgstr "Скарги в застосунку без дії"
 
@@ -25448,7 +25358,7 @@ msgid "Open user menu for {displayName}"
 msgstr "Відкрити меню користувача для {displayName}"
 
 #. Button or menu action label in the channel and chat embed video. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:51
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:52
 msgid "Open video"
 msgstr "Відкрити відео"
 
@@ -26558,9 +26468,9 @@ msgstr "Відтворити виділене"
 #. Play-button label on the inline video player thumbnail before playback starts.
 #. Short label in the channel and chat embed video. Keep it concise.
 #. Short label in the channel and chat embed you tube. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:64
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:65
 #: src/features/channel/components/embeds/media/EmbedYouTube.tsx:29
-#: src/features/voice/components/media_player/components/VideoPlayer.tsx:62
+#: src/features/voice/components/media_player/components/VideoPlayer.tsx:63
 msgid "Play video"
 msgstr "Відтворити відео"
 
@@ -26814,7 +26724,7 @@ msgid "Premium perks disabled"
 msgstr "Преміум-переваги вимкнено"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:160
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:140
 msgid "Premium since date"
 msgstr "Дата початку преміуму"
 
@@ -26824,17 +26734,17 @@ msgid "Premium state reset on the backend."
 msgstr "Стан преміуму скинуто на бекенді."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:152
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:132
 msgid "Premium type"
 msgstr "Тип преміуму"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:164
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:144
 msgid "Premium until date"
 msgstr "Дата завершення преміуму"
 
 #. Progress label on the save button while an animated image crop starts. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:58
+#: src/features/messaging/components/modals/ImageCropModal.tsx:59
 msgid "Preparing"
 msgstr "Підготовка"
 
@@ -27215,7 +27125,7 @@ msgid "Profile customization form"
 msgstr "Форма налаштування профілю"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:124
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:104
 msgid "Profile data warning"
 msgstr "Попередження про дані профілю"
 
@@ -27263,7 +27173,7 @@ msgid "Profile privacy"
 msgstr "Конфіденційність профілю"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:120
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:100
 msgid "Profile skeletons"
 msgstr "Скелети профілів"
 
@@ -28223,18 +28133,13 @@ msgstr "Перезавантажити"
 msgid "Reload {PRODUCT_NAME} to fully apply the engine change. Switching between in-app and system spellcheck requires a renderer reload because Electron can't swap providers while running."
 msgstr "Перезавантажте {PRODUCT_NAME}, щоб повністю застосувати зміну рушія. Перемикання між вбудованою та системною перевіркою орфографії потребує перезавантаження процесу візуалізації, оскільки Electron не може змінювати постачальників під час роботи."
 
-#. Tooltip on the channel header updater icon prompting a reload to apply freshly downloaded desktop modules. productName is the app name.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:77
-msgid "Reload {productName} to use the updated modules"
-msgstr "Перезавантажте {productName}, щоб використати оновлені модулі"
-
 #. Tooltip on the channel header updater icon prompting a web reload to apply an update of unknown version. productName is the app name.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:87
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:34
 msgid "Reload {productName} to use web update"
 msgstr "Перезавантажте {productName}, щоб застосувати вебоновлення"
 
 #. Tooltip on the channel header updater icon prompting a web reload to apply an in-place build update. productName is the app name.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:82
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:29
 msgid "Reload {productName} to use web update {version}"
 msgstr "Перезавантажте {productName}, щоб застосувати вебоновлення {version}"
 
@@ -29142,7 +29047,7 @@ msgstr "Надіслано повторно"
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:51
 #: src/features/app/components/floating/ColorPickerPopover.tsx:190
 #: src/features/input/components/KeybindRecorder.tsx:499
-#: src/features/messaging/components/modals/ImageCropModal.tsx:1022
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1023
 msgid "Reset"
 msgstr "Скинути"
 
@@ -29475,25 +29380,10 @@ msgstr "Враховувати намір відправника, без поп�
 msgid "Restart {appName}"
 msgstr "Перезапустити {appName}"
 
-#. Button label that restarts the app to apply a desktop update. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:100
-msgid "Restart {productName}"
-msgstr "Перезапустити {productName}"
-
 #. Desktop setting description shown when a tray-icon change on Linux requires restart.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:35
 msgid "Restart {productName} for this change to take effect because Linux desktops can't reliably add or remove tray icons at runtime."
 msgstr "Перезапустіть {productName}, щоб ця зміна набула чинності, оскільки робочі столи Linux не можуть надійно додавати або видаляти значки в треї під час роботи."
-
-#. Tooltip on the channel header updater icon prompting a restart to apply a downloaded update of unknown version. productName is the app name.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:72
-msgid "Restart {productName} to install desktop update"
-msgstr "Перезапустіть {productName}, щоб установити оновлення для комп'ютера"
-
-#. Tooltip on the channel header updater icon prompting a restart to apply a downloaded versioned update. productName is the app name.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:67
-msgid "Restart {productName} to install desktop update {version}"
-msgstr "Перезапустіть {productName}, щоб установити оновлення для комп'ютера {version}"
 
 #. Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.
 #. Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.
@@ -29717,7 +29607,7 @@ msgid "Revoked ban for {0}"
 msgstr "Скасовано блокування для {0}"
 
 #. Tooltip / aria label on the rewind button in the standalone audio player. {defaultSeekAmount} is an integer second count.
-#: src/features/voice/components/media_player/components/AudioPlayer.tsx:27
+#: src/features/voice/components/media_player/components/AudioPlayer.tsx:28
 msgid "Rewind {defaultSeekAmount} seconds"
 msgstr "Перемотати на {defaultSeekAmount} секунд назад"
 
@@ -29866,7 +29756,7 @@ msgstr "Румунська"
 
 #. Short label in the image crop modal. Keep it concise.
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:28
+#: src/features/messaging/components/modals/ImageCropModal.tsx:29
 #: src/features/messaging/components/modals/media_modal/shared.ts:93
 msgid "Rotate clockwise"
 msgstr "Повернути за годинниковою стрілкою"
@@ -29889,7 +29779,7 @@ msgid "Rows per page"
 msgstr "Рядків на сторінку"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "RPM" verbatim and translate only the word "package".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:165
+#: src/features/updater/commands/UpdaterModalCommands.tsx:139
 msgid "RPM package"
 msgstr "Пакет RPM"
 
@@ -31062,12 +30952,12 @@ msgid "Self-host setup"
 msgstr "Налаштування самостійного розміщення"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:140
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:120
 msgid "Self-hosted mode"
 msgstr "Режим самостійного розміщення"
 
 #. Developer option label for forcing self-hosted client mode.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:67
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:63
 msgid "Self-hosted mode override"
 msgstr "Примусовий режим самостійного розміщення"
 
@@ -32212,8 +32102,8 @@ msgstr "Показувати демонстрацію свого екрана"
 
 #. Developer option label for showing the current user as typing.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:96
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:63
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:76
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:59
 msgid "Show myself typing"
 msgstr "Показувати, що я друкую"
 
@@ -32675,7 +32565,7 @@ msgstr "Пропустити"
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "Пропускати підтвердження «Позначити всі як прочитані»"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:1034
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1035
 msgid "Skip cropping"
 msgstr "Пропустити обрізання"
 
@@ -32690,7 +32580,7 @@ msgid "Skip the external link warning for all domains"
 msgstr "Пропускати попередження про зовнішні посилання для всіх доменів"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the no-op in-app reports toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:140
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:136
 msgid "Skip the network call when an in-app report is submitted. The flow still advances to the success screen so you can exercise the UI, but nothing is actually sent to the safety team."
 msgstr "Пропускати мережевий виклик під час надсилання скарги в застосунку. Процес усе одно переходить до екрана успішного виконання, щоб ви могли перевірити інтерфейс, але команді безпеки нічого не надсилається."
 
@@ -32752,8 +32642,8 @@ msgstr "Словенія"
 
 #. Developer option label for simulating slow file uploads.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:100
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:99
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:80
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:95
 msgid "Slow attachment upload"
 msgstr "Повільне завантаження вкладень"
 
@@ -32769,29 +32659,29 @@ msgstr "Пригальмуйте. Зачекайте трохи, перш ніж
 
 #. Developer option label for simulating slow message edits.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:112
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:95
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:92
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:91
 msgid "Slow message edit"
 msgstr "Повільне редагування повідомлень"
 
 #. Developer option label for simulating slow message loading.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:104
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:87
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:84
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:83
 msgid "Slow message load"
 msgstr "Повільне завантаження повідомлень"
 
 #. Developer option label for simulating slow message sending.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:108
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:91
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:88
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:87
 msgid "Slow message send"
 msgstr "Повільне надсилання повідомлень"
 
 #. Developer option label for simulating slow profile loading.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:116
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:103
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:96
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:99
 msgid "Slow profile load"
 msgstr "Повільне завантаження профілю"
 
@@ -32807,7 +32697,7 @@ msgstr "Повільний режим · зачекайте {remaining}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Short label in the slowmode rate limited modal. Keep it concise.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:232
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:212
 #: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:8
 msgid "Slowmode active"
 msgstr "Повільний режим активний"
@@ -32858,7 +32748,7 @@ msgid "Slowmode is set to {durationLabel}. Wait before sending another message."
 msgstr "Встановлено повільний режим на {durationLabel}. Зачекайте, перш ніж надсилати наступне повідомлення."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:236
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:216
 msgid "Slowmode remaining"
 msgstr "Залишилось до кінця повільного режиму"
 
@@ -34781,7 +34671,7 @@ msgid "Tap to add a note"
 msgstr "Натисніть, щоб додати примітку"
 
 #. Option in the Linux package format dropdown of the desktop updater modal. Keep the format token "tar.gz" verbatim and translate only the word "archive".
-#: src/features/updater/commands/UpdaterModalCommands.tsx:170
+#: src/features/updater/commands/UpdaterModalCommands.tsx:144
 msgid "tar.gz archive"
 msgstr "Архів tar.gz"
 
@@ -35130,17 +35020,12 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "Спільноту, яку ви шукаєте, можливо, було видалено або у вас немає доступу до неї."
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:116
+#: src/features/updater/commands/UpdaterModalCommands.tsx:99
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "Не вдалося завантажити оновлення для комп'ютера. Спробуйте ще раз за допомогою кнопки оновлення, коли ваше з'єднання буде стабільним."
 
-#. Desktop updater modal body when the downloaded version is unknown. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:96
-msgid "The desktop update has been downloaded. Restart {productName} to finish installing."
-msgstr "Оновлення для комп'ютера завантажено. Перезапустіть {productName}, щоб завершити встановлення."
-
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:156
+#: src/features/updater/commands/UpdaterModalCommands.tsx:130
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "Завантажений файл збережено на вашому комп'ютері. Установіть його за допомогою звичайного менеджера пакунків."
 
@@ -35523,7 +35408,7 @@ msgid "This action cannot be undone. All associated data, including the bot user
 msgstr "Цю дію не можна скасувати. Усі пов'язані дані, включно з користувачем-ботом, буде видалено назавжди."
 
 #. Error modal body shown when an animated image has too many frames or pixels to crop in the browser.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:41
+#: src/features/messaging/components/modals/ImageCropModal.tsx:42
 msgid "This animation is too long or too large to crop. Try a shorter or smaller file."
 msgstr "Ця анімація занадто довга або занадто велика для обрізання. Спробуйте коротший або менший файл."
 
@@ -35549,7 +35434,7 @@ msgstr "Цей бот запитує дозвіл адміністратора. 
 #. Error modal body shown when the browser cannot decode animated AVIF for cropping. {avifFormatLabel} is the AVIF format name.
 #. Modal body shown when an animated AVIF upload is rejected because this browser cannot crop it.
 #: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:14
-#: src/features/messaging/components/modals/ImageCropModal.tsx:49
+#: src/features/messaging/components/modals/ImageCropModal.tsx:50
 msgid "This browser can't crop animated {avifFormatLabel} files. Upload a GIF or WebP instead."
 msgstr "Цей браузер не може обрізати анімовані файли {avifFormatLabel}. Натомість завантажте GIF або WebP."
 
@@ -35559,7 +35444,7 @@ msgid "This browser console is a developer tool."
 msgstr "Консоль браузера — це інструмент розробника."
 
 #. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:54
+#: src/features/messaging/components/modals/ImageCropModal.tsx:55
 msgid "This browser has WebAssembly turned off, so animated images can't be cropped."
 msgstr "У цьому браузері вимкнено WebAssembly, тому анімовані зображення не можна обрізати."
 
@@ -35877,7 +35762,7 @@ msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "Термін дії цього коду передачі закінчився. Створіть новий, щоб продовжити."
 
 #. Error modal body shown when an animated image fails to decode during cropping.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:45
+#: src/features/messaging/components/modals/ImageCropModal.tsx:46
 msgid "This image couldn't be read. It may be damaged."
 msgstr "Не вдалося прочитати це зображення. Можливо, воно пошкоджене."
 
@@ -36446,7 +36331,7 @@ msgid "Threshold date cannot be in the future"
 msgstr "Порогова дата не може бути в майбутньому"
 
 #. Short label in the channel and chat embed video. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:55
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:56
 msgid "Thumbnail for {title}"
 msgstr "Мініатюра для {title}"
 
@@ -36559,7 +36444,7 @@ msgid "Title bar"
 msgstr "Рядок заголовка"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:252
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:232
 msgid "Title bar platform"
 msgstr "Платформа рядка заголовка"
 
@@ -36620,7 +36505,7 @@ msgid "Toggle camera"
 msgstr "Перемкнути камеру"
 
 #. Aria label on the tap-to-toggle area of the mobile video viewer. Shows or hides the playback controls.
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:36
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:37
 msgid "Toggle controls"
 msgstr "Перемкнути елементи керування"
 
@@ -37387,12 +37272,12 @@ msgid "Typography"
 msgstr "Типографіка"
 
 #. Developer options group for forcing UI component states.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:71
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:67
 msgid "UI components"
 msgstr "Компоненти інтерфейсу"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:216
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:196
 msgid "UK geo"
 msgstr "Геолокація Великої Британії"
 
@@ -37528,7 +37413,7 @@ msgstr "Без категорії"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:15
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:192
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:172
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:37
 msgid "Unclaimed account"
 msgstr "Незареєстрований обліковий запис"
@@ -37689,7 +37574,7 @@ msgstr "Універсальний запасний варіант. Найниж
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:770
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:115
-#: src/features/updater/commands/UpdaterModalCommands.tsx:144
+#: src/features/updater/commands/UpdaterModalCommands.tsx:118
 msgid "Unknown"
 msgstr "Невідомо"
 
@@ -37757,7 +37642,7 @@ msgid "Unknown invite"
 msgstr "Невідоме запрошення"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:136
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:116
 msgid "Unknown message type"
 msgstr "Невідомий тип повідомлення"
 
@@ -37893,10 +37778,10 @@ msgstr "Увімкнути сповіщення"
 #. Mute toggle button label in the media player volume control (currently muted).
 #. Mute toggle button label in the media player volume control (currently muted).
 #. Mute toggle button label in the mobile video viewer (currently muted).
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:68
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:69
 #: src/features/voice/components/media_player/components/MediaVerticalVolumeControl.tsx:20
 #: src/features/voice/components/media_player/components/MediaVolumeControl.tsx:20
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:40
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:41
 msgctxt "playback-control-action"
 msgid "Unmute"
 msgstr "Увімкнути звук"
@@ -38125,12 +38010,12 @@ msgid "Unread DMs only"
 msgstr "Лише непрочитані приватні чати"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:184
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:164
 msgid "Unread gift count"
 msgstr "Кількість непрочитаних подарунків"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:180
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:160
 msgid "Unread gift inventory"
 msgstr "Непрочитаний інвентар подарунків"
 
@@ -38267,6 +38152,11 @@ msgstr "Оновіть {productName}, щоб переглянути це пов�
 msgid "Update app"
 msgstr "Оновити застосунок"
 
+#. Tooltip and accessible label on the channel header updater icon in the desktop app. Clicking it closes the window and opens the updater, which downloads and installs the update.
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:15
+msgid "Update available"
+msgstr "Оновлення доступне"
+
 #: src/features/user/components/modals/CustomStatusModal.tsx:424
 msgid "Update my status"
 msgstr "Оновити мій статус"
@@ -38310,11 +38200,6 @@ msgstr "Оновлені правила"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:23
 msgid "Updated saved media"
 msgstr "Оновлено збережені медіа"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:92
-msgid "Updater state"
-msgstr "Стан оновлення"
 
 #. Heading of the dialog shown after the user follows an announcement channel.
 #: src/features/channel/components/modals/ChannelFollowSuccessModal.tsx:19
@@ -39207,7 +39092,7 @@ msgid "Vanity URL can only contain alphanumeric characters and internal hyphens.
 msgstr "Персоналізована URL-адреса може містити лише літери, цифри та внутрішні дефіси."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:144
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:124
 msgid "Vanity URL disclaimer"
 msgstr "Попередження про персоналізовану URL-адресу"
 
@@ -39240,7 +39125,7 @@ msgid "Verification & membership barriers"
 msgstr "Бар'єри перевірки та членства"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:196
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:176
 msgid "Verification barrier"
 msgstr "Бар'єр перевірки"
 
@@ -39438,7 +39323,7 @@ msgstr "Яскравість"
 #: src/features/user/components/modals/tabs/VoiceVideoTab.tsx:15
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:113
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:170
-#: src/features/voice/components/media_player/components/VideoPlayer.tsx:58
+#: src/features/voice/components/media_player/components/VideoPlayer.tsx:59
 msgid "Video"
 msgstr "Відео"
 
@@ -39508,7 +39393,7 @@ msgid "Video preview"
 msgstr "Попередній перегляд відео"
 
 #. Aria label on the video scrubber / progress slider in the mobile video viewer.
-#: src/features/voice/components/modals/MobileVideoViewer.tsx:50
+#: src/features/voice/components/modals/MobileVideoViewer.tsx:51
 msgid "Video progress"
 msgstr "Прогрес відео"
 
@@ -39540,7 +39425,7 @@ msgid "Video settings"
 msgstr "Налаштування відео"
 
 #. Short label in the channel and chat embed video. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedVideo.tsx:60
+#: src/features/channel/components/embeds/media/EmbedVideo.tsx:61
 #: src/features/channel/components/embeds/media/EmbedYouTube.tsx:27
 msgid "Video thumbnail"
 msgstr "Мініатюра відео"
@@ -39857,7 +39742,7 @@ msgid "Visionary badge"
 msgstr "Значок Visionary"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:156
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:136
 msgid "Visionary badge ID"
 msgstr "ID значка Visionary"
 
@@ -40028,7 +39913,7 @@ msgid "Voice connection confirmation"
 msgstr "Підтвердження голосового з'єднання"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:148
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:128
 msgid "Voice connection debug"
 msgstr "Налагодження голосового з'єднання"
 
@@ -40060,7 +39945,7 @@ msgid "Voice message"
 msgstr "Голосове повідомлення"
 
 #. Short label in the channel and chat voice message player. Keep it concise.
-#: src/features/channel/components/embeds/media/VoiceMessagePlayer.tsx:31
+#: src/features/channel/components/embeds/media/VoiceMessagePlayer.tsx:32
 msgid "Voice message player"
 msgstr "Програвач голосових повідомлень"
 
@@ -40500,11 +40385,6 @@ msgstr "Вебпошук"
 msgid "Web search provider"
 msgstr "Постачальник вебпошуку"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:88
-msgid "Web updater ready"
-msgstr "Вебоновлювач готовий"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:92
 msgid "WebAuthn"
@@ -40850,7 +40730,7 @@ msgid "Whoa, this is heavy"
 msgstr "Ого, це забагато"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:172
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:152
 msgid "Will cancel"
 msgstr "Буде скасовано"
 
@@ -42447,7 +42327,7 @@ msgid "YubiKey"
 msgstr "YubiKey"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:917
+#: src/features/messaging/components/modals/ImageCropModal.tsx:918
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:182
 msgid "Zoom"
 msgstr "Масштаб"

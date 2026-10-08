@@ -8,7 +8,7 @@ import type {DesktopKnownInstanceStorageAPI} from '@fluxer/desktop_ipc/src/Known
 import type {DesktopLegacyHarvest} from '@fluxer/desktop_ipc/src/LegacyHarvestContract';
 import type {DesktopLocalAppUploadProgress} from '@fluxer/desktop_ipc/src/LocalAppRouteContract';
 import type {DesktopRuntimeConfigAPI} from '@fluxer/desktop_ipc/src/LocalAppRuntimeContract';
-import type {DesktopModuleAPI} from '@fluxer/desktop_ipc/src/ModuleContract';
+import type {DesktopModuleAPI, DesktopUpdateAPI} from '@fluxer/desktop_ipc/src/ModuleContract';
 import type {DesktopStorageAPI} from '@fluxer/desktop_ipc/src/StorageContract';
 import type {VoiceEngineV2BridgeHardwareEncoderApi} from '@fluxer/voice_engine_v2/bridge';
 import type {AuthenticationResponseJSON, RegistrationResponseJSON} from '@simplewebauthn/browser';
@@ -372,17 +372,10 @@ export interface DisplayMediaRequestInfo {
 export type DisplayMediaPortalSurfacePreference = 'window' | 'monitor';
 
 export interface UpdaterEvent {
-	type: 'checking' | 'available' | 'not-available' | 'error' | 'downloaded' | 'progress' | 'unsupported';
+	type: 'checking' | 'available' | 'not-available' | 'error' | 'unsupported';
 	context?: 'user' | 'background' | 'focus';
 	version?: string | null;
 	message?: string;
-	progress?: number;
-	percent?: number;
-	transferred?: number;
-	total?: number;
-	bytesPerSecond?: number;
-	downloadSize?: number | null;
-	downloadStarted?: boolean;
 	reason?: 'platform' | 'unpackaged' | 'managed-package';
 	downloadUrl?: string;
 	downloadOptions?: Array<UpdaterDownloadOption>;
@@ -487,8 +480,6 @@ export interface ElectronAPI {
 	downloadFile(url: string, suggestedName: string, sha256?: string | null): Promise<DownloadResult>;
 	onUpdaterEvent(callback: (event: UpdaterEvent) => void): () => void;
 	updaterCheck(context: 'user' | 'background'): Promise<void>;
-	updaterDownload(context: 'user' | 'background'): Promise<void>;
-	updaterInstall(): Promise<void>;
 	getDesktopSources(
 		types: Array<'screen' | 'window'>,
 		requestId?: string,
@@ -636,6 +627,7 @@ export interface ElectronAPI {
 	desktopRuntimeConfig?: DesktopRuntimeConfigAPI;
 	desktopLegacyHarvest?: DesktopLegacyHarvestAPI;
 	desktopModules?: DesktopModuleAPI;
+	desktopUpdate?: DesktopUpdateAPI;
 	reportLastRoute?: (routePath: string) => void;
 	notifyFirstContentPainted?: () => void;
 	localAppUpload?: DesktopLocalAppUploadAPI;

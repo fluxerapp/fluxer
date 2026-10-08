@@ -92,20 +92,21 @@ describe('Bootstrap entry point', () => {
 			/blockUntilRelaunch\('blocked-shell-update'\)/,
 			'Relaunching runs the same binary, refetches the same manifest and blocks again. On Linux, portable and Flatpak the shell cannot self update at all, so a retry is an unescapable loop.',
 		);
-		assert.match(source, /const plan = resolveShellUpdatePlan\(\);/);
-		assert.match(source, /armBlockedShellUpdate\(plan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);/);
-	});
-
-	test('a shell that can update itself tries to, and still falls through to the manual screen when it cannot', () => {
-		assert.match(source, /if \(plan\.capability === ShellUpdateCapability\.SELF_UPDATE\) \{/);
-		assert.match(source, /const failure = await runShellSelfUpdate\(plan, \{/);
+		assert.match(source, /const shellUpdatePlan = resolveShellUpdatePlan\(\);/);
 		assert.match(
 			source,
-			/logger\.error\('The shell self update failed, falling back to a manual download', failure\);\n\t{5}\}\n\t{5}openSplashWindow\(\);\n\t{5}armBlockedShellUpdate\(plan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);/,
+			/armBlockedShellUpdate\(shellUpdatePlan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);/,
+		);
+	});
+	test('a shell that can update itself tries to, and still falls through to the manual screen when it cannot', () => {
+		assert.match(source, /if \(shellUpdatePlan\.capability === ShellUpdateCapability\.SELF_UPDATE\) \{/);
+		assert.match(source, /return await runShellSelfUpdate\(shellUpdatePlan, \{/);
+		assert.match(
+			source,
+			/logger\.error\('The shell self update failed, falling back to a manual download', failure\);\n\t{5}\}\n\t{5}openSplashWindow\(\);\n\t{5}armBlockedShellUpdate\(shellUpdatePlan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);/,
 			'The manual screen is the fallback, so arming it must sit after the self update attempt rather than inside its else branch.',
 		);
 	});
-
 	test('the self update is imported inside the update loop, never at the top level', () => {
 		assert.doesNotMatch(
 			source,
@@ -116,16 +117,10 @@ describe('Bootstrap entry point', () => {
 	});
 
 	test('the self update paints its own progress rather than leaving the checking screen up', () => {
-		assert.match(
-			source,
-			/status: 'shell-update-downloading',\n\t+requiredSecurityUpdate: outcome\.requiredSecurityUpdate,\n\t+progress,/,
-		);
-		assert.match(
-			source,
-			/status: 'shell-update-restarting',\n\t+requiredSecurityUpdate: outcome\.requiredSecurityUpdate,/,
-		);
+		assert.match(source, /setSplashState\(\{status: 'shell-update-downloading', requiredSecurityUpdate, progress\}\);/);
+		assert.match(source, /setSplashState\(\{status: 'shell-update-restarting', requiredSecurityUpdate\}\);/);
+		assert.match(source, /await runShellSelfUpdateOnSplash\(outcome\.requiredSecurityUpdate\)/);
 	});
-
 	test('the retry affordance still belongs to the module update block', () => {
 		assert.match(source, /setSplashState\(\{status, action: SplashAction\.RETRY, message\}\);/);
 		assert.match(
@@ -138,11 +133,15 @@ describe('Bootstrap entry point', () => {
 		assert.equal(source.split('\n').filter((line) => line.includes('onSplashRetry(')).length, 1);
 		assert.match(
 			source,
-			/onSplashQuit\(\(\) => \{\n\t\tlogger\.info\('The splash requested a quit'\);\n\t\tapp\.quit\(\);\n\t\}\);\n\tonSplashRetry\(/,
+			/onSplashQuit\(\(\) => \{\n\t\t\tlogger\.info\('The splash requested a quit'\);\n\t\t\tapp\.quit\(\);\n\t\t\}\);\n\t\tonSplashRetry\(/,
 			'Two reachable blockUntilRelaunch calls would otherwise register two listeners and one click would relaunch twice.',
 		);
+		assert.doesNotMatch(
+			source,
+			/const blockUntilRelaunch = [^\n]*\n[^\n]*armSplashActions\(\)/,
+			'The splash forgets its listeners when it closes, so the update splash arms them again, but the block helper never does.',
+		);
 	});
-
 	test('refusing to start never top level awaits either', () => {
 		assert.doesNotMatch(source, /^await refuseUnsupportedBuild\(/m);
 		assert.match(source, /void refuseUnsupportedBuild\(/);
@@ -198,10 +197,9 @@ describe('Bootstrap entry point', () => {
 		);
 		assert.match(
 			source,
-			/armBlockedShellUpdate\(plan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);\n\t+setSecondInstanceSink\(focusSplashWindow\);/,
+			/armBlockedShellUpdate\(shellUpdatePlan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);\n\t+setSecondInstanceSink\(focusSplashWindow\);/,
 		);
 	});
-
 	test('an unreachable update server is retried in process instead of waiting for a click', () => {
 		const bootstrap = source.slice(source.indexOf('async function runModuleBootstrap()'));
 		assert.match(
@@ -222,15 +220,19 @@ describe('Bootstrap entry point', () => {
 		);
 	});
 
-	test('the module poll tracks the live main window rather than the one the boot handoff latched', () => {
-		assert.doesNotMatch(
-			source,
-			/onMainWindowCreated\(\(window\) => \{\n\t\t\tmainWindow = window;/,
-			'onMainWindowCreated is a one shot boot handoff. Closing the window and reopening it from the dock or the tray would leave the poll holding a destroyed window forever, so every later tick would short circuit and no module version would ever land again.',
+	test('the module poll only checks, it never downloads or reloads underneath the user', () => {
+		const poll = source.slice(
+			source.indexOf('function armModulePoll('),
+			source.indexOf('async function refuseUnsupportedBuild('),
 		);
-		assert.match(source, /observeMainWindow\(\(window\) => \{\n\t\t\tmainWindow = window;\n\t\t\}\);/);
+		assert.match(poll, /void checkDesktopUpdateNow\(\)/);
+		assert.doesNotMatch(
+			poll,
+			/installPending|prefetch|reloadIgnoringCache|refreshModuleRoots|activateMergedForRendererReload/,
+			'A background poll that downloads the renderer and commits it makes the update look like it already happened, then the click reloads in place while the shell update still waits. The poll only publishes whether an update exists.',
+		);
+		assert.doesNotMatch(source, /reloadIgnoringCache/);
 	});
-
 	test('a module poll that went quiet says so when it comes back', () => {
 		assert.match(
 			source,
@@ -239,60 +241,6 @@ describe('Bootstrap entry point', () => {
 		);
 	});
 
-	test('an activated module set that cannot reach the renderer releases the pending launch', () => {
-		assert.match(
-			source,
-			/\} catch \(error\) \{\n\t+updater\.abandonPendingLaunch\(refresh\.launchAttempt\);\n\t+throw error;/,
-			'refreshInstalledModules holds a pending launch from the moment it activates. If refreshing the module roots, the closed window check or reloadIgnoringCache throws, the poll only logs, and every later poll returns awaiting-renderer for the rest of the session.',
-		);
-	});
-
-	test('a reload the renderer never confirms releases the pending launch too', () => {
-		assert.doesNotMatch(
-			source,
-			/webContents\.once\('did-finish-load'/,
-			'A bare one shot only settles when the load lands. Nothing throws when the window is destroyed mid reload, so the pending launch would stay held and every later poll would return awaiting-renderer for the rest of the session.',
-		);
-		assert.match(
-			source,
-			/const stopWatchingReload = watchModuleRendererReload\(\{\n\t+target: webContents,\n\t+observeLaunchConfirmed: observeRendererLaunchConfirmed,\n\t+onLoaded: markReloadSucceeded,\n\t+onAbandoned: \(reason\) => \{/,
-		);
-		assert.match(source, /releasePendingLaunch\(\);\n\t+\},\n\t+\}\);/);
-		assert.match(
-			source,
-			/\} catch \(error\) \{\n\t+stopWatchingReload\(\);\n\t+releasePendingLaunch\(\);/,
-			'The reload runs from a user click, not from the poll, so nothing upstream is left to catch a rethrow. It has to release the pending launch itself or every later poll returns awaiting-renderer for the rest of the session.',
-		);
-	});
-
-	test('an activated module set is offered to the renderer rather than reloaded underneath it', () => {
-		assert.match(
-			source,
-			/offerPendingModuleUpdate\(\{\n\t+update: \{modules: refresh\.modules\},\n\t+apply: reloadRenderer,\n\t+discard: releasePendingLaunch,\n\t+\}\);/,
-			'A silent reloadIgnoringCache throws away whatever the user was typing. The poll hands the activated set to the gate and the renderer reloads when the user asks for it.',
-		);
-		assert.doesNotMatch(
-			source,
-			/\}\);\n\t+webContents\.reloadIgnoringCache\(\);/,
-			'reloadIgnoringCache belongs inside the applied callback, never on the poll path.',
-		);
-	});
-
-	test('a superseded or discarded module update releases the pending launch', () => {
-		assert.match(
-			source,
-			/discard: releasePendingLaunch,/,
-			'The gate holds at most one offer. Dropping one without releasing its launch attempt would leave refreshInstalledModules returning awaiting-renderer for the rest of the session.',
-		);
-	});
-
-	test('a window that closed before the user applied the update does not reload a destroyed target', () => {
-		assert.match(
-			source,
-			/const reloadRenderer = \(\): void => \{\n\t+if \(window\.isDestroyed\(\)\) \{/,
-			'The offer can sit unapplied for as long as the user leaves it. The window it captured may be gone by the time they click.',
-		);
-	});
 	test('a minimized login launch converges the modules without flashing the splash', () => {
 		const bootstrap = source.slice(source.indexOf('async function runModuleBootstrap()'));
 		assert.match(
@@ -317,10 +265,40 @@ describe('Bootstrap entry point', () => {
 		);
 		assert.match(
 			source,
-			/openSplashWindow\(\);\n\t+armBlockedShellUpdate\(plan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);/,
+			/openSplashWindow\(\);\n\t+armBlockedShellUpdate\(shellUpdatePlan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);/,
 		);
 	});
 
+	test('the update click takes the window over before anything downloads', () => {
+		const update = source.slice(source.indexOf('const runDesktopUpdate = async'));
+		const order = [
+			'const splash = openSplashWindow();',
+			'beginMainWindowTakeover(focusSplashWindow);',
+			'hideAppWindowsForUpdate(splash);',
+			'await closeAppWindowsForUpdate(splash);',
+			'const check = await checkForDesktopUpdate();',
+			'await updater.prefetch();',
+			'await runShellSelfUpdateOnSplash(false);',
+			'launchAttempt = await updater.installPending();',
+			'reopenMainWindow(launchAttempt);',
+		].map((needle) => {
+			const index = update.indexOf(needle);
+			assert.notEqual(index, -1, needle);
+			return index;
+		});
+		assert.deepEqual(
+			order,
+			[...order].sort((left, right) => left - right),
+			'The splash opens and the window goes away first, the shell update runs before the module install so a restart never strands a committed module set, and the window only comes back once the modules are served.',
+		);
+	});
+
+	test('the main window that closes for an update never takes the update splash with it', () => {
+		assert.match(
+			source,
+			/window\.once\('closed', closeSplashWithWindow\);\n\t+onMainWindowReady\(\(\) => \{\n\t+window\.removeListener\('closed', closeSplashWithWindow\);/,
+		);
+	});
 	test('the pre-ready Chromium configuration runs before the bootstrap waits for ready', () => {
 		const configure = source.indexOf('applyPreReadyChromiumConfiguration(userDataConfig.channel, process.argv);');
 		const gpuWorkaround = source.indexOf('await appendWindowsGpuDriverWorkaroundSwitches();');

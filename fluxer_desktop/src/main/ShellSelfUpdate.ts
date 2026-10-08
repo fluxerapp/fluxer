@@ -143,9 +143,7 @@ async function runVelopackSelfUpdate(control: SelfUpdateControl, hooks: ShellSel
 		control.settle({reason: 'install-failed', detail: errorDetail(error)});
 		return;
 	}
-	setImmediate(() => {
-		app.exit(0);
-	});
+	app.quit();
 }
 
 async function fetchPublishedAppImage(): Promise<{version: string; sha256: string | null}> {
@@ -222,9 +220,7 @@ async function runAppImageSelfUpdate(
 		return;
 	}
 	relaunchStableLaunchPath();
-	setImmediate(() => {
-		app.exit(0);
-	});
+	app.quit();
 }
 
 function runElectronSelfUpdate(control: SelfUpdateControl, hooks: ShellSelfUpdateHooks): void {

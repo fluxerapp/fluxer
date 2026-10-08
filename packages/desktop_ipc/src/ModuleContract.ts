@@ -2,13 +2,16 @@
 
 export const DESKTOP_MODULE_CHANNELS = Object.freeze({
 	ensure: 'desktop-modules:ensure',
-	pendingUpdate: 'desktop-modules:pending-update',
-	applyPendingUpdate: 'desktop-modules:apply-pending-update',
 	confirmLaunch: 'desktop-modules:confirm-launch',
 } as const);
 
-export const DESKTOP_MODULE_EVENTS = Object.freeze({
-	pendingUpdateChanged: 'desktop-modules:pending-update-changed',
+export const DESKTOP_UPDATE_CHANNELS = Object.freeze({
+	state: 'desktop-update:state',
+	start: 'desktop-update:start',
+} as const);
+
+export const DESKTOP_UPDATE_EVENTS = Object.freeze({
+	stateChanged: 'desktop-update:state-changed',
 } as const);
 
 const DESKTOP_MODULE_NAME_PATTERN = /^[a-z][a-z0-9_]{0,63}$/u;
@@ -43,16 +46,19 @@ export interface DesktopModuleEnsureResult {
 	readonly status: DesktopModuleEnsureStatus;
 }
 
-export interface DesktopPendingModuleUpdate {
-	readonly modules: ReadonlyArray<string>;
-}
-
 export interface DesktopModuleAPI {
 	ensure: (moduleName: string) => Promise<DesktopModuleEnsureResult>;
-	pendingUpdate?: () => Promise<DesktopPendingModuleUpdate | null>;
-	applyPendingUpdate?: () => Promise<boolean>;
-	onPendingUpdateChanged?: (listener: (pending: DesktopPendingModuleUpdate | null) => void) => () => void;
 	confirmLaunch?: () => Promise<void>;
+}
+
+export interface DesktopUpdateState {
+	readonly available: boolean;
+}
+
+export interface DesktopUpdateAPI {
+	state: () => Promise<DesktopUpdateState>;
+	start: () => Promise<void>;
+	onStateChanged: (listener: (state: DesktopUpdateState) => void) => () => void;
 }
 
 export function isDesktopModuleName(value: unknown): value is string {

@@ -18,7 +18,6 @@ export const NagbarType = {
 	LEGACY_PRICE_OPT_IN: 'legacy-price-opt-in',
 	GIFT_INVENTORY: 'gift-inventory',
 	DESKTOP_DOWNLOAD: 'desktop-download',
-	DESKTOP_UPDATE_READY: 'desktop-update-ready',
 	GUILD_MEMBERSHIP_CTA: 'guild-membership-cta',
 	VISIONARY_MFA: 'visionary-mfa',
 	VOICE_SESSION_RESTORE: 'voice-session-restore',
@@ -57,7 +56,6 @@ export interface NagbarConditions {
 	canShowLegacyPriceOptIn: boolean;
 	canShowGiftInventory: boolean;
 	canShowDesktopDownload: boolean;
-	canShowDesktopUpdateReady: boolean;
 	canShowGuildMembershipCta: boolean;
 	canShowVisionaryMfa: boolean;
 	canShowVoiceSessionRestore: boolean;

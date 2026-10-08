@@ -1764,9 +1764,6 @@ importers:
       hunspell-asm:
         specifier: 4.0.2
         version: 4.0.2(patch_hash=594ff55f398ab3a575ba1b4d090c4838a26e4251a2f1d65ba0f02d5b098d02ae)
-      update-electron-app:
-        specifier: 3.3.0
-        version: 3.3.0
       velopack:
         specifier: 1.2.0
         version: 1.2.0
@@ -8134,9 +8131,6 @@ packages:
   github-slugger@2.0.0:
     resolution: {integrity: sha512-IaOQ9puYtjrkq7Y0Ygl9KDZnrf/aiUJYUpVf89y8kyaxbRG7Y1SrX/jaumrv81vc61+kiMempujsM3Yw7w5qcw==}
 
-  github-url-to-object@4.0.6:
-    resolution: {integrity: sha512-NaqbYHMUAlPcmWFdrAB7bcxrNIiiJWJe8s/2+iOc9vlcHlwHqSGrPk+Yi3nu6ebTwgsZEa7igz+NH2vEq3gYwQ==}
-
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
     engines: {node: '>= 6'}
@@ -8453,9 +8447,6 @@ packages:
 
   is-unsafe@2.0.2:
     resolution: {integrity: sha512-HgbIHPBH0KHHCcjLfGsCvhtPTVxjaAZlXjwdz7/GQC40SjSe4sfQsar8J5VFo8JOSbarkpV0OLG95bbaNd9aAQ==}
-
-  is-url@1.2.4:
-    resolution: {integrity: sha512-ITvGim8FhRiYe4IQ5uHSkj7pVaPDrCTkNd3yq3cV7iZAcJdHTUMPMEHcqSOy9xZ9qFenQCvi+2wjH9a1nXqHww==}
 
   isarray@1.0.0:
     resolution: {integrity: sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==}
@@ -10771,9 +10762,6 @@ packages:
     hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
-
-  update-electron-app@3.3.0:
-    resolution: {integrity: sha512-5s73OcyNhAvogjxzAy8pbephY+bP6aXpXFv68OT1dNiEbcUpIUCv/ZZPalqGclnXUgx3oyn+yVdAIIVUpn/C1g==}
 
   upng-js@2.1.0:
     resolution: {integrity: sha512-d3xzZzpMP64YkjP5pr8gNyvBt7dLk/uGI67EctzDuVp4lCZyVMo0aJO6l/VDlgbInJYDY6cnClLoBp29eKWI6g==}
@@ -17191,10 +17179,6 @@ snapshots:
 
   github-slugger@2.0.0: {}
 
-  github-url-to-object@4.0.6:
-    dependencies:
-      is-url: 1.2.4
-
   glob-parent@5.1.2:
     dependencies:
       is-glob: 4.0.3
@@ -17619,8 +17603,6 @@ snapshots:
   is-unicode-supported@2.1.0: {}
 
   is-unsafe@2.0.2: {}
-
-  is-url@1.2.4: {}
 
   isarray@1.0.0: {}
 
@@ -20378,11 +20360,6 @@ snapshots:
       browserslist: 4.29.0
       escalade: 3.2.0
       picocolors: 1.1.1
-
-  update-electron-app@3.3.0:
-    dependencies:
-      github-url-to-object: 4.0.6
-      ms: 2.1.3
 
   upng-js@2.1.0(patch_hash=34ef83d86b7cdf910a393193e3321a239470e7c5e5c7755fd14c30e30db4ea8e):
     dependencies:

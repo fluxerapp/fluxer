@@ -25,7 +25,6 @@
 		"@simplewebauthn/browser": "14.0.0",
 		"franc-min": "6.2.0",
 		"hunspell-asm": "4.0.2",
-		"update-electron-app": "3.3.0",
 		"velopack": "1.2.0"
 	},
 	"devDependencies": {

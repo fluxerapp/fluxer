@@ -163,14 +163,20 @@ export const useTextareaDraftAndTyping = ({
 			flushDraftRef.current();
 		};
 	}, [channelId, isEditingMessageInComposer]);
-	useEffect(
-		() =>
-			onBeforeAppStorageScopeChange(() => {
-				flushDraftRef.current();
-				flushPendingPersistWrites();
-			}),
-		[],
-	);
+	useEffect(() => {
+		const flushBeforeUnload = (): void => {
+			flushDraftRef.current();
+			flushPendingPersistWrites();
+		};
+		const stopScopeChange = onBeforeAppStorageScopeChange(flushBeforeUnload);
+		window.addEventListener('pagehide', flushBeforeUnload);
+		window.addEventListener('beforeunload', flushBeforeUnload);
+		return () => {
+			stopScopeChange();
+			window.removeEventListener('pagehide', flushBeforeUnload);
+			window.removeEventListener('beforeunload', flushBeforeUnload);
+		};
+	}, []);
 	useEffect(() => {
 		const typingPreviousValue = typingPreviousValueRef.current;
 		typingPreviousValueRef.current = {channelId, value};

@@ -16,6 +16,8 @@ type SecondInstanceSink = (argv: Array<string>) => void;
 
 type OpenUrlSink = (url: string) => void;
 
+type MainWindowFactory = () => BrowserWindow;
+
 interface CommittedModuleFileIndex {
 	readonly root: string | null;
 	readonly files: ReadonlyMap<string, string>;
@@ -30,6 +32,7 @@ interface ModuleBootHandoffState {
 	mainWindow: BrowserWindow | null;
 	liveMainWindow: BrowserWindow | null;
 	onDemandModuleInstaller: OnDemandModuleInstaller | null;
+	mainWindowFactory: MainWindowFactory | null;
 	secondInstanceForwarding: boolean;
 	secondInstanceSink: SecondInstanceSink | null;
 	readonly bufferedSecondInstances: Array<Array<string>>;
@@ -49,6 +52,7 @@ const handoffState: ModuleBootHandoffState = {
 	mainWindow: null,
 	liveMainWindow: null,
 	onDemandModuleInstaller: null,
+	mainWindowFactory: null,
 	secondInstanceForwarding: false,
 	secondInstanceSink: null,
 	bufferedSecondInstances: [],
@@ -163,6 +167,18 @@ export function setOnDemandModuleInstaller(installer: OnDemandModuleInstaller | 
 
 export function getOnDemandModuleInstaller(): OnDemandModuleInstaller | null {
 	return handoffState.onDemandModuleInstaller;
+}
+
+export function setMainWindowFactory(factory: MainWindowFactory): void {
+	handoffState.mainWindowFactory = factory;
+}
+
+export function getMainWindowFactory(): MainWindowFactory | null {
+	return handoffState.mainWindowFactory;
+}
+
+export function getSecondInstanceSink(): SecondInstanceSink | null {
+	return handoffState.secondInstanceSink;
 }
 
 export function signalMainWindowCreated(window: BrowserWindow | null): void {

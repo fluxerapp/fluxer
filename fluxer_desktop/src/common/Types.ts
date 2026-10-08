@@ -6,7 +6,7 @@ import type {DesktopHandoffAPI} from '@fluxer/desktop_ipc/src/BrowserHandoffCont
 import type {DesktopCapabilityManifest} from '@fluxer/desktop_ipc/src/CapabilityManifest';
 import type {NativeGatewayTransportAPI} from '@fluxer/desktop_ipc/src/GatewayTransportContract';
 import type {DesktopKnownInstanceStorageAPI} from '@fluxer/desktop_ipc/src/KnownInstanceContract';
-import type {DesktopModuleAPI} from '@fluxer/desktop_ipc/src/ModuleContract';
+import type {DesktopModuleAPI, DesktopUpdateAPI} from '@fluxer/desktop_ipc/src/ModuleContract';
 import type {DesktopStorageAPI} from '@fluxer/desktop_ipc/src/StorageContract';
 import type {VoiceEngineV2BridgeHardwareEncoderApi} from '@fluxer/voice_engine_v2/bridge';
 import type {
@@ -217,8 +217,6 @@ export type UpdaterEvent =
 			type: 'available';
 			context: UpdaterContext;
 			version: string | null;
-			downloadSize?: number | null;
-			downloadStarted: boolean;
 			downloadUrl?: string;
 			downloadOptions?: Array<UpdaterDownloadOption>;
 	  }
@@ -227,23 +225,9 @@ export type UpdaterEvent =
 			context: UpdaterContext;
 	  }
 	| {
-			type: 'downloaded';
-			context: UpdaterContext;
-			version: string | null;
-	  }
-	| {
-			type: 'progress';
-			context: UpdaterContext;
-			percent: number;
-			transferred: number;
-			total: number;
-			bytesPerSecond: number;
-	  }
-	| {
 			type: 'error';
 			context: UpdaterContext;
 			message: string;
-			phase?: 'check' | 'download' | 'install';
 	  }
 	| {
 			type: 'unsupported';
@@ -676,8 +660,6 @@ export interface ElectronAPI {
 	popupHelpMenu: () => Promise<void>;
 	onUpdaterEvent: (callback: (event: UpdaterEvent) => void) => () => void;
 	updaterCheck: (context: UpdaterContext) => Promise<void>;
-	updaterDownload: (context: UpdaterContext) => Promise<void>;
-	updaterInstall: () => Promise<void>;
 	windowMinimize: () => void;
 	windowMaximize: () => void;
 	windowClose: () => void;
@@ -806,6 +788,7 @@ export interface ElectronAPI {
 	getAppMetrics?: () => Promise<AppMetricsSnapshot>;
 	capabilities: DesktopCapabilityManifest;
 	desktopModules: DesktopModuleAPI;
+	desktopUpdate: DesktopUpdateAPI;
 	reportLastRoute: (routePath: string) => void;
 	notifyFirstContentPainted: () => void;
 	desktopAccounts: DesktopAccountStorageAPI;

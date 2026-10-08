@@ -88,7 +88,8 @@ const DESKTOP_SPELLCHECK_DICTIONARY_RULE: &str = "spellcheck_dictionary";
 const DESKTOP_DICTIONARY_MODULE_PREFIX: &str = "fluxer_dict_";
 const DESKTOP_DICTIONARY_PACKAGE_PREFIX: &str = "dictionary-";
 const DESKTOP_DICTIONARY_FILE_NAMES: &[&str] = &["index.aff", "index.dic"];
-const DESKTOP_MODULE_MINIMUM_SHELL_VERSION: &str = "0.0.0";
+const DESKTOP_MODULE_MINIMUM_SHELL_VERSION: &str = "2026.1008.42615";
+const DESKTOP_DEVELOPMENT_MINIMUM_SHELL_VERSION: &str = "0.0.0";
 const DESKTOP_REQUIRED_MODULES: &[&str] = &[DESKTOP_RENDERER_MODULE];
 const DESKTOP_MODULES_ENV: &str = "FLUXER_MODULES";
 
@@ -5226,6 +5227,14 @@ fn stage_desktop_module_packages(
     Ok(())
 }
 
+fn desktop_module_minimum_shell_version(channel: &str) -> &'static str {
+    if channel == "development" {
+        DESKTOP_DEVELOPMENT_MINIMUM_SHELL_VERSION
+    } else {
+        DESKTOP_MODULE_MINIMUM_SHELL_VERSION
+    }
+}
+
 fn desktop_channel_manifest_entries(
     channel: &str,
     packed: &[DesktopPackedModule],
@@ -5239,7 +5248,7 @@ fn desktop_channel_manifest_entries(
                     sha256: module.sha256.clone(),
                     bytes: module.bytes,
                     url: desktop_module_package_url(channel, &module.module, &module.sha256),
-                    minimum_shell_version: DESKTOP_MODULE_MINIMUM_SHELL_VERSION.to_string(),
+                    minimum_shell_version: desktop_module_minimum_shell_version(channel).to_string(),
                     maximum_shell_version: None,
                 },
             )
@@ -5371,7 +5380,7 @@ fn write_desktop_channel_manifests(
             metadata_version,
             shell: DesktopChannelManifestShell {
                 latest_version: build_version.to_string(),
-                minimum_version: DESKTOP_MODULE_MINIMUM_SHELL_VERSION.to_string(),
+                minimum_version: desktop_module_minimum_shell_version(channel).to_string(),
             },
             modules: modules.clone(),
             required_modules: DESKTOP_REQUIRED_MODULES
@@ -6068,6 +6077,13 @@ mod tests {
         assert!(renderer["maximum_shell_version"].is_null());
         let parsed: DesktopChannelManifest = serde_json::from_value(manifest).unwrap();
         assert_eq!(parsed.shell.latest_version, "2026.1008.32323");
+    }
+
+    #[test]
+    fn released_channels_require_a_shell_with_the_in_app_update_start() {
+        assert_eq!(desktop_module_minimum_shell_version("canary"), "2026.1008.42615");
+        assert_eq!(desktop_module_minimum_shell_version("stable"), "2026.1008.42615");
+        assert_eq!(desktop_module_minimum_shell_version("development"), "0.0.0");
     }
 
     #[test]

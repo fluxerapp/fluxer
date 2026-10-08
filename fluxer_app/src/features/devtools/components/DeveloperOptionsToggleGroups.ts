@@ -56,10 +56,6 @@ const FORCE_LOADING_SKELETON_DESCRIPTOR = msg({
 	message: 'Force loading skeleton',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const FORCE_UPDATE_READY_DESCRIPTOR = msg({
-	message: 'Force update ready',
-	comment: 'Developer option label for simulating an available update.',
-});
 const SHOW_MYSELF_TYPING_DESCRIPTOR = msg({
 	message: 'Show myself typing',
 	comment: 'Developer option label for showing the current user as typing.',
@@ -161,10 +157,6 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 		items: [
 			{key: 'bypassLoadingSkeleton', label: BYPASS_LOADING_SKELETON_DESCRIPTOR},
 			{key: 'forceLoadingSkeleton', label: FORCE_LOADING_SKELETON_DESCRIPTOR},
-			{
-				key: 'forceUpdateReady',
-				label: FORCE_UPDATE_READY_DESCRIPTOR,
-			},
 			{
 				key: 'showMyselfTyping',
 				label: SHOW_MYSELF_TYPING_DESCRIPTOR,

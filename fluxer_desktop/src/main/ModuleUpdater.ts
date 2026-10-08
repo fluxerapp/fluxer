@@ -2,6 +2,7 @@
 
 import {createHash} from 'node:crypto';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import type {DesktopUpdateCheck} from '@electron/main/DesktopUpdateGate';
 import {ModuleDownloadRate} from '@electron/main/ModuleDownloadRate';
 import {
 	blockingModuleNames,
@@ -44,7 +45,7 @@ import {
 	ModuleUpdatePlanner,
 	ModuleUpdaterBlockReason,
 } from '@electron/main/ModuleUpdatePlanner';
-import {compareModuleVersions, parseModuleVersion} from '@electron/main/ModuleVersion';
+import {compareModuleVersions, type ModuleVersion, parseModuleVersion} from '@electron/main/ModuleVersion';
 import {resolveDesktopPackageOrigin} from '@electron/main/ShellDownloadFormats';
 import type {DesktopModuleEnsureResult} from '@fluxer/desktop_ipc/src/ModuleContract';
 import {DesktopModuleEnsureStatus} from '@fluxer/desktop_ipc/src/ModuleContract';
@@ -70,21 +71,6 @@ export const ModuleUpdaterStatus = Object.freeze({
 } as const);
 
 export type ModuleUpdaterStatus = (typeof ModuleUpdaterStatus)[keyof typeof ModuleUpdaterStatus];
-
-const ModuleRefreshStatus = Object.freeze({
-	UNCHANGED: 'unchanged',
-	AWAITING_RENDERER: 'awaiting-renderer',
-	ACTIVATED: 'activated',
-} as const);
-
-type ModuleRefreshResult =
-	| {readonly status: typeof ModuleRefreshStatus.UNCHANGED}
-	| {readonly status: typeof ModuleRefreshStatus.AWAITING_RENDERER}
-	| {
-			readonly status: typeof ModuleRefreshStatus.ACTIVATED;
-			readonly modules: ReadonlyArray<string>;
-			readonly launchAttempt: ModuleLaunchAttempt;
-	  };
 
 const ModuleUpdaterReportType = Object.freeze({
 	NETWORK_ERROR: 'network-error',
@@ -277,6 +263,7 @@ interface ModuleUpdaterOptions {
 	readonly arch?: NodeJS.Architecture;
 	readonly packageOrigin?: string;
 	readonly hasOfflineRenderer?: boolean;
+	readonly forceStartupUpdate?: boolean;
 	readonly onState?: (state: ModuleUpdaterSplashState) => void;
 	readonly report?: (report: ModuleUpdaterReport) => void;
 	readonly fetch: typeof globalThis.fetch;
@@ -292,6 +279,9 @@ function isRejectedManifestError(error: unknown): boolean {
 export class ModuleUpdater {
 	public readonly store: ModuleStore;
 	private readonly platform: string;
+	private readonly shellVersion: ModuleVersion;
+	private readonly hasOfflineRenderer: boolean;
+	private readonly forceStartupUpdate: boolean;
 	private readonly manifestFeed: ModuleManifestFeedIdentity;
 	private readonly manifestRepository: ModuleManifestRepository;
 	private readonly planner: ModuleUpdatePlanner;
@@ -311,18 +301,19 @@ export class ModuleUpdater {
 	private startupUpdatePolicy: ModuleStartupUpdatePolicy;
 	private manifestObservationTail: Promise<void> = Promise.resolve();
 	private recordedManifestSha256: string | null = null;
-	private pendingRendererLaunch: ModuleLaunchAttempt | null = null;
 
 	public constructor(options: ModuleUpdaterOptions) {
 		this.store = options.store;
-		const shellVersion = parseModuleVersion(options.shellVersion, 'desktop shell version');
+		this.shellVersion = parseModuleVersion(options.shellVersion, 'desktop shell version');
+		this.hasOfflineRenderer = options.hasOfflineRenderer ?? false;
+		this.forceStartupUpdate = options.forceStartupUpdate ?? false;
 		const releaseChannel = options.releaseChannel ?? BUILD_CHANNEL;
 		this.platform = options.platform ?? process.platform;
 		const arch = resolveDesktopModuleArchitecture(options.arch ?? process.arch);
 		this.manifestFeed = {releaseChannel, platform: this.platform, arch};
 		const packageOrigin = (options.packageOrigin ?? resolveDesktopPackageOrigin()).replace(/\/+$/u, '');
 		this.packageOrigin = packageOrigin;
-		this.planner = new ModuleUpdatePlanner(this.store, shellVersion, options.hasOfflineRenderer ?? false);
+		this.planner = new ModuleUpdatePlanner(this.store, this.shellVersion, this.hasOfflineRenderer);
 		this.onState = options.onState ?? (() => {});
 		this.reporter = options.report ?? (() => {});
 		this.sleep = options.sleep ?? defaultSleep;
@@ -476,7 +467,7 @@ export class ModuleUpdater {
 						this.isSecurityUpdateRequired(),
 					);
 					if (decision.kind === ModuleUnreachableLaunchDecision.LAUNCH) {
-						const launchAttempt = await this.recordRendererLaunchAttempt();
+						const launchAttempt = await this.store.recordLaunchAttempt();
 						this.emit(ModuleUpdaterStatus.UNREACHABLE_LAUNCH);
 						return {
 							status: ModuleUpdaterStatus.UNREACHABLE_LAUNCH,
@@ -562,24 +553,56 @@ export class ModuleUpdater {
 		return this.observeManifest(await this.manifestRepository.resolveMemoizedDocument());
 	}
 
-	public async refreshInstalledModules(): Promise<ModuleRefreshResult> {
-		if (this.pendingRendererLaunch != null) {
-			return {status: ModuleRefreshStatus.AWAITING_RENDERER};
-		}
-		this.manifestRepository.clearMemo();
-		const manifest = await this.observeManifest(await this.manifestRepository.fetchLatest());
+	public async checkForUpdate(): Promise<DesktopUpdateCheck> {
+		const manifest = await this.fetchFreshManifest(ModuleManifestObservationMode.READ_ONLY);
+		const shellNewer = compareModuleVersions(manifest.shell.latestVersion, this.shellVersion) > 0;
 		if (this.planner.shellUpdateRequired(manifest)) {
-			return {status: ModuleRefreshStatus.UNCHANGED};
+			return {shellNewer, modulesChanged: false};
 		}
+		return {shellNewer, modulesChanged: (await this.collectPendingItems(manifest, this.planner)).length > 0};
+	}
+
+	public async installPending(): Promise<ModuleLaunchAttempt | null> {
+		this.emit(ModuleUpdaterStatus.CHECKING);
+		this.downloadRate.reset();
+		const manifest = await this.fetchFreshManifest(ModuleManifestObservationMode.RECORD_FETCH);
+		if (this.planner.shellUpdateRequired(manifest)) {
+			return null;
+		}
+		const items = await this.collectPendingItems(manifest, this.planner);
+		const {installed, unresolved} = await this.installItems(items);
+		if (Object.keys(installed).length > 0) {
+			this.emit(ModuleUpdaterStatus.VERIFYING, {current: items.length, total: items.length});
+		}
+		return await this.store.activateMergedForRendererReload(installed, unresolved);
+	}
+
+	public async prefetch(): Promise<void> {
+		this.emit(ModuleUpdaterStatus.CHECKING);
+		this.downloadRate.reset();
+		const manifest = await this.fetchFreshManifest(ModuleManifestObservationMode.READ_ONLY);
+		const nextShellPlanner = new ModuleUpdatePlanner(this.store, manifest.shell.latestVersion, this.hasOfflineRenderer);
+		await this.installItems(await this.collectPendingItems(manifest, nextShellPlanner));
+	}
+
+	private async fetchFreshManifest(mode: ModuleManifestObservationMode): Promise<DesktopModuleUpdateManifest> {
+		this.manifestRepository.clearMemo();
+		return await this.observeManifest(await this.manifestRepository.fetchLatest(), mode);
+	}
+
+	private async collectPendingItems(
+		manifest: DesktopModuleUpdateManifest,
+		planner: ModuleUpdatePlanner,
+	): Promise<Array<ModulePlanItem>> {
 		const committed = this.store.getCommitted();
 		const names = new Set<string>([...Object.keys(committed), ...blockingModuleNames(manifest)]);
 		const wanted: Array<ModulePlanItem> = [];
 		for (const moduleName of Array.from(names).sort()) {
 			const entry = manifest.modules[moduleName];
-			if (entry == null || !this.planner.isShellCompatible(entry)) {
+			if (entry == null || !planner.isShellCompatible(entry)) {
 				continue;
 			}
-			if (committed[moduleName] === entry.sha256 && (await this.planner.isInstalled(moduleName, entry.sha256))) {
+			if (committed[moduleName] === entry.sha256 && (await planner.isInstalled(moduleName, entry.sha256))) {
 				continue;
 			}
 			if (this.store.isRejected(moduleName, entry.sha256)) {
@@ -587,15 +610,19 @@ export class ModuleUpdater {
 			}
 			wanted.push({module: moduleName, entry, requirement: ModulePlanItemRequirement.OPTIONAL});
 		}
-		if (wanted.length === 0) {
-			return {status: ModuleRefreshStatus.UNCHANGED};
-		}
+		return wanted;
+	}
+
+	private async installItems(
+		items: ReadonlyArray<ModulePlanItem>,
+	): Promise<{readonly installed: Readonly<Record<string, string>>; readonly unresolved: ReadonlySet<string>}> {
+		const committed = this.store.getCommitted();
 		const installed: Record<string, string> = {};
 		const unresolved = new Set<string>();
-		for (let index = 0; index < wanted.length; index += 1) {
-			const item = wanted[index];
+		for (let index = 0; index < items.length; index += 1) {
+			const item = items[index];
 			try {
-				await this.packageInstaller.install(item, index + 1, wanted.length);
+				await this.packageInstaller.install(item, index + 1, items.length);
 			} catch (error) {
 				if (isStorageFullError(error) || !isDeterministicPackageFailure(error)) {
 					throw error;
@@ -614,32 +641,14 @@ export class ModuleUpdater {
 			}
 			installed[item.module] = item.entry.sha256;
 		}
-		const activated = await this.store.activateMergedForRendererReload(installed, unresolved);
-		if (activated == null) {
-			return {status: ModuleRefreshStatus.UNCHANGED};
-		}
-		this.pendingRendererLaunch = activated;
-		return {
-			status: ModuleRefreshStatus.ACTIVATED,
-			modules: Object.keys(installed),
-			launchAttempt: activated,
-		};
+		return {installed, unresolved};
 	}
 
 	public async markLaunchSucceeded(attempt: ModuleLaunchAttempt): Promise<void> {
 		if (!(await this.store.markLaunchAttemptSucceeded(attempt))) {
 			return;
 		}
-		if (this.pendingRendererLaunch === attempt) {
-			this.pendingRendererLaunch = null;
-		}
 		await this.store.collectGarbage({now: this.now()});
-	}
-
-	public abandonPendingLaunch(attempt: ModuleLaunchAttempt): void {
-		if (this.pendingRendererLaunch === attempt) {
-			this.pendingRendererLaunch = null;
-		}
 	}
 
 	public async canLaunchWhileUnreachable(): Promise<boolean> {
@@ -672,7 +681,7 @@ export class ModuleUpdater {
 				'no module is committed and this build carries no offline renderer',
 			);
 		}
-		const launchAttempt = await this.recordRendererLaunchAttempt();
+		const launchAttempt = await this.store.recordLaunchAttempt();
 		this.emit(ModuleUpdaterStatus.LAUNCHING);
 		return {
 			status: ModuleUpdaterStatus.LAUNCHING,
@@ -705,7 +714,7 @@ export class ModuleUpdater {
 				message: `launching the reverted set below the persisted floor for ${belowFloor.join(', ')}, because recovering a bricked install outranks enforcing the forced update`,
 			});
 		}
-		const launchAttempt = await this.recordRendererLaunchAttempt();
+		const launchAttempt = await this.store.recordLaunchAttempt();
 		this.emit(ModuleUpdaterStatus.LAUNCHING);
 		return {
 			status: ModuleUpdaterStatus.LAUNCHING,
@@ -845,7 +854,9 @@ export class ModuleUpdater {
 	}
 
 	private async startupUpdateRequired(): Promise<boolean> {
-		return this.isStartupUpdateEnforced() || !(await this.planner.canLaunchCommittedModules());
+		return (
+			this.forceStartupUpdate || this.isStartupUpdateEnforced() || !(await this.planner.canLaunchCommittedModules())
+		);
 	}
 
 	private async execute(plan: ModulePlan): Promise<ModulePlanResult> {
@@ -882,15 +893,6 @@ export class ModuleUpdater {
 			}
 		}
 		return {desired, installed, blocked, blockedError};
-	}
-
-	private async recordRendererLaunchAttempt(): Promise<ModuleLaunchAttempt> {
-		if (this.pendingRendererLaunch != null) {
-			throw new Error('cannot begin a module renderer launch while another launch is awaiting readiness');
-		}
-		const launchAttempt = await this.store.recordLaunchAttempt();
-		this.pendingRendererLaunch = launchAttempt;
-		return launchAttempt;
 	}
 
 	private async persistManifest(

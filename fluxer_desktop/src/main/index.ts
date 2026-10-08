@@ -82,6 +82,7 @@ import {createApplicationMenu} from '@electron/main/Menu';
 import {
 	armOpenUrlForwarding,
 	armSecondInstanceForwarding,
+	setMainWindowFactory,
 	setOpenUrlSink,
 	setSecondInstanceSink,
 } from '@electron/main/ModuleBootHandoff';
@@ -100,6 +101,7 @@ import {
 	createWindow,
 	getMainWindow,
 	hideWindow,
+	isMainWindowTakenOver,
 	setQuitting,
 	showWindow,
 } from '@electron/main/Window';
@@ -374,6 +376,7 @@ if (launchConfigurationError) {
 		});
 		armSecondInstanceForwarding();
 		setSecondInstanceSink(handleSecondInstance);
+		setMainWindowFactory(() => createWindow());
 		app.on('child-process-gone', (_event, details) => {
 			log.error('Child process gone', details);
 		});
@@ -591,6 +594,7 @@ if (launchConfigurationError) {
 					initializeDesktopTray({
 						createWindow,
 						getMainWindow,
+						isMainWindowTakenOver,
 						hideWindow,
 						setQuitting,
 						showWindow,
@@ -602,7 +606,7 @@ if (launchConfigurationError) {
 				}
 				app.on('activate', () => {
 					const mainWindow = getMainWindow();
-					if (mainWindow === null || mainWindow.isDestroyed()) {
+					if ((mainWindow === null || mainWindow.isDestroyed()) && !isMainWindowTakenOver()) {
 						createWindow();
 					} else {
 						showWindow();
