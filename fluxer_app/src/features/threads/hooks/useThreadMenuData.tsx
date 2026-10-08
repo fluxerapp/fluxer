@@ -2,6 +2,7 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import type {Channel} from '@app/features/channel/models/Channel';
+import {ChannelDebugModal} from '@app/features/devtools/components/debug/ChannelDebugModal';
 import {MARK_AS_READ_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {buildChannelLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import Navigation from '@app/features/navigation/state/Navigation';
@@ -28,6 +29,7 @@ import {
 import {
 	CopyIdIcon,
 	CopyLinkIcon,
+	DebugChannelIcon,
 	DeleteIcon,
 	EditIcon,
 	LeaveIcon,
@@ -247,14 +249,32 @@ export function useThreadMenuData(thread: Channel, {onClose}: {onClose: () => vo
 		},
 	];
 	if (UserSettings.developerMode) {
-		copyItems.push({
-			icon: <CopyIdIcon size={20} data-flx="threads.use-thread-menu-data.copy-id-icon" />,
-			label: i18n._(D.COPY_THREAD_ID_DESCRIPTOR),
-			onClick: () => {
-				void TextCopyCommands.copy(i18n, thread.id, true);
-				onClose();
+		copyItems.push(
+			{
+				icon: <DebugChannelIcon size={20} data-flx="threads.use-thread-menu-data.debug-thread-icon" />,
+				label: i18n._(D.DEBUG_THREAD_DESCRIPTOR),
+				onClick: () => {
+					ModalCommands.pushAfterBottomSheetClose(
+						onClose,
+						modal(() => (
+							<ChannelDebugModal
+								title={i18n._(D.THREAD_DEBUG_DESCRIPTOR)}
+								channel={thread}
+								data-flx="threads.use-thread-menu-data.channel-debug-modal"
+							/>
+						)),
+					);
+				},
 			},
-		});
+			{
+				icon: <CopyIdIcon size={20} data-flx="threads.use-thread-menu-data.copy-id-icon" />,
+				label: i18n._(D.COPY_THREAD_ID_DESCRIPTOR),
+				onClick: () => {
+					void TextCopyCommands.copy(i18n, thread.id, true);
+					onClose();
+				},
+			},
+		);
 	}
 	groups.push({items: copyItems});
 	return {groups};
