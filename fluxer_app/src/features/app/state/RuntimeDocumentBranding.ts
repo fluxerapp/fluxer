@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {DEFAULT_APP_SHELL_BRANDING} from '@app/features/app/state/AppShellBranding';
+import {setDocumentTitleProductName} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import type {InstanceAppPublic} from '@fluxer/instance_bootstrap/src/Types';
-
-let lastProductName = DEFAULT_APP_SHELL_BRANDING.productName;
-
-function escapeRegExp(value: string): string {
-	return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
-}
 
 function brandedLink(rel: string): HTMLLinkElement | null {
 	return document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"][data-fluxer-branding="true"]`);
@@ -26,6 +21,22 @@ function setLink(rel: string, href: string): void {
 
 function removeLink(rel: string): void {
 	brandedLink(rel)?.remove();
+}
+
+function suspendDefaultLinks(rel: string): void {
+	for (const link of document.head.querySelectorAll<HTMLLinkElement>(
+		`link[rel="${rel}"]:not([data-fluxer-branding])`,
+	)) {
+		link.dataset.fluxerDefaultRel = rel;
+		link.rel = '';
+	}
+}
+
+function restoreDefaultLinks(rel: string): void {
+	for (const link of document.head.querySelectorAll<HTMLLinkElement>(`link[data-fluxer-default-rel="${rel}"]`)) {
+		link.rel = rel;
+		delete link.dataset.fluxerDefaultRel;
+	}
 }
 
 function brandedMeta(name: string): HTMLMetaElement | null {
@@ -47,25 +58,16 @@ function removeMeta(name: string): void {
 	brandedMeta(name)?.remove();
 }
 
-function replaceTitleProductName(nextProductName: string): void {
-	if (lastProductName === nextProductName) return;
-	const prefix = new RegExp(`^(\\(\\d+\\)\\s+|\\u2022\\s+)?${escapeRegExp(lastProductName)}(?=$| \\| )`, 'u');
-	if (prefix.test(document.title)) {
-		document.title = document.title.replace(prefix, (_match, notificationPrefix: string | undefined) => {
-			return `${notificationPrefix ?? ''}${nextProductName}`;
-		});
-	}
-}
-
 function applyDocumentBranding(productName: string, faviconUrl: string | null, themeColor: string | null): void {
 	if (typeof document === 'undefined') return;
-	replaceTitleProductName(productName);
-	lastProductName = productName;
+	setDocumentTitleProductName(productName);
 	setMeta('application-name', productName);
 	setMeta('apple-mobile-web-app-title', productName);
 	if (faviconUrl === null) {
 		removeLink('icon');
+		restoreDefaultLinks('icon');
 	} else {
+		suspendDefaultLinks('icon');
 		setLink('icon', faviconUrl);
 	}
 	if (themeColor === null) {
