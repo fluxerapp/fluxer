@@ -1430,7 +1430,7 @@ msgstr "{durationQuantity, plural, one {# rok} few {# roky} many {# roku} other 
 
 #. Accessible label for the avatar status badge; placeholder is the localized status name.
 #: src/features/app/components/shared/GroupDMAvatar.tsx:33
-#: src/features/ui/components/BaseAvatar.tsx:26
+#: src/features/ui/components/BaseAvatar.tsx:27
 #: src/features/ui/components/StatusIndicator.tsx:12
 msgid "{effectiveStatusLabel} status"
 msgstr "Stav: {effectiveStatusLabel}"
@@ -1476,7 +1476,7 @@ msgid "{fifteenMinutes} minutes"
 msgstr "{fifteenMinutes} minut"
 
 #. Short label in the sidebar navigation guild folder item. Preserve {folderName}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:77
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:78
 msgid "{folderName} folder"
 msgstr "Složka {folderName}"
 
@@ -5563,7 +5563,7 @@ msgstr "K dispozici v desktopové aplikaci."
 #. Accessible label for an avatar image.
 #. Form label for a webhook avatar image.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/ui/components/BaseAvatar.tsx:18
+#: src/features/ui/components/BaseAvatar.tsx:19
 #: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:353
 #: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:401
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:13
@@ -8876,7 +8876,7 @@ msgid "Collapse"
 msgstr "Sbalit"
 
 #. Short label in the sidebar navigation guild folder item. Preserve {folderName}; it is inserted by code.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:97
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:98
 msgid "Collapse {folderName}"
 msgstr "Sbalit složku {folderName}"
 
@@ -8921,7 +8921,7 @@ msgstr "Sbalit nepřečtené zprávy pro {channelHeading}"
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for a collapsed category.
 #: src/features/app/components/layout/ChannelItem.tsx:101
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:85
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:86
 msgid "collapsed"
 msgstr "sbaleno"
 
@@ -15276,7 +15276,7 @@ msgstr "Rozbalit nepřečtené zprávy pro {channelHeading}"
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for an expanded category.
 #: src/features/app/components/layout/ChannelItem.tsx:105
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:81
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:82
 msgid "expanded"
 msgstr "rozbaleno"
 
@@ -16217,7 +16217,7 @@ msgstr "Hlas v popředí"
 
 #. Folder icon option in the community-folder settings modal: a generic folder shape. Short standalone label.
 #. Short label in the sidebar navigation guild folder item.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:73
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:74
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:40
 msgid "Folder"
 msgstr "Složka"
@@ -25056,7 +25056,7 @@ msgid "Open community"
 msgstr "Otevřít komunitu"
 
 #. Short label in the app layout guild header. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/GuildHeader.tsx:33
+#: src/features/app/components/layout/GuildHeader.tsx:34
 msgid "Open community menu for {guildName}"
 msgstr "Otevřít nabídku komunity {guildName}"
 
@@ -37248,7 +37248,7 @@ msgstr "Avatary při psaní"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat typing. Keep it concise.
 #: src/features/channel/components/ChannelTyping.tsx:11
-#: src/features/ui/components/BaseAvatar.tsx:22
+#: src/features/ui/components/BaseAvatar.tsx:23
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:350
 msgid "Typing indicator"
 msgstr "Indikátor psaní"
@@ -37967,7 +37967,7 @@ msgstr "Skupinová konverzace odepnuta"
 #. Lowercase state label used inside channel-list accessible text when a channel has unread messages.
 #. Screen-reader fragment announcing that the DM list row has unread messages. Lowercase fragment.
 #: src/features/app/components/layout/ChannelItem.tsx:109
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:89
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:90
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:58
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:27
 #: src/features/channel/components/direct_message/DMListItem.tsx:71
@@ -39821,7 +39821,7 @@ msgstr "Hlasová aktivace"
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
-#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:93
+#: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:94
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:47
 msgid "voice activity"
 msgstr "hlasová aktivita"
