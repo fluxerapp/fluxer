@@ -7,6 +7,7 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ThreadCommands from '@app/features/threads/commands/ThreadCommands';
 import {openCreateThread, openThread} from '@app/features/threads/commands/ThreadNavigation';
 import styles from '@app/features/threads/components/ThreadBrowser.module.css';
+import {ThreadContextMenu} from '@app/features/threads/components/ThreadContextMenu';
 import {reportThreadActionError} from '@app/features/threads/hooks/useThreadMenuData';
 import {useThreadSearch} from '@app/features/threads/hooks/useThreadSearch';
 import ChannelThreads, {lastActivityId} from '@app/features/threads/state/ChannelThreads';
@@ -14,6 +15,7 @@ import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
 import {canCreateThreadIn, isModeratorOfParent} from '@app/features/threads/utils/ThreadActionRules';
 import * as D from '@app/features/threads/utils/ThreadMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
+import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -44,6 +46,15 @@ const ThreadBrowserItem = observer(({thread, onOpen}: {thread: Channel; onOpen: 
 				type="button"
 				className={styles.item}
 				onClick={() => onOpen(thread)}
+				onContextMenu={(event) =>
+					ContextMenuCommands.openFromEvent(event, ({onClose}) => (
+						<ThreadContextMenu
+							thread={thread}
+							onClose={onClose}
+							data-flx="threads.thread-browser.thread-browser-item.thread-context-menu"
+						/>
+					))
+				}
 				data-flx="threads.thread-browser.thread-browser-item.item.open"
 			>
 				<span className={styles.itemName} data-flx="threads.thread-browser.thread-browser-item.item-name">
