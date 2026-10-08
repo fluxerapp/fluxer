@@ -38,7 +38,7 @@ export function getForumPostListView(forum: Channel): ForumPostListView {
 	}
 	const list = ForumPosts.getList(forum.id, 'archived');
 	const {pinned, active, archived} = buildForumPostList({
-		active: ChannelThreads.getActiveThreadsForParent(forum.id),
+		known: ChannelThreads.getThreadsForParent(forum.id),
 		extra: resolvePosts(forum.id, list.ids),
 		sortOrder: ForumPosts.getSortOrder(forum),
 		tagIds: ForumPosts.getTagFilter(forum.id),
