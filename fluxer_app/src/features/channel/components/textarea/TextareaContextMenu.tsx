@@ -140,12 +140,6 @@ export const TextareaContextMenu = observer(
 			}
 			targetElement.focus({preventScroll: true});
 		};
-		const handleReplaceMisspelling = async (suggestion: string) => {
-			if (electronAPI?.spellcheckReplaceMisspelling) {
-				await electronAPI.spellcheckReplaceMisspelling(suggestion);
-			}
-			onClose();
-		};
 		const handleAddToDictionary = async () => {
 			if (!misspelledWord) return;
 			Spellcheck.addPersonalWord(misspelledWord);
@@ -165,6 +159,11 @@ export const TextareaContextMenu = observer(
 			requestAnimationFrame(() => {
 				focusTargetElement();
 				requestAnimationFrame(action);
+			});
+		};
+		const handleReplaceMisspelling = (suggestion: string) => {
+			runAfterClose(() => {
+				void electronAPI?.spellcheckReplaceMisspelling?.(suggestion);
 			});
 		};
 		const execCommand = (command: string) => {
