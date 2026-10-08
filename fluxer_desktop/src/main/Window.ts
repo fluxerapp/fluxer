@@ -27,6 +27,7 @@ import {isNativeGatewayAvailable} from '@electron/main/GatewaySocketNativeBounda
 import {shouldDisableV8CodeCache} from '@electron/main/LaunchOptions';
 import {getDesktopLocalAppAuthorization} from '@electron/main/LocalAppProtocolAuthorization';
 import {isLocalAppRendererDocumentURL, isLocalAppURL} from '@electron/main/LocalAppURL';
+import {cancelPendingFullScreenHide, hideWindowLeavingFullScreen} from '@electron/main/MacFullScreenHide';
 import {t} from '@electron/main/MainI18n';
 import {MainWindowRevealGate, MainWindowRevealReason} from '@electron/main/MainWindowReveal';
 import {signalMainWindowCreated, signalMainWindowReady} from '@electron/main/ModuleBootHandoff';
@@ -874,7 +875,7 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 					? 'Window close hid the app. Use Quit to terminate the process'
 					: 'Window close hid the app to the tray. Use Quit to terminate the process',
 			);
-			mainWindow?.hide();
+			if (mainWindow) hideWindowLeavingFullScreen(mainWindow);
 			refreshDesktopTrayMenu();
 		}
 	});
@@ -1140,6 +1141,7 @@ export function showWindow(): void {
 		return;
 	}
 	if (mainWindow) {
+		cancelPendingFullScreenHide(mainWindow);
 		if (mainWindow.isMinimized()) {
 			mainWindow.restore();
 		}
@@ -1180,7 +1182,7 @@ export function showWindow(): void {
 
 export function hideWindow(): void {
 	if (mainWindow) {
-		mainWindow.hide();
+		hideWindowLeavingFullScreen(mainWindow);
 	}
 }
 
