@@ -9,8 +9,8 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A thread member records that a user joined a [thread](/http-api/threads/). A thread holds at most 1,000 members, and adding one more returns 400 `MAX_THREAD_MEMBERS`.
 
-:::note[Every route needs the `channel_threads` experiment]
-A route on this page answers 404 `NOT_FOUND` unless the experiment is active for the guild and the caller. A user session also declares `channel_threads` in the `X-Fluxer-Features` header, and a bot needs no declaration.
+:::note[Every route needs the `channel_threads` client capability]
+A route on this page answers 404 `NOT_FOUND` to a user session that does not declare `channel_threads` in the `X-Fluxer-Features` header. A bot needs no declaration.
 :::
 
 ## Thread member object

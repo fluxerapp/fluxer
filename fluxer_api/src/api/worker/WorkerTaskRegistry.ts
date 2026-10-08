@@ -55,7 +55,6 @@ import syncUrlBlocklists from '@app/api/worker/tasks/SyncUrlBlocklists';
 import {
 	archiveInactiveThreads,
 	deleteChannelThreads,
-	rebuildThreadAutoArchiveQueue,
 	removeThreadMembershipsForGuildMember,
 	repairThreadIndexes,
 } from '@app/api/worker/tasks/ThreadMaintenanceTasks';
@@ -69,7 +68,6 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	applicationProcessDeletion,
 	archiveInactiveThreads,
 	deleteChannelThreads,
-	rebuildThreadAutoArchiveQueue,
 	removeThreadMembershipsForGuildMember,
 	repairThreadIndexes,
 	syncThreadSearchDocument,

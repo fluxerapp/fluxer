@@ -4,12 +4,9 @@ import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannelID, createGuildID, createRoleID} from '@app/api/BrandedTypes';
 import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {resetChannelThreadsConfig, setChannelThreadsConfig} from '@app/api/channel/tests/ThreadTestUtils';
 import {fetchOne} from '@app/api/database/CassandraQueryExecution';
 import type {GuildThreadStateRow} from '@app/api/database/types/ThreadTypes';
-import {
-	clearChannelThreadsTaintCacheForTesting,
-	syncChannelThreadsConfig,
-} from '@app/api/experiment/ChannelThreadsGate';
 import {GuildRoleRepository} from '@app/api/guild/repositories/GuildRoleRepository';
 import {
 	acceptInvite,
@@ -20,7 +17,6 @@ import {
 	getChannel,
 	updateRolePositions,
 } from '@app/api/guild/tests/GuildTestUtils';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {GuildThreadState} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
@@ -31,10 +27,7 @@ import {
 	THREAD_PERMISSIONS,
 	ThreadPermissionFlags,
 } from '@fluxer/constants/src/ThreadPermissionUtils';
-import {
-	type ChannelThreadsConfig,
-	ChannelThreadsConfigSchema,
-} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
+import type {ChannelThreadsConfig} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
@@ -50,17 +43,6 @@ const ACTIVE: Partial<ChannelThreadsConfig> = {
 
 const FETCH_MARKER = GuildThreadState.selectCql({where: GuildThreadState.where.eq('guild_id'), limit: 1});
 
-async function setConfig(patch: Partial<ChannelThreadsConfig>): Promise<void> {
-	await getInstanceConfigRepository().updateChannelThreadsConfig((current) =>
-		ChannelThreadsConfigSchema.parse({
-			...patch,
-			ever_enabled: current.ever_enabled || patch.enabled === true,
-			config_version: current.config_version + 1,
-		}),
-	);
-	clearChannelThreadsTaintCacheForTesting();
-}
-
 function bits(value: string | undefined): bigint {
 	return BigInt(value ?? '0');
 }
@@ -74,13 +56,11 @@ describe('thread permission bits across guild modes', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		syncChannelThreadsConfig(null, (raw) => ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {}));
-		clearChannelThreadsTaintCacheForTesting();
+		resetChannelThreadsConfig();
 	});
 
 	afterEach(() => {
-		syncChannelThreadsConfig(null, (raw) => ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {}));
-		clearChannelThreadsTaintCacheForTesting();
+		resetChannelThreadsConfig();
 	});
 
 	afterAll(async () => {
@@ -124,7 +104,7 @@ describe('thread permission bits across guild modes', () => {
 	});
 
 	test('active guilds seed @everyone, write bits for capable users and restore them for others', async () => {
-		await setConfig(ACTIVE);
+		await setChannelThreadsConfig(ACTIVE);
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Active');
 		expect(await roleBits(owner.token, guild.id, guild.id)).toBe(DEFAULT_PERMISSIONS | DEFAULT_THREAD_PERMISSIONS);
@@ -155,7 +135,7 @@ describe('thread permission bits across guild modes', () => {
 	});
 
 	test('bots write thread bits and bot invites keep them only for capable active users in active guilds', async () => {
-		await setConfig(ACTIVE);
+		await setChannelThreadsConfig(ACTIVE);
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Bots');
 		const bot = await createTestBotAccount(harness);
@@ -185,7 +165,7 @@ describe('thread permission bits across guild modes', () => {
 			.execute();
 		expect(bits(vcm.permissions)).toBe(0n);
 
-		await setConfig({enabled: false});
+		await setChannelThreadsConfig({enabled: false});
 		const controlOwner = await createTestAccount(harness);
 		const controlGuild = await createGuild(harness, controlOwner.token, 'Bots control');
 		const controlBot = await createTestBotAccount(harness);
@@ -197,7 +177,7 @@ describe('thread permission bits across guild modes', () => {
 	});
 
 	test('retired guilds keep stored thread bits read-only without escalation errors', async () => {
-		await setConfig(ACTIVE);
+		await setChannelThreadsConfig(ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Retired');
@@ -222,7 +202,7 @@ describe('thread permission bits across guild modes', () => {
 		await acceptInvite(harness, member.token, invite.code);
 		await addMemberRole(harness, owner.token, guild.id, member.userId, mod.id);
 
-		await setConfig({enabled: false});
+		await setChannelThreadsConfig({enabled: false});
 		const updated = await createBuilder<GuildRoleResponse>(harness, member.token)
 			.patch(`/guilds/${guild.id}/roles/${target.id}`)
 			.header(FEATURES, CAPABLE)
@@ -268,7 +248,7 @@ describe('thread permission bits across guild modes', () => {
 	});
 
 	test('active channel creates store thread-aware overwrites and mask them for non-viewers', async () => {
-		await setConfig(ACTIVE);
+		await setChannelThreadsConfig(ACTIVE);
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Overwrites');
 		const allow = Permissions.SEND_MESSAGES | ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS;
@@ -309,7 +289,7 @@ describe('thread permission bits across guild modes', () => {
 	});
 
 	test('overwrite removals keep thread bits the actor cannot write, without escalation errors', async () => {
-		await setConfig(ACTIVE);
+		await setChannelThreadsConfig(ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Removals');
@@ -352,7 +332,7 @@ describe('thread permission bits across guild modes', () => {
 		expect([after.everyone?.allow, after.everyone?.deny]).toEqual([inThreads, 0n]);
 		expect([after.target?.allow, after.target?.deny]).toEqual([0n, manageThreads]);
 
-		await setConfig({enabled: false});
+		await setChannelThreadsConfig({enabled: false});
 		await createBuilder(harness, member.token)
 			.patch(`/channels/${channel.id}`)
 			.header(FEATURES, CAPABLE)
@@ -368,7 +348,7 @@ describe('thread permission bits across guild modes', () => {
 	});
 
 	test('deleting a forum removes its thread-only index row', async () => {
-		await setConfig(ACTIVE);
+		await setChannelThreadsConfig(ACTIVE);
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Forum delete');
 		const guildId = createGuildID(BigInt(guild.id));
@@ -390,7 +370,7 @@ describe('thread permission bits across guild modes', () => {
 		expect(await repository.channelData.countGuildChannels(guildId)).toBe(before);
 	});
 	test('category sync and delete in a retired guild update forums without dispatching them', async () => {
-		await setConfig(ACTIVE);
+		await setChannelThreadsConfig(ACTIVE);
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Retired category');
 		const guildId = createGuildID(BigInt(guild.id));
@@ -407,7 +387,7 @@ describe('thread permission bits across guild modes', () => {
 		const forumId = createChannelID(BigInt(text.id) + 1n);
 		await repository.upsert({...source.toRow(), channel_id: forumId, type: ChannelTypes.GUILD_FORUM, name: 'forum'});
 		expect(await fetchOne<GuildThreadStateRow>(FETCH_MARKER, {guild_id: guildId})).not.toBeNull();
-		await setConfig({enabled: false});
+		await setChannelThreadsConfig({enabled: false});
 		const dispatchSpy = vi.spyOn(NoopGatewayService.prototype, 'dispatchGuild');
 		const updatedIds = () =>
 			dispatchSpy.mock.calls
@@ -431,7 +411,7 @@ describe('thread permission bits across guild modes', () => {
 		}
 	});
 	test('channel overwrite edits keep thread bits for clients that cannot write them', async () => {
-		await setConfig(ACTIVE);
+		await setChannelThreadsConfig(ACTIVE);
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Overwrite edits');
 		const inThreads = ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS;
@@ -474,7 +454,7 @@ describe('thread permission bits across guild modes', () => {
 		expect(await storedAllow()).toBeUndefined();
 	});
 	test('lock_permissions moves copy parent thread bits only for writers', async () => {
-		await setConfig(ACTIVE);
+		await setChannelThreadsConfig(ACTIVE);
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Lock sync');
 		const inThreads = ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS;
@@ -545,7 +525,7 @@ describe('thread permission bits across guild modes', () => {
 		const controlRoles = await listRoles(controlOwner.token, controlGuild.id, true);
 		expect(controlRoles.map((role) => bits(role.permissions) & THREAD_PERMISSIONS)).toEqual([0n, 0n]);
 
-		await setConfig(ACTIVE);
+		await setChannelThreadsConfig(ACTIVE);
 		const owner = await createTestAccount(harness);
 		const guild = await templated(owner.token);
 		const roles = await listRoles(owner.token, guild.id, true);

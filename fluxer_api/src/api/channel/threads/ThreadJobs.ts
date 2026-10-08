@@ -28,14 +28,6 @@ export async function enqueueRemoveThreadMemberships(guildId: GuildID, userId: U
 	);
 }
 
-export async function enqueueRebuildThreadAutoArchiveQueue(guildId: string): Promise<void> {
-	await (await workerService()).addJob(
-		'rebuildThreadAutoArchiveQueue',
-		{guildId, configVersion: getCompiledChannelThreadsConfig().config.config_version},
-		{jobKey: `rebuild-thread-archive-queue-${guildId}`},
-	);
-}
-
 export function enqueueRepairThreadIndexes(threadIds: Array<ChannelID>): void {
 	if (threadIds.length === 0) return;
 	const window = Math.floor(Date.now() / REPAIR_DEBOUNCE_MS);

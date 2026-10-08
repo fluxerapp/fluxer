@@ -106,20 +106,11 @@ pub async fn render(
                 .map(|response| response.threads)
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild threads"))
                 .unwrap_or_default();
-            let threads_enabled = client
-                .get_instance_config()
-                .await
-                .map(|instance| instance.channel_threads.enabled)
-                .map_err(
-                    |error| tracing::warn!(%error, "admin API request failed: get instance config"),
-                )
-                .unwrap_or(false);
             Some(tabs::threads::threads_tab(
                 config,
                 &guild,
                 &threads,
                 acl::has_permission(admin_acls, acl::MESSAGE_DELETE_ALL),
-                threads_enabled,
                 csrf_token,
             ))
         }

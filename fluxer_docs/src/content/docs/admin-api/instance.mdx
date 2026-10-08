@@ -36,7 +36,6 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | gateway_rollout | [Gateway rollout configuration](#gateway-rollout-configuration-object) object | Gateway admission and dispatch tuning |
 | push_relay | [push relay configuration](#push-relay-configuration-object) object | Operator consent to the Fluxer-run push relay |
 | domain_migration | [domain migration configuration](#domain-migration-configuration-object) object | Web domain migration rollout |
-| plutonium_page | [Plutonium page configuration](#plutonium-page-configuration-object) object | Plutonium page rollout |
 | captcha | [captcha configuration](#captcha-configuration-object) object | ALTCHA proof-of-work captcha settings |
 | experiment_delivery | [experiment delivery configuration](#experiment-delivery-configuration-object) object | Cadence every client polls the experiments route on |
 | registration | [registration configuration](#registration-configuration-object) object | Registration policy, issued URLs, and pending registrations |
@@ -159,27 +158,6 @@ Only the official web client acts on this configuration. On any other instance i
 :::caution[`enabled` is the kill switch]
 Setting `enabled` to false stops new migrations and also stops forwarding from the legacy origin for clients that already moved. Excluding an account only stops a migration that has not started yet.
 :::
-
-## Plutonium page configuration object
-
-The instance rollout that replaces the Plutonium settings tab with a full Plutonium page, makes app pages linkable in chat, and uses a minimal gift purchase modal. [Experiments](/http-api/experiments/#plutonium-page-assignment-object) defines what a client resolves from it.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| enabled | boolean | Whether the rollout runs at all (default false) |
-| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
-| rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
-| rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `plutonium-page-v1`) |
-| included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
-| included_guild_ids | array[snowflake] | Guilds whose members the rollout always selects, up to 1000 entries (default empty) |
-| include_premium_users | boolean | Whether the rollout always selects accounts with active premium (default false) |
-| excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
-
-Every field is present on read. An absent document or missing field uses the defaults above.
-
-`excluded_user_ids` wins over every other rule. Otherwise the rollout selects an account in `included_user_ids`, a member of a guild in `included_guild_ids`, or a premium account while `include_premium_users` is true, whatever `rollout_basis_points` says.
 
 ## Captcha configuration object
 
@@ -633,7 +611,6 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 | gateway_rollout? | object | Any subset of the [Gateway rollout configuration](#gateway-rollout-configuration-object) fields, each bound as documented there |
 | push_relay? | object | `relay_consent_accepted` from the [push relay configuration](#push-relay-configuration-object) |
 | domain_migration? | object | Any subset of the [domain migration](#domain-migration-configuration-object) fields |
-| plutonium_page? | object | Any subset of the [Plutonium page](#plutonium-page-configuration-object) fields |
 | captcha? | object | Any subset of the [captcha configuration](#captcha-configuration-object) fields |
 | experiment_delivery? | object | Any subset of the [experiment delivery](#experiment-delivery-configuration-object) fields |
 | registration? | object | `mode` and `admin_registration_urls_enabled` |
@@ -650,8 +627,6 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 `push_relay` takes only `relay_consent_accepted`. Fluxer sets `relay_consent_accepted_at` and `relay_consent_accepted_by` itself on the request that changes that flag, and accepts neither from a request. Turning the flag on stamps the current time and the acting account, and turning it off clears both to null. A request that repeats the flag it already holds leaves the stamp alone.
 
 `domain_migration` takes every [domain migration configuration](#domain-migration-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises `config_version` by one on each request that supplies at least one of them. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
-
-`plutonium_page` works the same way, over the [Plutonium page configuration](#plutonium-page-configuration-object) fields and its own `config_version`.
 
 `captcha` takes any subset of the [captcha configuration](#captcha-configuration-object) fields, each bound as documented there. Fluxer merges the supplied fields over the stored ones. The section has no `config_version`.
 
@@ -693,7 +668,7 @@ On a self-hosted deployment, billing and the `everyone` premium mode exclude eac
 | 400 | [error response](/admin-api/#error-response) | A policy transition is refused, returned as `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` |
 
 :::caution[Sections are applied one after another]
-The order is `gateway_rollout`, `push_relay`, `domain_migration`, `plutonium_page`, `captcha`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, `billing`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
+The order is `gateway_rollout`, `push_relay`, `domain_migration`, `captcha`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, `billing`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
 :::
 
 ### Side effects

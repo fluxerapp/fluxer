@@ -416,35 +416,11 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "anonymous_rollout_basis_points": 100,
             "standalone_forwarding": true
         },
-        "plutonium_page": {
-            "enabled": true,
-            "config_version": 3,
-            "rollout_basis_points": 500,
-            "rollout_salt": "plutonium-page-v1",
-            "included_user_ids": ["1500000000000000001"],
-            "excluded_user_ids": ["1500000000000000002"],
-            "included_guild_ids": ["1500000000000000005"],
-            "include_premium_users": true,
-            "future_plutonium_page_knob": true
-        },
         "captcha": {
             "enabled": true,
             "cost": 5000,
             "max_counter": 1000,
             "future_captcha_knob": 1
-        },
-        "channel_threads": {
-            "enabled": true,
-            "config_version": 3,
-            "ever_enabled": true,
-            "guild_basis_points": 0,
-            "guild_salt": "channel-threads-guild-v1",
-            "enabled_guild_ids": ["1600000000000000001"],
-            "disabled_guild_ids": [],
-            "user_basis_points": 10000,
-            "user_salt": "channel-threads-user-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": []
         },
         "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
         "registration": {
@@ -597,20 +573,9 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(resp.domain_migration.included_user_ids.len(), 1);
     assert_eq!(resp.domain_migration.anonymous_rollout_basis_points, 100);
     assert!(resp.domain_migration.standalone_forwarding);
-    assert!(resp.plutonium_page.enabled);
-    assert_eq!(resp.plutonium_page.config_version, 3);
-    assert_eq!(resp.plutonium_page.rollout_basis_points, 500);
-    assert_eq!(*resp.plutonium_page.rollout_salt, "plutonium-page-v1");
-    assert_eq!(resp.plutonium_page.included_user_ids.len(), 1);
-    assert_eq!(resp.plutonium_page.excluded_user_ids.len(), 1);
-    assert_eq!(resp.plutonium_page.included_guild_ids.len(), 1);
-    assert!(resp.plutonium_page.include_premium_users);
     assert!(resp.push_relay.relay_consent_accepted);
     assert!(resp.captcha.enabled);
     assert_eq!(resp.captcha.max_counter, 1000);
-    assert!(resp.channel_threads.enabled);
-    assert_eq!(resp.channel_threads.config_version, 3);
-    assert_eq!(resp.channel_threads.enabled_guild_ids.len(), 1);
     assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));
@@ -675,63 +640,6 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(
         serde_json::to_value(&baseline).unwrap(),
         serde_json::to_value(&resp).unwrap()
-    );
-}
-
-#[test]
-fn deserialize_channel_threads_config() {
-    let config: types::ChannelThreadsConfigResponse = serde_json::from_str(
-        r#"{
-        "enabled": true,
-        "config_version": 12,
-        "ever_enabled": true,
-        "guild_basis_points": 50,
-        "guild_salt": "channel-threads-guild-v2",
-        "enabled_guild_ids": ["1600000000000000001"],
-        "disabled_guild_ids": ["1600000000000000002", "1600000000000000003"],
-        "user_basis_points": 10000,
-        "user_salt": "channel-threads-user-v1",
-        "included_user_ids": [],
-        "excluded_user_ids": ["1500000000000000001"],
-        "future_threads_knob": 1
-    }"#,
-    )
-    .expect("a channel threads config must deserialize");
-
-    assert!(config.enabled);
-    assert!(config.ever_enabled);
-    assert_eq!(config.config_version, 12);
-    assert_eq!(config.guild_basis_points, 50);
-    assert_eq!(config.guild_salt, "channel-threads-guild-v2");
-    assert_eq!(config.enabled_guild_ids, vec!["1600000000000000001"]);
-    assert_eq!(config.disabled_guild_ids.len(), 2);
-    assert_eq!(config.user_basis_points, 10000);
-    assert_eq!(config.excluded_user_ids, vec!["1500000000000000001"]);
-
-    let absent: types::ChannelThreadsConfigResponse =
-        serde_json::from_str("{}").expect("an api without the experiment still deserializes");
-    assert!(!absent.enabled);
-    assert!(!absent.ever_enabled);
-    assert_eq!(absent.guild_salt, types::CHANNEL_THREADS_DEFAULT_GUILD_SALT);
-    assert_eq!(absent.user_salt, types::CHANNEL_THREADS_DEFAULT_USER_SALT);
-}
-
-#[test]
-fn serialize_channel_threads_update_never_sends_server_owned_fields() {
-    let update = types::InstanceConfigUpdateRequest {
-        channel_threads: Some(types::ChannelThreadsConfigUpdateRequest {
-            enabled: Some(true),
-            enabled_guild_ids: Some(vec!["1600000000000000001".to_owned()]),
-            ..Default::default()
-        }),
-        ..Default::default()
-    };
-    assert_eq!(
-        serde_json::to_value(&update).unwrap(),
-        serde_json::json!({"channel_threads": {
-            "enabled": true,
-            "enabled_guild_ids": ["1600000000000000001"],
-        }})
     );
 }
 

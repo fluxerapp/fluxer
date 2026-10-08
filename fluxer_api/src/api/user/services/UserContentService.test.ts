@@ -27,7 +27,7 @@ import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domain
 import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 import {ChannelThreadsConfigSchema} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {afterEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const {isUnreachableEntityError} = UserContentServiceTestHooks;
 
@@ -255,7 +255,7 @@ describe('getRecentMentions', () => {
 		const THREAD = createChannelID(400n);
 		const viewer = {kind: 'user', userId: VIEWER_ID, bot: false, capable: false} as const;
 
-		afterEach(() => {
+		beforeEach(() => {
 			syncChannelThreadsConfig(null, (raw) => ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {}));
 		});
 
@@ -447,7 +447,7 @@ describe('getSavedMessages', () => {
 			);
 		}
 
-		afterEach(() => {
+		beforeEach(() => {
 			syncChannelThreadsConfig(null, (raw) => ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {}));
 		});
 

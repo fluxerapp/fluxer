@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	applyChannelThreadsConfigUpdate,
 	type ChannelThreadsConfig,
 	ChannelThreadsConfigSchema,
-	ChannelThreadsConfigUpdateRequest,
 	channelThreadsGuildActive,
-	channelThreadsGuildFieldsChanged,
 	channelThreadsUserActive,
 	channelThreadsUserExcluded,
-	channelThreadsUserFieldsChanged,
 	compileChannelThreadsConfig,
 	DEFAULT_CHANNEL_THREADS_CONFIG,
-	DEFAULT_COMPILED_CHANNEL_THREADS_CONFIG,
+	everyoneChannelThreadsConfig,
 	resolveChannelThreadsAssignment,
 } from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
@@ -51,13 +47,8 @@ describe('channel threads configuration', () => {
 			included_user_ids: [],
 			excluded_user_ids: [],
 		});
-		expect(channelThreadsGuildActive(DEFAULT_COMPILED_CHANNEL_THREADS_CONFIG, GUILD_ID)).toBe(false);
-		expect(channelThreadsUserActive(DEFAULT_COMPILED_CHANNEL_THREADS_CONFIG, USER_ID)).toBe(false);
-	});
-
-	test('keeps partial updates free of defaults and server-maintained fields', () => {
-		expect(ChannelThreadsConfigUpdateRequest.parse({enabled: true})).toEqual({enabled: true});
-		expect(ChannelThreadsConfigUpdateRequest.parse({config_version: 9, ever_enabled: false})).toEqual({});
+		expect(channelThreadsGuildActive(compiled(), GUILD_ID)).toBe(false);
+		expect(channelThreadsUserActive(compiled(), USER_ID)).toBe(false);
 	});
 
 	test.each([
@@ -69,9 +60,8 @@ describe('channel threads configuration', () => {
 		{guild_salt: 'x'.repeat(65)},
 		{enabled_guild_ids: ['guild']},
 		{excluded_user_ids: ['123456789012345678901']},
-	])('rejects invalid values in stored config and updates: %j', (value) => {
+	])('rejects invalid values: %j', (value) => {
 		expect(ChannelThreadsConfigSchema.safeParse(value).success).toBe(false);
-		expect(ChannelThreadsConfigUpdateRequest.safeParse(value).success).toBe(false);
 	});
 
 	test('caps every targeted id list at a thousand', () => {
@@ -82,17 +72,23 @@ describe('channel threads configuration', () => {
 		}
 	});
 
-	test('bumps the version on every update and keeps ever_enabled sticky', () => {
-		const first = applyChannelThreadsConfigUpdate(DEFAULT_CHANNEL_THREADS_CONFIG, {user_basis_points: 100});
-		expect(first.config_version).toBe(1);
-		expect(first.ever_enabled).toBe(false);
-		const enabled = applyChannelThreadsConfigUpdate(first, {enabled: true});
-		expect(enabled.config_version).toBe(2);
-		expect(enabled.ever_enabled).toBe(true);
-		const disabled = applyChannelThreadsConfigUpdate(enabled, {enabled: false});
-		expect(disabled.config_version).toBe(3);
-		expect(disabled.enabled).toBe(false);
-		expect(disabled.ever_enabled).toBe(true);
+	test('the everyone config serves every guild and user and keeps the given version', () => {
+		const everyone = everyoneChannelThreadsConfig(42);
+		expect(everyone).toEqual({
+			...DEFAULT_CHANNEL_THREADS_CONFIG,
+			enabled: true,
+			config_version: 42,
+			ever_enabled: true,
+			guild_basis_points: 10000,
+			user_basis_points: 10000,
+		});
+		expect(ChannelThreadsConfigSchema.parse(everyone)).toEqual(everyone);
+		const cfg = compileChannelThreadsConfig(everyone);
+		for (const id of syntheticIds(200)) {
+			expect(channelThreadsGuildActive(cfg, id)).toBe(true);
+			expect(channelThreadsUserActive(cfg, id)).toBe(true);
+		}
+		expect(resolveChannelThreadsAssignment(cfg, USER_ID)).toEqual({active: true, config_version: 42});
 	});
 });
 
@@ -144,23 +140,10 @@ describe('channel threads predicates', () => {
 		}
 	});
 
-	test('the assignment is present only for active users and carries the version', () => {
+	test('the assignment is present only for active users and reports the version', () => {
 		const cfg = compiled({enabled: true, config_version: 7, included_user_ids: [USER_ID]});
 		expect(resolveChannelThreadsAssignment(cfg, USER_ID)).toEqual({active: true, config_version: 7});
 		expect(resolveChannelThreadsAssignment(cfg, OTHER_USER_ID)).toBeUndefined();
-	});
-
-	test('field change detection separates the guild and user dimensions', () => {
-		const base = config({enabled: true, enabled_guild_ids: [GUILD_ID], included_user_ids: [USER_ID]});
-		expect(channelThreadsGuildFieldsChanged(base, {...base, config_version: 5})).toBe(false);
-		expect(channelThreadsUserFieldsChanged(base, {...base, config_version: 5})).toBe(false);
-		expect(channelThreadsGuildFieldsChanged(base, {...base, enabled_guild_ids: [OTHER_GUILD_ID]})).toBe(true);
-		expect(channelThreadsUserFieldsChanged(base, {...base, enabled_guild_ids: [OTHER_GUILD_ID]})).toBe(false);
-		expect(channelThreadsGuildFieldsChanged(base, {...base, excluded_user_ids: [USER_ID]})).toBe(false);
-		expect(channelThreadsUserFieldsChanged(base, {...base, excluded_user_ids: [USER_ID]})).toBe(true);
-		expect(channelThreadsGuildFieldsChanged(base, {...base, enabled_guild_ids: [GUILD_ID, GUILD_ID]})).toBe(false);
-		expect(channelThreadsGuildFieldsChanged(base, {...base, enabled: false})).toBe(true);
-		expect(channelThreadsUserFieldsChanged(base, {...base, enabled: false})).toBe(true);
 	});
 });
 

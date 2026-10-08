@@ -7,20 +7,19 @@ use crate::{
             AppBrandingConfigUpdateRequest, AppLegalConfigUpdateRequest,
             AppPublicConfigUpdateRequest, AppRegistrationConfigUpdateRequest,
             AppSetupConfigUpdateRequest, CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE,
-            CaptchaConfigUpdateRequest, ChannelThreadsConfigUpdateRequest,
-            CreateRegistrationUrlRequest, DomainMigrationConfigUpdateRequest,
-            EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigUpdateRequest,
-            GatewayRolloutConfigUpdateRequest, GatewayRolloutMode,
-            InstanceAttachmentDecayUpdateRequest, InstanceBlueskyIntegrationUpdateRequest,
-            InstanceBlueskyKeyIntegrationUpdateRequest, InstanceConfigUpdateRequest,
-            InstanceEmailIntegrationUpdateRequest, InstanceEmailSmtpIntegrationUpdateRequest,
-            InstanceEmailSmtpTestRequest, InstanceGifIntegrationUpdateRequest,
-            InstanceIntegrationsUpdateRequest, InstanceMediaUpdateRequest,
-            InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
-            InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
-            LimitConfigUpdateRequest, LimitRule, LimitRuleFilters,
-            PlutoniumPageConfigUpdateRequest, PremiumMode, PushRelayConfigUpdateRequest,
-            RegistrationMode, SsoConfigUpdateRequest, VoiceE2eeScope,
+            CaptchaConfigUpdateRequest, CreateRegistrationUrlRequest,
+            DomainMigrationConfigUpdateRequest, EXPERIMENT_MAX_TARGETED_USERS,
+            ExperimentDeliveryConfigUpdateRequest, GatewayRolloutConfigUpdateRequest,
+            GatewayRolloutMode, InstanceAttachmentDecayUpdateRequest,
+            InstanceBlueskyIntegrationUpdateRequest, InstanceBlueskyKeyIntegrationUpdateRequest,
+            InstanceConfigUpdateRequest, InstanceEmailIntegrationUpdateRequest,
+            InstanceEmailSmtpIntegrationUpdateRequest, InstanceEmailSmtpTestRequest,
+            InstanceGifIntegrationUpdateRequest, InstanceIntegrationsUpdateRequest,
+            InstanceMediaUpdateRequest, InstancePolicyUpdateRequest,
+            InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
+            InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
+            LimitRuleFilters, PremiumMode, PushRelayConfigUpdateRequest, RegistrationMode,
+            SsoConfigUpdateRequest, VoiceE2eeScope,
         },
     },
     config::AdminConfig,
@@ -221,19 +220,10 @@ pub async fn instance_config_post(
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
-        "update_plutonium_page" => match build_plutonium_page_update(&form) {
-            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
-            Err(message) => FlashData::error(message),
-        },
         "update_captcha" => match build_captcha_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
-        "update_channel_threads" => instance_config_result(
-            client
-                .update_instance_config(&build_channel_threads_update(&form))
-                .await,
-        ),
         "update_experiment_delivery" => match build_experiment_delivery_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
@@ -619,41 +609,6 @@ fn build_domain_migration_update(
     })
 }
 
-fn build_plutonium_page_update(
-    form: &MultiValueForm,
-) -> Result<InstanceConfigUpdateRequest, String> {
-    Ok(InstanceConfigUpdateRequest {
-        plutonium_page: Some(PlutoniumPageConfigUpdateRequest {
-            enabled: Some(form.bool_value("plutonium_page_enabled")),
-            rollout_basis_points: parse_form_number(
-                form,
-                "plutonium_page_rollout_basis_points",
-                "Rollout basis points",
-                0,
-                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
-            )?,
-            rollout_salt: parse_experiment_rollout_salt(form, "plutonium_page_rollout_salt")?,
-            included_user_ids: Some(parse_experiment_user_ids(
-                form.first("plutonium_page_included_user_ids")
-                    .unwrap_or_default(),
-                "Included user IDs",
-            )?),
-            included_guild_ids: Some(parse_experiment_user_ids(
-                form.first("plutonium_page_included_guild_ids")
-                    .unwrap_or_default(),
-                "Included guild IDs",
-            )?),
-            include_premium_users: Some(form.bool_value("plutonium_page_include_premium_users")),
-            excluded_user_ids: Some(parse_experiment_user_ids(
-                form.first("plutonium_page_excluded_user_ids")
-                    .unwrap_or_default(),
-                "Excluded user IDs",
-            )?),
-        }),
-        ..Default::default()
-    })
-}
-
 fn build_captcha_update(form: &MultiValueForm) -> Result<InstanceConfigUpdateRequest, String> {
     Ok(InstanceConfigUpdateRequest {
         captcha: Some(CaptchaConfigUpdateRequest {
@@ -675,28 +630,6 @@ fn build_captcha_update(form: &MultiValueForm) -> Result<InstanceConfigUpdateReq
         }),
         ..Default::default()
     })
-}
-
-fn build_channel_threads_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
-    let channel_threads = if form.bool_value("channel_threads_everyone") {
-        ChannelThreadsConfigUpdateRequest {
-            enabled: Some(true),
-            guild_basis_points: Some(EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX),
-            user_basis_points: Some(EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX),
-            disabled_guild_ids: Some(Vec::new()),
-            excluded_user_ids: Some(Vec::new()),
-            ..Default::default()
-        }
-    } else {
-        ChannelThreadsConfigUpdateRequest {
-            enabled: Some(false),
-            ..Default::default()
-        }
-    };
-    InstanceConfigUpdateRequest {
-        channel_threads: Some(channel_threads),
-        ..Default::default()
-    }
 }
 
 fn build_experiment_delivery_update(
@@ -1465,30 +1398,6 @@ mod tests {
     }
 
     #[test]
-    fn build_channel_threads_update_turns_threads_on_for_everyone() {
-        let form = MultiValueForm::parse(b"_csrf=token&channel_threads_everyone=true");
-        assert_eq!(
-            serde_json::to_value(build_channel_threads_update(&form)).expect("serializable update"),
-            serde_json::json!({"channel_threads": {
-                "enabled": true,
-                "guild_basis_points": 10000,
-                "user_basis_points": 10000,
-                "disabled_guild_ids": [],
-                "excluded_user_ids": [],
-            }})
-        );
-    }
-
-    #[test]
-    fn build_channel_threads_update_only_turns_threads_off_when_unchecked() {
-        let form = MultiValueForm::parse(b"_csrf=token");
-        assert_eq!(
-            serde_json::to_value(build_channel_threads_update(&form)).expect("serializable update"),
-            serde_json::json!({"channel_threads": {"enabled": false}})
-        );
-    }
-
-    #[test]
     fn build_push_relay_update_reads_the_consent_checkbox() {
         let unchecked = build_push_relay_update(&MultiValueForm::parse(b"_csrf=token"));
         assert_eq!(
@@ -1566,72 +1475,6 @@ mod tests {
             build_domain_migration_update(&form).expect_err("invalid guild id"),
             "Included guild IDs entry 2 must contain 1 to 20 decimal digits"
         );
-    }
-
-    #[test]
-    fn build_plutonium_page_update_reads_the_rollout_fields() {
-        let form = MultiValueForm::parse(
-            b"plutonium_page_enabled=true&plutonium_page_rollout_basis_points=%20500%20&plutonium_page_rollout_salt=%20plutonium-page-v2%20&plutonium_page_included_user_ids=1500000000000000001&plutonium_page_excluded_user_ids=1500000000000000002&plutonium_page_included_guild_ids=1500000000000000005%0A1500000000000000006%2C1500000000000000005&plutonium_page_include_premium_users=true",
-        );
-        let update = build_plutonium_page_update(&form)
-            .expect("valid form")
-            .plutonium_page
-            .expect("plutonium page update");
-        assert_eq!(update.enabled, Some(true));
-        assert_eq!(update.rollout_basis_points, Some(500));
-        assert_eq!(update.rollout_salt, Some("plutonium-page-v2".to_owned()));
-        assert_eq!(update.include_premium_users, Some(true));
-        assert_eq!(
-            update.included_guild_ids,
-            Some(vec![
-                "1500000000000000005".to_owned(),
-                "1500000000000000006".to_owned()
-            ])
-        );
-        assert_eq!(
-            update.included_user_ids,
-            Some(vec!["1500000000000000001".to_owned()])
-        );
-        assert_eq!(
-            update.excluded_user_ids,
-            Some(vec!["1500000000000000002".to_owned()])
-        );
-    }
-
-    #[test]
-    fn build_plutonium_page_update_leaves_the_feature_inert_when_nothing_is_submitted() {
-        let form = MultiValueForm::parse(b"_csrf=token");
-        let request = build_plutonium_page_update(&form).expect("valid form");
-        assert_eq!(
-            serde_json::to_value(request).expect("serializable update"),
-            serde_json::json!({"plutonium_page": {
-                "enabled": false,
-                "included_user_ids": [],
-                "included_guild_ids": [],
-                "include_premium_users": false,
-                "excluded_user_ids": [],
-            }})
-        );
-    }
-
-    #[test]
-    fn build_plutonium_page_update_rejects_invalid_rollout_fields() {
-        for (form, message) in [
-            (
-                "plutonium_page_rollout_basis_points=10001",
-                "Rollout basis points must be a whole number between 0 and 10000",
-            ),
-            (
-                "plutonium_page_included_guild_ids=1500000000000000005%0Anot-a-guild",
-                "Included guild IDs entry 2 must contain 1 to 20 decimal digits",
-            ),
-        ] {
-            let form = MultiValueForm::parse(form.as_bytes());
-            assert_eq!(
-                build_plutonium_page_update(&form).expect_err("invalid field"),
-                message
-            );
-        }
     }
 
     #[test]

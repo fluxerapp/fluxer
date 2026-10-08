@@ -7,8 +7,8 @@ draft: true
 
 A session receives [threads](/http-api/threads/) through the Dispatch events below. A guild ready object in [Ready](/gateway/events/#ready), [Guild Create](/gateway/events/#guild-create), and [Guild Sync](/gateway/events/#guild-sync) has `threads` only when the session can view threads in that guild. A client treats the presence of that key as the signal that threads, forums, and media channels exist in the guild.
 
-:::note[Threads need the `channel_threads` experiment]
-A user session receives thread data only when it sets `CHANNEL_THREADS` in Identify and the experiment is active for the guild and the account. A bot session needs no flag.
+:::note[Threads need the `CHANNEL_THREADS` capability]
+A user session receives thread data only when it sets `CHANNEL_THREADS` in Identify. A bot session needs no flag.
 :::
 
 ## Session flag

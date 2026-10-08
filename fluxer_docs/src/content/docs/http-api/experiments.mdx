@@ -6,7 +6,7 @@ description: The experiment assignments envelope, the revalidation and polling c
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `domain_migration` and `plutonium_page`.
+An experiment is an instance-wide rollout. For each account, Fluxer works out whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `domain_migration` and `plutonium_page`. Only `domain_migration` is configured by an operator. `plutonium_page` is on for every account.
 
 Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
 
@@ -53,17 +53,17 @@ Only the official web client acts on this assignment, and only on its legacy ori
 
 ## Plutonium page assignment object
 
-One resolution of the instance Plutonium page rollout against one account. This server version writes the key on every response.
+The Plutonium page state for one account. This server version writes the key on every response, always with `enabled` true.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| enabled | boolean | Whether the caller's client shows the full Plutonium page in place of the Plutonium settings tab |
+| enabled | boolean | Whether the caller's client shows the full Plutonium page in place of the Plutonium settings tab, always true |
 
-A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
+The rollout is complete and has no operator setting. The key stays for clients that still read it.
 
-The assignment only changes what the client shows. A selected client replaces the Plutonium settings tab with a full Plutonium page, makes app pages linkable in chat, and uses a minimal gift purchase modal. The server applies no part of it on its own.
+The assignment only changes what the client shows. An enabled client replaces the Plutonium settings tab with a full Plutonium page, makes app pages linkable in chat, and uses a minimal gift purchase modal. The server applies no part of it on its own.
 
 ## Get experiment assignments
 

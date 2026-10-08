@@ -9,8 +9,8 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A forum channel holds posts, and every post is a public [thread](/http-api/threads/) with its own first message. A media channel is a forum channel whose posts center on attachments. Neither accepts a message of its own.
 
-:::note[Every route needs the `channel_threads` experiment]
-A route on this page answers 404 `NOT_FOUND` unless the experiment is active for the guild and the caller. A user session also declares `channel_threads` in the `X-Fluxer-Features` header, and a bot needs no declaration.
+:::note[Every route needs the `channel_threads` client capability]
+A route on this page answers 404 `NOT_FOUND` to a user session that does not declare `channel_threads` in the `X-Fluxer-Features` header. A bot needs no declaration.
 :::
 
 ## Forum channel fields

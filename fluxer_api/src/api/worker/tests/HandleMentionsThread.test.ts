@@ -349,6 +349,7 @@ describe('thread mention chunks', () => {
 	});
 
 	test('drops a thread chunk that lands after the guild left the experiment', async () => {
+		activate(false);
 		const increments = chunkHarness();
 		await runChunk();
 		expect(increments).toEqual([]);

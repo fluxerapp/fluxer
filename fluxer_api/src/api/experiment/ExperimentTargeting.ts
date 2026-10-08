@@ -13,9 +13,9 @@ const NO_GUILDS: ReadonlySet<string> = new Set();
 
 export async function resolveExperimentTargeting(
 	user: User,
-	configs: ReadonlyArray<TargetableExperimentConfig>,
+	config: TargetableExperimentConfig,
 ): Promise<ExperimentTargeting> {
-	const needsGuilds = configs.some((config) => config.enabled && config.included_guild_ids.length > 0);
+	const needsGuilds = config.enabled && config.included_guild_ids.length > 0;
 	const memberGuildIds = needsGuilds
 		? new Set((await getUserRepository().getUserGuildIds(user.id)).map((guildId) => guildId.toString()))
 		: NO_GUILDS;

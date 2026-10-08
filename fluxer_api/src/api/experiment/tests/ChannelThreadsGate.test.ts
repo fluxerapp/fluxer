@@ -25,6 +25,7 @@ import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {
 	type ChannelThreadsConfig,
 	ChannelThreadsConfigSchema,
+	everyoneChannelThreadsConfig,
 } from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -65,17 +66,17 @@ describe('ChannelThreadsGate', () => {
 	});
 
 	afterEach(() => {
-		syncChannelThreadsConfig(null, () => ChannelThreadsConfigSchema.parse({}));
+		load({});
 		setCassandraQueryExecutorForTesting(null);
 	});
 
-	it('is off for everyone while the config is missing', () => {
-		syncChannelThreadsConfig(null, () => {
-			throw new Error('a missing config is never parsed');
-		});
-		expect(guildActive(GUILD)).toBe(false);
-		expect(userActive(USER)).toBe(false);
-		expect(viewerActive(SYSTEM_THREAD_VIEWER, GUILD)).toBe(false);
+	it('hands a missing config to the parser', () => {
+		load({enabled: false});
+		const compiled = syncChannelThreadsConfig(null, (raw) => everyoneChannelThreadsConfig(raw === null ? 3 : 0));
+		expect(compiled.config.config_version).toBe(3);
+		expect(guildActive(GUILD)).toBe(true);
+		expect(userActive(USER)).toBe(true);
+		expect(viewerActive(SYSTEM_THREAD_VIEWER, GUILD)).toBe(true);
 	});
 
 	it('parses a snapshot once and reuses the compiled value while the string is unchanged', () => {

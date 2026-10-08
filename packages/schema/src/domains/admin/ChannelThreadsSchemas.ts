@@ -47,27 +47,23 @@ export type ChannelThreadsConfig = z.infer<typeof ChannelThreadsConfigSchema>;
 
 export const DEFAULT_CHANNEL_THREADS_CONFIG: ChannelThreadsConfig = ChannelThreadsConfigSchema.parse({});
 
-export const ChannelThreadsConfigUpdateRequest = z
-	.object(channelThreadsConfigFields)
-	.omit({config_version: true, ever_enabled: true})
-	.partial();
-
-export type ChannelThreadsConfigUpdateRequest = z.infer<typeof ChannelThreadsConfigUpdateRequest>;
-
 export const ChannelThreadsConfigResponse = ChannelThreadsConfigSchema;
 
 export type ChannelThreadsConfigResponse = z.infer<typeof ChannelThreadsConfigResponse>;
 
-export function applyChannelThreadsConfigUpdate(
-	current: ChannelThreadsConfig,
-	update: ChannelThreadsConfigUpdateRequest,
-): ChannelThreadsConfig {
-	const next = ChannelThreadsConfigSchema.parse({
-		...current,
-		...update,
-		config_version: current.config_version + 1,
-	});
-	return {...next, ever_enabled: current.ever_enabled || next.enabled};
+export function everyoneChannelThreadsConfig(configVersion: number): ChannelThreadsConfig {
+	return {
+		...DEFAULT_CHANNEL_THREADS_CONFIG,
+		enabled: true,
+		config_version: configVersion,
+		ever_enabled: true,
+		guild_basis_points: CHANNEL_THREADS_BASIS_POINTS_MAX,
+		user_basis_points: CHANNEL_THREADS_BASIS_POINTS_MAX,
+		enabled_guild_ids: [],
+		disabled_guild_ids: [],
+		included_user_ids: [],
+		excluded_user_ids: [],
+	};
 }
 
 export interface CompiledChannelThreadsConfig {
@@ -88,9 +84,6 @@ export function compileChannelThreadsConfig(config: ChannelThreadsConfig): Compi
 	};
 }
 
-export const DEFAULT_COMPILED_CHANNEL_THREADS_CONFIG: CompiledChannelThreadsConfig =
-	compileChannelThreadsConfig(DEFAULT_CHANNEL_THREADS_CONFIG);
-
 export function channelThreadsGuildActive(compiled: CompiledChannelThreadsConfig, guildId: string): boolean {
 	const {config} = compiled;
 	if (!config.enabled) return false;
@@ -109,32 +102,6 @@ export function channelThreadsUserActive(compiled: CompiledChannelThreadsConfig,
 	if (compiled.excludedUserIds.has(userId)) return false;
 	if (compiled.includedUserIds.has(userId)) return true;
 	return config.user_basis_points > 0 && experimentBucket(userId, config.user_salt) < config.user_basis_points;
-}
-
-function sameIds(a: ReadonlyArray<string>, b: ReadonlyArray<string>): boolean {
-	const left = new Set(a);
-	const right = new Set(b);
-	return left.size === right.size && [...right].every((id) => left.has(id));
-}
-
-export function channelThreadsGuildFieldsChanged(a: ChannelThreadsConfig, b: ChannelThreadsConfig): boolean {
-	return (
-		a.enabled !== b.enabled ||
-		a.guild_basis_points !== b.guild_basis_points ||
-		a.guild_salt !== b.guild_salt ||
-		!sameIds(a.enabled_guild_ids, b.enabled_guild_ids) ||
-		!sameIds(a.disabled_guild_ids, b.disabled_guild_ids)
-	);
-}
-
-export function channelThreadsUserFieldsChanged(a: ChannelThreadsConfig, b: ChannelThreadsConfig): boolean {
-	return (
-		a.enabled !== b.enabled ||
-		a.user_basis_points !== b.user_basis_points ||
-		a.user_salt !== b.user_salt ||
-		!sameIds(a.included_user_ids, b.included_user_ids) ||
-		!sameIds(a.excluded_user_ids, b.excluded_user_ids)
-	);
 }
 
 export const ChannelThreadsAssignmentResponse = z.object({

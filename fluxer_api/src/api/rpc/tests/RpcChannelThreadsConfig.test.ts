@@ -5,9 +5,9 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
-	applyChannelThreadsConfigUpdate,
 	type ChannelThreadsConfig,
 	DEFAULT_CHANNEL_THREADS_CONFIG,
+	everyoneChannelThreadsConfig,
 } from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
@@ -38,29 +38,27 @@ describe('RpcService get_channel_threads_config', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 
-	test('serves the disabled default before any admin write', async () => {
+	test('serves the everyone config at version zero while no row is stored', async () => {
 		expect(await fetchConfig()).toEqual({
 			type: 'get_channel_threads_config',
-			data: {config: DEFAULT_CHANNEL_THREADS_CONFIG},
+			data: {config: everyoneChannelThreadsConfig(0)},
 		});
 	});
 
-	test('serves the stored config with its version and sticky ever_enabled', async () => {
-		const repository = getInstanceConfigRepository();
-		await repository.updateChannelThreadsConfig((current) =>
-			applyChannelThreadsConfigUpdate(current, {enabled: true, enabled_guild_ids: ['123']}),
-		);
-		await repository.updateChannelThreadsConfig((current) =>
-			applyChannelThreadsConfigUpdate(current, {enabled: false}),
+	test('serves the everyone config at the stored version for a disabled partial row', async () => {
+		await getInstanceConfigRepository().setConfig(
+			'channel_threads_config',
+			JSON.stringify({
+				...DEFAULT_CHANNEL_THREADS_CONFIG,
+				enabled: false,
+				ever_enabled: true,
+				config_version: 12,
+				guild_basis_points: 2500,
+				enabled_guild_ids: ['123'],
+				excluded_user_ids: ['456'],
+			}),
 		);
 
-		const response = await fetchConfig();
-
-		expect(response.data.config).toMatchObject({
-			enabled: false,
-			ever_enabled: true,
-			config_version: 2,
-			enabled_guild_ids: ['123'],
-		});
+		expect((await fetchConfig()).data.config).toEqual(everyoneChannelThreadsConfig(12));
 	});
 });

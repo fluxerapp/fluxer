@@ -11,8 +11,8 @@ A thread is a channel inside a guild text, announcement, forum, or media channel
 
 [Thread members](/http-api/thread-members/) defines joining, leaving, and member lists. [Forums](/http-api/forums/) defines forum and media channels, where every thread is a post.
 
-:::note[Every route needs the `channel_threads` experiment]
-A route on this page answers 404 `NOT_FOUND` unless the experiment is active for the guild and the caller. A user session also declares `channel_threads` in the `X-Fluxer-Features` header, and a bot needs no declaration.
+:::note[Every route needs the `channel_threads` client capability]
+A route on this page answers 404 `NOT_FOUND` to a user session that does not declare `channel_threads` in the `X-Fluxer-Features` header. A bot needs no declaration.
 :::
 
 ## Thread object
@@ -539,7 +539,7 @@ Sending a message in a thread adds a user sender who is not a member. A mentione
 | Message search result | threads | The threads that contain a returned message |
 | Message search result | members | A thread member object for each of those threads the caller joined |
 | Audit log | threads | The threads referenced by the returned entries |
-| Experiment assignments | channel_threads | `active` and `config_version`, present only for an account in the rollout |
+| Experiment assignments | channel_threads | `active` and `config_version`, present for every account |
 
 The guild audit log records thread creation, update, and deletion as action types 110, 111, and 112.
 

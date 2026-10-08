@@ -2,14 +2,15 @@
 
 import {
 	clearChannelThreadsTaintCacheForTesting,
-	syncChannelThreadsConfig,
+	getCompiledChannelThreadsConfig,
+	pinChannelThreadsConfigForTesting,
 } from '@app/api/experiment/ChannelThreadsGate';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder, type TestRequestBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	type ChannelThreadsConfig,
 	ChannelThreadsConfigSchema,
+	DEFAULT_CHANNEL_THREADS_CONFIG,
 } from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 
 export const THREADS_FEATURE_HEADER = 'X-Fluxer-Features';
@@ -22,7 +23,8 @@ export const ALL_THREADS_ACTIVE: Partial<ChannelThreadsConfig> = {
 };
 
 export async function setChannelThreadsConfig(patch: Partial<ChannelThreadsConfig>): Promise<void> {
-	await getInstanceConfigRepository().updateChannelThreadsConfig((current) =>
+	const current = getCompiledChannelThreadsConfig().config;
+	pinChannelThreadsConfigForTesting(
 		ChannelThreadsConfigSchema.parse({
 			...patch,
 			ever_enabled: current.ever_enabled || patch.enabled === true,
@@ -33,7 +35,7 @@ export async function setChannelThreadsConfig(patch: Partial<ChannelThreadsConfi
 }
 
 export function resetChannelThreadsConfig(): void {
-	syncChannelThreadsConfig(null, (raw) => ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {}));
+	pinChannelThreadsConfigForTesting(DEFAULT_CHANNEL_THREADS_CONFIG);
 	clearChannelThreadsTaintCacheForTesting();
 }
 

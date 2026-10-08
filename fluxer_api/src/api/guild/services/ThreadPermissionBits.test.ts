@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createGuildID, createUserID, type GuildID} from '@app/api/BrandedTypes';
-import type {IThreadRepository} from '@app/api/channel/repositories/IThreadRepository';
-import type {GuildThreadStateRow} from '@app/api/database/types/ThreadTypes';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {
 	clearChannelThreadsTaintCacheForTesting,
 	isTainted,
@@ -16,7 +14,6 @@ import {
 	resolveThreadPermissionMode,
 	shouldMaskThreadPermissionBits,
 } from '@app/api/guild/services/ThreadPermissionBits';
-import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {
 	applyProtectedOverwriteBits,
@@ -26,14 +23,7 @@ import {
 	protectedThreadBits,
 } from '@app/api/utils/featureUtils';
 import {computePermissionsDiff} from '@app/api/utils/PermissionUtils';
-import {
-	enabledThreadGuildIds,
-	enqueueThreadPermissionSeeds,
-	newlyEnabledThreadGuildIds,
-	seedThreadOverwriteBits,
-	seedThreadOverwriteValue,
-} from '@app/api/worker/tasks/SeedThreadPermissions';
-import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {seedThreadOverwriteBits, seedThreadOverwriteValue} from '@app/api/worker/tasks/SeedThreadPermissions';
 import {ALL_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
 import {
@@ -43,13 +33,9 @@ import {
 	ThreadPermissionFlags,
 } from '@fluxer/constants/src/ThreadPermissionUtils';
 import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
-import {
-	ChannelThreadsConfigSchema,
-	DEFAULT_CHANNEL_THREADS_CONFIG,
-} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
+import {ChannelThreadsConfigSchema} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import {afterEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, describe, expect, it} from 'vitest';
 
 const NONE: ReadonlySet<string> = new Set();
 const CAPABLE: ReadonlySet<string> = new Set(['channel_threads']);
@@ -253,62 +239,5 @@ describe('thread permission seeding rules', () => {
 		expect(seedThreadOverwriteValue(seedThreadOverwriteValue(Permissions.SEND_MESSAGES))).toBe(
 			Permissions.SEND_MESSAGES | DEFAULT_THREAD_PERMISSIONS,
 		);
-	});
-
-	it('targets enabled, non-disabled guilds of an enabled config', () => {
-		const config = {
-			...DEFAULT_CHANNEL_THREADS_CONFIG,
-			enabled: true,
-			enabled_guild_ids: ['1', '2', '3'],
-			disabled_guild_ids: ['3'],
-		};
-		expect(enabledThreadGuildIds(config)).toEqual(['1', '2']);
-		expect(enabledThreadGuildIds({...config, enabled: false})).toEqual([]);
-	});
-
-	it('lists only guilds that became active in the landed config', () => {
-		const previous = {...DEFAULT_CHANNEL_THREADS_CONFIG, enabled: true, enabled_guild_ids: ['1', '2', '3']};
-		expect(newlyEnabledThreadGuildIds(previous, previous)).toEqual([]);
-		expect(newlyEnabledThreadGuildIds(previous, {...previous, enabled_guild_ids: ['1', '2', '3', '4']})).toEqual(['4']);
-		expect(newlyEnabledThreadGuildIds({...previous, disabled_guild_ids: ['2']}, previous)).toEqual(['2']);
-		expect(newlyEnabledThreadGuildIds({...previous, enabled: false}, previous)).toEqual(['1', '2', '3']);
-		expect(newlyEnabledThreadGuildIds(previous, {...previous, enabled: false})).toEqual([]);
-	});
-
-	it('enqueues seeds for every targeted guild without a seeded marker, so a retried update still seeds', async () => {
-		const addJob = vi.fn(async () => {});
-		setInjectedWorkerService({addJob} as unknown as IWorkerService<WorkerTaskName>);
-		const markers = new Map<string, GuildThreadStateRow>([
-			[
-				'1',
-				{
-					guild_id: createGuildID(1n),
-					first_active_at: new Date(),
-					perms_seeded_at: new Date(),
-					search_backfilled_at: null,
-				},
-			],
-			[
-				'2',
-				{guild_id: createGuildID(2n), first_active_at: new Date(), perms_seeded_at: null, search_backfilled_at: null},
-			],
-		]);
-		const threads = {
-			getGuildMarker: async (guildId: GuildID) => markers.get(guildId.toString()) ?? null,
-		} as unknown as IThreadRepository;
-		const config = {...DEFAULT_CHANNEL_THREADS_CONFIG, enabled: true, enabled_guild_ids: ['1', '2', '3']};
-		try {
-			await enqueueThreadPermissionSeeds(threads, config);
-			await enqueueThreadPermissionSeeds(threads, config);
-		} finally {
-			setInjectedWorkerService(undefined);
-		}
-		const keys = addJob.mock.calls.map((call) => (call as unknown as [string, unknown, {jobKey: string}])[2].jobKey);
-		expect(keys).toEqual([
-			'seed-thread-permissions-2',
-			'seed-thread-permissions-3',
-			'seed-thread-permissions-2',
-			'seed-thread-permissions-3',
-		]);
 	});
 });

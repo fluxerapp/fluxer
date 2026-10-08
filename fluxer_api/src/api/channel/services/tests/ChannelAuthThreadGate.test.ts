@@ -15,7 +15,7 @@ import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {ChannelThreadsConfigSchema} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
-import {afterEach, describe, expect, it} from 'vitest';
+import {beforeEach, describe, expect, it} from 'vitest';
 
 const GUILD_ID = createGuildID(100n);
 const CHANNEL_ID = createChannelID(300n);
@@ -54,7 +54,7 @@ function enroll(): void {
 const capableViewer: ThreadViewer = {kind: 'user', userId: USER_ID, bot: false, capable: true};
 
 describe('getChannelAuthenticated thread gate', () => {
-	afterEach(() => {
+	beforeEach(() => {
 		syncChannelThreadsConfig(null, () => ChannelThreadsConfigSchema.parse({}));
 	});
 

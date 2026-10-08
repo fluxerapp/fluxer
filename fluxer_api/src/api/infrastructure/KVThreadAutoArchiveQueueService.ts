@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type ChannelID, createChannelID, createGuildID, type GuildID, type MessageID} from '@app/api/BrandedTypes';
-import type {IChannelDataRepository} from '@app/api/channel/repositories/IChannelDataRepository';
-import type {IThreadRepository} from '@app/api/channel/repositories/IThreadRepository';
 import type {ThreadState} from '@app/api/models/ThreadState';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
@@ -20,11 +18,7 @@ export function threadAutoArchiveDueAt(state: ThreadState, lastMessageId: Messag
 }
 
 export class KVThreadAutoArchiveQueueService {
-	constructor(
-		private readonly kvClient: IKVProvider,
-		private readonly threads: IThreadRepository,
-		private readonly channelData: IChannelDataRepository,
-	) {}
+	constructor(private readonly kvClient: IKVProvider) {}
 
 	async schedule(state: ThreadState, lastMessageId: MessageID | null): Promise<void> {
 		if (state.archived || state.isPinned) {
@@ -62,24 +56,5 @@ export class KVThreadAutoArchiveQueueService {
 	async listGuilds(): Promise<Array<GuildID>> {
 		const members = await this.kvClient.smembers(THREAD_ARCHIVE_GUILDS_KEY);
 		return members.flatMap((member) => (/^\d+$/.test(member) ? [createGuildID(BigInt(member))] : []));
-	}
-
-	async rebuildGuild(guildId: GuildID): Promise<number> {
-		const key = threadArchiveQueueKey(guildId);
-		const states = (await this.threads.listActiveThreads(guildId)).filter((state) => !state.isPinned);
-		const channels = await this.channelData.listChannels(states.map((state) => state.threadId));
-		const lastMessageIds = new Map(channels.map((channel) => [channel.id, channel.lastMessageId]));
-		await this.kvClient.del(key);
-		if (states.length === 0) {
-			await this.kvClient.srem(THREAD_ARCHIVE_GUILDS_KEY, guildId.toString());
-			return 0;
-		}
-		const scoreMembers = states.flatMap((state) => [
-			threadAutoArchiveDueAt(state, lastMessageIds.get(state.threadId) ?? null),
-			state.threadId.toString(),
-		]);
-		await this.kvClient.zadd(key, ...scoreMembers);
-		await this.kvClient.sadd(THREAD_ARCHIVE_GUILDS_KEY, guildId.toString());
-		return states.length;
 	}
 }

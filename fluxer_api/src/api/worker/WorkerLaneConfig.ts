@@ -87,7 +87,6 @@ const LANE_CONFIG = {
 			'refreshSearchIndex',
 			'seedThreadPermissions',
 			'archiveInactiveThreads',
-			'rebuildThreadAutoArchiveQueue',
 			'repairThreadIndexes',
 			'deleteChannelThreads',
 			'removeThreadMembershipsForGuildMember',

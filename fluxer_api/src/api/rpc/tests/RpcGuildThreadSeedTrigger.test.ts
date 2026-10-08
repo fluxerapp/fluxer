@@ -2,35 +2,27 @@
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
+import {resetChannelThreadsConfig, setChannelThreadsConfig} from '@app/api/channel/tests/ThreadTestUtils';
 import {executeConditional, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import type {GuildThreadStateRow} from '@app/api/database/types/ThreadTypes';
 import {
 	clearChannelThreadsTaintCacheForTesting,
+	getCompiledChannelThreadsConfig,
 	insertGuildThreadMarker,
 	isTainted,
-	syncChannelThreadsConfig,
 } from '@app/api/experiment/ChannelThreadsGate';
 import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
-import {getChannelRepository, getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {getChannelRepository} from '@app/api/middleware/ServiceSingletons';
 import {GuildThreadState} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {
-	applyChannelThreadsConfigUpdate,
-	ChannelThreadsConfigSchema,
-} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 
 const FETCH_MARKER = GuildThreadState.selectCql({where: GuildThreadState.where.eq('guild_id'), limit: 1});
-
-function resetConfig(): void {
-	syncChannelThreadsConfig(null, (raw) => ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {}));
-	clearChannelThreadsTaintCacheForTesting();
-}
 
 describe('RpcService guild load thread permission seeding', () => {
 	let harness: ApiTestHarness;
@@ -41,12 +33,12 @@ describe('RpcService guild load thread permission seeding', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetConfig();
+		resetChannelThreadsConfig();
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		resetConfig();
+		resetChannelThreadsConfig();
 	});
 
 	afterAll(async () => {
@@ -60,10 +52,7 @@ describe('RpcService guild load thread permission seeding', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 	const loadGuild = (guildId: string) => loadCollection(guildId, 'guild');
-	const setEnabled = (enabled: boolean) =>
-		getInstanceConfigRepository().updateChannelThreadsConfig((current) =>
-			applyChannelThreadsConfigUpdate(current, {enabled, guild_basis_points: 10000}),
-		);
+	const setEnabled = (enabled: boolean) => setChannelThreadsConfig({enabled, guild_basis_points: 10000});
 
 	test('marks and seeds a bucketed guild on its first active load, and leaves control guilds alone', async () => {
 		const owner = await createTestAccount(harness);
@@ -75,16 +64,14 @@ describe('RpcService guild load thread permission seeding', () => {
 		expect(await fetchOne<GuildThreadStateRow>(FETCH_MARKER, {guild_id: guildId})).toBeNull();
 		expect(addJob).not.toHaveBeenCalled();
 
-		const landed = await getInstanceConfigRepository().updateChannelThreadsConfig((current) =>
-			applyChannelThreadsConfigUpdate(current, {enabled: true, guild_basis_points: 10000}),
-		);
+		await setEnabled(true);
 		await loadGuild(guild.id);
 		const marker = await fetchOne<GuildThreadStateRow>(FETCH_MARKER, {guild_id: guildId});
 		expect(marker?.first_active_at).toBeInstanceOf(Date);
 		expect(marker?.perms_seeded_at).toBeNull();
 		expect(addJob).toHaveBeenCalledWith(
 			'seedThreadPermissions',
-			{guildId: guild.id, configVersion: landed.config_version},
+			{guildId: guild.id, configVersion: getCompiledChannelThreadsConfig().config.config_version},
 			{jobKey: `seed-thread-permissions-${guild.id}`},
 		);
 

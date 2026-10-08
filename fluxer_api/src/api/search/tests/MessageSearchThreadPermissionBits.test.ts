@@ -1,21 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {
-	clearChannelThreadsTaintCacheForTesting,
-	syncChannelThreadsConfig,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {resetChannelThreadsConfig, setChannelThreadsConfig} from '@app/api/channel/tests/ThreadTestUtils';
 import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {markGuildChannelsAsIndexed, sendMessage} from '@app/api/message/tests/MessageTestUtils';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
-import {
-	type ChannelThreadsConfig,
-	ChannelThreadsConfigSchema,
-} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {MessageSearchResultsResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
@@ -23,37 +15,21 @@ import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 const FEATURES = 'X-Fluxer-Features';
 const CAPABLE = 'channel_threads';
 
-async function setConfig(patch: Partial<ChannelThreadsConfig>): Promise<void> {
-	await getInstanceConfigRepository().updateChannelThreadsConfig((current) =>
-		ChannelThreadsConfigSchema.parse({
-			...patch,
-			ever_enabled: current.ever_enabled || patch.enabled === true,
-			config_version: current.config_version + 1,
-		}),
-	);
-	clearChannelThreadsTaintCacheForTesting();
-}
-
-function resetConfig(): void {
-	syncChannelThreadsConfig(null, (raw) => ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {}));
-	clearChannelThreadsTaintCacheForTesting();
-}
-
 describe('message search thread permission bits', () => {
 	let harness: ApiTestHarness;
 
 	beforeEach(async () => {
 		harness = await createApiTestHarness({search: 'enabled'});
-		resetConfig();
+		resetChannelThreadsConfig();
 	});
 
 	afterEach(async () => {
-		resetConfig();
+		resetChannelThreadsConfig();
 		await harness.shutdown();
 	});
 
 	test('search channel overwrites are masked for non-viewers in tainted guilds', async () => {
-		await setConfig({enabled: true, guild_basis_points: 10000, user_basis_points: 10000});
+		await setChannelThreadsConfig({enabled: true, guild_basis_points: 10000, user_basis_points: 10000});
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Search masking');
 		const allow = Permissions.SEND_MESSAGES | ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS;
@@ -89,7 +65,7 @@ describe('message search thread permission bits', () => {
 			expect(await searchAllow(scope, false)).toBe(Permissions.SEND_MESSAGES);
 		}
 
-		await setConfig({enabled: false});
+		await setChannelThreadsConfig({enabled: false});
 		for (const scope of scopes) {
 			expect(await searchAllow(scope, true)).toBe(Permissions.SEND_MESSAGES);
 		}

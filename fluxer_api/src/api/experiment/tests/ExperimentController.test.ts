@@ -2,7 +2,6 @@
 
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/guild/tests/GuildTestUtils';
-import {ChannelThreadsConfigPublisher} from '@app/api/instance/ChannelThreadsConfigPublisher';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -10,18 +9,11 @@ import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequest
 import {grantPremium} from '@app/api/user/tests/UserTestUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {
-	applyChannelThreadsConfigUpdate,
-	type ChannelThreadsConfig,
-} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
+import {DEFAULT_CHANNEL_THREADS_CONFIG} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {
 	DEFAULT_DOMAIN_MIGRATION_CONFIG,
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
-import {
-	DEFAULT_PLUTONIUM_PAGE_CONFIG,
-	INERT_PLUTONIUM_PAGE_ASSIGNMENT,
-} from '@fluxer/schema/src/domains/admin/PlutoniumPageSchemas';
 import {
 	DEFAULT_EXPERIMENT_POLL_INTERVAL_SECONDS,
 	DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT,
@@ -31,7 +23,7 @@ import {
 	readDomainMigrationAssignment,
 	readPlutoniumPageAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const NOT_MODIFIED = 304;
 const ENDPOINT = '/experiments';
@@ -47,10 +39,6 @@ describe('GET /experiments', () => {
 		await harness.reset();
 	});
 
-	afterEach(() => {
-		vi.restoreAllMocks();
-	});
-
 	afterAll(async () => {
 		await harness.shutdown();
 	});
@@ -59,7 +47,7 @@ describe('GET /experiments', () => {
 		await createBuilderWithoutAuth(harness).get(ENDPOINT).expect(HTTP_STATUS.UNAUTHORIZED).execute();
 	});
 
-	it('returns the default delivery cadence and the inert assignment while the feature is disabled', async () => {
+	it('returns the default delivery cadence and the default assignments', async () => {
 		const account = await createTestAccount(harness);
 
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
@@ -69,7 +57,8 @@ describe('GET /experiments', () => {
 			poll_jitter_percent: DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT,
 			assignments: {
 				domain_migration: INERT_DOMAIN_MIGRATION_ASSIGNMENT,
-				plutonium_page: INERT_PLUTONIUM_PAGE_ASSIGNMENT,
+				channel_threads: {active: true, config_version: 0},
+				plutonium_page: {enabled: true},
 			},
 		});
 	});
@@ -83,13 +72,16 @@ describe('GET /experiments', () => {
 		expect(readDomainMigrationAssignment(body).enabled).toBe(false);
 	});
 
-	it('populates the plutonium page assignment key even when the rollout is disabled', async () => {
+	it('serves the plutonium page to everyone and ignores a leftover rollout row', async () => {
 		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setConfig(
+			'plutonium_page_config',
+			JSON.stringify({enabled: false, config_version: 3, rollout_basis_points: 0}),
+		);
 
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
 
-		expect(Object.hasOwn(body.assignments, 'plutonium_page')).toBe(true);
-		expect(readPlutoniumPageAssignment(body).enabled).toBe(false);
+		expect(readPlutoniumPageAssignment(body)).toEqual({enabled: true});
 	});
 
 	it('resolves the domain migration caller through the allowlist', async () => {
@@ -129,54 +121,7 @@ describe('GET /experiments', () => {
 		expect(body.assignments.domain_migration).toEqual({enabled: false});
 	});
 
-	it('resolves the plutonium page caller through the allowlist and the exclusion list', async () => {
-		const targeted = await createTestAccount(harness);
-		const untargeted = await createTestAccount(harness);
-		const excluded = await createTestAccount(harness);
-		await getInstanceConfigRepository().setPlutoniumPageConfig({
-			...DEFAULT_PLUTONIUM_PAGE_CONFIG,
-			enabled: true,
-			rollout_basis_points: 0,
-			included_user_ids: [targeted.userId, excluded.userId],
-			excluded_user_ids: [excluded.userId],
-		});
-
-		const targetedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, targeted.token)
-			.get(ENDPOINT)
-			.execute();
-		expect(targetedBody.assignments.plutonium_page).toEqual({enabled: true});
-
-		const untargetedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, untargeted.token)
-			.get(ENDPOINT)
-			.execute();
-		expect(untargetedBody.assignments.plutonium_page).toEqual({enabled: false});
-
-		const excludedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, excluded.token)
-			.get(ENDPOINT)
-			.execute();
-		expect(excludedBody.assignments.plutonium_page).toEqual({enabled: false});
-	});
-
-	it('keeps the plutonium page exclusion ahead of a full rollout', async () => {
-		const excluded = await createTestAccount(harness);
-		const other = await createTestAccount(harness);
-		await getInstanceConfigRepository().setPlutoniumPageConfig({
-			...DEFAULT_PLUTONIUM_PAGE_CONFIG,
-			enabled: true,
-			rollout_basis_points: 10000,
-			excluded_user_ids: [excluded.userId],
-		});
-
-		const excludedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, excluded.token)
-			.get(ENDPOINT)
-			.execute();
-		expect(excludedBody.assignments.plutonium_page).toEqual({enabled: false});
-
-		const otherBody = await createBuilder<ExperimentAssignmentsResponse>(harness, other.token).get(ENDPOINT).execute();
-		expect(otherBody.assignments.plutonium_page).toEqual({enabled: true});
-	});
-
-	it('enrols members of an included guild in every experiment and leaves everyone else out', async () => {
+	it('enrols members of an included guild in domain migration and leaves everyone else out', async () => {
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const outsider = await createTestAccount(harness);
@@ -184,14 +129,8 @@ describe('GET /experiments', () => {
 		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
 		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
 		await acceptInvite(harness, member.token, invite.code);
-		const repository = getInstanceConfigRepository();
-		await repository.setDomainMigrationConfig({
+		await getInstanceConfigRepository().setDomainMigrationConfig({
 			...DEFAULT_DOMAIN_MIGRATION_CONFIG,
-			enabled: true,
-			included_guild_ids: [guild.id],
-		});
-		await repository.setPlutoniumPageConfig({
-			...DEFAULT_PLUTONIUM_PAGE_CONFIG,
 			enabled: true,
 			included_guild_ids: [guild.id],
 		});
@@ -200,13 +139,11 @@ describe('GET /experiments', () => {
 			.get(ENDPOINT)
 			.execute();
 		expect(memberBody.assignments.domain_migration).toEqual({enabled: true});
-		expect(memberBody.assignments.plutonium_page).toEqual({enabled: true});
 
 		const outsiderBody = await createBuilder<ExperimentAssignmentsResponse>(harness, outsider.token)
 			.get(ENDPOINT)
 			.execute();
 		expect(outsiderBody.assignments.domain_migration).toEqual({enabled: false});
-		expect(outsiderBody.assignments.plutonium_page).toEqual({enabled: false});
 	});
 
 	it('enrols premium users, subscription and lifetime alike, when the switch is on', async () => {
@@ -215,14 +152,8 @@ describe('GET /experiments', () => {
 		const free = await createTestAccount(harness);
 		await grantPremium(harness, subscriber.userId, UserPremiumTypes.SUBSCRIPTION);
 		await grantPremium(harness, visionary.userId, UserPremiumTypes.LIFETIME);
-		const repository = getInstanceConfigRepository();
-		await repository.setDomainMigrationConfig({
+		await getInstanceConfigRepository().setDomainMigrationConfig({
 			...DEFAULT_DOMAIN_MIGRATION_CONFIG,
-			enabled: true,
-			include_premium_users: true,
-		});
-		await repository.setPlutoniumPageConfig({
-			...DEFAULT_PLUTONIUM_PAGE_CONFIG,
 			enabled: true,
 			include_premium_users: true,
 		});
@@ -233,30 +164,24 @@ describe('GET /experiments', () => {
 		] as const) {
 			const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
 			expect(body.assignments.domain_migration).toEqual({enabled: expected});
-			expect(body.assignments.plutonium_page).toEqual({enabled: expected});
 		}
 	});
 
-	it('stores the guild ids and premium switch an admin sets for each experiment', async () => {
+	it('stores the guild ids and premium switch an admin sets for domain migration', async () => {
 		const admin = await setUserACLs(harness, await createTestAccount(harness), [
 			AdminACLs.AUTHENTICATE,
 			AdminACLs.INSTANCE_CONFIG_VIEW,
 			AdminACLs.INSTANCE_CONFIG_UPDATE,
 		]);
 		const guildIds = ['1500000000000000001', '1500000000000000002'];
-		const body = await createBuilder<
-			Record<'domain_migration' | 'plutonium_page', {included_guild_ids: Array<string>; include_premium_users: boolean}>
-		>(harness, admin.token)
+		const body = await createBuilder<{
+			domain_migration: {included_guild_ids: Array<string>; include_premium_users: boolean};
+		}>(harness, admin.token)
 			.patch('/admin/instance/config')
-			.body({
-				domain_migration: {included_guild_ids: guildIds, include_premium_users: true},
-				plutonium_page: {included_guild_ids: guildIds, include_premium_users: true},
-			})
+			.body({domain_migration: {included_guild_ids: guildIds, include_premium_users: true}})
 			.execute();
-		for (const section of [body.domain_migration, body.plutonium_page]) {
-			expect(section.included_guild_ids).toEqual(guildIds);
-			expect(section.include_premium_users).toBe(true);
-		}
+		expect(body.domain_migration.included_guild_ids).toEqual(guildIds);
+		expect(body.domain_migration.include_premium_users).toBe(true);
 	});
 
 	it('revalidates with a strong etag and answers 304 when nothing changed', async () => {
@@ -411,38 +336,23 @@ describe('GET /experiments', () => {
 		expect(afterUndefined.domain_migration).toMatchObject({config_version: 1, enabled: true});
 	});
 
-	it('bumps the plutonium page config version on every admin update without the client sending one', async () => {
+	it('no longer exposes or accepts plutonium page and channel threads settings in the admin config', async () => {
 		const admin = await setUserACLs(harness, await createTestAccount(harness), [
 			AdminACLs.AUTHENTICATE,
 			AdminACLs.INSTANCE_CONFIG_VIEW,
 			AdminACLs.INSTANCE_CONFIG_UPDATE,
 		]);
 
-		const afterFirst = await createBuilder<{plutonium_page: {config_version: number; enabled: boolean}}>(
-			harness,
-			admin.token,
-		)
+		const updated = await createBuilder<Record<string, unknown>>(harness, admin.token)
 			.patch('/admin/instance/config')
-			.body({plutonium_page: {enabled: true, included_user_ids: [admin.userId]}})
+			.body({plutonium_page: {enabled: false}, channel_threads: {enabled: false}})
 			.execute();
-		expect(afterFirst.plutonium_page).toMatchObject({config_version: 1, enabled: true});
-
-		const afterSecond = await createBuilder<{
-			plutonium_page: {config_version: number; rollout_basis_points: number};
-		}>(harness, admin.token)
-			.patch('/admin/instance/config')
-			.body({plutonium_page: {rollout_basis_points: 2500}})
-			.execute();
-		expect(afterSecond.plutonium_page).toMatchObject({config_version: 2, rollout_basis_points: 2500});
-
-		const afterEmpty = await createBuilder<{plutonium_page: {config_version: number}}>(harness, admin.token)
-			.patch('/admin/instance/config')
-			.body({plutonium_page: {}})
-			.execute();
-		expect(afterEmpty.plutonium_page).toMatchObject({config_version: 2});
+		expect(Object.hasOwn(updated, 'plutonium_page')).toBe(false);
+		expect(Object.hasOwn(updated, 'channel_threads')).toBe(false);
 
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
 		expect(body.assignments.plutonium_page).toEqual({enabled: true});
+		expect(readChannelThreadsAssignment(body)).toEqual({active: true, config_version: 0});
 	});
 
 	it('serves the delivery cadence an admin set through the instance config', async () => {
@@ -466,67 +376,20 @@ describe('GET /experiments', () => {
 		expect(body.poll_jitter_percent).toBe(DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT);
 	});
 
-	it('keeps the control body and etag for a user outside the channel threads experiment', async () => {
+	it('assigns channel threads to every user with the stored config version, even from a disabled row', async () => {
 		const account = await createTestAccount(harness);
-		const before = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token)
-			.get(ENDPOINT)
-			.executeWithResponse();
-
-		await getInstanceConfigRepository().updateChannelThreadsConfig((current) =>
-			applyChannelThreadsConfigUpdate(current, {enabled: true, included_user_ids: ['1']}),
-		);
-		const after = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token)
-			.get(ENDPOINT)
-			.executeWithResponse();
-
-		expect(Object.hasOwn(after.json.assignments, 'channel_threads')).toBe(false);
-		expect(readChannelThreadsAssignment(after.json)).toBeNull();
-		expect(after.response.headers.get('etag')).toBe(before.response.headers.get('etag'));
-	});
-
-	it('assigns channel threads to an included user with the config version', async () => {
-		const account = await createTestAccount(harness);
-		await getInstanceConfigRepository().updateChannelThreadsConfig((current) =>
-			applyChannelThreadsConfigUpdate(current, {enabled: true, included_user_ids: [account.userId]}),
+		await getInstanceConfigRepository().setConfig(
+			'channel_threads_config',
+			JSON.stringify({
+				...DEFAULT_CHANNEL_THREADS_CONFIG,
+				enabled: false,
+				config_version: 7,
+				excluded_user_ids: [account.userId],
+			}),
 		);
 
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
 
-		expect(readChannelThreadsAssignment(body)).toEqual({active: true, config_version: 1});
-	});
-
-	it('bumps the channel threads version, keeps ever_enabled sticky and publishes every admin update', async () => {
-		const publish = vi.spyOn(ChannelThreadsConfigPublisher.prototype, 'publish').mockResolvedValue(undefined);
-		const admin = await setUserACLs(harness, await createTestAccount(harness), [
-			AdminACLs.AUTHENTICATE,
-			AdminACLs.INSTANCE_CONFIG_VIEW,
-			AdminACLs.INSTANCE_CONFIG_UPDATE,
-		]);
-		const patch = (body: Record<string, unknown>) =>
-			createBuilder<{channel_threads: ChannelThreadsConfig}>(harness, admin.token)
-				.patch('/admin/instance/config')
-				.body({channel_threads: body})
-				.execute();
-
-		const initial = await createBuilder<{channel_threads: ChannelThreadsConfig}>(harness, admin.token)
-			.get('/admin/instance/config')
-			.execute();
-		expect(initial.channel_threads).toMatchObject({enabled: false, config_version: 0, ever_enabled: false});
-
-		const enabled = await patch({enabled: true, included_user_ids: [admin.userId], ever_enabled: false});
-		expect(enabled.channel_threads).toMatchObject({enabled: true, config_version: 1, ever_enabled: true});
-
-		const disabled = await patch({enabled: false, config_version: 99});
-		expect(disabled.channel_threads).toMatchObject({enabled: false, config_version: 2, ever_enabled: true});
-
-		const unchanged = await patch({});
-		expect(unchanged.channel_threads.config_version).toBe(2);
-
-		expect(publish.mock.calls.map(([config]) => [config.config_version, config.enabled])).toEqual([
-			[1, true],
-			[2, false],
-		]);
-		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
-		expect(readChannelThreadsAssignment(body)).toBeNull();
+		expect(readChannelThreadsAssignment(body)).toEqual({active: true, config_version: 7});
 	});
 });

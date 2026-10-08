@@ -8,13 +8,11 @@ import {
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
 import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
-import {ChannelThreadsConfigPublisher} from '@app/api/instance/ChannelThreadsConfigPublisher';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {CreateRegistrationUrlResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {vi} from 'vitest';
 
 async function createRegistrationUrl(harness: ApiTestHarness, admin: TestAccount): Promise<string> {
 	const created = await createBuilder<CreateRegistrationUrlResponse>(harness, admin.token)
@@ -78,26 +76,6 @@ export const InstanceConfigAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase
 					targetType: 'instance_config',
 					targetId: '0',
 					metadata: {sections: 'experiment_delivery,registration'},
-				},
-			};
-		},
-	},
-	{
-		method: 'PATCH',
-		route: '/admin/instance/config',
-		name: 'channel threads',
-		async prepare() {
-			vi.spyOn(ChannelThreadsConfigPublisher.prototype, 'publish').mockResolvedValue(undefined);
-			return {
-				request: {
-					path: '/admin/instance/config',
-					body: {channel_threads: {enabled: true, enabled_guild_ids: ['1']}},
-				},
-				expected: {
-					action: 'update_instance_config',
-					targetType: 'instance_config',
-					targetId: '0',
-					metadata: {sections: 'channel_threads', channel_threads_config_version: '1'},
 				},
 			};
 		},

@@ -3,22 +3,20 @@
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {createChannel, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
+import {resetChannelThreadsConfig, setChannelThreadsConfig} from '@app/api/channel/tests/ThreadTestUtils';
 import {ChannelThreadsRouteGuard} from '@app/api/channel/threads/ChannelThreadsRouteGuard';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import type {CassandraParams, PreparedQuery} from '@app/api/database/CassandraTypes';
+import {getCompiledChannelThreadsConfig} from '@app/api/experiment/ChannelThreadsGate';
 import {BotOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
-import {
-	applyChannelThreadsConfigUpdate,
-	type ChannelThreadsConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
+import type {ChannelThreadsConfig} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {ChannelIdParam, GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import {z} from 'zod';
@@ -96,6 +94,7 @@ describe('ChannelThreadsRouteGuard', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
+		resetChannelThreadsConfig();
 		executor = new RecordingExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 		owner = await createTestAccount(harness);
@@ -109,10 +108,8 @@ describe('ChannelThreadsRouteGuard', () => {
 		await harness.shutdown();
 	});
 
-	async function setConfig(update: ChannelThreadsConfigUpdateRequest): Promise<void> {
-		await getInstanceConfigRepository().updateChannelThreadsConfig((current) =>
-			applyChannelThreadsConfigUpdate(current, update),
-		);
+	async function setConfig(update: Partial<ChannelThreadsConfig>): Promise<void> {
+		await setChannelThreadsConfig({...getCompiledChannelThreadsConfig().config, ...update});
 	}
 
 	async function snapshot(

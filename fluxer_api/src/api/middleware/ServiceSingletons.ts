@@ -47,7 +47,6 @@ import {createStorageService} from '@app/api/infrastructure/StorageServiceFactor
 import {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {createUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
 import {VirusScanService} from '@app/api/infrastructure/VirusScanService';
-import {ChannelThreadsConfigPublisher} from '@app/api/instance/ChannelThreadsConfigPublisher';
 import {GatewayRolloutConfigPublisher} from '@app/api/instance/GatewayRolloutConfigPublisher';
 import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {PushRelayConfigPublisher} from '@app/api/instance/PushRelayConfigPublisher';
@@ -175,17 +174,6 @@ export const getPushRelayConfigPublisher = singleton(
 		),
 );
 
-export const getChannelThreadsConfigPublisher = singleton(
-	() =>
-		new ChannelThreadsConfigPublisher(
-			new NatsConnectionManager({
-				url: Config.nats.coreUrl,
-				token: Config.nats.authToken || undefined,
-				name: 'fluxer-api-channel-threads-config',
-			}),
-		),
-);
-
 export const getVisionarySlotRepository = singleton(() => new VisionarySlotRepository());
 export const getCacheService: () => ICacheService = singleton(() => new KVCacheProvider({client: getKVClient()}));
 export const getRateLimitService = singleton(() => new RateLimitService(getKVClient()));
@@ -278,8 +266,7 @@ let threadAutoArchiveQueue: KVThreadAutoArchiveQueueService | null = null;
 export function getKVThreadAutoArchiveQueue(): KVThreadAutoArchiveQueueService {
 	const kvClient = getKVClient();
 	if (!threadAutoArchiveQueue || threadAutoArchiveQueueClient !== kvClient) {
-		const channels = getChannelRepository();
-		threadAutoArchiveQueue = new KVThreadAutoArchiveQueueService(kvClient, channels.threads, channels.channelData);
+		threadAutoArchiveQueue = new KVThreadAutoArchiveQueueService(kvClient);
 		threadAutoArchiveQueueClient = kvClient;
 	}
 	return threadAutoArchiveQueue;

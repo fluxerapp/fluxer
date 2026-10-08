@@ -19,6 +19,10 @@ import {startDockerContainer} from '@app/api/test/DockerTestContainer';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {
+	DEFAULT_CHANNEL_THREADS_CONFIG,
+	everyoneChannelThreadsConfig,
+} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
+import {
 	DEFAULT_DOMAIN_MIGRATION_CONFIG,
 	type DomainMigrationConfig,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
@@ -35,6 +39,7 @@ import {
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const DOMAIN_MIGRATION_CONFIG_KEY = 'domain_migration_config';
+const CHANNEL_THREADS_CONFIG_KEY = 'channel_threads_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
 const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
@@ -299,6 +304,37 @@ describe('InstanceConfigRepository', () => {
 		const domains = (await repository.getSsoConfig()).allowedEmailDomains;
 		expect(domains.length).toBeGreaterThan(0);
 		expect(domains).not.toContain('example.com');
+	});
+
+	it('serves the everyone channel threads config at version zero when the key is absent', async () => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
+
+		await expect(repository.getChannelThreadsConfig()).resolves.toEqual(everyoneChannelThreadsConfig(0));
+	});
+
+	it.each([
+		{
+			name: 'a disabled row',
+			stored: JSON.stringify({
+				...DEFAULT_CHANNEL_THREADS_CONFIG,
+				enabled: false,
+				config_version: 9,
+				disabled_guild_ids: ['1400000000000000001'],
+				excluded_user_ids: ['1400000000000000002'],
+			}),
+			version: 9,
+		},
+		{name: 'a partial rollout row', stored: '{"enabled":true,"config_version":4,"guild_basis_points":100}', version: 4},
+		{name: 'a row with an invalid version', stored: '{"enabled":false,"config_version":-1}', version: 0},
+		{name: 'unparseable text', stored: 'not-json', version: 0},
+	])('serves the everyone channel threads config for $name and keeps the stored version', async ({stored, version}) => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
+
+		await repository.setConfig(CHANNEL_THREADS_CONFIG_KEY, stored);
+
+		await expect(repository.getChannelThreadsConfig()).resolves.toEqual(everyoneChannelThreadsConfig(version));
 	});
 
 	it('returns the default domain migration config when the key is absent', async () => {

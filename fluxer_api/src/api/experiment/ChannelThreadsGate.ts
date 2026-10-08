@@ -13,7 +13,7 @@ import {
 	channelThreadsUserActive,
 	channelThreadsUserExcluded,
 	compileChannelThreadsConfig,
-	DEFAULT_COMPILED_CHANNEL_THREADS_CONFIG,
+	everyoneChannelThreadsConfig,
 } from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import type {Context} from 'hono';
 
@@ -39,17 +39,29 @@ const FETCH_GUILD_THREAD_STATE_CQL = GuildThreadState.selectCql({
 
 const taintCache = new Map<string, {tainted: boolean; checkedAt: number}>();
 
-let compiled: CompiledChannelThreadsConfig = DEFAULT_COMPILED_CHANNEL_THREADS_CONFIG;
+const INITIAL_COMPILED_CONFIG = compileChannelThreadsConfig(everyoneChannelThreadsConfig(0));
+
+let compiled: CompiledChannelThreadsConfig = INITIAL_COMPILED_CONFIG;
 let compiledSource: string | null | undefined;
+let compiledParser: ((raw: string | null) => ChannelThreadsConfig) | undefined;
+let pinnedForTesting = false;
 
 export function syncChannelThreadsConfig(
 	raw: string | null,
 	parse: (raw: string | null) => ChannelThreadsConfig,
 ): CompiledChannelThreadsConfig {
-	if (raw === compiledSource) return compiled;
-	compiled = raw === null ? DEFAULT_COMPILED_CHANNEL_THREADS_CONFIG : compileChannelThreadsConfig(parse(raw));
+	if (pinnedForTesting || (raw === compiledSource && parse === compiledParser)) return compiled;
+	compiled = compileChannelThreadsConfig(parse(raw));
 	compiledSource = raw;
+	compiledParser = parse;
 	return compiled;
+}
+
+export function pinChannelThreadsConfigForTesting(config: ChannelThreadsConfig | null): void {
+	compiled = config === null ? INITIAL_COMPILED_CONFIG : compileChannelThreadsConfig(config);
+	compiledSource = undefined;
+	compiledParser = undefined;
+	pinnedForTesting = config !== null;
 }
 
 export function getCompiledChannelThreadsConfig(): CompiledChannelThreadsConfig {

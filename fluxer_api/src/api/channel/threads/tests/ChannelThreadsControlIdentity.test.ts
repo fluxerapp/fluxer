@@ -2,21 +2,14 @@
 
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createDmChannel, createFriendship, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
+import {resetChannelThreadsConfig, setChannelThreadsConfig} from '@app/api/channel/tests/ThreadTestUtils';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import type {CassandraParams, KvQueryMeta, PreparedQuery} from '@app/api/database/CassandraTypes';
-import {
-	clearChannelThreadsTaintCacheForTesting,
-	syncChannelThreadsConfig,
-} from '@app/api/experiment/ChannelThreadsGate';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {getCompiledChannelThreadsConfig} from '@app/api/experiment/ChannelThreadsGate';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {
-	applyChannelThreadsConfigUpdate,
-	ChannelThreadsConfigSchema,
-} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 class RecordingExecutor extends InMemoryCassandraQueryExecutor {
@@ -38,11 +31,6 @@ class RecordingExecutor extends InMemoryCassandraQueryExecutor {
 	}
 }
 
-function resetConfig(): void {
-	syncChannelThreadsConfig(null, (raw) => ChannelThreadsConfigSchema.parse(raw ? JSON.parse(raw) : {}));
-	clearChannelThreadsTaintCacheForTesting();
-}
-
 describe('channel threads control identity', () => {
 	let harness: ApiTestHarness;
 	let executor: RecordingExecutor;
@@ -53,13 +41,13 @@ describe('channel threads control identity', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetConfig();
+		resetChannelThreadsConfig();
 		executor = new RecordingExecutor();
 		setCassandraQueryExecutorForTesting(executor);
 	});
 
 	afterEach(() => {
-		resetConfig();
+		resetChannelThreadsConfig();
 	});
 
 	afterAll(async () => {
@@ -93,10 +81,8 @@ describe('channel threads control identity', () => {
 		const baselineDm = await recorded(() => createDmChannel(harness, baseline.owner.token, baseline.friend.userId));
 		const baselineChannels = await loadChannels(baselineGuild.result.id);
 
-		await getInstanceConfigRepository().updateChannelThreadsConfig((current) =>
-			applyChannelThreadsConfigUpdate(current, {enabled: true, enabled_guild_ids: ['1']}),
-		);
-		expect((await getInstanceConfigRepository().refreshChannelThreadsConfig()).config.ever_enabled).toBe(true);
+		await setChannelThreadsConfig({enabled: true, enabled_guild_ids: ['1']});
+		expect(getCompiledChannelThreadsConfig().config.ever_enabled).toBe(true);
 
 		const enrolledOff = await createPair();
 		const guild = await recorded(() => createGuild(harness, enrolledOff.owner.token, 'control'));

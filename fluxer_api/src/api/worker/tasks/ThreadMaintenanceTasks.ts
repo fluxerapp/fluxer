@@ -22,14 +22,12 @@ import {
 import {Logger} from '@app/api/Logger';
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import {deleteThreadSearchDocuments} from '@app/api/search/thread/ThreadSearchService';
-import {ensureChannelThreadsConfigVersion} from '@app/api/worker/tasks/SeedThreadPermissions';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {MAX_THREAD_ARCHIVES_PER_SWEEP_TICK} from '@fluxer/constants/src/ThreadConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
 
 const SnowflakeString = z.string().regex(/^\d{1,20}$/);
-const GuildPayload = z.object({guildId: SnowflakeString, configVersion: z.number().int().min(0).optional()});
 const RepairPayload = z.object({threadIds: z.array(SnowflakeString).min(1).max(1000)});
 const ParentPayload = z.object({guildId: SnowflakeString, parentId: SnowflakeString});
 const MemberPayload = z.object({guildId: SnowflakeString, userId: SnowflakeString});
@@ -37,8 +35,8 @@ const MemberPayload = z.object({guildId: SnowflakeString, userId: SnowflakeStrin
 const PARENT_PAGE_SIZE = 100;
 
 function archiveQueue(): KVThreadAutoArchiveQueueService {
-	const {kvClient, channelRepository} = getWorkerDependencies();
-	return new KVThreadAutoArchiveQueueService(kvClient, channelRepository.threads, channelRepository.channelData);
+	const {kvClient} = getWorkerDependencies();
+	return new KVThreadAutoArchiveQueueService(kvClient);
 }
 
 async function archiveDueThreads(
@@ -107,15 +105,6 @@ export const archiveInactiveThreads: WorkerTaskHandler = async () => {
 	threadArchiveSweepBatch.observe(archived);
 	setThreadArchiveSweepLag(oldestDueMs === null ? 0 : (nowMs - oldestDueMs) / 1000);
 	if (archived > 0) Logger.info({archived}, 'Archived inactive threads');
-};
-
-export const rebuildThreadAutoArchiveQueue: WorkerTaskHandler = async (payload) => {
-	const validated = GuildPayload.parse(payload);
-	await ensureChannelThreadsConfigVersion(validated.configVersion);
-	const guildId = createGuildID(BigInt(validated.guildId));
-	if (!guildActive(guildId)) return;
-	const scheduled = await archiveQueue().rebuildGuild(guildId);
-	Logger.info({guildId: guildId.toString(), scheduled}, 'Rebuilt thread auto-archive queue');
 };
 
 export const repairThreadIndexes: WorkerTaskHandler = async (payload) => {

@@ -11,6 +11,7 @@ import {
 	setCassandraQueryExecutorForTesting,
 	shutdownCassandraQueryExecutorForTesting,
 } from '@app/api/database/CassandraQueryExecution';
+import {pinChannelThreadsConfigForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import type {IUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
 import {setInjectedUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
 import {initializeLogger} from '@app/api/Logger';
@@ -227,6 +228,7 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+	pinChannelThreadsConfigForTesting(null);
 	server.close();
 	await shutdownCassandraQueryExecutorForTesting();
 });

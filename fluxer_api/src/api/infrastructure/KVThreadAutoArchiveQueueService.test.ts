@@ -70,7 +70,7 @@ describe('KVThreadAutoArchiveQueueService', () => {
 		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
 		kv = new MockKVProvider();
 		repositories = new ChannelRepository();
-		queue = new KVThreadAutoArchiveQueueService(kv, repositories.threads, repositories.channelData);
+		queue = new KVThreadAutoArchiveQueueService(kv);
 		base = Date.now() - 10 * HOUR;
 		await upsertOne(Channels.upsertAll({...threadRow(PARENT_ID), type: ChannelTypes.GUILD_TEXT, parent_id: null}));
 	});
@@ -133,15 +133,5 @@ describe('KVThreadAutoArchiveQueueService', () => {
 		const transition = await repositories.threads.updateState(archived.threadId, () => ({archived: true}));
 		await queue.schedule(transition!.state, null);
 		expect(await kv.zcard(threadArchiveQueueKey(GUILD_ID))).toBe(0);
-	});
-
-	it('rebuilds a guild from its active partition', async () => {
-		const first = await createThread(0, 60);
-		const second = await createThread(1000, 60);
-		await createThread(2000, 60, ChannelFlags.PINNED);
-		await kv.zadd(threadArchiveQueueKey(GUILD_ID), 1, '123');
-		expect(await queue.rebuildGuild(GUILD_ID)).toBe(2);
-		expect(await queue.getDue(GUILD_ID, Date.now(), 200)).toEqual([first.threadId, second.threadId]);
-		expect(await queue.getDue(GUILD_ID, Date.now(), 1)).toEqual([first.threadId]);
 	});
 });
