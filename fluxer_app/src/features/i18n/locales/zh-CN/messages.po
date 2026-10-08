@@ -2153,7 +2153,7 @@ msgid "{tenSeconds} seconds"
 msgstr "{tenSeconds} 秒"
 
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:149
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:153
 msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
 msgstr "{textChannelCount, plural, other {# 个文字频道}}，{voiceChannelCount, plural, other {# 个语音频道}}，{categoryCount, plural, other {# 个类别}}，{roleCount, plural, other {# 个身份组}}"
 
@@ -4923,7 +4923,7 @@ msgstr "确定要重置 {appName} 的应用数据吗？"
 msgid "Are you sure you want to revoke the ban for <0>{0}</0>? They will be able to rejoin the community."
 msgstr "确定要撤销对 <0>{0}</0> 的封禁吗？他们将能够重新加入社区。"
 
-#: src/features/channel/components/embeds/channel_embed/EmbedLink.tsx:55
+#: src/features/channel/components/embeds/channel_embed/EmbedLink.tsx:58
 msgid "Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this message."
 msgstr "确定要隐藏此消息中的所有链接嵌入内容吗？此操作将隐藏此消息中的所有嵌入内容。"
 
@@ -5607,11 +5607,11 @@ msgstr "当前离开"
 #. Generic secondary button label that returns to the previous step or screen.
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:164
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:164
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:167
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:61
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:357
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:378
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:398
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:360
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:381
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:401
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
@@ -6559,8 +6559,8 @@ msgstr "在{premiumProductName}标签页购买{premiumProductName}礼物，然�
 msgid "Buy gift"
 msgstr "购买礼物"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:341
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:659
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:345
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:663
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "创建社区即表示你同意遵守并维护<0>{PRODUCT_NAME}社区准则</0>。"
 
@@ -7149,10 +7149,10 @@ msgstr "修改群昵称"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:63
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:307
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:86
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:630
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:67
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:90
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "更改图标"
@@ -7559,7 +7559,7 @@ msgid "Channel access"
 msgstr "频道访问"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:142
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:143
 msgid "Channel access denied"
 msgstr "无法访问频道"
 
@@ -7624,7 +7624,7 @@ msgstr "频道 ID 已复制到剪贴板"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:103
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:43
 msgid "channel link"
 msgstr "频道链接"
@@ -8245,8 +8245,8 @@ msgstr "领取礼物"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:45
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:69
 #: src/features/channel/utils/CreateDMModalUtils.tsx:44
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:213
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:441
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:216
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:444
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:345
 msgid "Claim your account"
 msgstr "认领你的账号"
@@ -9145,8 +9145,8 @@ msgstr "该社区助长群起攻击或针对性骚扰。"
 msgid "Community filter"
 msgstr "社区筛选"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:274
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:597
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:277
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:600
 msgid "Community icon"
 msgstr "社区图标"
 
@@ -9684,7 +9684,7 @@ msgstr "连接：{connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:424
-#: src/features/user/components/popouts/UserProfileShared.tsx:615
+#: src/features/user/components/popouts/UserProfileShared.tsx:618
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -11002,7 +11002,7 @@ msgstr "创建并分享"
 msgid "Create a community"
 msgstr "创建社区"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:259
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:262
 msgid "Create a community for you and your friends to chat."
 msgstr "创建社区，和好友一起畅聊。"
 
@@ -12738,13 +12738,13 @@ msgstr "开发者状态"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:154
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:155
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "开发者工具"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:158
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:159
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "在频道标题栏中点击员工徽章即可使用开发者工具。"
 
@@ -18625,8 +18625,8 @@ msgstr "图片已复制到剪贴板"
 #. Error modal title shown when a community image upload cannot be accepted or processed.
 #. Error modal title shown when a create-community icon upload cannot be accepted or processed.
 #. Error modal title shown when a template-import community icon upload cannot be accepted or processed.
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:59
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:155
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:63
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:159
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:52
 msgid "Image couldn't be used"
 msgstr "无法使用图片"
@@ -19420,7 +19420,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "共享时已隐藏邀请链接："
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:170
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:171
 msgid "Invite link masked while sharing"
 msgstr "共享时已隐藏邀请链接"
 
@@ -19849,7 +19849,7 @@ msgid "Jump to {displayName}"
 msgstr "跳转到 {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:116
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:117
 msgid "Jump to {labelText}"
 msgstr "跳转到“{labelText}”"
 
@@ -19906,12 +19906,12 @@ msgid "Jump to the current call"
 msgstr "跳转到当前通话"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:120
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:121
 msgid "Jump to the linked channel"
 msgstr "跳转到链接的频道"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:112
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:113
 msgid "Jump to the linked message"
 msgstr "跳转到链接的消息"
 
@@ -19921,7 +19921,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "跳转到 {authorNickname} 发送的消息"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:108
 msgid "Jump to the message in {labelText}"
 msgstr "跳转到“{labelText}”中的消息"
 
@@ -20666,7 +20666,7 @@ msgid "Link styling"
 msgstr "链接样式"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:162
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:163
 msgid "Link unavailable"
 msgstr "链接无法打开"
 
@@ -22096,7 +22096,7 @@ msgid "Message layout"
 msgstr "消息布局"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:98
 msgid "message link"
 msgstr "消息链接"
 
@@ -23638,7 +23638,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "无 {sendMessagesPermission} 权限"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:150
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:151
 msgid "No access"
 msgstr "无法访问"
 
@@ -24942,12 +24942,12 @@ msgid "Open {host} in your browser."
 msgstr "在浏览器中打开 {host}。"
 
 #. Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:130
 msgid "Open {labelText}"
 msgstr "打开 {labelText}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:124
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:125
 msgid "Open {labelText} in settings"
 msgstr "在设置中打开 {labelText}"
 
@@ -25348,7 +25348,7 @@ msgstr "打开系统设置"
 msgid "Open System Settings → Privacy & Security → Screen Recording, then allow {productName}."
 msgstr "打开“系统设置”→“隐私与安全性”→“屏幕录制”，然后允许 {productName}。"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:532
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:535
 msgid "Open template JSON"
 msgstr "打开模板 JSON"
 
@@ -25362,7 +25362,7 @@ msgstr "打开此社区的封禁对话框。"
 msgid "Open the context menu"
 msgstr "打开上下文菜单"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:515
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:518
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "在浏览器中打开下方链接，然后复制完整的 JSON 响应并粘贴到框中。"
 
@@ -25749,7 +25749,7 @@ msgid "Page down"
 msgstr "下翻页"
 
 #. Role description announced for an inline chat link pill that opens an app page. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:135
 msgid "page link"
 msgstr "页面链接"
 
@@ -25904,7 +25904,7 @@ msgstr "过去 7 天"
 msgid "Paste"
 msgstr "粘贴"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:487
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:490
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "粘贴 {theOtherPlatform} 模板 URL 以将其结构导入新社区。"
 
@@ -28411,8 +28411,8 @@ msgstr "从仅限 URL 的 GIF 收藏夹中移除"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
 #: src/features/channel/components/modals/EditGroupModal.tsx:292
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:316
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:639
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:320
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:643
 msgid "Remove icon"
 msgstr "移除图标"
 
@@ -31564,7 +31564,7 @@ msgid "Settings"
 msgstr "设置"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:138
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:139
 msgid "settings link"
 msgstr "设置链接"
 
@@ -32677,7 +32677,7 @@ msgid "Skip this step"
 msgstr "跳过此步骤"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:72
+#: src/app/App.tsx:73
 msgid "Skip to content"
 msgstr "跳到内容"
 
@@ -34772,7 +34772,7 @@ msgstr "任务栏角标"
 msgid "Teleporting you to another voice region..."
 msgstr "正在把你传送到其他语音区域…"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:564
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:567
 msgid "Template"
 msgstr "模板"
 
@@ -36009,7 +36009,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "此链接频道标记为成人内容，打开的内容可能不适合某些用户。"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:166
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:167
 msgid "This link is not available for your account."
 msgstr "你的账号无法使用此链接。"
 
@@ -38440,8 +38440,8 @@ msgstr "在此频道上传文件和媒体。"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:307
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:630
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "上传图标"
@@ -41403,7 +41403,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "你在 {PREMIUM_PRODUCT_NAME} 期间更改了标签。除非续订，否则你的 {PREMIUM_PRODUCT_NAME} 到期后，标签将随机重新生成。"
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:146
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:147
 msgid "You do not have access to the channel where this message was sent."
 msgstr "你无权访问发送此消息的频道。"
 
@@ -41589,8 +41589,8 @@ msgstr "你需要“{permissionLabel}”权限才能在此处使用其他社区�
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "你需要“{permissionLabel}”权限才能在此处使用其他社区的贴纸。"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:207
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:435
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:210
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:438
 msgid "You need to claim your account before you can create a community."
 msgstr "你需要先认领账号，才能创建社区。"
 
@@ -41607,8 +41607,8 @@ msgstr "你需要先认领账号才能发送私信。"
 msgid "You need to claim your account to send messages in this community."
 msgstr "你需要先认领账号，才能在此社区中发送消息。"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:232
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:460
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:235
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:463
 msgid "You need to verify your email address before you can create a community."
 msgstr "你需要先验证邮箱地址，才能创建社区。"
 

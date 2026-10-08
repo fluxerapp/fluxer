@@ -2153,7 +2153,7 @@ msgid "{tenSeconds} seconds"
 msgstr "{tenSeconds} sekund"
 
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:149
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:153
 msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
 msgstr "{textChannelCount, plural, one {# textový kanál} few {# textové kanály} many {# textového kanálu} other {# textových kanálů}}, {voiceChannelCount, plural, one {# hlasový kanál} few {# hlasové kanály} many {# hlasového kanálu} other {# hlasových kanálů}}, {categoryCount, plural, one {# kategorie} few {# kategorie} many {# kategorie} other {# kategorií}}, {roleCount, plural, one {# role} few {# role} many {# role} other {# rolí}}"
 
@@ -4923,7 +4923,7 @@ msgstr "Opravdu chcete resetovat data aplikace {appName}?"
 msgid "Are you sure you want to revoke the ban for <0>{0}</0>? They will be able to rejoin the community."
 msgstr "Opravdu chcete zrušit ban uživatele <0>{0}</0>? Bude se moci znovu připojit ke komunitě."
 
-#: src/features/channel/components/embeds/channel_embed/EmbedLink.tsx:55
+#: src/features/channel/components/embeds/channel_embed/EmbedLink.tsx:58
 msgid "Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this message."
 msgstr "Opravdu chcete skrýt všechny náhledy odkazů v této zprávě? Tato akce skryje veškerý vložený obsah této zprávy."
 
@@ -5607,11 +5607,11 @@ msgstr "Momentálně pryč"
 #. Generic secondary button label that returns to the previous step or screen.
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:164
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:164
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:167
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:61
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:357
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:378
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:398
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:360
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:381
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:401
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
@@ -6559,8 +6559,8 @@ msgstr "Kupte dárkové předplatné {premiumProductName} na kartě {premiumProd
 msgid "Buy gift"
 msgstr "Koupit dárek"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:341
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:659
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:345
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:663
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Vytvořením komunity souhlasíte s dodržováním a prosazováním <0>pravidel komunity {PRODUCT_NAME}</0>."
 
@@ -7149,10 +7149,10 @@ msgstr "Změnit přezdívku skupiny"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:63
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:307
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:86
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:630
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:67
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:90
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "Změnit ikonu"
@@ -7559,7 +7559,7 @@ msgid "Channel access"
 msgstr "Přístup k kanálu"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:142
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:143
 msgid "Channel access denied"
 msgstr "Přístup k tomuto kanálu odepřen"
 
@@ -7624,7 +7624,7 @@ msgstr "ID kanálu zkopírováno do schránky"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:103
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:43
 msgid "channel link"
 msgstr "odkaz na kanál"
@@ -8245,8 +8245,8 @@ msgstr "Převzít dárek"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:45
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:69
 #: src/features/channel/utils/CreateDMModalUtils.tsx:44
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:213
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:441
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:216
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:444
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:345
 msgid "Claim your account"
 msgstr "Dokončit registraci účtu"
@@ -9145,8 +9145,8 @@ msgstr "Komunita umožňuje hromadné útoky nebo cílené obtěžování."
 msgid "Community filter"
 msgstr "Filtr komunit"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:274
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:597
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:277
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:600
 msgid "Community icon"
 msgstr "Ikona komunity"
 
@@ -9684,7 +9684,7 @@ msgstr "Připojení: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:424
-#: src/features/user/components/popouts/UserProfileShared.tsx:615
+#: src/features/user/components/popouts/UserProfileShared.tsx:618
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -11002,7 +11002,7 @@ msgstr "Vytvořit a sdílet"
 msgid "Create a community"
 msgstr "Vytvořit komunitu"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:259
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:262
 msgid "Create a community for you and your friends to chat."
 msgstr "Vytvořte komunitu pro sebe a své přátele, kde si můžete povídat."
 
@@ -12738,13 +12738,13 @@ msgstr "Stav pro vývojáře"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:154
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:155
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Nástroje pro vývojáře"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:158
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:159
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Nástroje pro vývojáře jsou dostupné z odznaku pro zaměstnance v záhlaví kanálu."
 
@@ -18625,8 +18625,8 @@ msgstr "Obrázek zkopírován do schránky"
 #. Error modal title shown when a community image upload cannot be accepted or processed.
 #. Error modal title shown when a create-community icon upload cannot be accepted or processed.
 #. Error modal title shown when a template-import community icon upload cannot be accepted or processed.
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:59
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:155
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:63
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:159
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:52
 msgid "Image couldn't be used"
 msgstr "Obrázek nelze použít"
@@ -19420,7 +19420,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "Odkaz na pozvánku je skrytý, když sdílíte:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:170
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:171
 msgid "Invite link masked while sharing"
 msgstr "Odkaz na pozvánku je při sdílení maskován"
 
@@ -19849,7 +19849,7 @@ msgid "Jump to {displayName}"
 msgstr "Přejít na {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:116
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:117
 msgid "Jump to {labelText}"
 msgstr "Přejít na {labelText}"
 
@@ -19906,12 +19906,12 @@ msgid "Jump to the current call"
 msgstr "Přejít na aktuální hovor"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:120
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:121
 msgid "Jump to the linked channel"
 msgstr "Přejít na odkazovaný kanál"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:112
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:113
 msgid "Jump to the linked message"
 msgstr "Přejít na odkazovanou zprávu"
 
@@ -19921,7 +19921,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Přejít ke zprávě od {authorNickname}"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:108
 msgid "Jump to the message in {labelText}"
 msgstr "Přejít na zprávu v {labelText}"
 
@@ -20666,7 +20666,7 @@ msgid "Link styling"
 msgstr "Styl odkazů"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:162
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:163
 msgid "Link unavailable"
 msgstr "Odkaz není k dispozici"
 
@@ -22096,7 +22096,7 @@ msgid "Message layout"
 msgstr "Rozložení zpráv"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:98
 msgid "message link"
 msgstr "odkaz na zprávu"
 
@@ -23638,7 +23638,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Chybí oprávnění {sendMessagesPermission}"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:150
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:151
 msgid "No access"
 msgstr "Bez přístupu"
 
@@ -24942,12 +24942,12 @@ msgid "Open {host} in your browser."
 msgstr "Otevřete {host} ve svém prohlížeči."
 
 #. Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:130
 msgid "Open {labelText}"
 msgstr "Otevřít {labelText}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:124
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:125
 msgid "Open {labelText} in settings"
 msgstr "Otevřít {labelText} v nastavení"
 
@@ -25348,7 +25348,7 @@ msgstr "Otevřít Nastavení systému"
 msgid "Open System Settings → Privacy & Security → Screen Recording, then allow {productName}."
 msgstr "Otevřete Nastavení systému → Soukromí a zabezpečení → Nahrávání obrazovky a povolte {productName}."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:532
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:535
 msgid "Open template JSON"
 msgstr "Otevřít šablonu JSON"
 
@@ -25362,7 +25362,7 @@ msgstr "Otevřít dialog pro zabanování v této komunitě."
 msgid "Open the context menu"
 msgstr "Otevřít kontextovou nabídku"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:515
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:518
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "Otevřete odkaz níže ve svém prohlížeči, zkopírujte celou odpověď JSON a vložte ji do pole."
 
@@ -25749,7 +25749,7 @@ msgid "Page down"
 msgstr "Page Down"
 
 #. Role description announced for an inline chat link pill that opens an app page. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:135
 msgid "page link"
 msgstr "odkaz na stránku"
 
@@ -25904,7 +25904,7 @@ msgstr "Posledních 7 dní"
 msgid "Paste"
 msgstr "Vložit"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:487
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:490
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "Vložte URL šablony platformy {theOtherPlatform} a importujte její strukturu do nové komunity."
 
@@ -28411,8 +28411,8 @@ msgstr "Odebrat z oblíbených GIFů uložených pouze jako URL"
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
 #: src/features/channel/components/modals/EditGroupModal.tsx:292
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:316
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:639
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:320
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:643
 msgid "Remove icon"
 msgstr "Odebrat ikonu"
 
@@ -31564,7 +31564,7 @@ msgid "Settings"
 msgstr "Nastavení"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:138
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:139
 msgid "settings link"
 msgstr "odkaz na nastavení"
 
@@ -32677,7 +32677,7 @@ msgid "Skip this step"
 msgstr "Přeskočit tento krok"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:72
+#: src/app/App.tsx:73
 msgid "Skip to content"
 msgstr "Přejít na obsah"
 
@@ -34772,7 +34772,7 @@ msgstr "Odznak na hlavním panelu"
 msgid "Teleporting you to another voice region..."
 msgstr "Přesouváme vás do jiného hlasového regionu..."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:564
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:567
 msgid "Template"
 msgstr "Šablona"
 
@@ -36009,7 +36009,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Tento kanál s odkazem je označen jako kanál pro dospělé a může otevřít materiál, který nemusí být vhodný pro některé uživatele."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:166
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:167
 msgid "This link is not available for your account."
 msgstr "Tento odkaz není pro váš účet dostupný."
 
@@ -38440,8 +38440,8 @@ msgstr "Nahrávat soubory a média v tomto kanálu."
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:307
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:630
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "Nahrát ikonu"
@@ -41403,7 +41403,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Změnili jste si uživatelskou značku, když jste měli {PREMIUM_PRODUCT_NAME}. Náhodně se změní, až vaše předplatné {PREMIUM_PRODUCT_NAME} vyprší, pokud se neobnoví."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:146
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:147
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Nemáte přístup ke kanálu, ve kterém byla tato zpráva odeslána."
 
@@ -41589,8 +41589,8 @@ msgstr "K používání emoji z jiných komunit zde potřebujete oprávnění \"
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "K používání samolepek z jiných komunit zde potřebujete oprávnění „{permissionLabel}“."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:207
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:435
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:210
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:438
 msgid "You need to claim your account before you can create a community."
 msgstr "Než budete moci vytvořit komunitu, musíte dokončit registraci svého účtu."
 
@@ -41607,8 +41607,8 @@ msgstr "Abyste mohli posílat soukromé zprávy, musíte dokončit registraci sv
 msgid "You need to claim your account to send messages in this community."
 msgstr "Abyste mohli v této komunitě posílat zprávy, musíte dokončit registraci svého účtu."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:232
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:460
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:235
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:463
 msgid "You need to verify your email address before you can create a community."
 msgstr "Než budete moct vytvořit komunitu, musíte si ověřit e-mailovou adresu."
 

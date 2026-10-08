@@ -2153,7 +2153,7 @@ msgid "{tenSeconds} seconds"
 msgstr "{tenSeconds} секунди"
 
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:149
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:153
 msgid "{textChannelCount, plural, one {# text channel} other {# text channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}"
 msgstr "{textChannelCount, plural, one {# текстов канал} other {# текстови канала}}, {voiceChannelCount, plural, one {# гласов канал} other {# гласови канала}}, {categoryCount, plural, one {# категория} other {# категории}}, {roleCount, plural, one {# роля} other {# роли}}"
 
@@ -4923,7 +4923,7 @@ msgstr "Наистина ли искаш да нулираш данните на
 msgid "Are you sure you want to revoke the ban for <0>{0}</0>? They will be able to rejoin the community."
 msgstr "Наистина ли искаш да отмениш забраната за <0>{0}</0>? Ще може да се присъедини отново към общността."
 
-#: src/features/channel/components/embeds/channel_embed/EmbedLink.tsx:55
+#: src/features/channel/components/embeds/channel_embed/EmbedLink.tsx:58
 msgid "Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this message."
 msgstr "Наистина ли искаш да скриеш всички вградени елементи от линкове в това съобщение? Всички вградени елементи в съобщението ще бъдат скрити."
 
@@ -5607,11 +5607,11 @@ msgstr "В момента ме няма"
 #. Generic secondary button label that returns to the previous step or screen.
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:164
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:164
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:167
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:61
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:357
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:378
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:398
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:360
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:381
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:401
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:834
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:269
@@ -6559,8 +6559,8 @@ msgstr "Купи подарък {premiumProductName} от раздела {premiu
 msgid "Buy gift"
 msgstr "Купи подарък"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:341
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:659
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:345
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:663
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Със създаването на общност се съгласяваш да спазваш и поддържаш <0>насоките на общността на {PRODUCT_NAME}</0>."
 
@@ -7149,10 +7149,10 @@ msgstr "Промяна на прякор в групата"
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:63
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:307
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:86
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:630
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:67
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:90
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "Смяна на икона"
@@ -7559,7 +7559,7 @@ msgid "Channel access"
 msgstr "Достъп до канал"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:142
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:143
 msgid "Channel access denied"
 msgstr "Достъпът до канала е отказан"
 
@@ -7624,7 +7624,7 @@ msgstr "ID на канала е копирано в клипборда"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:103
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:43
 msgid "channel link"
 msgstr "линк към канал"
@@ -8245,8 +8245,8 @@ msgstr "Вземи подарък"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:45
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:69
 #: src/features/channel/utils/CreateDMModalUtils.tsx:44
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:213
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:441
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:216
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:444
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:345
 msgid "Claim your account"
 msgstr "Заяви акаунта си"
@@ -9145,8 +9145,8 @@ msgstr "Общността улеснява груповите атаки или
 msgid "Community filter"
 msgstr "Филтър за общности"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:274
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:597
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:277
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:600
 msgid "Community icon"
 msgstr "Икона на общността"
 
@@ -9684,7 +9684,7 @@ msgstr "Връзка: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:424
-#: src/features/user/components/popouts/UserProfileShared.tsx:615
+#: src/features/user/components/popouts/UserProfileShared.tsx:618
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -11002,7 +11002,7 @@ msgstr "Създаване и споделяне"
 msgid "Create a community"
 msgstr "Създаване на общност"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:259
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:262
 msgid "Create a community for you and your friends to chat."
 msgstr "Създай общност, в която ти и приятелите ти да си чатите."
 
@@ -12738,13 +12738,13 @@ msgstr "Състояние за разработчици"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:154
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:155
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Инструменти за разработчици"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:158
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:159
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Инструментите за разработчици са достъпни от значката на екипа в заглавката на канала."
 
@@ -18625,8 +18625,8 @@ msgstr "Изображението е копирано в клипборда"
 #. Error modal title shown when a community image upload cannot be accepted or processed.
 #. Error modal title shown when a create-community icon upload cannot be accepted or processed.
 #. Error modal title shown when a template-import community icon upload cannot be accepted or processed.
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:59
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:155
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:63
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:159
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:52
 msgid "Image couldn't be used"
 msgstr "Изображението не може да бъде използвано"
@@ -19420,7 +19420,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "Линкът за покана е скрит, докато споделяш:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:170
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:171
 msgid "Invite link masked while sharing"
 msgstr "Линкът за покана е скрит, докато споделяш"
 
@@ -19849,7 +19849,7 @@ msgid "Jump to {displayName}"
 msgstr "Към {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:116
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:117
 msgid "Jump to {labelText}"
 msgstr "Към {labelText}"
 
@@ -19906,12 +19906,12 @@ msgid "Jump to the current call"
 msgstr "Към текущия разговор"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:120
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:121
 msgid "Jump to the linked channel"
 msgstr "Към свързания канал"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:112
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:113
 msgid "Jump to the linked message"
 msgstr "Към свързаното съобщение"
 
@@ -19921,7 +19921,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Към съобщението от {authorNickname}"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:108
 msgid "Jump to the message in {labelText}"
 msgstr "Към съобщението в {labelText}"
 
@@ -20666,7 +20666,7 @@ msgid "Link styling"
 msgstr "Стил на линковете"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:162
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:163
 msgid "Link unavailable"
 msgstr "Линкът не е наличен"
 
@@ -22096,7 +22096,7 @@ msgid "Message layout"
 msgstr "Оформление на съобщенията"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:98
 msgid "message link"
 msgstr "линк към съобщение"
 
@@ -23638,7 +23638,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Няма разрешение {sendMessagesPermission}"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:150
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:151
 msgid "No access"
 msgstr "Няма достъп"
 
@@ -24942,12 +24942,12 @@ msgid "Open {host} in your browser."
 msgstr "Отвори {host} в браузъра си."
 
 #. Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:130
 msgid "Open {labelText}"
 msgstr "Отвори {labelText}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:124
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:125
 msgid "Open {labelText} in settings"
 msgstr "Отваряне на {labelText} в настройките"
 
@@ -25348,7 +25348,7 @@ msgstr "Отвори Системни настройки"
 msgid "Open System Settings → Privacy & Security → Screen Recording, then allow {productName}."
 msgstr "Отворете „Системни настройки“ → „Поверителност и сигурност“ → „Запис на екрана“ и разрешете {productName}."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:532
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:535
 msgid "Open template JSON"
 msgstr "Отваряне на JSON на шаблона"
 
@@ -25362,7 +25362,7 @@ msgstr "Отваряне на диалоговия прозорец за заб�
 msgid "Open the context menu"
 msgstr "Отваряне на контекстното меню"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:515
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:518
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "Отвори линка по-долу в браузъра си, след което копирай целия JSON отговор и го постави в полето."
 
@@ -25749,7 +25749,7 @@ msgid "Page down"
 msgstr "Page Down"
 
 #. Role description announced for an inline chat link pill that opens an app page. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:135
 msgid "page link"
 msgstr "връзка към страница"
 
@@ -25904,7 +25904,7 @@ msgstr "Последните 7 дни"
 msgid "Paste"
 msgstr "Постави"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:487
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:490
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "Постави URL адрес на шаблон от {theOtherPlatform}, за да импортираш структурата му в нова общност."
 
@@ -28411,8 +28411,8 @@ msgstr "Премахване от любимите GIF файлове, запа�
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
 #: src/features/channel/components/modals/EditGroupModal.tsx:292
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:316
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:639
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:320
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:643
 msgid "Remove icon"
 msgstr "Премахване на икона"
 
@@ -31564,7 +31564,7 @@ msgid "Settings"
 msgstr "Настройки"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:138
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:139
 msgid "settings link"
 msgstr "линк към настройките"
 
@@ -32677,7 +32677,7 @@ msgid "Skip this step"
 msgstr "Пропусни тази стъпка"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:72
+#: src/app/App.tsx:73
 msgid "Skip to content"
 msgstr "Към съдържанието"
 
@@ -34772,7 +34772,7 @@ msgstr "Значка в лентата на задачите"
 msgid "Teleporting you to another voice region..."
 msgstr "Прехвърляне към друг гласов регион..."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:564
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:567
 msgid "Template"
 msgstr "Шаблон"
 
@@ -36009,7 +36009,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Този канал с линкове е маркиран за съдържание за възрастни и може да отваря материали, които може да са неподходящи за някои потребители."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:166
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:167
 msgid "This link is not available for your account."
 msgstr "Този линк не е наличен за акаунта ти."
 
@@ -38440,8 +38440,8 @@ msgstr "Качване на файлове и медии в този канал.
 
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:307
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:630
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:311
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "Качване на икона"
@@ -41403,7 +41403,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Промени тага си, докато ползваше {PREMIUM_PRODUCT_NAME}. Тагът ти ще бъде преизбран на случаен принцип, когато {PREMIUM_PRODUCT_NAME} ти изтече, освен ако не се поднови."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:146
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:147
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Нямаш достъп до канала, където е изпратено това съобщение."
 
@@ -41589,8 +41589,8 @@ msgstr "Нужно е разрешението „{permissionLabel}“, за д�
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Нужно е разрешението „{permissionLabel}“, за да използваш стикери от други общности тук."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:207
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:435
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:210
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:438
 msgid "You need to claim your account before you can create a community."
 msgstr "Трябва да заявиш акаунта си, преди да можеш да създадеш общност."
 
@@ -41607,8 +41607,8 @@ msgstr "Трябва да заявиш акаунта си, за да изпра
 msgid "You need to claim your account to send messages in this community."
 msgstr "Трябва да заявиш акаунта си, за да изпращаш съобщения в тази общност."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:232
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:460
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:235
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:463
 msgid "You need to verify your email address before you can create a community."
 msgstr "Трябва да потвърдиш имейл адреса си, преди да можеш да създадеш общност."
 
