@@ -10,6 +10,7 @@ use axum::{
 
 const HX_RESWAP: HeaderName = HeaderName::from_static("hx-reswap");
 const ADMIN_TOAST: HeaderName = HeaderName::from_static("x-fluxer-admin-toast");
+const HX_REDIRECT: HeaderName = HeaderName::from_static("hx-redirect");
 
 pub fn is_htmx_request(headers: &HeaderMap) -> bool {
     headers
@@ -35,6 +36,16 @@ pub fn toast_response(flash: &FlashData) -> Response {
         .headers_mut()
         .insert(HX_RESWAP, HeaderValue::from_static("none"));
     add_toast_header(&mut response, flash);
+    response
+}
+
+pub fn navigate_with_flash(url: &str, flash: &FlashData, secure: bool) -> Response {
+    let mut response = StatusCode::NO_CONTENT.into_response();
+    if let Ok(value) = HeaderValue::from_str(url) {
+        response.headers_mut().insert(HX_REDIRECT, value);
+    }
+    add_toast_header(&mut response, flash);
+    flash::set_flash_cookie(&mut response, flash, secure);
     response
 }
 

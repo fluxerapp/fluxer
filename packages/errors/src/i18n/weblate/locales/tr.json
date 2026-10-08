@@ -364,6 +364,7 @@
 	"moderation_and_reports.report_already_resolved": "Rapor zaten çözüldü.",
 	"moderation_and_reports.report_banned": "Rapor göndermen yasaklandı.",
 	"moderation_and_reports.report_flow_outdated": "Rapor formu sen doldururken değişti. Raporu yeniden başlat.",
+	"moderation_and_reports.report_under_legal_hold": "Bu rapor yasal saklama kapsamında olduğu için silinemez.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Rapor göndermeden önce hesap kurulumunu tamamlamalısın.",
 	"moderation_and_reports.unknown_report": "Bilinmeyen rapor.",
 	"moderation_and_reports.user_is_not_banned": "Bu kullanıcı yasaklı değil.",

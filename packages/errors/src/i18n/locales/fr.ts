@@ -368,6 +368,7 @@ const ERROR_I18N_FR_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "Signalement déjà résolu.",
 	"moderation_and_reports.report_banned": "Vous n’êtes plus autorisé à envoyer des signalements.",
 	"moderation_and_reports.report_flow_outdated": "Le formulaire de signalement a changé pendant que vous le remplissiez. Veuillez recommencer le signalement.",
+	"moderation_and_reports.report_under_legal_hold": "Ce signalement fait l’objet d’une conservation légale et ne peut pas être supprimé.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Vous devez finaliser votre inscription avant de pouvoir envoyer des signalements.",
 	"moderation_and_reports.unknown_report": "Signalement inconnu.",
 	"moderation_and_reports.user_is_not_banned": "Cet utilisateur n'est pas banni.",

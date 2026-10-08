@@ -368,6 +368,7 @@ const ERROR_I18N_DE_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "Meldung bereits erledigt.",
 	"moderation_and_reports.report_banned": "Du bist für das Einreichen von Meldungen gesperrt.",
 	"moderation_and_reports.report_flow_outdated": "Das Meldeformular hat sich geändert, während du es ausgefüllt hast. Starte die Meldung erneut.",
+	"moderation_and_reports.report_under_legal_hold": "Diese Meldung unterliegt einer rechtlichen Aufbewahrungspflicht und kann nicht gelöscht werden.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Du musst die Einrichtung deines Accounts abschließen, bevor du Meldungen einreichen kannst.",
 	"moderation_and_reports.unknown_report": "Unbekannte Meldung.",
 	"moderation_and_reports.user_is_not_banned": "Dieser Benutzer ist nicht gebannt.",

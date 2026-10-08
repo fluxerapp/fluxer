@@ -368,6 +368,7 @@ const ERROR_I18N_RU_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "Жалоба уже рассмотрена.",
 	"moderation_and_reports.report_banned": "Ты забанен и не можешь отправлять жалобы.",
 	"moderation_and_reports.report_flow_outdated": "Форма жалобы изменилась во время заполнения. Начни жалобу заново.",
+	"moderation_and_reports.report_under_legal_hold": "Эта жалоба находится на юридическом удержании и не может быть удалена.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Тебе нужно завершить настройку аккаунта, чтобы подавать жалобы.",
 	"moderation_and_reports.unknown_report": "Жалоба не найдена.",
 	"moderation_and_reports.user_is_not_banned": "Этот пользователь не забанен.",

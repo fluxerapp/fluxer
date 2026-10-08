@@ -368,6 +368,7 @@ const ERROR_I18N_PT_BR_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "A denúncia já foi resolvida.",
 	"moderation_and_reports.report_banned": "Você foi impedido de enviar denúncias.",
 	"moderation_and_reports.report_flow_outdated": "O formulário de denúncia mudou enquanto você o preenchia. Comece a denúncia novamente.",
+	"moderation_and_reports.report_under_legal_hold": "Esta denúncia está sob retenção legal e não pode ser excluída.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Você precisa terminar a configuração da sua conta antes de fazer denúncias.",
 	"moderation_and_reports.unknown_report": "Denúncia não encontrada.",
 	"moderation_and_reports.user_is_not_banned": "Este usuário não está banido.",

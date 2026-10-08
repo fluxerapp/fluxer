@@ -19,7 +19,8 @@ use crate::{
                 data_field_text,
             },
             form::{
-                FORM_CONTROL_CLASS, FORM_LABEL_CLASS, csrf_input, opt_out_checkbox, select_chevron,
+                FORM_CONTROL_CLASS, FORM_LABEL_CLASS, checkbox, csrf_input, danger_button,
+                opt_out_checkbox, select_chevron,
             },
             media::{guild_icon_url, initials, user_avatar_url},
             message_data::ordered_messages,
@@ -963,7 +964,7 @@ fn legal_hold_card(
                     }
                     @if ended {
                         p class="text-neutral-500 text-sm" {
-                            "The report is no longer held and is deleted 365 days after it was filed."
+                            "The report is no longer held and is deleted when its retention period ends."
                         }
                     }
                     @if let Some(reason) = non_empty(report.legal_hold_reason.as_deref()) {
@@ -974,7 +975,7 @@ fn legal_hold_card(
                     }
                 } @else {
                     p class="text-neutral-500 text-sm" {
-                        "No hold. The report and its stored evidence are deleted 365 days after it was filed."
+                        "No hold. The report and its stored evidence are deleted when its retention period ends."
                     }
                 }
                 @if can_edit {
@@ -1008,6 +1009,51 @@ fn legal_hold_card(
                                 "Clear Hold"
                             }
                         }
+                    }
+                }
+            }
+        }))
+    }
+}
+
+pub const DELETE_REPORT_CONFIRMATION: &str =
+    "I understand this permanently deletes the report and its stored evidence";
+
+fn delete_report_card(
+    config: &AdminConfig,
+    auth: &AuthContext,
+    report: &ReportEntry,
+    csrf_token: &str,
+) -> Markup {
+    if !has_acl(auth, acl::REPORT_DELETE) {
+        return html! {};
+    }
+    let base = &config.base_path;
+    let held = non_empty(report.legal_hold_until.as_deref())
+        .is_some_and(|until| !legal_hold_has_ended(until));
+    html! {
+        (section_card(Some("Delete Report"), None, None, html! {
+            div class="flex flex-col gap-3" data-report-delete=(if held { "held" } else { "available" }) {
+                p class="text-neutral-500 text-sm" {
+                    "Deletes the report now, with its message context, profile snapshot, stored evidence and search entry. \
+                     Evidence that another report uses is kept. This cannot be undone."
+                }
+                @if held {
+                    p class="text-neutral-700 text-sm" {
+                        "The report is under a legal hold. Clear the hold to delete it."
+                    }
+                } @else {
+                    form method="post" action={(base) "/reports/" (report.report_id) "/delete"}
+                        class="flex flex-col gap-3" data-report-delete-form="" {
+                        (csrf_input(csrf_token))
+                        label for="delete_audit_log_reason" class=(FORM_LABEL_CLASS) {
+                            "Audit log reason (optional)"
+                        }
+                        input type="text" id="delete_audit_log_reason" name="audit_log_reason" maxlength="512"
+                            placeholder="Why this report is being deleted"
+                            class={(FORM_CONTROL_CLASS) " h-8 px-3 py-1.5"};
+                        (checkbox("confirm", "true", DELETE_REPORT_CONFIRMATION, false, true))
+                        (danger_button("Delete Report"))
                     }
                 }
             }
@@ -1098,6 +1144,7 @@ pub fn report_detail_page(
                 (status_card(config, report))
                 (actions_card(config, report, csrf_token))
                 (legal_hold_card(config, auth, report, csrf_token))
+                (delete_report_card(config, auth, report, csrf_token))
             }
         }
         }
@@ -2321,7 +2368,7 @@ mod tests {
             "{markup}"
         );
         assert!(
-            markup.contains("deleted 365 days after it was filed"),
+            markup.contains("deleted when its retention period ends"),
             "{markup}"
         );
         assert!(
@@ -2390,5 +2437,64 @@ mod tests {
         assert!(markup.contains(">Place Hold<"), "{markup}");
         assert!(!markup.contains(">Update Hold<"), "{markup}");
         assert!(markup.contains(">Clear Hold<"), "{markup}");
+    }
+
+    #[test]
+    fn delete_card_needs_report_delete_and_asks_for_confirmation() {
+        let config = test_config();
+        let deleter = auth_with_acls(&[acl::REPORT_VIEW, acl::REPORT_DELETE]);
+        let resolver = auth_with_acls(&[acl::REPORT_VIEW, acl::REPORT_RESOLVE]);
+
+        let open = report(json!({"status": 1}));
+        let markup = delete_report_card(&config, &deleter, &open, "csrf").into_string();
+        assert!(markup.contains(">Delete Report<"), "{markup}");
+        assert!(
+            markup.contains(r#"data-report-delete="available""#),
+            "{markup}"
+        );
+        assert!(
+            markup.contains(r#"action="/admin/reports/1800000000000000001/delete""#),
+            "{markup}"
+        );
+        assert!(
+            markup.contains(r#"type="checkbox" name="confirm" value="true""#),
+            "{markup}"
+        );
+        assert!(markup.contains(DELETE_REPORT_CONFIRMATION), "{markup}");
+        assert!(markup.contains(r#"name="audit_log_reason""#), "{markup}");
+        assert!(markup.contains("This cannot be undone."), "{markup}");
+        assert!(
+            !markup.contains("data-admin-refresh-on-success"),
+            "{markup}"
+        );
+
+        let held = report(json!({
+            "legal_hold_until": "2099-01-31T23:59:59.999Z",
+            "legal_hold_reason": "Court order 42"
+        }));
+        let markup = delete_report_card(&config, &deleter, &held, "csrf").into_string();
+        assert!(markup.contains(r#"data-report-delete="held""#), "{markup}");
+        assert!(markup.contains("Clear the hold to delete it."), "{markup}");
+        assert!(!markup.contains("<form"), "{markup}");
+
+        let lapsed = report(json!({
+            "legal_hold_until": "2026-01-31T23:59:59.999Z",
+            "legal_hold_reason": "Court order 41"
+        }));
+        let markup = delete_report_card(&config, &deleter, &lapsed, "csrf").into_string();
+        assert!(
+            markup.contains(r#"data-report-delete="available""#),
+            "{markup}"
+        );
+
+        assert!(
+            delete_report_card(&config, &resolver, &open, "csrf")
+                .into_string()
+                .is_empty()
+        );
+        let page = render_page(&deleter, &open);
+        assert!(page.contains("data-report-delete-form"), "{page}");
+        let page = render_page(&resolver, &open);
+        assert!(!page.contains("data-report-delete"), "{page}");
     }
 }

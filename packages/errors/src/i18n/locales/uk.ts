@@ -368,6 +368,7 @@ const ERROR_I18N_UK_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "Звіт вже розглянуто.",
 	"moderation_and_reports.report_banned": "Тобі заборонено надсилати звіти.",
 	"moderation_and_reports.report_flow_outdated": "Форма звіту змінилася під час заповнення. Почни звіт заново.",
+	"moderation_and_reports.report_under_legal_hold": "Цей звіт перебуває під юридичним утриманням, і його не можна видалити.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Тобі потрібно завершити налаштування акаунта, щоб надсилати звіти.",
 	"moderation_and_reports.unknown_report": "Невідомий звіт.",
 	"moderation_and_reports.user_is_not_banned": "Цей користувач не забанений.",

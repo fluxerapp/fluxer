@@ -278,6 +278,28 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
+		method: 'DELETE',
+		route: '/admin/reports/:report_id',
+		async prepare(context) {
+			const {reportId} = await fileUserReport(context);
+			return {
+				request: {path: `/admin/reports/${reportId}`, expectStatus: 204},
+				expected: {
+					action: 'delete_report',
+					targetType: 'report',
+					targetId: reportId,
+					metadata: {
+						report_id: reportId,
+						report_type: '1',
+						status: '0',
+						objects_deleted: '0',
+						shared_objects_kept: '0',
+					},
+				},
+			};
+		},
+	},
+	{
 		method: 'POST',
 		route: '/admin/reports/:report_id/legal-hold',
 		name: 'clear',

@@ -70,7 +70,7 @@ describe('report legal hold', () => {
 	async function runRetention() {
 		return processReportRetention(
 			{reportRepository: repository, storageService: new MockStorageService(), reportSearchService: null},
-			{now: new Date(), dryRun: false},
+			{now: new Date(), dryRun: false, policy: {retentionDays: 365, resolvedRetentionDays: null}},
 		);
 	}
 

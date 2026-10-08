@@ -368,6 +368,7 @@ const ERROR_I18N_HE_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "הדיווח כבר טופל.",
 	"moderation_and_reports.report_banned": "נחסמת מלהגיש דיווחים.",
 	"moderation_and_reports.report_flow_outdated": "טופס הדיווח השתנה במהלך המילוי. יש להתחיל את הדיווח מחדש.",
+	"moderation_and_reports.report_under_legal_hold": "הדיווח הזה נתון להקפאה משפטית ואי אפשר למחוק אותו.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "עליך להשלים את הגדרת החשבון שלך לפני שאפשר להגיש דיווחים.",
 	"moderation_and_reports.unknown_report": "דיווח לא ידוע.",
 	"moderation_and_reports.user_is_not_banned": "משתמש זה לא חסום.",

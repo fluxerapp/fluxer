@@ -61,7 +61,7 @@ A body with none of those fields resolves to no ACL at all and applies no change
 
 Fluxer checks each ACL an Admin grants against the ACLs that Admin holds. [Set user ACLs](/admin-api/users/#set-user-acls) and [Create Admin API key](/admin-api/api-keys/#create-admin-api-key) both refuse to write an ACL the acting Admin does not itself hold, with 403 `MISSING_ACL`. A wildcard holder is exempt. Set user ACLs also refuses the acting Admin's own account with 403 `ACCESS_DENIED`, and it looks up the target account before it checks the granted ACLs, so an unknown ID fails first with 404 `UNKNOWN_USER`.
 
-[Set user ACLs](/admin-api/users/#set-user-acls), [Create Admin API key](/admin-api/api-keys/#create-admin-api-key), and [Update Admin API key](/admin-api/api-keys/#update-admin-api-key) each accept at most 105 ACLs and validate every entry against the registry, so a value outside it returns 400 `INVALID_FORM_BODY`.
+[Set user ACLs](/admin-api/users/#set-user-acls), [Create Admin API key](/admin-api/api-keys/#create-admin-api-key), and [Update Admin API key](/admin-api/api-keys/#update-admin-api-key) each accept at most 106 ACLs and validate every entry against the registry, so a value outside it returns 400 `INVALID_FORM_BODY`.
 
 :::caution[`*` satisfies every present and future ACL]
 A key whose owning account holds `*` skips the owner check. An Admin holding `*` can grant any ACL.
@@ -348,6 +348,7 @@ An entry with any other action has `access` set to `write`.
 | delete_all_user_messages_dry_run | The same operation was run with `dry_run` set, so no message was deleted |
 | delete_guild | A guild was deleted |
 | delete_message | One message was deleted |
+| delete_report | A report was deleted with its stored evidence |
 | delete_voice_region | A voice region was deleted |
 | delete_voice_server | A registered voice server was deleted |
 | delete_webauthn_credential | A WebAuthn credential was removed from an account |
@@ -481,7 +482,7 @@ Returns every Admin permission string the instance recognises, in [ACL registry]
 
 | Field | Type | Description |
 | --- | --- | --- |
-| acls<sup>1</sup> | array[string] | The permission strings the Admin API recognises (at most 105 entries) |
+| acls<sup>1</sup> | array[string] | The permission strings the Admin API recognises (at most 106 entries) |
 
 <sup>1</sup> The response is the registry itself and does not vary with the caller's own ACL set
 
@@ -576,6 +577,7 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | message:delete | Deletes one message |
 | message:lookup | Reads, browses, and searches [messages](/admin-api/messages/) through the Admin API |
 | message:shred | Queues an explicit message shred job and reads its state |
+| report:delete | Deletes a [report](/admin-api/reports/#delete-report) with its stored evidence |
 | report:resolve | Updates and resolves [reports](/admin-api/reports/), and places legal holds on them |
 | report:view | Reads and searches reports |
 | report:view:reporter_pii<sup>6</sup> | Unredacts the contact fields a reporter supplied |

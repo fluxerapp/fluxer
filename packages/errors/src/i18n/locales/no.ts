@@ -368,6 +368,7 @@ const ERROR_I18N_NO_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "Rapporten er allerede behandlet.",
 	"moderation_and_reports.report_banned": "Du er utestengt fra å sende rapporter.",
 	"moderation_and_reports.report_flow_outdated": "Rapportskjemaet ble endret mens du fylte det ut. Start rapporten på nytt.",
+	"moderation_and_reports.report_under_legal_hold": "Denne rapporten er underlagt rettslig bevaring og kan ikke slettes.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Du må fullføre registreringen av kontoen din før du kan sende rapporter.",
 	"moderation_and_reports.unknown_report": "Ukjent rapport.",
 	"moderation_and_reports.user_is_not_banned": "Denne brukeren er ikke utestengt.",

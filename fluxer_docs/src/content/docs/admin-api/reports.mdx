@@ -1,12 +1,12 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Admin reports
-description: Report listing and search, captured evidence, report resolution, and report retention.
+description: Report listing and search, captured evidence, report resolution, report deletion, and report retention.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A report is one complaint filed against a message, an account, or a guild, together with the evidence captured when it was filed. These routes list and search reports, return that evidence, resolve a report with a comment shown to the reporter, and hold a report past its retention period.
+A report is one complaint filed against a message, an account, or a guild, together with the evidence captured when it was filed. These routes list and search reports, return that evidence, resolve a report with a comment shown to the reporter, hold a report past its retention period, and delete a report before it.
 
 Report submission belongs to the public [Reports](/http-api/reports/) resource, which defines the [report categories](/http-api/reports/#report-categories) and the [report reasons](/http-api/reports/#report-reasons) a report is filed under.
 
@@ -22,7 +22,7 @@ Fluxer reads the tag, username, display name, and discriminator of both accounts
 
 ## Admin report object
 
-A report is written once, when the reporter files it. [Update report](#update-report) moves it from PENDING to RESOLVED with an optional comment. [Schedule user deletion](/admin-api/users/#schedule-user-deletion) for one of the abuse reasons listed there also resolves the pending reports against the deleted account, with no public comment, and sends each reporter the generic notice [Update report](#update-report) describes. A report in the `child_safety`, `underage_user`, or `self_harm` category is never resolved this way and stays PENDING. A report is deleted at the end of its [retention period](#report-retention).
+A report is written once, when the reporter files it. [Update report](#update-report) moves it from PENDING to RESOLVED with an optional comment. [Schedule user deletion](/admin-api/users/#schedule-user-deletion) for one of the abuse reasons listed there also resolves the pending reports against the deleted account, with no public comment, and sends each reporter the generic notice [Update report](#update-report) describes. A report in the `child_safety`, `underage_user`, or `self_harm` category is never resolved this way and stays PENDING. A report is deleted at the end of its [retention period](#report-retention), or earlier through [Delete report](#delete-report).
 
 [List reports](#list-reports) returns this object without message context. [Get report](#get-report) returns the [Admin report detail object](#admin-report-detail-object), which extends it.
 
@@ -519,12 +519,14 @@ A report resolution is the reduced view [Update report](#update-report) returns.
 
 ## Report retention
 
-Fluxer deletes a report 365 days after it was filed, whether it is pending or resolved, together with its stored evidence: the attachment copies, the profile snapshot images, and its search index entry. A report with a [legal hold](#set-report-legal-hold) that ends later is kept until the next run after the hold ends. An evidence copy that a retained report also uses is kept for that report.
+Fluxer deletes a report when its retention period ends, whether it is pending or resolved, together with its stored evidence: the attachment copies, the profile snapshot images, and its search index entry. The reporter's duplicate-report reservation for it goes too, so the reporter can report the same message, account or guild again.
 
-The deletion runs once a day in `worker`. Each run logs one `Processed report retention` line with the counts it found and deleted. A report that fails to delete keeps its record and is retried on the next run.
+The retention period is 365 days from when the report was filed, or the number of days in `FLUXER_REPORT_RETENTION_DAYS`. With `FLUXER_RESOLVED_REPORT_RETENTION_DAYS` set, a resolved report is deleted that many days after `resolved_at` when that comes first. A report with a [legal hold](#set-report-legal-hold) that ends later is kept until the next run after the hold ends. An evidence copy that a retained report also uses is kept for that report.
 
-:::caution[Retention starts in dry-run mode]
-Until `FLUXER_REPORT_RETENTION_DRY_RUN` is set to `false` on `worker`, each run only counts what it would delete and deletes nothing. The [operator configuration](/operator/configuration/#moderation-and-abuse) describes the setting.
+The deletion runs once a day in `worker`. Each run logs one `Processed report retention` line with the counts it found and deleted and the two periods it used. A report that fails to delete keeps its record and is retried on the next run. [Delete report](#delete-report) deletes one report straight away by the same rules.
+
+:::caution[Deleted evidence cannot be restored]
+Retention deletes for real unless `FLUXER_REPORT_RETENTION_DRY_RUN` is `true` on `worker`. In a dry run each run only counts what it would delete and deletes nothing. The [operator configuration](/operator/configuration/#moderation-and-abuse) describes the three settings.
 :::
 
 ## List reports
@@ -714,7 +716,7 @@ A reporter who does not already have the system channel open receives [Channel C
 
 Places or clears a legal hold on one report and returns a [report legal hold](#report-legal-hold-object) object. Requires `report:resolve`.
 
-A held report is kept past the end of its [retention period](#report-retention) until the hold ends. A hold can be placed on a pending or a resolved report, and a new hold replaces the previous one.
+A held report is kept past the end of its [retention period](#report-retention) until the hold ends, and [Delete report](#delete-report) refuses it. A hold can be placed on a pending or a resolved report, and a new hold replaces the previous one.
 
 ### Path parameters
 
@@ -744,6 +746,40 @@ A held report is kept past the end of its [retention period](#report-retention) 
 ### Side effects
 
 Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report` and the report ID as target ID. Placing a hold records action `set_report_legal_hold` with the metadata keys `report_id`, `report_type`, `legal_hold_until`, and `legal_hold_reason`. Clearing a hold records action `clear_report_legal_hold` with `report_id` and `report_type`. Either adds `previous_legal_hold_until` when the report already had a hold end time stored, including one that has passed. A rejected request records nothing.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Delete report
+
+<RouteHeader method="DELETE" path="/v1/admin/reports/{report_id}" auditReason />
+
+Deletes one report straight away. Requires `report:delete`, which `report:resolve` does not include.
+
+This is the deletion [report retention](#report-retention) runs, without waiting for the retention period. It removes the report record with its captured message context and profile snapshot, its stored evidence copies, its search index entry, and the reporter's duplicate-report reservation for it. An evidence copy that another report also uses is kept for that report. A pending or a resolved report can be deleted, and the reporter is not told.
+
+:::caution[Deletion is permanent]
+Deleted evidence cannot be restored. A report with a legal hold that has not ended is refused. Clear the hold first when the report should go.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| report_id | snowflake | The ID of the report |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The report was deleted |
+| 404 | [error response](/admin-api/#error-response) | Report does not exist and the request returns `UNKNOWN_REPORT` |
+| 409 | [error response](/admin-api/#error-response) | The report has a legal hold that ends later and the request returns `REPORT_UNDER_LEGAL_HOLD` |
+
+### Side effects
+
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `delete_report`, target type `report`, and the report ID as target ID. The metadata keys are `report_id`, `report_type`, `status`, `objects_deleted` for the evidence copies removed, and `shared_objects_kept` for the copies kept because another report uses them. A refused request records nothing.
 
 ### Rate limit
 

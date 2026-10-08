@@ -97,8 +97,11 @@ describe('the shipped compose stack forwards settings from .env', () => {
 		expect(renamed).toEqual([]);
 	});
 
-	test('the worker is handed the report retention switch and gets no value when .env leaves it out', () => {
-		const name = 'FLUXER_REPORT_RETENTION_DRY_RUN';
+	test.each([
+		'FLUXER_REPORT_RETENTION_DAYS',
+		'FLUXER_RESOLVED_REPORT_RETENTION_DAYS',
+		'FLUXER_REPORT_RETENTION_DRY_RUN',
+	])('the worker is handed %s and gets no value when .env leaves it out', (name) => {
 		expect(serviceEnvironment('worker')[name]).toBe(`\${${name}:-}`);
 	});
 });

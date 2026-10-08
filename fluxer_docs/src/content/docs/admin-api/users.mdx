@@ -59,7 +59,7 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 | deletion_audit_log_reason | ?string | The private reason stored with the pending deletion, and null without `audit_log:view` |
 | deletion_scheduled_by | ?snowflake | The ID of the account that scheduled the pending deletion, or null when it was not recorded |
 | deletion_scheduled_at | ?ISO8601 timestamp | The time the pending deletion was scheduled, or null when it was not recorded |
-| acls<sup>7</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 105 entries |
+| acls<sup>7</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 106 entries |
 | traits<sup>8</sup> | array[string] | The free-form operator labels set on the account, with at most 100 entries |
 | has_totp<sup>9</sup> | boolean | Whether a TOTP authenticator is registered |
 | authenticator_types<sup>9</sup> <sup>12</sup> | array[integer] | Registered [authenticator types](/http-api/users/#authenticator-types), with at most 10 entries |
@@ -1148,7 +1148,7 @@ A path naming the acting account fails with 403 `ACCESS_DENIED` before the accou
 
 | Field | Type | Description |
 | --- | --- | --- |
-| acls<sup>1</sup> | array[string] | Replacement [Admin ACLs](/admin-api/#acl-registry), with at most 105 values |
+| acls<sup>1</sup> | array[string] | Replacement [Admin ACLs](/admin-api/#acl-registry), with at most 106 values |
 
 <sup>1</sup> Required. A value outside the [ACL registry](/admin-api/#acl-registry) fails body validation, and a repeated value is collapsed
 

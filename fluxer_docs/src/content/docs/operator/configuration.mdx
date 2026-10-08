@@ -1024,9 +1024,17 @@ Defaults to the inverse of `FLUXER_SELF_HOSTED`. Off by default on a self-hosted
 
 With feeds off, Fluxer checks none of this data. The first worker start with feeds off removes the URL feed file and every `malware_bazaar` file-SHA ban that no Admin added. File-SHA bans added through the Admin API stay. Turning feeds back on downloads the URLs within six hours and the hashes within twelve. Compose forwards it from `.env`.
 
+#### `FLUXER_REPORT_RETENTION_DAYS`
+
+Default `365`. Read by `worker`. The daily [report retention](/admin-api/reports/#report-retention) job deletes each report this many days after it was filed, pending or resolved, with its evidence copies and search entry, unless a legal hold is in place. Integer 1 to 36500, checked at startup. Compose forwards it from `.env`.
+
+#### `FLUXER_RESOLVED_REPORT_RETENTION_DAYS`
+
+Default unset, which leaves resolved reports to `FLUXER_REPORT_RETENTION_DAYS`. Read by `worker`. When set, a resolved report is deleted this many days after it was resolved, if that comes before the end of its retention period. Pending reports are not affected, and a legal hold still keeps a report. Integer 1 to 36500, checked at startup. Compose forwards it from `.env`.
+
 #### `FLUXER_REPORT_RETENTION_DRY_RUN`
 
-Default unset, which keeps the dry run. Read by `worker`. The daily [report retention](/admin-api/reports/#report-retention) job deletes reports 365 days after they were filed, with their evidence copies and search entries, unless a legal hold is in place. Until this is `false` or `0`, the job only logs what it would delete. Any other value, or no value, keeps the dry run. Check the counts in the `Processed report retention` log line before you turn deletion on, because deleted evidence cannot be restored. Compose forwards it from `.env`.
+Default `false`, so report retention deletes for real. Read by `worker`. With `true`, each run only counts what it would delete and deletes nothing. `true` or `false`, checked at startup. Use it to check the counts in the `Processed report retention` log line before the first real run, because deleted evidence cannot be restored. Compose forwards it from `.env`.
 
 #### `FLUXER_BREACHED_PASSWORD_CHECK_ENABLED`
 

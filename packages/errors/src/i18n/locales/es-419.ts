@@ -368,6 +368,7 @@ const ERROR_I18N_ES_419_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "El reporte ya se resolvió.",
 	"moderation_and_reports.report_banned": "Se te ha prohibido enviar reportes.",
 	"moderation_and_reports.report_flow_outdated": "El formulario de reporte cambió mientras lo completabas. Vuelve a iniciar el reporte.",
+	"moderation_and_reports.report_under_legal_hold": "Este reporte está bajo retención legal y no se puede eliminar.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Tienes que completar el registro de tu cuenta antes de poder enviar reportes.",
 	"moderation_and_reports.unknown_report": "Reporte desconocido.",
 	"moderation_and_reports.user_is_not_banned": "Este usuario no ha sido baneado.",

@@ -1192,6 +1192,139 @@ async fn report_resolve_form_sends_the_chosen_resolution_and_refuses_none() {
 }
 
 #[tokio::test]
+async fn report_delete_form_confirms_sends_the_reason_and_toasts_a_held_report() {
+    let received = Arc::new(Mutex::new(Vec::<Option<String>>::new()));
+    let sink = received.clone();
+    let api = Router::new()
+        .route(
+            "/admin/reports/1800000000000000001",
+            routing::delete(move |headers: HeaderMap| {
+                let sink = sink.clone();
+                async move {
+                    let reason = headers
+                        .get("X-Audit-Log-Reason")
+                        .and_then(|value| value.to_str().ok())
+                        .map(str::to_owned);
+                    sink.lock().unwrap().push(reason.clone());
+                    if reason.as_deref() == Some("held") {
+                        return (
+                            StatusCode::CONFLICT,
+                            Json(json!({
+                                "code": "REPORT_UNDER_LEGAL_HOLD",
+                                "message": "This report is under a legal hold and can't be deleted."
+                            })),
+                        )
+                            .into_response();
+                    }
+                    StatusCode::NO_CONTENT.into_response()
+                }
+            })
+            .get(|| async { json_response(searched_report()) }),
+        )
+        .fallback(mock_api);
+    let app = setup_with_api(api).await;
+    let (headers, page) = get_with_headers(&app, "/reports/1800000000000000001", &[]).await;
+    let csrf_token = csrf_cookie(&headers)
+        .unwrap_or_else(|| panic!("report page did not set csrf_token cookie\n{page}"));
+    assert_form_has_csrf(&page, "/reports/1800000000000000001/delete", &csrf_token);
+    let cookie = format!("{}; csrf_token={}", app.session_cookie, csrf_token);
+    let post = |body: String| {
+        let app = &app;
+        let cookie = cookie.clone();
+        async move {
+            post_form_with_headers(
+                app,
+                "/reports/1800000000000000001/delete",
+                &[
+                    ("HX-Request", "true"),
+                    ("HX-Target", "flash-container"),
+                    ("Cookie", &cookie),
+                ],
+                &body,
+            )
+            .await
+        }
+    };
+    let toast = |headers: &HeaderMap| {
+        headers
+            .get("X-Fluxer-Admin-Toast")
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or_else(|| panic!("missing toast header {headers:?}"))
+            .to_owned()
+    };
+
+    let (status, headers, text) = post(format!(
+        "_csrf={csrf_token}&audit_log_reason=Erasure+request"
+    ))
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT, "{text}");
+    let message = toast(&headers);
+    assert!(message.contains("error"), "{message}");
+    assert!(
+        message.contains("Confirm that the report should be deleted"),
+        "{message}"
+    );
+    assert!(headers.get("HX-Redirect").is_none(), "{headers:?}");
+
+    let (status, headers, text) = post(format!(
+        "_csrf={csrf_token}&confirm=true&audit_log_reason=Erasure+request"
+    ))
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT, "{text}");
+    assert_eq!(
+        headers.get("HX-Redirect").and_then(|v| v.to_str().ok()),
+        Some("/reports"),
+        "{headers:?}"
+    );
+    let message = toast(&headers);
+    assert!(message.contains("success"), "{message}");
+    assert!(message.contains("Report deleted"), "{message}");
+    assert!(
+        headers
+            .get_all(header::SET_COOKIE)
+            .iter()
+            .any(|value| value.to_str().is_ok_and(|v| v.starts_with("flash="))),
+        "{headers:?}"
+    );
+
+    let (status, headers, text) = post(format!(
+        "_csrf={csrf_token}&confirm=true&audit_log_reason=held"
+    ))
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT, "{text}");
+    assert!(headers.get("HX-Redirect").is_none(), "{headers:?}");
+    let message = toast(&headers);
+    assert!(message.contains("error"), "{message}");
+    assert!(
+        message.contains("The report is under a legal hold. Clear the hold before deleting it."),
+        "{message}"
+    );
+
+    let (status, headers, text) = post_form_with_headers(
+        &app,
+        "/reports/1800000000000000001/delete",
+        &[("Cookie", &cookie)],
+        &format!("_csrf={csrf_token}&confirm=true&audit_log_reason=+"),
+    )
+    .await;
+    assert!(status.is_redirection(), "{status} {text}");
+    assert_eq!(
+        headers.get(header::LOCATION).and_then(|v| v.to_str().ok()),
+        Some("/reports"),
+        "{headers:?}"
+    );
+
+    assert_eq!(
+        *received.lock().unwrap(),
+        vec![
+            Some("Erasure request".to_owned()),
+            Some("held".to_owned()),
+            None
+        ]
+    );
+}
+
+#[tokio::test]
 async fn report_actions_toast_the_server_message_and_refresh_the_detail() {
     let app = setup().await;
     let page = get(&app, "/reports/1800000000000000001", &[]).await;

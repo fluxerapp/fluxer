@@ -239,6 +239,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.REPORT_ALREADY_RESOLVED]: 'moderation_and_reports.report_already_resolved',
 	[APIErrorCodes.REPORT_BANNED]: 'moderation_and_reports.report_banned',
 	[APIErrorCodes.REPORT_FLOW_OUTDATED]: 'moderation_and_reports.report_flow_outdated',
+	[APIErrorCodes.REPORT_UNDER_LEGAL_HOLD]: 'moderation_and_reports.report_under_legal_hold',
 	[APIErrorCodes.RESPONSE_VALIDATION_ERROR]: 'admin_and_system.response_validation_failed',
 	[APIErrorCodes.RESOURCE_LOCKED]: 'admin_and_system.resource_locked',
 	[APIErrorCodes.SERVICE_UNAVAILABLE]: 'http.service_unavailable',

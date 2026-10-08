@@ -364,6 +364,7 @@
 	"moderation_and_reports.report_already_resolved": "A bejelentést már lezárták.",
 	"moderation_and_reports.report_banned": "Eltiltottak a bejelentések küldésétől.",
 	"moderation_and_reports.report_flow_outdated": "A bejelentési űrlap megváltozott, amíg kitöltötted. Kezdd elölről a bejelentést.",
+	"moderation_and_reports.report_under_legal_hold": "Ez a bejelentés jogi visszatartás alatt áll, ezért nem törölhető.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Be kell fejezned a fiókod regisztrációját, mielőtt bejelentéseket küldhetnél.",
 	"moderation_and_reports.unknown_report": "Ismeretlen bejelentés.",
 	"moderation_and_reports.user_is_not_banned": "Ez a felhasználó nincs kitiltva.",

@@ -368,6 +368,7 @@ const ERROR_I18N_RO_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "Raportul a fost deja rezolvat.",
 	"moderation_and_reports.report_banned": "Ți s-a interzis să trimiți rapoarte.",
 	"moderation_and_reports.report_flow_outdated": "Formularul de raportare s-a modificat în timp ce îl completai. Repornește raportarea.",
+	"moderation_and_reports.report_under_legal_hold": "Acest raport este supus unei rețineri legale și nu poate fi șters.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Trebuie să-ți finalizezi configurarea contului înainte să poți trimite rapoarte.",
 	"moderation_and_reports.unknown_report": "Raport necunoscut.",
 	"moderation_and_reports.user_is_not_banned": "Acest utilizator nu este banat.",

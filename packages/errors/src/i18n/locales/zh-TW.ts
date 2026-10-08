@@ -368,6 +368,7 @@ const ERROR_I18N_ZH_TW_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "檢舉已解決。",
 	"moderation_and_reports.report_banned": "你已被禁止送出檢舉。",
 	"moderation_and_reports.report_flow_outdated": "檢舉表單在你填寫時已變更。請重新開始檢舉。",
+	"moderation_and_reports.report_under_legal_hold": "此檢舉受法律保全約束，無法刪除。",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "你必須完成帳號設定才能送出檢舉。",
 	"moderation_and_reports.unknown_report": "未知的檢舉。",
 	"moderation_and_reports.user_is_not_banned": "此使用者未被封鎖。",

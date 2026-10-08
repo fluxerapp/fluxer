@@ -5360,6 +5360,66 @@
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UpdateReportRequest"}}}
 				}
+			},
+			"delete": {
+				"operationId": "delete_admin_report",
+				"summary": "Delete report",
+				"tags": ["Admin"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Deletes a report now: its record with the captured message context and profile snapshot, its stored evidence copies, its search index entry, and the duplicate-report reservation it holds for the reporter. An evidence copy that another report also uses is kept. A report under a legal hold that has not ended is refused with REPORT_UNDER_LEGAL_HOLD. This cannot be undone. Creates an audit log entry. Requires REPORT_DELETE permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "report_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"description": "The ID of the report",
+							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+						},
+						"description": "The ID of the report"
+					}
+				]
 			}
 		},
 		"/admin/reports/{report_id}/legal-hold": {
@@ -5411,7 +5471,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Places or clears a legal hold on a report. Reports are deleted 365 days after they were filed, together with their stored evidence, unless a hold that ends later is in place. A hold needs an end time in the future and a reason. A null legal_hold_until clears the hold. Creates an audit log entry. Requires REPORT_RESOLVE permission.",
+				"description": "Places or clears a legal hold on a report. A report is deleted together with its stored evidence when its retention period ends, unless a hold that ends later is in place, and a held report cannot be deleted through DELETE /admin/reports/{report_id} either. A hold needs an end time in the future and a reason. A null legal_hold_until clears the hold. Creates an audit log entry. Requires REPORT_RESOLVE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -10221,7 +10281,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions to assign"
@@ -13398,7 +13458,7 @@
 					},
 					"acls": {
 						"description": "Replacement list of access control permissions for the key",
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"}
 					}
@@ -13416,7 +13476,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -13446,7 +13506,7 @@
 						"maximum": 365
 					},
 					"acls": {
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions for the key"
@@ -13467,7 +13527,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -13480,7 +13540,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 105,
+						"maxItems": 106,
 						"type": "array",
 						"items": {"type": "string", "minLength": 1, "maxLength": 64},
 						"description": "Every admin access control permission the admin API recognises"
@@ -13562,6 +13622,7 @@
 					"message:delete",
 					"message:lookup",
 					"message:shred",
+					"report:delete",
 					"report:resolve",
 					"report:view",
 					"report:view:reporter_pii",
@@ -16628,7 +16689,7 @@
 						"description": "ISO 8601 timestamp when the pending deletion was scheduled",
 						"type": "string"
 					},
-					"acls": {"maxItems": 105, "type": "array", "items": {"type": "string"}},
+					"acls": {"maxItems": 106, "type": "array", "items": {"type": "string"}},
 					"traits": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"maxItems": 10, "type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}},
@@ -17238,6 +17299,7 @@
 					"REPORT_ALREADY_RESOLVED",
 					"REPORT_BANNED",
 					"REPORT_FLOW_OUTDATED",
+					"REPORT_UNDER_LEGAL_HOLD",
 					"RESPONSE_VALIDATION_ERROR",
 					"RESOURCE_LOCKED",
 					"SERVICE_UNAVAILABLE",
@@ -17533,6 +17595,7 @@
 					"Report already resolved.",
 					"You've been banned from submitting reports.",
 					"The report form changed while you were filling it in. Start the report again.",
+					"This report is under a legal hold and can't be deleted.",
 					"Response validation failed: {errors}.",
 					"This resource is being modified. Please try again shortly.",
 					"Service unavailable.",

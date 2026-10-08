@@ -47,7 +47,7 @@ Every accepted submission writes one report and returns it as a [report object](
 
 Two kinds of repeat are refused with 409 `CONFLICT`:
 
-- The same reporter reporting the same message again within 365 days of the earlier report.
+- The same reporter reporting the same message again within 365 days of the earlier report, unless that report was deleted.
 - The same reporter reporting the same user again within 24 hours of the earlier report.
 
 Nothing deduplicates a Digital Services Act notice.
@@ -624,7 +624,7 @@ A reporter without `READ_MESSAGE_HISTORY` can report a message sent at or after 
 | 409 | [error response](/http-api/#error-response) | The answers came from an outdated flow and do not fit the current one, returning `REPORT_FLOW_OUTDATED` |
 | 409<sup>1</sup> | [error response](/http-api/#error-response) | The reporter already reported this message, returning `CONFLICT` |
 
-<sup>1</sup> The reporter, the channel, and the message form a submission key that expires 365 days after the report. A second report of the same message by the same reporter within that time is refused whichever answers it sends. A submission that fails or is rate limited releases the key
+<sup>1</sup> The reporter, the channel, and the message form a submission key that expires 365 days after the report. A second report of the same message by the same reporter within that time is refused whichever answers it sends. A submission that fails or is rate limited releases the key, and so does [deleting the report](/admin-api/reports/#delete-report)
 
 ### Side effects
 
@@ -692,7 +692,7 @@ Fluxer checks the answers right after the claimed account and verified email che
 | 409 | [error response](/http-api/#error-response) | The answers came from an outdated flow and do not fit the current one, returning `REPORT_FLOW_OUTDATED` |
 | 409<sup>1</sup> | [error response](/http-api/#error-response) | The reporter already reported this user within 24 hours, returning `CONFLICT` |
 
-<sup>1</sup> The reporter and the reported user form a submission key that expires 24 hours after the report. A submission that fails or is rate limited releases the key
+<sup>1</sup> The reporter and the reported user form a submission key that expires 24 hours after the report. A submission that fails or is rate limited releases the key, and so does [deleting the report](/admin-api/reports/#delete-report)
 
 ### Side effects
 

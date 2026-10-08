@@ -21,6 +21,8 @@ import {
 
 let cachedConfig: MasterConfig | null = null;
 
+const MAX_REPORT_RETENTION_DAYS = 36_500;
+
 const DEFAULT_PASSKEY_ORIGINS = [
 	'https://fluxer.app',
 	'https://web.fluxer.app',
@@ -271,6 +273,11 @@ function defaultConfig(): MasterConfig {
 		attachment_decay_enabled: true,
 		deletion_grace_period_hours: 336,
 		inactivity_deletion_threshold_days: 365,
+		report_retention: {
+			days: 365,
+			resolved_days: null,
+			dry_run: false,
+		},
 	};
 }
 
@@ -436,6 +443,20 @@ function validateApiWorkerConfig(config: MasterConfig): void {
 	}
 }
 
+function validateReportRetentionConfig(config: MasterConfig): void {
+	const retention = config.report_retention;
+	assertIntegerInRange(retention.days, 'FLUXER_REPORT_RETENTION_DAYS', 1, MAX_REPORT_RETENTION_DAYS);
+	if (retention.resolved_days !== null) {
+		assertIntegerInRange(
+			retention.resolved_days,
+			'FLUXER_RESOLVED_REPORT_RETENTION_DAYS',
+			1,
+			MAX_REPORT_RETENTION_DAYS,
+		);
+	}
+	assertBoolean(retention.dry_run, 'FLUXER_REPORT_RETENTION_DRY_RUN');
+}
+
 function validateStorageChangeFeedConfig(config: MasterConfig): void {
 	const feed = config.services.api?.storage_change_feed;
 	if (!feed?.enabled) {
@@ -594,6 +615,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validatePostgresConfig(config);
 	validateApiWorkerConfig(config);
 	validateStorageChangeFeedConfig(config);
+	validateReportRetentionConfig(config);
 	validateCachePurgeConfig(config);
 	validateStoreBillingConfig(config);
 	validateReplyToEmail(config.integrations.email.reply_to_email);

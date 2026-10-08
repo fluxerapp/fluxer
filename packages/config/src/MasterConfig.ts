@@ -323,4 +323,9 @@ export interface MasterConfig {
 	attachment_decay_enabled: boolean;
 	deletion_grace_period_hours: number;
 	inactivity_deletion_threshold_days: number;
+	report_retention: {
+		days: number;
+		resolved_days: number | null;
+		dry_run: boolean;
+	};
 }

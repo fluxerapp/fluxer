@@ -140,7 +140,7 @@ The acting credential must already have every value in `acls`, unless it has `*`
 | --- | --- | --- |
 | name<sup>1</sup> | string | The name given to the key (1-100 characters) |
 | expires_in_days?<sup>2</sup> | integer | The number of days until the key expires (1-365) |
-| acls<sup>3</sup> | array[string] | The [ACLs](/admin-api/#acl-registry) stored on the key, each a registry value (at most 105) |
+| acls<sup>3</sup> | array[string] | The [ACLs](/admin-api/#acl-registry) stored on the key, each a registry value (at most 106) |
 
 <sup>1</sup> A value that is empty after trimming is rejected, so whitespace alone is not a name
 
@@ -218,7 +218,7 @@ An update never rotates the credential, and no field on this route changes the e
 | Field | Type | Description |
 | --- | --- | --- |
 | name?<sup>1</sup> | string | The replacement name for the key (1-100 characters) |
-| acls?<sup>2</sup> | array[string] | The complete replacement set of [ACLs](/admin-api/#acl-registry), each a registry value (at most 105) |
+| acls?<sup>2</sup> | array[string] | The complete replacement set of [ACLs](/admin-api/#acl-registry), each a registry value (at most 106) |
 
 <sup>1</sup> A value that is empty after trimming is rejected
 

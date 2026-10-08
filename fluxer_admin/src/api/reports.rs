@@ -80,6 +80,19 @@ impl AdminApiClient {
         .await
     }
 
+    pub async fn delete_report(
+        &self,
+        report_id: &str,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<()> {
+        self.delete_void_with_reason(
+            &format!("/admin/reports/{}", urlencoding::encode(report_id)),
+            None,
+            audit_log_reason,
+        )
+        .await
+    }
+
     pub async fn search_reports(
         &self,
         params: &SearchReportsParams<'_>,

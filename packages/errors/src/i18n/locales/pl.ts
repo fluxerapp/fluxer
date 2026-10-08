@@ -368,6 +368,7 @@ const ERROR_I18N_PL_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "Zgłoszenie zostało już rozpatrzone.",
 	"moderation_and_reports.report_banned": "Zablokowano Ci możliwość przesyłania zgłoszeń.",
 	"moderation_and_reports.report_flow_outdated": "Formularz zgłoszenia zmienił się podczas jego wypełniania. Rozpocznij zgłoszenie ponownie.",
+	"moderation_and_reports.report_under_legal_hold": "To zgłoszenie podlega prawnemu zabezpieczeniu i nie można go usunąć.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Dokończ rejestrację konta, zanim wyślesz zgłoszenia.",
 	"moderation_and_reports.unknown_report": "Nieznane zgłoszenie.",
 	"moderation_and_reports.user_is_not_banned": "Ten użytkownik nie ma bana.",

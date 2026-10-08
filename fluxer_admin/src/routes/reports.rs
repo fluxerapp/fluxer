@@ -62,6 +62,16 @@ struct LegalHoldForm {
 }
 
 #[derive(Deserialize)]
+struct DeleteForm {
+    #[serde(default)]
+    _csrf: Option<String>,
+    #[serde(default)]
+    confirm: Option<String>,
+    #[serde(default)]
+    audit_log_reason: Option<String>,
+}
+
+#[derive(Deserialize)]
 struct ResolveForm {
     #[serde(default)]
     _csrf: Option<String>,
@@ -87,6 +97,10 @@ pub fn router() -> Router<AppState> {
         .route(
             "/reports/{report_id}/legal-hold",
             axum::routing::post(report_legal_hold),
+        )
+        .route(
+            "/reports/{report_id}/delete",
+            axum::routing::post(report_delete),
         )
 }
 
@@ -409,6 +423,66 @@ async fn report_legal_hold(
     };
     flash::redirect_with_flash(&back, flash, config.secure_cookies())
 }
+
+async fn report_delete(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+    Path(report_id): Path<String>,
+    request: Request,
+) -> Response {
+    let config = state.config();
+    let base = &config.base_path;
+    let back = format!("{base}/reports/{report_id}");
+    let navigates = htmx::is_htmx_request(request.headers())
+        && htmx::targets(request.headers(), "flash-container");
+    let form: DeleteForm = match Form::from_request(request, &state).await {
+        Ok(Form(f)) => f,
+        Err(error) => {
+            tracing::warn!(%error, report_id, "failed to parse report delete form");
+            return flash::redirect_with_flash(
+                &back,
+                FlashData::error("Invalid form data"),
+                config.secure_cookies(),
+            );
+        }
+    };
+    if form.confirm.as_deref() != Some("true") {
+        return flash::redirect_with_flash(
+            &back,
+            FlashData::error(DELETE_NEEDS_CONFIRMATION),
+            config.secure_cookies(),
+        );
+    }
+    let audit_log_reason = clean_string(form.audit_log_reason.as_deref().unwrap_or(""));
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    match client
+        .delete_report(&report_id, audit_log_reason.as_deref())
+        .await
+    {
+        Ok(()) => {
+            let list = format!("{base}/reports");
+            let flash = FlashData::success("Report deleted");
+            if navigates {
+                htmx::navigate_with_flash(&list, &flash, config.secure_cookies())
+            } else {
+                flash::redirect_with_flash(&list, flash, config.secure_cookies())
+            }
+        }
+        Err(error) => {
+            tracing::warn!(%error, report_id, "admin API request failed: delete report");
+            let message = match error {
+                ApiError::Http { status: 409, .. } => DELETE_REFUSED_HELD,
+                ApiError::Http { status: 404, .. } => "The report no longer exists",
+                _ => "Failed to delete the report",
+            };
+            flash::redirect_with_flash(&back, FlashData::error(message), config.secure_cookies())
+        }
+    }
+}
+
+const DELETE_NEEDS_CONFIRMATION: &str = "Confirm that the report should be deleted";
+const DELETE_REFUSED_HELD: &str =
+    "The report is under a legal hold. Clear the hold before deleting it.";
 
 const LEGAL_HOLD_IN_PAST: &str = "The hold must end in the future";
 const LEGAL_HOLD_NEEDS_REASON: &str = "Give a reason for the hold";

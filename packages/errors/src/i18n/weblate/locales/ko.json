@@ -364,6 +364,7 @@
 	"moderation_and_reports.report_already_resolved": "이미 해결된 신고예요.",
 	"moderation_and_reports.report_banned": "신고 제출이 금지되었어요.",
 	"moderation_and_reports.report_flow_outdated": "작성하는 동안 신고 양식이 변경되었어요. 신고를 다시 시작해 주세요.",
+	"moderation_and_reports.report_under_legal_hold": "이 신고는 법적 보존 조치 대상이라 삭제할 수 없어요.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "신고를 제출하려면 계정 설정을 완료해야 해요.",
 	"moderation_and_reports.unknown_report": "알 수 없는 신고예요.",
 	"moderation_and_reports.user_is_not_banned": "이 사용자는 차단되지 않았어요.",

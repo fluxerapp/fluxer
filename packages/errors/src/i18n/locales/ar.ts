@@ -368,6 +368,7 @@ const ERROR_I18N_AR_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "تم حل البلاغ بالفعل.",
 	"moderation_and_reports.report_banned": "تم حظرك من إرسال البلاغات.",
 	"moderation_and_reports.report_flow_outdated": "تغيّر نموذج الإبلاغ أثناء تعبئتك له. ابدأ البلاغ من جديد.",
+	"moderation_and_reports.report_under_legal_hold": "هذا البلاغ خاضع لحجز قانوني ولا يمكن حذفه.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "تحتاج إلى إكمال إعداد حسابك قبل إرسال البلاغات.",
 	"moderation_and_reports.unknown_report": "بلاغ غير معروف.",
 	"moderation_and_reports.user_is_not_banned": "المستخدم غير محظور.",

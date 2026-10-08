@@ -364,6 +364,7 @@
 	"moderation_and_reports.report_already_resolved": "Сигналът вече е разгледан.",
 	"moderation_and_reports.report_banned": "Имаш забрана да подаваш сигнали.",
 	"moderation_and_reports.report_flow_outdated": "Формулярът за сигнал се промени, докато го попълваше. Започни сигнала отначало.",
+	"moderation_and_reports.report_under_legal_hold": "Този сигнал е под правно задържане и не може да бъде изтрит.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Трябва да завършиш настройката на акаунта си, преди да можеш да подаваш сигнали.",
 	"moderation_and_reports.unknown_report": "Неизвестен сигнал.",
 	"moderation_and_reports.user_is_not_banned": "Този потребител няма наложена забрана.",

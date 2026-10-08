@@ -70,6 +70,7 @@ pub const MESSAGE_DELETE_ALL: &str = "message:delete_all";
 pub const MESSAGE_DELETE: &str = "message:delete";
 pub const MESSAGE_LOOKUP: &str = "message:lookup";
 pub const MESSAGE_SHRED: &str = "message:shred";
+pub const REPORT_DELETE: &str = "report:delete";
 pub const REPORT_RESOLVE: &str = "report:resolve";
 pub const REPORT_VIEW: &str = "report:view";
 pub const REPORT_VIEW_REPORTER_PII: &str = "report:view:reporter_pii";
@@ -176,6 +177,7 @@ pub const ALL_ACLS: &[&str] = &[
     MESSAGE_DELETE,
     MESSAGE_LOOKUP,
     MESSAGE_SHRED,
+    REPORT_DELETE,
     REPORT_RESOLVE,
     REPORT_VIEW,
     REPORT_VIEW_REPORTER_PII,

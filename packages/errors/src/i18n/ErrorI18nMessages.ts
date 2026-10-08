@@ -428,6 +428,7 @@ export const ERROR_I18N_MESSAGES = {
 	'moderation_and_reports.report_banned': "You've been banned from submitting reports.",
 	'moderation_and_reports.report_flow_outdated':
 		'The report form changed while you were filling it in. Start the report again.',
+	'moderation_and_reports.report_under_legal_hold': "This report is under a legal hold and can't be deleted.",
 	'moderation_and_reports.unclaimed_account_cannot_submit_reports':
 		'You need to complete your account setup before you can submit reports.',
 	'moderation_and_reports.unknown_report': 'Unknown report.',

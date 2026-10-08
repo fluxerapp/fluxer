@@ -27,6 +27,7 @@ import {
 	type IARSubmissionRow,
 	type IReportRepository,
 	ReportStatus,
+	ReportType,
 } from '@app/api/report/IReportRepository';
 import {
 	DSAReportEmailVerifications,
@@ -196,9 +197,29 @@ export class ReportRepository implements IReportRepository {
 		if (!report) {
 			return;
 		}
+		await this.releaseReporterReservation(report);
 		await executeConditional(
 			IARSubmissions.conditionalDeleteByPk({report_id: reportId}, {report_type: report.reportType}),
 		);
+	}
+
+	private async releaseReporterReservation(report: IARSubmission): Promise<void> {
+		const {reporterId, reportId, reportedAt} = report;
+		if (!reporterId) {
+			return;
+		}
+		const base = {reporter_id: reporterId, report_id: reportId, reported_at: reportedAt};
+		if (report.reportType === ReportType.MESSAGE && report.reportedChannelId && report.reportedMessageId) {
+			await this.releaseMessageReportByReporter({
+				...base,
+				channel_id: report.reportedChannelId,
+				message_id: report.reportedMessageId,
+			});
+		} else if (report.reportType === ReportType.USER && report.reportedUserId) {
+			await this.releaseUserReportByReporter({...base, reported_user_id: report.reportedUserId});
+		} else if (report.reportType === ReportType.GUILD && report.reportedGuildId) {
+			await this.releaseGuildReportByReporter({...base, reported_guild_id: report.reportedGuildId});
+		}
 	}
 
 	private mapRowToSubmission(row: IARSubmissionRow): IARSubmission {

@@ -368,6 +368,7 @@ const ERROR_I18N_VI_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "Báo cáo đã được giải quyết.",
 	"moderation_and_reports.report_banned": "Bạn đã bị cấm gửi báo cáo.",
 	"moderation_and_reports.report_flow_outdated": "Biểu mẫu báo cáo đã thay đổi trong khi bạn đang điền. Hãy bắt đầu lại báo cáo.",
+	"moderation_and_reports.report_under_legal_hold": "Báo cáo này đang bị lưu giữ theo yêu cầu pháp lý và không thể xóa.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Bạn cần hoàn tất thiết lập tài khoản trước khi có thể gửi báo cáo.",
 	"moderation_and_reports.unknown_report": "Báo cáo không xác định.",
 	"moderation_and_reports.user_is_not_banned": "Người dùng này không bị cấm.",

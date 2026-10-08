@@ -364,6 +364,7 @@
 	"moderation_and_reports.report_already_resolved": "Prijava je već riješena.",
 	"moderation_and_reports.report_banned": "Zabranjeno ti je podnositi prijave.",
 	"moderation_and_reports.report_flow_outdated": "Obrazac prijave promijenio se tijekom ispunjavanja. Započni prijavu ponovno.",
+	"moderation_and_reports.report_under_legal_hold": "Ova prijava podliježe pravnom zadržavanju i ne može se izbrisati.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Moraš dovršiti postavljanje računa prije nego što možeš podnositi prijave.",
 	"moderation_and_reports.unknown_report": "Nepoznata prijava.",
 	"moderation_and_reports.user_is_not_banned": "Ovaj korisnik nema zabranu.",

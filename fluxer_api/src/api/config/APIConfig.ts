@@ -312,6 +312,11 @@ export interface APIConfig {
 	presignedHarvestDownloadsEnabled: boolean;
 	attachmentDecayEnabled: boolean;
 	deletionGracePeriodHours: number;
+	reportRetention: {
+		days: number;
+		resolvedDays: number | null;
+		dryRun: boolean;
+	};
 	inactivityDeletionThresholdDays?: number;
 	push: {
 		publicVapidKey?: string;

@@ -364,6 +364,7 @@
 	"moderation_and_reports.report_already_resolved": "Pranešimas jau išnagrinėtas.",
 	"moderation_and_reports.report_banned": "Tau uždrausta teikti pranešimus.",
 	"moderation_and_reports.report_flow_outdated": "Pranešimo forma pasikeitė, kol ją pildei. Pradėk pranešimą iš naujo.",
+	"moderation_and_reports.report_under_legal_hold": "Šiam pranešimui taikomas teisinis išsaugojimas, todėl jo ištrinti negalima.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Kad galėtum teikti pranešimus, turi užbaigti paskyros nustatymą.",
 	"moderation_and_reports.unknown_report": "Nežinomas pranešimas.",
 	"moderation_and_reports.user_is_not_banned": "Šis naudotojas nėra užblokuotas.",

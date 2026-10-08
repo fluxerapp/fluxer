@@ -882,6 +882,10 @@ Email verification is required for this action
 
 The report form changed while you were filling it in
 
+### `REPORT_UNDER_LEGAL_HOLD`
+
+This report is under a legal hold and can't be deleted
+
 ### `RESOURCE_LOCKED`
 
 This resource is being modified

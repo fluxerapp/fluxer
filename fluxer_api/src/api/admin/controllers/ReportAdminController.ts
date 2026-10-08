@@ -8,6 +8,8 @@ import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {getReportRepository} from '@app/api/middleware/ServiceSingletons';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {deleteReportNow} from '@app/api/report/ReportDeletion';
+import {getReportSearchService} from '@app/api/SearchFactory';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
@@ -241,7 +243,7 @@ export function ReportAdminController(app: HonoApp) {
 			operationId: 'set_admin_report_legal_hold',
 			summary: 'Set report legal hold',
 			description:
-				'Places or clears a legal hold on a report. Reports are deleted 365 days after they were filed, together with their stored evidence, unless a hold that ends later is in place. A hold needs an end time in the future and a reason. A null legal_hold_until clears the hold. Creates an audit log entry. Requires REPORT_RESOLVE permission.',
+				'Places or clears a legal hold on a report. A report is deleted together with its stored evidence when its retention period ends, unless a hold that ends later is in place, and a held report cannot be deleted through DELETE /admin/reports/{report_id} either. A hold needs an end time in the future and a reason. A null legal_hold_until clears the hold. Creates an audit log entry. Requires REPORT_RESOLVE permission.',
 			responseSchema: ReportLegalHoldResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -287,6 +289,50 @@ export function ReportAdminController(app: HonoApp) {
 				legal_hold_until: report.legalHoldUntil?.toISOString() ?? null,
 				legal_hold_reason: report.legalHoldReason,
 			});
+		},
+	);
+	app.delete(
+		'/admin/reports/:report_id',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
+		requireAdminACL(AdminACLs.REPORT_DELETE),
+		Validator('param', ReportIdParam),
+		OpenAPI({
+			operationId: 'delete_admin_report',
+			summary: 'Delete report',
+			description:
+				'Deletes a report now: its record with the captured message context and profile snapshot, its stored evidence copies, its search index entry, and the duplicate-report reservation it holds for the reporter. An evidence copy that another report also uses is kept. A report under a legal hold that has not ended is refused with REPORT_UNDER_LEGAL_HOLD. This cannot be undone. Creates an audit log entry. Requires REPORT_DELETE permission.',
+			responseSchema: null,
+			statusCode: 204,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const {report_id} = ctx.req.valid('param');
+			const reportId = createReportID(report_id);
+			const deleted = await deleteReportNow(
+				{
+					reportRepository: getReportRepository(),
+					storageService: ctx.get('storageService'),
+					reportSearchService: getReportSearchService(),
+				},
+				reportId,
+				new Date(),
+			);
+			await ctx.get('adminService').auditService.createAuditLog({
+				adminUserId: ctx.get('adminUserId'),
+				targetType: 'report',
+				targetId: BigInt(reportId),
+				action: 'delete_report',
+				auditLogReason: ctx.get('auditLogReason'),
+				metadata: new Map([
+					['report_id', reportId.toString()],
+					['report_type', deleted.report.reportType.toString()],
+					['status', deleted.report.status.toString()],
+					['objects_deleted', deleted.objectsDeleted.toString()],
+					['shared_objects_kept', deleted.sharedObjectsKept.toString()],
+				]),
+			});
+			return ctx.body(null, 204);
 		},
 	);
 }

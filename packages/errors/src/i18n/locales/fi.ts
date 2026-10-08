@@ -368,6 +368,7 @@ const ERROR_I18N_FI_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.report_already_resolved": "Ilmoitus on jo ratkaistu.",
 	"moderation_and_reports.report_banned": "Sinut on estetty lähettämästä ilmoituksia.",
 	"moderation_and_reports.report_flow_outdated": "Ilmoituslomake muuttui, kun täytit sitä. Aloita ilmoitus uudelleen.",
+	"moderation_and_reports.report_under_legal_hold": "Tämä ilmoitus on oikeudellisen säilytysvelvoitteen alainen, eikä sitä voi poistaa.",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "Viimeistele tilisi rekisteröinti ennen kuin voit lähettää ilmoituksia.",
 	"moderation_and_reports.unknown_report": "Tuntematon ilmoitus.",
 	"moderation_and_reports.user_is_not_banned": "Tällä käyttäjällä ei ole porttikieltoa.",

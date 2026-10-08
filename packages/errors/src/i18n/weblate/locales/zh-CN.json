@@ -364,6 +364,7 @@
 	"moderation_and_reports.report_already_resolved": "举报已解决。",
 	"moderation_and_reports.report_banned": "你已被禁止提交举报。",
 	"moderation_and_reports.report_flow_outdated": "举报表单在你填写过程中已更新。请重新开始举报。",
+	"moderation_and_reports.report_under_legal_hold": "该举报处于法律保全状态，无法删除。",
 	"moderation_and_reports.unclaimed_account_cannot_submit_reports": "你需要完成账号设置才能提交举报。",
 	"moderation_and_reports.unknown_report": "未知举报。",
 	"moderation_and_reports.user_is_not_banned": "此用户未被封禁。",
