@@ -375,6 +375,14 @@ export const UserSettingsResponse = z.object({
 		.describe(
 			'Default value of share_voice_activity applied to newly accepted friend relationships. Read-only here; mutated via PUT /users/@me/settings/voice-activity-sharing.',
 		),
+	privacy_setup_version: z
+		.number()
+		.int()
+		.describe('Latest privacy setup version the user has reviewed, 0 if never reviewed'),
+	privacy_setup_completed_at: z.iso
+		.datetime()
+		.nullable()
+		.describe('When the user last completed the privacy setup, or null if never'),
 });
 
 export type UserSettingsResponse = z.infer<typeof UserSettingsResponse>;

@@ -394,6 +394,14 @@ export const UserSettingsUpdateRequest = z
 		default_share_voice_activity: z
 			.boolean()
 			.describe('Default share_voice_activity applied to new friend relationships'),
+		privacy_setup_version: z
+			.number()
+			.int()
+			.min(1)
+			.max(1000)
+			.describe(
+				'Version of the privacy setup the user just reviewed. The server also records privacy_setup_completed_at as the current time.',
+			),
 		synced_preferences: z
 			.string()
 			.max(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH)

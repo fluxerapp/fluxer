@@ -101,12 +101,11 @@ describe('DM Privacy Bidirectional Enforcement', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
-		it('blocks message from a non-friend guild member to a new account by default', async () => {
+		it('allows message from a non-friend guild member to a new account by default', async () => {
 			const sender = await createTestAccount(harness);
 			const target = await createTestAccount(harness);
 			await ensureSessionStarted(harness, sender.token);
 			await ensureSessionStarted(harness, target.token);
-			await updateUserSettings(harness, sender.token, {default_guilds_restricted: false});
 			await createFriendship(harness, sender, target);
 			const guild = await createGuild(harness, sender.token, 'Default Community');
 			const systemChannel = await getChannel(harness, sender.token, guild.system_channel_id!);
@@ -116,8 +115,8 @@ describe('DM Privacy Bidirectional Enforcement', () => {
 			await removeRelationship(harness, sender.token, target.userId);
 			await createBuilder(harness, sender.token)
 				.post(`/channels/${channel.id}/messages`)
-				.body({content: 'default restricted target'})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'CANNOT_SEND_MESSAGES_TO_USER')
+				.body({content: 'default open target'})
+				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
 		it('blocks message when sender restricts the only mutual guild', async () => {

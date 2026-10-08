@@ -137,6 +137,10 @@ export class UserAccountSettingsService {
 		if (data.bot_default_guilds_restricted !== undefined) {
 			updatedRowData.bot_default_guilds_restricted = data.bot_default_guilds_restricted;
 		}
+		if (data.privacy_setup_version !== undefined) {
+			updatedRowData.privacy_setup_version = data.privacy_setup_version;
+			updatedRowData.privacy_setup_completed_at = new Date();
+		}
 		if (data.inline_attachment_media !== undefined) {
 			updatedRowData.inline_attachment_media = data.inline_attachment_media;
 		}

@@ -569,6 +569,8 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 					staff_dm_access_user_ids: Array.from(userSettings.staffDmAccessUserIds).map((id) => id.toString()),
 					synced_preferences: syncedPreferencesToJson(decodeSyncedPreferencesLenient(userSettings.syncedPreferences)),
 					profile_privacy: userSettings.profilePrivacy,
+					privacy_setup_version: userSettings.privacySetupVersion,
+					privacy_setup_completed_at: userSettings.privacySetupCompletedAt?.toISOString() ?? null,
 				}
 			: null,
 		guild_memberships: guildMemberships

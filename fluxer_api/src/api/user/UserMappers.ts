@@ -353,6 +353,8 @@ export function mapUserSettingsToResponse(params: {settings: UserSettings}): Use
 		synced_preferences: settings.syncedPreferences,
 		profile_privacy: settings.profilePrivacy,
 		default_share_voice_activity: settings.defaultShareVoiceActivity,
+		privacy_setup_version: settings.privacySetupVersion,
+		privacy_setup_completed_at: settings.privacySetupCompletedAt?.toISOString() ?? null,
 	};
 }
 

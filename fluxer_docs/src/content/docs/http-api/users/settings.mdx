@@ -228,6 +228,7 @@ Further members are accepted and ignored. `guild_positions` is an array of at mo
 | suppress_unprivileged_self_mentions_bypass_user_ids?<sup>12</sup> | ?array[snowflake] | The users exempt from mention suppression |
 | staff_dm_access_user_ids?<sup>12</sup> | ?array[snowflake] | The users granted staff direct message access |
 | profile_privacy? | integer | [Profile privacy level](/http-api/users/#profile-privacy-levels) |
+| privacy_setup_version?<sup>14</sup> | integer | The privacy setup version the user just reviewed (1-1000) |
 | synced_preferences?<sup>13</sup> | ?string | The base64-encoded `fluxer.user.preferences.v1.SyncedPreferences` snapshot, or null to clear it |
 
 <sup>1</sup> A string matches ISO 8601 and an integer is Unix milliseconds between 0 and 8640000000000000. Anything else is rejected with `INVALID_ISO_TIMESTAMP`
@@ -255,6 +256,8 @@ Further members are accepted and ignored. `guild_positions` is an array of at mo
 <sup>12</sup> The field is staff-only
 
 <sup>13</sup> The value runs to at most 699052 characters of base64 and decodes to at most 524288 bytes, the 512 KiB ceiling. A longer string returns 400 `INVALID_FORM_BODY`, an oversized decode fails with `TOO_LARGE`, and an undecodable value fails with `INVALID_FORMAT`
+
+<sup>14</sup> Fluxer stores the value as given and sets `privacy_setup_completed_at` to the time of the update
 
 Fluxer decodes an accepted `synced_preferences` value, re-encodes it canonically, and stores the result, so a snapshot with only zero values is stored as cleared and read back as the empty string.
 

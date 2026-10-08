@@ -68,6 +68,8 @@ export class UserSettings {
 	readonly syncedPreferences: string;
 	readonly profilePrivacy: ProfilePrivacyLevel;
 	readonly defaultShareVoiceActivity: boolean;
+	readonly privacySetupVersion: number;
+	readonly privacySetupCompletedAt: Date | null;
 	readonly version: number;
 
 	constructor(row: UserSettingsRow) {
@@ -115,6 +117,8 @@ export class UserSettings {
 		this.syncedPreferences = normalizeStoredSyncedPreferences(row.synced_preferences);
 		this.profilePrivacy = (row.profile_privacy ?? ProfilePrivacyLevels.ALL_GUILDS) as ProfilePrivacyLevel;
 		this.defaultShareVoiceActivity = row.default_share_voice_activity ?? true;
+		this.privacySetupVersion = row.privacy_setup_version ?? 0;
+		this.privacySetupCompletedAt = row.privacy_setup_completed_at ?? null;
 		this.version = row.version;
 	}
 
@@ -171,6 +175,8 @@ export class UserSettings {
 			synced_preferences: this.syncedPreferences === '' ? null : this.syncedPreferences,
 			profile_privacy: this.profilePrivacy,
 			default_share_voice_activity: this.defaultShareVoiceActivity,
+			privacy_setup_version: this.privacySetupVersion,
+			privacy_setup_completed_at: this.privacySetupCompletedAt,
 			version: this.version,
 		};
 	}
@@ -216,7 +222,7 @@ export class UserSettings {
 			friend_source_flags: friendSourceFlags,
 			incoming_call_flags: IncomingCallFlags.FRIENDS_ONLY,
 			group_dm_add_permission_flags: GroupDmAddPermissionFlags.FRIENDS_ONLY,
-			default_guilds_restricted: true,
+			default_guilds_restricted: false,
 			bot_default_guilds_restricted: false,
 			restricted_guilds: new Set(),
 			bot_restricted_guilds: new Set(),
@@ -244,6 +250,8 @@ export class UserSettings {
 			synced_preferences: null,
 			profile_privacy: ProfilePrivacyLevels.ALL_GUILDS,
 			default_share_voice_activity: true,
+			privacy_setup_version: 0,
+			privacy_setup_completed_at: null,
 			version: 1,
 		};
 	}

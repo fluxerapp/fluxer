@@ -294,6 +294,8 @@ The [user settings update object](/http-api/users/settings/#user-settings-update
 | synced_preferences<sup>6</sup> | string | The base64-encoded [synced preferences](/http-api/users/settings-protobuf/) message |
 | profile_privacy | integer | [Profile privacy level](#profile-privacy-levels) |
 | default_share_voice_activity<sup>7</sup> | boolean | Whether a newly accepted friend relationship starts with voice activity sharing on |
+| privacy_setup_version<sup>8</sup> | integer | The latest privacy setup version the account has reviewed, 0 if it never has |
+| privacy_setup_completed_at | ?ISO8601 timestamp | When the account last completed the privacy setup, or null if it never has |
 
 <sup>1</sup> Duplicate identifiers are removed when the array is written
 
@@ -308,6 +310,8 @@ The [user settings update object](/http-api/users/settings/#user-settings-update
 <sup>6</sup> The message is `fluxer.user.preferences.v1.SyncedPreferences`. The empty string means nothing has been synced yet. The decoded message cannot exceed 524288 bytes, the 512 KiB ceiling
 
 <sup>7</sup> The field is read-only here and is changed by [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing)
+
+<sup>8</sup> Fluxer only stores this number. The first-party client compares it with the privacy setup version it ships and asks the user to review their direct message settings while the stored number is lower
 
 ## Custom status object
 

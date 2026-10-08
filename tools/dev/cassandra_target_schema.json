@@ -8356,6 +8356,14 @@
 				{
 					"name": "default_share_voice_activity",
 					"type": "boolean"
+				},
+				{
+					"name": "privacy_setup_version",
+					"type": "int"
+				},
+				{
+					"name": "privacy_setup_completed_at",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((user_id))",

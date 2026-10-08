@@ -24983,6 +24983,12 @@
 						"type": "boolean",
 						"description": "Default share_voice_activity applied to new friend relationships"
 					},
+					"privacy_setup_version": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 1000,
+						"description": "Version of the privacy setup the user just reviewed. The server also records privacy_setup_completed_at as the current time."
+					},
 					"synced_preferences": {
 						"description": "Account-wide client preferences as a base64-encoded protobuf snapshot. Replaces the entire stored snapshot; pass null to clear it.",
 						"anyOf": [{"type": "string", "maxLength": 699052}, {"type": "null"}]
@@ -25136,6 +25142,23 @@
 					"default_share_voice_activity": {
 						"type": "boolean",
 						"description": "Default value of share_voice_activity applied to newly accepted friend relationships. Read-only here; mutated via PUT /users/@me/settings/voice-activity-sharing."
+					},
+					"privacy_setup_version": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Latest privacy setup version the user has reviewed, 0 if never reviewed"
+					},
+					"privacy_setup_completed_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the user last completed the privacy setup, or null if never"
 					}
 				},
 				"required": [
@@ -25173,7 +25196,9 @@
 					"staff_dm_access_user_ids",
 					"synced_preferences",
 					"profile_privacy",
-					"default_share_voice_activity"
+					"default_share_voice_activity",
+					"privacy_setup_version",
+					"privacy_setup_completed_at"
 				],
 				"additionalProperties": false
 			},
