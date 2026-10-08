@@ -303,4 +303,18 @@ describe('DesktopUpdateRun installing a renderer only update in place', () => {
 		assert.deepEqual(steps, ['probe', 'probe']);
 		assert.deepEqual(failures, [{reason: 'check-failed', detail: 'offline'}]);
 	});
+
+	test('a check works from the first window, a click only after the renderer confirmed its launch', async () => {
+		const {run, steps} = harness({probes: [MODULES_ONLY], settled: false});
+
+		assert.deepEqual(await run.check(), {shellNewer: false, modulesChanged: true});
+		await run.start();
+
+		assert.deepEqual(steps, ['probe']);
+
+		run.markLaunchSettled();
+		await run.start();
+
+		assert.deepEqual(steps, ['probe', 'probe', 'install', 'reload-in-place']);
+	});
 });

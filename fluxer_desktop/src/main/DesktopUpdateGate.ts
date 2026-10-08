@@ -46,6 +46,10 @@ export function getDesktopUpdateState(): DesktopUpdateState {
 	};
 }
 
+export function desktopUpdateReplacesShell(): boolean {
+	return gateState.lastCheck?.shellNewer === true;
+}
+
 function notify(): void {
 	const state = getDesktopUpdateState();
 	const updating = state.updating === true;

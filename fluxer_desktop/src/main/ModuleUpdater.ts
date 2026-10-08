@@ -629,7 +629,8 @@ export class ModuleUpdater {
 		if (
 			this.selfUpdateShellFirst == null ||
 			compareModuleVersions(manifest.shell.latestVersion, this.shellVersion) <= 0 ||
-			this.shellFirstAttempted.has(latestVersion)
+			this.shellFirstAttempted.has(latestVersion) ||
+			(this.platform === 'linux' && !this.isSecurityUpdateRequired())
 		) {
 			return false;
 		}
@@ -728,6 +729,17 @@ export class ModuleUpdater {
 
 	public async selectServedModules(modules: Readonly<Record<string, string>>): Promise<ServedModuleSelection> {
 		return await this.planner.selectServedModules(modules);
+	}
+
+	public async revertLaunch(attempt: ModuleLaunchAttempt): Promise<Readonly<Record<string, string>> | null> {
+		const reverted = await this.store.revertLaunchAttempt(attempt, this.planner.bundledModules());
+		if (reverted != null) {
+			this.report({
+				type: ModuleUpdaterReportType.ROLLBACK,
+				message: 'reverted an in place module update whose renderer never confirmed it started',
+			});
+		}
+		return reverted;
 	}
 
 	public async markLaunchSucceeded(attempt: ModuleLaunchAttempt): Promise<void> {

@@ -5,7 +5,6 @@ import path from 'node:path';
 import {
 	DEFAULT_WINDOW_HEIGHT,
 	DEFAULT_WINDOW_WIDTH,
-	DESKTOP_APP_ORIGIN,
 	DESKTOP_FIRST_CONTENT_PAINTED_CHANNEL,
 	MIN_WINDOW_HEIGHT,
 	MIN_WINDOW_WIDTH,
@@ -1218,15 +1217,17 @@ export function isMainWindowTakenOver(): boolean {
 	return mainWindowTakeover != null;
 }
 
-export function reloadAppWindowsForUpdate(): number {
-	let reloaded = 0;
-	for (const window of BrowserWindow.getAllWindows()) {
-		if (window.isDestroyed() || window.webContents.isDestroyed()) continue;
-		if (!window.webContents.getURL().startsWith(DESKTOP_APP_ORIGIN)) continue;
-		window.webContents.reloadIgnoringCache();
-		reloaded += 1;
+export async function reloadMainWindowForUpdate(): Promise<boolean> {
+	const window = mainWindow;
+	if (!isAliveWindow(window) || window.webContents.isDestroyed()) {
+		return false;
 	}
-	return reloaded;
+	await closeAppWindowsForUpdate(window);
+	if (window.isDestroyed() || window.webContents.isDestroyed()) {
+		return false;
+	}
+	window.webContents.reloadIgnoringCache();
+	return true;
 }
 
 export function hideAppWindowsForUpdate(keep: BrowserWindow): ReadonlyArray<BrowserWindow> {

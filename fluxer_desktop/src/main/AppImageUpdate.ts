@@ -45,6 +45,7 @@ const APPDIR_ENTRYPOINT = 'AppRun';
 const APPIMAGE_MODE = 0o755;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 const STAGING_FREE_SPACE_MARGIN_BYTES = 16 * 1024 * 1024;
+export const APPIMAGE_DOWNLOAD_STALL_MS = 30_000;
 const NON_RETRYABLE_STAGING_ERRNOS = new Set([
 	'ENOSPC',
 	'EDQUOT',
@@ -167,12 +168,45 @@ export async function stageAppImageUpdate(options: {
 	expectedSha256: string;
 	onProgress?: (progress: AppImageDownloadProgress) => void;
 	fetchImpl: typeof fetch;
+	stallMs?: number;
 }): Promise<StagedAppImageUpdate> {
 	const expected = options.expectedSha256.trim().toLowerCase();
 	if (!SHA256_PATTERN.test(expected)) {
 		throw new Error('Update checksum is missing or malformed.');
 	}
-	const response = await options.fetchImpl(options.url, {cache: 'no-store', redirect: 'follow'});
+	const stallMs = options.stallMs ?? APPIMAGE_DOWNLOAD_STALL_MS;
+	const stalled = new AbortController();
+	let stallTimer: NodeJS.Timeout | null = null;
+	const stopStallTimer = (): void => {
+		if (stallTimer != null) clearTimeout(stallTimer);
+		stallTimer = null;
+	};
+	const restartStallTimer = (): void => {
+		stopStallTimer();
+		stallTimer = setTimeout(() => {
+			stalled.abort(new Error(`Update download sent no data for ${stallMs} ms.`));
+		}, stallMs);
+	};
+	restartStallTimer();
+	try {
+		return await downloadAndStageAppImage(options, expected, stalled.signal, restartStallTimer);
+	} finally {
+		stopStallTimer();
+	}
+}
+
+async function downloadAndStageAppImage(
+	options: {
+		target: AppImageTarget;
+		url: string;
+		onProgress?: (progress: AppImageDownloadProgress) => void;
+		fetchImpl: typeof fetch;
+	},
+	expected: string,
+	signal: AbortSignal,
+	onData: () => void,
+): Promise<StagedAppImageUpdate> {
+	const response = await options.fetchImpl(options.url, {cache: 'no-store', redirect: 'follow', signal});
 	if (!response.ok || response.body == null) {
 		throw new Error(`Update download failed: ${response.status}`);
 	}
@@ -200,13 +234,21 @@ export async function stageAppImageUpdate(options: {
 	try {
 		const handle = await open(staged.stagedPath, 'wx', APPIMAGE_MODE);
 		const reader = response.body.getReader();
+		const cancelOnStall = (): void => {
+			void reader.cancel(signal.reason).catch(() => {});
+		};
+		signal.addEventListener('abort', cancelOnStall, {once: true});
 		let transferred = 0;
 		try {
 			for (;;) {
 				const {done, value} = await reader.read();
+				if (signal.aborted) {
+					throw signal.reason;
+				}
 				if (done) {
 					break;
 				}
+				onData();
 				let written = 0;
 				while (written < value.byteLength) {
 					const result = await handle.write(value, written, value.byteLength - written);
@@ -226,6 +268,7 @@ export async function stageAppImageUpdate(options: {
 			await reader.cancel().catch(() => {});
 			throw error;
 		} finally {
+			signal.removeEventListener('abort', cancelOnStall);
 			await handle.close();
 		}
 		const digest = await digestFile(staged.stagedPath);

@@ -2,7 +2,12 @@
 
 import {DESKTOP_APP_NAME} from '@electron/common/DesktopIdentity';
 import {createChildLogger} from '@electron/common/Logger';
-import {checkDesktopUpdateNow, getDesktopUpdateState, startDesktopUpdate} from '@electron/main/DesktopUpdateGate';
+import {
+	checkDesktopUpdateNow,
+	desktopUpdateReplacesShell,
+	getDesktopUpdateState,
+	startDesktopUpdate,
+} from '@electron/main/DesktopUpdateGate';
 import {t} from '@electron/main/MainI18n';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
 import {findNewerManualShell} from '@electron/main/Updater';
@@ -89,7 +94,7 @@ async function offerDesktopUpdate(): Promise<void> {
 	const install = await ask({
 		type: 'info',
 		message: t('desktop.update.availableMessage'),
-		detail: t('desktop.update.availableDetail'),
+		detail: t(desktopUpdateReplacesShell() ? 'desktop.update.availableDetail' : 'desktop.update.reloadDetail'),
 		buttons: [t('desktop.update.install'), t('desktop.update.later')],
 		defaultId: UpdatePromptChoice.PRIMARY,
 		cancelId: UpdatePromptChoice.SECONDARY,

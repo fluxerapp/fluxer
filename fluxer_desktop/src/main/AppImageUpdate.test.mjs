@@ -41,6 +41,9 @@ function loadAppImageUpdate(env = {}, overrides = {}, requireImpl = require) {
 		require: requireImpl,
 		console,
 		Buffer,
+		AbortController,
+		setTimeout,
+		clearTimeout,
 		fetch,
 		Error,
 		Number,
@@ -258,6 +261,29 @@ describe('AppImageUpdate in-place replacement', () => {
 
 		assert.equal(staged.stagingDirectory.startsWith(join(install.applications, '.fluxer-update-')), true);
 		appImageUpdate.discardStagedAppImageUpdate(staged);
+		assert.deepEqual(stagingLeftovers(install.applications), []);
+	});
+
+	test('a download that stops sending data fails instead of hanging and leaves nothing staged', async () => {
+		const install = createInstall();
+		const appImageUpdate = loadAppImageUpdate({APPIMAGE: install.installedPath});
+		const resolved = appImageUpdate.resolveAppImageTarget();
+		const silent = new ReadableStream({
+			start(controller) {
+				controller.enqueue(NEW_BYTES.subarray(0, 4));
+			},
+		});
+
+		await assert.rejects(
+			appImageUpdate.stageAppImageUpdate({
+				fetchImpl: async () => new Response(silent, {headers: {'content-length': String(NEW_BYTES.length)}}),
+				target: resolved.target,
+				url: 'https://pkgs.invalid/appimage',
+				expectedSha256: NEW_SHA256,
+				stallMs: 30,
+			}),
+			/sent no data for 30 ms/,
+		);
 		assert.deepEqual(stagingLeftovers(install.applications), []);
 	});
 
