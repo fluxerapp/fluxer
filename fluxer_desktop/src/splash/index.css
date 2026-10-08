@@ -101,6 +101,15 @@ html {
 				font-variant-numeric: tabular-nums;
 			}
 
+			&.splash-metrics {
+				margin-top: 8px;
+				height: 16px;
+				line-height: 16px;
+				font-weight: 400;
+				white-space: nowrap;
+				font-variant-numeric: tabular-nums;
+			}
+
 			&.splash-detail {
 				max-width: 280px;
 				margin: 6px auto 0;
@@ -177,6 +186,38 @@ html {
 
 .splash-action:hover {
 	background: var(--brand-bright);
+}
+
+.splash-diagnostics {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 14px;
+	display: flex;
+	justify-content: center;
+	gap: 14px;
+	visibility: hidden;
+}
+
+.splash-diagnostics.is-visible {
+	visibility: visible;
+}
+
+.splash-diagnostics-link {
+	-webkit-app-region: no-drag;
+	background: none;
+	border: none;
+	padding: 2px 0;
+	color: var(--muted);
+	font-family: var(--primary-font);
+	font-size: 11px;
+	font-weight: 400;
+	cursor: pointer;
+	text-decoration: none;
+}
+
+.splash-diagnostics-link:hover {
+	color: var(--white);
 }
 
 #splash:has(.splash-inner-dl) {

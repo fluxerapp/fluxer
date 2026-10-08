@@ -533,6 +533,9 @@ describe('splash state serialisation', () => {
 				total: 7,
 				progress: 42.5,
 				seconds: null,
+				receivedBytes: null,
+				totalBytes: null,
+				bytesPerSecond: null,
 				action: null,
 				message: null,
 				versionLabel: null,
@@ -560,6 +563,9 @@ describe('splash state serialisation', () => {
 				total: null,
 				progress: 0,
 				seconds: 0,
+				receivedBytes: null,
+				totalBytes: null,
+				bytesPerSecond: null,
 				action: null,
 				message: null,
 				versionLabel: null,
@@ -820,6 +826,9 @@ describe('splash IPC', () => {
 					total: 5,
 					progress: 40,
 					seconds: null,
+					receivedBytes: null,
+					totalBytes: null,
+					bytesPerSecond: null,
 					action: null,
 					message: null,
 					versionLabel: null,
@@ -853,6 +862,9 @@ describe('splash IPC', () => {
 					total: null,
 					progress: null,
 					seconds: null,
+					receivedBytes: null,
+					totalBytes: null,
+					bytesPerSecond: null,
 					action: null,
 					message: null,
 					versionLabel: null,
@@ -1132,6 +1144,12 @@ function createPreloadHarness() {
 			timeouts.push({callback, delayMs});
 			return timeouts.length;
 		},
+		clearTimeout: (id) => {
+			const timer = timeouts[id - 1];
+			if (timer != null) {
+				timer.cleared = true;
+			}
+		},
 		window: {
 			addEventListener: (eventName, listener) => {
 				windowListeners.set(eventName, listener);
@@ -1209,8 +1227,8 @@ describe('splash preload rendering', () => {
 		assert.deepEqual(harness.sent, []);
 		assert.equal(harness.query('.splash-mark').decodeCalls, 1);
 		assert.deepEqual(harness.fontLoads, ['400 12px "Fluxer Sans"', '500 16px "Fluxer Sans"']);
-		assert.equal(harness.timeouts.length, 1);
-		assert.ok(harness.timeouts[0].delayMs <= 500);
+		const brandingWaits = harness.timeouts.filter((timer) => timer.delayMs <= 500);
+		assert.equal(brandingWaits.length, 1);
 
 		await harness.settle();
 		assert.deepEqual(harness.sent, []);
@@ -1713,6 +1731,9 @@ describe('splash preload contract', () => {
 			total: null,
 			progress: null,
 			seconds: null,
+			receivedBytes: null,
+			totalBytes: null,
+			bytesPerSecond: null,
 			action: null,
 			message: null,
 			versionLabel: null,

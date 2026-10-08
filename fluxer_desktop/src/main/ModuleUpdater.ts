@@ -2,6 +2,7 @@
 
 import {createHash} from 'node:crypto';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {ModuleDownloadRate} from '@electron/main/ModuleDownloadRate';
 import {
 	blockingModuleNames,
 	type DesktopLinuxSecurityMinimum,
@@ -16,6 +17,7 @@ import {
 import {
 	describeErrorChain,
 	isDeterministicPackageFailure,
+	isModulePackageStall,
 	isTransientServerStatus,
 	ModulePackageFetchError,
 	ModulePackageInstaller,
@@ -123,6 +125,17 @@ export interface ModuleUpdaterSplashState {
 	readonly seconds: number | null;
 	readonly moduleName: string | null;
 	readonly detail: string | null;
+	readonly receivedBytes: number | null;
+	readonly totalBytes: number | null;
+	readonly bytesPerSecond: number | null;
+	readonly stalled: boolean;
+}
+
+export interface ModuleUpdaterDiagnostics {
+	readonly state: ModuleUpdaterSplashState;
+	readonly packageOrigin: string;
+	readonly lastError: string | null;
+	readonly lastErrorAt: number | null;
 }
 
 interface ModuleUpdaterReport {
@@ -289,6 +302,11 @@ export class ModuleUpdater {
 	private readonly random: () => number;
 	private readonly now: () => number;
 	private lastState: ModuleUpdaterSplashState;
+	private readonly packageOrigin: string;
+	private readonly downloadRate = new ModuleDownloadRate();
+	private downloadProgressed = false;
+	private lastError: string | null = null;
+	private lastErrorAt: number | null = null;
 	private ensureBlockedUntil = 0;
 	private startupUpdatePolicy: ModuleStartupUpdatePolicy;
 	private manifestObservationTail: Promise<void> = Promise.resolve();
@@ -303,6 +321,7 @@ export class ModuleUpdater {
 		const arch = resolveDesktopModuleArchitecture(options.arch ?? process.arch);
 		this.manifestFeed = {releaseChannel, platform: this.platform, arch};
 		const packageOrigin = (options.packageOrigin ?? resolveDesktopPackageOrigin()).replace(/\/+$/u, '');
+		this.packageOrigin = packageOrigin;
 		this.planner = new ModuleUpdatePlanner(this.store, shellVersion, options.hasOfflineRenderer ?? false);
 		this.onState = options.onState ?? (() => {});
 		this.reporter = options.report ?? (() => {});
@@ -323,10 +342,15 @@ export class ModuleUpdater {
 			store: this.store,
 			packageOrigin,
 			fetch: options.fetch,
+			now: () => this.now(),
 			onProgress: (progress) => {
 				switch (progress.phase) {
 					case ModulePackageInstallPhase.DOWNLOADING:
-						this.emit(ModuleUpdaterStatus.DOWNLOADING, progress);
+						this.recordDownloadProgress(progress.receivedBytes);
+						this.emit(ModuleUpdaterStatus.DOWNLOADING, {
+							...progress,
+							bytesPerSecond: this.downloadRate.sample(progress.receivedBytes, this.now()) ?? undefined,
+						});
 						break;
 					case ModulePackageInstallPhase.INSTALLING:
 						this.emit(ModuleUpdaterStatus.INSTALLING, progress);
@@ -346,7 +370,27 @@ export class ModuleUpdater {
 			seconds: null,
 			moduleName: null,
 			detail: null,
+			receivedBytes: null,
+			totalBytes: null,
+			bytesPerSecond: null,
+			stalled: false,
 		};
+	}
+
+	public diagnostics(): ModuleUpdaterDiagnostics {
+		return {
+			state: this.lastState,
+			packageOrigin: this.packageOrigin,
+			lastError: this.lastError,
+			lastErrorAt: this.lastErrorAt,
+		};
+	}
+
+	private recordDownloadProgress(receivedBytes: number): void {
+		const previous = this.lastState.status === ModuleUpdaterStatus.DOWNLOADING ? this.lastState.receivedBytes : null;
+		if (previous != null && receivedBytes > previous) {
+			this.downloadProgressed = true;
+		}
 	}
 
 	public getLastState(): ModuleUpdaterSplashState {
@@ -372,6 +416,8 @@ export class ModuleUpdater {
 		const backoff = new ModuleUpdaterBackoff(this.random);
 		for (;;) {
 			this.emit(ModuleUpdaterStatus.CHECKING);
+			this.downloadRate.reset();
+			this.downloadProgressed = false;
 			let fetched = false;
 			try {
 				const document = await this.manifestRepository.fetchLatest();
@@ -415,8 +461,13 @@ export class ModuleUpdater {
 				backoff.reset();
 			} catch (error) {
 				this.reportFailure(error);
+				this.lastError = describeErrorChain(error);
+				this.lastErrorAt = this.now();
 				const detail = isStorageFullError(error) ? 'Not enough disk space to install the update' : null;
 				const updateServerUnreachable = !isRejectedManifestError(error) && isUpdateServerUnreachable(error);
+				if (this.downloadProgressed) {
+					backoff.reset();
+				}
 				const delayMs = backoff.fail();
 				const exhausted = backoff.reachedCeiling || isRejectedManifestError(error);
 				if (exhausted || !fetched) {
@@ -444,6 +495,7 @@ export class ModuleUpdater {
 				this.emit(ModuleUpdaterStatus.RETRY_WAIT, {
 					seconds: Math.max(1, Math.round(delayMs / 1000)),
 					detail,
+					stalled: isModulePackageStall(error),
 				});
 				await this.sleep(delayMs);
 			}
@@ -934,6 +986,10 @@ export class ModuleUpdater {
 			readonly seconds?: number;
 			readonly moduleName?: string;
 			readonly detail?: string | null;
+			readonly receivedBytes?: number;
+			readonly totalBytes?: number;
+			readonly bytesPerSecond?: number;
+			readonly stalled?: boolean;
 		} = {},
 	): void {
 		this.lastState = {
@@ -945,6 +1001,10 @@ export class ModuleUpdater {
 			seconds: patch.seconds ?? null,
 			moduleName: patch.moduleName ?? null,
 			detail: patch.detail ?? null,
+			receivedBytes: patch.receivedBytes ?? null,
+			totalBytes: patch.totalBytes ?? null,
+			bytesPerSecond: patch.bytesPerSecond ?? null,
+			stalled: patch.stalled === true,
 		};
 		this.onState(this.lastState);
 	}

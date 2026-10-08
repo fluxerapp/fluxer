@@ -27,6 +27,8 @@ export const DESKTOP_SPLASH_RETRY_NOW_CHANNEL = 'desktop-splash:retry-now';
 export const DESKTOP_SPLASH_QUIT_CHANNEL = 'desktop-splash:quit';
 export const DESKTOP_SPLASH_OPEN_DOWNLOAD_CHANNEL = 'desktop-splash:open-download';
 export const DESKTOP_SPLASH_NETWORK_ONLINE_CHANNEL = 'desktop-splash:network-online';
+export const DESKTOP_SPLASH_OPEN_LOGS_CHANNEL = 'desktop-splash:open-logs';
+export const DESKTOP_SPLASH_COPY_DIAGNOSTICS_CHANNEL = 'desktop-splash:copy-diagnostics';
 
 export const SplashLayout = Object.freeze({
 	SPLASH: 'splash',
@@ -41,6 +43,7 @@ export const SplashStatus = Object.freeze({
 	INSTALLING_UPDATES: 'installing-updates',
 	VERIFYING: 'verifying',
 	UPDATE_FAILURE: 'update-failure',
+	DOWNLOAD_STALLED: 'download-stalled',
 	SHELL_UPDATE_DOWNLOADING: 'shell-update-downloading',
 	SHELL_UPDATE_RESTARTING: 'shell-update-restarting',
 	BLOCKED_UPDATE_REQUIRED: 'blocked-update-required',
@@ -91,6 +94,9 @@ export interface SplashState {
 	readonly total?: number | null;
 	readonly progress?: number | null;
 	readonly seconds?: number | null;
+	readonly receivedBytes?: number | null;
+	readonly totalBytes?: number | null;
+	readonly bytesPerSecond?: number | null;
 	readonly action?: SplashActionDescriptor | null;
 	readonly message?: string | null;
 	readonly versionLabel?: string | null;
@@ -105,6 +111,9 @@ export interface SerializedSplashState {
 	readonly total: number | null;
 	readonly progress: number | null;
 	readonly seconds: number | null;
+	readonly receivedBytes: number | null;
+	readonly totalBytes: number | null;
+	readonly bytesPerSecond: number | null;
 	readonly action: SplashActionDescriptor | null;
 	readonly message: string | null;
 	readonly versionLabel: string | null;
@@ -123,6 +132,8 @@ const retryListeners = new Set<SplashListener>();
 const quitListeners = new Set<SplashListener>();
 const networkOnlineListeners = new Set<SplashListener>();
 const openDownloadListeners = new Set<SplashDownloadListener>();
+const openLogsListeners = new Set<SplashListener>();
+const copyDiagnosticsListeners = new Set<SplashListener>();
 
 let splashWindow: BrowserWindow | null = null;
 let splashIpcRegistered = false;
@@ -196,6 +207,9 @@ export function serializeSplashState(state: SplashState): SerializedSplashState 
 		total: toSplashCount(state.total),
 		progress: toSplashProgress(state.progress),
 		seconds: toSplashCount(state.seconds),
+		receivedBytes: toSplashCount(state.receivedBytes),
+		totalBytes: toSplashCount(state.totalBytes),
+		bytesPerSecond: toSplashCount(state.bytesPerSecond),
 		action: toSplashAction(state.action),
 		message: toSplashText(state.message, SPLASH_MESSAGE_MAX_LENGTH),
 		versionLabel: toSplashText(state.versionLabel, SPLASH_VERSION_LABEL_MAX_LENGTH),
@@ -294,6 +308,14 @@ function registerSplashIpc(): void {
 		if (!isSplashSender(event)) return;
 		emitSplashDownloadListeners(toSplashDownloadValue(value));
 	});
+	ipcMain.on(DESKTOP_SPLASH_OPEN_LOGS_CHANNEL, (event) => {
+		if (!isSplashSender(event)) return;
+		emitSplashListeners(openLogsListeners);
+	});
+	ipcMain.on(DESKTOP_SPLASH_COPY_DIAGNOSTICS_CHANNEL, (event) => {
+		if (!isSplashSender(event)) return;
+		emitSplashListeners(copyDiagnosticsListeners);
+	});
 }
 
 function registerSplashDiagnostics(window: BrowserWindow): void {
@@ -391,6 +413,8 @@ export function closeSplashWindow(): void {
 	quitListeners.clear();
 	networkOnlineListeners.clear();
 	openDownloadListeners.clear();
+	openLogsListeners.clear();
+	copyDiagnosticsListeners.clear();
 	if (readyWatchdog != null) {
 		clearTimeout(readyWatchdog);
 		readyWatchdog = null;
@@ -449,4 +473,12 @@ export function onSplashNetworkOnline(listener: SplashListener): () => void {
 
 export function onSplashOpenDownload(listener: SplashDownloadListener): () => void {
 	return addSplashListener(openDownloadListeners, listener);
+}
+
+export function onSplashOpenLogs(listener: SplashListener): () => void {
+	return addSplashListener(openLogsListeners, listener);
+}
+
+export function onSplashCopyDiagnostics(listener: SplashListener): () => void {
+	return addSplashListener(copyDiagnosticsListeners, listener);
 }

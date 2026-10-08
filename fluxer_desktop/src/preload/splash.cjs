@@ -8,6 +8,8 @@ const SPLASH_RETRY_CHANNEL = 'desktop-splash:retry-now';
 const SPLASH_QUIT_CHANNEL = 'desktop-splash:quit';
 const SPLASH_OPEN_DOWNLOAD_CHANNEL = 'desktop-splash:open-download';
 const SPLASH_NETWORK_ONLINE_CHANNEL = 'desktop-splash:network-online';
+const SPLASH_OPEN_LOGS_CHANNEL = 'desktop-splash:open-logs';
+const SPLASH_COPY_DIAGNOSTICS_CHANNEL = 'desktop-splash:copy-diagnostics';
 
 const SPLASH_MOUNT_ID = 'splash-mount';
 const SPLASH_MARK_SIZE = 88;
@@ -23,6 +25,10 @@ const SPLASH_OPTION_LABEL_MAX_LENGTH = 48;
 const SPLASH_OPTION_BUTTON_LABEL_MAX_LENGTH = 24;
 const SPLASH_OPTION_MAX_COUNT = 8;
 const SPLASH_OPTION_VALUE_PATTERN = /^[a-z0-9_]{1,32}$/;
+const DIAGNOSTICS_REVEAL_MS = 30000;
+const DIAGNOSTICS_COPIED_MS = 2000;
+const BYTES_PER_MEGABYTE = 1000000;
+const BYTES_PER_KILOBYTE = 1000;
 
 const SplashLayout = Object.freeze({
 	SPLASH: 'splash',
@@ -35,6 +41,7 @@ const SplashStatus = Object.freeze({
 	INSTALLING_UPDATES: 'installing-updates',
 	VERIFYING: 'verifying',
 	UPDATE_FAILURE: 'update-failure',
+	DOWNLOAD_STALLED: 'download-stalled',
 	SHELL_UPDATE_DOWNLOADING: 'shell-update-downloading',
 	SHELL_UPDATE_RESTARTING: 'shell-update-restarting',
 	BLOCKED_UPDATE_REQUIRED: 'blocked-update-required',
@@ -56,6 +63,17 @@ const PROGRESS_STATUSES = new Set([
 	SplashStatus.INSTALLING_UPDATES,
 	SplashStatus.SHELL_UPDATE_DOWNLOADING,
 ]);
+const DIAGNOSTICS_STATUSES = new Set([
+	SplashStatus.UPDATE_FAILURE,
+	SplashStatus.DOWNLOAD_STALLED,
+	SplashStatus.BLOCKED_UPDATE_REQUIRED,
+	SplashStatus.BLOCKED_UPDATE_UNREACHABLE,
+	SplashStatus.BLOCKED_SECURITY_UPDATE_REQUIRED,
+	SplashStatus.BLOCKED_SHELL_UPDATE,
+	SplashStatus.BLOCKED_UNSUPPORTED_BUILD,
+	SplashStatus.UNREACHABLE_LAUNCH,
+]);
+const DIAGNOSTICS_HIDDEN_STATUSES = new Set([SplashStatus.LAUNCHING, SplashStatus.SHELL_UPDATE_RESTARTING]);
 const ACTION_CHANNELS = new Map([
 	['retry', SPLASH_RETRY_CHANNEL],
 	['download', SPLASH_OPEN_DOWNLOAD_CHANNEL],
@@ -68,6 +86,9 @@ let renderedLayout = null;
 let renderedManualSignature = null;
 let countdownTimer = null;
 let selectedOption = null;
+let splashStartedAt = Date.now();
+let diagnosticsRevealTimer = null;
+let diagnosticsCopiedTimer = null;
 
 function toCount(value) {
 	if (typeof value !== 'number' || !Number.isFinite(value)) return null;
@@ -128,6 +149,9 @@ function normalizeState(payload) {
 			total: null,
 			progress: null,
 			seconds: null,
+			receivedBytes: null,
+			totalBytes: null,
+			bytesPerSecond: null,
 			action: null,
 			message: null,
 			versionLabel: null,
@@ -142,6 +166,9 @@ function normalizeState(payload) {
 		total: toCount(payload.total),
 		progress: typeof payload.progress === 'number' && Number.isFinite(payload.progress) ? payload.progress : null,
 		seconds: toCount(payload.seconds),
+		receivedBytes: toCount(payload.receivedBytes),
+		totalBytes: toCount(payload.totalBytes),
+		bytesPerSecond: toCount(payload.bytesPerSecond),
 		action: normalizeAction(payload.action),
 		message: toText(payload.message, SPLASH_MESSAGE_MAX_LENGTH),
 		versionLabel: toText(payload.versionLabel, SPLASH_VERSION_LABEL_MAX_LENGTH),
@@ -161,6 +188,8 @@ function getStatusText(state) {
 				: `Installing update ${state.current ?? 0} of ${state.total ?? 0}…`;
 		case SplashStatus.VERIFYING:
 			return state.requiredSecurityUpdate ? 'Verifying required security update…' : 'Verifying files…';
+		case SplashStatus.DOWNLOAD_STALLED:
+			return `Download stalled. Retrying in ${state.seconds ?? 0} sec…`;
 		case SplashStatus.UPDATE_FAILURE:
 			return state.requiredSecurityUpdate
 				? `Required security update failed. Retrying in ${state.seconds ?? 0} sec…`
@@ -204,9 +233,39 @@ function shouldShowProgress(state) {
 	return state.progress !== null && PROGRESS_STATUSES.has(state.status);
 }
 
-function toProgressPercent(progress) {
-	if (progress === null) return 0;
-	return Math.min(100, Math.max(0, progress));
+function toProgressPercent(state) {
+	if (state.receivedBytes !== null && state.totalBytes !== null && state.totalBytes > 0) {
+		return Math.min(100, Math.max(0, (state.receivedBytes / state.totalBytes) * 100));
+	}
+	if (state.progress === null) return 0;
+	return Math.min(100, Math.max(0, state.progress));
+}
+
+function formatMegabytes(bytes) {
+	const megabytes = bytes / BYTES_PER_MEGABYTE;
+	return megabytes >= 10 ? String(Math.round(megabytes)) : megabytes.toFixed(1);
+}
+
+function formatSpeed(bytesPerSecond) {
+	if (bytesPerSecond >= BYTES_PER_MEGABYTE) {
+		return `${(bytesPerSecond / BYTES_PER_MEGABYTE).toFixed(1)} MB/s`;
+	}
+	return `${Math.max(0, Math.round(bytesPerSecond / BYTES_PER_KILOBYTE))} KB/s`;
+}
+
+function getMetricsText(state) {
+	if (state.status !== SplashStatus.DOWNLOADING_UPDATES && state.status !== SplashStatus.DOWNLOAD_STALLED) return '';
+	if (state.receivedBytes === null || state.totalBytes === null || state.totalBytes === 0) return '';
+	const amount = `${formatMegabytes(state.receivedBytes)} of ${formatMegabytes(state.totalBytes)} MB`;
+	if (state.status !== SplashStatus.DOWNLOADING_UPDATES || state.bytesPerSecond === null) return amount;
+	return `${amount}, ${formatSpeed(state.bytesPerSecond)}`;
+}
+
+function shouldShowDiagnostics(state) {
+	if (state.layout !== SplashLayout.SPLASH) return false;
+	if (DIAGNOSTICS_HIDDEN_STATUSES.has(state.status)) return false;
+	if (DIAGNOSTICS_STATUSES.has(state.status)) return true;
+	return Date.now() - splashStartedAt >= DIAGNOSTICS_REVEAL_MS;
 }
 
 function createNode(tagName, className) {
@@ -267,18 +326,55 @@ function buildSplashLayout(mount) {
 	text.appendChild(createNode('span', 'splash-status'));
 	text.appendChild(createNode('span', 'splash-detail'));
 	text.appendChild(createProgressPlaceholder());
+	text.appendChild(createNode('span', 'splash-metrics'));
 	text.appendChild(createNode('div', 'splash-action-slot'));
 	inner.appendChild(media);
 	inner.appendChild(text);
 	splash.appendChild(inner);
+	splash.appendChild(buildDiagnosticsRow());
 	mount.replaceChildren(splash);
+}
+
+function buildDiagnosticsRow() {
+	const row = createNode('div', 'splash-diagnostics');
+	const openLogs = createNode('button', 'splash-diagnostics-link');
+	openLogs.setAttribute('data-action', 'open-logs');
+	openLogs.textContent = 'Open logs';
+	openLogs.addEventListener('click', () => {
+		ipcRenderer.send(SPLASH_OPEN_LOGS_CHANNEL);
+	});
+	const copy = createNode('button', 'splash-diagnostics-link');
+	copy.setAttribute('data-action', 'copy-diagnostics');
+	copy.textContent = 'Copy diagnostics';
+	copy.addEventListener('click', () => {
+		ipcRenderer.send(SPLASH_COPY_DIAGNOSTICS_CHANNEL);
+		copy.textContent = 'Copied';
+		if (diagnosticsCopiedTimer != null) clearTimeout(diagnosticsCopiedTimer);
+		diagnosticsCopiedTimer = setTimeout(() => {
+			diagnosticsCopiedTimer = null;
+			copy.textContent = 'Copy diagnostics';
+		}, DIAGNOSTICS_COPIED_MS);
+	});
+	row.appendChild(openLogs);
+	row.appendChild(copy);
+	return row;
+}
+
+function reconcileDiagnostics(mount, state) {
+	const row = mount.querySelector('.splash-diagnostics');
+	if (row == null) return;
+	if (shouldShowDiagnostics(state)) {
+		row.classList.add('is-visible');
+	} else {
+		row.classList.remove('is-visible');
+	}
 }
 
 function reconcileProgress(mount, state) {
 	const existing = mount.querySelector('.progress, .progress-placeholder');
 	if (existing == null) return;
 	if (shouldShowProgress(state)) {
-		const percent = toProgressPercent(state.progress);
+		const percent = toProgressPercent(state);
 		const complete = existing.querySelector('.complete');
 		if (complete != null) {
 			complete.style.width = `${percent}%`;
@@ -426,8 +522,13 @@ function render() {
 	if (detailNode != null) {
 		detailNode.textContent = state.message ?? '';
 	}
+	const metricsNode = mount.querySelector('.splash-metrics');
+	if (metricsNode != null) {
+		metricsNode.textContent = getMetricsText(state) || NON_BREAKING_SPACE;
+	}
 	reconcileProgress(mount, state);
 	reconcileAction(mount, state);
+	reconcileDiagnostics(mount, state);
 }
 
 function hasCountdown(state) {
@@ -491,6 +592,11 @@ function afterNextPaint(callback) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+	splashStartedAt = Date.now();
+	diagnosticsRevealTimer = setTimeout(() => {
+		diagnosticsRevealTimer = null;
+		render();
+	}, DIAGNOSTICS_REVEAL_MS);
 	render();
 	const mount = document.getElementById(SPLASH_MOUNT_ID);
 	const branded = mount == null ? Promise.resolve() : waitForBranding(mount);
@@ -507,4 +613,6 @@ window.addEventListener('online', () => {
 
 window.addEventListener('beforeunload', () => {
 	stopCountdown();
+	if (diagnosticsRevealTimer != null) clearTimeout(diagnosticsRevealTimer);
+	if (diagnosticsCopiedTimer != null) clearTimeout(diagnosticsCopiedTimer);
 });

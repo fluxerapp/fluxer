@@ -92,12 +92,15 @@ const SPLASH_STATUS_BY_UPDATER_STATUS: Readonly<Record<ModuleUpdaterStatus, Spla
 
 function toSplashState(state: ModuleUpdaterSplashState): SplashState {
 	return {
-		status: SPLASH_STATUS_BY_UPDATER_STATUS[state.status],
+		status: state.stalled ? 'download-stalled' : SPLASH_STATUS_BY_UPDATER_STATUS[state.status],
 		requiredSecurityUpdate: state.requiredSecurityUpdate,
 		current: state.current,
 		total: state.total,
 		progress: state.progress,
 		seconds: state.seconds,
+		receivedBytes: state.receivedBytes,
+		totalBytes: state.totalBytes,
+		bytesPerSecond: state.bytesPerSecond,
 		message: state.detail,
 	};
 }
@@ -259,7 +262,7 @@ async function refuseUnsupportedBuild(reason: string): Promise<never> {
 }
 
 async function runModuleBootstrap(): Promise<void> {
-	const {app} = await import('electron');
+	const {app, clipboard, session, shell} = await import('electron');
 	const {BUILD_CHANNEL} = await import('@electron/common/BuildChannel');
 	const {createChildLogger} = await import('@electron/common/Logger');
 	const {loadDesktopConfig} = await import('@electron/common/DesktopConfig');
@@ -288,11 +291,14 @@ async function runModuleBootstrap(): Promise<void> {
 	const {resolveShellUpdatePlan, ShellUpdateCapability} = await import('@electron/main/ShellUpdateCapability');
 	const {armBlockedShellUpdate} = await import('@electron/main/ShellUpdateSplash');
 	const {UpdateServerRetry} = await import('@electron/main/UpdateServerRetry');
+	const {buildSplashDiagnosticsText} = await import('@electron/main/SplashDiagnostics');
 	const {
 		closeSplashWindow,
 		focusSplashWindow,
 		markSplashLaunching,
+		onSplashCopyDiagnostics,
 		onSplashNetworkOnline,
+		onSplashOpenLogs,
 		onSplashQuit,
 		onSplashRetry,
 		openSplashWindow,
@@ -373,6 +379,72 @@ async function runModuleBootstrap(): Promise<void> {
 		updateServerRetry.networkReturned();
 	});
 
+	const splashOpenedAt = Date.now();
+	let diagnosticsSource: {
+		readonly store: ModuleStoreInstance;
+		readonly updater: ModuleUpdaterInstance;
+	} | null = null;
+	const resolveLogsPath = (): string | null => {
+		try {
+			return app.getPath('logs');
+		} catch {
+			return null;
+		}
+	};
+	const collectSplashDiagnostics = async (): Promise<string> => {
+		const updaterDiagnostics = diagnosticsSource?.updater.diagnostics() ?? null;
+		const packageOrigin = updaterDiagnostics?.packageOrigin ?? resolveDesktopPackageOrigin();
+		let proxyRoute: string | null = null;
+		try {
+			proxyRoute = await session.defaultSession.resolveProxy(packageOrigin);
+		} catch (error) {
+			logger.warn('Failed to resolve the proxy route for diagnostics', error);
+		}
+		const state = updaterDiagnostics?.state ?? null;
+		return buildSplashDiagnosticsText({
+			generatedAt: Date.now(),
+			splashOpenedAt,
+			appVersion: app.getVersion(),
+			channel: BUILD_CHANNEL,
+			platform: process.platform,
+			arch: process.arch,
+			osVersion: process.getSystemVersion(),
+			electronVersion: process.versions.electron ?? 'unknown',
+			logsPath: resolveLogsPath(),
+			userDataPath: userDataConfig.base,
+			packageOrigin,
+			proxyRoute,
+			splashStatus: state == null ? null : (toSplashState(state).status ?? null),
+			updaterStatus: state?.status ?? null,
+			pendingModule: state?.moduleName ?? null,
+			receivedBytes: state?.receivedBytes ?? null,
+			totalBytes: state?.totalBytes ?? null,
+			bytesPerSecond: state?.bytesPerSecond ?? null,
+			committed: diagnosticsSource?.store.getCommitted() ?? {},
+			lastError: updaterDiagnostics?.lastError ?? null,
+			lastErrorAt: updaterDiagnostics?.lastErrorAt ?? null,
+		});
+	};
+	onSplashOpenLogs(() => {
+		const logsPath = resolveLogsPath();
+		if (logsPath == null) return;
+		void shell.openPath(logsPath).then((failure) => {
+			if (failure.length > 0) {
+				logger.warn('Failed to open the logs folder from the splash', {failure});
+			}
+		});
+	});
+	onSplashCopyDiagnostics(() => {
+		void collectSplashDiagnostics()
+			.then((text) => {
+				clipboard.writeText(text);
+				logger.info('Copied updater diagnostics from the splash');
+			})
+			.catch((error: unknown) => {
+				logger.error('Failed to copy updater diagnostics', error);
+			});
+	});
+
 	const showBlockedSplash = (status: SplashStatus, message: string | null = null): void => {
 		openSplashWindow();
 		setSplashState({status, action: SplashAction.RETRY, message});
@@ -432,6 +504,7 @@ async function runModuleBootstrap(): Promise<void> {
 				});
 			},
 		});
+		diagnosticsSource = {store, updater};
 
 		const runModuleUpdateAttempt = async (): Promise<ModuleLaunchPermit | null> => {
 			let outcome: ModuleUpdaterOutcome;
