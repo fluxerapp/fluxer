@@ -671,6 +671,7 @@ export default () => {
 				wasmCratesDir: path.join(ROOT_DIR, 'rust'),
 			}),
 			new DefinePlugin({
+				define: 'undefined',
 				__FLUXER_PRECACHE_MANIFEST__: JSON.stringify([]),
 				__FLUXER_SW_VERSION__: JSON.stringify(publicValues.PUBLIC_BUILD_VERSION || 'dev'),
 				'process.env.NODE_ENV': JSON.stringify(mode),
