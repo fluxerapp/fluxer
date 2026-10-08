@@ -289,6 +289,7 @@ The code that identifies one pending desktop handoff.
 | code<sup>1</sup> | string | The handoff code to present to the approving device |
 | expires_at | ISO8601 timestamp | The time at which the handoff expires, five minutes after creation |
 | poll_secret? | string | The secret the initiating device presents to read the issued token |
+| return_method? | string | How the approving browser hands the sign-in back, `deep_link` when the request registered a `return_uri` and `code` otherwise |
 
 <sup>1</sup> The code is 12 characters drawn from the alphabet `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, rendered as two groups of six separated by a hyphen
 
@@ -306,6 +307,7 @@ The device metadata shown to the approving device before it transfers a session.
 | --- | --- | --- |
 | status | string | The state, either `pending` or `expired` |
 | client_info?<sup>1</sup> | ?[client info](#client-info-object) object | The initiating device metadata |
+| return_method? | string | How the approving browser hands the sign-in back, either `deep_link` or `code`, present only when the status is `pending` |
 
 <sup>1</sup> The value is null whenever the status is `expired`
 
@@ -317,7 +319,7 @@ The state of one desktop handoff as observed by the device that initiated it.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| status<sup>1</sup> | string | The state, one of `pending`, `expired`, or `completed` |
+| status<sup>1</sup> | string | The state, one of `pending`, `denied`, `expired`, or `completed` |
 | token?<sup>2</sup> | ?string | The newly issued user session token |
 | user_id?<sup>2</sup> | ?snowflake | The authenticated user ID |
 | user?<sup>2</sup> | ?[partial user](/http-api/users/#partial-user-object) object | The public representation of the authenticated account |
@@ -325,6 +327,18 @@ The state of one desktop handoff as observed by the device that initiated it.
 <sup>1</sup> An unknown code and an expired code both report `expired`
 
 <sup>2</sup> The fields are present together only when the status is `completed`
+
+## Handoff completion object
+
+The deep link that returns a completed handoff to the initiating app.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| return_url<sup>1</sup> | string | The registered `return_uri` with the handoff `code` and a one-time `grant` in its query string |
+
+<sup>1</sup> The grant is 32 random bytes as 43 base64url characters, and only the initiating app that receives the link can present it
 
 ## Origin handoff object
 
@@ -1474,7 +1488,15 @@ This read reserves no username and changes no account state. No Gateway Dispatch
 
 Creates a pending handoff and returns the code the initiating device shows to an already signed-in device. Authentication is not required. Returns a [handoff initiation](#handoff-initiation-object) object.
 
-The request has no body. Fluxer derives the device metadata shown to the approving device from the request itself.
+The body is optional. Fluxer derives the device metadata shown to the approving device from the request itself.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| return_uri?<sup>1</sup> | string | The deep link the approving browser opens to hand the sign-in back to the initiating desktop app |
+
+<sup>1</sup> The value must be exactly `fluxer://handoff`, `fluxer-canary://handoff` or `fluxer-development://handoff`, and anything else returns 400 with a validation error
 
 ### Request headers
 
@@ -1488,6 +1510,7 @@ The request has no body. Fluxer derives the device metadata shown to the approvi
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [handoff initiation](#handoff-initiation-object) object | A handoff request was created |
+| 400 | [error response](/http-api/#error-response) | The `return_uri` is not an accepted deep link |
 | 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
 | 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
 | 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
@@ -1546,7 +1569,7 @@ A successful lookup consumes one of the code's three lookups and permits [comple
 
 <RouteHeader method="POST" path="/v1/auth/handoff/complete" />
 
-Approves a pending handoff by issuing a new session to the initiating device on the authority of a live one. Requires the approving device's own user session token. Returns 204 with no body.
+Approves a pending handoff by issuing a new session to the initiating device on the authority of a live one. Requires the approving device's own user session token. Returns a [handoff completion](#handoff-completion-object) object for the `deep_link` return method, otherwise 204 with no body.
 
 Fluxer reads that token from the `Authorization` header, or from the body `token` field when the body supplies one.
 
@@ -1557,12 +1580,15 @@ Fluxer reads that token from the `Authorization` header, or from the body `token
 | code<sup>1</sup> | string | The handoff code shown by the initiating device |
 | token?<sup>2</sup> | string | The approving device's own user session token |
 | user_id<sup>3</sup> | snowflake | The account the approving session belongs to |
+| return_method?<sup>4</sup> | string | Either `deep_link` or `code`, defaulting to `code` |
 
 <sup>1</sup> The code uses the same normalisation contract as [get desktop handoff information](#get-desktop-handoff-information), and only a code that operation has already inspected is accepted
 
 <sup>2</sup> The body token takes precedence over the `Authorization` header, and a request that supplies neither returns 401 `UNAUTHORIZED`
 
 <sup>3</sup> A supplied token that resolves to a different account returns `SESSION_TOKEN_MISMATCH`
+
+<sup>4</sup> `deep_link` returns 400 `INVALID_HANDOFF_CODE` when the handoff registered no `return_uri`
 
 :::caution[The approving token may travel in the body]
 Sending the token in `token` puts a live credential into a JSON payload. A client SHOULD use the `Authorization` header and omit `token`.
@@ -1576,8 +1602,9 @@ Session creation can also return 403 `BOT_USER_AUTH_SESSION_CREATION_DENIED` for
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | The handoff was completed |
-| 400 | [error response](/http-api/#error-response) | The body, code, expiry state, or session ownership is invalid |
+| 200 | [handoff completion](#handoff-completion-object) object | The handoff was completed with the `deep_link` return method |
+| 204 | empty | The handoff was completed with the `code` return method |
+| 400 | [error response](/http-api/#error-response) | The body, code, expiry state, return method, or session ownership is invalid |
 | 401 | [error response](/http-api/#error-response) | The approving credential is missing, invalid, or revoked |
 | 403 | [error response](/http-api/#error-response) | The approving session belongs to a bot or to an account awaiting approval or rejected |
 | 404 | [error response](/http-api/#error-response) | The approving session resolves to an account that no longer exists |
@@ -1587,13 +1614,45 @@ Session creation can also return 403 `BOT_USER_AUTH_SESSION_CREATION_DENIED` for
 
 ### Side effects
 
-Completion creates one new authentication session for the initiating device and publishes its token against the code. The token stays readable through [get desktop handoff status](#get-desktop-handoff-status) for whatever remains of the handoff's five minutes. Completion also discards the pending handoff, so the code cannot be completed a second time and a later [get desktop handoff information](#get-desktop-handoff-information) reports `expired`.
+Completion creates one new authentication session for the initiating device and publishes its token against the code. With the `deep_link` return method, the token also requires the grant from `return_url`. The token stays readable through [get desktop handoff status](#get-desktop-handoff-status) for whatever remains of the handoff's five minutes. Completion also discards the pending handoff, so the code cannot be completed a second time and a later [get desktop handoff information](#get-desktop-handoff-information) reports `expired`.
 
 The approving session remains valid. The new session takes the initiating device's client IP address, user agent, and reported operating system from the handoff record. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
 10 requests per minute, on the `auth:handoff:complete` bucket, and a client IP address is blocked after 5 failed code attempts in 15 minutes.
+
+## Deny a desktop handoff
+
+<RouteHeader method="POST" path="/v1/auth/handoff/{code}/deny" unauthenticated />
+
+Declines a pending handoff after the approving device has looked it up. Authentication is not required. Returns 204 with no body.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | The handoff code, using the same normalisation contract as [get desktop handoff information](#get-desktop-handoff-information) |
+
+Only a code that [get desktop handoff information](#get-desktop-handoff-information) has already inspected can be denied. An unknown, expired, or uninspected code returns 400 `INVALID_HANDOFF_CODE` and records a failed attempt. A malformed code and a request from a client IP address that has exhausted its failed-attempt allowance return the same error without recording one.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The handoff was denied |
+| 400 | [error response](/http-api/#error-response) | The code is malformed, uninspected or unknown, or the client IP attempt allowance is exhausted |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The handoff stays stored until it expires, marked denied, and the inspected state is cleared. The initiating device reads the `denied` status, [complete desktop handoff](#complete-desktop-handoff) rejects the code, and [get desktop handoff information](#get-desktop-handoff-information) reports `expired`. No session is created and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per minute, on the `auth:handoff:deny` bucket, and a client IP address is blocked after 5 failed code attempts in 15 minutes.
 
 ## Get desktop handoff status
 
@@ -1648,6 +1707,9 @@ Reports the state of a handoff and delivers the new session token once, to a cal
 | Field | Type | Description |
 | --- | --- | --- |
 | poll_secret | string | The secret returned by [initiate desktop handoff](#initiate-desktop-handoff) |
+| grant?<sup>1</sup> | string | The one-time grant from the [handoff completion](#handoff-completion-object) deep link |
+
+<sup>1</sup> A handoff completed with the `deep_link` return method reports `pending` until the grant is presented, and a wrong grant also records a failed attempt
 
 :::caution[The completed status is delivered exactly once]
 The token is returned once. Later polls report `expired`, so the initiating device MUST retain it when first received.
