@@ -156,6 +156,7 @@ let themeStudioPopoutWindow: BrowserWindow | null = null;
 let lastRestorableMainWindowMaximized = false;
 let mainWindowRendererGone = false;
 let closingMainWindowForUpdate = false;
+const SHELL_PAGE_URL_PREFIX = 'file:';
 let mainWindowTakeover: (() => void) | null = null;
 const takeoverEndedListeners = new Set<() => void>();
 let pendingMainWindowReveal: {readonly window: BrowserWindow; readonly requestShow: () => void} | null = null;
@@ -1222,7 +1223,7 @@ export async function reloadMainWindowForUpdate(): Promise<boolean> {
 	if (!isAliveWindow(window) || window.webContents.isDestroyed()) {
 		return false;
 	}
-	await closeAppWindowsForUpdate(window);
+	await closeAppWindowsForUpdate(window, {keepShellPages: true});
 	if (window.isDestroyed() || window.webContents.isDestroyed()) {
 		return false;
 	}
@@ -1247,8 +1248,17 @@ export function restoreAppWindowsAfterUpdate(hidden: ReadonlyArray<BrowserWindow
 	}
 }
 
-export async function closeAppWindowsForUpdate(keep: BrowserWindow): Promise<void> {
-	const closing = BrowserWindow.getAllWindows().filter((window) => window !== keep && !window.isDestroyed());
+function showsShellPage(window: BrowserWindow): boolean {
+	return !window.webContents.isDestroyed() && window.webContents.getURL().startsWith(SHELL_PAGE_URL_PREFIX);
+}
+
+export async function closeAppWindowsForUpdate(
+	keep: BrowserWindow,
+	{keepShellPages = false}: {readonly keepShellPages?: boolean} = {},
+): Promise<void> {
+	const closing = BrowserWindow.getAllWindows().filter(
+		(window) => window !== keep && !window.isDestroyed() && !(keepShellPages && showsShellPage(window)),
+	);
 	closingMainWindowForUpdate = true;
 	try {
 		await Promise.all(
