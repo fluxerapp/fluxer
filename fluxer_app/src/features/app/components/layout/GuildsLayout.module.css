@@ -206,6 +206,7 @@
 		color 70ms ease-out;
 	container-type: size;
 	--initials-font-size: clamp(0.85rem, 45cqi, 1.35rem);
+	--initials-fit-inline-size: 92cqi;
 	--initials-letter-spacing: 0px;
 	--initials-scale: 1;
 }
@@ -259,7 +260,10 @@
 	line-height: 1;
 	color: inherit;
 	font-weight: 600;
-	font-size: var(--initials-font-size);
+	font-size: min(
+		var(--initials-font-size),
+		calc(var(--initials-fit-inline-size) / (var(--initials-width-em, 0.01) * var(--initials-scale)))
+	);
 	letter-spacing: var(--initials-letter-spacing);
 	transform: scale(var(--initials-scale));
 	transform-origin: center;
@@ -269,12 +273,6 @@
 	--initials-font-size: clamp(0.85rem, 38cqi, 1.11rem);
 	--initials-letter-spacing: 0px;
 	--initials-scale: 0.92;
-}
-
-.guildIcon[data-initials-length='long'] .guildIconInitials {
-	--initials-font-size: clamp(0.85rem, 32cqi, 0.87rem);
-	--initials-letter-spacing: 0px;
-	--initials-scale: 0.78;
 }
 
 .guildIndicator {

@@ -44,7 +44,11 @@ import {
 	type TemplateJsonFormInputs,
 	THIS_DOESN_T_LOOK_LIKE_A_VALID_TEMPLATE_DESCRIPTOR,
 } from '@app/features/guild/components/modals/add_guild_modal/shared';
-import {getGuildIconDisplayInitials, getInitialsLength} from '@app/features/guild/utils/GuildInitialsUtils';
+import {
+	getGuildIconDisplayInitials,
+	getGuildInitialsFitStyle,
+	getInitialsLength,
+} from '@app/features/guild/utils/GuildInitialsUtils';
 import {
 	CREATE_COMMUNITY_DESCRIPTOR,
 	FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR,
@@ -245,13 +249,12 @@ export const TemplateImportForm = observer(() => {
 	const nameValue = createForm.watch('name');
 	const urlValue = urlForm.watch('url');
 	const jsonValue = jsonForm.watch('json');
-	const rawInitials = useMemo(() => {
+	const initials = useMemo(() => {
 		const raw = (nameValue || '').trim();
 		if (!raw) return '';
-		return StringUtils.getInitialsFromName(raw);
+		return getGuildIconDisplayInitials(StringUtils.getInitialsFromName(raw));
 	}, [nameValue]);
-	const initials = useMemo(() => getGuildIconDisplayInitials(rawInitials), [rawInitials]);
-	const initialsLength = useMemo(() => (rawInitials ? getInitialsLength(rawInitials) : null), [rawInitials]);
+	const initialsLength = initials ? getInitialsLength(initials) : null;
 	const showIconUploadErrorModal = useCallback(
 		(message: string) => {
 			showGuildErrorModal({
@@ -612,6 +615,7 @@ export const TemplateImportForm = observer(() => {
 									{initials ? (
 										<span
 											className={styles.iconInitials}
+											style={getGuildInitialsFitStyle(initials)}
 											data-flx="guild.add-guild-modal.template-import-form.icon-initials"
 										>
 											{initials}
