@@ -52,6 +52,7 @@ message SyncedPreferences {
   ReactionEmoji double_tap_reaction = 114;
   ChannelFrecencyState channel_frecency = 115;
   AnnouncementPromptsState announcement_prompts = 116;
+  DoubleTapAction double_tap_action = 117;
 
 }
 
@@ -277,6 +278,13 @@ message ChannelFrecencyState {
 
 message ChatInputSettings {
   optional bool convert_emoticons = 1;
+}
+
+enum DoubleTapAction {
+  DOUBLE_TAP_ACTION_UNSPECIFIED = 0;
+  DOUBLE_TAP_ACTION_REACT = 1;
+  DOUBLE_TAP_ACTION_EDIT = 2;
+  DOUBLE_TAP_ACTION_NONE = 3;
 }
 
 message ReactionEmoji {
