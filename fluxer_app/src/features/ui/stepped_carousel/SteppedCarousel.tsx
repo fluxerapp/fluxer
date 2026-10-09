@@ -125,7 +125,8 @@ export function SteppedCarousel<Step extends string>({
 	const paneRef = useRef<HTMLDivElement | null>(null);
 	const pendingFocusRequestRef = useRef(0);
 	const handledFocusRequestRef = useRef(0);
-	const stepShownRef = useRef({step, onStepShown});
+	const onStepShownRef = useRef(onStepShown);
+	const paneStep = step;
 	const measureNode = useCallback((node: HTMLElement) => {
 		const offsetHeight = node.offsetHeight;
 		const scrollHeight = node.scrollHeight;
@@ -146,7 +147,7 @@ export function SteppedCarousel<Step extends string>({
 					(node.querySelector<HTMLElement>(focusableSelector) ?? node).focus({preventScroll: true});
 				}
 			}
-			stepShownRef.current.onStepShown?.(stepShownRef.current.step);
+			onStepShownRef.current?.(paneStep);
 			let observer: ResizeObserver | null = null;
 			if (typeof ResizeObserver !== 'undefined') {
 				observer = new ResizeObserver(() => {
@@ -163,13 +164,13 @@ export function SteppedCarousel<Step extends string>({
 				}
 			};
 		},
-		[measureNode],
+		[measureNode, paneStep],
 	);
 	useLayoutEffect(() => {
 		pendingFocusRequestRef.current = model.focusRequestId;
 	}, [model.focusRequestId]);
 	useLayoutEffect(() => {
-		stepShownRef.current = {step, onStepShown};
+		onStepShownRef.current = onStepShown;
 	});
 	return (
 		<motion.div
