@@ -83,6 +83,7 @@ An over-length string draws two entries for the one path.
 | save_camera_uploads_to_device?<sup>4</sup> | bool | Whether a camera upload is also written to the device |
 | double_tap_reaction? | [reaction emoji](#reaction-emoji-object) object | Emoji a double tap on a message adds as a reaction |
 | announcement_prompts? | [announcement prompts state](#announcement-prompts-state-object) object | Hidden announcement channel prompt state |
+| double_tap_action | int32 | [Double tap action](#double-tap-actions) on a message |
 
 <sup>1</sup> The entries live inside the snapshot, and the account [memes](/http-api/memes/) collection holds none of them
 
@@ -874,3 +875,14 @@ The `double_tap_reaction` field stores the emoji that a double tap on a message 
 | name | string | Unicode emoji, or the custom emoji's name |
 
 <sup>1</sup> The decimal form of a [snowflake](/snowflakes/). Fluxer never resolves it, so it can name a custom emoji the account can no longer use
+
+## Double tap actions
+
+The `double_tap_action` field selects what a double tap on a message does in the mobile client.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | DOUBLE_TAP_ACTION_UNSPECIFIED | No explicit action is selected, so the client uses its default of adding the `double_tap_reaction` emoji |
+| 1 | DOUBLE_TAP_ACTION_REACT | Add the `double_tap_reaction` emoji as a reaction |
+| 2 | DOUBLE_TAP_ACTION_EDIT | Edit the message, when it is the account's own message |
+| 3 | DOUBLE_TAP_ACTION_NONE | Do nothing |

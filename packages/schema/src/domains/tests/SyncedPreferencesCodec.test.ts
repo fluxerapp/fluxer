@@ -20,6 +20,7 @@ import {
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
 import {
 	ChatInputSettingsSchema,
+	DoubleTapAction,
 	ReactionEmojiSchema,
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {describe, expect, it} from 'vitest';
@@ -101,6 +102,13 @@ describe('SyncedPreferencesCodec', () => {
 		expect(equals(SyncedPreferencesSchema, decodedCustom, custom)).toBe(true);
 		expect(decodedCustom.doubleTapReaction?.id).toBe('123456789012345678');
 		expect(decodedCustom.doubleTapReaction?.name).toBe('party');
+	});
+	it('round-trips every double tap action', () => {
+		for (const action of [DoubleTapAction.REACT, DoubleTapAction.EDIT, DoubleTapAction.NONE]) {
+			const original = create(SyncedPreferencesSchema, {doubleTapAction: action});
+			const decoded = decodeSyncedPreferences(encodeSyncedPreferences(original));
+			expect(decoded.doubleTapAction).toBe(action);
+		}
 	});
 	it('produces canonical encodings for equal inputs', () => {
 		const a = create(SyncedPreferencesSchema, {
