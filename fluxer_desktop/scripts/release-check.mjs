@@ -309,7 +309,37 @@ async function waitForRenderer({logPath, debugPort, version, timeoutMs, label, c
 	);
 }
 
-async function stop(child) {
+function killWindowsTree(child, executable) {
+	for (const args of [
+		['/PID', String(child.pid), '/T', '/F'],
+		['/IM', path.basename(executable), '/T', '/F'],
+	]) {
+		try {
+			execFileSync('taskkill', args, {stdio: 'ignore'});
+		} catch {}
+	}
+}
+
+async function removeSandbox(sandbox) {
+	for (let attempt = 0; attempt < 20; attempt++) {
+		try {
+			fs.rmSync(sandbox, {recursive: true, force: true});
+			return;
+		} catch (error) {
+			if (attempt === 19) {
+				process.stderr.write(`could not remove ${sandbox}: ${error.message}\n`);
+				return;
+			}
+			await sleep(500);
+		}
+	}
+}
+
+async function stop(child, executable) {
+	if (process.platform === 'win32') {
+		killWindowsTree(child, executable);
+		return;
+	}
 	if (child.exitCode != null || child.signalCode != null) return;
 	const exited = new Promise((resolve) => {
 		child.once('exit', resolve);
@@ -394,9 +424,9 @@ async function run() {
 		result.shellStillRunning = child.exitCode == null && child.signalCode == null;
 		result.ok = true;
 	} finally {
-		await stop(child);
+		await stop(child, executable);
 		if (!options.keep) {
-			fs.rmSync(sandbox, {recursive: true, force: true});
+			await removeSandbox(sandbox);
 		}
 	}
 	process.stdout.write(`${JSON.stringify(result, null, '\t')}\n`);
