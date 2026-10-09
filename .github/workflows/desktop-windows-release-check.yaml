@@ -1,0 +1,127 @@
+name: desktop windows release check
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Release channel
+        type: choice
+        options:
+          - canary
+          - stable
+        default: canary
+      version:
+        description: Published version to check
+        required: true
+        type: string
+      expect_failure:
+        description: Pass only when the published build fails to start
+        type: boolean
+        default: false
+      update_from:
+        description: Comma-separated published versions to install with Setup and update to the version above from the live feed
+        required: false
+        type: string
+        default: ""
+  pull_request:
+    paths:
+      - .github/workflows/desktop-windows-release-check.yaml
+      - fluxer_desktop/scripts/release-check.mjs
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-windows-release-check-${{ github.ref }}-${{ inputs.version || 'pr' }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check windows (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            os: windows-2025
+          - arch: arm64
+            os: windows-11-arm
+    env:
+      CHANNEL: ${{ inputs.channel || 'canary' }}
+      VERSION: ${{ inputs.version || '2026.1009.20411' }}
+      EXPECT_FAILURE: ${{ github.event_name == 'pull_request' && 'true' || inputs.expect_failure }}
+      UPDATE_FROM: ${{ inputs.update_from || '' }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          sparse-checkout: fluxer_desktop/scripts
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+
+      - name: Check the portable build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $work = Join-Path $env:RUNNER_TEMP 'portable'
+          New-Item -ItemType Directory -Force -Path $work | Out-Null
+          $zip = Join-Path $work 'portable.zip'
+          Invoke-WebRequest -Uri "https://pkgs.fluxer.com/desktop/$env:CHANNEL/win32/$env:ARCH/$env:VERSION/portable" -OutFile $zip
+          Expand-Archive -Path $zip -DestinationPath (Join-Path $work 'app')
+          $exe = Get-ChildItem -Path (Join-Path $work 'app') -Recurse -Filter 'Fluxer*.exe' | Where-Object { $_.Name -notlike '*_ExecutionStub.exe' } | Select-Object -First 1
+          if ($null -eq $exe) { throw "The portable build holds no Fluxer executable" }
+          $output = & node fluxer_desktop/scripts/release-check.mjs --app $exe.DirectoryName --channel $env:CHANNEL --expect-renderer $env:VERSION --expect-source bundled --app-arg=--disable-gpu --workdir (Join-Path $work 'runs') --timeout-seconds 240 2>&1
+          $code = $LASTEXITCODE
+          $output | ForEach-Object { Write-Host $_ }
+          if ($env:EXPECT_FAILURE -eq 'true') {
+            if ($code -eq 0) { throw "Expected $env:VERSION to fail its release check, it passed" }
+            Write-Host "$env:VERSION fails its release check on windows $env:ARCH as expected"
+            exit 0
+          }
+          if ($code -ne 0) { throw "The release check failed for $env:VERSION on windows $env:ARCH" }
+
+      - name: Update installed builds from the live feed
+        if: env.UPDATE_FROM != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $channelDirs = @{ canary = 'fluxer_desktop_canary'; stable = 'fluxer_desktop' }
+          $dataDirs = @{ canary = 'fluxercanary'; stable = 'fluxer' }
+          $installRoot = Join-Path $env:LOCALAPPDATA $channelDirs[$env:CHANNEL]
+          $logPath = Join-Path (Join-Path $env:APPDATA $dataDirs[$env:CHANNEL]) 'logs\main.log'
+          $failures = @()
+          foreach ($from in ($env:UPDATE_FROM -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })) {
+            Write-Host "== install $from, then update to $env:VERSION"
+            Get-Process | Where-Object { $_.Path -like "$installRoot*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+            if (Test-Path $installRoot) { Remove-Item -Recurse -Force $installRoot }
+            Remove-Item -Recurse -Force (Split-Path $logPath -Parent) -ErrorAction SilentlyContinue
+            $setup = Join-Path $env:RUNNER_TEMP "setup-$from.exe"
+            Invoke-WebRequest -Uri "https://pkgs.fluxer.com/desktop/$env:CHANNEL/win32/$env:ARCH/$from/setup" -OutFile $setup
+            Start-Process -FilePath $setup -ArgumentList '--silent' -Wait
+            Start-Sleep -Seconds 5
+            Get-Process | Where-Object { $_.Path -like "$installRoot*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+            $exe = Get-ChildItem -Path (Join-Path $installRoot 'current') -Filter 'Fluxer*.exe' | Where-Object { $_.Name -notlike '*_ExecutionStub.exe' } | Select-Object -First 1
+            if ($null -eq $exe) { $failures += "$from did not install"; continue }
+            Start-Process -FilePath $exe.FullName -ArgumentList '--disable-gpu'
+            $deadline = (Get-Date).AddMinutes(8)
+            $reported = $null
+            while ((Get-Date) -lt $deadline) {
+              Start-Sleep -Seconds 10
+              if (Test-Path $logPath) {
+                $line = Select-String -Path $logPath -Pattern "The renderer reported its build: .*Desktop $([regex]::Escape($env:VERSION)), Web $([regex]::Escape($env:VERSION))" | Select-Object -Last 1
+                if ($null -ne $line) { $reported = $line.Line; break }
+              }
+            }
+            $installed = Get-Content (Join-Path $installRoot 'current\sq.version') -Raw -ErrorAction SilentlyContinue
+            Write-Host "installed package after update: $installed"
+            if (Test-Path $logPath) { Get-Content $logPath | Select-String -Pattern 'Serving the renderer|reported its build|NativeModulePreflight|elf-update|shell update|Velopack' | Select-Object -Last 20 | ForEach-Object { Write-Host $_.Line } }
+            if ($null -eq $reported) { $failures += "$from did not reach Desktop and Web $env:VERSION" } else { Write-Host "$from updated: $reported" }
+            Get-Process | Where-Object { $_.Path -like "$installRoot*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+          }
+          if ($failures.Count -gt 0) { throw ($failures -join "`n") }

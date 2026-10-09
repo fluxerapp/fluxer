@@ -144,6 +144,7 @@ enum DesktopStep {
     PackModules,
     PruneShellRenderer,
     VerifyBundledRendererLinux,
+    VerifyBundledRendererWindows,
     BuildElectronMain,
     InstallVelopackCli,
     BuildAppMacos,
@@ -256,6 +257,7 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         DesktopStep::PackModules => pack_modules_step(),
         DesktopStep::PruneShellRenderer => prune_shell_renderer_step(),
         DesktopStep::VerifyBundledRendererLinux => verify_bundled_renderer_linux_step(),
+        DesktopStep::VerifyBundledRendererWindows => verify_bundled_renderer_windows_step(),
         DesktopStep::BuildElectronMain => build_electron_main_step(),
         DesktopStep::InstallVelopackCli => install_velopack_cli_step(),
         DesktopStep::BuildAppMacos => build_app_step(DesktopBuildPlatform::Macos),
@@ -1984,6 +1986,36 @@ fn verify_bundled_renderer_linux_step() -> Result<()> {
     )?;
     println!(
         "The packaged {channel} shell {version} boots its bundled renderer with no package feed"
+    );
+    Ok(())
+}
+
+fn verify_bundled_renderer_windows_step() -> Result<()> {
+    let channel = require_env("BUILD_CHANNEL")?;
+    let version = require_env("BUILD_VERSION")?;
+    let arch = require_env("ARCH")?;
+    let config = windows_package_config(&channel, &arch)?;
+    let unpacked = resolve_windows_unpacked_dir(&arch, &config.main_exe)?;
+    run_command(
+        CommandSpec::new("node")
+            .args(["scripts/release-check.mjs", "--app"])
+            .arg(unpacked.as_os_str())
+            .args([
+                "--channel",
+                channel.as_str(),
+                "--expect-renderer",
+                version.as_str(),
+                "--expect-source",
+                "bundled",
+                "--package-origin",
+                "http://127.0.0.1:9",
+                "--app-arg=--disable-gpu",
+                "--timeout-seconds",
+                "240",
+            ]),
+    )?;
+    println!(
+        "The packaged {channel} shell {version} for windows {arch} passes its native module preflight and boots its bundled renderer"
     );
     Ok(())
 }

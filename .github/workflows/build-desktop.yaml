@@ -551,6 +551,16 @@ jobs:
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step verify_windows_unpacked_signatures
 
+      - name: Verify the packaged shell starts and boots its bundled renderer (Windows)
+        if: matrix.platform == 'windows' && matrix.arch == 'x64'
+        working-directory: ${{ env.WORKDIR }}/fluxer_desktop
+        env:
+          BUILD_CHANNEL: ${{ env.BUILD_CHANNEL }}
+          BUILD_VERSION: ${{ env.VERSION }}
+        run: >-
+          cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
+          --step verify_bundled_renderer_windows
+
       - name: Create portable ZIP (Windows)
         if: matrix.platform == 'windows'
         working-directory: ${{ env.WORKDIR }}/fluxer_desktop
@@ -661,13 +671,59 @@ jobs:
           retention-days: 1
           compression-level: 0
 
+  verify_windows_arm64:
+    name: Verify windows (arm64)
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    needs:
+      - meta
+      - build
+    runs-on: windows-11-arm
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+    env:
+      CHANNEL: ${{ needs.meta.outputs.build_channel }}
+      VERSION: ${{ needs.meta.outputs.version }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.meta.outputs.source_sha }}
+          sparse-checkout: fluxer_desktop/scripts
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+
+      - name: Download windows arm64 build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          path: artifacts
+          pattern: fluxer-desktop-${{ needs.meta.outputs.build_channel }}-windows-arm64*
+
+      - name: Verify the packaged shell starts and boots its bundled renderer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Get-ChildItem -Path artifacts -Recurse -Filter "*-$env:VERSION-portable-win-arm64.zip" | Select-Object -First 1
+          if ($null -eq $zip) { Write-Host 'This build has no windows arm64 portable zip'; exit 0 }
+          $app = Join-Path $env:RUNNER_TEMP 'app'
+          Expand-Archive -Path $zip.FullName -DestinationPath $app
+          $exe = Get-ChildItem -Path $app -Recurse -Filter 'Fluxer*.exe' | Where-Object { $_.Name -notlike '*_ExecutionStub.exe' } | Select-Object -First 1
+          if ($null -eq $exe) { throw "$($zip.Name) holds no Fluxer executable" }
+          node fluxer_desktop/scripts/release-check.mjs --app $exe.DirectoryName --channel $env:CHANNEL --expect-renderer $env:VERSION --expect-source bundled --package-origin http://127.0.0.1:9 --app-arg=--disable-gpu --workdir (Join-Path $env:RUNNER_TEMP 'runs') --timeout-seconds 240
+          if ($LASTEXITCODE -ne 0) { throw "The windows arm64 build fails its release check" }
+
   upload:
     name: Assemble desktop release assets
-    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.verify_windows_arm64.result == 'success' }}
     needs:
       - meta
       - shared_assets
       - build
+      - verify_windows_arm64
     runs-on: ubuntu-24.04-arm
     environment: desktop-releases
     timeout-minutes: 180
