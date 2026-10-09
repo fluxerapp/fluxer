@@ -18,7 +18,8 @@ function exePath() {
 }
 function installed() {
 	try {
-		return fs.readFileSync(path.join(installRoot, 'current', 'sq.version'), 'utf8').trim();
+		const xml = fs.readFileSync(path.join(installRoot, 'current', 'sq.version'), 'utf8');
+		return /<version>([^<]+)<\/version>/.exec(xml)?.[1] ?? null;
 	} catch {
 		return null;
 	}
@@ -74,6 +75,10 @@ async function seed() {
 	await sleep(20_000);
 	killAll();
 	await sleep(5000);
+	launch(['--disable-gpu'], {FLUXER_DESKTOP_PACKAGE_ORIGIN: 'http://127.0.0.1:8099'});
+	await sleep(60_000);
+	killAll();
+	await sleep(5000);
 	server.close();
 	const state = readState();
 	console.log('seeded state', JSON.stringify({shell: state?.shell_version, committed: state?.committed, installed: installed()}));
@@ -105,7 +110,7 @@ async function cdpEval(expression) {
 async function click() {
 	launch(['--disable-gpu', '--remote-debugging-port=9333'], {});
 	let state = null;
-	for (let i = 0; i < 60; i++) {
+	for (let i = 0; i < 200; i++) {
 		await sleep(5000);
 		try {
 			const r = await cdpEval('window.electron?.desktopUpdate ? window.electron.desktopUpdate.state() : "no api"');
@@ -116,10 +121,27 @@ async function click() {
 	console.log('update state before click', JSON.stringify(state));
 	const started = await cdpEval('(window.electron.desktopUpdate.start(), "started")').catch((e) => ({error: String(e)}));
 	console.log('start', JSON.stringify(started?.result?.result?.value ?? started));
-	const deadline = Date.now() + 6 * 60_000;
+	let deadline = Date.now() + 4 * 60_000;
 	while (Date.now() < deadline) {
 		await sleep(10_000);
 		if (installed() === version) break;
+	}
+	console.log('installed after first click', installed());
+	if (installed() !== version) {
+		for (let i = 0; i < 24; i++) {
+			await sleep(5000);
+			try {
+				const r = await cdpEval('window.electron.desktopUpdate.state()');
+				if (r?.result?.result?.value?.available) break;
+			} catch {}
+		}
+		const again = await cdpEval('(window.electron.desktopUpdate.start(), "started")').catch((e) => ({error: String(e)}));
+		console.log('second start', JSON.stringify(again?.result?.result?.value ?? again));
+		deadline = Date.now() + 3 * 60_000;
+		while (Date.now() < deadline) {
+			await sleep(10_000);
+			if (installed() === version) break;
+		}
 	}
 	await sleep(30_000);
 	console.log('installed after click', installed());
