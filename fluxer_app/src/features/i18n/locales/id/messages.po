@@ -1123,14 +1123,14 @@ msgstr "{count, plural, one {# kanal mengikuti} other {# kanal mengikuti}} kanal
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# komunitas ditemukan} other {# komunitas ditemukan}}"
 
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# komunitas memiliki setelan sendiri} other {# komunitas memiliki setelan sendiri}}"
+
 #: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# komunitas sementara tidak tersedia karena kerusakan kapasitor fluks.} other {# komunitas sementara tidak tersedia karena kerusakan kapasitor fluks.}}"
-
-#. Heading above the list of communities whose direct message setting differs from the choice in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:55
-msgid "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
-msgstr "{count, plural, one {# komunitas menggunakan setelan yang berbeda} other {# komunitas menggunakan setelan yang berbeda}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:46
@@ -3959,11 +3959,11 @@ msgstr "Izinkan huruf kapital dan spasi dalam nama saluran teks. Jika dinonaktif
 msgid "Allow direct messages"
 msgstr "Izinkan pesan langsung"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:327
 msgid "Allow direct messages from community bots"
 msgstr "Izinkan pesan langsung dari bot komunitas"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:318
 msgid "Allow direct messages from community members"
 msgstr "Izinkan pesan langsung dari anggota komunitas"
 
@@ -4067,7 +4067,7 @@ msgstr "Diizinkan {permissions}"
 msgid "Allowed all members to mention this role"
 msgstr "Mengizinkan semua anggota menyebut peran ini"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:186
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:187
 msgid "Allowed callers"
 msgstr "Penelepon yang diizinkan"
 
@@ -4076,7 +4076,7 @@ msgstr "Penelepon yang diizinkan"
 msgid "Allowed flexible text channel names"
 msgstr "Mengizinkan nama saluran teks yang fleksibel"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:231
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:234
 msgid "Allowed invites"
 msgstr "Undangan yang diizinkan"
 
@@ -4164,6 +4164,11 @@ msgstr "Sudah ditukarkan"
 #: src/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal.tsx:28
 msgid "Already set to cancel"
 msgstr "Sudah diatur untuk dibatalkan"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:85
+msgid "Also change the communities below to match"
+msgstr "Ubah juga komunitas di bawah agar sesuai"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
 #: src/features/messaging/commands/MessageCommands.tsx:98
@@ -4619,9 +4624,13 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "Siapa pun dapat meminta akun, tetapi administrator harus menyetujuinya."
 
 #. Privacy setup option. People who share a community with the user can send them direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+#: src/features/user/components/modals/PrivacySetupModal.tsx:61
 msgid "Anyone in my communities"
 msgstr "Siapa pun di komunitas saya"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Siapa pun yang menemukan Anda dapat mengirim permintaan. Matikan ini untuk memilih grup di bawah."
 
 #. Warning under the recovery key in the recovery kit modal.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:59
@@ -4770,6 +4779,14 @@ msgstr "Aplikasi & bot"
 msgid "Applies to"
 msgstr "Berlaku untuk"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:329
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Berlaku untuk bot di komunitas yang Anda ikuti mulai sekarang. Anda juga dapat mengubahnya untuk setiap komunitas."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:320
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Berlaku untuk komunitas yang Anda ikuti mulai sekarang. Anda juga dapat mengubahnya untuk setiap komunitas."
+
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:81
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:175
 msgid "Apply"
@@ -4786,11 +4803,6 @@ msgstr "Terapkan tema"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "Terapkan ke semua komunitas"
-
-#. Checkbox in the privacy setup modal. When checked, the chosen setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:60
-msgid "Apply to these communities too"
-msgstr "Terapkan juga ke komunitas ini"
 
 #. Registration mode option requiring admin approval.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
@@ -6610,6 +6622,10 @@ msgstr "Privasi panggilan"
 msgid "Calls"
 msgstr "Panggilan"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "Panggilan yang Anda izinkan tetap masuk, tetapi tidak berdering."
+
 #. Fallback camera option label when the operating system does not report a device name.
 #. Fallback video device label when the browser or operating system does not provide a camera name.
 #. Generic voice/video setting label for the active camera device.
@@ -6720,6 +6736,11 @@ msgstr "Kamera dan perangkat tangkapan virtual dipilih di sini di {productName},
 #: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "Kamera mati jika peserta lebih dari {voiceChannelCameraUserLimit}"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "Dapat mengirimimu pesan"
 
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
 #: src/features/app/components/BootstrapErrorScreen.tsx:74
@@ -8123,6 +8144,10 @@ msgstr "Pilih mesin pencari yang digunakan secara default saat mencari teks yang
 msgid "Choose which translator is used by default when translating selected text."
 msgstr "Pilih penerjemah yang digunakan secara default saat menerjemahkan teks yang dipilih."
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "Pilih siapa yang dapat menambahkan Anda ke obrolan grup tanpa bertanya terlebih dahulu."
+
 #: src/features/connection/components/modals/EditConnectionModal.tsx:68
 msgid "Choose who can see this connection on your profile."
 msgstr "Pilih siapa yang bisa melihat koneksi ini di profilmu."
@@ -8131,6 +8156,14 @@ msgstr "Pilih siapa yang bisa melihat koneksi ini di profilmu."
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "Pilih siapa yang dapat melihat detail profilmu"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:280
+msgid "Choose who can send you a friend request."
+msgstr "Pilih siapa yang dapat mengirimi Anda permintaan pertemanan."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "Pilih siapa yang dapat memulai panggilan dengan Anda."
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -8984,6 +9017,21 @@ msgstr "Komunitas dengan lebih dari 250 orang akan otomatis menggunakan pengatur
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:199
 msgid "Communities you can join"
 msgstr "Komunitas yang bisa Anda ikuti"
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:103
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "Komunitas yang Anda ikuti mulai sekarang akan menggunakan ini, dan komunitas di bawah ini akan berubah agar sesuai."
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:99
+msgid "Communities you join from now on will use this."
+msgstr "Komunitas yang Anda ikuti mulai sekarang akan menggunakan ini."
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:94
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "Komunitas yang Anda ikuti mulai sekarang akan menggunakan ini. Komunitas Anda saat ini tetap menggunakan pengaturannya."
 
 #. Community settings sidebar category grouping discovery and the vanity URL.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
@@ -11250,6 +11298,11 @@ msgstr "Ctrl"
 msgid "Currency"
 msgstr "Mata uang"
 
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:77
+msgid "Current"
+msgstr "Saat ini"
+
 #. Notification sound setting label. Controls the sound for incoming messages in the currently focused channel.
 #: src/features/notification/utils/SoundLabels.ts:11
 msgid "Current channel message notifications"
@@ -12745,7 +12798,7 @@ msgstr "Pratinjau pesan langsung"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Direct messages"
 msgstr "Pesan langsung"
 
@@ -14990,7 +15043,7 @@ msgstr "Setiap komunitas yang mengikuti saluran ini akan mendapatkan salinannya.
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "Semua orang"
 
@@ -16535,10 +16588,14 @@ msgstr "Teman dan grup terpilih dapat meneleponmu"
 msgid "Friends and small communities only"
 msgstr "Hanya teman dan komunitas kecil"
 
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:26
-msgid "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
-msgstr "Teman selalu dapat mengirimkan Anda pesan langsung. Pilih apakah orang yang berbagi komunitas dengan Anda dapat mengirimi Anda pesan tanpa mengirim permintaan pertemanan terlebih dahulu."
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "Teman selalu dapat mengirim pesan kepada Anda."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:311
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Teman selalu dapat mengirim pesan kepada Anda. Pengaturan ini mencakup orang dan bot yang hanya Anda bagikan komunitasnya."
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:460
@@ -16547,7 +16604,9 @@ msgstr "Teman dari teman"
 
 #. Privacy > Profile privacy: radio option label restricting the profile to friends only.
 #. Privacy setup option. Only friends can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+#. Shown next to a community in the privacy setup modal. Only friends from it can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:56
+#: src/features/user/components/modals/PrivacySetupModal.tsx:69
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:37
 msgid "Friends only"
 msgstr "Hanya teman"
@@ -17386,6 +17445,10 @@ msgstr "Ditambahkan ke obrolan grup: hanya teman"
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:117
 msgid "Group chat adds: nobody"
 msgstr "Ditambahkan ke obrolan grup: tidak ada"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "Obrolan grup"
 
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:15
@@ -19662,6 +19725,11 @@ msgstr "Pertahankan tingkatan gratis dan premium. Anda dapat menyesuaikan tingka
 #: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:286
 msgid "Keep grace period"
 msgstr "Pertahankan masa tenggang"
+
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:111
+msgid "Keep my current settings"
+msgstr "Pertahankan pengaturan saya saat ini"
 
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
@@ -24084,6 +24152,11 @@ msgstr "Tidak ada yang bisa dikembalikan"
 msgid "Nothing to search for"
 msgstr "Tidak ada yang bisa dicari"
 
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:90
+msgid "Nothing will change. This just confirms your settings."
+msgstr "Tidak ada yang akan berubah. Ini hanya mengonfirmasi pengaturan Anda."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:91
 msgid "Notification"
@@ -25653,8 +25726,18 @@ msgstr "Pennsylvania"
 msgid "People"
 msgstr "Orang"
 
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "Orang-orang di komunitas Anda dapat mengirim pesan kepada Anda tanpa perlu berteman."
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "Orang-orang di komunitas Anda harus berteman dengan Anda sebelum mereka dapat mengirim pesan."
+
 #. Description under the "Friends only" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+#: src/features/user/components/modals/PrivacySetupModal.tsx:73
 msgid "People need to be your friend before they can message you. They can still send you a friend request."
 msgstr "Orang harus menjadi teman Anda sebelum mereka dapat mengirimi Anda pesan. Mereka masih dapat mengirimi Anda permintaan pertemanan."
 
@@ -25669,9 +25752,17 @@ msgid "People sign in with an email address and password. Password resets and ve
 msgstr "Orang masuk menggunakan alamat email dan sandi. Reset sandi dan verifikasi memerlukan pengiriman email, yang dapat Anda siapkan nanti."
 
 #. Description under the "Anyone in my communities" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+#: src/features/user/components/modals/PrivacySetupModal.tsx:65
 msgid "People who share a community with you can message you directly."
 msgstr "Orang yang berbagi komunitas dengan Anda dapat mengirimi Anda pesan secara langsung."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:300
+msgid "People who share a community with you."
+msgstr "Orang-orang yang berbagi komunitas dengan Anda."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:292
+msgid "People who share at least one friend with you."
+msgstr "Orang yang memiliki setidaknya satu teman dengan Anda."
 
 #. Helper text for the voice channel connection limit field.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:30
@@ -27333,6 +27424,10 @@ msgstr "Alasan: {0}"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:112
 msgid "Receipt"
 msgstr "Struk"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "Terima panggilan secara senyap"
 
 #. Label in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:69
@@ -29209,6 +29304,11 @@ msgctxt "mouse-button-name"
 msgid "Right mouse button"
 msgstr "Tombol kanan mouse"
 
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "Saat ini"
+
 #. Tooltip text in the overlays tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:27
 msgid "Right tooltip"
@@ -29399,7 +29499,6 @@ msgstr "Saturasi"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Button that saves the forum tag editor or tag picker.
 #. Confirm button on the alert shown before saving an edit to a published announcement message.
-#. Primary button in the privacy setup modal. Saves the chosen direct message setting.
 #. Save button in the community-folder settings modal footer.
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
@@ -29424,7 +29523,6 @@ msgstr "Saturasi"
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
-#: src/features/user/components/modals/PrivacySetupModal.tsx:51
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "Simpan"
@@ -29471,7 +29569,9 @@ msgstr "Simpan latar belakang"
 msgid "Save banner"
 msgstr "Simpan banner"
 
+#. Primary button in the privacy setup modal after the user picks a different setting.
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:60
+#: src/features/user/components/modals/PrivacySetupModal.tsx:115
 msgid "Save changes"
 msgstr "Simpan perubahan"
 
@@ -32033,10 +32133,6 @@ msgstr "Panggilan senyap"
 msgid "Silent calls"
 msgstr "Panggilan senyap"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:217
-msgid "Silent calls from everyone"
-msgstr "Panggilan senyap dari semua orang"
-
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:874
 msgid "Silent when the capture device has no audio input of its own"
 msgstr "Senyap saat perangkat penangkap tidak memiliki input audio sendiri"
@@ -34101,6 +34197,11 @@ msgstr "Tag membantu orang menemukan postingan. Anda dapat menambahkan hingga {c
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:60
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "Tag harus terdiri dari 2 hingga {maxLength} karakter dan alfanumerik."
+
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "Luangkan waktu sejenak untuk memeriksa siapa saja yang dapat mengirim pesan kepada Anda. Tidak ada yang berubah kecuali Anda memilihnya."
 
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
@@ -40131,10 +40232,6 @@ msgstr "Saat push-to-talk aktif, pintasanmu yang mengontrol mikrofon, jadi tombo
 msgid "Who can add"
 msgstr "Siapa yang bisa menambahkan"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:227
-msgid "Who can add you to group chats"
-msgstr "Siapa yang bisa menambahkanmu ke obrolan grup"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:74
 msgid "Who can call"
@@ -40156,12 +40253,12 @@ msgid "Who can join"
 msgstr "Siapa yang bisa bergabung"
 
 #. Accessible label for the group of options in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:65
+#: src/features/user/components/modals/PrivacySetupModal.tsx:81
 msgid "Who can message you"
 msgstr "Siapa yang dapat mengirim pesan kepada Anda"
 
 #. Title of the privacy setup modal that asks who can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:22
+#: src/features/user/components/modals/PrivacySetupModal.tsx:23
 msgid "Who can message you?"
 msgstr "Siapa yang bisa mengirimimu pesan?"
 
@@ -40483,7 +40580,7 @@ msgid "You can cancel the deletion process within 14 days"
 msgstr "Kamu dapat membatalkan proses penghapusan dalam 14 hari"
 
 #. Small note at the bottom of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+#: src/features/user/components/modals/PrivacySetupModal.tsx:107
 msgid "You can change this anytime in your privacy settings, including for each community."
 msgstr "Anda dapat mengubah ini kapan saja di pengaturan privasi Anda, termasuk untuk setiap komunitas."
 
@@ -41862,131 +41959,3 @@ msgstr "Perbesar"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "Perkecil"
-
-#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
-msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
-msgstr "{count, plural, one {# komunitas memiliki setelan sendiri} other {# komunitas memiliki setelan sendiri}}"
-
-#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:84
-msgid "Also change the communities below to match"
-msgstr "Ubah juga komunitas di bawah agar sesuai"
-
-#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:52
-msgid "Can message you"
-msgstr "Dapat mengirimimu pesan"
-
-#. Nagbar body asking the user to review who can send them direct messages.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
-msgid "Choose who can send you direct messages."
-msgstr "Pilih siapa saja yang dapat mengirim Anda pesan langsung."
-
-#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:102
-msgid "Communities you join from now on will use this, and the communities below change to match."
-msgstr "Komunitas yang Anda ikuti mulai sekarang akan menggunakan ini, dan komunitas di bawah ini akan berubah agar sesuai."
-
-#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:98
-msgid "Communities you join from now on will use this."
-msgstr "Komunitas yang Anda ikuti mulai sekarang akan menggunakan ini."
-
-#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:93
-msgid "Communities you join from now on will use this. Your current communities keep their settings."
-msgstr "Komunitas yang Anda ikuti mulai sekarang akan menggunakan ini. Komunitas Anda saat ini tetap menggunakan pengaturannya."
-
-#. Small tag next to the privacy setup option that matches the current setting.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:76
-msgid "Current"
-msgstr "Saat ini"
-
-#. Reassurance in the privacy setup modal that friends can always send direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
-msgid "Friends can always message you."
-msgstr "Teman selalu dapat mengirim pesan kepada Anda."
-
-#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:110
-msgid "Keep my current settings"
-msgstr "Pertahankan pengaturan saya saat ini"
-
-#. Summary in the privacy setup modal when the user keeps the current setting.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:89
-msgid "Nothing will change. This just confirms your settings."
-msgstr "Tidak ada yang akan berubah. Ini hanya mengonfirmasi pengaturan Anda."
-
-#. Describes the current setting in the privacy setup modal when community members can send direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
-msgid "People in your communities can message you without being friends."
-msgstr "Orang-orang di komunitas Anda dapat mengirim pesan kepada Anda tanpa perlu berteman."
-
-#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
-msgid "People in your communities need to be your friend before they can message you."
-msgstr "Orang-orang di komunitas Anda harus berteman dengan Anda sebelum mereka dapat mengirim pesan."
-
-#. Developer control label for the privacy setup banner.
-#: src/features/devtools/components/NagbarControls.ts:69
-msgid "Privacy setup nagbar"
-msgstr "Pengaturan privasi"
-
-#. Heading of the box in the privacy setup modal that describes the current direct message setting.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
-msgid "Right now"
-msgstr "Saat ini"
-
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:27
-msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
-msgstr "Luangkan waktu sejenak untuk memeriksa siapa saja yang dapat mengirim pesan kepada Anda. Tidak ada yang berubah kecuali Anda memilihnya."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
-msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
-msgstr "Siapa pun yang menemukan Anda dapat mengirim permintaan. Matikan ini untuk memilih grup di bawah."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
-msgid "Applies to bots in communities you join from now on. You can also change it for each community."
-msgstr "Berlaku untuk bot di komunitas yang Anda ikuti mulai sekarang. Anda juga dapat mengubahnya untuk setiap komunitas."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
-msgid "Applies to communities you join from now on. You can also change it for each community."
-msgstr "Berlaku untuk komunitas yang Anda ikuti mulai sekarang. Anda juga dapat mengubahnya untuk setiap komunitas."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
-msgid "Choose who can send you a friend request."
-msgstr "Pilih siapa yang dapat mengirimi Anda permintaan pertemanan."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
-msgid "Friends can always message you. These settings cover people and bots you only share a community with."
-msgstr "Teman selalu dapat mengirim pesan kepada Anda. Pengaturan ini mencakup orang dan bot yang hanya Anda bagikan komunitasnya."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
-msgid "People who share a community with you."
-msgstr "Orang-orang yang berbagi komunitas dengan Anda."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
-msgid "People who share at least one friend with you."
-msgstr "Orang yang memiliki setidaknya satu teman dengan Anda."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
-msgid "Calls you allow still come through, but they don't ring."
-msgstr "Panggilan yang Anda izinkan tetap masuk, tetapi tidak berdering."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
-msgid "Choose who can add you to a group chat without asking first."
-msgstr "Pilih siapa yang dapat menambahkan Anda ke obrolan grup tanpa bertanya terlebih dahulu."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
-msgid "Choose who can start a call with you."
-msgstr "Pilih siapa yang dapat memulai panggilan dengan Anda."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
-msgid "Group chats"
-msgstr "Obrolan grup"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
-msgid "Receive calls silently"
-msgstr "Terima panggilan secara senyap"

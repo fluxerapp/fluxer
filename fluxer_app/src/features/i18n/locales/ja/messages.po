@@ -1123,14 +1123,14 @@ msgstr "{count, plural, one {# チャンネルがフォローしています} ot
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {#件のコミュニティが見つかりました} other {#件のコミュニティが見つかりました}}"
 
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# コミュニティで独自のカスタム設定があります} other {# コミュニティで独自のカスタム設定があります}}"
+
 #: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {#件のコミュニティがフラックスキャパシタの不具合により一時的に利用できません。} other {#件のコミュニティがフラックスキャパシタの不具合により一時的に利用できません。}}"
-
-#. Heading above the list of communities whose direct message setting differs from the choice in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:55
-msgid "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
-msgstr "{count, plural, one {# コミュニティで設定が異なります} other {# コミュニティで設定が異なります}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:46
@@ -3959,11 +3959,11 @@ msgstr "テキストチャンネル名に大文字とスペースの使用を許
 msgid "Allow direct messages"
 msgstr "ダイレクトメッセージを許可"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:327
 msgid "Allow direct messages from community bots"
 msgstr "コミュニティボットからのダイレクトメッセージを許可"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:318
 msgid "Allow direct messages from community members"
 msgstr "コミュニティメンバーからのダイレクトメッセージを許可"
 
@@ -4067,7 +4067,7 @@ msgstr "{permissions}を許可しました"
 msgid "Allowed all members to mention this role"
 msgstr "このロールへのメンションを全員に許可しました"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:186
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:187
 msgid "Allowed callers"
 msgstr "着信を許可する相手"
 
@@ -4076,7 +4076,7 @@ msgstr "着信を許可する相手"
 msgid "Allowed flexible text channel names"
 msgstr "テキストチャンネル名の自由な設定を許可しました"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:231
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:234
 msgid "Allowed invites"
 msgstr "招待を許可する相手"
 
@@ -4164,6 +4164,11 @@ msgstr "使用済み"
 #: src/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal.tsx:28
 msgid "Already set to cancel"
 msgstr "キャンセル設定済み"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:85
+msgid "Also change the communities below to match"
+msgstr "以下のコミュニティも同様に変更"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
 #: src/features/messaging/commands/MessageCommands.tsx:98
@@ -4619,9 +4624,13 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "誰でもアカウントをリクエストできますが、管理者の承認が必要です。"
 
 #. Privacy setup option. People who share a community with the user can send them direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+#: src/features/user/components/modals/PrivacySetupModal.tsx:61
 msgid "Anyone in my communities"
 msgstr "コミュニティのメンバー全員"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "見つけた人は誰でもリクエストを送信できます。これをオフにすると、以下のグループを選択できます。"
 
 #. Warning under the recovery key in the recovery kit modal.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:59
@@ -4770,6 +4779,14 @@ msgstr "アプリとボット"
 msgid "Applies to"
 msgstr "適用範囲"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:329
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "今後参加するコミュニティのボットに適用されます。各コミュニティで個別に変更することもできます。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:320
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "今後参加するコミュニティに適用されます。各コミュニティで変更することもできます。"
+
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:81
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:175
 msgid "Apply"
@@ -4786,11 +4803,6 @@ msgstr "テーマを適用"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "すべてのコミュニティに適用"
-
-#. Checkbox in the privacy setup modal. When checked, the chosen setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:60
-msgid "Apply to these communities too"
-msgstr "これらのコミュニティにも適用"
 
 #. Registration mode option requiring admin approval.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
@@ -6610,6 +6622,10 @@ msgstr "通話プライバシー"
 msgid "Calls"
 msgstr "通話"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "許可した通話は引き続き着信しますが、呼び出し音は鳴りません。"
+
 #. Fallback camera option label when the operating system does not report a device name.
 #. Fallback video device label when the browser or operating system does not provide a camera name.
 #. Generic voice/video setting label for the active camera device.
@@ -6720,6 +6736,11 @@ msgstr "カメラと仮想キャプチャデバイスは、Waylandシステム�
 #: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "{voiceChannelCameraUserLimit}人を超えるとカメラはオフになります"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "メッセージを送信できます"
 
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
 #: src/features/app/components/BootstrapErrorScreen.tsx:74
@@ -8123,6 +8144,10 @@ msgstr "選択したテキストを検索する際に、デフォルトで使用
 msgid "Choose which translator is used by default when translating selected text."
 msgstr "選択したテキストを翻訳する際に、デフォルトで使用する翻訳ツールを選択します。"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "誰があなたをグループチャットに招待できるか、または確認なしで追加できるかを選択してください。"
+
 #: src/features/connection/components/modals/EditConnectionModal.tsx:68
 msgid "Choose who can see this connection on your profile."
 msgstr "このつながりをプロフィールで誰に公開するかを選択します。"
@@ -8131,6 +8156,14 @@ msgstr "このつながりをプロフィールで誰に公開するかを選択
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "プロフィール詳細を閲覧できるユーザーを選択"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:280
+msgid "Choose who can send you a friend request."
+msgstr "友達リクエストを送信できるユーザーを選択してください。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "誰があなたに電話をかけられるかを選択してください。"
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -8984,6 +9017,21 @@ msgstr "250人を超えるコミュニティでは、通知設定が「メンシ
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:199
 msgid "Communities you can join"
 msgstr "参加できるコミュニティ"
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:103
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "今後参加するコミュニティでこれが使用され、以下のコミュニティもそれに合わせて変更されます。"
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:99
+msgid "Communities you join from now on will use this."
+msgstr "今後参加するコミュニティでこれを使用します。"
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:94
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "今後参加するコミュニティに適用されます。現在のコミュニティの設定はそのまま維持されます。"
 
 #. Community settings sidebar category grouping discovery and the vanity URL.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
@@ -11250,6 +11298,11 @@ msgstr "Ctrl"
 msgid "Currency"
 msgstr "通貨"
 
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:77
+msgid "Current"
+msgstr "現在"
+
 #. Notification sound setting label. Controls the sound for incoming messages in the currently focused channel.
 #: src/features/notification/utils/SoundLabels.ts:11
 msgid "Current channel message notifications"
@@ -12745,7 +12798,7 @@ msgstr "ダイレクトメッセージのプレビュー"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Direct messages"
 msgstr "ダイレクトメッセージ"
 
@@ -14990,7 +15043,7 @@ msgstr "このチャンネルをフォローしているすべてのコミュニ
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "全員"
 
@@ -16535,10 +16588,14 @@ msgstr "友達と選択したグループがあなたに通話を発信できま
 msgid "Friends and small communities only"
 msgstr "友達と小規模コミュニティのみ"
 
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:26
-msgid "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
-msgstr "友達はいつでもあなたにダイレクトメッセージを送ることができます。コミュニティを共有している人が、先に友達リクエストを送らなくてもメッセージを送れるようにするかどうかを選択してください。"
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "友達はいつでもあなたにメッセージを送信できます。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:311
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "フレンドはいつでもあなたにメッセージを送信できます。これらの設定は、コミュニティのみを共有しているユーザーやボットに適用されます。"
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:460
@@ -16547,7 +16604,9 @@ msgstr "友達の友達"
 
 #. Privacy > Profile privacy: radio option label restricting the profile to friends only.
 #. Privacy setup option. Only friends can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+#. Shown next to a community in the privacy setup modal. Only friends from it can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:56
+#: src/features/user/components/modals/PrivacySetupModal.tsx:69
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:37
 msgid "Friends only"
 msgstr "友達のみ"
@@ -17386,6 +17445,10 @@ msgstr "グループチャットへの追加：友達のみ"
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:117
 msgid "Group chat adds: nobody"
 msgstr "グループチャットへの追加：許可しない"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "グループチャット"
 
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:15
@@ -19662,6 +19725,11 @@ msgstr "無料版とプレミアム版を残します。ティアをカスタマ
 #: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:286
 msgid "Keep grace period"
 msgstr "猶予期間を保持"
+
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:111
+msgid "Keep my current settings"
+msgstr "現在の設定を維持する"
 
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
@@ -24084,6 +24152,11 @@ msgstr "返金できるものはありません"
 msgid "Nothing to search for"
 msgstr "検索対象がありません"
 
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:90
+msgid "Nothing will change. This just confirms your settings."
+msgstr "何も変更されません。設定を確認するだけです。"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:91
 msgid "Notification"
@@ -25653,8 +25726,18 @@ msgstr "ペンシルベニア州"
 msgid "People"
 msgstr "ユーザー"
 
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "コミュニティのメンバーは、友達でなくてもあなたにメッセージを送信できます。"
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "コミュニティのメンバーがあなたにメッセージを送信するには、まず友達になる必要があります。"
+
 #. Description under the "Friends only" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+#: src/features/user/components/modals/PrivacySetupModal.tsx:73
 msgid "People need to be your friend before they can message you. They can still send you a friend request."
 msgstr "友達だけがあなたにメッセージを送信できます。友達リクエストは引き続き送信可能です。"
 
@@ -25669,9 +25752,17 @@ msgid "People sign in with an email address and password. Password resets and ve
 msgstr "メールアドレスとパスワードでサインインします。パスワードのリセットや認証にはメールの配信が必要ですが、これは後で設定できます。"
 
 #. Description under the "Anyone in my communities" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+#: src/features/user/components/modals/PrivacySetupModal.tsx:65
 msgid "People who share a community with you can message you directly."
 msgstr "あなたとコミュニティを共有している人は、あなたに直接メッセージを送信できます。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:300
+msgid "People who share a community with you."
+msgstr "あなたと同じコミュニティを共有しているユーザー"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:292
+msgid "People who share at least one friend with you."
+msgstr "あなたと少なくとも1人の共通の友達がいるユーザー"
 
 #. Helper text for the voice channel connection limit field.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:30
@@ -27333,6 +27424,10 @@ msgstr "理由: {0}"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:112
 msgid "Receipt"
 msgstr "領収書"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "通話をサイレントで受信"
 
 #. Label in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:69
@@ -29209,6 +29304,11 @@ msgctxt "mouse-button-name"
 msgid "Right mouse button"
 msgstr "マウスの右ボタン"
 
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "現在"
+
 #. Tooltip text in the overlays tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:27
 msgid "Right tooltip"
@@ -29399,7 +29499,6 @@ msgstr "彩度"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Button that saves the forum tag editor or tag picker.
 #. Confirm button on the alert shown before saving an edit to a published announcement message.
-#. Primary button in the privacy setup modal. Saves the chosen direct message setting.
 #. Save button in the community-folder settings modal footer.
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
@@ -29424,7 +29523,6 @@ msgstr "彩度"
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
-#: src/features/user/components/modals/PrivacySetupModal.tsx:51
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "保存"
@@ -29471,7 +29569,9 @@ msgstr "背景を保存"
 msgid "Save banner"
 msgstr "バナーを保存"
 
+#. Primary button in the privacy setup modal after the user picks a different setting.
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:60
+#: src/features/user/components/modals/PrivacySetupModal.tsx:115
 msgid "Save changes"
 msgstr "変更を保存"
 
@@ -32033,10 +32133,6 @@ msgstr "サイレント着信"
 msgid "Silent calls"
 msgstr "サイレント着信"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:217
-msgid "Silent calls from everyone"
-msgstr "全員からの着信をサイレントにする"
-
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:874
 msgid "Silent when the capture device has no audio input of its own"
 msgstr "音声入力がない場合はミュート"
@@ -34101,6 +34197,11 @@ msgstr "タグは投稿を見つけやすくします。最大 {count} 個まで
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:60
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "タグは2～{maxLength}文字の半角英数字で入力してください。"
+
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "メッセージを送信できるユーザーを確認しましょう。あなたが選択しない限り、何も変更されません。"
 
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
@@ -40131,10 +40232,6 @@ msgstr "プッシュトゥトークがオンの場合、ショートカットで
 msgid "Who can add"
 msgstr "追加できる人"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:227
-msgid "Who can add you to group chats"
-msgstr "自分をグループチャットに追加できる人"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:74
 msgid "Who can call"
@@ -40156,12 +40253,12 @@ msgid "Who can join"
 msgstr "参加できるユーザー"
 
 #. Accessible label for the group of options in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:65
+#: src/features/user/components/modals/PrivacySetupModal.tsx:81
 msgid "Who can message you"
 msgstr "メッセージを送信できるユーザー"
 
 #. Title of the privacy setup modal that asks who can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:22
+#: src/features/user/components/modals/PrivacySetupModal.tsx:23
 msgid "Who can message you?"
 msgstr "誰があなたにメッセージを送信できますか？"
 
@@ -40483,7 +40580,7 @@ msgid "You can cancel the deletion process within 14 days"
 msgstr "14日以内であれば、削除処理をキャンセルできます"
 
 #. Small note at the bottom of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+#: src/features/user/components/modals/PrivacySetupModal.tsx:107
 msgid "You can change this anytime in your privacy settings, including for each community."
 msgstr "いつでもプライバシー設定で変更できます。コミュニティごとに設定することも可能です。"
 
@@ -41862,131 +41959,3 @@ msgstr "拡大"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "縮小"
-
-#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
-msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
-msgstr "{count, plural, one {# コミュニティで独自のカスタム設定があります} other {# コミュニティで独自のカスタム設定があります}}"
-
-#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:84
-msgid "Also change the communities below to match"
-msgstr "以下のコミュニティも同様に変更"
-
-#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:52
-msgid "Can message you"
-msgstr "メッセージを送信できます"
-
-#. Nagbar body asking the user to review who can send them direct messages.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
-msgid "Choose who can send you direct messages."
-msgstr "誰があなたにダイレクトメッセージを送信できるかを選択してください。"
-
-#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:102
-msgid "Communities you join from now on will use this, and the communities below change to match."
-msgstr "今後参加するコミュニティでこれが使用され、以下のコミュニティもそれに合わせて変更されます。"
-
-#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:98
-msgid "Communities you join from now on will use this."
-msgstr "今後参加するコミュニティでこれを使用します。"
-
-#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:93
-msgid "Communities you join from now on will use this. Your current communities keep their settings."
-msgstr "今後参加するコミュニティに適用されます。現在のコミュニティの設定はそのまま維持されます。"
-
-#. Small tag next to the privacy setup option that matches the current setting.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:76
-msgid "Current"
-msgstr "現在"
-
-#. Reassurance in the privacy setup modal that friends can always send direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
-msgid "Friends can always message you."
-msgstr "友達はいつでもあなたにメッセージを送信できます。"
-
-#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:110
-msgid "Keep my current settings"
-msgstr "現在の設定を維持する"
-
-#. Summary in the privacy setup modal when the user keeps the current setting.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:89
-msgid "Nothing will change. This just confirms your settings."
-msgstr "何も変更されません。設定を確認するだけです。"
-
-#. Describes the current setting in the privacy setup modal when community members can send direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
-msgid "People in your communities can message you without being friends."
-msgstr "コミュニティのメンバーは、友達でなくてもあなたにメッセージを送信できます。"
-
-#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
-msgid "People in your communities need to be your friend before they can message you."
-msgstr "コミュニティのメンバーがあなたにメッセージを送信するには、まず友達になる必要があります。"
-
-#. Developer control label for the privacy setup banner.
-#: src/features/devtools/components/NagbarControls.ts:69
-msgid "Privacy setup nagbar"
-msgstr "プライバシー設定の通知バー"
-
-#. Heading of the box in the privacy setup modal that describes the current direct message setting.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
-msgid "Right now"
-msgstr "現在"
-
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:27
-msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
-msgstr "メッセージを送信できるユーザーを確認しましょう。あなたが選択しない限り、何も変更されません。"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
-msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
-msgstr "見つけた人は誰でもリクエストを送信できます。これをオフにすると、以下のグループを選択できます。"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
-msgid "Applies to bots in communities you join from now on. You can also change it for each community."
-msgstr "今後参加するコミュニティのボットに適用されます。各コミュニティで個別に変更することもできます。"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
-msgid "Applies to communities you join from now on. You can also change it for each community."
-msgstr "今後参加するコミュニティに適用されます。各コミュニティで変更することもできます。"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
-msgid "Choose who can send you a friend request."
-msgstr "友達リクエストを送信できるユーザーを選択してください。"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
-msgid "Friends can always message you. These settings cover people and bots you only share a community with."
-msgstr "フレンドはいつでもあなたにメッセージを送信できます。これらの設定は、コミュニティのみを共有しているユーザーやボットに適用されます。"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
-msgid "People who share a community with you."
-msgstr "あなたと同じコミュニティを共有しているユーザー"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
-msgid "People who share at least one friend with you."
-msgstr "あなたと少なくとも1人の共通の友達がいるユーザー"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
-msgid "Calls you allow still come through, but they don't ring."
-msgstr "許可した通話は引き続き着信しますが、呼び出し音は鳴りません。"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
-msgid "Choose who can add you to a group chat without asking first."
-msgstr "誰があなたをグループチャットに招待できるか、または確認なしで追加できるかを選択してください。"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
-msgid "Choose who can start a call with you."
-msgstr "誰があなたに電話をかけられるかを選択してください。"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
-msgid "Group chats"
-msgstr "グループチャット"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
-msgid "Receive calls silently"
-msgstr "通話をサイレントで受信"

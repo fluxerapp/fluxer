@@ -1123,14 +1123,14 @@ msgstr "{count, plural, one {# kanal följer} other {# kanaler följer}} den hä
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# community hittades} other {# communities hittades}}"
 
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# community har en egen inställning} other {# communities har egna inställningar}}"
+
 #: src/features/app/components/layout/GuildsLayout.tsx:1952
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# community är tillfälligt otillgänglig på grund av ett fel i flödeskondensatorn.} other {# communities är tillfälligt otillgängliga på grund av ett fel i flödeskondensatorn.}}"
-
-#. Heading above the list of communities whose direct message setting differs from the choice in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:55
-msgid "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
-msgstr "{count, plural, one {# community använder en annan inställning} other {# communities använder en annan inställning}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:46
@@ -3959,11 +3959,11 @@ msgstr "Tillåt stora bokstäver och mellanslag i textkanalnamn. När inställni
 msgid "Allow direct messages"
 msgstr "Tillåt direktmeddelanden"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:315
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:327
 msgid "Allow direct messages from community bots"
 msgstr "Tillåt direktmeddelanden från community-botar"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:318
 msgid "Allow direct messages from community members"
 msgstr "Tillåt direktmeddelanden från communitymedlemmar"
 
@@ -4067,7 +4067,7 @@ msgstr "Tillät {permissions}"
 msgid "Allowed all members to mention this role"
 msgstr "Tillät alla medlemmar att omnämna den här rollen"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:186
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:187
 msgid "Allowed callers"
 msgstr "Personer som får ringa"
 
@@ -4076,7 +4076,7 @@ msgstr "Personer som får ringa"
 msgid "Allowed flexible text channel names"
 msgstr "Tillät flexibla textkanalnamn"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:231
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:234
 msgid "Allowed invites"
 msgstr "Tillåtna inbjudningar"
 
@@ -4164,6 +4164,11 @@ msgstr "Redan inlöst"
 #: src/features/app/components/dialogs/components/plutonium/utils/PremiumActionErrorModal.tsx:28
 msgid "Already set to cancel"
 msgstr "Redan inställd för uppsägning"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:85
+msgid "Also change the communities below to match"
+msgstr "Ändra även communityn nedan för att matcha"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, confirming opens the report flow for the message, and the message is deleted when that flow ends. {productName} is the product name (e.g., Fluxer).
 #: src/features/messaging/commands/MessageCommands.tsx:98
@@ -4619,9 +4624,13 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "Vem som helst kan begära ett konto, men en administratör måste godkänna det."
 
 #. Privacy setup option. People who share a community with the user can send them direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+#: src/features/user/components/modals/PrivacySetupModal.tsx:61
 msgid "Anyone in my communities"
 msgstr "Alla i mina communities"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:285
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Alla som hittar dig kan skicka en begäran. Stäng av detta för att välja grupper nedan."
 
 #. Warning under the recovery key in the recovery kit modal.
 #: src/features/auth/components/modals/RecoveryKitModal.tsx:59
@@ -4770,6 +4779,14 @@ msgstr "Appar och botar"
 msgid "Applies to"
 msgstr "Gäller för"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:329
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Gäller för bottar i communities du går med i framöver. Du kan också ändra det för varje community."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:320
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Gäller för communities du går med i framöver. Du kan också ändra det för varje community."
+
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:81
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:175
 msgid "Apply"
@@ -4786,11 +4803,6 @@ msgstr "Använd tema"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "Tillämpa på alla communities"
-
-#. Checkbox in the privacy setup modal. When checked, the chosen setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:60
-msgid "Apply to these communities too"
-msgstr "Använd även för dessa communities"
 
 #. Registration mode option requiring admin approval.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:248
@@ -6610,6 +6622,10 @@ msgstr "Samtalssekretess"
 msgid "Calls"
 msgstr "Samtal"
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "Samtal som du tillåter kommer fortfarande igenom, men de ringer inte."
+
 #. Fallback camera option label when the operating system does not report a device name.
 #. Fallback video device label when the browser or operating system does not provide a camera name.
 #. Generic voice/video setting label for the active camera device.
@@ -6720,6 +6736,11 @@ msgstr "Kameror och virtuella inspelningsenheter väljs här i {productName}, in
 #: src/features/voice/components/VoiceControlBar.tsx:132
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "Kameror är avstängda vid fler än {voiceChannelCameraUserLimit} deltagare"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "Kan skicka direktmeddelanden till dig"
 
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
 #: src/features/app/components/BootstrapErrorScreen.tsx:74
@@ -8123,6 +8144,10 @@ msgstr "Välj vilken sökmotor som ska användas som standard när du söker eft
 msgid "Choose which translator is used by default when translating selected text."
 msgstr "Välj vilken översättare som ska användas som standard när du översätter markerad text."
 
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "Välj vem som kan lägga till dig i en gruppchatt utan att fråga först."
+
 #: src/features/connection/components/modals/EditConnectionModal.tsx:68
 msgid "Choose who can see this connection on your profile."
 msgstr "Välj vem som kan se den här anslutningen på din profil."
@@ -8131,6 +8156,14 @@ msgstr "Välj vem som kan se den här anslutningen på din profil."
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:146
 msgid "Choose who can see your profile details"
 msgstr "Välj vem som kan se dina profildetaljer"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:280
+msgid "Choose who can send you a friend request."
+msgstr "Välj vem som kan skicka en vänförfrågan till dig."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "Välj vem som kan ringa upp dig."
 
 #. Short title in the auth preferences step before login or registration details.
 #: src/features/auth/flow/client_intro/AuthClientPreferencesStep.tsx:20
@@ -8984,6 +9017,21 @@ msgstr "Communities med fler än 250 personer måste använda inställningen ”
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:199
 msgid "Communities you can join"
 msgstr "Communities du kan gå med i"
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:103
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "Framtida communities du går med i kommer att använda detta, och communities nedan ändras för att matcha."
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:99
+msgid "Communities you join from now on will use this."
+msgstr "Sällskap du går med i framöver kommer att använda detta."
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:94
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "Framtida communities du går med i kommer att använda detta. Dina nuvarande communities behåller sina inställningar."
 
 #. Community settings sidebar category grouping discovery and the vanity URL.
 #. Field label in the follow announcement channel dialog. The user picks the community that receives updates.
@@ -11250,6 +11298,11 @@ msgstr "Ctrl"
 msgid "Currency"
 msgstr "Valuta"
 
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:77
+msgid "Current"
+msgstr "Nuvarande"
+
 #. Notification sound setting label. Controls the sound for incoming messages in the currently focused channel.
 #: src/features/notification/utils/SoundLabels.ts:11
 msgid "Current channel message notifications"
@@ -12745,7 +12798,7 @@ msgstr "Förhandsvisningar av direktmeddelanden"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:457
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:227
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:305
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:309
 msgid "Direct messages"
 msgstr "Direktmeddelanden"
 
@@ -14990,7 +15043,7 @@ msgstr "Alla communities som följer den här kanalen får en kopia. Om du redig
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:55
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:283
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:284
 msgid "Everyone"
 msgstr "Alla"
 
@@ -16535,10 +16588,14 @@ msgstr "Vänner och valda grupper kan ringa dig"
 msgid "Friends and small communities only"
 msgstr "Endast vänner och små communities"
 
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:26
-msgid "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
-msgstr "Vänner kan alltid skicka direktmeddelanden till dig. Välj om personer som delar en community med dig kan skicka meddelanden utan att skicka en vänförfrågan först."
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "Vänner kan alltid skicka meddelanden till dig."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:311
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Vänner kan alltid skicka meddelanden till dig. Dessa inställningar gäller personer och botar som du bara delar en community med."
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:460
@@ -16547,7 +16604,9 @@ msgstr "Vänner till vänner"
 
 #. Privacy > Profile privacy: radio option label restricting the profile to friends only.
 #. Privacy setup option. Only friends can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+#. Shown next to a community in the privacy setup modal. Only friends from it can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:56
+#: src/features/user/components/modals/PrivacySetupModal.tsx:69
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx:37
 msgid "Friends only"
 msgstr "Endast vänner"
@@ -17386,6 +17445,10 @@ msgstr "Vilka får lägga till dig i gruppchattar: endast vänner"
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:117
 msgid "Group chat adds: nobody"
 msgstr "Vilka får lägga till dig i gruppchattar: ingen"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "Gruppchattar"
 
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:15
@@ -19662,6 +19725,11 @@ msgstr "Behåll gratis- och premiumnivåer. Du kan anpassa nivåerna, sälja pre
 #: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:286
 msgid "Keep grace period"
 msgstr "Behåll respitperiod"
+
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:111
+msgid "Keep my current settings"
+msgstr "Behåll mina nuvarande inställningar"
 
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
@@ -24084,6 +24152,11 @@ msgstr "Inget att återbetala"
 msgid "Nothing to search for"
 msgstr "Inget att söka efter"
 
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:90
+msgid "Nothing will change. This just confirms your settings."
+msgstr "Ingenting kommer att ändras. Detta bekräftar bara dina inställningar."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:91
 msgid "Notification"
@@ -25653,8 +25726,18 @@ msgstr "Pennsylvania"
 msgid "People"
 msgstr "Personer"
 
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "Personer i dina communities kan skicka meddelanden till dig utan att vara vänner."
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "Personer i dina communities måste vara din vän innan de kan skicka meddelanden till dig."
+
 #. Description under the "Friends only" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+#: src/features/user/components/modals/PrivacySetupModal.tsx:73
 msgid "People need to be your friend before they can message you. They can still send you a friend request."
 msgstr "Personer måste vara din vän innan de kan skicka meddelanden till dig. De kan fortfarande skicka en vänförfrågan."
 
@@ -25669,9 +25752,17 @@ msgid "People sign in with an email address and password. Password resets and ve
 msgstr "Personer loggar in med en e-postadress och ett lösenord. Återställning av lösenord och verifiering kräver leverans av e-post, vilket du kan ställa in senare."
 
 #. Description under the "Anyone in my communities" privacy setup option.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+#: src/features/user/components/modals/PrivacySetupModal.tsx:65
 msgid "People who share a community with you can message you directly."
 msgstr "Personer som delar en community med dig kan skicka meddelanden till dig direkt."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:300
+msgid "People who share a community with you."
+msgstr "Personer som delar en community med dig."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:292
+msgid "People who share at least one friend with you."
+msgstr "Personer som delar minst en vän med dig."
 
 #. Helper text for the voice channel connection limit field.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:30
@@ -27333,6 +27424,10 @@ msgstr "Orsak: {0}"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:112
 msgid "Receipt"
 msgstr "Kvitto"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "Ta emot samtal tyst"
 
 #. Label in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:69
@@ -29209,6 +29304,11 @@ msgctxt "mouse-button-name"
 msgid "Right mouse button"
 msgstr "Höger musknapp"
 
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "Just nu"
+
 #. Tooltip text in the overlays tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:27
 msgid "Right tooltip"
@@ -29399,7 +29499,6 @@ msgstr "Mättnad"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Button that saves the forum tag editor or tag picker.
 #. Confirm button on the alert shown before saving an edit to a published announcement message.
-#. Primary button in the privacy setup modal. Saves the chosen direct message setting.
 #. Save button in the community-folder settings modal footer.
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
@@ -29424,7 +29523,6 @@ msgstr "Mättnad"
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
-#: src/features/user/components/modals/PrivacySetupModal.tsx:51
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "Spara"
@@ -29471,7 +29569,9 @@ msgstr "Spara bakgrund"
 msgid "Save banner"
 msgstr "Spara banner"
 
+#. Primary button in the privacy setup modal after the user picks a different setting.
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:60
+#: src/features/user/components/modals/PrivacySetupModal.tsx:115
 msgid "Save changes"
 msgstr "Spara ändringar"
 
@@ -32033,10 +32133,6 @@ msgstr "Tyst samtal"
 msgid "Silent calls"
 msgstr "Tysta samtal"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:217
-msgid "Silent calls from everyone"
-msgstr "Tysta samtal från alla"
-
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:874
 msgid "Silent when the capture device has no audio input of its own"
 msgstr "Tyst när enheten som används för inspelning inte har någon egen ljudingång"
@@ -34101,6 +34197,11 @@ msgstr "Taggar hjälper folk att hitta inlägg. Du kan lägga till upp till {cou
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:60
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "Taggar måste vara 2 till {maxLength} tecken långa och alfanumeriska."
+
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "Ta en stund att kontrollera vem som kan skicka meddelanden till dig. Ingenting ändras om du inte väljer det."
 
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
@@ -40131,10 +40232,6 @@ msgstr "När tryck för att prata är på styr kortkommandot mikrofonen, så kna
 msgid "Who can add"
 msgstr "Vem kan lägga till"
 
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:227
-msgid "Who can add you to group chats"
-msgstr "Vem kan lägga till dig i gruppchattar"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:74
 msgid "Who can call"
@@ -40156,12 +40253,12 @@ msgid "Who can join"
 msgstr "Vem kan gå med"
 
 #. Accessible label for the group of options in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:65
+#: src/features/user/components/modals/PrivacySetupModal.tsx:81
 msgid "Who can message you"
 msgstr "Vem som kan skicka meddelanden till dig"
 
 #. Title of the privacy setup modal that asks who can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:22
+#: src/features/user/components/modals/PrivacySetupModal.tsx:23
 msgid "Who can message you?"
 msgstr "Vem kan skicka meddelanden till dig?"
 
@@ -40483,7 +40580,7 @@ msgid "You can cancel the deletion process within 14 days"
 msgstr "Du kan avbryta raderingen inom 14 dagar"
 
 #. Small note at the bottom of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+#: src/features/user/components/modals/PrivacySetupModal.tsx:107
 msgid "You can change this anytime in your privacy settings, including for each community."
 msgstr "Du kan ändra detta när som helst i dina sekretessinställningar, även för varje community."
 
@@ -41862,131 +41959,3 @@ msgstr "Zooma in"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "Zooma ut"
-
-#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:47
-msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
-msgstr "{count, plural, one {# community har en egen inställning} other {# communities har egna inställningar}}"
-
-#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:84
-msgid "Also change the communities below to match"
-msgstr "Ändra även communityn nedan för att matcha"
-
-#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:52
-msgid "Can message you"
-msgstr "Kan skicka direktmeddelanden till dig"
-
-#. Nagbar body asking the user to review who can send them direct messages.
-#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
-msgid "Choose who can send you direct messages."
-msgstr "Välj vem som kan skicka direktmeddelanden till dig."
-
-#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:102
-msgid "Communities you join from now on will use this, and the communities below change to match."
-msgstr "Framtida communities du går med i kommer att använda detta, och communities nedan ändras för att matcha."
-
-#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:98
-msgid "Communities you join from now on will use this."
-msgstr "Sällskap du går med i framöver kommer att använda detta."
-
-#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:93
-msgid "Communities you join from now on will use this. Your current communities keep their settings."
-msgstr "Framtida communities du går med i kommer att använda detta. Dina nuvarande communities behåller sina inställningar."
-
-#. Small tag next to the privacy setup option that matches the current setting.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:76
-msgid "Current"
-msgstr "Nuvarande"
-
-#. Reassurance in the privacy setup modal that friends can always send direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:43
-msgid "Friends can always message you."
-msgstr "Vänner kan alltid skicka meddelanden till dig."
-
-#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:110
-msgid "Keep my current settings"
-msgstr "Behåll mina nuvarande inställningar"
-
-#. Summary in the privacy setup modal when the user keeps the current setting.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:89
-msgid "Nothing will change. This just confirms your settings."
-msgstr "Ingenting kommer att ändras. Detta bekräftar bara dina inställningar."
-
-#. Describes the current setting in the privacy setup modal when community members can send direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:35
-msgid "People in your communities can message you without being friends."
-msgstr "Personer i dina communities kan skicka meddelanden till dig utan att vara vänner."
-
-#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:39
-msgid "People in your communities need to be your friend before they can message you."
-msgstr "Personer i dina communities måste vara din vän innan de kan skicka meddelanden till dig."
-
-#. Developer control label for the privacy setup banner.
-#: src/features/devtools/components/NagbarControls.ts:69
-msgid "Privacy setup nagbar"
-msgstr "Integritetsinställningar"
-
-#. Heading of the box in the privacy setup modal that describes the current direct message setting.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:31
-msgid "Right now"
-msgstr "Just nu"
-
-#. Explanation at the top of the privacy setup modal.
-#: src/features/user/components/modals/PrivacySetupModal.tsx:27
-msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
-msgstr "Ta en stund att kontrollera vem som kan skicka meddelanden till dig. Ingenting ändras om du inte väljer det."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
-msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
-msgstr "Alla som hittar dig kan skicka en begäran. Stäng av detta för att välja grupper nedan."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
-msgid "Applies to bots in communities you join from now on. You can also change it for each community."
-msgstr "Gäller för bottar i communities du går med i framöver. Du kan också ändra det för varje community."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
-msgid "Applies to communities you join from now on. You can also change it for each community."
-msgstr "Gäller för communities du går med i framöver. Du kan också ändra det för varje community."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
-msgid "Choose who can send you a friend request."
-msgstr "Välj vem som kan skicka en vänförfrågan till dig."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
-msgid "Friends can always message you. These settings cover people and bots you only share a community with."
-msgstr "Vänner kan alltid skicka meddelanden till dig. Dessa inställningar gäller personer och botar som du bara delar en community med."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
-msgid "People who share a community with you."
-msgstr "Personer som delar en community med dig."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
-msgid "People who share at least one friend with you."
-msgstr "Personer som delar minst en vän med dig."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
-msgid "Calls you allow still come through, but they don't ring."
-msgstr "Samtal som du tillåter kommer fortfarande igenom, men de ringer inte."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
-msgid "Choose who can add you to a group chat without asking first."
-msgstr "Välj vem som kan lägga till dig i en gruppchatt utan att fråga först."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
-msgid "Choose who can start a call with you."
-msgstr "Välj vem som kan ringa upp dig."
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
-msgid "Group chats"
-msgstr "Gruppchattar"
-
-#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
-msgid "Receive calls silently"
-msgstr "Ta emot samtal tyst"

@@ -2156,6 +2156,9 @@
         "msgid": "Allows members to start threads that only invited members and moderators can see."
       },
       {
+        "msgid": "Also change the communities below to match"
+      },
+      {
         "msgid": "An update for {appName} is available."
       },
       {
@@ -2180,6 +2183,9 @@
         "msgid": "Anyone in my communities"
       },
       {
+        "msgid": "Anyone who finds you can send a request. Turn this off to pick groups below."
+      },
+      {
         "msgid": "Anyone with this key can reset your password. Never share it."
       },
       {
@@ -2189,7 +2195,10 @@
         "msgid": "App audio isn't available right now on Windows."
       },
       {
-        "msgid": "Apply to these communities too"
+        "msgid": "Applies to bots in communities you join from now on. You can also change it for each community."
+      },
+      {
+        "msgid": "Applies to communities you join from now on. You can also change it for each community."
       },
       {
         "msgid": "Approval required"
@@ -2288,7 +2297,13 @@
         "msgid": "CSS files"
       },
       {
+        "msgid": "Calls you allow still come through, but they don't ring."
+      },
+      {
         "msgid": "Camera access is needed for device previews"
+      },
+      {
+        "msgid": "Can message you"
       },
       {
         "msgid": "Can't find {path}. Using the last loaded version."
@@ -2399,6 +2414,15 @@
         "msgid": "Choose whether people who share a community with you can send you direct messages without being friends first."
       },
       {
+        "msgid": "Choose who can add you to a group chat without asking first."
+      },
+      {
+        "msgid": "Choose who can send you a friend request."
+      },
+      {
+        "msgid": "Choose who can start a call with you."
+      },
+      {
         "msgid": "Choose your defaults"
       },
       {
@@ -2466,6 +2490,12 @@
       },
       {
         "msgid": "Communities you can join"
+      },
+      {
+        "msgid": "Communities you join from now on will use this."
+      },
+      {
+        "msgid": "Communities you join from now on will use this. Your current communities keep their settings."
       },
       {
         "msgid": "Community overrides"
@@ -2661,6 +2691,9 @@
       },
       {
         "msgid": "Cropping {percent}%"
+      },
+      {
+        "msgid": "Current"
       },
       {
         "msgid": "Custom emoji {emojiName} from a community"
@@ -2993,7 +3026,10 @@
         "msgid": "Forum"
       },
       {
-        "msgid": "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
+        "msgid": "Friends can always message you."
+      },
+      {
+        "msgid": "Friends can always message you. These settings cover people and bots you only share a community with."
       },
       {
         "msgid": "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
@@ -3066,6 +3102,9 @@
       },
       {
         "msgid": "Got it!"
+      },
+      {
+        "msgid": "Group chats"
       },
       {
         "msgid": "H.265 (requires opt-in)"
@@ -3231,6 +3270,9 @@
       },
       {
         "msgid": "Keep attachments when clearing an edit"
+      },
+      {
+        "msgid": "Keep my current settings"
       },
       {
         "msgid": "Keep this page somewhere safe. If you forget your password, you can use it to get back into your account. Anyone with this recovery key can reset your password, so never share it."
@@ -3515,6 +3557,9 @@
         "msgid": "Nothing to search for"
       },
       {
+        "msgid": "Nothing will change. This just confirms your settings."
+      },
+      {
         "msgid": "OP"
       },
       {
@@ -3650,6 +3695,12 @@
         "msgid": "Pay once and get a gift link to share. Gifts never renew."
       },
       {
+        "msgid": "People in your communities can message you without being friends."
+      },
+      {
+        "msgid": "People in your communities need to be your friend before they can message you."
+      },
+      {
         "msgid": "People need to be your friend before they can message you. They can still send you a friend request."
       },
       {
@@ -3660,6 +3711,12 @@
       },
       {
         "msgid": "People who share a community with you can message you directly."
+      },
+      {
+        "msgid": "People who share a community with you."
+      },
+      {
+        "msgid": "People who share at least one friend with you."
       },
       {
         "msgid": "Per-device volume"
@@ -3842,6 +3899,9 @@
         "msgid": "Reason (optional)."
       },
       {
+        "msgid": "Receive calls silently"
+      },
+      {
         "msgid": "Recently active"
       },
       {
@@ -4017,6 +4077,9 @@
       },
       {
         "msgid": "Review who can message you"
+      },
+      {
+        "msgid": "Right now"
       },
       {
         "msgid": "Run the instance as one community instead of many. This can only be enabled now, during setup."
@@ -4431,6 +4494,9 @@
       },
       {
         "msgid": "Tags help people find posts. You can add up to {count} tags."
+      },
+      {
+        "msgid": "Take a moment to check who can message you. Nothing changes unless you choose to."
       },
       {
         "msgid": "Tap Share, then Add to Home Screen."
@@ -5228,7 +5294,7 @@
         "msgid": "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
       },
       {
-        "msgid": "{count, plural, one {# community uses a different setting} other {# communities use a different setting}}"
+        "msgid": "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
       },
       {
         "msgid": "{count, plural, one {# file} other {# files}}"
@@ -5382,87 +5448,6 @@
       {
         "msgctxt": "voice-connection-status",
         "msgid": "Dismiss"
-      },
-      {
-        "msgid": "Also change the communities below to match"
-      },
-      {
-        "msgid": "Can message you"
-      },
-      {
-        "msgid": "Choose who can send you direct messages."
-      },
-      {
-        "msgid": "Communities you join from now on will use this."
-      },
-      {
-        "msgid": "Communities you join from now on will use this. Your current communities keep their settings."
-      },
-      {
-        "msgid": "Current"
-      },
-      {
-        "msgid": "Friends can always message you."
-      },
-      {
-        "msgid": "Keep my current settings"
-      },
-      {
-        "msgid": "Nothing will change. This just confirms your settings."
-      },
-      {
-        "msgid": "People in your communities can message you without being friends."
-      },
-      {
-        "msgid": "People in your communities need to be your friend before they can message you."
-      },
-      {
-        "msgid": "Privacy setup nagbar"
-      },
-      {
-        "msgid": "Right now"
-      },
-      {
-        "msgid": "Take a moment to check who can message you. Nothing changes unless you choose to."
-      },
-      {
-        "msgid": "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
-      },
-      {
-        "msgid": "Anyone who finds you can send a request. Turn this off to pick groups below."
-      },
-      {
-        "msgid": "Applies to bots in communities you join from now on. You can also change it for each community."
-      },
-      {
-        "msgid": "Applies to communities you join from now on. You can also change it for each community."
-      },
-      {
-        "msgid": "Choose who can send you a friend request."
-      },
-      {
-        "msgid": "Friends can always message you. These settings cover people and bots you only share a community with."
-      },
-      {
-        "msgid": "People who share a community with you."
-      },
-      {
-        "msgid": "People who share at least one friend with you."
-      },
-      {
-        "msgid": "Calls you allow still come through, but they don't ring."
-      },
-      {
-        "msgid": "Choose who can add you to a group chat without asking first."
-      },
-      {
-        "msgid": "Choose who can start a call with you."
-      },
-      {
-        "msgid": "Group chats"
-      },
-      {
-        "msgid": "Receive calls silently"
       }
     ],
     "es-419": [
