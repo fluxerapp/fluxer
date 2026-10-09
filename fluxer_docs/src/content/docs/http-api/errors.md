@@ -102,7 +102,7 @@ Fluxer answers an unrecognised failure with 500 `INTERNAL_SERVER_ERROR` and a ge
 | 504 | GATEWAY_TIMEOUT | An upstream dependency did not respond in time |
 | default<sup>3</sup> | GENERAL_ERROR | Any status without a specific mapping |
 
-<sup>1</sup> Also the code a request that matches no route receives, so an unrouted path and an unreadable resource are indistinguishable from the body alone
+<sup>1</sup> Also the code a request that matches no route receives, so an unrouted path and an unreadable resource are indistinguishable from the body alone. A route with a route header on [Threads](/http-api/threads/), [Thread members](/http-api/thread-members/) or [Forums](/http-api/forums/) returns it to a user request without the [`channel_threads` client capability](/http-api/threads/#client-capability)
 
 <sup>2</sup> Also the code an unrecognised failure receives, with the generic localised message
 
@@ -306,6 +306,10 @@ This channel already receives updates from that announcement channel
 
 Remove the followed channels posting here before converting it to an announcement channel
 
+### `CHANNEL_HAS_THREADS`
+
+Channels with threads can't be converted to announcement channels
+
 ### `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED`
 
 Only text and announcement channels can be converted into each other
@@ -446,6 +450,14 @@ Updates from an age-restricted channel can only go to an age-restricted channel
 
 Forbidden
 
+### `FORUM_TAG_NAMES_MUST_BE_UNIQUE`
+
+Tag names must be unique
+
+### `FORUM_TAG_REQUIRED`
+
+A tag is required to create a post in this channel
+
 ### `FRIEND_REQUEST_BLOCKED`
 
 User does not accept friend requests at this time
@@ -517,6 +529,10 @@ Your data export request failed
 ### `HARVEST_NOT_READY`
 
 Your data export is still being prepared
+
+### `HIDE_MEDIA_DOWNLOAD_OPTION_MEDIA_ONLY`
+
+Hiding media download options is only available in media channels
 
 ### `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED`
 
@@ -618,6 +634,10 @@ Invalid stream thumbnail payload
 
 Invalid system flag
 
+### `INVALID_THREAD_NOTIFICATION_SETTINGS`
+
+Invalid thread notification settings
+
 ### `INVALID_TIMESTAMP`
 
 Invalid timestamp
@@ -662,6 +682,10 @@ IP authorization resend limit exceeded
 
 This IP address cannot be added to the blocklist
 
+### `MAX_ACTIVE_THREADS`
+
+This community has reached its active thread limit of {count}
+
 ### `MAX_APPLICATIONS`
 
 You've reached the maximum of {limit, plural, one {# application} other {# applications}}
@@ -681,6 +705,10 @@ You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}
 ### `MAX_FAVORITE_MEMES`
 
 You've reached the maximum of {count, plural, one {# favorite meme} other {# favorite memes}}
+
+### `MAX_FORUM_TAGS`
+
+This channel has reached its tag limit of {count}
 
 ### `MAX_FRIENDS`
 
@@ -714,6 +742,10 @@ You've reached the maximum of {count, plural, one {# community role} other {# co
 
 You've reached the maximum of {count, plural, one {# invite} other {# invites}}
 
+### `MAX_PINNED_THREADS_IN_FORUM`
+
+This channel has reached its pinned post limit of {count}
+
 ### `MAX_REACTIONS`
 
 You've reached the maximum of {count, plural, one {# reaction} other {# reactions}}
@@ -721,6 +753,10 @@ You've reached the maximum of {count, plural, one {# reaction} other {# reaction
 ### `MAX_STICKERS`
 
 You've reached the maximum of {count, plural, one {# sticker} other {# stickers}}
+
+### `MAX_THREAD_MEMBERS`
+
+This thread has reached its member limit of {count}
 
 ### `MAX_WEBHOOKS_PER_CHANNEL`
 
@@ -805,6 +841,10 @@ No passkeys are registered
 ### `NO_PENDING_DELETION`
 
 Invalid request
+
+### `NO_TAGS_AVAILABLE_TO_NON_MODERATORS`
+
+A tag is required, but only moderators can apply the tags in this channel
 
 ### `NO_USERS_WITH_FLUXERTAG_EXIST`
 
@@ -893,6 +933,10 @@ This resource is being modified
 ### `RESPONSE_VALIDATION_ERROR`
 
 Response validation failed: {errors}
+
+### `SEARCH_INDEX_NOT_READY`
+
+The search index isn't ready yet
 
 ### `SERVICE_UNAVAILABLE`
 
@@ -1030,6 +1074,18 @@ Test harness is disabled
 
 Test harness is forbidden
 
+### `THREAD_ALREADY_CREATED_FOR_MESSAGE`
+
+A thread has already been created for this message
+
+### `THREAD_ARCHIVED`
+
+This thread is archived
+
+### `THREAD_LOCKED`
+
+This thread is locked
+
 ### `TWO_FACTOR_REQUIRED`
 
 Two-factor authentication is required
@@ -1106,6 +1162,10 @@ Unknown emoji
 
 Unknown favorite meme
 
+### `UNKNOWN_FORUM_TAG`
+
+Tag wasn't found
+
 ### `UNKNOWN_GIFT_CODE`
 
 Unknown gift code
@@ -1157,6 +1217,10 @@ Unknown sticker
 ### `UNKNOWN_STORE_PURCHASE`
 
 Unknown store purchase
+
+### `UNKNOWN_THREAD_MEMBER`
+
+Thread member wasn't found
 
 ### `UNKNOWN_USER`
 
@@ -1221,6 +1285,22 @@ Voice channel is full
 ### `WEBAUTHN_CREDENTIAL_LIMIT_REACHED`
 
 You've reached the maximum of {count, plural, one {# WebAuthn credential} other {# WebAuthn credentials}}
+
+### `WEBHOOK_FORUM_TARGET_CONFLICT`
+
+You can't specify both `thread_id` and `thread_name`
+
+### `WEBHOOK_FORUM_TARGET_REQUIRED`
+
+Webhooks posting to this channel need a `thread_id` or a `thread_name`
+
+### `WEBHOOK_SERVICE_FORUM_UNSUPPORTED`
+
+This webhook service can't post to a forum or media channel without a `thread_id`
+
+### `WEBHOOK_THREAD_NAME_REQUIRES_FORUM`
+
+`thread_name` and `applied_tags` only work in forum and media channels
 
 
 ## Validation error code registry

@@ -313,7 +313,7 @@ Sending `{"guild_ids": []}` dispatches a reload to every live guild process on e
 :::
 
 :::note[A reload fires Guild Update]
-Every reloaded guild process fires one [Guild Update](/gateway/events/#guild-update) Dispatch to each session subscribed to it. The payload is the rebuilt guild.
+Every reloaded guild process fires one [Guild Update](/gateway/events/#guild-update) Dispatch to each session subscribed to it. The payload is the rebuilt guild. Each process also reloads the thread state of its guild, and sessions receive [Thread List Sync](/gateway/threads/#thread-list-sync) in the cases that entry lists.
 :::
 
 ### Response body

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Admin threads
 description: Guild thread lookup and thread deletion.
-draft: true
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
@@ -33,6 +32,8 @@ Returns every thread of a guild, active and archived, newest first. Requires `gu
 | --- | --- | --- |
 | 200 | response body | Threads were listed |
 
+The operation does not verify that the guild exists. An unknown guild ID returns an empty `threads` array.
+
 ### Side effects
 
 One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_guild_threads`, the target type `guild`, and the guild ID as the target. Its metadata key `result_count` is the number of threads returned.
@@ -45,7 +46,7 @@ One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with t
 
 <RouteHeader method="DELETE" path="/v1/admin/channels/{channel_id}" auditReason />
 
-Deletes a thread with its messages and memberships. Requires `message:delete_all`. Returns 204 with no body. Emits a [Thread Delete](/gateway/events/#thread-delete) Gateway event.
+Deletes a thread with its messages, attachments, and memberships. Requires `message:delete_all`. Returns 204 with no body.
 
 ### Path parameters
 
@@ -57,13 +58,15 @@ Deletes a thread with its messages and memberships. Requires `message:delete_all
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | None | Thread was deleted |
-| 400 | [error response](/http-api/#error-response) | Channel is not a thread and the request returns `INVALID_CHANNEL_TYPE` |
-| 404 | [error response](/http-api/#error-response) | Channel does not exist and the request returns `UNKNOWN_CHANNEL` |
+| 204 | empty | Thread was deleted |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_CHANNEL_TYPE` when the channel is not a public, private, or announcement thread |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_CHANNEL` when no channel has this ID |
 
 ### Side effects
 
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `delete_thread`, the target type `channel`, and the thread ID as the target. Its metadata is `guild_id`, `parent_id`, and `type`. The guild audit log records nothing.
+Emits a [Thread Delete](/gateway/threads/#thread-delete) Gateway event. The source message of a thread started from a message loses `HAS_THREAD`, and Fluxer emits [Message Update](/gateway/events/#message-update) for it. Fluxer removes the thread and its messages from search.
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `delete_thread`, the target type `channel`, and the thread ID as the target. Its metadata keys are `guild_id`, `parent_id`, and `type`. `type` is the channel type as a decimal string. The guild's own audit log records nothing.
 
 ### Rate limit
 

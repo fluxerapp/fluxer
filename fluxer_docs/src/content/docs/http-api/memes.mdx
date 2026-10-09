@@ -232,6 +232,8 @@ The operation emits one [Favorite Meme Create](/gateway/events/#favorite-meme-cr
 
 Copies one attachment or one embed asset from a readable message into the caller's own collection and returns the created [meme object](#meme-object). Requires [VIEW_CHANNEL](/http-api/permissions/) in a guild channel. Emits a [Favorite Meme Create](/gateway/events/#favorite-meme-create) Gateway event.
 
+A message in a thread follows [Channel resolution](/http-api/messages/#channel-resolution).
+
 A guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) can select media only from a message on or after the guild's [message history cutoff](/http-api/messages/). Attachments and embeds in the message's forwarded snapshots are selectable alongside its own.
 
 ### Path parameters
@@ -273,6 +275,7 @@ An embed selection uses its image, video, or thumbnail, in that order. Media who
 | 400 | [error response](/http-api/#error-response) | The collection is at its limit with `MAX_FAVORITE_MEMES` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
 | 403 | [error response](/http-api/#error-response) | The caller is not a member of the guild or lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The caller cannot view the thread that holds the message and the request returns `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The channel requires age verification the account has not completed and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 404 | [error response](/http-api/#error-response) | Channel is unavailable or the caller is not a recipient of it with `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | The message is unavailable or unreadable with `UNKNOWN_MESSAGE` |

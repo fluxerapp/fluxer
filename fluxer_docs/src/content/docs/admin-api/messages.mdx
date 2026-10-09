@@ -16,6 +16,8 @@ A flattened moderation view of one message. It has the author identity, the cont
 
 Every operation that returns Admin message objects also returns the matching public message objects in a parallel `message_responses` array, so a client that needs the full wire shape joins on `id`.
 
+A `message_responses` entry has no `thread` field, and a thread started from a message lists no `THREAD_STARTER_MESSAGE`. [Thread messages](/http-api/threads/#thread-messages) defines both.
+
 ### Structure
 
 | Field | Type | Description |
@@ -44,6 +46,8 @@ Every operation that returns Admin message objects also returns the matching pub
 <sup>1</sup> Every object in one response has the same values, taken from the channel named in the request path or query. All are null when the channel no longer exists
 
 <sup>2</sup> Always absent from the objects these operations return. The same member is set on the [report message context object](/admin-api/reports/#report-message-context-object)
+
+For a thread, `channel_nsfw` is the value of its parent channel, as [Thread object](/http-api/threads/#thread-object) describes.
 
 ### Example
 
@@ -259,6 +263,8 @@ There is no grace period and no restore operation.
 The message and its attachments are permanently removed, including from search results and the CDN.
 
 [Message Delete](/gateway/events/#message-delete) is sent to the guild when the channel belongs to one, and to each recipient when the channel is private. No other Dispatch is emitted, and deleting a pinned message here emits no [Channel Pins Update](/gateway/events/#channel-pins-update).
+
+A deleted message in a thread no longer counts towards `message_count` of the [thread object](/http-api/threads/#thread-object). Fluxer emits no [Thread Update](/gateway/threads/#thread-update) for the change.
 
 One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `delete_message` and the target type `message`, targeting the message ID. Its metadata is `channel_id` and `message_id`. The entry is written whether or not a message was found.
 

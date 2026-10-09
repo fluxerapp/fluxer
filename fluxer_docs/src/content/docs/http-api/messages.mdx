@@ -8,15 +8,17 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A message is one post in a channel, together with the text, attachments, embeds, stickers, and reactions stored with it. Channel metadata and membership are defined by the [Channels resource](/http-api/channels/).
 
-A text-bearing channel is a [channel type](/http-api/channels/#channel-types) that stores messages, which is every type except a guild category and a guild link channel. The message history cutoff is a time stored on the guild, and a member without [READ_MESSAGE_HISTORY](/http-api/permissions/) reads nothing created before it.
+A text-bearing channel is a [channel type](/http-api/channels/#channel-types) that stores messages, which is every type except a guild category, a guild link channel, a forum channel, and a media channel. A thread is text-bearing. The message history cutoff is a time stored on the guild, and a member without [READ_MESSAGE_HISTORY](/http-api/permissions/) reads nothing created before it.
 
 ## Channel resolution
 
-Fluxer resolves the channel before it applies any per-route authorisation. A private channel returns 404 `UNKNOWN_CHANNEL` to a caller who is not a recipient. A guild channel returns 403 `MISSING_PERMISSIONS` to a non-member and to a member without [VIEW_CHANNEL](/http-api/permissions/). A guild an operator has marked unavailable returns 403 `MISSING_ACCESS` before the route runs. A guild that no Gateway process serves returns 404 `UNKNOWN_GUILD`, or 403 `ACCESS_DENIED` when its stored record survives.
+Fluxer resolves the channel before it applies any per-route authorisation. A private channel returns 404 `UNKNOWN_CHANNEL` to a caller who is not a recipient. A guild channel returns 403 `MISSING_PERMISSIONS` to a non-member and to a member without [VIEW_CHANNEL](/http-api/permissions/). A thread returns 403 `MISSING_ACCESS` to a member who lacks `VIEW_CHANNEL` in its parent or cannot view a private thread. A guild an operator has marked unavailable returns 403 `MISSING_ACCESS` before the route runs. A guild that no Gateway process serves returns 404 `UNKNOWN_GUILD`, or 403 `ACCESS_DENIED` when its stored record survives.
+
+[Thread permissions](/http-api/threads/#thread-permissions) and [Thread lifecycle](/http-api/threads/#thread-lifecycle) state the permission, lock, and archive rules of every operation on this page in a thread. In a thread, each Gateway event an operation on this page emits reaches the sessions that [Dispatch events](/gateway/threads/#dispatch-events) lists.
 
 The message read, create, modify, and delete routes, [Bulk delete messages](#bulk-delete-messages), [Bulk delete own messages](#bulk-delete-own-messages), and [List pinned messages](#list-pinned-messages) also enforce age verification on an age restricted guild channel. A guild channel is age restricted when its own setting says so. A channel with no setting of its own uses its parent category's setting, and then the guild's. They return 403 `NSFW_CONTENT_AGE_RESTRICTED` until the account satisfies it. The attachment routes, the pin routes, the reaction routes, and [Indicate typing](#indicate-typing) resolve the channel without that check.
 
-[Clear channel read state](#clear-channel-read-state) and [Acknowledge message](#acknowledge-message) resolve no channel. [Acknowledge pins](#acknowledge-pins) reads the channel without checking the caller's access. None of the three checks a permission.
+[Clear channel read state](#clear-channel-read-state) resolves no channel. [Acknowledge message](#acknowledge-message) checks no channel access. For a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability) it reads the channel type to set the [read state flags](/http-api/read-states/#read-state-flags). [Acknowledge pins](#acknowledge-pins) reads the channel without checking the caller's access, except for a thread. Clear channel read state and Acknowledge message check no permission. Acknowledge pins checks none outside a thread.
 
 ## Message object
 
@@ -51,6 +53,7 @@ A message object is the full stored form of one post in a channel.
 | nonce?<sup>6</sup> | string | Caller-supplied message nonce, echoed to the sender as a string of 1 through 32 characters |
 | call? | [message call](#message-call-object) object | Call state attached to a call message |
 | referenced_message?<sup>7</sup> | ?[message](#message-object) object | Resolved referenced message without a nested `referenced_message` field |
+| thread?<sup>8</sup> | [thread](/http-api/threads/#thread-object) object | The thread started from this message |
 
 <sup>1</sup> Built for a webhook-authored message and for a stored author ID that no longer resolves
 
@@ -65,6 +68,10 @@ A message object is the full stored form of one post in a channel.
 <sup>6</sup> Echoed only in the create message response and its originating [Message Create](/gateway/events/#message-create) Gateway Dispatch, and never stored on the message
 
 <sup>7</sup> The key is absent when the message has no reply reference, present and null when the reply target no longer resolves, and present with the message when it does. It is always absent on a copy of a [published message](#crosspost-message). A client must tell absent apart from null by key presence
+
+<sup>8</sup> Present only on a message with `HAS_THREAD` whose thread still exists
+
+A `THREAD_STARTER_MESSAGE` also has `referenced_message`. It is the message the thread started from, or null once that message is deleted, as [Thread messages](/http-api/threads/#thread-messages) describes.
 
 A webhook-authored message has no stored author user. Fluxer builds its author from the webhook, with the webhook ID as `id`, the stored webhook name as `username`, the discriminator `0000`, the stored webhook avatar hash as `avatar`, and `bot` true. A message whose stored author ID no longer resolves to an account is served with a deleted-user placeholder. The placeholder has that ID, the discriminator `0000`, and no avatar.
 
@@ -107,21 +114,27 @@ A reply reference resolves into `referenced_message`, and a forward has none. Fl
 | Value | Name | Description |
 | --- | --- | --- |
 | 0 | DEFAULT<sup>1</sup> <sup>2</sup> | Ordinary message |
-| 1 | RECIPIENT_ADD | Group direct message recipient-add system message |
-| 2 | RECIPIENT_REMOVE | Group direct message recipient-remove system message |
+| 1 | RECIPIENT_ADD | Recipient-add system message of a group direct message or a thread |
+| 2 | RECIPIENT_REMOVE | Recipient-remove system message of a group direct message or a thread |
 | 3 | CALL | Private call system message |
-| 4 | CHANNEL_NAME_CHANGE | Group direct message name-change system message |
+| 4 | CHANNEL_NAME_CHANGE | Name-change system message of a group direct message or a thread |
 | 5 | CHANNEL_ICON_CHANGE | Group direct message icon-change system message |
 | 6 | CHANNEL_PINNED_MESSAGE<sup>2</sup> | Channel pin system message |
 | 7 | USER_JOIN<sup>2</sup> | User-join system message |
 | 12 | CHANNEL_FOLLOW_ADD<sup>2</sup> <sup>3</sup> | System message posted when a channel starts following an announcement channel |
+| 18 | THREAD_CREATED<sup>2</sup> <sup>4</sup> | System message in the parent that announces a new public or announcement thread |
 | 19 | REPLY<sup>1</sup> <sup>2</sup> | Message with a reply reference |
+| 21 | THREAD_STARTER_MESSAGE<sup>4</sup> | First message of a thread started from a message, built on read and never stored |
 
-<sup>1</sup> Only `DEFAULT` and `REPLY` can be modified, pinned, unpinned, or used as the target of a reply reference. Any other type rejects modification, pinning, and unpinning with 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and rejects being replied to with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`
+<sup>1</sup> Only `DEFAULT` and `REPLY` can be modified, pinned, unpinned, or used as the target of a reply reference. Any other stored type rejects modification, pinning, and unpinning with 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and rejects being replied to with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`
 
-<sup>2</sup> Only `DEFAULT`, `CHANNEL_PINNED_MESSAGE`, `USER_JOIN`, `CHANNEL_FOLLOW_ADD`, and `REPLY` can be deleted, and any other type rejects deletion with 403 `MISSING_PERMISSIONS`
+<sup>2</sup> Only `DEFAULT`, `CHANNEL_PINNED_MESSAGE`, `USER_JOIN`, `CHANNEL_FOLLOW_ADD`, `THREAD_CREATED`, and `REPLY` can be deleted, and any other stored type rejects deletion with 403 `MISSING_PERMISSIONS`
 
 <sup>3</sup> Its `content` is the name of the new [channel follower webhook](/http-api/webhooks/#webhook-types). Its `message_reference` names the followed announcement channel and its guild, has `type` `0`, and has no `message_id`. It never sends a push notification
+
+<sup>4</sup> [Thread messages](/http-api/threads/#thread-messages) describes this type
+
+A caller other than a bot or a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability) never receives a `THREAD_CREATED` message or a `thread` field. That caller receives a thread flag only from a token-authenticated [webhook](/http-api/webhooks/) operation, which returns the stored flags.
 
 ## Message flags
 
@@ -131,6 +144,8 @@ A reply reference resolves into `referenced_message`, and a forward has none. Fl
 | 1 &lt;&lt; 1 | IS_CROSSPOST<sup>3</sup> | Message is a copy delivered from a followed announcement channel |
 | 1 &lt;&lt; 2 | SUPPRESS_EMBEDS<sup>1</sup> | Suppress rendering of embeds |
 | 1 &lt;&lt; 3 | SOURCE_MESSAGE_DELETED<sup>3</sup> | The published message this copy came from was deleted |
+| 1 &lt;&lt; 5 | HAS_THREAD<sup>4</sup> | A thread was started from this message |
+| 1 &lt;&lt; 8 | FAILED_TO_MENTION_SOME_ROLES_IN_THREAD<sup>4</sup> | Some members of a mentioned role were not added to the thread |
 | 1 &lt;&lt; 12 | SUPPRESS_NOTIFICATIONS | Do not generate ordinary mention notifications |
 | 1 &lt;&lt; 13 | VOICE_MESSAGE<sup>2</sup> | Message has one voice recording attachment |
 
@@ -139,6 +154,8 @@ A reply reference resolves into `referenced_message`, and a forward has none. Fl
 <sup>2</sup> A message with this flag has the voice message restrictions listed under [Create message](#create-message)
 
 <sup>3</sup> Set by the server. [Announcement channels](/topics/announcement-channels/) describes when each is set
+
+<sup>4</sup> Set by the server. [Thread messages](/http-api/threads/#thread-messages) describes when each is set
 
 `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS`, and `VOICE_MESSAGE` are the complete sendable set. A create masks the supplied value down to them, and a modify replaces only them and leaves every other stored bit untouched. Any other bit in the request is discarded, and the request still succeeds.
 
@@ -288,7 +305,7 @@ Each message has at most the resolved `max_reactions_per_message` distinct group
 
 ## Message reference object
 
-A message reference names the message that a reply points at, that a forward was taken from, or that a copy was published from.
+A message reference names the message that a reply points at, that a forward was taken from, or that a copy was published from. A `THREAD_CREATED` message references its thread, and a `THREAD_STARTER_MESSAGE` references the message its thread started from, as [Thread messages](/http-api/threads/#thread-messages) describes.
 
 ### Structure
 
@@ -299,13 +316,13 @@ A message reference names the message that a reply points at, that a forward was
 | guild_id? | snowflake | The ID of the referenced guild, present only for a guild message |
 | type | integer | [Message reference type](#message-reference-types) |
 
-<sup>1</sup> Absent only on a `CHANNEL_FOLLOW_ADD` [system message](#message-types), whose reference names a channel and no message
+<sup>1</sup> Absent on a `CHANNEL_FOLLOW_ADD` and on a `THREAD_CREATED` [system message](#message-types). Each of those references names a channel and no message
 
 ## Message reference types
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | DEFAULT<sup>1</sup> <sup>3</sup> | Reply reference, or the source of a published copy |
+| 0 | DEFAULT<sup>1</sup> <sup>3</sup> | Reply reference, the source of a published copy, or a thread reference |
 | 1 | FORWARD<sup>2</sup> | Forward reference represented by snapshots |
 
 <sup>1</sup> The default when a create message request supplies `message_reference` without a `type`
@@ -690,7 +707,7 @@ Fluxer issues an upload URL for an attachment before any message can reference i
 
 An `upload_url` can point to object storage or the Fluxer [upload relay](/media-proxy/upload-relay/). Send it exactly as issued without assuming its shape.
 
-An upload key can be referenced only by a message that the same identity creates in the same channel.
+An upload key can be referenced only by a message that the same identity creates in the same channel. An upload key planned for a forum or media channel is referenced by the first message of a post that [Start thread](/http-api/threads/#start-thread) creates in that channel.
 
 ### Attachment upload request item object
 
@@ -895,6 +912,7 @@ A caller without `READ_MESSAGE_HISTORY` in a guild channel with no history cutof
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | array[[message](#message-object) object] | Message window was returned |
+| 400 | [error response](/http-api/#error-response) | Channel is a forum or media channel and the request returns `INVALID_CHANNEL_TYPE` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS`, or the caller lacks age verification for the channel and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller is not a recipient of the private channel |
 
@@ -981,7 +999,7 @@ Plans from 1 through 10 attachment uploads. Returns a [singlepart](#singlepart-a
 
 ### Limitations
 
-- The channel must support messages, and one that does not fails with 400 `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL`.
+- The channel must be a text-bearing type, a forum channel, or a media channel. Any other channel fails with 400 `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL`.
 - A guild channel requires [SEND_MESSAGES](/http-api/permissions/) and [ATTACH_FILES](/http-api/permissions/), and a timed-out member is refused with 403 `COMMUNICATION_DISABLED`.
 
 Fluxer checks each declared `file_size` separately against the attachment size limit it resolves for the caller and the guild context. A declaration above that limit returns 400 `FILE_SIZE_TOO_LARGE` with the resolved ceiling. By default the resolved ceiling is 26214400 bytes (25 MiB) for a caller without premium and 524288000 bytes (500 MiB) for a caller with premium. A bot credential is clamped to 52428800 bytes, the 50 MiB bot ceiling, even when the resolved limit is higher.
@@ -1142,6 +1160,7 @@ Creates a message from a JSON body or from multipart form data. Returns the crea
 
 - The channel must be a text-bearing type.
 - A guild channel requires [VIEW_CHANNEL](/http-api/permissions/) and [SEND_MESSAGES](/http-api/permissions/), an untimed-out membership, and a membership that meets the guild's [verification level](/http-api/guilds/#verification-levels).
+- A thread requires [SEND_MESSAGES_IN_THREADS](/http-api/permissions/) in its parent where a guild channel requires `SEND_MESSAGES`.
 - A timed-out member is refused with 403 `COMMUNICATION_DISABLED`.
 - Embeds require [EMBED_LINKS](/http-api/permissions/), attachments require [ATTACH_FILES](/http-api/permissions/), a favourite meme requires both, and active everyone mentions require [MENTION_EVERYONE](/http-api/permissions/).
 - Slowmode applies to a non-bot caller unless they hold [BYPASS_SLOWMODE](/http-api/permissions/).
@@ -1205,7 +1224,7 @@ A nonce is remembered for the authenticated identity for five minutes, so a clie
 
 Reusing a nonce in the same channel inside that window returns the message the first request created. Reusing it in a different channel fails with 404 `UNKNOWN_MESSAGE`. The replay check runs after authorisation and body validation, so a retry that is otherwise invalid still fails, and a retry after the window has passed creates a second message.
 
-A reply from a guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) fails with 404 `UNKNOWN_MESSAGE` when its target was created before the guild's message history cutoff, or when the guild has no cutoff. A forward has no cutoff check on its source. A reply whose target is a system message fails with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`, and a reference that resolves to no message fails with 404 `UNKNOWN_MESSAGE`.
+A reply from a guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) fails with 404 `UNKNOWN_MESSAGE` when its target was created before the guild's message history cutoff, or when the guild has no cutoff. A forward has no cutoff check on its source. A forward whose source is a `THREAD_CREATED` or `THREAD_STARTER_MESSAGE` message fails with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`. A reply whose target is a system message fails with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`, and any other reference that resolves to no message fails with 404 `UNKNOWN_MESSAGE`.
 
 Every `FORWARD` reference has `channel_id`. One that does not is refused by body validation before the operation runs, with 400 `INVALID_MESSAGE_DATA` on a JSON body and a per-field 400 `INVALID_FORM_BODY` on a multipart body.
 
@@ -1270,6 +1289,8 @@ The resolved `max_voice_message_duration` limit defaults to 1200 seconds.
 | 400 | [error response](/http-api/#error-response) | Body, multipart form, content, reference, mention, attachment, embed, sticker, or voice message contract is invalid |
 | 400 | [error response](/http-api/#error-response) | The recipient's direct message policy denies the send and the request returns `CANNOT_SEND_MESSAGES_TO_USER` |
 | 400 | [error response](/http-api/#error-response) | Slowmode denies the send and the request returns `SLOWMODE_RATE_LIMITED` |
+| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
+| 400 | [error response](/http-api/#error-response) | The send would unarchive a thread while the guild has 1,000 active threads, returning `MAX_ACTIVE_THREADS` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks a required permission and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | Is timed out and the request returns `COMMUNICATION_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | Is age restricted from the channel and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
@@ -1291,6 +1312,8 @@ The operation creates the message, attaches every referenced upload and direct m
 It advances the author's read state unless the author is a bot, reopens a direct message for any recipient who had closed it, and resolves eligible uncached URLs into embeds.
 
 It emits [Message Create](/gateway/events/#message-create) to every session that can see the channel. Mention and reply notifications follow the resolved allowed mentions policy.
+
+In a thread the operation also unarchives an archived thread, as [Thread lifecycle](/http-api/threads/#thread-lifecycle) describes. It adds a user sender and the mentioned users as thread members, as [Thread messages](/http-api/threads/#thread-messages) describes.
 
 It writes no audit log entry.
 
@@ -1361,6 +1384,8 @@ An `id` that names no attachment on the message is skipped, and the edit still s
 | --- | --- | --- |
 | 200 | [message](#message-object) object | Message was modified |
 | 400 | [error response](/http-api/#error-response) | Body, message type, attachment, embed, or resulting payload is invalid, or the author is editing a message that has snapshots and the request returns `MESSAGES_WITH_SNAPSHOTS_CANNOT_BE_EDITED` |
+| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
+| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
 | 403 | [error response](/http-api/#error-response) | Caller is not the author and cannot moderate the message and the request returns `CANNOT_EDIT_OTHER_USER_MESSAGE` |
 | 403 | [error response](/http-api/#error-response) | The caller supplied `message_snapshots` or lacks `EMBED_LINKS` or `ATTACH_FILES` and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | The caller is timed out and the request returns `COMMUNICATION_DISABLED` |
@@ -1504,29 +1529,29 @@ Returns the public profile of the guild a copy of a published message came from,
 
 <RouteHeader method="DELETE" path="/v1/channels/{channel_id}/messages/ack" bot />
 
-Deletes the authenticated identity's read state entry for one channel. Returns 204 with an empty body on success.
+The operation is deprecated and changes no read state. Returns 204 with an empty body.
 
 ### Limitations
 
-- Fluxer does not resolve the channel, so the operation changes only the caller's own read state.
-- The operation is idempotent, and a channel with no stored entry still returns 204.
+- Fluxer never checks that the channel exists. An unknown channel ID returns 204.
+- The read state entry of the channel stays as it was.
 
 ### Path parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| channel_id | snowflake | The ID of the channel whose read state is deleted |
+| channel_id | snowflake | The ID of a channel |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | Read state was absent or deleted |
+| 204 | empty | Request was accepted |
 | 403 | [error response](/http-api/#error-response) | Credential type denies the request and it returns `ACCESS_DENIED` |
 
 ### Side effects
 
-The operation deletes the caller's read-through marker, mention count, and pin acknowledgement for the channel. It emits no Gateway Dispatch.
+The operation changes no read state and emits no Gateway Dispatch.
 
 ### Rate limit
 
@@ -1569,6 +1594,8 @@ There is no grace period and no restore operation.
 ### Side effects
 
 The operation permanently deletes the message, its reactions, and its attachments and removes it from search.
+
+Deleting a message that started a thread keeps the thread, as [Thread messages](/http-api/threads/#thread-messages) describes. Deleting a message in a thread lowers the `message_count` of the thread, except for the first message of a forum or media post.
 
 Deleting a [published](#crosspost-message) message keeps each copy of it in the following channels and turns it into a placeholder in the background. The content of the placeholder is `[Original message deleted]`, its attachments, embeds, and stickers are removed, its `edited_timestamp` is set, and it has the `SOURCE_MESSAGE_DELETED` [flag](#message-flags). Deleting a copy removes that copy alone.
 
@@ -1669,7 +1696,7 @@ An ID that names no message in the channel is skipped, so a partially matching r
 
 The operation permanently removes every selected message, attachment, and reaction and removes each message from search.
 
-When at least one ID matched, it emits one [Message Delete Bulk](/gateway/events/#message-delete-bulk) with every requested ID to sessions that can see the channel, including an ID that matched nothing. It emits no [Channel Pins Update](/gateway/events/#channel-pins-update) and no individual [Message Delete](/gateway/events/#message-delete).
+When at least one ID matched, it emits one [Message Delete Bulk](/gateway/events/#message-delete-bulk) with every requested ID to sessions that can see the channel, including an ID that matched nothing. In a thread the Dispatch has only the IDs that matched a message. It emits no [Channel Pins Update](/gateway/events/#channel-pins-update) and no individual [Message Delete](/gateway/events/#message-delete).
 
 It writes one `MESSAGE_BULK_DELETE` guild audit log entry with the matched count and the supplied reason.
 
@@ -1735,6 +1762,7 @@ Deletes every message the caller authored in one channel. Returns 202 with an em
 - The caller must be able to resolve the channel and be in [sudo mode](/http-api/users/mfa/#sudo-mode), established by the `X-Fluxer-Sudo-Mode-JWT` header or by supplying a proof in the body.
 - A caller who satisfies none of those receives 403 `SUDO_MODE_REQUIRED` with `has_mfa` and the available `methods`, which report `totp`, `webauthn`, and `backup_codes`.
 - An account that holds no verifiable credential at all, meaning it is not a bot, has no TOTP secret, no registered WebAuthn credential, and no stored password, satisfies the sudo requirement with an empty body.
+- A thread is a separate channel. The operation leaves the caller's messages in the threads of the channel, and a forum or media channel has no message of its own to delete.
 
 The deletion runs inside the request despite the 202 status, so every matching message is gone by the time the response is returned.
 
@@ -1825,6 +1853,7 @@ The cursor has no message ID, so a client that pages with the `pinned_at` of the
 | --- | --- | --- |
 | 200 | [channel pins page](#channel-pins-page-object) object | Pin page was returned |
 | 400 | [error response](/http-api/#error-response) | Path or cursor is invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
+| 400 | [error response](/http-api/#error-response) | Channel is a forum or media channel and the request returns `INVALID_CHANNEL_TYPE` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS`, or the caller lacks age verification for the channel and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller is not a recipient of the private channel |
 
@@ -1865,8 +1894,11 @@ Pins a `DEFAULT` or `REPLY` message. Returns 204 with an empty body on success. 
 | 400 | [error response](/http-api/#error-response) | The channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
 | 400 | [error response](/http-api/#error-response) | The target is a system message and the request returns `CANNOT_MODIFY_SYSTEM_WEBHOOK` |
 | 400 | [error response](/http-api/#error-response) | The private channel's send policy denies the caller and the request returns `CANNOT_SEND_MESSAGES_TO_USER` |
+| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
+| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `PIN_MESSAGES` and the request returns `MISSING_PERMISSIONS`, or message sending is temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | The caller is under a new conversation limit in a direct message the recipient has not written in, and the request returns `NEW_CONVERSATIONS_LIMITED` |
+| 403 | [error response](/http-api/#error-response) | Caller is timed out in a thread and the request returns `COMMUNICATION_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel or message does not exist, or the message is outside the caller's message history cutoff |
 
 ### Side effects
@@ -1908,7 +1940,10 @@ Unpins a message. Returns 204 with an empty body on success. Emits [Message Upda
 | 400 | [error response](/http-api/#error-response) | The channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
 | 400 | [error response](/http-api/#error-response) | The target is a system message and the request returns `CANNOT_MODIFY_SYSTEM_WEBHOOK` |
 | 400 | [error response](/http-api/#error-response) | The private channel's send policy denies the caller and the request returns `CANNOT_SEND_MESSAGES_TO_USER` |
+| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
+| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `PIN_MESSAGES` and the request returns `MISSING_PERMISSIONS`, or message sending is temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | Caller is timed out in a thread and the request returns `COMMUNICATION_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel or message does not exist, or the message is outside the caller's message history cutoff |
 
 ### Side effects
@@ -1939,11 +1974,15 @@ The request has no body. Fluxer acknowledges the channel's own stored last-pin t
 A channel the caller cannot see is acknowledged like any other whenever it stores a last-pin timestamp.
 :::
 
+A thread is the exception. Fluxer checks that the caller can view it, as [Channel resolution](#channel-resolution) describes. A forum or media channel returns 400 `INVALID_CHANNEL_TYPE`. A user request without the [`channel_threads` client capability](/http-api/threads/#client-capability) returns 204 for a thread, a forum channel, or a media channel and writes nothing.
+
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Pin state was absent or acknowledged |
+| 400 | [error response](/http-api/#error-response) | Channel is a forum or media channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` in the parent of a thread, or cannot view a private thread, each returning `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | Credential type denies the request and it returns `ACCESS_DENIED` |
 
 ### Side effects
@@ -2098,6 +2137,8 @@ Adds the authenticated identity's reaction. Returns 204 with an empty body. Emit
 | 400 | [error response](/http-api/#error-response) | The custom emoji is unknown and the request returns `CUSTOM_EMOJI_NOT_FOUND` |
 | 400 | [error response](/http-api/#error-response) | The external emoji requires the entitlement and the request returns `CUSTOM_EMOJIS_REQUIRE_PREMIUM_OUTSIDE_SOURCE` |
 | 400 | [error response](/http-api/#error-response) | The message has reached a reaction ceiling and the request returns `MAX_REACTIONS` |
+| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
+| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL`, `ADD_REACTIONS`, or `USE_EXTERNAL_EMOJIS` and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | The caller is timed out and the request returns `COMMUNICATION_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | The caller has an unverified email and the request returns `REACTION_EMAIL_VERIFICATION_REQUIRED` |
@@ -2147,6 +2188,8 @@ Removes the authenticated identity's own reaction. Returns 204 with an empty bod
 | --- | --- | --- |
 | 204 | empty | Reaction was absent or removed |
 | 400 | [error response](/http-api/#error-response) | Path, emoji, or session input is invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
+| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
+| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the message is outside the caller's message history cutoff |
 
@@ -2197,6 +2240,8 @@ Removes one named user's reaction. Returns 204 with an empty body. Emits a [Mess
 | --- | --- | --- |
 | 204 | empty | Target reaction was absent or removed |
 | 400 | [error response](/http-api/#error-response) | Path, emoji, or session input is invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
+| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
+| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or the channel is private, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the message is outside the caller's message history cutoff |
 
@@ -2236,6 +2281,8 @@ Removes every reaction for one emoji. Returns 204 with an empty body. Emits a [M
 | --- | --- | --- |
 | 204 | empty | Emoji reactions were absent or removed |
 | 400 | [error response](/http-api/#error-response) | Path or emoji is invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
+| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
+| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or the channel is private, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the message is outside the caller's message history cutoff |
 
@@ -2272,6 +2319,8 @@ Removes every reaction from a message. Returns 204 with an empty body. Emits a [
 | --- | --- | --- |
 | 204 | empty | Reactions were absent or removed |
 | 400 | [error response](/http-api/#error-response) | Path parameters are invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
+| 400 | [error response](/http-api/#error-response) | Thread is archived and the request returns `THREAD_ARCHIVED` |
+| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or the channel is private, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the message is outside the caller's message history cutoff |
 
@@ -2287,11 +2336,12 @@ Fluxer deletes every reaction on the message and emits one [Message Reaction Rem
 
 <RouteHeader method="POST" path="/v1/channels/{channel_id}/typing" bot />
 
-Publishes typing activity in a text-bearing channel. Returns 204 with an empty body. Emits a [Typing Start](/gateway/events/#typing-start) Gateway event.
+Publishes typing activity in a text-bearing channel. Returns 204 with an empty body, or 200 with the cooldown body below. Emits a [Typing Start](/gateway/events/#typing-start) Gateway event.
 
 ### Limitations
 
 - The caller must hold [SEND_MESSAGES](/http-api/permissions/) in a guild channel and must not be timed out.
+- A thread requires [SEND_MESSAGES_IN_THREADS](/http-api/permissions/) in its parent where a guild channel requires `SEND_MESSAGES`.
 - A private channel caller needs only recipient access, because this route applies no direct message send policy.
 
 ### Path parameters
@@ -2300,12 +2350,28 @@ Publishes typing activity in a text-bearing channel. Returns 204 with an empty b
 | --- | --- | --- |
 | channel_id | snowflake | The ID of the channel where typing is shown |
 
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| message_send_cooldown_ms?<sup>1</sup> | integer | The milliseconds until the channel slowmode accepts a message from the caller |
+| thread_create_cooldown_ms?<sup>1</sup> | integer | The milliseconds until the channel slowmode accepts a new thread from the caller |
+
+<sup>1</sup> The OpenAPI schema does not declare a response body for this route
+
+`thread_create_cooldown_ms` is present only for a guild text or announcement channel.
+
+Fluxer returns 200 only to a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability), in a guild channel with slowmode, while a cooldown is running and the caller lacks `BYPASS_SLOWMODE`.
+
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
+| 200 | cooldown body | Typing operation was accepted and a slowmode cooldown is running |
 | 204 | empty | Typing operation was accepted |
 | 400 | [error response](/http-api/#error-response) | Path parameter is invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
+| 400 | [error response](/http-api/#error-response) | Channel is a forum or media channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 400 | [error response](/http-api/#error-response) | Thread is locked and the caller is not a thread moderator, returning `THREAD_LOCKED` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `SEND_MESSAGES` and the request returns `MISSING_PERMISSIONS`, or the caller is timed out and the request returns `COMMUNICATION_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller is not a recipient of the private channel |
 
@@ -2326,7 +2392,7 @@ Advances the authenticated user's read state through one message. Returns 204 wi
 ### Limitations
 
 - This is a user-only operation, and a bot credential is refused with 403 `ACCESS_DENIED`.
-- Fluxer resolves neither the channel nor the message, so the operation writes the supplied identifiers straight into the caller's own read state and changes nothing else.
+- Fluxer never checks that the channel or the message exists. The operation writes the supplied identifiers into the caller's own read state and changes nothing else.
 
 ### Path parameters
 

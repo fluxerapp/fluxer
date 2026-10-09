@@ -38,6 +38,8 @@ To obtain the creation time in Unix milliseconds, shift the snowflake right by 2
 timestamp_ms = (snowflake >> 22) + 1420070400000
 ```
 
+A thread started from a message has the ID of that message. The formula then returns the time of the message, and `create_timestamp` in the [thread metadata](/http-api/threads/#thread-metadata-object) is the time the thread was created.
+
 The inverse expression produces the smallest possible snowflake for a Unix millisecond timestamp. It is useful as a pagination boundary.
 
 ```text
@@ -83,7 +85,7 @@ A collection endpoint that pages over a snowflake-ordered resource accepts a cur
 
 The type of a `before` or `after` cursor follows the operation. [List pinned messages](/http-api/messages/#list-pinned-messages) pages on the pin time, so its `before` is an ISO 8601 timestamp. [List blocklist entries](/admin-api/blocklists/#list-blocklist-entries) pages on the entry value. Its `after` is the stored value of the last entry on the previous page. Each operation states the type of its own cursors.
 
-Because the timestamp uses the high bits, numeric snowflake order is creation time order at millisecond resolution.
+Because the timestamp uses the high bits, numeric snowflake order is creation time order at millisecond resolution. Threads started from a message sort by the time of their source message.
 
 :::note[A cursor is a numeric boundary]
 A cursor does not need to identify a resource, so a snowflake derived from a timestamp can delimit a time range without a dedicated timestamp parameter.

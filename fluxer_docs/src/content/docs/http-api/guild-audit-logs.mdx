@@ -14,7 +14,7 @@ A route marked Audit reason accepts the `X-Audit-Log-Reason` request header, lis
 
 Fluxer trims the value. A value that is blank before trimming, empty after it, or longer than 512 characters after it counts as no reason at all. None of those values fails the request, so a reason that misses the bound is dropped and the operation still succeeds.
 
-The channel and message routes that write entries record the header as well: [Modify channel](/http-api/channels/#modify-channel), [Delete or leave channel](/http-api/channels/#delete-or-leave-channel), [Set channel permission overwrite](/http-api/channels/#set-channel-permission-overwrite), [Delete channel permission overwrite](/http-api/channels/#delete-channel-permission-overwrite), [Delete message](/http-api/messages/#delete-message), [Bulk delete messages](/http-api/messages/#bulk-delete-messages), [Pin message](/http-api/messages/#pin-message), and [Unpin message](/http-api/messages/#unpin-message).
+[Modify channel](/http-api/channels/#modify-channel), [Delete or leave channel](/http-api/channels/#delete-or-leave-channel), [Set channel permission overwrite](/http-api/channels/#set-channel-permission-overwrite), [Delete channel permission overwrite](/http-api/channels/#delete-channel-permission-overwrite), [Delete message](/http-api/messages/#delete-message), [Bulk delete messages](/http-api/messages/#bulk-delete-messages), [Pin message](/http-api/messages/#pin-message), and [Unpin message](/http-api/messages/#unpin-message) record the header as well. [Start thread from message](/http-api/threads/#start-thread-from-message) and [Start thread](/http-api/threads/#start-thread) record it on their thread entries. [Create forum tag](/http-api/forums/#create-forum-tag), [Modify forum tag](/http-api/forums/#modify-forum-tag), and [Delete forum tag](/http-api/forums/#delete-forum-tag) record it on their channel update entries.
 
 Two operations use a reason from the request body when the header supplies none:
 
@@ -40,12 +40,15 @@ One page of audit history together with the accounts and webhooks it references.
 | audit_log_entries<sup>1</sup> | array[[guild audit log entry](#guild-audit-log-entry-object) object] | The page of entries this request returned |
 | users<sup>2</sup> | array[[partial user](/http-api/users/#partial-user-object) object] | The accounts the returned entries name |
 | webhooks<sup>3</sup> | array[[audit log webhook](#audit-log-webhook-object) object] | The webhooks a returned webhook action targets |
+| threads?<sup>4</sup> | array[[thread](/http-api/threads/#thread-object) object] | The threads a returned thread action targets |
 
 <sup>1</sup> The page ordering is defined by the [query parameters](#query-parameters) of the request that produced it
 
 <sup>2</sup> Deduplicated by user ID, and a referenced value that is not a snowflake names no account
 
 <sup>3</sup> One object for each distinct webhook that a returned webhook action targets and that still exists, so a deleted webhook resolves to no object
+
+<sup>4</sup> Present only for a bot and for a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability). One object for each distinct thread that a returned [thread action](#audit-actions) targets and that still exists
 
 `users` has the actor of every returned entry and each account the entry references:
 
@@ -142,6 +145,9 @@ The Value column is the numeric `action_type`, which is also the value the `acti
 | 90 | STICKER_CREATE | Sticker was created. `target_id` is the sticker, and the action records no options |
 | 91 | STICKER_UPDATE | Sticker was changed. `target_id` is the sticker, and the action records no options |
 | 92 | STICKER_DELETE | Sticker was deleted. `target_id` is the sticker, and the action records no options |
+| 110 | THREAD_CREATE | Thread was created. `target_id` is the thread, and the action records no options |
+| 111 | THREAD_UPDATE | Thread was changed. `target_id` is the thread, and the action records `type` |
+| 112 | THREAD_DELETE | Thread was deleted. `target_id` is the thread, and the action records `type` |
 
 <sup>1</sup> Recorded by [Modify guild](/http-api/guilds/#modify-guild), by [Modify guild custom invite URL](/http-api/guilds/#modify-guild-custom-invite-url), and by [Transfer guild ownership](/http-api/guild-members/#transfer-guild-ownership), and `target_id` is the guild in every case
 
@@ -164,6 +170,8 @@ The Value column is the numeric `action_type`, which is also the value the `acti
 <sup>10</sup> Recorded for an overwrite whose target is a role other than `@everyone`, when that role exists at the write
 
 <sup>11</sup> [Follow announcement channel](/http-api/channels/#follow-announcement-channel) records `WEBHOOK_CREATE` in the following guild with `type` `2`, and deleting that webhook records `WEBHOOK_DELETE` the same way. Follower webhooks that Fluxer removes because the announcement channel was deleted or converted record no entry
+
+Deleting a text, announcement, forum, or media channel deletes its threads and records only [CHANNEL_DELETE](#audit-actions). [Delete thread](/http-api/threads/#delete-thread) records `THREAD_DELETE`. Fluxer records [THREAD_UPDATE](#audit-actions) only when a [thread change field](#thread-change-fields) differs.
 
 :::note[An update that changes nothing records no entry]
 GUILD_UPDATE, CHANNEL_UPDATE, CHANNEL_OVERWRITE_UPDATE, MEMBER_UPDATE, MEMBER_ROLE_UPDATE, MEMBER_MOVE, ROLE_UPDATE, WEBHOOK_UPDATE, EMOJI_UPDATE, and STICKER_UPDATE need a change other than `ip`. GUILD_UPDATE also ignores `guild_id`, `member_count`, and the image width and height fields. A reason alone records nothing.
@@ -203,7 +211,7 @@ Every field is present only for the actions listed against it in the [audit acti
 
 <sup>5</sup> Recorded by [MEMBER_ROLE_UPDATE](#audit-actions), [ROLE_UPDATE](#audit-actions), and an overwrite action whose target is a role other than `@everyone`
 
-<sup>6</sup> The value is a [channel type](/http-api/channels/#channel-types) for the channel actions, a [permission overwrite type](/http-api/channels/#permission-overwrite-types) for the overwrite actions, and a [webhook type](/http-api/webhooks/#webhook-types) for the webhook actions
+<sup>6</sup> The value is a [channel type](/http-api/channels/#channel-types) for the channel and thread actions, a [permission overwrite type](/http-api/channels/#permission-overwrite-types) for the overwrite actions, and a [webhook type](/http-api/webhooks/#webhook-types) for the webhook actions
 
 ## Audit log change object
 
@@ -221,7 +229,7 @@ One field a mutation changed, with the value on each side of the change.
 
 <sup>2</sup> A creation has only `new_value`, a deletion has only `old_value`, and a modification has both, so a change object always has at least one of the two
 
-A change value is a string, a JSON number, a boolean, `null`, an array of strings, an array of numbers, or an object with `added` and `removed` string arrays. The last shape comes only from the [permissions_diff](#guild-role-change-fields) key of a role modification.
+A change value is a string, a JSON number, a boolean, `null`, an array of strings, an array of numbers, or an object with `added` and `removed` string arrays. The last shape comes only from the [permissions_diff](#guild-role-change-fields) key of a role modification. The `available_tags` and `default_reaction_emoji` [channel change fields](#channel-change-fields) record an array of objects and an object.
 
 :::note[A 64-bit domain value is a decimal string]
 Fluxer serialises a permission mask or a snowflake as a decimal string. A bounded number such as a position or a colour remains a JSON number.
@@ -304,12 +312,44 @@ Recorded by [CHANNEL_CREATE](#audit-actions), [CHANNEL_UPDATE](#audit-actions), 
 | bitrate | ?number | The voice bitrate in bits per second |
 | rtc_region | ?string | The pinned voice region, or null when the channel is routed automatically |
 | permission_overwrite_count<sup>2</sup> | number | The number of permission overwrites the channel has |
+| flags<sup>3</sup> | number | The [channel flags](/http-api/forums/#channel-flags) of the channel |
+| default_auto_archive_duration<sup>3</sup> | number | The stored default [auto archive duration](/http-api/threads/#auto-archive-durations) |
+| default_thread_rate_limit_per_user<sup>3</sup> | number | The slowmode interval in seconds new threads inherit |
+| available_tags<sup>3</sup> | array[[forum tag](/http-api/forums/#forum-tag-object) object] | The tags a post can apply |
+| default_reaction_emoji<sup>3</sup> | [default reaction](/http-api/forums/#default-reaction-object) object | The reaction clients show on each post |
+| default_sort_order<sup>3</sup> | number | The default [sort order](/http-api/forums/#forum-sort-orders) of posts |
+| default_forum_layout<sup>3</sup> | number | The default [layout](/http-api/forums/#forum-layouts) of posts |
+| default_tag_setting<sup>3</sup> | string | The default [tag matching](/http-api/forums/#forum-tag-settings) of a post search |
 
 <sup>1</sup> Recorded only for a `GUILD_LINK` [channel type](/http-api/channels/#channel-types)
 
 <sup>2</sup> No current channel operation records the field. An individual overwrite mutation records its own [permission overwrite](#permission-overwrite-change-fields) entry
 
+<sup>3</sup> Recorded only by [CHANNEL_CREATE](#audit-actions) and [CHANNEL_UPDATE](#audit-actions), and only for a channel that stores thread or forum settings. No value is null
+
+`default_auto_archive_duration` and `default_thread_rate_limit_per_user` apply to a guild text, announcement, forum, or media channel. `default_forum_layout` applies to a forum channel. `flags`, `available_tags`, `default_reaction_emoji`, `default_sort_order`, and `default_tag_setting` apply to a forum or media channel.
+
 Changing `permission_overwrites` through [Modify channel](/http-api/channels/#modify-channel) records overwrite entries and adds no change to the [CHANNEL_UPDATE](#audit-actions) entry.
+
+#### Thread change fields
+
+Recorded by [THREAD_CREATE](#audit-actions), [THREAD_UPDATE](#audit-actions), and [THREAD_DELETE](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The name of the thread |
+| type | number | The [thread type](/http-api/threads/#thread-types) |
+| archived | boolean | Whether the thread is archived |
+| locked | boolean | Whether the thread is locked |
+| auto_archive_duration | number | The [auto archive duration](/http-api/threads/#auto-archive-durations) in minutes |
+| rate_limit_per_user | number | The slowmode interval in seconds |
+| flags | number | The [channel flags](/http-api/forums/#channel-flags) of the thread |
+| invitable<sup>1</sup> | boolean | Whether a member who is not a thread moderator can add members who are not thread moderators |
+| applied_tags<sup>2</sup> | array[string] | The decimal IDs of the applied [forum tags](/http-api/forums/#forum-tag-object) |
+
+<sup>1</sup> Recorded only for a private thread
+
+<sup>2</sup> Recorded only for a thread whose parent is a forum or media channel
 
 #### Permission overwrite change fields
 
@@ -485,7 +525,7 @@ A guild ID that names no guild returns 404 `UNKNOWN_GUILD`. A non-member of an e
 | before?<sup>2</sup> | snowflake | The cursor selecting entries older than this audit entry ID |
 | after?<sup>2</sup> | snowflake | The cursor selecting entries newer than this audit entry ID |
 | user_id?<sup>3</sup> | snowflake | The acting user ID the page is filtered by |
-| action_type?<sup>3</sup> | integer | The [audit action](#audit-actions) value the page is filtered by |
+| action_type?<sup>3</sup> <sup>4</sup> | integer | The [audit action](#audit-actions) value the page is filtered by |
 
 <sup>1</sup> A negative value and a value above 100 are both rejected, and the accepted value `0` is processed as `1`
 
@@ -493,9 +533,13 @@ A guild ID that names no guild returns 404 `UNKNOWN_GUILD`. A non-member of an e
 
 <sup>3</sup> Supplying either filter disables message deletion consolidation for the request, so a page filtered by actor or action returns the unconsolidated entries
 
+<sup>4</sup> A caller other than a bot or a user session that declares `channel_threads` receives 400 `INVALID_FORM_BODY` for 110, 111, or 112
+
 The read is ordered from newest to oldest by entry ID. `before` selects entries below the cursor and `after` selects entries above it, both read in that same descending order. An `after` page therefore begins with the newest entry above the cursor.
 
 Consolidated entries have new IDs but retain the position of the run they replace. Sort the page by ID if a strictly descending array is required.
+
+A caller other than a bot or a user session that declares `channel_threads` receives no entry about a thread, a forum channel, or a media channel. Its remaining entries lose the thread and forum keys of the [channel change fields](#channel-change-fields) and every [thread permission bit](/http-api/threads/#thread-permissions). The `webhooks` array also omits each webhook of a forum or media channel.
 
 A stored update entry that fails the [no-change rule](#audit-actions) is skipped and does not count towards `limit`. A page holds fewer entries than `limit` only when the guild has no further matching entries in that direction.
 

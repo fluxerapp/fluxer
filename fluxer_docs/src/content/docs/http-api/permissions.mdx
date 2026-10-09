@@ -29,7 +29,7 @@ Every bit Fluxer defines appears below.
 | 1 &lt;&lt; 8 | PRIORITY_SPEAKER | Use priority speaker in a guild voice channel, evaluated by the client |
 | 1 &lt;&lt; 9 | STREAM<sup>2</sup> | Publish a screenshare track on a guild voice connection |
 | 1 &lt;&lt; 10 | VIEW_CHANNEL<sup>3</sup> | View a guild channel |
-| 1 &lt;&lt; 11 | SEND_MESSAGES | Send a message in a guild text, announcement, or voice channel, and publish the caller's own announcement |
+| 1 &lt;&lt; 11 | SEND_MESSAGES | Send a message in a guild text, announcement, or voice channel, create a post in a forum or media channel, and publish the caller's own announcement |
 | 1 &lt;&lt; 12 | SEND_TTS_MESSAGES | Send a message that requests text-to-speech playback |
 | 1 &lt;&lt; 13 | MANAGE_MESSAGES<sup>4</sup> | Delete another member's message, bulk delete messages, remove another member's reaction, and edit the flags and attachments of another member's message |
 | 1 &lt;&lt; 14 | EMBED_LINKS | Have a link in the caller's own message expanded into an embed |
@@ -48,11 +48,15 @@ Every bit Fluxer defines appears below.
 | 1 &lt;&lt; 28 | MANAGE_ROLES<sup>5</sup> | Create, modify, position, and delete a role, assign a role to a member, and set a channel permission overwrite |
 | 1 &lt;&lt; 29 | MANAGE_WEBHOOKS | Create, modify, and delete a webhook on a guild channel, and follow an announcement channel into it |
 | 1 &lt;&lt; 30 | MANAGE_EXPRESSIONS<sup>6</sup> | Modify and delete an emoji or sticker created by another member |
+| 1 &lt;&lt; 34 | MANAGE_THREADS<sup>8</sup> | Archive, lock, rename, and delete a thread, view every private thread, and act in a locked thread |
+| 1 &lt;&lt; 35 | CREATE_PUBLIC_THREADS<sup>8</sup> | Start a public thread or an announcement thread |
+| 1 &lt;&lt; 36 | CREATE_PRIVATE_THREADS<sup>8</sup> | Start a private thread in a guild text channel |
 | 1 &lt;&lt; 37 | USE_EXTERNAL_STICKERS | Use a sticker owned by another guild |
+| 1 &lt;&lt; 38 | SEND_MESSAGES_IN_THREADS<sup>8</sup> | Send a message in a thread, and add another member to a thread |
 | 1 &lt;&lt; 40 | MODERATE_MEMBERS | Apply and clear a member communication timeout |
 | 1 &lt;&lt; 43 | CREATE_EXPRESSIONS<sup>6</sup> | Create an emoji or sticker, and modify or delete the ones the caller created |
 | 1 &lt;&lt; 51 | PIN_MESSAGES | Pin and unpin a message in a guild channel |
-| 1 &lt;&lt; 52 | BYPASS_SLOWMODE | Send a message without waiting for the channel slowmode interval |
+| 1 &lt;&lt; 52 | BYPASS_SLOWMODE | Send a message, start a thread, or create a forum post without waiting for the channel slowmode interval |
 | 1 &lt;&lt; 53 | UPDATE_RTC_REGION | Change the voice region of a guild voice channel |
 | 1 &lt;&lt; 54 | VIEW_CHANNEL_MEMBERS<sup>7</sup> | View the member list of a guild channel |
 
@@ -70,7 +74,9 @@ Every bit Fluxer defines appears below.
 
 <sup>7</sup> The bit is [feature-gated on write](#feature-gated-permission-bits), so a request that does not declare the feature cannot change it
 
-Bits 19, 31 through 36, 38, 39, 41, 42, 44 through 50, and 55 through 63 are unassigned.
+<sup>8</sup> The bit is [feature-gated](#feature-gated-permission-bits). [Thread permissions](/http-api/threads/#thread-permissions) describes how Fluxer evaluates it
+
+Bits 19, 31 through 33, 39, 41, 42, 44 through 50, and 55 through 63 are unassigned.
 
 :::note[`STREAM` authorises a track on the existing connection]
 The track is a screenshare or a camera. Fluxer opens no second connection for it, and losing the bit mutes the published tracks while the voice connection stays up.
@@ -88,13 +94,15 @@ Fluxer discards a bit it does not define. A role mutation intersects the request
 
 Fluxer gates some permission bits on a feature declaration, which a client sends in the `X-Fluxer-Features` request header as a comma-separated list.
 
-One bit is gated today. `VIEW_CHANNEL_MEMBERS` requires the feature name `view_channel_members_permission`.
+Two features gate bits. `VIEW_CHANNEL_MEMBERS` requires the feature name `view_channel_members_permission`. `MANAGE_THREADS`, `CREATE_PUBLIC_THREADS`, `CREATE_PRIVATE_THREADS`, and `SEND_MESSAGES_IN_THREADS` require the [`channel_threads` client capability](/http-api/threads/#client-capability) from a user session token. An OAuth2 bearer token cannot write them even when it declares the feature. A bot writes them without declaring the feature.
 
-On a role or overwrite write that does not declare the matching feature, Fluxer keeps the gated bit at its stored value, so the request can neither set nor clear it. Every other bit in the same mask is written normally.
+On a role or overwrite write by a caller that cannot write a gated bit, Fluxer keeps that bit at its stored value. Every other bit in the same mask is written normally.
+
+A caller other than a bot or a user session that declares `channel_threads` also receives role masks, overwrite masks, and guild `permissions` values without the four thread bits. `channels` on [Get guild](/http-api/guilds/#get-guild) is the exception.
 
 Fluxer trims and lowercases each name in the header before matching it. A name that is empty, longer than 64 characters, or containing a character outside `a-z`, `0-9`, and `_` is ignored. Fluxer reads at most 64 names from one header. An absent or empty header declares no features.
 
-On [Create guild role](#create-guild-role), a request that supplies `permissions` without declaring the feature always creates the role with `VIEW_CHANNEL_MEMBERS` cleared. A request that omits `permissions` copies the everyone role mask without applying the gate.
+On [Create guild role](#create-guild-role), a request that supplies `permissions` creates the role with `VIEW_CHANNEL_MEMBERS` cleared unless it declares `view_channel_members_permission`. It clears the four thread bits unless the caller is a bot or a user session that declares `channel_threads`. A request that omits `permissions` copies the everyone role mask without applying the gate.
 
 ## Announcement channel permissions
 
@@ -106,7 +114,7 @@ Delivery rechecks access. While the account that created a follow cannot view th
 
 ## Elevated permissions
 
-`KICK_MEMBERS`, `BAN_MEMBERS`, `ADMINISTRATOR`, `MANAGE_CHANNELS`, `MANAGE_GUILD`, `MANAGE_MESSAGES`, `MANAGE_ROLES`, `MANAGE_WEBHOOKS`, and `MODERATE_MEMBERS` are elevated permissions. In a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, only the guild owner uses them without an enrolled authenticator.
+`KICK_MEMBERS`, `BAN_MEMBERS`, `ADMINISTRATOR`, `MANAGE_CHANNELS`, `MANAGE_GUILD`, `MANAGE_MESSAGES`, `MANAGE_ROLES`, `MANAGE_WEBHOOKS`, `MODERATE_MEMBERS`, and `MANAGE_THREADS` are elevated permissions. In a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, only the guild owner uses them without an enrolled authenticator.
 
 An operation that asserts an elevated permission the caller holds but cannot use returns 400 `TWO_FACTOR_REQUIRED`. The check runs after Fluxer has confirmed the permission itself, so a caller who lacks the permission outright receives 403 `MISSING_PERMISSIONS` instead.
 
@@ -138,9 +146,13 @@ No deny overwrite in any channel restricts a member who holds the bit. Removing 
 
 A guild channel is visible when its channel-scoped mask contains `VIEW_CHANNEL`, or when the member holds temporary access through an in-flight voice or call transition. A category is also visible when the mask of at least one child channel contains `VIEW_CHANNEL`. Temporary access applies only to the channel it was granted on.
 
+A thread stores no overwrites. [Thread permissions](/http-api/threads/#thread-permissions) describes how Fluxer derives its mask from the parent channel.
+
 ## Communication timeout
 
 A communication timeout stops a member from communicating in a guild until it expires. It does not change the computed mask. A member whose [communication_disabled_until](/http-api/guild-members/#guild-member-object) is in the future keeps every permission their roles grant, and Fluxer applies the restriction as a separate precondition on each communicating operation.
+
+A timed-out member who holds `MANAGE_THREADS` without `ADMINISTRATOR` is not a [thread moderator](/http-api/threads/#thread-moderators) until the timeout ends. That member receives 403 `MISSING_ACCESS` for a private thread they have not joined.
 
 While the timeout is in the future, these operations fail with 403 `COMMUNICATION_DISABLED`:
 
@@ -151,8 +163,11 @@ While the timeout is in the future, these operations fail with 403 `COMMUNICATIO
 - Requesting an attachment upload
 - Starting a typing indicator
 - Changing the caller's own nickname
+- Starting, changing, or deleting a thread
+- Adding or removing a thread member
+- Pinning or unpinning a message in a thread
 
-A timeout has no effect in a private channel.
+[Thread permissions](/http-api/threads/#thread-permissions) states the thread cases. A timeout has no effect in a private channel.
 
 The order of the timeout precondition and the permission check varies by operation, so a caller who is both timed out and short of the permission can receive either `COMMUNICATION_DISABLED` or `MISSING_PERMISSIONS`.
 
@@ -313,7 +328,7 @@ Creates a role and returns its [guild role object](#guild-role-object). Requires
 | color? | integer | The colour of the role as a 24-bit RGB integer (0-16777215, default 0) |
 | permissions?<sup>1</sup> | decimal string \| integer | The [permission](#permissions) bitfield the role grants |
 
-<sup>1</sup> An omitted field copies the current permissions of the everyone role unchanged. A supplied value is intersected with the set of defined bits, Fluxer clears `VIEW_CHANNEL_MEMBERS` unless the caller's [feature declaration](#feature-gated-permission-bits) includes `view_channel_members_permission`, then checks the value against the caller's own permissions
+<sup>1</sup> An omitted field copies the current permissions of the everyone role unchanged. A supplied value is intersected with the set of defined bits, Fluxer clears `VIEW_CHANNEL_MEMBERS` unless the caller's [feature declaration](#feature-gated-permission-bits) includes `view_channel_members_permission`, clears the four thread bits unless the caller is a bot or a user session that declares `channel_threads`, then checks the value against the caller's own permissions
 
 ### Response
 
@@ -372,7 +387,7 @@ Every field is optional, and an omitted field leaves the stored value unchanged.
 
 <sup>1</sup> The field is accepted and then ignored when the target is the everyone role, which cannot be renamed, hoisted, given a member list position, or made mentionable
 
-<sup>2</sup> The supplied value becomes the complete stored mask. Before it checks the caller's authority, Fluxer intersects it with the set of defined bits and keeps each feature-gated bit at its stored value unless the caller's [feature declaration](#feature-gated-permission-bits) names the feature for that bit
+<sup>2</sup> The supplied value becomes the complete stored mask. Before it checks the caller's authority, Fluxer intersects it with the set of defined bits and keeps each feature-gated bit the caller cannot write at its stored value, as [Feature-gated permission bits](#feature-gated-permission-bits) describes
 
 ### Response
 

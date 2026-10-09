@@ -227,6 +227,7 @@ The value `1` is unassigned. Any stored authenticator value outside this registr
 An account is limited while its [user object](#user-object) reports `account_limited` as true. A limited account can still read, join voice, change its own settings, and manage its sessions. The operations below return 403 [`ACCOUNT_LIMITED`](/http-api/errors/), and the error message tells the user to check their email.
 
 - [Create message](/http-api/messages/#create-message) and [Modify message](/http-api/messages/#modify-message) in any channel except the account's personal notes
+- [Start thread from message](/http-api/threads/#start-thread-from-message) and [Start thread](/http-api/threads/#start-thread)
 - [Crosspost message](/http-api/messages/#crosspost-message)
 - [Add own reaction](/http-api/messages/#add-own-reaction)
 - [Create webhook](/http-api/webhooks/#create-webhook)

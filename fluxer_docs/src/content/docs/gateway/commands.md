@@ -18,9 +18,10 @@ Except for [Heartbeat](#heartbeat), [Identify](#identify), and [Resume](#resume)
 | 4 | Voice State Update | [Voice State Update](/gateway/events/#voice-state-update) and [Voice Server Update](/gateway/events/#voice-server-update) when state changes |
 | 6 | Resume | Replayed Dispatches followed by [Resumed](/gateway/events/#resumed), Invalid Session, or a close frame |
 | 8 | Request Guild Members | One or more [Guild Members Chunk](/gateway/events/#guild-members-chunk) events |
-| 14 | Lazy Request | [Guild Sync](/gateway/events/#guild-sync) and [Guild Member List Update](/gateway/events/#guild-member-list-update) |
+| 14 | Lazy Request | [Guild Sync](/gateway/events/#guild-sync), [Guild Member List Update](/gateway/events/#guild-member-list-update), [Thread List Sync](/gateway/threads/#thread-list-sync), and [Thread Member List Update](/gateway/threads/#thread-member-list-update) |
 | 15 | Request Guild Counts | [Guild Counts Update](/gateway/events/#guild-counts-update) |
 | 16 | Request Channel Member Counts | [Channel Member Counts Update](/gateway/events/#channel-member-counts-update) |
+| 28 | [Request Forum Unreads](/gateway/threads/#request-forum-unreads) | [Forum Unreads](/gateway/threads/#forum-unreads) |
 
 ## Payload handling
 
@@ -28,7 +29,7 @@ A frame that fails the size, decompression, or decoding checks closes the connec
 
 Fluxer charges every command that gets past those checks against the [source IP, session, and connection payload budgets](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) before it handles the opcode. Each session has its own session budget, so two sessions of one account never share one, and Fluxer skips that budget while the connection is unauthenticated.
 
-An opcode outside the registry closes with `4001` and reason `Unknown opcode` once a session is attached, and with `4003` while the connection is unauthenticated. A payload that has `op` but no `d` also closes with `4001`, except for Identify, which closes with `4005`.
+An opcode outside the registry closes with `4001` and reason `Unknown opcode` once a session is attached, and with `4003` while the connection is unauthenticated. A payload that has `op` but no `d` also closes with `4001`, except for Identify, which closes with `4005`. [Request Forum Unreads](/gateway/threads/#request-forum-unreads) closes with `4001` for a `d` that is not an object and for a user session without `CHANNEL_THREADS`.
 
 A Boolean command field is set only by `true`, and by the string `"true"` where noted. Every other value resolves to false, except in the Lazy Request [guild subscription object](#guild-subscription-object), which states its own rule.
 
@@ -124,8 +125,9 @@ A token the backend rejects closes with `4004` and reason `Invalid token`. A non
 | Value | Name | Description |
 | --- | --- | --- |
 | 1 &lt;&lt; 1 | DEBOUNCE_MESSAGE_REACTIONS | Merge runs of reaction additions into [Message Reaction Add Many](/gateway/events/#message-reaction-add-many) |
+| 1 &lt;&lt; 2 | [CHANNEL_THREADS](/gateway/threads/#session-flag) | The client can parse thread, forum, and media channels |
 
-Bit `0` and every bit above `1` are undefined. An undefined bit is accepted and ignored without closing the connection.
+Bit `0` and every bit above `2` are undefined. An undefined bit is accepted and ignored without closing the connection.
 
 `DEBOUNCE_MESSAGE_REACTIONS` applies to a reaction in a direct message or group direct message. A reaction in a guild channel is never merged and arrives as its own [Message Reaction Add](/gateway/events/#message-reaction-add).
 
@@ -358,11 +360,11 @@ A bot requesting the complete list is limited to one accepted request per guild 
 
 Results arrive as [Guild Members Chunk](/gateway/events/#guild-members-chunk) in pages of at most 1,000 members, each with `chunk_index` and `chunk_count`. Those chunks are delivered live and are never retained for Resume replay.
 
-Only one member request runs at a time on one WebSocket. While one runs, a newer request replaces any earlier pending request and starts when the active one finishes. [Bounded requests](#bounded-requests) covers the four-slot limit this command shares with the other three.
+Only one member request runs at a time on one WebSocket. While one runs, a newer request replaces any earlier pending request and starts when the active one finishes. [Bounded requests](#bounded-requests) covers the four-slot limit this command shares with the other bounded commands.
 
 ## Lazy Request
 
-Opcode `14` sets the per-guild subscriptions that decide member list, typing, and synchronisation traffic for the session.
+Opcode `14` sets the per-guild subscriptions that decide member list, typing, synchronisation, and [thread](/gateway/threads/#lazy-request-thread-options) traffic for the session.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -405,15 +407,15 @@ Opcode `14` sets the per-guild subscriptions that decide member list, typing, an
 
 <sup>2</sup> Subscriptions may be combined over a 100 ms window. Ranges sent during that window are merged for the same channel, and an empty range list clears its pending ranges
 
-Fluxer applies each option only when its key is present, in the order `active`, `sync`, `member_list_channels`, `members`, `typing`.
+Fluxer applies each option only when its key is present, in the order `active`, `sync`, `member_list_channels`, `members`, `typing`. The [thread options](/gateway/threads/#lazy-request-thread-options) `threads` and `thread_member_lists` follow `typing`.
 
-Marking a guild active changes how much traffic it produces, and [Event filtering](/gateway/event-filtering/) specifies the difference. A transition from passive to active, and a transition from active to passive, both imply a sync even when `sync` is absent. Every sync request, implied or explicit, is dropped when the guild is already marked synced for that session. Going passive clears that mark, so the next sync request produces a fresh Guild Sync.
+Marking a guild active changes how much traffic it produces, and [Event filtering](/gateway/event-filtering/) specifies the difference. A transition from passive to active, and a transition from active to passive, both imply a sync even when `sync` is absent. Every sync request, implied or explicit, is dropped when the guild is already marked synced for that session. Going passive clears that mark, so the next sync request produces a fresh Guild Sync. Going passive also clears the [`threads`](/gateway/threads/#lazy-request-thread-options) subscription.
 
 `member_list_channels` maps a channel ID to a list of `[start, end]` ranges. A range needs `start` at least 0, `end` at least `start`, `end` at most 100,000, and `end - start` at most 99. Ranges that fail those bounds are dropped, and each channel keeps at most the first 10 that pass. A channel key that is not a Snowflake is skipped.
 
-`VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS` together control the member list subscription, and both are evaluated for each channel separately. A channel the session cannot view, or can view without holding `VIEW_CHANNEL_MEMBERS` there, receives no [Guild Member List Update](/gateway/events/#guild-member-list-update) while its siblings subscribe normally.
+`VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS` together control the member list subscription, and both are evaluated for each channel separately. A channel the session cannot view, or can view without holding `VIEW_CHANNEL_MEMBERS` there, receives no [Guild Member List Update](/gateway/events/#guild-member-list-update) while its siblings subscribe normally. A thread ID in `member_list_channels` subscribes to nothing. A thread member list uses [`thread_member_lists`](/gateway/threads/#lazy-request-thread-options).
 
-Subscribing a channel to at least one range drops the session's other member list subscriptions in that guild, so one session holds at most one member list per guild.
+Subscribing a channel to at least one range drops the session's other member list subscriptions in that guild. One session holds at most one guild member list per guild. Thread member lists are counted separately.
 
 `members` entries that are not Snowflakes are dropped, and the first 1,000 that pass are kept. A member the session shares no viewable channel with is dropped as well.
 
@@ -472,6 +474,6 @@ Results arrive in one [Channel Member Counts Update](/gateway/events/#channel-me
 
 ## Bounded requests
 
-One WebSocket processes at most four bounded requests at once across [Request Guild Members](#request-guild-members), [Lazy Request](#lazy-request), [Request Guild Counts](#request-guild-counts), and [Request Channel Member Counts](#request-channel-member-counts). A command that arrives when all four slots are taken is dropped, without a close and without a result. Each request has a 10,000 ms deadline, after which it produces no further events.
+One WebSocket processes at most four bounded requests at once across [Request Guild Members](#request-guild-members), [Lazy Request](#lazy-request), [Request Guild Counts](#request-guild-counts), [Request Channel Member Counts](#request-channel-member-counts), and [Request Forum Unreads](/gateway/threads/#request-forum-unreads). A command that arrives when all four slots are taken is dropped, without a close and without a result. Request Forum Unreads from a user session without `CHANNEL_THREADS` still closes with `4001`, as [Gateway threads](/gateway/threads/#request-forum-unreads) describes. Each request has a 10,000 ms deadline, after which it produces no further events.
 
 Request Guild Members also keeps one replaceable pending request while another member request is active, whether or not a slot is free. See [Bounded commands](/gateway/limits-and-rate-limits/#bounded-commands).

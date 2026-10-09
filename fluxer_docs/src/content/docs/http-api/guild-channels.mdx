@@ -16,7 +16,7 @@ A request whose path names a guild that has [UNAVAILABLE_FOR_EVERYONE](/http-api
 
 ## Guild channel types
 
-These are the [channel types](/http-api/channels/#channel-types) that can exist inside a guild, and exactly the values [Create guild channel](#create-guild-channel) accepts in `type`.
+These are the [channel types](/http-api/channels/#channel-types) [Create guild channel](#create-guild-channel) accepts in `type`. A guild also holds threads, which the [Threads resource](/http-api/threads/) creates.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -25,6 +25,10 @@ These are the [channel types](/http-api/channels/#channel-types) that can exist 
 | 5 | GUILD_ANNOUNCEMENT | Text channel whose messages can be [published](/topics/announcement-channels/) to the channels that follow it |
 | 4 | GUILD_CATEGORY | Category that groups other guild channels and supplies inherited permission overwrites |
 | 998 | GUILD_LINK | Channel whose only content is an external destination URL |
+| 15 | GUILD_FORUM<sup>1</sup> | Guild channel that holds [posts](/http-api/forums/) and no messages of its own |
+| 16 | GUILD_MEDIA<sup>1</sup> | [Forum channel](/http-api/forums/) that can [hide media download options](/http-api/forums/#channel-flags) |
+
+<sup>1</sup> Accepted only from a bot or a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability). Any other caller receives 400 `INVALID_FORM_BODY`
 
 ## Create permission overwrite object
 
@@ -103,13 +107,13 @@ Naming a category as the preceding sibling places the moved channel after that c
 
 Returns every [channel object](/http-api/channels/#channel-object) in the guild that the authenticated member can see. Membership is the only requirement.
 
-Fluxer evaluates [channel visibility](/http-api/permissions/#permission-computation) per channel. A channel is included when the member holds [VIEW_CHANNEL](/http-api/permissions/) in it, or when the member holds temporary access to it through a voice transition. A category is included when at least one child grants the member `VIEW_CHANNEL`. A member with no visible channel receives an empty array.
+Fluxer evaluates [channel visibility](/http-api/permissions/#permission-computation) per channel. A channel is included when the member holds [VIEW_CHANNEL](/http-api/permissions/) in it, or when the member holds temporary access to it through a voice transition. A forum or media channel is included only for a bot or a user session that declares `channel_threads`, and no thread is included. A category is included when at least one child grants the member `VIEW_CHANNEL`. A member with no visible channel receives an empty array.
 
 :::note[Every visible channel arrives in one body]
 The route accepts no limit and no cursor. Each entry is a complete channel object whose `permission_overwrites` array is always present and always complete.
 :::
 
-A guild holds at most the instance-configured `max_guild_channels` [limit](/http-api/instance/#limit-keys), which defaults to 500.
+A guild holds at most the instance-configured `max_guild_channels` [limit](/http-api/instance/#limit-keys), which defaults to 500. A thread does not count towards this limit or towards `max_channels_per_category`. [Thread lifecycle](/http-api/threads/#thread-lifecycle) states the active thread limit.
 
 ### Path parameters
 
@@ -139,7 +143,7 @@ Creates a guild channel and returns its [channel object](/http-api/channels/#cha
 
 - Supplying `permission_overwrites` also requires [MANAGE_ROLES](/http-api/permissions/) at guild level.
 
-`MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
+`MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions). It also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
 
 ### Path parameters
 
@@ -149,13 +153,13 @@ Creates a guild channel and returns its [channel object](/http-api/channels/#cha
 
 ### JSON body
 
-`type` is required and decides which kind of channel is created. Every type accepts the same field set, so a field that has no meaning for the selected type is accepted and then ignored.
+`type` is required and decides which kind of channel is created. Every type accepts the field set below. A field that has no meaning for the selected type is accepted and ignored. A forum channel also accepts every field of the [forum field table](/http-api/forums/#creating-and-modifying-a-forum). A media channel accepts every field of the [forum field table](/http-api/forums/#creating-and-modifying-a-forum) except `default_forum_layout`.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | type | integer | [Guild channel type](#guild-channel-types) |
 | name<sup>1</sup><sup>2</sup> | string | Channel name (1-100 characters after normalisation) |
-| topic? | ?string | Channel topic (1-1024 characters) |
+| topic? | ?string | Channel topic (1-1024 characters, or 1-4096 for a forum or media channel) |
 | url?<sup>3</sup> | ?string | Destination URL for a link channel |
 | parent_id?<sup>4</sup> | ?snowflake | Parent category |
 | bitrate?<sup>5</sup><sup>11</sup> | ?integer | Voice channel bitrate in bits per second (8000-384000, default 64000) |
@@ -167,10 +171,12 @@ Creates a guild channel and returns its [channel object](/http-api/channels/#cha
 | nsfw_override?<sup>8</sup> | ?boolean | Explicit age restriction, or null to inherit from the parent category and then the guild |
 | content_warning_level?<sup>9</sup> | integer | [Content warning level](/http-api/channels/#content-warning-levels) (default 0) |
 | content_warning_text?<sup>10</sup> | ?string | Content warning text (max 200 characters), or null to inherit |
+| default_auto_archive_duration?<sup>12</sup> | ?integer | The stored default [auto archive duration](/http-api/threads/#auto-archive-durations), which Fluxer does not apply to a new thread, or null to clear it |
+| default_thread_rate_limit_per_user?<sup>12</sup> | ?integer | The slowmode interval in seconds new threads inherit (0-21,600), or null to clear it |
 
 <sup>1</sup> Normalisation strips control, join, bidirectional, and tag code points, collapses whitespace runs to one space, and trims. An empty result is rejected with `NAME_EMPTY_AFTER_NORMALIZATION`
 
-<sup>2</sup> A text or announcement channel name is also lowercased, its whitespace replaced with hyphens, and ASCII punctuation other than `-`, `.`, and `_` removed, unless the guild has [TEXT_CHANNEL_FLEXIBLE_NAMES](/http-api/guilds/#guild-features). That pass rewrites the stored name and never fails the request
+<sup>2</sup> A text, announcement, forum, or media channel name is also lowercased, its whitespace replaced with hyphens, and ASCII punctuation other than `-`, `.`, and `_` removed, unless the guild has [TEXT_CHANNEL_FLEXIBLE_NAMES](/http-api/guilds/#guild-features). That pass rewrites the stored name and never fails the request
 
 <sup>3</sup> An `http` or `https` URL of at most 2048 characters with a host and no embedded credentials. It is stored for every channel type
 
@@ -188,13 +194,15 @@ Creates a guild channel and returns its [channel object](/http-api/channels/#cha
 
 <sup>10</sup> The value is trimmed, and an empty result is stored as null
 
-<sup>11</sup> The stored value is capped at 96000 unless the guild holds an [audio bitrate feature](/http-api/guilds/#guild-features). A higher value is stored at the cap rather than rejected
+<sup>11</sup> The stored value is capped at 96000 unless the guild holds an [audio bitrate feature](/http-api/guilds/#guild-features). A higher value is stored at the cap
+
+<sup>12</sup> Stored only for a text, announcement, forum, or media channel. Fluxer discards both fields from a caller other than a bot or a user session that declares `channel_threads`
 
 A value longer than 10000 characters is rejected with `STRING_LENGTH_INVALID` before normalisation runs. A parent that does not exist in this guild returns `INVALID_PARENT_CHANNEL`, and one that is not a category returns `PARENT_MUST_BE_CATEGORY`.
 
 The guild holds at most the instance-configured `max_guild_channels` [limit](/http-api/instance/#limit-keys), defaulting to 500, and a parent category holds at most `max_channels_per_category`, defaulting to 50. Reaching the guild limit returns 400 `MAX_GUILD_CHANNELS` and reaching the category limit returns 400 `MAX_CATEGORY_CHANNELS`. Each error message states the resolved limit. The new channel is created with no RTC region.
 
-The new channel takes a position derived from its siblings. A category, and a channel created with no parent, is placed after the highest position in the guild. A voice channel created inside a category is placed after the last voice sibling, or after the last text, announcement, or link sibling when the category holds no voice channel. A text, announcement, or link channel is placed after the last text, announcement, or link sibling, and a channel with no such sibling is placed directly after the category itself. The rest of the guild is not renumbered, so two channels can hold the same stored position until the next [hierarchy update](#modify-guild-channel-positions) renumbers them.
+The new channel takes a position derived from its siblings. A category, and a channel created with no parent, is placed after the highest position in the guild. A voice channel created inside a category is placed after the last voice sibling, or after the last text, announcement, link, forum, or media sibling when the category holds no voice channel. Any other channel is placed after the last text, announcement, link, forum, or media sibling, and a channel with no such sibling is placed directly after the category itself. The rest of the guild is not renumbered. Two channels can hold the same stored position until the next [hierarchy update](#modify-guild-channel-positions) renumbers them.
 
 :::caution[Overwrites are checked against the parent category]
 Fluxer compares the allowed bits of every supplied overwrite against the caller's effective permissions in the parent category, or in the guild when no parent is supplied. A bit the caller does not hold there fails the entire request with 403 `MISSING_PERMISSIONS`.
@@ -219,7 +227,7 @@ Only the allowed mask is compared, so a supplied deny is stored without any auth
 
 The operation consumes one guild channel slot and, when a parent is supplied, one slot in that category. It creates a [`CHANNEL_CREATE`](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied reason, plus one [`CHANNEL_OVERWRITE_CREATE`](/http-api/guild-audit-logs/#audit-actions) entry for every stored overwrite, whether that overwrite was supplied or inherited. Reaching either channel limit fails the request without consuming a slot.
 
-It emits [Channel Create](/gateway/events/#channel-create) with the complete channel object only to sessions that can view the new channel.
+It emits [Channel Create](/gateway/events/#channel-create) with the complete channel object only to sessions that can view the new channel. For a forum or media channel the event reaches only a session with [thread access](/gateway/threads/#session-flag).
 
 ### Rate limit
 
@@ -236,13 +244,13 @@ Applies a guild channel hierarchy update and returns 204 with an empty body. Req
 - Setting `lock_permissions` on an entry that changes the parent also requires [MANAGE_ROLES](/http-api/permissions/) in the moved channel.
 - The operation records no guild audit log entry, so an `X-Audit-Log-Reason` header has no effect.
 
-`MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
+`MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions). It also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
 
 Concurrent hierarchy updates to the same guild can return 423 [`GENERAL_ERROR`](/http-api/errors/) with a `Retry-After` header of two seconds.
 
 An unknown channel, parent or sibling rejects the entire request. Fluxer applies entries one at a time. When a later entry fails a check after that existence check, including the `lock_permissions` authority check, every earlier entry stays applied. Moving a category moves its children with it, and neither the category nor its children count as destination siblings.
 
-After a move, positions run consecutively from 1 across the guild. Each category is followed by its children, with text and link channels before voice channels.
+After a move, positions run consecutively from 1 across the guild. Each category is followed by its children, with voice channels last.
 
 :::note[A move can change other channels' positions]
 Renumbering can change positions of channels not named in the request. An entry that leaves the order unchanged has no effect.
@@ -256,10 +264,10 @@ Renumbering can change positions of channels not named in the request. An entry 
 
 ### JSON body
 
-The top-level body is an array of [channel position objects](#channel-position-object) of any length, including zero. Every channel, parent, and sibling an entry names must exist in this guild. A category cannot be given a parent, and a parent that is not a category is refused. A channel cannot be positioned relative to itself or to one of its own children. Moving a channel into a full category is refused with 400 `MAX_CATEGORY_CHANNELS`.
+The top-level body is an array of [channel position objects](#channel-position-object) of any length, including zero. Every channel, parent, and sibling an entry names must exist in this guild. For a caller other than a bot or a user session that declares `channel_threads`, a forum or media channel counts as absent. Naming one returns the same validation error as an unknown channel. A thread has no position and counts as absent for every caller. A category cannot be given a parent, and a parent that is not a category is refused. A channel cannot be positioned relative to itself or to one of its own children. Moving a channel into a full category is refused with 400 `MAX_CATEGORY_CHANNELS`.
 
 :::caution[Inside a category, voice channels come last]
-Placing a voice channel above a text, announcement, or link sibling, or placing one of those below a voice sibling, returns `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS`.
+Placing a voice channel above a text, announcement, link, forum, or media sibling, or placing one of those below a voice sibling, returns `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS`.
 :::
 
 Channels at the guild root are exempt from this restriction.

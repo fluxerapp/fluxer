@@ -46,17 +46,19 @@ One source IP address makes 300 Identify attempts in each fixed 60-second window
 
 Presence Update accepts five commands per WebSocket in a rolling 20-second window. A further update is discarded without closing the connection.
 
+[Request Forum Unreads](/gateway/threads/#request-forum-unreads) accepts five commands per WebSocket in a rolling 5-second window. A further command is discarded without closing the connection.
+
 Voice State Update processes the first two commands per session in a rolling one-second window immediately. Later updates enter a per-session queue that holds at most 64 commands and drains one command every 500 ms. A newer update replaces an older queued update for the same `guild_id` and `connection_id` pair, and a full queue discards its oldest entry before accepting the new one.
 
 Request Guild Members has three command-specific budgets. Each account may send 12 requests in a rolling 10-second window, and each guild accepts 40 requests in a rolling 10-second window across all accounts. A request over either of these budgets is discarded without a result and without a close. A bot requesting a complete member list is limited to one accepted request per guild every 30 seconds, and a request inside that window produces [Rate Limited](/gateway/events/#rate-limited). The budget is keyed by the account and the guild together, so reconnecting does not reset it.
 
 ## Bounded commands
 
-One WebSocket processes at most four bounded requests at once across [Request Guild Members](/gateway/commands/#request-guild-members), [Lazy Request](/gateway/commands/#lazy-request), [Request Guild Counts](/gateway/commands/#request-guild-counts), and [Request Channel Member Counts](/gateway/commands/#request-channel-member-counts). Each request has a 10,000 ms deadline, after which it stops. Events already emitted are not retracted, so a command that emits its result in several events can deliver a partial result and then stop.
+One WebSocket processes at most four bounded requests at once across [Request Guild Members](/gateway/commands/#request-guild-members), [Lazy Request](/gateway/commands/#lazy-request), [Request Guild Counts](/gateway/commands/#request-guild-counts), [Request Channel Member Counts](/gateway/commands/#request-channel-member-counts), and [Request Forum Unreads](/gateway/threads/#request-forum-unreads). Each request has a 10,000 ms deadline, after which it stops. Events already emitted are not retracted. A command that emits its result in several events can deliver a partial result and then stop.
 
 Request Guild Members keeps one replaceable pending request while another member request is active. The most recent further request replaces any earlier pending one and starts when the active request finishes.
 
-A bounded command that finds all four slots occupied is dropped. There is no queue, no result event, and no close.
+A bounded command that finds all four slots occupied is dropped. There is no queue, no result event, and no close. Request Forum Unreads from a user session without `CHANNEL_THREADS` still closes with `4001`, as [Gateway threads](/gateway/threads/#request-forum-unreads) describes.
 
 Request Guild Counts queries each guild with a 2,000 ms deadline under an overall 3,000 ms batch deadline. Request Channel Member Counts queries its guild with a 2,000 ms deadline. A guild that misses its deadline is omitted from the result.
 
@@ -70,7 +72,7 @@ Both byte bounds measure in-memory size, not wire bytes, so both figures are app
 
 [Guild Members Chunk](/gateway/events/#guild-members-chunk) is delivered live and is never retained for Resume, whatever its size.
 
-[Guild Sync](/gateway/events/#guild-sync) and [Guild Member List Update](/gateway/events/#guild-member-list-update) are also excluded from replay. A replay can therefore have sequence gaps even within its retention window.
+[Guild Sync](/gateway/events/#guild-sync), [Guild Member List Update](/gateway/events/#guild-member-list-update), [Thread List Sync](/gateway/threads/#thread-list-sync), and [Thread Member List Update](/gateway/threads/#thread-member-list-update) are also excluded from replay. A replay can therefore have sequence gaps even within its retention window.
 
 A heartbeat with a sequence discards every retained Dispatch at or below that sequence and records it as the acknowledged sequence. A client MUST acknowledge only a sequence whose events it has finished processing. A heartbeat with `null`, and a heartbeat with a sequence below the acknowledged sequence, change nothing. Resume neither acknowledges nor evicts. A client that never heartbeats with a sequence keeps its full window until the count or byte bound evicts from the front.
 
@@ -84,9 +86,9 @@ Presence updates can be dropped under load without closing the connection.
 
 Request Guild Members accepts at most 100 user IDs, a nonce of at most 32 bytes, and a result limit from 0 through 100. Duplicate guild IDs are collapsed, an out-of-range limit is clamped, and an oversized nonce becomes null. An oversized `user_ids` array abandons the request. The nonce is echoed only when the request named exactly one guild.
 
-Lazy Request accepts at most 10 member list ranges per channel, each with `end` at most 100,000 and `end - start` at most 99, and at most 1,000 explicit member IDs per guild. Ranges and IDs that fail validation are dropped, and valid entries past either ceiling are truncated.
+Lazy Request accepts at most 10 member list ranges per channel, each with `end` at most 100,000 and `end - start` at most 99, and at most 1,000 explicit member IDs per guild. Ranges and IDs that fail validation are dropped, and valid entries past either ceiling are truncated. It keeps at most 10 [`thread_member_lists`](/gateway/threads/#lazy-request-thread-options) entries per guild.
 
-Request Guild Counts accepts at most 100 guild IDs after deduplication. Request Channel Member Counts accepts at most 25 channel IDs after deduplication. Both nonces run from 1 through 64 bytes, and a nonce outside that bound is omitted from the result.
+Request Guild Counts accepts at most 100 guild IDs after deduplication. Request Channel Member Counts accepts at most 25 channel IDs after deduplication. Both nonces run from 1 through 64 bytes, and a nonce outside that bound is omitted from the result. [Request Forum Unreads](/gateway/threads/#request-forum-unreads) accepts at most 40 posts after deduplication.
 
 Identify accepts at most 256 `ignored_events` entries. A longer array closes with `4002` and reason `Invalid identify payload`. Fluxer coerces or drops a value outside any other command payload bound. [Client commands](/gateway/commands/) states the exact coercion or drop rule for each field.
 

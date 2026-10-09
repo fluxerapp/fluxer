@@ -14,11 +14,13 @@ Every guild can create announcement channels. [Create guild channel](/http-api/g
 
 A text channel that receives copies from a followed announcement channel cannot become an announcement channel, because an announcement channel cannot follow another one. Delete its channel follower webhooks first.
 
+A text channel that holds a private thread cannot become an announcement channel either, and the request returns 400 `CHANNEL_HAS_THREADS`. [Thread types](/http-api/threads/#thread-types) describes how a conversion changes the type of the public threads of the channel.
+
 Converting an announcement channel into a text channel removes every follow of it. The copies already delivered stay, and they keep receiving later edits and deletions of the messages they came from.
 
 ## Publishing
 
-[Crosspost message](/http-api/messages/#crosspost-message) publishes one message. The author needs `SEND_MESSAGES`. Publishing another member's message, or a webhook's, also needs `MANAGE_MESSAGES`. A message is published once, and only a `DEFAULT` message that is not a reply, a forward, or a copy can be published.
+[Crosspost message](/http-api/messages/#crosspost-message) publishes one message. The author needs `SEND_MESSAGES`. Publishing another member's message, or a webhook's, also needs `MANAGE_MESSAGES`. A message is published once, and only a `DEFAULT` message that is not a reply, a forward, or a copy can be published. A message in an announcement thread cannot be published, as [Thread types](/http-api/threads/#thread-types) states.
 
 Publishing sets the `CROSSPOSTED` [message flag](/http-api/messages/#message-flags) and returns at once. The copies are created in the background, usually within seconds. A channel that follows the announcement channel after a message was published never receives that message.
 

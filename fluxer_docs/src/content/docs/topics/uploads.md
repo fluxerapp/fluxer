@@ -68,6 +68,8 @@ Completion checks permissions and file size limits again. See the endpoint's [re
 
 Include the `upload_filename` in a [pre-uploaded attachment](/http-api/messages/#pre-uploaded-attachment-object) when calling [Create message](/http-api/messages/#create-message) or [Modify message](/http-api/messages/#modify-message). Uploading alone does not create a message or emit a Gateway event.
 
+The `message` of a forum or media post in [Start thread](/http-api/threads/#start-thread) claims uploads the same way. Request the plan for the forum or media channel.
+
 An upload is bound to the identity and the channel that planned it, and a key is single use. A key the authenticated identity does not own, a key planned for another channel, and a key an attachment has already consumed each return 400 `INVALID_FORM_BODY` with `UPLOADED_ATTACHMENT_NOT_FOUND` on `attachments.{index}.upload_filename`. Where the object is absent from storage, which is what an untransferred plan leaves behind, the claim returns the same status with `FILE_NOT_FOUND` on the same path.
 
 :::caution[There is no resume operation]

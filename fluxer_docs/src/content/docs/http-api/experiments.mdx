@@ -6,7 +6,7 @@ description: The experiment assignments envelope, the revalidation and polling c
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An experiment is an instance-wide rollout. For each account, Fluxer works out whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `domain_migration` and `plutonium_page`. Only `domain_migration` is configured by an operator. `plutonium_page` is on for every account.
+An experiment is an instance-wide rollout. For each account, Fluxer works out whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `domain_migration`, `plutonium_page`, and `channel_threads`. Only `domain_migration` is configured by an operator. `plutonium_page` and `channel_threads` are on for every account.
 
 Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
 
@@ -34,6 +34,7 @@ One entry per experiment. The envelope reports this object even when it is empty
 | --- | --- | --- |
 | domain_migration? | [domain migration assignment](#domain-migration-assignment-object) object | The caller's web domain migration assignment |
 | plutonium_page? | [Plutonium page assignment](#plutonium-page-assignment-object) object | The caller's Plutonium page assignment |
+| channel_threads? | [channel threads assignment](#channel-threads-assignment-object) object | The caller's channel threads assignment |
 
 Ignore unknown experiments and treat a missing experiment as off.
 
@@ -64,6 +65,19 @@ The Plutonium page state for one account. This server version writes the key on 
 The rollout is complete and has no operator setting. The key stays for clients that still read it.
 
 The assignment only changes what the client shows. An enabled client replaces the Plutonium settings tab with a full Plutonium page, makes app pages linkable in chat, and uses a minimal gift purchase modal. The server applies no part of it on its own.
+
+## Channel threads assignment object
+
+The channel threads state for one account. This server version writes the key on every response.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| active | boolean | Always true, whatever client capability the caller declares |
+| config_version | integer | A non-negative version number, the same for every account |
+
+The key stays for clients that still read it. Threads, forum channels, and media channels need the [`channel_threads` client capability](/http-api/threads/#client-capability).
 
 ## Get experiment assignments
 

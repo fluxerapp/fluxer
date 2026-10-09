@@ -21,9 +21,10 @@ Both routes require the [ACL](/admin-api/#acl-evaluation) `guild:lookup`.
 | reports | Instance-wide | Every report, backing Admin report search |
 | audit_logs | Instance-wide | Every Admin audit entry, backing Admin audit search |
 | discovery<sup>1</sup> | Instance-wide | Discovery metadata written onto the guild documents of approved listings |
-| channel_messages<sup>2</sup> | One guild | Messages of every channel in one guild, requiring `guild_id` |
+| channel_messages<sup>2</sup> | One guild | Messages of every channel and thread in one guild, requiring `guild_id` |
 | guild_members<sup>3</sup> | One guild | Members of one guild, requiring `guild_id` |
 | favorite_memes<sup>4</sup> | One user | Favourited [memes](/http-api/memes/) of one user, requiring `user_id` |
+| threads<sup>5</sup> | One guild | Threads of one guild, backing [Search threads](/http-api/threads/#search-threads), requiring `guild_id` |
 
 <sup>1</sup> Refreshes the description, category, primary language and tags of approved discovery listings without removing guilds from search
 
@@ -32,6 +33,8 @@ Both routes require the [ACL](/admin-api/#acl-evaluation) `guild:lookup`.
 <sup>3</sup> Clears the guild's member index first and updates `members_indexed_at` on completion
 
 <sup>4</sup> Rebuilding this index is not supported. The request is accepted, but the job fails without reporting progress
+
+<sup>5</sup> [Search threads](/http-api/threads/#search-threads) returns 202 for the guild until the rebuild completes
 
 Every instance-wide name other than `discovery` deletes its documents before the first batch is written, so search over that index is incomplete for the whole run.
 
@@ -123,7 +126,7 @@ Every field is optional. Fluxer reads an absent or empty body as an empty object
 | guild_id?<sup>1</sup> | snowflake | The ID of the guild whose documents in the index are rebuilt |
 | user_id?<sup>2</sup> | snowflake | The ID of the user whose documents in the index are rebuilt |
 
-<sup>1</sup> Required by `channel_messages` and `guild_members`. Every other index name ignores it
+<sup>1</sup> Required by `channel_messages`, `guild_members`, and `threads`. Every other index name ignores it
 
 <sup>2</sup> Required by `favorite_memes`. Every other index name ignores it
 

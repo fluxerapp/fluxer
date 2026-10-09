@@ -98,6 +98,8 @@ A credential can affect even an unauthenticated operation. It selects account-ba
 
 A protected operation returns 401 `UNAUTHORIZED` for a missing, malformed, unknown, expired, or revoked credential. Bot tokens on Admin operations and non-bearer credentials on bearer-only operations also return 401.
 
+The routes with a route header on [Threads](/http-api/threads/), [Thread members](/http-api/thread-members/) and [Forums](/http-api/forums/) are the exception. A bot token reaches them with no declaration. A user request reaches them only with a session token and the `channel_threads` client capability. Any other request returns 404 `NOT_FOUND`, including one with no credential or an OAuth2 access token. [Client capability](/http-api/threads/#client-capability) defines the rule.
+
 A valid identity denied by the operation returns 403 `ACCESS_DENIED`. An [Authentication](/http-api/authentication/) operation that resolves a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`, as [Bot tokens](#bot-tokens) describes.
 
 Scope and Admin permission failures use the specific codes above. A 401 has no `WWW-Authenticate` header, so clients must inspect `code`.

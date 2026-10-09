@@ -96,7 +96,7 @@ An entry stores an acting Admin, a target type, a target ID, an action name, an 
 | target_id<sup>2</sup> | string | The target ID in decimal, which is the literal `0` for a target that has no snowflake |
 | target_user<sup>3</sup> | ?[Admin user summary](#admin-user-summary-object) object | The resolved target account, or null when the entry names no account target |
 | target_guild<sup>4</sup> | ?[Admin guild summary](#admin-guild-summary-object) object | The resolved target guild, or null when the entry names no guild target |
-| target_channel<sup>5</sup> | ?[Admin channel summary](#admin-channel-summary-object) object | The resolved target channel, or null when the entry names no channel target |
+| target_channel<sup>5</sup> | ?[Admin channel summary](#admin-channel-summary-object) object | The resolved target channel, or null when the entry names no channel target or the channel no longer exists |
 | related_users<sup>6</sup> | map[snowflake, [Admin user summary](#admin-user-summary-object) object] | The accounts the entry references, keyed by ID |
 | related_guilds<sup>6</sup> | map[snowflake, [Admin guild summary](#admin-guild-summary-object) object] | The guilds the entry references, keyed by ID |
 | related_channels<sup>6</sup> | map[snowflake, [Admin channel summary](#admin-channel-summary-object) object] | The channels the entry references, keyed by ID |
@@ -114,7 +114,7 @@ An entry stores an acting Admin, a target type, a target ID, an action name, an 
 
 <sup>4</sup> Resolved only when `target_type` is `guild`
 
-<sup>5</sup> Resolved when `target_type` is `channel`, and otherwise from a `channel_id` metadata key
+<sup>5</sup> Resolved when `target_type` is `channel`, and otherwise from a `channel_id` metadata key. The thread of a `delete_thread` entry no longer exists, and `target_channel` is null
 
 <sup>6</sup> Resolved once for the whole page and then repeated identically on every entry in it
 
@@ -288,6 +288,7 @@ An entry with one of these actions has `access` set to `read`.
 | list_guild_members | The members of a guild were listed |
 | list_guild_memory_stats | Guild memory statistics were listed |
 | list_guild_stickers | The stickers of a guild were listed |
+| list_guild_threads | The threads of a guild were listed |
 | list_report_reasons | The report reason catalogue was listed |
 | list_user_applications | The applications an account owns were read |
 | list_user_change_log | The contact change log of an account was read |
@@ -349,6 +350,7 @@ An entry with any other action has `access` set to `write`.
 | delete_guild | A guild was deleted |
 | delete_message | One message was deleted |
 | delete_report | A report was deleted with its stored evidence |
+| delete_thread | A thread was deleted |
 | delete_voice_region | A voice region was deleted |
 | delete_voice_server | A registered voice server was deleted |
 | delete_webauthn_credential | A WebAuthn credential was removed from an account |
@@ -561,7 +563,7 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | guild:force_add_member | Adds an account to a guild |
 | guild:kick_member | Removes a guild member |
 | guild:list:members | Reads guild member resources |
-| guild:lookup | Reads and searches Admin [guild](/admin-api/guilds/) resources, and queues and reads [search index](/admin-api/search-indexes/) rebuilds |
+| guild:lookup | Reads and searches Admin [guild](/admin-api/guilds/) resources, lists the [threads](/admin-api/threads/#list-guild-threads) of a guild, and queues and reads [search index](/admin-api/search-indexes/) rebuilds |
 | guild:reload | Reloads one guild on the main Gateway |
 | guild:shutdown | Stops one guild on the main Gateway |
 | guild:transfer_ownership<sup>5</sup> | Transfers guild ownership |
@@ -573,7 +575,7 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | instance:config:view | Reads instance configuration |
 | instance:limit_config:update | Replaces the instance-wide limit configuration |
 | instance:limit_config:view | Reads the instance-wide limit configuration |
-| message:delete_all | Queues deletion of every message one account sent |
+| message:delete_all | Queues deletion of every message one account sent, and deletes a [thread](/admin-api/threads/#delete-thread) |
 | message:delete | Deletes one message |
 | message:lookup | Reads, browses, and searches [messages](/admin-api/messages/) through the Admin API |
 | message:shred | Queues an explicit message shred job and reads its state |

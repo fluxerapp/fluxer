@@ -70,7 +70,7 @@ The compact guild representation returned by [List guilds](#list-guilds) and by 
 
 ## Admin guild detail object
 
-The full guild representation returned by [Get guild](#get-guild). It embeds every channel and every role of the guild.
+The full guild representation returned by [Get guild](#get-guild). It embeds every channel and every role of the guild. [List guild threads](/admin-api/threads/#list-guild-threads) returns the threads.
 
 ### Structure
 
@@ -103,7 +103,7 @@ The full guild representation returned by [Get guild](#get-guild). It embeds eve
 | rules_channel_id | ?snowflake | The channel holding the guild rules, or null when unset |
 | disabled_operations | integer | The [disabled guild operations](/http-api/guilds/#disabled-guild-operations) bitfield |
 | member_count | integer | The recorded member count |
-| channels | array[[Admin guild channel](#admin-guild-channel-object) object] | Every channel in the guild |
+| channels | array[[Admin guild channel](#admin-guild-channel-object) object] | Every channel in the guild except its threads |
 | roles | array[[Admin guild role](#admin-guild-role-object) object] | Every role in the guild |
 
 <sup>1</sup> All are null when the owner account cannot be resolved
@@ -564,7 +564,7 @@ The acting account must see the guild, hold [KICK_MEMBERS](/http-api/permissions
 
 ### Side effects
 
-The user loses membership and disappears from guild member search. A later rejoin restores a communication timeout that is still in force. The rejoined member starts with no nickname and no roles.
+The user loses membership and disappears from guild member search. Removal from the guild removes every membership in its threads. Fluxer emits a [Thread Members Update](/gateway/threads/#thread-members-update) for each of them, as [Thread member flags](/http-api/thread-members/#thread-member-flags) states. A later rejoin restores a communication timeout that is still in force. The rejoined member starts with no nickname and no roles.
 
 [Guild Member Remove](/gateway/events/#guild-member-remove) fires to the guild. A `MEMBER_KICK` entry is written to the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions). The entry names the acting Admin account and has the audit reason. The write fires [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions holding [VIEW_AUDIT_LOG](/http-api/permissions/).
 
@@ -625,7 +625,7 @@ The ban record names the acting Admin account as moderator. It has the expiry, t
 
 A positive deletion window queues a background job that deletes the target's matching messages after the response, which fires [Message Delete Bulk](/gateway/events/#message-delete-bulk) as deletion progresses.
 
-[Guild Ban Add](/gateway/events/#guild-ban-add) fires to the guild. If the target was a member, they lose access, disappear from member search, and trigger [Guild Member Remove](/gateway/events/#guild-member-remove). A communication timeout in force at the ban is not restored on a later rejoin. This operation writes no entry to the guild's own audit log and emits no [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create).
+[Guild Ban Add](/gateway/events/#guild-ban-add) fires to the guild. If the target was a member, they lose access, disappear from member search, and trigger [Guild Member Remove](/gateway/events/#guild-member-remove). Removal from the guild removes every membership in its threads. Fluxer emits a [Thread Members Update](/gateway/threads/#thread-members-update) for each of them, as [Thread member flags](/http-api/thread-members/#thread-member-flags) states. A communication timeout in force at the ban is not restored on a later rejoin. This operation writes no entry to the guild's own audit log and emits no [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create).
 
 One Admin audit entry is recorded with the action `ban_member`, the target type `guild_member`, and the banned user as the target. Its metadata has the guild ID, the user ID, the `delete_message_days` value, and any supplied reason and duration.
 
@@ -764,7 +764,7 @@ Every entry in `processed` records its own Admin audit entry, with the numeric I
 
 Returns one page of the guild's own in-app audit log, without requiring guild membership or [VIEW_AUDIT_LOG](/http-api/permissions/). Requires `guild:audit_log:view`.
 
-The response has the same fields, and its query parameters behave the same way, as in the public [List guild audit logs](/http-api/guild-audit-logs/#list-guild-audit-logs) operation, including its message deletion consolidation.
+The query parameters behave the same way as in the public [List guild audit logs](/http-api/guild-audit-logs/#list-guild-audit-logs) operation, including its message deletion consolidation, except for the thread action values in `action_type`.
 
 ### Path parameters
 
@@ -780,11 +780,13 @@ The response has the same fields, and its query parameters behave the same way, 
 | before?<sup>1</sup> | snowflake | Return entries older than this entry ID |
 | after?<sup>1</sup> | snowflake | Return entries newer than this entry ID |
 | user_id?<sup>2</sup> | snowflake | Return only entries recorded for this actor |
-| action_type?<sup>2</sup> | integer | Return only entries with this [audit action](/http-api/guild-audit-logs/#audit-actions) value |
+| action_type?<sup>2</sup><sup>3</sup> | integer | Return only entries with this [audit action](/http-api/guild-audit-logs/#audit-actions) value |
 
 <sup>1</sup> The cursors are mutually exclusive. Supplying both fails with 400 `INVALID_FORM_BODY` and the validation code `CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER` against `before`
 
 <sup>2</sup> Supplying either filter disables the consolidation of consecutive message deletion entries
+
+<sup>3</sup> The values 110, 111, and 112 return 400 `INVALID_FORM_BODY`
 
 ### Response body
 
@@ -793,6 +795,8 @@ The response has the same fields, and its query parameters behave the same way, 
 | audit_log_entries | array[[guild audit log entry](/http-api/guild-audit-logs/#guild-audit-log-entry-object) object] | The returned page of audit entries |
 | users | array[[partial user](/http-api/users/#partial-user-object) object] | Users referenced by the returned entries |
 | webhooks | array[[audit log webhook](/http-api/guild-audit-logs/#audit-log-webhook-object) object] | Webhooks referenced by the returned entries |
+
+The schema also declares `threads`. This operation never returns it.
 
 ### Response
 
@@ -843,7 +847,7 @@ A reload the main Gateway reports as failed returns 502 `BAD_GATEWAY`, an unansw
 
 ### Side effects
 
-The main Gateway reloads the guild's current state from storage and fires one [Guild Update](/gateway/events/#guild-update) Dispatch to every session subscribed to the guild. The operation changes no guild data.
+The main Gateway reloads the guild's current state from storage and fires one [Guild Update](/gateway/events/#guild-update) Dispatch to every session subscribed to the guild. The reload also reloads the thread state of the guild. Sessions then receive [Thread List Sync](/gateway/threads/#thread-list-sync) in the cases that entry lists. The operation changes no guild data.
 
 One Admin audit entry is recorded with the action `reload_guild`, the target type `guild`, and the guild ID in both the target and the metadata.
 
@@ -893,7 +897,7 @@ One Admin audit entry is recorded with the action `shutdown_guild`, the target t
 
 <RouteHeader method="POST" path="/v1/admin/guilds/{guild_id}/archives" auditReason />
 
-Queues an asynchronous archive of the guild's channels, messages, members, roles, and settings, and returns the created [archive](/admin-api/archives/#archive-object) object. Requires `archive:trigger:guild`.
+Queues an asynchronous archive of the guild's channels, threads, messages, members, roles, and settings, and returns the created [archive](/admin-api/archives/#archive-object) object. Requires `archive:trigger:guild`.
 
 Archive status and downloads are read through [Archives](/admin-api/archives/).
 

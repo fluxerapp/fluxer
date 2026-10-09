@@ -64,6 +64,7 @@ A guild object contains the guild's configuration. The operation that returns it
 | online_count?<sup>14</sup> | integer | Online presence count held by the main Gateway |
 | approximate_member_count?<sup>15</sup> | integer | Approximate member count |
 | approximate_presence_count?<sup>15</sup> | integer | Approximate online presence count |
+| threads_active?<sup>16</sup> | boolean | Whether the caller can use threads, forum channels, and media channels in the guild, always `true` when present |
 
 <sup>1</sup> An animated icon hash has the `a_` prefix, and that prefix is removed from the returned value while the guild lacks `ANIMATED_ICON`
 
@@ -89,11 +90,15 @@ A guild object contains the guild's configuration. The operation that returns it
 
 <sup>12</sup> Only [Get guild](#get-guild) populates this field
 
-<sup>13</sup> Only [Get guild](#get-guild) populates this field, and the array is filtered to the channels the caller can currently view
+<sup>13</sup> Only [Get guild](#get-guild) populates this field, with the channels the caller can currently view. The array has forum and media channels for every caller and has no threads
 
 <sup>14</sup> Only [Get guild](#get-guild) populates these fields
 
 <sup>15</sup> Only [List current user guilds](#list-current-user-guilds) populates these fields, and only when `with_counts` is true. A guild for which the Gateway holds no cached counts reports 0 for both
+
+<sup>16</sup> Only [List current user guilds](#list-current-user-guilds) populates this field, and only for a bot or a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability)
+
+A caller other than a bot or a user session that declares `channel_threads` receives `permissions` and each role `permissions` with the [thread permission bits](/http-api/threads/#thread-permissions) removed. The `permission_overwrites` of `channels` keep the thread bits.
 
 :::note[An absent field means the operation omitted it]
 `roles`, `emojis`, `stickers`, `channels`, and every count field arrive only from the operations named in the footnotes above. A guild returned without `roles` can still hold roles.
@@ -230,6 +235,8 @@ A creation template describes the roles and channels that [Create guild](#create
 
 <sup>4</sup> The value is stored on the created role. The everyone role is always created with no Unicode emoji
 
+A resolved everyone mask that has `SEND_MESSAGES` and no [thread permission bit](/http-api/threads/#thread-permissions) also receives `CREATE_PUBLIC_THREADS`, `CREATE_PRIVATE_THREADS`, and `SEND_MESSAGES_IN_THREADS`.
+
 ### Guild template channel object
 
 #### Structure
@@ -251,7 +258,7 @@ A creation template describes the roles and channels that [Create guild](#create
 
 <sup>1</sup> A duplicate identifier in the same template rejects creation with 400 `GUILD_TEMPLATE_INVALID`
 
-<sup>2</sup> The value 0 creates a text channel, 2 a voice channel, 4 a category, and 5 an announcement channel. The value 13, the stage channel type of another platform, creates a voice channel. Fluxer skips every other value, so the channel is not created
+<sup>2</sup> The value 0 creates a text channel, 2 a voice channel, 4 a category, and 5 an announcement channel. The value 13, the stage channel type of another platform, creates a voice channel. Fluxer skips every other value, a forum channel (15) and a media channel (16) included, and creates no channel for it
 
 <sup>3</sup> The identifier is applied only when it resolves to a category in the same template, and every other value leaves the channel at the guild root
 
@@ -390,7 +397,7 @@ Each value in the guild's `features` array is a capability or availability flag.
 | INVITE_SPLASH | Guild can use invite splash assets |
 | INVITES_DISABLED<sup>1</sup> | Guild invite use is disabled |
 | RAID_DETECTED | Raid detection is active and invites are restricted |
-| TEXT_CHANNEL_FLEXIBLE_NAMES<sup>1</sup> | Text channel names keep uppercase letters, spaces, and punctuation |
+| TEXT_CHANNEL_FLEXIBLE_NAMES<sup>1</sup> | Text, announcement, forum, and media channel names keep uppercase letters, spaces, and punctuation |
 | HIDE_OWNER_CROWN<sup>1</sup> | Guild owner crown is hidden |
 | MORE_EMOJI<sup>2</sup> | Legacy increased emoji slot allowance |
 | MORE_STICKERS<sup>2</sup> | Legacy increased sticker slot allowance |
@@ -517,7 +524,7 @@ A `name` outside 1 to 100 characters after normalisation returns `STRING_LENGTH_
 
 The `icon` base64 payload is bounded to 1 to 13981016 characters and is otherwise rejected with `BASE64_LENGTH_INVALID`, and a payload that is not valid base64 with `INVALID_BASE64_FORMAT`. The decoded image must fit within the instance `avatar_max_size` limit, which defaults to the 10 MiB ceiling, and a larger image is rejected with `IMAGE_SIZE_EXCEEDS_LIMIT`. PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JXL, and SVG are accepted. An animated AVIF is rejected with `INVALID_IMAGE_FORMAT`.
 
-Without a template the guild is created with a `Text Channels` category holding a text channel named `general`, a `Voice Channels` category holding a voice channel named `General`, and an everyone role with the default permission set. The `general` channel becomes the system channel.
+Without a template the guild is created with a `Text Channels` category holding a text channel named `general`, a `Voice Channels` category holding a voice channel named `General`, and an everyone role with the default permission set plus `CREATE_PUBLIC_THREADS`, `CREATE_PRIVATE_THREADS`, and `SEND_MESSAGES_IN_THREADS`. The `general` channel becomes the system channel.
 
 :::note[Embedded collections arrive on the Guild Create Dispatch]
 The creation response has no roles, channels, emojis, stickers, or member counts. Read [Get guild](#get-guild) afterwards to fetch them over HTTP.
@@ -720,7 +727,7 @@ Every successful request emits [Guild Update](/gateway/events/#guild-update) to 
 
 A request that changes the stored value of at least one body field records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the previous and new values. That entry emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions that can read the audit log.
 
-Removing `TEXT_CHANNEL_FLEXIBLE_NAMES` renames every guild text channel whose stored name changes when Fluxer trims it, lowercases it, replaces each whitespace run with a hyphen, and removes disallowed punctuation. When at least one channel is renamed, the removal emits one [Channel Update Bulk](/gateway/events/#channel-update-bulk) Dispatch with every channel in the guild.
+Removing `TEXT_CHANNEL_FLEXIBLE_NAMES` renames every guild text and announcement channel whose stored name changes when Fluxer trims it, lowercases it, replaces each whitespace run with a hyphen, and removes disallowed punctuation. A forum or media channel keeps its stored name until [Modify channel](/http-api/channels/#modify-channel) next sets `name`. When at least one channel is renamed, the removal emits one [Channel Update Bulk](/gateway/events/#channel-update-bulk) Dispatch with every channel in the guild.
 
 Replacing an image removes the previous asset. A failed replacement leaves the previous image unchanged.
 
@@ -755,7 +762,7 @@ While `single_community_enabled` is true in the [instance policy](/admin-api/ins
 The body is the optional [sudo verification fields](#sudo-verification-fields). A request that already has a valid proof can omit it.
 
 :::danger[Deleting a guild destroys its messages and attachments]
-Deletion removes the guild, memberships, roles, channels, messages, attachments, invites, webhooks and discovery listing. There is no grace period or way to restore them through the API.
+Deletion removes the guild, memberships, roles, channels, threads, messages, attachments, invites, webhooks and discovery listing. There is no grace period or way to restore them through the API.
 :::
 
 ### Response
@@ -840,6 +847,8 @@ Remaining guild sessions receive [Guild Member Remove](/gateway/events/#guild-me
 
 Guild read states and settings are unchanged, but the guild profile and roles are lost. Rejoining within one year resumes any unexpired communication timeout. Leaving records no audit entry, and `X-Audit-Log-Reason` has no effect.
 
+Removal from the guild removes every membership in its threads. Fluxer emits a [Thread Members Update](/gateway/threads/#thread-members-update) for each of them, as [Thread member flags](/http-api/thread-members/#thread-member-flags) states.
+
 ### Rate limit
 
 10 requests per 10 seconds for each authenticated user and guild, on the `guild:leave::guild_id` bucket.
@@ -850,7 +859,7 @@ Guild read states and settings are unchanged, but the guild profile and roles ar
 
 Deletes every message the authenticated account has authored in the guild and returns 202 with an empty body. Requires membership and sudo mode, which a bot credential satisfies implicitly. The membership survives the request.
 
-The deletion runs inside this request, so the 202 is sent only after every matching message in every guild channel has been removed. Each processed batch emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) in its channel.
+The deletion runs inside this request. Fluxer sends the 202 only after it has removed every matching message in every channel and thread of the guild. Each processed batch emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) in its channel or thread.
 
 ### Path parameters
 
