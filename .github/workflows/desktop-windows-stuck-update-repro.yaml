@@ -1,0 +1,73 @@
+name: desktop windows stuck update repro
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/desktop-windows-stuck-update-repro.yaml
+      - fluxer_desktop/scripts/stuck-update-repro.mjs
+
+permissions:
+  contents: read
+
+jobs:
+  repro:
+    name: Repro (${{ matrix.variant }}, ${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arch: x64, os: windows-2025, variant: clean}
+          - {arch: x64, os: windows-2025, variant: sticky}
+    env:
+      CHANNEL: canary
+      FROM: 2026.1008.190209
+      TO: 2026.1009.45608
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          sparse-checkout: fluxer_desktop/scripts
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+      - name: Install the old shell
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $setup = Join-Path $env:RUNNER_TEMP 'setup.exe'
+          Invoke-WebRequest -Uri "https://pkgs.fluxer.com/desktop/$env:CHANNEL/win32/${{ matrix.arch }}/$env:FROM/setup" -OutFile $setup
+          Start-Process -FilePath $setup -ArgumentList '--silent' -Wait
+          Start-Sleep -Seconds 5
+          $root = Join-Path $env:LOCALAPPDATA 'fluxer_desktop_canary'
+          Get-Process | Where-Object { $_.Path -like "$root*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 3
+          Remove-Item -Recurse -Force (Join-Path $env:APPDATA 'fluxercanary') -ErrorAction SilentlyContinue
+          Get-Content (Join-Path $root 'current\sq.version')
+      - name: Seed shell 190209 with renderer 45608
+        run: node fluxer_desktop/scripts/stuck-update-repro.mjs seed ${{ matrix.variant }} ${{ matrix.arch }} ${{ env.CHANNEL }} ${{ env.TO }} ${{ env.FROM }}
+      - name: Click update
+        run: node fluxer_desktop/scripts/stuck-update-repro.mjs click ${{ matrix.variant }} ${{ matrix.arch }} ${{ env.CHANNEL }} ${{ env.TO }} ${{ env.FROM }}
+      - name: Collect logs
+        if: always()
+        shell: pwsh
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP 'logs'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          $data = Join-Path $env:APPDATA 'fluxercanary'
+          $root = Join-Path $env:LOCALAPPDATA 'fluxer_desktop_canary'
+          Copy-Item (Join-Path $data 'logs\*') $out -ErrorAction SilentlyContinue
+          Copy-Item (Join-Path $data 'modules\state.json') $out -ErrorAction SilentlyContinue
+          Copy-Item (Join-Path $data 'update-apply-state.json') $out -ErrorAction SilentlyContinue
+          Get-ChildItem -Path $root -Filter '*.log' -Recurse -ErrorAction SilentlyContinue | Copy-Item -Destination $out
+          Get-Content (Join-Path $root 'current\sq.version') -ErrorAction SilentlyContinue
+          Get-ChildItem $out
+          $main = Join-Path $out 'main.log'
+          if (Test-Path $main) { Select-String -Path $main -Pattern 'DesktopUpdate|ShellSelfUpdate|shell self update|desktop update|Velopack|velopack|update' | Select-Object -Last 60 | ForEach-Object { Write-Host $_.Line } }
+          Get-ChildItem $out -Filter '*velopack*' | ForEach-Object { Write-Host "== $($_.Name)"; Get-Content $_.FullName -Tail 60 }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: stuck-update-${{ matrix.variant }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/logs
+          retention-days: 7
