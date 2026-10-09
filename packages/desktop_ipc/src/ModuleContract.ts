@@ -15,15 +15,15 @@ export const DESKTOP_UPDATE_EVENTS = Object.freeze({
 } as const);
 
 const DESKTOP_MODULE_NAME_PATTERN = /^[a-z][a-z0-9_]{0,63}$/u;
-export const DESKTOP_GRAMMAR_MODULE_NAME = 'fluxer_grammars';
+export const DESKTOP_RENDERER_MODULE_NAME = 'fluxer_renderer';
 export const DESKTOP_TWEMOJI_MODULE_NAME = 'fluxer_twemoji';
 export const DESKTOP_DEEP_FILTER_MODULE_NAME = 'fluxer_deepfilter';
+export const DESKTOP_CAMERA_EFFECTS_MODULE_NAME = 'fluxer_camera_effects';
 export const DESKTOP_EMOJI_SPRITES_MODULE_NAME = 'fluxer_emoji_sprites';
 export const DESKTOP_EXTRAS_MODULE_NAME = 'fluxer_extras';
 export const DESKTOP_SOURCEMAP_MODULE_NAME = 'fluxer_sourcemaps';
 
 export const DESKTOP_FONT_MODULE_NAMES = Object.freeze({
-	'non-latin': 'fluxer_fonts_nonlatin',
 	sc: 'fluxer_fonts_sc',
 	tc: 'fluxer_fonts_tc',
 	jp: 'fluxer_fonts_jp',
@@ -60,6 +60,7 @@ export interface DesktopModuleAPI {
 
 export interface DesktopUpdateState {
 	readonly available: boolean;
+	readonly updating?: boolean;
 }
 
 export interface DesktopUpdateAPI {

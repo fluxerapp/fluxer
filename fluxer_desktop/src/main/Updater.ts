@@ -136,6 +136,15 @@ async function fetchManualLatest(options: {forceRefresh?: boolean} = {}): Promis
 	return info;
 }
 
+export async function findNewerManualShell(): Promise<ManualLatestInfo | null> {
+	const plan = resolveShellUpdatePlan();
+	if (plan.capability !== ShellUpdateCapability.MANUAL_DOWNLOAD || plan.reason !== 'platform') {
+		return null;
+	}
+	const latest = await fetchManualLatest({forceRefresh: true});
+	return compareVersions(latest.version, app.getVersion()) > 0 ? latest : null;
+}
+
 function sendManualUpdateAvailable(
 	getMainWindow: () => BrowserWindow | null,
 	context: UpdaterContext,

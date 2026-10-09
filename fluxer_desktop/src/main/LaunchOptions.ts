@@ -23,6 +23,7 @@ const DISABLE_SPELLCHECK_ARGS = new Set(['--fluxer-disable-spellcheck', '--fluxe
 const SPELLCHECK_MODE_ARGS = new Set(['--fluxer-spellcheck']);
 const DISABLE_V8_CODE_CACHE_ARGS = new Set(['--fluxer-disable-v8-code-cache']);
 const DISABLE_NATIVE_GATEWAY_ARGS = new Set(['--fluxer-disable-native-gateway']);
+const DESKTOP_UPDATE_ARGS = new Set(['--fluxer-update']);
 
 function hasFlag(argv: ReadonlyArray<string>, flags: ReadonlySet<string>): boolean {
 	return argv.some((arg) => flags.has(arg) || [...flags].some((flag) => arg.startsWith(`${flag}=`)));
@@ -159,4 +160,8 @@ export function describeLaunchDiagnosticOptions(argv: ReadonlyArray<string> = pr
 		v8CodeCacheDisabled: shouldDisableV8CodeCache(argv),
 		nativeGatewayDisableReason: getNativeGatewayDisableReason(argv),
 	};
+}
+
+export function isDesktopUpdateRequested(argv: ReadonlyArray<string> = process.argv): boolean {
+	return hasFlag(argv, DESKTOP_UPDATE_ARGS);
 }

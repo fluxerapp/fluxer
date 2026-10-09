@@ -22,6 +22,7 @@ interface DesktopUpdateGateState {
 	lastCheck: DesktopUpdateCheck | null;
 	running: Promise<void> | null;
 	notifiedAvailable: boolean;
+	notifiedUpdating: boolean;
 	readonly listeners: Set<DesktopUpdateStateListener>;
 }
 
@@ -30,6 +31,7 @@ const gateState: DesktopUpdateGateState = {
 	lastCheck: null,
 	running: null,
 	notifiedAvailable: false,
+	notifiedUpdating: false,
 	listeners: new Set(),
 };
 
@@ -38,15 +40,24 @@ function isAvailable(check: DesktopUpdateCheck | null): boolean {
 }
 
 export function getDesktopUpdateState(): DesktopUpdateState {
-	return {available: gateState.running == null && isAvailable(gateState.lastCheck)};
+	return {
+		available: gateState.running == null && isAvailable(gateState.lastCheck),
+		updating: gateState.running != null,
+	};
+}
+
+export function desktopUpdateReplacesShell(): boolean {
+	return gateState.lastCheck?.shellNewer === true;
 }
 
 function notify(): void {
 	const state = getDesktopUpdateState();
-	if (state.available === gateState.notifiedAvailable) {
+	const updating = state.updating === true;
+	if (state.available === gateState.notifiedAvailable && updating === gateState.notifiedUpdating) {
 		return;
 	}
 	gateState.notifiedAvailable = state.available;
+	gateState.notifiedUpdating = updating;
 	for (const listener of Array.from(gateState.listeners)) {
 		try {
 			listener(state);

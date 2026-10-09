@@ -21,6 +21,7 @@ import {isDesktopModuleName} from '@fluxer/desktop_ipc/src/ModuleContract';
 const MODULE_STORE_DIRECTORY_NAME = 'modules';
 export const MODULE_STATE_FILE_NAME = 'state.json';
 export const MODULE_STATE_VERSION = 3;
+const MODULE_UNREADABLE_STATE_SUFFIX = '.unreadable';
 const MODULE_DOWNLOAD_DIRECTORY_NAME = 'download';
 const MODULE_DOWNLOAD_INCOMING_DIRECTORY_NAME = 'incoming';
 const MODULE_STORE_TREE_DIRECTORY_NAME = 'store';
@@ -1179,6 +1180,7 @@ export class ModuleStore {
 	public readonly storeRoot: string;
 	private state: ModuleStoreState;
 	private convergingShellVersion: string | null = null;
+	private unreadableStatePath: string | null = null;
 	private launchSucceeded = false;
 	private activeLaunchAttempt: ModuleLaunchAttempt | null = null;
 	private readonly installCoordinator = new ModuleInstallCoordinator<ModuleInstallation>();
@@ -1211,9 +1213,26 @@ export class ModuleStore {
 		await createDirectory(resolved);
 		await createDirectory(path.join(resolved, MODULE_DOWNLOAD_DIRECTORY_NAME, MODULE_DOWNLOAD_INCOMING_DIRECTORY_NAME));
 		await createDirectory(path.join(resolved, MODULE_STORE_TREE_DIRECTORY_NAME));
-		const stateFile = await ModuleStore.readState(path.join(resolved, MODULE_STATE_FILE_NAME));
+		const statePath = path.join(resolved, MODULE_STATE_FILE_NAME);
+		let stateFile: ModuleStoreStateFile;
+		let unreadableState: string | null = null;
+		try {
+			stateFile = await ModuleStore.readState(statePath);
+		} catch (error) {
+			if (
+				!(error instanceof ModuleStoreStateCorruptError) &&
+				!(error instanceof ModuleStoreStateUnsupportedVersionError)
+			) {
+				throw error;
+			}
+			unreadableState = `${statePath}${MODULE_UNREADABLE_STATE_SUFFIX}`;
+			await removeTree(unreadableState);
+			await renameWithRetry(statePath, unreadableState);
+			stateFile = {status: ModuleStoreStateFileStatus.MISSING};
+		}
 		if (stateFile.status === ModuleStoreStateFileStatus.MISSING) {
 			const store = new ModuleStore(resolved, createInitialModuleStoreState(shellVersion, releaseChannel));
+			store.unreadableStatePath = unreadableState;
 			await store.writeState(store.state);
 			return store;
 		}
@@ -1267,6 +1286,10 @@ export class ModuleStore {
 		} finally {
 			await handle.close();
 		}
+	}
+
+	public get recoveredUnreadableState(): string | null {
+		return this.unreadableStatePath;
 	}
 
 	public get shellVersionChanged(): boolean {
@@ -1500,6 +1523,21 @@ export class ModuleStore {
 		});
 	}
 
+	public async retireModule(moduleName: string): Promise<boolean> {
+		assertModuleName(moduleName);
+		return await this.withStateLock(async () => {
+			if (this.state.committed[moduleName] === undefined && this.state.previous[moduleName] === undefined) {
+				return false;
+			}
+			const committed = {...this.state.committed};
+			const previous = {...this.state.previous};
+			delete committed[moduleName];
+			delete previous[moduleName];
+			await this.writeState({...this.state, committed, previous});
+			return true;
+		});
+	}
+
 	public async mergeCommitted(entries: Readonly<Record<string, string>>): Promise<ModuleStoreState> {
 		return await this.withStateLock(async () => {
 			const added = await this.resolveInstalled(entries);
@@ -1588,13 +1626,20 @@ export class ModuleStore {
 		});
 	}
 
-	public async beginBootAttempt(): Promise<ModuleBootAttempt> {
+	public async beginBootAttempt({
+		bundled = [],
+	}: {
+		readonly bundled?: ReadonlyArray<string>;
+	} = {}): Promise<ModuleBootAttempt> {
 		return await this.withStateLock(async () => {
 			if (this.state.boot_attempt < MODULE_BOOT_ATTEMPT_ROLLBACK_THRESHOLD) {
 				return {rolledBack: false, bootAttempt: this.state.boot_attempt, committed: this.state.committed};
 			}
-			const revertedCommitted =
+			const previousCommitted =
 				Object.keys(this.state.previous).length === 0 ? this.state.committed : sortModuleMap(this.state.previous);
+			const revertedCommitted = sameModuleMap(this.state.committed, previousCommitted)
+				? Object.fromEntries(Object.entries(previousCommitted).filter(([moduleName]) => !bundled.includes(moduleName)))
+				: previousCommitted;
 			const rolledBack = !sameModuleMap(this.state.committed, revertedCommitted);
 			const rejected: Record<string, string> = {...this.state.rejected};
 			if (rolledBack) {
@@ -1607,10 +1652,46 @@ export class ModuleStore {
 			const reverted = await this.writeState({
 				...this.state,
 				committed: revertedCommitted,
+				previous: rolledBack ? revertedCommitted : this.state.previous,
 				rejected,
 				boot_attempt: 0,
 			});
 			return {rolledBack, bootAttempt: reverted.boot_attempt, committed: reverted.committed};
+		});
+	}
+
+	public async revertLaunchAttempt(
+		attempt: ModuleLaunchAttempt,
+		bundled: ReadonlyArray<string> = [],
+	): Promise<Readonly<Record<string, string>> | null> {
+		return await this.withStateLock(async () => {
+			if (this.activeLaunchAttempt !== attempt) {
+				return null;
+			}
+			const rejected: Record<string, string> = {...this.state.rejected};
+			const committed: Record<string, string> = {};
+			for (const [moduleName, sha256] of Object.entries(this.state.previous)) {
+				if (await this.isInstalled(moduleName, sha256)) {
+					committed[moduleName] = sha256;
+				}
+			}
+			for (const [moduleName, sha256] of Object.entries(this.state.committed)) {
+				if (committed[moduleName] === sha256) continue;
+				rejected[moduleName] = sha256;
+				if (committed[moduleName] === undefined && !bundled.includes(moduleName)) {
+					committed[moduleName] = sha256;
+					delete rejected[moduleName];
+				}
+			}
+			this.activeLaunchAttempt = null;
+			const reverted = await this.writeState({
+				...this.state,
+				committed,
+				previous: committed,
+				rejected,
+				boot_attempt: 0,
+			});
+			return reverted.committed;
 		});
 	}
 

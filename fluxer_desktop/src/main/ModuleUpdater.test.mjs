@@ -39,7 +39,7 @@ function createUserData() {
 	return root;
 }
 
-function installModuleOnDisk(storeRoot, moduleName, digest, entries) {
+function installModuleOnDisk(storeRoot, moduleName, digest, entries, buildVersion = SHELL_VERSION) {
 	const directory = path.join(storeRoot, 'store', moduleName, digest);
 	mkdirSync(directory, {recursive: true});
 	const files = entries.map(([relative, body]) => {
@@ -51,7 +51,7 @@ function installModuleOnDisk(storeRoot, moduleName, digest, entries) {
 		`${JSON.stringify(
 			{
 				module: moduleName,
-				build_version: SHELL_VERSION,
+				build_version: buildVersion,
 				release_channel: RELEASE_CHANNEL,
 				source_sha: SOURCE_SHA,
 				files,
@@ -121,7 +121,8 @@ function createUpdater(store, modules, options = {}) {
 		platform: options.platform ?? PLATFORM,
 		arch: ARCH,
 		packageOrigin: PACKAGE_ORIGIN,
-		hasOfflineRenderer: false,
+		hasOfflineRenderer: options.bundledRendererVersion != null,
+		bundledRendererVersion: options.bundledRendererVersion ?? null,
 		forceStartupUpdate: options.forceStartupUpdate ?? false,
 		selfUpdateShellFirst: options.selfUpdateShellFirst,
 		onState: options.onState,
@@ -860,5 +861,211 @@ describe('ModuleUpdater after a crash-loop rollback', () => {
 			.catch(() => undefined);
 
 		assert.equal(store.isRejected('fluxer_renderer', NEXT_RENDERER_SHA), false);
+	});
+});
+
+describe('ModuleUpdater with a renderer bundled in the shell', () => {
+	const OLDER_VERSION = '2026.822.9';
+
+	async function storeWithOlderRenderer() {
+		const store = await openStore(createUserData());
+		installModuleOnDisk(store.root, 'fluxer_renderer', RENDERER_SHA, [['index.html', 'renderer one']], OLDER_VERSION);
+		await store.commit({fluxer_renderer: RENDERER_SHA});
+		await store.recordManifestFetch({
+			etag: null,
+			fetchedAt: new Date(NOW).toISOString(),
+			manifest: {
+				feed: {releaseChannel: RELEASE_CHANNEL, platform: PLATFORM, arch: ARCH},
+				metadataVersion: 1,
+				manifestSha256: 'c'.repeat(64),
+			},
+			floor: {fluxer_renderer: NEXT_RENDERER_SHA},
+		});
+		return store;
+	}
+
+	test('a new shell over an older installed renderer launches the bundle with the feed down', async () => {
+		const store = await storeWithOlderRenderer();
+		const {updater, reports} = createUpdater(
+			store,
+			{},
+			{bundledRendererVersion: SHELL_VERSION, forceStartupUpdate: true, respond: unreachableFeed()},
+		);
+
+		const outcome = await updater.run();
+
+		assert.equal(outcome.status, 'unreachable-launch');
+		assert.deepEqual(outcome.committed, {});
+		assert.deepEqual(store.getCommitted(), {});
+		assert.deepEqual(store.getState().previous, {});
+		assert.equal(
+			reports.some((report) => report.type === 'bundled-renderer-preferred'),
+			true,
+		);
+		assert.deepEqual((await updater.selectServedModules(outcome.committed)).renderer, {
+			source: 'bundled',
+			version: SHELL_VERSION,
+			bundledVersion: SHELL_VERSION,
+		});
+	});
+
+	test('a feed renderer the bundle already covers is never downloaded', async () => {
+		const store = await storeWithOlderRenderer();
+		const {updater, requests} = createUpdater(
+			store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{bundledRendererVersion: SHELL_VERSION, forceStartupUpdate: true, metadataVersion: 2},
+		);
+
+		const outcome = await updater.run();
+
+		assert.equal(outcome.status, 'launching');
+		assert.deepEqual(outcome.committed, {});
+		assert.equal(
+			requests.some((url) => String(url).endsWith('package.br')),
+			false,
+		);
+		assert.deepEqual(store.getState().floor, {});
+		assert.deepEqual(await updater.checkForUpdate(), {
+			shellLatestVersion: SHELL_VERSION,
+			shellNewer: false,
+			modulesChanged: false,
+		});
+	});
+
+	test('a feed renderer newer than the bundle is still fetched', async () => {
+		const store = await openStore(createUserData());
+		const {updater, requests} = createUpdater(
+			store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{bundledRendererVersion: OLDER_VERSION, respond: missingPackages()},
+		);
+
+		await updater.run();
+
+		assert.equal(
+			requests.some((url) => String(url).endsWith(`${NEXT_RENDERER_SHA}/package.br`)),
+			true,
+		);
+	});
+
+	test('a renderer module that keeps failing to boot is dropped for the bundle, never relaunched forever', async () => {
+		const store = await openStore(createUserData());
+		installModuleOnDisk(store.root, 'fluxer_renderer', NEXT_RENDERER_SHA, [['index.html', 'broken']], '2026.900.1');
+		await store.commit({fluxer_renderer: NEXT_RENDERER_SHA});
+		const served = [];
+		for (let launch = 0; launch < 4; launch += 1) {
+			const {updater} = createUpdater(
+				store,
+				{},
+				{bundledRendererVersion: SHELL_VERSION, platform: 'linux', respond: unreachableFeed()},
+			);
+			const outcome = await updater.run();
+			served.push((await updater.selectServedModules(outcome.committed)).renderer.source);
+		}
+
+		assert.deepEqual(served, ['module', 'module', 'bundled', 'bundled']);
+		assert.equal(store.isRejected('fluxer_renderer', NEXT_RENDERER_SHA), true);
+	});
+
+	test('a committed on-demand module whose files are gone never blocks an offline launch', async () => {
+		for (const platform of ['darwin', 'linux']) {
+			const store = await openStore(createUserData());
+			const directory = installModuleOnDisk(store.root, 'fluxer_fonts_jp', OVERLAY_SHA, [['a.woff2', 'font']], '0.0.0');
+			await store.commit({fluxer_fonts_jp: OVERLAY_SHA});
+			await rm(directory, {recursive: true, force: true});
+			const {updater} = createUpdater(
+				store,
+				{},
+				{bundledRendererVersion: SHELL_VERSION, platform, respond: unreachableFeed()},
+			);
+
+			const outcome = await updater.run();
+
+			assert.equal(outcome.status, platform === 'linux' ? 'launching' : 'unreachable-launch', platform);
+			assert.deepEqual(outcome.committed, {}, platform);
+		}
+	});
+
+	test('a newer feed renderer whose package is missing launches the bundle instead of blocking', async () => {
+		const store = await openStore(createUserData());
+		const {updater} = createUpdater(
+			store,
+			{fluxer_renderer: NEXT_RENDERER_SHA},
+			{bundledRendererVersion: OLDER_VERSION, respond: missingPackages()},
+		);
+
+		const outcome = await updater.run();
+
+		assert.equal(outcome.status, 'launching');
+		assert.deepEqual(outcome.committed, {});
+		assert.deepEqual(await updater.checkForUpdate(), {
+			shellLatestVersion: SHELL_VERSION,
+			shellNewer: false,
+			modulesChanged: true,
+		});
+	});
+
+	test('a packaged bundle with no readable version still outranks an installed module', async () => {
+		const store = await openStore(createUserData());
+		installModuleOnDisk(store.root, 'fluxer_renderer', RENDERER_SHA, [['index.html', 'old']], OLDER_VERSION);
+		await store.commit({fluxer_renderer: RENDERER_SHA});
+		const updater = new ModuleUpdater({
+			store,
+			shellVersion: SHELL_VERSION,
+			releaseChannel: RELEASE_CHANNEL,
+			platform: 'linux',
+			arch: ARCH,
+			packageOrigin: PACKAGE_ORIGIN,
+			hasOfflineRenderer: true,
+			bundledRendererVersion: 'dev',
+			preferUnversionedBundle: true,
+			fetch: unreachableFeed(),
+			sleep: async () => {},
+			random: () => 0,
+			now: () => NOW,
+		});
+
+		const outcome = await updater.run();
+
+		assert.equal((await updater.selectServedModules(outcome.committed)).renderer.source, 'bundled');
+		assert.deepEqual(store.getCommitted(), {});
+	});
+
+	test('a Linux launch never waits on a shell download, a required security update still does', async () => {
+		const attempts = [];
+		const selfUpdateShellFirst = async (latestVersion) => {
+			attempts.push(latestVersion);
+		};
+		const store = await openStore(createUserData());
+		const {updater} = createUpdater(
+			store,
+			{},
+			{
+				bundledRendererVersion: SHELL_VERSION,
+				platform: 'linux',
+				forceStartupUpdate: true,
+				shellLatest: '2026.900.1',
+				shellMinimum: '0.0.0',
+				selfUpdateShellFirst,
+			},
+		);
+
+		assert.equal((await updater.run()).status, 'launching');
+		assert.deepEqual(attempts, []);
+
+		const mac = createUpdater(
+			await openStore(createUserData()),
+			{},
+			{
+				bundledRendererVersion: SHELL_VERSION,
+				forceStartupUpdate: true,
+				shellLatest: '2026.900.1',
+				shellMinimum: '0.0.0',
+				selfUpdateShellFirst,
+			},
+		);
+		await mac.updater.run();
+		assert.deepEqual(attempts, ['2026.900.1']);
 	});
 });

@@ -1227,3 +1227,103 @@ describe('ModuleStore boot checks without rehashing', () => {
 		assert.equal(await store.isInstalled('fluxer_renderer', RENDERER_V1.sha256), false);
 	});
 });
+
+describe('ModuleStore beside a renderer bundled in the shell', () => {
+	test('an unreadable state file is set aside and the store starts clean', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		const statePath = path.join(getModuleStoreRoot(userDataPath), MODULE_STATE_FILE_NAME);
+		for (const contents of ['{not json', JSON.stringify({state_version: 1})]) {
+			writeFileSync(statePath, contents);
+
+			const recovered = await openStore(userDataPath);
+
+			assert.equal(recovered.recoveredUnreadableState, `${statePath}.unreadable`);
+			assert.equal(readFileSync(`${statePath}.unreadable`, 'utf8'), contents);
+			assert.deepEqual(recovered.getCommitted(), {});
+			assert.equal(readState(userDataPath).state_version, MODULE_STATE_VERSION);
+		}
+		assert.equal(store.recoveredUnreadableState, null);
+	});
+
+	test('retiring a module drops it from the committed and previous sets so it can be collected', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		const first = await install(store, RENDERER_V1);
+		const second = await install(store, RENDERER_V2);
+		await install(store, GRAMMARS_V1);
+		await store.commit({fluxer_renderer: RENDERER_V1.sha256, fluxer_grammars: GRAMMARS_V1.sha256});
+		await store.commit({fluxer_renderer: RENDERER_V2.sha256, fluxer_grammars: GRAMMARS_V1.sha256});
+
+		assert.equal(await store.retireModule('fluxer_renderer'), true);
+		assert.equal(await store.retireModule('fluxer_renderer'), false);
+
+		assert.deepEqual(readState(userDataPath).committed, {fluxer_grammars: GRAMMARS_V1.sha256});
+		assert.deepEqual(readState(userDataPath).previous, {fluxer_grammars: GRAMMARS_V1.sha256});
+		await markLaunched(store);
+		await store.collectGarbage();
+		assert.equal(existsSync(first.directory), false);
+		assert.equal(existsSync(second.directory), false);
+		assert.equal(await store.isInstalled('fluxer_grammars', GRAMMARS_V1.sha256), true);
+	});
+
+	test('two failed boots of a first renderer module fall back to the bundle instead of looping', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		await install(store, RENDERER_V1);
+		await install(store, GRAMMARS_V1);
+		await store.commit({fluxer_grammars: GRAMMARS_V1.sha256});
+		await store.activateMergedForRendererReload({fluxer_renderer: RENDERER_V1.sha256});
+		await store.commit({fluxer_renderer: RENDERER_V1.sha256, fluxer_grammars: GRAMMARS_V1.sha256});
+		const state = readState(userDataPath);
+		writeFileSync(
+			path.join(getModuleStoreRoot(userDataPath), MODULE_STATE_FILE_NAME),
+			JSON.stringify({...state, previous: {}, boot_attempt: 2}),
+		);
+		const reopened = await openStore(userDataPath);
+
+		const withoutBundle = await reopened.beginBootAttempt();
+		assert.equal(withoutBundle.rolledBack, false);
+		writeFileSync(
+			path.join(getModuleStoreRoot(userDataPath), MODULE_STATE_FILE_NAME),
+			JSON.stringify({...readState(userDataPath), boot_attempt: 2}),
+		);
+		const bundled = await openStore(userDataPath);
+
+		const attempt = await bundled.beginBootAttempt({bundled: ['fluxer_renderer']});
+
+		assert.equal(attempt.rolledBack, true);
+		assert.deepEqual(attempt.committed, {fluxer_grammars: GRAMMARS_V1.sha256});
+		assert.equal(bundled.isRejected('fluxer_renderer', RENDERER_V1.sha256), true);
+		assert.equal(readState(userDataPath).boot_attempt, 0);
+	});
+
+	test('a renderer update that never confirms is reverted and rejected', async () => {
+		const userDataPath = createUserData();
+		const store = await openStore(userDataPath);
+		await install(store, RENDERER_V1);
+		await install(store, RENDERER_V2);
+		await install(store, GRAMMARS_V1);
+		await store.commit({fluxer_renderer: RENDERER_V1.sha256});
+		const attempt = await store.activateMergedForRendererReload({
+			fluxer_renderer: RENDERER_V2.sha256,
+			fluxer_grammars: GRAMMARS_V1.sha256,
+		});
+
+		assert.deepEqual(await store.revertLaunchAttempt(attempt, ['fluxer_renderer']), {
+			fluxer_renderer: RENDERER_V1.sha256,
+			fluxer_grammars: GRAMMARS_V1.sha256,
+		});
+		assert.equal(store.isRejected('fluxer_renderer', RENDERER_V2.sha256), true);
+		assert.equal(store.isRejected('fluxer_grammars', GRAMMARS_V1.sha256), false);
+		assert.equal(await store.revertLaunchAttempt(attempt, ['fluxer_renderer']), null);
+
+		const first = await store.activateMergedForRendererReload({fluxer_renderer: RENDERER_V2.sha256});
+		await store.revertLaunchAttempt(first, ['fluxer_renderer']);
+		await store.retireModule('fluxer_renderer');
+		const onBundle = await store.activateMergedForRendererReload({fluxer_renderer: RENDERER_V1.sha256});
+		assert.deepEqual(await store.revertLaunchAttempt(onBundle, ['fluxer_renderer']), {
+			fluxer_grammars: GRAMMARS_V1.sha256,
+		});
+	});
+});

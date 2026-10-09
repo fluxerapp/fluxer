@@ -8,6 +8,7 @@ import {
 } from '@electron/main/ModuleManifest';
 import {MODULE_BOOT_ATTEMPT_ROLLBACK_THRESHOLD, type ModuleStore} from '@electron/main/ModuleStore';
 import {compareModuleVersions, type ModuleVersion, parseModuleVersion} from '@electron/main/ModuleVersion';
+import {DESKTOP_RENDERER_MODULE_NAME} from '@fluxer/desktop_ipc/src/ModuleContract';
 
 export const ModuleUpdaterBlockReason = Object.freeze({
 	REQUIRED_MODULE_UNAVAILABLE: 'required-module-unavailable',
@@ -46,19 +47,134 @@ export type ModuleUnreachableLaunchDecision =
 	| {readonly kind: typeof ModuleUnreachableLaunchDecision.LAUNCH}
 	| {readonly kind: typeof ModuleUnreachableLaunchDecision.BLOCK; readonly reason: ModuleUpdaterBlockReason};
 
+export const ServedRendererSource = Object.freeze({
+	BUNDLED: 'bundled',
+	MODULE: 'module',
+	NONE: 'none',
+} as const);
+
+export type ServedRendererSource = (typeof ServedRendererSource)[keyof typeof ServedRendererSource];
+
+export interface ServedModuleSelection {
+	readonly modules: Readonly<Record<string, string>>;
+	readonly renderer: {
+		readonly source: ServedRendererSource;
+		readonly version: string | null;
+		readonly bundledVersion: string | null;
+	};
+}
+
 export class ModuleUpdatePlanner {
 	private readonly store: ModuleStore;
 	private readonly shellVersion: ModuleVersion;
 	private readonly hasOfflineRenderer: boolean;
+	private readonly bundledRendererVersion: ModuleVersion | null;
+	private readonly bundleOutranksEveryModule: boolean;
 
-	public constructor(store: ModuleStore, shellVersion: ModuleVersion, hasOfflineRenderer: boolean) {
+	public constructor(
+		store: ModuleStore,
+		shellVersion: ModuleVersion,
+		hasOfflineRenderer: boolean,
+		bundledRendererVersion: ModuleVersion | null = null,
+		preferUnversionedBundle = false,
+	) {
 		this.store = store;
 		this.shellVersion = shellVersion;
 		this.hasOfflineRenderer = hasOfflineRenderer;
+		this.bundledRendererVersion = hasOfflineRenderer ? bundledRendererVersion : null;
+		this.bundleOutranksEveryModule = hasOfflineRenderer && bundledRendererVersion == null && preferUnversionedBundle;
 	}
 
 	public hasSomethingToRender(committed: Readonly<Record<string, string>>): boolean {
 		return this.hasOfflineRenderer || Object.keys(committed).length > 0;
+	}
+
+	public hasBundledRenderer(): boolean {
+		return this.bundledRendererVersion != null || this.bundleOutranksEveryModule;
+	}
+
+	public bundledModules(): ReadonlyArray<string> {
+		return this.hasBundledRenderer() ? [DESKTOP_RENDERER_MODULE_NAME] : [];
+	}
+
+	public bundleCoversRendererAt(version: ModuleVersion): boolean {
+		if (this.bundleOutranksEveryModule) {
+			return true;
+		}
+		return this.bundledRendererVersion != null && compareModuleVersions(version, this.bundledRendererVersion) <= 0;
+	}
+
+	public async uninstalledCommittedModules(): Promise<ReadonlyArray<string>> {
+		if (!this.hasBundledRenderer()) {
+			return [];
+		}
+		const missing: Array<string> = [];
+		for (const [moduleName, sha256] of Object.entries(this.store.getCommitted())) {
+			if (!(await this.isInstalled(moduleName, sha256))) {
+				missing.push(moduleName);
+			}
+		}
+		return missing;
+	}
+
+	public bundleCoversModule(moduleName: string, manifest: DesktopModuleUpdateManifest): boolean {
+		return moduleName === DESKTOP_RENDERER_MODULE_NAME && this.bundleCoversRendererAt(manifest.buildVersion);
+	}
+
+	private async installedRendererVersion(sha256: string): Promise<ModuleVersion | null> {
+		const installed = await this.store.getInstalledManifest(DESKTOP_RENDERER_MODULE_NAME, sha256);
+		if (installed == null) {
+			return null;
+		}
+		try {
+			return parseModuleVersion(installed.build_version, 'installed renderer build version');
+		} catch {
+			return null;
+		}
+	}
+
+	public async staleRendererModule(): Promise<string | null> {
+		if (!this.hasBundledRenderer()) {
+			return null;
+		}
+		const sha256 = this.store.getCommitted()[DESKTOP_RENDERER_MODULE_NAME];
+		if (sha256 == null) {
+			return null;
+		}
+		const installedVersion = await this.installedRendererVersion(sha256);
+		return installedVersion == null || this.bundleCoversRendererAt(installedVersion) ? sha256 : null;
+	}
+
+	public async selectServedModules(modules: Readonly<Record<string, string>>): Promise<ServedModuleSelection> {
+		const bundledVersion = this.bundledRendererVersion?.source ?? null;
+		const sha256 = modules[DESKTOP_RENDERER_MODULE_NAME];
+		if (sha256 == null) {
+			return {
+				modules,
+				renderer: {
+					source: this.hasOfflineRenderer ? ServedRendererSource.BUNDLED : ServedRendererSource.NONE,
+					version: bundledVersion,
+					bundledVersion,
+				},
+			};
+		}
+		const installedVersion = await this.installedRendererVersion(sha256);
+		if (this.hasBundledRenderer() && (installedVersion == null || this.bundleCoversRendererAt(installedVersion))) {
+			const served = {...modules};
+			delete served[DESKTOP_RENDERER_MODULE_NAME];
+			return {
+				modules: served,
+				renderer: {source: ServedRendererSource.BUNDLED, version: bundledVersion, bundledVersion},
+			};
+		}
+		return {
+			modules,
+			renderer: {
+				source: ServedRendererSource.MODULE,
+				version: installedVersion?.source ?? null,
+				bundledVersion,
+			},
+		};
 	}
 
 	public isShellCompatible(entry: DesktopModuleManifestEntry): boolean {
@@ -90,6 +206,9 @@ export class ModuleUpdatePlanner {
 		}
 		const committed = this.store.getCommitted();
 		for (const moduleName of minimum.requiredModules) {
+			if (moduleName === DESKTOP_RENDERER_MODULE_NAME && this.bundleCoversRendererAt(minimum.version)) {
+				continue;
+			}
 			const sha256 = committed[moduleName];
 			if (sha256 == null) {
 				return true;
@@ -124,7 +243,7 @@ export class ModuleUpdatePlanner {
 			if (entry == null) {
 				continue;
 			}
-			if (!this.isShellCompatible(entry)) {
+			if (!this.isShellCompatible(entry) || this.bundleCoversModule(moduleName, manifest)) {
 				await this.retainCommitted(base, moduleName);
 				continue;
 			}
@@ -139,7 +258,10 @@ export class ModuleUpdatePlanner {
 			items.push({
 				module: moduleName,
 				entry,
-				requirement: blocking.has(moduleName) ? ModulePlanItemRequirement.REQUIRED : ModulePlanItemRequirement.OPTIONAL,
+				requirement:
+					blocking.has(moduleName) && !this.bundledModules().includes(moduleName)
+						? ModulePlanItemRequirement.REQUIRED
+						: ModulePlanItemRequirement.OPTIONAL,
 			});
 		}
 		return {items, base};
@@ -160,6 +282,9 @@ export class ModuleUpdatePlanner {
 		const below: Array<string> = [];
 		for (const [moduleName, sha256] of Object.entries(state.floor)) {
 			if (state.rejected[moduleName] === sha256) {
+				continue;
+			}
+			if (this.bundledModules().includes(moduleName)) {
 				continue;
 			}
 			if (state.committed[moduleName] !== sha256 || !(await this.isInstalled(moduleName, sha256))) {
@@ -187,7 +312,10 @@ export class ModuleUpdatePlanner {
 		securityUpdateRequired: boolean,
 	): Promise<ModuleUnreachableLaunchDecision> {
 		const state = this.store.getState();
-		if (state.last_manifest_fetch == null || !this.hasSomethingToRender(state.committed)) {
+		if (
+			(state.last_manifest_fetch == null && !this.hasBundledRenderer()) ||
+			!this.hasSomethingToRender(state.committed)
+		) {
 			return {kind: ModuleUnreachableLaunchDecision.BLOCK, reason: ModuleUpdaterBlockReason.NOTHING_INSTALLED};
 		}
 		if (state.boot_attempt >= MODULE_BOOT_ATTEMPT_ROLLBACK_THRESHOLD) {

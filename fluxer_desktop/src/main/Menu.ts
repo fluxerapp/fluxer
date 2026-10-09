@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {DESKTOP_APP_NAME} from '@electron/common/DesktopIdentity';
+import {checkForUpdatesFromShell} from '@electron/main/DesktopUpdatePrompt';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
 import {buildTroubleshootingMenuItems} from '@electron/main/Troubleshooting';
@@ -8,6 +9,15 @@ import {getMainWindow, toggleWindowDevTools} from '@electron/main/Window';
 import {type BaseWindow, BrowserWindow, Menu, type MenuItem, type MenuItemConstructorOptions} from 'electron';
 
 const MACOS_HELP_MENU_TITLE_AUTODETECT_OPT_OUT = '\u200C';
+
+function checkForUpdatesItem(): MenuItemConstructorOptions {
+	return {
+		label: t('desktop.appMenu.checkForUpdates'),
+		click: () => {
+			void checkForUpdatesFromShell();
+		},
+	};
+}
 
 function buildTemplate(): Array<MenuItemConstructorOptions> {
 	const appName = DESKTOP_APP_NAME;
@@ -21,6 +31,7 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 					role: 'about',
 					label: t('desktop.appMenu.about', {appName}),
 				},
+				checkForUpdatesItem(),
 				{type: 'separator'},
 				{
 					label: t('desktop.appMenu.preferences'),
@@ -198,6 +209,7 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 			? `${t('desktop.appMenu.help')}${MACOS_HELP_MENU_TITLE_AUTODETECT_OPT_OUT}`
 			: t('desktop.appMenu.help'),
 		submenu: [
+			...(isMac ? [] : [checkForUpdatesItem(), {type: 'separator' as const}]),
 			{
 				label: t('desktop.appMenu.website'),
 				click: async () => {

@@ -48,10 +48,15 @@ describe('Bootstrap entry point', () => {
 	test('the instance module preference can only be honoured through the offline renderer guard', () => {
 		assert.match(
 			source,
-			/const instancePreference = decideModuleSystemDisableRequest\(\n\t\tinstanceTurnedModulesOff\(userDataConfig\.base\),\n\t\tHAS_OFFLINE_RENDERER,\n\t\);/,
+			/const instancePreference = decideModuleSystemDisableRequest\(\n\t\tinstanceTurnedModulesOff\(userDataConfig\.base\),\n\t\tCAN_TURN_MODULE_SYSTEM_OFF,\n\t\);/,
 			'A server side switch that could turn the module system off on a build with no renderer would brick the install, so it goes through the same guard the launch flag does.',
 		);
 		assert.match(source, /case ModuleSystemDisableDecision\.HONOURED:\n\t\t\tlogger\.warn\(/);
+		assert.match(
+			source,
+			/const CAN_TURN_MODULE_SYSTEM_OFF = HAS_OFFLINE_RENDERER && BUILD_CHANNEL === 'development';/,
+			'Every release shell bundles a renderer now, so the switch and the launch flag would otherwise skip updates, floors and on-demand assets on stable and canary.',
+		);
 	});
 
 	test('the instance module preference is read from the module store root, never from the app store database', () => {
@@ -267,17 +272,6 @@ describe('Bootstrap entry point', () => {
 			source,
 			/openSplashWindow\(\);\n\t+armBlockedShellUpdate\(shellUpdatePlan, outcome\.latestVersion, outcome\.requiredSecurityUpdate\);/,
 		);
-	});
-
-	test('a user check works from the first window, a click only after the renderer confirmed its launch', () => {
-		const bootstrap = source.slice(source.indexOf('async function runModuleBootstrap()'));
-		const arm = bootstrap.indexOf(
-			'armDesktopUpdate({check: () => desktopUpdate.check(), start: () => desktopUpdate.start()});',
-		);
-		assert.notEqual(arm, -1);
-		assert.ok(arm < bootstrap.indexOf('await launchMainApp(permit, logger);'));
-		assert.match(bootstrap, /\.finally\(onLaunchSettled\)/);
-		assert.match(bootstrap, /desktopUpdate\.markLaunchSettled\(\);/);
 	});
 
 	test('the update splash hides the app only once it is on screen, in its own theme', () => {

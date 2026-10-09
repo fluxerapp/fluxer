@@ -49,6 +49,7 @@ const LIVE_RESIZE_IDLE_MS = 400;
 const VISIBILITY_MARGIN = 32;
 const RENDERER_GONE_REPEAT_WINDOW_MS = 30000;
 const CLOSE_FOR_UPDATE_TIMEOUT_MS = 5000;
+const UPDATE_RELOAD_COMMIT_TIMEOUT_MS = 8000;
 const THEME_WINDOW_BACKGROUND_COLORS: Readonly<Record<string, string>> = Object.freeze({
 	dark: '#1a181e',
 	light: '#ebecef',
@@ -156,6 +157,7 @@ let themeStudioPopoutWindow: BrowserWindow | null = null;
 let lastRestorableMainWindowMaximized = false;
 let mainWindowRendererGone = false;
 let closingMainWindowForUpdate = false;
+const SHELL_PAGE_URL_PREFIX = 'file:';
 let mainWindowTakeover: (() => void) | null = null;
 const takeoverEndedListeners = new Set<() => void>();
 let pendingMainWindowReveal: {readonly window: BrowserWindow; readonly requestShow: () => void} | null = null;
@@ -1217,6 +1219,45 @@ export function isMainWindowTakenOver(): boolean {
 	return mainWindowTakeover != null;
 }
 
+export async function reloadMainWindowForUpdate(): Promise<boolean> {
+	const window = mainWindow;
+	if (!isAliveWindow(window) || window.webContents.isDestroyed()) {
+		return false;
+	}
+	await closeAppWindowsForUpdate(window, {keepShellPages: true});
+	if (window.isDestroyed() || window.webContents.isDestroyed()) {
+		return false;
+	}
+	const committed = waitForReloadCommit(window.webContents);
+	window.webContents.reloadIgnoringCache();
+	if (await committed) {
+		return true;
+	}
+	logger.warn('The main window did not start reloading for the update, replacing it', {
+		timeoutMs: UPDATE_RELOAD_COMMIT_TIMEOUT_MS,
+	});
+	if (!window.isDestroyed()) {
+		window.destroy();
+	}
+	return false;
+}
+
+function waitForReloadCommit(contents: Electron.WebContents): Promise<boolean> {
+	return new Promise<boolean>((resolve) => {
+		const finish = (committed: boolean): void => {
+			clearTimeout(timer);
+			contents.removeListener('did-navigate', onCommit);
+			contents.removeListener('destroyed', onDestroyed);
+			resolve(committed);
+		};
+		const onCommit = (): void => finish(true);
+		const onDestroyed = (): void => finish(false);
+		const timer = setTimeout(() => finish(false), UPDATE_RELOAD_COMMIT_TIMEOUT_MS);
+		contents.once('did-navigate', onCommit);
+		contents.once('destroyed', onDestroyed);
+	});
+}
+
 export function hideAppWindowsForUpdate(keep: BrowserWindow): ReadonlyArray<BrowserWindow> {
 	const hidden: Array<BrowserWindow> = [];
 	for (const window of BrowserWindow.getAllWindows()) {
@@ -1234,8 +1275,17 @@ export function restoreAppWindowsAfterUpdate(hidden: ReadonlyArray<BrowserWindow
 	}
 }
 
-export async function closeAppWindowsForUpdate(keep: BrowserWindow): Promise<void> {
-	const closing = BrowserWindow.getAllWindows().filter((window) => window !== keep && !window.isDestroyed());
+function showsShellPage(window: BrowserWindow): boolean {
+	return !window.webContents.isDestroyed() && window.webContents.getURL().startsWith(SHELL_PAGE_URL_PREFIX);
+}
+
+export async function closeAppWindowsForUpdate(
+	keep: BrowserWindow,
+	{keepShellPages = false}: {readonly keepShellPages?: boolean} = {},
+): Promise<void> {
+	const closing = BrowserWindow.getAllWindows().filter(
+		(window) => window !== keep && !window.isDestroyed() && !(keepShellPages && showsShellPage(window)),
+	);
 	closingMainWindowForUpdate = true;
 	try {
 		await Promise.all(
