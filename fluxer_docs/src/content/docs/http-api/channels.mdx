@@ -36,7 +36,7 @@ A channel object always has its identity and type. Every other field is present 
 | last_pin_timestamp? | ?ISO8601 timestamp | The time a message was most recently pinned, or null when nothing has ever been pinned |
 | permission_overwrites?<sup>7</sup> | array[[permission overwrite](#permission-overwrite-object) object] | The overwrites applied to this channel, present only for a guild channel other than a thread |
 | recipients?<sup>8</sup> | array[[partial user](/http-api/users/#partial-user-object) object] | The other recipients of a direct message or group direct message (max 49) |
-| nsfw?<sup>9</sup> | boolean | Whether the channel has its own age restriction, present only for a guild channel other than a thread |
+| nsfw?<sup>9</sup> | boolean | Whether the channel has its own age restriction, present only for a guild channel other than a thread and for a group direct message, where it marks the group for mature content |
 | nsfw_override?<sup>9</sup> | ?boolean | Whether this channel overrides the inherited age restriction, or null when it inherits, present only for a guild channel other than a thread |
 | content_warning_level?<sup>10</sup> | integer | The [content warning level](#content-warning-levels) stored on this channel, present only for a guild channel other than a thread |
 | content_warning_text?<sup>10</sup> | ?string | The content warning text stored on this channel, or null when the channel inherits, present only for a guild channel other than a thread |
@@ -532,6 +532,7 @@ Every field is optional, and an omitted field preserves its current value.
 | icon?<sup>1</sup> | ?base64 string | The base64-encoded icon image (at most 13,981,014 encoded characters), or null to clear it |
 | owner_id?<sup>2</sup> | ?snowflake | The ID of the new owner |
 | nicks?<sup>3</sup> | ?map[snowflake, ?string] | The nicknames keyed by the decimal user ID (each 0-32 characters, or null) |
+| nsfw?<sup>4</sup> | ?boolean | Whether the group is marked for mature content |
 
 <sup>1</sup> Raw base64 or a data URL, with 1 through 13,981,014 characters after the prefix
 
@@ -539,11 +540,15 @@ Every field is optional, and an omitted field preserves its current value.
 
 <sup>3</sup> An explicit null clears every nickname and requires ownership. A non-owner may address only their own key
 
+<sup>4</sup> An explicit null leaves the setting unchanged. Changing the value requires ownership
+
 Decoded icon bytes are at most the instance-configured `avatar_max_size` [limit](/http-api/instance/#limit-keys), which defaults to the 10 MiB ceiling of 10485760 bytes. A larger image is rejected on the path `icon` with the code `IMAGE_SIZE_EXCEEDS_LIMIT`. PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JXL, and SVG are accepted, and an animated AVIF is rejected on the same path with `INVALID_IMAGE_FORMAT`.
 
 An `owner_id` naming an account that is not a current recipient returns 404 `UNKNOWN_USER`. A bot target returns 400 `CANNOT_TRANSFER_OWNERSHIP_TO_BOT`.
 
 Fluxer trims a stored nickname, and a value that is null or empty after trimming clears that one nickname. A `nicks` key that is neither a current recipient nor the caller returns 404 `UNKNOWN_USER`.
+
+A group marked for mature content accepts media the scanner flags as sensitive, like an age-restricted guild channel. Turning `nsfw` on while any recipient fails the age check returns 400 `GROUP_DM_MATURE_CONTENT_INELIGIBLE`, which does not say which recipient. A user who fails the age check cannot be added to a marked group, and the add returns the same 403 `MISSING_ACCESS` as a rejecting admission policy.
 
 ### Response
 
@@ -553,6 +558,7 @@ Fluxer trims a stored nickname, and a value that is null or empty after trimming
 | 400 | [error response](/http-api/#error-response) | The `type` on a text or announcement channel is neither `0` nor `5`, returning `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED` |
 | 400 | [error response](/http-api/#error-response) | The text channel receives followed channels, returning `CHANNEL_HAS_FOLLOWED_CHANNELS` |
 | 400 | [error response](/http-api/#error-response) | The text channel holds a private thread, returning `CHANNEL_HAS_THREADS` |
+| 400 | [error response](/http-api/#error-response) | `nsfw` is turned on while a recipient fails the age check, returning `GROUP_DM_MATURE_CONTENT_INELIGIBLE` |
 | 403 | [error response](/http-api/#error-response) | A required permission, ownership, or permission bit authority is absent and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | A concurrent change removed the caller from the group direct message and the request returns `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The guild exists but the caller's membership state cannot be resolved and the request returns `ACCESS_DENIED` |
@@ -721,7 +727,7 @@ Fluxer evaluates the target's admission policy in this order.
 | 400 | [error response](/http-api/#error-response) | CAPTCHA proof is missing or rejected, or the caller and target are not friends and the request returns `NOT_FRIENDS_WITH_USER` |
 | 400 | [error response](/http-api/#error-response) | The group is already full and the request returns `MAX_GROUP_DM_RECIPIENTS` |
 | 400 | [error response](/http-api/#error-response) | The channel is not a group direct message and the request returns `INVALID_CHANNEL_TYPE` |
-| 403 | [error response](/http-api/#error-response) | Caller is not a recipient, or the target's admission policy rejects the caller, each returning `MISSING_ACCESS` |
+| 403 | [error response](/http-api/#error-response) | Caller is not a recipient, the target's admission policy rejects the caller, or the target fails the age check of a group marked for mature content, each returning `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist and the request returns `UNKNOWN_CHANNEL` |
 

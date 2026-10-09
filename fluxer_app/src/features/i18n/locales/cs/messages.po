@@ -4092,6 +4092,11 @@ msgstr "Povolená přesměrování"
 msgid "Allowed up to {count, plural, one {# connection} other {# connections}} per member"
 msgstr "Povoleno až {count, plural, one {# připojení} few {# připojení} other {# připojení}} na člena"
 
+#. Description under the mature content switch in the edit group settings. Only the group owner sees it.
+#: src/features/channel/components/modals/GroupMatureContentSwitch.tsx:9
+msgid "Allows media flagged as sensitive in this group. Everyone in the group must be 18 or older. Each member still sees it according to their own sensitive content settings."
+msgstr "Povoluje média označená jako citlivá v této skupině. Všichni v této skupině musí být starší 18 let. Každý člen je stále vidí podle svých vlastních nastavení citlivého obsahu."
+
 #. Description of the Create posts permission in forum and media channel permissions.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:311
 msgid "Allows members to create posts in this channel."
@@ -4391,8 +4396,8 @@ msgstr "Animované video GIF"
 
 #. Title of the error modal shown when an animated group icon is selected.
 #. Title of the error modal shown when an animated group icon is selected.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:64
-#: src/features/channel/components/modals/EditGroupModal.tsx:61
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:66
+#: src/features/channel/components/modals/EditGroupModal.tsx:63
 msgid "Animated icons are not supported"
 msgstr "Animované ikony nejsou podporovány"
 
@@ -4403,8 +4408,8 @@ msgstr "Animované ikony nejsou podporovány při vytváření nové komunity. P
 
 #. Description text in the edit group modal.
 #. Error modal body in the mobile edit group sheet when an animated icon is chosen.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:60
-#: src/features/channel/components/modals/EditGroupModal.tsx:57
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:62
+#: src/features/channel/components/modals/EditGroupModal.tsx:59
 msgid "Animated icons are not supported. Use a static image."
 msgstr "Animované ikony nejsou podporovány. Použijte statický obrázek."
 
@@ -7059,10 +7064,10 @@ msgstr "Změnit přezdívku skupiny"
 #. Title of the modal where the user picks a group icon source in the mobile edit group sheet. Keep it concise. Keep the tone plain and specific.
 #. Title of the modal where the user picks a group icon source. Keep it concise. Keep the tone plain and specific.
 #. Title of the modal where the user picks an imported-template community icon source. Keep it concise. Keep the tone plain and specific.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:88
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
-#: src/features/channel/components/modals/EditGroupModal.tsx:85
-#: src/features/channel/components/modals/EditGroupModal.tsx:283
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:90
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:335
+#: src/features/channel/components/modals/EditGroupModal.tsx:87
+#: src/features/channel/components/modals/EditGroupModal.tsx:290
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:67
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:90
@@ -10527,8 +10532,8 @@ msgstr "Konverzaci se nepodařilo připnout"
 
 #. Title of the error modal shown when a cropped group icon cannot be processed.
 #. Title of the error modal shown when a cropped group icon cannot be processed.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:68
-#: src/features/channel/components/modals/EditGroupModal.tsx:65
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:70
+#: src/features/channel/components/modals/EditGroupModal.tsx:67
 msgid "Couldn't process image"
 msgstr "Nepodařilo se zpracovat obrázek"
 
@@ -13772,7 +13777,7 @@ msgid "Edit group details"
 msgstr "Upravit podrobnosti skupiny"
 
 #. Accessible label for the edit group form region in the mobile bottom sheet.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:76
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:78
 msgid "Edit group form"
 msgstr "Formulář pro úpravu skupiny"
 
@@ -17370,8 +17375,8 @@ msgstr "Avatary skupinových konverzací používají stejné masky stavů jako 
 msgid "Group DMs"
 msgstr "Skupinové konverzace"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:289
-#: src/features/channel/components/modals/EditGroupModal.tsx:247
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:296
+#: src/features/channel/components/modals/EditGroupModal.tsx:254
 msgid "Group icon"
 msgstr "Ikona skupiny"
 
@@ -17389,13 +17394,13 @@ msgstr "Skupinová zpráva"
 
 #. Field label for the group name input in the mobile edit group sheet.
 #. Short label in the edit group modal. Keep it concise.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:80
-#: src/features/channel/components/modals/EditGroupModal.tsx:77
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:82
+#: src/features/channel/components/modals/EditGroupModal.tsx:79
 msgid "Group name"
 msgstr "Název skupiny"
 
 #. Label in the edit group modal.
-#: src/features/channel/components/modals/EditGroupModal.tsx:73
+#: src/features/channel/components/modals/EditGroupModal.tsx:75
 msgid "Group name must not exceed 100 characters"
 msgstr "Název skupiny nesmí přesáhnout 100 znaků"
 
@@ -17429,8 +17434,8 @@ msgstr "Nastavení skupiny"
 msgid "Group typing states"
 msgstr "Stavy psaní ve skupině"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:231
-#: src/features/channel/components/modals/EditGroupModal.tsx:222
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:238
+#: src/features/channel/components/modals/EditGroupModal.tsx:229
 msgid "Group updated"
 msgstr "Skupina aktualizována"
 
@@ -18106,16 +18111,16 @@ msgstr "Ikona"
 
 #. Title of the error modal shown when the selected group icon exceeds the size limit.
 #. Title of the error modal shown when the selected group icon exceeds the size limit.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:52
-#: src/features/channel/components/modals/EditGroupModal.tsx:49
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:54
+#: src/features/channel/components/modals/EditGroupModal.tsx:51
 msgid "Icon file is too large"
 msgstr "Soubor ikony je příliš velký"
 
 #. Error message in the edit group modal. Preserve {imageMaxSizeLabel}; it is inserted by code.
 #. Error modal body in the mobile edit group sheet when the chosen icon file exceeds the size limit. imageMaxSizeLabel is a localized size.
 #. Validation error in the create-community form when the chosen icon exceeds the size limit. {imageMaxSizeLabel} is a formatted file size such as "8 MB".
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:47
-#: src/features/channel/components/modals/EditGroupModal.tsx:45
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:49
+#: src/features/channel/components/modals/EditGroupModal.tsx:47
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:111
 msgid "Icon file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "Soubor ikony je příliš velký. Vyberte soubor menší než {imageMaxSizeLabel}."
@@ -18930,8 +18935,8 @@ msgstr "Neplatný dárkový kód"
 
 #. Title of the error modal shown when the selected group icon image cannot be used.
 #. Title of the error modal shown when the selected group icon image cannot be used.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:72
-#: src/features/channel/components/modals/EditGroupModal.tsx:69
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:74
+#: src/features/channel/components/modals/EditGroupModal.tsx:71
 msgid "Invalid image"
 msgstr "Neplatný obrázek"
 
@@ -21059,7 +21064,7 @@ msgid "Mature content media gate"
 msgstr "Omezení přístupu k médiím pro dospělé"
 
 #. Error message in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:8
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:11
 msgid "Mature content not allowed"
 msgstr "Obsah pro dospělé není povolen"
 
@@ -22711,8 +22716,8 @@ msgstr "Moji přátelé"
 
 #. Placeholder text in the group name input in the mobile edit group sheet.
 #. Short label in the edit group modal. Keep it concise.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:84
-#: src/features/channel/components/modals/EditGroupModal.tsx:81
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:86
+#: src/features/channel/components/modals/EditGroupModal.tsx:83
 msgid "My group"
 msgstr "Moje skupina"
 
@@ -27846,8 +27851,8 @@ msgstr "Odebrat ze seznamu oken nahoře"
 msgid "Remove from URL-only GIF favorites"
 msgstr "Odebrat z oblíbených GIFů uložených pouze jako URL"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
-#: src/features/channel/components/modals/EditGroupModal.tsx:292
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:344
+#: src/features/channel/components/modals/EditGroupModal.tsx:299
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:321
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:644
 msgid "Remove icon"
@@ -29320,8 +29325,8 @@ msgstr "Sytost"
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
-#: src/features/channel/components/modals/EditGroupModal.tsx:322
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:386
+#: src/features/channel/components/modals/EditGroupModal.tsx:342
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -34943,7 +34948,7 @@ msgid "This channel is marked for mature content and may contain material that m
 msgstr "Tento kanál je označen jako kanál pro dospělé a může obsahovat materiál, který nemusí být vhodný pro některé uživatele."
 
 #. Label in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:12
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:15
 msgid "This channel is not marked for mature content. Mature content can only be sent in channels marked for mature content. Ask a moderator to update this channel if appropriate."
 msgstr "Tento kanál není označen jako kanál pro dospělé. Obsah pro dospělé lze odesílat pouze do takto označených kanálů. Pokud je to vhodné, požádejte moderátora o změnu nastavení kanálu."
 
@@ -35182,6 +35187,11 @@ msgstr "Tato skupina má příliš mnoho lidí"
 #: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:16
 msgid "This group is full. Remove someone before adding more people."
 msgstr "Tato skupina je plná. Než přidáte další lidi, někoho odeberte."
+
+#. Label in the mature content rejected modal for group direct messages.
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:26
+msgid "This group is not marked for mature content. The group owner can turn on Mature content in the group settings if everyone in the group is 18 or older."
+msgstr "Tato skupina není označena jako obsah pro dospělé. Vlastník skupiny může zapnout obsah pro dospělé v nastavení skupiny, pokud je všem členům skupiny 18 let nebo více."
 
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:113
 msgid "This handoff code has expired. Generate a new one to continue."
@@ -37467,8 +37477,8 @@ msgstr "Nepodporovaný typ souboru."
 
 #. Title of the error modal shown when the selected group icon format is unsupported.
 #. Title of the error modal shown when the selected group icon format is unsupported.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:56
-#: src/features/channel/components/modals/EditGroupModal.tsx:53
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:58
+#: src/features/channel/components/modals/EditGroupModal.tsx:55
 msgid "Unsupported icon format"
 msgstr "Nepodporovaný formát ikony"
 
@@ -37723,8 +37733,8 @@ msgstr "Nahrávat soubory a média do zpráv."
 msgid "Upload files and media in this channel."
 msgstr "Nahrávat soubory a média v tomto kanálu."
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
-#: src/features/channel/components/modals/EditGroupModal.tsx:283
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:335
+#: src/features/channel/components/modals/EditGroupModal.tsx:290
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
@@ -40889,6 +40899,11 @@ msgstr "Abyste mohli v této komunitě posílat zprávy, musíte si ověřit e-m
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:64
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "Vy nebo někdo, koho přidáváte, už má otevřený maximální počet skupinových konverzací. Opusťte jednu a zkuste to znovu."
+
+#. Label in the mature content rejected modal for one-to-one direct messages. Preserve {sensitiveContentSettingsPath}; it is a user settings path inserted by code.
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:20
+msgid "You or the person you are messaging has chosen to block sensitive media in direct messages. Each of you can change this in {sensitiveContentSettingsPath}."
+msgstr "Vy nebo osoba, se kterou si píšete, jste se rozhodli blokovat citlivý obsah v přímých zprávách. Každý z vás to může změnit v nastavení {sensitiveContentSettingsPath}."
 
 #. Helper text under the required username field when the instance uses usernames to sign in.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:66

@@ -2126,6 +2126,9 @@
         "msgid": "Allowed"
       },
       {
+        "msgid": "Allows media flagged as sensitive in this group. Everyone in the group must be 18 or older. Each member still sees it according to their own sensitive content settings."
+      },
+      {
         "msgid": "Allows members to create posts in this channel."
       },
       {
@@ -4872,6 +4875,9 @@
       },
       {
         "msgid": "You have version {version}."
+      },
+      {
+        "msgid": "You or the person you are messaging has chosen to block sensitive media in direct messages. Each of you can change this in {sensitiveContentSettingsPath}."
       },
       {
         "msgid": "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost."

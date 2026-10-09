@@ -215,6 +215,7 @@ Accepting an exhausted invite returns 404 `UNKNOWN_INVITE` and makes the code st
 | 400 | [error response](/http-api/#error-response) | A type `1` invite names a private channel that is not a group direct message and the caller is not already a recipient and the request returns `INVALID_CHANNEL_TYPE` |
 | 400 | [error response](/http-api/#error-response) | The caller already holds the maximum number of guilds and the request returns `MAX_GUILDS` |
 | 400 | [error response](/http-api/#error-response) | The target is full and the request returns `MAX_GUILD_MEMBERS` or `MAX_GROUP_DM_RECIPIENTS` |
+| 403 | [error response](/http-api/#error-response) | The group is marked for mature content and the caller fails the age check, returning `NSFW_CONTENT_AGE_RESTRICTED` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
 | 403 | [error response](/http-api/#error-response) | The guild has the invites-disabled feature and the request returns `INVITES_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | Instant invites are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |

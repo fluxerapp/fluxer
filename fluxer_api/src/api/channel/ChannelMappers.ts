@@ -165,6 +165,7 @@ function serializeGroupDMChannel(channel: Channel): ChannelResponse {
 		icon: channel.iconHash ?? null,
 		owner_id: channel.ownerId ? channel.ownerId.toString() : null,
 		nicks: nicknameMap.size > 0 ? nicks : undefined,
+		nsfw: channel.isNsfw,
 	};
 }
 

@@ -1163,7 +1163,12 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			);
 		} else if (error instanceof HttpError && isExplicitContentError(error)) {
 			ModalCommands.push(
-				modal(() => <MatureContentRejectedModal data-flx="messaging.message-queue.mature-content-rejected-modal" />),
+				modal(() => (
+					<MatureContentRejectedModal
+						channelId={channelId}
+						data-flx="messaging.message-queue.mature-content-rejected-modal"
+					/>
+				)),
 			);
 		} else if (error instanceof HttpError && isFileTooLargeError(error)) {
 			ModalCommands.push(

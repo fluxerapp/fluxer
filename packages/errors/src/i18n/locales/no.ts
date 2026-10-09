@@ -164,6 +164,7 @@ const ERROR_I18N_NO_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Fellesskap i Oppdag må ha et verifiseringsnivå på minst «Lav».",
 	"channels_and_guilds.follow_target_content_warning_required": "Oppdateringer fra en kanal med innholdsadvarsel kan bare gå til en kanal med innholdsadvarsel eller aldersgrense.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Oppdateringer fra en aldersbegrenset kanal kan bare gå til en aldersbegrenset kanal.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Ikke alle i denne gruppen oppfyller kravene for voksent innhold.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Én eller flere valgte brukere kan ikke legges til i denne gruppechatten.",
 	"channels_and_guilds.guild_banner_requires_feature": "Et fellesskapsbanner krever funksjonen BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Du har ikke tillatelse til å opprette fellesskap på denne instansen. Kontakt administratoren for instansen for å be om tilgang.",

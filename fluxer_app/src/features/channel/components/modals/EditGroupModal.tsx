@@ -7,9 +7,11 @@ import {
 	STATIC_IMAGE_FORMATS,
 } from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import Authentication from '@app/features/auth/state/Authentication';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
 import {showChannelErrorModal} from '@app/features/channel/components/alerts/ChannelErrorModalUtils';
 import styles from '@app/features/channel/components/modals/EditGroupModal.module.css';
+import {GroupMatureContentSwitch} from '@app/features/channel/components/modals/GroupMatureContentSwitch';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
@@ -40,7 +42,7 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {PlusIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useMemo, useState} from 'react';
-import {useForm} from 'react-hook-form';
+import {Controller, useForm} from 'react-hook-form';
 
 const ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR = msg({
 	message: 'Icon file is too large. Choose a file smaller than {imageMaxSizeLabel}.',
@@ -91,17 +93,19 @@ const CHANGE_ICON_DESCRIPTOR = msg({
 interface FormInputs {
 	icon?: string | null;
 	name: string;
+	nsfw: boolean;
 }
 
 export const EditGroupModal = observer(({channelId}: {channelId: string}) => {
 	const {i18n} = useLingui();
 	const channel = Channels.getChannel(channelId);
+	const isOwner = channel?.ownerId === Authentication.currentUserId;
 	const [hasClearedIcon, setHasClearedIcon] = useState(false);
 	const [previewIconUrl, setPreviewIconUrl] = useState<string | null>(null);
 	const form = useForm<FormInputs>({
-		defaultValues: useMemo(() => ({name: channel?.name || ''}), [channel]),
+		defaultValues: useMemo(() => ({name: channel?.name || '', nsfw: channel?.nsfw ?? false}), [channel]),
 	});
-	const remoteValues: FormInputs | null = channel ? {name: channel.name || ''} : null;
+	const remoteValues: FormInputs | null = channel ? {name: channel.name || '', nsfw: channel.nsfw} : null;
 	const {commitRemoteValues} = useRemoteFormReset<FormInputs>({
 		form,
 		identityKey: channelId,
@@ -211,18 +215,21 @@ export const EditGroupModal = observer(({channelId}: {channelId: string}) => {
 	}, [form]);
 	const onSubmit = useCallback(
 		async (data: FormInputs) => {
-			const updateData: {icon?: string | null; name: string} = {name: data.name};
+			const updateData: {icon?: string | null; name: string; nsfw?: boolean} = {name: data.name};
+			if (isOwner && data.nsfw !== channel?.nsfw) {
+				updateData.nsfw = data.nsfw;
+			}
 			assignTransientUploadFieldMutation(updateData, 'icon', {
 				value: data.icon,
 				previewUrl: previewIconUrl,
 				hasCleared: hasClearedIcon,
 			});
 			const newChannel = await ChannelCommands.update(channelId, updateData);
-			commitRemoteValues({name: newChannel.name || data.name});
+			commitRemoteValues({name: newChannel.name || data.name, nsfw: newChannel.nsfw ?? data.nsfw});
 			ToastCommands.createToast({type: 'success', children: <Trans>Group updated</Trans>});
 			ModalCommands.pop();
 		},
-		[channelId, commitRemoteValues, previewIconUrl, hasClearedIcon],
+		[channel, channelId, commitRemoteValues, isOwner, previewIconUrl, hasClearedIcon],
 	);
 	const {handleSubmit, isSubmitting} = useFormSubmit({
 		form,
@@ -315,6 +322,19 @@ export const EditGroupModal = observer(({channelId}: {channelId: string}) => {
 							maxLength={100}
 							error={form.formState.errors.name?.message}
 						/>
+						{isOwner && (
+							<Controller
+								name="nsfw"
+								control={form.control}
+								render={({field}) => (
+									<GroupMatureContentSwitch
+										value={field.value}
+										onChange={field.onChange}
+										data-flx="channel.edit-group-modal.group-mature-content-switch.change"
+									/>
+								)}
+							/>
+						)}
 					</Modal.ContentLayout>
 				</Modal.Content>
 				<Modal.Footer data-flx="channel.edit-group-modal.modal-footer">

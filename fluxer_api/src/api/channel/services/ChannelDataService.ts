@@ -179,6 +179,7 @@ export class ChannelDataService {
 				icon: groupDmData.icon !== undefined ? groupDmData.icon : undefined,
 				ownerId: groupDmData.owner_id ? createUserID(groupDmData.owner_id) : undefined,
 				nicks: groupDmData.nicks,
+				nsfw: groupDmData.nsfw ?? undefined,
 				requestCache,
 			});
 		}

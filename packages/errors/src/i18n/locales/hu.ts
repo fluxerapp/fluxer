@@ -164,6 +164,7 @@ const ERROR_I18N_HU_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "A felfedezhető közösségek ellenőrzési szintjének legalább Alacsonynak kell lennie.",
 	"channels_and_guilds.follow_target_content_warning_required": "A tartalmi figyelmeztetéssel rendelkező csatorna frissítései csak tartalmi figyelmeztetéssel vagy korhatárral rendelkező csatornába kerülhetnek.",
 	"channels_and_guilds.follow_target_not_age_restricted": "A korhatáros csatorna frissítései csak korhatáros csatornába kerülhetnek.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Ebben a csoportban nem mindenki jogosult felnőtt tartalomra.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Legalább egy kiválasztott felhasználó nem adható hozzá ehhez a csoportos beszélgetéshez.",
 	"channels_and_guilds.guild_banner_requires_feature": "A közösségi borítóképhez a BANNER funkció szükséges.",
 	"channels_and_guilds.guild_creation_permission_required": "Nincs jogosultságod közösségeket létrehozni ezen a példányon. A hozzáférésért fordulj a példány adminisztrátorához.",

@@ -164,6 +164,7 @@ const ERROR_I18N_VI_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Cộng đồng có trong danh sách Khám phá phải có mức xác minh tối thiểu là Thấp.",
 	"channels_and_guilds.follow_target_content_warning_required": "Cập nhật từ kênh có cảnh báo nội dung chỉ có thể gửi tới kênh có cảnh báo nội dung hoặc giới hạn độ tuổi.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Cập nhật từ kênh giới hạn độ tuổi chỉ có thể gửi tới kênh giới hạn độ tuổi.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Không phải ai trong nhóm này cũng đủ điều kiện xem nội dung người lớn.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Không thể thêm một hoặc nhiều người dùng đã chọn vào tin nhắn nhóm này.",
 	"channels_and_guilds.guild_banner_requires_feature": "Ảnh bìa cộng đồng yêu cầu tính năng BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Bạn không có quyền tạo cộng đồng trên phiên bản này. Vui lòng liên hệ quản trị viên của phiên bản để yêu cầu quyền truy cập.",

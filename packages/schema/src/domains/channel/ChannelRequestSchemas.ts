@@ -258,6 +258,7 @@ const ChannelUpdateGroupDmRequest = z.object({
 		.describe('Base64-encoded icon image for the group DM'),
 	owner_id: SnowflakeType.nullish().describe('ID of the new owner of the group DM'),
 	nicks: ChannelNicknameOverrides.nullish().describe('Custom nicknames for users in this group DM'),
+	nsfw: z.boolean().nullish().describe('Whether the group DM is marked for mature content (owner only)'),
 });
 
 const ChannelUpdateThreadFields = {

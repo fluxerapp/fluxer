@@ -4092,6 +4092,11 @@ msgstr "अनुमत रीडायरेक्ट"
 msgid "Allowed up to {count, plural, one {# connection} other {# connections}} per member"
 msgstr "प्रति सदस्य {count, plural, one {# कनेक्शन} other {# कनेक्शन}} तक की अनुमति दी गई"
 
+#. Description under the mature content switch in the edit group settings. Only the group owner sees it.
+#: src/features/channel/components/modals/GroupMatureContentSwitch.tsx:9
+msgid "Allows media flagged as sensitive in this group. Everyone in the group must be 18 or older. Each member still sees it according to their own sensitive content settings."
+msgstr "इस ग्रुप में संवेदनशील के रूप में फ़्लैग की गई मीडिया की अनुमति देता है। ग्रुप के सभी सदस्य 18 वर्ष या उससे अधिक उम्र के होने चाहिए। प्रत्येक सदस्य अभी भी इसे अपनी संवेदनशील सामग्री सेटिंग्स के अनुसार देखता है।"
+
 #. Description of the Create posts permission in forum and media channel permissions.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:311
 msgid "Allows members to create posts in this channel."
@@ -4391,8 +4396,8 @@ msgstr "एनिमेटेड GIF वीडियो"
 
 #. Title of the error modal shown when an animated group icon is selected.
 #. Title of the error modal shown when an animated group icon is selected.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:64
-#: src/features/channel/components/modals/EditGroupModal.tsx:61
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:66
+#: src/features/channel/components/modals/EditGroupModal.tsx:63
 msgid "Animated icons are not supported"
 msgstr "एनिमेटेड आइकॉन समर्थित नहीं हैं"
 
@@ -4403,8 +4408,8 @@ msgstr "नई कम्युनिटी बनाते समय एनि�
 
 #. Description text in the edit group modal.
 #. Error modal body in the mobile edit group sheet when an animated icon is chosen.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:60
-#: src/features/channel/components/modals/EditGroupModal.tsx:57
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:62
+#: src/features/channel/components/modals/EditGroupModal.tsx:59
 msgid "Animated icons are not supported. Use a static image."
 msgstr "एनिमेटेड आइकॉन समर्थित नहीं हैं। स्थिर इमेज इस्तेमाल करें।"
 
@@ -7059,10 +7064,10 @@ msgstr "ग्रुप का उपनाम बदलें"
 #. Title of the modal where the user picks a group icon source in the mobile edit group sheet. Keep it concise. Keep the tone plain and specific.
 #. Title of the modal where the user picks a group icon source. Keep it concise. Keep the tone plain and specific.
 #. Title of the modal where the user picks an imported-template community icon source. Keep it concise. Keep the tone plain and specific.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:88
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
-#: src/features/channel/components/modals/EditGroupModal.tsx:85
-#: src/features/channel/components/modals/EditGroupModal.tsx:283
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:90
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:335
+#: src/features/channel/components/modals/EditGroupModal.tsx:87
+#: src/features/channel/components/modals/EditGroupModal.tsx:290
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:67
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:90
@@ -10527,8 +10532,8 @@ msgstr "इस बातचीत को पिन नहीं किया ज
 
 #. Title of the error modal shown when a cropped group icon cannot be processed.
 #. Title of the error modal shown when a cropped group icon cannot be processed.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:68
-#: src/features/channel/components/modals/EditGroupModal.tsx:65
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:70
+#: src/features/channel/components/modals/EditGroupModal.tsx:67
 msgid "Couldn't process image"
 msgstr "इमेज प्रोसेस नहीं की जा सकी"
 
@@ -13772,7 +13777,7 @@ msgid "Edit group details"
 msgstr "ग्रुप का विवरण एडिट करें"
 
 #. Accessible label for the edit group form region in the mobile bottom sheet.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:76
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:78
 msgid "Edit group form"
 msgstr "ग्रुप फ़ॉर्म एडिट करें"
 
@@ -17370,8 +17375,8 @@ msgstr "ग्रुप DM अवतार रेगुलर अवतार �
 msgid "Group DMs"
 msgstr "ग्रुप DM"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:289
-#: src/features/channel/components/modals/EditGroupModal.tsx:247
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:296
+#: src/features/channel/components/modals/EditGroupModal.tsx:254
 msgid "Group icon"
 msgstr "ग्रुप आइकॉन"
 
@@ -17389,13 +17394,13 @@ msgstr "ग्रुप मैसेज"
 
 #. Field label for the group name input in the mobile edit group sheet.
 #. Short label in the edit group modal. Keep it concise.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:80
-#: src/features/channel/components/modals/EditGroupModal.tsx:77
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:82
+#: src/features/channel/components/modals/EditGroupModal.tsx:79
 msgid "Group name"
 msgstr "ग्रुप का नाम"
 
 #. Label in the edit group modal.
-#: src/features/channel/components/modals/EditGroupModal.tsx:73
+#: src/features/channel/components/modals/EditGroupModal.tsx:75
 msgid "Group name must not exceed 100 characters"
 msgstr "ग्रुप का नाम 100 वर्ण से ज़्यादा नहीं होना चाहिए"
 
@@ -17429,8 +17434,8 @@ msgstr "ग्रुप सेटिंग्स"
 msgid "Group typing states"
 msgstr "ग्रुप टाइपिंग स्टेटस"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:231
-#: src/features/channel/components/modals/EditGroupModal.tsx:222
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:238
+#: src/features/channel/components/modals/EditGroupModal.tsx:229
 msgid "Group updated"
 msgstr "ग्रुप अपडेट किया गया"
 
@@ -18106,16 +18111,16 @@ msgstr "आइकॉन"
 
 #. Title of the error modal shown when the selected group icon exceeds the size limit.
 #. Title of the error modal shown when the selected group icon exceeds the size limit.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:52
-#: src/features/channel/components/modals/EditGroupModal.tsx:49
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:54
+#: src/features/channel/components/modals/EditGroupModal.tsx:51
 msgid "Icon file is too large"
 msgstr "आइकॉन फ़ाइल बहुत बड़ी है"
 
 #. Error message in the edit group modal. Preserve {imageMaxSizeLabel}; it is inserted by code.
 #. Error modal body in the mobile edit group sheet when the chosen icon file exceeds the size limit. imageMaxSizeLabel is a localized size.
 #. Validation error in the create-community form when the chosen icon exceeds the size limit. {imageMaxSizeLabel} is a formatted file size such as "8 MB".
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:47
-#: src/features/channel/components/modals/EditGroupModal.tsx:45
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:49
+#: src/features/channel/components/modals/EditGroupModal.tsx:47
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:111
 msgid "Icon file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "आइकॉन फ़ाइल बहुत बड़ी है। {imageMaxSizeLabel} से छोटी फ़ाइल चुनें।"
@@ -18930,8 +18935,8 @@ msgstr "अमान्य उपहार कोड"
 
 #. Title of the error modal shown when the selected group icon image cannot be used.
 #. Title of the error modal shown when the selected group icon image cannot be used.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:72
-#: src/features/channel/components/modals/EditGroupModal.tsx:69
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:74
+#: src/features/channel/components/modals/EditGroupModal.tsx:71
 msgid "Invalid image"
 msgstr "अमान्य इमेज"
 
@@ -21059,7 +21064,7 @@ msgid "Mature content media gate"
 msgstr "वयस्क सामग्री मीडिया गेट"
 
 #. Error message in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:8
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:11
 msgid "Mature content not allowed"
 msgstr "वयस्क सामग्री की अनुमति नहीं है"
 
@@ -22711,8 +22716,8 @@ msgstr "मेरे दोस्त"
 
 #. Placeholder text in the group name input in the mobile edit group sheet.
 #. Short label in the edit group modal. Keep it concise.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:84
-#: src/features/channel/components/modals/EditGroupModal.tsx:81
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:86
+#: src/features/channel/components/modals/EditGroupModal.tsx:83
 msgid "My group"
 msgstr "मेरा ग्रुप"
 
@@ -27846,8 +27851,8 @@ msgstr "सबसे ऊपर रखना बंद करें"
 msgid "Remove from URL-only GIF favorites"
 msgstr "सिर्फ़ URL वाले पसंदीदा GIF से हटाएँ"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
-#: src/features/channel/components/modals/EditGroupModal.tsx:292
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:344
+#: src/features/channel/components/modals/EditGroupModal.tsx:299
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:321
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:644
 msgid "Remove icon"
@@ -29320,8 +29325,8 @@ msgstr "सैचुरेशन"
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
-#: src/features/channel/components/modals/EditGroupModal.tsx:322
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:386
+#: src/features/channel/components/modals/EditGroupModal.tsx:342
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -34943,7 +34948,7 @@ msgid "This channel is marked for mature content and may contain material that m
 msgstr "यह चैनल वयस्क सामग्री के लिए चिह्नित है और इसमें ऐसी सामग्री हो सकती है जो कुछ यूज़र के लिए अनुपयुक्त हो सकती है।"
 
 #. Label in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:12
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:15
 msgid "This channel is not marked for mature content. Mature content can only be sent in channels marked for mature content. Ask a moderator to update this channel if appropriate."
 msgstr "यह चैनल वयस्क सामग्री के लिए चिह्नित नहीं है। वयस्क सामग्री सिर्फ़ उन्हीं चैनलों में भेजी जा सकती है जो वयस्क सामग्री के लिए चिह्नित हों। अगर उचित हो, तो इस चैनल को अपडेट करने के लिए किसी मॉडरेटर से कहें।"
 
@@ -35182,6 +35187,11 @@ msgstr "इस ग्रुप में बहुत ज़्यादा ल�
 #: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:16
 msgid "This group is full. Remove someone before adding more people."
 msgstr "यह ग्रुप भरा हुआ है। और लोगों को जोड़ने से पहले किसी को हटाएँ।"
+
+#. Label in the mature content rejected modal for group direct messages.
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:26
+msgid "This group is not marked for mature content. The group owner can turn on Mature content in the group settings if everyone in the group is 18 or older."
+msgstr "यह ग्रुप परिपक्व सामग्री के लिए चिह्नित नहीं है। यदि ग्रुप के सभी सदस्य 18 वर्ष या उससे अधिक उम्र के हैं, तो ग्रुप का मालिक ग्रुप की सेटिंग में परिपक्व सामग्री चालू कर सकता है।"
 
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:113
 msgid "This handoff code has expired. Generate a new one to continue."
@@ -37467,8 +37477,8 @@ msgstr "असमर्थित फ़ाइल प्रकार।"
 
 #. Title of the error modal shown when the selected group icon format is unsupported.
 #. Title of the error modal shown when the selected group icon format is unsupported.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:56
-#: src/features/channel/components/modals/EditGroupModal.tsx:53
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:58
+#: src/features/channel/components/modals/EditGroupModal.tsx:55
 msgid "Unsupported icon format"
 msgstr "आइकॉन फ़ॉर्मैट समर्थित नहीं है"
 
@@ -37723,8 +37733,8 @@ msgstr "मैसेज में फ़ाइल और मीडिया अ�
 msgid "Upload files and media in this channel."
 msgstr "इस चैनल में फ़ाइलें और मीडिया अपलोड करें।"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
-#: src/features/channel/components/modals/EditGroupModal.tsx:283
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:335
+#: src/features/channel/components/modals/EditGroupModal.tsx:290
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
@@ -40889,6 +40899,11 @@ msgstr "इस कम्युनिटी में मैसेज भेज�
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:64
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "आपके या जिसे आप जोड़ रहे हैं उसके पास पहले से ही अधिकतम ग्रुप DM खुले हैं। किसी एक को छोड़ें और फिर से कोशिश करें।"
+
+#. Label in the mature content rejected modal for one-to-one direct messages. Preserve {sensitiveContentSettingsPath}; it is a user settings path inserted by code.
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:20
+msgid "You or the person you are messaging has chosen to block sensitive media in direct messages. Each of you can change this in {sensitiveContentSettingsPath}."
+msgstr "आपने या जिस व्यक्ति को आप संदेश भेज रहे हैं, उसने डायरेक्ट मैसेज में संवेदनशील मीडिया को ब्लॉक करना चुना है। आप में से प्रत्येक इसे {sensitiveContentSettingsPath} में बदल सकता है।"
 
 #. Helper text under the required username field when the instance uses usernames to sign in.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:66

@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Les communautés présentes dans Découverte doivent avoir un niveau de vérification au moins égal à Faible.",
 	"channels_and_guilds.follow_target_content_warning_required": "Les mises à jour d'un salon avec un avertissement de contenu ne peuvent aller que dans un salon avec un avertissement de contenu ou une restriction d'âge.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Les mises à jour d'un salon soumis à une restriction d'âge ne peuvent aller que dans un salon soumis à une restriction d'âge.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Tous les membres de ce groupe ne sont pas éligibles au contenu adulte.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Un ou plusieurs utilisateurs sélectionnés ne peuvent pas être ajoutés à ce MP de groupe.",
 	"channels_and_guilds.guild_banner_requires_feature": "La bannière de la communauté nécessite la fonctionnalité BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Vous n’avez pas la permission de créer des communautés sur cette instance. Contactez l’administrateur de l’instance pour demander l’accès.",

@@ -24,6 +24,7 @@ import type {User} from '@app/api/models/User';
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -36,6 +37,7 @@ import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownCha
 import {CannotRemoveOtherRecipientsError} from '@fluxer/errors/src/domains/core/CannotRemoveOtherRecipientsError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
+import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
 import {NotFriendsWithUserError} from '@fluxer/errors/src/domains/user/NotFriendsWithUserError';
 
 export class GroupDmOperationsService {
@@ -84,6 +86,9 @@ export class GroupDmOperationsService {
 			userId,
 			targetId: recipientId,
 		});
+		if (channel.isNsfw && !(await this.canJoinMatureGroup(recipientId))) {
+			throw new MissingAccessError();
+		}
 		const {channel: updatedChannel} = await this.addRecipientViaInviteWithResult({
 			channelId,
 			recipientId,
@@ -120,6 +125,11 @@ export class GroupDmOperationsService {
 			requestCache,
 		});
 		return updatedChannel;
+	}
+
+	private async canJoinMatureGroup(userId: UserID): Promise<boolean> {
+		const user = await this.userRepository.findUnique(userId);
+		return user != null && canUserAccessNsfwContent(user);
 	}
 
 	private async assertInviterNotLimited(userId: UserID): Promise<void> {
@@ -168,6 +178,9 @@ export class GroupDmOperationsService {
 		}
 		if (channel.recipientIds.has(recipientId)) {
 			return {channel, recipientAdded: false};
+		}
+		if (channel.isNsfw && !(await this.canJoinMatureGroup(recipientId))) {
+			throw new NsfwContentRequiresAgeVerificationError();
 		}
 		const inviterUser = inviterId ? await this.userRepository.findUnique(inviterId) : null;
 		const fallbackLimit = MAX_GROUP_DM_RECIPIENTS;

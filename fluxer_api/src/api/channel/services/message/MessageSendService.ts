@@ -19,7 +19,6 @@ import type {AuthenticatedChannel} from '@app/api/channel/services/Authenticated
 import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import {emitMessageCreated} from '@app/api/channel/services/message/MessageActivity';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
-import type {DmNsfwContext} from '@app/api/channel/services/message/MessageContentService';
 import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
 import type {MessageEmbedAttachmentResolver} from '@app/api/channel/services/message/MessageEmbedAttachmentResolver';
 import {
@@ -69,12 +68,7 @@ import {
 } from '@fluxer/constants/src/ChannelConstants';
 import {GuildNSFWLevel, GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {threadWriteBlock} from '@fluxer/constants/src/ThreadPermissionUtils';
-import {
-	DELETED_USER_ID,
-	RelationshipTypes,
-	SensitiveMediaFilterLevel,
-	UserFlags,
-} from '@fluxer/constants/src/UserConstants';
+import {DELETED_USER_ID, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
@@ -191,33 +185,6 @@ export class MessageSendService {
 	private getSearchIndexOptions(channel: Channel) {
 		const includeDefault = channel.indexedAt != null;
 		return includeDefault ? {includeDefault} : null;
-	}
-
-	private async buildDmNsfwContext(channel: Channel, senderId: UserID): Promise<DmNsfwContext | undefined> {
-		if (channel.type === ChannelTypes.GROUP_DM || channel.type === ChannelTypes.DM_PERSONAL_NOTES) {
-			return undefined;
-		}
-		if (channel.type !== ChannelTypes.DM) {
-			return undefined;
-		}
-		const recipientIds = Array.from(channel.recipientIds).filter((id) => id !== senderId);
-		if (recipientIds.length !== 1) {
-			return undefined;
-		}
-		const recipientId = recipientIds[0];
-		const [senderSettings, recipientSettings, friendship] = await Promise.all([
-			this.deps.userRepository.findSettings(senderId),
-			this.deps.userRepository.findSettings(recipientId),
-			this.deps.userRepository.getRelationship(senderId, recipientId, RelationshipTypes.FRIEND),
-		]);
-		const areFriends = friendship != null;
-		const senderFilterLevel = areFriends
-			? (senderSettings?.sensitiveContentFriendDmFilter ?? SensitiveMediaFilterLevel.SHOW)
-			: (senderSettings?.sensitiveContentNonFriendDmFilter ?? SensitiveMediaFilterLevel.BLOCK);
-		const recipientFilterLevel = areFriends
-			? (recipientSettings?.sensitiveContentFriendDmFilter ?? SensitiveMediaFilterLevel.SHOW)
-			: (recipientSettings?.sensitiveContentNonFriendDmFilter ?? SensitiveMediaFilterLevel.BLOCK);
-		return {senderFilterLevel, recipientFilterLevel};
 	}
 
 	private attachmentsToProcess(attachments?: Array<AttachmentRequestData>): Array<AttachmentToProcess> | undefined {
@@ -1033,7 +1000,7 @@ export class MessageSendService {
 			channelId,
 			data,
 		});
-		const dmNsfwContext = guild ? undefined : await this.buildDmNsfwContext(channel, user.id);
+		const dmNsfwContext = guild ? undefined : await this.deps.persistenceService.resolveDmNsfwContext(channel, user.id);
 		const messageId = forumStarter ? channelIdToMessageId(channel.id) : await this.generateMessageId(channel);
 		let mentionData: SendMentionData | undefined;
 		const shouldExtractMentions =

@@ -164,6 +164,7 @@ const ERROR_I18N_SV_SE_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Communities som visas i Upptäck måste ha verifieringsnivån Låg eller högre.",
 	"channels_and_guilds.follow_target_content_warning_required": "Uppdateringar från en kanal med innehållsvarning kan bara gå till en kanal med innehållsvarning eller åldersgräns.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Uppdateringar från en åldersbegränsad kanal kan bara gå till en åldersbegränsad kanal.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Alla i den här gruppen uppfyller inte kraven för vuxet innehåll.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "En eller flera av de valda användarna kan inte läggas till i den här grupp-DM:n.",
 	"channels_and_guilds.guild_banner_requires_feature": "En communitybanner kräver funktionen BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Du har inte behörighet att skapa communities på den här instansen. Kontakta instansens administratör för att begära åtkomst.",

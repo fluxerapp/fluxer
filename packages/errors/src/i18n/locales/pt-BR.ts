@@ -164,6 +164,7 @@ const ERROR_I18N_PT_BR_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "As comunidades exibidas em Descobrir devem ter um nível de verificação de, no mínimo, Baixo.",
 	"channels_and_guilds.follow_target_content_warning_required": "Atualizações de um canal com aviso de conteúdo só podem ir para um canal com aviso de conteúdo ou restrição de idade.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Atualizações de um canal com restrição de idade só podem ir para um canal com restrição de idade.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Nem todos neste grupo podem acessar conteúdo adulto.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Um ou mais usuários selecionados não podem ser adicionados a esta conversa em grupo.",
 	"channels_and_guilds.guild_banner_requires_feature": "O banner da comunidade requer o recurso BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Você não tem permissão para criar comunidades nesta instância. Entre em contato com o administrador da instância para solicitar acesso.",

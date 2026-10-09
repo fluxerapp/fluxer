@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "คอมมูนิตี้ที่เปิดให้ค้นพบได้ต้องมีระดับการยืนยันอย่างน้อยระดับต่ำ",
 	"channels_and_guilds.follow_target_content_warning_required": "อัปเดตจากช่องที่มีคำเตือนเนื้อหาจะส่งไปได้เฉพาะช่องที่มีคำเตือนเนื้อหาหรือจำกัดอายุเท่านั้น",
 	"channels_and_guilds.follow_target_not_age_restricted": "อัปเดตจากช่องที่จำกัดอายุจะส่งไปได้เฉพาะช่องที่จำกัดอายุเท่านั้น",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "ไม่ใช่ทุกคนในกลุ่มนี้ที่มีสิทธิ์เข้าถึงเนื้อหาสำหรับผู้ใหญ่",
 	"channels_and_guilds.group_dm_recipients_not_addable": "ไม่สามารถเพิ่มผู้ใช้ที่เลือกไว้อย่างน้อยหนึ่งคนเข้าแชตกลุ่มนี้ได้",
 	"channels_and_guilds.guild_banner_requires_feature": "แบนเนอร์คอมมูนิตี้ต้องมีฟีเจอร์ BANNER",
 	"channels_and_guilds.guild_creation_permission_required": "คุณไม่มีสิทธิ์สร้างคอมมูนิตี้บนอินสแตนซ์นี้ โปรดติดต่อผู้ดูแลอินสแตนซ์เพื่อขอสิทธิ์เข้าถึง",

@@ -164,6 +164,7 @@ const ERROR_I18N_EN_GB_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Discoverable communities must have a verification level of at least Low.",
 	"channels_and_guilds.follow_target_content_warning_required": "Updates from a channel with a content warning can only go to a channel with a content warning or an age restriction.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Updates from an age-restricted channel can only go to an age-restricted channel.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Not everyone in this group is eligible for mature content.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "One or more selected users can't be added to this group DM.",
 	"channels_and_guilds.guild_banner_requires_feature": "Community banner requires BANNER feature.",
 	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. Contact your instance administrator to request access.",
