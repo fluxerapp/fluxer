@@ -3,8 +3,9 @@
 	flex-direction: column;
 	gap: 0.5rem;
 	padding: 0.75rem;
+	border: 0.0625rem solid var(--background-header-secondary);
 	border-radius: var(--radius-sm);
-	background-color: var(--background-secondary);
+	background-color: var(--background-tertiary);
 }
 
 .sectionTitle {
@@ -91,8 +92,9 @@
 	flex-direction: column;
 	gap: 0.5rem;
 	padding: 0.75rem;
+	border: 0.0625rem solid var(--background-header-secondary);
 	border-radius: var(--radius-sm);
-	background-color: var(--background-secondary);
+	background-color: var(--background-tertiary);
 }
 
 .applyLabel {
