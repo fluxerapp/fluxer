@@ -3,6 +3,7 @@
 .container {
 	position: relative;
 	display: flex;
+	flex: 0 0 auto;
 	flex-direction: column;
 	gap: inherit;
 	overflow: hidden;
