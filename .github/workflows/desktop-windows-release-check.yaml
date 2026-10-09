@@ -120,8 +120,21 @@ jobs:
             }
             $installed = Get-Content (Join-Path $installRoot 'current\sq.version') -Raw -ErrorAction SilentlyContinue
             Write-Host "installed package after update: $installed"
-            if (Test-Path $logPath) { Get-Content $logPath | Select-String -Pattern 'Serving the renderer|reported its build|NativeModulePreflight|elf-update|shell update|Velopack' | Select-Object -Last 20 | ForEach-Object { Write-Host $_.Line } }
+            $logs = Join-Path $env:RUNNER_TEMP "logs\$from"
+            New-Item -ItemType Directory -Force -Path $logs | Out-Null
+            if (Test-Path $logPath) { Copy-Item $logPath $logs }
+            Get-ChildItem -Path $installRoot -Filter '*.log' -ErrorAction SilentlyContinue | Copy-Item -Destination $logs
+            if (Test-Path $logPath) { Get-Content $logPath | Select-String -Pattern 'Bootstrap|ShellSelfUpdate|Velopack|velopack|NativeModulePreflight|reported its build' | Select-Object -Last 40 | ForEach-Object { Write-Host $_.Line } }
             if ($null -eq $reported) { $failures += "$from did not reach Desktop and Web $env:VERSION" } else { Write-Host "$from updated: $reported" }
             Get-Process | Where-Object { $_.Path -like "$installRoot*" } | Stop-Process -Force -ErrorAction SilentlyContinue
           }
           if ($failures.Count -gt 0) { throw ($failures -join "`n") }
+
+      - name: Upload update logs
+        if: always() && env.UPDATE_FROM != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: update-logs-${{ matrix.arch }}
+          path: ${{ runner.temp }}/logs
+          if-no-files-found: ignore
+          retention-days: 7
