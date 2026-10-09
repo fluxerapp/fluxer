@@ -16539,6 +16539,11 @@ msgstr "Tik draugai"
 msgid "Friends sections"
 msgstr "Draugų skiltys"
 
+#. Privacy > Active now: helper text under the switch controlling whether friends see voice activity.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
+msgid "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
+msgstr "Draugai matys, kuriame balso kanale esate, jų sąraše „Dabar aktyvūs“. Galite tai pakeisti kartą per 24 valandas."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:86
 msgid "Friends-only calls"
@@ -39239,11 +39244,6 @@ msgstr "balso aktyvumas"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:291
 msgid "Voice activity"
 msgstr "Balso aktyvumas"
-
-#. Privacy > Active now: settings subsection title for voice activity sharing.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
-msgid "Voice activity on active now"
-msgstr "Balso aktyvumas skiltyje „Aktyvūs dabar“"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:318

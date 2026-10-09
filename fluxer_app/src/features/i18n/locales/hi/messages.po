@@ -16539,6 +16539,11 @@ msgstr "सिर्फ़ दोस्त"
 msgid "Friends sections"
 msgstr "दोस्तों के सेक्शन"
 
+#. Privacy > Active now: helper text under the switch controlling whether friends see voice activity.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
+msgid "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
+msgstr "आपके दोस्त आपको आपकी एक्टिव नाउ लिस्ट में देख पाएंगे कि आप किस वॉयस चैनल में हैं। आप इसे हर 24 घंटे में एक बार बदल सकते हैं।"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:86
 msgid "Friends-only calls"
@@ -39238,11 +39243,6 @@ msgstr "वॉइस गतिविधि"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:291
 msgid "Voice activity"
 msgstr "वॉइस गतिविधि"
-
-#. Privacy > Active now: settings subsection title for voice activity sharing.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
-msgid "Voice activity on active now"
-msgstr "'अभी सक्रिय' में वॉइस गतिविधि"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:318

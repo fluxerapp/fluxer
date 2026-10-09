@@ -2975,6 +2975,9 @@
         "msgid": "Friends can always send you direct messages. Choose whether people who share a community with you can message you without sending a friend request first."
       },
       {
+        "msgid": "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
+      },
+      {
         "msgid": "From {sourceGuildName}"
       },
       {

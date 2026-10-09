@@ -16539,6 +16539,11 @@ msgstr "เฉพาะเพื่อน"
 msgid "Friends sections"
 msgstr "ส่วนเพื่อน"
 
+#. Privacy > Active now: helper text under the switch controlling whether friends see voice activity.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
+msgid "Friends see which voice channel you're in on their Active now list. You can change this once every 24 hours."
+msgstr "เพื่อนๆ จะเห็นว่าคุณอยู่ในช่องเสียงใดในรายการ \"กำลังใช้งานอยู่\" ของพวกเขา คุณสามารถเปลี่ยนแปลงการตั้งค่านี้ได้ทุกๆ 24 ชั่วโมง"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:86
 msgid "Friends-only calls"
@@ -39238,11 +39243,6 @@ msgstr "กำลังใช้เสียง"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:291
 msgid "Voice activity"
 msgstr "กิจกรรมเสียง"
-
-#. Privacy > Active now: settings subsection title for voice activity sharing.
-#: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:72
-msgid "Voice activity on active now"
-msgstr "กิจกรรมเสียงในส่วนกำลังใช้งานอยู่"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:318
