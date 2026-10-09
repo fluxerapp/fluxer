@@ -2375,6 +2375,9 @@
         "msgid": "Choose the reason again"
       },
       {
+        "msgid": "Choose what happens to images and videos flagged as sensitive. Show displays them as usual, Blur hides them until you click, and Block hides them completely."
+      },
+      {
         "msgid": "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
       },
       {
@@ -3332,7 +3335,16 @@
         "msgid": "May cause compatibility issues for viewers. We’re working on improving this."
       },
       {
+        "msgid": "Media in channels that are not marked 18+. Channels marked 18+ always show it."
+      },
+      {
+        "msgid": "Media in group chats and in direct messages from people who aren't your friends."
+      },
+      {
         "msgid": "Media items you can save for later"
+      },
+      {
+        "msgid": "Media your friends send you in direct messages."
       },
       {
         "msgid": "Members who can manage posts can add or remove it."
