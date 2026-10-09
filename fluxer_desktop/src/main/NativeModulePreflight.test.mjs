@@ -73,6 +73,9 @@ function loadPreflight({
 				}),
 			};
 		}
+		if (specifier === '@electron/main/NativeModulePreflightModules.json') {
+			return JSON.parse(readFileSync(new URL('./NativeModulePreflightModules.json', import.meta.url), 'utf8'));
+		}
 		if (specifier === '@electron/main/AppStoreNativeBoundary') return {APP_STORE_ADDON_PACKAGE: '@fluxer/app-store'};
 		if (specifier === '@electron/main/GatewaySocketNativeBoundary') {
 			return {GATEWAY_SOCKET_ADDON_PACKAGE: '@fluxer/gateway-socket'};
@@ -165,4 +168,14 @@ describe('NativeModulePreflight', () => {
 		assert.deepEqual(degradedModules(preflight), []);
 		assert.equal(preflight.spawns.length, 1);
 	});
+});
+
+test('every module the preflight requires is a dependency of the desktop app', () => {
+	const modules = JSON.parse(readFileSync(new URL('./NativeModulePreflightModules.json', import.meta.url), 'utf8'));
+	const manifest = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+	const dependencies = {...manifest.dependencies, ...manifest.optionalDependencies};
+	assert.deepEqual(
+		modules.map((spec) => spec.name).filter((name) => !Object.hasOwn(dependencies, name)),
+		[],
+	);
 });

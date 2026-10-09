@@ -5,8 +5,7 @@ import {createHash} from 'node:crypto';
 import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import path from 'node:path';
-import {APP_STORE_ADDON_PACKAGE} from '@electron/main/AppStoreNativeBoundary';
-import {GATEWAY_SOCKET_ADDON_PACKAGE} from '@electron/main/GatewaySocketNativeBoundary';
+import NATIVE_MODULE_PREFLIGHT_MODULES from '@electron/main/NativeModulePreflightModules.json';
 import {app} from 'electron';
 import log from 'electron-log';
 
@@ -43,113 +42,13 @@ export interface NativeModulePreflightResult {
 	readonly degraded: ReadonlyArray<string>;
 }
 
-const NATIVE_MODULE_PREFLIGHT_SPECS: ReadonlyArray<NativeModulePreflightSpec> = [
-	{
-		name: '@fluxer/webauthn',
-		platforms: new Set(['darwin', 'linux', 'win32']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/platform-info',
-		platforms: new Set(['darwin', 'linux', 'win32']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/mac-app-audio',
-		platforms: new Set(['darwin']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/mac-clipboard',
-		platforms: new Set(['darwin']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/mac-sysctl',
-		platforms: new Set(['darwin']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/mac-tcc',
-		platforms: new Set(['darwin']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/macos-input-hook',
-		platforms: new Set(['darwin']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/linux-audio-capture',
-		platforms: new Set(['linux']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/linux-evdev',
-		platforms: new Set(['linux']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/linux-input-hook',
-		platforms: new Set(['linux']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/linux-notifications',
-		platforms: new Set(['linux']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/linux-portals',
-		platforms: new Set(['linux']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/linux-screen-capture',
-		platforms: new Set(['linux']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/system-hunspell',
-		platforms: new Set(['linux']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/win-clipboard',
-		platforms: new Set(['win32']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/win-process-loopback',
-		platforms: new Set(['win32']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/win-shell',
-		platforms: new Set(['win32']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/win-toast',
-		platforms: new Set(['win32']),
-		severity: 'fatal',
-	},
-	{
-		name: '@fluxer/windows-input-hook',
-		platforms: new Set(['win32']),
-		severity: 'fatal',
-	},
-	{
-		name: APP_STORE_ADDON_PACKAGE,
-		platforms: new Set(['darwin', 'linux', 'win32']),
-		severity: 'degraded',
-	},
-	{
-		name: GATEWAY_SOCKET_ADDON_PACKAGE,
-		platforms: new Set(['darwin', 'linux', 'win32']),
-		severity: 'degraded',
-	},
-];
+const NATIVE_MODULE_PREFLIGHT_SPECS: ReadonlyArray<NativeModulePreflightSpec> = NATIVE_MODULE_PREFLIGHT_MODULES.map(
+	(spec) => ({
+		name: spec.name,
+		platforms: new Set(spec.platforms as ReadonlyArray<NodeJS.Platform>),
+		severity: spec.severity as NativeModuleSeverity,
+	}),
+);
 const PROBE_SCRIPT = `
 const modulePaths = process.argv.slice(1);
 function write(obj) {
