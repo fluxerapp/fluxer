@@ -41923,3 +41923,23 @@ msgstr "Persoane care au o comunitate în comun cu tine."
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
 msgid "People who share at least one friend with you."
 msgstr "Persoane care au cel puțin un prieten comun cu tine."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "Apelurile pe care le permiți în continuare vor intra, dar nu vor suna."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "Alege cine te poate adăuga într-un chat de grup fără să te întrebe mai întâi."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "Alege cine poate iniția un apel cu tine."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "Conversații de grup"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "Primește apeluri silențios"

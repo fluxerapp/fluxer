@@ -41923,3 +41923,23 @@ msgstr "與您共享社群的人。"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
 msgid "People who share at least one friend with you."
 msgstr "與您至少有一位朋友的用戶。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "允許的通話仍會響鈴，但不會發出聲音。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "選擇誰可以在未經你同意的情況下將你加入群組聊天。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "選擇誰可以開始與你通話。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "群組聊天"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "接聽電話時保持靜音"

@@ -41923,3 +41923,23 @@ msgstr "Orang-orang yang berbagi komunitas dengan Anda."
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
 msgid "People who share at least one friend with you."
 msgstr "Orang yang memiliki setidaknya satu teman dengan Anda."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "Panggilan yang Anda izinkan tetap masuk, tetapi tidak berdering."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "Pilih siapa yang dapat menambahkan Anda ke obrolan grup tanpa bertanya terlebih dahulu."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "Pilih siapa yang dapat memulai panggilan dengan Anda."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "Obrolan grup"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "Terima panggilan secara senyap"

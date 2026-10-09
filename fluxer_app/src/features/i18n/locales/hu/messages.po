@@ -41923,3 +41923,23 @@ msgstr "Azok az emberek, akikkel közös közösségben vagy."
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
 msgid "People who share at least one friend with you."
 msgstr "Olyan emberek, akiknek legalább egy közös ismerősük van veled."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "A hívásaid továbbra is bejönnek, de nem csörögnek."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "Válaszd ki, ki adhat hozzá előzetes kérdezősködés nélkül egy csoportos csevegéshez."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "Válaszd ki, ki kezdeményezhet veled hívást."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "Csoportos csevegések"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "Hívások némán fogadása"

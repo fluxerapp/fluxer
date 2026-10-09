@@ -41923,3 +41923,23 @@ msgstr "คนที่อยู่ในชุมชนเดียวกัน
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
 msgid "People who share at least one friend with you."
 msgstr "คนที่แชร์เพื่อนอย่างน้อยหนึ่งคนกับคุณ"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "สายที่คุณอนุญาตยังคงโทรเข้ามาได้ แต่จะไม่มีเสียงเรียกเข้า"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "เลือกได้ว่าใครสามารถเพิ่มคุณเข้ากลุ่มแชทได้โดยไม่ต้องขออนุญาตก่อน"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "เลือกผู้ที่สามารถเริ่มการโทรกับคุณได้"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "กลุ่มแชท"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "รับสายแบบเงียบ"

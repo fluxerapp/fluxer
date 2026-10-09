@@ -41923,3 +41923,23 @@ msgstr "Osoby, które dzielą z Tobą społeczność."
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
 msgid "People who share at least one friend with you."
 msgstr "Osoby, które mają z Tobą przynajmniej jednego wspólnego znajomego."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "Nadal możesz odbierać połączenia, ale nie będą one dzwonić."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "Wybierz, kto może dodawać Cię do czatu grupowego bez pytania."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "Wybierz, kto może rozpocząć z Tobą rozmowę."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "Czatowanie w grupach"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "Odbieraj połączenia wyciszone"

@@ -5406,6 +5406,21 @@
       },
       {
         "msgid": "People who share at least one friend with you."
+      },
+      {
+        "msgid": "Calls you allow still come through, but they don't ring."
+      },
+      {
+        "msgid": "Choose who can add you to a group chat without asking first."
+      },
+      {
+        "msgid": "Choose who can start a call with you."
+      },
+      {
+        "msgid": "Group chats"
+      },
+      {
+        "msgid": "Receive calls silently"
       }
     ],
     "es-419": [

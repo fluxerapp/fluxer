@@ -41923,3 +41923,23 @@ msgstr "जो लोग आपके साथ एक समुदाय सा
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
 msgid "People who share at least one friend with you."
 msgstr "ऐसे लोग जिनके कम से कम एक दोस्त आपके साथ साझा हो।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "आपके द्वारा अनुमति दी गई कॉलें अभी भी आती हैं, लेकिन वे बजेंगी नहीं।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "चुनें कि कौन आपको पहले पूछे बिना ग्रुप चैट में जोड़ सकता है।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "आपसे कौन कॉल शुरू कर सकता है, यह चुनें।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "ग्रुप चैट"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "कॉल चुपचाप प्राप्त करें"

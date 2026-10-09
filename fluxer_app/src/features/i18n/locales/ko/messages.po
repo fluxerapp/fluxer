@@ -41923,3 +41923,23 @@ msgstr "커뮤니티를 함께 사용하는 사람들"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
 msgid "People who share at least one friend with you."
 msgstr "나와 친구가 한 명 이상 겹치는 사람"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:219
+msgid "Calls you allow still come through, but they don't ring."
+msgstr "허용된 통화는 계속 오지만 벨이 울리지 않습니다."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:230
+msgid "Choose who can add you to a group chat without asking first."
+msgstr "누가 먼저 묻지 않고 나를 그룹 채팅에 추가할 수 있는지 선택하세요."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:183
+msgid "Choose who can start a call with you."
+msgstr "누가 나에게 전화를 걸 수 있는지 선택하세요."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:229
+msgid "Group chats"
+msgstr "그룹 채팅"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:218
+msgid "Receive calls silently"
+msgstr "무음으로 통화 받기"
