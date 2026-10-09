@@ -643,6 +643,7 @@ export interface AccessibilitySettings {
 	showNeko: boolean;
 	keepNekoStill: boolean;
 	showVideoSeekPreviewThumbnails: boolean;
+	showPersonaPickerButton: boolean;
 	showLatchInPersonaPicker: boolean;
 }
 
@@ -750,6 +751,7 @@ class Accessibility {
 	showNeko = false;
 	keepNekoStill = false;
 	showVideoSeekPreviewThumbnails = false;
+	showPersonaPickerButton = true;
 	showLatchInPersonaPicker = false;
 	mediaQuery: MediaQueryList | null = null;
 	private _hydrated = false;
@@ -857,6 +859,8 @@ class Accessibility {
 				'stayInteractiveWhenUnfocused',
 				'scrollToBottomOnMessageSend',
 				'sequentialFileSend',
+				'showLatchInPersonaPicker',
+				'showPersonaPickerButton'
 			],
 			toMessage: (s) => ({
 				saturationFactor: s.saturationFactor,
@@ -919,6 +923,8 @@ class Accessibility {
 				stayInteractiveWhenUnfocused: s.stayInteractiveWhenUnfocused,
 				scrollToBottomOnMessageSend: s.scrollToBottomOnMessageSend,
 				sequentialFileSend: s.sequentialFileSend,
+				showPersonaPickerButton: s.showPersonaPickerButton,
+				showLatchInPersonaPicker: s.showLatchInPersonaPicker,
 			}),
 			applyMessage: (s, m) => {
 				if (m.saturationFactor !== undefined) s.saturationFactor = m.saturationFactor;
@@ -1011,6 +1017,8 @@ class Accessibility {
 					s.stayInteractiveWhenUnfocused = m.stayInteractiveWhenUnfocused;
 				if (m.scrollToBottomOnMessageSend !== undefined) s.scrollToBottomOnMessageSend = m.scrollToBottomOnMessageSend;
 				if (m.sequentialFileSend !== undefined) s.sequentialFileSend = m.sequentialFileSend;
+				if (m.showPersonaPickerButton !== undefined) s.showPersonaPickerButton = m.showPersonaPickerButton;
+				if (m.showLatchInPersonaPicker !== undefined) s.showLatchInPersonaPicker = m.showLatchInPersonaPicker;
 			},
 		});
 		await this.applyStoredZoom();
@@ -1357,6 +1365,7 @@ class Accessibility {
 			this.showVideoSeekPreviewThumbnails = validated.showVideoSeekPreviewThumbnails;
 			persistLocalVideoSeekPreviewThumbnails(validated.showVideoSeekPreviewThumbnails);
 		}
+		if (validated.showPersonaPickerButton !== undefined) this.showPersonaPickerButton = validated.showPersonaPickerButton;
 		if (
 			validated.showLatchInPersonaPicker !== undefined &&
 			validated.showLatchInPersonaPicker !== this.showLatchInPersonaPicker
@@ -1455,6 +1464,7 @@ class Accessibility {
 			showNeko: data.showNeko ?? this.showNeko,
 			keepNekoStill: data.keepNekoStill ?? this.keepNekoStill,
 			showVideoSeekPreviewThumbnails: data.showVideoSeekPreviewThumbnails ?? this.showVideoSeekPreviewThumbnails,
+			showPersonaPickerButton: data.showPersonaPickerButton ?? this.showPersonaPickerButton,
 			showLatchInPersonaPicker: data.showLatchInPersonaPicker ?? this.showLatchInPersonaPicker,
 		};
 	}

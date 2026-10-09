@@ -19,6 +19,7 @@ import * as PersonaCommands from "../commands/Personas";
 import { runInAction } from "mobx";
 import MobileLayout from "@app/features/ui/state/MobileLayout";
 import PersonaPickerMobile from "../state/PersonaPickerMobile";
+import Accessibility from "@app/features/accessibility/state/Accessibility";
 
 const SELECT_PERSONA_DESCRIPTOR = msg({
 	message: 'Select persona',
@@ -52,7 +53,7 @@ export const PersonaPickerComposerButton = observer<PersonaPickerComposerButtonP
 		})
 	}, []);
 
-	return hasPersonas && <Tooltip text={i18n._(SELECT_PERSONA_DESCRIPTOR)}>
+	return hasPersonas && Accessibility.showPersonaPickerButton && <Tooltip text={i18n._(SELECT_PERSONA_DESCRIPTOR)}>
 		<Button
 			ref={personaPickerRef}
 			aria-label="Select persona"

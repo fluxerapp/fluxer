@@ -60,6 +60,10 @@ const SHOW_SEND_BUTTON_DESCRIPTOR = msg({
 	message: 'Show send button',
 	comment: 'Short label in the channel and chat textarea plus menu. Keep it concise.',
 });
+const SHOW_PERSONA_PICKER_BUTTON_DESCRIPTOR = msg({
+	message: 'Show persona button',
+	comment: 'Plus menu submenu toggle that shows the persona picker button next to the textarea.',
+});
 
 interface TextareaPlusMenuProps {
 	onUploadFile: () => void;
@@ -86,6 +90,7 @@ export const TextareaPlusMenu = observer(
 		const showMemesButton = Accessibility.showMemesButton;
 		const showStickersButton = Accessibility.showStickersButton;
 		const showEmojiButton = Accessibility.showEmojiButton;
+		const showPersonaPickerButton = Accessibility.showPersonaPickerButton;
 		const showMessageSendButton = Accessibility.showMessageSendButton;
 		const canSendGift = useCanSendGift();
 		const hasTextContent = textareaValue && textareaValue.trim().length > 0;
@@ -191,6 +196,14 @@ export const TextareaPlusMenu = observer(
 									data-flx="channel.textarea.textarea-plus-menu.checkbox-item--4"
 								>
 									{i18n._(SHOW_EMOJI_BUTTON_DESCRIPTOR)}
+								</CheckboxItem>
+								<CheckboxItem
+									checked={showPersonaPickerButton}
+									onCheckedChange={(checked) => AccessibilityCommands.update({showPersonaPickerButton: checked})}
+									closeOnChange={false}
+									data-flx="channel.textarea.textarea-plus-menu.checkbox-item"
+								>
+									{i18n._(SHOW_PERSONA_PICKER_BUTTON_DESCRIPTOR)}
 								</CheckboxItem>
 								<CheckboxItem
 									checked={showMessageSendButton}

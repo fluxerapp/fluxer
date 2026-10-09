@@ -109,6 +109,10 @@ const SHOW_GIFS_BUTTON_DESCRIPTOR = msg({
 	message: 'Show GIFs button',
 	comment: 'Short label for an advanced message input preference.',
 });
+const SHOW_PERSONA_PICKER_BUTTON_DESCRIPTOR = msg({
+	message: 'Show persona button',
+	comment: 'Short label for an advanced message input preference.',
+});
 const SHOW_MEDIA_BUTTON_DESCRIPTOR = msg({
 	message: 'Show media button',
 	comment: 'Short label for an advanced message input preference.',
@@ -518,6 +522,12 @@ const InputButtonsContent = observer(() => {
 				value={Accessibility.showEmojiButton}
 				onChange={(value) => AccessibilityCommands.update({showEmojiButton: value})}
 				data-flx="user.advanced-settings-tab.switch-group-item.emoji-button"
+			/>
+			<SwitchGroupItem
+				label={i18n._(SHOW_PERSONA_PICKER_BUTTON_DESCRIPTOR)}
+				value={Accessibility.showPersonaPickerButton}
+				onChange={(value) => AccessibilityCommands.update({showPersonaPickerButton: value})}
+				data-flx="user.advanced-settings-tab.switch-group-item.persona-picker-button"
 			/>
 			<SwitchGroupItem
 				label={i18n._(SHOW_SEND_BUTTON_DESCRIPTOR)}
