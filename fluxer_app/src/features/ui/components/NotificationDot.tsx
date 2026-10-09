@@ -6,12 +6,17 @@ import {clsx} from 'clsx';
 interface NotificationDotProps {
 	className?: string;
 	label?: string;
+	'data-flx'?: string;
 }
 
-export function NotificationDot({className, label}: NotificationDotProps) {
+export function NotificationDot({className, label, 'data-flx': dataFlx}: NotificationDotProps) {
 	return (
 		<>
-			<span className={clsx(styles.dot, className)} aria-hidden="true" data-flx="ui.notification-dot.dot" />
+			<span
+				className={clsx(styles.dot, className)}
+				aria-hidden="true"
+				data-flx={dataFlx ?? 'ui.notification-dot.dot'}
+			/>
 			{label && (
 				<span className={styles.srOnly} data-flx="ui.notification-dot.label">
 					{label}
