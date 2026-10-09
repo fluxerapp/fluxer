@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "可发现的社区验证等级至少要设为“低”。",
 	"channels_and_guilds.follow_target_content_warning_required": "来自带有内容警告的频道的更新只能发送到带有内容警告或年龄限制的频道。",
 	"channels_and_guilds.follow_target_not_age_restricted": "来自年龄限制频道的更新只能发送到年龄限制频道。",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "此群聊中并非所有成员都符合查看成人内容的条件。",
 	"channels_and_guilds.group_dm_recipients_not_addable": "某些选中的用户无法添加到该群聊。",
 	"channels_and_guilds.guild_banner_requires_feature": "社区横幅需要启用 BANNER 功能。",
 	"channels_and_guilds.guild_creation_permission_required": "你没有在此实例上创建社区的权限。请联系实例管理员申请访问权限。",

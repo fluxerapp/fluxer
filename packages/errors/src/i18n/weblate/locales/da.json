@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Fællesskaber i Opdag skal have et verificeringsniveau på mindst Lavt.",
 	"channels_and_guilds.follow_target_content_warning_required": "Opdateringer fra en kanal med en indholdsadvarsel kan kun sendes til en kanal med en indholdsadvarsel eller en aldersbegrænsning.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Opdateringer fra en aldersbegrænset kanal kan kun sendes til en aldersbegrænset kanal.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Ikke alle i denne gruppe opfylder betingelserne for indhold for voksne.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "En eller flere valgte brugere kan ikke tilføjes til denne gruppe-DM.",
 	"channels_and_guilds.guild_banner_requires_feature": "Et fællesskabsbanner kræver funktionen BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Du har ikke tilladelse til at oprette fællesskaber på denne instans. Kontakt administratoren af instansen for at anmode om adgang.",

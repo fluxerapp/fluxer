@@ -164,6 +164,7 @@ const ERROR_I18N_EL_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Οι κοινότητες προς ανακάλυψη πρέπει να έχουν επίπεδο επαλήθευσης τουλάχιστον «Χαμηλό».",
 	"channels_and_guilds.follow_target_content_warning_required": "Οι ενημερώσεις από κανάλι με προειδοποίηση περιεχομένου μπορούν να πάνε μόνο σε κανάλι με προειδοποίηση περιεχομένου ή ηλικιακό περιορισμό.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Οι ενημερώσεις από κανάλι με ηλικιακό περιορισμό μπορούν να πάνε μόνο σε κανάλι με ηλικιακό περιορισμό.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Δεν πληρούν όλοι σε αυτή την ομάδα τις προϋποθέσεις για περιεχόμενο ενηλίκων.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Ένας ή περισσότεροι επιλεγμένοι χρήστες δεν μπορούν να προστεθούν σε αυτό το ομαδικό DM.",
 	"channels_and_guilds.guild_banner_requires_feature": "Το banner της κοινότητας απαιτεί τη λειτουργία BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Δεν έχεις το δικαίωμα να δημιουργείς κοινότητες σε αυτή την εγκατάσταση. Επικοινώνησε με τον διαχειριστή της εγκατάστασης για να ζητήσεις πρόσβαση.",

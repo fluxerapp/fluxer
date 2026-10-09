@@ -164,6 +164,7 @@ const ERROR_I18N_NL_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Communities in Ontdekken moeten minstens het verificatieniveau Laag hebben.",
 	"channels_and_guilds.follow_target_content_warning_required": "Updates uit een kanaal met een inhoudswaarschuwing kunnen alleen naar een kanaal met een inhoudswaarschuwing of leeftijdsbeperking gaan.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Updates uit een kanaal met leeftijdsbeperking kunnen alleen naar een kanaal met leeftijdsbeperking gaan.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Niet iedereen in deze groep komt in aanmerking voor inhoud voor volwassenen.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Een of meer geselecteerde gebruikers kunnen niet worden toegevoegd aan deze groeps-DM.",
 	"channels_and_guilds.guild_banner_requires_feature": "Een communitybanner vereist de functie BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Je hebt geen toestemming om communities aan te maken op deze instantie. Neem contact op met de beheerder van de instantie om toegang aan te vragen.",

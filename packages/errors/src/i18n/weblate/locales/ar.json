@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "يجب أن يكون مستوى التحقق في المجتمعات القابلة للاكتشاف \"منخفض\" على الأقل.",
 	"channels_and_guilds.follow_target_content_warning_required": "لا يمكن إرسال التحديثات من قناة عليها تحذير محتوى إلا إلى قناة عليها تحذير محتوى أو مقيدة بالعمر.",
 	"channels_and_guilds.follow_target_not_age_restricted": "لا يمكن إرسال التحديثات من قناة مقيدة بالعمر إلا إلى قناة مقيدة بالعمر.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "ليس كل من في هذه المجموعة مؤهلًا للمحتوى الناضج.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "لا يمكن إضافة واحد أو أكثر من المستخدمين المحددين إلى هذه المحادثة الجماعية.",
 	"channels_and_guilds.guild_banner_requires_feature": "تتطلب لافتة المجتمع ميزة BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "لا تملك إذنًا لإنشاء مجتمعات على هذا المثيل. تواصل مع مسؤول المثيل لطلب الوصول.",

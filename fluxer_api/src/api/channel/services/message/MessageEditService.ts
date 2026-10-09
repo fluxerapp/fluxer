@@ -175,6 +175,7 @@ export class MessageEditService {
 			});
 		}
 		const isBugHunterBot = !!user?.isBot && (user.flags & UserFlags.BUG_HUNTER) !== 0n;
+		const dmNsfwContext = guild ? undefined : await this.deps.persistenceService.resolveDmNsfwContext(channel, userId);
 		const updateResult = await this.deps.messageWriteLock.withFreshMessage(channelId, messageId, async (fresh) => {
 			if (!fresh) throw new UnknownMessageError();
 			return this.deps.crosspostPropagation.withPublishedEditBudget({fresh, actor: 'author'}, () =>
@@ -190,6 +191,7 @@ export class MessageEditService {
 					isBot: user?.isBot,
 					isBugHunterBot,
 					locale: user?.locale,
+					dmNsfwContext,
 				}),
 			);
 		});

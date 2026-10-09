@@ -4104,6 +4104,11 @@ msgstr "Reindirizzamenti consentiti"
 msgid "Allowed up to {count, plural, one {# connection} other {# connections}} per member"
 msgstr "Consentite fino a {count, plural, one {# connessione} other {# connessioni}} per membro"
 
+#. Description under the mature content switch in the edit group settings. Only the group owner sees it.
+#: src/features/channel/components/modals/GroupMatureContentSwitch.tsx:9
+msgid "Allows media flagged as sensitive in this group. Everyone in the group must be 18 or older. Each member still sees it according to their own sensitive content settings."
+msgstr "Consente i contenuti multimediali contrassegnati come sensibili in questo gruppo. Tutti i membri del gruppo devono avere almeno 18 anni. Ogni membro li vedrà comunque in base alle proprie impostazioni sui contenuti sensibili."
+
 #. Description of the Create posts permission in forum and media channel permissions.
 #: src/features/forum/utils/ForumMessageDescriptors.ts:311
 msgid "Allows members to create posts in this channel."
@@ -4403,8 +4408,8 @@ msgstr "Video GIF animato"
 
 #. Title of the error modal shown when an animated group icon is selected.
 #. Title of the error modal shown when an animated group icon is selected.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:64
-#: src/features/channel/components/modals/EditGroupModal.tsx:61
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:66
+#: src/features/channel/components/modals/EditGroupModal.tsx:63
 msgid "Animated icons are not supported"
 msgstr "Le icone animate non sono supportate"
 
@@ -4415,8 +4420,8 @@ msgstr "Quando si crea una nuova community, le icone animate non sono supportate
 
 #. Description text in the edit group modal.
 #. Error modal body in the mobile edit group sheet when an animated icon is chosen.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:60
-#: src/features/channel/components/modals/EditGroupModal.tsx:57
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:62
+#: src/features/channel/components/modals/EditGroupModal.tsx:59
 msgid "Animated icons are not supported. Use a static image."
 msgstr "Le icone animate non sono supportate. Usa un'immagine statica."
 
@@ -7071,10 +7076,10 @@ msgstr "Cambia soprannome del gruppo"
 #. Title of the modal where the user picks a group icon source in the mobile edit group sheet. Keep it concise. Keep the tone plain and specific.
 #. Title of the modal where the user picks a group icon source. Keep it concise. Keep the tone plain and specific.
 #. Title of the modal where the user picks an imported-template community icon source. Keep it concise. Keep the tone plain and specific.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:88
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
-#: src/features/channel/components/modals/EditGroupModal.tsx:85
-#: src/features/channel/components/modals/EditGroupModal.tsx:283
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:90
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:335
+#: src/features/channel/components/modals/EditGroupModal.tsx:87
+#: src/features/channel/components/modals/EditGroupModal.tsx:290
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:67
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:90
@@ -10539,8 +10544,8 @@ msgstr "Impossibile fissare questa conversazione"
 
 #. Title of the error modal shown when a cropped group icon cannot be processed.
 #. Title of the error modal shown when a cropped group icon cannot be processed.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:68
-#: src/features/channel/components/modals/EditGroupModal.tsx:65
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:70
+#: src/features/channel/components/modals/EditGroupModal.tsx:67
 msgid "Couldn't process image"
 msgstr "Impossibile elaborare l'immagine"
 
@@ -13784,7 +13789,7 @@ msgid "Edit group details"
 msgstr "Modifica dettagli gruppo"
 
 #. Accessible label for the edit group form region in the mobile bottom sheet.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:76
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:78
 msgid "Edit group form"
 msgstr "Modulo per modificare il gruppo"
 
@@ -17382,8 +17387,8 @@ msgstr "Gli avatar dei DM di gruppo usano le stesse maschere di stato degli avat
 msgid "Group DMs"
 msgstr "DM di gruppo"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:289
-#: src/features/channel/components/modals/EditGroupModal.tsx:247
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:296
+#: src/features/channel/components/modals/EditGroupModal.tsx:254
 msgid "Group icon"
 msgstr "Icona gruppo"
 
@@ -17401,13 +17406,13 @@ msgstr "Messaggio di gruppo"
 
 #. Field label for the group name input in the mobile edit group sheet.
 #. Short label in the edit group modal. Keep it concise.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:80
-#: src/features/channel/components/modals/EditGroupModal.tsx:77
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:82
+#: src/features/channel/components/modals/EditGroupModal.tsx:79
 msgid "Group name"
 msgstr "Nome del gruppo"
 
 #. Label in the edit group modal.
-#: src/features/channel/components/modals/EditGroupModal.tsx:73
+#: src/features/channel/components/modals/EditGroupModal.tsx:75
 msgid "Group name must not exceed 100 characters"
 msgstr "Il nome del gruppo non può superare i 100 caratteri"
 
@@ -17441,8 +17446,8 @@ msgstr "Impostazioni gruppo"
 msgid "Group typing states"
 msgstr "Stati di digitazione del gruppo"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:231
-#: src/features/channel/components/modals/EditGroupModal.tsx:222
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:238
+#: src/features/channel/components/modals/EditGroupModal.tsx:229
 msgid "Group updated"
 msgstr "Gruppo aggiornato"
 
@@ -18118,16 +18123,16 @@ msgstr "Icona"
 
 #. Title of the error modal shown when the selected group icon exceeds the size limit.
 #. Title of the error modal shown when the selected group icon exceeds the size limit.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:52
-#: src/features/channel/components/modals/EditGroupModal.tsx:49
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:54
+#: src/features/channel/components/modals/EditGroupModal.tsx:51
 msgid "Icon file is too large"
 msgstr "Il file dell'icona è troppo grande"
 
 #. Error message in the edit group modal. Preserve {imageMaxSizeLabel}; it is inserted by code.
 #. Error modal body in the mobile edit group sheet when the chosen icon file exceeds the size limit. imageMaxSizeLabel is a localized size.
 #. Validation error in the create-community form when the chosen icon exceeds the size limit. {imageMaxSizeLabel} is a formatted file size such as "8 MB".
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:47
-#: src/features/channel/components/modals/EditGroupModal.tsx:45
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:49
+#: src/features/channel/components/modals/EditGroupModal.tsx:47
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:111
 msgid "Icon file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "Il file dell'icona è troppo grande. Scegli un file più piccolo di {imageMaxSizeLabel}."
@@ -18942,8 +18947,8 @@ msgstr "Codice regalo non valido"
 
 #. Title of the error modal shown when the selected group icon image cannot be used.
 #. Title of the error modal shown when the selected group icon image cannot be used.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:72
-#: src/features/channel/components/modals/EditGroupModal.tsx:69
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:74
+#: src/features/channel/components/modals/EditGroupModal.tsx:71
 msgid "Invalid image"
 msgstr "Immagine non valida"
 
@@ -21071,7 +21076,7 @@ msgid "Mature content media gate"
 msgstr "Blocco di accesso ai media per adulti"
 
 #. Error message in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:8
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:11
 msgid "Mature content not allowed"
 msgstr "Contenuti per adulti non consentiti"
 
@@ -22723,8 +22728,8 @@ msgstr "I miei amici"
 
 #. Placeholder text in the group name input in the mobile edit group sheet.
 #. Short label in the edit group modal. Keep it concise.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:84
-#: src/features/channel/components/modals/EditGroupModal.tsx:81
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:86
+#: src/features/channel/components/modals/EditGroupModal.tsx:83
 msgid "My group"
 msgstr "Il mio gruppo"
 
@@ -27858,8 +27863,8 @@ msgstr "Disattiva sempre in primo piano"
 msgid "Remove from URL-only GIF favorites"
 msgstr "Rimuovi dalle GIF preferite salvate solo tramite URL"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
-#: src/features/channel/components/modals/EditGroupModal.tsx:292
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:344
+#: src/features/channel/components/modals/EditGroupModal.tsx:299
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:321
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:644
 msgid "Remove icon"
@@ -29332,8 +29337,8 @@ msgstr "Saturazione"
 #. Save button in the thread settings modal.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:111
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
-#: src/features/channel/components/modals/EditGroupModal.tsx:322
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:386
+#: src/features/channel/components/modals/EditGroupModal.tsx:342
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -34955,7 +34960,7 @@ msgid "This channel is marked for mature content and may contain material that m
 msgstr "Questo canale è contrassegnato per contenuti per adulti e potrebbe contenere materiale non adatto ad alcuni utenti."
 
 #. Label in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:12
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:15
 msgid "This channel is not marked for mature content. Mature content can only be sent in channels marked for mature content. Ask a moderator to update this channel if appropriate."
 msgstr "Questo canale non è contrassegnato per contenuti per adulti. I contenuti per adulti possono essere inviati solo nei canali contrassegnati per contenuti per adulti. Chiedi a un moderatore di aggiornare questo canale, se appropriato."
 
@@ -35194,6 +35199,11 @@ msgstr "Questo gruppo ha troppe persone"
 #: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:16
 msgid "This group is full. Remove someone before adding more people."
 msgstr "Questo gruppo è al completo. Rimuovi qualcuno prima di aggiungere altre persone."
+
+#. Label in the mature content rejected modal for group direct messages.
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:26
+msgid "This group is not marked for mature content. The group owner can turn on Mature content in the group settings if everyone in the group is 18 or older."
+msgstr "Questo gruppo non è contrassegnato per contenuti per adulti. Il proprietario del gruppo può attivare i Contenuti per adulti nelle impostazioni del gruppo se tutti nel gruppo hanno 18 anni o più."
 
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:113
 msgid "This handoff code has expired. Generate a new one to continue."
@@ -37479,8 +37489,8 @@ msgstr "Tipo di file non supportato."
 
 #. Title of the error modal shown when the selected group icon format is unsupported.
 #. Title of the error modal shown when the selected group icon format is unsupported.
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:56
-#: src/features/channel/components/modals/EditGroupModal.tsx:53
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:58
+#: src/features/channel/components/modals/EditGroupModal.tsx:55
 msgid "Unsupported icon format"
 msgstr "Formato icona non supportato"
 
@@ -37735,8 +37745,8 @@ msgstr "Carica file e media nei messaggi."
 msgid "Upload files and media in this channel."
 msgstr "Carica file e contenuti multimediali in questo canale."
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
-#: src/features/channel/components/modals/EditGroupModal.tsx:283
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:335
+#: src/features/channel/components/modals/EditGroupModal.tsx:290
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:312
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
@@ -40901,6 +40911,11 @@ msgstr "Devi verificare la tua email per inviare messaggi in questa community."
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:64
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "Tu o una delle persone che stai aggiungendo avete già il numero massimo di DM di gruppo aperti. Lasciane uno e riprova."
+
+#. Label in the mature content rejected modal for one-to-one direct messages. Preserve {sensitiveContentSettingsPath}; it is a user settings path inserted by code.
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:20
+msgid "You or the person you are messaging has chosen to block sensitive media in direct messages. Each of you can change this in {sensitiveContentSettingsPath}."
+msgstr "Tu o la persona con cui stai messaggiando avete scelto di bloccare contenuti multimediali sensibili nei messaggi diretti. Ognuno di voi può modificare questa impostazione in {sensitiveContentSettingsPath}."
 
 #. Helper text under the required username field when the instance uses usernames to sign in.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:66

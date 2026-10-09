@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Le community presenti in Scopri devono avere un livello di verifica almeno basso.",
 	"channels_and_guilds.follow_target_content_warning_required": "Gli aggiornamenti da un canale con un avviso sui contenuti possono andare solo in un canale con un avviso sui contenuti o una limitazione di età.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Gli aggiornamenti da un canale con limitazione di età possono andare solo in un canale con limitazione di età.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Non tutti in questo gruppo possono accedere ai contenuti per adulti.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Uno o più utenti selezionati non possono essere aggiunti a questo DM di gruppo.",
 	"channels_and_guilds.guild_banner_requires_feature": "Il banner della community richiede la funzionalità BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Non hai il permesso di creare community su questa istanza. Contatta l'amministratore dell'istanza per richiedere l'accesso.",

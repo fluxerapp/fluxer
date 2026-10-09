@@ -164,6 +164,7 @@ const ERROR_I18N_FI_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Löydettävien yhteisöjen vahvistustason on oltava vähintään matala.",
 	"channels_and_guilds.follow_target_content_warning_required": "Päivitykset kanavalta, jolla on sisältövaroitus, voivat mennä vain kanavalle, jolla on sisältövaroitus tai ikäraja.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Päivitykset ikärajoitetulta kanavalta voivat mennä vain ikärajoitetulle kanavalle.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Kaikki tämän ryhmän jäsenet eivät täytä aikuisille tarkoitetun sisällön ehtoja.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Yhtä tai useampaa valittua käyttäjää ei voi lisätä tähän ryhmäkeskusteluun.",
 	"channels_and_guilds.guild_banner_requires_feature": "Yhteisön banneri vaatii BANNER-ominaisuuden.",
 	"channels_and_guilds.guild_creation_permission_required": "Sinulla ei ole oikeutta luoda yhteisöjä tässä instanssissa. Pyydä käyttöoikeutta instanssin ylläpitäjältä.",

@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Społeczności widoczne w sekcji Odkrywanie muszą mieć poziom weryfikacji co najmniej Niski.",
 	"channels_and_guilds.follow_target_content_warning_required": "Aktualizacje z kanału z ostrzeżeniem o treści mogą trafiać tylko na kanał z ostrzeżeniem o treści lub ograniczeniem wiekowym.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Aktualizacje z kanału z ograniczeniem wiekowym mogą trafiać tylko na kanał z ograniczeniem wiekowym.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Nie wszyscy w tej grupie spełniają warunki dostępu do treści dla dorosłych.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Co najmniej jednego z wybranych użytkowników nie można dodać do tego czatu grupowego.",
 	"channels_and_guilds.guild_banner_requires_feature": "Baner społeczności wymaga funkcji BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Nie masz uprawnień do tworzenia społeczności w tej instancji. Skontaktuj się z administratorem instancji, aby poprosić o dostęp.",

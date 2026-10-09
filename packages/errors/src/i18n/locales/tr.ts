@@ -164,6 +164,7 @@ const ERROR_I18N_TR_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Keşfedilebilir topluluklar en az düşük doğrulama seviyesine sahip olmalı.",
 	"channels_and_guilds.follow_target_content_warning_required": "İçerik uyarısı olan bir kanalın güncellemeleri yalnızca içerik uyarısı veya yaş sınırlaması olan bir kanala gidebilir.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Yaş sınırlamalı bir kanalın güncellemeleri yalnızca yaş sınırlamalı bir kanala gidebilir.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Bu gruptaki herkes yetişkin içerik için uygun değil.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Seçilen bir veya daha fazla kullanıcı bu grup DM'sine eklenemiyor.",
 	"channels_and_guilds.guild_banner_requires_feature": "Topluluk banner'ı BANNER özelliği gerektirir.",
 	"channels_and_guilds.guild_creation_permission_required": "Bu kurulumda topluluk oluşturma yetkin yok. Erişim istemek için kurulumun yöneticisiyle iletişime geç.",

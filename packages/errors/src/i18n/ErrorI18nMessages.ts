@@ -200,6 +200,8 @@ export const ERROR_I18N_MESSAGES = {
 	'channels_and_guilds.context_channel_or_guild_required': 'A context channel or community ID is required.',
 	'channels_and_guilds.discoverable_guild_verification_level_too_low':
 		'Discoverable communities must have a verification level of at least Low.',
+	'channels_and_guilds.group_dm_mature_content_ineligible':
+		'Not everyone in this group is eligible for mature content.',
 	'channels_and_guilds.group_dm_recipients_not_addable': "One or more selected users can't be added to this group DM.",
 	'channels_and_guilds.guild_banner_requires_feature': 'Community banner requires BANNER feature.',
 	'channels_and_guilds.guild_creation_permission_required':

@@ -164,6 +164,7 @@ const ERROR_I18N_HE_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "קהילות הניתנות לגילוי חייבות להיות ברמת אימות \"נמוכה\" לפחות.",
 	"channels_and_guilds.follow_target_content_warning_required": "עדכונים מערוץ עם אזהרת תוכן יכולים להישלח רק לערוץ עם אזהרת תוכן או הגבלת גיל.",
 	"channels_and_guilds.follow_target_not_age_restricted": "עדכונים מערוץ עם הגבלת גיל יכולים להישלח רק לערוץ עם הגבלת גיל.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "לא כל מי שבקבוצה הזו עומד בתנאים לתוכן למבוגרים.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "לא ניתן להוסיף ל-DM הקבוצתי הזה חלק מהמשתמשים שנבחרו.",
 	"channels_and_guilds.guild_banner_requires_feature": "באנר הקהילה דורש את התכונה BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "אין לך הרשאה ליצור קהילות במופע זה. יש לפנות למנהל המופע כדי לבקש גישה.",

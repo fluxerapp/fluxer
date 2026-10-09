@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "可探索社群的驗證等級至少須為「低」。",
 	"channels_and_guilds.follow_target_content_warning_required": "來自具有內容警告頻道的更新，只能傳送到具有內容警告或年齡限制的頻道。",
 	"channels_and_guilds.follow_target_not_age_restricted": "來自年齡限制頻道的更新，只能傳送到年齡限制頻道。",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "此群組中並非所有成員都符合觀看成人內容的資格。",
 	"channels_and_guilds.group_dm_recipients_not_addable": "有一或多個選取的使用者無法加入此群組私訊。",
 	"channels_and_guilds.guild_banner_requires_feature": "社群橫幅需要 BANNER 功能。",
 	"channels_and_guilds.guild_creation_permission_required": "你沒有在此實例上建立社群的權限。請聯絡實例管理員以申請存取權限。",

@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Komunitas yang bisa ditemukan harus memiliki tingkat verifikasi minimal Rendah.",
 	"channels_and_guilds.follow_target_content_warning_required": "Pembaruan dari saluran dengan peringatan konten hanya bisa dikirim ke saluran dengan peringatan konten atau batasan usia.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Pembaruan dari saluran dengan batasan usia hanya bisa dikirim ke saluran dengan batasan usia.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Tidak semua orang di grup ini memenuhi syarat untuk konten dewasa.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Satu atau lebih pengguna yang dipilih tidak bisa ditambahkan ke DM grup ini.",
 	"channels_and_guilds.guild_banner_requires_feature": "Banner komunitas memerlukan fitur BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Kamu tidak punya izin untuk membuat komunitas di instance ini. Hubungi admin instance untuk meminta akses.",

@@ -164,6 +164,7 @@ const ERROR_I18N_BG_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Откриваемите общности трябва да имат ниво на потвърждение поне „Ниско“.",
 	"channels_and_guilds.follow_target_content_warning_required": "Актуализациите от канал с предупреждение за съдържание могат да отиват само в канал с предупреждение за съдържание или възрастово ограничение.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Актуализациите от канал с възрастово ограничение могат да отиват само в канал с възрастово ограничение.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Не всички в тази група отговарят на условията за съдържание за възрастни.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Един или повече избрани потребители не могат да бъдат добавени към това групово DM.",
 	"channels_and_guilds.guild_banner_requires_feature": "Банерът на общността изисква функцията BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Нямаш разрешение да създаваш общности в тази инстанция. Свържи се с администратора на инстанцията, за да поискаш достъп.",

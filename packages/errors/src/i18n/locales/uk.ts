@@ -164,6 +164,7 @@ const ERROR_I18N_UK_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "У спільнот, відкритих для пошуку, рівень перевірки має бути щонайменше «Низький».",
 	"channels_and_guilds.follow_target_content_warning_required": "Оновлення з каналу з попередженням про вміст можна надсилати лише в канал із попередженням про вміст або віковим обмеженням.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Оновлення з каналу з віковим обмеженням можна надсилати лише в канал із віковим обмеженням.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Не всі учасники цієї групи мають право на вміст для дорослих.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Одного або кількох вибраних користувачів не можна додати до цього групового чату.",
 	"channels_and_guilds.guild_banner_requires_feature": "Для банера спільноти потрібна функція BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "У тебе немає дозволу створювати спільноти в цьому екземплярі. Звернись до адміністратора екземпляра, щоб запросити доступ.",

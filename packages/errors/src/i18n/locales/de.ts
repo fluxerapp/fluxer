@@ -164,6 +164,7 @@ const ERROR_I18N_DE_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Auffindbare Communitys müssen mindestens die Verifizierungsstufe \"Niedrig\" haben.",
 	"channels_and_guilds.follow_target_content_warning_required": "Updates aus einem Kanal mit Inhaltswarnung können nur in einen Kanal mit Inhaltswarnung oder Altersbeschränkung gehen.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Updates aus einem altersbeschränkten Kanal können nur in einen altersbeschränkten Kanal gehen.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Nicht alle in dieser Gruppe sind für Inhalte für Erwachsene berechtigt.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Ein oder mehrere ausgewählte Benutzer können dieser Gruppen-DM nicht hinzugefügt werden.",
 	"channels_and_guilds.guild_banner_requires_feature": "Community-Banner erfordert die BANNER-Funktion.",
 	"channels_and_guilds.guild_creation_permission_required": "Du hast keine Berechtigung, auf dieser Instanz Communitys zu erstellen. Wende dich an den Administrator der Instanz, um Zugriff anzufragen.",

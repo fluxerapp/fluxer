@@ -164,6 +164,7 @@ const ERROR_I18N_RO_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Comunitățile listate în Discovery trebuie să aibă un nivel de verificare de cel puțin Scăzut.",
 	"channels_and_guilds.follow_target_content_warning_required": "Actualizările dintr-un canal cu avertisment de conținut pot merge doar într-un canal cu avertisment de conținut sau restricție de vârstă.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Actualizările dintr-un canal cu restricție de vârstă pot merge doar într-un canal cu restricție de vârstă.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Nu toată lumea din acest grup este eligibilă pentru conținut pentru adulți.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Unul sau mai mulți utilizatori selectați nu pot fi adăugați la acest DM de grup.",
 	"channels_and_guilds.guild_banner_requires_feature": "Bannerul comunității necesită funcția BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Nu ai permisiunea de a crea comunități pe această instanță. Contactează administratorul instanței pentru a solicita acces.",

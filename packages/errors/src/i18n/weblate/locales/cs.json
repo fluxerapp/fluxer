@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Komunity v Objevování musí mít úroveň ověření alespoň Nízká.",
 	"channels_and_guilds.follow_target_content_warning_required": "Aktualizace z kanálu s upozorněním na obsah lze posílat jen do kanálu s upozorněním na obsah nebo s věkovým omezením.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Aktualizace z kanálu s věkovým omezením lze posílat jen do kanálu s věkovým omezením.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Ne každý v této skupině splňuje podmínky pro obsah pro dospělé.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Jednoho nebo více vybraných uživatelů nelze přidat do této skupinové konverzace.",
 	"channels_and_guilds.guild_banner_requires_feature": "Banner komunity vyžaduje funkci BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Nemáte oprávnění vytvářet komunity na této instanci. Požádejte o přístup správce instance.",

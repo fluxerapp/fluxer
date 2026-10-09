@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Видимые в каталоге сообщества должны иметь уровень проверки не ниже «Низкий».",
 	"channels_and_guilds.follow_target_content_warning_required": "Обновления из канала с предупреждением о содержимом можно отправлять только в канал с предупреждением о содержимом или возрастным ограничением.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Обновления из канала с возрастным ограничением можно отправлять только в канал с возрастным ограничением.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Не все участники этой группы могут получать контент для взрослых.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Одного или нескольких выбранных пользователей нельзя добавить в этот групповой чат.",
 	"channels_and_guilds.guild_banner_requires_feature": "Для баннера сообщества требуется функция BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "У тебя нет прав на создание сообществ в этом экземпляре. Обратись к администратору экземпляра, чтобы запросить доступ.",

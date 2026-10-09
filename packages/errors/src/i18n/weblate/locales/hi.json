@@ -160,6 +160,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "डिस्कवरेबल कम्युनिटी का वेरिफ़िकेशन लेवल कम से कम \"कम\" होना चाहिए।",
 	"channels_and_guilds.follow_target_content_warning_required": "कंटेंट चेतावनी वाले चैनल के अपडेट केवल कंटेंट चेतावनी या आयु प्रतिबंध वाले चैनल में जा सकते हैं।",
 	"channels_and_guilds.follow_target_not_age_restricted": "आयु-प्रतिबंधित चैनल के अपडेट केवल आयु-प्रतिबंधित चैनल में जा सकते हैं।",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "इस ग्रुप में हर कोई मैच्योर कंटेंट के लिए योग्य नहीं है।",
 	"channels_and_guilds.group_dm_recipients_not_addable": "चुने गए एक या ज़्यादा यूज़र को इस ग्रुप DM में नहीं जोड़ा जा सकता।",
 	"channels_and_guilds.guild_banner_requires_feature": "कम्युनिटी बैनर के लिए BANNER फ़ीचर ज़रूरी है।",
 	"channels_and_guilds.guild_creation_permission_required": "आपके पास इस इंस्टेंस पर कम्युनिटी बनाने की अनुमति नहीं है। एक्सेस के लिए अपने इंस्टेंस एडमिन से संपर्क करें।",

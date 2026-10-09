@@ -12,7 +12,9 @@ import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService'
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import {GroupDmMatureContentIneligibleError} from '@fluxer/errors/src/domains/channel/GroupDmMatureContentIneligibleError';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
@@ -37,6 +39,7 @@ export class GroupDmUpdateService {
 		icon,
 		ownerId,
 		nicks,
+		nsfw,
 		requestCache,
 	}: {
 		userId: UserID;
@@ -45,6 +48,7 @@ export class GroupDmUpdateService {
 		icon?: string | null;
 		ownerId?: UserID;
 		nicks?: Record<string, string | null> | null;
+		nsfw?: boolean;
 		requestCache: RequestCache;
 	}): Promise<Channel> {
 		const channel = await this.channelRepository.channelData.findUnique(channelId);
@@ -112,6 +116,20 @@ export class GroupDmUpdateService {
 				}
 				updates.nicks = updatedNicknames.size > 0 ? (updatedNicknames as Map<string, string>) : null;
 			}
+		}
+		if (nsfw !== undefined && nsfw !== channel.isNsfw) {
+			if (channel.ownerId !== userId) {
+				throw new MissingPermissionsError();
+			}
+			if (nsfw) {
+				const recipients = await Promise.all(
+					Array.from(channel.recipientIds).map((id) => this.userRepository.findUnique(id)),
+				);
+				if (recipients.some((recipient) => !recipient || !canUserAccessNsfwContent(recipient))) {
+					throw new GroupDmMatureContentIneligibleError();
+				}
+			}
+			updates.nsfw = nsfw;
 		}
 		let iconHash: string | null = null;
 		if (icon !== undefined) {

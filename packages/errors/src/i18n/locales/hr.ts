@@ -164,6 +164,7 @@ const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Zajednice za otkrivanje moraju imati barem nisku razinu provjere.",
 	"channels_and_guilds.follow_target_content_warning_required": "Ažuriranja iz kanala s upozorenjem o sadržaju mogu ići samo u kanal s upozorenjem o sadržaju ili dobnim ograničenjem.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Ažuriranja iz dobno ograničenog kanala mogu ići samo u dobno ograničen kanal.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Ne ispunjavaju svi u ovoj grupi uvjete za sadržaj za odrasle.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Jedan ili više odabranih korisnika ne može se dodati u ovu grupnu izravnu poruku.",
 	"channels_and_guilds.guild_banner_requires_feature": "Banner zajednice zahtijeva značajku BANNER.",
 	"channels_and_guilds.guild_creation_permission_required": "Nemaš dopuštenje za stvaranje zajednica na ovoj instanci. Javi se administratoru instance da zatražiš pristup.",

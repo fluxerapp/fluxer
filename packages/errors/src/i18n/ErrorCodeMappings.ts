@@ -197,6 +197,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.MAX_FAVORITE_MEMES]: 'media_and_memes.max_favorite_memes_reached',
 	[APIErrorCodes.MAX_FRIENDS]: 'misc_limits.max_friends_reached',
 	[APIErrorCodes.GROUP_DM_RECIPIENTS_NOT_ADDABLE]: 'channels_and_guilds.group_dm_recipients_not_addable',
+	[APIErrorCodes.GROUP_DM_MATURE_CONTENT_INELIGIBLE]: 'channels_and_guilds.group_dm_mature_content_ineligible',
 	[APIErrorCodes.MAX_GROUP_DM_RECIPIENTS]: 'channels_and_guilds.max_group_dm_recipients_reached',
 	[APIErrorCodes.MAX_GROUP_DMS]: 'channels_and_guilds.max_group_dms_reached',
 	[APIErrorCodes.MAX_GUILD_CHANNELS]: 'channels_and_guilds.max_guild_channels_reached',

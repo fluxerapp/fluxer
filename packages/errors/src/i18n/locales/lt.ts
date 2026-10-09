@@ -164,6 +164,7 @@ const ERROR_I18N_LT_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Atradimo sąraše rodomų bendruomenių patvirtinimo lygis turi būti bent žemas.",
 	"channels_and_guilds.follow_target_content_warning_required": "Atnaujinimai iš kanalo su turinio įspėjimu gali būti siunčiami tik į kanalą su turinio įspėjimu arba amžiaus apribojimu.",
 	"channels_and_guilds.follow_target_not_age_restricted": "Atnaujinimai iš kanalo su amžiaus apribojimu gali būti siunčiami tik į kanalą su amžiaus apribojimu.",
+	"channels_and_guilds.group_dm_mature_content_ineligible": "Ne visi šios grupės nariai atitinka suaugusiesiems skirto turinio sąlygas.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Vieno ar daugiau pasirinktų naudotojų negalima pridėti prie šios grupės DM.",
 	"channels_and_guilds.guild_banner_requires_feature": "Bendruomenės baneriui reikalinga BANNER funkcija.",
 	"channels_and_guilds.guild_creation_permission_required": "Neturi leidimo kurti bendruomenių šioje instancijoje. Norėdamas gauti prieigą, susisiek su instancijos administratoriumi.",

@@ -490,6 +490,10 @@ Your IP address {ipAddress} has been temporarily blocked from the {product_name}
 
 Gone
 
+### `GROUP_DM_MATURE_CONTENT_INELIGIBLE`
+
+Not everyone in this group is eligible for mature content
+
 ### `GROUP_DM_RECIPIENTS_NOT_ADDABLE`
 
 One or more selected users can't be added to this group DM
