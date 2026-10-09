@@ -374,6 +374,7 @@ export const EditGroupBottomSheet: React.FC<EditGroupBottomSheetProps> = observe
 											data-flx="channel.edit-group-bottom-sheet.group-mature-content-switch.change"
 										/>
 									)}
+									data-flx="channel.edit-group-bottom-sheet.controller"
 								/>
 							)}
 							<div className={styles.footer} data-flx="channel.edit-group-bottom-sheet.footer">

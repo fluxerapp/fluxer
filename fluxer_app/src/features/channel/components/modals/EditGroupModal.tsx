@@ -333,6 +333,7 @@ export const EditGroupModal = observer(({channelId}: {channelId: string}) => {
 										data-flx="channel.edit-group-modal.group-mature-content-switch.change"
 									/>
 								)}
+								data-flx="channel.edit-group-modal.controller"
 							/>
 						)}
 					</Modal.ContentLayout>
