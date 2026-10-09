@@ -45,7 +45,6 @@ const CONTENT_I18N_HI_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "बाल यौन शोषण की असली या AI से बनाई गई तस्वीरें या वीडियो",
 	"report_flow.label.discovery_listing": "डिस्कवरी लिस्टिंग",
 	"report_flow.label.dislike": "यह बस मेरे लिए नहीं है",
-	"report_flow.label.dsa": "यूरोपीय संघ में गैर-कानूनी सामग्री (डिजिटल सेवा अधिनियम)",
 	"report_flow.label.eating_disorder_promotion": "खाने संबंधी विकार वाली आदतों को बढ़ावा देना",
 	"report_flow.label.eating_disorder_promotion_profile": "उनकी प्रोफ़ाइल खाने संबंधी विकारों को बढ़ावा देती है",
 	"report_flow.label.email": "ईमेल पता",

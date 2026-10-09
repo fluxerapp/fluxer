@@ -45,7 +45,6 @@ const CONTENT_I18N_ID_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "Gambar atau video kekerasan seksual terhadap anak, baik yang asli maupun buatan AI",
 	"report_flow.label.discovery_listing": "Listing di Discovery",
 	"report_flow.label.dislike": "Ini tidak cocok untuk saya",
-	"report_flow.label.dsa": "Konten yang ilegal di UE (Undang-Undang Layanan Digital/DSA)",
 	"report_flow.label.eating_disorder_promotion": "Mendorong perilaku makan yang terganggu",
 	"report_flow.label.eating_disorder_promotion_profile": "Profil mereka mempromosikan gangguan makan",
 	"report_flow.label.email": "Alamat email",

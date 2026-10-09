@@ -45,7 +45,6 @@ const CONTENT_I18N_LT_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "Tikri ar dirbtinio intelekto sukurti vaikų seksualinės prievartos vaizdai ar vaizdo įrašai",
 	"report_flow.label.discovery_listing": "Atradimo sąrašas",
 	"report_flow.label.dislike": "Tai tiesiog ne man",
-	"report_flow.label.dsa": "Turinys, kuris neteisėtas ES (Skaitmeninių paslaugų aktas)",
 	"report_flow.label.eating_disorder_promotion": "Sutrikusių mitybos įpročių skatinimas",
 	"report_flow.label.eating_disorder_promotion_profile": "Jų profilis propaguoja valgymo sutrikimus",
 	"report_flow.label.email": "El. pašto adresas",

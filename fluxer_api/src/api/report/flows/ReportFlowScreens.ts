@@ -6,7 +6,7 @@ import type {ReportFlowSurface} from '@fluxer/schema/src/domains/report/ReportFl
 
 export type ReportFlowCopyKey = Extract<ContentI18nKey, `report_flow.${string}`>;
 
-export type ReportFlowLinkId = 'dsa' | 'copyright' | 'crisis_lines' | 'guidelines';
+export type ReportFlowLinkId = 'copyright' | 'crisis_lines' | 'guidelines';
 
 export type ReportFlowOutcomeDef =
 	| {type: 'screen'; screenId: string}
@@ -110,7 +110,6 @@ export const REPORT_FLOW_SCREENS: ReadonlyArray<ReportFlowScreenDef> = [
 				outcome: {type: 'screen', screenId: 'something_else_message'},
 			},
 			{id: 'dislike', label: 'report_flow.label.dislike', outcome: {type: 'end'}, surface: 'in_app'},
-			{id: 'dsa', label: 'report_flow.label.dsa', outcome: {type: 'link', link: 'dsa'}, surface: 'in_app'},
 		],
 	},
 	{
@@ -521,7 +520,6 @@ export const REPORT_FLOW_SCREENS: ReadonlyArray<ReportFlowScreenDef> = [
 				label: 'report_flow.label.something_else',
 				outcome: {type: 'screen', screenId: 'something_else_user'},
 			},
-			{id: 'dsa', label: 'report_flow.label.dsa', outcome: {type: 'link', link: 'dsa'}, surface: 'in_app'},
 		],
 	},
 	{

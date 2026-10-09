@@ -45,7 +45,6 @@ const CONTENT_I18N_TH_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "ภาพหรือวิดีโอการล่วงละเมิดทางเพศเด็ก ไม่ว่าจะเป็นของจริงหรือสร้างโดย AI",
 	"report_flow.label.discovery_listing": "รายการใน Discovery",
 	"report_flow.label.dislike": "ไม่เหมาะกับฉัน",
-	"report_flow.label.dsa": "เนื้อหาที่ผิดกฎหมายในสหภาพยุโรป (กฎหมายบริการดิจิทัล หรือ DSA)",
 	"report_flow.label.eating_disorder_promotion": "ส่งเสริมพฤติกรรมการกินที่ผิดปกติ",
 	"report_flow.label.eating_disorder_promotion_profile": "โปรไฟล์ของพวกเขาส่งเสริมความผิดปกติในการกิน",
 	"report_flow.label.email": "ที่อยู่อีเมล",

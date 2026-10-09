@@ -45,7 +45,6 @@ const CONTENT_I18N_VI_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "Ảnh hoặc video lạm dụng tình dục trẻ em, dù là thật hay do AI tạo ra",
 	"report_flow.label.discovery_listing": "Danh sách khám phá",
 	"report_flow.label.dislike": "Không hợp với tôi",
-	"report_flow.label.dsa": "Nội dung bất hợp pháp tại EU (Đạo luật Dịch vụ Kỹ thuật số)",
 	"report_flow.label.eating_disorder_promotion": "Khuyến khích chứng rối loạn ăn uống",
 	"report_flow.label.eating_disorder_promotion_profile": "Hồ sơ của họ quảng bá chứng rối loạn ăn uống",
 	"report_flow.label.email": "Địa chỉ email",

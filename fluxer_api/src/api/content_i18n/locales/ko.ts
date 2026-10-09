@@ -45,7 +45,6 @@ const CONTENT_I18N_KO_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "아동 성착취물(실제 또는 AI로 생성된 이미지 또는 동영상)",
 	"report_flow.label.discovery_listing": "디스커버리 목록",
 	"report_flow.label.dislike": "그냥 내 취향이 아닙니다",
-	"report_flow.label.dsa": "EU에서 불법인 콘텐츠(디지털 서비스법, DSA)",
 	"report_flow.label.eating_disorder_promotion": "섭식 장애 행동 조장",
 	"report_flow.label.eating_disorder_promotion_profile": "프로필에서 섭식 장애를 조장합니다",
 	"report_flow.label.email": "이메일 주소",
