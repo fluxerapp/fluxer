@@ -342,7 +342,7 @@ describe('velopack self update', () => {
 	});
 
 	selfUpdateTest('an apply that never landed falls back instead of applying it again', async ({start}) => {
-		writeFileSync(applyStatePath, JSON.stringify({version: '2026.900.0', attemptedAt: 1}));
+		writeFileSync(applyStatePath, JSON.stringify({version: '2026.900.0', attemptedAt: Date.now() - 60_000}));
 		velopack.pendingRestart = {id: 'staged', Version: '2026.900.0'};
 		const {calls, hooks} = createHooks();
 
@@ -354,6 +354,24 @@ describe('velopack self update', () => {
 		assert.deepEqual(velopack.calls, []);
 		assert.deepEqual(quits, []);
 	});
+
+	selfUpdateTest(
+		'an old apply that never landed retries from the feed instead of blocking every update',
+		async ({start, stillPending}) => {
+			writeFileSync(applyStatePath, JSON.stringify({version: '2026.900.0', attemptedAt: Date.now() - 3_600_000}));
+			velopack.pendingRestart = {id: 'staged', Version: '2026.900.0'};
+			velopack.checkResult = {id: 'v3', TargetFullRelease: {Version: '2026.950.0'}};
+			const {hooks} = createHooks();
+
+			assert.equal(await stillPending(start('velopack', hooks)), true);
+			assert.deepEqual(velopack.calls, [
+				'checkForUpdatesAsync',
+				'downloadUpdateAsync',
+				'waitExitThenApplyUpdate:v3:true:true',
+			]);
+			assert.equal(JSON.parse(readFileSync(applyStatePath, 'utf8')).version, '2026.950.0');
+		},
+	);
 
 	selfUpdateTest('an apply that landed is forgotten and the next one is recorded', async ({start, stillPending}) => {
 		writeFileSync(applyStatePath, JSON.stringify({version: '2026.800.0', attemptedAt: 1}));
