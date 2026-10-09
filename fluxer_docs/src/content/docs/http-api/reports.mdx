@@ -84,9 +84,9 @@ An option's [outcome](#report-flow-outcome-object) says what choosing it does. A
 
 A flow has up to two variants, one for each [surface](#report-flow-surfaces). `in_app` is the variant a signed-in client shows. `dsa` is the variant the public Digital Services Act form shows before it calls [Create DSA report](#create-dsa-report).
 
-The two variants share their screens and differ in a few options. Only `in_app` has the options that end on the thank-you screen without a report, the options for a reporter worried about someone's safety, and the links to the Digital Services Act form, its copyright option among them. Its user flow also starts with an info screen. On `dsa` the copyright option files a report instead. The `guild` flow exists on the `dsa` surface alone.
+The two variants share their screens and differ in a few options. Only `in_app` has the options that end on the thank-you screen without a report, the options for a reporter worried about someone's safety, and a copyright option that links to the copyright help page. Its user flow also starts with an info screen. On `dsa` the copyright option files a report instead. The `guild` flow exists on the `dsa` surface alone.
 
-A self-hosted instance drops the links to the Digital Services Act form. It keeps the crisis line, and keeps the guidelines links only when its operator has set a [guidelines URL](/http-api/instance/#public-legal-configuration-object). Without one its flow has a null `guidelines_url`. Its `in_app` revision hashes therefore differ from those of the hosted instance, and differ again between a self-hosted instance with a guidelines URL and one without. Its `dsa` revision hashes match the hosted ones.
+A self-hosted instance drops the copyright link. It keeps the crisis line, and keeps the guidelines links only when its operator has set a [guidelines URL](/http-api/instance/#public-legal-configuration-object). Without one its flow has a null `guidelines_url`. Its `in_app` revision hashes therefore differ from those of the hosted instance, and differ again between a self-hosted instance with a guidelines URL and one without. Its `dsa` revision hashes match the hosted ones.
 
 ### Walking a flow
 

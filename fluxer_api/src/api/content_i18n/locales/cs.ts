@@ -45,7 +45,6 @@ const CONTENT_I18N_CS_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "Skutečné nebo pomocí AI vytvořené obrázky či videa sexuálního zneužívání dětí",
 	"report_flow.label.discovery_listing": "Záznam v seznamu objevování",
 	"report_flow.label.dislike": "Prostě to není pro mě",
-	"report_flow.label.dsa": "Obsah, který je v EU nelegální (akt o digitálních službách)",
 	"report_flow.label.eating_disorder_promotion": "Nabádání k poruchám příjmu potravy",
 	"report_flow.label.eating_disorder_promotion_profile": "Jejich profil propaguje poruchy příjmu potravy",
 	"report_flow.label.email": "E-mailová adresa",

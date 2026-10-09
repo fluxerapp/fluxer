@@ -45,7 +45,6 @@ const CONTENT_I18N_AR_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "صور أو مقاطع فيديو حقيقية أو مولدة بالذكاء الاصطناعي تُظهر اعتداءً جنسيًا على الأطفال",
 	"report_flow.label.discovery_listing": "قائمة الاكتشاف",
 	"report_flow.label.dislike": "هذا ببساطة لا يناسبني",
-	"report_flow.label.dsa": "محتوى غير قانوني في الاتحاد الأوروبي (قانون الخدمات الرقمية)",
 	"report_flow.label.eating_disorder_promotion": "تشجيع سلوكيات الأكل المضطربة",
 	"report_flow.label.eating_disorder_promotion_profile": "ملفهم الشخصي يروج لاضطرابات الأكل",
 	"report_flow.label.email": "عنوان البريد الإلكتروني",

@@ -45,7 +45,6 @@ const CONTENT_I18N_HU_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "Gyermekek szexuális bántalmazását ábrázoló valódi vagy mesterséges intelligencia által generált képek vagy videók",
 	"report_flow.label.discovery_listing": "Listázás a Felfedezésben",
 	"report_flow.label.dislike": "Egyszerűen nem nekem való",
-	"report_flow.label.dsa": "Az EU-ban illegális tartalom (digitális szolgáltatásokról szóló rendelet, DSA)",
 	"report_flow.label.eating_disorder_promotion": "Kóros étkezési szokásokra buzdítás",
 	"report_flow.label.eating_disorder_promotion_profile": "A profilja evészavarokat népszerűsít",
 	"report_flow.label.email": "E-mail-cím",

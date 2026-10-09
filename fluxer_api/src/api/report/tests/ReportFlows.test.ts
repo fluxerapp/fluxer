@@ -428,11 +428,12 @@ describe('Report flows', () => {
 				.get('/reports/flows/message?surface=dsa')
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			const appOnly = ['dislike', 'rude_language', 'dsa', 'copyright', 'worried_self_harm', 'worried_suicide'];
+			const appOnly = ['dislike', 'rude_language', 'copyright', 'worried_self_harm', 'worried_suicide'];
 			for (const id of appOnly) {
 				expect(optionIds(inApp), id).toContain(id);
 				expect(optionIds(dsa), id).not.toContain(id);
 			}
+			expect(optionIds(inApp)).not.toContain('dsa');
 			expect(optionIds(inApp)).not.toContain('copyright_notice');
 			expect(optionIds(dsa)).toContain('copyright_notice');
 			expect(dsa.revision_hash).not.toBe(inApp.revision_hash);

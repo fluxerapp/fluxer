@@ -121,7 +121,6 @@
 		"message/private_info/threat_to_share": "item",
 		"message/root_message/abuse": "screen:abuse",
 		"message/root_message/dislike": "end",
-		"message/root_message/dsa": "link:dsa",
 		"message/root_message/private_info": "screen:private_info",
 		"message/root_message/something_else": "screen:something_else_message",
 		"message/root_message/spam": "submit:spam",
@@ -215,7 +214,6 @@
 		"user/profile_threat/violence_incitement": "submit:violence_incitement",
 		"user/profile_threat/violent_threat": "submit:violent_threat",
 		"user/root_user/abuse": "screen:profile_abuse",
-		"user/root_user/dsa": "link:dsa",
 		"user/root_user/hate_violence": "screen:profile_hate_violence",
 		"user/root_user/impersonation": "screen:impersonation",
 		"user/root_user/something_else": "screen:something_else_user",
@@ -242,6 +240,8 @@
 		"user/spam_profile/spam_profile": "submit:spam"
 	},
 	"retired": {
-		"message/something_else_message/violence_misinfo": "screen:violence_misinfo"
+		"message/root_message/dsa": "link:dsa",
+		"message/something_else_message/violence_misinfo": "screen:violence_misinfo",
+		"user/root_user/dsa": "link:dsa"
 	}
 }

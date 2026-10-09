@@ -45,7 +45,6 @@ const CONTENT_I18N_HR_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "Stvarne ili AI-generirane slike ili videozapisi seksualnog zlostavljanja djece",
 	"report_flow.label.discovery_listing": "Unos u Otkrivanju",
 	"report_flow.label.dislike": "Jednostavno mi ne odgovara",
-	"report_flow.label.dsa": "Sadržaj koji je nezakonit u EU-u (Akt o digitalnim uslugama)",
 	"report_flow.label.eating_disorder_promotion": "Poticanje poremećaja hranjenja",
 	"report_flow.label.eating_disorder_promotion_profile": "Njihov profil promiče poremećaje hranjenja",
 	"report_flow.label.email": "Adresa e-pošte",

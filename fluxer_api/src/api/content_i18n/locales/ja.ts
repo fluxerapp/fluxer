@@ -45,7 +45,6 @@ const CONTENT_I18N_JA_MESSAGES = defineContentI18nLocaleMessages({
 	"report_flow.label.csam": "児童性的虐待の画像・動画（実在のもの、またはAI生成のもの）",
 	"report_flow.label.discovery_listing": "「見つける」の掲載内容",
 	"report_flow.label.dislike": "自分には合わない",
-	"report_flow.label.dsa": "EUで違法なコンテンツ（デジタルサービス法、DSA）",
 	"report_flow.label.eating_disorder_promotion": "摂食障害的な食行動を促している",
 	"report_flow.label.eating_disorder_promotion_profile": "プロフィールが摂食障害を助長している",
 	"report_flow.label.email": "メールアドレス",

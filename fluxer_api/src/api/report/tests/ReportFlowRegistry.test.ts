@@ -248,7 +248,7 @@ describe('report flow definitions', () => {
 		expect(() => assertValidReportFlowLibrary(broken)).toThrow(/missing_screen is not defined/);
 	});
 
-	test('a no-report or DSA option that is not limited to the app throws', () => {
+	test('a no-report option that is not limited to the app throws', () => {
 		const unlimitedDislike = editScreen(REPORT_FLOW_LIBRARY, 'root_message', (screen) => ({
 			...screen,
 			options: screen.options?.map((option) =>
@@ -256,11 +256,6 @@ describe('report flow definitions', () => {
 			),
 		}));
 		expect(() => assertValidReportFlowLibrary(unlimitedDislike)).toThrow(/limited to in_app/);
-		const unlimitedDsaRow = editScreen(REPORT_FLOW_LIBRARY, 'root_user', (screen) => ({
-			...screen,
-			options: screen.options?.map((option) => (option.id === 'dsa' ? {...option, surface: undefined} : option)),
-		}));
-		expect(() => assertValidReportFlowLibrary(unlimitedDsaRow)).toThrow(/limited to in_app/);
 	});
 
 	test('other broken definitions throw', () => {
@@ -883,7 +878,6 @@ describe('report flow rendering', () => {
 			'spam',
 			'something_else',
 			'dislike',
-			'dsa',
 		]);
 		expect(root.options[5].outcome).toEqual({type: 'end', screen_id: null, reason: null, notice_id: null, url: null});
 		expect(root.options[3].outcome).toEqual({
@@ -893,7 +887,6 @@ describe('report flow rendering', () => {
 			notice_id: null,
 			url: null,
 		});
-		expect(root.options[6].outcome.url).toBe(`${config.endpoints.webApp}/report`);
 		const copyright = message.screens
 			.find((screen) => screen.id === 'something_else_message')!
 			.options.find((option) => option.id === 'copyright');
@@ -902,7 +895,7 @@ describe('report flow rendering', () => {
 			screen_id: null,
 			reason: null,
 			notice_id: null,
-			url: `${config.endpoints.webApp}/report?option=copyright_notice`,
+			url: 'https://fluxer.app/help/copyright',
 		});
 		expect(root.checklist).toBeNull();
 		expect(root.next_screen_id).toBeNull();
@@ -920,6 +913,9 @@ describe('report flow rendering', () => {
 		expect(sexual.options[0].id).toBe('minor_sexual');
 		const user = getReportFlowResponse('user', 'in_app', 'en-US');
 		expect(user.guidelines_url).toBe(`${config.endpoints.marketing}/guidelines`);
+		expect(user.screens.find((screen) => screen.id === 'root_user')?.options.map((option) => option.id)).not.toContain(
+			'dsa',
+		);
 		const intro = user.screens[0];
 		expect(intro.next_screen_id).toBe('profile_parts');
 		expect(intro.options_heading).toBe('Learn more');
@@ -984,8 +980,8 @@ describe('report flow rendering', () => {
 		);
 	});
 
-	test('the in-app copyright rows open the DSA form on the copyright notice', () => {
-		const url = `${getConfig().endpoints.webApp}/report?option=copyright_notice`;
+	test('the in-app copyright rows open the copyright help page', () => {
+		const url = 'https://fluxer.app/help/copyright';
 		const copyrightUrl = (target: ReportFlowTargetType, screenId: string) =>
 			getReportFlowResponse(target, 'in_app', 'en-US')
 				.screens.find((screen) => screen.id === screenId)
@@ -1031,7 +1027,7 @@ describe('report flow rendering', () => {
 		).not.toMatch(dsaNames);
 	});
 
-	test('self-hosted instances get no guidelines, DSA or copyright link rows', () => {
+	test('self-hosted instances get no guidelines or copyright link rows', () => {
 		const hostedUser = getReportFlowResponse('user', 'in_app', 'en-US');
 		getConfig().instance.selfHosted = true;
 		const user = getReportFlowResponse('user', 'in_app', 'en-US');
@@ -1042,7 +1038,6 @@ describe('report flow rendering', () => {
 		expect(intro.options_heading).toBeNull();
 		expect(intro.next_screen_id).toBe('profile_parts');
 		const userScreens = new Map(user.screens.map((screen) => [screen.id, screen]));
-		expect(userScreens.get('root_user')?.options.map((option) => option.id)).not.toContain('dsa');
 		expect(userScreens.get('something_else_user')?.options.map((option) => option.id)).not.toContain('copyright');
 		const message = getReportFlowResponse('message', 'in_app', 'en-US');
 		for (const screen of message.screens) {
@@ -1051,7 +1046,6 @@ describe('report flow rendering', () => {
 			}
 		}
 		const messageScreens = new Map(message.screens.map((screen) => [screen.id, screen]));
-		expect(messageScreens.get('root_message')?.options.map((option) => option.id)).not.toContain('dsa');
 		expect(messageScreens.get('something_else_message')?.options.map((option) => option.id)).not.toContain('copyright');
 		const messageDsa = getReportFlowResponse('message', 'dsa', 'en-US');
 		expect(
