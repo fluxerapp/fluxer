@@ -41895,3 +41895,31 @@ msgstr "目前"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "花點時間檢查誰可以傳送訊息給你。除非你選擇更改，否則一切都不會改變。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "任何人找到你都可以傳送要求。關閉此選項即可選擇下方的群組。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "之後加入的社群機器人將套用此設定。你也可以為每個社群個別變更。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "將套用到您之後加入的所有社群。您也可以為每個社群個別變更。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "選擇誰可以向您傳送好友邀請。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "好友隨時都能傳訊息給你。這些設定適用於你僅與其共享社群的人員和機器人。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "與您共享社群的人。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "與您至少有一位朋友的用戶。"

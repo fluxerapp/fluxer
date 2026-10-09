@@ -41895,3 +41895,31 @@ msgstr "Şu anda"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Kimlerin size mesaj gönderebileceğini gözden geçirin. Siz seçmediğiniz sürece hiçbir şey değişmez."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Seni bulan herkes istek gönderebilir. Aşağıdaki grupları seçmek için bunu kapat."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Katıldığın topluluklardaki botlar için geçerlidir. Her topluluk için ayrıca değiştirebilirsin."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Bundan sonra katılacağın topluluklar için geçerlidir. Her topluluk için de değiştirebilirsin."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Arkadaşlık isteği gönderebilecek kişileri seçin."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Arkadaşların sana her zaman mesaj gönderebilir. Bu ayarlar, yalnızca bir topluluğu paylaştığın kişiler ve botlar için geçerlidir."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Seninle aynı topluluğu paylaşan kişiler."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Sizinle en az bir arkadaşı ortak olan kişiler."

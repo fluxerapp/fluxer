@@ -41895,3 +41895,31 @@ msgstr "في الوقت الحالي"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "خذ لحظة للتحقق من يمكنه مراسلتك. لن يتغير شيء ما لم تختر ذلك."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "يمكن لأي شخص يعثر عليك إرسال طلب. قم بإيقاف تشغيل هذا لاختيار المجموعات أدناه."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "ينطبق على البوتات في المجتمعات التي تنضم إليها من الآن فصاعدًا. يمكنك أيضًا تغييره لكل مجتمع."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "ينطبق على المجتمعات التي تنضم إليها من الآن فصاعدًا. يمكنك أيضًا تغييره لكل مجتمع."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "اختر من يمكنه إرسال طلب صداقة إليك."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "يمكن للأصدقاء دائمًا مراسلتك. تغطي هذه الإعدادات الأشخاص والروبوتات الذين تشارك معهم مجتمعًا فقط."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "الأشخاص الذين يشاركونك مجتمعًا."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "الأشخاص الذين لديهم صديق مشترك واحد على الأقل معك."

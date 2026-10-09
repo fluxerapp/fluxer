@@ -41895,3 +41895,31 @@ msgstr "В момента"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Отделете момент, за да проверите кой може да ви пише. Нищо няма да се промени, освен ако вие не решите."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Всеки, който ви намери, може да изпрати заявка. Изключете това, за да изберете групи по-долу."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Прилага се за ботове в общности, към които се присъединявате отсега нататък. Можете също да го променяте за всяка общност."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Прилага се за общности, към които се присъединявате отсега нататък. Можете също да го променяте за всяка общност."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Изберете кой може да ви изпраща заявка за приятелство."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Приятели винаги могат да ти пишат. Тези настройки се отнасят за хора и ботове, с които споделяш само общност."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Хора, които споделят общност с вас."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Хора, които споделят поне един приятел с вас."

@@ -41895,3 +41895,31 @@ msgstr "Saat ini"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Luangkan waktu sejenak untuk memeriksa siapa saja yang dapat mengirim pesan kepada Anda. Tidak ada yang berubah kecuali Anda memilihnya."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Siapa pun yang menemukan Anda dapat mengirim permintaan. Matikan ini untuk memilih grup di bawah."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Berlaku untuk bot di komunitas yang Anda ikuti mulai sekarang. Anda juga dapat mengubahnya untuk setiap komunitas."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Berlaku untuk komunitas yang Anda ikuti mulai sekarang. Anda juga dapat mengubahnya untuk setiap komunitas."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Pilih siapa yang dapat mengirimi Anda permintaan pertemanan."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Teman selalu dapat mengirim pesan kepada Anda. Pengaturan ini mencakup orang dan bot yang hanya Anda bagikan komunitasnya."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Orang-orang yang berbagi komunitas dengan Anda."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Orang yang memiliki setidaknya satu teman dengan Anda."

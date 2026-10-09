@@ -41896,3 +41896,31 @@ msgstr "Op dit moment"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Neem even de tijd om te controleren wie je een bericht kan sturen. Niets verandert, tenzij jij dat wilt."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Iedereen die je vindt, kan een verzoek sturen. Schakel dit uit om groepen hieronder te kiezen."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Is van toepassing op bots in communities die je vanaf nu toevoegt. Je kunt dit ook per community aanpassen."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Is van toepassing op communities die je vanaf nu lid van wordt. Je kunt het ook per community aanpassen."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Kies wie je een vriendschapsverzoek kan sturen."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Vrienden kunnen je altijd berichten sturen. Deze instellingen gelden voor mensen en bots met wie je alleen een community deelt."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Mensen die een community met je delen."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Mensen die minstens één vriend met je delen."

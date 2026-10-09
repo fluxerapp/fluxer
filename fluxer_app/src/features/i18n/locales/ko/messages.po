@@ -41895,3 +41895,31 @@ msgstr "지금"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "메시지를 보낼 수 있는 사람을 확인해 보세요. 원치 않으시면 아무것도 변경되지 않습니다."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "찾는 사람이 요청을 보낼 수 있습니다. 아래 그룹을 선택하려면 이 기능을 끄세요."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "앞으로 참여하는 커뮤니티의 봇에 적용됩니다. 각 커뮤니티별로 변경할 수도 있습니다."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "앞으로 가입하는 커뮤니티에 적용됩니다. 각 커뮤니티별로 변경할 수도 있습니다."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "누가 친구 요청을 보낼 수 있는지 선택하세요."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "친구는 항상 메시지를 보낼 수 있습니다. 이 설정은 커뮤니티만 공유하는 사람 및 봇에 적용됩니다."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "커뮤니티를 함께 사용하는 사람들"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "나와 친구가 한 명 이상 겹치는 사람"

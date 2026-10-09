@@ -277,16 +277,19 @@ export const ConnectionsTabContent: React.FC = observer(() => {
 		<>
 			<SettingsTabSection
 				title={<Trans>Friend requests</Trans>}
+				description={<Trans>Choose who can send you a friend request.</Trans>}
 				data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.settings-tab-section"
 			>
 				<Switch
 					label={<Trans>Everyone</Trans>}
+					description={<Trans>Anyone who finds you can send a request. Turn this off to pick groups below.</Trans>}
 					value={hasFriendFlag(FriendSourceFlags.NO_RELATION)}
 					onChange={(value) => handleFriendRequestToggle(FriendSourceFlags.NO_RELATION, value)}
 					data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.switch.friend-request-toggle"
 				/>
 				<Switch
 					label={i18n._(FRIENDS_OF_FRIENDS_DESCRIPTOR)}
+					description={<Trans>People who share at least one friend with you.</Trans>}
 					value={everyoneEnabled || hasFriendFlag(FriendSourceFlags.MUTUAL_FRIENDS)}
 					onChange={(value) => handleFriendRequestToggle(FriendSourceFlags.MUTUAL_FRIENDS, value)}
 					disabled={everyoneEnabled}
@@ -294,6 +297,7 @@ export const ConnectionsTabContent: React.FC = observer(() => {
 				/>
 				<Switch
 					label={i18n._(COMMUNITY_MEMBERS_DESCRIPTOR)}
+					description={<Trans>People who share a community with you.</Trans>}
 					value={everyoneEnabled || hasFriendFlag(FriendSourceFlags.MUTUAL_GUILDS)}
 					onChange={(value) => handleFriendRequestToggle(FriendSourceFlags.MUTUAL_GUILDS, value)}
 					disabled={everyoneEnabled}
@@ -303,16 +307,29 @@ export const ConnectionsTabContent: React.FC = observer(() => {
 			<PrivacyReviewAlert data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.privacy-review-alert" />
 			<SettingsTabSection
 				title={<Trans>Direct messages</Trans>}
+				description={
+					<Trans>
+						Friends can always message you. These settings cover people and bots you only share a community with.
+					</Trans>
+				}
 				data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.settings-tab-section--2"
 			>
 				<Switch
 					label={<Trans>Allow direct messages from community members</Trans>}
+					description={
+						<Trans>Applies to communities you join from now on. You can also change it for each community.</Trans>
+					}
 					value={!defaultGuildsRestricted}
 					onChange={handleDirectMessagesToggle}
 					data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.switch.direct-messages-toggle"
 				/>
 				<Switch
 					label={<Trans>Allow direct messages from community bots</Trans>}
+					description={
+						<Trans>
+							Applies to bots in communities you join from now on. You can also change it for each community.
+						</Trans>
+					}
 					value={!botDefaultGuildsRestricted}
 					onChange={handleBotDirectMessagesToggle}
 					data-flx="user.privacy-safety-tab.connections-tab.connections-tab-content.switch.bot-direct-messages-toggle"

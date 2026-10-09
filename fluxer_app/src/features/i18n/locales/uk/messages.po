@@ -41895,3 +41895,31 @@ msgstr "Зараз"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Приділіть хвилину, щоб перевірити, хто може вам писати. Нічого не зміниться, доки ви самі цього не захочете."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Будь-хто, хто вас знайде, може надіслати запит. Вимкніть це, щоб вибрати групи нижче."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Застосовується до ботів у спільнотах, до яких ви приєднаєтеся відтепер. Ви також можете змінити це для кожної спільноти."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Застосовується до спільнот, до яких ви приєднуєтеся відтепер. Ви також можете змінити це для кожної спільноти."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Виберіть, хто може надсилати вам запит на додавання в друзі."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Друзі завжди можуть вам писати. Ці налаштування стосуються людей і ботів, з якими ви ділите лише спільноту."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Люди, які мають спільну спільноту з вами."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Люди, у яких є принаймні один спільний друг з вами."

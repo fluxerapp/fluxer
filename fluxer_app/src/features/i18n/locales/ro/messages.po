@@ -41895,3 +41895,31 @@ msgstr "În acest moment"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Acordă-ți un moment să verifici cine te poate contacta. Nimic nu se schimbă decât dacă alegi tu."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Oricine te găsește îți poate trimite o cerere. Dezactivează această opțiune pentru a alege grupuri mai jos."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Se aplică roboților din comunitățile la care te alături de acum înainte. Poți, de asemenea, să o modifici pentru fiecare comunitate."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Se aplică comunităților pe care le vei alătura de acum înainte. Poți să o schimbi și pentru fiecare comunitate în parte."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Alege cine îți poate trimite o cerere de prietenie."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Prietenii îți pot trimite oricând mesaje. Aceste setări acoperă persoanele și boții cu care împarți doar o comunitate."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Persoane care au o comunitate în comun cu tine."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Persoane care au cel puțin un prieten comun cu tine."

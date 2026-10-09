@@ -41895,3 +41895,31 @@ msgstr "Akkurat nå"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Ta deg tid til å sjekke hvem som kan sende deg meldinger. Ingenting endres med mindre du velger det."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Alle som finner deg kan sende en forespørsel. Skru av dette for å velge grupper nedenfor."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Gjelder for boter i fellesskap du blir med i fra nå av. Du kan også endre det for hvert fellesskap."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Gjelder for communities du blir med i heretter. Du kan også endre det for hver community."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Velg hvem som kan sende deg en venneforespørsel."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Venner kan alltid sende deg meldinger. Disse innstillingene gjelder personer og roboter du bare deler et fellesskap med."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Folk som deler et fellesskap med deg."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Folk som deler minst én venn med deg."

@@ -41895,3 +41895,31 @@ msgstr "Jelenleg"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Szánj egy percet annak ellenőrzésére, hogy ki üzenhet neked. Semmi sem változik, hacsak nem te magad döntesz így."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Bárki, aki megtalál, kérhet. Kapcsold ki ezt, hogy kiválaszd az alábbi csoportokat."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "A jövőben csatlakozott közösségek botjaira vonatkozik. Minden közösségre külön is módosíthatod."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "A jövőben csatlakozott közösségekre vonatkozik. Minden közösségre külön is módosíthatod."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Válaszd ki, ki küldhet neked ismerősnek jelölést."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "A barátok mindig üzenhetnek neked. Ezek a beállítások azokra az emberekre és botokra vonatkoznak, akikkel csak egy közösséget osztasz meg."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Azok az emberek, akikkel közös közösségben vagy."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Olyan emberek, akiknek legalább egy közös ismerősük van veled."

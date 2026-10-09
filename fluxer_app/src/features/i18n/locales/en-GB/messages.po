@@ -41933,3 +41933,38 @@ msgstr "Right now"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Take a moment to check who can message you. Nothing changes unless you choose to."
+
+# auto-i18n: reviewed unchanged
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Anyone who finds you can send a request. Turn this off to pick groups below."
+
+# auto-i18n: reviewed unchanged
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Applies to bots in communities you join from now on. You can also change it for each community."
+
+# auto-i18n: reviewed unchanged
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Applies to communities you join from now on. You can also change it for each community."
+
+# auto-i18n: reviewed unchanged
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Choose who can send you a friend request."
+
+# auto-i18n: reviewed unchanged
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Friends can always message you. These settings cover people and bots you only share a community with."
+
+# auto-i18n: reviewed unchanged
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "People who share a community with you."
+
+# auto-i18n: reviewed unchanged
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "People who share at least one friend with you."

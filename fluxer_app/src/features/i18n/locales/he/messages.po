@@ -41895,3 +41895,31 @@ msgstr "כרגע"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "קח רגע לבדוק מי יכול לשלוח לך הודעות. שום דבר לא ישתנה אלא אם תבחר בכך."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "כל מי שימצא אותך יוכל לשלוח בקשה. כבה זאת כדי לבחור קבוצות למטה."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "יחול על בוטים בקהילות שתצטרפו אליהן מעתה ואילך. אפשר גם לשנות זאת עבור כל קהילה."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "חָל על קהילות שתצטרפו אליהן מעתה ואילך. אפשר גם לשנות זאת עבור כל קהילה בנפרד."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "בחר מי יכול לשלוח לך בקשת חבר."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "חברים תמיד יכולים לשלוח לך הודעות. הגדרות אלו חלות על אנשים ובוטים שאתה חולק איתם רק קהילה."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "אנשים שחולקים קהילה איתך."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "אנשים שחולקים איתך חבר אחד לפחות."

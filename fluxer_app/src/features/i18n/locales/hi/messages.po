@@ -41895,3 +41895,31 @@ msgstr "अभी"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "एक पल लें और जांचें कि आपको कौन संदेश भेज सकता है। जब तक आप चुनते नहीं हैं, तब तक कुछ भी नहीं बदलता है।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "जो कोई भी आपको ढूंढता है, वह अनुरोध भेज सकता है। नीचे दिए गए समूहों को चुनने के लिए इसे बंद कर दें।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "अब से आपके द्वारा शामिल किए जाने वाले समुदायों में बॉट्स पर लागू होता है। आप इसे प्रत्येक समुदाय के लिए भी बदल सकते हैं।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "अब से आपके द्वारा शामिल किए जाने वाले समुदायों पर लागू होता है। आप इसे प्रत्येक समुदाय के लिए भी बदल सकते हैं।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "चुनें कि कौन आपको फ्रेंड रिक्वेस्ट भेज सकता है।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "आपके दोस्त आपको हमेशा मैसेज कर सकते हैं। ये सेटिंग्स उन लोगों और बॉट्स के लिए हैं जिनके साथ आप केवल एक कम्युनिटी शेयर करते हैं।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "जो लोग आपके साथ एक समुदाय साझा करते हैं।"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "ऐसे लोग जिनके कम से कम एक दोस्त आपके साथ साझा हो।"

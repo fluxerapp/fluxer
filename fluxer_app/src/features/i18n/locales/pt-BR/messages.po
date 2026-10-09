@@ -41895,3 +41895,31 @@ msgstr "No momento"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Reserve um momento para verificar quem pode te enviar mensagens. Nada muda a menos que você escolha."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Qualquer pessoa que te encontrar pode enviar um pedido. Desative isso para escolher os grupos abaixo."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Aplica-se a bots em comunidades que você ingressar a partir de agora. Você também pode alterá-lo para cada comunidade."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Aplica-se às comunidades que você entrar a partir de agora. Você também pode alterá-la para cada comunidade."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Escolha quem pode te enviar um pedido de amizade."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Amigos sempre podem te enviar mensagens. Estas configurações cobrem pessoas e bots com quem você compartilha apenas uma comunidade."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Pessoas que compartilham uma comunidade com você."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Pessoas que compartilham pelo menos um amigo com você."

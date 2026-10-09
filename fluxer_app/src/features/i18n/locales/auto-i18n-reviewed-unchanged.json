@@ -5385,6 +5385,27 @@
       },
       {
         "msgid": "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+      },
+      {
+        "msgid": "Anyone who finds you can send a request. Turn this off to pick groups below."
+      },
+      {
+        "msgid": "Applies to bots in communities you join from now on. You can also change it for each community."
+      },
+      {
+        "msgid": "Applies to communities you join from now on. You can also change it for each community."
+      },
+      {
+        "msgid": "Choose who can send you a friend request."
+      },
+      {
+        "msgid": "Friends can always message you. These settings cover people and bots you only share a community with."
+      },
+      {
+        "msgid": "People who share a community with you."
+      },
+      {
+        "msgid": "People who share at least one friend with you."
       }
     ],
     "es-419": [

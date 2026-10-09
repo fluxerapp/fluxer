@@ -41896,3 +41896,31 @@ msgstr "Šiuo metu"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Skirkite akimirką ir patikrinkite, kas gali jums rašyti. Nieko nepakeisite, kol patys to nenuspręsite."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Visi, kas jus suras, gali atsiųsti užklausą. Išjunkite tai, kad pasirinktumėte toliau esančias grupes."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Taikoma robotams bendruomenėse, prie kurių prisijungsite nuo šiol. Taip pat galite pakeisti kiekvienai bendruomenei."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Taikoma bendruomenėms, prie kurių prisijungsite nuo šiol. Taip pat galite pakeisti kiekvienai bendruomenei."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Pasirinkite, kas gali siųsti jums draugystės užklausą."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Draugai visada gali tau rašyti. Šie nustatymai taikomi žmonėms ir robotams, su kuriais dalijiesi tik bendruomene."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Žmonės, kurie dalijasi bendruomene su jumis."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Žmonės, kurie turi bent vieną bendrą draugą su jumis."

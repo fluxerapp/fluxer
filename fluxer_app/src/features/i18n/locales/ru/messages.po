@@ -41895,3 +41895,31 @@ msgstr "Сейчас"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Уделите минутку, чтобы проверить, кто может вам писать. Ничего не изменится, если вы сами этого не захотите."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Любой, кто вас найдет, сможет отправить запрос. Отключите эту опцию, чтобы выбрать группы ниже."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Применяется к ботам в сообществах, к которым вы присоединитесь в дальнейшем. Вы также можете изменить это для каждого сообщества."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Применяется к сообществам, к которым вы присоединитесь в дальнейшем. Вы также можете изменить его для каждого сообщества."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Выберите, кто может отправлять вам запрос в друзья."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Друзья всегда могут вам написать. Эти настройки касаются людей и ботов, с которыми вы состоите только в одном сообществе."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Люди, которые состоят в том же сообществе, что и вы."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Люди, у которых есть хотя бы один общий друг."

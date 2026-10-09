@@ -41895,3 +41895,31 @@ msgstr "Tällä hetkellä"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Varaa hetki tarkistaaksesi, kuka voi lähettää sinulle viestejä. Mikään ei muutu, ellet itse niin päätä."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Kuka tahansa sinut löytävä voi lähettää pyynnön. Poista tämä käytöstä valitaksesi ryhmät alta."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Koskee botteja yhteisöissä, joihin liityt tästä eteenpäin. Voit myös muuttaa sitä kussakin yhteisössä."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Koskee yhteisöjä, joihin liityt tästä eteenpäin. Voit myös muuttaa sitä kunkin yhteisön osalta."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Valitse, kuka voi lähettää sinulle kaveripyyntöjä."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Ystävät voivat aina lähettää sinulle viestejä. Nämä asetukset koskevat ihmisiä ja botteja, joiden kanssa jaat vain yhteisön."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Ihmiset, jotka jakavat yhteisön kanssasi."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Ihmiset, joilla on vähintään yksi yhteinen ystävä kanssasi."

@@ -41895,3 +41895,31 @@ msgstr "ตอนนี้"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "ใช้เวลาสักครู่เพื่อตรวจสอบว่าใครสามารถส่งข้อความถึงคุณได้ จะไม่มีอะไรเปลี่ยนแปลงจนกว่าคุณจะเลือก"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "ทุกคนที่เจอคุณสามารถส่งคำขอได้ ปิดสิ่งนี้เพื่อเลือกกลุ่มด้านล่าง"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "มีผลกับบอทในชุมชนที่คุณเข้าร่วมตั้งแต่นี้เป็นต้นไป คุณสามารถเปลี่ยนการตั้งค่าสำหรับแต่ละชุมชนได้เช่นกัน"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "มีผลกับชุมชนที่คุณเข้าร่วมตั้งแต่นี้เป็นต้นไป คุณสามารถเปลี่ยนการตั้งค่าสำหรับแต่ละชุมชนได้เช่นกัน"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "เลือกผู้ที่สามารถส่งคำขอเป็นเพื่อนถึงคุณได้"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "เพื่อนๆ สามารถส่งข้อความถึงคุณได้เสมอ การตั้งค่าเหล่านี้จะครอบคลุมถึงผู้คนและบอทที่คุณแชร์ชุมชนด้วยเท่านั้น"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "คนที่อยู่ในชุมชนเดียวกันกับคุณ"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "คนที่แชร์เพื่อนอย่างน้อยหนึ่งคนกับคุณ"

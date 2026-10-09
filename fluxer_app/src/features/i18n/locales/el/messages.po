@@ -41895,3 +41895,31 @@ msgstr "Αυτή τη στιγμή"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Αφιερώστε λίγο χρόνο για να ελέγξετε ποιος μπορεί να σας στείλει μήνυμα. Τίποτα δεν αλλάζει εκτός αν το επιλέξετε εσείς."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Όποιος σε βρει μπορεί να στείλει αίτημα. Απενεργοποίησε αυτήν την επιλογή για να επιλέξεις ομάδες παρακάτω."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Ισχύει για bots σε κοινότητες που θα ενταχθείς από τώρα και στο εξής. Μπορείς επίσης να το αλλάξεις για κάθε κοινότητα."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Ισχύει για κοινότητες που θα συμμετάσχεις από τώρα και στο εξής. Μπορείς επίσης να το αλλάξεις για κάθε κοινότητα."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Επιλέξτε ποιος μπορεί να σας στείλει αίτημα φιλίας."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Οι φίλοι μπορούν πάντα να σου στείλουν μήνυμα. Αυτές οι ρυθμίσεις αφορούν άτομα και bots με τα οποία μοιράζεσαι μόνο μια κοινότητα."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Άτομα που μοιράζονται μια κοινότητα μαζί σας."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Άτομα που μοιράζονται τουλάχιστον έναν φίλο μαζί σου."

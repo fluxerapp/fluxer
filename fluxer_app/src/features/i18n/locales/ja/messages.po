@@ -41895,3 +41895,31 @@ msgstr "現在"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "メッセージを送信できるユーザーを確認しましょう。あなたが選択しない限り、何も変更されません。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "見つけた人は誰でもリクエストを送信できます。これをオフにすると、以下のグループを選択できます。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "今後参加するコミュニティのボットに適用されます。各コミュニティで個別に変更することもできます。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "今後参加するコミュニティに適用されます。各コミュニティで変更することもできます。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "友達リクエストを送信できるユーザーを選択してください。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "フレンドはいつでもあなたにメッセージを送信できます。これらの設定は、コミュニティのみを共有しているユーザーやボットに適用されます。"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "あなたと同じコミュニティを共有しているユーザー"
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "あなたと少なくとも1人の共通の友達がいるユーザー"

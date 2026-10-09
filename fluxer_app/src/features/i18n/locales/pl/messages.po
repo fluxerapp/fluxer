@@ -41895,3 +41895,31 @@ msgstr "Obecnie"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Poświęć chwilę, aby sprawdzić, kto może wysyłać Ci wiadomości. Nic się nie zmieni, dopóki sam tego nie zdecydujesz."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Każdy, kto Cię znajdzie, może wysłać prośbę. Wyłącz to, aby wybrać grupy poniżej."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Dotyczy botów w społecznościach, do których dołączysz od teraz. Możesz też zmienić to ustawienie dla każdej społeczności."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Dotyczy społeczności, do których dołączysz od teraz. Możesz też zmienić to ustawienie dla każdej społeczności."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Wybierz, kto może wysyłać Ci zaproszenia do znajomych."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Znajomi zawsze mogą Ci wysyłać wiadomości. Te ustawienia dotyczą osób i botów, z którymi dzielisz tylko społeczność."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Osoby, które dzielą z Tobą społeczność."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Osoby, które mają z Tobą przynajmniej jednego wspólnego znajomego."

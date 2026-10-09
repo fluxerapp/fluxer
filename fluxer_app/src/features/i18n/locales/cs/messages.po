@@ -41895,3 +41895,31 @@ msgstr "Právě teď"
 #: src/features/user/components/modals/PrivacySetupModal.tsx:27
 msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
 msgstr "Chvilku si zkontrolujte, kdo vám může psát zprávy. Nic se nezmění, pokud to sami nezvolíte."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:236
+msgid "Anyone who finds you can send a request. Turn this off to pick groups below."
+msgstr "Kdokoli vás najde, vám může poslat žádost. Vypněte tuto možnost a vyberte skupiny níže."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:272
+msgid "Applies to bots in communities you join from now on. You can also change it for each community."
+msgstr "Platí pro boty v komunitách, ke kterým se připojíte odteď. Můžete ji také změnit pro každou komunitu."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:265
+msgid "Applies to communities you join from now on. You can also change it for each community."
+msgstr "Platí pro komunity, ke kterým se připojíte odteď. Můžete ji také změnit pro každou komunitu."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:231
+msgid "Choose who can send you a friend request."
+msgstr "Vyberte, kdo vám může poslat žádost o přátelství."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:260
+msgid "Friends can always message you. These settings cover people and bots you only share a community with."
+msgstr "Přátelé vám mohou vždy poslat zprávu. Tato nastavení se týkají lidí a botů, se kterými sdílíte pouze komunitu."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:251
+msgid "People who share a community with you."
+msgstr "Lidé, kteří s vámi sdílejí komunitu."
+
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:243
+msgid "People who share at least one friend with you."
+msgstr "Lidé, kteří s vámi sdílejí alespoň jednoho přítele."
