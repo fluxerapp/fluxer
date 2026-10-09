@@ -23,6 +23,10 @@ on:
         required: false
         type: string
         default: ""
+      stale_apply_record:
+        description: Before each update, leave behind an hour-old record of an update that never installed (passes only when the installed versions retry it)
+        type: boolean
+        default: false
   pull_request:
     paths:
       - .github/workflows/desktop-windows-release-check.yaml
@@ -53,6 +57,7 @@ jobs:
       VERSION: ${{ inputs.version || '2026.1009.20411' }}
       EXPECT_FAILURE: ${{ github.event_name == 'pull_request' && 'true' || inputs.expect_failure }}
       UPDATE_FROM: ${{ inputs.update_from || '' }}
+      STALE_APPLY_RECORD: ${{ inputs.stale_apply_record && 'true' || 'false' }}
       ARCH: ${{ matrix.arch }}
     steps:
       - name: Checkout source
@@ -108,6 +113,13 @@ jobs:
             Get-Process | Where-Object { $_.Path -like "$installRoot*" } | Stop-Process -Force -ErrorAction SilentlyContinue
             $exe = Get-ChildItem -Path (Join-Path $installRoot 'current') -Filter 'Fluxer*.exe' | Where-Object { $_.Name -notlike '*_ExecutionStub.exe' } | Select-Object -First 1
             if ($null -eq $exe) { $failures += "$from did not install"; continue }
+            if ($env:STALE_APPLY_RECORD -eq 'true') {
+              $dataRoot = Split-Path (Split-Path $logPath -Parent) -Parent
+              New-Item -ItemType Directory -Force -Path $dataRoot | Out-Null
+              $attemptedAt = [DateTimeOffset]::UtcNow.AddHours(-1).ToUnixTimeMilliseconds()
+              Set-Content -Path (Join-Path $dataRoot 'update-apply-state.json') -Value "{`"version`":`"$env:VERSION`",`"attemptedAt`":$attemptedAt}" -NoNewline
+              Write-Host "left a stale apply record for $env:VERSION"
+            }
             Start-Process -FilePath $exe.FullName -ArgumentList '--disable-gpu'
             $deadline = (Get-Date).AddMinutes(8)
             $reported = $null
