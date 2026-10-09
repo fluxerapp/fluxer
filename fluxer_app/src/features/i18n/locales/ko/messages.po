@@ -22537,7 +22537,7 @@ msgstr "멤버 음소거"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:65
+#: src/features/app/components/layout/UserArea.tsx:66
 #: src/features/platform/utils/DesktopLocaleBridge.ts:209
 msgid "Mute microphone"
 msgstr "마이크 음소거"
@@ -24937,7 +24937,7 @@ msgid "Open thread again"
 msgstr "스레드 다시 열기"
 
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/UserArea.tsx:78
+#: src/features/app/components/layout/UserArea.tsx:74
 msgid "Open user menu for {displayName}"
 msgstr "{displayName}님의 사용자 메뉴 열기"
 
@@ -26943,7 +26943,7 @@ msgid "Push to talk (priority)"
 msgstr "눌러서 말하기 (우선순위)"
 
 #. User-area voice status text shown when push-to-talk is active. The hint is the user-configured keybind label.
-#: src/features/app/components/layout/UserArea.tsx:56
+#: src/features/app/components/layout/UserArea.tsx:57
 msgid "Push to talk is on. Hold {pushToTalkHint} to speak."
 msgstr "눌러서 말하기가 켜져 있습니다. {pushToTalkHint}을(를) 길게 눌러 말하세요."
 
@@ -28999,7 +28999,7 @@ msgid "Review apps that can access your account."
 msgstr "계정에 액세스할 수 있는 앱을 검토하세요."
 
 #. Screen reader text read after the Privacy item in the settings sidebar while the user has not yet reviewed who can message them. A red dot marks the item visually.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:319
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:323
 msgid "Review needed"
 msgstr "검토 필요"
 
@@ -37281,7 +37281,7 @@ msgstr "즐겨찾기 알림 켜기"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:61
+#: src/features/app/components/layout/UserArea.tsx:62
 #: src/features/platform/utils/DesktopLocaleBridge.ts:213
 msgid "Unmute microphone"
 msgstr "마이크 음소거 해제"
@@ -38254,7 +38254,7 @@ msgid "User avatars"
 msgstr "프로필 사진"
 
 #. Short label in the app layout user area.
-#: src/features/app/components/layout/UserArea.tsx:69
+#: src/features/app/components/layout/UserArea.tsx:70
 msgid "User controls"
 msgstr "사용자 컨트롤"
 
@@ -38323,8 +38323,8 @@ msgstr "사용자 레코드"
 msgid "User settings"
 msgstr "사용자 설정"
 
-#. Accessible label for the user settings button in the user area while the user has not yet reviewed who can message them.
-#: src/features/app/components/layout/UserArea.tsx:73
+#. Accessible label for the user settings button while the user has not yet reviewed who can message them.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:319
 msgid "User settings, privacy review needed"
 msgstr "사용자 설정, 개인 정보 검토 필요"
 

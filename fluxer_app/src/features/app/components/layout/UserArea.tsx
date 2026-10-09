@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {UserAreaPopout} from '@app/features/app/components/floating/UserAreaPopout';
 import styles from '@app/features/app/components/layout/UserArea.module.css';
 import {
@@ -18,8 +17,6 @@ import {getPushToTalkHoldLabel} from '@app/features/input/utils/PushToTalkHint';
 import Presence from '@app/features/presence/state/Presence';
 import {SettingsContextMenu} from '@app/features/ui/action_menu/SettingsContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import {FocusRingWrapper} from '@app/features/ui/components/FocusRingWrapper';
 import {NotificationDot} from '@app/features/ui/components/NotificationDot';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
@@ -29,7 +26,11 @@ import {TooltipWithKeybind} from '@app/features/ui/keybind_hint/KeybindHint';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {USER_SETTINGS_LABEL_DESCRIPTOR} from '@app/features/user/components/settings_utils/SettingsConstants';
+import {openUserSettingsModal} from '@app/features/user/commands/UserSettingsModalCommands';
+import {
+	USER_SETTINGS_LABEL_DESCRIPTOR,
+	USER_SETTINGS_PRIVACY_REVIEW_NEEDED_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/SettingsConstants';
 import type {User} from '@app/features/user/models/User';
 import UserSettings from '@app/features/user/state/UserSettings';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
@@ -69,11 +70,6 @@ const MUTE_MICROPHONE_DESCRIPTOR = msg({
 const USER_CONTROLS_DESCRIPTOR = msg({
 	message: 'User controls',
 	comment: 'Short label in the app layout user area.',
-});
-const USER_SETTINGS_PRIVACY_REVIEW_NEEDED_DESCRIPTOR = msg({
-	message: 'User settings, privacy review needed',
-	comment:
-		'Accessible label for the user settings button in the user area while the user has not yet reviewed who can message them.',
 });
 const OPEN_USER_MENU_FOR_DESCRIPTOR = msg({
 	message: 'Open user menu for {displayName}',
@@ -151,23 +147,6 @@ const UserAreaInner = observer(
 		const settingsLabel = privacySetupPending
 			? i18n._(USER_SETTINGS_PRIVACY_REVIEW_NEEDED_DESCRIPTOR)
 			: i18n._(USER_SETTINGS_LABEL_DESCRIPTOR);
-		const handleSettingsClick = () => {
-			ModalCommands.push(
-				modal(
-					() =>
-						privacySetupPending ? (
-							<UserSettingsModal
-								initialTab="privacy_safety"
-								initialSubtab="connections"
-								data-flx="app.user-area.handle-settings-click.user-settings-modal--privacy-review"
-							/>
-						) : (
-							<UserSettingsModal data-flx="app.user-area.handle-settings-click.user-settings-modal" />
-						),
-					'user-settings',
-				),
-			);
-		};
 		const storeConnectedChannelId = MediaEngine.channelId;
 		const forceShowVoiceConnection = DeveloperOptions.forceShowVoiceConnection;
 		const hasVoiceConnection = !MobileLayout.enabled && (forceShowVoiceConnection || !!storeConnectedChannelId);
@@ -453,7 +432,7 @@ const UserAreaInner = observer(
 									type="button"
 									aria-label={settingsLabel}
 									className={clsx(styles.controlButton, settingsContextMenuOpen && styles.contextMenuHover)}
-									onClick={handleSettingsClick}
+									onClick={openUserSettingsModal}
 									onContextMenu={(event) => {
 										event.preventDefault();
 										event.stopPropagation();

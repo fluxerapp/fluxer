@@ -3,7 +3,6 @@
 import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import type {HandlerHost} from '@app/features/app/keybindings/keybind_manager/handlers/types';
 import {
 	PUSH_TO_TALK_WHILE_DEAFENED_DESCRIPTION_DESCRIPTOR,
@@ -49,6 +48,7 @@ import {getUnreadThreadIds} from '@app/features/threads/utils/ThreadViewUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
+import {openUserSettingsModal} from '@app/features/user/commands/UserSettingsModalCommands';
 import {openVoiceMessageComposerModal} from '@app/features/voice/components/VoiceMessageComposerModal';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
@@ -255,7 +255,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('system_toggle_settings', ({type}) => {
 		if (type !== 'press') return;
-		ModalCommands.push(modal(() => React.createElement(UserSettingsModal), 'user-settings'));
+		openUserSettingsModal();
 	});
 	host.register('system_open_theme_studio_popout', ({type}) => {
 		if (type !== 'press') return;

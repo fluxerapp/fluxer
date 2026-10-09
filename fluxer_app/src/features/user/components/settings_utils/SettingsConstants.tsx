@@ -316,6 +316,10 @@ export const USER_SETTINGS_LABEL_DESCRIPTOR = msg({
 	message: 'User settings',
 	comment: 'Root label for the current user settings modal and settings search paths.',
 });
+export const USER_SETTINGS_PRIVACY_REVIEW_NEEDED_DESCRIPTOR = msg({
+	message: 'User settings, privacy review needed',
+	comment: 'Accessible label for the user settings button while the user has not yet reviewed who can message them.',
+});
 export const PRIVACY_REVIEW_NEEDED_DESCRIPTOR = msg({
 	message: 'Review needed',
 	comment:

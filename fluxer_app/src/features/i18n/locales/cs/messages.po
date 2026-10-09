@@ -22537,7 +22537,7 @@ msgstr "Ztlumovat mikrofony členům"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:65
+#: src/features/app/components/layout/UserArea.tsx:66
 #: src/features/platform/utils/DesktopLocaleBridge.ts:209
 msgid "Mute microphone"
 msgstr "Ztlumit mikrofon"
@@ -24937,7 +24937,7 @@ msgid "Open thread again"
 msgstr "Znovu otevřít vlákno"
 
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
-#: src/features/app/components/layout/UserArea.tsx:78
+#: src/features/app/components/layout/UserArea.tsx:74
 msgid "Open user menu for {displayName}"
 msgstr "Otevřít uživatelskou nabídku pro {displayName}"
 
@@ -26943,7 +26943,7 @@ msgid "Push to talk (priority)"
 msgstr "Stisknutím mluvit (priorita)"
 
 #. User-area voice status text shown when push-to-talk is active. The hint is the user-configured keybind label.
-#: src/features/app/components/layout/UserArea.tsx:56
+#: src/features/app/components/layout/UserArea.tsx:57
 msgid "Push to talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Režim Stisknutím mluvit je zapnutý. Chcete-li mluvit, podržte {pushToTalkHint}."
 
@@ -28999,7 +28999,7 @@ msgid "Review apps that can access your account."
 msgstr "Prohlédněte si aplikace, které mají přístup k vašemu účtu."
 
 #. Screen reader text read after the Privacy item in the settings sidebar while the user has not yet reviewed who can message them. A red dot marks the item visually.
-#: src/features/user/components/settings_utils/SettingsConstants.tsx:319
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:323
 msgid "Review needed"
 msgstr "Potřebuje kontrolu"
 
@@ -37281,7 +37281,7 @@ msgstr "Zrušit ztlumení oblíbených"
 
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
-#: src/features/app/components/layout/UserArea.tsx:61
+#: src/features/app/components/layout/UserArea.tsx:62
 #: src/features/platform/utils/DesktopLocaleBridge.ts:213
 msgid "Unmute microphone"
 msgstr "Zapnout mikrofon"
@@ -38254,7 +38254,7 @@ msgid "User avatars"
 msgstr "Avatary uživatelů"
 
 #. Short label in the app layout user area.
-#: src/features/app/components/layout/UserArea.tsx:69
+#: src/features/app/components/layout/UserArea.tsx:70
 msgid "User controls"
 msgstr "Ovládání uživatele"
 
@@ -38323,8 +38323,8 @@ msgstr "Záznam uživatele"
 msgid "User settings"
 msgstr "Uživatelské nastavení"
 
-#. Accessible label for the user settings button in the user area while the user has not yet reviewed who can message them.
-#: src/features/app/components/layout/UserArea.tsx:73
+#. Accessible label for the user settings button while the user has not yet reviewed who can message them.
+#: src/features/user/components/settings_utils/SettingsConstants.tsx:319
 msgid "User settings, privacy review needed"
 msgstr "Nastavení uživatele, nutná kontrola soukromí"
 
