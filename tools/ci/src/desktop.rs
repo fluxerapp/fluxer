@@ -89,6 +89,8 @@ const DESKTOP_DICTIONARY_MODULE_PREFIX: &str = "fluxer_dict_";
 const DESKTOP_DICTIONARY_PACKAGE_PREFIX: &str = "dictionary-";
 const DESKTOP_DICTIONARY_FILE_NAMES: &[&str] = &["index.aff", "index.dic"];
 const DESKTOP_MODULE_MINIMUM_SHELL_VERSION: &str = "0.0.0";
+const DESKTOP_CONTENT_MODULE_BUILD_VERSION: &str = "0.0.0";
+const DESKTOP_RENDERER_VERSION_FILE_NAME: &str = "version.json";
 const DESKTOP_REQUIRED_MODULES: &[&str] = &[DESKTOP_RENDERER_MODULE];
 const DESKTOP_MODULES_ENV: &str = "FLUXER_MODULES";
 
@@ -140,7 +142,8 @@ enum DesktopStep {
     RestoreSharedAssets,
     SplitModules,
     PackModules,
-    StripShellRenderer,
+    PruneShellRenderer,
+    VerifyBundledRendererLinux,
     BuildElectronMain,
     InstallVelopackCli,
     BuildAppMacos,
@@ -251,7 +254,8 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         DesktopStep::RestoreSharedAssets => restore_shared_assets_step(),
         DesktopStep::SplitModules => split_modules_step(),
         DesktopStep::PackModules => pack_modules_step(),
-        DesktopStep::StripShellRenderer => strip_shell_renderer_step(),
+        DesktopStep::PruneShellRenderer => prune_shell_renderer_step(),
+        DesktopStep::VerifyBundledRendererLinux => verify_bundled_renderer_linux_step(),
         DesktopStep::BuildElectronMain => build_electron_main_step(),
         DesktopStep::InstallVelopackCli => install_velopack_cli_step(),
         DesktopStep::BuildAppMacos => build_app_step(DesktopBuildPlatform::Macos),
@@ -826,6 +830,7 @@ DPkg::Lock::Timeout "120";
         "libclang-dev",
         "clang",
         "libpulse-dev",
+        "xvfb",
     ])?;
     install_linux_pipewire_headers().await?;
     install_linux_libfido2().await?;
@@ -1544,6 +1549,12 @@ fn restore_shared_assets_step() -> Result<()> {
     remove_dir_if_exists(&renderer_dir)?;
     copy_dir_contents(&payload_dir, &renderer_dir)?;
     ensure_renderer_assets_ready(&renderer_dir)?;
+    let bundled_version = read_bundled_renderer_version(&renderer_dir)?;
+    ensure!(
+        bundled_version == build_version,
+        "The shared renderer in {} reports version {bundled_version}, this shell is {build_version}",
+        renderer_dir.display()
+    );
     println!(
         "Restored {} shared renderer file(s) into {}",
         manifest.files.len(),
@@ -1817,44 +1828,110 @@ fn classify_renderer_files(renderer_dir: &Path) -> Result<Vec<DesktopClassifiedR
     Ok(classified)
 }
 
-fn strip_renderer_tree_owned_by_modules(
+fn is_content_addressed_desktop_module(module: &str) -> bool {
+    module != DESKTOP_RENDERER_MODULE && module != DESKTOP_SOURCEMAP_MODULE
+}
+
+fn desktop_content_module_source_sha(files: &[DesktopSharedAssetFile]) -> String {
+    let mut entries = files
+        .iter()
+        .map(|entry| (entry.path.as_str(), entry.sha256.as_str(), entry.bytes))
+        .collect::<Vec<_>>();
+    entries.sort();
+    let mut digest = Sha256::new();
+    for (path, sha256, bytes) in entries {
+        digest.update(path.as_bytes());
+        digest.update([0]);
+        digest.update(sha256.as_bytes());
+        digest.update([0]);
+        digest.update(bytes.to_string().as_bytes());
+        digest.update(b"\n");
+    }
+    hex::encode(digest.finalize())[..40].to_string()
+}
+
+fn desktop_module_manifest(
+    module: &str,
+    build_version: &str,
+    release_channel: &str,
+    source_sha: &str,
+    files: Vec<DesktopSharedAssetFile>,
+) -> DesktopModuleManifest {
+    if is_content_addressed_desktop_module(module) {
+        return DesktopModuleManifest {
+            module: module.to_string(),
+            build_version: DESKTOP_CONTENT_MODULE_BUILD_VERSION.to_string(),
+            release_channel: release_channel.to_string(),
+            source_sha: desktop_content_module_source_sha(&files),
+            files,
+        };
+    }
+    DesktopModuleManifest {
+        module: module.to_string(),
+        build_version: build_version.to_string(),
+        release_channel: release_channel.to_string(),
+        source_sha: source_sha.to_string(),
+        files,
+    }
+}
+
+fn read_bundled_renderer_version(renderer_dir: &Path) -> Result<String> {
+    let path = renderer_dir.join(DESKTOP_RENDERER_VERSION_FILE_NAME);
+    let bytes = fs::read(&path).with_context(|| {
+        format!(
+            "Failed to read {}, the shell picks between its bundled renderer and an installed module by this version",
+            path.display()
+        )
+    })?;
+    let value: Value = serde_json::from_slice(&bytes)
+        .with_context(|| format!("Failed to parse {}", path.display()))?;
+    let version = value
+        .get("version")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
+        .with_context(|| format!("{} names no version", path.display()))?;
+    Ok(version.to_string())
+}
+
+fn prune_on_demand_modules_from_renderer_tree(
     renderer_dir: &Path,
 ) -> Result<BTreeMap<String, Vec<DesktopSharedAssetFile>>> {
     ensure_renderer_assets_ready(renderer_dir)?;
     let mut removed: BTreeMap<String, Vec<DesktopSharedAssetFile>> = BTreeMap::new();
+    let mut kept = 0usize;
     for file in classify_renderer_files(renderer_dir)? {
+        if file.module == DESKTOP_RENDERER_MODULE {
+            kept += 1;
+            continue;
+        }
         fs::remove_file(&file.source)
             .with_context(|| format!("Failed to remove {}", file.source.display()))?;
         removed.entry(file.module).or_default().push(file.entry);
     }
     ensure!(
-        removed
-            .get(DESKTOP_RENDERER_MODULE)
-            .is_some_and(|entries| !entries.is_empty()),
-        "{DESKTOP_RENDERER_MODULE} claimed no file in {}, refusing to publish a shell whose renderer module is empty",
-        renderer_dir.display()
-    );
-    let left = count_files(renderer_dir)?;
-    ensure!(
-        left == 0,
-        "{left} renderer file(s) survived the strip in {}, every packed file must belong to a module",
+        kept > 0,
+        "{DESKTOP_RENDERER_MODULE} claimed no file in {}, refusing to package a shell with no bundled renderer",
         renderer_dir.display()
     );
     remove_empty_dirs_below(renderer_dir)?;
-    let surviving_entries = fs::read_dir(renderer_dir)
-        .with_context(|| format!("Failed to read {}", renderer_dir.display()))?
-        .count();
+    ensure_renderer_assets_ready(renderer_dir)?;
+    let survivors = classify_renderer_files(renderer_dir)?;
     ensure!(
-        surviving_entries == 0,
-        "{surviving_entries} entries survived the strip in {}, the packed renderer directory must be left empty",
-        renderer_dir.display()
+        survivors.len() == kept
+            && survivors
+                .iter()
+                .all(|file| file.module == DESKTOP_RENDERER_MODULE),
+        "{} keeps {} file(s) after the prune, {kept} belong to {DESKTOP_RENDERER_MODULE}",
+        renderer_dir.display(),
+        survivors.len()
     );
     Ok(removed)
 }
 
-fn strip_shell_renderer_step() -> Result<()> {
+fn prune_shell_renderer_step() -> Result<()> {
     let renderer_dir = desktop_renderer_dir();
-    let removed = strip_renderer_tree_owned_by_modules(&renderer_dir)?;
+    let removed = prune_on_demand_modules_from_renderer_tree(&renderer_dir)?;
     let mut total_files = 0usize;
     let mut total_bytes = 0u64;
     for (module, entries) in &removed {
@@ -1866,9 +1943,47 @@ fn strip_shell_renderer_step() -> Result<()> {
             entries.len()
         );
     }
+    let bundled_version = read_bundled_renderer_version(&renderer_dir)?;
     println!(
-        "Stripped {total_files} module file(s), {total_bytes} bytes from {}, the shell now ships no renderer",
-        renderer_dir.display()
+        "Pruned {total_files} on-demand module file(s), {total_bytes} bytes from {}, the shell bundles renderer {bundled_version} in {} file(s)",
+        renderer_dir.display(),
+        count_files(&renderer_dir)?
+    );
+    Ok(())
+}
+
+fn verify_bundled_renderer_linux_step() -> Result<()> {
+    let channel = require_env("BUILD_CHANNEL")?;
+    let version = require_env("BUILD_VERSION")?;
+    let dist = Path::new("dist-electron");
+    let unpacked = sorted_child_directories(dist)?
+        .into_iter()
+        .find(|entry| {
+            file_name_string(entry)
+                .is_ok_and(|name| name.starts_with("linux") && name.ends_with("unpacked"))
+        })
+        .with_context(|| format!("No unpacked Linux app found in {}", dist.display()))?;
+    run_command(
+        CommandSpec::new("xvfb-run")
+            .args(["-a", "node", "scripts/release-check.mjs", "--app"])
+            .arg(unpacked.as_os_str())
+            .args([
+                "--channel",
+                channel.as_str(),
+                "--expect-renderer",
+                version.as_str(),
+                "--expect-source",
+                "bundled",
+                "--package-origin",
+                "http://127.0.0.1:9",
+                "--app-arg=--no-sandbox",
+                "--app-arg=--disable-gpu",
+                "--timeout-seconds",
+                "180",
+            ]),
+    )?;
+    println!(
+        "The packaged {channel} shell {version} boots its bundled renderer with no package feed"
     );
     Ok(())
 }
@@ -1922,13 +2037,13 @@ fn split_modules_step() -> Result<()> {
         }
         write_json_pretty(
             &module_dir.join(DESKTOP_MODULE_FILE_LIST_NAME),
-            &DesktopModuleManifest {
-                module: module.clone(),
-                build_version: build_version.clone(),
-                release_channel: release_channel.clone(),
-                source_sha: source_sha.clone(),
-                files: entries.iter().map(|(_, entry)| entry.clone()).collect(),
-            },
+            &desktop_module_manifest(
+                module,
+                &build_version,
+                &release_channel,
+                &source_sha,
+                entries.iter().map(|(_, entry)| entry.clone()).collect(),
+            ),
         )?;
         summaries.push(DesktopModuleClassificationSummary {
             module: module.clone(),
@@ -2071,13 +2186,8 @@ fn write_desktop_dictionary_modules(
                     .len(),
             });
         }
-        let manifest = DesktopModuleManifest {
-            module,
-            build_version: build_version.to_string(),
-            release_channel: release_channel.to_string(),
-            source_sha: source_sha.to_string(),
-            files,
-        };
+        let manifest =
+            desktop_module_manifest(&module, build_version, release_channel, source_sha, files);
         write_json_pretty(&module_dir.join(DESKTOP_MODULE_FILE_LIST_NAME), &manifest)?;
         manifests.push(manifest);
     }
@@ -5151,9 +5261,14 @@ fn read_packed_desktop_modules(
             manifest.module,
             manifest.release_channel
         );
+        let expected_version = if is_content_addressed_desktop_module(&manifest.module) {
+            DESKTOP_CONTENT_MODULE_BUILD_VERSION
+        } else {
+            build_version
+        };
         ensure!(
-            manifest.build_version == build_version,
-            "Desktop module {} was packed for version {}, expected {build_version}",
+            manifest.build_version == expected_version,
+            "Desktop module {} was packed for version {}, expected {expected_version}",
             manifest.module,
             manifest.build_version
         );
@@ -7028,6 +7143,70 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
             .position(|step| *step == "Build desktop module manifest")
             .unwrap();
         assert_eq!(steps[manifest + 1], "Prepare GitHub release assets");
+    }
+
+    #[test]
+    fn pruning_the_shell_renderer_keeps_the_renderer_and_drops_on_demand_modules() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("renderer");
+        write_file(&root.join("index.html"), "<html></html>");
+        write_file(&root.join("version.json"), "{\"version\":\"2026.1009.1\"}");
+        write_file(&root.join("assets/main.js"), "main");
+        write_file(&root.join("assets/main.js.map"), "{}");
+        write_file(&root.join("assets/fluxer_fonts_jp/a.woff2"), "font");
+        write_file(&root.join("assets/fluxer_grammar_rust/b.wasm"), "wasm");
+
+        let removed = prune_on_demand_modules_from_renderer_tree(&root).unwrap();
+
+        assert_eq!(
+            removed.keys().map(String::as_str).collect::<Vec<_>>(),
+            vec![
+                "fluxer_fonts_jp",
+                "fluxer_grammar_rust",
+                "fluxer_sourcemaps"
+            ]
+        );
+        assert!(root.join("index.html").is_file());
+        assert!(root.join("assets/main.js").is_file());
+        assert!(!root.join("assets/main.js.map").exists());
+        assert!(!root.join("assets/fluxer_fonts_jp").exists());
+        assert_eq!(read_bundled_renderer_version(&root).unwrap(), "2026.1009.1");
+    }
+
+    #[test]
+    fn on_demand_module_manifests_do_not_change_between_builds() {
+        let files = vec![DesktopSharedAssetFile {
+            path: "assets/fluxer_fonts_jp/a.woff2".to_string(),
+            sha256: "a".repeat(64),
+            bytes: 4,
+        }];
+        let first = desktop_module_manifest(
+            "fluxer_fonts_jp",
+            "2026.1009.1",
+            "canary",
+            &"1".repeat(40),
+            files.clone(),
+        );
+        let second = desktop_module_manifest(
+            "fluxer_fonts_jp",
+            "2026.1010.7",
+            "canary",
+            &"2".repeat(40),
+            files.clone(),
+        );
+        assert_eq!(first, second);
+        assert_eq!(first.build_version, DESKTOP_CONTENT_MODULE_BUILD_VERSION);
+        assert_eq!(first.source_sha.len(), 40);
+
+        let renderer = desktop_module_manifest(
+            DESKTOP_RENDERER_MODULE,
+            "2026.1009.1",
+            "canary",
+            &"1".repeat(40),
+            files,
+        );
+        assert_eq!(renderer.build_version, "2026.1009.1");
+        assert_eq!(renderer.source_sha, "1".repeat(40));
     }
 
     #[test]
