@@ -917,35 +917,65 @@ msgstr "{altText} — anteprima con tema chiaro"
 msgid "{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}"
 msgstr "{appCount, plural, one {# app selezionata per la revoca dell’accesso} other {# app selezionate per la revoca dell’accesso}}"
 
+#. Native desktop dialog headline on installs that cannot update themselves. {version} is the new version number.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:269
+msgid "{appName} {version} is available."
+msgstr "È disponibile {appName} {version}."
+
 #. Body of the native dialog shown when the desktop app has repeatedly failed to load. {appName} is the desktop app name (typically Fluxer). The app keeps retrying on its own while the dialog is open.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:348
+#: src/features/platform/utils/DesktopLocaleBridge.ts:426
 msgid "{appName} can't reach its servers. It will keep trying in the background."
 msgstr "{appName} non riesce a raggiungere i suoi server. Continuerà a provare in background."
 
 #. Title of the native error dialog shown when the desktop app cannot open the local data store it used before. {appName} is the desktop app name (typically Fluxer).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:290
+#: src/features/platform/utils/DesktopLocaleBridge.ts:368
 msgid "{appName} cannot open its local data"
 msgstr "{appName} non può aprire i suoi dati locali"
 
 #. Main message of the native error dialog shown when the desktop app cannot open its local data store. {appName} is the desktop app name (typically Fluxer).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:295
+#: src/features/platform/utils/DesktopLocaleBridge.ts:373
 msgid "{appName} cannot open the local data it saved on this computer."
 msgstr "{appName} non riesce ad aprire i dati locali salvati su questo computer."
 
 #. Plain text page shown in the desktop window when the installed app files cannot be found. {appName} is the desktop app name.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:314
+#: src/features/platform/utils/DesktopLocaleBridge.ts:392
 msgid "{appName} could not load its app files. Quit and open it again."
 msgstr "{appName} non è riuscito a caricare i file dell'app. Chiudi e riapri l'applicazione."
 
 #. Plain text page shown in the desktop window when one installed app file cannot be read. {appName} is the desktop app name.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:319
+#: src/features/platform/utils/DesktopLocaleBridge.ts:397
 msgid "{appName} could not read one of its app files. Quit and open it again."
 msgstr "{appName} non è riuscito a leggere uno dei suoi file. Chiudi e riapri l'app."
 
+#. Native desktop dialog headline when a manual update check could not reach the update server.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:286
+msgid "{appName} couldn't check for updates."
+msgstr "{appName} non è riuscito a verificare la presenza di aggiornamenti."
+
+#. Native desktop dialog headline when a desktop update the user started did not complete.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:294
+msgid "{appName} couldn't finish updating."
+msgstr "{appName} non è riuscito a completare l'aggiornamento."
+
 #. Title of the native error dialog shown when the desktop app cannot boot. {appName} is the desktop app name (typically Fluxer).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:338
+#: src/features/platform/utils/DesktopLocaleBridge.ts:416
 msgid "{appName} failed to start"
 msgstr "Impossibile avviare {appName}"
+
+#. Native desktop dialog headline after a manual update check found nothing newer.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:278
+msgid "{appName} is up to date."
+msgstr "{appName} è aggiornato."
+
+#. Native desktop dialog body under the update available headline when the desktop app itself updates. Explains what Update now does.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:243
+msgid "{appName} will close, install the update and open again."
+msgstr "{appName} si chiuderà, installerà l'aggiornamento e si riaprirà."
+
+#. Native desktop dialog body under the update available headline when only the app files update. The window reloads and the app itself keeps running.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:248
+msgid "{appName} will reload to finish updating."
+msgstr "{appName} si ricaricherà per completare l'aggiornamento."
 
 #. TTS sentence spoken for a normal message. {authorName} is the author display name, {formatted} is the speakable message body.
 #: src/features/voice/utils/TtsTextFormatter.ts:52
@@ -3348,7 +3378,7 @@ msgid "Add item"
 msgstr "Aggiungi elemento"
 
 #. Title of the native file picker that selects local theme files to add.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:259
+#: src/features/platform/utils/DesktopLocaleBridge.ts:337
 #: src/features/theme_studio/sections/AssetsSection.tsx:150
 msgid "Add local files"
 msgstr "Aggiungi file locali"
@@ -4271,6 +4301,11 @@ msgstr "Si è verificato un errore imprevisto"
 #: src/lib/forms/index.tsx:14
 msgid "An unexpected error occurred. Try again."
 msgstr "Si è verificato un errore imprevisto. Riprova."
+
+#. Native desktop dialog headline after a manual update check found an update.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:239
+msgid "An update for {appName} is available."
+msgstr "È disponibile un aggiornamento per {appName}."
 
 #. Description for has:sound. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:47
@@ -6677,7 +6712,7 @@ msgstr "Le fotocamere sono disattivate oltre i {voiceChannelCameraUserLimit} par
 
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
 #: src/features/app/components/BootstrapErrorScreen.tsx:74
-#: src/features/platform/utils/DesktopLocaleBridge.ts:343
+#: src/features/platform/utils/DesktopLocaleBridge.ts:421
 msgid "Can't connect"
 msgstr "Impossibile connettersi"
 
@@ -7683,6 +7718,11 @@ msgstr "Ricontrolla"
 msgid "Check for updates"
 msgstr "Controlla aggiornamenti"
 
+#. Desktop app menu item that looks for a new desktop version. The trailing ellipsis shows that a dialog follows.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:234
+msgid "Check for updates..."
+msgstr "Verifica aggiornamenti..."
+
 #: src/features/app/components/BootstrapErrorScreen.tsx:98
 msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
 msgstr "Controlla il nostro <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> per aggiornamenti sullo stato."
@@ -7719,6 +7759,11 @@ msgstr "Controlla la tua casella di posta all'indirizzo {emailAddress} per il li
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx:99
 msgid "Check your inbox for a verification email."
 msgstr "Controlla la tua casella di posta per un'email di verifica."
+
+#. Native desktop dialog body under the headline saying the update check failed.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:290
+msgid "Check your internet connection and try again."
+msgstr "Controlla la tua connessione Internet e riprova."
 
 #. Report flow: title of the summary screen shown before the report is sent.
 #: src/features/moderation/components/report_flow/ReportFlowCopy.ts:5
@@ -9187,7 +9232,7 @@ msgid "Completing sign-in…"
 msgstr "Accesso in corso…"
 
 #. Windows jump-list task description (tooltip text) for the New direct message action.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:250
+#: src/features/platform/utils/DesktopLocaleBridge.ts:328
 msgid "Compose a new direct message"
 msgstr "Componi un nuovo messaggio diretto"
 
@@ -9819,7 +9864,7 @@ msgstr "Copia URL banner"
 
 #. Tray menu item. Copies build / version diagnostics to the clipboard for bug reports.
 #: src/features/app/components/floating/UserAreaPopout.tsx:609
-#: src/features/platform/utils/DesktopLocaleBridge.ts:229
+#: src/features/platform/utils/DesktopLocaleBridge.ts:307
 msgid "Copy build info"
 msgstr "Copia info build"
 
@@ -11168,7 +11213,7 @@ msgid "CSS"
 msgstr "CSS"
 
 #. Name of the file type filter in the native theme file picker, shown next to the *.css pattern.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:276
+#: src/features/platform/utils/DesktopLocaleBridge.ts:354
 msgid "CSS files"
 msgstr "File CSS"
 
@@ -12426,7 +12471,7 @@ msgid "Desktop startup"
 msgstr "Avvio su desktop"
 
 #. Tooltip on the updater icon for a Linux desktop update that requires choosing a package format.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:20
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:25
 msgid "Desktop update {version} available. Choose a Linux package."
 msgstr "Aggiornamento desktop {version} disponibile. Scegli un pacchetto Linux."
 
@@ -12436,7 +12481,7 @@ msgid "Desktop update available"
 msgstr "Aggiornamento desktop disponibile"
 
 #. Tooltip on the updater icon for a Linux desktop update that requires choosing a package format and no version is known.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:24
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:29
 msgid "Desktop update available. Choose a Linux package."
 msgstr "Aggiornamento desktop disponibile. Scegli un pacchetto Linux."
 
@@ -12482,7 +12527,7 @@ msgid "Details"
 msgstr "Dettagli"
 
 #. Detail line in the native dialog shown when the desktop app cannot open its local data store. {reason} is a technical error message.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:309
+#: src/features/platform/utils/DesktopLocaleBridge.ts:387
 msgid "Details: {reason}"
 msgstr "Dettagli: {reason}"
 
@@ -13317,9 +13362,11 @@ msgstr "Fai doppio clic su qualcuno per guardare il suo stream."
 
 #. Button that downloads account backup codes as a text file.
 #. Generic action label that downloads an attachment / file.
+#. Native desktop dialog button that opens the download page for a new desktop version in the browser.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:85
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:391
+#: src/features/platform/utils/DesktopLocaleBridge.ts:265
 #: src/features/theme_studio/sections/QuickCssSection.tsx:205
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:210
 msgid "Download"
@@ -13419,6 +13466,11 @@ msgstr "Scarica le mappe sorgente"
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:34
 msgid "Download source maps so stack traces and the developer tools point at real source"
 msgstr "Scarica le mappe sorgente in modo che le tracce dello stack e gli strumenti per sviluppatori puntino al codice sorgente effettivo"
+
+#. Native desktop dialog body under the headline announcing a new version that must be downloaded by hand.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:274
+msgid "Download the new version to update {appName}."
+msgstr "Scarica la nuova versione per aggiornare {appName}."
 
 #. Media context menu action that downloads a video attachment.
 #: src/features/ui/action_menu/items/MediaMenuData.tsx:123
@@ -18333,7 +18385,7 @@ msgid "Import complete. Added {importedCount, plural, one {# GIF} other {# GIFs}
 msgstr "Importazione completata. {importedCount, plural, one {Aggiunta # GIF.} other {Aggiunte # GIF.}}"
 
 #. Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:267
+#: src/features/platform/utils/DesktopLocaleBridge.ts:345
 #: src/features/theme_studio/sections/LibrarySection.tsx:420
 #: src/features/theme_studio/sections/QuickCssSection.tsx:190
 msgid "Import CSS"
@@ -18345,7 +18397,7 @@ msgid "Import favorite GIFs"
 msgstr "Importa GIF preferite"
 
 #. Title of the native folder picker that imports a directory of theme files.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:263
+#: src/features/platform/utils/DesktopLocaleBridge.ts:341
 #: src/features/theme_studio/sections/LibrarySection.tsx:432
 msgid "Import folder"
 msgstr "Importa cartella"
@@ -18809,12 +18861,12 @@ msgid "Instance URL is too long"
 msgstr "L'URL dell'istanza è troppo lungo"
 
 #. Comment of the Linux .desktop entry. One-line app description shown as a tooltip in Linux launchers and software centres. VoIP is voice over IP; keep the term if it is used untranslated in your language.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:358
+#: src/features/platform/utils/DesktopLocaleBridge.ts:436
 msgid "Instant messaging and VoIP"
 msgstr "Messaggistica istantanea e VoIP"
 
 #. GenericName of the Linux .desktop entry. The category of app shown next to the name in GNOME Activities, KDE Kickoff and software centres. Use the generic term for a chat app in your language.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:353
+#: src/features/platform/utils/DesktopLocaleBridge.ts:431
 msgid "Instant Messenger"
 msgstr "Messaggistica istantanea"
 
@@ -19784,10 +19836,12 @@ msgid "Latency graph"
 msgstr "Grafico latenza"
 
 #. Button label that dismisses the update modal without taking action.
+#. Native desktop dialog button that closes an update dialog without updating.
 #. Short confirmation button label in advanced settings.
 #. Short confirmation button label in advanced settings.
 #. Short label in the desktop settings tab. Keep it concise.
 #. Short label in the theme studio settings section. Keep it concise.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:257
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:61
 #: src/features/updater/commands/UpdaterModalCommands.tsx:47
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:51
@@ -20203,7 +20257,7 @@ msgstr "Collega account e domini esterni al tuo profilo"
 
 #. Button in the Theme Studio library that links an existing theme to a CSS file on disk so saved changes to the file apply live.
 #. Title of the native file picker that links an existing theme to a CSS file on disk.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:272
+#: src/features/platform/utils/DesktopLocaleBridge.ts:350
 #: src/features/theme_studio/sections/LibrarySection.tsx:607
 msgid "Link file"
 msgstr "Collega file"
@@ -22936,7 +22990,7 @@ msgid "New community muted"
 msgstr "Nuova community silenziata"
 
 #. Windows jump-list task title. Starts composing a new DM.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:246
+#: src/features/platform/utils/DesktopLocaleBridge.ts:324
 msgid "New direct message"
 msgstr "Nuovo messaggio diretto"
 
@@ -23599,7 +23653,7 @@ msgid "No search results"
 msgstr "Nessun risultato"
 
 #. Plain text body returned by the desktop app when a request has no active server to go to. Rarely seen by users.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:328
+#: src/features/platform/utils/DesktopLocaleBridge.ts:406
 msgid "No server is selected for this request."
 msgstr "Nessun server è selezionato per questa richiesta."
 
@@ -23874,7 +23928,7 @@ msgstr "Non fa per te? Puoi disattivarlo in qualsiasi momento."
 #. Browser tab and window title for the 404 page.
 #. Plain text page shown in the desktop window when a requested app file does not exist.
 #: src/features/app/components/pages/NotFoundPage.tsx:13
-#: src/features/platform/utils/DesktopLocaleBridge.ts:324
+#: src/features/platform/utils/DesktopLocaleBridge.ts:402
 msgid "Not found"
 msgstr "Pagina non trovata"
 
@@ -24122,7 +24176,9 @@ msgctxt "us-state"
 msgid "Ohio"
 msgstr "Ohio"
 
+#. Native desktop dialog button that closes the dialog saying the app is up to date.
 #: src/features/guild/components/RoleManagement.tsx:410
+#: src/features/platform/utils/DesktopLocaleBridge.ts:261
 msgid "OK"
 msgstr "OK"
 
@@ -24384,7 +24440,7 @@ msgstr "Opacità"
 #. Short button that opens a billing invoice or receipt.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:21
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:159
-#: src/features/platform/utils/DesktopLocaleBridge.ts:254
+#: src/features/platform/utils/DesktopLocaleBridge.ts:332
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:22
 msgid "Open"
 msgstr "Apri"
@@ -24396,7 +24452,7 @@ msgid "Open"
 msgstr "Aperta"
 
 #. Windows jump-list task description (tooltip text) for the Open settings action.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:242
+#: src/features/platform/utils/DesktopLocaleBridge.ts:320
 msgid "Open {appName} settings"
 msgstr "Apri le impostazioni di {appName}"
 
@@ -27047,7 +27103,7 @@ msgid "Quit {appName}"
 msgstr "Esci da {appName}"
 
 #. Detail line in the native dialog shown when the desktop app cannot open its local data store. {appName} is the desktop app name (typically Fluxer).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:304
+#: src/features/platform/utils/DesktopLocaleBridge.ts:382
 msgid "Quit {appName}, make sure no other copy is running, and open it again."
 msgstr "Esci da {appName}, assicurati che non ci siano altre copie in esecuzione e riaprilo."
 
@@ -27582,12 +27638,12 @@ msgid "Reload {PRODUCT_NAME} to fully apply the engine change. Switching between
 msgstr "Ricarica {PRODUCT_NAME} per applicare completamente il cambio di motore. Il passaggio tra il controllo ortografico in-app e quello di sistema richiede il ricaricamento del renderer, perché Electron non può cambiare provider durante l’esecuzione."
 
 #. Tooltip on the channel header updater icon prompting a web reload to apply an update of unknown version. productName is the app name.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:34
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:39
 msgid "Reload {productName} to use web update"
 msgstr "Ricarica {productName} per applicare l'aggiornamento dal web"
 
 #. Tooltip on the channel header updater icon prompting a web reload to apply an in-place build update. productName is the app name.
-#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:29
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:34
 msgid "Reload {productName} to use web update {version}"
 msgstr "Ricarica {productName} per utilizzare l'aggiornamento web {version}"
 
@@ -28810,7 +28866,7 @@ msgid "Respect the sender's intent, with no warning when they toggle the @mentio
 msgstr "Rispetta l'intenzione del mittente, senza avvisi quando attiva o disattiva la menzione @"
 
 #. Tray menu item that restarts the desktop app process.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:233
+#: src/features/platform/utils/DesktopLocaleBridge.ts:311
 msgid "Restart {appName}"
 msgstr "Riavvia {appName}"
 
@@ -31576,7 +31632,7 @@ msgid "Show stickers in expression autocomplete"
 msgstr "Mostra gli sticker nel completamento automatico delle espressioni"
 
 #. Button in the native dialog shown when the desktop app cannot open its local data store. Opens the folder that holds the data file.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:333
+#: src/features/platform/utils/DesktopLocaleBridge.ts:411
 msgid "Show store folder"
 msgstr "Mostra cartella archivio"
 
@@ -32799,7 +32855,7 @@ msgid "Start"
 msgstr "Inizia"
 
 #. Reason shown by the Linux Flatpak background permission portal when enabling launch-at-login. {appName} is the desktop app name.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:237
+#: src/features/platform/utils/DesktopLocaleBridge.ts:315
 msgid "Start {appName} automatically when you sign in."
 msgstr "Avvia {appName} automaticamente all'accesso."
 
@@ -34565,6 +34621,16 @@ msgstr "Il sistema ha assegnato il ruolo {role} a {target}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:145
 msgid "The system removed the role {role} from {target}"
 msgstr "Il sistema ha rimosso il ruolo {role} da {target}"
+
+#. Native desktop dialog body under the headline saying the update did not finish. The buttons are Try again, Download and Later.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:298
+msgid "The update did not download or install. Try again or download it yourself."
+msgstr "L'aggiornamento non è stato scaricato o installato. Riprova o scaricalo manualmente."
+
+#. Native desktop dialog body shown when the update download is slow and still running in the background.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:303
+msgid "The update is still downloading. Try again in a few minutes."
+msgstr "L'aggiornamento è ancora in fase di download. Riprova tra qualche minuto."
 
 #. Body of the sticker upload size error modal when the upload service rejects the image as too large.
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:59
@@ -37378,12 +37444,12 @@ msgid "Unread message badge"
 msgstr "Badge messaggi non letti"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers, when there are unread messages but no exact count to show.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:280
+#: src/features/platform/utils/DesktopLocaleBridge.ts:358
 msgid "Unread messages"
 msgstr "Messaggi non letti"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:285
+#: src/features/platform/utils/DesktopLocaleBridge.ts:363
 msgid "Unread messages: {count}"
 msgstr "Messaggi non letti: {count}"
 
@@ -37467,6 +37533,11 @@ msgstr "Fino a 4K/60fps"
 msgid "Up to 720p at 30 FPS"
 msgstr "Fino a 720p a 30 FPS"
 
+#. Tray menu item shown only while a desktop update is waiting. Clicking it installs the update. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts:229
+msgid "Update {appName} now"
+msgstr "Aggiorna {appName} ora"
+
 #. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:149
 msgid "Update {productName} to use system-wide shortcuts on Wayland."
@@ -37482,7 +37553,7 @@ msgstr "Aggiorna {productName} per visualizzare questo messaggio."
 msgid "Update app"
 msgstr "Aggiorna l'app"
 
-#. Tooltip and accessible label on the channel header updater icon in the desktop app. Clicking it closes the window and opens the updater, which downloads and installs the update.
+#. Tooltip and accessible label on the channel header updater icon in the desktop app. Clicking it downloads the update, then either reloads the window or, when the desktop app itself updates, closes it and opens the updater.
 #: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:15
 msgid "Update available"
 msgstr "Aggiornamento disponibile"
@@ -37492,6 +37563,8 @@ msgid "Update my status"
 msgstr "Aggiorna il mio stato"
 
 #. Button label that closes the desktop app and opens the updater to install an available update.
+#. Native desktop dialog button that installs the waiting desktop update.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:253
 #: src/features/updater/commands/UpdaterModalCommands.tsx:43
 msgid "Update now"
 msgstr "Aggiorna ora"
@@ -37550,6 +37623,11 @@ msgstr "Non riceverai più aggiornamenti da questo canale. I messaggi già conse
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:42
 msgid "Updating favorites…"
 msgstr "Aggiornamento preferiti…"
+
+#. Tooltip and accessible label on the channel header updater icon in the desktop app while an update the user started is downloading. The app reloads by itself when it is done.
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx:20
+msgid "Updating…"
+msgstr "Aggiornamento in corso…"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:19
@@ -40670,6 +40748,11 @@ msgstr "Hai modifiche non salvate."
 msgid "You have unsaved changes. Save or reset before leaving."
 msgstr "Hai delle modifiche non salvate. Salva o annulla prima di uscire."
 
+#. Native desktop dialog body under the up to date headline. {version} is the installed version number.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:282
+msgid "You have version {version}."
+msgstr "Hai la versione {version}."
+
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:429
 msgid "You haven't authorized any applications to access your account."
 msgstr "Non hai autorizzato alcuna applicazione ad accedere al tuo account."
@@ -41209,7 +41292,7 @@ msgid "Your account will no longer be protected by two-factor authentication whe
 msgstr "Il tuo account non sarà più protetto dall'autenticazione a due fattori quando accedi con la password. Perderai anche i permessi elevati nelle community che richiedono l'autenticazione a due fattori."
 
 #. Detail line in the native dialog shown when the desktop app cannot open its local data store.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:300
+#: src/features/platform/utils/DesktopLocaleBridge.ts:378
 msgid "Your accounts and settings have not been changed or deleted."
 msgstr "I tuoi account e le tue impostazioni non sono stati modificati o eliminati."
 

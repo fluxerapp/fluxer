@@ -2147,6 +2147,9 @@
         "msgid": "Allows members to start threads that only invited members and moderators can see."
       },
       {
+        "msgid": "An update for {appName} is available."
+      },
+      {
         "msgid": "Animated avatar and profile banner"
       },
       {
@@ -2328,6 +2331,9 @@
       },
       {
         "msgid": "Check again"
+      },
+      {
+        "msgid": "Check your internet connection and try again."
       },
       {
         "msgid": "Check your report"
@@ -2745,6 +2751,9 @@
       },
       {
         "msgid": "Download source maps so stack traces and the developer tools point at real source"
+      },
+      {
+        "msgid": "Download the new version to update {appName}."
       },
       {
         "msgid": "Drag members between voice channels they can access, and disconnect them from voice."
@@ -4415,6 +4424,9 @@
         "msgid": "The sign-in was cancelled in your browser."
       },
       {
+        "msgid": "The update is still downloading. Try again in a few minutes."
+      },
+      {
         "msgid": "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
       },
       {
@@ -4652,6 +4664,9 @@
         "msgid": "Update your passkey"
       },
       {
+        "msgid": "Update {appName} now"
+      },
+      {
         "msgid": "Update {productName} to use system-wide shortcuts on Wayland."
       },
       {
@@ -4659,6 +4674,9 @@
       },
       {
         "msgid": "Updates from this channel will stop arriving here. Messages already delivered stay. You can follow it again from the announcement channel."
+      },
+      {
+        "msgid": "Updating…"
       },
       {
         "msgid": "Upload files and media in messages."
@@ -4851,6 +4869,9 @@
       },
       {
         "msgid": "You don't have a recovery kit yet"
+      },
+      {
+        "msgid": "You have version {version}."
       },
       {
         "msgid": "You'll be charged now. Your remaining gift time is added after your paid period, so none of it is lost."
@@ -5112,6 +5133,24 @@
       },
       {
         "msgid": "{appName} could not read one of its app files. Quit and open it again."
+      },
+      {
+        "msgid": "{appName} couldn't check for updates."
+      },
+      {
+        "msgid": "{appName} couldn't finish updating."
+      },
+      {
+        "msgid": "{appName} is up to date."
+      },
+      {
+        "msgid": "{appName} will close, install the update and open again."
+      },
+      {
+        "msgid": "{appName} will reload to finish updating."
+      },
+      {
+        "msgid": "{appName} {version} is available."
       },
       {
         "msgid": "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
@@ -7024,9 +7063,6 @@
       },
       {
         "msgid": "Tab"
-      },
-      {
-        "msgid": "Threads"
       },
       {
         "msgid": "Visionary"
@@ -9290,12 +9326,6 @@
         "msgid": "Hindi"
       },
       {
-        "msgid": "Instance"
-      },
-      {
-        "msgid": "Instance URL"
-      },
-      {
         "msgid": "Malta"
       },
       {
@@ -9863,6 +9893,9 @@
       },
       {
         "msgid": "sticker"
+      },
+      {
+        "msgid": "{appName} is up to date."
       },
       {
         "msgid": "{context} · {accountName}"
@@ -11140,9 +11173,6 @@
       },
       {
         "msgid": "Tokens"
-      },
-      {
-        "msgid": "Use {accountTag}"
       },
       {
         "msgid": "Visionary"
