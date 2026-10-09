@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CrosspostCommunityPopout} from '@app/features/channel/components/CrosspostCommunityPopout';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
@@ -30,6 +31,8 @@ export const MessageAvatar = observer(
 		const onPopoutToggle = useMaybeMessageViewContext()?.onPopoutToggle;
 		const handlePopoutOpen = useCallback(() => onPopoutToggle?.(true), [onPopoutToggle]);
 		const handlePopoutClose = useCallback(() => onPopoutToggle?.(false), [onPopoutToggle]);
+		const systemDmAvatarUrl =
+			user.id === '0' && !guildId && RuntimeConfig.isSelfHosted() ? (RuntimeConfig.logoUrl ?? undefined) : undefined;
 		if (message.isCrosspostCopy) {
 			return (
 				<CrosspostCommunityPopout
@@ -40,11 +43,13 @@ export const MessageAvatar = observer(
 				>
 					<FocusRing data-flx="channel.message-avatar.focus-ring--2">
 						<Avatar
+							avatarUrl={systemDmAvatarUrl}
 							user={user}
 							size={size}
 							className={className}
 							forceAnimate={isHovering}
 							guildId={guildId}
+							hoverAvatarUrl={systemDmAvatarUrl}
 							data-user-id={user.id}
 							data-guild-id={guildId}
 							data-flx="channel.message-avatar.crosspost-author-avatar"
@@ -68,11 +73,13 @@ export const MessageAvatar = observer(
 			>
 				<FocusRing data-flx="channel.message-avatar.focus-ring">
 					<Avatar
+						avatarUrl={systemDmAvatarUrl}
 						user={user}
 						size={size}
 						className={className}
 						forceAnimate={isHovering}
 						guildId={guildId}
+						hoverAvatarUrl={systemDmAvatarUrl}
 						data-user-id={user.id}
 						data-guild-id={guildId}
 						data-flx="channel.message-avatar.avatar"
