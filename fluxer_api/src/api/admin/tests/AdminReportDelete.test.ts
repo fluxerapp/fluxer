@@ -130,6 +130,9 @@ describe('DELETE /admin/reports/:report_id', () => {
 		const profileKey = `reports/${reportId}/profile/user_avatar/abc${id}`;
 		await harness.storageService.uploadObject({bucket: REPORTS_BUCKET, key: attachmentKey, body: new Uint8Array([1])});
 		await harness.storageService.uploadObject({bucket: REPORTS_BUCKET, key: profileKey, body: new Uint8Array([2])});
+		const uploadedAt = new Date(Date.now() - ms('1 hour'));
+		harness.storageService.setObjectLastModified(REPORTS_BUCKET, attachmentKey, uploadedAt);
+		harness.storageService.setObjectLastModified(REPORTS_BUCKET, profileKey, uploadedAt);
 		const report = await repository.createReport({
 			...Object.fromEntries(IAR_SUBMISSION_COLUMNS.map((column) => [column, null])),
 			report_id: id,
