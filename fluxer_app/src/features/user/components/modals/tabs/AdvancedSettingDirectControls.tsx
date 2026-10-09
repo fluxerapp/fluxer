@@ -25,6 +25,7 @@ import {
 	KeepAttachmentsOnEmptyEditAdvancedControl,
 	MediaButtonsControl,
 	MessageActionBarControl,
+	PersonaTriggerBehaviorControl,
 	PreuploadMessageAttachmentsControl,
 	ReverseImageSearchControl,
 	SaveGifFavoritesControl,
@@ -89,6 +90,7 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-scroll-to-bottom-on-send',
 	'chat-settings-skip-mark-all-as-read-confirmation',
 	'chat-settings-hide-muted-channels',
+	'chat-settings-persona-trigger-behavior',
 	'voice-video-new-device-alerts',
 	'voice-video-connection-volume-controls',
 	'voice-video-screen-share-codec',
@@ -207,6 +209,13 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'chat-settings-media-buttons':
 			return (
 				<MediaButtonsControl
+					title={item.label}
+					data-flx="user.advanced-setting-direct-controls.advanced-setting-control.media-buttons-control"
+				/>
+			);
+		case 'chat-settings-persona-trigger-behavior':
+			return (
+				<PersonaTriggerBehaviorControl
 					title={item.label}
 					data-flx="user.advanced-setting-direct-controls.advanced-setting-control.media-buttons-control"
 				/>

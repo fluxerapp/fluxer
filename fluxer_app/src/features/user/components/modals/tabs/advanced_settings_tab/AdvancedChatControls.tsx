@@ -9,10 +9,12 @@ import Guilds from '@app/features/guild/state/Guilds';
 import Inbox from '@app/features/inbox/state/Inbox';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
+import { Checkbox } from '@app/features/ui/checkbox/Checkbox';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {SwitchGroup, SwitchGroupItem} from '@app/features/ui/components/SwitchGroup';
+import { RadioGroup } from '@app/features/ui/radio_group/RadioGroup';
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import type {SearchEngineMode} from '@app/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal';
@@ -29,8 +31,10 @@ import {
 	TextSearchEnginesContent,
 	TranslatorsContent,
 } from '@app/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab';
+import Personas from '@app/features/user/state/Personas';
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
 import UserSettings from '@app/features/user/state/UserSettings';
+import { PersonaSettings_LatchMode } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {GearIcon} from '@phosphor-icons/react';
@@ -165,6 +169,34 @@ const CONFIGURE_DESCRIPTOR = msg({
 	message: 'Configure',
 	comment: 'Button label that opens a dedicated advanced settings modal.',
 });
+export const LATCH_OFF_DESCRIPTOR = msg({
+	message: "Off",
+	comment: "A label for the latching modes (trigger behavior) setting."
+});
+const LATCH_OFF_DESCRIPTION_DESCRIPTOR = msg({
+	message: "Triggers don't do anything.",
+	comment: "A label for the latching modes (trigger behavior) setting."
+});
+export const LATCH_MANUAL_DESCRIPTOR = msg({
+	message: "Manual",
+	comment: "A label for the latching modes (trigger behavior) setting."
+});
+const LATCH_MANUAL_DESCRIPTION_DESCRIPTOR = msg({
+	message: "A trigger sends a message with its persona, but the active persona doesn't change.",
+	comment: "A label for the latching modes (trigger behavior) setting."
+});
+export const LATCH_TRIGGER_SWITCHING_DESCRIPTOR = msg({
+	message: "Last Used",
+	comment: "A label for the latching modes (trigger behavior) setting."
+});
+const LATCH_TRIGGER_SWITCHING_DESCRIPTION_DESCRIPTOR = msg({
+	message: "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\".",
+	comment: "A label for the latching modes (trigger behavior) setting."
+});
+export const SHOW_LATCH_IN_PERSONA_PICKER_DESCRIPTOR = msg({
+	message: "Show trigger behavior slider in persona picker",
+	comment: "A label for the latching modes (trigger behavior) setting."
+});
 
 export const AutoSendGifsControl = observer(() => {
 	const {i18n} = useLingui();
@@ -269,6 +301,37 @@ const MediaButtonsContent = observer(() => {
 			/>
 		</SwitchGroup>
 	);
+});
+
+const PersonaTriggerBehaviorComponent = observer(() => {
+	const {i18n} = useLingui();
+	return (<>
+		<Checkbox
+			checked={Accessibility.showLatchInPersonaPicker}
+			onChange={(checked) => Accessibility.updateSettings({showLatchInPersonaPicker: checked})}
+		>{i18n._(SHOW_LATCH_IN_PERSONA_PICKER_DESCRIPTOR)}</Checkbox>
+		<RadioGroup
+			value={Personas.latchMode}
+			onChange={(v) => Personas.latchMode = v}
+			options={[
+				{
+					value: PersonaSettings_LatchMode.OFF,
+					name: i18n._(LATCH_OFF_DESCRIPTOR),
+					desc: i18n._(LATCH_OFF_DESCRIPTION_DESCRIPTOR)
+				},
+				{
+					value: PersonaSettings_LatchMode.MANUAL,
+					name: i18n._(LATCH_MANUAL_DESCRIPTOR),
+					desc: i18n._(LATCH_MANUAL_DESCRIPTION_DESCRIPTOR)
+				},
+				{
+					value: PersonaSettings_LatchMode.TRIGGER_SWITCHING,
+					name: i18n._(LATCH_TRIGGER_SWITCHING_DESCRIPTOR),
+					desc: i18n._(LATCH_TRIGGER_SWITCHING_DESCRIPTION_DESCRIPTOR)
+				},
+			]}
+		/>
+	</>);
 });
 
 export const StripTrackingControl = observer(() => (
@@ -466,7 +529,7 @@ const InputButtonsContent = observer(() => {
 	);
 });
 
-type SwitchGroupSettingsMode = 'message-action-bar' | 'media-buttons' | 'expression-autocomplete' | 'input-buttons';
+type SwitchGroupSettingsMode = 'message-action-bar' | 'media-buttons' | 'expression-autocomplete' | 'persona-trigger-behavior' | 'input-buttons';
 
 interface SwitchGroupSettingsModalProps {
 	mode: SwitchGroupSettingsMode;
@@ -484,6 +547,8 @@ const SwitchGroupSettingsModal = observer(({mode, title}: SwitchGroupSettingsMod
 			<MediaButtonsContent data-flx="user.advanced-settings-tab.advanced-chat-controls.switch-group-settings-modal.media-buttons-content" />
 		) : mode === 'expression-autocomplete' ? (
 			<ExpressionAutocompleteContent data-flx="user.advanced-settings-tab.advanced-chat-controls.switch-group-settings-modal.expression-autocomplete-content" />
+		) : mode === 'persona-trigger-behavior' ? (
+			<PersonaTriggerBehaviorComponent data-flx="user.advanced-settings-tab.advanced-chat-controls.switch-group-settings-modal.persona-trigger-behavior-content" />
 		) : (
 			<InputButtonsContent data-flx="user.advanced-settings-tab.advanced-chat-controls.switch-group-settings-modal.input-buttons-content" />
 		);
@@ -548,6 +613,15 @@ const SwitchGroupSettingsButton = observer(({mode, title, dataFlx}: SwitchGroupS
 interface SwitchGroupSettingsControlProps {
 	title: string;
 }
+
+export const PersonaTriggerBehaviorControl = observer(({title}: SwitchGroupSettingsControlProps) => (
+	<SwitchGroupSettingsButton
+		mode="persona-trigger-behavior"
+		title={title}
+		dataFlx="user.advanced-settings-tab.persona-trigger-behavior-control.configure-button"
+		data-flx="user.advanced-settings-tab.advanced-chat-controls.persona-trigger-behavior-control.switch-group-settings-button"
+	/>
+));
 
 export const MessageActionBarControl = observer(({title}: SwitchGroupSettingsControlProps) => (
 	<SwitchGroupSettingsButton

@@ -78,6 +78,8 @@ message AccessibilitySettings {
   optional bool dim_strikethrough_text = 62;
   optional bool sequential_file_send = 63;
   optional bool mobile_splash_zoom_animation = 64;
+	reserved 90101;
+	optional bool show_latch_in_persona_picker = 90102;
 }
 
 message AccessibilityOverrides {

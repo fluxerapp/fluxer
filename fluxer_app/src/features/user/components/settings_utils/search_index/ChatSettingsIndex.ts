@@ -7,6 +7,7 @@ import {
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {INBOX_DESCRIPTOR} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
+import { LATCH_MANUAL_DESCRIPTOR, LATCH_OFF_DESCRIPTOR, LATCH_TRIGGER_SWITCHING_DESCRIPTOR } from '../../modals/tabs/advanced_settings_tab/AdvancedChatControls';
 
 const AUTOMATICALLY_SEND_GIFS_WHEN_SELECTED_DESCRIPTOR = msg({
 	message: 'Automatically send GIFs when selected',
@@ -508,6 +509,15 @@ const HIDE_CHANNELS_YOU_VE_MUTED_FROM_COMMUNITY_SIDEBARS_DESCRIPTOR = msg({
 	message: "Hide channels you've muted from community sidebars",
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
+const PERSONA_TRIGGER_BEHAVIOR_DESCRIPTOR = msg({
+	message: "Persona trigger behavior",
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+});
+const CHOOSE_WHAT_HAPPENS_WHEN_YOU_USE_A_PERSONA_TRIGGER_DESCRIPTOR = msg({
+	message: "Choose what happens when you use a persona trigger",
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+});
+
 export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'chat-settings-auto-send-gifs',
@@ -795,5 +805,18 @@ export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 		description: ENSURES_FILES_ARE_SENT_IN_THE_ORDER_THEY_WERE_ADDED_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['chat'],
+	},
+	{
+		id: 'chat-settings-persona-trigger-behavior',
+		tabType: 'advanced_settings',
+		sectionId: 'chat',
+		label: PERSONA_TRIGGER_BEHAVIOR_DESCRIPTOR,
+		keywords: [
+			LATCH_MANUAL_DESCRIPTOR,
+			LATCH_TRIGGER_SWITCHING_DESCRIPTOR,
+		],
+		description: CHOOSE_WHAT_HAPPENS_WHEN_YOU_USE_A_PERSONA_TRIGGER_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['chat', 'accessibility'],
 	},
 ];

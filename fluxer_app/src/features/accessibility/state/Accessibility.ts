@@ -39,6 +39,7 @@ const ACCESSIBILITY_SHOW_NEKO_STORAGE_KEY = 'Accessibility:showNeko';
 const ACCESSIBILITY_KEEP_NEKO_STILL_STORAGE_KEY = 'Accessibility:keepNekoStill';
 const ACCESSIBILITY_PIN_NEKO_TO_TEXTAREA_STORAGE_KEY = 'Accessibility:pinNekoToTextarea';
 const ACCESSIBILITY_VIDEO_SEEK_PREVIEW_THUMBNAILS_STORAGE_KEY = 'Accessibility:videoSeekPreviewThumbnails';
+const ACCESSIBILITY_SHOW_LATCH_IN_PERSONA_PICKER_STORAGE_KEY = 'Accessibility:showLatchInPersonaPicker';
 const SYNCED_PREFERENCES_LOCAL_STORAGE_KEY = 'UserSettings:syncedPreferencesLocal';
 const getShowNekoStorageKey = (userId: string): string => `${ACCESSIBILITY_SHOW_NEKO_STORAGE_KEY}:${userId}`;
 const getKeepNekoStillStorageKey = (userId: string): string => `${ACCESSIBILITY_KEEP_NEKO_STILL_STORAGE_KEY}:${userId}`;
@@ -364,6 +365,12 @@ function persistLocalVideoSeekPreviewThumbnails(value: boolean): void {
 	} catch {}
 }
 
+function persistLocalShowLatchInPersonaPicker(value: boolean): void {
+	try {
+		AppStorage.setItem(ACCESSIBILITY_SHOW_LATCH_IN_PERSONA_PICKER_STORAGE_KEY, JSON.stringify(value));
+	} catch {}
+}
+
 function readLocalCustomThemeCss(storage: StartupSettingsStorage = AppStorage): string | null {
 	let raw: string | null;
 	try {
@@ -636,6 +643,7 @@ export interface AccessibilitySettings {
 	showNeko: boolean;
 	keepNekoStill: boolean;
 	showVideoSeekPreviewThumbnails: boolean;
+	showLatchInPersonaPicker: boolean;
 }
 
 const getDefaultDmMessagePreviewMode = (): DMMessagePreviewMode =>
@@ -742,6 +750,7 @@ class Accessibility {
 	showNeko = false;
 	keepNekoStill = false;
 	showVideoSeekPreviewThumbnails = false;
+	showLatchInPersonaPicker = false;
 	mediaQuery: MediaQueryList | null = null;
 	private _hydrated = false;
 	private unsubscribeZoomStorage: (() => void) | null = null;
@@ -1348,6 +1357,13 @@ class Accessibility {
 			this.showVideoSeekPreviewThumbnails = validated.showVideoSeekPreviewThumbnails;
 			persistLocalVideoSeekPreviewThumbnails(validated.showVideoSeekPreviewThumbnails);
 		}
+		if (
+			validated.showLatchInPersonaPicker !== undefined &&
+			validated.showLatchInPersonaPicker !== this.showLatchInPersonaPicker
+		) {
+			this.showLatchInPersonaPicker = validated.showLatchInPersonaPicker;
+			persistLocalShowLatchInPersonaPicker(validated.showLatchInPersonaPicker);
+		}
 	}
 
 	private validateSettings(data: Readonly<Partial<AccessibilitySettings>>): Partial<AccessibilitySettings> {
@@ -1439,6 +1455,7 @@ class Accessibility {
 			showNeko: data.showNeko ?? this.showNeko,
 			keepNekoStill: data.keepNekoStill ?? this.keepNekoStill,
 			showVideoSeekPreviewThumbnails: data.showVideoSeekPreviewThumbnails ?? this.showVideoSeekPreviewThumbnails,
+			showLatchInPersonaPicker: data.showLatchInPersonaPicker ?? this.showLatchInPersonaPicker,
 		};
 	}
 

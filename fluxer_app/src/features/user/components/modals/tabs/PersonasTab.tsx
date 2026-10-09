@@ -22,9 +22,6 @@ import { i18n } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { PersonaEditorModal } from "../PersonaEditorModal";
 import { StatusSlate } from "@app/features/app/components/dialogs/shared/StatusSlate";
-import { SettingsSection } from "@app/features/app/components/dialogs/shared/SettingsSection";
-import { RadioGroup } from "@app/features/ui/radio_group/RadioGroup";
-import { PersonaSettings_LatchMode } from "@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js";
 import { Input } from "@app/features/ui/components/form/FormInput";
 import { PERSONA_FILTER_PLACEHOLDER_DESCRIPTOR } from "@app/features/personas/components/popouts/PersonaPickerPopout";
 import MobileLayout from "@app/features/ui/state/MobileLayout";
@@ -57,32 +54,6 @@ const TRY_A_DIFFERENT_SEARCH_DESCRIPTOR = msg({
 	message: "Try a different search, or check your spelling.",
 	comment: "Slate message that shows in the Personas tab when there are no personas when filtered."
 });
-
-export const LATCH_OFF_DESCRIPTOR = msg({
-	message: "Off",
-	comment: "A label for the latching modes (trigger behavior) setting."
-});
-const LATCH_OFF_DESCRIPTION_DESCRIPTOR = msg({
-	message: "Triggers don't do anything.",
-	comment: "A label for the latching modes (trigger behavior) setting."
-});
-export const LATCH_MANUAL_DESCRIPTOR = msg({
-	message: "Manual",
-	comment: "A label for the latching modes (trigger behavior) setting."
-});
-const LATCH_MANUAL_DESCRIPTION_DESCRIPTOR = msg({
-	message: "A trigger sends a message with its persona, but the active persona doesn't change.",
-	comment: "A label for the latching modes (trigger behavior) setting."
-});
-export const LATCH_TRIGGER_SWITCHING_DESCRIPTOR = msg({
-	message: "Last Used",
-	comment: "A label for the latching modes (trigger behavior) setting."
-});
-const LATCH_TRIGGER_SWITCHING_DESCRIPTION_DESCRIPTOR = msg({
-	message: "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\".",
-	comment: "A label for the latching modes (trigger behavior) setting."
-});
-
 const ACCEPTED_IMPORT_FORMATS_DESCRIPTOR = msg({
 	message: "You can import JSON files exported from Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, or anything that exports to a compatible format.",
 	comment: "A list of supported import formats. The names of each format should remain untranslated since they are proper nouns."
@@ -243,37 +214,7 @@ const PersonasTabComponent = observer(function PersonasTabComponent() {
 			<p data-flx="user.personas-tab.personas-tab-component.personas-explanation"><Trans>Personas are reusable profiles that you can attach to messages.</Trans></p>
 			{/* <div className={styles.column}></div> */}
 			{/* <Button onClick={() => Personas.personas = {}} leftIcon={<BugIcon />}>Reset</Button> */}
-			<SettingsSection
-				tabType="personas"
-				isAdvanced
-				linkable
-				defaultExpanded={false}
-				description={<Trans>Set what happens when you send a message using a persona's trigger.</Trans>}
-				id="persona-latch-mode"
-				title={<Trans>Trigger Behavior</Trans>}
-			>
-				<RadioGroup
-					value={Personas.latchMode}
-					onChange={(v) => Personas.latchMode = v}
-				  options={[
-						{
-							value: PersonaSettings_LatchMode.OFF,
-							name: i18n._(LATCH_OFF_DESCRIPTOR),
-							desc: i18n._(LATCH_OFF_DESCRIPTION_DESCRIPTOR)
-						},
-						{
-							value: PersonaSettings_LatchMode.MANUAL,
-							name: i18n._(LATCH_MANUAL_DESCRIPTOR),
-							desc: i18n._(LATCH_MANUAL_DESCRIPTION_DESCRIPTOR)
-						},
-						{
-							value: PersonaSettings_LatchMode.TRIGGER_SWITCHING,
-							name: i18n._(LATCH_TRIGGER_SWITCHING_DESCRIPTOR),
-							desc: i18n._(LATCH_TRIGGER_SWITCHING_DESCRIPTION_DESCRIPTOR)
-						},
-					]}
-				/>
-			</SettingsSection>
+
 			<div className={clsx(styles.buttonRow, isMobile && styles.mobile)}>
 				{!isMobile && <FilterInput filter={filter} disabled={!allPersonas} />}
 				<Tooltip maxWidth="xl" position="top" text={i18n._(ACCEPTED_IMPORT_FORMATS_DESCRIPTOR)}>

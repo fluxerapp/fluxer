@@ -6,7 +6,7 @@
 	}
 	&:not(.mobile) {
 		width: 32ch;
-		max-height: min(50vh, 20lh);
+		max-height: min(50vh, 16lh);
 		background: var(--form-surface-background);
 
 		border: 1px solid var(--background-modifier-accent) / 100%;

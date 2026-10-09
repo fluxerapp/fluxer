@@ -23,9 +23,10 @@ import { Input } from "@app/features/ui/components/form/FormInput";
 import { Trans } from "@lingui/react/macro";
 import { SensitiveContentChoiceRow } from "@app/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab";
 import { PersonaSettings_LatchMode } from "@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js";
-import { LATCH_MANUAL_DESCRIPTOR, LATCH_OFF_DESCRIPTOR, LATCH_TRIGGER_SWITCHING_DESCRIPTOR } from "@app/features/user/components/modals/tabs/PersonasTab";
+import { LATCH_MANUAL_DESCRIPTOR, LATCH_OFF_DESCRIPTOR, LATCH_TRIGGER_SWITCHING_DESCRIPTOR } from "@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls";
 import { clsx } from "clsx";
 import PersonaPickerMobile from "../../state/PersonaPickerMobile";
+import Accessibility from "@app/features/accessibility/state/Accessibility";
 
 const MAIN_ACCOUNT_DESCRIPTOR = msg({
 	message: "This is your account.",
@@ -133,7 +134,7 @@ export const PersonaPickerPopout = observer<PersonaPickerPopoutProps>(({ channel
 
 	return <div className={clsx(styles.root, props.isMobile && styles.mobile)}>
 		<div className={styles.header}>
-			<SensitiveContentChoiceRow
+			{Accessibility.showLatchInPersonaPicker && <SensitiveContentChoiceRow
 				className={styles.latchModes}
 				dataFlx="persona-picker.latch-mode-choice-row"
 				label="Trigger Behavior"
@@ -153,7 +154,7 @@ export const PersonaPickerPopout = observer<PersonaPickerPopoutProps>(({ channel
 						label: i18n._(LATCH_TRIGGER_SWITCHING_DESCRIPTOR),
 					},
 				]}
-			/>
+			/>}
 			<Input
 				label={<Trans>Filter personas</Trans>}
 				placeholder={i18n._(PERSONA_FILTER_PLACEHOLDER_DESCRIPTOR)}
