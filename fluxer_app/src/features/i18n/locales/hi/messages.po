@@ -41795,3 +41795,83 @@ msgstr "ज़ूम इन करें"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "ज़ूम आउट करें"
+
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# समुदाय की अपनी सेटिंग है} other {# समुदायों की अपनी सेटिंग है}}"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:84
+msgid "Also change the communities below to match"
+msgstr "नीचे दिए गए समुदायों को भी बदलें"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "आपको संदेश भेज सकते हैं"
+
+#. Nagbar body asking the user to review who can send them direct messages.
+#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
+msgid "Choose who can send you direct messages."
+msgstr "चुनें कि कौन आपको सीधे संदेश भेज सकता है।"
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:102
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "अब से आप जिन समुदायों में शामिल होंगे, वे इसका उपयोग करेंगे, और नीचे दिए गए समुदाय भी उसी के अनुसार बदल जाएंगे।"
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:98
+msgid "Communities you join from now on will use this."
+msgstr "आप जिन समुदायों में शामिल होंगे, वे अब इसका उपयोग करेंगे।"
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:93
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "अब से आप जिन समुदायों में शामिल होंगे, वे इसका उपयोग करेंगे। आपके वर्तमान समुदायों की अपनी सेटिंग्स बनी रहेंगी।"
+
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:76
+msgid "Current"
+msgstr "वर्तमान"
+
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "आपके दोस्त आपको हमेशा मैसेज कर सकते हैं।"
+
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:110
+msgid "Keep my current settings"
+msgstr "अपनी वर्तमान सेटिंग रखें"
+
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:89
+msgid "Nothing will change. This just confirms your settings."
+msgstr "कुछ नहीं बदलेगा। यह बस आपकी सेटिंग्स की पुष्टि करता है।"
+
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "आपके समुदायों के लोग आपको दोस्त बनाए बिना संदेश भेज सकते हैं।"
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "आपके समुदायों के लोग आपको संदेश भेजने से पहले आपके दोस्त होने चाहिए।"
+
+#. Developer control label for the privacy setup banner.
+#: src/features/devtools/components/NagbarControls.ts:69
+msgid "Privacy setup nagbar"
+msgstr "गोपनीयता सेटअप सूचना पट्टी"
+
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "अभी"
+
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "एक पल लें और जांचें कि आपको कौन संदेश भेज सकता है। जब तक आप चुनते नहीं हैं, तब तक कुछ भी नहीं बदलता है।"

@@ -41795,3 +41795,83 @@ msgstr "Přiblížit"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "Oddálit"
+
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# komunita má vlastní nastavení} other {# komunity mají vlastní nastavení}}"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:84
+msgid "Also change the communities below to match"
+msgstr "Také změňte níže uvedené komunity, aby odpovídaly"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "Může vám poslat přímou zprávu"
+
+#. Nagbar body asking the user to review who can send them direct messages.
+#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
+msgid "Choose who can send you direct messages."
+msgstr "Vyberte, kdo vám může posílat přímé zprávy."
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:102
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "Komunity, ke kterým se odteď připojíte, budou používat toto nastavení a níže uvedené komunity se podle něj změní."
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:98
+msgid "Communities you join from now on will use this."
+msgstr "Komunity, ke kterým se odteď připojíte, budou používat toto."
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:93
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "Komunity, ke kterým se připojíte odteď, budou používat toto nastavení. Vaše stávající komunity si zachovají svá nastavení."
+
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:76
+msgid "Current"
+msgstr "Aktuální"
+
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "Přátelé vám mohou vždy posílat zprávy."
+
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:110
+msgid "Keep my current settings"
+msgstr "Ponechat moje aktuální nastavení"
+
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:89
+msgid "Nothing will change. This just confirms your settings."
+msgstr "Nic se nezmění. Tímto pouze potvrdíte svá nastavení."
+
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "Lidé ve vašich komunitách vám můžou psát zprávy, aniž byste byli přátelé."
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "Lidé ve vašich komunitách s vámi musí být přátelé, než vám budou moci poslat zprávu."
+
+#. Developer control label for the privacy setup banner.
+#: src/features/devtools/components/NagbarControls.ts:69
+msgid "Privacy setup nagbar"
+msgstr "Nastavení soukromí"
+
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "Právě teď"
+
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "Chvilku si zkontrolujte, kdo vám může psát zprávy. Nic se nezmění, pokud to sami nezvolíte."

@@ -41795,3 +41795,83 @@ msgstr "ซูมเข้า"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "ซูมออก"
+
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# ชุมชนมีการตั้งค่าเฉพาะของตัวเอง} other {# ชุมชนมีการตั้งค่าเฉพาะของตัวเอง}}"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:84
+msgid "Also change the communities below to match"
+msgstr "เปลี่ยนชุมชนด้านล่างให้ตรงกันด้วย"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "ส่งข้อความถึงคุณได้"
+
+#. Nagbar body asking the user to review who can send them direct messages.
+#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
+msgid "Choose who can send you direct messages."
+msgstr "เลือกเลยว่าใครสามารถส่งข้อความส่วนตัวถึงคุณได้"
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:102
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "ชุมชนที่คุณเข้าร่วมตั้งแต่นี้เป็นต้นไปจะใช้การตั้งค่านี้ และชุมชนด้านล่างจะเปลี่ยนไปให้ตรงกัน"
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:98
+msgid "Communities you join from now on will use this."
+msgstr "ชุมชนที่คุณเข้าร่วมหลังจากนี้จะใช้การตั้งค่านี้"
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:93
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "ชุมชนที่คุณเข้าร่วมตั้งแต่นี้เป็นต้นไปจะใช้การตั้งค่านี้ ชุมชนปัจจุบันของคุณจะยังคงใช้การตั้งค่าเดิม"
+
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:76
+msgid "Current"
+msgstr "ปัจจุบัน"
+
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "เพื่อนๆ สามารถส่งข้อความถึงคุณได้เสมอ"
+
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:110
+msgid "Keep my current settings"
+msgstr "คงการตั้งค่าปัจจุบันของฉัน"
+
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:89
+msgid "Nothing will change. This just confirms your settings."
+msgstr "จะไม่มีอะไรเปลี่ยนแปลง แค่เป็นการยืนยันการตั้งค่าของคุณ"
+
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "คนในชุมชนของคุณสามารถส่งข้อความถึงคุณได้โดยไม่ต้องเป็นเพื่อนกัน"
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "คนในชุมชนของคุณจะต้องเป็นเพื่อนกับคุณก่อน จึงจะสามารถส่งข้อความถึงคุณได้"
+
+#. Developer control label for the privacy setup banner.
+#: src/features/devtools/components/NagbarControls.ts:69
+msgid "Privacy setup nagbar"
+msgstr "การตั้งค่าความเป็นส่วนตัว"
+
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "ตอนนี้"
+
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "ใช้เวลาสักครู่เพื่อตรวจสอบว่าใครสามารถส่งข้อความถึงคุณได้ จะไม่มีอะไรเปลี่ยนแปลงจนกว่าคุณจะเลือก"

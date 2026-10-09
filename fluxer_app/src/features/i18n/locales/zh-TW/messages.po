@@ -41795,3 +41795,83 @@ msgstr "放大"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "縮小"
+
+#. Heading above the list of communities whose direct message setting differs from the default, in the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:47
+msgid "{count, plural, one {# community has its own setting} other {# communities have their own setting}}"
+msgstr "{count, plural, one {# 個社群有獨立設定} other {# 個社群有獨立設定}}"
+
+#. Unchecked checkbox in the privacy setup modal. When checked, the new setting also replaces the setting of the listed communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:84
+msgid "Also change the communities below to match"
+msgstr "同時更改下方社群的設定"
+
+#. Shown next to a community in the privacy setup modal. Its members can send the user direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:52
+msgid "Can message you"
+msgstr "可以傳送訊息給你"
+
+#. Nagbar body asking the user to review who can send them direct messages.
+#: src/features/app/components/layout/app_layout/nagbars/PrivacySetupNagbar.tsx:15
+msgid "Choose who can send you direct messages."
+msgstr "選擇誰可以傳送私人訊息給你。"
+
+#. Summary in the privacy setup modal when the new setting also applies to the listed current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:102
+msgid "Communities you join from now on will use this, and the communities below change to match."
+msgstr "你之後加入的社群將會套用此設定，下方的社群也會隨之變更。"
+
+#. Summary in the privacy setup modal when the user changes the setting and no current community is affected.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:98
+msgid "Communities you join from now on will use this."
+msgstr "你之後加入的社群將會套用這個設定。"
+
+#. Summary in the privacy setup modal when the user changes the setting without changing their current communities.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:93
+msgid "Communities you join from now on will use this. Your current communities keep their settings."
+msgstr "你之後加入的社群將會套用此設定。你目前的社群會保留原有設定。"
+
+#. Small tag next to the privacy setup option that matches the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:76
+msgid "Current"
+msgstr "目前"
+
+#. Reassurance in the privacy setup modal that friends can always send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:43
+msgid "Friends can always message you."
+msgstr "朋友隨時都能傳訊息給你。"
+
+#. Primary button in the privacy setup modal when nothing is changed. Confirms the current settings.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:110
+msgid "Keep my current settings"
+msgstr "保留我的目前設定"
+
+#. Summary in the privacy setup modal when the user keeps the current setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:89
+msgid "Nothing will change. This just confirms your settings."
+msgstr "沒有任何變更。這只是確認您的設定。"
+
+#. Describes the current setting in the privacy setup modal when community members can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:35
+msgid "People in your communities can message you without being friends."
+msgstr "你所在社群的成員無需加你為好友即可傳送訊息給你。"
+
+#. Describes the current setting in the privacy setup modal when only friends can send direct messages.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:39
+msgid "People in your communities need to be your friend before they can message you."
+msgstr "你社群中的成員必須先成為你的朋友，才能傳送訊息給你。"
+
+#. Developer control label for the privacy setup banner.
+#: src/features/devtools/components/NagbarControls.ts:69
+msgid "Privacy setup nagbar"
+msgstr "隱私設定通知列"
+
+#. Heading of the box in the privacy setup modal that describes the current direct message setting.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:31
+msgid "Right now"
+msgstr "目前"
+
+#. Explanation at the top of the privacy setup modal.
+#: src/features/user/components/modals/PrivacySetupModal.tsx:27
+msgid "Take a moment to check who can message you. Nothing changes unless you choose to."
+msgstr "花點時間檢查誰可以傳送訊息給你。除非你選擇更改，否則一切都不會改變。"
