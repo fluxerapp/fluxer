@@ -96,7 +96,10 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 		return null;
 	}
 	const displayName = NicknameUtils.getNickname(user, null, channel?.id);
-	const fluxerTag = NicknameUtils.formatTagForStreamerMode(user.tag);
+	if (!displayName) return null;
+	const fluxerTag = NicknameUtils.formatTagForStreamerMode(
+		user.id === '0' ? `${displayName}#${user.discriminator}` : user.tag,
+	);
 	const handleSendFriendRequest = () => {
 		RelationshipActionUtils.sendFriendRequest(i18n, user.id);
 	};

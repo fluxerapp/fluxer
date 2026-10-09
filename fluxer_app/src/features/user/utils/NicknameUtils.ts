@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Channels from '@app/features/channel/state/Channels';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
@@ -51,6 +52,10 @@ export function getDisplayName(user: UserDisplayNameLike): string {
 }
 
 export function getNickname(user: User, guildId?: string | null, channelId?: string): string {
+	if (user.id === '0') {
+		const productName = RuntimeConfig.getSnapshotOrNull()?.appPublic.branding.product_name;
+		return productName ? formatNicknameForStreamerMode(productName) : '';
+	}
 	let name = user.displayName || user.globalName || user.username || user.id || '';
 	const relationship = Relationships.getRelationship(user.id);
 	if (relationship?.nickname) {
